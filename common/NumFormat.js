@@ -4898,6 +4898,7 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 			var currencySymbol = info.currency;
 			var cultureInfo = g_aCultureInfos[info.symbol];
 			var hasCurrency = !!cultureInfo || !!currencySymbol;
+			var bIsUseLocalFormatYear = true;
 			if (Asc.c_oAscNumFormatType.General === info.type) {
 				res.push(AscCommon.g_cGeneralFormat);
 			} else if (Asc.c_oAscNumFormatType.Number === info.type) {
@@ -4948,6 +4949,16 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 					res.push('yy' + separator + 'mm' + separator + 'dd;@');
 					res.push('yyyy' + separator + 'm' + separator + 'd;@');
 					res.push('yyyy' + separator + 'mm' + separator + 'dd;@');
+				}
+				if(bIsUseLocalFormatYear)
+				{
+					res.push("[$-800411]"+LocaleFormatSymbol['g'].repeat(3)+"e\"年\"" + getShortDateFormat2(0, 1, 0, cultureInfo) + "\"月\"" + getShortDateFormat2(1, 0, 0, cultureInfo) + "\"日\";@")
+					res.push("[$-800411]"+LocaleFormatSymbol['g']+"e." + getShortDateFormat2(0, 1, 0, cultureInfo) + "." + getShortDateFormat2(1, 0, 0, cultureInfo) + ";@")
+				}
+				else
+				{
+					res.push("[$-411]"+LocaleFormatSymbol['g'].repeat(3)+"e\"年\"" + getShortDateFormat2(0, 1, 0, cultureInfo) + "\"月\"" + getShortDateFormat2(1, 0, 0, cultureInfo) + "\"日\";@")
+					res.push("[$-411]"+LocaleFormatSymbol['g']+"e." + getShortDateFormat2(0, 1, 0, cultureInfo) + "." + getShortDateFormat2(1, 0, 0, cultureInfo) + ";@")
 				}
 			} else if (Asc.c_oAscNumFormatType.Time === info.type) {
 				res = gc_aTimeFormats;
