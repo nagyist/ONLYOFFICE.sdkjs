@@ -5387,7 +5387,7 @@ CChartsDrawer.prototype =
 		return paths;
 	},
 
-	_getFill: function (pen, brush, face, val) {
+	_getFill: function (pen, brush, face, val, seria) {
 		//k: 0 - передняя, 1 - верхняя, 2 - левая, 3 - правая, 4 - нижняя, 5 - задняя
 		var shade = "shade";
 		var shadeValue1, shadeValue2;
@@ -5416,7 +5416,7 @@ CChartsDrawer.prototype =
 					break;
 				}
 				case c_oChartBar3dFaces.back: {
-					newBrush = this._reverseGradient(brush);
+					newBrush = this._reverseGradient(brush, seria);
 					break;
 				}
 				case c_oChartBar3dFaces.up: {
@@ -5530,13 +5530,7 @@ CChartsDrawer.prototype =
 				}
 			} else if (angle >= 90 && angle < 135) {
 				colors = this._getColors(colors, val, 3);
-				// if (faceIndex === c_oChartBar3dFaces.up || faceIndex === c_oChartBar3dFaces.left) {
-				// 	gradientBrush = getCSolidColor(colors[0].color, shadeValue1);
-				// } else if (faceIndex === c_oChartBar3dFaces.right) {
-				// 	gradientBrush = this._applyColorModeByBrush(brushFill, shadeValue1);
-				// } else if (faceIndex === c_oChartBar3dFaces.down) {
-				// 	gradientBrush = getCSolidColor(colors[colors.length - 1].color);
-				// }
+
 				if (faceIndex === c_oChartBar3dFaces.up) {
 					gradientBrush = getCSolidColor(colors[0], shadeValue1);
 				} else if (faceIndex === c_oChartBar3dFaces.right || faceIndex === c_oChartBar3dFaces.left) {
@@ -5592,10 +5586,16 @@ CChartsDrawer.prototype =
 		return angle;
 	},
 
-	_reverseGradient: function (brush) {
-		var angle = this._getDegreeFromLinAngle(brush);
+	_reverseGradient: function (brush, seria) {
+		var shape = this.calcProp.series && this.calcProp.series[seria] ? this.calcProp.series[seria].shape : null;
+		if (shape === AscFormat.BAR_SHAPE_CONE || shape === AscFormat.BAR_SHAPE_CONETOMAX || shape === AscFormat.BAR_SHAPE_CYLINDER) {
+			return brush;
+		}
+
 		var duplicateBrush = brush.createDuplicate();
-		if (angle >= 0 && angle < 45) {
+		var angle = this._getDegreeFromLinAngle(brush);
+
+		if (angle >= 0 && angle < 90) {
 			var colors = duplicateBrush.fill.colors;
 			var newColors = [];
 			var j = 0;
@@ -6444,7 +6444,7 @@ drawBarChart.prototype = {
 					brush = options.brush;
 				}
 
-				t._drawBar3D(paths, pen, brush, k, options.val);
+				t._drawBar3D(paths, pen, brush, k, options.val, i);
 			}
 		};
 
@@ -6496,10 +6496,10 @@ drawBarChart.prototype = {
 		return {pen: pen, brush: brush, val: pt.val}
 	},
 
-	_drawBar3D: function (path, pen, brush, k, val) {
+	_drawBar3D: function (path, pen, brush, k, val, seria) {
 		//front: 0, down: 1, left: 2, right: 3, up: 4, unfront: 5
 		//затемнение боковых сторон
-		var fill = this.cChartDrawer._getFill(pen, brush, k, val);
+		var fill = this.cChartDrawer._getFill(pen, brush, k, val, seria);
 		var newBrush = fill.brush;
 		var newPen = fill.pen;
 		this.cChartDrawer.drawPath(path, newPen, newBrush);
