@@ -11690,8 +11690,6 @@
 										var sDateFormat = "";
 										if (bDate) {
 											sDateFormat = AscCommon.getShortDateFormat(cultureInfo, bCurrentEraYear);
-											if (bCurrentEraYear)
-												sDateFormat = (sDateFormat.indexOf("[$-411]") != -1) ? sDateFormat.replace("/", "") : sDateFormat;
 										}
 										var sTimeFormat = 'h:mm:ss';
 										if (cultureInfo.AMDesignator.length > 0 && cultureInfo.PMDesignator.length > 0){
@@ -11704,7 +11702,7 @@
 										else
 											oNumFormat = oNumFormatCache.get(sDateFormat);
 
-										var aFormatedValue = oNumFormat.format(nValue, CellValueType.Number, AscCommon.gc_nMaxDigCount, undefined, undefined, true, undefined, bCurrentEraYear);
+										var aFormatedValue = oNumFormat.format(nValue, CellValueType.Number, AscCommon.gc_nMaxDigCount, undefined, undefined, true);
 										oValueText = "";
 										for(var i = 0, length = aFormatedValue.length; i < length; ++i)
 											oValueText += aFormatedValue[i].text;
