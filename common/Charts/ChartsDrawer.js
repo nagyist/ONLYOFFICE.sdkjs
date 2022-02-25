@@ -5595,7 +5595,7 @@ CChartsDrawer.prototype =
 		var duplicateBrush = brush.createDuplicate();
 		var angle = this._getDegreeFromLinAngle(brush);
 
-		if (angle >= 0 && angle < 90) {
+		if (angle >= 0 && angle < 45) {
 			var colors = duplicateBrush.fill.colors;
 			var newColors = [];
 			var j = 0;
@@ -5625,14 +5625,17 @@ CChartsDrawer.prototype =
 	},
 
 	_getColors: function (colors, val, angleSector) {
+		var color1 = colors[0].color;
+		var color2 = colors[colors.length - 1].color;
 		var valAxOrientation = this.cChartSpace.chart.plotArea.valAx.scaling.orientation;
 		var chartType = this.calcProp.type;
 
-		var color1 = colors[0].color;
-		var color2 = colors[colors.length - 1].color;
-
 		var inverse = (val > 0 && valAxOrientation !== ORIENTATION_MIN_MAX) || (val < 0 && valAxOrientation === ORIENTATION_MIN_MAX);
 		var chartCondition = ((angleSector === 3) && chartType !== c_oChartTypes.HBar) || ((angleSector === 0) && chartType === c_oChartTypes.HBar);
+
+		if (chartType === c_oChartTypes.Area) {
+			inverse = !inverse;
+		}
 
 		if (inverse && chartCondition) {
 			color1 = colors[colors.length - 1].color;
@@ -6465,35 +6468,6 @@ drawBarChart.prototype = {
 			}
 		}
 
-	},
-
-	_getOptionsForDrawing: function (ser, point, onlyLessNull) {
-		var seria = this.chart.series[ser];
-		var numCache = this.cChartDrawer.getNumCache(seria.val);
-		if (!numCache) {
-			return null;
-		}
-
-		var pt = numCache.getPtByIndex(point);
-		if (!seria || !this.paths.series[ser] || !this.paths.series[ser][point] || !pt) {
-			return null;
-		}
-
-		var brush = seria.brush;
-		var pen = seria.pen;
-
-		if ((pt.val > 0 && onlyLessNull === true) || (pt.val < 0 && onlyLessNull === false)) {
-			return null;
-		}
-
-		if (pt.pen) {
-			pen = pt.pen;
-		}
-		if (pt.brush) {
-			brush = pt.brush;
-		}
-
-		return {pen: pen, brush: brush, val: pt.val}
 	},
 
 	_drawBar3D: function (path, pen, brush, k, val, seria) {
@@ -8593,7 +8567,7 @@ drawAreaChart.prototype = {
 			}
 
 			if (numCache && numCache.pts[0].val) {
-				val = numCache.pts[0].brush;
+				val = numCache.pts[0].val;
 			}
 
 			this._drawBar3D(this.paths.series[j][1], pen, brush, 1, val);
