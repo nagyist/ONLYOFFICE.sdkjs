@@ -745,11 +745,27 @@
         if(oAttribute.fill === NODE_FILL_HOLD || oAttribute.fill === NODE_FILL_FREEZE) {
             return function () {
                 oThis.freezeCallback(oPlayer);
+                oThis.checkTriggerStartOnEnd(oPlayer);
             }
         }
         return function () {
             oThis.finishCallback(oPlayer);
+            oThis.checkTriggerStartOnEnd(oPlayer);
         };
+    };
+    CTimeNodeBase.prototype.checkTriggerStartOnEnd = function(oPlayer) {
+        var oThis = this;
+        if(oThis.getSpClickInteractiveSeq()) {
+            var nElapsed = oPlayer.getElapsedTicks();
+            oPlayer.scheduleEvent(new CAnimEvent(function() {
+                    oThis.scheduleStart(oPlayer);
+                },
+                new CAnimComplexTrigger(function () {
+                    return oPlayer.getElapsedTicks() > nElapsed;
+                }),
+                oThis
+            ));
+        }
     };
     CTimeNodeBase.prototype.activateChildrenCallback = function(oPlayer) {
     };
@@ -1164,6 +1180,14 @@
         var oObject = this.getTargetObject();
         if(!oObject) {
             return null;
+        }
+        if(!oObject.brush || !oObject.brush.isNoFill()) {
+            var oBrush = AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(255, 255, 255));
+            oBrush.fill.color.RGBA.R = 255;
+            oBrush.fill.color.RGBA.G = 255;
+            oBrush.fill.color.RGBA.B = 255;
+            oBrush.fill.color.RGBA.A = 255;
+            return oBrush;
         }
         return oObject.brush;
     };
@@ -1814,6 +1838,20 @@
         }
         return oMainSeq.isAtEnd();
     };
+    CTiming.prototype.isSpClickTrigger = function(oSp) {
+        var oRoot = this.getTimingRootNode();
+        if(!oRoot) {
+            return true;
+        }
+        var aRootChildren = oRoot.getChildrenTimeNodes();
+        var sSpId = oSp.Get_Id();
+        for(var nChild = 0; nChild < aRootChildren.length; ++nChild) {
+            if(aRootChildren[nChild].isInteractiveSeq(sSpId)) {
+                return true;
+            }
+        }
+        return false;
+    };
     CTiming.prototype.staticCreateNoneEffect = function() {
         return AscFormat.ExecuteNoHistory(function() {
             return CTiming.prototype.createPar(NODE_FILL_HOLD, "indefinite")
@@ -1990,6 +2028,11 @@
                 return this.addAnimationToSelectedObjects(nPresetClass, nPresetId, nPresetSubtype);
             }
             else {
+				var aSelectedObjects = this.parent.graphicObjects.selectedObjects;
+				if(aSelectedObjects.length > 0) {
+					this.removeSelectedEffects();
+					return this.addAnimationToSelectedObjects(nPresetClass, nPresetId, nPresetSubtype);
+				}
                 var aSeqs = this.getEffectsSequences();
                 var aSeq;
                 var bNeedRebuild = false;
@@ -2525,13 +2568,21 @@
         }
     };
     CTiming.prototype.getEffectsForDemo = function() {
-        var aEffectsForDemo;
+        var aEffectsForDemo, aCurEffects;
         var aSelectedEffects = this.getSelectedEffects();
         if(aSelectedEffects.length > 0) {
-            aEffectsForDemo = aSelectedEffects;
+            aCurEffects = aSelectedEffects;
         }
         else {
-            aEffectsForDemo = this.getAllAnimEffects();
+            aCurEffects = this.getAllAnimEffects();
+        }
+
+        aEffectsForDemo = [];
+        for(var nEffect = 0; nEffect < aCurEffects.length; ++nEffect) {
+            var oEffect = aCurEffects[nEffect];
+            if(oEffect.isPartOfMainSequence()) {
+                aEffectsForDemo.push(oEffect);
+            }
         }
         if(aEffectsForDemo.length === 0) {
             return null;
@@ -2569,6 +2620,9 @@
                 var nDur = oCopyEffect.asc_getDuration();
                 if(nDur === AscFormat.untilNextSlide || nDur === AscFormat.untilNextClick) {
                     oCopyEffect.cTn.changeEffectDuration(1000);
+                }
+                if(AscFormat.isRealNumber(nDur) && nDur < 50) {
+                    oCopyEffect.cTn.changeEffectDuration(750);
                 }
 
                 oCopyEffect.originalNode = null;
@@ -6048,13 +6102,15 @@
     changesFactory[AscDFH.historyitem_AnimClrByRGB] = CChangeObjectNoId;
     changesFactory[AscDFH.historyitem_AnimClrByHSL] = CChangeObjectNoId;
     changesFactory[AscDFH.historyitem_AnimClrCBhvr] = CChangeObject;
-    changesFactory[AscDFH.historyitem_AnimClrFrom] = CChangeObject;
-    changesFactory[AscDFH.historyitem_AnimClrTo] = CChangeObject;
+    changesFactory[AscDFH.historyitem_AnimClrFrom] = CChangeObjectNoId;
+    changesFactory[AscDFH.historyitem_AnimClrTo] = CChangeObjectNoId;
     changesFactory[AscDFH.historyitem_AnimClrClrSpc] = CChangeLong;
     changesFactory[AscDFH.historyitem_AnimClrDir] = CChangeLong;
 
     drawingConstructorsMap[AscDFH.historyitem_AnimClrByRGB] = CColorPercentage;
     drawingConstructorsMap[AscDFH.historyitem_AnimClrByHSL] = CColorPercentage;
+    drawingConstructorsMap[AscDFH.historyitem_AnimClrFrom] = AscFormat.CUniColor;
+    drawingConstructorsMap[AscDFH.historyitem_AnimClrTo] = AscFormat.CUniColor;
 
     drawingsChangesMap[AscDFH.historyitem_AnimClrByRGB] = function(oClass, value) {oClass.byRGB = value;};
     drawingsChangesMap[AscDFH.historyitem_AnimClrByHSL] = function(oClass, value) {oClass.byHSL = value;};
@@ -6119,12 +6175,12 @@
         this.setParentToChild(pr);
     };
     CAnimClr.prototype.setFrom = function(pr) {
-        oHistory.Add(new CChangeObject(this, AscDFH.historyitem_AnimClrFrom, this.from, pr));
+        oHistory.Add(new CChangeObjectNoId(this, AscDFH.historyitem_AnimClrFrom, this.from, pr));
         this.from = pr;
         this.setParentToChild(pr);
     };
     CAnimClr.prototype.setTo = function(pr) {
-        oHistory.Add(new CChangeObject(this, AscDFH.historyitem_AnimClrTo, this.to, pr));
+        oHistory.Add(new CChangeObjectNoId(this, AscDFH.historyitem_AnimClrTo, this.to, pr));
         this.to = pr;
         this.setParentToChild(pr);
     };
@@ -6265,7 +6321,7 @@
             var oBrush;
             if(sFirstAttrName === "stroke.color") {
                 var oPen = this.getTargetObjectPen();
-                oBrush = oPen && oPen.Fill;
+                oBrush = oPen && oPen.Fill || AscFormat.CreateUnfilFromRGB(0, 0, 0);
             }
             else {
                 oBrush = this.getTargetObjectBrush();
@@ -7808,6 +7864,10 @@
             dW = oRect.w;
             dH = oRect.h;
             
+			if (oGraphics.IsSlideBoundsCheckerType) {
+                oGraphics.rect(dX, dY, dW, dH);
+                return;
+			}
             var oContext = oGraphics.m_oContext;
             if(!oContext) {
                 return;
@@ -8237,6 +8297,8 @@
     CTimeNodeContainer.prototype.asc_putTriggerClickSequence = function(v) {
         this.triggerClickSequence = v;
     };
+    CTimeNodeContainer.prototype["asc_putTriggerClickSequence"] = CTimeNodeContainer.prototype.asc_putTriggerClickSequence;
+
     CTimeNodeContainer.prototype.asc_getTriggerObjectClick = function() {
         if(this.triggerObjectClick !== undefined) {
             return this.triggerObjectClick;
@@ -9975,10 +10037,14 @@
         return oTexture;
     };
     CAnimTexture.prototype.createRandomBarsVertical = function(fTime, nTransition) {
-        var aFilledRanges = this.getRandomRanges(fTime);
-        if(aFilledRanges.length === 0) {
-            return this;
+		var fResTime;
+        if(nTransition === TRANSITION_TYPE_IN) {
+            fResTime = 1 - fTime;
         }
+        else {
+            fResTime = fTime;
+        }
+        var aFilledRanges = this.getRandomRanges(fResTime);
         var oTexture = this.createCopy();
         var oCanvas = oTexture.canvas;
         var oCtx = oCanvas.getContext('2d');
@@ -10718,6 +10784,14 @@
         }
         return this.addExternalEvent(new CExternalEvent(this.eventsProcessor, COND_EVNT_ON_NEXT, null));
     };
+    CAnimationPlayer.prototype.isSpClickTrigger = function(oSp) {
+        for(var nTiming = 0; nTiming < this.timings.length; ++nTiming) {
+            if(this.timings[nTiming].isSpClickTrigger(oSp)) {
+                return true;
+            }
+        }
+        return false;
+    };
     CAnimationPlayer.prototype.onSpDblClick = function(oSp) {
         if(!oSp) {
             return false;
@@ -10787,8 +10861,13 @@
         this.overlay = editor.WordControl.m_oOverlayApi;
     };
     CDemoAnimPlayer.prototype.onMainSeqFinished = function () {
-        this.stop();
-        editor.WordControl.m_oLogicDocument.StopAnimationPreview();
+        var oThis = this;
+        setTimeout(function () {
+            if(!oThis.isStopped()) {
+                oThis.stop();
+                editor.WordControl.m_oLogicDocument.StopAnimationPreview();
+            }
+        }, 1000);
     };
     
     CDemoAnimPlayer.prototype.start = function () {
@@ -11125,8 +11204,9 @@
             }
             else {
                 if(oStrokeColor) {
+                    var oPen;
                     if(oDrawing.pen) {
-                        var oPen = oDrawing.pen.createDuplicate();
+                        oPen = oDrawing.pen.createDuplicate();
                         var oMods;
                         if(oPen.Fill &&
                             oPen.Fill.fill &&
@@ -11136,9 +11216,12 @@
                             oMods = oPen.Fill.fill.color.Mods;
                             oMods.Apply(oStrokeColor.RGBA);
                         }
-                        oPen.Fill = AscFormat.CreateUniFillByUniColor(oStrokeColor);
-                        oDrawing.pen = oPen;
                     }
+                    else {
+                        oPen = AscFormat.CreateNoFillLine();
+                    }
+                    oPen.Fill = AscFormat.CreateUniFillByUniColor(oStrokeColor);
+                    oDrawing.pen = oPen;
                 }
             }
             oTexture = oTextureCache.createDrawingTexture(sId, fScale);
@@ -11527,7 +11610,7 @@
     var CONST_REGEXPSTR = "(pi\|e)";
     var CONST_REGEXP = new RegExp(CONST_REGEXPSTR, "g");
 
-    var NUMBER_REGEXPSTR = "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?";
+    var NUMBER_REGEXPSTR = "[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?";
     var NUMBER_REGEXP = new RegExp(NUMBER_REGEXPSTR, "g");
 
 
@@ -11627,7 +11710,7 @@
                     }
                     oLastFunction = aFunctionsStack[aFunctionsStack.length-1];
                     oLastFunction.addOperand(this.queue.last());
-                    if(oLastFunction.addOperand(this.queue.last()) >= oLastFunction.getArgumentsCount()){
+                    if(oLastFunction.getOperandsCount() >= oLastFunction.getArgumentsCount()){
                         return null;
                     }
                 }

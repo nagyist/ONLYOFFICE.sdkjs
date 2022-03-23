@@ -2094,6 +2094,9 @@
 
 		this.lastFindOptions = null;
 		this.lastFindCells = {};
+		this.oleSize = null;
+		// var range  = new Asc.Range(5, 5, 10, 10);
+		// this.oleSize = range;
 
 		//при копировании листа с одного wb на другой необходимо менять в стеке
 		// формул лист и книгу(на которые ссылаемся) - например у элементов cStrucTable
@@ -2150,12 +2153,21 @@
 			this.snapshot = this._getSnapshot();
 		}
 	};
+	Workbook.prototype.getOleSize = function () {
+		return this.oleSize;
+	}
+	Workbook.prototype.setOleSize = function (oPr) {
+		this.oleSize = oPr;
+	}
 	Workbook.prototype.initPostOpenZip=function(pivotCaches){
 		var t = this;
 		this.forEach(function (ws) {
 			ws.initPostOpenZip(pivotCaches, t.oNumFmtsOpen);
 		});
 	};
+	Workbook.prototype.isChartOleObject = function () {
+		return this.aWorksheets.length === 2;
+	}
 	Workbook.prototype.setCommonIndexObjectsFrom = function(wb) {
 		this.oStyleManager = wb.oStyleManager;
 		this.sharedStrings = wb.sharedStrings;
@@ -8309,6 +8321,10 @@
 			}
 		}
 	};
+	Worksheet.prototype.inTopAutoFilter = function (range) {
+		var _filterRange = this.AutoFilter && this.AutoFilter.Ref && new Asc.Range(this.AutoFilter.Ref.c1, this.AutoFilter.Ref.r1, this.AutoFilter.Ref.c2, this.AutoFilter.Ref.r1);
+		return _filterRange && range.intersection(_filterRange);
+	};
 	Worksheet.prototype.inPivotTable = function (range, exceptPivot) {
 		return this.pivotTables.find(function (element) {
 			return exceptPivot !== element && element.intersection(range);
@@ -8624,6 +8640,9 @@
 		}]);
 		if (isWholeWordTrue !== null) {
 			options.isWholeWord = isWholeWordTrue;
+		}
+		if (findEmptyStr) {
+			options.findWhat = "";
 		}
 		this.lastFindOptions = options.clone();
 		// ToDo support multiselect
@@ -11692,7 +11711,8 @@
 											sDateFormat = AscCommon.getShortDateFormat(cultureInfo, bCurrentEraYear);
 										}
 										var sTimeFormat = 'h:mm:ss';
-										if (cultureInfo.AMDesignator.length > 0 && cultureInfo.PMDesignator.length > 0){
+
+										if (AscCommon.is12HourTimeFormat(cultureInfo)){
 											sTimeFormat += ' AM/PM';
 										}
 										if(bDate && bTime)

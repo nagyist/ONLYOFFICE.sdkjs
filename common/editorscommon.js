@@ -2043,6 +2043,8 @@
 			tempLink.style.display = 'none';
 			tempLink.href = blobURL;
 			tempLink.setAttribute('download', filename);
+			//to prevent click hook in web-apps/vendor/framework7-react/node_modules/framework7/esm/modules/clicks/clicks.js
+			tempLink.classList.add("external");
 
 			// Safari thinks _blank anchor are pop ups. We only want to set _blank
 			// target if the browser does not support the HTML5 download attribute.
@@ -2061,6 +2063,19 @@
 				(window.URL || window.webkitURL).revokeObjectURL(blobURL);
 			}, 200)
 		}
+	}
+
+	function getImageFileFromDataURL(dataUrl) {
+		var arr = dataUrl.split(',');
+		var mime = arr[0].match(/:(.*?);/)[1];
+		var u8arr = AscCommon.Base64.decode(arr[1]);
+		return new File([u8arr], '1.' + mime.split('/')[1], {type:mime});
+	}
+
+	function uploadDataUrlAsFile(dataUrl, obj, callback) {
+		var file = getImageFileFromDataURL(dataUrl);
+		var nError = ValidateUploadImage([file]);
+		callback(nError, [file], obj);
 	}
 
 	function UploadImageFiles(files, documentId, documentUserId, jwt, callback)
@@ -3977,7 +3992,6 @@
 	/**
 	 * Конвертируем нумерацию {a b ... z aa bb ... zz aaa bbb ... zzz ...} в число
 	 * @param sLetters
-	 * @constructor
 	 */
 	function LatinNumberingToInt(sLetters)
 	{
@@ -8893,6 +8907,42 @@
 				|| 0x2610 === nUnicode));
 	}
 
+	function ExecuteNoHistory(f, oLogicDocument, oThis, args)
+	{
+		// TODO: Надо перевести все редакторы на StartNoHistoryMode/EndNoHistoryMode
+
+		let oState = null, isTableId = false;
+		if (oLogicDocument && oLogicDocument.IsDocumentEditor && oLogicDocument.IsDocumentEditor())
+		{
+			oState = oLogicDocument.StartNoHistoryMode();
+		}
+		else
+		{
+			AscCommon.History.TurnOff && AscCommon.History.TurnOff();
+
+			if (AscCommon.g_oTableId && !AscCommon.g_oTableId.IsOn())
+			{
+				AscCommon.g_oTableId.TurnOff();
+				isTableId = true;
+			}
+		}
+
+		let result = f.apply(oThis, args);
+
+		if (oLogicDocument && oLogicDocument.IsDocumentEditor && oLogicDocument.IsDocumentEditor())
+		{
+			oLogicDocument.EndNoHistoryMode(oState);
+		}
+		else
+		{
+			AscCommon.History.TurnOn && AscCommon.History.TurnOn();
+			if (isTableId)
+				AscCommon.g_oTableId.TurnOn();
+		}
+
+		return result;
+	}
+
 	function private_IsAbbreviation(sWord) {
 		if (sWord.toUpperCase() === sWord) {
 			// Корейские символы считаются символами в верхнем регистре, но при этом мы не должны считать их аббревиатурой
@@ -11200,6 +11250,11 @@
 			}
 			//todo quotes
 			if (textQualifier) {
+				if (!row.length) {
+					matrix.push(row.split(delimiterChar));
+					continue;
+				}
+
 				var _text = "";
 				var startQualifier = false;
 				for (var j = 0; j < row.length; j++) {
@@ -11766,6 +11821,7 @@
 	window["AscCommon"].UploadImageFiles = UploadImageFiles;
     window["AscCommon"].UploadImageUrls = UploadImageUrls;
 	window["AscCommon"].DownloadOriginalFile = DownloadOriginalFile;
+	window["AscCommon"].uploadDataUrlAsFile = uploadDataUrlAsFile;
 	window["AscCommon"].DownloadFileFromBytes = DownloadFileFromBytes;
 	window["AscCommon"].CanDropFiles = CanDropFiles;
 	window["AscCommon"].getUrlType = getUrlType;
@@ -11798,6 +11854,7 @@
 	window["AscCommon"].IsLetter = IsLetter;
 	window["AscCommon"].CorrectFontSize = CorrectFontSize;
 	window["AscCommon"].IsAscFontSupport = IsAscFontSupport;
+	window["AscCommon"].ExecuteNoHistory = ExecuteNoHistory;
 
 	window["AscCommon"].loadSdk = loadSdk;
     window["AscCommon"].loadScript = loadScript;

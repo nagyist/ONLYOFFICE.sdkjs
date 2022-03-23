@@ -79,7 +79,7 @@ function CEditorPage(api)
 	// ------------------------------------------------------------------
 	this.Name           = "";
 	this.IsSupportNotes = true;
-	this.IsSupportAnimPane = true;
+	this.IsSupportAnimPane = false;
 
 	this.EditorType = "presentations";
 
@@ -2369,9 +2369,11 @@ function CEditorPage(api)
 
 		if (oWordControl.m_oDrawingDocument.InlineTextTrackEnabled)
 		{
-			var pos2 = oWordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(pos.X, pos.Y, pos.Page, undefined, true);
-			if (pos2.Y > oWordControl.m_oNotesContainer.AbsolutePosition.T * g_dKoef_mm_to_pix)
-				return;
+			if (oWordControl.m_oLogicDocument.IsFocusOnNotes()) {
+				var pos2 = oWordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(pos.X, pos.Y, pos.Page, undefined, true);
+				if (pos2.Y > oWordControl.m_oNotesContainer.AbsolutePosition.T * g_dKoef_mm_to_pix)
+					return;
+			}
 		}
 
 		oWordControl.StartUpdateOverlay();
@@ -2461,9 +2463,11 @@ function CEditorPage(api)
 
 		if (oWordControl.m_oDrawingDocument.InlineTextTrackEnabled)
 		{
-			var pos2 = oWordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(pos.X, pos.Y, pos.Page, undefined, true);
-			if (pos2.Y > oWordControl.m_oNotesContainer.AbsolutePosition.T * g_dKoef_mm_to_pix)
-				return;
+			if (oWordControl.m_oLogicDocument.IsFocusOnNotes()) {
+				var pos2 = oWordControl.m_oDrawingDocument.ConvertCoordsToCursorWR(pos.X, pos.Y, pos.Page, undefined, true);
+				if (pos2.Y > oWordControl.m_oNotesContainer.AbsolutePosition.T * g_dKoef_mm_to_pix)
+					return;
+			}
 		}
 
 		oWordControl.StartUpdateOverlay();
@@ -3897,7 +3901,7 @@ function CEditorPage(api)
 			_c.m_nCurrentTimeClearCache = 0;
 			_c.m_oDrawingDocument.CheckFontCache();
 		}
-        oThis.m_oLogicDocument.ContinueCheckSpelling();
+        oThis.m_oLogicDocument.ContinueSpellCheck();
 	};
 	this.OnScroll       = function()
 	{
@@ -4182,7 +4186,10 @@ function CEditorPage(api)
 		}
 
 		oWordControl.m_oDrawingDocument.Collaborative_TargetsUpdate(isRepaint);
-
+		if (oThis.DemonstrationManager.Mode && !oThis.m_oApi.isReporterMode)
+		{
+			oThis.DemonstrationManager.CheckHideCursor();
+		}
 		oWordControl.m_nPaintTimerId = setTimeout(oWordControl.onTimerScroll, oWordControl.m_nTimerScrollInterval);
 		//window.requestAnimationFrame(oWordControl.onTimerScroll);
 	};
