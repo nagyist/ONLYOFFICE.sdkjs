@@ -4255,8 +4255,8 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00:F:00" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
 
         testArrayFormula2(assert, "TEXT", 2, 2);
 
@@ -4360,8 +4360,8 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "02 00" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4412,8 +4412,43 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "keskiviikko 2. toukokuuta 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23.26.37" );
+
+		AscCommon.setCurrentCultureInfo(culturelciddefault);
+		AscCommon.setCurrentCultureInfo(11); 
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年k月p日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4452,8 +4487,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "woensdag 2 mei 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4488,8 +4555,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "miércoles, 2 de mayo de 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4580,13 +4679,45 @@ $( function () {
         assert.ok( oParser.parse() );
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
-         oParser = new parserFormula( "TEXT(123,\"ММ мм\")", "A2", ws );
-         assert.ok( oParser.parse() );
-         assert.strictEqual( oParser.calculate().getValue(), "05 00" );
+		oParser = new parserFormula( "TEXT(123,\"ММ мм\")", "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "05 00" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "2 мая 1900 г." );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年М月Д日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4625,8 +4756,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "mercredi 2 mai 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月j日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4673,8 +4836,41 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "0 2" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "Mittwoch, 2. Mai 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年M月t日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4717,8 +4913,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "mercoledì 2 maggio 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxxe年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxxee年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxe年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxee年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xe年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xee年m月g日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4765,8 +4993,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "den 2 maj 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年M月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________ch________________________________________________
@@ -4784,8 +5044,43 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "02 00" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		AscCommon.setCurrentCultureInfo(culturelciddefault);
+		AscCommon.setCurrentCultureInfo(2052);
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "1900年5月2日" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________el________________________________________________
@@ -4827,8 +5122,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 02" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "Τετάρτη, 2 Μαΐου 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年μ月η日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
 
@@ -4863,8 +5190,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "123 123 123" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "1900. május 2., szerda" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年h月n日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________tr________________________________________________
@@ -4898,8 +5257,17 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "123.123.123" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "2 Mayıs 1900 Çarşamba" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________pl________________________________________________
@@ -4925,8 +5293,16 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "123 123 123" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "środa, 2 maja 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________cs________________________________________________
@@ -4964,8 +5340,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "00 qq" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "středa 2. května 1900" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         AscCommon.setCurrentCultureInfo(culturelciddefault);
         //_____________________________ja________________________________________________
@@ -4983,8 +5391,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "123,123,123" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "1900年5月2日" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 
         //_____________________________ko________________________________________________
         AscCommon.setCurrentCultureInfo(1042);
@@ -5001,8 +5441,40 @@ $( function () {
         assert.strictEqual( oParser.calculate().getValue(), "123,123,123" );
 
 		oParser = new parserFormula( "TEXT(123,\"[$-411]e\")", "A2", ws );
-		ok( oParser.parse() );
-        strictEqual( oParser.calculate().getValue(), "33" );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "33" );
+
+		oParser = new parserFormula( "TEXT(123,\"[$-x-sysdate]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "1900년 5월 2일 수요일" );
+
+		oParser = new parserFormula( "TEXT(0.97681712962963,\"[$-x-systime]\")", "A2", ws );
+		assert.ok( oParser.parse() );
+        assert.strictEqual( oParser.calculate().getValue(), "오후 23:26:37" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
+
+		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
 		
         AscCommon.setCurrentCultureInfo(culturelciddefault);
     } );
@@ -15136,4718 +15608,32 @@ $( function () {
 		testArrayFormula2(assert, "ADDRESS", 2, 5);
 	} );
 
-	test( "Test: \"Gannen Calendar\"", function () {
-
-		oParser = new parserFormula( 'TEXT(4358.9,"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治44年12月6日" );
-
-		oParser = new parserFormula( 'TEXT(4358.1,"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治44年12月6日" );
-
-		oParser = new parserFormula( 'TEXT(5684.168,"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正4年7月24日" );
-
-		oParser = new parserFormula( 'TEXT(19648.005,"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和28年10月16日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge.yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33.33.1.1" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge.m.d.yyyy;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33.1.1.33" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"ge.yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.1900.1.1" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.1.1" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]yyyy.ge.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.M33.1.1" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-
-	} );
-
-	test( "Test: \"Letter's locales\"", function () {
+	QUnit.test( "Test: \"Letter's locales\"", function (assert) {
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-ja-JP]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-ja-JP,80]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,05,02),"[$-ja-JP]yyyy.ge.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.M33.5.2" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "1900.M33.5.2" );
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,05,02),"[$-ja-JP]ge.yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33.33.5.2" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "M33.33.5.2" );
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,05,02),"[$-ru-RU]ge.yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.1900.5.2" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "1900.1900.5.2" );
 
 		oParser = new parserFormula( 'TEXT(DATE(1900,05,02),"[$-ru-RU]ge.yyyy.m.d;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "1900.1900.5.2" );
+		assert.ok( oParser.parse() );
+		assert.strictEqual( oParser.calculate().getValue(), "1900.1900.5.2" );
 
-	} );
-	test( "Test: \"Gannen calendar Locales FI\"", function () {
-
-		AscCommon.setCurrentCultureInfo(11); 
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年k月p日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-
-	} );
-
-	test( "Test: \"Gannen calendar Locales ES\"", function () {
-		AscCommon.setCurrentCultureInfo(10); 
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales RU\"", function () {
-		AscCommon.setCurrentCultureInfo(25);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年М月Д日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales FR\"", function () {
-		AscCommon.setCurrentCultureInfo(12);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月j日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales DE\"", function () {
-		AscCommon.setCurrentCultureInfo(7);
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年M月T日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales IT\"", function () {
-		AscCommon.setCurrentCultureInfo(16);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xxxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xxxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xxe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xxee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xe年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]xee年m月g日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales EL\"", function () {
-		AscCommon.setCurrentCultureInfo(8);
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年μ月η日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales HU\"", function () {
-		AscCommon.setCurrentCultureInfo(14);
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年h月n日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales CS\"", function () {
-		AscCommon.setCurrentCultureInfo(5);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales JA\"", function () {
-		AscCommon.setCurrentCultureInfo(17);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
-	} );
-
-	test( "Test: \"Gannen calendar Locales KO\"", function () {
-		AscCommon.setCurrentCultureInfo(18);
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1900,01,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M33年1月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,28),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月28日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明治45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "明45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "M45年7月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T1年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1912,07,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T01年7月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,23),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月23日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大正15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "大15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,24),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "T15年12月24日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,25),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月25日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S1年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1926,12,26),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S01年12月26日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,06),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月6日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭和64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "昭64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,07),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "S64年1月7日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,08),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月8日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H1年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(1989,01,09),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H01年1月9日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,29),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月29日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平成31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "平31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,04,30),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "H31年4月30日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,01),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月1日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令和01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令1年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ggee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "令01年5月2日" );
-
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]ge年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R1年5月2日" );
-		
-		oParser = new parserFormula( 'TEXT(DATE(2019,05,02),"[$-411]gee年m月d日;@")', "A2", ws );
-		ok( oParser.parse() );
-		strictEqual( oParser.calculate().getValue(), "R01年5月2日" );
 	} );
 
 	QUnit.test("Test: \"reference argument test\"", function (assert) {
