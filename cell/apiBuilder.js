@@ -798,6 +798,7 @@
 	ApiWorksheet.prototype.GetCells = function (row, col) {
 		if (row) row--;
 		if (typeof col !== "undefined" && typeof row !== "undefined") {
+			if (col) col--;
 			return new ApiRange(this.worksheet.getRange3(row, col, row, col));
 		} else if (typeof row !== "undefined") {
 			var r = (row) ?  (row / AscCommon.gc_nMaxCol0) >> 0 : row;
@@ -2721,7 +2722,9 @@
 			return null;
 		}
 		var ws = this.range.worksheet.workbook.oApi.wb.getWorksheet(this.range.worksheet.getIndex());
-		return new ApiComment(ws.cellCommentator.getComment(this.range.bbox.c1, this.range.bbox.r1, false), ws);
+		var comment = ws.cellCommentator.getComment(this.range.bbox.c1, this.range.bbox.r1, false);
+		var res = comment ? new ApiComment(comment, ws) : null;
+		return res;
 	};
 	Object.defineProperty(ApiRange.prototype, "Comments", {
 		get: function () {

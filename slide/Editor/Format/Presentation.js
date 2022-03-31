@@ -3795,7 +3795,9 @@ CPresentation.prototype.TurnOffSpellCheck = function () {
 CPresentation.prototype.TurnOnSpellCheck = function () {
     this.Spelling.TurnOn();
 };
-
+CPresentation.prototype.GetSpellCheckManager = function() {
+	return this.Spelling;
+};
 
 CPresentation.prototype.Get_DrawingDocument = function () {
     return this.DrawingDocument;
@@ -7153,6 +7155,7 @@ CPresentation.prototype.OnEndTextDrag = function (NearPos, bCopy) {
             if (oParagraph) {
                 if (oParagraph.Parent && oParagraph.Parent.Parent && oParagraph.Parent.Parent.parent) {
                     var oObjectTo = oParagraph.Parent.Parent.parent;
+                    var initialObjectTo = oObjectTo;
                     while (oObjectTo.group) {
                         oObjectTo = oObjectTo.group;
                     }
@@ -7176,14 +7179,16 @@ CPresentation.prototype.OnEndTextDrag = function (NearPos, bCopy) {
 
                             NearPos.Paragraph.Check_NearestPos(NearPos);
                             if (!bCopy) {
-                                var bNoCheck = oObjectFrom.getObjectType() !== AscDFH.historyitem_type_SmartArt;
-                                oController.removeCallback(-1, undefined, undefined, undefined, undefined, bNoCheck);
+                                oController.removeCallback(-1, undefined, undefined, undefined, undefined, true);
                             }
                             oController.resetSelection(false, false);
                             oSelectedContent = oSelectedContent.copy();
                             oParagraph.Parent.InsertContent(oSelectedContent.DocContent, NearPos);
                             oController.onMouseUp(AscCommon.global_mouseEvent, AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
                             NearPos.Paragraph.Document_SetThisElementCurrent(false);
+                            if (initialObjectTo.isObjectInSmartArt()) {
+                                initialObjectTo.checkExtentsByDocContent();
+                            }
                             this.Recalculate();
                             this.Document_UpdateSelectionState();
                             this.Document_UpdateUndoRedoState();
@@ -11000,9 +11005,13 @@ CPresentation.prototype.StartAnimationPreview = function() {
     if(!oPlayer) {
         return false;
     }
+    var bOldLblFlag = this.Api.bIsShowAnimTab;
+    this.Api.bIsShowAnimTab = false;
+    this.DrawingDocument.OnRecalculatePage(this.CurPage, this.Slides[this.CurPage]);
+    this.Api.bIsShowAnimTab = bOldLblFlag;
     this.previewPlayer = oPlayer;
     oPlayer.start();
-    this.DrawingDocument.TargetEnd()
+    this.DrawingDocument.TargetEnd();
     return true;
 };
 CPresentation.prototype.StopAnimationPreview = function() {
@@ -11014,6 +11023,14 @@ CPresentation.prototype.StopAnimationPreview = function() {
         this.previewPlayer = null;
         this.UpdateSelection();
         return true;
+    }
+    return false;
+};
+CPresentation.prototype.IsStartedPreview = function() {
+    if(this.previewPlayer) {
+        if(this.previewPlayer.isStarted()) {
+            return true;
+        }
     }
     return false;
 };

@@ -443,7 +443,7 @@ CSelectedContent.prototype =
         this.MoveDrawing = Value;
     },
 
-    On_EndCollectElements : function(LogicDocument)
+    On_EndCollectElements : function(LogicDocument, isFromCopy)
     {
     	// TODO: Данную функцию нужно разделить на 2. Первая будет обрабатывать элементы после сборки
 		//       и собирать различные списки. Вторая нужна перед непосредственной вставкой, она должна
@@ -505,7 +505,7 @@ CSelectedContent.prototype =
             }
         }
 
-        this.CheckComments(LogicDocument);
+        this.CheckComments(LogicDocument, isFromCopy);
 		this.CheckDocPartNames(LogicDocument);
 
         // Ставим метки переноса в начало и конец
@@ -866,7 +866,7 @@ CSelectedContent.prototype.CheckDocPartNames = function(oLogicDocument)
 		}
 	}
 };
-CSelectedContent.prototype.CheckComments = function(oLogicDocument)
+CSelectedContent.prototype.CheckComments = function(oLogicDocument, isFromCopy)
 {
 	if (!(oLogicDocument instanceof CDocument))
 		return;
@@ -915,7 +915,7 @@ CSelectedContent.prototype.CheckComments = function(oLogicDocument)
 
 	// Если история включена, то мы не можем быть уверены, что один и тот же комментарий не вставляется несколько раз,
 	// поэтому необходимо делать копию
-	if (oLogicDocument.GetHistory().IsOn())
+	if (!isFromCopy && oLogicDocument.GetHistory().IsOn())
 	{
 		var oCommentsManager = oLogicDocument.GetCommentsManager();
 		for (var sId in mCommentsMarks)
@@ -2328,8 +2328,11 @@ function CDocumentSettings()
 	this.TrackRevisions = false; // Флаг рецензирования, который записан в самом файле
 
 	// Compatibility
-	this.SplitPageBreakAndParaMark = false;
-	this.DoNotExpandShiftReturn    = false;
+	this.SplitPageBreakAndParaMark        = false;
+	this.DoNotExpandShiftReturn           = false;
+	this.BalanceSingleByteDoubleByteWidth = false;
+	this.UlTrailSpace                     = false;
+	this.UseFELayout                      = false;
 }
 
 /**
@@ -2734,9 +2737,7 @@ CDocument.prototype.On_EndLoad                     = function()
     // Проверяем последний параграф на наличие секции
     this.Check_SectionLastParagraph();
 
-    // Специальная проверка плохо заданных нумераций через стиль. Когда ссылка на нумерацию в стиле есть,
-    // а обратной ссылки в нумерации на стиль - нет.
-    this.Styles.Check_StyleNumberingOnLoad(this.Numbering);
+    this.Styles.OnEndDocumentLoad(this);
 
     // Обновляем массив позиций для комментариев
     this.Comments.UpdateAll();
@@ -13011,25 +13012,30 @@ CDocument.prototype.Document_UpdateInterfaceState = function(bSaveCurRevisionCha
 };
 CDocument.prototype.private_UpdateInterface = function(isSaveCurrentReviewChange, isExternalTrigger)
 {
-	if (!this.Api.isDocumentLoadComplete || true === AscCommon.g_oIdCounter.m_bLoad || true === AscCommon.g_oIdCounter.m_bRead)
+	let oApi = this.GetApi();
+	if (!oApi.isDocumentLoadComplete || true === AscCommon.g_oIdCounter.m_bLoad || true === AscCommon.g_oIdCounter.m_bRead)
 		return;
 
 	if (true === this.TurnOffInterfaceEvents)
 		return;
 
 	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+	{
+		let oThis = this;
+		oApi.checkLongActionCallback(function(){oThis.UpdateInterface();});
 		return;
+	}
 
 	// Удаляем весь список
-	this.Api.sync_BeginCatchSelectedElements();
+	oApi.sync_BeginCatchSelectedElements();
 
 	// Уберем из интерфейса записи о том где мы находимся (параграф, таблица, картинка или колонтитул)
-	this.Api.ClearPropObjCallback();
+	oApi.ClearPropObjCallback();
 
 	this.Controller.UpdateInterfaceState();
 
 	// Сообщаем, что список составлен
-	this.Api.sync_EndCatchSelectedElements(isExternalTrigger);
+	oApi.sync_EndCatchSelectedElements(isExternalTrigger);
 
 	this.UpdateSelectedReviewChanges(isSaveCurrentReviewChange);
 
@@ -17038,6 +17044,10 @@ CDocument.prototype.AddPageCount = function()
 //----------------------------------------------------------------------------------------------------------------------
 // Settings
 //----------------------------------------------------------------------------------------------------------------------
+CDocument.prototype.GetDocumentSettings = function()
+{
+	return this.Settings;
+};
 CDocument.prototype.GetCompatibilityMode = function()
 {
 	return this.Settings.CompatibilityMode;
@@ -17088,6 +17098,14 @@ CDocument.prototype.IsSplitPageBreakAndParaMark = function()
 CDocument.prototype.IsDoNotExpandShiftReturn = function()
 {
 	return this.Settings.DoNotExpandShiftReturn;
+};
+CDocument.prototype.IsBalanceSingleByteDoubleByteWidth = function()
+{
+	return (this.Settings.BalanceSingleByteDoubleByteWidth && (this.Styles.IsValidDefaultEastAsiaFont() || this.Settings.UseFELayout));
+};
+CDocument.prototype.IsUnderlineTrailSpace = function()
+{
+	return this.Settings.UlTrailSpace;
 };
 /**
  * Проверяем все ли параметры SdtSettings выставлены по умолчанию
@@ -20125,7 +20143,10 @@ CDocument.prototype.controller_MoveCursorLeft = function(AddToSelect, Word)
 					this.CurPos.ContentPos = this.Selection.EndPos;
 
 					var Item = this.Content[this.Selection.EndPos];
-					Item.MoveCursorLeftWithSelectionFromEnd(Word);
+					if (this.Selection.StartPos <= this.Selection.EndPos)
+						Item.MoveCursorLeft(true, Word);
+					else
+						Item.MoveCursorLeftWithSelectionFromEnd(Word);
 				}
 			}
 
@@ -20217,17 +20238,18 @@ CDocument.prototype.controller_MoveCursorRight = function(AddToSelect, Word)
 	{
 		if (true === AddToSelect)
 		{
-			// Добавляем к селекту
 			if (false === this.Content[this.Selection.EndPos].MoveCursorRight(true, Word))
 			{
-				// Нужно перейти в начало следующего элемента
-				if (this.Content.length - 1 != this.Selection.EndPos)
+				if (this.Content.length - 1 !== this.Selection.EndPos)
 				{
 					this.Selection.EndPos++;
 					this.CurPos.ContentPos = this.Selection.EndPos;
 
 					var Item = this.Content[this.Selection.EndPos];
-					Item.MoveCursorRightWithSelectionFromStart(Word);
+					if (this.Selection.StartPos >= this.Selection.EndPos)
+						Item.MoveCursorRight(true, Word);
+					else
+						Item.MoveCursorRightWithSelectionFromStart(Word);
 				}
 			}
 
@@ -27128,6 +27150,10 @@ CDocument.prototype.TurnOffSpellCheck = function()
 CDocument.prototype.TurnOnSpellCheck = function()
 {
 	this.Spelling.TurnOn();
+};
+CDocument.prototype.GetSpellCheckManager = function()
+{
+	return this.Spelling;
 };
 //----------------------------------------------------------------------------------------------------------------------
 CDocument.prototype.SetupBeforeNativePrint = function(layoutOptions, oGraphics)
