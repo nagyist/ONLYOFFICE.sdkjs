@@ -431,6 +431,7 @@
 	};
 
 	CellEditor.prototype.setTextStyle = function (prop, val, opt_ignoreFormula) {
+		//opt_ignoreFormula - подсвечиваем скобки при переходе курсора мыши. в историю ничего не пишем
 		if (this.isFormula() && !opt_ignoreFormula) {
 			return;
 		}
@@ -441,10 +442,12 @@
 			end = Math.max(t.selectionBegin, t.selectionEnd);
 
 			// save info to undo/redo
-			if (end - begin < 2) {
-				t.undoList.push({fn: t._addChars, args: [t.textRender.getChars(begin, 1), begin]});
-			} else {
-				t.undoList.push({fn: t._addFragments, args: [t._getFragments(begin, end - begin), begin]});
+			if (!opt_ignoreFormula) {
+				if (end - begin < 2) {
+					t.undoList.push({fn: t._addChars, args: [t.textRender.getChars(begin, 1), begin]});
+				} else {
+					t.undoList.push({fn: t._addFragments, args: [t._getFragments(begin, end - begin), begin]});
+				}
 			}
 
 			t._extractFragments(begin, end - begin);
@@ -464,13 +467,15 @@
 				t._mergeFragments();
 				t._update();
 
-				// Обновляем выделение
-				t._cleanSelection();
-				t._drawSelection();
-
 				// save info to undo/redo
-				t.undoList.push({fn: t._removeChars, args: [begin, end - begin]});
-				t.redoList = [];
+				if (!opt_ignoreFormula) {
+					// Обновляем выделение
+					t._cleanSelection();
+					t._drawSelection();
+
+					t.undoList.push({fn: t._removeChars, args: [begin, end - begin]});
+					t.redoList = [];
+				}
 			}
 
 		} else {
@@ -2298,26 +2303,34 @@
 			var str = this.getText();
 			if (str) {
 				var needPos = this.cursorPos + (kind === kPrevChar ? 0 : -1);
-				var endPos
+				var endPos;
 				if (str[needPos] === "(" || str[needPos] === ")") {
 					endPos = this._findNextParenthesis(str, this.cursorPos, str[needPos] === ")");
 					if (endPos !== null) {
 						//получили и конечную и начальную позицию
-						//выдделям жирным и по таймеру снимаем выделение, вызываем callback
+						//выделям жирным и по таймеру снимаем выделение, вызываем callback
 						var realCursorPos = this.cursorPos;
-						this.selectionBegin = this.cursorPos - 1;
-						this.selectionEnd = this.cursorPos;
+						this.selectionBegin = needPos;
+						this.selectionEnd = needPos + 1;
 						this.setTextStyle("b", true, true);
 						this.selectionBegin = endPos;
 						this.selectionEnd = endPos + 1;
 						this.setTextStyle("b", true, true);
+						t._cleanSelection();
+
 						setTimeout(function () {
-							//t.undo();
-							//t.undo();
+							t.selectionBegin = needPos;
+							t.selectionEnd = needPos + 1;
+							t.setTextStyle("b", false, true);
+							t.selectionBegin = endPos;
+							t.selectionEnd = endPos + 1;
+							t.setTextStyle("b", false, true);
+
+							t._cleanSelection();
 							t.selectionBegin = t.selectionEnd = -1;
 							t.cursorPos = realCursorPos;
 							callback();
-						});
+						}, 300);
 						return;
 					}
 				}
