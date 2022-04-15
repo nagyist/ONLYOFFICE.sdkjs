@@ -430,8 +430,8 @@
 		return true;
 	};
 
-	CellEditor.prototype.setTextStyle = function (prop, val) {
-		if (this.isFormula()) {
+	CellEditor.prototype.setTextStyle = function (prop, val, opt_ignoreFormula) {
+		if (this.isFormula() && !opt_ignoreFormula) {
 			return;
 		}
 		var t = this, opt = t.options, begin, end, i, first, last;
@@ -1595,7 +1595,7 @@
 		this._updateSelectionInfo();
 	};
 
-	CellEditor.prototype._moveCursor = function (kind, pos) {
+	CellEditor.prototype._moveCursor = function (kind, pos, opt_keyPress) {
 		this.newTextFormat = null;
 		var t = this;
 		this.sAutoComplete = null;
@@ -1643,8 +1643,17 @@
 			t.selectionBegin = t.selectionEnd = -1;
 			t._cleanSelection();
 		}
-		t._updateCursorPosition();
-		t._updateCursor();
+		var callback = function () {
+			t._updateCursorPosition();
+			t._updateCursor();
+		};
+
+		//проверяем, необходимо ли выделить открывающуюся скобку
+		if ((kind === kPrevChar || kind === kNextChar)&& opt_keyPress && t.isFormula()) {
+			t._selectParentheses(kind, callback);
+		} else {
+			callback();
+		}
 	};
 
 	CellEditor.prototype._findCursorPosition = function ( coord ) {
@@ -2282,6 +2291,67 @@
 		return 0 > count ? 0 : count;
 	};
 
+	CellEditor.prototype._selectParentheses = function (kind, callback) {
+		var t = this;
+		if (this.isFormula() && (kind === kPrevChar || kind === kNextChar)) {
+			//проверям, прошёл ли курсор через отскрывающуюся/закрывающуюся скобку
+			var str = this.getText();
+			if (str) {
+				var needPos = this.cursorPos + (kind === kPrevChar ? 0 : -1);
+				var endPos
+				if (str[needPos] === "(" || str[needPos] === ")") {
+					endPos = this._findNextParenthesis(str, this.cursorPos, str[needPos] === ")");
+					if (endPos !== null) {
+						//получили и конечную и начальную позицию
+						//выдделям жирным и по таймеру снимаем выделение, вызываем callback
+						var realCursorPos = this.cursorPos;
+						this.selectionBegin = this.cursorPos - 1;
+						this.selectionEnd = this.cursorPos;
+						this.setTextStyle("b", true, true);
+						this.selectionBegin = endPos;
+						this.selectionEnd = endPos + 1;
+						this.setTextStyle("b", true, true);
+						setTimeout(function () {
+							//t.undo();
+							//t.undo();
+							t.selectionBegin = t.selectionEnd = -1;
+							t.cursorPos = realCursorPos;
+							callback();
+						});
+						return;
+					}
+				}
+			}
+		}
+
+		callback();
+	};
+
+	CellEditor.prototype._findNextParenthesis = function (str, startPos, reverse) {
+		//reverse - ищем справа налево
+		var res = null;
+		if (str) {
+			var level = 0;
+			//поскольку прошли через открывающуюся скобку, ищем закрывающуюся
+			var searchSym = reverse ? "(" : ")";
+			var startSym = !reverse ? "(" : ")";
+			startPos = reverse ? startPos - 1 : startPos + 1;
+			for (var i = startPos; reverse ? i >= 0 : i < str.length; reverse ? i-- : i++) {
+				if (level === 0 && str[i] === searchSym) {
+					res = i;
+					break;
+				}
+				if (startSym === str[i]) {
+					level++;
+				} else if (searchSym === str[i]) {
+					level--;
+				}
+			}
+		}
+		return res;
+	};
+
+
 	// Event handlers
 
 	/**
@@ -2400,7 +2470,7 @@
 					t._syncEditors();
 				}
 				kind = ctrlKey ? kPrevWord : kPrevChar;
-				event.shiftKey ? t._selectChars(kind) : t._moveCursor(kind);
+				event.shiftKey ? t._selectChars(kind) : t._moveCursor(kind, null, true);
 				return false;
 
 			case 39:  // "right"
@@ -2418,7 +2488,7 @@
 					t._syncEditors();
 				}
 				kind = ctrlKey ? kNextWord : kNextChar;
-				event.shiftKey ? t._selectChars(kind) : t._moveCursor(kind);
+				event.shiftKey ? t._selectChars(kind) : t._moveCursor(kind, null, true);
 				return false;
 
 			case 38:  // "up"
