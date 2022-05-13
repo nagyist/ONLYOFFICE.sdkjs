@@ -203,7 +203,8 @@
     var c_oSerNumFmtTypes =
     {
         FormatCode: 0,
-        NumFmtId: 1
+        NumFmtId: 1,
+        FormatCode16: 2
     };
     /** @enum */
     var c_oSerSharedStringTypes =
@@ -7699,6 +7700,10 @@
             else if ( c_oSerNumFmtTypes.NumFmtId == type )
             {
                 oNumFmt.id = this.stream.GetULongLE();
+            }
+            else if ( c_oSerNumFmtTypes.FormatCode16 == type )
+            {
+                oNumFmt.f = this.stream.GetString2LE(length);
             }
             else
                 res = c_oSerConstants.ReadUnknown;
