@@ -1835,9 +1835,11 @@
 				this._addFragments([oNewObj], pos);
 				this.newTextFormat = null;
 			} else {
-				f = this._findFragmentToInsertInto(pos);
+				//TODO нужно для удаления сделать аналогично(removeChars)
+				var modelPos = this.correctViewPosition(pos);
+				f = this._findFragmentToInsertInto(modelPos);
 				if (f) {
-					l = pos - f.begin;
+					l = modelPos - f.begin;
 					s = opt.fragments[f.index].getCharCodes();
 
 					opt.fragments[f.index].setCharCodes(s.slice(0, l).concat(str).concat(s.slice(l)));
@@ -2023,6 +2025,31 @@
 	CellEditor.prototype._isWholeFragment = function ( pos, len ) {
 		var fr = this._findFragment( pos );
 		return fr && pos === fr.begin && len === fr.end - fr.begin;
+	};
+
+	CellEditor.prototype.correctViewPosition = function (pos) {
+		//stringRender -> _filterChars
+		//фильтруем символы для редактора ячейки
+		//при добавлении новых символов необходимо это учитывать
+		var fr = this.options && this.options.fragments;
+		if (fr) {
+			var counter = 0;
+			for (var j = 0; j < fr.length; j++) {
+				if (fr[j].charCodes) {
+					for (var i = 0; i < fr[j].charCodes.length; i++) {
+						if (0xD === fr[j].charCodes[i] && 0xA === fr[j].charCodes[i + 1]) {
+							pos++;
+						}
+						counter++;
+						if (counter >= pos) {
+							return pos;
+						}
+					}
+				}
+			}
+		}
+
+		return pos;
 	};
 
 	CellEditor.prototype._splitFragment = function ( f, pos, fragments ) {
