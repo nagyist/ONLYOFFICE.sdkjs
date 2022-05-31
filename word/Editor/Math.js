@@ -134,6 +134,9 @@ CMathPropertiesSettings.prototype.Merge = function(Pr)
     if(Pr.brkBin !== null && Pr.brkBin !== undefined)
         this.brkBin = Pr.brkBin;
 
+    if(Pr.brkBinSub !== null && Pr.brkBinSub !== undefined)
+        this.brkBinSub = Pr.brkBinSub;
+
     if(Pr.dispDef !== null && Pr.dispDef !== undefined)
         this.dispDef = Pr.dispDef;
 	
@@ -1170,7 +1173,10 @@ ParaMath.prototype.GetCompiledDefaultTextPr = function()
 	oTextPr.Merge(this.DefaultTextPr);
 	return oTextPr;
 };
-
+/**
+ * Добавляем элемент в текущую позицию (с учетом возможной глубины)
+ * @param Item
+ */
 ParaMath.prototype.Add = function(Item)
 {
     var LogicDocument  = (this.Paragraph ? this.Paragraph.LogicDocument : undefined);
@@ -1282,6 +1288,27 @@ ParaMath.prototype.Add = function(Item)
 
     // Корректируем данный контент
     oContent.Correct_Content(true);
+};
+/**
+ * Добавляем элемент в конец корневого контента
+ * @param oElement
+ */
+ParaMath.prototype.Push = function(oElement)
+{
+	this.Root.AddToContent(this.Root.GetElementsCount(), oElement);
+};
+/**
+ * Добавляем все элементы заданного ParaMath в конец текущего
+ * @param oMath {ParaMath}
+ */
+ParaMath.prototype.Concat = function(oMath)
+{
+	let nCount = oMath.Root.GetElementsCount();
+	for (let nIndex = 0, nCount = oMath.Root.GetElementsCount(); nIndex < nCount; ++nIndex)
+	{
+		this.Push(oMath.Root.GetElement(nIndex));
+	}
+	oMath.Root.RemoveFromContent(0, nCount);
 };
 
 ParaMath.prototype.Get_AlignToLine = function(_CurLine, _CurRange, _Page, _X, _XLimit)
@@ -3629,6 +3656,31 @@ ParaMath.prototype.CheckSpelling = function(oCollector, nDepth)
 
 	oCollector.FlushWord();
 };
+//----------------------------------------------------------------------------------------------------------------------
+// Search
+//----------------------------------------------------------------------------------------------------------------------
+ParaMath.prototype.Search = function(oParaSearch)
+{
+	this.Root.Search(oParaSearch);
+};
+ParaMath.prototype.AddSearchResult = function(SearchResult, Start, ContentPos, Depth)
+{
+	this.Root.AddSearchResult(SearchResult, Start, ContentPos, Depth);
+};
+ParaMath.prototype.ClearSearchResults = function()
+{
+	this.Root.ClearSearchResults();
+};
+ParaMath.prototype.RemoveSearchResult = function(oSearchResult)
+{
+	this.Root.RemoveSearchResult(oSearchResult);
+};
+ParaMath.prototype.GetSearchElementId = function(bNext, bUseContentPos, ContentPos, Depth)
+{
+	return this.Root.GetSearchElementId(bNext, bUseContentPos, ContentPos, Depth);
+};
+//----------------------------------------------------------------------------------------------------------------------
+
 
 function MatGetKoeffArgSize(FontSize, ArgSize)
 {

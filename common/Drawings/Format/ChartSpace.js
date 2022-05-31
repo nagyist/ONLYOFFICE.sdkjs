@@ -1115,13 +1115,13 @@ var GLOBAL_PATH_COUNT = 0;
         this.nvGraphicFramePr = null;
         this.chart = null;
         this.clrMapOvr = null;
-        this.date1904 = null;
+        this.date1904 = false;
         this.externalData = null;
         this.lang = null;
         this.pivotSource = null;
         this.printSettings = null;
         this.protection = null;
-        this.roundedCorners = null;
+        this.roundedCorners = false;
         this.spPr = null;
         this.style = 2;
         this.txPr = null;
@@ -3713,6 +3713,10 @@ var GLOBAL_PATH_COUNT = 0;
     CChartSpace.prototype.setSpPr = function(spPr) {
         History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_ChartSpace_SetSpPr, this.spPr, spPr));
         this.spPr = spPr;
+
+        if(spPr) {
+            spPr.setParent(this);
+        }
         this.recalcInfo.recalculateBrush = true;
         this.recalcInfo.recalculatePen = true;
         this.addToRecalculate();
@@ -8281,10 +8285,10 @@ var GLOBAL_PATH_COUNT = 0;
             }
         }
     };
-    CChartSpace.prototype.Search = function(Str, Props, SearchEngine, Type) {
+    CChartSpace.prototype.Search = function(SearchEngine, Type) {
         var titles = this.getAllTitles();
         for(var i = 0; i < titles.length; ++i) {
-            titles[i].Search(Str, Props, SearchEngine, Type)
+            titles[i].Search(SearchEngine, Type)
         }
     };
     CChartSpace.prototype.GetSearchElementId = function(bNext, bCurrent) {
@@ -9114,8 +9118,8 @@ var GLOBAL_PATH_COUNT = 0;
                 continue;
 
             var pts = oSeries.getNumPts();
-            if (nDataPoint >= pts.length)
-                return false;
+            if (nDataPoint >= pts.length || nDataPoint < 0)
+                continue;
 
             oDataPoint = oSeries.dPt[nDataPoint];
             if(!oDataPoint)
@@ -9152,8 +9156,8 @@ var GLOBAL_PATH_COUNT = 0;
                 continue;
 
             var pts = oSeries.getNumPts();
-            if (nDataPoint >= pts.length)
-                return false;
+            if (nDataPoint >= pts.length || nDataPoint < 0)
+                continue;
 
             oDataPoint = oSeries.dPt[nDataPoint];
             if(!oDataPoint)
@@ -9417,6 +9421,89 @@ var GLOBAL_PATH_COUNT = 0;
 
 		return false;
 	};
+    
+    CChartSpace.prototype.SetAxieNumFormat = function(sNumFormat, nAxiePos)
+	{
+        if (this.chart.plotArea.axId)
+        {
+            var oAxie;
+            for (var nAxie = 0; nAxie < this.chart.plotArea.axId.length; nAxie++)
+            {
+                oAxie = this.chart.plotArea.axId[nAxie];
+                if (oAxie instanceof AscFormat.CValAx && oAxie.axPos === nAxiePos)
+                {
+                    oAxie.numFmt.setFormatCode(sNumFormat);
+                    if (sNumFormat !== "General")
+                        oAxie.numFmt.setSourceLinked(false);
+                    else
+                        oAxie.numFmt.setSourceLinked(true);
+
+                    return true;
+                }
+            }
+
+        }
+        return false;
+	};
+
+    CChartSpace.prototype.SetSeriaNumFormat = function(sNumFormat, nSeria)
+	{
+        if (Asc.editor && Asc.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
+            return false;
+
+        var allSeries = this.getAllSeries();
+        var oSeria;
+
+		for (var nCurSeria = 0; nCurSeria < allSeries.length; nCurSeria++)
+		{
+            if (allSeries[nCurSeria].idx === nSeria)
+            {
+                oSeria = allSeries[nCurSeria];
+                break;
+            }
+		}
+
+        if (!oSeria || typeof(sNumFormat) !== "string")
+            return false;
+
+        var oNumLit = oSeria.getNumLit();
+        oNumLit.setFormatCode(sNumFormat);
+
+        for (var nPt = 0; nPt < oNumLit.pts.length; nPt++)
+            oNumLit.pts[nPt].setFormatCode(null);
+
+        return true;
+    };
+
+    CChartSpace.prototype.SetDataPointNumFormat = function(sFormat, nSeria, nDataPoint, bAllSeries)
+	{
+        if (Asc.editor && Asc.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
+            return false;
+
+        var allSeries = this.getAllSeries();
+		var oSeries, isOk;
+		for (var nCurSeries = 0; nCurSeries < allSeries.length; nCurSeries++)
+        {
+            oSeries = allSeries[nCurSeries];
+            if (!bAllSeries && oSeries.idx !== nSeria)
+                continue;
+
+            var pts = oSeries.getNumPts();
+            if (nDataPoint >= pts.length || nDataPoint < 0)
+                continue;
+
+            pts[nDataPoint].setFormatCode(sFormat);
+            isOk = true;
+
+            if (isOk && !bAllSeries)
+                return true;
+		}
+
+        if (isOk)
+		    return true;
+
+        return false;
+    };
     
     function CAdditionalStyleData() {
         this.dLbls = null;

@@ -376,15 +376,7 @@
 		oParagraph.GetPrevRunElements(oRunElementsBefore);
 		var arrElements = oRunElementsBefore.GetElements();
 		if (arrElements.length > 0)
-		{
-			var oPrevElement = arrElements[0];
-			if (para_Text === oPrevElement.Type
-				&& 45 !== oPrevElement.Value
-				&& 40 !== oPrevElement.Value
-				&& 91 !== oPrevElement.Value
-				&& 123 !== oPrevElement.Value)
-				isOpenQuote = false;
-		}
+			isOpenQuote = this.private_IsOpenQuoteAfter(arrElements[0]);
 
 		if (!isDoubleQuote && (1050 === nLang || 1060 === nLang))
 			return false;
@@ -402,6 +394,18 @@
 		this.RunItem = this.Run.GetElement(this.Pos);
 
 		return true;
+	};
+	CRunAutoCorrect.prototype.private_IsOpenQuoteAfter = function(oPrevElement)
+	{
+		// nbsp - – − ( [ {
+		return (!oPrevElement.IsText()
+			|| oPrevElement.IsNBSP()
+			|| 0x002D === oPrevElement.Value
+			|| 0x2013 === oPrevElement.Value
+			|| 0x2212 === oPrevElement.Value
+			|| 0x0028 === oPrevElement.Value
+			|| 0x005B === oPrevElement.Value
+			|| 0x007B === oPrevElement.Value);
 	};
 	CRunAutoCorrect.prototype.private_ReplaceSmartQuotes = function(nLang, isDoubleQuote, isOpenQuote)
 	{
@@ -1292,63 +1296,63 @@
 		var nNumType = null;
 		if (sText === "(a)")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaLcParenBoth;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaLcParenBoth;
 		}
 		else if (sText === "a)")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaLcParenR;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaLcParenR;
 		}
 		else if (sText === "a.")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaLcPeriod;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaLcPeriod;
 		}
 		else if (sText === "(A)")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaUcParenBoth;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaUcParenBoth;
 		}
 		else if (sText === "A)")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaUcParenR;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaUcParenR;
 		}
 		else if (sText === "A.")
 		{
-			nNumType = numbering_presentationnumfrmt_AlphaUcPeriod;
+			nNumType = AscFormat.numbering_presentationnumfrmt_AlphaUcPeriod;
 		}
 		else if (sText === "(1)")
 		{
-			nNumType = numbering_presentationnumfrmt_ArabicParenBoth;
+			nNumType = AscFormat.numbering_presentationnumfrmt_ArabicParenBoth;
 		}
 		else if (sText === "1)")
 		{
-			nNumType = numbering_presentationnumfrmt_ArabicParenR;
+			nNumType = AscFormat.numbering_presentationnumfrmt_ArabicParenR;
 		}
 		else if (sText === "1.")
 		{
-			nNumType = numbering_presentationnumfrmt_ArabicPeriod;
+			nNumType = AscFormat.numbering_presentationnumfrmt_ArabicPeriod;
 		}
 		else if (sText === "(i)")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanLcParenBoth;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanLcParenBoth;
 		}
 		else if (sText === "i)")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanLcParenR;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanLcParenR;
 		}
 		else if (sText === "i.")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanLcPeriod;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanLcPeriod;
 		}
 		else if (sText === "(I)")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanUcParenBoth;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanUcParenBoth;
 		}
 		else if (sText === "I)")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanUcParenR;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanUcParenR;
 		}
 		else if (sText === "I.")
 		{
-			nNumType = numbering_presentationnumfrmt_RomanUcPeriod;
+			nNumType = AscFormat.numbering_presentationnumfrmt_RomanUcPeriod;
 		}
 		if (nNumType !== null)
 		{

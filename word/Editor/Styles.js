@@ -60,10 +60,14 @@ var g_dKoef_pt_to_mm = 25.4 / 72;
 var g_dKoef_pc_to_mm = g_dKoef_pt_to_mm / 12;
 var g_dKoef_in_to_mm = 25.4;
 var g_dKoef_twips_to_mm = g_dKoef_pt_to_mm / 20;
-var g_dKoef_emu_to_mm = 1 / 36000;
 var g_dKoef_mm_to_pt = 1 / g_dKoef_pt_to_mm;
 var g_dKoef_mm_to_twips = 1 / g_dKoef_twips_to_mm;
 var g_dKoef_mm_to_emu = 36000;
+var g_dKoef_emu_to_mm = 1 / 36000;
+var g_dKoef_emu_to_twips = g_dKoef_emu_to_mm * g_dKoef_mm_to_twips;
+var g_dKoef_twips_to_pt = 20;
+var g_dKoef_twips_to_emu = 1 / g_dKoef_emu_to_twips;
+var g_dKoef_pt_to_twips = 1 / g_dKoef_twips_to_pt;
 
 var tblwidth_Auto = 0x00;
 var tblwidth_Mm   = 0x01;
@@ -97,19 +101,6 @@ var textdirection_LRTBV = 0x03;
 var textdirection_TBRLV = 0x04;
 var textdirection_TBLRV = 0x05;
 
-// Данный список шрифтов используется совместно с настройкой BalanceSingleByteDoubleByteWidth
-// если список будет изменяться, то проверить работу этой настройки с новыми шрифтами, если работать не будет, тогда
-// надо будет иметь два разных списка
-const EAST_ASIA_FONTS = [
-	"MingLiU", "PMingLiU",
-	"SimSun", "NSimSun", "SimSun-ExtA", "SimSun-ExtB",
-	"MS Mincho",
-	"Batang",
-	"Arial Unicode MS",
-	"Microsoft JhengHei", "Microsoft YaHei", "SimHei", "DengXian",
-	"Meiryo", "MS Gothic", "MS PGothic", "MS UI Gothic", "Yu Gothic",
-	"Dotum", "Gulim", "Malgun Gothic"
-];
 
 function IsEqualStyleObjects(Object1, Object2)
 {
@@ -10032,32 +10023,11 @@ CStyles.prototype.GetDefaultTextPrForWrite = function()
 	oTextPr.InitDefault();
 	return this.Default.TextPr.GetDiff(oTextPr);
 };
-/**
- * @param {string} sName
- * @returns {boolean}
- */
-CStyles.prototype.IsEastAsiaFont = function(sName)
-{
-	for (let oIterator = sName.getUnicodeIterator(); oIterator.check(); oIterator.next())
-	{
-		let	nUnicode = oIterator.value();
-		if (AscCommon.isEastAsianScript(nUnicode))
-			return true;
-	}
-
-	for (let nIndex = 0, nCount = EAST_ASIA_FONTS.length; nIndex < nCount; ++nIndex)
-	{
-		if (sName === EAST_ASIA_FONTS[nIndex])
-			return true;
-	}
-
-	return false;
-};
 CStyles.prototype.OnChangeDefaultTextPr = function()
 {
 	this.ValidDefaultEastAsiaFont = false;
 	if (this.Default.TextPr.RFonts && this.Default.TextPr.RFonts.EastAsia)
-		this.ValidDefaultEastAsiaFont = this.IsEastAsiaFont(this.Default.TextPr.RFonts.EastAsia.Name);
+		this.ValidDefaultEastAsiaFont = AscCommon.IsEastAsianFont(this.Default.TextPr.RFonts.EastAsia.Name);
 };
 CStyles.prototype.IsValidDefaultEastAsiaFont = function()
 {
@@ -10177,7 +10147,36 @@ CDocumentColor.prototype.SetFromColor = function(oColor)
 	this.b    = undefined !== oColor.b ? oColor.b : 0;
 	this.Auto = undefined !== oColor.Auto ? oColor.Auto : false;
 };
+CDocumentColor.prototype.SetFromHexColor = function(val) {
+	this.Auto = false;
+	if ("auto" === val || "none" === val) {
+		this.Auto = true;
+	} else if (AscFormat.mapPrstColor[val]) {
+		var rgb = AscFormat.mapPrstColor[val];
+		this.r = (rgb >> 16) & 0xFF;
+		this.g = (rgb >> 8) & 0xFF;
+		this.b = rgb & 0xFF;
+	} else if (6 <= val.length || 3 === val.length) {
+		var rgba = AscCommon.RgbaHexToRGBA(val);
+		this.r = rgba.R;
+		this.g = rgba.G;
+		this.b = rgba.B;
+	} else {
+		this.Auto = true;
+	}
+};
+CDocumentColor.prototype.ToHexColor = function() {
+	if (this.Auto) {
+		return "auto";
+	} else {
+		return AscCommon.ByteToHex(this.r) + AscCommon.ByteToHex(this.g) + AscCommon.ByteToHex(this.b);
+	}
+};
 
+CDocumentColor.prototype.ConvertToUniColor = function()
+{
+	return AscFormat.CreateUniColorRGB(this.r, this.g, this.b);
+};
 
 function CDocumentShd()
 {
@@ -10881,6 +10880,26 @@ CDocumentBorder.prototype.IsNone = function()
 {
 	return (this.Value === border_None);
 };
+CDocumentBorder.prototype.setSizeIn8Point = function(val)
+{
+	if(null !== val && undefined !== val) {
+		this.Size = g_dKoef_pt_to_mm * val / 8;
+	}
+};
+CDocumentBorder.prototype.getSizeIn8Point = function()
+{
+	return undefined !== this.Size ? Math.round(8 * this.Size * g_dKoef_mm_to_pt) : undefined;
+};
+CDocumentBorder.prototype.setSpaceInPoint = function(val)
+{
+	if(null !== val && undefined !== val) {
+		this.Space = g_dKoef_pt_to_mm * val;
+	}
+};
+CDocumentBorder.prototype.getSpaceInPoint = function(val)
+{
+	return undefined !== this.Space ? Math.round(this.Space * g_dKoef_mm_to_pt) : undefined;
+};
 /**
  * Получаем рассчитанную толщину линии в зависимости от типа.
  * @returns {number}
@@ -11029,6 +11048,29 @@ CTableMeasurement.prototype.WriteToBinary = function(oWriter)
 	// Long   : Type
 	oWriter.WriteDouble(this.W);
 	oWriter.WriteLong(this.Type);
+};
+CTableMeasurement.prototype.SetValueByType = function(val)
+{
+	if (null !== val && undefined !== val) {
+		if (tblwidth_Mm == this.Type) {
+			this.W = g_dKoef_twips_to_mm * val;
+		} else if (tblwidth_Pct == this.Type) {
+			this.W = 2 * val / 100;
+		} else {
+			this.W = val;
+		}
+	}
+};
+CTableMeasurement.prototype.GetValueByType = function() {
+	var res = this.W;
+	if (null !== res && undefined !== res) {
+		if (tblwidth_Mm == this.Type) {
+			res = Math.round(AscCommonWord.g_dKoef_mm_to_twips * this.W);
+		} else if (tblwidth_Pct == this.Type) {
+			res = Math.round(100 * this.W / 2);
+		}
+	}
+	return res;
 };
 
 function CTablePr()
@@ -12592,6 +12634,12 @@ CTableCellPr.prototype.RemovePrChange = function()
 	delete this.ReviewInfo;
 };
 
+const rfont_None     = 0x00;
+const rfont_ASCII    = 0x01;
+const rfont_EastAsia = 0x02;
+const rfont_CS       = 0x04;
+const rfont_HAnsi    = 0x08;
+
 function CRFonts()
 {
     this.Ascii    = undefined;
@@ -13768,7 +13816,7 @@ CTextPr.prototype.ReplaceThemeFonts = function(oFontScheme)
 		}
 	}
 
-	if (this.FontFamily)
+	if (this.FontFamily && oFontScheme)
 	{
 		this.FontFamily.Name  = oFontScheme.checkFont(this.FontFamily.Name);
 		this.FontFamily.Index = -1;
@@ -15098,6 +15146,59 @@ CTextPr.prototype.GetDescription = function()
 
 	return Description;
 };
+CTextPr.prototype.GetTextMetrics = function(oTheme, nFontFlags)
+{
+	let oMetrics = new CTextMetrics();
+
+	g_oTextMeasurer.SetTextPr(this, oTheme);
+
+	if ((nFontFlags & rfont_ASCII) && this.RFonts.Ascii)
+		oMetrics.Update(this.RFonts.Ascii.Name, fontslot_ASCII);
+
+	if ((nFontFlags & rfont_CS) && this.RFonts.CS)
+		oMetrics.Update(this.RFonts.CS.Name, fontslot_CS);
+
+	if ((nFontFlags & rfont_HAnsi) && this.RFonts.HAnsi)
+		oMetrics.Update(this.RFonts.HAnsi.Name, fontslot_HAnsi);
+
+	if ((nFontFlags & rfont_EastAsia) && this.RFonts.EastAsia)
+		oMetrics.Update(this.RFonts.EastAsia.Name, fontslot_EastAsia);
+
+	return oMetrics;
+};
+
+function CTextMetrics()
+{
+	this.Ascent  = 0;
+	this.Descent = 0;
+	this.LineGap = 0;
+	this.Height  = 0;
+}
+CTextMetrics.prototype.Update = function(fontName, fontSlot)
+{
+	g_oTextMeasurer.SetFontSlot(fontSlot);
+
+	let nHeight  = g_oTextMeasurer.GetHeight();
+	let nAscent  = g_oTextMeasurer.GetAscender();
+	let nDescent = Math.abs(g_oTextMeasurer.GetDescender());
+
+	let _nHeight  = nHeight;
+	let _nDescent = nDescent;
+	let _nAscent  = Math.min(nAscent, nHeight - nDescent);
+	let _nLineGap = Math.max(0, nHeight - nAscent - nDescent);
+
+	if (this.Height < _nHeight)
+		this.Height = _nHeight;
+
+	if (this.Descent < _nDescent)
+		this.Descent = _nDescent;
+
+	if (this.Ascent < _nAscent)
+		this.Ascent = _nAscent;
+
+	if (this.LineGap < _nLineGap)
+		this.LineGap = _nLineGap;
+};
 //----------------------------------------------------------------------------------------------------------------------
 // CTextPr Export
 //----------------------------------------------------------------------------------------------------------------------
@@ -15174,6 +15275,28 @@ CParaTab.prototype.GetLeader = function()
 {
 	return this.Leader;
 };
+CParaTab.prototype.IsValid = function()
+{
+	return null != this.Pos && null != this.Value;
+}
+CParaTab.prototype.Correct_Content = function()
+{
+	if(null != oNewTab.Pos && null != oNewTab.Value)
+	{
+		if (4 === this.Value) {
+			oNewTab.Value = tab_Right;
+		} else if (6 === this.Value) {
+			oNewTab.Value = tab_Left;
+		} else if (tab_Bar === this.Value || tab_Decimal) {
+			oNewTab.Value = tab_Left;
+		} else if (6 === this.Value) {
+			oNewTab.Value = tab_Left;
+		}
+
+		Tabs.Add(oNewTab);
+	}
+};
+
 
 function CParaTabs()
 {
@@ -15676,6 +15799,19 @@ CParaSpacing.prototype.IsEqual = function(oSpacing)
 		&& IsEqualNullableFloatNumbers(this.BeforePct, oSpacing.BeforePct)
 		&& this.BeforeAutoSpacing === oSpacing.BeforeAutoSpacing
 		&& this.AfterAutoSpacing === oSpacing.AfterAutoSpacing);
+};
+CParaSpacing.prototype.SetLineTwips = function (val) {
+	if (null !== val && undefined !== val) {
+		if (val < 0) {
+			val = Math.abs(val);
+			this.LineRule = Asc.linerule_Exact;
+		}
+		if (Asc.linerule_Auto === this.LineRule) {
+			this.Line = val / 240;
+		} else {
+			this.Line = g_dKoef_twips_to_mm * val;
+		}
+	}
 };
 
 function CNumPr(sNumId, nLvl)
@@ -17200,7 +17336,7 @@ CParaPr.prototype.Get_PresentationBullet = function(theme, colorMap)
 		{
 			case AscFormat.BULLET_TYPE_BULLET_CHAR:
 			{
-				Bullet.m_nType = numbering_presentationnumfrmt_Char;
+				Bullet.m_nType = AscFormat.numbering_presentationnumfrmt_Char;
 				if (typeof this.Bullet.bulletType.Char === "string" && this.Bullet.bulletType.Char.length > 0)
 				{
 					Bullet.m_sChar = this.Bullet.bulletType.Char.substring(0, 1);
@@ -17231,8 +17367,13 @@ CParaPr.prototype.Get_PresentationBullet = function(theme, colorMap)
 			}
 			case AscFormat.BULLET_TYPE_BULLET_BLIP :
 			{
-				Bullet.m_nType = numbering_presentationnumfrmt_Blip;
-				Bullet.m_sSrc = AscCommon.getFullImageSrc2(this.Bullet.getImageBulletURL());
+				Bullet.m_nType = AscFormat.numbering_presentationnumfrmt_Blip;
+
+				var imageBulletURL = this.Bullet.getImageBulletURL();
+				if (imageBulletURL)
+				{
+					Bullet.m_sSrc = AscCommon.getFullImageSrc2(imageBulletURL);
+				}
 				break;
 			}
 		}
@@ -17695,7 +17836,6 @@ asc_CStyle.prototype.get_TextPr = function()
 {
     return this.TextPr;
 };
-
 //---------------------------------------------------------export---------------------------------------------------
 window['Asc'] = window['Asc'] || {};
 window['AscCommonWord'] = window['AscCommonWord'] || {};
@@ -17720,10 +17860,15 @@ window["AscCommonWord"].CDocumentShd = CDocumentShd;
 window["AscCommonWord"].g_dKoef_pt_to_mm = g_dKoef_pt_to_mm;
 window["AscCommonWord"].g_dKoef_pc_to_mm = g_dKoef_pc_to_mm;
 window["AscCommonWord"].g_dKoef_in_to_mm = g_dKoef_in_to_mm;
+window["AscCommonWord"].g_dKoef_twips_to_mm = g_dKoef_twips_to_mm;
+window["AscCommonWord"].g_dKoef_emu_to_mm = g_dKoef_emu_to_mm;
+window["AscCommonWord"].g_dKoef_emu_to_twips = g_dKoef_emu_to_twips;
 window["AscCommonWord"].g_dKoef_mm_to_twips = g_dKoef_mm_to_twips;
 window["AscCommonWord"].g_dKoef_mm_to_pt = g_dKoef_mm_to_pt;
 window["AscCommonWord"].g_dKoef_mm_to_emu = g_dKoef_mm_to_emu;
-window["AscCommonWord"].g_dKoef_emu_to_mm = g_dKoef_emu_to_mm;
+window["AscCommonWord"].g_dKoef_twips_to_pt = g_dKoef_twips_to_pt;
+window["AscCommonWord"].g_dKoef_twips_to_emu = g_dKoef_twips_to_emu;
+window["AscCommonWord"].g_dKoef_pt_to_twips = g_dKoef_pt_to_twips;
 window["AscCommonWord"].border_Single = border_Single;
 window["AscCommonWord"].Default_Tab_Stop = Default_Tab_Stop;
 window["AscCommonWord"].highlight_None = highlight_None;
@@ -17752,5 +17897,7 @@ g_oDocumentDefaultTableStylePr.InitDefault();
 
 var g_oDocumentDefaultFillColor   = new CDocumentColor(255, 255, 255, true);
 var g_oDocumentDefaultStrokeColor = new CDocumentColor(0, 0, 0, true);
+
+window["AscCommonWord"].DEFAULT_STYLES = new CStyles(false);
 
 // ----------------------------------------------------------------
