@@ -1990,6 +1990,7 @@ NumFormat.prototype =
 									
 								}
 							}
+							this.flagForLetersFormat = false;
 							var el = item.Lid.toLowerCase().split('-');
 							el = this.checkUpperAndLowerLoceles(el);
 							var defaultSecondPart = gc_oDefaultLocales[el[0]];
@@ -2003,6 +2004,7 @@ NumFormat.prototype =
 									this.LCID = Asc.g_oLcidNameToIdMap[defaultSecondPart];
 							}
 							if(this.LCID != null && this.LCID != 0) {
+								this.flagForLetersFormat = true;
 								if (item.currentEra != null)
 									this.bCurrentEraYear = item.currentEra;
 							}
@@ -2697,6 +2699,8 @@ NumFormat.prototype =
             {
                 if(null != item.CurrencyString || null != item.Lid)
                 {
+					if(this.flagForLetersFormat == true)
+						res += "x16r2:formatCode16=";
                     res += "[$";
                     if(null != item.CurrencyString)
                         res += item.CurrencyString;
