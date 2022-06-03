@@ -3768,8 +3768,8 @@
 							_rule = _rule.clone();
 							_rule.id = _id;
 							_rule.isLock = isLocked;
+							_rule.recalcInterfaceFormula(sheet, true);
 						}
-						_rule.recalcInterfaceFormula(sheet, true)
 						rules.push(_rule);
 					}
 				};
@@ -3788,8 +3788,8 @@
 						_rule = _rule.clone();
 						_rule.id = _id;
 						_rule.isLock = isLocked;
+						_rule.recalcInterfaceFormula(sheet, true);
 					}
-					_rule.recalcInterfaceFormula(sheet, true)
 					rules.push(_rule);
 				}
 			}

@@ -2099,7 +2099,7 @@
 	CFormulaCF.prototype.recalcFormula = function (ws, toInterface) {
 		var f = new AscCommonExcel.parserFormula(this.Text, null, ws);
 		if (f.parse(!toInterface)) {
-			this.Text = toInterface ? f.assembleLocale() : f.assemble();
+			this.Text = toInterface ? f.assembleLocale(AscCommonExcel.cFormulaFunctionToLocale, true) : f.assemble();
 		}
 	};
 	CFormulaCF.prototype.getFormula = function (ws, opt_parent) {
