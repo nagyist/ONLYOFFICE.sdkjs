@@ -216,6 +216,13 @@
 			this.isLock = oRule.isLock;
 		}
 	};
+	CConditionalFormattingRule.prototype.recalcInterfaceFormula = function (ws, toInterface) {
+		if (this.aRuleElements && this.type === Asc.ECfType.expression) {
+			for (var i = 0; i < this.aRuleElements.length; i++) {
+				this.aRuleElements[i].recalcFormula(ws, toInterface);
+			}
+		}
+	};
 	CConditionalFormattingRule.prototype.Write_ToBinary2 = function (writer) {
 		//for wrapper
 		//writer.WriteLong(this.getObjectType());
@@ -2087,6 +2094,12 @@
 				//todo realize removeDependencies
 				this._f.buildDependencies();
 			}
+		}
+	};
+	CFormulaCF.prototype.recalcFormula = function (ws, toInterface) {
+		var f = new AscCommonExcel.parserFormula(this.Text, null, ws);
+		if (f.parse(!toInterface)) {
+			this.Text = toInterface ? f.assembleLocale() : f.assemble();
 		}
 	};
 	CFormulaCF.prototype.getFormula = function (ws, opt_parent) {
