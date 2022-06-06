@@ -217,10 +217,8 @@
 		}
 	};
 	CConditionalFormattingRule.prototype.recalcInterfaceFormula = function (ws, toInterface) {
-		if (this.aRuleElements && this.type === Asc.ECfType.expression) {
-			for (var i = 0; i < this.aRuleElements.length; i++) {
-				this.aRuleElements[i].recalcFormula(ws, toInterface);
-			}
+		for (var i = 0; i < this.aRuleElements.length; i++) {
+			this.aRuleElements[i].recalcFormula(ws, toInterface);
 		}
 	};
 	CConditionalFormattingRule.prototype.Write_ToBinary2 = function (writer) {
