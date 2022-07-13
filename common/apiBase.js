@@ -3870,6 +3870,16 @@
 		this.openedAt = val;
 	};
 
+	baseEditorsApi.prototype.asc_startRecordMacros = function()
+	{
+		this.macros && this.macros.startRecord();
+	};
+
+	baseEditorsApi.prototype.asc_endRecordMacros = function()
+	{
+		this.macros && this.macros.endRecord();
+	};
+
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
 	window['AscCommon'].baseEditorsApi = baseEditorsApi;
@@ -3912,5 +3922,8 @@
 	prot['setOpenedAt'] = prot.setOpenedAt;
 
 	prot['asc_isCrypto'] = prot.asc_isCrypto;
+
+	prot['asc_startRecordMacros'] = prot.asc_startRecordMacros;
+	prot['asc_endRecordMacros'] = prot.asc_endRecordMacros;
 
 })(window);

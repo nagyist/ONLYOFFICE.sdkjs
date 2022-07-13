@@ -47,6 +47,8 @@ function (window, undefined)
 
 		this.Data = "";
 
+		this.RecordObj = null;
+
 		AscCommon.g_oTableId.Add(this, this.Id);
 	}
 	CDocumentMacros.prototype.SetData = function(sData)
@@ -215,6 +217,29 @@ function (window, undefined)
         }
         return false;
     };
+
+	CDocumentMacros.prototype.record = function(str)
+	{
+		if (this.RecordObj) {
+			this.RecordObj.str += str;
+		}
+	};
+
+	CDocumentMacros.prototype.startRecord = function(name)
+	{
+		this.RecordObj = {};
+		this.RecordObj.name = name;
+		this.RecordObj.str = "";
+	};
+
+	CDocumentMacros.prototype.endRecord = function()
+	{
+		//TODO нужно добавить к старой структуре - новую
+		if (this.RecordObj) {
+			this.SetData(this.RecordObj);
+			this.RecordObj = null;
+		}
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_DocumentMacros_Data]     = CChangesDocumentMacrosData;
 	AscDFH.changesRelationMap[AscDFH.historyitem_DocumentMacros_Data] = [AscDFH.historyitem_DocumentMacros_Data];

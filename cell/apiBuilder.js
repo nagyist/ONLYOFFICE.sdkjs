@@ -742,6 +742,10 @@
 		return !this.worksheet.getHidden();
 	};
 
+	ApiWorksheet.prototype.getRecordPrefixStr = function () {
+		return "ActiveSheet.";
+	};
+
 	/**
 	 * Sets the state of sheet visibility.
 	 * @memberof ApiWorksheet
@@ -1757,6 +1761,11 @@
 		return "range";
 	};
 
+	ApiRange.prototype.getRecordPrefixStr = function()
+	{
+		return "Selection.";
+	};
+
 	/**
 	 * Returns a row number for the selected cell.
 	 * @memberof ApiRange
@@ -2478,6 +2487,9 @@
 			return this.SetBold(isBold);
 		}
 	});
+	ApiRange.prototype.record_setBold = function (isBold) {
+		return this.getRecordPrefix() + ".SetBold" + "(" + isBold + ")";
+	};
 
 	/**
 	 * Sets the italic property to the text characters in the current cell or cell range.

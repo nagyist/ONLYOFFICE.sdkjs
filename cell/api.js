@@ -5413,6 +5413,8 @@ var editor;
     } else {
       this.wb.setFontAttributes("b", isBold);
       this.wb.restoreFocus();
+
+	  this.macros.record(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr() + this.ActiveSheet.Selection.record_setBold(isBold));
     }
   };
 
