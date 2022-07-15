@@ -5403,6 +5403,8 @@ var editor;
     } else {
       this.wb.setFontAttributes("fs", fontSize);
       this.wb.restoreFocus();
+
+      this.macros.recordProp(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr(), this.ActiveSheet.Selection.record_setBold(), fontSize);
     }
   };
 
