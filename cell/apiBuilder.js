@@ -2487,8 +2487,8 @@
 			return this.SetBold(isBold);
 		}
 	});
-	ApiRange.prototype.record_setBold = function (isBold) {
-		return this.getRecordPrefix() + ".SetBold" + "(" + isBold + ")";
+	ApiRange.prototype.record_setBold = function () {
+		return "SetBold";
 	};
 
 	/**
@@ -2505,6 +2505,9 @@
 			return this.SetItalic(isItalic);
 		}
 	});
+	ApiRange.prototype.record_setItalic = function () {
+		return "SetItalic";
+	};
 
 	/**
 	 * Specifies that the contents of the current cell / cell range are displayed along with a line appearing directly below the character.
@@ -2560,6 +2563,9 @@
 			return this.SetStrikeout(isStrikeout);
 		}
 	});
+	ApiRange.prototype.record_setStrikeout = function () {
+		return "SetItalic";
+	};
 
 	/**
 	 * Specifies whether the words in the cell must be wrapped to fit the cell size or not.

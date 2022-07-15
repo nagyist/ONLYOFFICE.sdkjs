@@ -5414,7 +5414,7 @@ var editor;
       this.wb.setFontAttributes("b", isBold);
       this.wb.restoreFocus();
 
-	  this.macros.record(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr() + this.ActiveSheet.Selection.record_setBold(isBold));
+	  this.macros.recordProp(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr(), this.ActiveSheet.Selection.record_setBold(), isBold);
     }
   };
 
@@ -5425,6 +5425,8 @@ var editor;
     } else {
       this.wb.setFontAttributes("i", isItalic);
       this.wb.restoreFocus();
+
+      this.macros.recordProp(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr(), this.ActiveSheet.Selection.record_setItalic(), isItalic);
     }
   };
 
@@ -5445,6 +5447,8 @@ var editor;
     } else {
       this.wb.setFontAttributes("s", isStrikeout);
       this.wb.restoreFocus();
+
+      this.macros.recordProp(this.ActiveSheet.getRecordPrefixStr() + this.ActiveSheet.Selection.getRecordPrefixStr(), this.ActiveSheet.Selection.record_setStrikeout(), isStrikeout);
     }
   };
 

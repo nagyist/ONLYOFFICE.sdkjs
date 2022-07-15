@@ -225,6 +225,26 @@ function (window, undefined)
 		}
 	};
 
+	CDocumentMacros.prototype.recordProp = function()
+	{
+		if (this.RecordObj) {
+			var prefix = arguments[0];
+			var name = arguments[1];
+
+			if (prefix && name) {
+				var res = prefix + name + "(";
+				if (arguments.length > 2) {
+					for (var i = 2; i < arguments.length; i++) {
+						res += "," + arguments[i];
+					}
+				}
+				res += ")";
+
+				this.record(res);
+			}
+		}
+	};
+
 	CDocumentMacros.prototype.startRecord = function(name)
 	{
 		this.RecordObj = {};
