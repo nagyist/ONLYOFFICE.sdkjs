@@ -142,6 +142,52 @@ var editor;
     this.handlers.trigger.apply(this.handlers, arguments);
   };
 
+  //временно здесь добавляю информацияю по событиям, которые отправляютя в мс в случае изменения ячейки
+	// 1. vba
+	//Worksheet_Change -
+	// отправляется при: изменении текста внутри ячейки, очитске, сдвигов ячеек/строк/столбцов,
+	//перемещении, закрытии редактора ячейки, копипасте, иногда при undo/redo - после применения ф/т
+	//НЕ ПРИХОДИТ при: ПРИ МЕРЖЕ, изменеии стиля, сортировке, добавлении ф/т
+
+	//пример
+	// Private Sub Worksheet_Change(ByVal Target As Range)
+	// Target.Font.ColorIndex = 5
+	// MsgBox (Target)
+	// End Sub
+
+
+	//2. js
+	// worksheet -> onChanged
+	// отправляется при: аналогично vba + мерже + undo/redo(изменение данных ячейки)
+	//НЕ ПРИХОДИТ при: изменеии стиля, сортировке, добавлении ф/т
+	//WorksheetChangedEventArgs - инфомарция о событии
+
+
+	//пример
+	// Excel.run(async (context) => {
+	// 	const worksheet = context.workbook.worksheets.getItem("Sheet1");
+	// 	worksheet.onChanged.add(handleChange);
+	//
+	// 	console.log("Event handler successfully registered for onChanged event in the worksheet.");
+	// }).catch(errorHandlerFunction);
+	//
+	// function handleChange(event) {
+	// 	Excel.run(async (context) => {
+	// 		await context.sync();
+	// 		console.log("Change type of event: " + event.changeType);
+	// 		console.log("Address of event: " + event.address);
+	// 		console.log("Source of event: " + event.source);
+	// 	}).catch(errorHandlerFunction);
+	// }
+	// function errorHandlerFunctio(event) {
+	// 	Excel.run(async (context) => {
+	// 		await context.sync();
+	// 		console.log("Change type of event: " + event.changeType);
+	// 		console.log("Address of event: " + event.address);
+	// 		console.log("Source of event: " + event.source);
+	// 	}).catch(errorHandlerFunction);
+	// }
+
   spreadsheet_api.prototype._init = function() {
     AscCommon.baseEditorsApi.prototype._init.call(this);
     this.topLineEditorElement = document.getElementById(this.topLineEditorName);
