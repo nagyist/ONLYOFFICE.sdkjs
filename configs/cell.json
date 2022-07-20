@@ -34,6 +34,7 @@
 			"word/Editor/Table/TableLook.js"
 		],
 		"common": [
+			"common/list.js",
 			"common/api/actionOnTimer.js",
 			"common/api/tableStylesPreviewGenerator.js",
 			"common/api/spellCheckSettings.js",

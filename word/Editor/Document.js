@@ -27111,7 +27111,7 @@ function CTrackRevisionsManager(oLogicDocument)
 {
 	this.LogicDocument     = oLogicDocument;
 	this.CheckElements     = {};   // Элементы, которые нужно проверить
-	this.CheckArray        = [];   // Дублирующий массив элементов, которые нужно проверить
+	this.CheckArray        = new AscCommon.CList();   // Дублирующий массив элементов, которые нужно проверить
 	this.Changes           = {};   // Объект с ключом - Id параграфа, в котором лежит массив изменений
 	this.ChangesOutline    = [];   // Упорядоченный массив с объектами, в которых есть изменения в рецензировании
 	this.CurChange         = null; // Текущее изменение
@@ -27136,11 +27136,9 @@ CTrackRevisionsManager.prototype.CheckElement = function(oElement)
 	if (!(oElement instanceof Paragraph) && !(oElement instanceof CTable))
 		return;
 
-	for (var nIndex = 0, nCount = this.CheckArray.length; nIndex < nCount; ++nIndex)
-	{
-		if (this.CheckArray[nIndex] === oElement)
-			return;
-	}
+	if (-1 !== this.CheckArray.find(oElement))
+		return;
+
 	this.CheckArray.push(oElement);
 };
 /**
@@ -27891,15 +27889,13 @@ CTrackRevisionsManager.prototype.CompleteTrackChangesForElements = function(arrE
 	var isChecked = false;
 	for (var nIndex = 0, nCount = arrElements.length; nIndex < nCount; ++nIndex)
 	{
-		for (var nCheckIndex = 0, nCheckCount = this.CheckArray.length; nCheckIndex < nCheckCount; ++nCheckIndex)
+		let nCheckIndex = this.CheckArray.find(arrElements[nIndex]);
+		if (-1 !== nCheckIndex)
 		{
-			if (this.CheckArray[nCheckIndex] === arrElements[nIndex])
-			{
-				if (this.private_TrackChangesForSingleElement(nCheckIndex))
-					isChecked = true;
+			if (this.private_TrackChangesForSingleElement(nCheckIndex))
+				isChecked = true;
 
-				break;
-			}
+			break;
 		}
 	}
 
@@ -27907,14 +27903,9 @@ CTrackRevisionsManager.prototype.CompleteTrackChangesForElements = function(arrE
 };
 CTrackRevisionsManager.prototype.private_TrackChangesForSingleElement = function(nIndex)
 {
-	var oElement = this.CheckArray[nIndex];
+	var oElement = this.CheckArray.getValue(nIndex, true);
 	if (oElement)
 	{
-		if (nIndex === this.CheckArray.length - 1)
-			this.CheckArray.length = this.CheckArray.length - 1;
-		else
-			this.CheckArray.splice(nIndex, 1);
-
 		if (oElement.Is_UseInDocument())
 		{
 			var sId = oElement.GetId();
