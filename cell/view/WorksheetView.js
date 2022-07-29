@@ -7604,9 +7604,48 @@
         }
     };
 
-    WorksheetView.prototype.prepareDepCells = function (se) {
-        this.drawDepCells();
-    };
+	var c_oAscDrawDepOptions = {
+		Master	: 0,
+		Slave	: 1,
+		Clear	: 2
+	};
+
+	WorksheetView.prototype.prepareDepCells = function (se) {
+		var activeCell = this.model.getSelection().activeCell, mc = this.model.getMergedByCell(activeCell.row, activeCell.col), c1 = mc ? mc.c1 : activeCell.col,
+			r1 = mc ? mc.r1 : activeCell.row, c = this._getVisibleCell(c1, r1);
+			var nodes = (se == c_oAscDrawDepOptions.Master) ? this.model.workbook.dependencyFormulas.getMasterNodes(this.model.getId(), c.getName()) :
+				this.model.workbook.dependencyFormulas.getSlaveNodes(this.model.getId(), c.getName());
+
+		if (!nodes) {
+			return;
+		}
+
+		if (!this.depDrawCells) {
+			this.depDrawCells = {};
+		}
+
+		if (se == c_oAscDrawDepOptions.Master) {
+			c = c.getCells()[0];
+			var id = getVertexId(this.model.getId(), c.getName());
+			this.depDrawCells[id] = {from: c, to: nodes};
+		} else {
+			var to = {}, to1, id = getVertexId(this.model.getId(), c.getName());
+			to[getVertexId(this.model.getId(), c.getName())] = this.model.workbook.dependencyFormulas.getNode(this.model.getId(), c.getName());
+			to1 = this.model.workbook.dependencyFormulas.getNode(this.model.getId(), c.getName());
+			for (var id2 in nodes) {
+				if (this.depDrawCells[id2]) {
+					$.extend(this.depDrawCells[id2].to, to)
+				} else {
+					this.depDrawCells[id2] = {}
+					this.depDrawCells[id2].from = nodes[id2].returnCell()
+					this.depDrawCells[id2].to = {}
+					this.depDrawCells[id2].to[id] = to1;
+				}
+			}
+		}
+		this.drawDepCells();
+
+	};
 
     WorksheetView.prototype.cleanDepCells = function () {
         this.depDrawCells = null;
@@ -8041,7 +8080,9 @@
 			editor.move();
 		}
 
-        //ToDo this.drawDepCells();
+		this.prepareDepCells(c_oAscDrawDepOptions.Master);
+        this.drawDepCells();
+
         this.cellCommentator.updateActiveComment();
         this.cellCommentator.drawCommentCells();
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
