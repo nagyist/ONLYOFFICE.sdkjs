@@ -393,6 +393,8 @@
 		this.pivotNameIndex = 0;
 	}
 
+	var nodes = {}, nodesId = {}, badRes = [], result = [], nodeslength = 0, __nodes = {}, thas = this;
+
 	DependencyGraph.prototype = {
 		maxSharedRecursion: 100,
 		//listening

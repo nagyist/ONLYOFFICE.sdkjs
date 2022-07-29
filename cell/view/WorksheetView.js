@@ -7611,9 +7611,12 @@
 	};
 
 	WorksheetView.prototype.prepareDepCells = function (se) {
-		var activeCell = this.model.getSelection().activeCell, mc = this.model.getMergedByCell(activeCell.row, activeCell.col), c1 = mc ? mc.c1 : activeCell.col,
-			r1 = mc ? mc.r1 : activeCell.row, c = this._getVisibleCell(c1, r1);
-			var nodes = (se == c_oAscDrawDepOptions.Master) ? this.model.workbook.dependencyFormulas.getMasterNodes(this.model.getId(), c.getName()) :
+		var activeCell = this.model.getSelection().activeCell;
+		var mc = this.model.getMergedByCell(activeCell.row, activeCell.col);
+		var c1 = mc ? mc.c1 : activeCell.col;
+		var r1 = mc ? mc.r1 : activeCell.row;
+		var c = this._getVisibleCell(c1, r1);
+		var nodes = (se == c_oAscDrawDepOptions.Master) ? this.model.workbook.dependencyFormulas.getMasterNodes(this.model.getId(), c.getName()) :
 				this.model.workbook.dependencyFormulas.getSlaveNodes(this.model.getId(), c.getName());
 
 		if (!nodes) {
