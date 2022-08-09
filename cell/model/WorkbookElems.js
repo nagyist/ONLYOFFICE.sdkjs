@@ -4267,7 +4267,16 @@ StyleManager.prototype =
 		return this.bVisited;
 	};
 	Hyperlink.prototype.getHyperlinkType = function () {
-		return null !== this.Hyperlink ? Asc.c_oAscHyperlinkType.WebLink : Asc.c_oAscHyperlinkType.RangeLink;
+		var res = null;
+		if (null !== this.Hyperlink) {
+			//либо гиперссылка, либо ссылка на локальный файл(отдельное поле не стал заводить, все будет в Hyperlink)
+			if (this.Hyperlink) {
+				res = Asc.c_oAscHyperlinkType.FileLink;
+			} else {
+				res = Asc.c_oAscHyperlinkType.WebLink;
+			}
+		}
+		return null !== res ? res : Asc.c_oAscHyperlinkType.RangeLink;
 	};
 	Hyperlink.prototype.getType = function () {
 		return UndoRedoDataTypes.Hyperlink;

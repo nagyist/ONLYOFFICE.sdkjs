@@ -126,7 +126,8 @@ var c_oAscScrollType = {
 
 var c_oAscHyperlinkType = {
   WebLink: 1,
-  RangeLink: 2
+  RangeLink: 2,
+  FileLink: 3
 };
 
 var c_oAscMouseMoveType = {
@@ -661,6 +662,7 @@ var c_oAscPopUpSelectorType = {
   prot = c_oAscHyperlinkType;
   prot['WebLink'] = prot.WebLink;
   prot['RangeLink'] = prot.RangeLink;
+  prot['FileLink'] = prot.FileLink;
   window['Asc']['c_oAscMouseMoveType'] = window['Asc'].c_oAscMouseMoveType = c_oAscMouseMoveType;
   prot = c_oAscMouseMoveType;
   prot['None'] = prot.None;
