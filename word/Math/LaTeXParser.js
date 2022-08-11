@@ -885,7 +885,9 @@
 			return
 		}
 		const oConverter = new CLaTeXParser(true);
-		const oTokens = oConverter.Parse(str);
+		let oTokens = oConverter.Parse(str);
+
+		oTokens = oConverter.oTokenizer.ProceedOutputAstObject(oTokens);
 
 		if (!isGetOnlyTokens) {
 			ConvertTokens(oTokens, oContext);

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Mocha Tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
+    <script src="../../word/Math/NamesOfLiterals.js"></script>
+    <script src="../../word/Math/UnicodeParser.js"></script>
+</head>
+<body>
+<div id="mocha"></div>
+
+<script src="https://unpkg.com/chai/chai.js"></script>
+<script src="https://unpkg.com/mocha/mocha.js"></script>
+
+<script type="text/javascript" src="./UnicodeTestsList/literal-tests.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/fraction-test.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/sqrt-tests.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/script-tests.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/aboveAndBelow-test.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/hbrack-tests.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/brackets-test.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/complex-stuff.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/box-tests.js"></script>
+<script type="text/javascript" src="./UnicodeTestsList/special_scripts-tests.js"></script>
+
+<script class="mocha-init">
+	mocha.setup('bdd');
+	mocha.checkLeaks();
+</script>
+
+<script type="module" class="mocha-exec">
+	const assert = chai.assert;
+	const parser = window.AscMath.CUnicodeConverter;
+
+	const sqrt = window.AscMath.sqrt;
+	const box = window.AscMath.box;
+	const bracket = window.AscMath.bracket;
+	const fraction = window.AscMath.fraction;
+	const literal = window.AscMath.literal;
+	const aboveBelow = window.AscMath.aboveBelow;
+	const complex = window.AscMath.complex;
+	const hbrack = window.AscMath.hbrack;
+	const script = window.AscMath.script;
+	const special = window.AscMath.special;
+
+	describe("Literals", function () {
+		literal(test);
+	});
+	describe("Fraction", function () {
+		fraction(test);
+	});
+	describe("Radicals", function () {
+		sqrt(test);
+	});
+	describe("Degree", function () {
+		script(test);
+	});
+	describe("Below & Above", function () {
+		aboveBelow(test);
+	});
+	describe("Horozontal bracket", function () {
+		hbrack(test);
+	});
+	describe("Brackts", function () {
+		bracket(test);
+	});
+	describe("Complex stuff", function () {
+		complex(test);
+	});
+	describe("Box", function () {
+		box(test);
+	});
+	describe("Special scripts", function () {
+		special(test);
+	});
+
+	function test(program, expected, description = "description") {
+		it(description, function () {
+			const ast = parser(program, undefined, true);
+			console.log(JSON.parse(JSON.stringify(ast)));
+			assert.deepEqual(
+				ast,
+				expected,
+				`Get:\n${JSON.stringify(ast,null, 2)}\nExpected:\n${JSON.stringify(expected,null, 2)}`
+			);
+		});
+	}
+	mocha.run();
+</script>
+</body>
+</html>

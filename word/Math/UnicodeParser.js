@@ -446,15 +446,15 @@
 		this.EatToken(oLiteralNames.sqrtLiteral[0]);
 		if (this.IsOperandLiteral()) {
 			oToken = this.GetOperandLiteral();
-			return {
-				type: oLiteralNames.sqrtLiteral[num],
-				index: {
-					type: oLiteralNames.charLiteral[num],
-					value: "3",
-				},
-				value: oToken,
-			};
 		}
+		return {
+			type: oLiteralNames.sqrtLiteral[num],
+			index: {
+				type: oLiteralNames.charLiteral[num],
+				value: "3",
+			},
+			value: oToken,
+		};
 	};
 	CUnicodeParser.prototype.IsCubertLiteral = function () {
 		return this.oLookahead.data === "∛" && this.oLookahead.class !== oLiteralNames.operatorLiteral[0];
@@ -464,15 +464,16 @@
 		this.EatToken(oLiteralNames.sqrtLiteral[0]);
 		if (this.IsOperandLiteral()) {
 			oContent = this.GetOperandLiteral();
-			return {
-				type: oLiteralNames.sqrtLiteral[num],
-				index: {
-					type: oLiteralNames.charLiteral[num],
-					value: "4",
-				},
-				value: oContent,
-			};
 		}
+
+		return {
+			type: oLiteralNames.sqrtLiteral[num],
+			index: {
+				type: oLiteralNames.charLiteral[num],
+				value: "4",
+			},
+			value: oContent,
+		};
 	};
 	CUnicodeParser.prototype.IsFourthrtLiteral = function () {
 		return this.oLookahead.data === "∜" && this.oLookahead.class !== oLiteralNames.operatorLiteral[0];
@@ -622,6 +623,13 @@
 		}
 		else if (this.oLookahead.class === "├") {
 			return this.EatCloseOrOpenBracket();
+		}
+
+		if (strClose === undefined && oExp[0].length === 0) {
+			return {
+				type: oLiteralNames.charLiteral[num],
+				value: strOpen
+			}
 		}
 
 		return {
@@ -1028,7 +1036,7 @@
 				? oLiteralNames.binomLiteral[num]
 				: oLiteralNames.fractionLiteral[num];
 
-			if (strOpOver === "⁄") {
+			if (strOpOver === "⁄" || strOpOver === "∕") {
 				intTypeFraction = 1;
 			}
 			if (strOpOver === "⊘") {
@@ -1587,7 +1595,9 @@
 			return
 		}
 		let oParser = new CUnicodeParser();
-		const oTokens = oParser.Parse(str);
+		let oTokens = oParser.Parse(str);
+
+		oTokens = oParser.oTokenizer.ProceedOutputAstObject(oTokens);
 
 		if (!isGetOnlyTokens) {
 			ConvertTokens(oTokens, oContext);
