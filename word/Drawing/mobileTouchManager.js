@@ -82,7 +82,7 @@
 
 	CMobileTouchManager.prototype.isViewMode = function()
 	{
-		return (this.Api.isViewMode || this.Api.isRestrictionView()) ? true : false;
+		return (this.Api.isViewMode || (this.Api.isRestrictionView() && !this.Api.isRestrictionForms())) ? true : false;
 	};
 
 	CMobileTouchManager.prototype.onTouchStart = function(e)
