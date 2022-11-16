@@ -16631,6 +16631,16 @@
 			sKey = "";
 		return sKey;
 	};
+
+	Object.defineProperty(ApiFormBase.prototype, "key", {
+		get: function () {
+			return this.GetFormKey();
+		},
+		set: function(sKey) {
+			return this.SetFormKey(sKey);
+		}
+	});
+
 	/**
 	 * Sets a key to the current form.
 	 * @memberof ApiFormBase
@@ -16673,6 +16683,16 @@
 
 		return sTip;
 	};
+
+	Object.defineProperty(ApiFormBase.prototype, "tip", {
+		get: function () {
+			return this.GetTipText();
+		},
+		set: function(sTip) {
+			return this.SetTipText(sTip);
+		}
+	});
+
 	/**
 	 * Sets the tip text to the current form.
 	 * @memberof ApiFormBase
@@ -16691,6 +16711,7 @@
 		this.Sdt.SetFormPr(oFormPr);
 		return true;
 	};
+
 	/**
 	 * Checks if the current form is required.
 	 * @memberof ApiFormBase
@@ -16701,6 +16722,16 @@
 	{
 		return this.Sdt.IsFormRequired();
 	};
+
+	Object.defineProperty(ApiFormBase.prototype, "required", {
+		get: function () {
+			return this.IsRequired();
+		},
+		set: function(bRequired) {
+			return this.SetRequired(bRequired);
+		}
+	});
+
 	/**
 	 * Specifies if the current form should be required.
 	 * @memberof ApiFormBase
@@ -16872,6 +16903,30 @@
         
         return new ApiShape(oShape);
     };
+
+	/**
+	 * Returns the placeholder text from the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE"]
+	 * @returns {string}
+	 */
+	ApiFormBase.prototype.GetPlaceholderText = function()
+	{
+		if (this.Sdt.IsCheckBox() || this.Sdt.IsRadioButton())
+			return "";
+
+		return this.Sdt.GetPlaceholderText();
+	};
+
+	Object.defineProperty(ApiFormBase.prototype, "placeholder", {
+		get: function() {
+			return this.GetPlaceholderText();
+		},
+		set: function(sText) {
+			return this.SetPlaceholderText(sText);
+		}
+	});
+
 	/**
 	 * Sets the placeholder text to the current form.
 	 * *Can't be set to checkbox or radio button.*
@@ -16890,6 +16945,7 @@
 		this.Sdt.SetPlaceholderText(sText);
 		return true;
 	};
+
 	/**
 	 * Sets the text properties to the current form.
 	 * *This method is used only for text and combo box forms.*
@@ -16975,6 +17031,16 @@
 	{
 		return this.Sdt.IsAutoFitContent();
 	};
+
+	Object.defineProperty(ApiTextForm.prototype, "autoFit", {
+		get: function() {
+			return this.IsAutoFit();
+		},
+		set: function(bAutoFit) {
+			return this.SetAutoFit(bAutoFit);
+		}
+	});
+
 	/**
 	 * Specifies if the text form content should be autofit, i.e. whether the font size adjusts to the size of the fixed size form.
 	 * @memberof ApiTextForm
@@ -17005,6 +17071,16 @@
 	{
 		return this.Sdt.IsMultiLineForm();
 	};
+
+	Object.defineProperty(ApiTextForm.prototype, "multiLine", {
+		get: function() {
+			return this.IsMultiline();
+		},
+		set: function(bMultiline) {
+			return this.SetMultiline(bMultiline);
+		}
+	});
+
 	/**
 	 * Specifies if the current text form should be miltiline.
 	 * @memberof ApiTextForm
@@ -17041,6 +17117,16 @@
 
 		return oPr.GetMaxCharacters();
 	};
+
+	Object.defineProperty(ApiTextForm.prototype, "maxCharacters", {
+		get: function() {
+			return this.GetCharactersLimit();
+		},
+		set: function(nChars) {
+			return this.SetCharactersLimit(nChars);
+		}
+	});
+
 	/**
 	 * Sets a limit to the text form characters.
 	 * @memberof ApiTextForm
@@ -17082,6 +17168,16 @@
 		let oPr = this.Sdt.GetTextFormPr();
 		return oPr ? oPr.IsComb() : false;
 	};
+
+	Object.defineProperty(ApiTextForm.prototype, "comb", {
+		get: function() {
+			return this.IsComb();
+		},
+		set: function(bComb) {
+			return this.SetComb(bComb);
+		}
+	});
+
 	/**
 	 * Specifies if the text form should be a comb of characters with the same cell width.
 	 * The maximum number of characters must be set to a positive value.
@@ -17111,6 +17207,33 @@
 		this.Sdt.SetTextFormPr(oPr);
 		return true;
 	};
+
+	/**
+	 * Gets the cell width of the comb of characters.
+	 * @memberof ApiTextForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {mm}
+	 */
+	ApiTextForm.prototype.GetCellWidth = function()
+	{
+		if (!this.IsComb())
+			return 0;
+
+		let nWidth = this.Sdt.GetTextFormPr().GetWidth();
+		nWidth = Math.round(nWidth / 72 / 20 * 25.4 + 0.5);
+
+		return nWidth;
+	};
+
+	Object.defineProperty(ApiTextForm.prototype, "cellWidth", {
+		get: function() {
+			return this.GetCellWidth();
+		},
+		set: function(nCellWidth) {
+			return this.SetCellWidth(nCellWidth);
+		}
+	});
+
 	/**
 	 * Sets the cell width to the applied comb of characters.
 	 * @memberof ApiTextForm
@@ -17134,6 +17257,7 @@
 		this.Sdt.SetTextFormPr(oPr);
 		return true;
 	};
+
 	/**
 	 * Sets the text to the current text form.
 	 * @memberof ApiTextForm
@@ -17185,6 +17309,16 @@
 
 		return sScaleFlag;
 	};
+
+	Object.defineProperty(ApiPictureForm.prototype, "scaleFlag", {
+		get: function() {
+			return this.GetScaleFlag();
+		},
+		set: function(sScaleFlag) {
+			return this.SetScaleFlag(sScaleFlag);
+		}
+	});
+
 	/**
 	 * Sets the scaling condition to the current picture form.
 	 * @memberof ApiPictureForm
@@ -17244,6 +17378,16 @@
 	{
 		return this.Sdt.GetPictureFormPr().IsConstantProportions();
 	};
+
+	Object.defineProperty(ApiPictureForm.prototype, "lockAspectRatio", {
+		get: function() {
+			return this.IsLockAspectRatio();
+		},
+		set: function(isLock) {
+			return this.SetLockAspectRatio(isLock);
+		}
+	});
+
 	/**
 	 * Sets the picture position inside the current form:
 	 * * <b>0</b> - the picture is placed on the left/top;
@@ -17258,8 +17402,10 @@
 	ApiPictureForm.prototype.SetPicturePosition = function(nShiftX, nShiftY)
 	{
 		let oPr = this.Sdt.GetPictureFormPr().Copy();
-		oPr.SetShiftX(Math.max(0, Math.min(100, GetNumberParameter(nShiftX, 50))) / 100);
-		oPr.SetShiftY(Math.max(0, Math.min(100, GetNumberParameter(nShiftY, 50))) / 100);
+		if (nShiftX != undefined)
+			oPr.SetShiftX(Math.max(0, Math.min(100, GetNumberParameter(nShiftX, 50))) / 100);
+		if (nShiftY != undefined)
+			oPr.SetShiftY(Math.max(0, Math.min(100, GetNumberParameter(nShiftY, 50))) / 100);
 		this.Sdt.SetPictureFormPr(oPr);
 		this.Sdt.UpdatePictureFormLayout();
 		return true;
@@ -17275,6 +17421,37 @@
 		let oPr = this.Sdt.GetPictureFormPr();
 		return [(oPr.GetShiftX() * 100) | 0, (oPr.GetShiftY() * 100) | 0];
 	};
+
+	/**
+	 * Gets the horizontal picture position inside the picture form measured in percent.
+	 * @memberof ApiPictureForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {percentage}
+	 */
+	Object.defineProperty(ApiPictureForm.prototype, "shiftX", {
+		get: function() {
+			return this.GetPicturePosition()[0];
+		},
+		set: function(nShiftX) {
+			return this.SetPicturePosition(nShiftX);
+		}
+	});
+
+	/**
+	 * Gets the vertical picture position inside the picture form measured in percent.
+	 * @memberof ApiPictureForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {percentage}
+	 */
+	Object.defineProperty(ApiPictureForm.prototype, "shiftY", {
+		get: function() {
+			return this.GetPicturePosition()[1];
+		},
+		set: function(nShiftY) {
+			return this.SetPicturePosition(nShiftY);
+		}
+	});
+
 	/**
 	 * Respects the form border width when scaling the image.
 	 * @memberof ApiPictureForm
@@ -17300,6 +17477,15 @@
 	{
 		return this.Sdt.GetPictureFormPr().IsRespectBorders();
 	};
+
+	Object.defineProperty(ApiPictureForm.prototype, "respectBorders", {
+		get: function() {
+			return this.IsRespectBorders();
+		},
+		set: function(isRespect) {
+			return this.SetRespectBorders(isRespect);
+		}
+	});
 	/**
 	 * Returns an image in the base64 format from the current picture form.
 	 * @memberof ApiPictureForm
@@ -17459,6 +17645,7 @@
 
 		return true;
 	};
+
 	/**
 	 * Checks if the combo box text can be edited.
 	 * @memberof ApiComboBoxForm
@@ -17470,6 +17657,53 @@
 		return (this.Sdt.IsComboBox());
 	};
 
+	Object.defineProperty(ApiComboBoxForm.prototype, "editable", {
+		get: function() {
+			return this.IsEditable();
+		}
+	});
+
+	/**
+	 * Checks if the combobox form content is autofit, i.e. whether the font size adjusts to the size of the fixed size form.
+	 * @memberof ApiComboBoxForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiComboBoxForm.prototype.IsAutoFit = function()
+	{
+		return this.Sdt.IsAutoFitContent();
+	};
+
+	Object.defineProperty(ApiComboBoxForm.prototype, "autoFit", {
+		get: function() {
+			return this.IsAutoFit();
+		},
+		set: function(bAutoFit) {
+			return this.SetAutoFit(bAutoFit);
+		}
+	});
+
+	/**
+	 * Specifies if the combobox form content should be autofit, i.e. whether the font size adjusts to the size of the fixed size form.
+	 * @memberof ApiComboBoxForm
+	 * @param {boolean} bAutoFit - Defines if the combobox form content is autofit (true) or not (false).
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiComboBoxForm.prototype.SetAutoFit = function(bAutoFit)
+	{
+		if (typeof(bAutoFit) !== "boolean" || !this.IsFixed())
+			return false;
+		if (bAutoFit === this.IsAutoFit())
+			return true;
+
+		var oPr = this.Sdt.GetComboBoxPr().Copy();
+		oPr.SetAutoFit(bAutoFit);
+
+		this.Sdt.SetComboBoxPr(oPr);
+		return true;
+	};
+	
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiCheckBoxForm
@@ -17511,6 +17745,13 @@
 	{
 		return this.Sdt.IsRadioButton();
 	};
+
+	Object.defineProperty(ApiCheckBoxForm.prototype, "radio", {
+		get: function() {
+			return this.IsRadioButton();
+		}
+	});
+
 	/**
 	 * Returns the radio group key if the current checkbox is a radio button.
 	 * @memberof ApiCheckBoxForm
@@ -19135,6 +19376,7 @@
 	ApiFormBase.prototype["GetText"]             = ApiFormBase.prototype.GetText;
 	ApiFormBase.prototype["Clear"]               = ApiFormBase.prototype.Clear;
 	ApiFormBase.prototype["GetWrapperShape"]     = ApiFormBase.prototype.GetWrapperShape;
+	ApiFormBase.prototype["GetPlaceholderText"]  = ApiFormBase.prototype.GetPlaceholderText;
 	ApiFormBase.prototype["SetPlaceholderText"]  = ApiFormBase.prototype.SetPlaceholderText;
 	ApiFormBase.prototype["SetTextPr"]           = ApiFormBase.prototype.SetTextPr;
 	ApiFormBase.prototype["GetTextPr"]           = ApiFormBase.prototype.GetTextPr;
@@ -19147,6 +19389,7 @@
 	ApiTextForm.prototype["SetCharactersLimit"]  = ApiTextForm.prototype.SetCharactersLimit;
 	ApiTextForm.prototype["IsComb"]              = ApiTextForm.prototype.IsComb;
 	ApiTextForm.prototype["SetComb"]             = ApiTextForm.prototype.SetComb;
+	ApiTextForm.prototype["GetCellWidth"]        = ApiTextForm.prototype.GetCellWidth;
 	ApiTextForm.prototype["SetCellWidth"]        = ApiTextForm.prototype.SetCellWidth;
 	ApiTextForm.prototype["SetText"]             = ApiTextForm.prototype.SetText;
 	ApiTextForm.prototype["Copy"]                = ApiTextForm.prototype.Copy;
