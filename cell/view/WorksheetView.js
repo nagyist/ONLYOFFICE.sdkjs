@@ -689,8 +689,24 @@
         if (allowPane && this.topLeftFrozenCell) {
             tmp = this.topLeftFrozenCell.getRow0();
         }
-        return this.visibleRange.r1 - tmp;
+		var rowHiddenCount = 0;
+		for (var i = 0; i < this.visibleRange.r1; i++) {
+			if (this.model.getRowHidden(i)) {
+				rowHiddenCount++;
+			}
+		}
+
+
+        return this.visibleRange.r1 - tmp - rowHiddenCount;
     };
+
+	WorksheetView.prototype.getFirstVisibleRow2 = function (allowPane) {
+		var tmp = 0;
+		if (allowPane && this.topLeftFrozenCell) {
+			tmp = this.topLeftFrozenCell.getRow0();
+		}
+		return this.visibleRange.r1 - tmp;
+	};
 
     WorksheetView.prototype.getLastVisibleRow = function () {
         return this.visibleRange.r2;
@@ -719,7 +735,7 @@
 		var offsetFrozen = this.getFrozenPaneOffset(true, false);
         var ctxH = this.drawingCtx.getHeight() - offsetFrozen.offsetY - this.cellsTop;
         for (var h = 0, i = this.nRowsCount - 1; i >= 0; --i) {
-            h += this._getRowHeight(i);
+            h += /*this.model.getRowHidden(i) ? 0 :*/ this._getRowHeight(i);
             if (h >= ctxH) {
                 break;
             }
@@ -733,6 +749,25 @@
 		}
 		return Math.max(0, i - tmp); // Диапазон скрола должен быть меньше количества строк, чтобы не было прибавления строк при перетаскивании бегунка
     };
+
+	WorksheetView.prototype.getVerticalScrollRange = function () {
+		var offsetFrozen = this.getFrozenPaneOffset(true, false);
+		var ctxH = this.drawingCtx.getHeight() - offsetFrozen.offsetY - this.cellsTop;
+		for (var h = 0, i = this.nRowsCount - 1; i >= 0; --i) {
+			h += this.model.getRowHidden(i) ? 0 : this._getRowHeight(i);
+			if (h >= ctxH) {
+				break;
+			}
+		}
+		var tmp = 0;
+		if (this.topLeftFrozenCell) {
+			tmp = this.topLeftFrozenCell.getRow0();
+		}
+		if (gc_nMaxRow === this.nRowsCount || this.model.isDefaultHeightHidden()) {
+			tmp -= 1;
+		}
+		return Math.max(0, i - tmp); // Диапазон скрола должен быть меньше количества строк, чтобы не было прибавления строк при перетаскивании бегунка
+	};
 
 	WorksheetView.prototype.getHorizontalScrollMax = function () {
 		var tmp = 0;
