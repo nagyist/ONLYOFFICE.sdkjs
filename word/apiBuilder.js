@@ -2790,7 +2790,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. (Required).
 	 * @param {string} sAutor - The author's name (Optional).
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiRange.prototype.AddComment = function(sText, sAutor)
 	{
@@ -4074,6 +4074,16 @@
      * @typedef {("simple" | "online" | "classic" | "distinctive" | "centered" | "formal")} TofStyle
 	 * **/
 
+	/**
+	 * Possible values for the text format of text form content.
+	 * **"none"**       - no format
+	 * **"digit"**     	- can be write only digist
+	 * **"letter"**		- can be write only letters
+	 * **"mask"**		- will be apply arbitrary mask
+	 * **"regExp"**		- will be apply regular expression
+	 * @typedef {"none" | "digit" | "letter" | "mask" | "regExp"} FormatType
+	 */
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// Base Api
@@ -4968,7 +4978,7 @@
 	 * @param {ApiRun[] | DocumentElement} oElement - The element where a comment will be added. May be applyed to any element which has an AddComment method.
 	 * @param {string} sText - The comment text.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if comment was not add.
+	 * @returns {?ApiComment} - returns null if comment was not add.
 	 */
 	Api.prototype.AddComment = function(oElement, sText, sAutor)
 	{
@@ -5964,7 +5974,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiDocument.prototype.AddComment = function(sText, sAutor)
 	{
@@ -6398,7 +6408,7 @@
 	 * @memberof ApiDocument
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sId
-	 * @returns {ApiComment?}
+	 * @returns {?ApiComment}
 	 */
 	ApiDocument.prototype.GetCommentById = function(sId) 
 	{
@@ -7268,7 +7278,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiParagraph.prototype.AddComment = function(sText, sAutor)
 	{
@@ -9402,7 +9412,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiRun.prototype.AddComment = function(sText, sAutor)
 	{
@@ -10671,7 +10681,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiTable.prototype.AddComment = function(sText, sAutor)
 	{
@@ -15906,7 +15916,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiInlineLvlSdt.prototype.AddComment = function(sText, sAutor)
 	{
@@ -16496,7 +16506,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @param {string} sText - The comment text. Required.
 	 * @param {string} sAutor - The author's name. Optional.
-	 * @returns {ApiComment?} - returns null if the comment was not add.
+	 * @returns {?ApiComment} - returns null if the comment was not add.
 	 */
 	ApiBlockLvlSdt.prototype.AddComment = function(sText, sAutor)
 	{
@@ -17015,6 +17025,28 @@
 		return new this.constructor(oSdt);
 	};
 
+	/**
+	 * Adds a string tag to the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE"]
+	 * @param {string} sTag - The tag which will be added to the current form.
+	 */
+	ApiFormBase.prototype.SetTag = function(sTag)
+	{
+		this.Sdt.SetTag(sTag);
+	};
+	
+	/**
+	 * Returns the tag attribute for the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE"]
+	 * @returns {string}
+	 */
+	ApiFormBase.prototype.GetTag = function()
+	{
+		return this.Sdt.GetTag();
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiTextForm
@@ -17273,6 +17305,104 @@
 
 		this.Sdt.SetInnerText(_sText);
 		return true;
+	};
+
+	/**
+	 * Sets the format type to the current form.
+	 * @memberof ApiTextForm
+	 * @param {FormatType} sFormat - The format type for the entered text.
+	 * @param {string} sMask - the mask of the format (only for format "mask" and "regExp").
+	 * Note: Default value of *sMask* for rexExp format is ".", default value of *sMask* for "mask" format is '*'. 
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiTextForm.prototype.SetFormat = function(sFormat, sMask)
+	{
+		let oPr = this.Sdt.GetTextFormPr().Copy();
+		switch (sFormat)
+		{
+			case "none":
+				oPr.Format.SetNone();
+				break;
+			case "digit":
+				oPr.Format.SetDigit();
+				break;
+			case "letter":
+				oPr.Format.SetLetter();
+				break;
+			case "mask":
+				if (typeof(sMask) != "string" || sMask == "")
+					sMask = "*";
+				oPr.Format.SetMask(sMask);
+				break;
+			case "regExp":
+				if (typeof(sMask) != "string" || sMask == "")
+					sMask = ".";
+				oPr.Format.SetRegExp(sMask);
+				break;
+			default:
+				return false;
+		}
+
+		this.Sdt.SetTextFormPr(oPr);
+		return true;
+	};
+
+	/**
+	 * Gets the format type of the current form.
+	 * @memberof ApiTextForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {Array} - contains two elements, first is a format type, second is a mask (mask is undefined if format isn't a "mask" or "regular").
+	 */
+	ApiTextForm.prototype.GetFormat = function()
+	{
+		let oPr = this.Sdt.GetTextFormPr();
+
+		switch (oPr.Format.BaseFormat)
+		{
+			case Asc.TextFormFormatType.None:
+				return ["none"];
+			case Asc.TextFormFormatType.Digit:
+				return ["digit"];
+			case Asc.TextFormFormatType.Letter:
+				return ["letter"];
+			case Asc.TextFormFormatType.Mask:
+				return ["mask", oPr.Format.GetMask()];
+			case Asc.TextFormFormatType.RegExp:
+				return ["regExp", oPr.Format.GetRegExp()];
+		}
+
+		return [];
+	};
+
+	/**
+	 * Sets the allowed symbols for the current form.
+	 * @memberof ApiTextForm
+	 * @param {string} [sSyblols=""] - allowed symbols set.
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiTextForm.prototype.SetAllowedSymbols = function(sSyblols)
+	{
+		if (typeof(sSyblols) != "string")
+			sSyblols = "";
+
+		let oPr = this.Sdt.GetTextFormPr().Copy();
+		oPr.SetFormatSymbols(sSyblols);
+		
+		this.Sdt.SetTextFormPr(oPr);
+		return true;
+	};
+
+	/**
+	 * Gets the allowed symbols of the current form.
+	 * @memberof ApiTextForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {string} - allowed symbols set.
+	 */
+	ApiTextForm.prototype.GetAllowedSymbols = function()
+	{
+		return this.Sdt.GetTextFormPr().GetFormatSymbols();
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -18462,7 +18592,7 @@
 	 * Gets the quote text of comment.
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE"]
-	 * @returns {Number?}
+	 * @returns {String}
 	 */
 	ApiComment.prototype.GetQuoteText = function () {
 		return this.Comment.GetData().GetQuoteText();
@@ -18472,7 +18602,7 @@
 	 * Gets count of the comment replies.
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE"]
-	 * @returns {Number?}
+	 * @returns {Number}
 	 */
 	ApiComment.prototype.GetRepliesCount = function () {
 		return this.Comment.GetData().Get_RepliesCount();
@@ -18483,7 +18613,7 @@
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE"]
 	 * @param {Number} [nIndex = 0]
-	 * @returns {ApiCommentReply?}
+	 * @returns {?ApiCommentReply}
 	 */
 	ApiComment.prototype.GetReply = function (nIndex) {
 		if (typeof(nIndex) != "number" || nIndex < 0 || nIndex >= this.GetRepliesCount())
@@ -18504,7 +18634,7 @@
 	 * @param {String} sAutorName - Optional.
 	 * @param {String} sUserId - Optional.
 	 * @param {Number} [nPos=this.GetRepliesCount()]
-	 * @returns {ApiComment?} - this.
+	 * @returns {?ApiComment} - this.
 	 */
 	ApiComment.prototype.AddReply = function (sText, sAutorName, sUserId, nPos) {
 		if (typeof(sText) !== "string" || sText === "")
@@ -18533,7 +18663,7 @@
 	 * @param {Number} [nPos = 0]
 	 * @param {Number} [nCount = 1]
 	 * @param {boolean} [bRemoveAll = false] - indicates whether to remove all
-	 * @returns {ApiComment?} - this.
+	 * @returns {ApiComment} - this.
 	 */
 	ApiComment.prototype.RemoveReplies = function (nPos, nCount, bRemoveAll) {
 		if (typeof(nPos) !== "number" || nPos < 0 || nPos > this.GetRepliesCount())
@@ -19380,6 +19510,8 @@
 	ApiFormBase.prototype["SetPlaceholderText"]  = ApiFormBase.prototype.SetPlaceholderText;
 	ApiFormBase.prototype["SetTextPr"]           = ApiFormBase.prototype.SetTextPr;
 	ApiFormBase.prototype["GetTextPr"]           = ApiFormBase.prototype.GetTextPr;
+	ApiFormBase.prototype["SetTag"]              = ApiFormBase.prototype.SetTag;
+	ApiFormBase.prototype["GetTag"]              = ApiFormBase.prototype.GetTag;
 
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;
@@ -19393,6 +19525,10 @@
 	ApiTextForm.prototype["SetCellWidth"]        = ApiTextForm.prototype.SetCellWidth;
 	ApiTextForm.prototype["SetText"]             = ApiTextForm.prototype.SetText;
 	ApiTextForm.prototype["Copy"]                = ApiTextForm.prototype.Copy;
+	ApiTextForm.prototype["SetFormat"]           = ApiTextForm.prototype.SetFormat;
+	ApiTextForm.prototype["GetFormat"]           = ApiTextForm.prototype.GetFormat;
+	ApiTextForm.prototype["SetAllowedSymbols"]   = ApiTextForm.prototype.SetAllowedSymbols;
+	ApiTextForm.prototype["GetAllowedSymbols"]   = ApiTextForm.prototype.GetAllowedSymbols;
 
 	ApiPictureForm.prototype["GetScaleFlag"]       = ApiPictureForm.prototype.GetScaleFlag;
 	ApiPictureForm.prototype["SetScaleFlag"]       = ApiPictureForm.prototype.SetScaleFlag;
