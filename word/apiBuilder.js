@@ -17607,7 +17607,7 @@
 			return this.GetPicturePosition()[1];
 		},
 		set: function(nShiftY) {
-			return this.SetPicturePosition(nShiftY);
+			return this.SetPicturePosition(undefined, nShiftY);
 		}
 	});
 
