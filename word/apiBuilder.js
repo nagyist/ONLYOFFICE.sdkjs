@@ -8817,6 +8817,9 @@
 	 */
 	ApiRun.prototype.AddPageBreak = function()
 	{
+		if (this.Run.GetParentForm())
+			return false;
+
 		this.Run.Add_ToContent(this.Run.Content.length, new AscWord.CRunBreak(AscWord.break_Page));
 	};
 	/**
@@ -8835,6 +8838,9 @@
 	 */
 	ApiRun.prototype.AddColumnBreak = function()
 	{
+		if (this.Run.GetParentForm())
+			return false;
+
 		this.Run.Add_ToContent(this.Run.Content.length, new AscWord.CRunBreak(AscWord.break_Column));
 	};
 	/**
@@ -8855,7 +8861,7 @@
 	 */ 
 	ApiRun.prototype.AddDrawing = function(oDrawing)
 	{
-		if (!(oDrawing instanceof ApiDrawing))
+		if (!(oDrawing instanceof ApiDrawing) || this.Run.GetParentForm())
 			return false;
 
 		this.Run.Add_ToContent(this.Run.Content.length, oDrawing.Drawing);
@@ -8922,6 +8928,9 @@
 	 */
 	ApiRun.prototype.AddHyperlink = function(sLink, sScreenTipText)
 	{
+		if (this.Run.GetParentForm())
+			return null;
+
 		if (typeof(sLink) !== "string" || sLink === "" || sLink.length > Asc.c_nMaxHyperlinkLength)
 			return null;
 		if (typeof(sScreenTipText) !== "string")
@@ -9002,20 +9011,23 @@
      * Returns a content control that contains the current run.
      * @memberof ApiRun
 	 * @typeofeditors ["CDE"]
-     * @return {ApiBlockLvlSdt | ApiInlineLvlSdt | null} - returns null if parent content control doesn't exist.  
+     * @return {ApiForm | ApiBlockLvlSdt | ApiInlineLvlSdt } - returns null if parent content control doesn't exist.  
      */
     ApiRun.prototype.GetParentContentControl = function()
     {
-        var RunPosition = this.Run.GetDocumentPositionFromObject();
+        let RunPosition = this.Run.GetDocumentPositionFromObject();
+		let oParentForm = this.Run.GetParentForm();
+		if (oParentForm)
+			return private_CheckForm(oParentForm);
 
-        for (var Index = RunPosition.length - 1; Index >= 1; Index--)
+        for (let Index = RunPosition.length - 1; Index >= 1; Index--)
         {
             if (RunPosition[Index].Class)
             {
                 if (RunPosition[Index].Class.Parent && RunPosition[Index].Class.Parent instanceof CBlockLevelSdt)
                     return new ApiBlockLvlSdt(RunPosition[Index].Class);
                 else if (RunPosition[Index].Class instanceof CInlineLevelSdt)
-                    return new ApiInlineLvlSdt(RunPosition[Index].Class);
+                    return private_CheckForm(RunPosition[Index].Class);
             }
         }
 
@@ -15626,14 +15638,10 @@
 			this.Sdt.SetShowingPlcHdr(false);
 		}
 
-		if (undefined !== nPos)
-		{
-			this.Sdt.AddToContent(nPos, oParaElement);
-		}
-		else
-		{
-			private_PushElementToParagraph(this.Sdt, oParaElement);
-		}
+		if (typeof(nPos) != "number" || nPos < 0 && nPos > this.GetElementsCount())
+			nPos = this.GetElementsCount();
+		
+		this.Sdt.AddToContent(nPos, oParaElement);
 
 		return true;
 	};
@@ -17047,6 +17055,27 @@
 		return this.Sdt.GetTag();
 	};
 
+	/**
+	 * Removes a form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE"]
+	 * @returns {boolean}
+	 */
+	ApiFormBase.prototype.Delete = function()
+	{
+		var oParentPara = this.Sdt.GetParagraph();
+		if (oParentPara)
+		{
+			this.Sdt.PreDelete();
+			var nPosInPara = this.Sdt.GetPosInParent();
+			oParentPara.RemoveFromContent(nPosInPara, 1);
+
+			return true;
+		}
+
+		return false;
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiTextForm
@@ -17910,6 +17939,129 @@
 		this.Sdt.SetCheckBoxPr(oPr);
 	};
 
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiComplexForm
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Returns a type of the ApiComplexForm class.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {"complexForm"}
+	 */
+	ApiComplexForm.prototype.GetClassType = function()
+	{
+		return "complexForm";
+	};
+
+	/**
+	 * Returns the child forms of current complex form.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {ApiForm[]}
+	 */
+	ApiComplexForm.prototype.GetChildForms = function()
+	{
+		let aChilds = [];
+		for (let i = 0; i < this.Sdt.Content.length; i++)
+		{
+			if (this.Sdt.Content[i].IsForm && this.Sdt.Content[i].IsForm())
+			{
+				aChilds.push(ToApiForm(this.Sdt.Content[i]));
+			}
+		}
+
+		return aChilds;
+	};
+
+	/**
+	 * Gets count of child elements.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @returns {Number}
+	 */
+	ApiComplexForm.prototype.GetElementsCount = function()
+	{
+		return this.Sdt.GetElementsCount();
+	};
+
+	/**
+	 * Returns an element of the current complex form using the position specified.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @param {Number} nPos
+	 * @returns {ApiRun | ApiForm}
+	 */
+	ApiComplexForm.prototype.GetElement = function(nPos)
+	{
+		if (typeof(nPos) != "number" || nPos < 0 || nPos >= this.Sdt.Content.length)
+			return null;
+
+		return private_GetSupportedParaElement(this.Sdt.Content[nPos]);
+	};
+
+	/**
+	 * Adds an element to complex field by specifed position.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @param {ApiForm | ApiRun} oElement - form element (ApiForm) or text element (ApiRun).
+	 * @param {Number} [nPos=this.GetElementsCount()] - pos to add element.
+	 * @returns {boolean}
+	 */
+	ApiComplexForm.prototype.AddElement = function(oElement, nPos)
+	{
+		oElement = oElement.private_GetImpl();
+		if ((oElement instanceof ParaRun) == false && (oElement instanceof CInlineLevelSdt) == false)
+			return false;
+
+		if (oElement.IsForm && oElement.IsForm() == false || oElement.IsForm && oElement.IsForm() == true && oElement.IsComplexForm() == true)
+			return false;
+
+		if (oElement.IsUseInDocument())
+			return false;
+		
+		if (this.Sdt.IsShowingPlcHdr())
+		{
+			this.Sdt.RemoveFromContent(0, this.Sdt.GetElementsCount(), false);
+			this.Sdt.SetShowingPlcHdr(false);
+		}
+
+		if (typeof(nPos) != "number" || nPos < 0 || nPos > this.GetElementsCount())
+			nPos = this.GetElementsCount();
+		
+		this.Sdt.AddToContent(nPos, oElement);
+
+		return true;
+	};
+
+	/**
+	 * Removes the specified count of elements from complex form by specified position.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE"]
+	 * @param {Number} nPos
+	 * @param {Number} [nCount = 1]
+	 * @returns {boolean}
+	 */
+	ApiComplexForm.prototype.RemoveElements = function(nPos, nCount)
+	{
+		if (typeof(nPos) != "number" || nPos < 0 || nPos >= this.GetElementsCount())
+			return false;
+		if (typeof(nCount) != "number" || nCount <= 0)
+			return nCount = 1;
+		if (nCount > this.GetElementsCount() - nPos)
+			nCount = this.GetElementsCount() - nPos;
+
+		this.Sdt.RemoveFromContent(nPos, nCount);
+		if (this.Sdt.Content.length === 0)
+		{
+			this.Sdt.SetShowingPlcHdr(true);
+			this.Sdt.private_FillPlaceholderContent();
+		}
+
+		return true;
+	};
 
 	/**
 	 * Converts the ApiBlockLvlSdt object into the JSON object.
@@ -19455,7 +19607,6 @@
 	ApiInlineLvlSdt.prototype["GetPlaceholderText"]     = ApiInlineLvlSdt.prototype.GetPlaceholderText;
 	ApiInlineLvlSdt.prototype["SetPlaceholderText"]     = ApiInlineLvlSdt.prototype.SetPlaceholderText;
 	ApiInlineLvlSdt.prototype["IsForm"]                 = ApiInlineLvlSdt.prototype.IsForm;
-	ApiInlineLvlSdt.prototype["GetForm"]                = ApiInlineLvlSdt.prototype.GetForm;
 
 	ApiBlockLvlSdt.prototype["GetClassType"]            = ApiBlockLvlSdt.prototype.GetClassType;
 	ApiBlockLvlSdt.prototype["SetLock"]                 = ApiBlockLvlSdt.prototype.SetLock;
@@ -19512,6 +19663,8 @@
 	ApiFormBase.prototype["GetTextPr"]           = ApiFormBase.prototype.GetTextPr;
 	ApiFormBase.prototype["SetTag"]              = ApiFormBase.prototype.SetTag;
 	ApiFormBase.prototype["GetTag"]              = ApiFormBase.prototype.GetTag;
+	ApiFormBase.prototype["Copy"]                = ApiFormBase.prototype.Copy;
+	ApiFormBase.prototype["Delete"]              = ApiFormBase.prototype.Delete;
 
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;
@@ -19524,7 +19677,6 @@
 	ApiTextForm.prototype["GetCellWidth"]        = ApiTextForm.prototype.GetCellWidth;
 	ApiTextForm.prototype["SetCellWidth"]        = ApiTextForm.prototype.SetCellWidth;
 	ApiTextForm.prototype["SetText"]             = ApiTextForm.prototype.SetText;
-	ApiTextForm.prototype["Copy"]                = ApiTextForm.prototype.Copy;
 	ApiTextForm.prototype["SetFormat"]           = ApiTextForm.prototype.SetFormat;
 	ApiTextForm.prototype["GetFormat"]           = ApiTextForm.prototype.GetFormat;
 	ApiTextForm.prototype["SetAllowedSymbols"]   = ApiTextForm.prototype.SetAllowedSymbols;
@@ -19533,28 +19685,32 @@
 	ApiPictureForm.prototype["GetScaleFlag"]       = ApiPictureForm.prototype.GetScaleFlag;
 	ApiPictureForm.prototype["SetScaleFlag"]       = ApiPictureForm.prototype.SetScaleFlag;
 	ApiPictureForm.prototype["SetLockAspectRatio"] = ApiPictureForm.prototype.SetLockAspectRatio;
-	ApiPictureForm.prototype["IsLockAspectRatio"] = ApiPictureForm.prototype.IsLockAspectRatio;
+	ApiPictureForm.prototype["IsLockAspectRatio"]  = ApiPictureForm.prototype.IsLockAspectRatio;
 	ApiPictureForm.prototype["SetPicturePosition"] = ApiPictureForm.prototype.SetPicturePosition;
 	ApiPictureForm.prototype["GetPicturePosition"] = ApiPictureForm.prototype.GetPicturePosition;
-	ApiPictureForm.prototype["SetRespectBorders"] = ApiPictureForm.prototype.SetRespectBorders;
-	ApiPictureForm.prototype["IsRespectBorders"] = ApiPictureForm.prototype.IsRespectBorders;
+	ApiPictureForm.prototype["SetRespectBorders"]  = ApiPictureForm.prototype.SetRespectBorders;
+	ApiPictureForm.prototype["IsRespectBorders"]   = ApiPictureForm.prototype.IsRespectBorders;
 	ApiPictureForm.prototype["GetImage"]           = ApiPictureForm.prototype.GetImage;
 	ApiPictureForm.prototype["SetImage"]           = ApiPictureForm.prototype.SetImage;
-	ApiPictureForm.prototype["Copy"]               = ApiPictureForm.prototype.Copy;
 
 	ApiComboBoxForm.prototype["GetListValues"]       = ApiComboBoxForm.prototype.GetListValues;
 	ApiComboBoxForm.prototype["SetListValues"]       = ApiComboBoxForm.prototype.SetListValues;
 	ApiComboBoxForm.prototype["SelectListValue"]     = ApiComboBoxForm.prototype.SelectListValue;
 	ApiComboBoxForm.prototype["SetText"]             = ApiComboBoxForm.prototype.SetText;
 	ApiComboBoxForm.prototype["IsEditable"]          = ApiComboBoxForm.prototype.IsEditable;
-	ApiComboBoxForm.prototype["Copy"]                = ApiComboBoxForm.prototype.Copy;
 
 	ApiCheckBoxForm.prototype["SetChecked"]    = ApiCheckBoxForm.prototype.SetChecked;
 	ApiCheckBoxForm.prototype["IsChecked"]     = ApiCheckBoxForm.prototype.IsChecked;
 	ApiCheckBoxForm.prototype["IsRadioButton"] = ApiCheckBoxForm.prototype.IsRadioButton;
 	ApiCheckBoxForm.prototype["GetRadioGroup"] = ApiCheckBoxForm.prototype.GetRadioGroup;
 	ApiCheckBoxForm.prototype["SetRadioGroup"] = ApiCheckBoxForm.prototype.SetRadioGroup;
-	ApiCheckBoxForm.prototype["Copy"]          = ApiCheckBoxForm.prototype.Copy;
+
+	ApiComplexForm.prototype["GetClassType"]     = ApiComplexForm.prototype.GetClassType;
+	ApiComplexForm.prototype["GetChildForms"]    = ApiComplexForm.prototype.GetChildForms;
+	ApiComplexForm.prototype["GetElementsCount"] = ApiComplexForm.prototype.GetElementsCount;
+	ApiComplexForm.prototype["GetElement"]       = ApiComplexForm.prototype.GetElement;
+	ApiComplexForm.prototype["AddElement"]       = ApiComplexForm.prototype.AddElement;
+	ApiComplexForm.prototype["RemoveElements"]   = ApiComplexForm.prototype.RemoveElements;
 
 	ApiComment.prototype["GetClassType"]	= ApiComment.prototype.GetClassType;
 	ApiComment.prototype["GetText"]			= ApiComment.prototype.GetText;
@@ -19728,8 +19884,6 @@
 			return private_CheckForm(oElement);
 		else if (oElement instanceof ParaHyperlink)
 			return new ApiHyperlink(oElement);
-		else if (oElement instanceof ApiFormBase)
-			return (new ApiInlineLvlSdt(oElement)).GetForm();
 		else
 			return new ApiUnsupported();
 	}
