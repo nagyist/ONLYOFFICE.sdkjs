@@ -52,32 +52,28 @@
 
     /**
      * @typedef {(0 | 1 | 2 | 3)} ContentControlLock
-     * <p>A value that defines if it is possible to delete and/or edit the content control or not:</p>
-     * <ul>
-	 * 	<li><b>0</b> - only deleting</li>
-	 *  <li><b>1</b> - disable deleting or editing</li>
-	 *  <li><b>2</b> - only editing</li>
-	 *  <li><b>3</b> - full access</li>
-	 * </ul>
+     * A value that defines if it is possible to delete and/or edit the content control or not:
+	 * * **0** - only deleting
+	 * * **1** - disable deleting or editing
+	 * * **2** - only editing
+	 * * **3** - full access
      */
 
     /**
      * @typedef {(1 | 2 | 3 | 4)} ContentControlType
-     * <p>A numeric value that specifies the content control type:</p>
-	 * <ul>
-	 * 	<li><b>1</b> - block content control</li>
-	 *  <li><b>2</b> - inline content control</li>
-	 *  <li><b>3</b> - row content control</li>
-	 *  <li><b>4</b> - cell content control</li>
-	 * </ul>
+     * A numeric value that specifies the content control type:
+	 * * **1** - block content control
+	 * * **2** - inline content control
+	 * * **3** - row content control
+	 * * **4** - cell content control
      */
 
     /**
      * @typedef {Object} ContentControlPropertiesAndContent
      * The content control properties and contents.
      * @property  {ContentControlProperties} [ContentControlProperties = {}] - The content control properties.
-     * @property  {string} Script - A script that will be executed to generate the data within the content control (can be replaced with the <em>Url</em> parameter).
-     * @property  {string} Url - A link to the shared file (can be replaced with the <em>Script</em> parameter).
+     * @property  {string} Script - A script that will be executed to generate the data within the content control (can be replaced with the *Url* parameter).
+     * @property  {string} Url - A link to the shared file (can be replaced with the *Script* parameter).
      */
 
     /**
@@ -89,7 +85,7 @@
      * @property {string} InternalId - A unique internal identifier of the content control.
 	 * @property {string} Alias - The alias attribute.
 	 * @property {string} PlaceHolderText - The content control placeholder text.
-     * @property {number} Appearance - Defines if the content control is shown as the bounding box (<b>1</b>) or not (<b>2</b>).
+     * @property {number} Appearance - Defines if the content control is shown as the bounding box (**1**) or not (**2**).
      * @property {object} Color - The color for the current content control in the RGB format.
      * @property {number} Color.R - Red color component value.
      * @property {number} Color.G - Green color component value.
@@ -132,7 +128,7 @@
         return this.asc_GetBlockChainData();
     };
     /**
-     * Inserts the content control containing data. The data is specified by the JS code for {@link https://api.onlyoffice.com/docbuilder/basic Document Builder}, or by a link to the shared document.
+     * Inserts the content control containing data. The data is specified by the JS code for {@link /docbuilder/basic Document Builder}, or by a link to the shared document.
      * @memberof Api
      * @typeofeditors ["CDE"]
      * @alias InsertAndReplaceContentControls
@@ -328,7 +324,7 @@
      * @typeofeditors ["CDE"]
      * @alias MoveCursorToContentControl
      * @param {string} id - A unique internal identifier of the content control.
-     * @param {boolean} [isBegin = false] - Defines if the cursor position changes in the content control. By default, a cursor will be placed to the content control begin (<b>false</b>).
+     * @param {boolean} [isBegin = false] - Defines if the cursor position changes in the content control. By default, a cursor will be placed to the content control begin (**false**).
      * @example
      * window.Asc.plugin.executeMethod("MoveCursorToContentControl", ["2_839", false])
      */
@@ -375,8 +371,8 @@
 	 * @property {string} UserName - The comment author.
 	 * @property {string} Text - The comment text.
 	 * @property {string} Time - The time when the comment was posted (in milliseconds).
-	 * @property {boolean} Solved - Specifies if the comment is resolved (<b>true</b>) or not (<b>false</b>).
-	 * @property {CommentData[]} Replies - An array containing the comment replies represented as the <em>CommentData</em> object.
+	 * @property {boolean} Solved - Specifies if the comment is resolved (**true**) or not (**false**).
+	 * @property {CommentData[]} Replies - An array containing the comment replies represented as the *CommentData* object.
 	 */
 
 	/**
@@ -400,7 +396,7 @@
 	};
     /**
      * Moves a cursor to the beginning of the current editing area (document body, footer/header, footnote, or autoshape).
-	 * This method is similar to pressing the <b>Ctrl + Home</b> keyboard shortcut.
+	 * This method is similar to pressing the **Ctrl + Home** keyboard shortcut.
      * @memberof Api
      * @typeofeditors ["CDE"]
      * @alias MoveCursorToStart
@@ -419,7 +415,7 @@
     };
     /**
      * Moves a cursor to the end of the current editing area (document body, footer/header, footnote, or autoshape).
-	 * This method is similar to pressing the <b>Ctrl + End</b> keyboard shortcut.
+	 * This method is similar to pressing the **Ctrl + End** keyboard shortcut.
      * @memberof Api
      * @typeofeditors ["CDE"]
      * @alias MoveCursorToEnd
@@ -557,10 +553,10 @@
 	 * @typeofeditors ["CDE"]
 	 * @alias SetDisplayModeInReview
 	 * @param {string} [sMode="edit"] - The display mode:
-	 * * <b>edit</b> - all changes are displayed,
-	 * * <b>simple</b> - all changes are displayed but the balloons are turned off,
-	 * * <b>final</b> - all accepted changes are displayed,
-	 * * <b>original</b> - all rejected changes are displayed.
+	 * * **edit** - all changes are displayed,
+	 * * **simple** - all changes are displayed but the balloons are turned off,
+	 * * **final** - all accepted changes are displayed,
+	 * * **original** - all rejected changes are displayed.
 	 */
 	window["asc_docs_api"].prototype["pluginMethod_SetDisplayModeInReview"] = function(sMode)
 	{
@@ -582,7 +578,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias AddContentControl
-	 * @param {ContentControlType} type - A numeric value that specifies the content control type. It can have one of the following values: <b>1</b> (block), <b>2</b> (inline), <b>3</b> (row), or <b>4</b> (cell).
+	 * @param {ContentControlType} type - A numeric value that specifies the content control type. It can have one of the following values: **1** (block), **2** (inline), **3** (row), or **4** (cell).
 	 * @param {ContentControlProperties}  [commonPr = {}] - The common content control properties.
 	 * @returns {ContentControl} - A JSON object containing the data about the created content control.
 	 * @example
@@ -601,7 +597,7 @@
 	};
 
 	/**
-	 * @typedef {Object} ContentControlCkeckBoxProperties
+	 * @typedef {Object} ContentControlCheckBoxProperties
 	 * The content control checkbox properties.
 	 * @property {boolean} Checked - Defines if the content control checkbox is checked or not.
 	 * @property {number} CheckedSymbol - A symbol in the HTML code format that is used when the checkbox is checked.
@@ -613,7 +609,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias AddContentControlCheckBox
-	 * @param {ContentControlCkeckBoxProperties}  [checkBoxPr = {}] - The content control checkbox properties.
+	 * @param {ContentControlCheckBoxProperties}  [checkBoxPr = {}] - The content control checkbox properties.
 	 * @param {ContentControlProperties}  [commonPr = {}] - The common content control properties.
 	 * @example
 	 * var checkBoxPr = {"Checked": false, "CheckedSymbol": 9746, "UncheckedSymbol": 9744};
@@ -660,8 +656,8 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias AddContentControlList
-	 * @param {ContentControlType} type - A numeric value that specifies the content control type. It can have one of the following values: <b>1</b> (block), <b>2</b> (inline), <b>3</b> (row), or <b>4</b> (cell).
-	 * @param {Array<String, String>}  [List = [{Display, Value}]] - A list of the content control elements that consists of two items: <b>Display</b> - an item that will be displayed to the user in the content control list, <b>Value</b> - a value of each item from the content control list.
+	 * @param {ContentControlType} type - A numeric value that specifies the content control type. It can have one of the following values: **1** (block), **2** (inline), **3** (row), or **4** (cell).
+	 * @param {Array<String, String>}  [List = [{Display, Value}]] - A list of the content control elements that consists of two items: **Display** - an item that will be displayed to the user in the content control list, **Value** - a value of each item from the content control list.
 	 * @param {ContentControlProperties}  [commonPr = {}] - The common content control properties.
 	 * @example
 	 * var type = 1; //1 - ComboBox  0 - DropDownList
@@ -689,7 +685,7 @@
 	 * @typedef {Object} ContentControlDatePickerProperties
 	 * The content control datepicker properties.
 	 * @property {string} DateFormat - A format in which the date will be displayed.
-	 * For example: <em>"MM/DD/YYYY", "dddd\,\ mmmm\ dd\,\ yyyy", "DD\ MMMM\ YYYY", "MMMM\ DD\,\ YYYY", "DD-MMM-YY", "MMMM\ YY", "MMM-YY", "MM/DD/YYYY\ hh:mm\ AM/PM", "MM/DD/YYYY\ hh:mm:ss\ AM/PM", "hh:mm", "hh:mm:ss", "hh:mm\ AM/PM", "hh:mm:ss:\ AM/PM"</em>.
+	 * For example: *"MM/DD/YYYY", "dddd\,\ mmmm\ dd\,\ yyyy", "DD\ MMMM\ YYYY", "MMMM\ DD\,\ YYYY", "DD-MMM-YY", "MMMM\ YY", "MMM-YY", "MM/DD/YYYY\ hh:mm\ AM/PM", "MM/DD/YYYY\ hh:mm:ss\ AM/PM", "hh:mm", "hh:mm:ss", "hh:mm\ AM/PM", "hh:mm:ss:\ AM/PM"*.
 	 * @property {object} Date - The current date and time.
 	 */
 
@@ -744,7 +740,7 @@
 	 * The OLE object data.
 	 * @property {string} Data - OLE object data (internal format).
 	 * @property {string} ImageData - An image in the base64 format stored in the OLE object and used by the plugin.
-	 * @property {string} ApplicationId - An identifier of the plugin which can edit the current OLE object and must be of the <em>asc.{UUID}</em> type.
+	 * @property {string} ApplicationId - An identifier of the plugin which can edit the current OLE object and must be of the *asc.{UUID}* type.
 	 * @property {string} InternalId - The OLE object identifier which is used to work with OLE object added to the document.
 	 * @property {string} ParaDrawingId - An identifier of the drawing object containing the current OLE object.
 	 * @property {number} Width - The OLE object width measured in millimeters.
@@ -755,11 +751,11 @@
 
 	/**
 	 * Returns all OLE object data for objects which can be opened by the specified plugin.
-	 * If <em>sPluginId</em> is not defined, this method returns all OLE objects contained in the currrent document.
+	 * If *sPluginId* is not defined, this method returns all OLE objects contained in the currrent document.
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias GetAllOleObjects
-	 * @param {?string} sPluginId - Plugin identifier. It must be of the <em>asc.{UUID}</em> type.
+	 * @param {?string} sPluginId - Plugin identifier. It must be of the *asc.{UUID}* type.
 	 * @returns {OLEObjectData[]} - An array of the OLEObjectData objects containing the data about the OLE object parameters.
 	 * */
 	window["asc_docs_api"].prototype["pluginMethod_GetAllOleObjects"] = function (sPluginId)
@@ -833,7 +829,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @alias InsertOleObject
 	 * @param {OLEObjectData} NewObject - The OLEObjectData object.
-	 * @param {?boolean} bSelect - Defines if the OLE object will be selected after inserting into the document (<b>true</b>) or not (<b>false</b>).
+	 * @param {?boolean} bSelect - Defines if the OLE object will be selected after inserting into the document (**true**) or not (**false**).
 	 */
 	window["asc_docs_api"].prototype["pluginMethod_InsertOleObject"] = function(NewObject, bSelect)
 	{
@@ -851,7 +847,7 @@
 
 
 	/**
-	 * Changes the OLE object with the <em>InternalId</em> specified in OLE object data.
+	 * Changes the OLE object with the *InternalId* specified in OLE object data.
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias ChangeOleObject
@@ -862,7 +858,7 @@
 		this["pluginMethod_ChangeOleObjects"]([ObjectData]);
 	};
 	/**
-	 * Changes multiple OLE objects with the <em>InternalIds</em> specified in OLE object data.
+	 * Changes multiple OLE objects with the *InternalIds* specified in OLE object data.
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias ChangeOleObjects
@@ -967,7 +963,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias AcceptReviewChanges
-	 * @param {boolean} [isAll=false] Specifies if all changes will be accepted (<b>true</b>) or only changes from the current selection (<b>false</b>).
+	 * @param {boolean} [isAll=false] Specifies if all changes will be accepted (**true**) or only changes from the current selection (**false**).
 	 * @example
 	 * window.Asc.plugin.executeMethod("AcceptReviewChanges");
 	 *
@@ -984,7 +980,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias RejectReviewChanges
-	 * @param {boolean} [isAll=false] Specifies if all changes will be rejected (<b>true</b>) or only changes from the current selection (<b>false</b>).
+	 * @param {boolean} [isAll=false] Specifies if all changes will be rejected (**true**) or only changes from the current selection (**false**).
 	 * @example
 	 * window.Asc.plugin.executeMethod("RejectReviewChanges");
 	 *
@@ -1001,7 +997,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @alias MoveToNextReviewChange
-	 * @param {boolean} [isForward=true] Specifies whether to navigate to the next (<b>true</b>) or previous (<b>false</b>) review change.
+	 * @param {boolean} [isForward=true] Specifies whether to navigate to the next (**true**) or previous (**false**) review change.
 	 * @example
 	 * window.Asc.plugin.executeMethod("MoveToNextReviewChange");
 	 *
