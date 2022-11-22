@@ -56,20 +56,20 @@
 
     /**
      * The editors which the plugin is available for:
-	 * * <b>word</b> - text document editor,
-	 * * <b>cell</b> - spreadsheet editor,
-	 * * <b>slide</b> - presentation editor.
+	 * * **word** - text document editor,
+	 * * **cell** - spreadsheet editor,
+	 * * **slide** - presentation editor.
 	 * @typedef {("word" | "cell" | "slide")} editorType
      */
 
     /**
 	 * The data type selected in the editor and sent to the plugin:
-     * * <b>text</b> - the text data,
-	 * * <b>html</b> - HTML formatted code,
-	 * * <b>ole</b> - OLE object data,
-     * * <b>desktop</b> - the desktop editor data,
-     * * <b>destop-external</b> - the main page data of the desktop app (system messages),
-     * * <b>none</b> - no data will be send to the plugin from the editor.
+     * * **text** - the text data,
+	 * * **html** - HTML formatted code,
+	 * * **ole** - OLE object data,
+     * * **desktop** - the desktop editor data,
+     * * **destop-external** - the main page data of the desktop app (system messages),
+     * * **none** - no data will be send to the plugin from the editor.
 	 * @typedef {("text" | "html" | "ole" | "desktop" | "destop-external" | "none")} initDataType
      */
 
@@ -175,7 +175,7 @@
      * @param {Object} data - The OLE object properties.
      * @param {string} data.data - OLE object data (internal format).
      * @param {string} data.imgSrc - A link to the image (its visual representation) stored in the OLE object and used by the plugin.
-     * @param {string} data.guid - An identifier of the plugin which can edit the current OLE object and must be of the <em>asc.{UUID}</em> type.
+     * @param {string} data.guid - An identifier of the plugin which can edit the current OLE object and must be of the *asc.{UUID}* type.
      * @param {number} data.width - The OLE object width measured in millimeters.
      * @param {number} data.height - The OLE object height measured in millimeters.
      * @param {number} data.widthPix - The OLE object image width in pixels.
@@ -218,7 +218,7 @@
 	 * @property {number} m_usWeigth The visual weight (stroke blackness or thickness) of the font characters (1-1000).
 	 * @property {number} m_usWidth The relative change from the normal aspect ratio (width to height ratio).
 	 * @property {number} m_sFamilyClass The font family class which values are assigned by IBM to each font family.
-	 * @property {number} m_eFontFormat The specific file type(s) used to store font data: <b>0</b> - *.fon, <b>1</b> - *.ttf, <b>2</b> - *.ttf, *.otf (CFF), <b>3</b> - unknown font format.
+	 * @property {number} m_eFontFormat The specific file type(s) used to store font data: **0** - *.fon, **1** - *.ttf, **2** - *.ttf, *.otf (CFF), **3** - unknown font format.
 	 * @property {number} m_shAvgCharWidth The arithmetic average of the escapement (width) of all non-zero width glyphs in the font.
 	 * @property {number} m_shAscent The height above the baseline for a clipping region.
 	 * @property {number} m_shDescent The vertical extent below the baseline for a clipping region.
@@ -267,7 +267,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias PasteHtml
-     * @param {string} htmlText - A string value that specifies the text in the <em>HTML</em> format to be pasted into the document.
+     * @param {string} htmlText - A string value that specifies the text in the *HTML* format to be pasted into the document.
      */
     Api.prototype["pluginMethod_PasteHtml"] = function(htmlText)
     {
@@ -362,7 +362,7 @@
     /**
      * An object containing the data about all the macros from the document.
      * @typedef {Object} Macros
-     * @property {Array.<string>} macrosArray - An array of macros codes (<em>[{"name": "Macros1", "value": "{macrosCode}"}]</em>).
+     * @property {Array.<string>} macrosArray - An array of macros codes (*[{"name": "Macros1", "value": "{macrosCode}"}]*).
      * @property {number} current - A current macro index.
      */
 
@@ -383,7 +383,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias SetMacros
-     * @param {Macros} data - The <em>Macros</em> object containing the data about all the macros from the document.
+     * @param {Macros} data - The *Macros* object containing the data about all the macros from the document.
      */
     Api.prototype["pluginMethod_SetMacros"] = function(data)
     {
@@ -395,7 +395,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias StartAction
-     * @param {number} type - A value which defines an action type which can take <b>0</b> if this is an <em>Information</em> action or <b>1</b> if this is a <em>BlockInteraction</em> action.
+     * @param {number} type - A value which defines an action type which can take **0** if this is an *Information* action or **1** if this is a *BlockInteraction* action.
 	 * @param {string} description - A string value that specifies the description text for the start action of the operation.
      */
     Api.prototype["pluginMethod_StartAction"] = function(type, description)
@@ -408,7 +408,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias EndAction
-     * @param {number} type - A value which defines an action type which can take <b>0</b> if this is the <em>Information</em> action or <b>1</b> if this is the <em>BlockInteraction</em> action.
+     * @param {number} type - A value which defines an action type which can take **0** if this is the *Information* action or **1** if this is the *BlockInteraction* action.
      * @param {string} description - A string value that specifies the description text for the operation end action.
      */
     Api.prototype["pluginMethod_EndAction"] = function(type, description, status)
@@ -463,16 +463,16 @@
      * @alias OnEncryption
      * @param {object} obj - The encryption properties.
      * @param {string} obj.type - The type of encrypting operation:
-     * * <b>generatePassword</b> - generates a password for the document,
-     * * <b>getPasswordByFile</b> - sends the password when opening the document,
-     * * <b>setPasswordByFile</b> - sets a password to the document,
-     * * <b>encryptData</b> - encrypts changes when co-editing,
-     * * <b>decryptData</b> - decrypts changes when co-editing.
+     * * **generatePassword** - generates a password for the document,
+     * * **getPasswordByFile** - sends the password when opening the document,
+     * * **setPasswordByFile** - sets a password to the document,
+     * * **encryptData** - encrypts changes when co-editing,
+     * * **decryptData** - decrypts changes when co-editing.
      * @param {string} obj.password - A string value specifying the password to access the document.
      * @param {string} obj.data - Encrypted/decrypted changes.
-     * @param {boolean} obj.check - Checks if the encryption/decryption operation is successful or not (used only for <em>encryptData</em>/<em>decryptData</em> types).
+     * @param {boolean} obj.check - Checks if the encryption/decryption operation is successful or not (used only for *encryptData* or *decryptData* types).
      * @param {string} obj.docinfo - An unencrypted part of the encrypted file.
-     * @param {string} obj.hash - A string value specifying a file hash (<em>sha256</em> by default).
+     * @param {string} obj.hash - A string value specifying a file hash (*sha256* by default).
      * @param {string} obj.error - A string value specifying an error that occurs (the "" value means that the operation is successful).
      */
     Api.prototype["pluginMethod_OnEncryption"] = function(obj)
@@ -539,7 +539,7 @@
 	 * An object containing the watermark properties.
      * @typedef {Object} watermark_on_draw
      * @property {float} transparent The watermark transparency degree.
-     * @property {string} type The {@link https://api.onlyoffice.com/docbuilder/global#ShapeType shape type} which specifies the preset shape geometry for the current watermark.
+     * @property {string} type The {@link /docbuilder/global#ShapeType shape type} which specifies the preset shape geometry for the current watermark.
 	 * @property {number} width The watermark width measured in millimeters.
 	 * @property {number} height The watermark height measured in millimeters.
 	 * @property {number} rotate The watermark rotation angle measured in degrees.
@@ -547,9 +547,9 @@
 	 * @property {Array.<number>} fill The watermark fill color in the RGB format. The empty array [] means that the watermark has no fill.
      * @property {number} stroke-width The watermark stroke width measured in millimeters.
 	 * @property {Array.<number>} stroke The watermark stroke color in the RGB format. The empty array [] means that the watermark stroke has no fill.
-	 * @property {number} align The vertical text align in the watermark shape: <b>0</b> - bottom, <b>1</b> - center, <b>4</b> - top.
+	 * @property {number} align The vertical text align in the watermark shape: **0** - bottom, **1** - center, **4** - top.
 	 * @property {Array.<object>} paragraphs The array with paragraphs from the current watermark with their properties.
-	 * @property {number} paragraphs.align The horizontal text align in the current paragraph: <b>0</b> - right, <b>1</b> - left, <b>2</b> - center, <b>3</b> - justify.
+	 * @property {number} paragraphs.align The horizontal text align in the current paragraph: **0** - right, **1** - left, **2** - center, **3** - justify.
 	 * @property {Array.<number>} paragraphs.fill The paragraph highlight in the RGB format. The empty array [] means that the paragraph is not highlighted.
 	 * @property {number} paragraphs.linespacing The text linespecing in the current paragraph.
 	 * @property {Array.<object>} paragraphs.runs The array with runs from the current paragraph with their properties.
@@ -568,7 +568,7 @@
      * @typedef {Object} fillForms
      * @property {object} tags The form tags which specify the content for each form type with such a tag.
      * @property {string} tags.text The text field value (some text).
-	 * @property {string} tags.checkBox The checkbox form value (<b>true</b> - checked, <b>false</b> - unchecked).
+	 * @property {string} tags.checkBox The checkbox form value (**true** - checked, **false** - unchecked).
 	 * @property {string} tags.picture The image form value (a link to the image).
 	 * @property {string} tags.comboBox The combo box form value (one of the items from the combo box list values).
      */
@@ -579,8 +579,8 @@
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias SetProperties
      * @param {object} obj - The document properties.
-	 * @param {?boolean} obj.copyoutenabled - Disables copying from the editor if it is set to <b>false</b>.
-	 * @param {?boolean} obj.hideContentControlTrack - Disables tracking the content control if it is set to <b>true</b>.
+	 * @param {?boolean} obj.copyoutenabled - Disables copying from the editor if it is set to **false**.
+	 * @param {?boolean} obj.hideContentControlTrack - Disables tracking the content control if it is set to **true**.
 	 * @param {?string} obj.watermark_on_draw - A string value for {@link global#watermark_on_draw watermark properties} in JSON format.
      * @param {?boolean} obj.disableAutostartMacros - Sets a flag that specifies that macros are started automatically when the editor opens.
      * @param {?string} obj.fillForms - Sets rules in JSON format for filling document {@link global#fillForms forms} by tags.
@@ -792,10 +792,10 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias ShowInputHelper
-     * @param {string} guid - A string value which specifies a plugin identifier which must be of the <em>asc.{UUID}</em> type.
+     * @param {string} guid - A string value which specifies a plugin identifier which must be of the *asc.{UUID}* type.
      * @param {number} w - A number which specifies the window width measured in millimeters.
      * @param {number} h - A number which specifies the window height measured in millimeters.
-     * @param {boolean} isKeyboardTake - Defines if the keyboard is caught (<b>true</b>) or not (<b>false</b>).
+     * @param {boolean} isKeyboardTake - Defines if the keyboard is caught (**true**) or not (**alse**).
      */
     Api.prototype["pluginMethod_ShowInputHelper"] = function(guid, w, h, isKeyboardTake)
     {
@@ -879,8 +879,8 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias UnShowInputHelper
-     * @param {string} guid - A string value which specifies a plugin identifier which must be of the <em>asc.{UUID}</em> type.
-     * @param {string} isclear - Defines if the input context will be cleared (<b>true</b>) or not (<b>false</b>).
+     * @param {string} guid - A string value which specifies a plugin identifier which must be of the *asc.{UUID}* type.
+     * @param {string} isclear - Defines if the input context will be cleared (**true**) or not (**false**).
      */
     Api.prototype["pluginMethod_UnShowInputHelper"] = function(guid, isclear)
     {
@@ -1161,7 +1161,7 @@
 
 
     /**
-     * An object containing the information about the base64 encoded <em>png</em> image.
+     * An object containing the information about the base64 encoded *png* image.
      * @typedef {Object} ImageData
      * @property {string} src The image source in the base64 format.
      * @property {number} width The image width in pixels.
@@ -1185,7 +1185,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias PutImageDataToSelection
-     * @param {ImageData} oImageData - The information about the base64 encoded <em>png</em> image.
+     * @param {ImageData} oImageData - The information about the base64 encoded *png* image.
      */
 	Api.prototype["pluginMethod_PutImageDataToSelection"] = function(oImageData)
 	{
@@ -1316,11 +1316,11 @@
 
     /**
 	 * The plugin object.
-     * @typedef {Object} Plugin
+     * @typedef {Object} PluginData
      * @property {string} url The URL to plugin config.
-     * @property {string} guid The plugin identifier. It must be of the <em>asc.{UUID}</em> type.
-	 * @property {boolean} canRemoved Specifies if the plugin can be removed (<b>true</b>) or not (<b>false</b>).
-     * @property {object} obj The {@link config} of the installed plugin. The version is taken from the config and compared with the current one to check for updates.
+     * @property {string} guid The plugin identifier. It must be of the *asc.{UUID}* type.
+	 * @property {boolean} canRemoved Specifies if the plugin can be removed (**true**) or not (**false**).
+     * @property {object} obj The {@link /plugin/config config} of the installed plugin. The version is taken from the config and compared with the current one to check for updates.
      */
 
 	/**
@@ -1328,7 +1328,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @alias GetInstalledPlugins
-     * @returns {Plugin[]} - An array of all the installed plugins.
+     * @returns {PluginData[]} - An array of all the installed plugins.
      */
 	Api.prototype["pluginMethod_GetInstalledPlugins"] = function()
 	{
@@ -1389,7 +1389,7 @@
     * Removes a plugin with the specified GUID.
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
-     * @param {string} [guid] - The plugin identifier. It must be of the <em>asc.{UUID}</em> type.
+     * @param {string} [guid] - The plugin identifier. It must be of the *asc.{UUID}* type.
      * @alias RemovePlugin
      * @returns {object} - An object with the result information.
      */
@@ -1457,7 +1457,7 @@
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
      * @param {string} [id] - The button ID.
-     * @param {boolean} [bShow] - The flag specifies whether the button is shown (<b>true</b>) or hidden (<b>false</b>).
+     * @param {boolean} [bShow] - The flag specifies whether the button is shown (**true**) or hidden (**false**).
      * @alias ShowButton 
      */
 	Api.prototype["pluginMethod_ShowButton"] = function(id, bShow)

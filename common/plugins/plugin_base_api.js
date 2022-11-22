@@ -46,20 +46,20 @@ window.startPluginApi = function() {
 
 	/**
 	 * The editors which the plugin is available for:
-	 * * <b>word</b> - text document editor,
-	 * * <b>cell</b> - spreadsheet editor,
-	 * * <b>slide</b> - presentation editor.
+	 * * **word** - text document editor,
+	 * * **cell** - spreadsheet editor,
+	 * * **slide** - presentation editor.
 	 * @typedef {("word" | "cell" | "slide")} editorType
 	 * */
 
 	/**
 	 * The data type selected in the editor and sent to the plugin:
-     * * <b>text</b> - the text data,
-	 * * <b>html</b> - HTML formatted code,
-	 * * <b>ole</b> - OLE object data,
-     * * <b>desktop</b> - the desktop editor data,
-     * * <b>destop-external</b> - the main page data of the desktop app (system messages),
-     * * <b>none</b> - no data will be send to the plugin from the editor.
+     * * **text** - the text data,
+	 * * **html** - HTML formatted code,
+	 * * **ole** - OLE object data,
+     * * **desktop** - the desktop editor data,
+     * * **destop-external** - the main page data of the desktop app (system messages),
+     * * **none** - no data will be send to the plugin from the editor.
 	 * @typedef {("text" | "html" | "ole" | "desktop" | "destop-external" | "none")} initDataType
      */
 
@@ -83,13 +83,11 @@ window.startPluginApi = function() {
 
 	/**
      * @typedef {(0 | 1 | 2 | 3)} ContentControlLock
-     * <p>A value that defines if it is possible to delete and/or edit the content control or not:</p>
-     * <ul>
-	 * 	<li><b>0</b> - only deleting</li>
-	 *  <li><b>1</b> - disable deleting or editing</li>
-	 *  <li><b>2</b> - only editing</li>
-	 *  <li><b>3</b> - full access</li>
-	 * </ul>
+     * A value that defines if it is possible to delete and/or edit the content control or not:
+	 * * **0** - only deleting
+	 * * **1** - disable deleting or editing
+	 * * **2** - only editing
+	 * * **3** - full access
      */
 
 	/**
@@ -105,8 +103,8 @@ window.startPluginApi = function() {
 	 * @property {string} UserName - The comment author.
 	 * @property {string} Text - The comment text.
 	 * @property {string} Time - The time when the comment was posted (in milliseconds).
-	 * @property {boolean} Solved - Specifies if the comment is resolved (<b>true</b>) or not (<b>false</b>).
-	 * @property {CommentData[]} Replies - An array containing the comment replies represented as the <em>CommentData</em> object.
+	 * @property {boolean} Solved - Specifies if the comment is resolved (**true**) or not (**false**).
+	 * @property {CommentData[]} Replies - An array containing the comment replies represented as the *CommentData* object.
 	 */
 
 
@@ -183,7 +181,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @alias init
 	 * @description The function called when the plugin is launched. It defines the data sent to the plugin describing what actions are to be performed and how they must be performed.
-	 * @param {string} text - Defines the data parameter that depends on the {@link Config#initDataType initDataType} setting specified in the <em>config.json</em> file.
+	 * @param {string} text - Defines the data parameter that depends on the {@link /plugin/config#initDataType initDataType} setting specified in the *config.json* file.
 	 */
 
 	/**
@@ -192,7 +190,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @alias button
 	 * @description The function called when any of the plugin buttons is clicked. It defines the buttons used with the plugin and the plugin behavior when they are clicked.
-	 * @param {number} buttonIndex - Defines the button index in the {@link Config#buttons buttons} array of the <em>config.json</em> file. If <em>id == -1</em>, then the plugin considers that the <b>Close</b> window cross button has been clicked or its operation has been somehow interrupted.
+	 * @param {number} buttonIndex - Defines the button index in the {@link /plugin/config#buttons buttons} array of the *config.json* file. If *id == -1*, then the plugin considers that the **Close** window cross button has been clicked or its operation has been somehow interrupted.
 	 */
 
 	/**
@@ -226,19 +224,13 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @alias inputHelper_onSelectItem
 	 * @description The function called when the user is trying to select an item from the input helper.
-	 * @param {object} item - <p>Defines the selected item:</p>
-	 * <ul>
-	 * 	<li>
-	 * 		<p><b>text</b> - the item text,</p>
-	 * 		<p><b>type</b>: string,</p>
-	 * 		<p><b>example</b>: "name";</p>
-	 * </li>
-	 * <li>
-	 * 		<p><b>id</b> - the item index,</p>
-	 * 		<p><b>type</b>: string,</p>
-	 * 		<p><b>example</b>: "1".</p>
-	 * </li>
-	 * </ul>
+	 * @param {object} item - Defines the selected item:
+	 * * **text** - the item text,  
+	 * **type**: string,  
+	 * **example**: "name";
+	 * * **id** - the item index,  
+	 * **type**: string,  
+	 * **example**: "1".
 	 */
 
 	/**
@@ -255,19 +247,13 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @alias onInputHelperInput
 	 * @description The function called when the user is trying to input the text and the input helper appears.
-	 * @param {object} data - <p>Defines the text which the user inputs:</p>
-	 * <ul>
-	 * 	<li>
-	 * 		<p><b>add</b> - defines if the text is added to the current text (<b>true</b>) or this is the beginning of the text (<b>false</b>),</p>
-	 * 		<p><b>type</b>: boolean,</p>
-	 * 		<p><b>example</b>: true;</p>
-	 * </li>
-	 * <li>
-	 * 		<p><b>text</b> - the text which the user inputs,</p>
-	 * 		<p><b>type</b>: string,</p>
-	 * 		<p><b>example</b>: "text".</p>
-	 * </li>
-	 * </ul>
+	 * @param {object} data - Defines the text which the user inputs:
+	 * * **add** - defines if the text is added to the current text (**true**) or this is the beginning of the text (**false**),  
+	 * **type**: boolean,  
+	 * **example**: true;
+	 * * **text** - the text which the user inputs,  
+	 * **type**: string,  
+	 * **example**: "text".
 	 */
 
 	/**
@@ -284,7 +270,7 @@ window.startPluginApi = function() {
      * @memberof Plugin
      * @alias onEnableMouseEvent
 	 * @description The function called to turn the mouse or touchpad events on/off.
-	 * @param {boolean} isEnabled - Defines if the mouse or touchpad is enabled (<b>true</b>) or not (<b>false</b>).
+	 * @param {boolean} isEnabled - Defines if the mouse or touchpad is enabled (**true**) or not (**false**).
      */
 
     /**
@@ -301,19 +287,13 @@ window.startPluginApi = function() {
      * @memberof Plugin
      * @alias onExternalPluginMessage
      * @description The function called to show the editor integrator message.
-     * @param {Object} data - <p>Defines the editor integrator message:</p>
-	 * <ul>
-	 * 	<li>
-	 * 		<p><b>type</b> - the message type,</p>
-	 * 		<p><b>type</b>: string,</p>
-	 * 		<p><b>example</b>: "close";</p>
-	 * </li>
-	 * <li>
-	 * 		<p><b>text</b> - the message text,</p>
-	 * 		<p><b>type</b>: string,</p>
-	 * 		<p><b>example</b>: "text".</p>
-	 * </li>
-	 * </ul>
+     * @param {Object} data - Defines the editor integrator message:
+	 * * **type** - the message type,  
+	 * **type**: string,  
+	 * **example**: "close";
+	 * * **text** - the message text,  
+	 * **type**: string,  
+	 * **example**: "text".
      */
 
 	/**
@@ -352,7 +332,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @typeofeditors ["CDE"]
 	 * @alias onCommandCallback
-	 * @description The function called to return the result of the previously executed command. It can be used to return data after executing the {@link Plugin#executeCommand} method.
+	 * @description The function called to return the result of the previously executed command. It can be used to return data after executing the {@link Plugin#executeCommand executeCommand} method.
 	 */
 
 	/**
@@ -361,7 +341,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @typeofeditors ["CDE"]
 	 * @alias onMethodReturn
-	 * @description The function called to return the result of the previously executed method. It can be used to return data after executing the {@link Plugin#executeMethod} method.
+	 * @description The function called to return the result of the previously executed method. It can be used to return data after executing the {@link Plugin#executeMethod executeMethod} method.
 	 * @param returnValue - Defines the value that will be returned.
 	 */
 
@@ -371,7 +351,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @typeofeditors ["CDE"]
 	 * @alias onAddComment
-	 * @description The function called when a comment is added to the document with the {@link Plugin#executeMethod#AddComment AddComment} method.
+	 * @description The function called when a comment is added to the document with the {@link /plugin/executeMethod/text/addcomment AddComment} method.
 	 * @param {comment} comment - Defines the comment object containing the comment data.
 	 */
 
@@ -381,7 +361,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @typeofeditors ["CDE"]
 	 * @alias onChangeCommentData
-	 * @description The function called when the specified comment is changed with the {@link Plugin#executeMethod#ChangeComment ChangeComment} method.
+	 * @description The function called when the specified comment is changed with the {@link /plugin/executeMethod/text/changecomment ChangeComment} method.
 	 * @param {comment} comment - Defines the comment object containing the comment data.
 	 */
 
@@ -391,7 +371,7 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @typeofeditors ["CDE"]
 	 * @alias onRemoveComment
-	 * @description The function called when the specified comment is removed with the {@link Plugin#executeMethod#RemoveComments RemoveComments} method.
+	 * @description The function called when the specified comment is removed with the {@link /plugin/executeMethod/text/removecomments RemoveComments} method.
 	 * @param {comment} comment - Defines the comment object containing the comment data.
 	 */
 
@@ -407,27 +387,30 @@ window.startPluginApi = function() {
 	 * @memberof Plugin
 	 * @alias executeCommand
 	 * @deprecated Please use callCommand method.
-	 * @description <p>Defines the method used to send the data back to the editor.</p>
-	 * <note>This method is deprecated, please use the {@link Plugin#callCommand} method which runs the code from the <em>data</em> string parameter.</note>
-	 * <p>Now this method is mainly used to work with the OLE objects or close the plugin without any other commands.
-	 * It is also retained for using with text so that the previous versions of the plugin remain compatible.</p>
-	 * <p>The <em>callback</em> is the result that the command returns. It is an optional parameter. In case it is missing, the {@link events#onCommandCallback window.Asc.plugin.onCommandCallback} function will be used to return the result of the command execution.</p>
-	 * <p>The second parameter is the JavaScript code for working with <b>ONLYOFFICE Document Builder</b> {@link https://api.onlyoffice.com/docbuilder/basic API} 
-	 * that allows the plugin to send structured data inserted to the resulting document file (formatted paragraphs, tables, text parts, and separate words, etc.).</p>
-	 * <note><b>ONLYOFFICE Document Builder</b> commands can be only used to create content and insert it to the document editor
-	 * (using the <em>Api.GetDocument().InsertContent(...)</em>). This limitation exists due to the co-editing feature in the online editors.
+	 * @description Defines the method used to send the data back to the editor.
+	 * <note>This method is deprecated, please use the {@link Plugin#callCommand callCommand} method which runs the code from the *data* string parameter.</note>
+	 * 
+	 * Now this method is mainly used to work with the OLE objects or close the plugin without any other commands.
+	 * It is also retained for using with text so that the previous versions of the plugin remain compatible.
+	 * 
+	 * The *callback* is the result that the command returns. It is an optional parameter. In case it is missing, the {@link Plugin#onCommandCallback window.Asc.plugin.onCommandCallback} function will be used to return the result of the command execution.
+	 * 
+	 * The second parameter is the JavaScript code for working with **ONLYOFFICE Document Builder** {@link /docbuilder/basic API} 
+	 * that allows the plugin to send structured data inserted to the resulting document file (formatted paragraphs, tables, text parts, and separate words, etc.).
+	 * <note>**ONLYOFFICE Document Builder** commands can be only used to create content and insert it to the document editor
+	 * (using the *Api.GetDocument().InsertContent(...)*). This limitation exists due to the co-editing feature in the online editors.
 	 * If it is necessary to create a plugin for the desktop editors to work with local files, no such limitation is applied.</note>
-	 * <p>When creating/editing OLE objects, two extensions are used to work with them:</p>
-	 * <ul>
-	 * 	<li><em>Api.asc_addOleObject (window.Asc.plugin.info)</em> - used to create an OLE object in the document;</li>
-	 *  <li><em>Api.asc_editOleObject (window.Asc.plugin.info)</em> - used to edit the created OLE object.</li>
-	 * </ul>
-	 * <p>When creating/editing the objects, their properties can be passed to the {@link info window.Asc.plugin.info} object that defines how the object should look.</p>
-	 * @param {string} type - Defines the type of the command. The <em>close</em> is used to close the plugin window after executing the function in the <em>data</em> parameter.
-	 * The <em>command</em> is used to execute the command and leave the window open waiting for the next command.
+	 * 
+	 * When creating/editing OLE objects, two extensions are used to work with them:
+	 * * *Api.asc_addOleObject (window.Asc.plugin.info)* - used to create an OLE object in the document;
+	 * * *Api.asc_editOleObject (window.Asc.plugin.info)* - used to edit the created OLE object.
+	 * 
+	 * When creating/editing the objects, their properties can be passed to the {@link /plugin/info window.Asc.plugin.info} object that defines how the object should look.
+	 * @param {string} type - Defines the type of the command. The *close* is used to close the plugin window after executing the function in the *data* parameter.
+	 * The *command* is used to execute the command and leave the window open waiting for the next command.
      * @param {string} data - Defines the command written in JavaScript code which purpose is to form the structured data which can be inserted to the resulting document file
 	 * (formatted paragraphs, tables, text parts, and separate words, etc.). Then the data is sent to the editors.
-	 * The command must be compatible with {@link https://api.onlyoffice.com/docbuilder/basic ONLYOFFICE Document Builder} syntax.
+	 * The command must be compatible with {@link /docbuilder/basic ONLYOFFICE Document Builder} syntax.
      * @param {Function} callback - The result that the method returns.
 	 */
 	Plugin.executeCommand = function(type, data, callback)
@@ -453,8 +436,9 @@ window.startPluginApi = function() {
 	 * executeMethod
 	 * @memberof Plugin
 	 * @alias executeMethod
-	 * @description <p>Defines the method used to execute certain editor methods using the plugin.</p>
-	 * <p>The callback is the result that the method returns. It is an optional parameter. In case it is missing, the {@link events#onMethodReturn window.Asc.plugin.onMethodReturn} function will be used to return the result of the method execution.</p>
+	 * @description Defines the method used to execute certain editor methods using the plugin.
+	 * 
+	 * The callback is the result that the method returns. It is an optional parameter. In case it is missing, the {@link Plugin#onMethodReturn window.Asc.plugin.onMethodReturn} function will be used to return the result of the method execution.
 	 * @param {string} name - The name of the specific method that must be executed.
 	 * @param {Array} params - The arguments that the method in use has (if it has any).
      * @param {Function} callback - The result that the method returns.
@@ -495,7 +479,7 @@ window.startPluginApi = function() {
 	 * resizeWindow (only for visual modal plugins)
 	 * @memberof Plugin
 	 * @alias resizeWindow
-	 * @description <p>Defines the method used to change the window size updating the minimum/maximum sizes.</p>
+	 * @description Defines the method used to change the window size updating the minimum/maximum sizes.
 	 * <note>This method is used for visual modal plugins only.</note>
 	 * @param {number} width - The window width.
      * @param {number} height - The window height.
@@ -532,22 +516,24 @@ window.startPluginApi = function() {
 	 * callCommand
 	 * @memberof Plugin
 	 * @alias callCommand
-	 * @description <p>Defines the method used to send the data back to the editor.
-	 * It replaces the {@link Plugin#executeCommand} method when working with texts in order to simplify the syntax of the script that is necessary to pass to the editors using <b>ONLYOFFICE Document Builder</b> {@link https://api.onlyoffice.com/docbuilder/basic API}.
-	 * It allows the plugin to send structured data that can be inserted to the resulting document file (formatted paragraphs, tables, text parts, and separate words, etc.).</p>
-	 * <p>The <em>callback</em> is the result that the command returns. It is an optional parameter. In case it is missing, the {@link events#onCommandCallback window.Asc.plugin.onCommandCallback} function will be used to return the result of the command execution.</p>
-     * <note><b>ONLYOFFICE Document Builder</b> commands can be only used to create content and insert it to the document editor (using the <em>Api.GetDocument().InsertContent(...)</em>).
+	 * @description Defines the method used to send the data back to the editor.
+	 * It replaces the {@link Plugin#executeCommand executeCommand} method when working with texts in order to simplify the syntax of the script that is necessary to pass to the editors using **ONLYOFFICE Document Builder** {@link /docbuilder/basic API}.
+	 * It allows the plugin to send structured data that can be inserted to the resulting document file (formatted paragraphs, tables, text parts, and separate words, etc.).
+	 * 
+	 * The *callback* is the result that the command returns. It is an optional parameter. In case it is missing, the {@link Plugin#onCommandCallback window.Asc.plugin.onCommandCallback} function will be used to return the result of the command execution.
+     * <note>**ONLYOFFICE Document Builder** commands can be only used to create content and insert it to the document editor (using the *Api.GetDocument().InsertContent(...)*).
 	 * This limitation exists due to the co-editing feature in the online editors. If it is necessary to create a plugin for desktop editors to work with local files, no such limitation is applied.</note>
-     * <p>This method is executed in its own context isolated from other JavaScript data. If some parameters or other data need to be passed to this method, use {@link scope Asc.scope} object.</p>
+     * 
+	 * This method is executed in its own context isolated from other JavaScript data. If some parameters or other data need to be passed to this method, use {@link /plugin/scope Asc.scope} object.
 	 * @param {Function} func - Defines the command written in JavaScript which purpose is to form structured data which can be inserted to the resulting document file
 	 * (formatted paragraphs, tables, text parts, and separate words, etc.). Then the data is sent to the editors.
-	 * The command must be compatible with {@link https://api.onlyoffice.com/docbuilder/basic ONLYOFFICE Document Builder} syntax.
+	 * The command must be compatible with {@link /docbuilder/basic ONLYOFFICE Document Builder} syntax.
 	 * @param {boolean} isClose - Defines whether the plugin window must be closed after the code is executed or left open waiting for another command or action.
-	 * The <em>true</em> value is used to close the plugin window after executing the function in the <em>func</em> parameter.
-	 * The <em>false</em> value is used to execute the command and leave the window open waiting for the next command.
+	 * The *true* value is used to close the plugin window after executing the function in the *func* parameter.
+	 * The *false* value is used to execute the command and leave the window open waiting for the next command.
      * @param {boolean} isCalc - Defines whether the document will be recalculated or not.
-	 * The <em>true</em> value is used to recalculate the document after executing the function in the <em>func</em> parameter.
-	 * The <em>false</em> value will not recalculate the document (use it only when your edits surely will not require document recalculation).
+	 * The *true* value is used to recalculate the document after executing the function in the *func* parameter.
+	 * The *false* value will not recalculate the document (use it only when your edits surely will not require document recalculation).
 	 * @param {Function} callback - The result that the method returns.
 	 */
 	Plugin.callCommand = function(func, isClose, isCalc, callback)
@@ -566,8 +552,8 @@ window.startPluginApi = function() {
 	 * @param {string} url - The resource code URL.
 	 * @param {Function} callback - The result that the method returns.
 	 * @param {boolean} isClose - Defines whether the plugin window must be closed after the code is executed or left open waiting for another action.
-	 * The <em>true</em> value is used to close the plugin window after executing a remotely located script.
-	 * The <em>false</em> value is used to execute the code and leave the window open waiting for the next action.
+	 * The *true* value is used to close the plugin window after executing a remotely located script.
+	 * The *false* value is used to execute the code and leave the window open waiting for the next action.
 	 */
 	Plugin.callModule = function(url, callback, isClose)
     {
@@ -650,7 +636,7 @@ window.startPluginApi = function() {
 	 * @memberof InputHelper
 	 * @alias setItems
 	 * @description Sets the items to the input helper.
-	 * @param {InputHelperItem[]} - Defines an array of the {@link global#InputHelperItem InputHelperItem} objects which contain all the items for the input helper.
+	 * @param {InputHelperItem[]} items - Defines an array of the {@link global#InputHelperItem InputHelperItem} objects which contain all the items for the input helper.
 	 */
 
 	/**
@@ -660,7 +646,7 @@ window.startPluginApi = function() {
 	 * @description Shows an input helper.
 	 * @param {number} width - The input helper window width measured in millimeters.
 	 * @param {number} height - The input helper window height measured in millimeters.
-	 * @param {boolean} isCaptureKeyboard - Defines if the keyboard is caught (<b>true</b>) or not (<b>false</b>).
+	 * @param {boolean} isCaptureKeyboard - Defines if the keyboard is caught (**true**) or not (**false**).
 	 */
 
 	/**
