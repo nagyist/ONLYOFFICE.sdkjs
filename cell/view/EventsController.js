@@ -1601,6 +1601,14 @@
 				return;
 			}
 
+			if (this.view.Api.isMobileVersion) {
+				t.clickCounter.mouseDownEvent(coord.x, coord.y, button);
+				event.ClickCount = t.clickCounter.clickCount;
+				if (0 === event.ClickCount % 2) {
+					t.isDblClickInMouseDown = true;
+					return;
+				}
+			}
 
 			if (2 === event.detail) {
 				// Это означает, что это MouseDown для dblClick эвента (его обрабатывать не нужно)
@@ -1783,6 +1791,11 @@
                 }
 
 				return true;
+			}
+
+			if (this.clickCounter.clickCount >= 2 && this.view.Api.isMobileVersion) {
+				this.view.input.focus();
+				return;
 			}
 
 			if (this.isSelectMode) {
