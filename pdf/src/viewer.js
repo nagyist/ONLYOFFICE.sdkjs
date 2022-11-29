@@ -105,6 +105,7 @@
 	{
 		this.isPainted = false;
 		this.links = null;
+		this.fields = null;
 	}
 	function CDocumentPagesInfo()
 	{
@@ -265,7 +266,8 @@
 			elements += "<canvas id=\"id_overlay\" class=\"block_elem\" style=\"left:0px;top:0px;width:100;height:100;\"></canvas>";
 			elements += "<div id=\"id_vertical_scroll\" class=\"block_elem\" style=\"display:none;left:0px;top:0px;width:0px;height:0px;\"></div>";
 			elements += "<div id=\"id_horizontal_scroll\" class=\"block_elem\" style=\"display:none;left:0px;top:0px;width:0px;height:0px;\"></div>";
-		
+			elements += "<div id=\"id_target_cursor\" class=\"block_elem\" width=\"1\" height=\"1\" style=\"touch-action:none;-ms-touch-action: none;-webkit-user-select: none;width:2px;height:13px;z-index:4;\"></div>"
+
 			//this.parent.style.backgroundColor = this.backgroundColor; <= this color from theme
 			this.parent.innerHTML = elements;
 
@@ -274,6 +276,8 @@
 
 			this.canvasOverlay = document.getElementById("id_overlay");
 			this.canvasOverlay.style.pointerEvents = "none";
+
+			this.Api.WordControl.m_oDrawingDocument.TargetHtmlElement = document.getElementById('id_target_cursor');
 
 			this.overlay = new AscCommon.COverlay();
 			this.overlay.m_oControl = { HtmlElement : this.canvasOverlay };
@@ -1155,6 +1159,31 @@
 			}
 			return null;
 		};
+		this.getPageFieldByMouse = function()
+		{
+			let pageObject = this.getPageByCoords(AscCommon.global_mouseEvent.X - this.x, AscCommon.global_mouseEvent.Y - this.y);
+			if (!pageObject)
+				return null;
+
+			let pageFields = this.pagesInfo.pages[pageObject.index];
+
+			let mouseXInPage = (AscCommon.global_mouseEvent.X - this.x) * AscCommon.AscBrowser.retinaPixelRatio - this.pageDetector.pages[pageObject.index].x;
+			let mouseYInPage = (AscCommon.global_mouseEvent.Y - this.y) * AscCommon.AscBrowser.retinaPixelRatio - this.pageDetector.pages[pageObject.index].y;
+			if (pageFields.fields)
+			{
+				for (let i = 0, len = pageFields.fields.length; i < len; i++)
+				{
+					let fieldW = pageFields.fields[i]._pagePos.w;
+					let fieldH = pageFields.fields[i]._pagePos.h;
+					if (mouseXInPage >= pageFields.fields[i]._pagePos.x && mouseXInPage <= (pageFields.fields[i]._pagePos.x + fieldW) &&
+						mouseYInPage >= pageFields.fields[i]._pagePos.y && mouseYInPage <= (pageFields.fields[i]._pagePos.y + fieldH))
+					{
+						return pageFields.fields[i];
+					}
+				}
+			}
+			return null;
+		};
 
 		this.onMouseDown = function(e)
 		{
@@ -1226,16 +1255,32 @@
 
 			oThis.isMouseMoveBetweenDownUp = false;
 			oThis.mouseDownLinkObject = oThis.getPageLinkByMouse();
+			oThis.mouseDownFieldObject = oThis.getPageFieldByMouse();
 
 			// нажали мышь - запомнили координаты и находимся ли на ссылке
 			// при выходе за epsilon на mouseMove - сэмулируем нажатие
 			// так что тут только курсор
 
 			var cursorType;
-			if (oThis.mouseDownLinkObject)
-				cursorType = "pointer";
+			if (oThis.mouseDownFieldObject)
+			{
+				switch (oThis.mouseDownFieldObject.type)
+				{
+					case "text":
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+						oThis.fieldFillingMode = true;
+						cursorType = "text";
+						break;
+					default:
+						oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						cursorType = "pointer";
+						oThis.fieldFillingMode = false;
+						break;
+				}
+			}
 			else
 			{
+				oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
 				if (oThis.MouseHandObject)
 					cursorType = "grabbing";
 				else
@@ -1244,7 +1289,7 @@
 
 			oThis.setCursorType(cursorType);
 
-			if (!oThis.MouseHandObject && !oThis.mouseDownLinkObject)
+			if (!oThis.MouseHandObject && (!oThis.mouseDownLinkObject))
 			{
 				// ждать смысла нет
 				oThis.isMouseMoveBetweenDownUp = true;
@@ -1321,7 +1366,11 @@
 
 			if (oThis.MouseHandObject)
 			{
-				if (oThis.mouseDownLinkObject)
+				if (oThis.mouseDownFieldObject)
+				{
+					oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e)
+				}
+				else if (oThis.mouseDownLinkObject)
 				{
 					// смотрим - если совпало со ссылкой при нажатии - то переходим по ней
 					var mouseUpLinkObject = oThis.getPageLinkByMouse();
@@ -1448,12 +1497,27 @@
 					}
 					else
 					{
-						// просто водим мышкой - тогда смотрим, на ссылке или нет, чтобы выставить курсор
+						// просто водим мышкой - тогда смотрим, на ссылке или поле, чтобы выставить курсор
 						var mouseMoveLinkObject = oThis.getPageLinkByMouse();
+						var mouseMoveFieldObject = oThis.getPageFieldByMouse();
+						let cursorType = "pointer";
 						if (mouseMoveLinkObject)
-							oThis.setCursorType("pointer");
+							cursorType = "pointer";
+						else if (mouseMoveFieldObject)
+						{
+							switch (mouseMoveFieldObject.type)
+							{
+								case "text":
+									cursorType = "text";
+									break;
+								default:
+									cursorType = "pointer";
+							}
+						}
 						else
-							oThis.setCursorType("grab");
+							cursorType = "grab";
+
+						oThis.setCursorType(cursorType);
 					}
 				}
 				return;
@@ -1960,6 +2024,13 @@
 				ctx.strokeRect(x + lineW / 2, y + lineW / 2, w - lineW, h - lineW);
 
 				this.pageDetector.addPage(i, x, y, w, h);
+
+				let oThis = this;
+				if (this.pagesInfo.pages[i].fields != null) {
+					this.pagesInfo.pages[i].fields.forEach(function(item) {
+						item.Draw(oThis, x, y);
+					});
+				}
 			}
 
 			this.isClearPages = false;
@@ -2274,7 +2345,45 @@
 		{
 			var bRetValue = false;
 
-			if ( e.KeyCode == 33 ) // PgUp
+			if (e.KeyCode === 8) // BackSpace
+			{
+				if (this.mouseDownFieldObject && this.fieldFillingMode)
+				{
+					this.mouseDownFieldObject.Remove(-1);
+					this._paint();
+					bRetValue = true;
+				}
+			}
+			else if (e.KeyCode === 9) // Tab
+			{
+				if (this.mouseDownFieldObject)
+				{
+					// to do переключение между формами
+				}
+			}
+			else if (e.KeyCode === 13) // Enter
+			{
+				if (this.mouseDownFieldObject)
+				{
+					// to do применить ввод (выбрать результат)
+				}
+			}
+			else if (e.KeyCode === 27) // Esc
+			{
+				if (this.mouseDownFieldObject)
+				{
+					// to do отмена ввода
+				}
+			}
+			else if (e.KeyCode === 32) // Space
+			{
+				if (this.mouseDownFieldObject)
+				{
+					
+				}
+				// to do включить checkbox/radio
+			}
+			else if ( e.KeyCode == 33 ) // PgUp
 			{
 				this.m_oScrollVerApi.scrollByY(-this.height, false);
 				this.timerSync();
@@ -2302,9 +2411,23 @@
 				this.timerSync();
 				bRetValue = true;
 			}
-			else if ( e.KeyCode == 37 ) // Left Arrow
+			else if ( e.KeyCode == 37 && this.fieldFillingMode) // Left Arrow
 			{
-				if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
+				if (this.mouseDownFieldObject)
+				{
+					// сбрасываем счетчик до появления курсора
+					if (true !== e.ShiftKey)
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+					// Чтобы при зажатой клавише курсор не пропадал
+					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+
+					let oCurPos = this.mouseDownFieldObject.MoveCursorLeft(true === e.ShiftKey, true === e.CtrlKey);
+					this.mouseDownFieldObject._content.CheckFormViewWindowPDF();
+					
+					if (oCurPos.X < this.mouseDownFieldObject._content.X)
+						this._paint();
+				}
+				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
 				{
 					this.m_oScrollHorApi.scrollByX(-40);
 				}
@@ -2335,8 +2458,21 @@
 				bRetValue = true;
 			}
 			else if ( e.KeyCode == 39 ) // Right Arrow
-			{
-				if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
+			{	
+				if (this.mouseDownFieldObject && this.fieldFillingMode)
+				{
+					// сбрасываем счетчик до появления курсора
+					if (true !== e.ShiftKey)
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+					// Чтобы при зажатой клавише курсор не пропадал
+					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+
+					let oCurPos = this.mouseDownFieldObject.MoveCursorRight(true === e.ShiftKey, true === e.CtrlKey);
+					this.mouseDownFieldObject._content.CheckFormViewWindowPDF();
+					if (oCurPos.X > this.mouseDownFieldObject._content.XLimit)
+						this._paint();
+				}
+				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
 				{
 					this.m_oScrollHorApi.scrollByX(40);
 				}
@@ -2370,6 +2506,15 @@
 						this.navigateToPage(nextPage);
 				}
 				bRetValue = true;
+			}
+			else if (e.KeyCode === 46) // Delete
+			{
+				if (this.mouseDownFieldObject && this.fieldFillingMode)
+				{
+					this.mouseDownFieldObject.Remove(1);
+					this._paint();
+					bRetValue = true;
+				}
 			}
 			else if ( e.KeyCode == 65 && true === e.CtrlKey ) // Ctrl + A
 			{
@@ -2435,6 +2580,13 @@
 					result += this.file.pages[i].text.length;
 			}
 			return result;
+		};
+
+		this.Get_AllFontNames = function()
+		{
+			return {
+				// to do
+			}
 		};
 	}
 

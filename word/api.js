@@ -1467,6 +1467,10 @@ background-repeat: no-repeat;\
 	{
 		return !!this.WordControl.m_oDrawingDocument.m_oDocumentRenderer;
 	};
+	asc_docs_api.prototype.getDocumentRenderer = function()
+	{
+		return this.WordControl.m_oDrawingDocument.m_oDocumentRenderer;
+	};
 
 	asc_docs_api.prototype.OpenDocument = function(url, gObject)
 	{
@@ -1532,7 +1536,7 @@ background-repeat: no-repeat;\
 			_t.sendEvent("asc_onHyperlinkClick", url);
 		});
 
-		AscCommon.InitBrowserInputContext(this, "", "id_viewer");
+		AscCommon.InitBrowserInputContext(this, "id_target_cursor", "id_viewer");
 		if (AscCommon.g_inputContext)
 			AscCommon.g_inputContext.onResize(this.HtmlElementName);
 
@@ -1544,6 +1548,13 @@ background-repeat: no-repeat;\
 		AscCommon.History.BinaryWriter = null;
 
 		this.WordControl.OnResize(true);
+		this.getDocumentRenderer().ImageMap = {};
+        this.getDocumentRenderer().InitDocument = function() {return};
+
+		this.FontLoader.LoadDocumentFonts(this.WordControl.m_oDrawingDocument.CheckFontNeeds(), false);
+		let LoadTimer = setInterval(function() {
+			AscFonts.FontPickerByCharacter.checkText('✓', editor, function() {clearInterval(LoadTimer)}, false, true, true);
+		}, 1000);
 	};
 	asc_docs_api.prototype["asc_setViewerThumbnailsZoom"] = function(value) {
 		if (this.WordControl.m_oDrawingDocument.m_oDocumentRenderer &&
@@ -11933,10 +11944,13 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_enterText = function(value)
 	{
 		let logicDocument = this.private_GetLogicDocument();
-		if (!logicDocument)
-			return false;
-
-		return logicDocument.EnterText(value);
+		let documentRenderer = this.getDocumentRenderer();
+		if (logicDocument)
+			return logicDocument.EnterText(value);
+		else if (documentRenderer.fieldFillingMode)
+			return documentRenderer.mouseDownFieldObject.EnterText(value);
+		
+		return false;
 	};
 	asc_docs_api.prototype.asc_correctEnterText = function(oldValue, newValue)
 	{
@@ -11998,7 +12012,7 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.Input_UpdatePos = function()
 	{
-		if (this.WordControl.m_oLogicDocument)
+		if (this.WordControl.m_oLogicDocument || this.isDocumentRenderer())
 			this.WordControl.m_oDrawingDocument.MoveTargetInInputContext();
 	};
 

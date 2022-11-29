@@ -281,6 +281,8 @@
 			"pdf/src/thumbnails.js",
 			"pdf/src/viewer.js",
 			"pdf/src/file.js",
+			"pdf/src/forms.js",
+			"pdf/src/document.js",
 			"word/document/empty.js",
 			"word/Math/NamesOfLiterals.js",
 			"word/Math/LaTeXParser.js",

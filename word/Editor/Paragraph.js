@@ -18184,7 +18184,15 @@ Paragraph.prototype.GetInnerForm = function()
 Paragraph.prototype.IsInFixedForm = function()
 {
 	var oShape = this.Parent ? this.Parent.Is_DrawingShape(true) : null;
-	return (oShape && oShape.isForm());
+	if (oShape && oShape.isForm())
+		return true;
+
+	// for pdf forms
+	let oForm = this.Parent && this.Parent.ParentPDF;
+	if (oForm)
+		return true;
+
+	return false;
 };
 Paragraph.prototype.GetParentShape = function()
 {

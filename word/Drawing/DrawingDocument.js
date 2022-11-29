@@ -2069,7 +2069,13 @@ function CDrawingDocument()
 		if (this.TargetHtmlElementBlock)
 			this.TargetHtmlElement.style.display = isShow ? "display" : "none";
 		else
-			this.TargetHtmlElement.style.visibility = isShow ? "visible" : "hidden";
+		{
+			if (isShow)
+				this.TargetHtmlElement.style.visibility = "visible";
+			else
+				this.TargetHtmlElement.style.visibility = "hidden";
+		}
+			//this.TargetHtmlElement.style.visibility = isShow ? "visible" : "hidden";
 	};
 	this.isShowTarget = function ()
 	{
@@ -3197,6 +3203,29 @@ function CDrawingDocument()
 		return {X: x_pix, Y: y_pix, Error: false};
 	};
 
+	// for pdf viewer
+	this.ConvertCoordsToCursor5 = function (x, y, pageIndex, isNoRound)
+	{
+		// теперь крутить всякие циклы нет смысла
+		if (pageIndex < 0 || pageIndex >= this.m_lPagesCount)
+		{
+			return {X: 0, Y: 0, Error: true};
+		}
+
+		var dKoef = ((this.m_oWordControl.m_nZoomValue / 100) * g_dKoef_mm_to_pix );
+
+		var x_pix = x * dKoef;
+		var y_pix = y * dKoef;
+
+		if (true !== isNoRound)
+		{
+			x_pix = (x_pix + 0.5) >> 0;
+			y_pix = (y_pix + 0.5) >> 0;
+		}
+
+		return {X: x_pix, Y: y_pix, Error: false};
+	};
+
 	this.InitViewer = function ()
 	{
 	};
@@ -3287,7 +3316,7 @@ function CDrawingDocument()
 				y += this.TextMatrix.ty;
 			}
 
-			var pos = this.ConvertCoordsToCursor4(x, y, this.m_lCurrentPage, true);
+			var pos = this.m_oDocumentRenderer == null ? this.ConvertCoordsToCursor4(x, y, this.m_lCurrentPage, true) :  this.ConvertCoordsToCursor5(x, y, this.m_lCurrentPage, true);
 			this.TargetHtmlElementLeft = pos.X >> 0;
 			this.TargetHtmlElementTop = (pos.Y + 0.5) >> 0;
 
@@ -3360,7 +3389,8 @@ function CDrawingDocument()
 		if (this.m_oWordControl)
 			this.m_oWordControl.m_oApi.checkLastWork();
 
-		this.m_oWordControl.m_oLogicDocument.Set_TargetPos(x, y, pageIndex);
+		if (this.m_oWordControl.m_oLogicDocument)
+			this.m_oWordControl.m_oLogicDocument.Set_TargetPos(x, y, pageIndex);
 
         if(window["NATIVE_EDITOR_ENJINE"])
         	return;
@@ -3383,7 +3413,7 @@ function CDrawingDocument()
 			this.m_lTimerUpdateTargetID = -1;
 		}
 
-		if (pageIndex >= this.m_arrPages.length)
+		if (this.m_oWordControl.m_oLogicDocument && pageIndex >= this.m_arrPages.length)
 			return;
 
 		var bIsPageChanged = false;
@@ -3398,15 +3428,21 @@ function CDrawingDocument()
 		var targetSizePx = (this.m_dTargetSize * this.m_oWordControl.m_nZoomValue * g_dKoef_mm_to_pix / 100) >> 0;
 
 		var pos = null;
-		if (!this.TextMatrix)
+		if (this.m_oWordControl.m_oLogicDocument)
 		{
-			pos = this.ConvertCoordsToCursor2(x, y, this.m_lCurrentPage);
+			if (!this.TextMatrix)
+			{
+				pos = this.ConvertCoordsToCursor2(x, y, this.m_lCurrentPage);
+			}
+			else
+			{
+				pos = this.ConvertCoordsToCursor2(this.TextMatrix.TransformPointX(x, y),
+					this.TextMatrix.TransformPointY(x, y), this.m_lCurrentPage);
+			}
 		}
+		// pdf
 		else
-		{
-			pos = this.ConvertCoordsToCursor2(this.TextMatrix.TransformPointX(x, y),
-				this.TextMatrix.TransformPointY(x, y), this.m_lCurrentPage);
-		}
+			pos = this.ConvertCoordsToCursor5(x, y, this.m_lCurrentPage);
 
 		if (true == pos.Error && (false == bIsPageChanged))
 			return;
@@ -5072,16 +5108,26 @@ function CDrawingDocument()
 	// при загрузке документа - нужно понять какие шрифты используются
 	this.CheckFontNeeds = function ()
 	{
-		var map_keys = this.m_oWordControl.m_oLogicDocument.Document_Get_AllFontNames();
+		var map_keys = {};
+		if (this.m_oWordControl.m_oLogicDocument)
+			map_keys = this.m_oWordControl.m_oLogicDocument.Document_Get_AllFontNames();
+		else if (this.m_oDocumentRenderer)
+			map_keys = this.m_oDocumentRenderer.Get_AllFontNames();
+
 		var dstfonts = [];
 		for (var i in map_keys)
 		{
 			dstfonts[dstfonts.length] = new AscFonts.CFont(i, 0, "", 0, null);
 		}
-		AscFonts.FontPickerByCharacter.getFontsByString(AscCommon.translateManager.getValue("Heading" + " 123"));
-        AscFonts.FontPickerByCharacter.extendFonts(dstfonts);
-		this.m_oWordControl.m_oLogicDocument.Fonts = dstfonts;
-		return;
+
+		if (this.m_oWordControl.m_oLogicDocument)
+		{
+			AscFonts.FontPickerByCharacter.getFontsByString(AscCommon.translateManager.getValue("Heading" + " 123"));
+			AscFonts.FontPickerByCharacter.extendFonts(dstfonts);
+			this.m_oWordControl.m_oLogicDocument.Fonts = dstfonts;
+		}
+		
+		return dstfonts;
 
 		/*
 		 var map_used = this.m_oWordControl.m_oLogicDocument.Document_CreateFontMap();
