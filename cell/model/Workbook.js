@@ -2751,6 +2751,7 @@
 	};
 	Workbook.prototype.SerializeHistory = function(){
 		var aRes = [];
+		var aRes2 = [];
 		//соединяем изменения, которые были до приема данных с теми, что получились после.
 
 		var t, j, length2;
@@ -2772,12 +2773,13 @@
 					} else {
 						this._SerializeHistory(oMemory, item, aRes);
 					}
+					aRes2.push(item);
 				}
 			}
 			this.aCollaborativeActions = [];
 			this.snapshot = this._getSnapshot();
 		}
-		return aRes;
+		return [aRes, aRes2];
 	};
 	Workbook.prototype._getSnapshot = function() {
 		var wb = new Workbook(new AscCommonExcel.asc_CHandlersList(), this.oApi);
@@ -4686,6 +4688,8 @@
 		this.sheetProtection = null;
 		this.aProtectedRanges = [];
 		this.aCellWatches = [];
+
+		AscCommon.g_oTableId.Add(this, this.Id);
 	}
 
 	Worksheet.prototype.getCompiledStyle = function (row, col, opt_cell, opt_styleComponents) {
@@ -12044,8 +12048,10 @@
 		var DataNew = null;
 		if(History.Is_On())
 			DataNew = this.getValueData();
-		if(History.Is_On() && false == DataOld.isEqual(DataNew))
-			History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(), new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
+		if(History.Is_On() && false == DataOld.isEqual(DataNew)) {
+			History.Add(new AscDFH.CChangesCellValueChange(this.ws, DataOld, DataNew, new AscDFH.CCellCoordsWritable(this.nRow, this.nCol)));
+		}
+			// History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(), new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
 		//todo не должны удаляться ссылки, если сделать merge ее части.
 		if(this.isNullTextString())
 		{

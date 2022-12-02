@@ -4469,6 +4469,7 @@
 	 */
 	function CChangesBase(Class)
 	{
+		console.trace('CChangesBase');
 		this.Class = Class;
 
 		this.Reverted = false;

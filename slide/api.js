@@ -2427,6 +2427,7 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.sync_CanUndoCallback         = function(bCanUndo)
 	{
+		console.trace('asc_onCanUndo:'+bCanUndo);
 		this.sendEvent("asc_onCanUndo", bCanUndo);
 	};
 	asc_docs_api.prototype.sync_CanRedoCallback         = function(bCanRedo)

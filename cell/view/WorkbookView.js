@@ -189,7 +189,7 @@
     this.element = elem;
     this.input = inputElem;
     this.Api = Api;
-    this.collaborativeEditing = collaborativeEditing;
+    this.collaborativeEditing = this.CollaborativeEditing = collaborativeEditing;
     this.lastSendInfoRange = null;
     this.oSelectionInfo = null;
     this.canUpdateAfterShiftUp = false;	// Нужно ли обновлять информацию после отпускания Shift
@@ -799,6 +799,7 @@
 			  }, "cleanSelectRange": function () {
 			      self._onCleanSelectRange();
               }, "updateUndoRedoChanged": function (bCanUndo, bCanRedo) {
+				  console.trace('onCanUndo:'+bCanUndo);
 				  self.handlers.trigger("asc_onCanUndoChanged", bCanUndo);
 				  self.handlers.trigger("asc_onCanRedoChanged", bCanRedo);
 			  }, "applyCloseEvent": function () {
@@ -937,6 +938,7 @@
       self.onShowDrawingObjects.apply(self, arguments);
     });
     this.model.handlers.add("setCanUndo", function(bCanUndo) {
+		console.trace('asc_onCanUndo:'+bCanUndo);
       self.handlers.trigger("asc_onCanUndoChanged", bCanUndo);
     });
     this.model.handlers.add("setCanRedo", function(bCanRedo) {
@@ -2926,21 +2928,29 @@
 	};
 
   WorkbookView.prototype.undo = function(Options) {
-    var oFormulaLocaleInfo = AscCommonExcel.oFormulaLocaleInfo;
-    oFormulaLocaleInfo.Parse = false;
-    oFormulaLocaleInfo.DigitSep = false;
+	  if (true === AscCommon.CollaborativeEditing.Get_GlobalLock())
+		  return;
+
+	  var oFormulaLocaleInfo = AscCommonExcel.oFormulaLocaleInfo;
+	  oFormulaLocaleInfo.Parse = false;
+	  oFormulaLocaleInfo.DigitSep = false;
 	  if (this.Api.isEditVisibleAreaOleEditor) {
 		  const oOleSize = this.getOleSize();
 		  oOleSize.undo();
-	  } else if (!this.getCellEditMode()) {
-      if (!History.Undo(Options) && this.collaborativeEditing.getFast() && this.collaborativeEditing.getCollaborativeEditing()) {
-        this.Api.sync_TryUndoInFastCollaborative();
-      }
-    } else {
-      this.cellEditor.undo();
-    }
-    oFormulaLocaleInfo.Parse = true;
-    oFormulaLocaleInfo.DigitSep = true;
+	  } else if (this.getCellEditMode()) {
+		  this.cellEditor.undo();
+	  } else if (true !== History.Can_Undo() && this.collaborativeEditing && this.collaborativeEditing.Is_Fast() && !this.collaborativeEditing.Is_SingleUser()) {
+		  this.collaborativeEditing.Set_GlobalLock(true);
+		  this.Api.forceSaveUndoRequest = true;
+	  } else {
+		  History.Undo(Options);
+	  }
+	  oFormulaLocaleInfo.Parse = true;
+	  oFormulaLocaleInfo.DigitSep = true;
+
+	  if (!AscCommon.CollaborativeEditing.Get_GlobalLock()) {
+		  this.restoreFocus();
+	  }
   };
 
   WorkbookView.prototype.redo = function() {
@@ -4513,6 +4523,76 @@
 
 		for (var i = 0; i < eventList.length; i++) {
 			this.handlers.remove(eventList[i]);
+		}
+	};
+	WorkbookView.prototype.Document_UpdateUndoRedoState = function()
+	{
+		if (true === this.TurnOffInterfaceEvents)
+			return;
+
+		if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+			return;
+
+		// TODO: Возможно стоит перенсти эту проверку в класс CHistory и присылать
+		//       данные события при изменении значения History.Index
+
+		// Проверяем состояние Undo/Redo
+
+		var bCanUndo = History.Can_Undo();
+		if (true !== bCanUndo && this.Api && this.CollaborativeEditing && true === this.CollaborativeEditing.Is_Fast() && true !== this.CollaborativeEditing.Is_SingleUser())
+			bCanUndo = this.CollaborativeEditing.CanUndo();
+
+		this.Api.sync_CanUndoCallback(bCanUndo);
+		this.Api.sync_CanRedoCallback(History.Can_Redo());
+		this.Api.CheckChangedDocument();
+	};
+	WorkbookView.prototype.Continue_FastCollaborativeEditing = function () {
+		if (true === this.CollaborativeEditing.Get_GlobalLock())
+		{
+			if (this.Api.forceSaveUndoRequest)
+				this.Api.asc_Save(true);
+
+			return;
+		}
+
+		if (this.Api.isLongAction())
+			return;
+
+		if (true !== this.CollaborativeEditing.Is_Fast() || true === this.CollaborativeEditing.Is_SingleUser())
+			return;
+
+		if (true === this.IsMovingTableBorder() || true === this.Api.isStartAddShape || this.DrawingObjects.checkTrackDrawings() || this.Api.isOpenedChartFrame)
+			return;
+
+		var HaveChanges = this.History.Have_Changes(true);
+		if (true !== HaveChanges && (true === this.CollaborativeEditing.Have_OtherChanges() || 0 !== this.CollaborativeEditing.getOwnLocksLength()))
+		{
+			// Принимаем чужие изменения. Своих нет, но функцию отсылки надо вызвать, чтобы снять локи.
+			this.CollaborativeEditing.Apply_Changes();
+			this.CollaborativeEditing.Send_Changes();
+		}
+		else if (true === HaveChanges || true === this.CollaborativeEditing.Have_OtherChanges())
+		{
+			this.Api.asc_Save(true);
+		}
+
+		var CurTime = new Date().getTime();
+		if (true === this.NeedUpdateTargetForCollaboration && (CurTime - this.LastUpdateTargetTime > 1000))
+		{
+			this.NeedUpdateTargetForCollaboration = false;
+			if (true !== HaveChanges)
+			{
+				var CursorInfo = this.History.Get_DocumentPositionBinary();
+				if (null !== CursorInfo)
+				{
+					this.Api.CoAuthoringApi.sendCursor(CursorInfo);
+					this.LastUpdateTargetTime = CurTime;
+				}
+			}
+			else
+			{
+				this.LastUpdateTargetTime = CurTime;
+			}
 		}
 	};
 
