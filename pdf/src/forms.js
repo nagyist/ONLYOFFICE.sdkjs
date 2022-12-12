@@ -211,7 +211,19 @@
         this._userName      = ""; // It is intended to be used as tooltip text whenever the cursor enters a field. 
         //It can also be used as a user-friendly name, instead of the field name, when generating error messages.
 
+        // internal
+        this._formRelRectMM = {
+            X: 0,
+            Y: 0,
+            W: 0,
+            H: 0,
+            Page: 0
+        }
         this._oldContentPos = {X: 0, Y: 0, XLimit: 0, YLimit: 0};
+        this._curShiftView = {
+            x: 0,
+            y: 0
+        }
 
         editor.getDocumentRenderer().ImageMap = {};
         editor.getDocumentRenderer().InitDocument = function() {return};
@@ -510,42 +522,7 @@
 
     CBaseField.prototype.getFormRelRect = function()
     {
-        var nX = this._content.X, nW = this._content.XLimit - this._content.X;
-	    var nY = this._content.Y, nH = this._content.YLimit - this._content.Y;
-      
-        var aX = [nX, nW];
-        var aY = [nY, nH];
-        var fX0, fY0;
-
-        return {
-            X    : nX,
-            Y    : nY,
-            W    : nW,
-            H    : nH,
-            Page : this._content.CurPage
-        };
-
-        var aRelX = [], aRelY = [];
-        for(var nX = 0; nX < aX.length; ++nX) {
-            fX0 = aX[nX];
-            for(var nY = 0; nY < aY.length; ++nY) {
-                fY0 = aY[nY];
-                var fX = oSpTransform.TransformPointX(fX0, fY0);
-                var fY = oSpTransform.TransformPointY(fX0, fY0);
-                var fRelX = oInvTextTransform.TransformPointX(fX, fY);
-                var fRelY = oInvTextTransform.TransformPointY(fX, fY);
-                aRelX.push(fRelX);
-                aRelY.push(fRelY);
-            }
-        }
-
-        return {
-            X    : Math.min.apply(Math, aRelX),
-            Y    : Math.min.apply(Math, aRelY),
-            W    : nW,
-            H    : nH,
-            Page : this.parent.PageNum
-        };
+        return this._formRelRectMM;
     };
 
     CBaseField.prototype.Draw = function(viewer, pageIndX, pageIndY) {
@@ -558,9 +535,6 @@
         
         let ctx = viewer.canvas.getContext("2d");
         
-        // draw border
-        ctx.beginPath();
-
         let X = pageIndX + (this._rect[0] * viewer.zoom);
         let Y = pageIndY + (this._rect[1] * viewer.zoom);
         let nWidth = (this._rect[2] - this._rect[0]) * viewer.zoom;
@@ -581,27 +555,67 @@
                 break;
         }
 
-        ctx.rect(X, Y, nWidth, nHeight);
-        ctx.stroke();
+        // draw border
+        if (this.type != "radiobutton") {
+            ctx.beginPath();
+            ctx.rect(X, Y, nWidth, nHeight);
+            ctx.stroke();
+        }
+
+        // маркер списка
+        if (this.type == "combobox") {
+            let nMarkX = X + nWidth * 0.95 + (nWidth * 0.025) - (nWidth * 0.025)/4;
+            let nMarkWidth = nWidth * 0.025;
+            let nMarkHeight = nMarkWidth/ 2;
+            ctx.beginPath();
+            ctx.moveTo(nMarkX, Y + nHeight/2 + nMarkHeight/2);
+            ctx.lineTo(nMarkX + nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
+            ctx.lineTo(nMarkX - nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
+            ctx.fill();
+
+            this._markRect = {
+                x1: (nMarkX - nMarkWidth/2) - ((X + nWidth) - (nMarkX + nMarkWidth/2)),
+                y1: Y,
+                x2: X + nWidth,
+                y2: Y + nHeight
+            }
+        }
 
         let scaleCoef = viewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
         let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentY = (Y + nHeight / 8) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
         let contentXLimit = (X + nWidth * 0.98) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentYLimit = (Y + nHeight) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentYLimit = (Y + nHeight - nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
         
         if (this.type == "checkbox" || this.type == "radiobutton") {
             contentY = Y * g_dKoef_pix_to_mm / scaleCoef;
             this.ProcessAutoFitContent(); // подгоняем размер галочки
         }
+        else if (this.type == "combobox") {
+            contentXLimit = this._markRect.x1 * g_dKoef_pix_to_mm / scaleCoef; // ограничиваем контент позицией маркера
+            let nContentH = this._content.GetElement(0).Get_EmptyHeight();
+            contentY = (Y + nHeight / 2) * g_dKoef_pix_to_mm / scaleCoef - nContentH / 2;
+        }
+        else if (this.type == "text" && !this.multiline) {
+            // выставляем текст посередине
+            let nContentH = this._content.GetElement(0).Get_EmptyHeight();
+            contentY = (Y + nHeight / 2) * g_dKoef_pix_to_mm / scaleCoef - nContentH / 2;
+        }
+
+        this._formRelRectMM = {
+            X: contentX,
+            Y: contentY,
+            W: contentXLimit - contentX,
+            H: contentYLimit - contentY
+        }
 
         if (contentX != this._oldContentPos.X || contentY != this._oldContentPos.Y ||
-        contentXLimit != this._oldContentPos.XLimit || contentYLimit != this._oldContentPos.YLimit) {
+        contentXLimit != this._oldContentPos.XLimit) {
             this._content.X      = this._oldContentPos.X        = contentX;
             this._content.Y      = this._oldContentPos.Y        = contentY;
             this._content.XLimit = this._oldContentPos.XLimit   = contentXLimit;
-            this._content.YLimit = this._oldContentPos.YLimit   = contentYLimit;
+            this._content.YLimit = this._oldContentPos.YLimit   = 20000;
             this._content.Recalculate_Page(0, true);
         }
         else {
@@ -610,7 +624,15 @@
             });
         }
         
-        this._content.CheckFormViewWindowPDF();
+        //this._content.ResetShiftView();
+        if (this.type == "listbox") {
+            this._content.ResetShiftView();
+            this._content.ShiftView(this._curShiftView.x, this._curShiftView.y);
+        }
+
+        if (this.type == "text" || this.type == "combobox" || this._needShiftContentView)
+            this.CheckFormViewWindow();
+
         let oGraphics = new AscCommon.CGraphics();
         let widthPx = viewer.canvas.width;
         let heightPx = viewer.canvas.height;
@@ -619,12 +641,12 @@
 		oGraphics.m_oFontManager = AscCommon.g_fontManager;
 		oGraphics.endGlobalAlphaColor = [255, 255, 255];
         oGraphics.transform(1, 0, 0, 1, 0, 0);
-
-        oGraphics.AddClipRect(this._content.X, this._content.Y, this._content.XLimit - this._content.X, this._content.YLimit - this._content.Y);
+        
+        oGraphics.AddClipRect(this._content.X, this._content.Y, this._content.XLimit - this._content.X, contentYLimit - contentY);
 
         this._content.Draw(0, oGraphics);
         // redraw target cursor if field is selected
-        if (viewer.mouseDownFieldObject == this)
+        if (viewer.mouseDownFieldObject == this && (viewer.fieldFillingMode || this.type == "combobox"))
             this._content.RecalculateCurPos();
         
         oGraphics.RemoveClip();
@@ -632,8 +654,18 @@
         this._pageIndY = pageIndY;
         
         // save pos in page.
-        this._pagePos = {x: X - pageIndX, y: Y - pageIndY, w: nWidth, h: nHeight};
-        
+        this._pagePos = {
+            x: X - pageIndX,
+            y: Y - pageIndY,
+            w: nWidth,
+            h: nHeight,
+            realX: X,
+            realY: Y
+        };
+
+        this._drawAfterScroll = false;
+        if (this.type == "listbox")
+            this.private_updateScroll(true);
     };
     
     function CPushButtonField(sName, nPage, aRect)
@@ -769,6 +801,15 @@
                         arrValues[i] = String(arrValues[i]);
                     else if (arrValues[i] === "")
                         arrValues[i] = "Yes";
+
+                let aFields = this._doc.getWidgetsByName(this.name);
+                for (var i = 0; i < aFields.length; i++) {
+                    aFields[i]._exportValues = arrValues;
+                    if (arrValues[i])
+                        aFields[i]._exportValue = arrValues[i];
+                    else
+                        aFields[i]._exportValue = "Yes";
+                }
             },
             get() {
                 return this._exportValues;
@@ -782,24 +823,8 @@
             get() {
                 return this._style;
             }
-        },
-        "value": {
-            set(sValue) {
-                let aFields = this._doc.getWidgetsByName(this.name);
-                if (this._exportValues.includes(sValue)) {
-                    aFields.forEach(function(field) {
-                        field._value = sValue;
-                    }) 
-                }
-                else
-                    aFields.forEach(function(field) {
-                        field._value = "Off";
-                    }) 
-            },
-            get() {
-                return this._value;
-            }
         }
+        
     });
 
     CBaseCheckBoxField.prototype.ProcessAutoFitContent = function() {
@@ -824,8 +849,9 @@
         oRun.SetFontSize(nNewFontSize);
     };
 
-    const CheckedSymbol   = 0x2611;
-	const UncheckedSymbol = 0x2610;
+    // for radiobutton
+    const CheckedSymbol   = 0x25C9;
+	const UncheckedSymbol = 0x25CB;
 
     function CCheckBoxField(sName, nPage, aRect)
     {
@@ -835,6 +861,26 @@
     }
     CCheckBoxField.prototype = Object.create(CBaseCheckBoxField.prototype);
 	CCheckBoxField.prototype.constructor = CCheckBoxField;
+    Object.defineProperties(CRadioButtonField.prototype, {
+        "value": {
+            set(sValue) {
+                let aFields = this._doc.getWidgetsByName(this.name);
+                if (this._exportValues.includes(sValue)) {
+                    aFields.forEach(function(field) {
+                        field._value = sValue;
+                    });
+                }
+                else {
+                    aFields.forEach(function(field) {
+                        field._value = "Off";
+                    });
+                }
+            },
+            get() {
+                return this._value;
+            }
+        }
+    });
 
     CCheckBoxField.prototype.onMouseDown = function() {
         let aFields = this._doc.getWidgetsByName(this.name);
@@ -853,11 +899,43 @@
         editor.getDocumentRenderer()._paint();
     };
     
+    /**
+	 * Synchronizes this field with fields with the same name.
+	 * @memberof CCheckBoxField
+	 * @typeofeditors ["PDF"]
+	 */
+    CCheckBoxField.prototype.private_syncField = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        let nThisIdx = aFields.indexOf(this);
+        
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] != this) {
+                this._content.Internal_Content_RemoveAll();
+                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++)
+                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                
+                this._exportValues = aFields[i]._exportValues.slice();
+
+                if (this._exportValues[nThisIdx])
+                    this._exportValue = this._exportValues[nThisIdx];
+                else
+                    this._exportValue = "Yes";
+
+                if (aFields[i]._value != "Off")
+                    this._value = this._exportValue;
+                break;
+            }
+        }
+    };
 
     function CRadioButtonField(sName, nPage, aRect)
     {
         CBaseCheckBoxField.call(this, sName, FIELD_TYPE.radiobutton, nPage, aRect);
         
+        let oRun = this._content.GetElement(0).GetElement(0);
+        //oRun.AddText(String.fromCharCode(UncheckedSymbol));
+        oRun.AddText("〇");
+
         this._radiosInUnison = false;
         this._style = style.ci;
     }
@@ -866,15 +944,167 @@
     Object.defineProperties(CRadioButtonField.prototype, {
         "radiosInUnison": {
             set(bValue) {
-                if (typeof(bValue) == "boolean")
-                    this._radiosInUnison = bValue;
+                if (typeof(bValue) == "boolean") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._radiosInUnison = bValue;
+                    });
+                    this.private_UpdateAll();
+                }
             },
             get() {
                 return this._radiosInUnison;
             }
         },
+        "value": {
+            set(sValue) {
+                let aFields = this._doc.getWidgetsByName(this.name);
+                if (this._exportValues.includes(sValue)) {
+                    aFields.forEach(function(field) {
+                        field._value = sValue;
+                    });
+                }
+                else {
+                    aFields.forEach(function(field) {
+                        field._value = "Off";
+                    });
+                }
+                this.private_UpdateAll();
+            },
+            get() {
+                return this._value;
+            }
+        }
     });
+    /**
+	 * Synchronizes this field with fields with the same name.
+	 * @memberof CRadioButtonField
+	 * @typeofeditors ["PDF"]
+	 */
+    CRadioButtonField.prototype.private_syncField = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        let nThisIdx = aFields.indexOf(this);
+                
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] != this) {
+                this._radiosInUnison = aFields[i]._radiosInUnison;
+                this._exportValues = aFields[i]._exportValues.slice();
+                if (this._exportValues[nThisIdx])
+                    this._exportValue = this._exportValues[nThisIdx];
+                else
+                    this._exportValue = "Yes";
 
+                if (aFields[i]._value != "Off")
+                    this._value = this._exportValue;
+
+                if (this._radiosInUnison && this._exportValue == aFields[i]._exportValue) {
+                    this._content.Internal_Content_RemoveAll();
+                    for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++)
+                        this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                
+                    break;
+                }
+            }
+        }
+    };
+    CRadioButtonField.prototype.onMouseDown = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        let oThis = this;
+        if (false == this._radiosInUnison) {
+            if (this._value != "Off") {
+                return;
+            }
+            else {
+                this.private_SetChecked(true);
+            }
+
+            aFields.forEach(function(field) {
+                if (field == oThis)
+                    return;
+
+                if (field._value != "Off") {
+                    field.private_SetChecked(false);
+                }
+            });
+        }
+        else {
+            aFields.forEach(function(field) {
+                if (field._exportValue != oThis._exportValue) {
+                    field.private_SetChecked(false);
+                }
+                else {
+                    field.private_SetChecked(true);
+                }
+            });
+        }
+        
+        editor.getDocumentRenderer()._paint();
+    };
+    /**
+	 * Updates all field with this field name.
+	 * @memberof CRadioButtonField
+	 * @typeofeditors ["PDF"]
+	 */
+    CRadioButtonField.prototype.private_UpdateAll = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        
+        if (this._radiosInUnison) {
+            // отмечаем все radiobuttons с тем же экспортом, что и отмеченные
+            let sExportValue;
+            for (let i = 0; i < aFields.length; i++) {
+                if (!sExportValue && aFields[i]._value != "Off") {
+                    sExportValue = aFields[i]._exportValue;
+                    break;
+                }
+            }
+            if (!sExportValue) {
+                aFields.forEach(function(field) {
+                    field.private_SetChecked(false);
+                });
+            }
+            else {
+                aFields.forEach(function(field) {
+                    if (field._exportValue != sExportValue) {
+                        field.private_SetChecked(false);
+                    }
+                    else {
+                        field.private_SetChecked(true);
+                    }
+                });
+            }
+        }
+        else {
+            let oCheckedFld = null;
+            // оставляем активной первую отмеченную radiobutton
+            for (let i = 0; i < aFields.length; i++) {
+                if (!oCheckedFld && aFields[i]._value != "Off") {
+                    oCheckedFld = aFields[i];
+                    continue;
+                }
+                if (oCheckedFld) {
+                    aFields[i].private_SetChecked(false);
+                }
+            }
+        }
+    };
+    /**
+	 * Set checked to this field (not for all with the same name).
+	 * @memberof CRadioButtonField
+	 * @typeofeditors ["PDF"]
+	 */
+    CRadioButtonField.prototype.private_SetChecked = function(isChecked) {
+        let oRun = this._content.GetElement(0).GetElement(0);
+        if (isChecked) {
+            oRun.ClearContent();
+            oRun.AddText(String.fromCharCode(CheckedSymbol));
+            this._value = this._exportValue;
+        }
+        else {
+            oRun.ClearContent();
+            oRun.AddText("〇");
+            this._value = "Off";
+        }
+    };
 
     function CTextField(sName, nPage, aRect)
     {
@@ -892,11 +1122,11 @@
         this._richText          = false; // to do связанные свойства, методы
         this._richValue         = [];
         this._textFont          = "ArialMT";
-
+        this._fileSelect        = false;
+        
         this._content = new AscWord.CDocumentContent(null, editor.WordControl.m_oDrawingDocument, 0, 0, 0, 0, undefined, undefined, false);
         this._content.ParentPDF = this;
         this._content.SetUseXLimit(false);
-
     }
     CTextField.prototype = Object.create(CBaseField.prototype);
 	CTextField.prototype.constructor = CTextField;
@@ -921,8 +1151,12 @@
         },
         "calcOrderIndex": {
             set(nValue) {
-                if (typeof(nValue) == "number")
-                    this._calcOrderIndex = nValue;
+                if (typeof(nValue) == "number") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._calcOrderIndex = nValue;
+                    });
+                }
             },
             get() {
                 return this._calcOrderIndex;
@@ -930,8 +1164,13 @@
         },
         "charLimit": {
             set(nValue) {
-                if (typeof(nValue) == "number" && nValue <= 500 && nValue > 0 && this.fileSelect === false)
-                    this._charLimit = Math.round(nValue);
+                if (typeof(nValue) == "number" && nValue <= 500 && nValue > 0 && this.fileSelect === false) {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    nValue = Math.round(nValue);
+                    aFields.forEach(function(field) {
+                        field._charLimit = nValue;
+                    });
+                }
             },
             get() {
                 return this._charLimit;
@@ -939,12 +1178,19 @@
         },
         "comb": {
             set(bValue) {
+                let aFields = this._doc.getWidgetsByName(this.name);
                 if (bValue === true) {
-                    this._comb = true;
-                    this._doNotScroll = true;
+                    aFields.forEach(function(field) {
+                        field._comb = true;
+                        field._doNotScroll = true;
+                    });
+                    
                 }
-                else if (bValue === false)
-                    this._comb = false;
+                else if (bValue === false) {
+                    aFields.forEach(function(field) {
+                        field._comb = false;
+                    });
+                }
             },
             get() {
                 return this._comb;
@@ -952,8 +1198,12 @@
         },
         "doNotScroll": {
             set(bValue) {
-                if (typeof(bValue) === "boolean")
-                    this._doNotScroll = bValue;
+                if (typeof(bValue) === "boolean") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._doNotScroll = bValue;
+                    });
+                }
             },
             get() {
                 return this._doNotScroll;
@@ -961,8 +1211,12 @@
         },
         "doNotSpellCheck": {
             set(bValue) {
-                if (typeof(bValue) === "boolean")
-                    this._doNotSpellCheck = bValue;
+                if (typeof(bValue) === "boolean") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._doNotSpellCheck = bValue;
+                    });
+                }
             },
             get() {
                 return this._doNotSpellCheckl;
@@ -970,11 +1224,18 @@
         },
         "fileSelect": {
             set(bValue) {
+                let aFields = this._doc.getWidgetsByName(this.name);
                 if (bValue === true && this.multiline == false && this.charLimit === 0
-                    && this.password == false && this.defaultValue == "")
-                    this._fileSelect = true;
-                else if (bValue === false)
-                    this._fileSelect = false;
+                    && this.password == false && this.defaultValue == "") {
+                        aFields.forEach(function(field) {
+                            field._fileSelect = true;
+                        });
+                    }
+                else if (bValue === false) {
+                    aFields.forEach(function(field) {
+                        field._fileSelect = false;
+                    });
+                }
             },
             get() {
                 return this._fileSelect;
@@ -982,10 +1243,19 @@
         },
         "multiline": {
             set(bValue) {
-                if (bValue === true && this.fileSelect === false)
-                    this._multiline = true;
-                else if (bValue === false)
-                    this._multiline = false;
+                let aFields = this._doc.getWidgetsByName(this.name);
+                if (bValue === true && this.fileSelect === false) {
+                    aFields.forEach(function(field) {
+                        field._content.SetUseXLimit(true);
+                        field._multiline = true;
+                    });
+                }
+                else if (bValue === false) {
+                    aFields.forEach(function(field) {
+                        field._content.SetUseXLimit(false);
+                        field._multiline = false;
+                    });
+                }
             },
             get() {
                 return this._multiline;
@@ -993,10 +1263,17 @@
         },
         "password": {
             set (bValue) {
-                if (bValue === true && this.fileSelect === false)
-                    this._password = true;
-                else if (bValue === false)
-                    this._password = false;
+                let aFields = this._doc.getWidgetsByName(this.name);
+                if (bValue === true && this.fileSelect === false) {
+                    aFields.forEach(function(field) {
+                        field._password = true;
+                    });
+                }
+                else if (bValue === false) {
+                    aFields.forEach(function(field) {
+                        field._password = false;
+                    });
+                }
             },
             get() {
                 return this._password;
@@ -1004,8 +1281,12 @@
         },
         "richText": {
             set(bValue) {
-                if (typeof(bValue) == "boolean")
-                    this._richText = bValue;
+                if (typeof(bValue) == "boolean") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._richText = bValue;
+                    });
+                }
             },
             get() {
                 return this._richText;
@@ -1019,7 +1300,10 @@
                             return item;
                     });
 
-                    this._richValue = aCorrectVals;
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._richValue = aCorrectVals;
+                    });
                 }
             },
             get() {
@@ -1028,17 +1312,22 @@
         },
         "textFont": {
             set(sValue) {
-                if (typeof(sValue) == "string" && sValue !== "")
-                    this._textFont = sValue;
+                if (typeof(sValue) == "string" && sValue !== "") {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._textFont = sValue;
+                    });
+                }
             },
             get() {
                 return this.textFont;
             }
         }
-
     });
     
     CTextField.prototype.onMouseDown = function(x, y, e) {
+        editor.WordControl.m_oDrawingDocument.TargetStart();
+
         let oHTMLPage = editor.getDocumentRenderer();
                 
         let mouseXInPage = x - oHTMLPage.x;
@@ -1051,30 +1340,27 @@
         editor.WordControl.m_oDrawingDocument.m_lCurrentPage = 0;
         editor.WordControl.m_oDrawingDocument.m_lPagesCount = 1;
         
-        let aFields = this._doc.getWidgetsByName(this.name);
-        aFields.forEach(function(field) {
-            field._content.Selection_SetStart(X, field._content.Y, 0, e);
-            field._content.RemoveSelection();
-        });
+        this._content.Selection_SetStart(X, Y, 0, e);
+        this._content.RemoveSelection();
         
         this._content.RecalculateCurPos();
     };
-    CTextField.prototype.MoveCursorLeft = function(isShiftKey, isCtrlKey)
+    CTextField.prototype.private_moveCursorLeft = function(isShiftKey, isCtrlKey)
     {
-        let aFields = this._doc.getWidgetsByName(this.name);
-        aFields.forEach(function(field) {
-            field._content.MoveCursorLeft(isShiftKey, isCtrlKey);
-        });
-
+        this._content.MoveCursorLeft(isShiftKey, isCtrlKey);
         return this._content.RecalculateCurPos();
     };
-    CTextField.prototype.MoveCursorRight = function(isShiftKey, isCtrlKey)
+    CTextField.prototype.private_moveCursorRight = function(isShiftKey, isCtrlKey)
     {
-        let aFields = this._doc.getWidgetsByName(this.name);
-        aFields.forEach(function(field) {
-            field._content.MoveCursorRight(isShiftKey, isCtrlKey);
-        });
-
+        this._content.MoveCursorRight(isShiftKey, isCtrlKey);
+        return this._content.RecalculateCurPos();
+    };
+    CTextField.prototype.private_MoveCursorDown = function() {
+        this._content.MoveCursorDown();
+        return this._content.RecalculateCurPos();
+    };
+    CTextField.prototype.private_MoveCursorUp = function() {
+        this._content.MoveCursorUp();
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.EnterText = function(aChars)
@@ -1082,31 +1368,82 @@
         if (aChars.length == 0)
             return;
 
-        let aFields = this._doc.getWidgetsByName(this.name);
-        aFields.forEach(function(field) {
-            let oPara = field._content.GetElement(0);
-            let oRun = oPara.GetElement(0);
-            for (let index = 0, count = aChars.length; index < count; ++index)
-            {
-                let codePoint = aChars[index];
-                oRun.Add(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
-            }
-        });
+        if (this.type == "combobox" && this._editable == false)
+            return;
+
+        let oPara = this._content.GetElement(0);
+        let oRun = oPara.GetElement(oPara.CurPos.ContentPos);
+        for (let index = 0, count = aChars.length; index < count; ++index)
+        {
+            let codePoint = aChars[index];
+            oRun.Add(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
+        }
 
         editor.getDocumentRenderer()._paint();
     };
-    
+    /**
+	 * Applies value of this field to all field with the same name.
+	 * @memberof CTextField
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.private_applyValueForAll = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        
+        for (let i = 0; i < aFields.length; i++) {
+            aFields[i]._content.GetElement(0).MoveCursorToStartPos();
+
+            if (aFields[i] == this)
+                continue;
+
+            aFields[i]._content.Internal_Content_RemoveAll();
+            for (let nItem = 0; nItem < this._content.Content.length; nItem++)
+                aFields[i]._content.Internal_Content_Add(nItem, this._content.Content[nItem].Copy());
+
+            aFields[i]._content.Recalculate_Page(0);
+        }
+    };
+
     /**
 	 * Removes char in current position by direction.
 	 * @memberof CTextField
 	 * @typeofeditors ["PDF"]
 	 */
     CTextField.prototype.Remove = function(nDirection) {
+        this._content.Remove(nDirection, true, false, false, false);
+    };
+    /**
+	 * Synchronizes this field with fields with the same name.
+	 * @memberof CTextField
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.private_syncField = function() {
         let aFields = this._doc.getWidgetsByName(this.name);
         
-        aFields.forEach(function(field) {
-            field._content.Remove(nDirection, true, false, false, false);
-        });
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] != this) {
+                this._alignment         = aFields[i]._alignment;
+                this._calcOrderIndex    = aFields[i]._calcOrderIndex;
+                this._charLimit         = aFields[i]._charLimit;
+                this._comb              = aFields[i]._comb;
+                this._doNotScroll       = aFields[i]._doNotScroll;
+                this._doNotSpellCheckl  = aFields[i]._doNotSpellCheckl;
+                this._fileSelect        = aFields[i]._fileSelect;
+                this._multiline         = aFields[i]._multiline;
+                this._password          = aFields[i]._password;
+                this._richText          = aFields[i]._richText;
+                this._richValue         = aFields[i]._richValue.slice();
+                this._textFont          = aFields[i]._textFont;
+
+                if (this._multiline)
+                    this._content.SetUseXLimit(true);
+
+                this._content.Internal_Content_RemoveAll();
+                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++)
+                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                
+                break;
+            }
+        }
     };
 
     function CBaseListField(sName, sType, nPage, aRect)
@@ -1115,8 +1452,12 @@
 
         this._commitOnSelChange     = false;
         this._currentValueIndices   = undefined;
-        this._numItems              = 0;
         this._textFont              = "ArialMT";
+        this._options               = [];
+        
+        this._content = new AscWord.CDocumentContent(null, editor.WordControl.m_oDrawingDocument, 0, 0, 0, 0, undefined, undefined, false);
+        this._content.ParentPDF = this;
+        this._content.SetUseXLimit(false);
     }
     CBaseListField.prototype = Object.create(CBaseField.prototype);
 	CBaseListField.prototype.constructor = CBaseListField;
@@ -1154,7 +1495,7 @@
         },
         "numItems": {
             get() {
-                return this._numItems;
+                return this._options.length;
             }
         },
         "textFont": {
@@ -1168,6 +1509,30 @@
         }
     });
 
+    /**
+	 * Gets the internal value of an item in a combo box or a list box.
+	 * @memberof CTextField
+     * @param {number} nIdx - The 0-based index of the item in the list or -1 for the last item in the list.
+     * @param {boolean} [bExportValue=true] - Specifies whether to return an export value.
+	 * @typeofeditors ["PDF"]
+     * @returns {string}
+	 */
+    CBaseListField.prototype.getItemAt = function(nIdx, bExportValue) {
+        if (typeof(bExportValue) != "boolean")
+            bExportValue = true;
+
+        if (this._options[nIdx]) {
+            if (typeof(this._options[nIdx]) == "string")
+                return this._options[nIdx];
+            else {
+                if (bExportValue)
+                    return this._options[nIdx][1];
+
+                return this._options[nIdx][0];
+            } 
+        }
+    };
+
     function CComboBoxField(sName, nPage, aRect)
     {
         CBaseListField.call(this, sName, FIELD_TYPE.combobox, nPage, aRect);
@@ -1175,6 +1540,9 @@
         this._calcOrderIndex    = 0;
         this._doNotSpellCheck   = false;
         this._editable          = false;
+
+        // internal
+        this._id = AscCommon.g_oIdCounter.Get_NewId();
     };
     CComboBoxField.prototype = Object.create(CBaseListField.prototype);
 	CComboBoxField.prototype.constructor = CComboBoxField;
@@ -1203,19 +1571,117 @@
                     this._editable = bValue;
             },
             get() {
-                return this._editablel;
+                return this._editable;
             }
         }
-        
     });
+
+    CComboBoxField.prototype.onMouseDown = function(x, y, e) {
+        let oViewer = editor.getDocumentRenderer();
+        let X = (x - oViewer.x) * AscCommon.AscBrowser.retinaPixelRatio;
+        let Y = (y - oViewer.y) * AscCommon.AscBrowser.retinaPixelRatio;
+        
+        let mouseXInPage = x - oViewer.x;
+        let mouseYInPage = y - oViewer.y;
+
+        let XInContent = mouseXInPage * g_dKoef_pix_to_mm / oViewer.zoom;
+        let YInContent = mouseYInPage * g_dKoef_pix_to_mm / oViewer.zoom;
+        
+        editor.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
+        editor.WordControl.m_oDrawingDocument.m_lCurrentPage = 0;
+        editor.WordControl.m_oDrawingDocument.m_lPagesCount = 1;
+
+        if (X >= this._markRect.x1 && X <= this._markRect.x2 && Y >= this._markRect.y1 && Y <= this._markRect.y2 && this._options.length != 0) {
+            editor.sendEvent("asc_onShowPDFFormsActions", this, x, y);
+            this._content.GetElement(0).MoveCursorToStartPos();
+        }
+        else {
+            this._content.Selection_SetStart(XInContent, YInContent, 0, e);
+            this._content.RemoveSelection();
+        }
+        
+        this._content.RecalculateCurPos();
+    };
+    /**
+	 * Sets the list of items for a combo box.
+	 * @memberof CComboBoxField
+     * @param {string[]} values - An array in which each element is either an object convertible to a string or another array:
+        For an element that can be converted to a string, the user and export values for the list item are equal to the string.
+        For an element that is an array, the array must have two subelements convertible to strings, where the first is the user value and the second is the export value.
+	 * @typeofeditors ["PDF"]
+	 */
+    CComboBoxField.prototype.setItems = function(values) {
+        let aOptToPush = [];
+        for (let i = 0; i < values.length; i++) {
+            if (values[i] == null)
+                continue;
+            if (typeof(values[i]) == "string" && values[i] != "")
+                aOptToPush.push(values[i]);
+            else if (Array.isArray(values[i]) && values[i][0] != undefined && values[i][1] != undefined) {
+                if (values[i][0].toString && values[i][1].toString) {
+                    aOptToPush.push([values[i][0].toString(), values[i][1].toString()])
+                }
+            }
+            else if (typeof(values[i]) != "string" && values[i].toString) {
+                aOptToPush.push(values[i].toString());
+            }
+        }
+
+        let aFields = this._doc.getWidgetsByName(this.name);
+        aFields.forEach(function(field) {
+            field._options = aOptToPush.slice();
+        });
+    };
+    CComboBoxField.prototype.private_selectOption = function(nIdx) {
+        let oPara = this._content.GetElement(0);
+        let oRun = oPara.GetElement(0);
+        oRun.ClearContent();
+        if (Array.isArray(this._options[nIdx]))
+            oRun.AddText(this._options[nIdx][0]);
+        else
+            oRun.AddText(this._options[nIdx]);
+
+        editor.getDocumentRenderer()._paint();
+    };
+    /**
+	 * Synchronizes this field with fields with the same name.
+	 * @memberof CComboBoxField
+	 * @typeofeditors ["PDF"]
+	 */
+    CComboBoxField.prototype.private_syncField = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] != this) {
+
+                this._calcOrderIndex    = aFields[i]._calcOrderIndex;
+                this._doNotSpellCheck   = aFields[i]._doNotSpellCheck;
+                this._editable          = aFields[i]._editable;
+
+                this._content.Internal_Content_RemoveAll();
+                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++) {
+                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                }
+                
+                this._options = aFields[i]._options.slice();
+                break;
+            }
+        }
+    };
+
+    CComboBoxField.prototype.EnterText                  = CTextField.prototype.EnterText;
+    CComboBoxField.prototype.private_applyValueForAll   = CTextField.prototype.private_applyValueForAll;
+    CComboBoxField.prototype.Remove                     = CTextField.prototype.Remove;
+    CComboBoxField.prototype.private_moveCursorLeft     = CTextField.prototype.private_moveCursorLeft;
+    CComboBoxField.prototype.private_moveCursorRight    = CTextField.prototype.private_moveCursorRight;
 
     function CListBoxField(sName, nPage, aRect)
     {
         CBaseListField.call(this, sName, FIELD_TYPE.listbox, nPage, aRect);
 
         this._multipleSelection = false;
-        
     };
+    CListBoxField.scrollCount = 0;
     CListBoxField.prototype = Object.create(CBaseListField.prototype);
 	CListBoxField.prototype.constructor = CListBoxField;
     Object.defineProperties(CListBoxField.prototype, {
@@ -1227,14 +1693,261 @@
             get() {
                 return this._multipleSelection;
             }
-
         }
     });
+    /**
+	 * Synchronizes this field with fields with the same name.
+	 * @memberof CListBoxField
+	 * @typeofeditors ["PDF"]
+	 */
+    CListBoxField.prototype.private_syncField = function() {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] != this) {
+                this._multipleSelection = aFields[i]._multipleSelection;
+                this._content.Internal_Content_RemoveAll();
+                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++) {
+                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                }
+                
+                this._options = aFields[i]._options.slice();
+                break;
+            }
+        }
+    };
+    /**
+	 * Applies value of this field to all field with the same name.
+	 * @memberof CListBoxField
+	 * @typeofeditors ["PDF"]
+	 */
+    CListBoxField.prototype.private_applyValueForAll = function(oFieldToSkip) {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        let oThis = this;
+        let nIdx = this._content.CurPos.ContentPos;
+        aFields.forEach(function(field) {
+            if (oThis == field || oFieldToSkip == field)
+                return;
+            
+            field._curShiftView.y = oThis._curShiftView.y;
+            field._needShiftContentView = true;
+            field.private_selectOption(nIdx);
+        });
+    };
+    /**
+	 * Sets the list of items for a list box.
+	 * @memberof CListBoxField
+     * @param {string[]} values - An array in which each element is either an object convertible to a string or another array:
+        For an element that can be converted to a string, the user and export values for the list item are equal to the string.
+        For an element that is an array, the array must have two subelements convertible to strings, where the first is the user value and the second is the export value.
+	 * @typeofeditors ["PDF"]
+	 */
+    CListBoxField.prototype.setItems = function(values) {
+        let aFields = this._doc.getWidgetsByName(this.name);
+
+        aFields.forEach(function(field) {
+            field._options = [];
+            field._content.Internal_Content_RemoveAll();
+            let sCaption, oPara, oRun;
+            
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] == null)
+                    continue;
+                sCaption = "";
+                if (typeof(values[i]) == "string" && values[i] != "") {
+                    sCaption = values[i];
+                    field._options.push(values[i]);
+                }
+                else if (Array.isArray(values[i]) && values[i][0] != undefined && values[i][1] != undefined) {
+                    if (values[i][0].toString && values[i][1].toString) {
+                        field._options.push([values[i][0].toString(), values[i][1].toString()]);
+                        sCaption = values[i][0].toString();
+                    }
+                }
+                else if (typeof(values[i]) != "string" && values[i].toString) {
+                    field._options.push(values[i].toString());
+                    sCaption = values[i].toString();
+                }
+
+                if (sCaption != "") {
+                    oPara = new AscCommonWord.Paragraph(field._content.DrawingDocument, field._content, false);
+                    oRun = new AscCommonWord.ParaRun(oPara, false);
+                    field._content.Internal_Content_Add(i, oPara);
+                    oPara.Add(oRun);
+                    oRun.AddText(sCaption);
+                }
+            }
+
+            field._curShiftView.x = 0;
+            field._curShiftView.y = 0;
+            //field._content.Recalculate_Page(0, true);
+        });
+    };
+
+    CListBoxField.prototype.private_selectOption = function(nIdx) {
+        let oApiPara;
+        
+        this._content.Set_CurrentElement(nIdx);
+        this._content.Content.forEach(function(para){
+            oApiPara = editor.private_CreateApiParagraph(para);
+            oApiPara.SetShd('nil');
+            if (oApiPara.Paragraph.CompiledPr.Pr && oApiPara.Paragraph.CompiledPr.Pr.ParaPr == g_oDocumentDefaultParaPr)
+                oApiPara.Paragraph.CompiledPr.Pr.ParaPr = g_oDocumentDefaultParaPr.Copy();
+            if (oApiPara.Paragraph.CompiledPr.Pr)
+                oApiPara.Paragraph.CompiledPr.Pr.ParaPr.Shd = oApiPara.Paragraph.Pr.Shd.Copy();
+        });
+
+        let oParaToSelect = editor.private_CreateApiParagraph(this._content.GetElement(nIdx));
+        oParaToSelect.SetShd('clear', 0, 112, 192);
+
+        oParaToSelect.Paragraph.CompiledPr.Pr.ParaPr.Shd = oParaToSelect.Paragraph.Pr.Shd.Copy();
+    };
+
+    CListBoxField.prototype.onMouseDown = function(x, y, e) {
+        let oHTMLPage = editor.getDocumentRenderer();
+        let mouseXInPage = x - oHTMLPage.x;
+        let mouseYInPage = y - oHTMLPage.y;
+
+        let X = mouseXInPage * g_dKoef_pix_to_mm / oHTMLPage.zoom;
+        let Y = mouseYInPage * g_dKoef_pix_to_mm / oHTMLPage.zoom;
+        
+        editor.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
+        editor.WordControl.m_oDrawingDocument.m_lCurrentPage = 0;
+        editor.WordControl.m_oDrawingDocument.m_lPagesCount = 1;
+        
+        let nPos = this._content.Internal_GetContentPosByXY(X, Y, 0);
+        this._content.Set_CurrentElement(nPos);
+        this.private_selectOption(nPos);
+        this._needShiftContentView = true;
+
+        editor.getDocumentRenderer()._paint();
+        this.private_updateScroll(false, true);
+    };
+    CListBoxField.prototype.private_MoveSelectDown = function() {
+        this._needShiftContentView = true;
+        this._content.MoveCursorDown();
+        this.private_selectOption(this._content.CurPos.ContentPos);
+        editor.getDocumentRenderer()._paint();
+        this.private_updateScroll();
+    };
+    CListBoxField.prototype.private_MoveSelectUp = function() {
+        this._needShiftContentView = true;
+        this._content.MoveCursorUp();
+        this.private_selectOption(this._content.CurPos.ContentPos);
+        
+        editor.getDocumentRenderer()._paint();
+        this.private_updateScroll();
+    };
+    CListBoxField.prototype.private_updateScroll = function(bUpdateOnlyPos, bShow) {
+        let oContentBounds = this._content.GetContentBounds(0);
+        let oFieldBounds = this._content.ParentPDF.getFormRelRect();
+        let oScroll, oScrollDocElm, oScrollSettings;
+        let nContentH = oContentBounds.Bottom - oContentBounds.Top;
+        
+        if (nContentH < oFieldBounds.H)
+            return;
+
+        if (typeof(bShow) != "boolean" && this._scrollInfo)
+            bShow = this._scrollInfo.scroll.canvas.style.display == "none" ? false : true;
+
+        let oViewer = editor.getDocumentRenderer();
+        let nKoeff = g_dKoef_pix_to_mm / (oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio);
+
+        if (!bUpdateOnlyPos && !this._scrollInfo && oContentBounds.Bottom - oContentBounds.Top > oFieldBounds.H) {
+            CListBoxField.scrollCount++;
+            oScrollDocElm = document.createElement('div');
+            document.getElementById('editor_sdk').appendChild(oScrollDocElm);
+            oScrollDocElm.id = "formScroll_" + CListBoxField.scrollCount;
+            oScrollDocElm.style.top = this._pagePos.realY / AscCommon.AscBrowser.retinaPixelRatio + 'px';
+            oScrollDocElm.style.left = (this._pagePos.realX + this._pagePos.w) / AscCommon.AscBrowser.retinaPixelRatio - 14 + 'px';
+            oScrollDocElm.style.position = "absolute";
+            oScrollDocElm.style.display = "block";
+			oScrollDocElm.style.width = "14px";
+			oScrollDocElm.style.height = this._pagePos.h / AscCommon.AscBrowser.retinaPixelRatio + "px";
+
+            oScrollSettings = editor.WordControl.CreateScrollSettings();
+            oScrollSettings.isHorizontalScroll = false;
+		    oScrollSettings.isVerticalScroll = true;
+		    oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
+            oScrollSettings.screenH = 0;
+            oScrollSettings.scrollerMinHeight = 5;
+            
+            oScroll = new AscCommon.ScrollObject(oScrollDocElm.id, oScrollSettings);
+            let oThis = this;
+            oScroll.bind("scrollvertical", function(evt) {
+                oThis.private_scrollVertical(evt.scrollD, evt.maxScrollY);
+            });
+
+            let nMaxShiftY = oFieldBounds.H - nContentH;
+            let nScrollCoeff = this._curShiftView.y / nMaxShiftY;
+            oScroll.scrollVCurrentY = oScroll.maxScrollY * nScrollCoeff;
+
+            this._scrollInfo = {
+                scroll: oScroll,
+                docElem: oScrollDocElm,
+                baseYPos: parseInt(oScrollDocElm.style.top),
+                oldZoom: oViewer.zoom,
+                scrollCoeff: nScrollCoeff // проскроленная часть
+            }
+
+            oScroll.Repos(oScrollSettings, false);
+        }
+        else if (this._scrollInfo) {
+            if (bUpdateOnlyPos) {
+                this._scrollInfo.docElem.style.top = this._pagePos.realY / AscCommon.AscBrowser.retinaPixelRatio  + 'px';
+                this._scrollInfo.docElem.style.left = (this._pagePos.realX + this._pagePos.w) / AscCommon.AscBrowser.retinaPixelRatio - 14 + 'px';
+                this._scrollInfo.docElem.style.height = this._pagePos.h / AscCommon.AscBrowser.retinaPixelRatio  + 'px';
+            }
+            
+            if (this._scrollInfo.oldZoom != oViewer.zoom) {
+                this._scrollInfo.oldZoom = oViewer.zoom;
+                oScrollSettings = editor.WordControl.CreateScrollSettings();
+                oScrollSettings.isHorizontalScroll = false;
+                oScrollSettings.isVerticalScroll = true;
+                oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
+                oScrollSettings.screenH = 0;
+                oScrollSettings.scrollerMinHeight = 5;
+                this._scrollInfo.scroll.scrollVCurrentY = this._scrollInfo.scroll.maxScrollY * this._scrollInfo.scrollCoeff;
+                this._scrollInfo.scroll.Repos(oScrollSettings, false);
+            }
+
+            if (!bUpdateOnlyPos) {
+                oScrollSettings = editor.WordControl.CreateScrollSettings();
+                oScrollSettings.isHorizontalScroll = false;
+                oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
+                oScrollSettings.screenH = 0;
+                oScrollSettings.scrollerMinHeight = 5;
+
+                let nMaxShiftY = oFieldBounds.H - nContentH;
+                let nScrollCoeff = this._curShiftView.y / nMaxShiftY;
+                this._scrollInfo.scroll.scrollVCurrentY = this._scrollInfo.scroll.maxScrollY * nScrollCoeff;
+                this._scrollInfo.scroll.Repos(oScrollSettings, false);
+                this._scrollInfo.scrollCoeff = nScrollCoeff;
+            }
+
+            if (bShow === true)
+                this._scrollInfo.scroll.canvas.style.display = "";
+            if (bShow === false)
+                this._scrollInfo.scroll.canvas.style.display = "none";
+        }
+    };
+    CListBoxField.prototype.private_scrollVertical = function(scrollY, maxYscroll) {
+        let oContentBounds = this._content.GetContentBounds(0);
+
+        let oFormBounds = this.getFormRelRect();
+        let nContentH = oContentBounds.Bottom - oContentBounds.Top;
+        let nMaxShiftY = oFormBounds.H - nContentH;
+
+        let nScrollCoeff = scrollY / maxYscroll;
+        this._curShiftView.y = nMaxShiftY * nScrollCoeff;
+        this._needShiftContentView = false;
+        this._scrollInfo.scrollCoeff = nScrollCoeff;
+        editor.getDocumentRenderer()._paint();
+    };
 
     function CSignatureField(sName, nPage, aRect)
     {
         CBaseField.call(this, sName, FIELD_TYPE.signature, nPage, aRect);
-        
     };
 
     function CSpan()
@@ -1331,6 +2044,96 @@
         });
     }
 
+    CBaseField.prototype.CheckFormViewWindow = function()
+    {
+        let oParagraph  = this._content.GetElement(this._content.CurPos.ContentPos);
+        let nEndPos     = this._content.Pages[0].EndPos;
+
+        // размеры до текущего параграффа
+        this._content.Pages[0].EndPos = this._content.CurPos.ContentPos;
+        let oPageBoundsToCurPara = this._content.GetContentBounds(0);
+        this._content.Pages[0].EndPos = nEndPos;
+
+        // размеры всего контента
+        let oPageBounds     = this._content.GetContentBounds(0);
+        let oCurParaHeight  = oParagraph.Lines[0].Bottom - oParagraph.Lines[0].Top;
+
+        let oFormBounds = this.getFormRelRect();
+
+        let nDx = 0, nDy = 0;
+
+        if (oPageBounds.Right - oPageBounds.Left > oFormBounds.W)
+        {
+            if (oPageBounds.Left > oFormBounds.X)
+                nDx = -oPageBounds.Left + oFormBounds.X;
+            else if (oPageBounds.Right < oFormBounds.X + oFormBounds.W)
+                nDx = oFormBounds.X + oFormBounds.W - oPageBounds.Right;
+        }
+        else
+        {
+            nDx = -this._content.ShiftViewX;
+        }
+
+        // если высота контента больше чем высота формы (для нескольких параграфов)
+        if (this.type == "listbox") {
+            if (oPageBounds.Bottom - oPageBounds.Top > oFormBounds.H) {
+                if (oPageBoundsToCurPara.Bottom > oFormBounds.Y + oFormBounds.H)
+                    nDy = oFormBounds.Y + oFormBounds.H - oPageBoundsToCurPara.Bottom;
+                else if (oPageBoundsToCurPara.Bottom - oCurParaHeight < oFormBounds.Y)
+                    nDy = oFormBounds.Y - (oPageBoundsToCurPara.Bottom - oCurParaHeight);
+                else if (oPageBoundsToCurPara.Bottom < oFormBounds.Y)
+                    nDy = oCurParaHeight;
+            }
+        }
+
+        if (Math.abs(nDx) > 0.001 || Math.abs(nDy))
+        {
+            this._content.ShiftView(nDx, nDy);
+            this._curShiftView = {
+                x: this._content.ShiftViewX,
+                y: this._content.ShiftViewY
+            }
+        }
+
+        var oCursorPos  = oParagraph.GetCalculatedCurPosXY();
+        var oLineBounds = oParagraph.GetLineBounds(oCursorPos.Internal.Line);
+
+	    nDx = 0;
+	    nDy = 0;
+
+        var nCursorT = Math.min(oCursorPos.Y, oLineBounds.Top);
+        var nCursorB = Math.max(oCursorPos.Y + oCursorPos.Height, oLineBounds.Bottom);
+        var nCursorH = Math.max(0, nCursorB - nCursorT);
+
+        if (oPageBounds.Right - oPageBounds.Left > oFormBounds.W)
+        {
+            if (oCursorPos.X < oFormBounds.X)
+                nDx = oFormBounds.X - oCursorPos.X;
+            else if (oCursorPos.X > oFormBounds.X + oFormBounds.W)
+                nDx = oFormBounds.X + oFormBounds.W - oCursorPos.X;
+        }
+
+        // если высота контента больше чем высота формы (для одного параграфа)
+        if (this._multiline) {
+            if (oPageBounds.Bottom - oPageBounds.Top > oFormBounds.H) {
+                if (nCursorT < oFormBounds.Y)
+                    nDy = oFormBounds.Y - nCursorT;
+                else if (nCursorT + nCursorH > oFormBounds.Y + oFormBounds.H)
+                    nDy = oFormBounds.Y + oFormBounds.H - (nCursorT + nCursorH);
+            }
+        }
+
+        if (this.type == "listbox") nDx = 0;
+
+        if (Math.abs(nDx) > 0.001 || Math.round(nDy) != 0)
+        {
+            this._content.ShiftView(nDx, nDy);
+            this._curShiftView = {
+                x: this._content.ShiftViewX,
+                y: this._content.ShiftViewY
+            }
+        }
+    };
     // private methods
     
     function private_GetFieldAlign(sJc)
@@ -1357,6 +2160,4 @@
 	window["AscPDFEditor"].CListBoxField        = CListBoxField;
 	window["AscPDFEditor"].CRadioButtonField    = CRadioButtonField;
 	window["AscPDFEditor"].CSignatureField      = CSignatureField;
-    
-
 })();

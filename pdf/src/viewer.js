@@ -1255,7 +1255,25 @@
 
 			oThis.isMouseMoveBetweenDownUp = false;
 			oThis.mouseDownLinkObject = oThis.getPageLinkByMouse();
-			oThis.mouseDownFieldObject = oThis.getPageFieldByMouse();
+			
+			// если выбрали другую форму (или снимаем выделение с формы), то применяем значение
+			let oField = oThis.getPageFieldByMouse();
+			if (oThis.mouseDownFieldObject && oField != oThis.mouseDownFieldObject) {
+				let oFieldToSkip = null;
+				if (oThis.mouseDownFieldObject.type == "listbox") {
+					oThis.mouseDownFieldObject.private_updateScroll(false, false);
+					if (oField && oField.name == oThis.mouseDownFieldObject.name) {
+						oFieldToSkip = oField;
+					}
+				}
+
+				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
+					oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
+					oThis._paint();
+				}
+			}
+
+			oThis.mouseDownFieldObject = oField;
 
 			// нажали мышь - запомнили координаты и находимся ли на ссылке
 			// при выходе за epsilon на mouseMove - сэмулируем нажатие
@@ -1267,14 +1285,13 @@
 				switch (oThis.mouseDownFieldObject.type)
 				{
 					case "text":
-						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
-						oThis.fieldFillingMode = true;
+						cursorType = "text";
+						break;
+					case "combobox":
 						cursorType = "text";
 						break;
 					default:
-						oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
 						cursorType = "pointer";
-						oThis.fieldFillingMode = false;
 						break;
 				}
 			}
@@ -1368,7 +1385,35 @@
 			{
 				if (oThis.mouseDownFieldObject)
 				{
-					oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e)
+					switch (oThis.mouseDownFieldObject.type)
+					{
+						case "text":
+							oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+							oThis.fieldFillingMode = true;
+							cursorType = "text";
+							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e)
+							break;
+						case "combobox":
+								// можем попасть по маркеру списка, тогда не надо включать заполнение
+								oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+								oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+								if (oThis.mouseDownFieldObject._editable)
+									oThis.fieldFillingMode = true;
+								cursorType = "text";
+							break;
+						case "listbox":
+							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+							cursorType = "pointer";
+							break;
+						case "checkbox":
+						case "radiobutton":
+							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							cursorType = "pointer";
+							oThis.fieldFillingMode = false;
+							break;
+					}
+
 				}
 				else if (oThis.mouseDownLinkObject)
 				{
@@ -1509,6 +1554,15 @@
 							{
 								case "text":
 									cursorType = "text";
+									break;
+								case "combobox":
+									let X = (AscCommon.global_mouseEvent.X - oThis.x) * AscCommon.AscBrowser.retinaPixelRatio;
+       								let Y = (AscCommon.global_mouseEvent.Y - oThis.y) * AscCommon.AscBrowser.retinaPixelRatio;
+									if (X >= mouseMoveFieldObject._markRect.x1 && X <= mouseMoveFieldObject._markRect.x2 && Y >= mouseMoveFieldObject._markRect.y1 && Y <= mouseMoveFieldObject._markRect.y2 && mouseMoveFieldObject._options.length != 0) {
+										cursorType = "pointer";
+									}
+									else
+										cursorType = "text";
 									break;
 								default:
 									cursorType = "pointer";
@@ -2365,7 +2419,23 @@
 			{
 				if (this.mouseDownFieldObject)
 				{
-					// to do применить ввод (выбрать результат)
+					switch (this.mouseDownFieldObject.type)
+					{
+						case "checkbox":
+						case "radiobutton":
+							this.mouseDownFieldObject.onMouseDown();
+							break;
+						case "listbox":
+							this.mouseDownFieldObject.private_applyValueForAll();
+							this.mouseDownFieldObject.private_updateScroll(false, false);
+						default:
+							this.mouseDownFieldObject.private_applyValueForAll();
+							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							break;
+					}
+					this.mouseDownFieldObject = null;
+					this.fieldFillingMode = false;
+					this._paint();
 				}
 			}
 			else if (e.KeyCode === 27) // Esc
@@ -2411,7 +2481,7 @@
 				this.timerSync();
 				bRetValue = true;
 			}
-			else if ( e.KeyCode == 37 && this.fieldFillingMode) // Left Arrow
+			else if ( e.KeyCode == 37 && (this.fieldFillingMode || this.mouseDownFieldObject.type == "combobox")) // Left Arrow
 			{
 				if (this.mouseDownFieldObject)
 				{
@@ -2421,10 +2491,10 @@
 					// Чтобы при зажатой клавише курсор не пропадал
 					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 
-					let oCurPos = this.mouseDownFieldObject.MoveCursorLeft(true === e.ShiftKey, true === e.CtrlKey);
-					this.mouseDownFieldObject._content.CheckFormViewWindowPDF();
-					
-					if (oCurPos.X < this.mouseDownFieldObject._content.X)
+					let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
+					let oCurPos = this.mouseDownFieldObject.private_moveCursorLeft(true === e.ShiftKey, true === e.CtrlKey);
+										
+					if (oCurPos.X < oFieldBounds.X)
 						this._paint();
 				}
 				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
@@ -2440,7 +2510,28 @@
 			}
 			else if ( e.KeyCode == 38 ) // Top Arrow
 			{
-				if (!this.isFocusOnThumbnails)
+				if (this.mouseDownFieldObject)
+				{
+					switch (this.mouseDownFieldObject.type)
+					{
+						case "listbox":
+							this.mouseDownFieldObject.private_MoveSelectUp();
+							break;
+						case "text":
+							// сбрасываем счетчик до появления курсора
+							if (true !== e.ShiftKey)
+								oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+							// Чтобы при зажатой клавише курсор не пропадал
+							oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+
+							let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
+							let oCurPos = this.mouseDownFieldObject.private_MoveCursorUp();
+							if (oCurPos.Y < oFieldBounds.Y)
+								this._paint();
+							break;
+					}
+				}
+				else if (!this.isFocusOnThumbnails)
 				{
 					this.m_oScrollVerApi.scrollByY(-40);
 				}
@@ -2459,7 +2550,7 @@
 			}
 			else if ( e.KeyCode == 39 ) // Right Arrow
 			{	
-				if (this.mouseDownFieldObject && this.fieldFillingMode)
+				if (this.mouseDownFieldObject && (this.fieldFillingMode || this.mouseDownFieldObject.type == "combobox"))
 				{
 					// сбрасываем счетчик до появления курсора
 					if (true !== e.ShiftKey)
@@ -2467,9 +2558,10 @@
 					// Чтобы при зажатой клавише курсор не пропадал
 					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 
-					let oCurPos = this.mouseDownFieldObject.MoveCursorRight(true === e.ShiftKey, true === e.CtrlKey);
-					this.mouseDownFieldObject._content.CheckFormViewWindowPDF();
-					if (oCurPos.X > this.mouseDownFieldObject._content.XLimit)
+					let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
+					let oCurPos = this.mouseDownFieldObject.private_moveCursorRight(true === e.ShiftKey, true === e.CtrlKey);
+					
+					if (oCurPos.X > oFieldBounds.X + oFieldBounds.W)
 						this._paint();
 				}
 				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
@@ -2485,7 +2577,29 @@
 			}
 			else if ( e.KeyCode == 40 ) // Bottom Arrow
 			{
-				if (!this.isFocusOnThumbnails)
+				if (this.mouseDownFieldObject)
+				{
+					switch (this.mouseDownFieldObject.type)
+					{
+						case "listbox":
+							this.mouseDownFieldObject.private_MoveSelectDown();
+							break;
+						case "text":
+							// сбрасываем счетчик до появления курсора
+							if (true !== e.ShiftKey)
+								oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+							// Чтобы при зажатой клавише курсор не пропадал
+							oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+
+							let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
+							let oCurPos = this.mouseDownFieldObject.private_MoveCursorDown();
+							if (oCurPos.Y > oFieldBounds.Y + oFieldBounds.H)
+								this._paint();
+							break;
+					}
+					
+				}
+				else if (!this.isFocusOnThumbnails)
 				{
 					this.m_oScrollVerApi.scrollByY(40);
 				}

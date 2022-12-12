@@ -2117,8 +2117,6 @@ Paragraph.prototype.Internal_Draw_2 = function(CurPage, pGraphics, Pr)
 Paragraph.prototype.Internal_Draw_3 = function(CurPage, pGraphics, Pr)
 {
 	var LogicDocument = this.LogicDocument;
-	if (!LogicDocument)
-		return;
 
 	var bDrawBorders = this.Is_NeedDrawBorders();
 	if (true === bDrawBorders && 0 === CurPage && true === this.private_IsEmptyPageWithBreak(CurPage))
@@ -2130,19 +2128,19 @@ Paragraph.prototype.Internal_Draw_3 = function(CurPage, pGraphics, Pr)
 
 	var _Page = this.Pages[CurPage];
 
-	var DocumentComments = LogicDocument.Comments;
+	var DocumentComments = LogicDocument && LogicDocument.Comments;
 	var Page_abs         = this.Get_AbsolutePage(CurPage);
 
 	var DrawComm           = DocumentComments ? DocumentComments.Is_Use() : false;
-	var DrawFind           = LogicDocument.SearchEngine.Selection;
+	var DrawFind           = LogicDocument && LogicDocument.SearchEngine.Selection;
 	var DrawColl           = undefined !== pGraphics.RENDERER_PDF_FLAG;
-	var DrawMMFields       = !!(this.LogicDocument && this.LogicDocument.Is_HighlightMailMergeFields && true === this.LogicDocument.Is_HighlightMailMergeFields());
+	var DrawMMFields       = LogicDocument && !!(this.LogicDocument && this.LogicDocument.Is_HighlightMailMergeFields && true === this.LogicDocument.Is_HighlightMailMergeFields());
 	var DrawSolvedComments = DocumentComments ? DocumentComments.IsUseSolved() : false;
 
-	var SdtHighlightColor  = this.LogicDocument.GetSdtGlobalShowHighlight && this.LogicDocument.GetSdtGlobalShowHighlight() ? this.LogicDocument.GetSdtGlobalColor() : null;
-	var FormsHighlight     = this.LogicDocument.GetSpecialFormsHighlight && this.LogicDocument.GetSpecialFormsHighlight() ? this.LogicDocument.GetSpecialFormsHighlight() : null;
+	var SdtHighlightColor  = LogicDocument && this.LogicDocument.GetSdtGlobalShowHighlight && this.LogicDocument.GetSdtGlobalShowHighlight() ? this.LogicDocument.GetSdtGlobalColor() : null;
+	var FormsHighlight     = LogicDocument && this.LogicDocument.GetSpecialFormsHighlight && this.LogicDocument.GetSpecialFormsHighlight() ? this.LogicDocument.GetSpecialFormsHighlight() : null;
 
-	if (false === this.LogicDocument.ForceDrawFormHighlight
+	if (!LogicDocument || false === this.LogicDocument.ForceDrawFormHighlight
 		|| (true !== this.LogicDocument.ForceDrawFormHighlight && undefined !== pGraphics.RENDERER_PDF_FLAG))
 	{
 		SdtHighlightColor = null;
@@ -2207,9 +2205,9 @@ Paragraph.prototype.Internal_Draw_3 = function(CurPage, pGraphics, Pr)
 				var oSdtBounds;
 
 				let isDrawFormHighlight = !pGraphics.isPrintMode;
-				if (true === LogicDocument.ForceDrawFormHighlight)
+				if (LogicDocument && true === LogicDocument.ForceDrawFormHighlight)
 					isDrawFormHighlight = true;
-				else if (false === LogicDocument.ForceDrawFormHighlight)
+				else if (!LogicDocument || false === LogicDocument.ForceDrawFormHighlight)
 					isDrawFormHighlight = false;
 
 				for (var nSdtIndex = 0, nSdtCount = PDSH.InlineSdt.length; nSdtIndex < nSdtCount; ++nSdtIndex)

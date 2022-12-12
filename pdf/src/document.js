@@ -83,7 +83,7 @@
         while (cName.indexOf('..') != -1)
             cName = cName.replace(new RegExp("\.\.", "g"), ".");
 
-        let oExistsWidget = this.private_isWidgetField(cName);
+        let oExistsWidget = this.private_getWidgetField(cName);
         // если есть виджет-поле с таким именем, но другим типом, то не добавляем 
         if (oExistsWidget && oExistsWidget.type != cFieldType)
             return null; // to do add error (field with this name already exists)
@@ -138,8 +138,10 @@
         if (oPagesInfo.pages[nPageNum].fields == null)
             oPagesInfo.pages[nPageNum].fields = this._widgets;
 
-        oField.Draw(viewer, viewer.pageDetector.pages[nPageNum].x, viewer.pageDetector.pages[nPageNum].y);
         oField._doc = this;
+        oField.private_syncField();
+        oField.Draw(viewer, viewer.pageDetector.pages[nPageNum].x, viewer.pageDetector.pages[nPageNum].y);
+        
         return oField;
     };
 
@@ -155,8 +157,9 @@
         while (cName.indexOf('..') != -1)
             cName = cName.replace(new RegExp("\.\.", "g"), ".");
 
+        let oExistsWidget = this.private_getWidgetField(cName);
         // если есть виджет-поле с таким именем то не добавляем 
-        if (this.private_isWidgetField(cName) == true)
+        if (oExistsWidget && oExistsWidget.type != oField.type)
             return null; // to do выдавать ошибку создания поля
 
         // получаем partial names
@@ -203,6 +206,7 @@
         }
 
         this.private_checkField(oFieldParent);
+        oField.private_syncField();
         return oField;
     };
 
@@ -256,7 +260,7 @@
 	 * @typeofeditors ["PDF"]
 	 * @returns {?CBaseField}
 	 */
-    CPDFDoc.prototype.private_isWidgetField = function(sName) {
+    CPDFDoc.prototype.private_getWidgetField = function(sName) {
         let aPartNames = sName.split('.').filter(function(item) {
             if (item != "")
                 return item;

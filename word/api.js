@@ -1553,7 +1553,7 @@ background-repeat: no-repeat;\
 
 		this.FontLoader.LoadDocumentFonts(this.WordControl.m_oDrawingDocument.CheckFontNeeds(), false);
 		let LoadTimer = setInterval(function() {
-			AscFonts.FontPickerByCharacter.checkText('✓', editor, function() {clearInterval(LoadTimer)}, false, true, true);
+			AscFonts.FontPickerByCharacter.checkText('✓⦿〇' + String.fromCharCode(0x25C9) + String.fromCharCode(0x25CB), editor, function() {clearInterval(LoadTimer)}, false, true, true);
 		}, 1000);
 	};
 	asc_docs_api.prototype["asc_setViewerThumbnailsZoom"] = function(value) {
@@ -10626,6 +10626,12 @@ background-repeat: no-repeat;\
 			oLogicDocument.FinalizeAction();
 		}
 	};
+	asc_docs_api.prototype.asc_SelectPDFFormListItem = function(sValue)
+	{
+		let oViewer = this.getDocumentRenderer();
+		let oCurForm = oViewer.mouseDownFieldObject;
+		oCurForm.private_selectOption(sValue);
+	};
 	asc_docs_api.prototype.asc_GetContentControlListCurrentValue = function(sId)
 	{
 		var oLogicDocument = this.private_GetLogicDocument();
@@ -11044,6 +11050,16 @@ background-repeat: no-repeat;\
 			return;
 
 		oLogicDocument.DocumentOutline.SetUse(false);
+	};
+	asc_docs_api.prototype.asc_SelectPDFFormListItem = function(sId)
+	{
+		let nIdx = parseInt(sId);
+		let oVeiwer = this.getDocumentRenderer();
+		let oField = oVeiwer.mouseDownFieldObject;
+		if (!oField)
+			return;
+
+		oField.private_selectOption(nIdx);
 	};
 	asc_docs_api.prototype.sync_OnDocumentOutlineUpdate = function()
 	{
