@@ -2079,18 +2079,37 @@
 
 				this.pageDetector.addPage(i, x, y, w, h);
 
-				let oThis = this;
-				if (this.pagesInfo.pages[i].fields != null) {
-					this.pagesInfo.pages[i].fields.forEach(function(item) {
-						item.Draw(oThis, x, y);
-					});
-				}
+				this._paintForms(i, x, y);
 			}
 
 			this.isClearPages = false;
 			this.updateCurrentPage(this.pageDetector.getCurrentPage(this.currentPage));
 		};
+		this._paintForms = function(nPage, nPageIndX, nPageIndY)
+		{
+			let canvas = document.createElement('canvas');
+			canvas.width = this.canvas.width;
+			canvas.height = this.canvas.height;
 
+			let nPageWidth = this.pageDetector.pages[nPage].w;
+			let nPageHeight = this.pageDetector.pages[nPage].h;
+
+			let ctx = canvas.getContext("2d");
+			ctx.fillStyle = "#FFFFFF";
+			ctx.fillRect(nPageIndX, nPageIndY, nPageWidth, nPageHeight);
+
+			let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
+			if (!aForms)
+				return;
+
+			if (this.pagesInfo.pages[nPage].fields != null) {
+				this.pagesInfo.pages[nPage].fields.forEach(function(item) {
+					item.Draw(ctx, nPageIndX, nPageIndY);
+				});
+			}
+
+			this.canvas.getContext('2d').drawImage(canvas, 0, 0, canvas.width, canvas.height);
+		};
 		this.checkPagesLinks = function()
 		{
 			if (this.startVisiblePage < 0 || this.endVisiblePage < 0)

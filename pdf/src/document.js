@@ -140,7 +140,7 @@
 
         oField._doc = this;
         oField.private_syncField();
-        oField.Draw(viewer, viewer.pageDetector.pages[nPageNum].x, viewer.pageDetector.pages[nPageNum].y);
+        oField.Draw(viewer.canvas.getContext('2d'), viewer.pageDetector.pages[nPageNum].x, viewer.pageDetector.pages[nPageNum].y);
         
         return oField;
     };

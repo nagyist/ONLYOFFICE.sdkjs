@@ -525,29 +525,26 @@
         return this._formRelRectMM;
     };
 
-    CBaseField.prototype.Draw = function(viewer, pageIndX, pageIndY) {
-        if (!viewer)
-            return;
+    CBaseField.prototype.Draw = function(oCtx, pageIndX, pageIndY) {
+        let oViewer = editor.getDocumentRenderer();
 
         function round(nValue) {
             return (nValue + 0.5) >> 0;
         }
         
-        let ctx = viewer.canvas.getContext("2d");
-        
-        let X = pageIndX + (this._rect[0] * viewer.zoom);
-        let Y = pageIndY + (this._rect[1] * viewer.zoom);
-        let nWidth = (this._rect[2] - this._rect[0]) * viewer.zoom;
-        let nHeight = (this._rect[3] - this._rect[1]) * viewer.zoom;
+        let X = pageIndX + (this._rect[0] * oViewer.zoom);
+        let Y = pageIndY + (this._rect[1] * oViewer.zoom);
+        let nWidth = (this._rect[2] - this._rect[0]) * oViewer.zoom;
+        let nHeight = (this._rect[3] - this._rect[1]) * oViewer.zoom;
 
         switch (this._borderStyle) {
             case "solid":
-                //ctx.setLineDash([]);
+                //oCtx.setLineDash([]);
                 break;
             case "beveled":
                 break;
             case "dashed":
-                //ctx.setLineDash([5 * viewer.zoom]);
+                //oCtx.setLineDash([5 * oViewer.zoom]);
                 break;
             case "inset":
                 break;
@@ -557,9 +554,9 @@
 
         // draw border
         if (this.type != "radiobutton") {
-            ctx.beginPath();
-            ctx.rect(X, Y, nWidth, nHeight);
-            ctx.stroke();
+            oCtx.beginPath();
+            oCtx.rect(X, Y, nWidth, nHeight);
+            oCtx.stroke();
         }
 
         // маркер списка
@@ -567,11 +564,11 @@
             let nMarkX = X + nWidth * 0.95 + (nWidth * 0.025) - (nWidth * 0.025)/4;
             let nMarkWidth = nWidth * 0.025;
             let nMarkHeight = nMarkWidth/ 2;
-            ctx.beginPath();
-            ctx.moveTo(nMarkX, Y + nHeight/2 + nMarkHeight/2);
-            ctx.lineTo(nMarkX + nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
-            ctx.lineTo(nMarkX - nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
-            ctx.fill();
+            oCtx.beginPath();
+            oCtx.moveTo(nMarkX, Y + nHeight/2 + nMarkHeight/2);
+            oCtx.lineTo(nMarkX + nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
+            oCtx.lineTo(nMarkX - nMarkWidth/2, Y + nHeight/2 - nMarkHeight/2);
+            oCtx.fill();
 
             this._markRect = {
                 x1: (nMarkX - nMarkWidth/2) - ((X + nWidth) - (nMarkX + nMarkWidth/2)),
@@ -581,7 +578,7 @@
             }
         }
 
-        let scaleCoef = viewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
+        let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
         let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
         let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
@@ -634,10 +631,10 @@
             this.CheckFormViewWindow();
 
         let oGraphics = new AscCommon.CGraphics();
-        let widthPx = viewer.canvas.width;
-        let heightPx = viewer.canvas.height;
+        let widthPx = oViewer.canvas.width;
+        let heightPx = oViewer.canvas.height;
         
-        oGraphics.init(ctx, widthPx * scaleCoef, heightPx * scaleCoef, widthPx * g_dKoef_pix_to_mm, heightPx * g_dKoef_pix_to_mm);
+        oGraphics.init(oCtx, widthPx * scaleCoef, heightPx * scaleCoef, widthPx * g_dKoef_pix_to_mm, heightPx * g_dKoef_pix_to_mm);
 		oGraphics.m_oFontManager = AscCommon.g_fontManager;
 		oGraphics.endGlobalAlphaColor = [255, 255, 255];
         oGraphics.transform(1, 0, 0, 1, 0, 0);
@@ -646,7 +643,7 @@
 
         this._content.Draw(0, oGraphics);
         // redraw target cursor if field is selected
-        if (viewer.mouseDownFieldObject == this && (viewer.fieldFillingMode || this.type == "combobox"))
+        if (oViewer.mouseDownFieldObject == this && (oViewer.fieldFillingMode || this.type == "combobox"))
             this._content.RecalculateCurPos();
         
         oGraphics.RemoveClip();
@@ -666,6 +663,8 @@
         this._drawAfterScroll = false;
         if (this.type == "listbox")
             this.private_updateScroll(true);
+        
+        
     };
     
     function CPushButtonField(sName, nPage, aRect)
