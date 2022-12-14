@@ -168,6 +168,9 @@ module.exports = function(grunt) {
 	function getSdkPath(min, name) {
 		return path.join(name, min ? 'sdk-all-min.js' : 'sdk-all.js');
 	}
+	function getChunkPath(min, name) {
+		return min ? 'sdk-all-min' : 'sdk-all';
+	}
 
 	const path = require('path');
 	const level = grunt.option('level') || 'ADVANCED';
@@ -210,6 +213,8 @@ module.exports = function(grunt) {
 			footer: '})(window);'
 		};
 		const sdkMinTmp = 'sdk-min-tmp.js';
+		const sdkWordMinTmp = 'sdk-word-min-tmp.js';
+		const sdkWordAllTmp = 'sdk-word-all-tmp.js';
 		const sdkAllTmp = 'sdk-all-tmp.js';
 		const sdkWordTmp = 'sdk-word-tmp.js';
 		const sdkCellTmp = 'sdk-cell-tmp.js';
@@ -219,6 +224,9 @@ module.exports = function(grunt) {
 		if (grunt.option('map')) {
 			compilerArgs.push('--property_renaming_report=sdk-all.props.js.map');
 			compilerArgs.push('--variable_renaming_report=sdk-all.vars.js.map');
+			compilerArgs.push('--create_source_map=%outname%.map');
+			compilerArgs.push('--source_map_include_content=true');
+			compilerArgs.push('--source_map_format=V3');
 		}
 		if (formatting) {
 			compilerArgs.push('--formatting=' + formatting);
@@ -229,15 +237,15 @@ module.exports = function(grunt) {
 				wordsdkmin: {
 					options: optionsSdkMin,
 					src: getFilesMin(configWord),
-					dest: sdkMinTmp
+					dest: sdkWordMinTmp
 				},
 				wordsdkall: {
 					options: optionsSdkAll,
 					src: getFilesAll(configWord),
-					dest: sdkAllTmp
+					dest: sdkWordAllTmp
 				},
 				wordall: {
-					src: [sdkMinTmp, sdkAllTmp],
+					src: [sdkWordMinTmp, sdkWordAllTmp],
 					dest: sdkWordTmp
 				},
 				cellsdkmin: {
@@ -275,10 +283,20 @@ module.exports = function(grunt) {
 						args: compilerArgs.concat(
 							'--rewrite_polyfills=true', '--jscomp_off=checkVars',
 							'--warning_level=QUIET', '--compilation_level=' + level,
-							'--module=polyfill:1:', '--js=' + emptyJs,
-							'--module=word:1:polyfill', '--js=' + sdkWordTmp,
-							'--module=cell:1:polyfill', '--js=' + sdkCellTmp,
-							'--module=slide:1:polyfill', '--js=' + sdkSlideTmp)
+							'--js=' + emptyJs,
+							'--chunk=polyfill:1:',
+							'--js=' + sdkWordMinTmp,
+							'--chunk='+getChunkPath(true, 'word')+':1:polyfill',
+							'--js=' + sdkWordAllTmp,
+							'--chunk='+getChunkPath(false, 'word')+':1:polyfill',
+							// '--module=polyfill:1:','--js=' + emptyJs,
+							// '--module='+getChunkPath(true, 'word')+':1:polyfill','--js=' + sdkWordMinTmp,
+							// '--module='+getChunkPath(false, 'word')+':1:polyfill','--js=' + sdkWordAllTmp,
+							// '--chunk=cell:1:', '--js=' + sdkCellTmp,
+							// '--chunk=slide:1:', '--js=' + sdkSlideTmp
+							
+						)
+
 					}
 				}
 			},
