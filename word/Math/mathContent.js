@@ -6055,11 +6055,11 @@ ContentIterator.prototype.GetNextFromCurrentElement = function (nextRule)
 
             const strCurrent = String.fromCharCode(intCode);
 
-            if (AscMath.MathLiterals.rBrackets.IsIncludes(strCurrent))
+            if (AscMath.MathLiterals.rBrackets.IsIncludesToSymbols(strCurrent))
             {
                 this.intBracketCounter--;
             }
-            else if (AscMath.MathLiterals.lrBrackets.IsIncludes(strCurrent))
+            else if (AscMath.MathLiterals.lrBrackets.IsIncludesToSymbols(strCurrent))
             {
                 if (this.intBracketCounter === 0 && intCount === 0)
                     this.intBracketCounter--;
@@ -6076,12 +6076,12 @@ ContentIterator.prototype.GetNextFromCurrentElement = function (nextRule)
                     }
                 }
             }
-            else if (AscMath.MathLiterals.lBrackets.IsIncludes(strCurrent) && this.intBracketCounter < 0)
+            else if (AscMath.MathLiterals.lBrackets.IsIncludesToSymbols(strCurrent) && this.intBracketCounter < 0)
             {
                 this.intBracketCounter++;
                 return intCode;
             }
-            else if (AscMath.MathLiterals.lBrackets.IsIncludes(strCurrent))
+            else if (AscMath.MathLiterals.lBrackets.IsIncludesToSymbols(strCurrent))
             {
                 this.CurrentElement.CheckCursor();
                 this.CurrentElement.Cursor++;
