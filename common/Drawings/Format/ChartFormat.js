@@ -15828,8 +15828,7 @@
                             for(nRow = oRange.bbox.r1; nRow <= oRange.bbox.r2; ++nRow) {
                                 for(nCol = oRange.bbox.c1; nCol <= oRange.bbox.c2; ++nCol) {
                                     oCell = oWS.getCell3(nRow, nCol);
-                                    var value = oCell.getNumberValue();
-                                    if(!AscFormat.isRealNumber(value)) {
+                                    if(!CChartDataRefs.prototype.privateCheckCellValueNumberOrEmpty(oCell)) {
                                         oResult.setError(Asc.c_oAscError.ID.DataRangeError);
                                         return;
                                     }
