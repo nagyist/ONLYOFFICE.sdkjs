@@ -582,7 +582,6 @@
 		  });
 
       if (this.input && this.input.addEventListener) {
-		  var skipNextMouseDownEvent = false;
 				var eventInfo = new AscCommon.CEventListenerInfo(this.input, "focus", function () {
 					if (this.Api.isEditVisibleAreaOleEditor) {
 						this.input.blur();
@@ -604,9 +603,6 @@
 						enterOptions.focus = true;
 						this._onEditCell(enterOptions);
 					}
-					if (this.Api.isMobileVersion && this.controller.clickCounter.clickCount >=2) {
-						skipNextMouseDownEvent = true;
-					}
 				}.bind(this), false);
 				this.eventListeners.push(eventInfo);
 
@@ -620,16 +616,6 @@
 				  }
 			  }
 		  }.bind(this), false);
-		  this.eventListeners.push(eventInfo);
-
-		  eventInfo = new AscCommon.CEventListenerInfo(window, "mousedown", function (event) {
-			  if (skipNextMouseDownEvent) {
-				  event.preventDefault && event.preventDefault();
-				  event.stopPropagation && event.stopPropagation();
-				  skipNextMouseDownEvent = false;
-			  }
-		  }.bind(this), false);
-
 		  this.eventListeners.push(eventInfo);
 
 
