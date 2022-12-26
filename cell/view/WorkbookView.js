@@ -592,7 +592,6 @@
 					if (!this.canEdit()) {
 						return;
 					}
-					console.log("focus");
 					if (this.isProtectActiveCell()) {
 						this.input.blur();
 						this.handlers.trigger("asc_onError", c_oAscError.ID.ChangeOnProtectedSheet, c_oAscError.Level.NoCritical);
@@ -613,12 +612,15 @@
 
 
 
-
-				eventInfo = new AscCommon.CEventListenerInfo(this.input, "blur", function (event) {
-					var test = 1;
-				}.bind(this), false);
-
-				this.eventListeners.push(eventInfo);
+		  eventInfo = new AscCommon.CEventListenerInfo(this.input, "keydown", function (event) {
+			  if (this.isCellEditMode) {
+				  this.handlers.trigger('asc_onInputKeyDown', event);
+				  if (!event.defaultPrevented) {
+					  this.cellEditor._onWindowKeyDown(event, true);
+				  }
+			  }
+		  }.bind(this), false);
+		  this.eventListeners.push(eventInfo);
 
 		  eventInfo = new AscCommon.CEventListenerInfo(window, "mousedown", function (event) {
 			  if (skipNextMouseDownEvent) {
