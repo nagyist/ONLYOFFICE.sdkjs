@@ -621,7 +621,6 @@
 				this.eventListeners.push(eventInfo);
 
 		  eventInfo = new AscCommon.CEventListenerInfo(window, "mousedown", function (event) {
-			  console.log("mousedown");
 			  if (skipNextMouseDownEvent) {
 				  event.preventDefault && event.preventDefault();
 				  event.stopPropagation && event.stopPropagation();

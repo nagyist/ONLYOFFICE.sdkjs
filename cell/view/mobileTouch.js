@@ -967,12 +967,16 @@ function (window, undefined)
         if (AscCommon.g_inputContext.isHardCheckKeyboard)
             isPreventDefault ? AscCommon.g_inputContext.preventVirtualKeyboard_Hard() : AscCommon.g_inputContext.enableVirtualKeyboard_Hard();
 
-		if (true !== this.iScroll.isAnimating && (this.CellEditorType != Asc.c_oAscCellEditorState.editFormula)) {
+
+		if (true !== this.iScroll.isAnimating && (this.CellEditorType != Asc.c_oAscCellEditorState.editFormula))
+			this.CheckContextMenuTouchEnd(isCheckContextMenuMode, isCheckContextMenuSelect, isCheckContextMenuCursor);
+
+		/*if (true !== this.iScroll.isAnimating && (this.CellEditorType != Asc.c_oAscCellEditorState.editFormula)) {
 			var _newTime = new Date().getTime();
 			if ((_newTime - this.TimeDown) > this.ReadingGlassTime && !this.MoveAfterDown) {
 				this.CheckContextMenuTouchEnd(isCheckContextMenuMode, isCheckContextMenuSelect, isCheckContextMenuCursor);
 			}
-		}
+		}*/
 
 		return false;
 	};
