@@ -1534,6 +1534,10 @@
 
 		/** @param event {MouseEvent} */
 		asc_CEventsController.prototype._onMouseDown = function (event) {
+
+
+			console.log("_onMouseDown");
+
 			var t = this;
 			asc["editor"].checkInterfaceElementBlur();
 			var ctrlKey = !AscCommon.getAltGr(event) && (event.metaKey || event.ctrlKey);
@@ -1606,6 +1610,10 @@
 				t.handlers.trigger("graphicObjectMouseDown", event, coord.x, coord.y);
 				t.handlers.trigger("updateSelectionShape", /*isSelectOnShape*/true);
 				return;
+			}
+
+			if (0 === event.ClickCount % 2) {
+				t.isDblClickInMouseDown = true;
 			}
 
 			if (this.view.Api.isMobileVersion) {
@@ -1763,6 +1771,9 @@
 
 		/** @param event {MouseEvent} */
 		asc_CEventsController.prototype._onMouseUp = function (event) {
+
+			console.log("_onMouseUp");
+
 			var button = AscCommon.getMouseButton(event);
 			AscCommon.global_mouseEvent.UnLockMouse();
 
@@ -1801,6 +1812,8 @@
 			}
 
 			if (this.clickCounter.clickCount >= 2 && this.view.Api.isMobileVersion) {
+				event.preventDefault && event.preventDefault();
+				event.stopPropagation && event.stopPropagation();
 				this.view.input.focus();
 				return;
 			}

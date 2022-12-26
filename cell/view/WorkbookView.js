@@ -582,6 +582,7 @@
 		  });
 
       if (this.input && this.input.addEventListener) {
+		  var skipNextMouseDownEvent = false;
 				var eventInfo = new AscCommon.CEventListenerInfo(this.input, "focus", function () {
 					if (this.Api.isEditVisibleAreaOleEditor) {
 						this.input.blur();
@@ -591,6 +592,7 @@
 					if (!this.canEdit()) {
 						return;
 					}
+					console.log("focus");
 					if (this.isProtectActiveCell()) {
 						this.input.blur();
 						this.handlers.trigger("asc_onError", c_oAscError.ID.ChangeOnProtectedSheet, c_oAscError.Level.NoCritical);
@@ -603,19 +605,33 @@
 						enterOptions.focus = true;
 						this._onEditCell(enterOptions);
 					}
-				}.bind(this), false);
-				this.eventListeners.push(eventInfo);
-
-
-				eventInfo = new AscCommon.CEventListenerInfo(this.input, "keydown", function (event) {
-					if (this.isCellEditMode) {
-						this.handlers.trigger('asc_onInputKeyDown', event);
-						if (!event.defaultPrevented) {
-							this.cellEditor._onWindowKeyDown(event, true);
-						}
+					if (this.Api.isMobileVersion && this.controller.clickCounter.clickCount >=2) {
+						skipNextMouseDownEvent = true;
 					}
 				}.bind(this), false);
 				this.eventListeners.push(eventInfo);
+
+
+
+
+				eventInfo = new AscCommon.CEventListenerInfo(this.input, "blur", function (event) {
+					var test = 1;
+				}.bind(this), false);
+
+				this.eventListeners.push(eventInfo);
+
+		  eventInfo = new AscCommon.CEventListenerInfo(window, "mousedown", function (event) {
+			  console.log("mousedown");
+			  if (skipNextMouseDownEvent) {
+				  event.preventDefault && event.preventDefault();
+				  event.stopPropagation && event.stopPropagation();
+				  skipNextMouseDownEvent = false;
+			  }
+		  }.bind(this), false);
+
+		  this.eventListeners.push(eventInfo);
+
+
 			}
 
       this.Api.onKeyDown = function (event) {
