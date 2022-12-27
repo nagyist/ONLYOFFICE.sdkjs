@@ -4367,10 +4367,34 @@ function CDrawingDocument()
 		this.IsTextMatrixUse = ((null != this.TextMatrix) && !global_MatrixTransformer.IsIdentity(this.TextMatrix));
         var rPR = AscCommon.AscBrowser.retinaPixelRatio;
 		var page = this.m_arrPages[pageIndex];
-		var drawPage = page.drawingPage;
+		
+		var drawPage;
+		if (!this.m_oDocumentRenderer)
+		{
+			drawPage = page.drawingPage;
+		}
+		else
+		{
+			page = {
+				width_mm: this.m_oDocumentRenderer.drawingPages[0].W * g_dKoef_pix_to_mm,
+				height_mm: this.m_oDocumentRenderer.drawingPages[0].H * g_dKoef_pix_to_mm
+			}
+			drawPage = {
+				left:	0,
+				right:	this.m_oDocumentRenderer.drawingPages[0].W,
+				top:	0,
+				bottom:	this.m_oDocumentRenderer.drawingPages[0].H
+			}
+			this.Overlay = this.m_oDocumentRenderer.overlay;
+		}
 
 		var dKoefX = (drawPage.right - drawPage.left) / page.width_mm;
 		var dKoefY = (drawPage.bottom - drawPage.top) / page.height_mm;
+		if (this.m_oDocumentRenderer)
+		{
+			dKoefX *= this.m_oDocumentRenderer.zoom;
+			dKoefY *= this.m_oDocumentRenderer.zoom;
+		}
 
 		if (!this.IsTextMatrixUse)
 		{

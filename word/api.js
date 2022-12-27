@@ -2470,7 +2470,19 @@ background-repeat: no-repeat;\
 		if (!this.WordControl.m_oLogicDocument)
 		{
 			var _text_object = (AscCommon.c_oAscClipboardDataFormat.Text & _formats) ? {Text : ""} : null;
-			var _html_data   = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Copy(_text_object);
+			var _html_data;
+			var oActiveForm = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.mouseDownFieldObject;
+			if (oActiveForm && oActiveForm._content.IsSelectionUse()) {
+				let sText = oCheckbox._content.GetSelectedText(true);
+				if (sText == "")
+					return;
+
+				_text_object.Text = sText;
+				_html_data = "<div><p><span>" + sText + "</span></p></div>";
+			}
+			else {
+				_html_data = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Copy(_text_object)
+			}
 
 			//TEXT
 			if (AscCommon.c_oAscClipboardDataFormat.Text & _formats)
@@ -2548,38 +2560,58 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_PasteData = function(_format, data1, data2, text_data, useCurrentPoint, callback, checkLocks)
 	{
-		if (AscCommon.CollaborativeEditing.Get_GlobalLock())
-			return;
-
-		var _logicDoc = this.WordControl.m_oLogicDocument;
-		if (!_logicDoc)
-			return;
-
-		// TODO: isPasteImage заменить на проверку того, что вставляется просто картинка
-		var isPasteImage = AscCommon.checkOnlyOneImage(data1);
-
-		var isLocked = false;
-		var oCC      = null;
-
-		if (isPasteImage)
-			oCC = _logicDoc.GetContentControl();
-
-		if (false !== checkLocks)
+		if (this.isDocumentRenderer() == false)
 		{
-			if (oCC && oCC.IsPicture())
-				isLocked = _logicDoc.IsSelectionLocked(AscCommon.changestype_Image_Properties, null, true, _logicDoc.IsFormFieldEditing());
-			else
-				isLocked = _logicDoc.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, _logicDoc.IsFormFieldEditing());
+			if (AscCommon.CollaborativeEditing.Get_GlobalLock())
+				return;
+
+			var _logicDoc = this.WordControl.m_oLogicDocument;
+			if (!_logicDoc)
+				return;
+
+			// TODO: isPasteImage заменить на проверку того, что вставляется просто картинка
+			var isPasteImage = AscCommon.checkOnlyOneImage(data1);
+
+			var isLocked = false;
+			var oCC      = null;
+
+			if (isPasteImage)
+				oCC = _logicDoc.GetContentControl();
+
+			if (false !== checkLocks)
+			{
+				if (oCC && oCC.IsPicture())
+					isLocked = _logicDoc.IsSelectionLocked(AscCommon.changestype_Image_Properties, null, true, _logicDoc.IsFormFieldEditing());
+				else
+					isLocked = _logicDoc.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, _logicDoc.IsFormFieldEditing());
+			}
+
+			if (!isLocked)
+			{
+				window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);
+
+				if (!useCurrentPoint)
+					_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
+
+				AscCommon.Editor_Paste_Exec(this, _format, data1, data2, text_data, undefined, callback);
+			}
 		}
-
-		if (!isLocked)
+		else
 		{
-			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);
+			let oViewer = this.getDocumentRenderer();
+			let oField = oViewer.mouseDownFieldObject;
+			if (text_data.length == 0)
+				return;
 
-			if (!useCurrentPoint)
-				_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
+			if (oField && (oField.type == "text" || (oField.type == "combobox" && oField._editable)))
+			{
+				let aChars = [];
+				for (let i = 0; i < text_data.length; i++)
+					aChars.push(text_data[i].charCodeAt(0));
 
-			AscCommon.Editor_Paste_Exec(this, _format, data1, data2, text_data, undefined, callback);
+				oField.EnterText(aChars);
+				oViewer._paintForms();
+			}
 		}
 	};
 
@@ -10631,6 +10663,7 @@ background-repeat: no-repeat;\
 		let oViewer = this.getDocumentRenderer();
 		let oCurForm = oViewer.mouseDownFieldObject;
 		oCurForm.private_selectOption(sValue);
+		this.getDocumentRenderer()._paintForms();
 	};
 	asc_docs_api.prototype.asc_GetContentControlListCurrentValue = function(sId)
 	{
@@ -11963,8 +11996,15 @@ background-repeat: no-repeat;\
 		let documentRenderer = this.getDocumentRenderer();
 		if (logicDocument)
 			return logicDocument.EnterText(value);
-		else if (documentRenderer.fieldFillingMode)
-			return documentRenderer.mouseDownFieldObject.EnterText(value);
+		else if (documentRenderer.fieldFillingMode) {
+			documentRenderer.mouseDownFieldObject.EnterText(value);
+			documentRenderer._paintForms();
+			documentRenderer.onUpdateOverlay();
+			this.WordControl.m_oDrawingDocument.TargetStart();
+			// Чтобы при зажатой клавише курсор не пропадал
+			this.WordControl.m_oDrawingDocument.showTarget(true);
+			return true;
+		}
 		
 		return false;
 	};

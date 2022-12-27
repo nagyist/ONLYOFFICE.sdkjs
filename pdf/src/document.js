@@ -78,6 +78,10 @@
             return null;
 
         let viewer = editor.WordControl.m_oDrawingDocument.m_oDocumentRenderer;
+        let oPagesInfo = viewer.pagesInfo;
+        if (!oPagesInfo.pages[nPageNum])
+            return null;
+        
         let oField;
 
         while (cName.indexOf('..') != -1)
@@ -131,16 +135,20 @@
             this._widgets.push(oField);
         }
 
-        let oPagesInfo = viewer.pagesInfo;
-        if (!oPagesInfo.pages[nPageNum] || !viewer.pageDetector.pages[nPageNum])
-            return null;
-
         if (oPagesInfo.pages[nPageNum].fields == null)
             oPagesInfo.pages[nPageNum].fields = this._widgets;
 
         oField._doc = this;
         oField.private_syncField();
-        oField.Draw(viewer.canvas.getContext('2d'), viewer.pageDetector.pages[nPageNum].x, viewer.pageDetector.pages[nPageNum].y);
+        
+        for (let i = 0; i < viewer.pageDetector.pages.length; i++) {
+            if (viewer.pageDetector.pages[i].num == nPageNum) {
+                oField.Draw(viewer.canvasForms.getContext('2d'), viewer.pageDetector.pages[i].x, viewer.pageDetector.pages[i].y);
+                if (oField._needDrawHighlight == true)
+                    oField.DrawHighlight(viewer.canvasFormsHighlight.getContext("2d"));
+                break;
+            }
+        }
         
         return oField;
     };

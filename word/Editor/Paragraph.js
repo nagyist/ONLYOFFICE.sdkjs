@@ -8407,6 +8407,9 @@ Paragraph.prototype.DrawSelectionOnPage = function(CurPage)
 		this.GetSelectedElementsInfo(oInfo);
 		oFillingCC = oInfo.GetInlineLevelSdt();
 	}
+	// если пдф форма
+	if (this.Parent && this.Parent.ParentPDF)
+		oFillingCC = this.Parent.ParentPDF;
 
 	switch (this.Selection.Flag)
 	{

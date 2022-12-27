@@ -215,6 +215,8 @@
 		this.isFocusOnThumbnails = false;
 		this.isDocumentContentReady = false;
 
+		this.doc = new AscPDFEditor.CPDFDoc();
+
 		this.isXP = ((AscCommon.AscBrowser.userAgent.indexOf("windowsxp") > -1) || (AscCommon.AscBrowser.userAgent.indexOf("chrome/49") > -1)) ? true : false;
 		if (!this.isXP && AscCommon.AscBrowser.isIE && !AscCommon.AscBrowser.isIeEdge)
 			this.isXP = true;
@@ -264,10 +266,12 @@
 			var elements = "";
 			elements += "<canvas id=\"id_viewer\" class=\"block_elem\" style=\"left:0px;top:0px;width:100;height:100;\"></canvas>";
 			elements += "<canvas id=\"id_overlay\" class=\"block_elem\" style=\"left:0px;top:0px;width:100;height:100;\"></canvas>";
+			elements += "<canvas id=\"id_formsHighlight\" class=\"block_elem\" style=\"left:0px;top:0px;width:100;height:100;\"></canvas>";
+			elements += "<canvas id=\"id_forms\" class=\"block_elem\" style=\"left:0px;top:0px;width:100;height:100;\"></canvas>";
 			elements += "<div id=\"id_vertical_scroll\" class=\"block_elem\" style=\"display:none;left:0px;top:0px;width:0px;height:0px;\"></div>";
 			elements += "<div id=\"id_horizontal_scroll\" class=\"block_elem\" style=\"display:none;left:0px;top:0px;width:0px;height:0px;\"></div>";
 			elements += "<div id=\"id_target_cursor\" class=\"block_elem\" width=\"1\" height=\"1\" style=\"touch-action:none;-ms-touch-action: none;-webkit-user-select: none;width:2px;height:13px;z-index:4;\"></div>"
-
+			
 			//this.parent.style.backgroundColor = this.backgroundColor; <= this color from theme
 			this.parent.innerHTML = elements;
 
@@ -276,6 +280,9 @@
 
 			this.canvasOverlay = document.getElementById("id_overlay");
 			this.canvasOverlay.style.pointerEvents = "none";
+
+			this.canvasForms = document.getElementById("id_forms");
+			this.canvasFormsHighlight = document.getElementById("id_formsHighlight");
 
 			this.Api.WordControl.m_oDrawingDocument.TargetHtmlElement = document.getElementById('id_target_cursor');
 
@@ -511,6 +518,14 @@
 			this.canvasOverlay.style.width = this.width + "px";
 			this.canvasOverlay.style.height = this.height + "px";
 			AscCommon.calculateCanvasSize(this.canvasOverlay);
+			
+			this.canvasForms.style.width = this.width + "px";
+			this.canvasForms.style.height = this.height + "px";
+			AscCommon.calculateCanvasSize(this.canvasForms);
+			
+			this.canvasFormsHighlight.style.width = this.width + "px";
+			this.canvasFormsHighlight.style.height = this.height + "px";
+			AscCommon.calculateCanvasSize(this.canvasFormsHighlight);
 
 			var scrollV = document.getElementById("id_vertical_scroll");
 			scrollV.style.display = "block";
@@ -1132,11 +1147,11 @@
 		{
 			if (this.isXP)
 			{
-				this.canvas.style.cursor = AscCommon.g_oHtmlCursor.value(cursor);
+				this.canvasForms.style.cursor = AscCommon.g_oHtmlCursor.value(cursor);
 				return;
 			}
 
-			this.canvas.style.cursor = cursor;
+			this.canvasForms.style.cursor = cursor;
 		};
 
 		this.getPageLinkByMouse = function()
@@ -1167,16 +1182,16 @@
 
 			let pageFields = this.pagesInfo.pages[pageObject.index];
 
-			let mouseXInPage = (AscCommon.global_mouseEvent.X - this.x) * AscCommon.AscBrowser.retinaPixelRatio - this.pageDetector.pages[pageObject.index].x;
-			let mouseYInPage = (AscCommon.global_mouseEvent.Y - this.y) * AscCommon.AscBrowser.retinaPixelRatio - this.pageDetector.pages[pageObject.index].y;
+			let mouseXInPage = (AscCommon.global_mouseEvent.X - this.x) * AscCommon.AscBrowser.retinaPixelRatio;
+			let mouseYInPage = (AscCommon.global_mouseEvent.Y - this.y) * AscCommon.AscBrowser.retinaPixelRatio;
 			if (pageFields.fields)
 			{
 				for (let i = 0, len = pageFields.fields.length; i < len; i++)
 				{
 					let fieldW = pageFields.fields[i]._pagePos.w;
 					let fieldH = pageFields.fields[i]._pagePos.h;
-					if (mouseXInPage >= pageFields.fields[i]._pagePos.x && mouseXInPage <= (pageFields.fields[i]._pagePos.x + fieldW) &&
-						mouseYInPage >= pageFields.fields[i]._pagePos.y && mouseYInPage <= (pageFields.fields[i]._pagePos.y + fieldH))
+					if (mouseXInPage >= pageFields.fields[i]._pagePos.realX && mouseXInPage <= (pageFields.fields[i]._pagePos.realX + fieldW) &&
+						mouseYInPage >= pageFields.fields[i]._pagePos.realY && mouseYInPage <= (pageFields.fields[i]._pagePos.realY + fieldH))
 					{
 						return pageFields.fields[i];
 					}
@@ -1256,24 +1271,69 @@
 			oThis.isMouseMoveBetweenDownUp = false;
 			oThis.mouseDownLinkObject = oThis.getPageLinkByMouse();
 			
-			// если выбрали другую форму (или снимаем выделение с формы), то применяем значение
+			// если попали в другую форму (или снимаем выделение с формы), то применяем значение текущей формы
 			let oField = oThis.getPageFieldByMouse();
 			if (oThis.mouseDownFieldObject && oField != oThis.mouseDownFieldObject) {
 				let oFieldToSkip = null;
 				if (oThis.mouseDownFieldObject.type == "listbox") {
 					oThis.mouseDownFieldObject.private_updateScroll(false, false);
-					if (oField && oField.name == oThis.mouseDownFieldObject.name) {
+					if (oField && oField.name == oThis.mouseDownFieldObject.name && oField._multipleSelection == false) {
 						oFieldToSkip = oField;
 					}
 				}
+				else if (oThis.mouseDownFieldObject.private_updateScroll)
+					oThis.mouseDownFieldObject.private_updateScroll(false, false)
 
 				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
 					oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
-					oThis._paint();
+					oThis.mouseDownFieldObject._needDrawHighlight = true;
+					oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+					oThis._paintForms();
+					oThis._paintFormsHighlight();
+				}
+
+				if (oThis.mouseDownFieldObject && oThis.mouseDownFieldObject._content.IsSelectionEmpty()) {
+					oThis.mouseDownFieldObject._content.RemoveSelection();
+					oThis.onUpdateOverlay();
 				}
 			}
-
+			
 			oThis.mouseDownFieldObject = oField;
+			if (oThis.mouseDownFieldObject)
+			{
+				switch (oThis.mouseDownFieldObject.type)
+				{
+					case "text":
+						oThis.fieldFillingMode = true;
+						cursorType = "text";
+						oThis.mouseDownFieldObject._needDrawHighlight = false;
+						oThis._paintFormsHighlight();
+						oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+						oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+						oThis.onUpdateOverlay();
+						break;
+					case "combobox":
+						oThis.mouseDownFieldObject._needDrawHighlight = false;
+						oThis._paintFormsHighlight();
+						oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+						oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+						oThis.onUpdateOverlay();
+						if (oThis.mouseDownFieldObject._editable)
+							oThis.fieldFillingMode = true;
+						cursorType = "text";
+						break;
+					case "listbox":
+						oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						oThis.mouseDownFieldObject._needDrawHighlight = false;
+						oThis._paintFormsHighlight();
+						oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+						oThis.onUpdateOverlay();
+						cursorType = "pointer";
+						break;
+				}
+			}
 
 			// нажали мышь - запомнили координаты и находимся ли на ссылке
 			// при выходе за epsilon на mouseMove - сэмулируем нажатие
@@ -1294,6 +1354,7 @@
 						cursorType = "pointer";
 						break;
 				}
+
 			}
 			else
 			{
@@ -1385,35 +1446,32 @@
 			{
 				if (oThis.mouseDownFieldObject)
 				{
+					if (global_mouseEvent.ClickCount == 2 && oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox")
+					{
+						oThis.mouseDownFieldObject._content.SelectAll();
+						if (oThis.mouseDownFieldObject._content.IsSelectionEmpty() == false)
+							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						else
+							oThis.mouseDownFieldObject._content.RemoveSelection();
+
+						oThis.onUpdateOverlay();
+					}
+					else if (!oThis.isMouseMoveBetweenDownUp && oThis.mouseDownFieldObject._content.IsSelectionUse())
+					{
+						oThis.mouseDownFieldObject._content.RemoveSelection();
+						oThis.onUpdateOverlay();
+					}
+
 					switch (oThis.mouseDownFieldObject.type)
 					{
-						case "text":
-							oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
-							oThis.fieldFillingMode = true;
-							cursorType = "text";
-							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e)
-							break;
-						case "combobox":
-								// можем попасть по маркеру списка, тогда не надо включать заполнение
-								oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
-								oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
-								if (oThis.mouseDownFieldObject._editable)
-									oThis.fieldFillingMode = true;
-								cursorType = "text";
-							break;
-						case "listbox":
-							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
-							cursorType = "pointer";
-							break;
 						case "checkbox":
 						case "radiobutton":
-							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
 							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
 							cursorType = "pointer";
 							oThis.fieldFillingMode = false;
 							break;
 					}
-
 				}
 				else if (oThis.mouseDownLinkObject)
 				{
@@ -1449,6 +1507,42 @@
 				oThis.mouseDownLinkObject = null;
 				return;
 			}
+			else {
+				if (oThis.mouseDownFieldObject)
+				{
+					if (global_mouseEvent.ClickCount == 2 && oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox")
+					{
+						oThis.mouseDownFieldObject._content.SelectAll();
+						if (oThis.mouseDownFieldObject._content.IsSelectionEmpty() == false)
+							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						else
+							oThis.mouseDownFieldObject._content.RemoveSelection();
+
+						oThis.onUpdateOverlay();
+					}
+					else if (!oThis.isMouseMoveBetweenDownUp && oThis.mouseDownFieldObject._content.IsSelectionUse())
+					{
+						oThis.mouseDownFieldObject._content.RemoveSelection();
+						oThis.onUpdateOverlay();
+					}
+
+					switch (oThis.mouseDownFieldObject.type)
+					{
+						case "checkbox":
+						case "radiobutton":
+							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+							cursorType = "pointer";
+							oThis.fieldFillingMode = false;
+							break;
+					}
+
+					oThis.isMouseMoveBetweenDownUp = false;
+					oThis.mouseDownLinkObject = null;
+					return;
+				}
+			}
+			
 
 			if (oThis.mouseDownLinkObject)
 			{
@@ -1500,7 +1594,7 @@
 
 			if (oThis.MouseHandObject)
 			{
-				if (oThis.MouseHandObject.Active)
+				if (oThis.MouseHandObject.Active && !oThis.fieldFillingMode)
 				{
 					// двигаем рукой
 					oThis.setCursorType("grabbing");
@@ -1529,7 +1623,23 @@
 				{
 					if (oThis.isMouseDown)
 					{
-						if (oThis.mouseDownLinkObject)
+						if (oThis.mouseDownFieldObject)
+						{
+							if (oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox")
+							{
+								oThis.mouseDownFieldObject.private_SelectionSetEnd(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+								if (oThis.mouseDownFieldObject._content.IsSelectionEmpty() == false) {
+									oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+								}
+								else {
+									oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+									oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+								}
+								
+								oThis.onUpdateOverlay();
+							}
+						}
+						else if (oThis.mouseDownLinkObject)
 						{
 							// не меняем курсор с "ссылочного", если зажимали на ссылке
 							oThis.setCursorType("pointer");
@@ -1568,8 +1678,6 @@
 									cursorType = "pointer";
 							}
 						}
-						else
-							cursorType = "grab";
 
 						oThis.setCursorType(cursorType);
 					}
@@ -1595,7 +1703,16 @@
 
 				if (oThis.isMouseDown)
 				{
-					if (oThis.isMouseMoveBetweenDownUp)
+					if (oThis.mouseDownFieldObject)
+					{
+						if (oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox")
+						{
+							oThis.mouseDownFieldObject.private_SelectionSetEnd(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+							oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							oThis.onUpdateOverlay();
+						}
+					}
+					else if (oThis.isMouseMoveBetweenDownUp)
 					{
 						// нажатая мышка - курсор всегда default (так как за eps вышли)
 						oThis.setCursorType("default");
@@ -1611,11 +1728,34 @@
 				}
 				else
 				{
+					// просто водим мышкой - тогда смотрим, на ссылке или поле, чтобы выставить курсор
 					var mouseMoveLinkObject = oThis.getPageLinkByMouse();
+					var mouseMoveFieldObject = oThis.getPageFieldByMouse();
+					let cursorType = "default";
 					if (mouseMoveLinkObject)
-						oThis.setCursorType("pointer");
-					else
-						oThis.setCursorType("default");
+						cursorType = "default";
+					else if (mouseMoveFieldObject)
+					{
+						switch (mouseMoveFieldObject.type)
+						{
+							case "text":
+								cursorType = "text";
+								break;
+							case "combobox":
+								let X = (AscCommon.global_mouseEvent.X - oThis.x) * AscCommon.AscBrowser.retinaPixelRatio;
+								   let Y = (AscCommon.global_mouseEvent.Y - oThis.y) * AscCommon.AscBrowser.retinaPixelRatio;
+								if (X >= mouseMoveFieldObject._markRect.x1 && X <= mouseMoveFieldObject._markRect.x2 && Y >= mouseMoveFieldObject._markRect.y1 && Y <= mouseMoveFieldObject._markRect.y2 && mouseMoveFieldObject._options.length != 0) {
+									cursorType = "default";
+								}
+								else
+									cursorType = "text";
+								break;
+							default:
+								cursorType = "default";
+						}
+					}
+
+					oThis.setCursorType(cursorType);
 				}
 			}
 			return false;
@@ -1964,6 +2104,12 @@
 				ctx.fill();
 				ctx.beginPath();
 			}
+			if (this.mouseDownFieldObject && this.mouseDownFieldObject._content.IsSelectionUse())
+			{
+				this.mouseDownFieldObject._content.DrawSelectionOnPage(0);
+				ctx.globalAlpha = 0.2;
+				ctx.fill();
+			}
 			ctx.globalAlpha = 1.0;
 		};
 
@@ -2078,38 +2224,110 @@
 				ctx.strokeRect(x + lineW / 2, y + lineW / 2, w - lineW, h - lineW);
 
 				this.pageDetector.addPage(i, x, y, w, h);
-
-				this._paintForms(i, x, y);
 			}
+			
+			this._paintForms();
+			this._paintFormsHighlight();
 
 			this.isClearPages = false;
 			this.updateCurrentPage(this.pageDetector.getCurrentPage(this.currentPage));
 		};
-		this._paintForms = function(nPage, nPageIndX, nPageIndY)
+		this._paintForms = function()
 		{
-			let canvas = document.createElement('canvas');
-			canvas.width = this.canvas.width;
-			canvas.height = this.canvas.height;
+			let canvas = this.canvasForms;
+			const ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-			let nPageWidth = this.pageDetector.pages[nPage].w;
-			let nPageHeight = this.pageDetector.pages[nPage].h;
+			for (let i = 0; i < this.pageDetector.pages.length; i++)
+			{
+				let nPage = this.pageDetector.pages[i].num;
+				let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
+				let nPageIndX = this.pageDetector.pages[i].x;
+				let nPageIndY = this.pageDetector.pages[i].y;
+				
+				if (!aForms)
+					continue;
 
-			let ctx = canvas.getContext("2d");
-			ctx.fillStyle = "#FFFFFF";
-			ctx.fillRect(nPageIndX, nPageIndY, nPageWidth, nPageHeight);
+				if (this.pagesInfo.pages[nPage].fields != null) {
+					this.pagesInfo.pages[nPage].fields.forEach(function(field) {
+						field.Draw(ctx, nPageIndX, nPageIndY);
+					});
+				}
+			}
+		};
+		this._paintFormsHighlight = function()
+		{
+			let canvas = this.canvasFormsHighlight;
+			const ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-			let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
-			if (!aForms)
+			for (let i = 0; i < this.pageDetector.pages.length; i++)
+			{
+				let nPage = this.pageDetector.pages[i].num;
+				let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
+				
+				if (!aForms)
+					continue;
+
+				if (this.pagesInfo.pages[nPage].fields != null) {
+					this.pagesInfo.pages[nPage].fields.forEach(function(field) {
+						if (field._needDrawHighlight)
+							field.DrawHighlight(ctx);
+					});
+				}
+			}
+		};
+		this.SelectNextForm = function()
+		{
+			let aWidgetForms = this.doc._widgets;
+			if (aWidgetForms.length == 0)
 				return;
 
-			if (this.pagesInfo.pages[nPage].fields != null) {
-				this.pagesInfo.pages[nPage].fields.forEach(function(item) {
-					item.Draw(ctx, nPageIndX, nPageIndY);
-				});
+			let nCurForm = this.doc._widgets.indexOf(this.mouseDownFieldObject);
+			
+			if (nCurForm == -1)
+			{
+				this.mouseDownFieldObject = this.doc._widgets[0];
+				this.mouseDownFieldObject._needDrawHighlight = false;
 			}
+			else
+			{
+				let oNextForm = this.doc._widgets[nCurForm + 1] || this.doc._widgets[nCurForm - 1];
+				if (!oNextForm)
+					return;
 
-			this.canvas.getContext('2d').drawImage(canvas, 0, 0, canvas.width, canvas.height);
+				if (this.mouseDownFieldObject.private_applyValueForAll)
+				{
+					this.mouseDownFieldObject.private_applyValueForAll();
+					this._paintForms();
+				}
+				
+				this.mouseDownFieldObject._needDrawHighlight = true;
+
+				this.mouseDownFieldObject = oNextForm;
+				this.mouseDownFieldObject._needDrawHighlight = false;
+				switch (this.mouseDownFieldObject.type)
+				{
+					case "text":
+					case "combobox":
+						this.fieldFillingMode = true;
+						this.Api.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
+        				this.Api.WordControl.m_oDrawingDocument.m_lCurrentPage = 0;
+        				this.Api.WordControl.m_oDrawingDocument.m_lPagesCount = 1;
+						this.Api.WordControl.m_oDrawingDocument.TargetStart();
+						this.mouseDownFieldObject._content.GetElement(0).MoveCursorToStartPos();
+						this.mouseDownFieldObject._content.RecalculateCurPos();
+						break;
+					default:
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						this.fieldFillingMode = false;
+						break;
+				}
+
+				this._paintFormsHighlight();
+			}
 		};
+		
 		this.checkPagesLinks = function()
 		{
 			if (this.startVisiblePage < 0 || this.endVisiblePage < 0)
@@ -2422,8 +2640,15 @@
 			{
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
-					this.mouseDownFieldObject.Remove(-1);
-					this._paint();
+					this.mouseDownFieldObject.Remove(-1, e.CtrlKey == true);
+					this._paintForms();
+					this.onUpdateOverlay();
+					// сбрасываем счетчик до появления курсора
+					if (true !== e.ShiftKey)
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+					// Чтобы при зажатой клавише курсор не пропадал
+					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
+					
 					bRetValue = true;
 				}
 			}
@@ -2431,7 +2656,7 @@
 			{
 				if (this.mouseDownFieldObject)
 				{
-					// to do переключение между формами
+					this.SelectNextForm();
 				}
 			}
 			else if (e.KeyCode === 13) // Enter
@@ -2445,16 +2670,22 @@
 							this.mouseDownFieldObject.onMouseDown();
 							break;
 						case "listbox":
+							oThis.mouseDownFieldObject._needDrawHighlight = true;
 							this.mouseDownFieldObject.private_applyValueForAll();
 							this.mouseDownFieldObject.private_updateScroll(false, false);
 						default:
+							oThis.mouseDownFieldObject._needDrawHighlight = true;
 							this.mouseDownFieldObject.private_applyValueForAll();
+							if (this.mouseDownFieldObject.private_updateScroll)
+								this.mouseDownFieldObject.private_updateScroll(false, false);
+								
 							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 							break;
 					}
 					this.mouseDownFieldObject = null;
 					this.fieldFillingMode = false;
-					this._paint();
+					this._paintForms();
+					this._paintFormsHighlight();
 				}
 			}
 			else if (e.KeyCode === 27) // Esc
@@ -2512,9 +2743,13 @@
 
 					let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
 					let oCurPos = this.mouseDownFieldObject.private_moveCursorLeft(true === e.ShiftKey, true === e.CtrlKey);
-										
-					if (oCurPos.X < oFieldBounds.X)
-						this._paint();
+					if (this.mouseDownFieldObject._content.IsSelectionUse())
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						
+					if (oCurPos.X < oFieldBounds.X || oCurPos.Y < oFieldBounds.Y)
+						this._paintForms();
+
+					this.onUpdateOverlay();
 				}
 				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
 				{
@@ -2544,9 +2779,14 @@
 							oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 
 							let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
-							let oCurPos = this.mouseDownFieldObject.private_MoveCursorUp();
+							let oCurPos = this.mouseDownFieldObject.private_MoveCursorUp(true === e.ShiftKey, true === e.CtrlKey);
+							if (this.mouseDownFieldObject._content.IsSelectionUse())
+								this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+
 							if (oCurPos.Y < oFieldBounds.Y)
-								this._paint();
+								this._paintForms();
+							
+							this.onUpdateOverlay();
 							break;
 					}
 				}
@@ -2580,8 +2820,13 @@
 					let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
 					let oCurPos = this.mouseDownFieldObject.private_moveCursorRight(true === e.ShiftKey, true === e.CtrlKey);
 					
-					if (oCurPos.X > oFieldBounds.X + oFieldBounds.W)
-						this._paint();
+					if (this.mouseDownFieldObject._content.IsSelectionUse())
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+
+					if (oCurPos.X > oFieldBounds.X + oFieldBounds.W || oCurPos.Y > oFieldBounds.Y + oFieldBounds.H)
+						this._paintForms();
+
+					this.onUpdateOverlay();
 				}
 				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
 				{
@@ -2611,9 +2856,13 @@
 							oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 
 							let oFieldBounds = this.mouseDownFieldObject.getFormRelRect();
-							let oCurPos = this.mouseDownFieldObject.private_MoveCursorDown();
+							let oCurPos = this.mouseDownFieldObject.private_MoveCursorDown(true === e.ShiftKey, true === e.CtrlKey);
+							if (this.mouseDownFieldObject._content.IsSelectionUse())
+								this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+								
 							if (oCurPos.Y > oFieldBounds.Y + oFieldBounds.H)
-								this._paint();
+								this._paintForms();
+							this.onUpdateOverlay();
 							break;
 					}
 					
@@ -2644,29 +2893,47 @@
 			{
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
-					this.mouseDownFieldObject.Remove(1);
-					this._paint();
+					this.mouseDownFieldObject.Remove(1, e.CtrlKey == true);
+					this._paintForms();
+					this.onUpdateOverlay();
+					// сбрасываем счетчик до появления курсора
+					if (true !== e.ShiftKey)
+						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
+					// Чтобы при зажатой клавише курсор не пропадал
+					oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 					bRetValue = true;
 				}
 			}
 			else if ( e.KeyCode == 65 && true === e.CtrlKey ) // Ctrl + A
 			{
-				bRetValue = true;
-				if (this.isFullTextMessage)
-					return bRetValue;
-
-				if (!this.isFullText)
+				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
-					this.fullTextMessageCallbackArgs = [];
-					this.fullTextMessageCallback = function() {
-						this.file.selectAll();
-					};
-					this.showTextMessage();
+					this.mouseDownFieldObject._content.SelectAll();
+					if (this.mouseDownFieldObject._content.IsSelectionUse())
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+					
+					this.onUpdateOverlay();
+					bRetValue = true;
 				}
 				else
 				{
-					this.file.selectAll();
-				}
+					bRetValue = true;
+					if (this.isFullTextMessage)
+						return bRetValue;
+
+					if (!this.isFullText)
+					{
+						this.fullTextMessageCallbackArgs = [];
+						this.fullTextMessageCallback = function() {
+							this.file.selectAll();
+						};
+						this.showTextMessage();
+					}
+					else
+					{
+						this.file.selectAll();
+					}
+				} 
 			}
 			else if ( e.KeyCode == 80 && true === e.CtrlKey ) // Ctrl + P + ...
 			{
