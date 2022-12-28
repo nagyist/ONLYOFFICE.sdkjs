@@ -2746,9 +2746,13 @@
 					if (this.mouseDownFieldObject._content.IsSelectionUse())
 						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 						
-					if (oCurPos.X < oFieldBounds.X || oCurPos.Y < oFieldBounds.Y)
+					if ((oCurPos.X < oFieldBounds.X || oCurPos.Y < oFieldBounds.Y) && this.mouseDownFieldObject._doNotScroll == false)
+					{
 						this._paintForms();
-
+						if (this.mouseDownFieldObject.private_updateScroll)
+							this.mouseDownFieldObject.private_updateScroll();
+					}
+					
 					this.onUpdateOverlay();
 				}
 				else if (!this.isFocusOnThumbnails && this.isVisibleHorScroll)
@@ -2783,9 +2787,13 @@
 							if (this.mouseDownFieldObject._content.IsSelectionUse())
 								this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 
-							if (oCurPos.Y < oFieldBounds.Y)
+							if (oCurPos.Y < oFieldBounds.Y && this.mouseDownFieldObject._doNotScroll == false)
+							{
 								this._paintForms();
-							
+								if (this.mouseDownFieldObject.private_updateScroll)
+									this.mouseDownFieldObject.private_updateScroll();
+							}
+														
 							this.onUpdateOverlay();
 							break;
 					}
@@ -2823,8 +2831,12 @@
 					if (this.mouseDownFieldObject._content.IsSelectionUse())
 						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 
-					if (oCurPos.X > oFieldBounds.X + oFieldBounds.W || oCurPos.Y > oFieldBounds.Y + oFieldBounds.H)
+					if ((oCurPos.X > oFieldBounds.X + oFieldBounds.W || oCurPos.Y > oFieldBounds.Y + oFieldBounds.H) && this.mouseDownFieldObject._doNotScroll == false)
+					{
 						this._paintForms();
+						if (this.mouseDownFieldObject.private_updateScroll)
+							this.mouseDownFieldObject.private_updateScroll();
+					}
 
 					this.onUpdateOverlay();
 				}
@@ -2860,8 +2872,13 @@
 							if (this.mouseDownFieldObject._content.IsSelectionUse())
 								this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 								
-							if (oCurPos.Y > oFieldBounds.Y + oFieldBounds.H)
+							if (oCurPos.Y > oFieldBounds.Y + oFieldBounds.H && this.mouseDownFieldObject._doNotScroll == false)
+							{
 								this._paintForms();
+								if (this.mouseDownFieldObject.private_updateScroll)
+									this.mouseDownFieldObject.private_updateScroll();
+							}
+
 							this.onUpdateOverlay();
 							break;
 					}

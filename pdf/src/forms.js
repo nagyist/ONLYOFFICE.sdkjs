@@ -1343,6 +1343,13 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._doNotScroll = bValue;
+                        if (editor.getDocumentRenderer().mouseDownFieldObject == field) {
+                            if (bValue == true)
+                                editor.getDocumentRenderer().mouseDownFieldObject.private_updateScroll(false, false);
+                            else
+                                editor.getDocumentRenderer().mouseDownFieldObject.private_updateScroll();
+                        }
+                            
                     });
                 }
             },
@@ -1529,7 +1536,6 @@
             this._content.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
-            this._wasChanged = false;
         }
         
         if (this._multiline == true) {
@@ -1570,8 +1576,14 @@
             realY: Y
         };
 
-        if (this._doNotScroll == false)
-            this.private_updateScroll(true);
+        if (this._doNotScroll == false) {
+            if (this._wasChanged == false)
+                this.private_updateScroll(true);
+            else
+                this.private_updateScroll(false, true);
+        }
+
+        this._wasChanged = false;
     };
 
     CTextField.prototype.onMouseDown = function(x, y, e) {
@@ -1619,23 +1631,23 @@
     CTextField.prototype.private_moveCursorLeft = function(isShiftKey, isCtrlKey)
     {
         this._content.MoveCursorLeft(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true;
+        this._needShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.private_moveCursorRight = function(isShiftKey, isCtrlKey)
     {
         this._content.MoveCursorRight(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true;
+        this._needShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.private_MoveCursorDown = function(isShiftKey, isCtrlKey) {
         this._content.MoveCursorDown(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true;
+        this._needShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.private_MoveCursorUp = function(isShiftKey, isCtrlKey) {
         this._content.MoveCursorUp(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true;
+        this._needShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.EnterText = function(aChars)
@@ -1658,7 +1670,7 @@
         }
 
         this._wasChanged = true;
-        this._needShiftContentView = true;
+        this._needShiftContentView = true && this._doNotScroll == false;
     };
     /**
 	 * Applies value of this field to all field with the same name.
@@ -1959,7 +1971,7 @@
 
         this._content.Draw(0, oGraphics);
         // redraw target cursor if field is selected
-        if (oViewer.mouseDownFieldObject == this && this._content.IsSelectionUse() == false && (oViewer.fieldFillingMode || this.type == "combobox"))
+        if (oViewer.mouseDownFieldObject == this && this._content.IsSelectionUse() == false && oViewer.fieldFillingMode)
             this._content.RecalculateCurPos();
         
         oGraphics.RemoveClip();
