@@ -214,7 +214,7 @@
         this._submitName    = "";
         this._textColor     = ["RGB",0,0,0];
         this._fgColor       = undefined;
-        this._textSize      = 12; // 0 == max text size
+        this._textSize      = 10; // 0 == max text size // to do
         this._userName      = ""; // It is intended to be used as tooltip text whenever the cursor enters a field. 
         //It can also be used as a user-friendly name, instead of the field name, when generating error messages.
 
@@ -470,8 +470,22 @@
         },
         "textSize": {
             set(nValue) {
-                if (typeof(nValue) != "number" && nValue >= 0 && nValue < MAX_TEXT_SIZE)
-                    this._textSize = nValue;
+                if (typeof(nValue) == "number" && nValue >= 0 && nValue < MAX_TEXT_SIZE) {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    let oField;
+                    for (var i = 0; i < aFields.length; i++) {
+                        oField = aFields[i];
+                        oField._textSize = nValue;
+
+                        let aParas = oField._content.Content;
+                        aParas.forEach(function(para) {
+                           para.SetApplyToAll(true);
+                           para.Add(new AscCommonWord.ParaTextPr({FontSize : nValue}));
+                           para.SetApplyToAll(false);
+                        });
+                    }
+                }
+                    
             },
             get() {
                 return 
