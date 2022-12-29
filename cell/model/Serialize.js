@@ -3903,6 +3903,9 @@
             if (ws.aCellWatches && ws.aCellWatches.length > 0) {
                 this.bs.WriteItem(c_oSerWorksheetsTypes.CellWatches, function(){oThis.WriteCellWatches(ws.aCellWatches);});
             }
+            if (ws.Controls) {
+                this.bs.WriteItem(c_oSerWorksheetsTypes.Controls, function() {oThis.memory.WriteBuffer(ws.Controls, 0, ws.Controls.length)});
+            }
         };
 		this.WriteDataValidations = function(dataValidations)
 		{
@@ -8079,6 +8082,8 @@
                 res = this.bcr.Read1(length, function(t, l) {
                     return oThis.ReadCellWatches(t, l, oWorksheet.aCellWatches);
                 });
+            } else if (c_oSerWorksheetsTypes.Controls === type) {
+                oWorksheet.Controls = this.stream.GetBuffer(length);
             } else
 				res = c_oSerConstants.ReadUnknown;
 			return res;
