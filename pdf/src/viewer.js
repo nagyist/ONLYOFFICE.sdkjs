@@ -1285,10 +1285,13 @@
 					oThis.mouseDownFieldObject.private_updateScroll(false, false)
 
 				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
-					oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
+					if (oThis.mouseDownFieldObject._wasChanged) {
+						oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
+						oThis._paintForms();
+					}
+						
 					oThis.mouseDownFieldObject._needDrawHighlight = true;
 					oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
-					oThis._paintForms();
 					oThis._paintFormsHighlight();
 				}
 
@@ -2671,20 +2674,24 @@
 							break;
 						case "listbox":
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							this.mouseDownFieldObject.private_applyValueForAll();
+							if (this.mouseDownFieldObject._wasChanged)
+								this.mouseDownFieldObject.private_applyValueForAll();
 							this.mouseDownFieldObject.private_updateScroll(false, false);
 						default:
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							this.mouseDownFieldObject.private_applyValueForAll();
+							if (this.mouseDownFieldObject._wasChanged)
+								this.mouseDownFieldObject.private_applyValueForAll();
 							if (this.mouseDownFieldObject.private_updateScroll)
 								this.mouseDownFieldObject.private_updateScroll(false, false);
 								
 							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 							break;
 					}
-					this.mouseDownFieldObject = null;
+					
 					this.fieldFillingMode = false;
-					this._paintForms();
+					if (this.mouseDownFieldObject._wasChanged)
+						this._paintForms();
+					this.mouseDownFieldObject = null;
 					this._paintFormsHighlight();
 				}
 			}

@@ -1021,6 +1021,7 @@
                         field._value = "Off";
                     });
                 }
+                editor.getDocumentRenderer()._paintForms();
             },
             get() {
                 return this._value;
@@ -1322,9 +1323,21 @@
                 if (typeof(nValue) == "number" && nValue <= 500 && nValue > 0 && this.fileSelect === false) {
                     let aFields = this._doc.getWidgetsByName(this.name);
                     nValue = Math.round(nValue);
-                    aFields.forEach(function(field) {
-                        field._charLimit = nValue;
-                    });
+                    if (this._charLimit != nValue) {
+                        let aChars = [];
+                        let sText = this._content.GetElement(0).GetText();
+                        for (let i = 0; i < sText.length; i++) {
+                            aChars.push(sText[i].charCodeAt(0));
+                        }
+
+                        aFields.forEach(function(field) {
+                            field._charLimit = nValue;
+                            field._content.SelectAll();
+                            field.EnterText(aChars);
+                        });
+
+                        editor.getDocumentRenderer()._paintForms();
+                    }
                 }
             },
             get() {
@@ -1485,6 +1498,25 @@
             get() {
                 return this.textFont;
             }
+        },
+        "value": {
+            set(sText) {
+                if (typeof(sText) != "string")
+                    return;
+                
+                let aChars = [];
+                for (let i = 0; i < sText.length; i++) {
+                    aChars.push(sText[i].charCodeAt(0));
+                }
+
+                let aFields = this._doc.getWidgetsByName(this.name);
+                aFields.forEach(function(field) {
+                    field._content.SelectAll();
+                    field.EnterText(aChars);
+                });
+
+                editor.getDocumentRenderer()._paintForms();
+            }
         }
     });
     
@@ -1546,7 +1578,7 @@
             this._content.YLimit = this._oldContentPos.YLimit   = 20000;
             this._content.Recalculate_Page(0, true);
         }
-        else if (this._wasChanged) {
+        else if (true) {
             this._content.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
@@ -1666,19 +1698,31 @@
     };
     CTextField.prototype.EnterText = function(aChars)
     {
-        if (aChars.length == 0)
-            return;
-
         let oPara = this._content.GetElement(0);
         if (this._content.IsSelectionEmpty())
             this._content.RemoveSelection();
 
+        let nChars = 0;
+        function getCharsCount(oRun) {
+            var nCurPos = oRun.Content.length;
+			for (var nPos = 0; nPos < nCurPos; ++nPos)
+			{
+				if (para_Text === oRun.Content[nPos].Type || para_Space === oRun.Content[nPos].Type || para_Tab === oRun.Content[nPos].Type)
+                    nChars++;
+            }
+        }
+        
         if (this._content.IsSelectionUse()) {
             // Если у нас что-то заселекчено и мы вводим текст или пробел
 			// и т.д., тогда сначала удаляем весь селект.
             this._content.Remove(1, true, false, true);
         }
-        for (let index = 0, count = aChars.length; index < count; ++index) {
+
+        if (this._charLimit != 0)
+            this._content.CheckRunContent(getCharsCount);
+
+        let nMaxCharsToAdd = this._charLimit != 0 ? this._charLimit - nChars : aChars.length;
+        for (let index = 0, count = Math.min(nMaxCharsToAdd, aChars.length); index < count; ++index) {
             let codePoint = aChars[index];
             oPara.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
         }
@@ -1704,8 +1748,8 @@
             for (let nItem = 0; nItem < this._content.Content.length; nItem++)
                 aFields[i]._content.Internal_Content_Add(nItem, this._content.Content[nItem].Copy());
 
-            aFields[i]._wasChanged = true;
-            //aFields[i]._content.Recalculate_Page(0); // to do check
+            //aFields[i]._wasChanged = true;
+            aFields[i]._content.Recalculate_Page(0); // to do check
         }
     };
     
@@ -2102,7 +2146,7 @@
     };
     CComboBoxField.prototype.EnterText = function(aChars)
     {
-        if (aChars.length == 0 || this._editable == false)
+        if (this._editable == false)
             return;
 
         let oPara = this._content.GetElement(0);
