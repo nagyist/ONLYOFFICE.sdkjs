@@ -4421,6 +4421,14 @@
 		var y1 = this._getRowTop(rowT) - offsetY;
 		var w = this._getColLeft(colR + 1) - offsetX - x1;
 		var h = this._getRowTop(rowB + 1) - offsetY - y1;
+
+		//if 1 line text(+2???) > row height, temporary change vertical align bug #36556
+		//TODO need check on all text position and text content
+		var cellVA = ct.cellVA;
+		if (ct.cellVA === Asc.c_oAscVAlign.Center && isWrapped && ct.state && ct.state.lines[0] && ct.state.lines[0].th + 2 >= h) {
+			cellVA = Asc.c_oAscVAlign.Top;
+		}
+
 		var x2 = x1 + w - (isTrimmedR ? 0 : gridlineSize);
 		var y2 = y1 + h;
 		var bl = y2 - Asc.round(
@@ -4428,7 +4436,7 @@
 		var x1ct = isMerged ? x1 : this._getColLeft(col) - offsetX;
 		var x2ct = isMerged ? x2 : x1ct + this._getColumnWidth(col) - gridlineSize;
 		var textX = this._calcTextHorizPos(x1ct, x2ct, ct.metrics, ct.cellHA);
-		var textY = this._calcTextVertPos(y1, h, bl, ct.metrics, ct.cellVA);
+		var textY = this._calcTextVertPos(y1, h, bl, ct.metrics, cellVA);
 		var textW = this._calcTextWidth(x1ct, x2ct, ct.metrics, ct.cellHA);
 
 		var xb1, yb1, wb, hb, colLeft, colRight;
@@ -4533,21 +4541,21 @@
 
 			if (isWrapped) {
 				if (ct.angle < 0) {
-					if (Asc.c_oAscVAlign.Top === ct.cellVA) {
+					if (Asc.c_oAscVAlign.Top === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Left;
-					} else if (Asc.c_oAscVAlign.Center === ct.cellVA || Asc.c_oAscVAlign.Dist === ct.cellVA ||
-						Asc.c_oAscVAlign.Just === ct.cellVA) {
+					} else if (Asc.c_oAscVAlign.Center === cellVA || Asc.c_oAscVAlign.Dist === cellVA ||
+						Asc.c_oAscVAlign.Just === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Center;
-					} else if (Asc.c_oAscVAlign.Bottom === ct.cellVA) {
+					} else if (Asc.c_oAscVAlign.Bottom === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Right;
 					}
 				} else {
-					if (Asc.c_oAscVAlign.Top === ct.cellVA) {
+					if (Asc.c_oAscVAlign.Top === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Right;
-					} else if (Asc.c_oAscVAlign.Center === ct.cellVA || Asc.c_oAscVAlign.Dist === ct.cellVA ||
-						Asc.c_oAscVAlign.Just === ct.cellVA) {
+					} else if (Asc.c_oAscVAlign.Center === cellVA || Asc.c_oAscVAlign.Dist === cellVA ||
+						Asc.c_oAscVAlign.Just === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Center;
-					} else if (Asc.c_oAscVAlign.Bottom === ct.cellVA) {
+					} else if (Asc.c_oAscVAlign.Bottom === cellVA) {
 						this.stringRender.flags.textAlign = AscCommon.align_Left;
 					}
 				}
@@ -4592,9 +4600,9 @@
 					(ct.flags && ct.flags.verticalText);
 				var _defaultSpaceWidth = this.workbook.printPreviewState && this.workbook.printPreviewState.isStart() ? this.defaultSpaceWidth * this.getZoom() : this.defaultSpaceWidth;
 				if (verticalText) {
-					if (Asc.c_oAscVAlign.Bottom === ct.cellVA) {
+					if (Asc.c_oAscVAlign.Bottom === cellVA) {
 						//textY -= ct.indent * 3 * this.defaultSpaceWidth;
-					} else if (Asc.c_oAscVAlign.Top === ct.cellVA) {
+					} else if (Asc.c_oAscVAlign.Top === cellVA) {
 						textY += ct.indent * 3 * _defaultSpaceWidth;
 					}
 				} else {
