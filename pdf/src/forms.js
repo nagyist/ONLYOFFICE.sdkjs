@@ -151,10 +151,10 @@
     }
     
     let LINE_WIDTH = {
-        none:   0,
-        thin:   1,
-        medium: 2,
-        thick:  3
+        "none":   0,
+        "thin":   1,
+        "medium": 2,
+        "thick":  3
     }
 
     let VALID_ROTATIONS = [0, 90, 180, 270];
@@ -270,8 +270,15 @@
         // common
         "borderStyle": {
             set(sValue) {
-                if (Object.values(border).includes(sValue))
-                    this._borderStyle = sValue;
+                if (Object.values(border).includes(sValue)) {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._borderStyle = sValue;
+                    });
+
+                    editor.getDocumentRenderer()._paintForms();
+                }
+
             },
             get() {
                 return this._borderStyle;
@@ -330,8 +337,14 @@
         "lineWidth": {
             set(nValue) {
                 nValue = parseInt(nValue);
-                if (!isNaN(nValue))
-                    this._lineWidth = nValue;
+                if (Object.values(LINE_WIDTH).includes(nValue)) {
+                    let aFields = this._doc.getWidgetsByName(this.name);
+                    aFields.forEach(function(field) {
+                        field._lineWidth = nValue;
+                    });
+
+                    editor.getDocumentRenderer()._paintForms();
+                }
             },
             get() {
                 return this._lineWidth;
@@ -716,6 +729,137 @@
         oCtx.fillStyle = `rgb(${FIELDS_HIGHLIGHT.r}, ${FIELDS_HIGHLIGHT.g}, ${FIELDS_HIGHLIGHT.b})`;
         oCtx.fillRect(this._pagePos.realX, this._pagePos.realY, this._pagePos.w, this._pagePos.h);
     };
+
+    CBaseField.prototype.DrawBorders = function(oCtx, X, Y, nWidth, nHeight) {
+        let oViewer = editor.getDocumentRenderer();
+        let nLineWidth = 2 * oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio * this._lineWidth;
+        oCtx.lineWidth = nLineWidth;
+        if (nLineWidth == 0) {
+            return;
+        }
+
+        switch (this._borderStyle) {
+            case "solid":
+                oCtx.setLineDash([]);
+                oCtx.beginPath();
+                oCtx.rect(X, Y, nWidth, nHeight);
+                oCtx.stroke();
+                break;
+            case "beveled":
+                oCtx.beginPath();
+                oCtx.rect(X, Y, nWidth, nHeight);
+                oCtx.stroke();
+                oCtx.closePath();
+
+                // bottom part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nLineWidth + nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                
+                oCtx.moveTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+
+                oCtx.fillStyle = "gray";
+                oCtx.closePath();
+                oCtx.fill();
+
+                // right part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nLineWidth + nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                
+                oCtx.moveTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+                oCtx.lineTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+
+                oCtx.fillStyle = "gray";
+                oCtx.closePath();
+                oCtx.fill();
+
+                break;
+            case "dashed":
+                oCtx.setLineDash([5 * oViewer.zoom]);
+                oCtx.beginPath();
+                oCtx.rect(X, Y, nWidth, nHeight);
+                oCtx.stroke();
+                break;
+            case "inset":
+                oCtx.setLineDash([]);
+                oCtx.beginPath();
+                oCtx.rect(X, Y, nWidth, nHeight);
+                oCtx.stroke();
+                oCtx.closePath();
+
+                // left part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nLineWidth + nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth + nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                
+                oCtx.moveTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth + nLineWidth / 2, Y + nLineWidth / 2);
+
+                oCtx.fillStyle = "gray";
+                oCtx.closePath();
+                oCtx.fill();
+
+                // top part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nLineWidth + nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nLineWidth + nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                
+                oCtx.moveTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nLineWidth + nLineWidth / 2);
+
+                oCtx.fillStyle = "gray";
+                oCtx.closePath();
+                oCtx.fill();
+
+                // bottom part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nLineWidth + nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+                oCtx.lineTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                
+                oCtx.moveTo(X + nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth - nLineWidth / 2);
+
+                oCtx.fillStyle = "rgb(191, 191, 191)";
+                oCtx.closePath();
+                oCtx.fill();
+
+                // right part
+                oCtx.beginPath();
+                oCtx.moveTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nLineWidth + nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                
+                oCtx.moveTo(X + nWidth - nLineWidth / 2, Y + nLineWidth / 2);
+                oCtx.lineTo(X + nWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+                oCtx.lineTo(X + nWidth - nLineWidth - nLineWidth / 2, Y + nHeight - nLineWidth);
+
+                oCtx.fillStyle = "rgb(191, 191, 191)";
+                oCtx.closePath();
+                oCtx.fill();
+
+                break;
+            case "underline":
+                oCtx.setLineDash([]);
+                oCtx.beginPath();
+                oCtx.moveTo(X, Y + nHeight);
+                oCtx.lineTo(X + nWidth, Y + nHeight);
+                oCtx.stroke();
+                break;
+        }
+    };
+
     CBaseField.prototype.private_GetType = function() {
         return this.type;
     };
@@ -891,32 +1035,15 @@
         let nWidth = (this._rect[2] - this._rect[0]) * oViewer.zoom;
         let nHeight = (this._rect[3] - this._rect[1]) * oViewer.zoom;
 
-        switch (this._borderStyle) {
-            case "solid":
-                //oCtx.setLineDash([]);
-                break;
-            case "beveled":
-                break;
-            case "dashed":
-                //oCtx.setLineDash([5 * oViewer.zoom]);
-                break;
-            case "inset":
-                break;
-            case "underline":
-                break;
-        }
-
-        // draw border
-        oCtx.beginPath();
-        oCtx.rect(X, Y, nWidth, nHeight);
-        oCtx.stroke();
+        this.DrawBorders(oCtx, X, Y, nWidth, nHeight);
+        let oMargins = this.private_getMarginsByBorder();
 
         let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
-        let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentXLimit = (X + nWidth * 0.98) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentYLimit = (Y + nHeight - nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentX = (X + nWidth * 0.02 + oMargins.left) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm / scaleCoef;
         
         // подгоняем размер галочки
         contentY = Y * g_dKoef_pix_to_mm / scaleCoef;
@@ -1532,32 +1659,15 @@
         let nWidth = (this._rect[2] - this._rect[0]) * oViewer.zoom;
         let nHeight = (this._rect[3] - this._rect[1]) * oViewer.zoom;
 
-        switch (this._borderStyle) {
-            case "solid":
-                //oCtx.setLineDash([]);
-                break;
-            case "beveled":
-                break;
-            case "dashed":
-                //oCtx.setLineDash([5 * oViewer.zoom]);
-                break;
-            case "inset":
-                break;
-            case "underline":
-                break;
-        }
-
-        // draw border
-        oCtx.beginPath();
-        oCtx.rect(X, Y, nWidth, nHeight);
-        oCtx.stroke();
+        this.DrawBorders(oCtx, X, Y, nWidth, nHeight);
+        let oMargins = this.private_getMarginsByBorder();
 
         let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
-        let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentXLimit = (X + nWidth * 0.98) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentYLimit = (Y + nHeight - nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentX = (X + nWidth * 0.02 + oMargins.left) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm / scaleCoef;
         
         if (this.multiline == false) {
             // выставляем текст посередине
@@ -1784,6 +1894,7 @@
                 this._richText          = aFields[i]._richText;
                 this._richValue         = aFields[i]._richValue.slice();
                 this._textFont          = aFields[i]._textFont;
+                this._borderStyle       = aFields[i]._borderStyle;
 
                 if (this._multiline)
                     this._content.SetUseXLimit(true);
@@ -1945,26 +2056,6 @@
         let nWidth = (this._rect[2] - this._rect[0]) * oViewer.zoom;
         let nHeight = (this._rect[3] - this._rect[1]) * oViewer.zoom;
 
-        switch (this._borderStyle) {
-            case "solid":
-                //oCtx.setLineDash([]);
-                break;
-            case "beveled":
-                break;
-            case "dashed":
-                //oCtx.setLineDash([5 * oViewer.zoom]);
-                break;
-            case "inset":
-                break;
-            case "underline":
-                break;
-        }
-
-        // draw border
-        oCtx.beginPath();
-        oCtx.rect(X, Y, nWidth, nHeight);
-        oCtx.stroke();
-
         // маркер dropdown
         let nMarkX = X + nWidth * 0.95 + (nWidth * 0.025) - (nWidth * 0.025)/4;
         let nMarkWidth = nWidth * 0.025;
@@ -1982,12 +2073,15 @@
             y2: Y + nHeight
         }
 
+        this.DrawBorders(oCtx, X, Y, nWidth, nHeight);
+        let oMargins = this.private_getMarginsByBorder();
+
         let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
-        let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentXLimit = (X + nWidth * 0.98) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentYLimit = (Y + nHeight - nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentX = (X + nWidth * 0.02 + oMargins.left) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm / scaleCoef;
         
         // ограничиваем контент позицией маркера
         contentXLimit = this._markRect.x1 * g_dKoef_pix_to_mm / scaleCoef; 
@@ -2259,31 +2353,15 @@
         let nWidth = (this._rect[2] - this._rect[0]) * oViewer.zoom;
         let nHeight = (this._rect[3] - this._rect[1]) * oViewer.zoom;
 
-        switch (this._borderStyle) {
-            case "solid":
-                //oCtx.setLineDash([]);
-                break;
-            case "beveled":
-                break;
-            case "dashed":
-                //oCtx.setLineDash([5 * oViewer.zoom]);
-                break;
-            case "inset":
-                break;
-            case "underline":
-                break;
-        }
-
-        oCtx.beginPath();
-        oCtx.rect(X, Y, nWidth, nHeight);
-        oCtx.stroke();
+        this.DrawBorders(oCtx, X, Y, nWidth, nHeight);
+        let oMargins = this.private_getMarginsByBorder();
 
         let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 
-        let contentX = (X + nWidth * 0.02) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentY = (Y + nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentXLimit = (X + nWidth * 0.98) * g_dKoef_pix_to_mm / scaleCoef;
-        let contentYLimit = (Y + nHeight - nWidth * 0.01) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentX = (X + nWidth * 0.02 + oMargins.left) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm / scaleCoef;
+        let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm / scaleCoef;
         
         this._formRelRectMM.X = contentX;
         this._formRelRectMM.Y = contentY;
@@ -2882,6 +2960,57 @@
                 x: this._content.ShiftViewX,
                 y: this._content.ShiftViewY
             }
+        }
+    };
+    CBaseField.prototype.private_getMarginsByBorder = function() {
+        let oViewer = editor.getDocumentRenderer();
+        let nLineWidth = 2 * oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio * this._lineWidth;
+
+        if (nLineWidth == 0) {
+            return {
+                left:     0,
+                top:      0,
+                right:    0,
+                bottom:   0
+            }
+        }
+
+        switch (this._borderStyle) {
+            case "solid":
+                return {
+                    left:     nLineWidth,
+                    top:      nLineWidth,
+                    right:    nLineWidth,
+                    bottom:   nLineWidth
+                }
+            case "beveled":
+                return {
+                    left:     nLineWidth,
+                    top:      nLineWidth,
+                    right:    2 * nLineWidth,
+                    bottom:   2 * nLineWidth
+                }             
+            case "dashed":
+                return {
+                    left:     nLineWidth,
+                    top:      nLineWidth,
+                    right:    nLineWidth,
+                    bottom:   nLineWidth
+                }
+            case "inset":
+                return {
+                    left:     2 * nLineWidth,
+                    top:      2 * nLineWidth,
+                    right:    2 * nLineWidth,
+                    bottom:   2 * nLineWidth
+                }
+            case "underline":
+                return {
+                    left:     0,
+                    top:      0,
+                    right:    0,
+                    bottom:   nLineWidth
+                }
         }
     };
     // private methods
