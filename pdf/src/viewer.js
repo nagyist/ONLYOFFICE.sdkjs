@@ -2969,10 +2969,22 @@
 				// nothing
 				bRetValue = true;
 			}
+			else if ( e.KeyCode == 90 && true === e.CtrlKey ) // Ctrl + Z
+			{
+				this.DoUndo();
+				bRetValue = true;
+			}
 
 			return bRetValue;
 		};
-
+		this.DoUndo = function()
+		{
+			if (AscCommon.History.Can_Undo())
+			{
+				var arrChanges = AscCommon.History.Undo();
+				//this.UpdateAfterUndoRedo(arrChanges);
+			}
+		};
 		this.showTextMessage = function()
 		{
 			if (this.isFullTextMessage)

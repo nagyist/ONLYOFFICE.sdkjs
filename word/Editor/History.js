@@ -239,10 +239,11 @@ CHistory.prototype =
 		this.UndoRedoInProgress = true;
 
         // Запоминаем самое последнее состояние документа для Redo
-        if ( this.Index === this.Points.length - 1 )
+        if ( this.Index === this.Points.length - 1 && this.Document)
             this.LastState = this.Document.GetSelectionState();
         
-        this.Document.RemoveSelection(true);
+        if (this.Document)
+			this.Document.RemoveSelection(true);
 
         var Point = null;
         if (undefined !== Options && null !== Options && true === Options.All)
@@ -259,7 +260,7 @@ CHistory.prototype =
             this.private_UndoPoint(Point, arrChanges);
         }
 
-        if (null != Point)
+        if (null != Point && this.Document)
             this.Document.SetSelectionState( Point.State );
 
 		if(!window['AscCommon'].g_specialPasteHelper.specialPasteStart)
@@ -327,7 +328,7 @@ CHistory.prototype =
 
         this.CheckUnionLastPoints();
         
-        var State = oSelectionState ? oSelectionState : this.Document.GetSelectionState();
+        var State = oSelectionState ? oSelectionState : this.Document ? this.Document.GetSelectionState() : undefined;
         var Items = [];
         var Time  = new Date().getTime();
 
@@ -697,7 +698,7 @@ CHistory.prototype =
     {
         // Не объединяем точки в истории, когда отключается пересчет.
         // TODO: Неправильно изменяется RecalcIndex
-        if (true !== this.Document.Is_OnRecalculate())
+        if (this.Document && true !== this.Document.Is_OnRecalculate())
             return false;
 
         // Не объединяем точки во время Undo/Redo

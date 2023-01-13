@@ -1808,6 +1808,11 @@
     };
     CTextField.prototype.EnterText = function(aChars)
     {
+        if (aChars.length > 0) {
+            AscCommon.History.TurnOn();
+            AscCommon.History.Create_NewPoint();
+        }
+
         let oPara = this._content.GetElement(0);
         if (this._content.IsSelectionEmpty())
             this._content.RemoveSelection();
@@ -1837,8 +1842,10 @@
             oPara.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
         }
 
-        this._wasChanged = true;
-        this._needShiftContentView = true && this._doNotScroll == false;
+        if (aChars.length > 0) {
+            this._wasChanged = true;
+            this._needShiftContentView = true && this._doNotScroll == false;
+        }
     };
     /**
 	 * Applies value of this field to all field with the same name.

@@ -1544,8 +1544,11 @@ background-repeat: no-repeat;\
 			this.WordControl.initEventsMobile();
 
 		// destroy unused memory
-		AscCommon.pptx_content_writer.BinaryFileWriter = null;
-		AscCommon.History.BinaryWriter = null;
+		let isEditForms = true;
+		if (isEditForms == false) {
+			AscCommon.pptx_content_writer.BinaryFileWriter = null;
+			AscCommon.History.BinaryWriter = null;
+		}
 
 		this.WordControl.OnResize(true);
 		this.getDocumentRenderer().ImageMap = {};
