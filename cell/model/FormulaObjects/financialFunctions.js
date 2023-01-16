@@ -729,7 +729,7 @@
 
 		// basis = 0;
 		firstDate = new cDate(iss > coupPCD ? iss : coupPCD);
-		days = AscCommonExcel.days360(firstDate, settl, basis);
+		days = AscCommonExcel.newDays360(firstDate, settl, basis);
 		coupDays = getcoupdays(coupPCD, fInter, frequency, basis).getValue();
 		res = days / coupDays;
 		startDate = new cDate(coupPCD);

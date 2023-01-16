@@ -15990,10 +15990,10 @@ $(function () {
 		ws.getRange2("A109").setValue("0");
 		ws.getRange2("A110").setValue("1");
 		ws.getRange2("A111").setValue("1s2p");
-		ws.getRange2("A112").setValue("0");
-		ws.getRange2("A112").setNumFormat("@");
-		ws.getRange2("A113").setValue("1");
-		ws.getRange2("A113").setNumFormat("@");
+		ws.getRange2("A220").setValue("0");
+		ws.getRange2("A220").setNumFormat("@");
+		ws.getRange2("A221").setValue("1");
+		ws.getRange2("A221").setNumFormat("@");
 
 		// normal case
 		// arg[0]
@@ -16457,19 +16457,19 @@ $(function () {
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,1)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,1)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 2275.34, "Result of ACCRINT(39508,39691,39769,1,1000,1,1)");	// 709.24
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 724.66, "Result of ACCRINT(39508,39691,39769,1,1000,1,1)");	// 709.24
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,2)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,2)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 2286.11, "Result of ACCRINT(39508,39691,39769,1,1000,1,2)");	// 725
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 713.89, "Result of ACCRINT(39508,39691,39769,1,1000,1,2)");	// 725
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,3)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,3)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 2276.71, "Result of ACCRINT(39508,39691,39769,1,1000,1,3)");	// 715.07
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 726.03, "Result of ACCRINT(39508,39691,39769,1,1000,1,3)");	// 715.07
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,4)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,4)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 2283.33, "Result of ACCRINT(39508,39691,39769,1,1000,1,4)-");	// 708.36
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 711.11, "Result of ACCRINT(39508,39691,39769,1,1000,1,4)-");	// 708.36
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,-1)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,-1)");
@@ -16501,7 +16501,7 @@ $(function () {
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,{1})", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,{1})");
-		assert.strictEqual(oParser.calculate().getValue().toFixed() - 0, 2275, "Result of ACCRINT(39508,39691,39769,1,1000,1,{1})"); // 709.24
+		assert.strictEqual(oParser.calculate().getValue().toFixed() - 0, 725, "Result of ACCRINT(39508,39691,39769,1,1000,1,{1})"); // 709.24
 
 		oParser = new parserFormula("ACCRINT(39508,39691,39769,1,1000,1,{-1})", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(39508,39691,39769,1,1000,1,{-1})");
@@ -16600,15 +16600,15 @@ $(function () {
 		assert.ok(oParser.parse(), "ACCRINT(A100,A101,A102,A103,A104,A105,A106,A111)");
 		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of ACCRINT(A100,A101,A102,A103,A104,A105,A106,A111)");
 
-		oParser = new parserFormula("ACCRINT(A100,A101,A102,A103,A104,A105,A106,A112)", "A2", ws);
-		assert.ok(oParser.parse(), "ACCRINT(A100,A101,A102,A103,A104,A105,A106,A112)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 711.11, "Result of ACCRINT(A100,A101,A102,A103,A104,A105,A106,A112)");
+		oParser = new parserFormula("ACCRINT(A100,A101,A102,A103,A104,A105,A106,A220)", "A2", ws);
+		assert.ok(oParser.parse(), "ACCRINT(A100,A101,A102,A103,A104,A105,A106,A220)");
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 711.11, "Result of ACCRINT(A100,A101,A102,A103,A104,A105,A106,A220)");
 
-		oParser = new parserFormula("ACCRINT(A100,A101,A102,A103,A104,A105,A106,A113)", "A2", ws);
-		assert.ok(oParser.parse(), "ACCRINT(A100,A101,A102,A103,A104,A105,A106,A113)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 713.89, "Result of ACCRINT(A100,A101,A102,A103,A104,A105,A106,A113)");
+		oParser = new parserFormula("ACCRINT(A100,A101,A102,A103,A104,A105,A106,A221)", "A2", ws);
+		assert.ok(oParser.parse(), "ACCRINT(A100,A101,A102,A103,A104,A105,A106,A221)");
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 713.89, "Result of ACCRINT(A100,A101,A102,A103,A104,A105,A106,A221)");
 
-		// diff cases
+		// bug cases
 		oParser = new parserFormula("ACCRINT(60,39691,39769,1,1000,2,0)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(60,39691,39769,1,1000,2,0)");
 		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 108713.89, "Result of ACCRINT(60,39691,39769,1,1000,2,0)");	// 108719.44
@@ -16631,19 +16631,19 @@ $(function () {
 
 		oParser = new parserFormula("ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,1)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,1)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 19.93, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,1)");	// 9.97
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 10.01, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,1)");	// 9.97
 
 		oParser = new parserFormula("ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,2)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,2)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 20, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,2)");	// 10.14
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 9.94, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,2)");	// 10.14
 
 		oParser = new parserFormula("ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,3)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,3)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 19.95, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,3)");	// 10
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 10.03, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,3)");	// 10
 
 		oParser = new parserFormula("ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,4)", "A2", ws);
 		assert.ok(oParser.parse(), "ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,4)");
-		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 20.03, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,4)");	// 9.97
+		assert.strictEqual(oParser.calculate().getValue().toFixed(2) - 0, 9.97, "Result of ACCRINT(DATE(2020,1,1),DATE(2020,7,1),DATE(2020,12,31),0.1,100,1,4)");	// 9.97
 
 		testArrayFormula2(assert, "ACCRINT", 6, 8, true);
 	});

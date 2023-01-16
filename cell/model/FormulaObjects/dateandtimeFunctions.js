@@ -273,6 +273,40 @@
 		return sign * ( nD2 - nD1 + ( nM2 - nM1 ) * 30 + ( nY2 - nY1 ) * 360 );
 	}
 
+	function newDays360(date1, date2, flag) {
+		let sign = 1;
+
+		let nY1 = date1.getUTCFullYear(), nM1 = date1.getUTCMonth() + 1, nD1 = date1.getUTCDate(),
+			nY2 = date2.getUTCFullYear(), nM2 = date2.getUTCMonth() + 1, nD2 = date2.getUTCDate();
+
+		if (nD1 == 31) {
+			nD1 -= 1;
+		} else if (!flag) {
+			if (nM1 == 2) {
+				switch (nD1) {
+					case 28 :
+						if (!date1.isLeapYear()) {
+							nD1 = 30;
+						}
+						break;
+					case 29 :
+						nD1 = 30;
+						break;
+				}
+			}
+		}
+		if (nD2 == 31) {
+			if (!flag) {
+				if (nD1 == 30) {
+					nD2--;
+				}
+			} else {
+				nD2 = 30;
+			}
+		}
+		return sign * ( nD2 - nD1 + ( nM2 - nM1 ) * 30 + ( nY2 - nY1 ) * 360 );
+	}
+
 	function daysInYear(date, basis) {
 		switch (basis) {
 			case DayCountBasis.UsPsa30_360:         // 0=USA (NASD) 30/360
@@ -2296,7 +2330,7 @@
 		val1 = cDate.prototype.getDateFromExcel(val1);
 
 		return yearFrac(val0, val1, arg2.getValue());
-//    return diffDate2( val0, val1, arg2.getValue() );
+   		// return diffDate2( val0, val1, arg2.getValue() );
 
 	};
 
@@ -2306,5 +2340,6 @@
 	window['AscCommonExcel'].yearFrac = yearFrac;
 	window['AscCommonExcel'].diffDate = diffDate;
 	window['AscCommonExcel'].days360 = days360;
+	window['AscCommonExcel'].newDays360 = newDays360;
 	window['AscCommonExcel'].daysInYear = daysInYear;
 })(window);
