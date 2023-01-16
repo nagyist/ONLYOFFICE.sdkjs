@@ -227,8 +227,6 @@ function CDrawingDocument()
     this.Overlay = null;
     this.IsTextMatrixUse = false;
 
-    this.placeholders = new AscCommon.DrawingPlaceholders(this);
-
     this.getDrawingObjects = function()
     {
         var oWs = Asc.editor.wb.getWorksheet();
