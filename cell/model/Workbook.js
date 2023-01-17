@@ -9760,8 +9760,23 @@
 			let parser = new AscCommonExcel.parserFormula(formula, /*formulaParsed.parent*/null, this);
 			let parseResultArg = new AscCommonExcel.ParseResult([], []);
 			parser.parse(true, true, parseResultArg, true);
+
 			if (!parseResultArg.error) {
 				res = parser.calculate();
+			}
+
+			//if try parse string, try convert to text
+			if ((!res || res.type === AscCommonExcel.cElementType.error) && type === Asc.c_oAscFormulaArgumentType.text) {
+				parser = new AscCommonExcel.parserFormula('"' + formula + '"', /*formulaParsed.parent*/null, this);
+				parseResultArg = new AscCommonExcel.ParseResult([], []);
+				parser.parse(true, true, parseResultArg, true);
+
+				if (!parseResultArg.error) {
+					let newRes = parser.calculate();
+					if (newRes && newRes.type !== AscCommonExcel.cElementType.error) {
+						res = newRes;
+					}
+				}
 			}
 
 			resultStr = "";
