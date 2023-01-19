@@ -628,7 +628,6 @@
 		}
 
 		// ------------------------- arg7 type check -------------------------//
-		// ??? where's other types
 		if (cElementType.cell === calcMethod.type || cElementType.cell3D === calcMethod.type) {
 			calcMethod = calcMethod.getValue();
 		} else if (cElementType.cellsRange === calcMethod.type || cElementType.cellsRange3D === calcMethod.type) {
@@ -735,6 +734,7 @@
 		startDate = new cDate(coupPCD);
 		endDate = iss;
 
+		// ???
 		while (!( numMonthsNeg > 0 ? startDate >= iss : startDate <= iss )) {
 			endDate = startDate;
 			startDate = addMonth(startDate, numMonthsNeg, endMonth);
