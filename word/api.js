@@ -2476,7 +2476,7 @@ background-repeat: no-repeat;\
 			var _html_data;
 			var oActiveForm = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.mouseDownFieldObject;
 			if (oActiveForm && oActiveForm._content.IsSelectionUse()) {
-				let sText = oCheckbox._content.GetSelectedText(true);
+				let sText = oActiveForm._content.GetSelectedText(true);
 				if (sText == "")
 					return;
 
@@ -10661,13 +10661,6 @@ background-repeat: no-repeat;\
 			oLogicDocument.FinalizeAction();
 		}
 	};
-	asc_docs_api.prototype.asc_SelectPDFFormListItem = function(sValue)
-	{
-		let oViewer = this.getDocumentRenderer();
-		let oCurForm = oViewer.mouseDownFieldObject;
-		oCurForm.private_selectOption(sValue);
-		this.getDocumentRenderer()._paintForms();
-	};
 	asc_docs_api.prototype.asc_GetContentControlListCurrentValue = function(sId)
 	{
 		var oLogicDocument = this.private_GetLogicDocument();
@@ -11090,12 +11083,14 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_SelectPDFFormListItem = function(sId)
 	{
 		let nIdx = parseInt(sId);
-		let oVeiwer = this.getDocumentRenderer();
-		let oField = oVeiwer.mouseDownFieldObject;
+		let oViewer = this.getDocumentRenderer();
+		let oField = oViewer.mouseDownFieldObject;
 		if (!oField)
 			return;
 
 		oField.private_selectOption(nIdx);
+		oField.private_UnionLastHistoryPoints(false);
+		oViewer._paintForms();
 	};
 	asc_docs_api.prototype.sync_OnDocumentOutlineUpdate = function()
 	{

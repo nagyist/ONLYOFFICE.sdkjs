@@ -1285,11 +1285,12 @@
 					oThis.mouseDownFieldObject.private_updateScroll(false, false)
 
 				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
-					if (oThis.mouseDownFieldObject._wasChanged) {
+					if (oThis.mouseDownFieldObject._needApplyToAll) {
 						oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
+						oThis.mouseDownFieldObject._needApplyToAll = false;
 						oThis._paintForms();
 					}
-						
+											
 					oThis.mouseDownFieldObject._needDrawHighlight = true;
 					oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
 					oThis._paintFormsHighlight();
@@ -1449,7 +1450,7 @@
 			{
 				if (oThis.mouseDownFieldObject)
 				{
-					if (global_mouseEvent.ClickCount == 2 && oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox")
+					if (global_mouseEvent.ClickCount == 2 && (oThis.mouseDownFieldObject.type == "text" || oThis.mouseDownFieldObject.type == "combobox"))
 					{
 						oThis.mouseDownFieldObject._content.SelectAll();
 						if (oThis.mouseDownFieldObject._content.IsSelectionEmpty() == false)
@@ -2644,7 +2645,9 @@
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
 					this.mouseDownFieldObject.Remove(-1, e.CtrlKey == true);
-					this._paintForms();
+					if (this.mouseDownFieldObject._wasChanged)
+						this._paintForms();
+
 					this.onUpdateOverlay();
 					// сбрасываем счетчик до появления курсора
 					if (true !== e.ShiftKey)
@@ -2674,23 +2677,26 @@
 							break;
 						case "listbox":
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							if (this.mouseDownFieldObject._wasChanged)
+							if (this.mouseDownFieldObject._needApplyToAll)
 								this.mouseDownFieldObject.private_applyValueForAll();
 							this.mouseDownFieldObject.private_updateScroll(false, false);
 						default:
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							if (this.mouseDownFieldObject._wasChanged)
+							if (this.mouseDownFieldObject._needApplyToAll)
 								this.mouseDownFieldObject.private_applyValueForAll();
 							if (this.mouseDownFieldObject.private_updateScroll)
 								this.mouseDownFieldObject.private_updateScroll(false, false);
-								
+							
 							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 							break;
 					}
 					
 					this.fieldFillingMode = false;
-					if (this.mouseDownFieldObject._wasChanged)
+					if (this.mouseDownFieldObject._needApplyToAll) {
+						this.mouseDownFieldObject._needApplyToAll = false;
 						this._paintForms();
+					}
+					
 					this.mouseDownFieldObject = null;
 					this._paintFormsHighlight();
 				}
@@ -2918,7 +2924,9 @@
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
 					this.mouseDownFieldObject.Remove(1, e.CtrlKey == true);
-					this._paintForms();
+					if (this.mouseDownFieldObject._wasChanged)
+						this._paintForms();
+
 					this.onUpdateOverlay();
 					// сбрасываем счетчик до появления курсора
 					if (true !== e.ShiftKey)
@@ -2969,6 +2977,11 @@
 				// nothing
 				bRetValue = true;
 			}
+			else if ( e.KeyCode == 89 && true === e.CtrlKey ) // Ctrl + Y
+			{
+				this.DoRedo();
+				bRetValue = true;
+			}
 			else if ( e.KeyCode == 90 && true === e.CtrlKey ) // Ctrl + Z
 			{
 				this.DoUndo();
@@ -2981,9 +2994,229 @@
 		{
 			if (AscCommon.History.Can_Undo())
 			{
-				var arrChanges = AscCommon.History.Undo();
-				//this.UpdateAfterUndoRedo(arrChanges);
+				let oCurPoint = AscCommon.History.Points[AscCommon.History.Index];
+				let nCurPoindIdx = AscCommon.History.Index;
+				
+				let arrChanges = AscCommon.History.Undo();
+
+				let oParentForm = this.private_RecalculateFastRunRange(arrChanges);
+				if (oParentForm) {
+					// если форма активна, то изменения (undo) применяются только для неё
+					// иначе для всех с таким именем
+					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						oParentForm._wasChanged = true;
+						oParentForm.private_applyValueForAll(false);
+						oParentForm.private_removeNotAppliedChangesPoints(nCurPoindIdx);
+						// выход из формы
+						if (this.mouseDownFieldObject)
+						{
+							this.mouseDownFieldObject._needDrawHighlight = true;
+							this._paintFormsHighlight();
+							this.mouseDownFieldObject = null;
+						}
+					}
+
+					// Перерисуем страницу, на которой произошли изменения
+					this._paintForms();
+					return;
+				}
+
+				oParentForm = this.private_RecalculateFastParagraph(arrChanges);
+				if (oParentForm) {
+					// если форма активна, то изменения (undo) применяются только для неё
+					// иначе для всех с таким именем
+					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						oParentForm._wasChanged = true;
+						oParentForm.private_applyValueForAll(false);
+						oParentForm.private_removeNotAppliedChangesPoints();
+						// выход из формы
+						if (this.mouseDownFieldObject)
+						{
+							this.mouseDownFieldObject._needDrawHighlight = true;
+							this._paintFormsHighlight();
+							this.mouseDownFieldObject = null;
+						}
+					}
+						
+					this._paintForms();
+					return;
+				}
 			}
+		};
+		this.DoRedo = function()
+		{
+			if (AscCommon.History.Can_Redo())
+			{
+				let arrChanges = AscCommon.History.Redo();
+				let nCurPoindIdx = AscCommon.History.Index;
+				let oCurPoint = AscCommon.History.Points[nCurPoindIdx];
+
+				let oParentForm = this.private_RecalculateFastRunRange(arrChanges);
+				if (oParentForm) {
+					// если мы в форме, то изменения (undo) применяются только для неё
+					// иначе для всех с таким именем
+					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						oParentForm._wasChanged = true;
+						oParentForm.private_applyValueForAll(false);
+						// выход из формы
+						if (this.mouseDownFieldObject)
+						{
+							this.mouseDownFieldObject._needDrawHighlight = true;
+							this._paintFormsHighlight();
+							this.mouseDownFieldObject = null;
+						}
+					}
+
+					// Перерисуем страницу, на которой произошли изменения
+					this._paintForms();
+					return;
+				}
+
+				oParentForm = this.private_RecalculateFastParagraph(arrChanges);
+				if (oParentForm) {
+					// если мы в форме, то изменения (undo) применяются только для неё
+					// иначе для всех с таким именем
+					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
+						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						oParentForm._wasChanged = true;
+						oParentForm.private_applyValueForAll(false);
+						// выход из формы
+						if (this.mouseDownFieldObject)
+						{
+							this.mouseDownFieldObject._needDrawHighlight = true;
+							this._paintFormsHighlight();
+							this.mouseDownFieldObject = null;
+						}
+					}
+
+					this._paintForms();
+					return;
+				}
+			}
+		};
+		this.private_RecalculateFastRunRange = function(arrChanges)
+		{
+			var nStartIndex = 0;
+			var nEndIndex   = arrChanges.length - 1;
+
+			var oRun = null;
+			for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
+			{
+				var oChange = arrChanges[nIndex];
+
+				if (oChange.IsDescriptionChange())
+					continue;
+
+				if (!oRun)
+					oRun = oChange.GetClass();
+				else if (oRun !== oChange.GetClass())
+					return null;
+			}
+
+			if (!oRun || !(oRun instanceof ParaRun) || !oRun.GetParagraph())
+				return null;
+
+			
+			var oParaPos = oRun.GetSimpleChangesRange(arrChanges, nStartIndex, nEndIndex);
+			let oParentForm = oRun.GetParagraph().GetParent().ParentPDF;
+
+			return oParentForm;
+		};
+		this.private_RecalculateFastParagraph = function(arrChanges, nStartIndex, nEndIndex)
+		{
+			var nStartIndex = 0;
+			var nEndIndex   = arrChanges.length - 1;
+
+			// Смотрим, чтобы изменения происходили только внутри параграфов. Если есть изменение,
+			// которое не возвращает параграф, значит возвращаем null.
+			// А также проверяем, что каждое из этих изменений влияет только на параграф.
+			var arrParagraphs = [];
+			for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
+			{
+				var oChange = arrChanges[nIndex];
+				var oClass  = oChange.GetClass();
+				var oPara   = null;
+
+				if (oClass instanceof Paragraph)
+					oPara = oClass;
+				else if (oClass instanceof AscCommon.CTableId || oClass instanceof AscCommon.CComments)
+					continue;
+				else if (oClass.GetParagraph)
+					oPara = oClass.GetParagraph();
+				else
+					return false;
+
+				// Такое может быть, если класс еще не приписан ни к какому параграфу. Либо класс дальше небудет
+				// использован, либо его добавят в параграф и в этом изменении мы отметим параграф
+				// Поэтому мы не отказываемся от быстрого пересчета в данной ситуации
+				if (!oPara)
+					continue;
+
+				if (!oClass.IsParagraphSimpleChanges || !oClass.IsParagraphSimpleChanges(oChange))
+					return false;
+
+				var isAdd = true;
+				for (var nParaIndex = 0, nParasCount = arrParagraphs.length; nParaIndex < nParasCount; ++nParaIndex)
+				{
+					if (oPara === arrParagraphs[nParaIndex])
+					{
+						isAdd = false;
+						break;
+					}
+				}
+
+				if (isAdd)
+					arrParagraphs.push(oPara);
+			}
+
+			if (arrParagraphs.length > 0)
+			{
+				var oFastPages     = {};
+				var bCanFastRecalc = true;
+				for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
+				{
+					var oSimplePara  = arrParagraphs[nSimpleIndex];
+					var arrFastPages = oSimplePara.Recalculate_FastWholeParagraph();
+					if (!arrFastPages || arrFastPages.length <= 0)
+					{
+						bCanFastRecalc = false;
+						break;
+					}
+				}
+
+
+				if (bCanFastRecalc)
+				{
+					for (var nPageIndex in oFastPages)
+					{
+						// // Recalculation LOG
+						// console.log("Fast Recalculation Paragraph, PageIndex=" + nPageIndex);
+						this.DrawingDocument.OnRecalculatePage(oFastPages[nPageIndex], this.Pages[nPageIndex]);
+					}
+
+					this.DrawingDocument.OnEndRecalculate(false, true);
+					this.History.Reset_RecalcIndex();
+					this.private_UpdateCursorXY(true, true);
+
+					for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
+					{
+						var oSimplePara = arrParagraphs[nSimpleIndex];
+						if (oSimplePara.Parent && oSimplePara.Parent.GetTopDocumentContent)
+						{
+							var oTopDocument = oSimplePara.Parent.GetTopDocumentContent();
+							if (oTopDocument instanceof CFootEndnote)
+								oTopDocument.OnFastRecalculate();
+						}
+					}
+
+					return true;
+				}
+			}
+
+			return false;
 		};
 		this.showTextMessage = function()
 		{

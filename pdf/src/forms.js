@@ -1405,9 +1405,13 @@
         this._fileSelect        = false;
         
         // internal
+        if (AscCommon.History.IsOn())
+            AscCommon.History.TurnOff();
         this._content = new AscWord.CDocumentContent(null, editor.WordControl.m_oDrawingDocument, 0, 0, 0, 0, undefined, undefined, false);
         this._content.ParentPDF = this;
         this._content.SetUseXLimit(false);
+        if (AscCommon.History.IsOn() == false)
+            AscCommon.History.TurnOn();
 
         this._scrollInfo = null;
     }
@@ -1643,6 +1647,9 @@
                 });
 
                 editor.getDocumentRenderer()._paintForms();
+            },
+            get() {
+                return this._content.GetElement(0).GetText({ParaEndToSpace: false});
             }
         }
     });
@@ -1809,12 +1816,14 @@
     CTextField.prototype.EnterText = function(aChars)
     {
         if (aChars.length > 0) {
-            AscCommon.History.TurnOn();
+            if (AscCommon.History.IsOn() == false)
+                AscCommon.History.TurnOn();
             AscCommon.History.Create_NewPoint();
+            AscCommon.History.SetAdditionalFormFilling(this);
         }
 
         let oPara = this._content.GetElement(0);
-        if (this._content.IsSelectionEmpty())
+        if (this._content.IsSelectionUse() && this._content.IsSelectionEmpty())
             this._content.RemoveSelection();
 
         let nChars = 0;
@@ -1844,40 +1853,164 @@
 
         if (aChars.length > 0) {
             this._wasChanged = true;
+            this._needApplyToAll = true; // флаг что значение будет применено к остальным формам с таким именем
             this._needShiftContentView = true && this._doNotScroll == false;
         }
     };
     /**
 	 * Applies value of this field to all field with the same name.
 	 * @memberof CTextField
+     * @param {boolean} [bUnionPoints=true] - whether to union last changes maked in this form to one history point.
 	 * @typeofeditors ["PDF"]
 	 */
-    CTextField.prototype.private_applyValueForAll = function() {
+    CTextField.prototype.private_applyValueForAll = function(bUnionPoints) {
         let aFields = this._doc.getWidgetsByName(this.name);
+        let oThisPara = this._content.GetElement(0);
+
         
+        if (bUnionPoints == undefined)
+            bUnionPoints = true;
+
+        if (bUnionPoints)
+            this.private_UnionLastHistoryPoints();
+
+        if (aFields.length == 1)
+            this._needApplyToAll = false;
+
+        if (AscCommon.History.IsOn())
+            AscCommon.History.TurnOff();
         for (let i = 0; i < aFields.length; i++) {
             aFields[i]._content.GetElement(0).MoveCursorToStartPos();
 
             if (aFields[i] == this)
                 continue;
 
-            aFields[i]._content.Internal_Content_RemoveAll();
-            for (let nItem = 0; nItem < this._content.Content.length; nItem++)
-                aFields[i]._content.Internal_Content_Add(nItem, this._content.Content[nItem].Copy());
+            aFields[i]._currentValueIndices = this._currentValueIndices;
 
-            //aFields[i]._wasChanged = true;
+            let oFieldPara = aFields[i]._content.GetElement(0);
+            let oThisRun, oFieldRun;
+            for (let nItem = 0; nItem < oThisPara.Content.length - 1; nItem++) {
+                oThisRun = oThisPara.Content[nItem];
+                oFieldRun = oFieldPara.Content[nItem];
+                oFieldRun.ClearContent();
+
+                for (let nRunPos = 0; nRunPos < oThisRun.Content.length; nRunPos++) {
+                    oFieldRun.AddToContent(nRunPos, AscCommon.IsSpace(oThisRun.Content[nRunPos].Value) ? new AscWord.CRunSpace(oThisRun.Content[nRunPos].Value) : new AscWord.CRunText(oThisRun.Content[nRunPos].Value));
+                }
+            }
+
             aFields[i]._content.Recalculate_Page(0); // to do check
         }
+
+        if (AscCommon.History.IsOn() == false)
+            AscCommon.History.TurnOn();
     };
-    
+    /**
+	 * Unions the last history points of this form.
+	 * @memberof CTextField
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.private_UnionLastHistoryPoints = function() {
+        let oTmpPoint;
+        let oResultPoint = {
+            State      : undefined,
+            Items      : [],
+            Time       : new Date().getTime(),
+            Additional : {FormFilling: this, CanUnion: false},
+            Description: undefined
+        };
+
+        let i = 0;
+        for (i = AscCommon.History.Points.length - 1; i >= 0 ; i--) {
+            oTmpPoint = AscCommon.History.Points[i];
+            if (oTmpPoint.Additional.FormFilling === this && oTmpPoint.Additional.CanUnion != false) {
+                oResultPoint.Items = oTmpPoint.Items.concat(oResultPoint.Items);
+            }
+            else {
+                break;
+            }
+        }
+
+        i++; // индекс точки, в которую поместим результирующее значение.
+        
+        // объединяем только больше 2х точек
+        if (i < AscCommon.History.Points.length - 1) {
+            AscCommon.History.Index = i;
+            AscCommon.History.Points.splice(i, AscCommon.History.Points.length - i, oResultPoint);
+        }
+        else
+            AscCommon.History.Points[i].Additional.CanUnion = false; // запрещаем объединять последнюю добавленную точку
+    };
+    /**
+	 * Unions the last history points of this form.
+	 * @memberof CTextField
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.private_UnionLastHistoryPoints = function() {
+        let oTmpPoint;
+        let oResultPoint = {
+            State      : undefined,
+            Items      : [],
+            Time       : new Date().getTime(),
+            Additional : {FormFilling: this, CanUnion: false},
+            Description: undefined
+        };
+
+        let i = 0;
+        for (i = AscCommon.History.Points.length - 1; i >= 0 ; i--) {
+            oTmpPoint = AscCommon.History.Points[i];
+            if (oTmpPoint.Additional.FormFilling === this && oTmpPoint.Additional.CanUnion != false) {
+                oResultPoint.Items = oTmpPoint.Items.concat(oResultPoint.Items);
+            }
+            else {
+                break;
+            }
+        }
+
+        i++; // индекс точки, в которую поместим результирующее значение.
+        
+        // объединяем только больше 2х точек
+        if (i < AscCommon.History.Points.length - 1) {
+            AscCommon.History.Index = i;
+            AscCommon.History.Points.splice(i, AscCommon.History.Points.length - i, oResultPoint);
+        }
+        else
+            AscCommon.History.Points[i].Additional.CanUnion = false; // запрещаем объединять последнюю добавленную точку
+    };
+    /**
+	 * Removes all history points, which were done before form was applied.
+	 * @memberof CTextField
+     * @param {number} [nCurPoint=AscCommon.History.Index]
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.private_removeNotAppliedChangesPoints = function(nCurPoint) {
+        nCurPoint = nCurPoint != undefined ? nCurPoint : AscCommon.History.Index + 1;
+
+        if (!AscCommon.History.Points[nCurPoint + 1] || AscCommon.History.Points[nCurPoint + 1].Additional.CanUnion === false) {
+            return;
+        }
+        AscCommon.History.Points.splice(nCurPoint + 1, AscCommon.History.Points.length - 1);
+    };
     /**
 	 * Removes char in current position by direction.
 	 * @memberof CTextField
 	 * @typeofeditors ["PDF"]
 	 */
     CTextField.prototype.Remove = function(nDirection, bWord) {
+        if (AscCommon.History.IsOn() == false)
+            AscCommon.History.TurnOn();
+
+        AscCommon.History.Create_NewPoint();
+        AscCommon.History.SetAdditionalFormFilling(this);
+
         this._content.Remove(nDirection, true, false, false, bWord);
-        this._wasChanged = true;
+        
+        if (AscCommon.History.Is_LastPointEmpty())
+            AscCommon.History.Remove_LastPoint();
+        else {
+            this._wasChanged = true;
+            this._needApplyToAll = true;
+        }
     };
     /**
 	 * Synchronizes this field with fields with the same name.
@@ -1887,6 +2020,9 @@
     CTextField.prototype.private_syncField = function() {
         let aFields = this._doc.getWidgetsByName(this.name);
         
+        if (AscCommon.History.IsOn())
+            AscCommon.History.TurnOff();
+
         for (let i = 0; i < aFields.length; i++) {
             if (aFields[i] != this) {
                 this._alignment         = aFields[i]._alignment;
@@ -1906,13 +2042,20 @@
                 if (this._multiline)
                     this._content.SetUseXLimit(true);
 
-                this._content.Internal_Content_RemoveAll();
-                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++)
-                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                let oPara = this._content.GetElement(0);
+                let oParaToCopy = aFields[i]._content.GetElement(0);
+
+                oPara.ClearContent();
+                for (var nPos = 0; nPos < oParaToCopy.Content.length - 1; nPos++) {
+                    oPara.Internal_Content_Add(nPos, oParaToCopy.GetElement(nPos).Copy());
+                }
+                oPara.CheckParaEnd();
                 
                 break;
             }
         }
+
+        AscCommon.History.TurnOn();
     };
 
     function CBaseListField(sName, sType, nPage, aRect)
@@ -2183,6 +2326,8 @@
 	 */
     CComboBoxField.prototype.setItems = function(values) {
         let aOptToPush = [];
+        let oThis = this;
+
         for (let i = 0; i < values.length; i++) {
             if (values[i] == null)
                 continue;
@@ -2201,24 +2346,54 @@
         let aFields = this._doc.getWidgetsByName(this.name);
         aFields.forEach(function(field) {
             field._options = aOptToPush.slice();
-            field.private_selectOption(0);
+            if (field == oThis) {
+                field.private_selectOption(0, true);
+                field.private_UnionLastHistoryPoints();
+            }
+            else
+                field.private_selectOption(0, false);
         });
 
         editor.getDocumentRenderer()._paintForms();
     };
-    CComboBoxField.prototype.private_selectOption = function(nIdx) {
+    /**
+	 * Selects the specified option.
+	 * @memberof CComboBoxField
+     * @param {boolean} [bAddToHistory=true] - whether to add change to history.
+	 * @typeofeditors ["PDF"]
+	 */
+    CComboBoxField.prototype.private_selectOption = function(nIdx, bAddToHistory) {
+        if (bAddToHistory == undefined)
+            bAddToHistory = true;
+
         let oPara = this._content.GetElement(0);
         let oRun = oPara.GetElement(0);
-        oRun.ClearContent();
 
         this._currentValueIndices = nIdx;
 
+        if (bAddToHistory) {
+            if (AscCommon.History.IsOn() == false)
+                AscCommon.History.TurnOn();
+            AscCommon.History.Create_NewPoint();
+            AscCommon.History.SetAdditionalFormFilling(this);
+        }
+        else if (!bAddToHistory)
+            AscCommon.History.TurnOff();
+
+        oRun.ClearContent();
         if (Array.isArray(this._options[nIdx]))
             oRun.AddText(this._options[nIdx][0]);
         else
             oRun.AddText(this._options[nIdx]);
 
+        if (AscCommon.History.IsOn() == true)
+            AscCommon.History.TurnOff();
+
         this._wasChanged = true;
+        this._needApplyToAll = true;
+    };
+    CComboBoxField.prototype.private_checkLastHistoryPoint = function() {
+    
     };
     /**
 	 * Synchronizes this field with fields with the same name.
@@ -2235,10 +2410,14 @@
                 this._doNotSpellCheck   = aFields[i]._doNotSpellCheck;
                 this._editable          = aFields[i]._editable;
 
-                this._content.Internal_Content_RemoveAll();
-                for (let nItem = 0; nItem < aFields[i]._content.Content.length; nItem++) {
-                    this._content.Internal_Content_Add(nItem, aFields[i]._content.Content[nItem].Copy());
+                let oPara = this._content.GetElement(0);
+                let oParaToCopy = aFields[i]._content.GetElement(0);
+
+                oPara.ClearContent();
+                for (var nPos = 0; nPos < oParaToCopy.Content.length - 1; nPos++) {
+                    oPara.Internal_Content_Add(nPos, oParaToCopy.GetElement(nPos).Copy());
                 }
+                oPara.CheckParaEnd();
                 
                 this._options = aFields[i]._options.slice();
                 break;
@@ -2250,12 +2429,20 @@
         if (this._editable == false)
             return;
 
+        if (aChars.length > 0) {
+            if (AscCommon.History.IsOn() == false)
+                AscCommon.History.TurnOn();
+            AscCommon.History.Create_NewPoint();
+            AscCommon.History.SetAdditionalFormFilling(this);
+        }
+
         let oPara = this._content.GetElement(0);
         if (this._content.IsSelectionUse()) {
             // Если у нас что-то заселекчено и мы вводим текст или пробел
 			// и т.д., тогда сначала удаляем весь селект.
             this._content.Remove(1, true, false, true);
         }
+        
         for (let index = 0, count = aChars.length; index < count; ++index) {
             let codePoint = aChars[index];
             oPara.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
@@ -2263,6 +2450,122 @@
 
         this._currentValueIndices = -1;
         this._wasChanged = true;
+        this._needApplyToAll = true; // флаг что значение будет применено к остальным формам с таким именем
+    };
+    /**
+	 * Applies value of this field to all field with the same name.
+	 * @memberof CComboBoxField
+     * @param {boolean} [bUnionPoints=true] - whether to union last changes maked in this form to one history point.
+	 * @typeofeditors ["PDF"]
+	 */
+    CComboBoxField.prototype.private_applyValueForAll = function(bUnionPoints) {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        let oThisPara = this._content.GetElement(0);
+        
+        if (bUnionPoints == undefined)
+            bUnionPoints = true;
+
+        this.private_checkCurValueIndex();
+
+        if (bUnionPoints)
+            this.private_UnionLastHistoryPoints(true);
+
+        if (aFields.length == 1)
+            this._needApplyToAll = false;
+
+        AscCommon.History.TurnOff();
+        for (let i = 0; i < aFields.length; i++) {
+            aFields[i]._content.GetElement(0).MoveCursorToStartPos();
+
+            if (aFields[i] == this)
+                continue;
+
+            let oFieldPara = aFields[i]._content.GetElement(0);
+            let oThisRun, oFieldRun;
+            for (let nItem = 0; nItem < oThisPara.Content.length - 1; nItem++) {
+                oThisRun = oThisPara.Content[nItem];
+                oFieldRun = oFieldPara.Content[nItem];
+                oFieldRun.ClearContent();
+
+                for (let nRunPos = 0; nRunPos < oThisRun.Content.length; nRunPos++) {
+                    oFieldRun.AddToContent(nRunPos, AscCommon.IsSpace(oThisRun.Content[nRunPos].Value) ? new AscWord.CRunSpace(oThisRun.Content[nRunPos].Value) : new AscWord.CRunText(oThisRun.Content[nRunPos].Value));
+                }
+            }
+
+            aFields[i]._currentValueIndices = this._currentValueIndices;
+            aFields[i]._content.Recalculate_Page(0); // to do check
+        }
+
+        AscCommon.History.TurnOn();
+    };
+    /**
+	 * Checks curValueIndex, corrects it and return.
+	 * @memberof CComboBoxField
+	 * @typeofeditors ["PDF"]
+     * @returns {number}
+	 */
+    CComboBoxField.prototype.private_checkCurValueIndex = function() {
+        let sValue = this._content.GetElement(0).GetText({ParaEndToSpace: false});
+        let nIdx = -1;
+        if (Array.isArray(this._options) == true) {
+            for (let i = 0; i < this._options.length; i++) {
+                if (this._options[i][0] === sValue) {
+                    nIdx = i;
+                    break;
+                }
+            }
+        }
+        else {
+            for (let i = 0; i < this._options.length; i++) {
+                if (this._options[i] === sValue) {
+                    nIdx = i;
+                    break;
+                }
+            }
+        }
+
+        this._currentValueIndices = nIdx;
+        return nIdx;
+    };
+    /**
+	 * Unions the last history points of this form.
+	 * @memberof CComboBoxField
+     * @param {boolean} [bForbidToUnion=true] - wheter to forbid to merge the points united by this iteration
+	 * @typeofeditors ["PDF"]
+	 */
+    CComboBoxField.prototype.private_UnionLastHistoryPoints = function(bForbidToUnion) {
+        if (bForbidToUnion == undefined)
+            bForbidToUnion = true;
+            
+        let oTmpPoint;
+        let oResultPoint = {
+            State      : undefined,
+            Items      : [],
+            Time       : new Date().getTime(),
+            Additional : {FormFilling: this, CanUnion: !bForbidToUnion},
+            Description: undefined
+        };
+
+        let i = 0;
+        for (i = AscCommon.History.Points.length - 1; i >= 0 ; i--) {
+            oTmpPoint = AscCommon.History.Points[i];
+            if (oTmpPoint.Additional.FormFilling === this && oTmpPoint.Additional.CanUnion != false) {
+                oResultPoint.Items = oTmpPoint.Items.concat(oResultPoint.Items);
+            }
+            else {
+                break;
+            }
+        }
+
+        i++; // индекс точки, в которую поместим результирующее значение.
+        
+        // объединяем только больше 2х точек
+        if (i < AscCommon.History.Points.length - 1) {
+            AscCommon.History.Index = i;
+            AscCommon.History.Points.splice(i, AscCommon.History.Points.length - i, oResultPoint);
+        }
+        else
+            AscCommon.History.Points[i].Additional.CanUnion = !bForbidToUnion; // запрещаем объединять последнюю добавленную точку
     };
 
     function CListBoxField(sName, nPage, aRect)
@@ -2541,6 +2844,8 @@
                 this._currentValueIndices = 0;
             this.private_applyValueForAll(this);
         }
+
+        editor.getDocumentRenderer()._paintForms();
     };
 
     CListBoxField.prototype.private_selectOption = function(nIdx, isSingleSelect) {
@@ -3034,12 +3339,14 @@
 		return undefined;
 	}
 
-    CComboBoxField.prototype.private_applyValueForAll   = CTextField.prototype.private_applyValueForAll;
-    CComboBoxField.prototype.Remove                     = CTextField.prototype.Remove;
-    CComboBoxField.prototype.private_moveCursorLeft     = CTextField.prototype.private_moveCursorLeft;
-    CComboBoxField.prototype.private_moveCursorRight    = CTextField.prototype.private_moveCursorRight;
-    CTextField.prototype.private_updateScroll           = CListBoxField.prototype.private_updateScroll;
-    CTextField.prototype.private_scrollVertical         = CListBoxField.prototype.private_scrollVertical;
+    CComboBoxField.prototype.Remove                         = CTextField.prototype.Remove;
+    CComboBoxField.prototype.private_moveCursorLeft         = CTextField.prototype.private_moveCursorLeft;
+    CComboBoxField.prototype.private_moveCursorRight        = CTextField.prototype.private_moveCursorRight;
+    CComboBoxField.prototype.private_SelectionSetStart      = CTextField.prototype.private_SelectionSetStart;
+    CComboBoxField.prototype.private_SelectionSetEnd        = CTextField.prototype.private_SelectionSetEnd;
+    CComboBoxField.prototype.private_removeNotAppliedChangesPoints = CTextField.prototype.private_removeNotAppliedChangesPoints 
+    CTextField.prototype.private_updateScroll               = CListBoxField.prototype.private_updateScroll;
+    CTextField.prototype.private_scrollVertical             = CListBoxField.prototype.private_scrollVertical;
     
     if (!window["AscPDFEditor"])
 	    window["AscPDFEditor"] = {};

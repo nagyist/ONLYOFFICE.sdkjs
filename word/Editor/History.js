@@ -281,19 +281,23 @@ CHistory.prototype =
 
 		this.UndoRedoInProgress = true;
 
-        this.Document.RemoveSelection(true);
+		if (this.Document)
+        	this.Document.RemoveSelection(true);
         
         var Point = this.Points[++this.Index];
 		this.private_RedoPoint(Point, arrChanges);
 
         // Восстанавливаем состояние на следующую точку
         var State = null;
-        if ( this.Index === this.Points.length - 1 )
-            State = this.LastState;
-        else
-            State = this.Points[this.Index + 1].State;
+		if (this.Document)
+		{
+			if ( this.Index === this.Points.length - 1)
+				State = this.LastState;
+			else
+				State = this.Points[this.Index + 1].State;
 
-        this.Document.SetSelectionState( State );
+			this.Document.SetSelectionState( State );
+		}
 		
 		if(!window['AscCommon'].g_specialPasteHelper.pasteStart)
 		{
@@ -1104,7 +1108,11 @@ CHistory.prototype.ClearAdditional = function()
 		//       надо переназвать функции по-нормальному
 
 		let form = this.GetLastPointFormFilling();
+		let isCanUnion = this.Points[this.Index].Additional && this.Points[this.Index].Additional.CanUnion === false ? false : true;
+
 		this.Points[this.Index].Additional = {};
+		if (isCanUnion == false)
+			this.Points[this.Index].Additional.CanUnion = false;
 
 		if (form)
 			this.SetAdditionalFormFilling(form);
@@ -1135,7 +1143,8 @@ CHistory.prototype.private_UpdateContentChangesOnRedo = function(Item)
 
 		var ContentChanges = new AscCommon.CContentChangesElement(( bAdd == true ? AscCommon.contentchanges_Add : AscCommon.contentchanges_Remove ), Item.Data.Pos, Count, Item);
 		Item.Class.Add_ContentChanges(ContentChanges);
-		this.CollaborativeEditing.Add_NewDC(Item.Class);
+		if (this.CollaborativeEditing)
+			this.CollaborativeEditing.Add_NewDC(Item.Class);
 	}
 };
 CHistory.prototype.private_IsContentChange = function(Class, Data)
@@ -1554,7 +1563,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		this.UndoRedoInProgress = false;
 		return changes;
 	};
-	/**
+/**
 	 * Конвертируем все действия внутри заданной точки из составных в простые
 	 */
 	CHistory.prototype.ConvertPointItemsToSimpleChanges = function(pointIndex)
@@ -1605,8 +1614,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 				point.Items.push(items[index]);
 			}
 		}
-	};
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	};	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Private area
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	CHistory.prototype.private_UndoPoint = function(point, changes)
