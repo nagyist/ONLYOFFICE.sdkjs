@@ -8300,6 +8300,181 @@ $(function () {
 		assert.ok(oParser.parse(), 'IMPOWER("1.12+1.12i",2)');
 		assert.strictEqual(oParser.calculate().getValue(), "1.5362e-16+2.5088i", 'Result of IMPOWER("1.12+1.12i",2)');	// 1.53682622183737e-16+2.5088i
 
+		oParser = new parserFormula('IMPOWER("1.12+1.12i",3)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.12+1.12i",3)');
+		assert.strictEqual(oParser.calculate().getValue(), "-2.80986+2.80986i", 'Result of IMPOWER("1.12+1.12i",3)');	// -2.809856+2.809856i
+
+		oParser = new parserFormula('IMPOWER("1.12+1.12i",4)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.12+1.12i",4)');
+		assert.strictEqual(oParser.calculate().getValue(), "-6.29408+7.70802e-16i", 'Result of IMPOWER("1.12+1.12i",4)');	// -6,29407744+7,7111792506912E-16i
+
+		oParser = new parserFormula('IMPOWER("1.12+1.12i",5)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.12+1.12i",5)');
+		assert.strictEqual(oParser.calculate().getValue(), "-7.04937-7.04937i", 'Result of IMPOWER("1.12+1.12i",5)');	// -7,0493667328-7,0493667328i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",2)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",2)');
+		assert.strictEqual(oParser.calculate().getValue(), "-7.9361+5.99196i", 'Result of IMPOWER("1.002+2.99i",2)');	// -7,936096+5,99196i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",3)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",3)');
+		assert.strictEqual(oParser.calculate().getValue(), "-25.86793-17.72498i", 'Result of IMPOWER("1.002+2.99i",3)');	// -25,867928592-17,72498312i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",4)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",4)');
+		assert.strictEqual(oParser.calculate().getValue(), "27.07804-95.10554i", 'Result of IMPOWER("1.002+2.99i",4)');	// 27,078035079616-95,10553957632i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",5)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",5)');
+		assert.strictEqual(oParser.calculate().getValue(), "311.49775-14.33243i", 'Result of IMPOWER("1.002+2.99i",5)');	// 311,497754482972-14,332425767421i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",6)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",6)');
+		assert.strictEqual(oParser.calculate().getValue(), "354.9747+917.0172i", 'Result of IMPOWER("1.002+2.99i",6)');	// 354,974703036527+917,017195285131i
+
+		oParser = new parserFormula('IMPOWER("1.002+2.99i",7)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("1.002+2.99i",7)');
+		assert.strictEqual(oParser.calculate().getValue(), "-2386.19676+1980.22559i", 'Result of IMPOWER("1.002+2.99i",7)');	// -2386,19676145994+1980,22559175492i
+
+		oParser = new parserFormula('IMPOWER("0.012+2.99i",2)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("0.012+2.99i",2)');
+		assert.strictEqual(oParser.calculate().getValue(), "-8.93996+0.07176i", 'Result of IMPOWER("0.012+2.99i",2)');	// -8,939956+0,0717599999999995i
+		
+		oParser = new parserFormula('IMPOWER("0.012+2.99i",3)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("0.012+2.99i",3)');
+		assert.strictEqual(oParser.calculate().getValue(), "-0.321842-26.72961i", 'Result of IMPOWER("0.012+2.99i",3)');	// -0,321841872000004-26,72960732i
+
+		oParser = new parserFormula('IMPOWER("0.012+0.99i",2)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("0.012+0.99i",2)');
+		assert.strictEqual(oParser.calculate().getValue(), "-0.979956+0.02376i", 'Result of IMPOWER("0.012+0.99i",2)');	// -0,979956+0,0237600000000001i
+
+		oParser = new parserFormula('IMPOWER("0.012+0.99i",3)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("0.012+0.99i",3)');
+		assert.strictEqual(oParser.calculate().getValue(), "-0.0352819-0.969871i", 'Result of IMPOWER("0.012+0.99i",3)');	// -0,0352818720000003-0,96987132i
+
+		oParser = new parserFormula('IMPOWER("3+3i","1")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3i","1")');
+		assert.strictEqual(oParser.calculate().getValue(), "3+3i", 'Result of IMPOWER("3+3i","1")');
+
+		
+		oParser = new parserFormula('IMPOWER(TRUE,3)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(TRUE,3)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(TRUE,3)');
+
+		oParser = new parserFormula('IMPOWER("0.012+0.99i",TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("0.012+0.99i",TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER("0.012+0.99i",TRUE)');	
+
+		oParser = new parserFormula('IMPOWER(TRUE,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(TRUE,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(TRUE,TRUE)');
+
+		oParser = new parserFormula('IMPOWER("3+3i","1s")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3i","1s")');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER("3+3i","1s")');
+
+		oParser = new parserFormula('IMPOWER("3+3k",1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3k",1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMPOWER("3+3k",1)');
+
+		oParser = new parserFormula('IMPOWER("z+3i",1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("z+3i",1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMPOWER("z+3i",1)');
+
+		oParser = new parserFormula('IMPOWER("3+3i","3+3i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3i","3+3i")');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER("3+3i","3+3i")');
+
+		oParser = new parserFormula('IMPOWER("3+3",1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3",1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMPOWER("3+3",1)');
+
+		oParser = new parserFormula('IMPOWER("3+3i",{1,2,#N/A})', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER("3+3i",{1,2,#N/A})');
+		assert.strictEqual(oParser.calculate().getValue(), "3+3i", 'Result of IMPOWER("3+3",{1,2,#N/A})');
+
+		oParser = new parserFormula('IMPOWER({7,2,#N/A},1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER({7,2,#N/A},1)');
+		assert.strictEqual(oParser.calculate().getValue(), "7", 'Result of IMPOWER({7,2,#N/A},1)');
+
+		oParser = new parserFormula('IMPOWER({7,2,#N/A},{2,"str",#NUM!})', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER({7,2,#N/A},{2,"str",#NUM!})');
+		assert.strictEqual(oParser.calculate().getValue(), "49", 'Result of IMPOWER({7,2,#N/A},{2,"str",#NUM!})');
+
+		ws.getRange2("A101").setValue("1");
+		ws.getRange2("A102").setValue("2");
+		ws.getRange2("A103").setValue("");
+		ws.getRange2("A104").setValue();
+		ws.getRange2("A105").setValue("#N/A");
+		ws.getRange2("A106").setValue("f");
+		ws.getRange2("A107").setValue("3+3i");
+		ws.getRange2("A108").setValue("4+4i");
+		ws.getRange2("A109").setValue("TRUE");
+
+		oParser = new parserFormula('IMPOWER(A101,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(1,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "1", 'Result of IMPOWER(1,1)');
+
+		oParser = new parserFormula('IMPOWER(A103,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A103,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "0", 'Result of IMPOWER(A103,1)');
+
+		oParser = new parserFormula('IMPOWER(A104,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A104,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "0", 'Result of IMPOWER(A104,1)');
+
+		oParser = new parserFormula('IMPOWER(A105,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A105,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of IMPOWER(A105,1)');
+
+		oParser = new parserFormula('IMPOWER(A106,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A106,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMPOWER(A106,1)');
+
+		oParser = new parserFormula('IMPOWER(A109,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A109,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(A109,1)');
+
+		oParser = new parserFormula('IMPOWER(A101:A102,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(A101:A102,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(A101:A102,1)');
+
+		oParser = new parserFormula('IMPOWER(4,A102)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,2)');
+		assert.strictEqual(oParser.calculate().getValue(), "16", 'Result of IMPOWER(4,2)');
+
+		oParser = new parserFormula('IMPOWER(4,A103)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A103)');
+		assert.strictEqual(oParser.calculate().getValue(), "1", 'Result of IMPOWER(4,A103)');
+
+		oParser = new parserFormula('IMPOWER(4,A104)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A104)');
+		assert.strictEqual(oParser.calculate().getValue(), "1", 'Result of IMPOWER(4,A104)');
+
+		oParser = new parserFormula('IMPOWER(4,A105)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A105)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of IMPOWER(4,A105)');
+
+		oParser = new parserFormula('IMPOWER(4,A106)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A106)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(4,A106)');
+
+		oParser = new parserFormula('IMPOWER(4,A107)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A107)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(4,A107)');
+
+		oParser = new parserFormula('IMPOWER(4,A101:A102)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,A101:A102)');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of IMPOWER(4,A101:A102)');
+
+		oParser = new parserFormula('IMPOWER(4,A102:A102)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(4,2)');
+		assert.strictEqual(oParser.calculate().getValue(), "16", 'Result of IMPOWER(4,2)');
+
+		oParser = new parserFormula('IMPOWER(A107:A107,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMPOWER(3+3i,1)');
+		assert.strictEqual(oParser.calculate().getValue(), "3+3i", 'Result of IMPOWER(3+3i,1)');
+
 		testArrayFormula2(assert, "IMPOWER", 2, 2, true, null);
 	});
 

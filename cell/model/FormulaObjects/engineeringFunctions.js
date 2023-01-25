@@ -38,6 +38,7 @@
  * @param {undefined} undefined
  */
 function (window, undefined) {
+	var cElementType = AscCommonExcel.cElementType;
 	var cErrorType = AscCommonExcel.cErrorType;
 	var cNumber = AscCommonExcel.cNumber;
 	var cString = AscCommonExcel.cString;
@@ -744,10 +745,10 @@ function (window, undefined) {
 				phi *= power;
 
 				let real = Math.cos(phi) * p;
-				this.real = Math.abs(real) > 1 ? +((real).toPrecision(numberCount(real) + 5)) : +((real).toPrecision(numberCount(real) + 5));
+				this.real = +((real).toPrecision(numberCount(real) + 5));
 
 				let img = Math.sin(phi) * p;
-				this.img = Math.abs(img) > 1 ? +((img).toPrecision(numberCount(img) + 5)) : +((img).toPrecision(numberCount(img) + 5));
+				this.img = +((img).toPrecision(numberCount(img) + 5));
 
 				return true;
 			}
@@ -6428,37 +6429,58 @@ function (window, undefined) {
 	cIMPOWER.prototype.argumentsType = [argType.any, argType.any];
 	cIMPOWER.prototype.Calculate = function (arg) {
 
-		var arg0 = arg[0], arg1 = arg[1];
+		let arg0 = arg[0], arg1 = arg[1];
 
-		if (arg0 instanceof cArea || arg0 instanceof cArea3D) {
-			arg0 = arg0.cross(arguments[1]);
-		} else if (arg0 instanceof cArray) {
+		if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
+			if (arg0.isOneElement()) {
+				arg0 = arg0.getFirstElement();
+			} else {
+				arg0 = arg0.cross(arguments[1]);
+			}
+		} else if (cElementType.array === arg0.type) {
 			arg0 = arg0.getElementRowCol(0, 0);
+		} else if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
+			arg0 = arg0.getValue();
 		}
 
-		if (arg1 instanceof cArea || arg1 instanceof cArea3D) {
-			arg1 = arg1.cross(arguments[1]);
-		} else if (arg1 instanceof cArray) {
+		if (cElementType.bool === arg0.type) {
+			return new cError(cErrorType.wrong_value_type);
+		}
+
+		if (cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
+			if (arg1.isOneElement()) {
+				arg1 = arg1.getFirstElement();
+			} else {
+				arg1 = arg1.cross(arguments[1]);
+			}
+		} else if (cElementType.array === arg1.type) {
 			arg1 = arg1.getElementRowCol(0, 0);
+		} else if (cElementType.cell === arg1.type || cElementType.cell3D === arg1.type) {
+			arg1 = arg1.getValue();
+		}
+
+		if (cElementType.bool === arg1.type) {
+			return new cError(cErrorType.wrong_value_type);
 		}
 
 		arg0 = arg0.tocString();
 		arg1 = arg1.tocNumber();
 
-		if (arg0 instanceof cError) {
+		if (cElementType.error === arg0.type) {
 			return arg0;
 		}
-		if (arg1 instanceof cError) {
+
+		if (cElementType.error === arg1.type) {
 			return arg1;
 		}
 
-		var c = new Complex(arg0.toString());
+		let c = new Complex(arg0.toString());
 
-		if (c instanceof cError) {
+		if (cElementType.error === c.type) {
 			return c;
 		}
 
-		var res;
+		let res;
 		if (c.Power(arg1.getValue())) {
 			res = new cString(c.toString());
 		} else {
@@ -6468,7 +6490,6 @@ function (window, undefined) {
 		res.numFormat = 0;
 
 		return res;
-
 	};
 
 	/**
