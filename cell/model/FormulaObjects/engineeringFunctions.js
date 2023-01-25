@@ -729,7 +729,11 @@ function (window, undefined) {
 				}
 			} else {
 
-				var p = this.Abs(), phi;
+				const numberCount = function(n) {
+					return Math.abs(n).toFixed().length;
+				} 
+
+				let p = this.Abs(), phi;
 
 				phi = Math.acos(this.real / p);
 				if (this.img < 0) {
@@ -739,8 +743,11 @@ function (window, undefined) {
 				p = Math.pow(p, power);
 				phi *= power;
 
-				this.real = Math.cos(phi) * p;
-				this.img = Math.sin(phi) * p;
+				let real = Math.cos(phi) * p;
+				this.real = Math.abs(real) > 1 ? +((real).toPrecision(numberCount(real) + 5)) : +((real).toPrecision(numberCount(real) + 5));
+
+				let img = Math.sin(phi) * p;
+				this.img = Math.abs(img) > 1 ? +((img).toPrecision(numberCount(img) + 5)) : +((img).toPrecision(numberCount(img) + 5));
 
 				return true;
 			}
