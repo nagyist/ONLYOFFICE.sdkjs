@@ -119,7 +119,7 @@ function Paragraph(DrawingDocument, Parent, bFromPresentation)
 	{
 		this.DrawingDocument = DrawingDocument;
 		this.LogicDocument   = this.DrawingDocument.m_oLogicDocument;
-		this.bFromDocument   = bFromPresentation === true ? false : !!this.LogicDocument;
+		this.bFromDocument   = bFromPresentation === true ? false : DrawingDocument.m_oDocumentRenderer ? true : !!this.LogicDocument;
 	}
     else
     {
@@ -19042,7 +19042,8 @@ CParagraphDrawStateHighlights.prototype.Reset = function(Paragraph, Graphics, Dr
 		}
 	}
 
-	this.Check_CommentsFlag();
+	if (Paragraph.LogicDocument)
+		this.Check_CommentsFlag();
 };
 CParagraphDrawStateHighlights.prototype.Reset_Range = function(Page, Line, Range, X, Y0, Y1, SpacesCount)
 {

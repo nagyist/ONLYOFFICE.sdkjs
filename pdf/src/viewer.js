@@ -2997,17 +2997,30 @@
 				let oCurPoint = AscCommon.History.Points[AscCommon.History.Index];
 				let nCurPoindIdx = AscCommon.History.Index;
 				
-				let arrChanges = AscCommon.History.Undo();
-
-				let oParentForm = this.private_RecalculateFastRunRange(arrChanges);
+				AscCommon.History.Undo();
+				let oParentForm = oCurPoint.Additional.FormFilling;
 				if (oParentForm) {
 					// если форма активна, то изменения (undo) применяются только для неё
-					// иначе для всех с таким именем
-					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
-						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+					// иначе для всех с таким именем (для checkbox и radiobutton всегда применяем для всех)
+					// так же применяем для всех, если добрались до точки, общей для всех форм, а не примененнёые изменения удаляем (для всех кроме checkbox и radiobutton)
+					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false || 
+						oParentForm && (oParentForm.type == "checkbox" || oParentForm.type == "radiobutton")) {
+						
+							// убираем курсор
+						if (oParentForm.type == "combobox" || oParentForm.type == "text") {
+							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+							oParentForm.private_removeNotAppliedChangesPoints(nCurPoindIdx);
+						}
+
 						oParentForm._wasChanged = true;
-						oParentForm.private_applyValueForAll(false);
-						oParentForm.private_removeNotAppliedChangesPoints(nCurPoindIdx);
+
+						if (oCurPoint.Additional.FormFilling.type == "listbox") {
+							oCurPoint.Additional.FormFilling.private_checkCurValueIndex();
+							oCurPoint.Additional.FormFilling.private_applyValueForAll(null, false);
+						}
+						else
+							oParentForm.private_applyValueForAll(false);
+
 						// выход из формы
 						if (this.mouseDownFieldObject)
 						{
@@ -3018,28 +3031,6 @@
 					}
 
 					// Перерисуем страницу, на которой произошли изменения
-					this._paintForms();
-					return;
-				}
-
-				oParentForm = this.private_RecalculateFastParagraph(arrChanges);
-				if (oParentForm) {
-					// если форма активна, то изменения (undo) применяются только для неё
-					// иначе для всех с таким именем
-					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
-						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
-						oParentForm._wasChanged = true;
-						oParentForm.private_applyValueForAll(false);
-						oParentForm.private_removeNotAppliedChangesPoints();
-						// выход из формы
-						if (this.mouseDownFieldObject)
-						{
-							this.mouseDownFieldObject._needDrawHighlight = true;
-							this._paintFormsHighlight();
-							this.mouseDownFieldObject = null;
-						}
-					}
-						
 					this._paintForms();
 					return;
 				}
@@ -3049,18 +3040,29 @@
 		{
 			if (AscCommon.History.Can_Redo())
 			{
-				let arrChanges = AscCommon.History.Redo();
+				AscCommon.History.Redo();
 				let nCurPoindIdx = AscCommon.History.Index;
 				let oCurPoint = AscCommon.History.Points[nCurPoindIdx];
 
-				let oParentForm = this.private_RecalculateFastRunRange(arrChanges);
+				let oParentForm = oCurPoint.Additional.FormFilling;
 				if (oParentForm) {
 					// если мы в форме, то изменения (undo) применяются только для неё
 					// иначе для всех с таким именем
 					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
-						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 						oParentForm._wasChanged = true;
-						oParentForm.private_applyValueForAll(false);
+
+						// убираем курсор
+						if (oParentForm.type == "combobox" || oParentForm.type == "text")
+							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
+						
+						// 
+						if (oCurPoint.Additional.FormFilling.type == "listbox") {
+							oCurPoint.Additional.FormFilling.private_checkCurValueIndex();
+							oCurPoint.Additional.FormFilling.private_applyValueForAll(null, false);
+						}
+						else
+							oParentForm.private_applyValueForAll(false);
+
 						// выход из формы
 						if (this.mouseDownFieldObject)
 						{
@@ -3074,150 +3076,129 @@
 					this._paintForms();
 					return;
 				}
-
-				oParentForm = this.private_RecalculateFastParagraph(arrChanges);
-				if (oParentForm) {
-					// если мы в форме, то изменения (undo) применяются только для неё
-					// иначе для всех с таким именем
-					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
-						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
-						oParentForm._wasChanged = true;
-						oParentForm.private_applyValueForAll(false);
-						// выход из формы
-						if (this.mouseDownFieldObject)
-						{
-							this.mouseDownFieldObject._needDrawHighlight = true;
-							this._paintFormsHighlight();
-							this.mouseDownFieldObject = null;
-						}
-					}
-
-					this._paintForms();
-					return;
-				}
 			}
 		};
-		this.private_RecalculateFastRunRange = function(arrChanges)
-		{
-			var nStartIndex = 0;
-			var nEndIndex   = arrChanges.length - 1;
+		// this.private_RecalculateFastRunRange = function(arrChanges)
+		// {
+		// 	var nStartIndex = 0;
+		// 	var nEndIndex   = arrChanges.length - 1;
 
-			var oRun = null;
-			for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
-			{
-				var oChange = arrChanges[nIndex];
+		// 	var oRun = null;
+		// 	for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
+		// 	{
+		// 		var oChange = arrChanges[nIndex];
 
-				if (oChange.IsDescriptionChange())
-					continue;
+		// 		if (oChange.IsDescriptionChange())
+		// 			continue;
 
-				if (!oRun)
-					oRun = oChange.GetClass();
-				else if (oRun !== oChange.GetClass())
-					return null;
-			}
+		// 		if (!oRun)
+		// 			oRun = oChange.GetClass();
+		// 		else if (oRun !== oChange.GetClass())
+		// 			return null;
+		// 	}
 
-			if (!oRun || !(oRun instanceof ParaRun) || !oRun.GetParagraph())
-				return null;
+		// 	if (!oRun || !(oRun instanceof ParaRun) || !oRun.GetParagraph())
+		// 		return null;
 
 			
-			var oParaPos = oRun.GetSimpleChangesRange(arrChanges, nStartIndex, nEndIndex);
-			let oParentForm = oRun.GetParagraph().GetParent().ParentPDF;
+		// 	var oParaPos = oRun.GetSimpleChangesRange(arrChanges, nStartIndex, nEndIndex);
+		// 	let oParentForm = oRun.GetParagraph().GetParent().ParentPDF;
 
-			return oParentForm;
-		};
-		this.private_RecalculateFastParagraph = function(arrChanges, nStartIndex, nEndIndex)
-		{
-			var nStartIndex = 0;
-			var nEndIndex   = arrChanges.length - 1;
+		// 	return oParentForm;
+		// };
+		// this.private_RecalculateFastParagraph = function(arrChanges, nStartIndex, nEndIndex)
+		// {
+		// 	var nStartIndex = 0;
+		// 	var nEndIndex   = arrChanges.length - 1;
 
-			// Смотрим, чтобы изменения происходили только внутри параграфов. Если есть изменение,
-			// которое не возвращает параграф, значит возвращаем null.
-			// А также проверяем, что каждое из этих изменений влияет только на параграф.
-			var arrParagraphs = [];
-			for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
-			{
-				var oChange = arrChanges[nIndex];
-				var oClass  = oChange.GetClass();
-				var oPara   = null;
+		// 	// Смотрим, чтобы изменения происходили только внутри параграфов. Если есть изменение,
+		// 	// которое не возвращает параграф, значит возвращаем null.
+		// 	// А также проверяем, что каждое из этих изменений влияет только на параграф.
+		// 	var arrParagraphs = [];
+		// 	for (var nIndex = nStartIndex; nIndex <= nEndIndex; ++nIndex)
+		// 	{
+		// 		var oChange = arrChanges[nIndex];
+		// 		var oClass  = oChange.GetClass();
+		// 		var oPara   = null;
 
-				if (oClass instanceof Paragraph)
-					oPara = oClass;
-				else if (oClass instanceof AscCommon.CTableId || oClass instanceof AscCommon.CComments)
-					continue;
-				else if (oClass.GetParagraph)
-					oPara = oClass.GetParagraph();
-				else
-					return false;
+		// 		if (oClass instanceof Paragraph)
+		// 			oPara = oClass;
+		// 		else if (oClass instanceof AscCommon.CTableId || oClass instanceof AscCommon.CComments)
+		// 			continue;
+		// 		else if (oClass.GetParagraph)
+		// 			oPara = oClass.GetParagraph();
+		// 		else
+		// 			return false;
 
-				// Такое может быть, если класс еще не приписан ни к какому параграфу. Либо класс дальше небудет
-				// использован, либо его добавят в параграф и в этом изменении мы отметим параграф
-				// Поэтому мы не отказываемся от быстрого пересчета в данной ситуации
-				if (!oPara)
-					continue;
+		// 		// Такое может быть, если класс еще не приписан ни к какому параграфу. Либо класс дальше небудет
+		// 		// использован, либо его добавят в параграф и в этом изменении мы отметим параграф
+		// 		// Поэтому мы не отказываемся от быстрого пересчета в данной ситуации
+		// 		if (!oPara)
+		// 			continue;
 
-				if (!oClass.IsParagraphSimpleChanges || !oClass.IsParagraphSimpleChanges(oChange))
-					return false;
+		// 		if (!oClass.IsParagraphSimpleChanges || !oClass.IsParagraphSimpleChanges(oChange))
+		// 			return false;
 
-				var isAdd = true;
-				for (var nParaIndex = 0, nParasCount = arrParagraphs.length; nParaIndex < nParasCount; ++nParaIndex)
-				{
-					if (oPara === arrParagraphs[nParaIndex])
-					{
-						isAdd = false;
-						break;
-					}
-				}
+		// 		var isAdd = true;
+		// 		for (var nParaIndex = 0, nParasCount = arrParagraphs.length; nParaIndex < nParasCount; ++nParaIndex)
+		// 		{
+		// 			if (oPara === arrParagraphs[nParaIndex])
+		// 			{
+		// 				isAdd = false;
+		// 				break;
+		// 			}
+		// 		}
 
-				if (isAdd)
-					arrParagraphs.push(oPara);
-			}
+		// 		if (isAdd)
+		// 			arrParagraphs.push(oPara);
+		// 	}
 
-			if (arrParagraphs.length > 0)
-			{
-				var oFastPages     = {};
-				var bCanFastRecalc = true;
-				for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
-				{
-					var oSimplePara  = arrParagraphs[nSimpleIndex];
-					var arrFastPages = oSimplePara.Recalculate_FastWholeParagraph();
-					if (!arrFastPages || arrFastPages.length <= 0)
-					{
-						bCanFastRecalc = false;
-						break;
-					}
-				}
+		// 	if (arrParagraphs.length > 0)
+		// 	{
+		// 		var oFastPages     = {};
+		// 		var bCanFastRecalc = true;
+		// 		for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
+		// 		{
+		// 			var oSimplePara  = arrParagraphs[nSimpleIndex];
+		// 			var arrFastPages = oSimplePara.Recalculate_FastWholeParagraph();
+		// 			if (!arrFastPages || arrFastPages.length <= 0)
+		// 			{
+		// 				bCanFastRecalc = false;
+		// 				break;
+		// 			}
+		// 		}
 
 
-				if (bCanFastRecalc)
-				{
-					for (var nPageIndex in oFastPages)
-					{
-						// // Recalculation LOG
-						// console.log("Fast Recalculation Paragraph, PageIndex=" + nPageIndex);
-						this.DrawingDocument.OnRecalculatePage(oFastPages[nPageIndex], this.Pages[nPageIndex]);
-					}
+		// 		if (bCanFastRecalc)
+		// 		{
+		// 			for (var nPageIndex in oFastPages)
+		// 			{
+		// 				// // Recalculation LOG
+		// 				// console.log("Fast Recalculation Paragraph, PageIndex=" + nPageIndex);
+		// 				this.DrawingDocument.OnRecalculatePage(oFastPages[nPageIndex], this.Pages[nPageIndex]);
+		// 			}
 
-					this.DrawingDocument.OnEndRecalculate(false, true);
-					this.History.Reset_RecalcIndex();
-					this.private_UpdateCursorXY(true, true);
+		// 			this.DrawingDocument.OnEndRecalculate(false, true);
+		// 			this.History.Reset_RecalcIndex();
+		// 			this.private_UpdateCursorXY(true, true);
 
-					for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
-					{
-						var oSimplePara = arrParagraphs[nSimpleIndex];
-						if (oSimplePara.Parent && oSimplePara.Parent.GetTopDocumentContent)
-						{
-							var oTopDocument = oSimplePara.Parent.GetTopDocumentContent();
-							if (oTopDocument instanceof CFootEndnote)
-								oTopDocument.OnFastRecalculate();
-						}
-					}
+		// 			for (var nSimpleIndex = 0, nSimplesCount = arrParagraphs.length; nSimpleIndex < nSimplesCount; ++nSimpleIndex)
+		// 			{
+		// 				var oSimplePara = arrParagraphs[nSimpleIndex];
+		// 				if (oSimplePara.Parent && oSimplePara.Parent.GetTopDocumentContent)
+		// 				{
+		// 					var oTopDocument = oSimplePara.Parent.GetTopDocumentContent();
+		// 					if (oTopDocument instanceof CFootEndnote)
+		// 						oTopDocument.OnFastRecalculate();
+		// 				}
+		// 			}
 
-					return true;
-				}
-			}
+		// 			return true;
+		// 		}
+		// 	}
 
-			return false;
-		};
+		// 	return false;
+		// };
 		this.showTextMessage = function()
 		{
 			if (this.isFullTextMessage)

@@ -139,6 +139,10 @@
             oPagesInfo.pages[nPageNum].fields = this._widgets;
 
         oField._doc = this;
+
+        if (AscCommon.History.IsOn() == true)
+            AscCommon.History.TurnOff();
+
         oField.private_syncField();
         
         for (let i = 0; i < viewer.pageDetector.pages.length; i++) {
