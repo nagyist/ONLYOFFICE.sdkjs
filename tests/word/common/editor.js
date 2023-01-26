@@ -61,15 +61,20 @@
 		FirePaint : function(){},
 		GetMMPerDot : function(value){return value / this.GetDotsPerMM(1);},
 		GetDotsPerMM : function(value) {return 72;},
-		EndTrackTable : function() {}
+		EndTrackTable : function() {},
+		OnRePaintAttack : function() {},
+		ConvertCoordsToCursorWR : function() {return {X:0,Y:0,Error:false};}
 	};
 
 	drawingDocument.CanvasHit = document.createElement('canvas');
 	drawingDocument.CanvasHitContext = drawingDocument.CanvasHit.getContext('2d');
+	drawingDocument.m_oWordControl = drawingDocument;
 
 	const editor = new AscCommon.baseEditorsApi({});
 	editor.WordControl = drawingDocument;
 	editor.WordControl.m_oDrawingDocument = drawingDocument;
+	editor.WordControl.m_oApi = editor;
+	editor.isDocumentEditor = true;
 	editor.sync_BeginCatchRevisionsChanges = function(){};
 	editor.sync_EndCatchRevisionsChanges = function(){};
 	editor.sync_ChangeCommentLogicalPosition = function(){};
@@ -84,7 +89,7 @@
 	editor.asc_GetRevisionsChangesStack = function(){return []};
 	editor.private_GetLogicDocument = function(){return this.WordControl.m_oLogicDocument;};
 	editor.asc_getKeyboardLanguage = function(){return -1;};
-
+	editor.sync_ContextMenuCallback = function(){};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscTest.DrawingDocument = drawingDocument;
 	AscTest.Editor          = editor;
