@@ -745,10 +745,10 @@ function (window, undefined) {
 				phi *= power;
 
 				let real = Math.cos(phi) * p;
-				this.real = +((real).toPrecision(numberCount(real) + 5));
+				this.real = +((real).toPrecision(numberCount(real) + 10));
 
 				let img = Math.sin(phi) * p;
-				this.img = +((img).toPrecision(numberCount(img) + 5));
+				this.img = +((img).toPrecision(numberCount(img) + 10));
 
 				return true;
 			}
