@@ -59,7 +59,8 @@ var AscTest = AscTest || {};
 			return this.map[id];
 		},
 		TurnOff : function(){},
-		TurnOn : function(){}
+		TurnOn : function(){},
+		init : function () {},
 	};
 
 	AscCommon.g_oIdCounter.m_bLoad = false;

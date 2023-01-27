@@ -8860,6 +8860,7 @@ CDocument.prototype.OnKeyDown = function(e)
 		case c_oAscDocumentShortcutType.SoftHyphen:
 		{
 			// TODO: Реализовать
+          // TODO: unlock shortcut initialization after implementation and add a check for the correct operation of the shortcut to the tests
 			bRetValue = keydownresult_PreventAll;
 			break;
 		}
@@ -8885,13 +8886,13 @@ CDocument.prototype.OnKeyDown = function(e)
 			}
 			break;
 		}
-		case c_oAscDocumentShortcutType.IncreaseFontSize:
+		case c_oAscDocumentShortcutType.DecreaseFontSize:
 		{
 			this.Api.FontSizeOut();
 			bRetValue = keydownresult_PreventAll;
 			break;
 		}
-		case c_oAscDocumentShortcutType.DecreaseFontSize:
+		case c_oAscDocumentShortcutType.IncreaseFontSize:
 		{
 			this.Api.FontSizeIn();
 			bRetValue = keydownresult_PreventAll;
@@ -12326,8 +12327,8 @@ CDocument.prototype.Document_Redo = function()
 };
 CDocument.prototype.UpdateAfterUndoRedo = function(changes)
 {
-	if (this.OFormDocument)
-		this.OFormDocument.onUndoRedo();
+	// if (this.OFormDocument)
+	// 	this.OFormDocument.onUndoRedo();
 	
 	this.DocumentOutline.UpdateAll(); // TODO: надо бы подумать как переделать на более легкий пересчет
 	this.Comments.UpdateAll();        // TODO: Надо переделать как на Start/Finalize

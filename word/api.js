@@ -1409,8 +1409,8 @@ background-repeat: no-repeat;\
 			[c_oAscDocumentShortcutType.ApplyHeading2, 50, false, false, true],
 			[c_oAscDocumentShortcutType.ApplyHeading3, 51, false, false, true],
 			[c_oAscDocumentShortcutType.InsertFootnoteNow, 70, true, false, true],
-			[c_oAscDocumentShortcutType.InsertEquation, 187, false, false, true],
-			[c_oAscDocumentShortcutType.SoftHyphen, 189, false, false, true]
+			[c_oAscDocumentShortcutType.InsertEquation, 187, false, false, true]
+			//[c_oAscDocumentShortcutType.SoftHyphen, 189, false, false, true] TODO: unlock after implementation
 		]);
 	}
 
@@ -1420,8 +1420,8 @@ background-repeat: no-repeat;\
 			[c_oAscDocumentShortcutType.ApplyHeading1, 49, true, false, true],
 			[c_oAscDocumentShortcutType.ApplyHeading2, 50, true, false, true],
 			[c_oAscDocumentShortcutType.ApplyHeading3, 51, true, false, true],
-			[c_oAscDocumentShortcutType.InsertEquation, 187, true, false, true],
-			[c_oAscDocumentShortcutType.SoftHyphen, 189, true, false, true]
+			[c_oAscDocumentShortcutType.InsertEquation, 187, true, false, true]
+			//[c_oAscDocumentShortcutType.SoftHyphen, 189, true, false, true] TODO: unlock after implementation
 		]);
 	}
 
@@ -9497,14 +9497,19 @@ background-repeat: no-repeat;\
 		}
 	};
 
-	asc_docs_api.prototype._onEndLoadSdk = function()
+	asc_docs_api.prototype._InitVariablesOnEndLoadSdk = function ()
 	{
-		AscCommon.baseEditorsApi.prototype._onEndLoadSdk.call(this);
-
 		History           = AscCommon.History;
 		g_fontApplication = AscFonts.g_fontApplication;
 		PasteElementsId   = AscCommon.PasteElementsId;
 		global_mouseEvent = AscCommon.global_mouseEvent;
+	}
+	asc_docs_api.prototype._onEndLoadSdk = function()
+	{
+		AscCommon.baseEditorsApi.prototype._onEndLoadSdk.call(this);
+
+
+		this._InitVariablesOnEndLoadSdk();
 
 		this.WordControl      = new AscCommonWord.CEditorPage(this);
 		this.WordControl.Name = this.HtmlElementName;
