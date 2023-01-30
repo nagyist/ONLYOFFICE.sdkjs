@@ -3142,10 +3142,11 @@
 			pageBottomField = Math.max(pageMargins.asc_getBottom(), c_oAscPrintDefaultSettings.MinPageBottomField);
 		}
 
-
+		var _retinaPixelRatio = 1;
 		var vector_koef = AscCommonExcel.vector_koef / this.getZoom();
 		if (AscCommon.AscBrowser.isCustomScaling()) {
-			vector_koef /= AscCommon.AscBrowser.retinaPixelRatio;
+			_retinaPixelRatio = AscCommon.AscBrowser.retinaPixelRatio;
+			vector_koef /= _retinaPixelRatio;
 		}
 
 		if (null == pageGridLines) {
@@ -3185,8 +3186,6 @@
 			pageHeight = tmp;
 		}
 
-		var pageWidthWithFields = pageWidth - pageLeftField - pageRightField;
-		var pageHeightWithFields = pageHeight - pageTopField - pageBottomField;
 		var leftFieldInPx = pageLeftField / vector_koef + 1;
 		var topFieldInPx = pageTopField / vector_koef + 1;
 
@@ -3218,7 +3217,8 @@
 			if(height) {
 				var heightAllRows = pageHeadings ? t.cellsTop * height : 0;
 				for(var i = start; i <= end; i++) {
-					heightAllRows += t._getRowHeight(i);
+					heightAllRows += t._getHeightForPrint(i) * _retinaPixelRatio ;
+					//heightAllRows += t._getRowHeight(i);
 				}
 				res = ((pageHeightWithFieldsHeadings * height) / heightAllRows) * 100;
 			}
@@ -3283,14 +3283,17 @@
 			}
 		}
 
+		//scale only int
+		wScale = wScale >> 0;
+		hScale = hScale >> 0;
 
 		var minScale;
 		if(width && height) {
-			minScale = Math.min(Math.round(wScale), Math.round(hScale));
+			minScale = Math.min(wScale, hScale);
 		} else if(width) {
-			minScale = Math.round(wScale);
+			minScale = wScale;
 		} else {
-			minScale = Math.round(hScale);
+			minScale = hScale;
 		}
 
 		if(minScale < 10) {
