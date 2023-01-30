@@ -87,6 +87,7 @@
         oRun.AddText(arrText[i]);
       }
     }
+    //oLogicDocument.MoveCursorToEndPos();
 
 
     return oLogicDocument;
@@ -585,13 +586,33 @@
     const oLogicDocument = getLogicDocumentWithParagraphs(['']);
     oLogicDocument.OnKeyDown(event);
     const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      if (oRun instanceof AscCommonWord.ParaMath) {
-        return true;
+    let bCheck = false;
+    oParagraph.CheckRunContent(function (oRun) {
+      if (oRun.IsMathRun()) {
+        bCheck = true;
       }
-    }
-    return false;
+    });
+    return bCheck;
+  }
+
+  function checkBackSpace(assert) {
+    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
+    let event;
+    event = createEvent(8, false, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
+    assert.strictEqual(sText, 'Hell', 'check backspace hotkey');
+
+    oLogicDocument = getLogicDocumentWithParagraphs(['Hello hello hello']);
+    event = createEvent(8, true, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
+    assert.strictEqual(sText, 'Hello hello ', 'check ctrl+backspace hotkey');
+
+  }
+
+  function checkTab() {
+
   }
 
   function checkEnter() {
@@ -602,8 +623,13 @@
 
   }
 
-  function checkSpace() {
-
+  function checkSpace(assert) {
+    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
+    let event;
+    event = createEvent(32, false, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
+    assert.strictEqual(sText, 'Hello ', 'check space hotkey');
   }
 
   function checkPgUp() {
@@ -618,8 +644,56 @@
 
   }
 
-  function checkHome() {
+  function checkHome(assert) {
+    let oLogicDocument = getLogicDocumentWithParagraphs(['HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
+    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello']);
+    let event;
+    event = createEvent(36, false, false, false, false, false);
+    const oParagraph = oLogicDocument.Content[0];
+    //oParagraph.Reset(0, 0, 1000, 1000, 0, 0, 1);
+    oParagraph.Recalculate_Page(0);
+    oLogicDocument.TurnOffRecalc = 0;
+    oLogicDocument.RecalculateFromStart(true)
 
+    oLogicDocument.OnKeyDown(event);
+    const oPos = oParagraph.GetCurrentParaPos();
+    assert.strictEqual(oPos, 'Hello ', 'check space hotkey');
   }
 
   function checkLeftArrow() {
@@ -642,24 +716,79 @@
 
   }
 
-  function checkX() {
+  function checkX(assert) {
+    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
+    const oParagraph = oLogicDocument.Content[0];
+    oParagraph.SelectCurrentWord();
+    const event = createEvent(88, false, false, true, false, false);
+    oLogicDocument.OnKeyDown(event);
+    let bCheck = false;
+    for (let i = 0; i < oParagraph.Content.length; i += 1) {
+      const oRun = oParagraph.Content[i];
+      for (let j = 0; j < oRun.Content.length; j += 1) {
+        if (oRun.Content[j].Value === 0x1F607) {
+          bCheck = true;
+          break;
+        }
+      }
+      if (bCheck) {
+        break;
+      }
+    }
+    assert.strictEqual(bCheck, true, 'check alt+x hotkey');
+  }
+
+  function checkContextMenu(assert) {
+    let oLogicDocument;
+    let event;
+    let bCheck = false;
+    const fOldContextMenuCallback = editor.sync_ContextMenuCallback;
+    editor.sync_ContextMenuCallback = function () {
+      bCheck = true;
+    }
+    oLogicDocument = getLogicDocumentWithParagraphs(['']);
+    event = createEvent(93, false, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    assert.strictEqual(bCheck, true, 'check context menu hotkey');
+    bCheck = false;
+
+    event = createEvent(121, false, true, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    assert.strictEqual(bCheck, true, 'check context menu hotkey');
+    bCheck = false;
+
+    const bOldOpera = AscCommon.AscBrowser.isOpera;
+    AscCommon.AscBrowser.isOpera = true;
+    event = createEvent(57351, false, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    assert.strictEqual(bCheck, true, 'check context menu hotkey');
+    AscCommon.AscBrowser.isOpera = bOldOpera;
+
+    editor.sync_ContextMenuCallback = fOldContextMenuCallback;
+  }
+
+  function checkNumLock(assert) { // Nothing happens, just prevent default
+    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
+    const event = createEvent(144,false,false,false,false,false);
+    const oRet = oLogicDocument.OnKeyDown(event);
+    assert.strictEqual((oRet & keydownresult_PreventDefault) !== 0, true, 'check num lock hotkey');
 
   }
 
-  function checkContextMenu() {
-
+  function checkScrollLock(assert) { // Nothing happens, just prevent default
+    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
+    const event = createEvent(145,false,false,false,false,false);
+    const oRet = oLogicDocument.OnKeyDown(event);
+    assert.strictEqual((oRet & keydownresult_PreventDefault) !== 0, true, 'check scroll lock hotkey');
   }
 
-  function checkNumLock() {
-
-  }
-
-  function checkScrollLock() {
-
-  }
-
-  function checkCJKSpace() {
-
+  function checkCJKSpace(assert) {
+    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
+    let event;
+    event = createEvent(12288, false, false, false, false, false);
+    oLogicDocument.OnKeyDown(event);
+    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
+    assert.strictEqual(sText, 'Hello ', 'check CJK space hotkey');
   }
 
   $(function () {
@@ -851,7 +980,7 @@
 
 
       event = createEvent(51, true, false, true, false, false);
-      assert.strictEqual(checkApplyHeading2(event), true, 'Check apply heading3 shortcut');
+      assert.strictEqual(checkApplyHeading3(event), true, 'Check apply heading3 shortcut');
 
 
       event = createEvent(187, true, false, true, false, false);
@@ -864,9 +993,25 @@
     {
       editor.initDefaultShortcuts();
 
-      const event = createEvent(13, true, false, false, false, false);
-      assert.strictEqual(checkInsertPageBreak(event), true);
-
+      checkBackSpace(assert);
+      checkTab(assert);
+      checkEnter(assert);
+      checkEsc(assert);
+      checkSpace(assert);
+      checkPgUp(assert);
+      checkPgDn(assert);
+      checkEnd(assert);
+      checkHome(assert);
+      checkLeftArrow(assert);
+      checkTopArrow(assert);
+      checkRightArrow(assert);
+      checkBottomArrow(assert);
+      checkDelete(assert);
+      checkX(assert);
+      checkContextMenu(assert);
+      checkNumLock(assert);
+      checkScrollLock(assert);
+      checkCJKSpace(assert);
       editor.Shortcuts = new AscCommon.CShortcuts();
     });
 
