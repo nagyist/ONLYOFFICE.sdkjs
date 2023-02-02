@@ -68,6 +68,7 @@ const AscTest = window.AscTest || {};
 
 
   AscTest.createShape = function (oParent) {
+    AscCommon.History.Create_NewPoint();
     var oShapeTrack = new AscFormat.NewShapeTrack('rect', 0, 0, AscFormat.GetDefaultTheme(), null, null, null, 0);
     oShapeTrack.track({}, 100, 100);
     var oShape = oShapeTrack.getShape(false, AscTest.DrawingDocument, null);
@@ -75,7 +76,6 @@ const AscTest = window.AscTest || {};
     oShape.setParent(oParent);
     oShape.createTextBody();
     oShape.addToDrawingObjects();
-
     return oShape;
   };
 

@@ -116,6 +116,7 @@
 
 		AscFonts.HB_StartString();
 	};
+	const g_oTextMeasurer = window.g_oTextMeasurer || AscCommon.g_oTextMeasurer;
 	g_oTextMeasurer.SetFontInternal = function()
 	{
 	};
@@ -147,6 +148,10 @@
 	g_oTextMeasurer.Measure         = function()
 	{
 		return {Width : CharWidth * FontSize};
+	};
+	AscCommon.g_fontApplication = AscCommon.g_fontApplication || window.g_fontApplication || {};
+	AscCommon.g_fontApplication.LoadFont = function () {
+
 	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscTest.CharWidth   = CharWidth;

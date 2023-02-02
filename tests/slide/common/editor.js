@@ -44,6 +44,7 @@
     UpdateTargetTransform : function(){},
     SelectEnabled : function(){},
     SelectShow : function(){},
+    SelectClear : function(){},
     TargetStart : function(){},
     TargetShow : function(){},
     TargetEnd : function(){},
@@ -69,6 +70,19 @@
       return 100;
     },
     GoToPage: function () {},
+    m_oHorRuler: new CHorRuler(),
+    m_oVerRuler: new CVerRuler(),
+    UpdateHorRuler: function () {},
+    UpdateVerRuler: function () {},
+    Notes_OnRecalculate: function () {},
+    Thumbnails: {
+      GetSelectedArray: function () {
+        const oLogicDocument = editor.WordControl.m_oLogicDocument;
+        return [oLogicDocument.CurPage];
+      },
+      IsSlideHidden: function () {return false;},
+      SelectSlides: function () {}
+    }
   };
 
   drawingDocument.CanvasHit = document.createElement('canvas');

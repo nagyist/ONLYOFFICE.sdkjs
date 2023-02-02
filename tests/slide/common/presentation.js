@@ -34,26 +34,32 @@
 
 (function(window)
 {
-  let logicDocument = null;
+  let oLogicDocument = null;
 
   function CreateLogicDocument()
   {
-    if (logicDocument)
-      return logicDocument;
+    if (oLogicDocument)
+      return oLogicDocument;
 
-    logicDocument = new AscCommonSlide.CPresentation(AscTest.DrawingDocument);
-    logicDocument.Api = AscTest.Editor;
-    logicDocument.Api.WordControl.m_oLogicDocument = logicDocument;
-    logicDocument.createNecessaryObjectsIfNoPresent();
-    logicDocument.addNextSlide();
+    oLogicDocument = new AscCommonSlide.CPresentation(AscTest.DrawingDocument);
+    oLogicDocument.Api = AscTest.Editor;
+    oLogicDocument.Api.WordControl.m_oLogicDocument = oLogicDocument;
+    oLogicDocument.createNecessaryObjectsIfNoPresent();
+    oLogicDocument.addNextSlide();
+    
+    AscTest.DrawingDocument.m_oLogicDocument = oLogicDocument;
 
-    AscTest.DrawingDocument.m_oLogicDocument = logicDocument;
+    return oLogicDocument;
+  }
 
-    return logicDocument;
+  function GetParagraphText(paragraph)
+  {
+    return paragraph.GetText({ParaEndToSpace : false});
   }
 
   //--------------------------------------------------------export----------------------------------------------------
   AscTest.CreateLogicDocument      = CreateLogicDocument;
+  AscTest.GetParagraphText         = GetParagraphText;
 
 
 })(window);
