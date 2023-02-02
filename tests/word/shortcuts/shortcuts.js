@@ -65,6 +65,21 @@
   editor.asc_AddMath = Asc.asc_docs_api.prototype.asc_AddMath;
   editor._InitVariablesOnEndLoadSdk = Asc.asc_docs_api.prototype._InitVariablesOnEndLoadSdk;
   editor.asc_AddMath2 = Asc.asc_docs_api.prototype.asc_AddMath2;
+  editor._saveCheck = Asc.asc_docs_api.prototype._saveCheck;
+  editor.asc_AddTableOfContents = Asc.asc_docs_api.prototype.asc_AddTableOfContents;
+  editor.asc_registerCallback = Asc.asc_docs_api.prototype.asc_registerCallback;
+  editor.asc_unregisterCallback = Asc.asc_docs_api.prototype.asc_unregisterCallback;
+  editor.sendEvent = Asc.asc_docs_api.prototype.sendEvent;
+
+  AscFonts.FontPickerByCharacter = {
+    checkText: function (text, _this, callback) {
+      callback.call(_this);
+    }
+  };
+  
+  AscCommon.CDocsCoApi.prototype.askSaveChanges = function (callback) {
+    callback({"saveLock": false});
+  };
 
   editor._InitVariablesOnEndLoadSdk();
   AscCommon.g_font_loader = {
@@ -75,12 +90,14 @@
   function getLogicDocumentWithParagraphs(arrText) {
     const oLogicDocument = AscTest.CreateLogicDocument();
     resetLogicDocument(oLogicDocument);
-    oLogicDocument.Start_SilentMode();
+    if (!oLogicDocument.TurnOffRecalc) {
+      oLogicDocument.Start_SilentMode();
+    }
     oLogicDocument.RemoveFromContent(0, oLogicDocument.GetElementsCount(), false);
     if (Array.isArray(arrText)) {
       for (let i = 0; i < arrText.length; i += 1) {
         const oParagraph = AscTest.CreateParagraph();
-        oLogicDocument.AddToContent(oLogicDocument.Content.length, oParagraph);
+        oLogicDocument.Internal_Content_Add(oLogicDocument.Content.length, oParagraph);
         oParagraph.MoveCursorToEndPos();
         const oRun = new AscWord.CRun();
         oParagraph.AddToContent(0, oRun);
@@ -329,17 +346,13 @@
   function checkPrintPreviewAndPrint(event, assert) {
     const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
     let bCheck = false;
-    const fOldOnPrint = editor.onPrint;
-    editor.onPrint = function () {
-      assert.true(true, 'Check hyperlink shortcut');
+    editor.asc_registerCallback("asc_onPrint", function () {
       bCheck = true;
-    };
+    });
     oLogicDocument.SelectAll();
     oLogicDocument.OnKeyDown(event);
-    if (!bCheck) {
-      assert.true(false, 'Check hyperlink shortcut');
-    }
-    editor.onPrint = fOldOnPrint;
+    assert.true(bCheck, 'Check print shortcut');
+    editor.asc_unregisterCallback("asc_onPrint");
   }
 
   function checkInsertPageNumber(event) {
@@ -382,16 +395,16 @@
     return false;
   }
 
-  function checkSave(event) {
+  function checkSave(event, assert) {
     const oLogicDocument = getLogicDocumentWithParagraphs();
-    const fOldSave = editor.asc_Save;
+    const fOldSave = editor._onSaveCallbackInner;
     let bCheck = false;
-    editor.asc_Save = function () {
+    editor._onSaveCallbackInner = function () {
       bCheck = true;
+      editor._onSaveCallbackInner = fOldSave;
     }
     oLogicDocument.OnKeyDown(event);
-    editor.asc_Save = fOldSave;
-    return bCheck;
+    assert.strictEqual(bCheck, true, 'Check save shortcut');
   }
 
   function checkTradeMarkSign(event) {
@@ -434,14 +447,22 @@
     return !!oSecondRun.Get_Bold();
   }
 
+  AscCommon.CTableId = Object;
   function checkRedo(event) {
     const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    //oLogicDocument.OnKeyDown(event);
+    oLogicDocument.SelectAll();
+    oLogicDocument.Remove(undefined, undefined, true);
+    oLogicDocument.Document_Undo();
+    oLogicDocument.OnKeyDown(event);
+    return AscTest.GetParagraphText(oLogicDocument.Content[0]) === '';
   }
 
   function checkUndo(event) {
     const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    //oLogicDocument.OnKeyDown(event);
+    oLogicDocument.SelectAll();
+    oLogicDocument.Remove(undefined, undefined, true);
+    oLogicDocument.OnKeyDown(event);
+    return AscTest.GetParagraphText(oLogicDocument.Content[0]) === 'Hello World';
   }
 
   function checkEnDash(event) {
@@ -477,7 +498,38 @@
   }
 
   function checkUpdateFields(event) {
+    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello', 'Hello', 'Hello']);
+    oLogicDocument.End_SilentMode();
+    AscTest.Recalculate();
+    for (let i = 0; i < oLogicDocument.Content.length; i += 1) {
+      oLogicDocument.Set_CurrentElement(i, true);
+      oLogicDocument.SetParagraphStyle("Heading 1");
+    }
+    AscTest.Recalculate();
+    oLogicDocument.MoveCursorToStartPos();
+    const props = new Asc.CTableOfContentsPr();
+    props.put_OutlineRange(1, 9);
+    props.put_Hyperlink(true);
+    props.put_ShowPageNumbers(true);
+    props.put_RightAlignTab(true);
+    props.put_TabLeader( Asc.c_oAscTabLeader.Dot);
+    editor.asc_AddTableOfContents(null, props);
+    
+    oLogicDocument.MoveCursorToEndPos();
+    const oParagraph = AscTest.CreateParagraph();
+    oLogicDocument.AddToContent(oLogicDocument.Content.length, oParagraph);
+    oParagraph.MoveCursorToEndPos();
+    const oRun = new AscWord.CRun();
+    oParagraph.AddToContent(0, oRun);
+    oRun.AddText('Hello');
+    oLogicDocument.Set_CurrentElement(oLogicDocument.Content.length - 1, true);
+    oLogicDocument.SetParagraphStyle("Heading 1");
 
+    oLogicDocument.Content[0].SetThisElementCurrent();
+    AscTest.Recalculate();
+    oLogicDocument.OnKeyDown(event);
+    return oLogicDocument.Content[0].Content.Content.length === 5;
+    
   }
 
   function checkSuperscript(event) {
@@ -684,15 +736,20 @@
     'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
     'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello']);
     let event;
-    event = createEvent(36, false, false, false, false, false);
+    oLogicDocument.End_SilentMode();
+    oLogicDocument.private_IsStartTimeoutOnRecalc = function () {
+      return false;
+    }
     const oParagraph = oLogicDocument.Content[0];
-    //oParagraph.Reset(0, 0, 1000, 1000, 0, 0, 1);
-    oParagraph.Recalculate_Page(0);
-    oLogicDocument.TurnOffRecalc = 0;
-    oLogicDocument.RecalculateFromStart(true)
-
+    oParagraph.SetThisElementCurrent();
+    oParagraph.MoveCursorToEndPos();
+    
+    AscTest.Recalculate();
+    event = createEvent(36, false, false, false, false, false);
+    const oOldPos = oParagraph.GetCurPosXY();
+    console.log(oOldPos)
     oLogicDocument.OnKeyDown(event);
-    const oPos = oParagraph.GetCurrentParaPos();
+    const oPos = oParagraph.GetCurPosXY();
     assert.strictEqual(oPos, 'Hello ', 'check space hotkey');
   }
 
@@ -742,10 +799,11 @@
     let oLogicDocument;
     let event;
     let bCheck = false;
-    const fOldContextMenuCallback = editor.sync_ContextMenuCallback;
-    editor.sync_ContextMenuCallback = function () {
+    const fCheck = function () {
       bCheck = true;
     }
+    editor.asc_registerCallback("asc_onContextMenu", fCheck);
+
     oLogicDocument = getLogicDocumentWithParagraphs(['']);
     event = createEvent(93, false, false, false, false, false);
     oLogicDocument.OnKeyDown(event);
@@ -764,7 +822,7 @@
     assert.strictEqual(bCheck, true, 'check context menu hotkey');
     AscCommon.AscBrowser.isOpera = bOldOpera;
 
-    editor.sync_ContextMenuCallback = fOldContextMenuCallback;
+    editor.asc_unregisterCallback("asc_onContextMenu", fCheck);
   }
 
   function checkNumLock(assert) { // Nothing happens, just prevent default
@@ -884,7 +942,7 @@
 
 
       event = createEvent(83, true, false, false,false,false);
-      assert.strictEqual(checkSave(event), true, 'Check save shortcut');
+      checkSave(event, assert);
 
 
       event = createEvent(84, true, false, true,false,false);
