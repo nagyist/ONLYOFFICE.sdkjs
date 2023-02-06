@@ -65,6 +65,9 @@
   {
     HB_String.push(u);
   };
+  AscFonts.onLoadModule = function () {
+    
+  }
   AscFonts.CTextShaper.prototype.FlushWord = function()
   {
     AscFonts.HB_EndString();

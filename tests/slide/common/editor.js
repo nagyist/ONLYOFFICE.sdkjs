@@ -34,88 +34,86 @@
 
 (function(window)
 {
-  const drawingDocument = {
-    CanvasHit : null,
-    CanvasHitContext : null,
-
-    OnStartRecalculate : function(){},
-    OnRecalculatePage : function(){},
-    OnEndRecalculate : function(){},
-    UpdateTargetTransform : function(){},
-    SelectEnabled : function(){},
-    SelectShow : function(){},
-    SelectClear : function(){},
-    TargetStart : function(){},
-    TargetShow : function(){},
-    TargetEnd : function(){},
-    Set_RulerState_Start : function(){},
-    Set_RulerState_Paragraph : function(){},
-    Set_RulerState_End : function(){},
-    Update_MathTrack : function(){},
-    OnDrawContentControl : function(){},
-    Update_FieldTrack : function(){},
-    SetTargetColor : function(){},
-    SetTargetSize : function(){},
-    UpdateTarget : function(){},
-    ClearCachePages : function(){},
-    OnRepaintPage : function(){},
-    FirePaint : function(){},
-    GetMMPerDot : function(value){return value / this.GetDotsPerMM(1);},
-    GetDotsPerMM : function(value) {return 72;},
-    EndTrackTable : function() {},
-    OnRePaintAttack : function() {},
-    DrawImageTextureFillSlide : function() {},
-    ConvertCoordsToCursorWR : function() {return {X:0,Y:0,Error:false};},
-    Notes_GetWidth: function () {
-      return 100;
-    },
-    GoToPage: function () {},
-    m_oHorRuler: new CHorRuler(),
-    m_oVerRuler: new CVerRuler(),
-    UpdateHorRuler: function () {},
-    UpdateVerRuler: function () {},
-    Notes_OnRecalculate: function () {},
-    Thumbnails: {
-      GetSelectedArray: function () {
-        const oLogicDocument = editor.WordControl.m_oLogicDocument;
-        return [oLogicDocument.CurPage];
-      },
-      IsSlideHidden: function () {return false;},
-      SelectSlides: function () {}
-    }
-  };
-
-  drawingDocument.CanvasHit = document.createElement('canvas');
-  drawingDocument.CanvasHitContext = drawingDocument.CanvasHit.getContext('2d');
-  drawingDocument.m_oWordControl = drawingDocument;
+  // const drawingDocument = {
+  //   CanvasHit : null,
+  //   CanvasHitContext : null,
+  //
+  //   OnStartRecalculate : function(){},
+  //   OnRecalculatePage : function(){},
+  //   OnEndRecalculate : function(){},
+  //   UpdateTargetTransform : function(){},
+  //   SelectEnabled : function(){},
+  //   SelectShow : function(){},
+  //   SelectClear : function(){},
+  //   TargetStart : function(){},
+  //   TargetShow : function(){},
+  //   TargetEnd : function(){},
+  //   Set_RulerState_Start : function(){},
+  //   Set_RulerState_Paragraph : function(){},
+  //   Set_RulerState_End : function(){},
+  //   Update_MathTrack : function(){},
+  //   OnDrawContentControl : function(){},
+  //   Update_FieldTrack : function(){},
+  //   SetTargetColor : function(){},
+  //   SetTargetSize : function(){},
+  //   UpdateTarget : function(){},
+  //   ClearCachePages : function(){},
+  //   OnRepaintPage : function(){},
+  //   FirePaint : function(){},
+  //   GetMMPerDot : function(value){return value / this.GetDotsPerMM(1);},
+  //   GetDotsPerMM : function(value) {return 72;},
+  //   EndTrackTable : function() {},
+  //   OnRePaintAttack : function() {},
+  //   DrawImageTextureFillSlide : function() {},
+  //   ConvertCoordsToCursorWR : function() {return {X:0,Y:0,Error:false};},
+  //   Notes_GetWidth: function () {
+  //     return 100;
+  //   },
+  //   GoToPage: function (nPage) {},
+  //   m_oHorRuler: new CHorRuler(),
+  //   m_oVerRuler: new CVerRuler(),
+  //   UpdateHorRuler: function () {},
+  //   UpdateVerRuler: function () {},
+  //   Notes_OnRecalculate: function () {},
+  //   OnUpdateOverlay: function () {},
+  //   SetCursorType : function () {},
+  //   IsTrackText : function () {}
+  //
+  // };
+  //
+  // drawingDocument.CanvasHit = document.createElement('canvas');
+  // drawingDocument.CanvasHitContext = drawingDocument.CanvasHit.getContext('2d');
+  // drawingDocument.m_oWordControl = drawingDocument;
 
 
-  Asc.asc_docs_api.prototype._onEndLoadSdk = function () {
 
-  };
-  const editor = new AscCommon.baseEditorsApi({});
-  editor.WordControl = drawingDocument;
-  editor.WordControl.m_oDrawingDocument = drawingDocument;
-  editor.WordControl.m_oApi = editor;
-  editor.isDocumentEditor = true;
-  editor.sync_BeginCatchRevisionsChanges = function(){};
-  editor.sync_EndCatchRevisionsChanges = function(){};
-  editor.sync_ChangeCommentLogicalPosition = function(){};
-  editor.GetCollaborativeMarksShowType = function(){return c_oAscCollaborativeMarksShowType.All;};
-  editor.asc_OnChangeContentControl = function(){};
-  editor.sync_OnAllRequiredFormsFilled = function(){};
-  editor.asc_OnFocusContentControl = function(){};
-  editor.asc_OnBlurContentControl = function(){};
-  editor.sync_CanUndoCallback = function(){};
-  editor.sync_CanRedoCallback = function(){};
-  editor.CheckChangedDocument = function(){};
-  editor.asc_GetRevisionsChangesStack = function(){return []};
-  editor.private_GetLogicDocument = function(){return this.WordControl.m_oLogicDocument;};
-  editor.asc_getKeyboardLanguage = function(){return -1;};
-  editor.sync_ContextMenuCallback = function(){};
+  const editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
+  AscCommon.loadSdk = function () {
+    editor._onEndLoadSdk();
+  }
+
+  // editor.WordControl = drawingDocument;
+  // editor.WordControl.m_oDrawingDocument = drawingDocument;
+  // editor.WordControl.m_oApi = editor;
+  // editor.isDocumentEditor = true;
+  // editor.sync_BeginCatchRevisionsChanges = function(){};
+  // editor.sync_EndCatchRevisionsChanges = function(){};
+  // editor.sync_ChangeCommentLogicalPosition = function(){};
+  // editor.GetCollaborativeMarksShowType = function(){return c_oAscCollaborativeMarksShowType.All;};
+  // editor.asc_OnChangeContentControl = function(){};
+  // editor.sync_OnAllRequiredFormsFilled = function(){};
+  // editor.asc_OnFocusContentControl = function(){};
+  // editor.asc_OnBlurContentControl = function(){};
+  // editor.sync_CanUndoCallback = function(){};
+  // editor.sync_CanRedoCallback = function(){};
+  // editor.CheckChangedDocument = function(){};
+  // editor.asc_GetRevisionsChangesStack = function(){return []};
+  // editor.private_GetLogicDocument = function(){return this.WordControl.m_oLogicDocument;};
+  // editor.asc_getKeyboardLanguage = function(){return -1;};
+  // editor.sync_ContextMenuCallback = function(){};
   editor.SelectedObjectsStack = [];
   //--------------------------------------------------------export----------------------------------------------------
-  AscTest.DrawingDocument = drawingDocument;
+  AscTest.DrawingDocument = editor.WordControl.m_oDrawingDocument;
   AscTest.Editor          = editor;
 
   window.editor = editor;

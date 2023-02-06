@@ -31,37 +31,38 @@
  */
 
 "use strict";
+function IsCanvas(sName) {
+  return true;
+}
+(function(window, undefined){
 
-(function(window)
-{
-  let oLogicDocument = null;
-
-  function CreateLogicDocument()
+  function CreateControlContainer(name)
   {
-    if (oLogicDocument)
-      return oLogicDocument;
-    editor.InitEditor();
-    oLogicDocument = editor.WordControl.m_oLogicDocument;
-    // oLogicDocument = new AscCommonSlide.CPresentation(AscTest.DrawingDocument);
-    // oLogicDocument.Api = AscTest.Editor;
-    // oLogicDocument.Api.WordControl.m_oLogicDocument = oLogicDocument;
-    oLogicDocument.createNecessaryObjectsIfNoPresent();
-    oLogicDocument.addNextSlide();
-    
-    AscTest.DrawingDocument.m_oLogicDocument = oLogicDocument;
-
-    return oLogicDocument;
+    var ctrl = new AscCommon.CControlContainer();
+    ctrl.Name = name;
+    const oHtmlElement = document.createElement(IsCanvas(name) ? 'canvas' : 'div');
+    oHtmlElement.style.display = 'none';
+    oHtmlElement.style.width = '20px';
+    oHtmlElement.style.height = '20px';
+    document.body.appendChild(oHtmlElement);
+    ctrl.HtmlElement = oHtmlElement;
+    return ctrl;
   }
-
-  function GetParagraphText(paragraph)
+  function CreateControl(name)
   {
-    return paragraph.GetText({ParaEndToSpace : false});
+    var ctrl = new AscCommon.CControl();
+    ctrl.Name = name;
+    const oHtmlElement = document.createElement(IsCanvas(name) ? 'canvas' : 'div');
+    oHtmlElement.style.display = 'none';
+    oHtmlElement.style.width = '20px';
+    oHtmlElement.style.height = '20px';
+    document.body.appendChild(oHtmlElement);
+    ctrl.HtmlElement = oHtmlElement;
+    return ctrl;
   }
 
   //--------------------------------------------------------export----------------------------------------------------
-  AscTest.CreateLogicDocument      = CreateLogicDocument;
-  AscTest.GetParagraphText         = GetParagraphText;
-
-
+  window['AscCommon'] = window['AscCommon'] || {};
+  window['AscCommon'].CreateControlContainer = CreateControlContainer;
+  window['AscCommon'].CreateControl = CreateControl;
 })(window);
-
