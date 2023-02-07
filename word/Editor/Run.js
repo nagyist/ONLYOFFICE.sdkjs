@@ -1378,7 +1378,7 @@ ParaRun.prototype.Remove = function(Direction, bOnAddText)
 					return true;
 				}
 
-				var oStyles = (this.Paragraph && this.Paragraph.bFromDocument) ? this.Paragraph.LogicDocument.GetStyles() : null;
+				var oStyles = (this.Paragraph && this.Paragraph.bFromDocument && this.Paragraph.LogicDocument) ? this.Paragraph.LogicDocument.GetStyles() : null;
 				if (oStyles && 1 === this.Content.length && ((para_FootnoteReference === this.Content[0].Type && this.GetRStyle() === oStyles.GetDefaultFootnoteReference()) || (para_EndnoteReference === this.Content[0].Type && this.GetRStyle() === oStyles.GetDefaultEndnoteReference())))
 					this.SetRStyle(undefined);
 
@@ -1413,7 +1413,7 @@ ParaRun.prototype.Remove = function(Direction, bOnAddText)
 					return true;
 				}
 
-				var oStyles = (this.Paragraph && this.Paragraph.bFromDocument) ? this.Paragraph.LogicDocument.GetStyles() : null;
+				var oStyles = (this.Paragraph && this.Paragraph.bFromDocument && this.Paragraph.LogicDocument) ? this.Paragraph.LogicDocument.GetStyles() : null;
 				if (oStyles && 1 === this.Content.length && ((para_FootnoteReference === this.Content[0].Type && this.GetRStyle() === oStyles.GetDefaultFootnoteReference()) || (para_EndnoteReference === this.Content[0].Type && this.GetRStyle() === oStyles.GetDefaultEndnoteReference())))
 					this.SetRStyle(undefined);
 
@@ -3466,6 +3466,7 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 	var nMaxComb    = -1;
 	var nCombWidth  = null;
 	var oTextForm   = this.GetTextForm();
+	let oTextFormPDF = this.GetTextFormPDF();
 	let isKeepWidth = false;
 	if (oTextForm && oTextForm.IsComb())
 	{
@@ -3499,12 +3500,33 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 		}
 
 	}
-
-	if (nCombWidth && nMaxComb > 0)
+	// for pdf text forms
+	else if (oTextFormPDF && oTextFormPDF.comb)
 	{
-		var oCombBorder  = oTextForm.GetCombBorder();
-		var nCombBorderW = oCombBorder? oCombBorder.GetWidth() : 0;
-		this.private_MeasureCombForm(nCombBorderW, nCombWidth, nMaxComb, oTextForm, isKeepWidth, oTextPr, oTheme, oInfoMathText);
+		isKeepWidth = true;
+		nMaxComb = oTextFormPDF.charLimit;
+		nCombWidth = oTextFormPDF.getFormRelRect().W / nMaxComb;
+	}
+
+	if (nCombWidth && nMaxComb > 1)
+	{
+		var oCombBorder, nCombBorderW;
+		if (oTextForm)
+		{
+			oCombBorder = oTextForm.GetCombBorder();
+			nCombBorderW = oCombBorder? oCombBorder.GetWidth() : 0;
+			this.private_MeasureCombForm(nCombBorderW, nCombWidth, nMaxComb, oTextForm, isKeepWidth, oTextPr, oTheme, oInfoMathText);
+		}
+		else if (oTextFormPDF)
+		{
+			let oViewer = editor.getDocumentRenderer();
+			let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
+			if (oTextFormPDF.borderStyle == "solid" || oTextFormPDF.borderStyle == "dashed")
+				nCombBorderW = oTextFormPDF.private_getMarginsByBorder().left * g_dKoef_pix_to_mm / scaleCoef;
+			else
+				nCombBorderW = 0;
+			this.private_MeasureCombForm(nCombBorderW, nCombWidth, nMaxComb, oTextFormPDF, isKeepWidth, oTextPr, oTheme, oInfoMathText);
+		}
 	}
 	else if (this.RecalcInfo.Measure)
 	{
@@ -12876,6 +12898,15 @@ ParaRun.prototype.GetTextForm = function()
 		return null;
 
 	return oTextFormPr;
+};
+ParaRun.prototype.GetTextFormPDF = function()
+{
+	let oPara = this.GetParagraph();
+	let oParaParent = oPara.GetParent();
+	if (oParaParent && oParaParent.ParentPDF)
+		return oParaParent.ParentPDF;
+
+	return null;
 };
 ParaRun.prototype.IsInCheckBox = function()
 {

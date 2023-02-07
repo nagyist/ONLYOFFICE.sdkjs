@@ -1465,8 +1465,12 @@ NumFormat.prototype =
             //После округления может получиться ноль,
             //но не стала перестаскивать проверку на знак сюда, т.к. для округления нужно неотриц число
 
-            if(this.bDateTime === true)
-				res.date = this.parseDate(number);
+            if(this.bDateTime === true) {
+				if (editor && editor.getDocumentRenderer())
+					res.date = this.parseDatePDF(number);
+				else
+					res.date = this.parseDate(number);
+			}
         }
         return res;
     },
@@ -1520,6 +1524,79 @@ NumFormat.prototype =
 				year = stDate.getUTCFullYear();
 			}
 			else if(numberAbs < 60)
+			{
+				stDate = new Date(Date.UTC(1899,11,31,0,0,0));
+				if(d.val)
+					stDate.setUTCDate( stDate.getUTCDate() + d.val );
+				day = stDate.getUTCDate();
+				dayWeek = ( stDate.getUTCDay() > 0) ? stDate.getUTCDay() - 1 : 6;
+				month = stDate.getUTCMonth();
+				year = stDate.getUTCFullYear();
+			}
+			else
+			{
+				stDate = new Date(Date.UTC(1899,11,30,0,0,0));
+				if(d.val)
+					stDate.setUTCDate( stDate.getUTCDate() + d.val );
+				day = stDate.getUTCDate();
+				dayWeek = stDate.getUTCDay();
+				month = stDate.getUTCMonth();
+				year = stDate.getUTCFullYear();
+			}
+		}
+        return {d: day, month: month, year: year, dayWeek: dayWeek, hour: h.val, min: min.val, sec: s.val, ms: ms.val, countDay: d.val };
+	},
+	// used for pdf forms
+	parseDatePDF : function(number)
+	{
+        var d = {val: 0, coeff: 1}, h = {val: 0, coeff: 24},
+            min = {val: 0, coeff: 60}, s = {val: 0, coeff: 60}, ms = {val: 0, coeff: 1000};
+        //number is negative in case of bDate1904
+        var numberAbs = number;
+        var tmp = numberAbs;
+        var ttimes = [d, h, min, s, ms];
+        for(var i = 0; i < 4; i++)
+        {
+            var v = tmp*ttimes[i].coeff;
+            ttimes[i].val = Math.floor(v);
+            tmp = v - ttimes[i].val;
+        }
+        ms.val = Math.round(tmp*1000);
+        for(i = 4; i > 0 && (ttimes[i].val === ttimes[i].coeff); i--)
+        {
+            ttimes[i].val = 0;
+            ttimes[i-1].val++;
+        }
+        var stDate, day, month, year, dayWeek;
+		if(AscCommon.bDate1904)
+		{
+			stDate = new Date(Date.UTC(1904,0,1,0,0,0));
+			if(d.val)
+				stDate.setUTCDate( stDate.getUTCDate() + d.val );
+			day = stDate.getUTCDate();
+			dayWeek = stDate.getUTCDay();
+			month = stDate.getUTCMonth();
+			year = stDate.getUTCFullYear();
+		}
+		else
+		{
+			if(numberAbs === 60)
+			{
+				day = 29;
+				month = 1;
+				year = 1900;
+				dayWeek = 3;
+			}
+			else if(numberAbs === 0)
+			{
+				//TODO необходимо использовать cDate везде
+				stDate = new Asc.cDate(Date.UTC(1899,11,31,0,0,0));
+				day = stDate.getUTCDate();
+				dayWeek = ( stDate.getUTCDay() > 0) ? stDate.getUTCDay() - 1 : 6;
+				month = stDate.getUTCMonth();
+				year = stDate.getUTCFullYear();
+			}
+			else if(Math.abs(numberAbs) < 60)
 			{
 				stDate = new Date(Date.UTC(1899,11,31,0,0,0));
 				if(d.val)
@@ -1926,7 +2003,7 @@ NumFormat.prototype =
         {
             if(true === this.bDateTime)
             {
-                if(this.isInvalidDateValue(number))
+                if(this.isInvalidDateValue(number) && (editor == null || editor.getDocumentRenderer() == null))
                 {
                     var oNewFont = new AscCommonExcel.Font();
 					oNewFont.repeat = true;
@@ -4157,6 +4234,240 @@ FormatParser.prototype =
         }
 		return res;
 	},
+	parseDatePDF: function (value, cultureInfo)
+	{
+		var res = null;
+		var match = [];
+		var sCurValue = null;
+		var oCurDataType = null;
+		var oPrevType = null;
+		var bAmPm = false;
+		var bMonth = false;
+		var bError = false;
+		var oDataTypes = {letter: {id: 0, min: 2, max: 9}, digit: {id: 1, min: 1, max: 4}, delimiter: {id: 2, min: 1, max: 1}, space: {id: 3, min: null, max: null}};
+		var valueLower = value.toLowerCase();
+		for(var i = 0, length = value.length; i < length; i++)
+		{
+		    var sChar = value[i];
+		    var oDataType = null;
+		    if("0" <= sChar && sChar <= "9")
+		        oDataType = oDataTypes.digit;
+		    else if(" " == sChar)
+		        oDataType = oDataTypes.space;
+		    else if ("/" == sChar || "-" == sChar || ":" == sChar || cultureInfo.DateSeparator == sChar || cultureInfo.TimeSeparator == sChar)
+		        oDataType = oDataTypes.delimiter;
+		    else
+		        oDataType = oDataTypes.letter;
+			    
+		    if(null != oDataType)
+		    {
+		        if(null == oCurDataType)
+		            sCurValue = sChar;
+		        else
+		        {
+		            if(oCurDataType == oDataType)
+		            {
+		                if(null == oCurDataType.max || sCurValue.length < oCurDataType.max)
+		                    sCurValue += sChar;
+		                else
+		                    bError = true;
+		            }
+		            else
+		            {
+		                if (null == oCurDataType.min || sCurValue.length >= oCurDataType.min) {
+		                    if (oDataTypes.space != oCurDataType) {
+		                        var oNewElem = { val: sCurValue, type: oCurDataType, month: null, am: false, pm: false, date: false, time: false };
+		                        if (oDataTypes.digit == oCurDataType)
+		                            oNewElem.val = oNewElem.val - 0;
+		                        match.push(oNewElem);
+		                    }
+		                    sCurValue = sChar;
+		                    oPrevType = oCurDataType;
+		                }
+		                else
+		                    bError = true;
+		            }
+		        }
+		        oCurDataType = oDataType;
+		    }
+		    else
+		        bError = true;
+		    if(oDataTypes.letter == oDataType){
+		        var oNewElem = { val: sCurValue, type: oCurDataType, month: null, am: false, pm: false, date: false, time: false };
+		        var bAm = false;
+		        var bPm = false;
+		        if (!bAmPm && ((bAm = this.strcmp(valueLower, "am", i, 2)) || (bPm = this.strcmp(valueLower, "pm", i, 2)))) {
+		            bAmPm = true;
+		            oNewElem.am = bAm;
+		            oNewElem.pm = bPm;
+		            oNewElem.time = true;
+		            match.push(oNewElem);
+		            i += 2 - 1;
+		            if (oPrevType != oDataTypes.space)
+		                bError = true;
+		        }
+		        else if (!bMonth) {
+		            bMonth = true;
+		            var aArraysToCheck = [{ arr: cultureInfo.AbbreviatedMonthNames, format: "mmm" }, { arr: cultureInfo.MonthNames, format: "mmmm" }];
+		            var bFound = false;
+		            for (var index in aArraysToCheck) {
+		                var aArrayTemp = aArraysToCheck[index];
+		                for (var j = 0, length2 = aArrayTemp.arr.length; j < length2; j++) {
+		                    var sCmpVal = aArrayTemp.arr[j].toLowerCase();
+		                    var sCmpValCrop = sCmpVal.replace(/\./g, "");
+		                    var bCrop = false;
+		                    if (this.strcmp(valueLower, sCmpVal, i, sCmpVal.length) || (bCrop = (sCmpVal != sCmpValCrop && this.strcmp(valueLower, sCmpValCrop, i, sCmpValCrop.length)))) {
+		                        bFound = true;
+		                        oNewElem.month = { val: j + 1, format: aArrayTemp.format };
+		                        oNewElem.date = true;
+		                        if (bCrop)
+		                            i += sCmpValCrop.length - 1;
+		                        else
+		                            i += sCmpVal.length - 1;
+		                        break;
+		                    }
+		                }
+		                if (bFound)
+		                    break;
+		            }
+		            //ничего кроме имени месяца больше быть не может
+		            if (bFound)
+		                match.push(oNewElem);
+		            else
+		                bError = true;
+		        }
+		        else
+		            bError = true;
+		        oCurDataType = null;
+		        sCurValue = null;
+		    }
+			if (bError)
+			{
+				match = null;
+				break;
+			}
+		}
+		if (null != match && null != sCurValue) {
+		    if (oDataTypes.space != oCurDataType) {
+		        var oNewElem = { val: sCurValue, type: oCurDataType, month: null, am: false, pm: false, date: false, time: false };
+		        if (oDataTypes.digit == oCurDataType)
+		            oNewElem.val = oNewElem.val - 0;
+		        match.push(oNewElem);
+		    }
+		}
+		if(null != match && match.length > 0)
+		{
+		    var oParsedDate = this._parseDateFromArray(match, oDataTypes, cultureInfo);
+			if(null != oParsedDate)
+			{
+				var d = oParsedDate.d;
+				var m = oParsedDate.m;
+				var y = oParsedDate.y;
+				var h = oParsedDate.h;
+				var min = oParsedDate.min;
+				var s = oParsedDate.s;
+				var am = oParsedDate.am;
+				var pm = oParsedDate.pm;
+				var sDateFormat = oParsedDate.sDateFormat;
+				
+				var bDate = false;
+				var bTime = false;
+				var nDay;
+				var nMounth;
+				var nYear;
+				if(AscCommon.bDate1904)
+				{
+					nDay = 1;
+					nMounth = 0;
+					nYear = 1904;
+				}
+				else
+				{
+					nDay = 31;
+					nMounth = 11;
+					nYear = 1899;
+				}
+				var nHour = 0;
+				var nMinute = 0;
+				var nSecond = 0;
+				var dValue = 0;
+				var bValidDate = true;
+				if(null != m && (null != d || null != y))
+				{
+					bDate = true;
+					var oNowDate;
+					if(null != d)
+						nDay = d - 0;
+					else
+						nDay = 1;
+					nMounth = m - 1;
+					if(null != y)
+						nYear = y - 0;
+					else
+                    {
+                        oNowDate = new Date();
+						nYear = oNowDate.getFullYear();
+                    }
+					
+					//проверяем дату на валидность
+					bValidDate = this.isValidDatePDF(nYear, nMounth, nDay);
+				}
+				if(null != h)
+				{
+					bTime = true;
+					nHour = h - 0;
+					if (am || pm)
+					{
+						if(nHour <= 23)
+						{
+							//переводим 24
+							nHour = nHour % 12;
+							if(pm)
+								nHour += 12;
+						}
+						else
+							bValidDate = false;
+					}
+					if(null != min)
+					{
+						nMinute = min - 0;
+						if(nMinute > 59)
+							bValidDate = false;
+					}
+					if(null != s)
+					{
+						nSecond = s - 0;
+						if(nSecond > 59)
+							bValidDate = false;
+					}
+				}
+				if(true == bValidDate && (true == bDate || true == bTime))
+				{
+					dValue = (Date.UTC(nYear,nMounth,nDay,nHour,nMinute,nSecond) - Date.UTC(1899,11,30,0,0,0)) / (86400 * 1000);
+					var sFormat;
+					if(true == bDate && true == bTime)
+					{
+						sFormat = sDateFormat + " h:mm:ss";
+						if (am || pm)
+							sFormat += " AM/PM";
+					}
+					else if(true == bDate)
+						sFormat = sDateFormat;
+					else
+					{
+						if(dValue > 1)
+							sFormat = "[h]:mm:ss";
+						else if (am || pm)
+							sFormat = "h:mm:ss AM/PM";
+						else
+							sFormat = "h:mm:ss";
+					}
+					res = {format: sFormat, value: dValue, bDateTime: true, bDate: bDate, bTime: bTime, bPercent: false, bCurrency: false};
+				}
+            }
+        }
+		return res;
+	},
 	isValidDate : function(nYear, nMounth, nDay)
 	{
 		if(nYear < 1900 && !(1899 === nYear && 11 == nMounth && 31 == nDay))
@@ -4171,6 +4482,13 @@ FormatParser.prototype =
 				return true;
 		}
 		return false;
+	},
+	isValidDatePDF : function(nYear, nMounth, nDay)
+	{
+		if(nMounth < 0 || nMounth > 11)
+			return false;
+		else if(this.isValidDay(nYear, nMounth, nDay))
+			return true;
 	},
 	isValidDay : function(nYear, nMounth, nDay){
 		if(this.isLeapYear(nYear))

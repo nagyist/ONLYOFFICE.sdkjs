@@ -32,7 +32,11 @@
 
 (function(){
 
-    // field types
+    //------------------------------------------------------------------------------------------------------------------
+	//
+	// Internal
+	//
+	//------------------------------------------------------------------------------------------------------------------
 
     let FIELDS_HIGHLIGHT = {
         r: 201, 
@@ -49,6 +53,24 @@
         signature:      "signature",
         text:           "text"
     }
+
+    let ACTION_TRIGGER_TYPES = {
+        MouseUp:    0,
+        MouseDown:  1,
+        MouseEnter: 2,
+        MouseExit:  3,
+        OnFocus:    4,
+        OnBlur:     5,
+        Keystroke:  6,
+        Validate:   7,
+        Calculate:  8,
+        Format:     9
+    }
+    //------------------------------------------------------------------------------------------------------------------
+	//
+	// pdf api types
+	//
+	//------------------------------------------------------------------------------------------------------------------
     
     let ALIGN_TYPE = {
         left:   "left",
@@ -172,6 +194,7 @@
 
     const MAX_TEXT_SIZE = 32767;
 
+    // freeze objects
     Object.freeze(FIELDS_HIGHLIGHT);
     Object.freeze(FIELD_TYPE);
     Object.freeze(ALIGN_TYPE);
@@ -186,6 +209,7 @@
     Object.freeze(highlight);
     Object.freeze(VALID_ROTATIONS);
     Object.freeze(style);
+    Object.freeze(ACTION_TRIGGER_TYPES);
 
     // base form class with attributes and method for all types of forms
 	function CBaseField(sName, sType, nPage, aRect)
@@ -266,7 +290,6 @@
             enumerable: false
         },
 
-
         // common
         "borderStyle": {
             set(sValue) {
@@ -274,6 +297,10 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._borderStyle = sValue;
+                        field._wasChanged = true;
+                        field._content.GetElement(0).Content.forEach(function(run) {
+                            run.RecalcInfo.Measure = true;
+                        });
                     });
 
                     editor.getDocumentRenderer()._paintForms();
@@ -341,6 +368,10 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._lineWidth = nValue;
+                        field._wasChanged = true;
+                        field._content.GetElement(0).Content.forEach(function(run) {
+                            run.RecalcInfo.Measure = true;
+                        });
                     });
 
                     editor.getDocumentRenderer()._paintForms();
@@ -352,12 +383,10 @@
         },
         "borderWidth": {
             set(nValue) {
-                nValue = parseInt(nValue);
-                if (!isNaN(nValue))
-                    this._borderWidth = nValue;
+                this.lineWidth = nValue;
             },
             get() {
-                return this._borderWidth;
+                return this.lineWidth;
             }
         },
         "name": {
@@ -858,6 +887,19 @@
                 oCtx.lineTo(X + nWidth, Y + nHeight);
                 oCtx.stroke();
                 break;
+        }
+
+        // draw comb cells
+        if ((this._borderStyle == "solid" || this._borderStyle == "dashed") && (this.type == "text" && this._comb == true)) {
+            let nCombWidth = nWidth / this._charLimit;
+            let nIndentX = nCombWidth;
+
+            for (let i = 0; i < this._charLimit - 1; i++) {
+                oCtx.moveTo(X + nIndentX, Y);
+                oCtx.lineTo(X + nIndentX, Y + nHeight);
+                oCtx.stroke();
+                nIndentX += nCombWidth;
+            }
         }
     };
 
@@ -1500,13 +1542,22 @@
         this._richValue         = [];
         this._textFont          = "ArialMT";
         this._fileSelect        = false;
-        
+
+        this._actions           = new CFormActions();
+
         // internal
         TurnOffHistory();
         this._content = new AscWord.CDocumentContent(null, editor.WordControl.m_oDrawingDocument, 0, 0, 0, 0, undefined, undefined, false);
         this._content.ParentPDF = this;
         this._content.SetUseXLimit(false);
 
+        // content for formatting value
+        // Note: draw this content instead of main if form has a "format" action
+        this._contentFormat = new AscWord.CDocumentContent(null, editor.WordControl.m_oDrawingDocument, 0, 0, 0, 0, undefined, undefined, false);
+        this._contentFormat.ParentPDF = this;
+        this._contentFormat.SetUseXLimit(false);
+
+        this._formatInternal = new AscWord.CTextFormFormat();
         this._scrollInfo = null;
     }
     CTextField.prototype = Object.create(CBaseField.prototype);
@@ -1550,7 +1601,7 @@
                     nValue = Math.round(nValue);
                     if (this._charLimit != nValue) {
                         let aChars = [];
-                        let sText = this._content.GetElement(0).GetText();
+                        let sText = this._content.GetElement(0).GetText({ParaEndToSpace: false});
                         for (let i = 0; i < sText.length; i++) {
                             aChars.push(sText[i].charCodeAt(0));
                         }
@@ -1576,13 +1627,19 @@
                     aFields.forEach(function(field) {
                         field._comb = true;
                         field._doNotScroll = true;
+                        field._wasChanged = true;
                     });
-                    
+                    editor.getDocumentRenderer()._paintForms();
                 }
                 else if (bValue === false) {
                     aFields.forEach(function(field) {
                         field._comb = false;
+                        field._wasChanged = true;
+                        field._content.GetElement(0).Content.forEach(function(run) {
+                            run.RecalcInfo.Measure = true;
+                        });
                     });
+                    editor.getDocumentRenderer()._paintForms();
                 }
             },
             get() {
@@ -1769,6 +1826,14 @@
         let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm / scaleCoef;
         let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm / scaleCoef;
         let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm / scaleCoef;
+
+        let oContentToDraw = this._actions.Format && oViewer.mouseDownFieldObject != this ? this._contentFormat : this._content;
+
+        if ((this.borderStyle == "solid" || this.borderStyle == "dashed") && 
+        this._comb == true && this._charLimit > 1) {
+            contentX = (X) * g_dKoef_pix_to_mm / scaleCoef;
+            contentXLimit = (X + nWidth) * g_dKoef_pix_to_mm / scaleCoef;
+        }
         
         if (this.multiline == false) {
             // выставляем текст посередине
@@ -1783,21 +1848,22 @@
 
         if (contentX != this._oldContentPos.X || contentY != this._oldContentPos.Y ||
         contentXLimit != this._oldContentPos.XLimit) {
-            this._content.X      = this._oldContentPos.X        = contentX;
-            this._content.Y      = this._oldContentPos.Y        = contentY;
-            this._content.XLimit = this._oldContentPos.XLimit   = contentXLimit;
-            this._content.YLimit = this._oldContentPos.YLimit   = 20000;
+            this._content.X      = this._contentFormat.X = this._oldContentPos.X = contentX;
+            this._content.Y      = this._contentFormat.Y = this._oldContentPos.Y = contentY;
+            this._content.XLimit = this._contentFormat.XLimit = this._oldContentPos.XLimit = contentXLimit;
+            this._content.YLimit = this._contentFormat.YLimit = this._oldContentPos.YLimit = 20000;
             this._content.Recalculate_Page(0, true);
+            this._contentFormat.Recalculate_Page(0, true);
         }
         else if (true) {
-            this._content.Content.forEach(function(element) {
+            oContentToDraw.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
         }
         
         if (this._multiline == true) {
-            this._content.ResetShiftView();
-            this._content.ShiftView(this._curShiftView.x, this._curShiftView.y);
+            oContentToDraw.ResetShiftView();
+            oContentToDraw.ShiftView(this._curShiftView.x, this._curShiftView.y);
         }
 
         if (this._needShiftContentView)
@@ -1811,13 +1877,13 @@
 		oGraphics.m_oFontManager = AscCommon.g_fontManager;
 		oGraphics.endGlobalAlphaColor = [255, 255, 255];
         oGraphics.transform(1, 0, 0, 1, 0, 0);
-        oGraphics.AddClipRect(this._content.X, this._content.Y, this._content.XLimit - this._content.X, contentYLimit - contentY);
+        oGraphics.AddClipRect(oContentToDraw.X, oContentToDraw.Y, oContentToDraw.XLimit - oContentToDraw.X, contentYLimit - contentY);
 
-        this._content.Draw(0, oGraphics);
+        oContentToDraw.Draw(0, oGraphics);
 
         // redraw target cursor if field is selected
-        if (oViewer.mouseDownFieldObject == this && this._content.IsSelectionUse() == false && oViewer.fieldFillingMode)
-            this._content.RecalculateCurPos();
+        if (oViewer.mouseDownFieldObject == this && oContentToDraw.IsSelectionUse() == false && oViewer.fieldFillingMode)
+            oContentToDraw.RecalculateCurPos();
         
         oGraphics.RemoveClip();
         this._pageIndX = pageIndX;
@@ -1842,7 +1908,6 @@
 
         this._wasChanged = false;
     };
-
     CTextField.prototype.onMouseDown = function(x, y, e) {
         let oViewer = editor.getDocumentRenderer();
                 
@@ -1884,7 +1949,6 @@
 
         this._content.Selection_SetEnd(X, Y, 0, e);
     };
-
     CTextField.prototype.private_moveCursorLeft = function(isShiftKey, isCtrlKey)
     {
         this._content.MoveCursorLeft(isShiftKey, isCtrlKey);
@@ -1909,6 +1973,14 @@
     };
     CTextField.prototype.EnterText = function(aChars)
     {
+        if (this._actions.Keystroke) {
+            this._doc.enteredFormChars = aChars;
+            this._doc.activeForm = this;
+            let isCanEnter = eval(this._actions.Keystroke.script);
+            if (isCanEnter == false)
+                return;
+        }
+        
         if (aChars.length > 0)
             CreateNewHistoryPointForField(this);
 
@@ -1956,17 +2028,37 @@
     CTextField.prototype.private_applyValueForAll = function(bUnionPoints) {
         let aFields = this._doc.getWidgetsByName(this.name);
         let oThisPara = this._content.GetElement(0);
-
+        
         if (bUnionPoints == undefined)
             bUnionPoints = true;
 
+        TurnOffHistory();
+
+        if (this._actions.Format) {
+            this._doc.activeForm = this;
+            let isValidFormat = eval(this._actions.Format.script);
+            // проверка для форматов, не ограниченных на какие-либо символы своей функцией keystroke
+            // например для даты, маски
+            if (isValidFormat === false && this.value != "") {
+                // отменяем все изменения сделанные в форме, т.к. не подходят формату 
+                this.private_UnionLastHistoryPoints();
+                let nPoint = AscCommon.History.Index;
+                AscCommon.History.Undo();
+                this._wasChanged = true;
+                
+                // удаляем точки
+                AscCommon.History.Points.length = nPoint;
+
+                // to do выдать предупреждение, что строка не подходит по формату
+                return;
+            }
+        }
+            
         if (bUnionPoints)
             this.private_UnionLastHistoryPoints();
 
         if (aFields.length == 1)
             this._needApplyToAll = false;
-
-        TurnOffHistory();
 
         for (let i = 0; i < aFields.length; i++) {
             aFields[i]._content.GetElement(0).MoveCursorToStartPos();
@@ -1974,12 +2066,30 @@
             if (aFields[i] == this)
                 continue;
 
-            aFields[i]._currentValueIndices = this._currentValueIndices;
-
             let oFieldPara = aFields[i]._content.GetElement(0);
             let oThisRun, oFieldRun;
             for (let nItem = 0; nItem < oThisPara.Content.length - 1; nItem++) {
                 oThisRun = oThisPara.Content[nItem];
+                oFieldRun = oFieldPara.Content[nItem];
+                oFieldRun.ClearContent();
+
+                for (let nRunPos = 0; nRunPos < oThisRun.Content.length; nRunPos++) {
+                    oFieldRun.AddToContent(nRunPos, AscCommon.IsSpace(oThisRun.Content[nRunPos].Value) ? new AscWord.CRunSpace(oThisRun.Content[nRunPos].Value) : new AscWord.CRunText(oThisRun.Content[nRunPos].Value));
+                }
+            }
+
+            aFields[i]._wasChanged = true;
+        }
+
+        let oParaFromFormat = this._contentFormat.GetElement(0);
+        for (let i = 0; i < aFields.length; i++) {
+            if (aFields[i] == this)
+                continue;
+
+            let oFieldPara = aFields[i]._contentFormat.GetElement(0);
+            let oThisRun, oFieldRun;
+            for (let nItem = 0; nItem < oParaFromFormat.Content.length - 1; nItem++) {
+                oThisRun = oParaFromFormat.Content[nItem];
                 oFieldRun = oFieldPara.Content[nItem];
                 oFieldRun.ClearContent();
 
@@ -2120,6 +2230,8 @@
                 this._textFont          = aFields[i]._textFont;
                 this._borderStyle       = aFields[i]._borderStyle;
 
+                this._actions = aFields[i]._actions ? aFields[i]._actions.Copy(this) : null;
+
                 if (this._multiline)
                     this._content.SetUseXLimit(true);
 
@@ -2131,11 +2243,77 @@
                     oPara.Internal_Content_Add(nPos, oParaToCopy.GetElement(nPos).Copy());
                 }
                 oPara.CheckParaEnd();
+
+                // format content
+                oPara = this._contentFormat.GetElement(0);
+                oParaToCopy = aFields[i]._contentFormat.GetElement(0);
+
+                oPara.ClearContent();
+                for (var nPos = 0; nPos < oParaToCopy.Content.length - 1; nPos++) {
+                    oPara.Internal_Content_Add(nPos, oParaToCopy.GetElement(nPos).Copy());
+                }
+                oPara.CheckParaEnd();
                 
                 break;
             }
         }
     };
+
+    // pdf api methods
+
+    /**
+	 * A string that sets the trigger for the action. Values are:
+	 * @typedef {"MouseUp" | "MouseDown" | "MouseEnter" | "MouseExit" | "OnFocus" | "OnBlur" | "Keystroke" | "Validate" | "Calculate" | "Format"} cTrigger
+	 * For a list box, use the Keystroke trigger for the Selection Change event.
+     * /
+    
+    /**
+	 * Sets the JavaScript action of the field for a given trigger.
+     * Note: This method will overwrite any action already defined for the chosen trigger.
+	 * @memberof CTextField
+     * @param {cTrigger} cTrigger - A string that sets the trigger for the action.
+     * @param {string} cScript - The JavaScript code to be executed when the trigger is activated.
+	 * @typeofeditors ["PDF"]
+	 */
+    CTextField.prototype.setAction = function(cTrigger, cScript) {
+        let aFields = this._doc.getWidgetsByName(this.name);
+        
+        aFields.forEach(function(field) {
+            switch (cTrigger) {
+                case "MouseUp":
+                    ACTION_TRIGGER_TYPES.MouseUp;
+                    break;
+                case "MouseDown":
+                    ACTION_TRIGGER_TYPES.MouseDown;
+                    break;
+                case "MouseEnter":
+                    ACTION_TRIGGER_TYPES.MouseEnter;
+                    break;
+                case "MouseExit":
+                    ACTION_TRIGGER_TYPES.MouseExit;
+                    break;
+                case "OnFocus":
+                    ACTION_TRIGGER_TYPES.OnFocus;
+                    break;
+                case "OnBlur":
+                    ACTION_TRIGGER_TYPES.OnBlur;
+                    break;
+                case "Keystroke":
+                    field._actions.Keystroke = new CFormAction(ACTION_TRIGGER_TYPES.Keystroke, cScript);
+                    break;
+                case "Validate":
+                    ACTION_TRIGGER_TYPES.Validate;
+                    break;
+                case "Calculate":
+                    ACTION_TRIGGER_TYPES.Calculate;
+                    break;
+                case "Format":
+                    field._actions.Format = new CFormAction(ACTION_TRIGGER_TYPES.Format, cScript);
+                    field._formatInternal.SetDigit();
+                    break;
+            }
+        });
+    }
 
     function CBaseListField(sName, sType, nPage, aRect)
     {
@@ -2545,6 +2723,8 @@
 
         if (aChars.length > 0)
             CreateNewHistoryPointForField(this);
+        else
+            return;
 
         let oPara = this._content.GetElement(0);
         if (this._content.IsSelectionUse()) {
@@ -3293,6 +3473,52 @@
         });
     }
 
+    function CFormActions() {
+        this.MouseUp = null; 
+        this.MouseDown = null; 
+        this.MouseEnter = null; 
+        this.MouseExit = null; 
+        this.OnFocus = null; 
+        this.OnBlur = null; 
+        this.Keystroke = null; 
+        this.Validate = null; 
+        this.Calculate = null; 
+        this.Format = null;
+    }
+    CFormActions.prototype.Copy = function() {
+        let newObj = new CFormActions();
+        if (this.MouseUp != null)
+            newObj.MouseUp = this.MouseUp.Copy(); 
+        if (this.MouseDown != null)
+            newObj.MouseDown = this.MouseDown.Copy(); 
+        if (this.MouseEnter != null)
+            newObj.MouseEnter = this.MouseEnter.Copy(); 
+        if (this.MouseExit != null)
+            newObj.MouseExit = this.MouseExit.Copy(); 
+        if (this.OnFocus != null)
+            newObj.OnFocus = this.OnFocus.Copy(); 
+        if (this.OnBlur != null)
+            newObj.OnBlur = this.OnBlur.Copy(); 
+        if (this.Keystroke != null)
+            newObj.Keystroke = this.Keystroke.Copy(); 
+        if (this.Validate != null)
+            newObj.Validate = this.Validate.Copy(); 
+        if (this.Calculate != null)
+            newObj.Calculate = this.Calculate.Copy(); 
+        if (this.Format != nul)
+            newObj.Format = this.Format.Copy();
+
+        return newObj;
+    }
+
+    function CFormAction(type, sScript) {
+        this.type = type;
+        this.script = sScript;
+    }
+    CFormAction.prototype.Copy = function() {
+        return new CFormAction(this.type, this.script);
+    }
+    
     CBaseField.prototype.CheckFormViewWindow = function()
     {
         let oParagraph  = this._content.GetElement(this._content.CurPos.ContentPos);
@@ -3451,7 +3677,555 @@
                 }
         }
     };
+
+    // for format
+
+    /**
+	 * Convert field value to specific number format.
+	 * @memberof CTextField
+     * @param {number} nDec = number of decimals
+     * @param {number} sepStyle = separator style 0 = 1,234.56 / 1 = 1234.56 / 2 = 1.234,56 / 3 = 1234,56 / 4 = 1'234.56
+     * @param {number} negStyle = 0 black minus / 1 red minus / 2 parens black / 3 parens red /
+     * @param {number} currStyle = reserved
+     * @param {string} strCurrency = string of currency to display
+     * @param {boolean} bCurrencyPrepend = true = pre pend / false = post pend
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFNumber_Format(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
+        let oCurForm = oDoc.activeForm;
+
+        let oInfoObj = {
+            decimalPlaces: nDec,
+            separator: true,
+            symbol: null,
+            type: Asc.c_oAscNumFormatType.Number
+        }
+
+        let oCultureInfo = {};
+        Object.assign(oCultureInfo, AscCommon.g_aCultureInfos[oInfoObj.symbol]);
+        switch (sepStyle) {
+            case 0:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = ",";
+                break;
+            case 1:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = "";
+                break;
+            case 2:
+                oCultureInfo.NumberDecimalSeparator = ",";
+                oCultureInfo.NumberGroupSeparator = ".";
+                break;
+            case 3:
+                oCultureInfo.NumberDecimalSeparator = ",";
+                oCultureInfo.NumberGroupSeparator = "";
+                break;
+            case 4:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = "'";
+                break;
+        }
+
+        oCultureInfo.NumberGroupSizes = [3];
+        
+        let aFormats = AscCommon.getFormatCells(oInfoObj);
+        let oNumFormat = AscCommon.oNumFormatCache.get(aFormats[0]);
+        let oTargetRun = oCurForm._contentFormat.GetElement(0).GetElement(0);
+
+        let sCurValue = oCurForm.value;
+        if (sCurValue == "") {
+            oTargetRun.ClearContent();
+            return;
+        }
+            
+        let sRes = oNumFormat.format(sCurValue, 0, AscCommon.gc_nMaxDigCount, true, oCultureInfo, true)[0].text;
+
+        if (bCurrencyPrepend)
+            sRes = strCurrency + sRes;
+        else
+            sRes = sRes + strCurrency;
+
+        if (sRes.indexOf("-") != - 1) {
+            sRes = sRes.replace("-", "");
+            switch (negStyle) {
+                case 0:
+                    oTargetRun.Pr.Color = private_GetColor(255, 255, 255, true);
+                    break;
+                case 1:
+                    oTargetRun.Pr.Color = private_GetColor(255, 0, 0, false);
+                    break;
+                case 2:
+                    oTargetRun.Pr.Color = private_GetColor(255, 255, 255, true);
+                    sRes = "(" + sRes + ")";
+                    break;
+                case 3:
+                    oTargetRun.Pr.Color = private_GetColor(255, 0, 0, false);
+                    sRes = "(" + sRes + ")";
+                    break;
+            }
+        }
+        else {
+            oTargetRun.Pr.Color = private_GetColor(255, 255, 255, true);
+        }
+        
+        oTargetRun.RecalcInfo.TextPr = true
+        oTargetRun.ClearContent();
+        oTargetRun.AddText(sRes);
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {number} nDec = number of decimals
+     * @param {number} sepStyle = separator style 0 = 1,234.56 / 1 = 1234.56 / 2 = 1.234,56 / 3 = 1234,56 / 4 = 1'234.56
+     * @param {number} negStyle = 0 black minus / 1 red minus / 2 parens black / 3 parens red /
+     * @param {number} currStyle = reserved
+     * @param {string} strCurrency = string of currency to display
+     * @param {boolean} bCurrencyPrepend = true = pre pend / false = post pend
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
+        let oCurForm = oDoc.activeForm;
+        let aEnteredChars = oDoc.enteredFormChars;
+
+        if (!oCurForm)
+            return true;
+
+        function isValidNumber(str) {
+            return !isNaN(str) && isFinite(str);
+        }
+
+        let isHasSelectedText = oCurForm._content.IsSelectionUse() && oCurForm._content.IsSelectionEmpty() == false;
+
+        let oPara = oCurForm._content.GetElement(0);
+        let oTempPara = oPara.Copy(null, oPara.DrawingDocument);
+        let oSelState = oPara.Get_SelectionState2();
+        oTempPara.Set_SelectionState2(oSelState);
+        if (isHasSelectedText) {
+            oTempPara.Remove(-1, true, false, true);
+        }
+
+        for (let index = 0; index < aEnteredChars.length; ++index) {
+            let codePoint = aEnteredChars[index];
+            oTempPara.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
+        }
+
+        let sResultText = oTempPara.GetText({ParaEndToSpace: false});
+
+        // разделитель дробной части, который можно ввести
+        switch (sepStyle) {
+            case 0:
+            case 1:
+            case 4:
+                if (sResultText.indexOf(",") != -1)
+                    return false;
+
+                if (isValidNumber(sResultText) == false)
+                    return false;
+                break;
+            case 2:
+            case 3:
+                if (sResultText.indexOf(".") != -1)
+                    return false;
+
+                sResultText = sResultText.replace(/\,/g, ".");
+                if (isValidNumber(sResultText) == false)
+                    return false;
+                break;
+        }
+
+        return true;
+    }
+
+    /**
+	 * Convert field value to specific percent format.
+	 * @memberof CTextField
+     * @param {number} nDec = number of decimals
+     * @param {number} sepStyle = separator style 0 = 1,234.56 / 1 = 1234.56 / 2 = 1.234,56 / 3 = 1234,56 / 4 = 1'234.56
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFPercent_Format(nDec, sepStyle) {
+        let oCurForm = oDoc.activeForm;
+
+        let oInfoObj = {
+            decimalPlaces: nDec,
+            separator: true,
+            symbol: null,
+            type: Asc.c_oAscNumFormatType.Number
+        }
+
+        let oCultureInfo = {};
+        Object.assign(oCultureInfo, AscCommon.g_aCultureInfos[oInfoObj.symbol]);
+        switch (sepStyle) {
+            case 0:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = ",";
+                break;
+            case 1:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = "";
+                break;
+            case 2:
+                oCultureInfo.NumberDecimalSeparator = ",";
+                oCultureInfo.NumberGroupSeparator = ".";
+                break;
+            case 3:
+                oCultureInfo.NumberDecimalSeparator = ",";
+                oCultureInfo.NumberGroupSeparator = "";
+                break;
+            case 4:
+                oCultureInfo.NumberDecimalSeparator = ".";
+                oCultureInfo.NumberGroupSeparator = "'";
+                break;
+        }
+        oCultureInfo.NumberGroupSizes = [3];
+
+        let aFormats = AscCommon.getFormatCells(oInfoObj);
+        let oNumFormat = AscCommon.oNumFormatCache.get(aFormats[0]);
+        let oTargetRun = oCurForm._contentFormat.GetElement(0).GetElement(0);
+
+        let sCurValue = oCurForm.value;
+        sCurValue.replace(",", ".");
+        if (sCurValue == "")
+            sCurValue = 0;
+            
+        sCurValue = (parseFloat(sCurValue) * 100).toString();
+        let sRes = oNumFormat.format(sCurValue, 0, AscCommon.gc_nMaxDigCount, true, oCultureInfo, true)[0].text;
+        sRes = sRes + "%";
+
+        oTargetRun.ClearContent();
+        oTargetRun.AddText(sRes);
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {number} nDec = number of decimals
+     * @param {number} sepStyle = separator style 0 = 1,234.56 / 1 = 1234.56 / 2 = 1.234,56 / 3 = 1234,56 / 4 = 1'234.56
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFPercent_Keystroke(nDec, sepStyle) {
+        let oCurForm = oDoc.activeForm;
+        let aEnteredChars = oDoc.enteredFormChars;
+
+        if (!oCurForm)
+            return true;
+
+        function isValidNumber(str) {
+            return !isNaN(str) && isFinite(str);
+        }
+
+        let isHasSelectedText = oCurForm._content.IsSelectionUse() && oCurForm._content.IsSelectionEmpty() == false;
+
+        let oPara = oCurForm._content.GetElement(0);
+        let oTempPara = oPara.Copy(null, oPara.DrawingDocument);
+        let oSelState = oPara.Get_SelectionState2();
+        oTempPara.Set_SelectionState2(oSelState);
+        if (isHasSelectedText) {
+            oTempPara.Remove(-1, true, false, true);
+        }
+
+        for (let index = 0; index < aEnteredChars.length; ++index) {
+            let codePoint = aEnteredChars[index];
+            oTempPara.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
+        }
+
+        let sResultText = oTempPara.GetText({ParaEndToSpace: false});
+
+        // разделитель дробной части, который можно ввести
+        switch (sepStyle) {
+            case 0:
+            case 1:
+            case 4:
+                if (sResultText.indexOf(",") != -1)
+                    return false;
+
+                if (isValidNumber(sResultText) == false)
+                    return false;
+                break;
+            case 2:
+            case 3:
+                if (sResultText.indexOf(".") != -1)
+                    return false;
+
+                sResultText = sResultText.replace(/\,/g, ".");
+                if (isValidNumber(sResultText) == false)
+                    return false;
+                break;
+        }
+
+        return true;
+    }
+
+    /**
+	 * Convert field value to specific date format.
+	 * @memberof CTextField
+     * @param {string} cFormat - date format
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFDate_Format(cFormat) {
+        let oCurForm = oDoc.activeForm;
+
+        if (cFormat.indexOf(" tt") == cFormat.length - 3)
+            cFormat = cFormat.replace(" tt", "AM/PM")
+        let oNumFormat = AscCommon.oNumFormatCache.get(cFormat);
+        oNumFormat.oNegativeFormat.bAddMinusIfNes = false;
+        
+        let oTargetRun = oCurForm._contentFormat.GetElement(0).GetElement(0);
+
+        let sCurValue = oCurForm.value;
+        let oFormatParser = AscCommon.g_oFormatParser;
+
+        let oResParsed = oFormatParser.parseDatePDF(sCurValue, AscCommon.g_aCultureInfos[9]);
+        
+        if (sCurValue == "")
+            oTargetRun.ClearContent();
+        if (!oResParsed) {
+            return false;
+        }
+
+        let sRes = oNumFormat.format(oResParsed.value, 0, AscCommon.gc_nMaxDigCount, true, undefined, true)[0].text;
+
+        oTargetRun.ClearContent();
+        oTargetRun.AddText(sRes);
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {string} cFormat - date format
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFDate_Keystroke(cFormat) {
+        return true;
+    }
+    /**
+	 * Convert field value to specific time format.
+	 * @memberof CTextField
+     * @param {number} ptf - time format
+     *  0 = 24HR_MM [ 14:30 ]
+     *  1 = 12HR_MM [ 2:30 PM ]
+     *  2 = 24HR_MM_SS [ 14:30:15 ]
+     *  3 = 12HR_MM_SS [ 2:30:15 PM ]
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFTime_Format(ptf) {
+        let oCurForm = oDoc.activeForm;
+        if (!oCurForm)
+            return;
+
+        let oCultureInfo = {};
+        Object.assign(oCultureInfo, AscCommon.g_aCultureInfos[9]);
+
+        let sFormat;
+        switch (ptf) {
+            case 0:
+                sFormat = "HH:MM";
+                break;
+            case 1:
+                sFormat = "h:MM AM/PM";
+                break;
+            case 2:
+                sFormat = "HH:MM:ss";
+                break;
+            case 3:
+                sFormat = "h:MM:ss AM/PM";
+                break;
+        }
+
+        let oNumFormat = AscCommon.oNumFormatCache.get(sFormat);
+        oNumFormat.oNegativeFormat.bAddMinusIfNes = false;
+        
+        let oTargetRun = oCurForm._contentFormat.GetElement(0).GetElement(0);
+
+        let sCurValue = oCurForm.value;
+        if (sCurValue == "")
+            oTargetRun.ClearContent();
+
+        let oFormatParser = AscCommon.g_oFormatParser;
+        let oResParsed = oFormatParser.parseDatePDF(sCurValue, AscCommon.g_aCultureInfos[9]);
+
+        if (!oResParsed) {
+            oTargetRun.ClearContent();
+            return false;
+        }
+        
+        let sRes = oNumFormat.format(oResParsed.value, 0, AscCommon.gc_nMaxDigCount, true, undefined, true)[0].text;
+
+        oTargetRun.ClearContent();
+        oTargetRun.AddText(sRes);
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {string} cFormat - date format
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFTime_Keystroke(cFormat) {
+        return true;
+    }
+    /**
+	 * Convert field value to specific special format.
+	 * @memberof CTextField
+     * @param {number} psf – psf is the type of formatting to use:
+     *  0 = zip code
+     *  1 = zip + 4
+     *  2 = phone
+     *  3 = SSN
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFSpecial_Format(psf) {
+        let oCurForm = oDoc.activeForm;
+        if (!oCurForm)
+            return;
+
+        let sFormValue = oCurForm.value.replace(/\D/g, ""); // delete all except digits
+        let sFormatValue = "";
+
+        let oTargetRun = oCurForm._contentFormat.GetElement(0).GetElement(0);
+        oTargetRun.ClearContent();
+
+        switch (psf) {
+            case 0:
+                sFormatValue = sFormValue.substring(0, 5);
+                break;
+            case 1:
+                sFormatValue = sFormValue.substring(0, 9);
+                if (sFormatValue[4])
+                    sFormatValue = sFormValue.substring(0, 5) + "-" + sFormValue.substring(5);
+                break;
+            case 2: 
+                let x = sFormValue.substring(0, 10);
+                sFormatValue = x.length > 6
+                    ? "(" + x.substring(0, 3) + ") " + x.substring(3, 6) + "-" + x.substring(6, 10)
+                    : x.length > 3
+                    ? "(" + x.substring(0, 3) + ") " + x.substring(3)
+                    : x;
+                break;
+            case 3:
+                let y = sFormValue.substring(0, 9);
+                sFormatValue = y.length > 5
+                ? y.substring(0, 3) + "-" + y.substring(3, 5) + "-" + y.substring(5, 9)
+                : y.length > 2
+                ? y.substring(0, 3) + "-" + x.substring(3)
+                : x;
+                break;
+        }
+
+        oTargetRun.AddText(sFormatValue);
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {number} psf – psf is the type of formatting to use:
+     *  0 = zip code
+     *  1 = zip + 4
+     *  2 = phone
+     *  3 = SSN
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFSpecial_Keystroke(psf) {
+        let oCurForm = oDoc.activeForm;
+        let aEnteredChars = oDoc.enteredFormChars;
+
+        if (!oCurForm)
+            return true;
+
+        function isValidPhoneNumber(number) {
+            let regex = /^\s*\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\s*$|^\s*\(\d{3}\)\s?\d{3}[-.\s]?\d{4}\s*$/;
+            return regex.test(number);
+        }
+        function isValidZipCode(zip) {
+            let regex = /^\d{5}$/;
+            return regex.test(zip);
+        }
+        function isValidZipCode4(zip) {
+            let regex = /^\d{5}(?:[-\s]\d{4})?$/;
+            return regex.test(zip);
+        }
+        function isValidSSN(ssn) {
+            let regex = /^\d{3}[-.]\d{2}[-.]\d{4}$/;
+            return regex.test(ssn);
+        }
+
+        let sFormValue = oCurForm.value;
+        let sEnteredText = aEnteredChars.reduce(function(prevVal, curElm) {
+            prevVal += String.fromCharCode(curElm);
+        }, "");
+
+        let oMainPara = this.oCurForm._content.GetElement(0);
+        let nCurPos = oMainPara.GetElement(oMainPara.CurPos.ContentPos).State.ContentPos;
+        
+        let sResultText = sFormValue.subscript(0, nCurPos) + sEnteredText + sFormValue.subscript(nCurPos);
+        
+        let canAdd;
+        switch (psf) {
+            case 0:
+                canAdd = isValidZipCode(sResultText);
+                break;
+            case 1:
+                canAdd = isValidZipCode4(sResultText);
+                break;
+            case 2:
+                canAdd = isValidPhoneNumber(sResultText);
+                break;
+            case 3:
+                canAdd = isValidSSN(sResultText);
+                break;
+            default:
+                if (typeof(psf) == "string" && psf != "") {
+                    let oTextFormat = new AscWord.CTextFormFormat();
+                    let arrBuffer = oTextFormat.GetBuffer(sResultText);
+
+                    let oFormMask = new AscWord.CTextFormMask();
+                    canAdd = oFormMask.Check(aEnteredChars);
+                    oFormMask.Set(psf);
+
+                }
+                break;
+        }
+
+        return canAdd;
+    }
+    /**
+	 * Check can the field accept the char or not.
+	 * @memberof CTextField
+     * @param {number} mask - the special mask
+	 * @typeofeditors ["PDF"]
+	 */
+    function AFSpecial_KeystrokeEx(mask) {
+        let oCurForm = oDoc.activeForm;
+        let aEnteredChars = oDoc.enteredFormChars;
+
+        if (!oCurForm)
+            return true;
+
+        let sFormValue = oCurForm.value;
+        let sEnteredText = aEnteredChars.reduce(function(prevVal, curElm) {
+            prevVal += String.fromCharCode(curElm);
+        }, "");
+
+        let oMainPara = this.oCurForm._content.GetElement(0);
+        let nCurPos = oMainPara.GetElement(oMainPara.CurPos.ContentPos).State.ContentPos;
+        
+        let sResultText = sFormValue.subscript(0, nCurPos) + sEnteredText + sFormValue.subscript(nCurPos);
+        
+        if (typeof(mask) == "string" && mask != "") {
+            let oTextFormat = new AscWord.CTextFormFormat();
+            let arrBuffer = oTextFormat.GetBuffer(sResultText);
+
+            let oFormMask = new AscWord.CTextFormMask();
+            oFormMask.Set(mask);
+            return oFormMask.Check(arrBuffer);
+        }
+
+        return false;
+    }
+
+
     // private methods
+
+    function private_GetColor(r, g, b, Auto)
+	{
+		return new AscCommonWord.CDocumentColor(r, g, b, Auto ? Auto : false);
+	}
     
     function private_GetFieldAlign(sJc)
 	{

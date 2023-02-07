@@ -1285,13 +1285,19 @@
 					oThis.mouseDownFieldObject.private_updateScroll(false, false)
 
 				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
+					oThis.mouseDownFieldObject._needDrawHighlight = true;
+
 					if (oThis.mouseDownFieldObject._needApplyToAll) {
 						oThis.mouseDownFieldObject.private_applyValueForAll(oFieldToSkip);
 						oThis.mouseDownFieldObject._needApplyToAll = false;
+						oThis.mouseDownFieldObject = null;
+						oThis._paintForms();
+					}
+					else if (oThis.mouseDownFieldObject._actions.Format && oThis.mouseDownFieldObject.value != "") {
+						oThis.mouseDownFieldObject = null;
 						oThis._paintForms();
 					}
 											
-					oThis.mouseDownFieldObject._needDrawHighlight = true;
 					oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
 					oThis._paintFormsHighlight();
 				}
@@ -1313,6 +1319,10 @@
 						oThis.mouseDownFieldObject._needDrawHighlight = false;
 						oThis._paintFormsHighlight();
 						oThis.mouseDownFieldObject.onMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, e);
+						if (oThis.mouseDownFieldObject._actions.Format) {
+							oThis._paintForms();
+						}
+							
 						oThis.Api.WordControl.m_oDrawingDocument.TargetStart();
 						oThis.Api.WordControl.m_oDrawingDocument.showTarget(true);
 						oThis.onUpdateOverlay();
@@ -2675,29 +2685,27 @@
 						case "radiobutton":
 							this.mouseDownFieldObject.onMouseDown();
 							break;
-						case "listbox":
-							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							if (this.mouseDownFieldObject._needApplyToAll)
-								this.mouseDownFieldObject.private_applyValueForAll();
-							this.mouseDownFieldObject.private_updateScroll(false, false);
 						default:
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
-							if (this.mouseDownFieldObject._needApplyToAll)
-								this.mouseDownFieldObject.private_applyValueForAll();
 							if (this.mouseDownFieldObject.private_updateScroll)
 								this.mouseDownFieldObject.private_updateScroll(false, false);
+
+							if (this.mouseDownFieldObject._needApplyToAll) {
+								this.fieldFillingMode = false;
+								this.mouseDownFieldObject.private_applyValueForAll();
+								this.mouseDownFieldObject._needApplyToAll = false;
+								this.mouseDownFieldObject = null;
+								this._paintForms();
+							}
+							else if (oThis.mouseDownFieldObject._actions.Format && oThis.mouseDownFieldObject.value != "") {
+								oThis.mouseDownFieldObject = null;
+								oThis._paintForms();
+							}
 							
 							this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 							break;
 					}
-					
-					this.fieldFillingMode = false;
-					if (this.mouseDownFieldObject._needApplyToAll) {
-						this.mouseDownFieldObject._needApplyToAll = false;
-						this._paintForms();
-					}
-					
-					this.mouseDownFieldObject = null;
+
 					this._paintFormsHighlight();
 				}
 			}

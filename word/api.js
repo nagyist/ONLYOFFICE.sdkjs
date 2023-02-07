@@ -2613,7 +2613,10 @@ background-repeat: no-repeat;\
 					aChars.push(text_data[i].charCodeAt(0));
 
 				oField.EnterText(aChars);
+				oViewer.Api.WordControl.m_oDrawingDocument.showTarget(true);
+				oViewer.Api.WordControl.m_oDrawingDocument.TargetStart();
 				oViewer._paintForms();
+				oViewer.onUpdateOverlay();
 			}
 		}
 	};
@@ -11996,11 +11999,15 @@ background-repeat: no-repeat;\
 			return logicDocument.EnterText(value);
 		else if (documentRenderer.fieldFillingMode) {
 			documentRenderer.mouseDownFieldObject.EnterText(value);
-			documentRenderer._paintForms();
-			documentRenderer.onUpdateOverlay();
+			if (documentRenderer.mouseDownFieldObject._wasChanged) {
+				documentRenderer._paintForms();
+				documentRenderer.onUpdateOverlay();
+			}
+
 			this.WordControl.m_oDrawingDocument.TargetStart();
 			// Чтобы при зажатой клавише курсор не пропадал
 			this.WordControl.m_oDrawingDocument.showTarget(true);
+			
 			return true;
 		}
 		
