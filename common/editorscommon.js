@@ -3524,6 +3524,8 @@
 	var g_oHtmlCursor = new CHTMLCursor();
 	var kCurFormatPainterWord = 'de-formatpainter';
 	g_oHtmlCursor.register(kCurFormatPainterWord, "text_copy", "2 11", "pointer");
+	var kCurFormatPainterDrawing = 'drawing-formatpainter';
+	g_oHtmlCursor.register(kCurFormatPainterDrawing, "shape_copy", "2 11", "pointer");
 
 	function asc_ajax(obj)
 	{
@@ -3669,6 +3671,9 @@
 		this.m_bRead = false;
 		this.m_nIdCounterLoad = 0; // Счетчик Id для загрузки
 		this.m_nIdCounterEdit = 0; // Счетчик Id для работы
+		
+		this.m_nOFormLoadCounter = 0;
+		this.m_nOFormEditCounter = 0;
 	}
 
 	CIdCounter.prototype.Get_NewId = function ()
@@ -3698,6 +3703,16 @@
 		this.m_bLoad = true;
 		this.m_nIdCounterLoad = 0; // Счетчик Id для загрузки
 		this.m_nIdCounterEdit = 0; // Счетчик Id для работы
+
+		this.m_nOFormLoadCounter = 0;
+		this.m_nOFormEditCounter = 0;
+	};
+	CIdCounter.prototype.GetNewIdForOForm = function()
+	{
+		if (true === this.m_bLoad || null === this.m_sUserId)
+			return ("_oform_" + (++this.m_nOFormLoadCounter));
+		else
+			return ("" + this.m_sUserId + "_oform_" + (++this.m_nOFormEditCounter));
 	};
 
 	function CLock()
@@ -9162,6 +9177,25 @@
 
 		return true;
 	}
+	
+	/**
+	 * Проверяем поддержку заданного функционала
+	 * @param type
+	 * @returns {boolean}
+	 */
+	function IsSupportAscFeature(type)
+	{
+		return !!(window["Asc"] && window["Asc"]["Addons"] && window["Asc"]["Addons"][type] === true);
+	}
+	
+	/**
+	 * Проверяем поддержку всего функционала, связанного с oform
+	 * @returns {boolean}
+	 */
+	function IsSupportOFormFeature()
+	{
+		return !!(window['AscOForm'] && IsSupportAscFeature("forms"));
+	}
 
 	var g_oUserColorById = {}, g_oUserNextColorIndex = 0;
 
@@ -12230,6 +12264,72 @@
 		this.CheckStyleDisplay();
 	};
 
+	function CFormatPainter(oApi) {
+		this.api = oApi;
+		this.state = AscCommon.c_oAscFormatPainterState.kOff;
+		this.data = null
+	}
+	CFormatPainter.prototype.isOn = function() {
+		return !this.isOff();
+	};
+	CFormatPainter.prototype.isOff = function() {
+		return this.state === AscCommon.c_oAscFormatPainterState.kOff;
+	};
+	CFormatPainter.prototype.toggle = function() {
+		if(this.isOn()) {
+			this.changeState(AscCommon.c_oAscFormatPainterState.kOff);
+		}
+		else {
+			this.changeState(AscCommon.c_oAscFormatPainterState.kOn);
+		}
+	};
+	CFormatPainter.prototype.setState = function(nState) {
+		this.state = nState;
+	};
+	CFormatPainter.prototype.getState = function(nState) {
+		return this.state;
+	};
+	CFormatPainter.prototype.toggleState = function() {
+		if(this.isOn()) {
+			this.setState(AscCommon.c_oAscFormatPainterState.kOff);
+		}
+		else {
+			this.setState(AscCommon.c_oAscFormatPainterState.kOn);
+		}
+	};
+	CFormatPainter.prototype.putState = function(nState) {
+		if(nState !== null && nState !== undefined) {
+			this.setState(nState);
+		}
+		else {
+			this.toggleState();
+		}
+	};
+	CFormatPainter.prototype.changeState = function(nState) {
+		this.setState(nState);
+		if(this.isOn()) {
+			this.checkData();
+		}
+	};
+	CFormatPainter.prototype.checkData = function() {
+		this.data = this.api.retrieveFormatPainterData();
+		return this.data;
+	};
+	CFormatPainter.prototype.clearData = function() {
+		this.data = null;
+	};
+
+	function CFormatPainterDataBase() {
+
+	}
+	CFormatPainterDataBase.prototype.isDrawingData = function()
+	{
+		return false;
+	};
+	CFormatPainterDataBase.prototype.getDocData = function()
+	{
+		return null;
+	};
 
 	//------------------------------------------------------------fill polyfill--------------------------------------------
 	if (!Array.prototype.findIndex) {
@@ -13281,6 +13381,8 @@
 	window["AscCommon"].IsAscFontSupport = IsAscFontSupport;
 	window["AscCommon"].ExecuteNoHistory = ExecuteNoHistory;
 	window["AscCommon"].CompareStrings = CompareStrings;
+	window["AscCommon"].IsSupportAscFeature = IsSupportAscFeature;
+	window["AscCommon"].IsSupportOFormFeature = IsSupportOFormFeature;
 
 	window["AscCommon"].loadSdk = loadSdk;
     window["AscCommon"].loadScript = loadScript;
@@ -13312,6 +13414,7 @@
 	window["AscCommon"].rx_allowedProtocols = rx_allowedProtocols;
 
 	window["AscCommon"].kCurFormatPainterWord = kCurFormatPainterWord;
+	window["AscCommon"].kCurFormatPainterDrawing = kCurFormatPainterDrawing;
 	window["AscCommon"].parserHelp = parserHelp;
 	window["AscCommon"].g_oIdCounter = g_oIdCounter;
 
@@ -13403,6 +13506,8 @@
 		word = word.replaceAll("\'", "&#39;");
 		return word;
 	}
+	window["AscCommon"].CFormatPainter = CFormatPainter;
+	window["AscCommon"].CFormatPainterDataBase = CFormatPainterDataBase;
 
 })(window);
 

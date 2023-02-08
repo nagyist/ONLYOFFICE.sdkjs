@@ -299,6 +299,7 @@ Paragraph.prototype.Copy = function(Parent, DrawingDocument, oPr)
 
 	// Копируем содержимое параграфа
 	var Count = this.Content.length;
+	var arrMoveMarks = [];
 	for (var Index = 0; Index < Count; Index++)
 	{
 		var Item = this.Content[Index];
@@ -309,6 +310,18 @@ Paragraph.prototype.Copy = function(Parent, DrawingDocument, oPr)
 			continue;
 
 		let newItems = Item.Copy(false, oPr);
+		if (oPr.Comparison && oPr.CheckComparisonMoveMarks)
+		{
+			var bContinue = oPr.Comparison.checkCopyParagraphElement(Item, newItems, arrMoveMarks);
+			if (bContinue)
+			{
+				continue;
+			}
+			else
+			{
+				arrMoveMarks = [];
+			}
+		}
 		if (Array.isArray(newItems))
 		{
 			for (let newIndex = 0, newCount = newItems.length; newIndex < newCount; ++newIndex)
@@ -336,7 +349,7 @@ Paragraph.prototype.Copy = function(Parent, DrawingDocument, oPr)
 
 	if(oPr && oPr.Comparison)
 	{
-		oPr.Comparison.updateReviewInfo(EndRun, reviewtype_Add, true);
+		oPr.Comparison.checkCopyParaRun(EndRun, this.GetParaEndRun());
 	}
 
 	// Добавляем секцию в конце
@@ -5925,7 +5938,7 @@ Paragraph.prototype.MoveCursorLeft = function(AddToSelect, Word)
 
 			var oResultPos = SelectPos;
 
-			if ((oPlaceHolderObject && oPlaceHolderObject instanceof CInlineLevelSdt) || oPresentationField)
+			if ((oPlaceHolderObject && ((oPlaceHolderObject instanceof CInlineLevelSdt) || (oPlaceHolderObject instanceof ParaMath))) || oPresentationField)
 			{
 				var oSearchPos = new CParagraphSearchPos();
 				this.GetCursorLeftPos(oSearchPos, SelectPos);
@@ -6045,8 +6058,8 @@ Paragraph.prototype.MoveCursorRight = function(AddToSelect, Word)
 				this.RemoveSelection();
 
 				var oResultPos = SelectPos;
-
-				if ((oPlaceHolderObject && oPlaceHolderObject instanceof CInlineLevelSdt) || oPresentationField)
+				
+				if ((oPlaceHolderObject && ((oPlaceHolderObject instanceof CInlineLevelSdt) || (oPlaceHolderObject instanceof ParaMath))) || oPresentationField)
 				{
 					var oSearchPos = new CParagraphSearchPos();
 					this.GetCursorRightPos(oSearchPos, SelectPos);
@@ -8249,6 +8262,7 @@ Paragraph.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent, bTabl
 		this.GetSelectedElementsInfo(oInfo);
 		var oField = oInfo.GetField();
 		var oSdt   = oInfo.GetInlineLevelSdt();
+		let oMath  = oInfo.GetMath();
 
 		let oForm = null;
 		if (oSdt && oSdt.IsForm() && this.GetLogicDocument() && this.GetLogicDocument().IsDocumentEditor() && this.GetLogicDocument().IsFillingFormMode())
@@ -8267,6 +8281,10 @@ Paragraph.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent, bTabl
 		else if (oSdt && oSdt.IsCheckBox())
 		{
 			this.RemoveSelection();
+		}
+		else if (oMath && oMath.IsMathContentPlaceholder())
+		{
+			oMath.SelectAllInCurrentMathContent();
 		}
 		else
 		{
@@ -10803,13 +10821,17 @@ Paragraph.prototype.GetCompiledParaPr = function(copy)
 {
 	return this.Get_CompiledPr2(copy).ParaPr;
 };
-Paragraph.prototype.PasteFormatting = function(TextPr, oParaPr, ApplyPara)
+Paragraph.prototype.PasteFormatting = function(oData)
 {
+	if(!oData)
+		return;
+	let oTextPr = oData.TextPr;
+	let oParaPr = oData.ParaPr;
 	// Применяем текстовые настройки всегда
-	if (TextPr)
+	if (oTextPr)
 	{
 		var oParaTextPr = new ParaTextPr();
-		oParaTextPr.Value.Set_FromObject(TextPr, true);
+		oParaTextPr.Value.Set_FromObject(oTextPr, true);
 		this.Add(oParaTextPr);
 	}
 
@@ -17173,9 +17195,12 @@ Paragraph.prototype.GetPlaceHolderObject = function(oContentPos)
 	var oInfo = new CSelectedElementsInfo();
 	this.GetSelectedElementsInfo(oInfo, oContentPos, 0);
 
-	var oSdt = oInfo.GetInlineLevelSdt();
+	let oSdt  = oInfo.GetInlineLevelSdt();
+	let oMath = oInfo.GetMath();
 	if (oSdt && oSdt.IsPlaceHolder())
 		return oSdt;
+	else if (oMath && oMath.IsMathContentPlaceholder())
+		return oMath;
 
 	return null;
 };

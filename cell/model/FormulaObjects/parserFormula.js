@@ -78,6 +78,23 @@ function (window, undefined) {
 		return newArray
 	}
 
+	function generate3DLink(externalPath, sheet, range) {
+		let filePrefix = "file:///";
+		if (externalPath && 0 === externalPath.indexOf(filePrefix)) {
+			//"file:///C:\root\from1.xlsx"
+			sheet = sheet.split(":");
+			var wsFrom = sheet[0], wsTo = sheet[1] === undefined ? wsFrom : sheet[1];
+			wsFrom = wsFrom.replace(/'/g, "''");
+			wsTo = wsTo.replace(/'/g, "''");
+			return "'" + externalPath + (wsFrom !== wsTo ? wsFrom + ":" + wsTo : wsFrom) + "'!" + range;
+		} else {
+			if (!externalPath) {
+				externalPath = "";
+			}
+			return parserHelp.get3DRef(externalPath + sheet, range);
+		}
+	}
+	
 	function ParsedThing(value, type, subtype, pos, length) {
 		this.value = value;
 		this.type = type;
@@ -539,6 +556,13 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 	};
 	cBaseType.prototype.getDimensions = function () {
 		return {col: 1, row: 1};
+	};
+	cBaseType.prototype.isOneElement = function () {
+		let dimensions = this.getDimensions();
+		if (dimensions.col === 1 && dimensions.row === 1) {
+			return true;
+		}
+		return false;
 	};
 	cBaseType.prototype.getExternalLinkStr = function (externalLink, locale) {
 		var wb = Asc["editor"] && Asc["editor"].wb;
@@ -1241,6 +1265,9 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		}
 		return res;
 	};
+	cArea.prototype.getFirstElement = function () {
+		return this.getValueByRowCol(0, 0);
+	}
 
 	/**
 	 * @constructor
@@ -1404,7 +1431,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		var wsTo = this.wsTo.getName();
 		var name = this.bbox ? this.bbox.getName() : this.value;
 		var exPath = this.getExternalLinkStr(this.externalLink, true);
-		return  parserHelp.get3DRef(wsFrom !== wsTo ? (exPath + wsFrom + ':' + wsTo) : (exPath + wsFrom), name);
+		return generate3DLink(exPath, wsFrom !== wsTo ? (wsFrom + ':' + wsTo) : wsFrom, name);
 	};
 	cArea3D.prototype.tocNumber = function () {
 		return this.getValue()[0].tocNumber();
@@ -1609,6 +1636,9 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		}
 		return res;
 	};
+	cArea3D.prototype.getFirstElement = function () {
+		return this.getValueByRowCol(0, 0);
+	}
 
 	/**
 	 * @constructor
@@ -1814,7 +1844,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 	};
 	cRef3D.prototype.toLocaleString = function () {
 		var exPath = this.getExternalLinkStr(this.externalLink, true);
-		return parserHelp.get3DRef(exPath + this.ws.getName(), this.range.getName());
+		return generate3DLink(exPath, this.ws.getName(), this.range.getName());
 	};
 	cRef3D.prototype.getWS = function () {
 		return this.ws;
@@ -2766,6 +2796,10 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		res.fillFromArray(newArray);
 		return res;
 	};
+
+	cArray.prototype.getFirstElement = function () {
+		return this.getElementRowCol(0,0);	
+	}
 
 
 
@@ -5480,6 +5514,26 @@ _func[cElementType.cell3D] = _func[cElementType.cell];
 		return res;
 	};
 
+	ParseResult.prototype.checkNumberOperator = function(elemArr) {
+		//проверка оператора перед числом
+		//TODO ещё необходимо сделать проверку после числа + проверку с другими типами
+		var res = true;
+		let lastElem;
+		if (this.elems && this.elems.length) {
+			lastElem = this.elems[this.elems.length - 1];
+			if (lastElem && lastElem.name === " ") {
+				res = false;
+			}
+		} else if (elemArr) {
+			lastElem = elemArr[elemArr.length - 1];
+			if (lastElem && lastElem.name === " ") {
+				res = false;
+			}
+		}
+		return res;
+	};
+
+
 	var g_defParseResult = new ParseResult(undefined, undefined);
 
 	var lastListenerId = 0;
@@ -6648,7 +6702,7 @@ function parserFormula( formula, parent, _ws ) {
 			}
 
 			/* Numbers*/ else if (parserHelp.isNumber.call(ph, t.Formula, ph.pCurrPos, digitDelim)) {
-				if (ph.operand_str !== ".") {
+				if (ph.operand_str !== "." && parseResult.checkNumberOperator(elemArr)) {
 					var _number = parseFloat(ph.operand_str);
 					//TODO для отрицательныз числе необходимо сделать проверку
 					if (!_checkReferenceCount((_number >= 65536 || !Number.isInteger(_number)) ? 1.25 : 0.5)) {
@@ -8120,7 +8174,16 @@ function parserFormula( formula, parent, _ws ) {
 				case "=":
 				default:
 					if (cElementType.string === x.type) {
-						x = x.tocNumber(doNotParseNum);
+						var toNumberX = x.tocNumber(doNotParseNum);
+						if (toNumberX.value === y.value) {
+							res = true;
+							break;
+						}
+						var parseRes = AscCommon.g_oFormatParser.parse(x.value);
+						if (parseRes && parseRes.value === y.value) {
+							res = true;
+							break;
+						}
 					}
 					res = (x.value === y.value);
 					break;
@@ -8488,57 +8551,58 @@ function parserFormula( formula, parent, _ws ) {
 		return retArr;
 	}
 
-	function specialFuncArrayToArray(arg0, arg1, what){
+	function specialFuncArrayToArray(arg0, arg1, what) {
 		var retArr = null, _arg0, _arg1;
+		var iRow, iCol;
 		if (arg0.getRowCount() === arg1.getRowCount() && 1 === arg0.getCountElementInRow()) {
 			retArr = new cArray();
-			for ( var iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true ) {
-				for ( var iCol = 0; iCol < arg1.getCountElementInRow(); iCol++ ) {
-					_arg0 = arg0.getElementRowCol( iRow, 0 );
-					_arg1 = arg1.getElementRowCol( iRow, iCol );
-					retArr.addElement( _func[_arg0.type][_arg1.type]( _arg0, _arg1, what ) );
+			for (iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg1.getCountElementInRow(); iCol++) {
+					_arg0 = arg0.getElementRowCol(iRow, 0);
+					_arg1 = arg1.getElementRowCol(iRow, iCol);
+					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));
 				}
 			}
 		} else if (arg0.getRowCount() === arg1.getRowCount() && 1 === arg1.getCountElementInRow()) {
 			retArr = new cArray();
-			for ( var iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true ) {
-				for ( var iCol = 0; iCol < arg0.getCountElementInRow(); iCol++ ) {
-					_arg0 = arg0.getElementRowCol( iRow, iCol );
-					_arg1 = arg1.getElementRowCol( iRow, 0 );
-					retArr.addElement( _func[_arg0.type][_arg1.type]( _arg0, _arg1, what ) );
+			for (iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg0.getCountElementInRow(); iCol++) {
+					_arg0 = arg0.getElementRowCol(iRow, iCol);
+					_arg1 = arg1.getElementRowCol(iRow, 0);
+					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));
 				}
 			}
 		} else if (arg0.getCountElementInRow() === arg1.getCountElementInRow() && 1 === arg0.getRowCount()) {
 			retArr = new cArray();
-			for ( var iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true ) {
-				for ( var iCol = 0; iCol < arg1.getCountElementInRow(); iCol++ ) {
-					_arg0 = arg0.getElementRowCol( 0, iCol );
-					_arg1 = arg1.getElementRowCol( iRow, iCol );
-					retArr.addElement( _func[_arg0.type][_arg1.type]( _arg0, _arg1, what ) );
+			for (iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg1.getCountElementInRow(); iCol++) {
+					_arg0 = arg0.getElementRowCol(0, iCol);
+					_arg1 = arg1.getElementRowCol(iRow, iCol);
+					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));
 				}
 			}
 		} else if (arg0.getCountElementInRow() === arg1.getCountElementInRow() && 1 === arg1.getRowCount()) {
 			retArr = new cArray();
-			for ( var iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true ) {
-				for ( var iCol = 0; iCol < arg0.getCountElementInRow(); iCol++ ) {
-					_arg0 = arg0.getElementRowCol( iRow, iCol );
-					_arg1 = arg1.getElementRowCol( 0, iCol );
-					retArr.addElement( _func[_arg0.type][_arg1.type]( _arg0, _arg1, what ) );
+			for (iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg0.getCountElementInRow(); iCol++) {
+					_arg0 = arg0.getElementRowCol(iRow, iCol);
+					_arg1 = arg1.getElementRowCol(0, iCol);
+					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));
 				}
 			}
-		} else if (1 === arg0.getCountElementInRow() && 1 ===  arg1.getRowCount()) {
+		} else if (1 === arg0.getCountElementInRow() && 1 === arg1.getRowCount()) {
 			retArr = new cArray();
-			for (var iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true) {
-				for (var iCol = 0; iCol < arg1.getCountElementInRow(); iCol++) {
+			for (iRow = 0; iRow < arg0.getRowCount(); iRow++, iRow < arg0.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg1.getCountElementInRow(); iCol++) {
 					_arg0 = arg0.getElementRowCol(iRow, 0);
 					_arg1 = arg1.getElementRowCol(0, iCol);
 					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));
 				}
 			}
-		} else if (1 === arg1.getCountElementInRow() && 1 ===  arg0.getRowCount()) {
+		} else if (1 === arg1.getCountElementInRow() && 1 === arg0.getRowCount()) {
 			retArr = new cArray();
-			for (var iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true) {
-				for (var iCol = 0; iCol < arg0.getCountElementInRow(); iCol++) {
+			for (iRow = 0; iRow < arg1.getRowCount(); iRow++, iRow < arg1.getRowCount() ? retArr.addRow() : true) {
+				for (iCol = 0; iCol < arg0.getCountElementInRow(); iCol++) {
 					_arg0 = arg0.getElementRowCol(0, iCol);
 					_arg1 = arg1.getElementRowCol(iRow, 0);
 					retArr.addElement(_func[_arg0.type][_arg1.type](_arg0, _arg1, what));

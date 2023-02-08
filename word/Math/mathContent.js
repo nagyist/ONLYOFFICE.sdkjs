@@ -2401,7 +2401,13 @@ CMathContent.prototype.CopyTo = function(OtherContent, Selected, oPr)
     }
     if(oPr && oPr.Comparison)
     {
-        oPr.Comparison.updateReviewInfo(OtherContent, reviewtype_Add);
+        if (oPr.SkipUpdateInfo) {
+            oPr.Comparison.saveReviewInfo(OtherContent, OtherContent);
+        } else if (oPr.bSaveCustomReviewType) {
+            oPr.Comparison.saveCustomReviewInfo(OtherContent, OtherContent, oPr.Comparison.nInsertChangesType);
+        } else {
+            oPr.Comparison.updateReviewInfo(OtherContent, oPr.Comparison.nInsertChangesType);
+        }
     }
 };
 CMathContent.prototype.getElem = function(nNum)
@@ -3260,35 +3266,26 @@ CMathContent.prototype.Add_Element = function(Element)
     this.Internal_Content_Add(this.CurPos, Element, false);
     this.CurPos++;
 };
-CMathContent.prototype.Add_Text = function(sText, Paragraph, MathStyle)
+CMathContent.prototype.Add_Text = function(text, paragraph, mathStyle)
 {
-    this.Paragraph = Paragraph;
-
-    if (sText)
-    {
-        var MathRun = new ParaRun(this.Paragraph, true);
-
-        for (var nCharPos = 0, nTextLen = sText.length; nCharPos < nTextLen; nCharPos++)
-        {
-            var oText = null;
-            if (0x0026 == sText.charCodeAt(nCharPos))
-                oText = new CMathAmp();
-            else
-            {
-                oText = new CMathText(false);
-                oText.addTxt(sText[nCharPos]);
-            }
-            MathRun.Add(oText, true);
-        }
-
-        MathRun.Set_RFont_ForMathRun();
-
-        if (undefined !== MathStyle && null !== MathStyle)
-            MathRun.Math_Apply_Style(MathStyle);
-
-        this.Internal_Content_Add(this.CurPos, MathRun, false);
-        this.CurPos++;
-    }
+	if (!text)
+		return;
+	
+	this.Paragraph = paragraph;
+	
+	let run = new AscWord.CRun(this.Paragraph, true);
+	AscWord.TextToMathRunElements(text, function(item)
+	{
+		run.Add(item, true);
+	});
+	
+	run.Set_RFont_ForMathRun();
+	
+	if (mathStyle)
+		run.Math_Apply_Style(mathStyle);
+	
+	this.AddToContent(this.CurPos, run, false);
+	this.CurPos++;
 };
 
 CMathContent.prototype.Add_TextOnPos = function(nPos, sText, Paragraph, MathStyle)
@@ -3717,12 +3714,12 @@ CMathContent.prototype.Get_ParaContentPos = function(bSelection, bStart, Content
 			if (true === bStart && nPos > 0)
 			{
 				ContentPos.Add(nPos - 1);
-				this.Content[nPos - 1].Get_EndPos(false, ContentPos, ContentPos.Get_Depth() + 1);
+				this.Content[nPos - 1].Get_EndPos(false, ContentPos, ContentPos.GetDepth() + 1);
 			}
 			else
 			{
 				ContentPos.Add(nPos + 1);
-				this.Content[nPos + 1].Get_StartPos(ContentPos, ContentPos.Get_Depth() + 1);
+				this.Content[nPos + 1].Get_StartPos(ContentPos, ContentPos.GetDepth() + 1);
 			}
 		}
 		else
@@ -3811,8 +3808,9 @@ CMathContent.prototype.GetSelectContent = function(isAll)
 };
 CMathContent.prototype.Get_LeftPos = function(SearchPos, ContentPos, Depth, UseContentPos)
 {
-    if (true !== this.ParentElement.Is_ContentUse(this))
-        return false;
+	if ((this.IsPlaceholder() && UseContentPos)
+		|| true !== this.ParentElement.Is_ContentUse(this))
+		return false;
 
     if (false === UseContentPos && para_Math_Run === this.Content[this.Content.length - 1].Type)
     {
@@ -3873,8 +3871,9 @@ CMathContent.prototype.Get_LeftPos = function(SearchPos, ContentPos, Depth, UseC
 };
 CMathContent.prototype.Get_RightPos = function(SearchPos, ContentPos, Depth, UseContentPos, StepEnd)
 {
-    if (true !== this.ParentElement.Is_ContentUse(this))
-        return false;
+	if ((this.IsPlaceholder() && UseContentPos)
+		|| true !== this.ParentElement.Is_ContentUse(this))
+		return false;
 
     if (false === UseContentPos && para_Math_Run === this.Content[0].Type)
     {
@@ -5510,7 +5509,7 @@ CMathContent.prototype.private_IsMenuPropsForContent = function(Action)
 CMathContent.prototype.MergeParaRuns = function ()
 {
 	if (this.Content.length > 0) {
-		
+
         for(let i = 0; i < this.Content.length; i++) {
 
 			if (this.Content[i].Type === 49) {
@@ -6344,7 +6343,7 @@ ContentIterator.prototype.CheckTextLiteral = function(literal)
             this.CreateCurrentElement();
         }
 
-        if (!(this.CurrentElement instanceof ParaRunIterator))
+        if (!(this.CurrentElement instanceof ParaRunIterator) || this.CurrentElement.Cursor < 0)
         {
             this.cursor--;
             this.CreateCurrentElement();

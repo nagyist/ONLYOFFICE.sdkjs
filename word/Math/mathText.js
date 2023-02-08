@@ -1004,9 +1004,9 @@ CMathText.prototype.Read_FromBinary = function(Reader)
 	if (AscFonts.IsCheckSymbols)
 		AscFonts.FontPickerByCharacter.getFontBySymbol(this.value);
 };
-CMathText.prototype.Is_LetterCS = function()
+CMathText.prototype.GetFontSlot = function()
 {
-    return this.FontSlot == AscWord.fontslot_CS;
+	return this.FontSlot;
 };
 CMathText.prototype.ToSearchElement = function(oProps)
 {
@@ -1439,4 +1439,7 @@ var q_Math_BreakOperators =
     0x00D7: 1, 0x00F7:  1
 };
 
-
+//--------------------------------------------------------export----------------------------------------------------
+window['AscWord'] = window['AscWord'] || {};
+window['AscWord'].CMathText = CMathText;
+window['AscWord'].CMathAmp = CMathAmp;

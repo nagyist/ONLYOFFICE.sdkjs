@@ -976,8 +976,9 @@
 						return true;
 					}
 					var isSelectColumns = ctrlKey;
+					var isSelectAllMacOs = isSelectColumns && shiftKey && macOs;
 					// Обработать как обычный текст
-					if (!isSelectColumns && !shiftKey) {
+					if ((!isSelectColumns && !shiftKey) || isSelectAllMacOs) {
 						//теперь пробел обрабатывается на WindowKeyDown
 						//вторыы аргументом передаю true, чтобы два раза пробел не добавлялся и сработало событие CellEditor.prototype._onWindowKeyDown
 						//задача функции EnterText в данном случае - либо добавить данные в графику, либо открыть редактор ячейки, чтобы потом
@@ -991,9 +992,19 @@
 					stop();
 					if (isSelectColumns) {
 						t.handlers.trigger("selectColumnsByRange");
-					} else if (shiftKey) {
+					}
+					if (shiftKey) {
 						t.handlers.trigger("selectRowsByRange");
 					}
+					return result;
+
+				case 110: //NumpadDecimal
+					if (!canEdit || t.getCellEditMode() || selectionDialogMode) {
+						return true;
+					}
+					window["Asc"]["editor"].wb.EnterText(this.view.Api.asc_getDecimalSeparator().charCodeAt(0), true);
+					//stop to prevent double enter
+					stop();
 					return result;
 
 				case 33: // PageUp
@@ -1206,26 +1217,12 @@
 					}
 					stop();
 					return result;
-				case 84:
-					if (!canEdit || t.getCellEditMode() || selectionDialogMode || !macOs) {
-						return true;
-					}
-					if (macCmdKey && shiftKey) {
-						this.handlers.trigger('addFunction',
-							AscCommonExcel.cFormulaFunctionToLocale ? AscCommonExcel.cFormulaFunctionToLocale['SUM'] :
-								'SUM', Asc.c_oAscPopUpSelectorType.Func, true);
-						stop();
-					} else {
-						t._setSkipKeyPress(false);
-					}
-					return result;
 				case 61:  // Firefox, Opera (+/=)
 				case 187: // +/=
-					if (!canEdit || t.getCellEditMode() || selectionDialogMode || macOs) {
+					if (!canEdit || t.getCellEditMode() || selectionDialogMode) {
 						return true;
 					}
-
-					if (event.altKey) {
+					if (event.altKey && (!macOs || (macOs && event.ctrlKey))) {
 						this.handlers.trigger('addFunction',
 							AscCommonExcel.cFormulaFunctionToLocale ? AscCommonExcel.cFormulaFunctionToLocale['SUM'] :
 								'SUM', Asc.c_oAscPopUpSelectorType.Func, true);

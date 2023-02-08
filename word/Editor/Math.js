@@ -1438,12 +1438,12 @@ ParaMath.prototype.Remove = function(Direction, bOnAddText)
         // Если данный элемент - ран, удаляем внутри рана, если нет, тогда удаляем целиком элемент
         if (para_Math_Run === oElement.Type)
         {
-            if (true === oElement.IsPlaceholder() && oElement.Parent.bRoot == true)
+            if ((true === oElement.IsPlaceholder() && !bOnAddText) && oElement.Parent.bRoot == true)
             {
                 this.Root.Remove_FromContent(0, 1);
                 return true;
             }
-            else if ((true === oElement.IsPlaceholder()) || (false === oElement.Remove(Direction) && true !== this.bSelectionUse))
+            else if ((true === oElement.IsPlaceholder() && !bOnAddText) || (false === oElement.Remove(Direction) && true !== this.bSelectionUse))
             {
                 if ((Direction > 0 && oContent.Content.length - 1 === nStartPos) || (Direction < 0 && 0 === nStartPos))
                 {
@@ -3304,6 +3304,19 @@ ParaMath.prototype.Selection_IsPlaceholder = function()
     }
 
     return bPlaceholder;
+};
+ParaMath.prototype.IsMathContentPlaceholder = function()
+{
+	return this.Selection_IsPlaceholder();
+};
+ParaMath.prototype.SelectAllInCurrentMathContent = function()
+{
+	let content = this.GetSelectContent().Content;
+	if (content)
+	{
+		content.SelectThisElement(1);
+		content.SelectAll(1);
+	}
 };
 
 ParaMath.prototype.Selection_CheckParaEnd = function()

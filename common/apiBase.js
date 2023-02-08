@@ -222,6 +222,9 @@
 		this.binaryChanges = false;
 
 		this.isBlurEditor = false;
+
+
+		this.formatPainter = new AscCommon.CFormatPainter(this);
 		this._correctEmbeddedWork();
 
 		return this;
@@ -466,10 +469,19 @@
 			//чтобы в versionHistory был один documentId для auth и open
 			this.CoAuthoringApi.setDocId(this.documentId);
 
-			if (this.documentOpenOptions && this.documentOpenOptions["watermark"])
+			if (this.documentOpenOptions)
 			{
-				this.watermarkDraw = new AscCommon.CWatermarkOnDraw(this.documentOpenOptions["watermark"], this);
-				this.watermarkDraw.CheckParams(this);
+				if (this.documentOpenOptions["watermark"])
+				{
+					this.watermarkDraw = new AscCommon.CWatermarkOnDraw(this.documentOpenOptions["watermark"], this);
+					this.watermarkDraw.CheckParams(this);
+				}
+				
+				if (false === this.documentOpenOptions["oform"] && AscCommon.IsSupportOFormFeature())
+				{
+					window["Asc"]["Addons"]["forms"] = false;
+					AscCommon.g_oTableId.InitOFormClasses();
+				}
 			}
 		}
 
@@ -922,6 +934,10 @@
 		{
 			return true;
 		}
+	};
+	baseEditorsApi.prototype.canUndoRedoByRestrictions = function()
+	{
+		return (this.canEdit() || this.isRestrictionComments() || this.isRestrictionForms());
 	};
 	/**
 	 * Функция для загрузчика шрифтов (нужно ли грузить default шрифты). Для Excel всегда возвращаем false
@@ -2544,10 +2560,16 @@
 	};
 	baseEditorsApi.prototype.asc_getCanUndo = function()
 	{
+		if (!this.canUndoRedoByRestrictions())
+			return false;
+		
 		return AscCommon.History.Can_Undo();
 	};
 	baseEditorsApi.prototype.asc_getCanRedo = function()
 	{
+		if (!this.canUndoRedoByRestrictions())
+			return false;
+		
 		return AscCommon.History.Can_Redo();
 	};
 	// Offline mode
@@ -4182,6 +4204,38 @@
 		this.asc_pluginRun(plugin.guid, 0, startData);
 	};
 
+
+	baseEditorsApi.prototype.retrieveFormatPainterData = function() {
+		return null;
+	};
+	baseEditorsApi.prototype.getFormatPainter = function() {
+		return this.formatPainter;
+	};
+	baseEditorsApi.prototype.getFormatPainterState = function() {
+		return this.formatPainter.getState();
+	};
+	baseEditorsApi.prototype.isFormatPainterOn = function() {
+		return this.formatPainter.isOn();
+	};
+	baseEditorsApi.prototype.checkFormatPainterData = function() {
+		return this.formatPainter.checkData();
+	};
+	baseEditorsApi.prototype.getFormatPainterData = function() {
+		return this.formatPainter.data;
+	};
+	baseEditorsApi.prototype.clearFormatPainterData = function() {
+		return this.formatPainter.clearData();
+	};
+	baseEditorsApi.prototype.sendPaintFormatEvent = function(_value)
+	{
+		let value = ( true === _value ? c_oAscFormatPainterState.kOn : ( false === _value ? c_oAscFormatPainterState.kOff : _value ) );
+		this.formatPainter.putState(value);
+		this.sendEvent("asc_onPaintFormatChanged", value);
+		if(value === c_oAscFormatPainterState.kOff)
+		{
+			this.sendEvent('asc_onStopFormatPainter');
+		}
+	};
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
 	window['AscCommon'].baseEditorsApi = baseEditorsApi;

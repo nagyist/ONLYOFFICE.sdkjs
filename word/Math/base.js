@@ -1541,7 +1541,13 @@ CMathBase.prototype.Copy = function(Selected, oPr)
     }
     if(oPr && oPr.Comparison)
     {
-        oPr.Comparison.updateReviewInfo(NewElement, reviewtype_Add);
+        if (oPr.SkipUpdateInfo) {
+            oPr.Comparison.saveReviewInfo(NewElement, this);
+        } else if (oPr.bSaveCustomReviewType) {
+            oPr.Comparison.saveCustomReviewInfo(NewElement, this, oPr.Comparison.nInsertChangesType);
+        } else {
+            oPr.Comparison.updateReviewInfo(NewElement, oPr.Comparison.nInsertChangesType);
+        }
     }
     return NewElement;
 };
@@ -3007,6 +3013,10 @@ CMathBase.prototype.ConvertOperatorToStr = function(operator)
         return operator;
     }
     return OPERATOR_EMPTY === operator ? "" : AscCommon.convertUnicodeToUTF16([operator]);
+};
+CMathBase.prototype.GetTextOfElement = function()
+{
+	return "";
 };
 
 CMathBase.prototype.GetStartBracetForGetTextContent = function(isLaTeX) {

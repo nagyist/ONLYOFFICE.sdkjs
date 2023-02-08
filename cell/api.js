@@ -980,11 +980,15 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_Undo = function() {
+    if (!this.canUndoRedoByRestrictions())
+      return;
     this.wb.undo();
     this.wb.restoreFocus();
   };
 
   spreadsheet_api.prototype.asc_Redo = function() {
+    if (!this.canUndoRedoByRestrictions())
+      return;
     this.wb.redo();
     this.wb.restoreFocus();
   };
@@ -1422,7 +1426,7 @@ var editor;
       this.wb._executeWithoutZoom(function () {
       	t.wb.printPreviewState.advancedOptions = options.advancedOptions;
         printPagesData = t.wb.calcPagesPrint(options.advancedOptions);
-        pdfPrinterMemory = t.wb.printSheets(printPagesData).DocumentRenderer.Memory;
+        pdfPrinterMemory = t.wb.printSheets(printPagesData, null, options.advancedOptions).DocumentRenderer.Memory;
       	t.wb.printPreviewState.advancedOptions = null;
       });
       dataContainer.data = oAdditionalData["nobase64"] ? pdfPrinterMemory.GetData() : pdfPrinterMemory.GetBase64Memory();
@@ -1496,7 +1500,8 @@ var editor;
 	spreadsheet_api.prototype.asc_initPrintPreview = function (containerId, options) {
 		var curElem = document.getElementById(containerId);
 		if (curElem) {
-			var canvasId = containerId + "-canvas"
+			var isInitCanvas = false;
+			var canvasId = containerId + "-canvas";
 			var canvas = document.getElementById(canvasId);
 			if (!canvas) {
 				canvas = document.createElement('canvas');
@@ -1507,7 +1512,10 @@ var editor;
 				canvas.style.border = "1px solid";
 				canvas.style.borderColor = "#" + this.wb.defaults.worksheetView.cells.defaultState.border.get_hex();
 				curElem.appendChild(canvas);
+				isInitCanvas = true;
+			}
 
+			if (!this.wb.printPreviewState.getCtx() || isInitCanvas) {
 				this.wb.printPreviewState.setCtx(new asc.DrawingContext({
 					canvas: canvas, units: 0/*px*/, fmgrGraphics: this.wb.fmgrGraphics, font: this.wb.m_oFont
 				}));
@@ -1837,7 +1845,7 @@ var editor;
 											var relationship = externalWorkbookPart.getRelationship(oExternalReference.val.externalBook.Id);
 											//подменяем id на target
 											if (relationship && relationship.targetFullName) {
-												oExternalReference.val.externalBook.Id = relationship.targetFullName;
+												oExternalReference.val.externalBook.Id = AscCommonExcel.decodeXmlPath(relationship.targetFullName);
 											}
 											wb.externalReferences.push(oExternalReference.val.externalBook);
 
@@ -4001,27 +4009,22 @@ var editor;
 
   spreadsheet_api.prototype.asc_findText = function(options, callback) {
     var result = null;
-    if (window["NATIVE_EDITOR_ENJINE"]) {
-      if (this.wb.findCellText(options)) {
-        var ws = this.wb.getWorksheet();
-        var activeCell = this.wbModel.getActiveWs().selectionRange.activeCell;
-        result = [ws.getCellLeftRelative(activeCell.col, 0), ws.getCellTopRelative(activeCell.row, 0)];
-      }
-    } else {
-		//***searchEngine
-		var SearchEngine = this.wb.Search(options);
-		var Id = this.wb.GetSearchElementId(!options || options.scanForward);
 
-		if (null != Id) {
-			this.wb.SelectSearchElement(Id);
-		}
+	//***searchEngine
+	var SearchEngine = this.wb.Search(options);
+	var Id = this.wb.GetSearchElementId(!options || options.scanForward);
 
+	if (null != Id) {
+		this.wb.SelectSearchElement(Id);
+	}
+
+	if (window["NATIVE_EDITOR_ENJINE"]) {
+		var ws = this.wb.getWorksheet();
+		var activeCell = this.wbModel.getActiveWs().selectionRange.activeCell;
+		result = [ws.getCellLeftRelative(activeCell.col, 0), ws.getCellTopRelative(activeCell.row, 0)];
+	} else {
 		result = SearchEngine.Count;
-
-		/* var d = this.wb.findCellText(options);
-		 this.controller.scroll(d);
-		 result = !!d;*/
-    }
+	}
 
     if (callback)
       callback(result);
@@ -6020,10 +6023,19 @@ var editor;
 
   // Формат по образцу
   spreadsheet_api.prototype.asc_formatPainter = function(formatPainterState) {
+	this.formatPainter.putState(formatPainterState);
     if (this.wb) {
       this.wb.formatPainter(formatPainterState);
     }
   };
+	spreadsheet_api.prototype.retrieveFormatPainterData = function()
+	{
+		let oWSView = this.wb.getWorksheet();
+		if(!oWSView || !oWSView.model) {
+			return null;
+		}
+		return new AscCommonExcel.CCellFormatPasteData(oWSView);
+	};
 
   spreadsheet_api.prototype.asc_showAutoComplete = function() {
     this.wb.showAutoComplete();
@@ -6562,7 +6574,7 @@ var editor;
     if (undefined === _printer && _page === undefined) {
       // ПУСТОЙ вызов, так как он должен быть ДО команд печати (картинки). А реальзый вызов - после (pagescount)
       window["AscDesktopEditor"] && window["AscDesktopEditor"]["Print_Start"]();
-      _printer = this.wb.printSheets(_printPagesData).DocumentRenderer;
+      _printer = this.wb.printSheets(_printPagesData, null, _adjustPrint).DocumentRenderer;
 
       if (undefined !== window["AscDesktopEditor"]) {
         var pagescount = _printer.m_lPagesCount;
@@ -6609,7 +6621,7 @@ var editor;
         window["AscDesktopEditor"]["Print_End"](paramEnd);
       }
     } else {
-      this.wb.printSheets(_printPagesData, _printer);
+      this.wb.printSheets(_printPagesData, _printer, _adjustPrint);
     }
 
     this.wb.setPrintOptionsJson(null);
@@ -7745,10 +7757,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.onUpdateRestrictions = function () {
-    var oHistory = AscCommon.History;
-    if (this.isRestrictionSignatures() && oHistory && !oHistory.Have_Changes()) {
-        oHistory.Clear();
-    }
+    this._onUpdateDocumentCanUndoRedo();
   };
   spreadsheet_api.prototype.isShowShapeAdjustments = function()
   {
