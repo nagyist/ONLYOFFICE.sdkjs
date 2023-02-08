@@ -73,6 +73,26 @@
   // editor.asc_hideComments = Asc.asc_docs_api.prototype.asc_hideComments;
   // editor.sync_HideComment = Asc.asc_docs_api.prototype.sync_HideComment;
 
+  window.AscFonts = window.AscFonts || {};
+  AscFonts.g_fontApplication = {
+    GetFontInfo: function (sFontName) {
+      if (sFontName === 'Cambria Math') {
+        return new AscFonts.CFontInfo('Cambria Math', 40, 1, 433, 1,-1,-1,-1,-1,-1,-1);
+      }
+    },
+    Init: function () {
+
+    },
+    LoadFont: function () {
+
+    },
+    GetFontInfoName: function () {
+      
+    }
+  }
+
+  window.g_fontApplication = AscFonts.g_fontApplication;
+
   AscCommon.CDocsCoApi.prototype.askSaveChanges = function (callback) {
     callback({'saveLock': false});
   };
@@ -158,17 +178,16 @@
     const oLogicDocument = AscTest.CreateLogicDocument();
     const oController = oLogicDocument.GetCurrentController();
     oController.resetSelection();
-    //editor.WordControl.Thumbnails = getThumbnails();
+    
     editor.WordControl.m_oThumbnailsContainer.AbsolutePosition.SetParams(0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
     editor.WordControl.m_oThumbnails.AbsolutePosition.SetParams(0, 0, 20, 20, 0, 0, 20, 20, 20, 20);
     editor.WordControl.Thumbnails.m_bIsVisible = true;
-    editor.WordControl.Thumbnails.CalculatePlaces();
+    editor.zoom100();
     editor.WordControl.Thumbnails.SelectSlides([0]);
     oLogicDocument.OnKeyDown(oEvent);
 
     const bCheck = oLogicDocument.Slides.length === 2 && oLogicDocument.Slides[0].cSld.spTree.length === oLogicDocument.Slides[1].cSld.spTree.length;
     oAssert.true(bCheck, 'check duplicate slides  shortcut');
-    //delete editor.WordControl.Thumbnails;
   }
 
   function checkPrint(oEvent, oAssert) {
@@ -402,10 +421,8 @@
   }
 
   function checkSuperscript(oEvent, oAssert) {
-    executeTestWithParams(function ({oLogicDocument, oShape, oParagraph}) {
+    executeTestWithParams(function ({oLogicDocument, oParagraph}) {
       oParagraph.SetThisElementCurrent();
-      const oRun = oParagraph.Content[0];
-
       oLogicDocument.OnKeyDown(oEvent);
       const oTextPr = oParagraph.GetCalculatedTextPr();
       oAssert.strictEqual(oTextPr.VertAlign, AscCommon.vertalign_SuperScript, 'Check superscript shortcut');
@@ -480,7 +497,6 @@
   }
 
   let oTable
-
   function checkMoveToNextCell(oEvent, oAssert) {
     executeTestWithParams(function ({oLogicDocument}) {
       const oGraphicFrame = oLogicDocument.Add_FlowTable(3, 3);
@@ -495,6 +511,27 @@
       oLogicDocument.OnKeyDown(oEvent);
       oAssert.strictEqual(oTable.CurCell.Index, 0, 'check go to previous cell shortcut');
     }, '', true);
+  }
+  
+  let oBulletParagraph;
+  function checkIncreaseBulletIndent(oEvent, oAssert) {
+    executeTestWithParams(function ({oLogicDocument, oParagraph}) {
+      const oBullet = AscFormat.fGetPresentationBulletByNumInfo({Type: 0, SubType: 1});
+      oParagraph.Add_PresentationNumbering(oBullet);
+      oParagraph.SetThisElementCurrent();
+      oParagraph.MoveCursorToStartPos();
+      oParagraph.Set_Ind({Left: 0});
+      oLogicDocument.OnKeyDown(oEvent);
+      oBulletParagraph = oParagraph;
+      oAssert.strictEqual(oParagraph.Pr.Get_IndLeft(), 11.1125, 'Check bullet indent shortcut');
+    }, 'Hello', true);
+  }
+
+  function checkDecreaseBulletIndent(oEvent, oAssert) {
+    oBulletParagraph.SetThisElementCurrent();
+    oBulletParagraph.MoveCursorToStartPos();
+    oGlobalLogicDocument.OnKeyDown(oEvent);
+      oAssert.strictEqual(oBulletParagraph.Pr.Get_IndLeft(), 0, 'Check bullet indent shortcut');
   }
 
   function checkAddTab(oEvent, oAssert) {
@@ -721,19 +758,22 @@
         oParagraph.MoveCursorToStartPos();
       }
       oShape.recalculateContentWitCompiledPr();
-
+      oParagraph.RecalculateCurPos(true, true);
+      
       oLogicDocument.OnKeyDown(oEvent);
 
       let oPos;
+      oParagraph.RecalculateCurPos(true, true);
       if (bGetPos) {
-        oPos = oParagraph.Internal_Recalculate_CurPos();
+        
+        oPos = oParagraph.GetCurPosXY(true, true);
       }
       let sSelectedText;
       if (bGetSelectedText) {
         sSelectedText = oParagraph.GetSelectedText();
       }
       fTestCallback({oPos, sSelectedText});
-    }, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', true);
+    }, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', true, true);
   }
 
   function checkSelectToStartLineContent(oEvent, oAssert) {
@@ -903,6 +943,7 @@
   function checkIncreaseIndent(oEvent, oAssert) {
     executeTestWithParams(function ({oLogicDocument, oParagraph, oShape}) {
       oParagraph.Pr.SetInd(0, 0, 0);
+      oParagraph.Set_PresentationLevel(0);
       oLogicDocument.OnKeyDown(oEvent);
 
       oAssert.strictEqual(oParagraph.Pr.GetIndLeft(), 11.1125, 'Check increase indent');
@@ -911,12 +952,13 @@
 
   function checkDecreaseIndent(oEvent, oAssert) {
     executeTestWithParams(function ({oLogicDocument, oParagraph, oShape}) {
-      oParagraph.Pr.SetInd(12, 12, 0);
+      oParagraph.Pr.SetInd(0, 12, 0);
+      oParagraph.Set_PresentationLevel(1);
       oParagraph.SetThisElementCurrent();
       oParagraph.MoveCursorToStartPos();
       oLogicDocument.OnKeyDown(oEvent);
 
-      oAssert.strictEqual(oParagraph.Pr.GetIndLeft(), 0.8875, 'Check decrease indent');
+      oAssert.true(AscFormat.fApproxEqual(oParagraph.Pr.GetIndLeft(), 0.8875), 'Check decrease indent');
     }, 'Hello', true);
   }
 
@@ -1053,9 +1095,9 @@
       oEvent = createEvent(9, false, true, false, false, false, false);
       checkMoveToPreviousCell(oEvent, oAssert);
       oEvent = createEvent(9, false, false, false, false, false, false);
-      checkIncreaseIndent(oEvent, oAssert);
+      checkIncreaseBulletIndent(oEvent, oAssert);
       oEvent = createEvent(9, false, true, false, false, false, false);
-      checkDecreaseIndent(oEvent, oAssert);
+      checkDecreaseBulletIndent(oEvent, oAssert);
       oEvent = createEvent(9, false, false, false, false, false, false);
       checkAddTab(oEvent, oAssert);
       oEvent = createEvent(9, false, false, false, false, false, false);

@@ -40,7 +40,14 @@
   {
     if (oLogicDocument)
       return oLogicDocument;
+    
     editor.InitEditor();
+    editor.bInit_word_control = true;
+    editor.WordControl.Thumbnails.SetFont = function () {
+
+    };
+    editor.WordControl.InitControl();
+
     oLogicDocument = editor.WordControl.m_oLogicDocument;
     // oLogicDocument = new AscCommonSlide.CPresentation(AscTest.DrawingDocument);
     // oLogicDocument.Api = AscTest.Editor;

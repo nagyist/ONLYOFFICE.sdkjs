@@ -44,6 +44,9 @@
     Init: function () {
 
     },
+    LoadFont: function () {
+      
+    }
   }
 
   window.g_fontApplication = AscFonts.g_fontApplication;
