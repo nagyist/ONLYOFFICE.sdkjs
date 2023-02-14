@@ -57,13 +57,17 @@
 		var prot;
 
 		var g_oAutoFiltersOptionsElementsProperties = {
-			val		    : 0,
-			visible	    : 1,
-			text        : 2,
-			isDateFormat: 3,
-			year        : 4,
-			month       : 5,
-			day         : 6
+			val		         : 0,
+			visible	         : 1,
+			text             : 2,
+			isDateFormat     : 3,
+			year             : 4,
+			month            : 5,
+			day              : 6,
+			hour             : 7,
+			minute           : 8,
+			second           : 9,
+			dateTimeGrouping : 10
 		};
 		function AutoFiltersOptionsElements () {
 			if ( !(this instanceof AutoFiltersOptionsElements) ) {return new AutoFiltersOptionsElements();}
@@ -77,7 +81,13 @@
 			this.year = null;
 			this.month = null;
 			this.day = null;
+			this.hour = null;
+			this.minute = null;
+			this.second = null;
+			this.dateTimeGrouping = null;
+
 			this.repeats = 1;
+
 
 			this.hiddenByOtherColumns = undefined;
 		}
@@ -92,13 +102,17 @@
 			},
 			getProperty : function (nType) {
 				switch (nType) {
-					case this.Properties.val: return this.val; break;
-					case this.Properties.visible: return this.visible; break;
-					case this.Properties.text: return this.text; break;
-					case this.Properties.isDateFormat: return this.isDateFormat; break;
-					case this.Properties.year: return this.year; break;
-					case this.Properties.month: return this.month; break;
-					case this.Properties.day: return this.day; break;
+					case this.Properties.val: return this.val;
+					case this.Properties.visible: return this.visible;
+					case this.Properties.text: return this.text;
+					case this.Properties.isDateFormat: return this.isDateFormat;
+					case this.Properties.year: return this.year;
+					case this.Properties.month: return this.month;
+					case this.Properties.day: return this.day;
+					case this.Properties.hour: return this.hour;
+					case this.Properties.minute: return this.minute;
+					case this.Properties.second: return this.second;
+					case this.Properties.dateTimeGrouping: return this.dateTimeGrouping;
 				}
 
 				return null;
@@ -112,6 +126,10 @@
 					case this.Properties.year: this.year = value;break;
 					case this.Properties.month: this.month = value;break;
 					case this.Properties.day: this.day = value;break;
+					case this.Properties.hour: this.hour = value;break;
+					case this.Properties.minute: this.minute = value;break;
+					case this.Properties.second: this.second = value;break;
+					case this.Properties.dateTimeGrouping: this.dateTimeGrouping = value;break;
 				}
 			},
 			
@@ -126,6 +144,11 @@
 				res.year = this.visible;
 				res.month = this.isDateFormat;
 				res.day = this.day;
+
+				res.hour = this.hour;
+				res.minute = this.minute;
+				res.second = this.second;
+				res.dateTimeGrouping = this.dateTimeGrouping;
 				
 				return res;
 			},
@@ -137,7 +160,10 @@
 			asc_getYear: function () { return this.year; },
 			asc_getMonth: function () { return this.month; },
 			asc_getDay: function () { return this.day; },
-			asc_getRepeats: function () { return this.repeats; },
+			asc_getHour: function () { return this.hour; },
+			asc_getMinute: function () { return this.minute; },
+			asc_getSecond: function () { return this.second; },
+			asc_getDateTimeGrouping: function () { return this.dateTimeGrouping; },
 			
 			asc_setVal: function (val) { this.val = val; },
 			asc_setVisible: function (val) { this.visible = val; },
@@ -146,7 +172,11 @@
 			asc_setYear: function (val) { this.year = val; },
 			asc_setMonth: function (val) { this.month = val; },
 			asc_setDay: function (val) { this.day = val; },
-			asc_setRepeats: function (val) { this.repeats = val; }
+			asc_setRepeats: function (val) { this.repeats = val; },
+			asc_setHour: function (val) { this.hour = val; },
+			asc_setMinute: function (val) { this.minute = val; },
+			asc_setSecond: function (val) { this.second = val; },
+			asc_setDateTimeGrouping: function (val) { this.dateTimeGrouping = val; }
 		};
 
 		var g_oAutoFiltersOptionsProperties = {
@@ -925,9 +955,9 @@
 						var textLowerCase = text.toLowerCase();
 
 						var isDateTimeFormat = cell.getNumFormat().isDateTimeFormat() && cell.getType() === window["AscCommon"].CellValueType.Number;
-						if (isDateTimeFormat) {
-							isDateTimeFormat = cell.getNumFormat().getType() === Asc.c_oAscNumFormatType.Data;
-						}
+						/*if (isDateTimeFormat) {
+							isDateTimeFormat = cell.getNumFormat().getType() === Asc.c_oAscNumFormatType.Date;
+						}*/
 
 						var dataValue = isDateTimeFormat ? AscCommon.NumFormat.prototype.parseDate(val) : null;
 
@@ -4639,9 +4669,9 @@
 					var textLowerCase = text.toLowerCase();
 
 					isDateTimeFormat = cell.getNumFormat().isDateTimeFormat() && cell.getType() === window["AscCommon"].CellValueType.Number;
-					if (isDateTimeFormat) {
-						isDateTimeFormat = cell.getNumFormat().getType() === Asc.c_oAscNumFormatType.Data;
-					}
+					/*if (isDateTimeFormat) {
+						isDateTimeFormat = cell.getNumFormat().getType() === Asc.c_oAscNumFormatType.Date;
+					}*/
 
 					if (isDateTimeFormat) {
 						dataValue = AscCommon.NumFormat.prototype.parseDate(val);
@@ -6368,6 +6398,16 @@
 		prot["asc_getDay"]						= prot.asc_getDay;
 		prot["asc_getRepeats"]					= prot.asc_getRepeats;
 		prot["asc_getVal"]						= prot.asc_getVal;
+		prot["asc_getHour"]					    = prot.asc_getHour;
+		prot["asc_getMinute"]				    = prot.asc_getMinute;
+		prot["asc_getSecond"]					= prot.asc_getSecond;
+		prot["asc_getDateTimeGrouping"]			= prot.asc_getDateTimeGrouping;
+		prot["asc_setHour"]				    	= prot.asc_setHour;
+		prot["asc_setMinute"]					= prot.asc_setMinute;
+		prot["asc_setSecond"]					= prot.asc_setSecond;
+		prot["asc_setDateTimeGrouping"]			= prot.asc_setDateTimeGrouping;
+
+
 
 		window["AscCommonExcel"].AddFormatTableOptions = AddFormatTableOptions;
 		prot									= AddFormatTableOptions.prototype;
