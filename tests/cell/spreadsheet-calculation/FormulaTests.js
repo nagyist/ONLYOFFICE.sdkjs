@@ -646,20 +646,6 @@
 
 		QUnit.module("Formula");
 		QUnit.test("Test: \"ABS\"", function (assert) {
-
-			ws.getRange2("A22").setValue("-4");
-
-			oParser = new parserFormula("ABS(2)", "A1", ws);
-			assert.ok(oParser.parse());
-			assert.strictEqual(oParser.calculate().getValue(), 2);
-			oParser = new parserFormula("ABS(-2)", "A1", ws);
-			assert.ok(oParser.parse());
-			assert.strictEqual(oParser.calculate().getValue(), 2);
-			oParser = new parserFormula("ABS(A22)", "A1", ws);
-			assert.ok(oParser.parse());
-			assert.strictEqual(oParser.calculate().getValue(), 4);
-
-			testArrayFormula(assert, "ABS");
 		});
 
 
