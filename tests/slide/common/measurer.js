@@ -147,6 +147,10 @@
   {
     return {Width : CharWidth * FontSize};
   };
+	g_oTextMeasurer.Measure2Code     = function()
+	{
+		return {Width : CharWidth * FontSize};
+	};
   g_oTextMeasurer.Measure         = function()
   {
     return {Width : CharWidth * FontSize};

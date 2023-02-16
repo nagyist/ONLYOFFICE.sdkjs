@@ -5658,7 +5658,7 @@ function CThumbnailsManager()
 					}
 					else
 					{
-						if (oDrawingDocument.SlideCurrent > 0)
+						if (oDrawingDocument.SlideCurrent !== (slidesCount - 1))
 						{
 							this.CorrectShiftSelect(false, true);
 						}

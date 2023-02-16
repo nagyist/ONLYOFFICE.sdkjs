@@ -8144,12 +8144,16 @@
 				},
 
 				GetSelectedText: function (bCleartText, oPr) {
-					var content = this.getTargetDocContent();
-					if (content) {
-						return content.GetSelectedText(bCleartText, oPr);
+					const oObject = getTargetTextObject(this);
+					if (oObject && oObject.GetSelectedText) {
+						return oObject.GetSelectedText(bCleartText, oPr);
 					} else {
-						return "";
+						const oContent = this.getTargetDocContent();
+						if (oContent) {
+							return oContent.GetSelectedText(bCleartText, oPr);
+						}
 					}
+					return "";
 				},
 
 				putPrLineSpacing: function (type, value) {

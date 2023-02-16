@@ -46,15 +46,14 @@
     editor.WordControl.Thumbnails.SetFont = function () {
 
     };
+		editor.WordControl.StartMainTimer = function ()
+		{
+
+		};
     editor.WordControl.InitControl();
 
     oLogicDocument = editor.WordControl.m_oLogicDocument;
-    // oLogicDocument = new AscCommonSlide.CPresentation(AscTest.DrawingDocument);
-    // oLogicDocument.Api = AscTest.Editor;
-    // oLogicDocument.Api.WordControl.m_oLogicDocument = oLogicDocument;
     oLogicDocument.createNecessaryObjectsIfNoPresent();
-    oLogicDocument.addNextSlide();
-    
     AscTest.DrawingDocument.m_oLogicDocument = oLogicDocument;
 
     return oLogicDocument;
