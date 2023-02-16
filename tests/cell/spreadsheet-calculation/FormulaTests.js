@@ -608,16 +608,16 @@
 		if (AscCommon.c_oSerFormat.Signature === sData.substring(0, AscCommon.c_oSerFormat.Signature.length)) {
 
 
+
+
+			let api = new Asc.spreadsheet_api({
+				'id-view': 'editor_sdk'
+			});
+			api.FontLoader = {
+				LoadDocumentFonts: function() {}
+			};
 			let docInfo = new Asc.asc_CDocInfo();
 			docInfo.asc_putTitle("TeSt.xlsx");
-
-			let api = {
-				wb: {
-					getWorksheet: function () {
-					}
-				}, DocInfo: docInfo,
-				isEyedropperStarted: function() {return false;}
-			};
 			api.DocInfo = docInfo;
 			window["Asc"]["editor"] = api;
 
