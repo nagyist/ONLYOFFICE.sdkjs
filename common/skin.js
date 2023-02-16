@@ -142,9 +142,13 @@ var EditorSkins = {
 		ColorHighlighted         : "#6a6a70",
 		ColorFiltering           : "#008636",
 
-		BackgroundDark           : "#444444",
-		BackgroundDarkActive     : "#111111",
-		BackgroundDarkHighlighted: "#666666",
+		BackgroundDark           : "#73bf92",
+		BackgroundDarkActive     : "#aaffcc",
+		BackgroundDarkHighlighted: "#97e3b7",
+		SheetViewCellTitleLabel  : "#121213",
+		FreezeLine1px            : "#818182",
+		FreezeLine2px            : "#aaaaaa",
+		SelectAllTriangleIcon    : "#3d664e",
 
 		ColorDark                : "#ffffff",
 		ColorDarkActive          : "#ffffff",
@@ -248,6 +252,10 @@ var EditorSkins = {
 		Background               : "#666666",
 		BackgroundActive         : "#939393",
 		BackgroundHighlighted    : "#787878",
+		SheetViewCellTitleLabel  : "#121214",
+		FreezeLine1px            : "#818183",
+		FreezeLine2px            : "#aaaaaa",
+		SelectAllTriangleIcon    : "#3d664e",
 
 		Border                   : "#757575",
 		BorderActive             : "#9e9e9e",
@@ -258,9 +266,9 @@ var EditorSkins = {
 		ColorHighlighted         : "#d9d9d9",
 		ColorFiltering           : "#6BEC9F",
 
-		BackgroundDark           : "#55B27B",
-		BackgroundDarkActive     : "#7AFFAF",
-		BackgroundDarkHighlighted: "#6EE59F",
+		BackgroundDark           : "#73bf93",
+		BackgroundDarkActive     : "#aaffcc",
+		BackgroundDarkHighlighted: "#97e3b8",
 
 		ColorDark                : "#333",
 		ColorDarkActive          : "#333",
@@ -362,9 +370,13 @@ function updateGlobalSkinColors(theme)
 		ColorActive                     : "canvas-cell-title",
 		ColorHighlighted                : "canvas-cell-title",
 
-		BackgroundDark                  : "canvas-dark-cell-title",
-		BackgroundDarkActive            : "canvas-dark-cell-title-selected",
-		BackgroundDarkHighlighted       : "canvas-dark-cell-title-hover",
+		BackgroundDark                  : "canvas-sheet-view-cell-background",
+		BackgroundDarkActive            : "canvas-sheet-view-cell-background-pressed",
+		BackgroundDarkHighlighted       : "canvas-sheet-view-cell-background-hover",
+		SheetViewCellTitleLabel         : "canvas-sheet-view-cell-title-label",
+		FreezeLine1px                   : "canvas-freeze-line-1px",
+		FreezeLine2px                   : "canvas-freeze-line-2px",
+		SelectAllTriangleIcon           : "canvas-select-all-icon",
 
 		ColorDark                       : "canvas-dark-cell-title-text",
 		ColorDarkActive                 : "canvas-dark-cell-title-text",

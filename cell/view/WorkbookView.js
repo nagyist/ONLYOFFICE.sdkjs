@@ -136,6 +136,11 @@
 		this.activeCellBorderColor = new CColor(72, 121, 92);
 		this.activeCellBorderColor2 = new CColor(255, 255, 255, 1);
 		this.findFillColor = new CColor(255, 238, 128, 1);
+		
+		this.sheetViewCellTitleLabelColor = this.getCColor(AscCommon.GlobalSkin.SheetViewCellTitleLabel);
+		this.sheetViewSelectAllTriangleIconColor = this.getCColor(AscCommon.GlobalSkin.SelectAllTriangleIcon);
+		this.freezeLine1pxColor = this.getCColor(AscCommon.GlobalSkin.FreezeLine1px);
+		this.freezeLine2pxColor = this.getCColor(AscCommon.GlobalSkin.FreezeLine2px);
 
 		// Цвет закрепленных областей
 		this.frozenColor = new CColor(105, 119, 62, 1);
