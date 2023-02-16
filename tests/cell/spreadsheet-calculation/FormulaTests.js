@@ -606,18 +606,19 @@
 
 		var oParser, wb, ws, dif = 1e-9, sData = AscCommon.getEmpty(), tmp, array;
 		if (AscCommon.c_oSerFormat.Signature === sData.substring(0, AscCommon.c_oSerFormat.Signature.length)) {
+
+
+			let docInfo = new Asc.asc_CDocInfo();
+			docInfo.asc_putTitle("TeSt.xlsx");
+
 			let api = {
 				wb: {
 					getWorksheet: function () {
 					}
 				}, DocInfo: docInfo,
-				isEydropperStarted: function() {return false;}
+				isEyedropperStarted: function() {return false;}
 			};
-
-			let docInfo = new Asc.asc_CDocInfo();
-			docInfo.asc_putTitle("TeSt.xlsx");
 			api.DocInfo = docInfo;
-
 			window["Asc"]["editor"] = api;
 
 			wb = new AscCommonExcel.Workbook(new AscCommonExcel.asc_CHandlersList(), api);
