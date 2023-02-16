@@ -604,52 +604,8 @@
 		var fSortAscending = AscCommon.fSortAscending;
 		var g_oIdCounter = AscCommon.g_oIdCounter;
 
-		var oParser, wb, ws, dif = 1e-9, sData = AscCommon.getEmpty(), tmp, array;
-		if (AscCommon.c_oSerFormat.Signature === sData.substring(0, AscCommon.c_oSerFormat.Signature.length)) {
-			let api = new Asc.spreadsheet_api({
-				'id-view': 'editor_sdk'
-			});
-
-			let docInfo = new Asc.asc_CDocInfo();
-			docInfo.asc_putTitle("TeSt.xlsx");
-			api.DocInfo = docInfo;
-
-			window["Asc"]["editor"] = api;
-
-			wb = new AscCommonExcel.Workbook(new AscCommonExcel.asc_CHandlersList(), api);
-			AscCommon.History.init(wb);
-			wb.maxDigitWidth = 7;
-			wb.paddingPlusBorder = 5;
-
-			AscCommon.g_oTableId.init();
-			if (this.User) {
-				g_oIdCounter.Set_UserId(this.User.asc_getId());
-			}
-
-			AscCommonExcel.g_oUndoRedoCell = new AscCommonExcel.UndoRedoCell(wb);
-			AscCommonExcel.g_oUndoRedoWorksheet = new AscCommonExcel.UndoRedoWoorksheet(wb);
-			AscCommonExcel.g_oUndoRedoWorkbook = new AscCommonExcel.UndoRedoWorkbook(wb);
-			AscCommonExcel.g_oUndoRedoCol = new AscCommonExcel.UndoRedoRowCol(wb, false);
-			AscCommonExcel.g_oUndoRedoRow = new AscCommonExcel.UndoRedoRowCol(wb, true);
-			AscCommonExcel.g_oUndoRedoComment = new AscCommonExcel.UndoRedoComment(wb);
-			AscCommonExcel.g_oUndoRedoAutoFilters = new AscCommonExcel.UndoRedoAutoFilters(wb);
-			AscCommonExcel.g_DefNameWorksheet = new AscCommonExcel.Worksheet(wb, -1);
-			g_oIdCounter.Set_Load(false);
-
-			var oBinaryFileReader = new AscCommonExcel.BinaryFileReader();
-			oBinaryFileReader.Read(sData, wb);
-			ws = wb.getWorksheet(wb.getActive());
-			AscCommonExcel.getFormulasInfo();
-		}
-
-		wb.dependencyFormulas.lockRecal();
 
 		QUnit.module("Formula");
 		QUnit.test("Test: \"ABS\"", function (assert) {
 		});
-
-
-
-
-		wb.dependencyFormulas.unlockRecal();
 	});
