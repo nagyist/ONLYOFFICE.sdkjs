@@ -983,6 +983,10 @@
 							res.asc_setYear(dataValue.year);
 							res.asc_setMonth(dataValue.month);
 							res.asc_setDay(dataValue.d);
+							
+							res.asc_setHour(dataValue.hour);
+							res.asc_setMinute(dataValue.min);
+							res.asc_setSecond(dataValue.sec);
 						}
 						values.push(res);
 					});
@@ -4596,6 +4600,10 @@
 						res.asc_setYear(dataValue.year);
 						res.asc_setMonth(dataValue.month);
 						res.asc_setDay(dataValue.d);
+
+						res.asc_setHour(dataValue.hour);
+						res.asc_setMinute(dataValue.min);
+						res.asc_setSecond(dataValue.sec);
 					}
 					res.hiddenByOtherColumns = hiddenByOtherColumns;
 
