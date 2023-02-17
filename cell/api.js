@@ -6463,6 +6463,7 @@ var editor;
     var pageSetup;
     var countWorksheets = this.wbModel.getWorksheetCount();
     var t = this;
+	var LCID;
 
     if(_options) {
       //печатаем только 1 страницу первой книги
@@ -6511,6 +6512,7 @@ var editor;
          var bottom = AscCommon.valueToMm(_margins["bottom"]);
          _margins = null !== left && null !== right && null !== top && null !== bottom ? {left: left, right: right, top: top, bottom: bottom} : null;
        }
+       LCID = _options["printOptions"] && _options["printOptions"]["LCID"];
 
 	   for (var index = 0; index < this.wbModel.getWorksheetCount(); ++index) {
            ws = this.wbModel.getWorksheet(index);
@@ -6559,6 +6561,10 @@ var editor;
        }
     }
 
+    //AscCommon.g_oDefaultCultureInfo.LCID
+    if (LCID) {
+    	this.asc_setLocale(LCID);
+	}
     this.wb.setPrintOptionsJson(spreadsheetLayout && spreadsheetLayout["sheetsProps"]);
 
     var _printPagesData = this.wb.calcPagesPrint(_adjustPrint);
