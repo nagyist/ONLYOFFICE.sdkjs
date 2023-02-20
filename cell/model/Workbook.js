@@ -7374,6 +7374,8 @@
 		this.moveSparklineGroup(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
 		this.moveProtectedRange(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
 
+		this.moveCols(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
+		this.moveRows(oBBoxFrom, oBBoxTo, copyRange, offset, wsTo);
 
 		if(true == this.workbook.bUndoChanges || true == this.workbook.bRedoChanges) {
 			wsTo.autoFilters.unmergeTablesAfterMove(oBBoxTo);
@@ -11581,6 +11583,38 @@
 			}
 		}
 		return c_oAscError.ID.No;
+	};
+
+	Worksheet.prototype.moveCols = function (oBBoxFrom, oBBoxTo, copyRange, offset, wsTo, wsFrom) {
+		let t = this;
+		if (!wsTo) {
+			wsTo = this;
+		}
+		if (wsTo.getSheetProtection()) {
+			return;
+		}
+		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges) {
+			const bboxFromType = oBBoxFrom.getType();
+			if (bboxFromType === Asc.c_oAscSelectionType.RangeCol || bboxFromType === Asc.c_oAscSelectionType.RangeMax) {
+
+			}
+		}
+	};
+
+	Worksheet.prototype.moveRows = function (oBBoxFrom, oBBoxTo, copyRange, offset, wsTo, wsFrom) {
+		let t = this;
+		if (!wsTo) {
+			wsTo = this;
+		}
+		if (wsTo.getSheetProtection()) {
+			return;
+		}
+		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges) {
+			const bboxFromType = oBBoxFrom.getType();
+			if (bboxFromType === Asc.c_oAscSelectionType.RangeCol || bboxFromType === Asc.c_oAscSelectionType.RangeMax) {
+
+			}
+		}
 	};
 
 //-------------------------------------------------------------------------------------------------

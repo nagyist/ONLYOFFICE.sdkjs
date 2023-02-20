@@ -1679,6 +1679,13 @@
 						window['AscCommon'].g_specialPasteHelper.Special_Paste_Hide_Button();
 					}
 
+					let pastedRange = pasteData.selectionRange && pasteData.selectionRange.ranges;
+					let typeRange = pastedRange && pastedRange[0] && pastedRange[0].getType();
+					var oType = Asc.c_oAscSelectionType;
+					if (typeRange === oType.RangeMax || typeRange === oType.RangeCol || typeRange === oType.RangeRow) {
+						isPasteAll = true;
+					}
+
 					//закрываем общую транзакцию _loadDataBeforePaste после загрузки шрифтов
 					worksheet.setSelectionInfo('paste', {data: pasteData, fromBinary: true, fontsNew: newFonts, pasteAllSheet: isPasteAll, wb: tempWorkbook});
 				};
