@@ -1563,7 +1563,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		this.UndoRedoInProgress = false;
 		return changes;
 	};
-/**
+	/**
 	 * Конвертируем все действия внутри заданной точки из составных в простые
 	 */
 	CHistory.prototype.ConvertPointItemsToSimpleChanges = function(pointIndex)

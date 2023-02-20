@@ -2544,21 +2544,37 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_SelectionCut = function()
 	{
-	    if (AscCommon.CollaborativeEditing.Get_GlobalLock())
-    	    return;
+		let _logicDoc = this.WordControl.m_oLogicDocument;
+		let oViewer = this.getDocumentRenderer();
 
-		var _logicDoc = this.WordControl.m_oLogicDocument;
-		if (!_logicDoc || _logicDoc.IsSelectionEmpty(true))
-			return;
+		if (_logicDoc) {
+			if (AscCommon.CollaborativeEditing.Get_GlobalLock())
+    	    	return;
+			if (_logicDoc.IsSelectionEmpty(true))
+				return;
 
-		if (!_logicDoc.IsSelectionLocked(AscCommon.changestype_Remove, null, true, _logicDoc.IsFormFieldEditing()))
-		{
-			_logicDoc.StartAction(AscDFH.historydescription_Cut);
-			_logicDoc.Remove(-1, true, true, false, false, true); // -1 - нормальное удаление  (например, для таблиц)
-			_logicDoc.Recalculate();
-			_logicDoc.UpdateSelection();
-			_logicDoc.FinalizeAction();
+			if (!_logicDoc.IsSelectionLocked(AscCommon.changestype_Remove, null, true, _logicDoc.IsFormFieldEditing()))
+			{
+				_logicDoc.StartAction(AscDFH.historydescription_Cut);
+				_logicDoc.Remove(-1, true, true, false, false, true); // -1 - нормальное удаление  (например, для таблиц)
+				_logicDoc.Recalculate();
+				_logicDoc.UpdateSelection();
+				_logicDoc.FinalizeAction();
+			}
 		}
+		else if (oViewer) {
+			let oField = oViewer.mouseDownFieldObject;
+			if (oField && (oField.type == "text" || (oField.type == "combobox" && oField._editable))) {
+				if (oField._content.IsSelectionUse()) {
+					oField.Remove(-1);
+					oViewer._paintForms();
+					oViewer.onUpdateOverlay();
+					this.WordControl.m_oDrawingDocument.TargetStart();
+					this.WordControl.m_oDrawingDocument.showTarget(true);
+				}
+			}
+		}
+
 	};
 
 	asc_docs_api.prototype.asc_PasteData = function(_format, data1, data2, text_data, useCurrentPoint, callback, checkLocks)
@@ -5839,7 +5855,7 @@ background-repeat: no-repeat;\
 						oApi.WordControl.m_oLogicDocument.AddPlaceholderImages(arrImages, oOptionObject);
 					}
 				}
-				else if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
+				else if (this.WordControl.m_oLogicDocument && false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 				{
 					const arrImages = [];
 					for(let i = 0; i < arrUrls.length; ++i)
@@ -5855,6 +5871,33 @@ background-repeat: no-repeat;\
 						oApi.WordControl.m_oLogicDocument.StartAction();
 						oApi.WordControl.m_oLogicDocument.AddImages(arrImages);
 						oApi.WordControl.m_oLogicDocument.FinalizeAction();
+					}
+				}
+				else if (this.isDocumentRenderer()) {
+					let oViewer = this.getDocumentRenderer();
+					let oField = oOptionObject.field;
+					let oBounds = oField.getFormRelRect();
+					let W = oBounds.W;
+					let H = oBounds.H;
+					const oImage = oApi.ImageLoader.LoadImage(arrUrls[0], 1);
+					
+					if(oImage.Image)
+					{
+						let __w = Math.max((oImage.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
+						let __h = Math.max((oImage.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
+						W      = Math.max(5, Math.min(W, __w));
+						H      = Math.max(5, Math.min((W * __h / __w)));
+						let Drawing   = new ParaDrawing(W, H, null, this.WordControl.m_oDrawingDocument, this, null);
+						let Image = oViewer.DrawingObjects.createImage(oImage.src, 0, 0, W, H);
+						Image.setParent(Drawing);
+						Drawing.Set_GraphicObject(Image);
+
+						let oTargetRun = oField._content.GetElement(0).GetElement(0);
+						oTargetRun.Add_ToContent(oTargetRun.Content.length, Drawing);
+						Drawing.Set_Parent(oTargetRun);
+
+						oField._wasChanged = true;
+						oViewer._paintForms();
 					}
 				}
 			}, []);
@@ -11091,8 +11134,8 @@ background-repeat: no-repeat;\
 		if (!oField)
 			return;
 
-		oField.private_selectOption(nIdx);
-		oField.private_UnionLastHistoryPoints(false);
+		oField.SelectOption(nIdx);
+		oField.UnionLastHistoryPoints(false);
 		oViewer._paintForms();
 	};
 	asc_docs_api.prototype.sync_OnDocumentOutlineUpdate = function()

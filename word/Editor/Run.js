@@ -3522,7 +3522,7 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 			let oViewer = editor.getDocumentRenderer();
 			let scaleCoef = oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio;
 			if (oTextFormPDF.borderStyle == "solid" || oTextFormPDF.borderStyle == "dashed")
-				nCombBorderW = oTextFormPDF.private_getMarginsByBorder().left * g_dKoef_pix_to_mm / scaleCoef;
+				nCombBorderW = oTextFormPDF.GetBordersWidth().left * g_dKoef_pix_to_mm / scaleCoef;
 			else
 				nCombBorderW = 0;
 			this.private_MeasureCombForm(nCombBorderW, nCombWidth, nMaxComb, oTextFormPDF, isKeepWidth, oTextPr, oTheme, oInfoMathText);
@@ -5409,8 +5409,17 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                 var ColumnAbs = Para.Get_AbsoluteColumn(CurPage);
 
                 var LogicDocument = this.Paragraph.LogicDocument;
-                var LD_PageLimits = LogicDocument.Get_PageLimits(PageAbs);
-                var LD_PageFields = LogicDocument.Get_PageFields(PageAbs, isInHdrFtr);
+                var LD_PageLimits;
+                var LD_PageFields;
+				if (LogicDocument)
+				{
+					LD_PageLimits = LogicDocument.Get_PageLimits(PageAbs);
+					LD_PageFields = LogicDocument.Get_PageFields(PageAbs, isInHdrFtr);
+				}
+				else if (editor.isDocumentRenderer())
+				{
+					LD_PageLimits = LD_PageFields = editor.getDocumentRenderer().Get_PageLimits();
+				}
 
                 var Page_Width  = LD_PageLimits.XLimit;
                 var Page_Height = LD_PageLimits.YLimit;

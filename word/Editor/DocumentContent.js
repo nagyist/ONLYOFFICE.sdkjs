@@ -91,6 +91,10 @@ function CDocumentContent(Parent, DrawingDocument, X, Y, XLimit, YLimit, Split, 
             this.DrawingObjects  = DrawingDocument.m_oLogicDocument.DrawingObjects; // Массив укзателей на все инлайновые графические объекты
         }
     }
+	else if (editor.isDocumentRenderer())
+	{
+		this.DrawingObjects = editor.getDocumentRenderer().DrawingObjects;
+	}
 
     this.TurnOffInnerWrap = undefined === TurnOffInnerWrap ? false : TurnOffInnerWrap;
 

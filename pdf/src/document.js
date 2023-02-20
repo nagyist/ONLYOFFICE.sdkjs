@@ -114,7 +114,7 @@
                 // последним добавляем виджет-поле (то, которое рисуем)
                 if (i == aPartNames.length - 1) {
                     oField = private_createField(aPartNames[i], cFieldType, nPageNum, oCoords);
-                    oParentField.private_addKid(oField);
+                    oParentField.AddKid(oField);
                     this._widgets.push(oField);
                 }
                 else {
@@ -123,7 +123,7 @@
                     if (oExistsField)
                         oParentField = oExistsField;
                     else {
-                        oExistsField.private_addKid(private_createField(aPartNames[i], "", "", []));
+                        oExistsField.AddKid(private_createField(aPartNames[i], "", "", []));
                         oParentField = oExistsField;
                     }
                 }
@@ -143,7 +143,7 @@
         if (AscCommon.History.IsOn() == true)
             AscCommon.History.TurnOff();
 
-        oField.private_syncField();
+        oField.SyncField();
         
         for (let i = 0; i < viewer.pageDetector.pages.length; i++) {
             if (viewer.pageDetector.pages[i].num == nPageNum) {
@@ -154,6 +154,113 @@
             }
         }
         
+        return oField;
+    };
+
+    /**
+	 * Adds an interactive field to document.
+	 * @memberof CPDFDoc
+	 * @typeofeditors ["PDF"]
+     * @param {String} cName - The name of the new field to create.
+     * @param {"button" | "checkbox" | "combobox" | "listbox" | "radiobutton" | "signature" | "text"} cFieldType - The type of form field to create.
+     * @param {Number} nPageNum - The 0-based index of the page to which to add the field.
+     * @param {Array} oCoords - An array of four numbers in rotated user space that specifies the size and placement
+        of the form field. These four numbers are the coordinates of the bounding rectangle,
+        in the following order: upper-left x, upper-left y, lower-right x and lower-right y 
+	 * @returns {CBaseForm}
+	 */
+    CPDFDoc.prototype.private_addField = function(cName, cFieldType, nPageNum, oCoords) {
+        function checkValidParams(cName, cFieldType, nPageNum, oCoords) {
+            if (Object.values(AscPDFEditor.FIELD_TYPE).includes(cFieldType) == false)
+                return false;
+            if (typeof(nPageNum) !== "number" || nPageNum < 0)
+                return false;
+            if (typeof(cName) !== "string" || cName == "")
+                return false;
+            let isValidRect = true;
+            if (Array.isArray(oCoords)) {
+                for (let i = 0; i < 4; i++) {
+                    if (typeof(oCoords[i]) != "number") {
+                        isValidRect = false;
+                        break;
+                    }
+                }
+            }
+            else
+                isValidRect = false;
+
+            if (!isValidRect)
+                return false;
+        }
+        if (false == checkValidParams(cName, cFieldType, nPageNum, oCoords))
+            return null;
+
+        let viewer = editor.WordControl.m_oDrawingDocument.m_oDocumentRenderer;
+        let oPagesInfo = viewer.pagesInfo;
+        if (!oPagesInfo.pages[nPageNum])
+            return null;
+        
+        let oField;
+
+        while (cName.indexOf('..') != -1)
+            cName = cName.replace(new RegExp("\.\.", "g"), ".");
+
+        let oExistsWidget = this.private_getWidgetField(cName);
+        // если есть виджет-поле с таким именем, но другим типом, то не добавляем 
+        if (oExistsWidget && oExistsWidget.type != cFieldType)
+            return null; // to do add error (field with this name already exists)
+
+        // получаем PartNames
+        let aPartNames = cName.split('.').filter(function(item) {
+            if (item != "")
+                return item;
+        })
+
+        // по формату не больше 20 вложенностей
+        if (aPartNames.length > 20)
+            return null;
+
+        // создаем родительские поля, последнее будет виджет-полем
+        if (aPartNames.length > 1) {
+            if (this._rootFields.get(aPartNames[0]) == null) { // если нет root поля, то создаем
+                this._rootFields.set(aPartNames[0], private_createField(aPartNames[0], "", "", []));
+            }
+
+            let oParentField = this._rootFields.get(aPartNames[0]);
+            
+            for (let i = 1; i < aPartNames.length; i++) {
+                // последним добавляем виджет-поле (то, которое рисуем)
+                if (i == aPartNames.length - 1) {
+                    oField = private_createField(aPartNames[i], cFieldType, nPageNum, oCoords);
+                    oParentField.AddKid(oField);
+                    this._widgets.push(oField);
+                }
+                else {
+                    // если есть поле с таким именем (part name), то двигаемся дальше, если нет, то создаем
+                    let oExistsField = oParentField.private_getField(aPartNames[i]);
+                    if (oExistsField)
+                        oParentField = oExistsField;
+                    else {
+                        oExistsField.AddKid(private_createField(aPartNames[i], "", "", []));
+                        oParentField = oExistsField;
+                    }
+                }
+            }
+        }
+        // сразу создаем виджет-поле
+        else {
+            oField = private_createField(aPartNames[0], cFieldType, nPageNum, oCoords);
+            this._widgets.push(oField);
+        }
+
+        if (oPagesInfo.pages[nPageNum].fields == null)
+            oPagesInfo.pages[nPageNum].fields = this._widgets;
+
+        oField._doc = this;
+
+        if (AscCommon.History.IsOn() == true)
+            AscCommon.History.TurnOff();
+
         return oField;
     };
 
@@ -189,7 +296,7 @@
 
         let oFieldParent = oField._parent;
         // удаляем поле из родителя
-        oFieldParent.private_removeKid(oField);
+        oFieldParent.RemoveKid(oField);
 
         // создаем родительские поля, последнее будет виджет-полем
         if (aPartNames.length > 1) {
@@ -202,7 +309,7 @@
             for (let i = 1; i < aPartNames.length; i++) {
                 // добавляем виджет-поле (то, которое рисуем)
                 if (i == aPartNames.length - 1) {
-                    oParentField.private_addKid(oField);
+                    oParentField.AddKid(oField);
                 }
                 else {
                     // если есть поле с таким именем (part name), то двигаемся дальше, если нет, то создаем
@@ -210,7 +317,7 @@
                     if (oExistsField)
                         oParentField = oExistsField;
                     else {
-                        oExistsField.private_addKid(private_createField(aPartNames[i], "", "", []));
+                        oExistsField.AddKid(private_createField(aPartNames[i], "", "", []));
                         oParentField = oExistsField;
                     }
                 }
@@ -218,7 +325,7 @@
         }
 
         this.private_checkField(oFieldParent);
-        oField.private_syncField();
+        oField.SyncField();
         return oField;
     };
 
@@ -241,7 +348,7 @@
     CPDFDoc.prototype.private_checkField = function(oField) {
         if (oField._kids.length == 0) {
             if (oField._parent) {
-                oField._parent.private_removeKid(oField);
+                oField._parent.RemoveKid(oField);
                 this.private_checkField(oField._parent);
             }
             else if (this._rootFields.get(oField.name)) {
