@@ -5855,6 +5855,17 @@ background-repeat: no-repeat;\
 						oApi.WordControl.m_oLogicDocument.AddPlaceholderImages(arrImages, oOptionObject);
 					}
 				}
+				else if (this.isDocumentRenderer() && oOptionObject.field && oOptionObject.field.type === "button")
+				{
+					let oViewer = this.getDocumentRenderer();
+					let oField = oOptionObject.field;
+					const oImage = oApi.ImageLoader.LoadImage(arrUrls[0], 1);
+					if(oImage && oImage.Image)
+					{
+						oField.AddImage(oImage);
+						oViewer._paintForms();
+					}
+				}
 				else if (this.WordControl.m_oLogicDocument && false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 				{
 					const arrImages = [];
@@ -5871,33 +5882,6 @@ background-repeat: no-repeat;\
 						oApi.WordControl.m_oLogicDocument.StartAction();
 						oApi.WordControl.m_oLogicDocument.AddImages(arrImages);
 						oApi.WordControl.m_oLogicDocument.FinalizeAction();
-					}
-				}
-				else if (this.isDocumentRenderer()) {
-					let oViewer = this.getDocumentRenderer();
-					let oField = oOptionObject.field;
-					let oBounds = oField.getFormRelRect();
-					let W = oBounds.W;
-					let H = oBounds.H;
-					const oImage = oApi.ImageLoader.LoadImage(arrUrls[0], 1);
-					
-					if(oImage.Image)
-					{
-						let __w = Math.max((oImage.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
-						let __h = Math.max((oImage.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
-						W      = Math.max(5, Math.min(W, __w));
-						H      = Math.max(5, Math.min((W * __h / __w)));
-						let Drawing   = new ParaDrawing(W, H, null, this.WordControl.m_oDrawingDocument, this, null);
-						let Image = oViewer.DrawingObjects.createImage(oImage.src, 0, 0, W, H);
-						Image.setParent(Drawing);
-						Drawing.Set_GraphicObject(Image);
-
-						let oTargetRun = oField._content.GetElement(0).GetElement(0);
-						oTargetRun.Add_ToContent(oTargetRun.Content.length, Drawing);
-						Drawing.Set_Parent(oTargetRun);
-
-						oField._wasChanged = true;
-						oViewer._paintForms();
 					}
 				}
 			}, []);

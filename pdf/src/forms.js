@@ -617,7 +617,35 @@
     }
     CPushButtonField.prototype = Object.create(CBaseField.prototype);
 	CPushButtonField.prototype.constructor = CPushButtonField;
-
+	CPushButtonField.prototype.AddImage = function(oImgData) {
+		if(!oImgData) {
+			return;
+		}
+		const oHTMLImg = oImgData.Image;
+		if(!oHTMLImg) {
+			return;
+		}
+		if(oHTMLImg.width === 0 || oHTMLImg.height === 0) {
+			return;
+		}
+		const dImgW = Math.max((oHTMLImg.width * AscCommon.g_dKoef_pix_to_mm), 1);
+		const dImgH = Math.max((oHTMLImg.height * AscCommon.g_dKoef_pix_to_mm), 1);
+		const oRect = this.getFormRelRect();
+		const dFrmW = oRect.W;
+		const dFrmH = oRect.H;
+		const dCW = dFrmW/dImgW;
+		const dCH = dFrmH/dImgH;
+		const dCoef = Math.min(dCW, dCH);
+		const dDrawingW = dCoef*dImgW;
+		const dDrawingH = dCoef*dImgH;
+		const oDrawing = new AscCommonWord.ParaDrawing(dDrawingW, dDrawingH, null, this._content.DrawingDocument, this._content, null);
+		const oImg = AscFormat.DrawingObjectsController.prototype.createImage(oImgData.src, 0, 0, dDrawingW, dDrawingH);
+		oImg.setParent(oDrawing);
+		oDrawing.Set_GraphicObject(oImg);
+		this._content.AddToParagraph(oDrawing, false);
+		oImg.recalculate();
+		this._wasChanged = true;
+	};
     CPushButtonField.prototype.Draw = function(oCtx, pageIndX, pageIndY) {
         let oViewer = private_getViewer();
 
