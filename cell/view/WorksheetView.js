@@ -12067,6 +12067,12 @@
 				}
 				History.EndTransaction();
 
+				let typeTo = arnTo.getType();
+				let gSelType = Asc.c_oAscSelectionType;
+				if (typeTo === gSelType.RangeMax || typeTo === gSelType.RangeRow || typeTo === gSelType.RangeCol) {
+					t._initCellsArea(AscCommonExcel.recalcType.recalc);
+				}
+
 				wsTo._updateRange(arnTo);
 				t._updateRange(arnFrom);
 
