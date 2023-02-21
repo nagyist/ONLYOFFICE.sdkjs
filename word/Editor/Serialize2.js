@@ -718,7 +718,9 @@ var c_oSer_SettingsType = {
 	BookFoldRevPrinting: 17,
 	SpecialFormsHighlight: 18,
 	DocumentProtection: 19,
-	WriteProtection: 20
+	WriteProtection: 20,
+	AutoHyphenation: 21,
+	HyphenationZone: 22
 };
 var c_oDocProtect = {
 	AlgorithmName: 0,
@@ -6965,6 +6967,8 @@ function BinarySettingsTableWriter(memory, doc, saveParams)
 				oThis.saveParams.endnotesIndex = index;
 			}
 		});
+		
+		let settings = oThis.Document.Settings;
 		if (oThis.Document.Settings && oThis.Document.Settings.DecimalSymbol) {
 			this.bs.WriteItem(c_oSer_SettingsType.DecimalSymbol, function() {oThis.memory.WriteString3(oThis.Document.Settings.DecimalSymbol);});
 		}
@@ -6985,6 +6989,11 @@ function BinarySettingsTableWriter(memory, doc, saveParams)
 		{
 			this.bs.WriteItem(c_oSer_SettingsType.WriteProtection, function(){oThis.WriteWriteProtect();});
 		}
+		if (settings && settings.AutoHyphenation)
+			this.bs.WriteItem(c_oSer_SettingsType.AutoHyphenation, function() {oThis.memory.WriteBool(true);});
+		if (settings && undefined !== settings.HyphenationZone)
+			this.bs.WriteItem(c_oSer_SettingsType.HyphenationZone, function() {oThis.memory.WriteLong(settings.HyphenationZone);});
+		
 		// if (oThis.Document.Settings && null != oThis.Document.Settings.PrintTwoOnOne) {
 		// 	this.bs.WriteItem(c_oSer_SettingsType.PrintTwoOnOne, function() {oThis.memory.WriteBool(oThis.Document.Settings.PrintTwoOnOne);});
 		// }
@@ -16391,6 +16400,14 @@ function Binary_SettingsTableReader(doc, oReadResult, stream)
 		// {
 		// 	editor.WordControl.m_oLogicDocument.Settings.BookFoldRevPrinting = this.stream.GetBool();
 		// }
+		else if (c_oSer_SettingsType.AutoHyphenation === type)
+		{
+			Settings.AutoHyphenation = this.stream.GetBool();
+		}
+		else if (c_oSer_SettingsType.HyphenationZone === type)
+		{
+			Settings.HyphenationZone = this.stream.GetLong();
+		}
         else
             res = c_oSerConstants.ReadUnknown;
         return res;
