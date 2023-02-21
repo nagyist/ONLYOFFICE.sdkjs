@@ -11590,13 +11590,59 @@
 		if (!wsTo) {
 			wsTo = this;
 		}
+		if (!wsFrom) {
+			wsFrom = this;
+		}
 		if (wsTo.getSheetProtection()) {
 			return;
 		}
 		if (false === this.workbook.bUndoChanges && false === this.workbook.bRedoChanges) {
 			const bboxFromType = oBBoxFrom.getType();
 			if (bboxFromType === Asc.c_oAscSelectionType.RangeCol || bboxFromType === Asc.c_oAscSelectionType.RangeMax) {
+				let i;
+				let arrColsProps = [];
 
+				var oDefColPr = new AscCommonExcel.UndoRedoData_ColProp();
+				//get props from bboxFrom + clear old props
+				wsFrom.getRange3(oBBoxFrom.r1, oBBoxFrom.c1, oBBoxFrom.r2, oBBoxFrom.c2)._foreachColNoEmpty(function(col) {
+					let nIndex = col.getIndex();
+					let oOldProps = col.getWidthProp();
+					arrColsProps[nIndex] = oOldProps;
+
+					wsFrom.cellsByCol.splice(nIndex, 1);
+					wsFrom.aCols.splice(nIndex, 1);
+
+					if (false === oOldProps.isEqual(oDefColPr))
+						History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_ColProp, t.getId(), new Asc.Range(nIndex, 0, nIndex, gc_nMaxRow0), new UndoRedoData_IndexSimpleProp(nIndex, false, oOldProps, oDefColPr));
+					col.setStyle(null);
+				});
+				//clear old props from oBBoxTo
+				wsTo.getRange3(oBBoxTo.r1, oBBoxTo.c1, oBBoxTo.r2, oBBoxTo.c2)._foreachColNoEmpty(function(col) {
+					let nIndex = col.getIndex();
+					let oOldProps = col.getWidthProp();
+
+					wsTo.cellsByCol.splice(nIndex, 1);
+					wsTo.aCols.splice(nIndex, 1);
+
+					if (false === oOldProps.isEqual(oDefColPr))
+						History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_ColProp, t.getId(), new Asc.Range(nIndex, 0, nIndex, gc_nMaxRow0), new UndoRedoData_IndexSimpleProp(nIndex, false, oOldProps, oDefColPr));
+					col.setStyle(null);
+				});
+				//apply new props by oBBoxTo
+				if (arrColsProps && arrColsProps.length) {
+					for (let i in arrColsProps) {
+						let oNewProps = arrColsProps[i];
+						let nCurIndex = parseInt(i);
+
+						var col = wsTo._getCol(nCurIndex + offset.col);
+						var oOldProps = col.getWidthProp();
+						if (false === oOldProps.isEqual(oNewProps)) {
+							col.setWidthProp(oNewProps);
+							wsTo.initColumn(col);
+							History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_ColProp, wsTo.getId(), new Asc.Range(nCurIndex, 0, nCurIndex, gc_nMaxRow0), new UndoRedoData_IndexSimpleProp(nCurIndex, false, oOldProps, oNewProps));
+						}
+					}
+				}
 			}
 		}
 	};
