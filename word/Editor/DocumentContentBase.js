@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -2299,7 +2299,7 @@ CDocumentContentBase.prototype.SetThisElementCurrent = function(isUpdateStates)
  */
 CDocumentContentBase.prototype.GetAllOleObjects = function(sPluginId, arrObjects)
 {
-	if (Array.isArray(arrObjects))
+	if (!Array.isArray(arrObjects))
 	{
 		arrObjects = [];
 	}
@@ -2354,4 +2354,9 @@ CDocumentContentBase.prototype.CountElementsInFrame = function(nStartIndex)
 	}
 
 	return nFlowsCount;
+};
+CDocumentContentBase.prototype.OnContentChange = function()
+{
+	if (this.Parent && this.Parent.OnContentChange)
+		this.Parent.OnContentChange();
 };

@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -249,6 +249,7 @@ var c_oAscError = Asc.c_oAscError;
 			{
 				var printOptionsObj = asc["editor"].getPrintOptionsJson();
 				printOptionsObj["documentLayout"] = { "openedAt" : asc["editor"].openedAt };
+				printOptionsObj["locale"] = asc["editor"].asc_getLocale();
 
 				printOptions = JSON.stringify(printOptionsObj);
 			}

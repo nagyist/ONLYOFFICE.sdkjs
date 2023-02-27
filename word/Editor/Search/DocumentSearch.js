@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2022
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -413,9 +413,9 @@
 			if (!this.Elements[sId])
 				continue;
 
-			let sText = this.Elements[sId].GetTextAroundSearchResult(sId);
-			this.TextArround[sId] = sText;
-			arrResult.push([sId, sText]);
+			let textAround = this.Elements[sId].GetTextAroundSearchResult(sId);
+			this.TextArround[sId] = textAround;
+			arrResult.push([sId, textAround]);
 		}
 
 		if (arrResult.length)

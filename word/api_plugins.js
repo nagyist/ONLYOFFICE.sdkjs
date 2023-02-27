@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -864,6 +864,7 @@
 		oPluginData["data"] = NewObject["Data"];
 		oPluginData["guid"] = NewObject["ApplicationId"];
 		oPluginData["select"] = bSelect;
+		oPluginData["plugin"] = true;
 		this.asc_addOleObject(oPluginData);
 	};
 
@@ -964,6 +965,11 @@
 					oImagesMap[oData["ImageData"]] = oData["ImageData"];
 				}
 				let oApi = this;
+				let sGuid;
+				if(window.g_asc_plugins)
+				{
+					sGuid = window.g_asc_plugins.setPluginMethodReturnAsync();
+				}
 				AscCommon.Check_LoadingDataBeforePrepaste(this, {}, oImagesMap, function() {
 					oLogicDocument.Reassign_ImageUrls(oImagesMap);
 					oLogicDocument.Recalculate();
@@ -971,6 +977,10 @@
 					oLogicDocument.LoadDocumentState(oStartState);
 					oLogicDocument.UpdateSelection();
 					oLogicDocument.FinalizeAction();
+					if(window.g_asc_plugins)
+					{
+						window.g_asc_plugins.onPluginMethodReturn(sGuid);
+					}
 				});
 			}
 			else

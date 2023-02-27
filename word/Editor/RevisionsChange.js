@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -310,7 +310,8 @@ CRevisionsChange.prototype.IsTextChange = function()
 CRevisionsChange.prototype.IsTableRowChange = function()
 {
 	return (c_oAscRevisionsChangeType.RowsAdd === this.Type
-		|| c_oAscRevisionsChangeType.RowsRem === this.Type);
+		|| c_oAscRevisionsChangeType.RowsRem === this.Type
+		|| c_oAscRevisionsChangeType.TableRowPr === this.Type);
 };
 CRevisionsChange.prototype.IsTablePrChange = function()
 {

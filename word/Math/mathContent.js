@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -5607,10 +5607,11 @@ CMathContent.prototype.ConvertContentView = function(intStart, intEnd, nInputTyp
             }
         }
 
-        if (isToLinear || undefined === nInputType || null === nInputType)
+        if ((isToLinear || undefined === nInputType || null === nInputType) && strContent !== "")
         {
             this.Remove_FromContent(intStart, intCount);
             this.Add_TextOnPos(intStart, strContent);
+
             this.Content[intStart].SelectAll();
 
             this.Selection.Use      = true;

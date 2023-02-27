@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -8706,6 +8706,10 @@ ParaRun.prototype.Get_CompiledPr = function(bCopy)
     {
         this.RecalcInfo.TextPr = false;
         this.CompiledPr = this.Internal_Compile_Pr();
+		
+		// Пока настройки параграфа не считаются скомпилированными, мы не можем считать скомпилированными настройки рана
+		if (this.Paragraph && !this.Paragraph.IsParaPrCompiled())
+			this.RecalcInfo.TextPr = true;
     }
 
     if ( false === bCopy )

@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -4256,6 +4256,9 @@
 				break;
 			case Asc.c_oAscRevisionsChangeType.RowsRem:
 				sChangeType = "rowsRem";
+				break;
+			case Asc.c_oAscRevisionsChangeType.TableRowPr:
+				sChangeType = "tableRowPr";
 				break;
 			case Asc.c_oAscRevisionsChangeType.MoveMark:
 				sChangeType = "moveMark";
@@ -9943,6 +9946,9 @@
 				break;
 			case "tablePr":
 				nChangeType = Asc.c_oAscRevisionsChangeType.TablePr;
+				break;
+			case "tableRowPr":
+				nChangeType = Asc.c_oAscRevisionsChangeType.TableRowPr;
 				break;
 			case "rowsAdd":
 				nChangeType = Asc.c_oAscRevisionsChangeType.RowsAdd;
