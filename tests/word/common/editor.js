@@ -70,6 +70,8 @@
 	drawingDocument.CanvasHitContext = drawingDocument.CanvasHit.getContext('2d');
 	drawingDocument.m_oWordControl = drawingDocument;
 
+	window['asc_docs_api'] = AscCommon.baseEditorsApi;
+
 	const editor = new AscCommon.baseEditorsApi({});
 	editor.WordControl = drawingDocument;
 	editor.WordControl.m_oDrawingDocument = drawingDocument;

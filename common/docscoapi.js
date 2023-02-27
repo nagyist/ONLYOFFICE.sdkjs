@@ -969,7 +969,8 @@
     // Отключаемся сами
     this.isCloseCoAuthoring = true;
     if (opt_code) {
-      this.socketio.disconnect();//todo (opt_code, opt_reason);
+      this.onDisconnect(opt_reason, opt_code);
+      this.socketio.disconnect();
     } else {
       this._send({"type": "close"});
       this._state = ConnectionState.ClosedCoAuth;
@@ -1122,8 +1123,24 @@
 
   DocsCoApi.prototype._onRefreshToken = function(jwt) {
     this.jwtOpen = undefined;
+    if (this.socketio) {
+      if (this.socketio.auth) {
+        this.socketio.auth.token = this.jwtOpen;
+      }
+      if (this.socketio.io && this.socketio.io.setOpenToken) {
+        this.socketio.io.setOpenToken(this.jwtOpen);
+      }
+    }
     if (jwt) {
       this.jwtSession = jwt;
+      if (this.socketio) {
+        if (this.socketio.auth) {
+          this.socketio.auth.session = this.jwtSession;
+        }
+        if (this.socketio.io && this.socketio.io.setSessionToken) {
+          this.socketio.io.setSessionToken(this.jwtSession);
+        }
+      }
     }
   };
 
@@ -1774,6 +1791,16 @@
   CNativeSocket.prototype.reconnectionDelay    = function(val) { this.settings["reconnectionDelay"] = val; };
   CNativeSocket.prototype.reconnectionDelayMax = function(val) { this.settings["reconnectionDelayMax"] = val; };
   CNativeSocket.prototype.randomizationFactor  = function(val) { this.settings["randomizationFactor"] = val; };
+  CNativeSocket.prototype.setOpenToken = function (val) {
+    if (this.settings["auth"]) {
+      this.settings["auth"]["token"] = val;
+    }
+  };
+  CNativeSocket.prototype.setSessionToken = function (val) {
+    if (this.settings["auth"]) {
+      this.settings["auth"]["session"] = val;
+    }
+  };
 
   CNativeSocket.prototype.on = function(name, callback) {
     if (!this.events.hasOwnProperty(name))
@@ -1794,16 +1821,18 @@
 	DocsCoApi.prototype._initSocksJs = function () {
       var t = this;
       let socket;
+      let firstConnection = true;
       let options = {
         "path": this.socketio_url,
-        "transports": ["polling", "websocket"],
+        "transports": ["websocket", "polling"],
         "closeOnBeforeunload": false,
         "reconnectionAttempts": 15,
         "reconnectionDelay": 500,
         "reconnectionDelayMax": 10000,
         "randomizationFactor": 0.5,
         "auth": {
-          "token": this.jwtOpen
+          "token": this.jwtOpen,
+          "session": this.jwtSession
         }
       };
       if (window['IS_NATIVE_EDITOR']) {
@@ -1814,6 +1843,7 @@
         socket = io(options);
       }
       socket.on("connect", function () {
+        firstConnection = false;
         t._onServerOpen();
       });
       socket.on("disconnect", function (reason) {
@@ -1831,6 +1861,11 @@
           //cases: authorization
           t._onServerClose(true);
           t.onDisconnect(err.data.description, err.data.code);
+        } else if (firstConnection) {
+          firstConnection = false;
+          if (socket.io.opts) {
+            socket.io.opts.transports = ["polling", "websocket"];
+          }
         }
       });
       socket.io.on("reconnect_failed", function () {

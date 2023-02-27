@@ -4257,6 +4257,9 @@
 			case Asc.c_oAscRevisionsChangeType.RowsRem:
 				sChangeType = "rowsRem";
 				break;
+			case Asc.c_oAscRevisionsChangeType.TableRowPr:
+				sChangeType = "tableRowPr";
+				break;
 			case Asc.c_oAscRevisionsChangeType.MoveMark:
 				sChangeType = "moveMark";
 				break;
@@ -9111,7 +9114,7 @@
 
 			var nBulleType = AscFormat.BULLET_TYPE_BULLET_NONE;
 			var nAutoNumType;
-			switch (oParsedBulletType["AutoNumType"])
+			switch (oParsedBulletType["autoNumType"])
 			{
 				case "alphaLcParenBoth":
 					nAutoNumType = AscFormat.numbering_presentationnumfrmt_AlphaLcParenBoth;
@@ -9943,6 +9946,9 @@
 				break;
 			case "tablePr":
 				nChangeType = Asc.c_oAscRevisionsChangeType.TablePr;
+				break;
+			case "tableRowPr":
+				nChangeType = Asc.c_oAscRevisionsChangeType.TableRowPr;
 				break;
 			case "rowsAdd":
 				nChangeType = Asc.c_oAscRevisionsChangeType.RowsAdd;

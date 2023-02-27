@@ -1442,8 +1442,8 @@
 		}
 
 		return {
-			type : "Removed",
-			guid : removedPlugin ? removedPlugin.guid : ""
+			"type" : "Removed",
+			"guid" : removedPlugin ? removedPlugin.guid : ""
 		};
 	};
 	/**
@@ -1563,5 +1563,26 @@
 				break;
 		}
 	};
+
+    /**
+     * Gets the document language.
+     * @memberof Api
+     * @typeofeditors ["CDE", "CPE"]
+     * @alias GetDocumentLang
+     * @returns {string} 
+     */
+    Api.prototype["pluginMethod_GetDocumentLang"] = function()
+    {
+        let langCode = 1033; // en-US
+        let langName = "en-US";
+
+        if (this.WordControl && this.WordControl.m_oLogicDocument && this.WordControl.m_oLogicDocument.GetDefaultLanguage)
+            langCode = this.WordControl.m_oLogicDocument.GetDefaultLanguage();
+
+        if (window["Common"])
+            langName = window["Common"]["util"]['LanguageInfo']['getLocalLanguageName'](langCode)[0];
+
+        return langName;
+    };
 
 })(window);
