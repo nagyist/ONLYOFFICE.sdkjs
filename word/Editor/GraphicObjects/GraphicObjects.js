@@ -2151,7 +2151,6 @@ CGraphicObjects.prototype =
                     editor.Update_ParaInd(ParaPr.Ind);
                     editor.sync_PrAlignCallBack(ParaPr.Jc);
                     editor.sync_ParaStyleName(ParaPr.StyleName);
-                    editor.sync_ListType(ParaPr.NumPr);
                 }
             }
         }
@@ -2222,7 +2221,6 @@ CGraphicObjects.prototype =
         editor.Update_ParaInd(new CParaInd());
         editor.sync_PrAlignCallBack(null);
         editor.sync_ParaStyleName(null);
-        editor.sync_ListType({ Type : -1, SubType : -1 });
     },
 
     isNeedUpdateRulers: function()
