@@ -17700,10 +17700,11 @@ CParaPr.prototype.Get_PresentationBullet = function(theme, colorMap)
 	}
 	return Bullet;
 };
-CParaPr.prototype.Is_Empty = function()
+CParaPr.prototype.Is_Empty = function(oPr)
 {
+	const bIsSingleLvlPresetJSON = !!(oPr && oPr.isSingleLvlPresetJSON);
 	return !(undefined !== this.ContextualSpacing
-		|| true !== this.Ind.Is_Empty()
+		|| true !== (bIsSingleLvlPresetJSON || this.Ind.Is_Empty())
 		|| undefined !== this.Jc
 		|| undefined !== this.KeepLines
 		|| undefined !== this.KeepNext
@@ -17718,7 +17719,7 @@ CParaPr.prototype.Is_Empty = function()
 		|| undefined !== this.Brd.Right
 		|| undefined !== this.Brd.Top
 		|| undefined !== this.WidowControl
-		|| undefined !== this.Tabs
+		|| (undefined !== this.Tabs && !bIsSingleLvlPresetJSON)
 		|| undefined !== this.NumPr
 		|| undefined !== this.PStyle
 		|| undefined !== this.OutlineLvl
