@@ -33,1101 +33,1089 @@
 'use strict';
 
 
-(function(window) {
-  window.AscFonts = window.AscFonts || {};
-  AscFonts.g_fontApplication = {
-    GetFontInfo: function (sFontName) {
-      if (sFontName === 'Cambria Math') {
-        return new AscFonts.CFontInfo('Cambria Math', 40, 1, 433, 1,-1,-1,-1,-1,-1,-1);
-      }
-    },
-    Init: function () {
-
-    },
-    LoadFont: function () {
-      
-    }
-  }
-
-  window.g_fontApplication = AscFonts.g_fontApplication;
-
-  Asc.createPluginsManager = function () {
-
-  };
-  const editor = window.editor;
-
-  editor.initDefaultShortcuts = Asc.asc_docs_api.prototype.initDefaultShortcuts;
-  editor._InitCommonShortcuts = Asc.asc_docs_api.prototype._InitCommonShortcuts;
-  editor._InitWindowsShortcuts = Asc.asc_docs_api.prototype._InitWindowsShortcuts;
-  editor._InitMacOsShortcuts = Asc.asc_docs_api.prototype._InitMacOsShortcuts;
-  editor.put_ShowParaMarks = Asc.asc_docs_api.prototype.put_ShowParaMarks;
-  editor.get_ShowParaMarks = Asc.asc_docs_api.prototype.get_ShowParaMarks;
-  editor.sync_ShowParaMarks = Asc.asc_docs_api.prototype.sync_ShowParaMarks;
-  editor.FontSizeOut = Asc.asc_docs_api.prototype.FontSizeOut;
-  editor.FontSizeIn = Asc.asc_docs_api.prototype.FontSizeIn;
-  editor.asc_AddMath = Asc.asc_docs_api.prototype.asc_AddMath;
-  editor._InitVariablesOnEndLoadSdk = Asc.asc_docs_api.prototype._InitVariablesOnEndLoadSdk;
-  editor.asc_AddMath2 = Asc.asc_docs_api.prototype.asc_AddMath2;
-  editor._saveCheck = Asc.asc_docs_api.prototype._saveCheck;
-  editor.asc_AddTableOfContents = Asc.asc_docs_api.prototype.asc_AddTableOfContents;
-  editor.asc_registerCallback = Asc.asc_docs_api.prototype.asc_registerCallback;
-  editor.asc_unregisterCallback = Asc.asc_docs_api.prototype.asc_unregisterCallback;
-  editor.sendEvent = Asc.asc_docs_api.prototype.sendEvent;
-
-  AscFonts.FontPickerByCharacter = {
-    checkText: function (text, _this, callback) {
-      callback.call(_this);
-    }
-  };
-  
-  AscCommon.CDocsCoApi.prototype.askSaveChanges = function (callback) {
-    callback({"saveLock": false});
-  };
-
-  editor._InitVariablesOnEndLoadSdk();
-  AscCommon.g_font_loader = {
-    LoadFont: function () {
-      return false;
-    }
-  }
-  function getLogicDocumentWithParagraphs(arrText) {
-    const oLogicDocument = AscTest.CreateLogicDocument();
-    resetLogicDocument(oLogicDocument);
-    if (!oLogicDocument.TurnOffRecalc) {
-      oLogicDocument.Start_SilentMode();
-    }
-    oLogicDocument.RemoveFromContent(0, oLogicDocument.GetElementsCount(), false);
-    if (Array.isArray(arrText)) {
-      for (let i = 0; i < arrText.length; i += 1) {
-        const oParagraph = AscTest.CreateParagraph();
-        oLogicDocument.Internal_Content_Add(oLogicDocument.Content.length, oParagraph);
-        oParagraph.MoveCursorToEndPos();
-        const oRun = new AscWord.CRun();
-        oParagraph.AddToContent(0, oRun);
-        oRun.AddText(arrText[i]);
-      }
-    }
-    //oLogicDocument.MoveCursorToEndPos();
-
-
-    return oLogicDocument;
-  }
-  function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey) {
-    const oKeyBoardEvent = new AscCommon.CKeyboardEvent();
-    oKeyBoardEvent.KeyCode = nKeyCode;
-    oKeyBoardEvent.ShiftKey = bIsShift;
-    oKeyBoardEvent.AltKey = bIsAlt;
-    oKeyBoardEvent.CtrlKey = bIsCtrl;
-    oKeyBoardEvent.MacCmdKey = bIsMacCmdKey;
-    oKeyBoardEvent.AltGr = bIsAltGr;
-    return oKeyBoardEvent;
-  }
-
-  function checkInsertPageBreak(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].Check_PageBreak();
-  }
-
-  function checkInsertLineBreak(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].IsLineBreak && oRun.Content[j].IsLineBreak()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  function checkInsertColumnBreak(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].IsColumnBreak && oRun.Content[j].IsColumnBreak()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkResetChar(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    const oParagraph = oLogicDocument.Content[0];
-    const oRun = new AscWord.CRun();
-    oParagraph.AddToContent(0, oRun);
-    oRun.AddText("Hello Word!");
-    oLogicDocument.ApplyToAll = true;
-    oLogicDocument.SelectAll();
-    oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Bold: true, Italic: true, Underline: true}));
-
-    oLogicDocument.OnKeyDown(event);
-    return !(oRun.Get_Bold() || oRun.Get_Italic() || oRun.Get_Underline());
-  }
-
-  function checkNonBreakingSpace(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x00A0) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkStrikeout(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oRun = oLogicDocument.Content[0].Content[0];
-
-    return !!oRun.Get_Strikeout();
-  }
-
-  function checkShowNonPrintingCharacters(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    editor.put_ShowParaMarks(false);
-    oLogicDocument.OnKeyDown(event);
-    return !!editor.get_ShowParaMarks();
-  }
-
-  function checkSelectAll(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.GetSelectedText() === 'Hello World';
-  }
-
-  function checkBold(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oRun = oLogicDocument.Content[0].Content[0];
-
-    return !!oRun.Get_Bold();
-  }
-
-  function checkCopyFormat(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    const oTextRun = oLogicDocument.Content[0].Content[0];
-    oTextRun.SetBold(true);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.CopyTextPr.IsEqual(oTextRun.Pr);
-  }
-
-  function checkInsertCopyright(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x00A9) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-  function resetLogicDocument(oLogicDocument) {
-    oLogicDocument.SetDocPosType(AscCommonWord.docpostype_Content);
-  }
-  function checkInsertEndNote(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return !!oLogicDocument.Endnotes.CurEndnote;
-  }
-
-  function checkCenterPara(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SetDocPosType(AscCommonWord.docpostype_Content);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].GetParagraphAlign() === AscCommon.align_Center;
-  }
-
-  function checkEuroSign(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x20AC) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkItalic(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oRun = oLogicDocument.Content[0].Content[0];
-
-    return !!oRun.Get_Italic();
-  }
-
-  function checkJustifyPara(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].GetParagraphAlign() === AscCommon.align_Justify;
-  }
-// in our editors, we send an event to open a window with hyperlink settings, check if the event was sent
-  function checkHyperlink(event, assert) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    let bCheck = false;
-    const fOldSyncDialogAddHyperlink = editor.sync_DialogAddHyperlink;
-    editor.sync_DialogAddHyperlink = function () {
-      assert.true(true, 'Check hyperlink shortcut');
-      bCheck = true;
-    };
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    if (!bCheck) {
-      assert.true(false, 'Check hyperlink shortcut');
-    }
-    editor.sync_DialogAddHyperlink = fOldSyncDialogAddHyperlink;
-  }
-
-  function checkBulletList(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    return oParagraph.IsBulletedNumbering();
-  }
-
-  function checkLeftPara(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.private_ToggleParagraphAlignByHotkey(AscCommon.align_Justify);
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].GetParagraphAlign() === AscCommon.align_Left;
-  }
-
-  function checkIndent(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    const nOldIndent = oLogicDocument.Content[0].Pr.Get_IndLeft();
-    oLogicDocument.OnKeyDown(event);
-    const nNewIndent = oLogicDocument.Content[0].Pr.Get_IndLeft();
-    return nNewIndent !== nOldIndent;
-  }
-
-  function checkUnIndent(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.Content[0].Pr.SetInd(undefined, 12.5);
-    const nOldIndent = oLogicDocument.Content[0].Pr.Get_IndLeft();
-    oLogicDocument.OnKeyDown(event);
-    const nNewIndent = oLogicDocument.Content[0].Pr.Get_IndLeft();
-    return nNewIndent !== nOldIndent;
-  }
-
-  function checkPrintPreviewAndPrint(event, assert) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    let bCheck = false;
-    editor.asc_registerCallback("asc_onPrint", function () {
-      bCheck = true;
-    });
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    assert.true(bCheck, 'Check print shortcut');
-    editor.asc_unregisterCallback("asc_onPrint");
-  }
-
-  function checkInsertPageNumber(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Type === para_PageNum) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkRightPara(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].GetParagraphAlign() === AscCommon.align_Right;
-  }
-
-
-  function checkRegisteredSign(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x00AE) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkSave(event, assert) {
-    const oLogicDocument = getLogicDocumentWithParagraphs();
-    const fOldSave = editor._onSaveCallbackInner;
-    let bCheck = false;
-    editor._onSaveCallbackInner = function () {
-      bCheck = true;
-      editor._onSaveCallbackInner = fOldSave;
-    }
-    oLogicDocument.OnKeyDown(event);
-    assert.strictEqual(bCheck, true, 'Check save shortcut');
-  }
-
-  function checkTradeMarkSign(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x2122) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkUnderline(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oRun = oLogicDocument.Content[0].Content[0];
-
-    return !!oRun.Get_Underline();
-  }
-
-  function checkPasteFormat(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World', 'Hello word']);
-    const oFirstParagraph = oLogicDocument.Content[0];
-    const oFirstRun = oFirstParagraph.Content[0];
-    oFirstRun.SetBold(true);
-    oLogicDocument.MoveCursorToStartPos();
-    oLogicDocument.SelectCurrentWord();
-    oLogicDocument.Document_Format_Copy();
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oSecondParagraph = oLogicDocument.Content[1];
-    const oSecondRun = oSecondParagraph.Content[0];
-    return !!oSecondRun.Get_Bold();
-  }
-
-  AscCommon.CTableId = Object;
-  function checkRedo(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.Remove(undefined, undefined, true);
-    oLogicDocument.Document_Undo();
-    oLogicDocument.OnKeyDown(event);
-    return AscTest.GetParagraphText(oLogicDocument.Content[0]) === '';
-  }
-
-  function checkUndo(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.Remove(undefined, undefined, true);
-    oLogicDocument.OnKeyDown(event);
-    return AscTest.GetParagraphText(oLogicDocument.Content[0]) === 'Hello World';
-  }
-
-  function checkEnDash(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x2013) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkEmDash(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x2014) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkUpdateFields(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello', 'Hello', 'Hello']);
-    oLogicDocument.End_SilentMode();
-    AscTest.Recalculate();
-    for (let i = 0; i < oLogicDocument.Content.length; i += 1) {
-      oLogicDocument.Set_CurrentElement(i, true);
-      oLogicDocument.SetParagraphStyle("Heading 1");
-    }
-    AscTest.Recalculate();
-    oLogicDocument.MoveCursorToStartPos();
-    const props = new Asc.CTableOfContentsPr();
-    props.put_OutlineRange(1, 9);
-    props.put_Hyperlink(true);
-    props.put_ShowPageNumbers(true);
-    props.put_RightAlignTab(true);
-    props.put_TabLeader( Asc.c_oAscTabLeader.Dot);
-    editor.asc_AddTableOfContents(null, props);
-    
-    oLogicDocument.MoveCursorToEndPos();
-    const oParagraph = AscTest.CreateParagraph();
-    oLogicDocument.AddToContent(oLogicDocument.Content.length, oParagraph);
-    oParagraph.MoveCursorToEndPos();
-    const oRun = new AscWord.CRun();
-    oParagraph.AddToContent(0, oRun);
-    oRun.AddText('Hello');
-    oLogicDocument.Set_CurrentElement(oLogicDocument.Content.length - 1, true);
-    oLogicDocument.SetParagraphStyle("Heading 1");
-
-    oLogicDocument.Content[0].SetThisElementCurrent();
-    AscTest.Recalculate();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].Content.Content.length === 5;
-    
-  }
-
-  function checkSuperscript(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].Content[0].Get_VertAlign() === AscCommon.vertalign_SuperScript;
-  }
-
-  function checkNonBreakingHyphen(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x002D) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkHorizontalEllipsis(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.OnKeyDown(event);
-
-    const oParagraph = oLogicDocument.Content[0];
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x2026) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function checkSubscript(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return oLogicDocument.Content[0].Content[0].Get_VertAlign() === AscCommon.vertalign_SubScript;
-  }
-
-  function checkIncreaseFontSize(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    const oRun = oLogicDocument.Content[0].Content[0];
-    const nOldFontSize = oRun.Get_FontSize();
-    oLogicDocument.OnKeyDown(event);
-    const nNewFontSize = oRun.Get_FontSize();
-
-    return nOldFontSize < nNewFontSize;
-  }
-
-  function checkDecreaseFontSize(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    const oRun = oLogicDocument.Content[0].Content[0];
-    const nOldFontSize = oRun.Get_FontSize();
-    oLogicDocument.OnKeyDown(event);
-    const nNewFontSize = oRun.Get_FontSize();
-
-    return nOldFontSize > nNewFontSize;
-  }
-
-  function checkApplyHeading1(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oParagraphPr = oLogicDocument.Content[0].Pr;
-    const sPStyleName = oLogicDocument.Styles.Get_Name(oParagraphPr.Get_PStyle());
-    return sPStyleName === 'Heading 1';
-  }
-
-  function checkApplyHeading2(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oParagraphPr = oLogicDocument.Content[0].Pr;
-    const sPStyleName = oLogicDocument.Styles.Get_Name(oParagraphPr.Get_PStyle());
-    return sPStyleName === 'Heading 2';
-  }
-
-  function checkApplyHeading3(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello World']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    const oParagraphPr = oLogicDocument.Content[0].Pr;
-    const sPStyleName = oLogicDocument.Styles.Get_Name(oParagraphPr.Get_PStyle());
-    return sPStyleName === 'Heading 3';
-  }
-
-  function checkInsertFootnote(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    oLogicDocument.SelectAll();
-    oLogicDocument.OnKeyDown(event);
-    return !!oLogicDocument.Footnotes.CurFootnote;
-  }
-
-  function checkInsertEquation(event) {
-    const oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    oLogicDocument.OnKeyDown(event);
-    const oParagraph = oLogicDocument.Content[0];
-    let bCheck = false;
-    oParagraph.CheckRunContent(function (oRun) {
-      if (oRun.IsMathRun()) {
-        bCheck = true;
-      }
-    });
-    return bCheck;
-  }
-
-  function checkBackSpace(assert) {
-    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    let event;
-    event = createEvent(8, false, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
-    assert.strictEqual(sText, 'Hell', 'check backspace hotkey');
-
-    oLogicDocument = getLogicDocumentWithParagraphs(['Hello hello hello']);
-    event = createEvent(8, true, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
-    assert.strictEqual(sText, 'Hello hello ', 'check ctrl+backspace hotkey');
-
-  }
-
-  function checkTab() {
-
-  }
-
-  function checkEnter() {
-
-  }
-
-  function checkEsc() {
-
-  }
-
-  function checkSpace(assert) {
-    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    let event;
-    event = createEvent(32, false, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
-    assert.strictEqual(sText, 'Hello ', 'check space hotkey');
-  }
-
-  function checkPgUp() {
-
-  }
-
-  function checkPgDn() {
-
-  }
-
-  function checkEnd() {
-
-  }
-
-  function checkHome(assert) {
-    let oLogicDocument = getLogicDocumentWithParagraphs(['HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello' +
-    'HelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHelloHello']);
-    let event;
-    oLogicDocument.End_SilentMode();
-    oLogicDocument.private_IsStartTimeoutOnRecalc = function () {
-      return false;
-    }
-    const oParagraph = oLogicDocument.Content[0];
-    oParagraph.SetThisElementCurrent();
-    oParagraph.MoveCursorToEndPos();
-    
-    AscTest.Recalculate();
-    event = createEvent(36, false, false, false, false, false);
-    const oOldPos = oParagraph.GetCurPosXY();
-    console.log(oOldPos)
-    oLogicDocument.OnKeyDown(event);
-    const oPos = oParagraph.GetCurPosXY();
-    assert.strictEqual(oPos, 'Hello ', 'check space hotkey');
-  }
-
-  function checkLeftArrow() {
-
-  }
-
-  function checkTopArrow() {
-
-  }
-
-  function checkRightArrow() {
-
-  }
-
-  function checkBottomArrow() {
-
-  }
-
-  function checkDelete() {
-
-  }
-
-  function checkX(assert) {
-    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
-    const oParagraph = oLogicDocument.Content[0];
-    oParagraph.SelectCurrentWord();
-    const event = createEvent(88, false, false, true, false, false);
-    oLogicDocument.OnKeyDown(event);
-    let bCheck = false;
-    for (let i = 0; i < oParagraph.Content.length; i += 1) {
-      const oRun = oParagraph.Content[i];
-      for (let j = 0; j < oRun.Content.length; j += 1) {
-        if (oRun.Content[j].Value === 0x1F607) {
-          bCheck = true;
-          break;
-        }
-      }
-      if (bCheck) {
-        break;
-      }
-    }
-    assert.strictEqual(bCheck, true, 'check alt+x hotkey');
-  }
-
-  function checkContextMenu(assert) {
-    let oLogicDocument;
-    let event;
-    let bCheck = false;
-    const fCheck = function () {
-      bCheck = true;
-    }
-    editor.asc_registerCallback("asc_onContextMenu", fCheck);
-
-    oLogicDocument = getLogicDocumentWithParagraphs(['']);
-    event = createEvent(93, false, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    assert.strictEqual(bCheck, true, 'check context menu hotkey');
-    bCheck = false;
-
-    event = createEvent(121, false, true, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    assert.strictEqual(bCheck, true, 'check context menu hotkey');
-    bCheck = false;
-
-    const bOldOpera = AscCommon.AscBrowser.isOpera;
-    AscCommon.AscBrowser.isOpera = true;
-    event = createEvent(57351, false, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    assert.strictEqual(bCheck, true, 'check context menu hotkey');
-    AscCommon.AscBrowser.isOpera = bOldOpera;
-
-    editor.asc_unregisterCallback("asc_onContextMenu", fCheck);
-  }
-
-  function checkNumLock(assert) { // Nothing happens, just prevent default
-    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
-    const event = createEvent(144,false,false,false,false,false);
-    const oRet = oLogicDocument.OnKeyDown(event);
-    assert.strictEqual((oRet & keydownresult_PreventDefault) !== 0, true, 'check num lock hotkey');
-
-  }
-
-  function checkScrollLock(assert) { // Nothing happens, just prevent default
-    let oLogicDocument = getLogicDocumentWithParagraphs(['1F607']);
-    const event = createEvent(145,false,false,false,false,false);
-    const oRet = oLogicDocument.OnKeyDown(event);
-    assert.strictEqual((oRet & keydownresult_PreventDefault) !== 0, true, 'check scroll lock hotkey');
-  }
-
-  function checkCJKSpace(assert) {
-    let oLogicDocument = getLogicDocumentWithParagraphs(['Hello']);
-    let event;
-    event = createEvent(12288, false, false, false, false, false);
-    oLogicDocument.OnKeyDown(event);
-    let sText = AscTest.GetParagraphText(oLogicDocument.Content[0]);
-    assert.strictEqual(sText, 'Hello ', 'check CJK space hotkey');
-  }
-
-  $(function () {
-
-    QUnit.module("Unit-tests for Shortcuts");
-
-
-    QUnit.test("Test common shortcuts", function (assert)
-    {
-      editor.initDefaultShortcuts();
-
-      let event = createEvent(13, true, false, false, false, false);
-      assert.strictEqual(checkInsertPageBreak(event), true, 'Check page break shortcut');
-
-      event = createEvent(13, false, true, false,false,false);
-      assert.strictEqual(checkInsertLineBreak(event), true, 'Check line break shortcut');
-
-      event = createEvent(13, true, true, false,false,false);
-      assert.strictEqual(checkInsertColumnBreak(event), true, 'Check column break shortcut');
-
-
-      event = createEvent(32, true, false, false,false,false);
-      assert.strictEqual(checkResetChar(event), true, 'Check reset char shortcut');
-
-
-      event = createEvent(32, true, true, false,false,false);
-      assert.strictEqual(checkNonBreakingSpace(event), true, 'Check add non breaking space shortcut');
-
-
-      event = createEvent(53, true, false, false,false,false);
-      assert.strictEqual(checkStrikeout(event), true, 'Check add strikeout shortcut');
-
-
-      event = createEvent(56, true, true, false,false,false);
-      assert.strictEqual(checkShowNonPrintingCharacters(event), true, 'Check show non printing characters shortcut');
-
-      event = createEvent(65, true, false, false,false,false);
-      assert.strictEqual(checkSelectAll(event), true, 'Check select all shortcut');
-
-      event = createEvent(66, true, false, false,false,false);
-      assert.strictEqual(checkBold(event), true, 'Check bold shortcut');
-
-      event = createEvent(67, true, true, false,false,false);
-      assert.strictEqual(checkCopyFormat(event), true, 'Check copy format shortcut');
-
-      event = createEvent(67, true, false, true,false,false);
-      assert.strictEqual(checkInsertCopyright(event), true, 'Check insert copyright shortcut');
-
-      event = createEvent(68, true, false, true,false,false);
-      assert.strictEqual(checkInsertEndNote(event), true, 'Check insert endnote shortcut');
-
-      event = createEvent(69, true, false, false,false,false);
-      assert.strictEqual(checkCenterPara(event), true, 'Check center para shortcut');
-
-      event = createEvent(69, true, false, true,false,false);
-      assert.strictEqual(checkEuroSign(event), true, 'Check insert euro sign shortcut');
-
-      event = createEvent(73, true, false, false,false,false);
-      assert.strictEqual(checkItalic(event), true, 'Check italic shortcut');
-
-
-      event = createEvent(74, true, false, false,false,false);
-      assert.strictEqual(checkJustifyPara(event), true, 'Check justify para shortcut');
-
-      event = createEvent(75, true, false, false,false,false);
-      checkHyperlink(event, assert);
-
-      event = createEvent(76, true, true, false,false,false);
-      assert.strictEqual(checkBulletList(event), true, 'Check bullet list shortcut');
-
-      event = createEvent(76, true, false, false,false,false);
-      assert.strictEqual(checkLeftPara(event), true, 'Check left para shortcut');
-
-      event = createEvent(77, true, false, false,false,false);
-      assert.strictEqual(checkIndent(event), true, 'Check indent shortcut');
-
-      event = createEvent(77, true, true, false,false,false);
-      assert.strictEqual(checkUnIndent(event), true, 'Check indent shortcut');
-
-      event = createEvent(80, true, false, false,false,false);
-      checkPrintPreviewAndPrint(event, assert);
-
-      event = createEvent(80, true, true, false,false,false);
-      assert.strictEqual(checkInsertPageNumber(event), true, 'Check insert page number shortcut');
-
-
-      event = createEvent(82, true, false, false,false,false);
-      assert.strictEqual(checkRightPara(event), true, 'Check right para shortcut');
-
-
-      event = createEvent(82, true, false, true,false,false);
-      assert.strictEqual(checkRegisteredSign(event), true, 'Check registered sign shortcut');
-
-
-      event = createEvent(83, true, false, false,false,false);
-      checkSave(event, assert);
-
-
-      event = createEvent(84, true, false, true,false,false);
-      assert.strictEqual(checkTradeMarkSign(event), true, 'Check trademark sign shortcut');
-
-      event = createEvent(85, true, false, false,false,false);
-      assert.strictEqual(checkUnderline(event), true, 'Check underline shortcut');
-
-
-      event = createEvent(86, true, true, false,false,false);
-      assert.strictEqual(checkPasteFormat(event), true, 'Check paste format shortcut');
-
-
-      event = createEvent(89, true, false, false,false,false);
-      assert.strictEqual(checkRedo(event), true, 'Check redo shortcut');
-
-
-      event = createEvent(90, true, false, false,false,false);
-      assert.strictEqual(checkUndo(event), true, 'Check undo shortcut');
-
-
-      event = createEvent(109, true, false, false,false,false);
-      assert.strictEqual(checkEnDash(event), true, 'Check en dash shortcut');
-
-
-      event = createEvent(109, true, false, true,false,false);
-      assert.strictEqual(checkEmDash(event), true, 'Check em dash shortcut');
-
-
-      event = createEvent(120, false, false, false,false,false);
-      assert.strictEqual(checkUpdateFields(event), true, 'Check update fields shortcut');
-
-
-      event = createEvent(188, true, false, false,false,false);
-      assert.strictEqual(checkSuperscript(event), true, 'Check superscript shortcut');
-
-
-      event = createEvent(189, true, true, false,false,false);
-      assert.strictEqual(checkNonBreakingHyphen(event), true, 'Check non breaking hyphen shortcut');
-
-
-      event = createEvent(190, true, false, true,false,false);
-      assert.strictEqual(checkHorizontalEllipsis(event), true, 'Check horizontal ellipsis shortcut');
-
-
-      event = createEvent(190, true, false, false,false,false);
-      assert.strictEqual(checkSubscript(event), true, 'Check subscript shortcut');
-
-
-      event = createEvent(219, true, false, false,false,false);
-      assert.strictEqual(checkIncreaseFontSize(event), true, 'Check increase font size shortcut');
-
-
-      event = createEvent(221, true, false, false,false,false);
-      assert.strictEqual(checkDecreaseFontSize(event), true, 'Check decrease font size shortcut');
-
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    QUnit.test("Test windows shortcuts", function (assert)
-    {
-      editor.initDefaultShortcuts();
-      let event;
-      event = createEvent(49, false, false, true, false, false);
-      assert.strictEqual(checkApplyHeading1(event), true, 'Check apply heading1 shortcut');
-
-      event = createEvent(50, false, false, true, false, false);
-      assert.strictEqual(checkApplyHeading2(event), true, 'Check apply heading2 shortcut');
-
-      event = createEvent(51, false, false, true, false, false);
-      assert.strictEqual(checkApplyHeading3(event), true, 'Check apply heading3 shortcut');
-
-      event = createEvent(70, true, false, true, false, false);
-      assert.strictEqual(checkInsertFootnote(event), true, 'Check insert footnote shortcut');
-
-      event = createEvent(187, false, false, true, false, false);
-      assert.strictEqual(checkInsertEquation(event), true, 'Check insert equation shortcut');
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    QUnit.test("Test macOs shortcuts", function (assert)
-    {
-      AscCommon.AscBrowser.isMacOs = true;
-      editor.initDefaultShortcuts();
-      let event;
-      event = createEvent(49, true, false, true, false, false);
-      assert.strictEqual(checkApplyHeading1(event), true, 'Check apply heading1 shortcut');
-
-      event = createEvent(50, true, false, true, false, false);
-      assert.strictEqual(checkApplyHeading2(event), true, 'Check apply heading2 shortcut');
-
-
-      event = createEvent(51, true, false, true, false, false);
-      assert.strictEqual(checkApplyHeading3(event), true, 'Check apply heading3 shortcut');
-
-
-      event = createEvent(187, true, false, true, false, false);
-      assert.strictEqual(checkInsertEquation(event), true, 'Check insert equation shortcut');
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    QUnit.test("Test common hotkeys", function (assert)
-    {
-      editor.initDefaultShortcuts();
-
-      checkBackSpace(assert);
-      checkTab(assert);
-      checkEnter(assert);
-      checkEsc(assert);
-      checkSpace(assert);
-      checkPgUp(assert);
-      checkPgDn(assert);
-      checkEnd(assert);
-      checkHome(assert);
-      checkLeftArrow(assert);
-      checkTopArrow(assert);
-      checkRightArrow(assert);
-      checkBottomArrow(assert);
-      checkDelete(assert);
-      checkX(assert);
-      checkContextMenu(assert);
-      checkNumLock(assert);
-      checkScrollLock(assert);
-      checkCJKSpace(assert);
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    QUnit.test("Test windows hotkeys", function (assert)
-    {
-      editor.initDefaultShortcuts();
-
-      const event = createEvent(13, true, false, false, false, false);
-      assert.strictEqual(checkInsertPageBreak(event), true);
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    QUnit.test("Test macOs hotkeys", function (assert)
-    {
-      editor.initDefaultShortcuts();
-
-      const event = createEvent(13, true, false, false, false, false);
-      assert.strictEqual(checkInsertPageBreak(event), true);
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-    });
-
-    function checkNonBlockedAlt(event) {
-      const oLogicDocument = AscTest.CreateLogicDocument();
-      oLogicDocument.Start_SilentMode();
-      oLogicDocument.RemoveFromContent(0, oLogicDocument.GetElementsCount(), false);
-      const oParagraph = AscTest.CreateParagraph();
-      oLogicDocument.AddToContent(0, oParagraph);
-      oParagraph.MoveCursorToEndPos();
-
-      const nRetMouseDown = oLogicDocument.OnKeyDown(event);
-      return (nRetMouseDown & keydownresult_PreventDefault) === 0;
-    }
-
-    QUnit.test("Test unlocked alt button for mac", function (assert)
-    {
-      const bOldIsMacOs = AscCommon.AscBrowser.isMacOs;
-      AscCommon.AscBrowser.isMacOs = true;
-      editor.initDefaultShortcuts();
-
-      const arrCheckCodes = [48,49,50,51,52,53,54,55,56,57,189,187,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,
-        84,85,86,87,88,89,90,219,221,186,222,220,188,190,191,96,97,98,99,100,101,102,103,104,105,111,106,
-        109,110,107];
-      for (let nKeyCodeIndex = 0, nLength = arrCheckCodes.length; nKeyCodeIndex < nLength; ++nKeyCodeIndex) {
-        const oAltEvent = createEvent(arrCheckCodes[nKeyCodeIndex], false, false, true, false, false);
-        assert.strictEqual(checkNonBlockedAlt(oAltEvent), true, `Check (${arrCheckCodes[nKeyCodeIndex]}) key code with Alt`);
-
-        const oAltShiftEvent = createEvent(arrCheckCodes[nKeyCodeIndex], false, true, true, false, false);
-        assert.strictEqual(checkNonBlockedAlt(oAltShiftEvent), true, `Check (${arrCheckCodes[nKeyCodeIndex]}) key code with Shift and Alt`);
-      }
-
-      editor.Shortcuts = new AscCommon.CShortcuts();
-      AscCommon.AscBrowser.isMacOs = bOldIsMacOs;
-    });
-
-  });
+(function (window)
+{
+	const {
+		addPropertyToDocument,
+		getLogicDocumentWithParagraphs,
+		checkTextAfterKeyDownHelperEmpty,
+		checkDirectTextPrAfterKeyDown,
+		checkDirectParaPrAfterKeyDown,
+		oGlobalLogicDocument,
+		addParagraphToDocumentWithText,
+		remove,
+		recalculate,
+		clean,
+		onKeyDown,
+		moveToParagraph,
+		createNativeEvent,
+		moveCursorDown,
+		moveCursorUp,
+		moveCursorLeft,
+		moveCursorRight,
+		selectAll,
+		getSelectedText,
+		executeTestWithCatchEvent
+	} = AscTestShortcut;
+
+
+	function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey)
+	{
+		const oKeyBoardEvent = new AscCommon.CKeyboardEvent();
+		oKeyBoardEvent.KeyCode = nKeyCode;
+		oKeyBoardEvent.ShiftKey = bIsShift;
+		oKeyBoardEvent.AltKey = bIsAlt;
+		oKeyBoardEvent.CtrlKey = bIsCtrl;
+		oKeyBoardEvent.MacCmdKey = bIsMacCmdKey;
+		oKeyBoardEvent.AltGr = bIsAltGr;
+		return oKeyBoardEvent;
+	}
+
+
+	function checkInsertElementByType(nType, sPrompt, oAssert, oEvent)
+	{
+		const {oParagraph} = getLogicDocumentWithParagraphs(['']);
+		onKeyDown(oEvent);
+		let bCheck = false;
+		for (let i = 0; i < oParagraph.Content.length; i += 1)
+		{
+			const oRun = oParagraph.Content[i];
+			for (let j = 0; j < oRun.Content.length; j += 1)
+			{
+				if (oRun.Content[j].Type === nType)
+				{
+					bCheck = true;
+				}
+			}
+		}
+		oAssert.true(bCheck, sPrompt);
+	}
+
+	function createParagraphWithText(sText)
+	{
+		const oParagraph = AscTest.CreateParagraph();
+		const oRun = new AscWord.CRun();
+		oParagraph.AddToContent(0, oRun);
+		oRun.AddText(sText);
+		return oParagraph;
+	}
+
+	function checkApplyParagraphStyle(sStyleName, sPrompt, oEvent, oAssert)
+	{
+		const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello World']);
+		oLogicDocument.SelectAll();
+		onKeyDown(oEvent);
+		const oParagraphPr = oLogicDocument.GetDirectParaPr();
+		const sPStyleName = oLogicDocument.Styles.Get_Name(oParagraphPr.Get_PStyle());
+		oAssert.strictEqual(sPStyleName, sStyleName, sPrompt);
+	}
+
+
+	$(function ()
+	{
+		let fOldGetShortcut;
+		QUnit.module("Test shortcut actions", {
+			before    : function ()
+			{
+				editor.initDefaultShortcuts();
+			},
+			beforeEach: function ()
+			{
+				fOldGetShortcut = editor.getShortcut;
+			},
+			afterEach : function ()
+			{
+				editor.getShortcut = fOldGetShortcut;
+			},
+			after     : function ()
+			{
+				editor.Shortcuts = new AscCommon.CShortcuts();
+			}
+		});
+
+		QUnit.test('Check page break shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertPageBreak};
+			let oEvent = createNativeEvent();
+			const {oLogicDocument} = getLogicDocumentWithParagraphs([''], true);
+			oLogicDocument.OnKeyDown(oEvent);
+			oAssert.strictEqual(oLogicDocument.GetPagesCount(), 2, 'Check page break shortcut');
+			oLogicDocument.OnKeyDown(oEvent);
+			oAssert.strictEqual(oLogicDocument.GetPagesCount(), 3, 'Check page break shortcut');
+			oLogicDocument.OnKeyDown(oEvent);
+			oAssert.strictEqual(oLogicDocument.GetPagesCount(), 4, 'Check page break shortcut');
+		});
+
+		QUnit.test('Check line break shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertLineBreak};
+			const {oLogicDocument, oParagraph} = getLogicDocumentWithParagraphs([''], true);
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			oAssert.strictEqual(oParagraph.GetLinesCount(), 2, 'Check line break shortcut');
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			oAssert.strictEqual(oParagraph.GetLinesCount(), 3, 'Check line break shortcut');
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			oAssert.strictEqual(oParagraph.GetLinesCount(), 4, 'Check line break shortcut');
+		});
+
+		QUnit.test('Check column break shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertColumnBreak};
+			let oColumnProps = new Asc.CDocumentColumnsProps();
+			oColumnProps.put_Num(2);
+			editor.asc_SetColumnsProps(oColumnProps);
+			const {oLogicDocument} = getLogicDocumentWithParagraphs([''], true);
+
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			const oParagraph = oLogicDocument.GetCurrentParagraph();
+
+			oAssert.strictEqual(oParagraph.Get_CurrentColumn(), 1, 'Check column break shortcut');
+			oColumnProps = new Asc.CDocumentColumnsProps();
+			oColumnProps.put_Num(1);
+			editor.asc_SetColumnsProps(oColumnProps);
+		});
+
+		QUnit.test('Check reset char shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ResetChar};
+
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello world']);
+			oLogicDocument.SelectAll();
+			addPropertyToDocument({Bold: true, Italic: true, Underline: true});
+			onKeyDown(createNativeEvent());
+			const oDirectTextPr = oGlobalLogicDocument.GetDirectTextPr();
+			oAssert.true(!(oDirectTextPr.Get_Bold() || oDirectTextPr.Get_Italic() || oDirectTextPr.Get_Underline()), 'Check reset char shortcut');
+		});
+
+		QUnit.test('Check add non breaking space shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.NonBreakingSpace};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x00A0), createNativeEvent(), oAssert, 'Check add non breaking space shortcut');
+		});
+
+		QUnit.test('Check add strikeout shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Strikeout};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Strikeout(), true, 'Check add strikeout shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_Strikeout(), false, 'Check add strikeout shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check show non printing characters shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ShowAll};
+			editor.put_ShowParaMarks(false);
+			onKeyDown(createNativeEvent());
+			oAssert.true(editor.get_ShowParaMarks(), 'Check show non printing characters shortcut');
+		});
+
+		QUnit.test('Check select all shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EditSelectAll};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello World']);
+			onKeyDown(createNativeEvent());
+			oAssert.strictEqual(oLogicDocument.GetSelectedText(), 'Hello World', 'Check select all shortcut');
+		});
+
+		QUnit.test('Check bold shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Bold};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Bold(), true, 'Check bold shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_Bold(), false, 'Check bold shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check copy format shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.CopyFormat};
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+			oParagraph.SetThisElementCurrent();
+			oGlobalLogicDocument.SelectAll();
+			addPropertyToDocument({Bold: true, Italic: true, Underline: true});
+
+			onKeyDown(createNativeEvent());
+			const oCopyParagraphTextPr = new AscCommonWord.CTextPr();
+			oCopyParagraphTextPr.SetUnderline(true);
+			oCopyParagraphTextPr.SetBold(true);
+			oCopyParagraphTextPr.BoldCS = true;
+			oCopyParagraphTextPr.SetItalic(true);
+			oCopyParagraphTextPr.ItalicCS = true;
+			oAssert.deepEqual(editor.getFormatPainterData().TextPr, oCopyParagraphTextPr, 'Check copy format shortcut');
+		});
+
+		QUnit.test('Check insert copyright shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.CopyrightSign};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x00A9), createNativeEvent(), oAssert, 'Check add non breaking space shortcut');
+		});
+
+		QUnit.test('Check insert endnote shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertEndnoteNow};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello']);
+			oLogicDocument.SelectAll();
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			const arrEndnotes = oLogicDocument.GetEndnotesList();
+			oAssert.deepEqual(arrEndnotes.length, 1, 'Check insert endnote shortcut');
+		});
+
+		QUnit.test('Check center para shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.CenterPara};
+			const fAnotherCheck = checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.Get_Jc(), align_Center, 'Check center para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oParaPr) => oParaPr.Get_Jc(), align_Left, 'Check center para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check insert euro sign shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EuroSign};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x20AC), createNativeEvent(), oAssert, 'Check add non breaking space shortcut');
+		});
+
+		QUnit.test('Check italic shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Italic};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Italic(), true, 'Check add italic shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_Italic(), false, 'Check add italic shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check justify para shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.JustifyPara};
+			const fAnotherCheck = checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.Get_Jc(), align_Justify, 'Check justify para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oParaPr) => oParaPr.Get_Jc(), align_Left, 'Check justify para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check bullet list shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ApplyListBullet};
+			const {oLogicDocument, oParagraph} = getLogicDocumentWithParagraphs(['Hello']);
+			oLogicDocument.SelectAll();
+			onKeyDown(createNativeEvent());
+
+			oAssert.true(oParagraph.IsBulletedNumbering(), 'check apply bullet list');
+		});
+
+		QUnit.test('Check left para shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.LeftPara};
+			const fAnotherCheck = checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.Get_Jc(), align_Justify, 'Check center para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oParaPr) => oParaPr.Get_Jc(), align_Left, 'Check center para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check indent shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Indent};
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello']);
+			oParagraph.Pr.SetInd(0, 0, 0);
+			moveToParagraph(oParagraph, true);
+
+			onKeyDown(createNativeEvent());
+			const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
+			oAssert.strictEqual(oParaPr.GetIndLeft(), 12.5, 'Check increase indent');
+		});
+
+		QUnit.test('Check unindent shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.UnIndent};
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello']);
+			oParagraph.Pr.SetInd(0, 12.5, 0);
+			moveToParagraph(oParagraph, true);
+
+			onKeyDown(createNativeEvent());
+			const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
+			oAssert.true(AscFormat.fApproxEqual(oParaPr.GetIndLeft(), 0), 'Check decrease indent');
+		});
+
+		QUnit.test('Check insert page number shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertPageNumber};
+			checkInsertElementByType(para_PageNum, 'Check insert page number shortcut', oAssert, createNativeEvent());
+		});
+
+		QUnit.test('Check right para shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.RightPara};
+			const fAnotherCheck = checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.Get_Jc(), align_Right, 'Check center para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oParaPr) => oParaPr.Get_Jc(), align_Left, 'Check center para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check registered sign shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.RegisteredSign};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x00AE), createNativeEvent(), oAssert, 'Check registered sign shortcut');
+		});
+
+		QUnit.test('Check trademark sign shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.TrademarkSign};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x2122), createNativeEvent(), oAssert, 'Check registered sign shortcut');
+		});
+
+		QUnit.test('Check underline shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Underline};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Underline(), true, 'Check underline shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_Underline(), false, 'Check underline shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check paste format shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.PasteFormat};
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+			oParagraph.SetThisElementCurrent();
+			oGlobalLogicDocument.SelectAll();
+			addPropertyToDocument({Bold: true, Italic: true});
+			oGlobalLogicDocument.Document_Format_Copy();
+			remove();
+			addParagraphToDocumentWithText('Hello');
+			oGlobalLogicDocument.SelectAll();
+			onKeyDown(createNativeEvent());
+			const oDirectTextPr = oGlobalLogicDocument.GetDirectTextPr();
+			oAssert.true(oDirectTextPr.Get_Bold() && oDirectTextPr.Get_Italic(), 'Check paste format shortcut');
+		});
+
+		QUnit.test('Check redo shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EditRedo};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello World']);
+			oLogicDocument.SelectAll();
+			oLogicDocument.Remove(undefined, undefined, true);
+			oLogicDocument.Document_Undo();
+			onKeyDown(createNativeEvent());
+			oAssert.strictEqual(AscTest.GetParagraphText(oLogicDocument.Content[0]), '', 'Check redo shortcut');
+		});
+
+		QUnit.test('Check undo shortcut', (oAssert) =>
+		{
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello World']);
+			selectAll();
+			editor.asc_Remove();
+
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EditUndo};
+			onKeyDown(createNativeEvent());
+			selectAll();
+			oAssert.strictEqual(getSelectedText(), 'Hello World', 'Check redo shortcut');
+		});
+
+		QUnit.test('Check en dash shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EnDash};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x2013), createNativeEvent(), oAssert, 'Check en dash shortcut');
+		});
+
+		QUnit.test('Check em dash shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.EmDash};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x2014), createNativeEvent(), oAssert, 'Check em dash shortcut');
+		});
+
+		QUnit.test('Check update fields shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.UpdateFields};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello', 'Hello', 'Hello'], true);
+			AscTest.Recalculate();
+			for (let i = 0; i < oLogicDocument.Content.length; i += 1)
+			{
+				oLogicDocument.Set_CurrentElement(i, true);
+				oLogicDocument.SetParagraphStyle("Heading 1");
+			}
+			AscTest.Recalculate();
+			oLogicDocument.MoveCursorToStartPos();
+			const props = new Asc.CTableOfContentsPr();
+			props.put_OutlineRange(1, 9);
+			props.put_Hyperlink(true);
+			props.put_ShowPageNumbers(true);
+			props.put_RightAlignTab(true);
+			props.put_TabLeader(Asc.c_oAscTabLeader.Dot);
+			editor.asc_AddTableOfContents(null, props);
+
+			oLogicDocument.MoveCursorToEndPos();
+			const oParagraph = createParagraphWithText('Hello');
+			oLogicDocument.AddToContent(oLogicDocument.Content.length, oParagraph);
+			oParagraph.MoveCursorToEndPos();
+			oParagraph.SetThisElementCurrent();
+			oLogicDocument.SetParagraphStyle("Heading 1");
+
+			oLogicDocument.Content[0].SetThisElementCurrent();
+			AscTest.Recalculate();
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			oAssert.strictEqual(oLogicDocument.Content[0].Content.Content.length, 5, 'Check update fields shortcut');
+		});
+
+		QUnit.test('Check superscript shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Superscript};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_VertAlign(), AscCommon.vertalign_SuperScript, 'Check center para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_VertAlign(), AscCommon.vertalign_Baseline, 'Check center para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check non breaking hyphen shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.NonBreakingHyphen};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x002D), createNativeEvent(), oAssert, 'Check non breaking hyphen shortcut');
+		});
+
+		QUnit.test('Check horizontal ellipsis shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.HorizontalEllipsis};
+			checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x2026), createNativeEvent(), oAssert, 'Check add horizontal ellipsis shortcut');
+		});
+
+		QUnit.test('Check subscript shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Subscript};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_VertAlign(), AscCommon.vertalign_SubScript, 'Check center para shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_VertAlign(), AscCommon.vertalign_Baseline, 'Check center para shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check show hyperlink menu shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertHyperlink};
+			executeTestWithCatchEvent('asc_onDialogAddHyperlink', () => true, true, createNativeEvent(), oAssert, () =>
+			{
+				const {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+				moveToParagraph(oParagraph);
+				oGlobalLogicDocument.SelectAll();
+			});
+		});
+
+		QUnit.test('Check print shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.PrintPreviewAndPrint};
+			executeTestWithCatchEvent('asc_onPrint', () => true, true, createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check save shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.Save};
+			const fOldSave = editor._onSaveCallbackInner;
+			let bCheck = false;
+			editor._onSaveCallbackInner = function ()
+			{
+				bCheck = true;
+				editor.canSave = true;
+			};
+			onKeyDown(createNativeEvent());
+			oAssert.strictEqual(bCheck, true, 'Check save shortcut');
+			editor._onSaveCallbackInner = fOldSave;
+		});
+
+		QUnit.test('Check increase font size shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.IncreaseFontSize};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), 11, 'Check increase font size shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_FontSize(), 12, 'Check increase font size shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check decrease font size shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.DecreaseFontSize};
+			const fAnotherCheck = checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), 9, 'Check decrease font size shortcut', createNativeEvent(), oAssert);
+			fAnotherCheck((oTextPr) => oTextPr.Get_FontSize(), 8, 'Check decrease font size shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check apply heading 1', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ApplyHeading1};
+			checkApplyParagraphStyle('Heading 1', 'Check apply heading 1 shortcut', createNativeEvent(), oAssert);
+		});
+		QUnit.test('Check apply heading 2', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ApplyHeading2};
+			checkApplyParagraphStyle('Heading 2', 'Check apply heading 2 shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check apply heading 3', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.ApplyHeading3};
+			checkApplyParagraphStyle('Heading 3', 'Check apply heading 3 shortcut', createNativeEvent(), oAssert);
+		});
+
+		QUnit.test('Check insert footnotes now', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertFootnoteNow};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello']);
+			oLogicDocument.SelectAll();
+			oLogicDocument.OnKeyDown(createNativeEvent());
+			const arrFootnotes = oLogicDocument.GetFootnotesList();
+			oAssert.deepEqual(arrFootnotes.length, 1, 'Check insert footnote shortcut');
+		});
+
+		QUnit.test('Check insert equation', (oAssert) =>
+		{
+			editor.getShortcut = function () {return c_oAscDocumentShortcutType.InsertEquation};
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['']);
+			onKeyDown(createNativeEvent());
+			const oMath = oLogicDocument.GetCurrentMath();
+			oAssert.true(!!oMath, 'Check insert equation shortcut');
+		});
+
+		QUnit.module("Test getting desired action by event")
+		QUnit.test("Test getting common desired action by event", (oAssert) =>
+		{
+			editor.initDefaultShortcuts();
+			oAssert.strictEqual(editor.getShortcut(createEvent(13, true, false, false, false, false, false)), c_oAscDocumentShortcutType.InsertPageBreak, 'Check getting c_oAscDocumentShortcutType.InsertPageBreak action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(13, false, true, false, false, false, false)), c_oAscDocumentShortcutType.InsertLineBreak, 'Check getting c_oAscDocumentShortcutType.InsertLineBreak action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(13, true, true, false, false, false, false)), c_oAscDocumentShortcutType.InsertColumnBreak, 'Check getting c_oAscDocumentShortcutType.InsertColumnBreak action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(32, true, false, false, false, false, false)), c_oAscDocumentShortcutType.ResetChar, 'Check getting c_oAscDocumentShortcutType.ResetChar action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(32, true, true, false, false, false, false)), c_oAscDocumentShortcutType.NonBreakingSpace, 'Check getting c_oAscDocumentShortcutType.NonBreakingSpace action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(53, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Strikeout, 'Check getting c_oAscDocumentShortcutType.Strikeout action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(56, true, true, false, false, false, false)), c_oAscDocumentShortcutType.ShowAll, 'Check getting c_oAscDocumentShortcutType.ShowAll action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(65, true, false, false, false, false, false)), c_oAscDocumentShortcutType.EditSelectAll, 'Check getting c_oAscDocumentShortcutType.EditSelectAll action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(66, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Bold, 'Check getting c_oAscDocumentShortcutType.Bold action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(67, true, true, false, false, false, false)), c_oAscDocumentShortcutType.CopyFormat, 'Check getting c_oAscDocumentShortcutType.CopyFormat action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(67, true, false, true, false, false, false)), c_oAscDocumentShortcutType.CopyrightSign, 'Check getting c_oAscDocumentShortcutType.CopyrightSign action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(68, true, false, true, false, false, false)), c_oAscDocumentShortcutType.InsertEndnoteNow, 'Check getting c_oAscDocumentShortcutType.InsertEndnoteNow action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(69, true, false, false, false, false, false)), c_oAscDocumentShortcutType.CenterPara, 'Check getting c_oAscDocumentShortcutType.CenterPara action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(69, true, false, true, false, false, false)), c_oAscDocumentShortcutType.EuroSign, 'Check getting c_oAscDocumentShortcutType.EuroSign action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(73, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Italic, 'Check getting c_oAscDocumentShortcutType.Italic action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(74, true, false, false, false, false, false)), c_oAscDocumentShortcutType.JustifyPara, 'Check getting c_oAscDocumentShortcutType.JustifyPara action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(75, true, false, false, false, false, false)), c_oAscDocumentShortcutType.InsertHyperlink, 'Check getting c_oAscDocumentShortcutType.InsertHyperlink action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(76, true, true, false, false, false, false)), c_oAscDocumentShortcutType.ApplyListBullet, 'Check getting c_oAscDocumentShortcutType.ApplyListBullet action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(76, true, false, false, false, false, false)), c_oAscDocumentShortcutType.LeftPara, 'Check getting c_oAscDocumentShortcutType.LeftPara action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(77, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Indent, 'Check getting c_oAscDocumentShortcutType.Indent action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(77, true, true, false, false, false, false)), c_oAscDocumentShortcutType.UnIndent, 'Check getting c_oAscDocumentShortcutType.UnIndent action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(80, true, false, false, false, false, false)), c_oAscDocumentShortcutType.PrintPreviewAndPrint, 'Check getting c_oAscDocumentShortcutType.PrintPreviewAndPrint action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(80, true, true, false, false, false, false)), c_oAscDocumentShortcutType.InsertPageNumber, 'Check getting c_oAscDocumentShortcutType.InsertPageNumber action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(82, true, false, false, false, false, false)), c_oAscDocumentShortcutType.RightPara, 'Check getting c_oAscDocumentShortcutType.RightPara action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(82, true, false, true, false, false, false)), c_oAscDocumentShortcutType.RegisteredSign, 'Check getting c_oAscDocumentShortcutType.RegisteredSign action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(83, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Save, 'Check getting c_oAscDocumentShortcutType.Save action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(84, true, false, true, false, false, false)), c_oAscDocumentShortcutType.TrademarkSign, 'Check getting c_oAscDocumentShortcutType.TrademarkSign action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(85, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Underline, 'Check getting c_oAscDocumentShortcutType.Underline action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(86, true, true, false, false, false, false)), c_oAscDocumentShortcutType.PasteFormat, 'Check getting c_oAscDocumentShortcutType.PasteFormat action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(89, true, false, false, false, false, false)), c_oAscDocumentShortcutType.EditRedo, 'Check getting c_oAscDocumentShortcutType.EditRedo action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(90, true, false, false, false, false, false)), c_oAscDocumentShortcutType.EditUndo, 'Check getting c_oAscDocumentShortcutType.EditUndo action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(109, true, false, false, false, false, false)), c_oAscDocumentShortcutType.EnDash, 'Check getting c_oAscDocumentShortcutType.EnDash action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(109, true, false, true, false, false, false)), c_oAscDocumentShortcutType.EmDash, 'Check getting c_oAscDocumentShortcutType.EmDash action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(120, false, false, false, false, false, false)), c_oAscDocumentShortcutType.UpdateFields, 'Check getting c_oAscDocumentShortcutType.UpdateFields action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(188, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Superscript, 'Check getting c_oAscDocumentShortcutType.Superscript action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(189, true, true, false, false, false, false)), c_oAscDocumentShortcutType.NonBreakingHyphen, 'Check getting c_oAscDocumentShortcutType.NonBreakingHyphen action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(190, true, false, true, false, false, false)), c_oAscDocumentShortcutType.HorizontalEllipsis, 'Check getting c_oAscDocumentShortcutType.HorizontalEllipsis action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(190, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Subscript, 'Check getting c_oAscDocumentShortcutType.Subscript action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(219, true, false, false, false, false, false)), c_oAscDocumentShortcutType.IncreaseFontSize, 'Check getting c_oAscDocumentShortcutType.IncreaseFontSize action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(221, true, false, false, false, false, false)), c_oAscDocumentShortcutType.DecreaseFontSize, 'Check getting c_oAscDocumentShortcutType.DecreaseFontSize action');
+			editor.Shortcuts = new AscCommon.CShortcuts();
+		});
+
+		QUnit.test("Test getting windows desired action by event", (oAssert) =>
+		{
+			editor.initDefaultShortcuts();
+			oAssert.strictEqual(editor.getShortcut(createEvent(49, false, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading1, 'Check getting c_oAscDocumentShortcutType.ApplyHeading1 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(50, false, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading2, 'Check getting c_oAscDocumentShortcutType.ApplyHeading2 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(51, false, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading3, 'Check getting c_oAscDocumentShortcutType.ApplyHeading3 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(70, true, false, true, false, false, false)), c_oAscDocumentShortcutType.InsertFootnoteNow, 'Check getting c_oAscDocumentShortcutType.InsertFootnoteNow shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(187, false, false, true, false, false, false)), c_oAscDocumentShortcutType.InsertEquation, 'Check getting c_oAscDocumentShortcutType.InsertEquation shortcut type');
+			editor.Shortcuts = new AscCommon.CShortcuts();
+		});
+
+		QUnit.test("Test getting macOs desired action by event", (oAssert) =>
+		{
+			const bOldMacOs = AscCommon.AscBrowser.isMacOs;
+			AscCommon.AscBrowser.isMacOs = true;
+			editor.initDefaultShortcuts();
+			oAssert.strictEqual(editor.getShortcut(createEvent(49, true, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading1, 'Check getting c_oAscDocumentShortcutType.ApplyHeading1 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(50, true, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading2, 'Check getting c_oAscDocumentShortcutType.ApplyHeading2 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(51, true, false, true, false, false, false)), c_oAscDocumentShortcutType.ApplyHeading3, 'Check getting c_oAscDocumentShortcutType.ApplyHeading3 shortcut type');
+			oAssert.strictEqual(editor.getShortcut(createEvent(187, true, false, true, false, false, false)), c_oAscDocumentShortcutType.InsertEquation, 'Check getting c_oAscDocumentShortcutType.InsertEquation shortcut type');
+			editor.Shortcuts = new AscCommon.CShortcuts();
+			AscCommon.AscBrowser.isMacOs = bOldMacOs;
+		});
+
+		function createTable(nRows, nCols)
+		{
+			const {oLogicDocument} = getLogicDocumentWithParagraphs(['']);
+			return oLogicDocument.AddInlineTable(nCols, nRows);
+		}
+
+		function moveToTable(oTable, bToStart)
+		{
+			oTable.Document_SetThisElementCurrent();
+			if (bToStart)
+			{
+				oTable.MoveCursorToStartPos();
+			} else
+			{
+				oTable.MoveCursorToEndPos();
+			}
+		}
+
+		function createShape()
+		{
+			AscCommon.History.Create_NewPoint();
+			const oDrawing = new ParaDrawing(100, 100, null, oGlobalLogicDocument.GetDrawingDocument(), oGlobalLogicDocument, null);
+			const oShapeTrack = new AscFormat.NewShapeTrack('rect', 0, 0, oGlobalLogicDocument.theme, null, null, null, 0);
+			oShapeTrack.track({}, 100, 100);
+			const oShape = oShapeTrack.getShape(true, oGlobalLogicDocument.GetDrawingDocument(), null);
+			oShape.setBDeleted(false);
+			oShape.setParent(oDrawing);
+			oDrawing.Set_GraphicObject(oShape);
+			oShape.createTextBoxContent();
+			oDrawing.Set_DrawingType(drawing_Anchor);
+			oDrawing.Set_WrappingType(WRAPPING_TYPE_NONE);
+			oDrawing.Set_Distance(0, 0, 0, 0);
+			const oNearestPos = oGlobalLogicDocument.Get_NearestPos(0, oShape.x, oShape.y, true, oDrawing);
+			oDrawing.Set_XYForAdd(oShape.x, oShape.y, oNearestPos, 0);
+			oDrawing.AddToDocument(oNearestPos);
+			oDrawing.CheckWH();
+			recalculate();
+			return oDrawing;
+		}
+
+		function selectParaDrawing(oParaDrawing)
+		{
+			oGlobalLogicDocument.SelectDrawings([oParaDrawing], oGlobalLogicDocument);
+		}
+
+		QUnit.test("Test remove back", (oAssert) =>
+		{
+			let oEvent;
+			oEvent = createNativeEvent(8, false, false, false, false);
+			let {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+			moveToParagraph(oParagraph);
+			onKeyDown(oEvent);
+			selectAll();
+			oAssert.strictEqual(getSelectedText(), 'Hello Worl', 'Test remove back symbol');
+
+			oEvent = createNativeEvent(8, true, false, false, false);
+			moveToParagraph(oParagraph);
+			onKeyDown(oEvent);
+			selectAll();
+			oAssert.strictEqual(getSelectedText(), 'Hello ', 'Test remove back word');
+
+			// todo
+			oAssert.strictEqual(true, false, 'Test remove shape');
+			oAssert.strictEqual(true, false, 'Test remove form');
+		});
+
+		QUnit.test("Test move to next form", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test move to next form');
+		});
+
+		QUnit.test("Test handle tab in math", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test move to next form');
+		});
+
+		QUnit.test("Test move to cell", (oAssert) =>
+		{
+			let oEvent;
+			oEvent = createNativeEvent(9, false, false, false, false);
+			const oTable = createTable(3, 3);
+			moveToTable(oTable, true);
+			onKeyDown(oEvent);
+
+			oAssert.strictEqual(oTable.CurCell.Index, 1, 'Test move to next cell');
+
+			oEvent = createNativeEvent(9, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oTable.CurCell.Index, 0, 'Test move to previous cell');
+		});
+
+		function drawingObjects()
+		{
+			return oGlobalLogicDocument.DrawingObjects;
+		}
+
+		QUnit.test("Test select object", (oAssert) =>
+		{
+			clean();
+			getLogicDocumentWithParagraphs([''], true);
+			recalculate();
+			let oEvent;
+			oEvent = createNativeEvent(9, false, false, false, false);
+			const oFirstParaDrawing = createShape();
+			const oSecondParaDrawing = createShape();
+			selectParaDrawing(oFirstParaDrawing);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(drawingObjects().selectedObjects.length === 1 && drawingObjects().selectedObjects[0] === oSecondParaDrawing.GraphicObj, true, 'Test select next object');
+			oEvent = createNativeEvent(9, false, true, false, false);
+			onKeyDown(oEvent);
+
+			oAssert.strictEqual(drawingObjects().selectedObjects.length === 1 && drawingObjects().selectedObjects[0] === oFirstParaDrawing.GraphicObj, true, 'Test select previous object');
+		});
+
+		function logicContent()
+		{
+			return oGlobalLogicDocument.Content;
+		}
+
+		function directParaPr()
+		{
+			return oGlobalLogicDocument.GetDirectParaPr();
+		}
+
+		function directTextPr()
+		{
+			return oGlobalLogicDocument.GetDirectTextPr();
+		}
+
+		QUnit.test("Test working with indent", (oAssert) =>
+		{
+			let oEvent;
+			getLogicDocumentWithParagraphs(['Hello world', "Hello world"]);
+			selectAll();
+			oEvent = createNativeEvent(9, false, false, false, false);
+			onKeyDown(oEvent);
+			let arrSteps = [];
+			moveToParagraph(logicContent()[0]);
+			arrSteps.push(directParaPr().GetIndLeft());
+			moveToParagraph(logicContent()[1]);
+			arrSteps.push(directParaPr().GetIndLeft());
+			oAssert.deepEqual(arrSteps, [12.5, 12.5], 'Test indent');
+
+			selectAll();
+			oEvent = createNativeEvent(9, false, true, false, false);
+			onKeyDown(oEvent);
+
+			arrSteps = [];
+			moveToParagraph(logicContent()[0]);
+			arrSteps.push(directParaPr().GetIndLeft());
+			moveToParagraph(logicContent()[1]);
+			arrSteps.push(directParaPr().GetIndLeft());
+
+			oAssert.deepEqual(arrSteps, [0, 0], 'Test unindent');
+		});
+
+		QUnit.test("Test add tab to paragraph", (oAssert) =>
+		{
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+			moveToParagraph(oParagraph, true);
+			moveCursorRight();
+			onKeyDown(createNativeEvent(9, false, false, false));
+			selectAll();
+
+			oAssert.strictEqual(getSelectedText(), 'H\tello World', 'Test indent');
+		});
+
+		QUnit.test("Test visit hyperlink", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test indent');
+			oAssert.strictEqual(true, false, 'Test unindent');
+			oAssert.strictEqual(true, false, 'Test add tab');
+		});
+
+		QUnit.test("Test go to bookmark", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test indent');
+			oAssert.strictEqual(true, false, 'Test unindent');
+			oAssert.strictEqual(true, false, 'Test add tab');
+		});
+
+		QUnit.test("Test add break line to inlinelvlsdt", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test indent');
+			oAssert.strictEqual(true, false, 'Test unindent');
+			oAssert.strictEqual(true, false, 'Test add tab');
+		});
+
+		QUnit.test("Test handle enter for shapes", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test indent');
+			oAssert.strictEqual(true, false, 'Test unindent');
+			oAssert.strictEqual(true, false, 'Test add tab');
+		});
+
+		QUnit.test("Test add new line to math", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test indent');
+			oAssert.strictEqual(true, false, 'Test unindent');
+			oAssert.strictEqual(true, false, 'Test add tab');
+		});
+
+		function createMath()
+		{
+			return editor.asc_AddMath();
+		}
+
+		function addText(sText)
+		{
+			oGlobalLogicDocument.AddTextWithPr(sText);
+		}
+
+		QUnit.test("Test add new paragraph", (oAssert) =>
+		{
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello Text']);
+			moveToParagraph(oParagraph);
+			let oEvent = createNativeEvent(13, false, false, false, false);
+
+			onKeyDown(oEvent);
+
+			oAssert.strictEqual(logicContent().length, 2, 'Test add new paragraph to content');
+			createMath();
+			addText('abcd');
+			moveCursorLeft();
+			oEvent = createNativeEvent(13, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(logicContent().length, 3, 'Test add new paragraph with math');
+
+
+		});
+
+		QUnit.test("Test close all window popups", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, 'Test add new paragraph with math');
+			oAssert.strictEqual(true, false, 'Test add new paragraph to content');
+
+		});
+
+		QUnit.test("Test reset", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test reset drag'n'drop");
+			oAssert.strictEqual(true, false, "Test reset marker");
+			oAssert.strictEqual(true, false, "Test reset formatting by example");
+			oAssert.strictEqual(true, false, "Test reset shape selection");
+			oAssert.strictEqual(true, false, "Test reset add shape");
+
+		});
+
+
+		QUnit.test("Test end editing", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test end editing footer");
+			oAssert.strictEqual(true, false, "Test end editing drawing");
+			oAssert.strictEqual(true, false, "Test end editing form");
+		});
+
+		QUnit.test("Test toggle checkbox", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test end editing footer");
+			oAssert.strictEqual(true, false, "Test end editing drawing");
+			oAssert.strictEqual(true, false, "Test end editing form");
+		});
+
+		QUnit.test("Test make auto correct in math", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test end editing footer");
+			oAssert.strictEqual(true, false, "Test end editing drawing");
+			oAssert.strictEqual(true, false, "Test end editing form");
+		});
+
+		QUnit.test("Test actions to page up", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test move to previous header/footer");
+			oAssert.strictEqual(true, false, "Test move to begin of previous page");
+			oAssert.strictEqual(true, false, "Test move to previous page");
+			oAssert.strictEqual(true, false, "Test select to previous page");
+			oAssert.strictEqual(true, false, "Test select to begin of previous page");
+
+		});
+
+		QUnit.test("Test actions to page down", (oAssert) =>
+		{
+			oAssert.strictEqual(true, false, "Test move to next header/footer");
+			oAssert.strictEqual(true, false, "Test move to begin of next page");
+			oAssert.strictEqual(true, false, "Test move to next page");
+			oAssert.strictEqual(true, false, "Test select to next page");
+			oAssert.strictEqual(true, false, "Test select to begin of next page");
+		});
+
+		QUnit.test("Test actions to end", (oAssert) =>
+		{
+			let oEvent;
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"], true);
+			moveToParagraph(oParagraph, true);
+
+			recalculate();
+			oEvent = createNativeEvent(35, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 107, "Test move to end of document");
+			moveToParagraph(oParagraph, true);
+			oEvent = createNativeEvent(35, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 18, "Test move to end of line");
+			moveToParagraph(oParagraph, true);
+			oEvent = createNativeEvent(35, true, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World", "Test select to end of document");
+			moveToParagraph(oParagraph, true);
+			oEvent = createNativeEvent(35, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), "Hello World Hello ", "Test select to end of line");
+		});
+
+		QUnit.test("Test actions to home", (oAssert) =>
+		{
+			let oEvent;
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"], true);
+			moveToParagraph(oParagraph);
+
+			recalculate();
+			oEvent = createNativeEvent(36, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 0, "Test move to home of document");
+			moveToParagraph(oParagraph);
+			oEvent = createNativeEvent(36, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 90, "Test move to home of line");
+			moveToParagraph(oParagraph);
+			oEvent = createNativeEvent(36, true, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), "Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World", "Test select to home of document");
+			moveToParagraph(oParagraph);
+			oEvent = createNativeEvent(36, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), "World Hello World", "Test select to home of line");
+		});
+
+		QUnit.test("Test actions to left", (oAssert) =>
+		{
+			let oEvent;
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World"], true);
+
+			moveToParagraph(oParagraph);
+
+			oEvent = createNativeEvent(37, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 22, "Test move to previous symbol");
+
+			oEvent = createNativeEvent(37, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), 'l', "Test select to previous symbol");
+
+			oEvent = createNativeEvent(37, true, false, false, false);
+			moveCursorLeft();
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 18, "Test move to previous word");
+			oEvent = createNativeEvent(37, true, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), 'Hello ', "Test select to previous word");
+		});
+
+
+		QUnit.test("Test actions to right", (oAssert) =>
+		{
+			let oEvent
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"], true);
+
+			moveToParagraph(oParagraph, true);
+
+			oEvent = createNativeEvent(39, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(contentPosition(), 1, "Test move to next symbol");
+
+			oEvent = createNativeEvent(39, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), "e", "Test select to next symbol");
+
+			moveCursorRight();
+			oEvent = createNativeEvent(39, true, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.deepEqual(contentPosition(), 6, "Test move to next word");
+
+			oEvent = createNativeEvent(39, true, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), 'World ', "Test select to next word");
+		});
+
+		QUnit.test("Test actions to up", (oAssert) =>
+		{
+			let oEvent;
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"], true);
+
+			moveToParagraph(oParagraph, true);
+
+			moveCursorDown();
+			oEvent = createNativeEvent(38, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.deepEqual(contentPosition(), 0, "Test move to upper line");
+
+			moveCursorDown();
+			oEvent = createNativeEvent(38, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), 'Hello World Hello ', "Test select to upper line");
+
+			//todo
+			oAssert.strictEqual(true, false, "Test select previous option in combo box");
+		});
+
+		function contentPosition()
+		{
+			const oPos = oGlobalLogicDocument.GetContentPosition();
+			return oPos[oPos.length - 1].Position;
+		}
+
+		QUnit.test("Test actions to down", (oAssert) =>
+		{
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World"], true);
+			moveToParagraph(oParagraph, true);
+
+			recalculate();
+			let oEvent;
+			oEvent = createNativeEvent(40, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.deepEqual(contentPosition(), 18, "Test move to down line");
+
+			oEvent = createNativeEvent(40, false, true, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), 'World Hello World ', "Test select to down line");
+
+			// TODO: need resolve
+			oAssert.strictEqual(true, false, "Test select next option in combo box");
+		});
+
+		QUnit.test("Test remove front", (oAssert) =>
+		{
+			let oEvent;
+			oEvent = createNativeEvent(46, false, false, false, false);
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World"]);
+			moveToParagraph(oParagraph, true);
+			onKeyDown(oEvent);
+			selectAll();
+			oAssert.strictEqual(getSelectedText(), 'ello World', 'Test remove front symbol');
+
+			oEvent = createNativeEvent(46, true, false, false, false);
+			moveToParagraph(oParagraph, true);
+			onKeyDown(oEvent);
+			selectAll();
+			oAssert.strictEqual(getSelectedText(), 'World', 'Test remove front word');
+
+			// todo
+			oAssert.strictEqual(true, false, 'Test remove shape');
+			oAssert.strictEqual(true, false, 'Test remove form');
+		});
+
+		QUnit.test("Test replace unicode code to symbol", (oAssert) =>
+		{
+			let oEvent = createNativeEvent(88, false, false, true, false);
+			const {oParagraph} = getLogicDocumentWithParagraphs(["2601"]);
+			moveToParagraph(oParagraph, true);
+			moveCursorRight(true, true);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(getSelectedText(), '☁', 'Test replace unicode code to symbol');
+		});
+		QUnit.test("Test show context menu", (oAssert) =>
+		{
+			let oEvent;
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello Text"]);
+			moveToParagraph(oParagraph, true);
+
+			oEvent = createNativeEvent(93, false, false, false, false);
+			executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oEvent, oAssert);
+
+			AscCommon.AscBrowser.isOpera = true;
+			oEvent = createNativeEvent(57351, false, false, false, false);
+			executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oEvent, oAssert);
+			AscCommon.AscBrowser.isOpera = false;
+
+			oEvent = createNativeEvent(121, false, true, false, false);
+			executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oEvent, oAssert);
+		});
+		QUnit.test("Test disable numlock", (oAssert) =>
+		{
+			let oEvent = createNativeEvent(144, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oEvent.isDefaultPrevented, true, 'Test prevent default on numlock');
+		});
+		QUnit.test("Test disable scroll lock", (oAssert) =>
+		{
+			let oEvent = createNativeEvent(145, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oEvent.isDefaultPrevented, true, 'Test prevent default on scroll lock');
+		});
+		QUnit.test("Test add SJK test", (oAssert) =>
+		{
+			let oEvent = createNativeEvent(12288, false, false, false);
+			checkTextAfterKeyDownHelperEmpty(' ', oEvent, oAssert, 'Check add space after SJK space');
+		});
+	});
 })(window);

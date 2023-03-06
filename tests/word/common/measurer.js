@@ -34,6 +34,8 @@
 
 (function(window)
 {
+	window.AscFonts = window.AscFonts || {};
+	onLoadFontsModule = function () {};
 
 	const CharWidth   = 0.5;
 	const FontSize    = 10;

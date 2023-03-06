@@ -62,6 +62,7 @@ var AscTest = AscTest || {};
 		TurnOn : function(){},
 		init : function () {},
 	};
+	AscCommon.g_oTableId.GetById = AscCommon.g_oTableId.Get_ById;
 
 	AscCommon.g_oIdCounter.m_bLoad = false;
 	AscCommon.g_oIdCounter.m_bRead = false;

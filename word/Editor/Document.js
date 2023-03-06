@@ -5464,7 +5464,7 @@ CDocument.prototype.CheckViewPosition = function()
 	
 	this.RecalculateCurPos();
 };
-CDocument.prototype.RecalculateCurPos = function()
+CDocument.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY, isUpdateTarget)
 {
 	if (true === this.TurnOffRecalcCurPos)
 		return;
@@ -5474,7 +5474,7 @@ CDocument.prototype.RecalculateCurPos = function()
 
 	this.DrawingDocument.UpdateTargetTransform(null);
 
-	this.Controller.RecalculateCurPos();
+	this.Controller.RecalculateCurPos(bUpdateX, bUpdateY, isUpdateTarget);
 
 	// TODO: Здесь добавлено обновление линейки, чтобы обновлялись границы рамки при наборе текста, а также чтобы
 	//       обновлялись поля колонтитулов при наборе текста.
@@ -8909,7 +8909,7 @@ CDocument.prototype.OnKeyDown = function(e)
 		case c_oAscDocumentShortcutType.SoftHyphen:
 		{
 			// TODO: Реализовать
-          // TODO: unlock shortcut initialization after implementation and add a check for the correct operation of the shortcut to the tests
+			// TODO: unlock shortcut initialization after implementation and add a check for the correct operation of the shortcut to the tests
 			bRetValue = keydownresult_PreventAll;
 			break;
 		}
