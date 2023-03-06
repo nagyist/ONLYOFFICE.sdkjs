@@ -977,14 +977,7 @@
 					}
 					var isSelectColumns = ctrlKey;
 					var isSelectAllMacOs = isSelectColumns && shiftKey && macOs;
-					// Обработать как обычный текст
-					if ((!isSelectColumns && !shiftKey) || isSelectAllMacOs) {
-						//теперь пробел обрабатывается на WindowKeyDown
-						//вторыы аргументом передаю true, чтобы два раза пробел не добавлялся и сработало событие CellEditor.prototype._onWindowKeyDown
-						//задача функции EnterText в данном случае - либо добавить данные в графику, либо открыть редактор ячейки, чтобы потом
-						//была вызвана следующая инструкия в функции выше -> Api.onKeyDown
-						window["Asc"]["editor"].wb.EnterText(event.which, true);
-						t._setSkipKeyPress(false);
+					if (isSelectAllMacOs) {
 						return false;
 					}
 					// Отключим стандартную обработку браузера нажатия
