@@ -5653,11 +5653,7 @@
 							}
 						}
 						bRetValue = true;
-					} else if (e.keyCode == 33) // PgUp
-					{
-					} else if (e.keyCode == 34) // PgDn
-					{
-					} else if (e.keyCode == 35) // клавиша End
+					} else if (e.keyCode === 35) // клавиша End
 					{
 						var content = this.getTargetDocContent();
 						if (content) {
@@ -5677,7 +5673,7 @@
 							}
 						}
 						bRetValue = true;
-					} else if (e.keyCode == 36) // клавиша Home
+					} else if (e.keyCode === 36) // клавиша Home
 					{
 						var content = this.getTargetDocContent();
 						if (content) {
@@ -5728,9 +5724,6 @@
 						drawingObjectsController.updateOverlay();
 						this.drawingObjects.sendGraphicObjectProps();
 						bRetValue = true;
-					} else if (e.keyCode == 45) // Insert
-					{
-						//TODO
 					} else if (e.keyCode == 46 && canEdit) // Delete
 					{
 						if (!e.shiftKey) {

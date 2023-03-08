@@ -1292,6 +1292,8 @@
 			});
 
 
+			QUnit.module("Test graphic shortcuts");
+
 			// QUnit.module('test shortcuts');
 			// QUnit.test('Test common shortcuts', function (oAssert)
 			// {
@@ -1773,381 +1775,1019 @@
 			// 	oEvent = createEvent(221, true, false, false, false, false);
 			// 	checkIncreaseFontSize(oEvent, oAssert);
 			// });
+
+			QUnit.module('Test graphic objects shortcuts');
+			QUnit.test('Test remove back text graphic object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeBackChar);
+			});
+			QUnit.test('Test remove back text graphic object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeBackWord);
+			});
+			QUnit.test('Test remove chart', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeChart);
+			});
+			QUnit.test('Test remove shape', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeShape);
+			});
+			QUnit.test('Test remove group', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeGroup);
+			});
+			QUnit.test('Test remove shape in group', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeShapeInGroup);
+			});
+
+			QUnit.test('Test add tab', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.addTab);
+			});
+			QUnit.test('Test select next object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectNextObject);
+			});
+
+			QUnit.test('Test select previous object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectPreviousObject);
+			});
+
+			QUnit.test('Test visit hyperlink', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.visitHyperink);
+			});
+
+			QUnit.test('Test add line in math', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.addLineInMath);
+			});
+			QUnit.test('Test add break line', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.addBreakLine);
+			});
+			QUnit.test('Test add paragraph', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.addParagraph);
+			});
+
+			QUnit.test('Test create text body', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.createTxBody);
+			});
+
+			QUnit.test('Test move cursor to start position in empty content', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveToStartInEmptyContent);
+			});
+			QUnit.test('Test select all after enter', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectAllAfterEnter);
+			});
+			QUnit.test('Test move cursor to start position in empty title', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorToStartPositionInTitle);
+			});
+			QUnit.test('Test select all after enter in title', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectAllTitleAfterEnter);
+			});
+			QUnit.test('Test reset text selection', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.resetTextSelection);
+			});
+
+			QUnit.test('Test reset step selection', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.resetStepSelection);
+			});
+
+			QUnit.test('Test move cursor to end', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorToEndLine);
+			});
+
+			QUnit.test('Test move cursor to end', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorToEndDocument);
+			});
+
+			QUnit.test('Test select to end', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectToEndLine);
+			});
+
+			QUnit.test('Test select to end', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectToEndDocument);
+			});
+
+			QUnit.test('Test move cursor to start', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorToStartLine);
+			});
+
+			QUnit.test('Test move cursor to start', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorToStartDocument);
+			});
+
+			QUnit.test('Test select to start', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectToStartLine);
+			});
+
+			QUnit.test('Test select to start', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectToStartDocument);
+			});
+
+			QUnit.test('Test move cursor to left char', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorLeftChar);
+			});
+
+			QUnit.test('Test select to left char', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorLeftChar);
+			});
+
+			QUnit.test('Test move cursor to left word', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorLeftWord);
+			});
+
+			QUnit.test('Test select to left word', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorLeftWord);
+			});
+
+			QUnit.test('Test move object to left', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.littleMoveGraphicObjectLeft);
+			});
+
+			QUnit.test('Test move object to left', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.bigMoveGraphicObjectLeft);
+			});
+
+			QUnit.test('Test move cursor to up', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorUp);
+			});
+
+			QUnit.test('Test select to up', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorUp);
+			});
+
+			QUnit.test('Test move object to up', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.littleMoveGraphicObjectUp);
+			});
+
+			QUnit.test('Test move object to up', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.bigMoveGraphicObjectUp);
+			});
+
+			QUnit.test('Test move cursor to right char', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorRightChar);
+			});
+
+			QUnit.test('Test select to right char', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorRightChar);
+			});
+
+			QUnit.test('Test move cursor to right word', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorRightWord);
+			});
+
+			QUnit.test('Test select to right word', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorRightWord);
+			});
+
+			QUnit.test('Test move object to right', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.littleMoveGraphicObjectRight);
+			});
+
+			QUnit.test('Test move object to right', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.bigMoveGraphicObjectRight);
+			});
+
+			QUnit.test('Test move cursor to down', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.moveCursorDown);
+			});
+
+			QUnit.test('Test select to down', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectCursorDown);
+			});
+
+			QUnit.test('Test move object to down', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.littleMoveGraphicObjectDown);
+			});
+
+			QUnit.test('Test move object to down', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.bigMoveGraphicObjectDown);
+			});
+
+			QUnit.test('Test remove front text graphic object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeFrontChar);
+			});
+
+			QUnit.test('Test remove front text graphic object', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.removeFrontWord);
+			});
+
+			QUnit.test('Test select all content in shape', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectAllContent);
+			});
+			QUnit.test('Test select all graphic objects', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.selectAllDrawings);
+			});
+
+			QUnit.test('Test bold', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.bold);
+			});
+
+			QUnit.test('Test clear slicer', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.cleanSlicer);
+			});
+
+			QUnit.test('Test center align', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.centerAlign);
+			});
+			QUnit.test('Test italic', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.italic);
+			});
+			QUnit.test('Test justify align', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.justifyAlign);
+			});
+			QUnit.test('Test left align', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.leftAlign);
+			});
+			QUnit.test('Test right align', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.rightAlign);
+			});
+
+			QUnit.test('Test invert multiselect slicer', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.invertMultiselectSlicer);
+			});
+			QUnit.test('Test underline', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.underline);
+			});
+
+			QUnit.test('Test superscript vertical align', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.superscript);
+			});
+
+			QUnit.test('Test add en dash', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.enDash);
+			});
+
+			QUnit.test('Test add hyphen', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.hyphen);
+			});
+
+			QUnit.test('Test add underscore', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.underscore);
+			});
+
+			QUnit.test('Test add subscript', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.subscript);
+			});
+
+			QUnit.test('Test decrease font size', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.decreaseFontSize);
+			});
+
+			QUnit.test('Test increase font size', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				startTest((oEvent) =>
+				{
+
+				}, oTypes.increaseFontSize);
+			});
 		}
 	)
+
+	const oTypes = {
+		removeBackChar                  : 1,
+		removeBackWord                  : 1.5,
+		removeChart                     : 2,
+		removeShape                     : 3,
+		removeGroup                     : 4,
+		removeShapeInGroup              : 5,
+		addTab                          : 6,
+		selectNextObject                : 7,
+		selectPreviousObject            : 8,
+		visitHyperink                   : 9,
+		addLineInMath                   : 10,
+		addBreakLine                    : 11,
+		addParagraph                    : 12,
+		createTxBody                    : 13,
+		moveToStartInEmptyContent       : 14,
+		selectAllAfterEnter             : 15,
+		moveCursorToStartPositionInTitle: 16,
+		selectAllTitleAfterEnter        : 17,
+		resetTextSelection              : 18,
+		resetStepSelection              : 18.5,
+		moveCursorToEndDocument         : 19,
+		moveCursorToEndLine             : 19.5,
+		selectToEndDocument             : 20,
+		selectToEndLine                 : 20.5,
+		moveCursorToStartDocument       : 21,
+		moveCursorToStartLine           : 21.5,
+		selectToStartDocument           : 22,
+		selectToStartLine               : 22.5,
+		moveCursorLeftChar              : 23,
+		selectCursorLeftChar            : 24,
+		moveCursorLeftWord              : 25,
+		selectCursorLeftWord            : 26,
+		bigMoveGraphicObjectLeft        : 27,
+		littleMoveGraphicObjectLeft     : 28,
+		moveCursorRightChar             : 29,
+		selectCursorRightChar           : 30,
+		moveCursorRightWord             : 31,
+		selectCursorRightWord           : 32,
+		bigMoveGraphicObjectRight       : 33,
+		littleMoveGraphicObjectRight    : 34,
+		moveCursorUp                    : 35,
+		selectCursorUp                  : 36,
+		bigMoveGraphicObjectUp          : 37,
+		littleMoveGraphicObjectUp       : 38,
+		moveCursorDown                  : 39,
+		selectCursorDown                : 40,
+		bigMoveGraphicObjectDown        : 41,
+		littleMoveGraphicObjectDown     : 42,
+		removeFrontWord                 : 43,
+		removeFrontChar                 : 44,
+		selectAllContent                : 45,
+		selectAllDrawings               : 46,
+		bold                            : 47,
+		cleanSlicer                     : 48,
+		centerAlign                     : 49,
+		italic                          : 50,
+		justifyAlign                    : 51,
+		leftAlign                       : 52,
+		rightAlign                      : 53,
+		invertMultiselectSlicer         : 54,
+		underline                       : 55,
+		superscriptAndSubscript         : 56,
+		superscript                     : 57,
+		enDash                          : 58,
+		hyphen                          : 59,
+		underscore                      : 60,
+		subscript                       : 61,
+		increaseFontSize                : 62,
+		decreaseFontSize                : 63
+	};
+
+
+	const testAll = 0;
+	const testWindows = 1;
+	const testMacOs = 2;
+
+	function CTestEvent(oEvent, nType)
+	{
+		this.type = nType || testAll;
+		this.event = oEvent;
+	}
+
+	const oKeyCode =
+		{
+			BackSpace       : 8,
+			Tab             : 9,
+			Enter           : 13,
+			Esc             : 27,
+			End             : 35,
+			Home            : 36,
+			ArrowLeft       : 37,
+			ArrowTop        : 38,
+			ArrowRight      : 39,
+			ArrowBottom     : 40,
+			Delete          : 46,
+			A               : 65,
+			B               : 66,
+			C               : 67,
+			E               : 69,
+			I               : 73,
+			J               : 74,
+			K               : 75,
+			L               : 76,
+			M               : 77,
+			P               : 80,
+			R               : 82,
+			S               : 83,
+			U               : 85,
+			V               : 86,
+			X               : 88,
+			Y               : 89,
+			Z               : 90,
+			OperaContextMenu: 57351,
+			F10             : 121,
+			NumLock         : 144,
+			ScrollLock      : 145,
+			Equal           : 187,
+			Comma           : 188,
+			Minus           : 189,
+			Period          : 190,
+			BracketLeft     : 219,
+			BracketRight    : 221,
+			F2              : 113
+		}
+
+	const oTestEvents = {};
+	oTestEvents[oTypes.removeBackChar] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, true, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, true, false, false)),
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, true, false, false))
+	];
+	oTestEvents[oTypes.removeBackWord] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, true, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.BackSpace, true, true, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.BackSpace, true, false, true, false, false))
+	];
+	oTestEvents[oTypes.removeChart] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Delete, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.removeShape] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Delete, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.removeGroup] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Delete, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.removeShapeInGroup] = [
+		new CTestEvent(createEvent(oKeyCode.BackSpace, false, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Delete, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.addTab] = [
+		new CTestEvent(createEvent(oKeyCode.Tab, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.selectNextObject] = [
+		new CTestEvent(createEvent(oKeyCode.Tab, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.selectPreviousObject] = [
+		new CTestEvent(createEvent(oKeyCode.Tab, true, false, false, false, false))
+	];
+	oTestEvents[oTypes.visitHyperink] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.addLineInMath] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.addBreakLine] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, true, false, false, false))
+	];
+	oTestEvents[oTypes.addParagraph] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.createTxBody] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.moveToStartInEmptyContent] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.selectAllAfterEnter] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.moveCursorToStartPositionInTitle] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectAllTitleAfterEnter] = [
+		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.resetTextSelection] = [
+		new CTestEvent(createEvent(oKeyCode.Esc, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.resetStepSelection] = [
+		new CTestEvent(createEvent(oKeyCode.Esc, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.moveCursorToEndDocument] = [
+		new CTestEvent(createEvent(oKeyCode.End, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorToEndLine] = [
+		new CTestEvent(createEvent(oKeyCode.End, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectToEndDocument] = [
+		new CTestEvent(createEvent(oKeyCode.End, true, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectToEndLine] = [
+		new CTestEvent(createEvent(oKeyCode.End, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorToStartDocument] = [
+		new CTestEvent(createEvent(oKeyCode.Home, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorToStartLine] = [
+		new CTestEvent(createEvent(oKeyCode.Home, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectToStartDocument] = [
+		new CTestEvent(createEvent(oKeyCode.Home, true, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectToStartLine] = [
+		new CTestEvent(createEvent(oKeyCode.Home, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorLeftChar] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.selectCursorLeftChar] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorLeftWord] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectCursorLeftWord] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, true, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.bigMoveGraphicObjectLeft] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.littleMoveGraphicObjectLeft] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowLeft, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorRightChar] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectCursorRightChar] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorRightWord] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectCursorRightWord] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, true, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.bigMoveGraphicObjectRight] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.littleMoveGraphicObjectRight] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowRight, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorUp] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowTop, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectCursorUp] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowTop, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.bigMoveGraphicObjectUp] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowTop, false, false, false, false, false))
+	];
+	oTestEvents[oTypes.littleMoveGraphicObjectUp] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowTop, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.moveCursorDown] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowBottom, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectCursorDown] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowBottom, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.bigMoveGraphicObjectDown] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowBottom, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.littleMoveGraphicObjectDown] = [
+		new CTestEvent(createEvent(oKeyCode.ArrowBottom, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.removeFrontWord] = [
+		new CTestEvent(createEvent(oKeyCode.Delete, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.removeFrontChar] = [
+		new CTestEvent(createEvent(oKeyCode.Delete, false, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectAllContent] = [
+		new CTestEvent(createEvent(oKeyCode.A, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.selectAllDrawings] = [
+		new CTestEvent(createEvent(oKeyCode.A, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.bold] = [
+		new CTestEvent(createEvent(oKeyCode.B, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.cleanSlicer] = [
+		new CTestEvent(createEvent(oKeyCode.C, true, false, false, false, false), testMacOs),
+		new CTestEvent(createEvent(oKeyCode.C, false, false, false, false, false), testWindows)
+	];
+	oTestEvents[oTypes.centerAlign] = [
+		new CTestEvent(createEvent(oKeyCode.E, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.italic] = [
+		new CTestEvent(createEvent(oKeyCode.I, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.justifyAlign] = [
+		new CTestEvent(createEvent(oKeyCode.J, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.leftAlign] = [
+		new CTestEvent(createEvent(oKeyCode.L, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.rightAlign] = [
+		new CTestEvent(createEvent(oKeyCode.R, true, false, false, false, false))
+	];
+	oTestEvents[oTypes.invertMultiselectSlicer] = [
+		new CTestEvent(createEvent(oKeyCode.S, true, false, false, false, false), testMacOs),
+		new CTestEvent(createEvent(oKeyCode.S, false, false, false, false, false), testWindows)
+	];
+	oTestEvents[oTypes.underline] = [
+		new CTestEvent(createEvent(oKeyCode.U, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.superscript] = [
+		new CTestEvent(createEvent(oKeyCode.Equal, true, true, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Comma, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.enDash] = [
+		new CTestEvent(createEvent(oKeyCode.Minus, true, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.hyphen] = [
+		new CTestEvent(createEvent(oKeyCode.Minus, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.underscore] = [
+		new CTestEvent(createEvent(oKeyCode.Minus, false, true, false, false, false))
+
+	];
+	oTestEvents[oTypes.subscript] = [
+		new CTestEvent(createEvent(oKeyCode.Equal, true, false, false, false, false)),
+		new CTestEvent(createEvent(oKeyCode.Period, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.increaseFontSize] = [
+		new CTestEvent(createEvent(oKeyCode.BracketLeft, true, false, false, false, false))
+
+	];
+	oTestEvents[oTypes.decreaseFontSize] = [
+		new CTestEvent(createEvent(oKeyCode.BracketRight, true, false, false, false, false))
+
+	];
+
+	function startTest(fCallback, nShortcutType)
+	{
+		const arrTestEvents = oTestEvents[nShortcutType];
+
+		for (let i = 0; i < arrTestEvents.length; i += 1)
+		{
+			const nTestType = arrTestEvents[i].type;
+			if (nTestType === testAll)
+			{
+				AscCommon.AscBrowser.isMacOs = true;
+				fCallback(arrTestEvents[i].event);
+
+				AscCommon.AscBrowser.isMacOs = false;
+				fCallback(arrTestEvents[i].event);
+			} else if (nTestType === testMacOs)
+			{
+				AscCommon.AscBrowser.isMacOs = true;
+				fCallback(arrTestEvents[i].event);
+				AscCommon.AscBrowser.isMacOs = false;
+			} else if (nTestType === testWindows)
+			{
+				fCallback(arrTestEvents[i].event);
+			}
+		}
+	}
 })(window);
-
-function checkRemoveShape(oEvent, oAssert)
-{
-
-}
-
-function checkAddTab(oEvent, oAssert)
-{
-
-}
-
-function checkSelectNextObject(oEvent, oAssert)
-{
-
-}
-
-function checkSelectPreviousObject(oEvent, oAssert)
-{
-
-}
-
-function checkVisitHyperlink(oEvent, oAssert)
-{
-
-}
-
-function checkAddNewLineMath(oEvent, oAssert)
-{
-
-}
-
-function checkAddBreakLine(oEvent, oAssert)
-{
-
-}
-
-function checkAddNewLine(oEvent, oAssert)
-{
-
-}
-
-function checkCreateTxBoxContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkCreateTxBodyContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToStartPosShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectAllContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToStartPosChartTitle(oEvent, oAssert)
-{
-
-}
-
-function checkSelectAllContentChartTitle(oEvent, oAssert)
-{
-
-}
-
-function checkRemoveSelectionCellGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToStartPosAndSelectAllTable(oEvent, oAssert)
-{
-
-}
-
-function checkStepRemoveSelection(oEvent, oAssert)
-{
-
-}
-
-function checkResetAddShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToEndPositionContent(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToEndLineContent(oEvent, oAssert)
-{
-
-}
-
-function checkSelectToEndLineContent(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorToStartPositionContent(oEvent, oAssert)
-{
-
-}
-
-function checkSelectToStartLineContent(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorLeftCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorLeftWordContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectLeftCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectLeftWordContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorLeftCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorLeftWordContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectLeftCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectLeftWordContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSmallMoveLeftShape(oEvent, oAssert)
-{
-
-}
-
-function checkBigMoveLeftShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorRightCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorRightWordContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectRightCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectRightWordContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorRightCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorRightWordContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectRightCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectRightWordContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSmallMoveRightShape(oEvent, oAssert)
-{
-
-}
-
-function checkBigMoveRightShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorUpCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectUpCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorUpCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectUpCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSmallMoveUpShape(oEvent, oAssert)
-{
-
-}
-
-function checkBigMoveUpShape(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorDownCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkSelectDownCharContentGraphicFrame(oEvent, oAssert)
-{
-
-}
-
-function checkMoveCursorDownCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectDownCharContentShape(oEvent, oAssert)
-{
-
-}
-
-function checkSmallMoveDownShape(oEvent, oAssert)
-{
-
-}
-
-function checkBigMoveDownShape(oEvent, oAssert)
-{
-
-}
-
-function checkRemoveShape(oEvent, oAssert)
-{
-
-}
-
-function checkSelectAllShape(oEvent, oAssert)
-{
-
-}
-
-function checkBoldShape(oEvent, oAssert)
-{
-
-}
-
-function checkClearSlicer(oEvent, oAssert)
-{
-
-}
-
-function checkSetCenterAlign(oEvent, oAssert)
-{
-
-}
-
-function checkSetItalicShape(oEvent, oAssert)
-{
-
-}
-
-function checkSetJustifyAlign(oEvent, oAssert)
-{
-
-}
-
-function checkSetLeftAlign(oEvent, oAssert)
-{
-
-}
-
-function checkSetRightAlign(oEvent, oAssert)
-{
-
-}
-
-function checkSlicerMultiSelect(oEvent, oAssert)
-{
-
-}
-
-function checkUnderlineShape(oEvent, oAssert)
-{
-
-}
-
-function checkSubscriptShape(oEvent, oAssert)
-{
-
-}
-
-function checkSuperscriptShape(oEvent, oAssert)
-{
-
-}
-
-function checkSuperscriptShape(oEvent, oAssert)
-{
-
-}
-
-function checkAddEnDash(oEvent, oAssert)
-{
-
-}
-
-function checkAddLowLine(oEvent, oAssert)
-{
-
-}
-
-function checkAddHyphenMinus(oEvent, oAssert)
-{
-
-}
-
-function checkSubscriptShape(oEvent, oAssert)
-{
-
-}
-
-function checkDecreaseFontSize(oEvent, oAssert)
-{
-
-}
-
-function checkIncreaseFontSize(oEvent, oAssert)
-{
-
-}
