@@ -349,15 +349,7 @@
         },
         "name": {
             get() {
-                if (this._parent)
-                {
-                    if (this._partialName != "")
-                        return `${this._parent.name}.${this._partialName}`
-                    else
-                        return this._parent.name;
-                }
-
-                return this._partialName ? this._partialName : "";
+                return this.field.GetFullName();
             }
         },
         "page": {
@@ -525,38 +517,7 @@
         let aFields = this.field._doc.getWidgetsByName(this.name);
         
         aFields.forEach(function(field) {
-            switch (cTrigger) {
-                case "MouseUp":
-                    ACTION_TRIGGER_TYPES.MouseUp;
-                    break;
-                case "MouseDown":
-                    ACTION_TRIGGER_TYPES.MouseDown;
-                    break;
-                case "MouseEnter":
-                    ACTION_TRIGGER_TYPES.MouseEnter;
-                    break;
-                case "MouseExit":
-                    ACTION_TRIGGER_TYPES.MouseExit;
-                    break;
-                case "OnFocus":
-                    ACTION_TRIGGER_TYPES.OnFocus;
-                    break;
-                case "OnBlur":
-                    ACTION_TRIGGER_TYPES.OnBlur;
-                    break;
-                case "Keystroke":
-                    field._actions.Keystroke = new CFormAction(ACTION_TRIGGER_TYPES.Keystroke, cScript);
-                    break;
-                case "Validate":
-                    ACTION_TRIGGER_TYPES.Validate;
-                    break;
-                case "Calculate":
-                    ACTION_TRIGGER_TYPES.Calculate;
-                    break;
-                case "Format":
-                    field._actions.Format = new CFormAction(ACTION_TRIGGER_TYPES.Format, cScript);
-                    break;
-            }
+            field.SetAction(cTrigger, cScript);
         });
     };
 
@@ -649,25 +610,7 @@
     });
 
     ApiPushButtonField.prototype.buttonImportIcon = function() {
-        let Api = editor;
-        let oThis = this;
-
-        Api.oSaveObjectForAddImage = this;
-        AscCommon.ShowImageFileDialog(Api.documentId, Api.documentUserId, undefined, function(error, files)
-		{
-			Api._uploadCallback(error, files, oThis);
-		}, function(error)
-		{
-			if (c_oAscError.ID.No !== error)
-			{
-				Api.sendEvent("asc_onError", error, c_oAscError.Level.NoCritical);
-			}
-			if (obj && obj.sendUrlsToFrameEditor && Api.isOpenedChartFrame)
-			{
-				Api.sendStartUploadImageActionToFrameEditor();
-			}
-			Api.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.UploadImage);
-		});
+        this.field.buttonImportIcon();
     };
 
     function ApiBaseCheckBoxField(oField)
@@ -710,6 +653,30 @@
         }
         
     });
+
+    /**
+	 * Determines whether the specified widget is checked.
+     * Note: For a set of radio buttons that do not have duplicate export values, you can get the value, which is equal to the
+     * export value of the individual widget that is currently checked (or returns an empty string, if none is).
+	 * @memberof ApiBaseCheckBoxField
+     * @param {number} nWidget - The 0-based index of an individual radio button or check box widget for this field.
+     * The index is determined by the order in which the individual widgets of this field
+     * were created (and is unaffected by tab-order).
+     * Every entry in the Fields panel has a suffix giving this index, for example, MyField #0.
+	 * @typeofeditors ["PDF"]
+     * @returns {string}
+	 */
+    ApiBaseCheckBoxField.prototype.isBoxChecked = function(nWidget) {
+        let aFields = this.field._doc.getWidgetsByName(this.name);
+        let oField = aFields[nWidget];
+        if (!oField)
+            return false;
+
+        if (oField._exportValue == oField._value)
+            return true;
+
+        return false;
+    };
 
     // for radiobutton
     const CheckedSymbol   = 0x25C9;
@@ -798,7 +765,7 @@
                     this._alignment = sValue;
                     var nJcType = private_GetFieldAlign(sValue);
 
-                    let aFields = this._doc.getWidgetsByName(this.name);
+                    let aFields = this.field._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field.SetAlign(nJcType);
                     });
@@ -1007,7 +974,7 @@
                 editor.getDocumentRenderer()._paintForms();
             },
             get() {
-                return this._content.GetElement(0).GetText({ParaEndToSpace: false});
+                return this.field._content.GetElement(0).GetText({ParaEndToSpace: false});
             }
         }
     });
@@ -1330,6 +1297,26 @@
 
         editor.getDocumentRenderer()._paintForms();
     };
+    /**
+	 * Inserts a new item into a list box
+	 * @memberof ApiListBoxField
+     * @param {string} cName - The item name that will appear in the form.
+     * @param {string} cExport - (optional) The export value of the field when this item is selected. If not provided, the
+     * cName is used as the export value.
+     * @param {number} nIdx - (optional) The index in the list at which to insert the item. If 0 (the default), the new
+     *  item is inserted at the top of the list. If –1, the new item is inserted at the end of the
+     *  list.
+	 * @typeofeditors ["PDF"]
+	 */
+    ApiListBoxField.prototype.insertItemAt = function(cName, cExport, nIdx) {
+        let aFields = this.field._doc.getWidgetsByName(this.name);
+
+        aFields.forEach(function(field) {
+            field.InsertOption(cName, cExport, nIdx);
+        })
+
+        editor.getDocumentRenderer()._paintForms();
+    };
 
     function ApiSignatureField(oField)
     {
@@ -1429,6 +1416,18 @@
 
         });
     }
+
+    function private_GetFieldAlign(sJc)
+	{
+		if ("left" === sJc)
+			return align_Left;
+		else if ("right" === sJc)
+			return align_Right;
+		else if ("center" === sJc)
+			return align_Center;
+
+		return undefined;
+	}
 
     if (!window["AscPDFEditor"])
 	    window["AscPDFEditor"] = {};

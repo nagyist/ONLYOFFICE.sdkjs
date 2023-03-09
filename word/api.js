@@ -5855,14 +5855,13 @@ background-repeat: no-repeat;\
 						oApi.WordControl.m_oLogicDocument.AddPlaceholderImages(arrImages, oOptionObject);
 					}
 				}
-				else if (this.isDocumentRenderer() && oOptionObject.field && oOptionObject.field.type === "button")
+				else if (this.isDocumentRenderer() && oOptionObject && oOptionObject.type === "button")
 				{
 					let oViewer = this.getDocumentRenderer();
-					let oField = oOptionObject.field;
 					const oImage = oApi.ImageLoader.LoadImage(arrUrls[0], 1);
 					if(oImage && oImage.Image)
 					{
-						oField.AddImage(oImage);
+						oOptionObject.AddImage(oImage);
 						oViewer._paintForms();
 					}
 				}

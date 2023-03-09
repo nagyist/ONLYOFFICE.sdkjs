@@ -135,8 +135,11 @@
             this._widgets.push(oField);
         }
 
-        if (oPagesInfo.pages[nPageNum].fields == null)
-            oPagesInfo.pages[nPageNum].fields = this._widgets;
+        if (oPagesInfo.pages[nPageNum].fields == null) {
+            oPagesInfo.pages[nPageNum].fields = [];
+        }
+        
+        oPagesInfo.pages[nPageNum].fields.push(oField);
 
         oField._doc = this;
 
@@ -254,7 +257,9 @@
         }
 
         if (oPagesInfo.pages[nPageNum].fields == null)
-            oPagesInfo.pages[nPageNum].fields = this._widgets;
+            oPagesInfo.pages[nPageNum].fields = [];
+
+        oPagesInfo.pages[nPageNum].fields.push(oField);
 
         oField._doc = this;
 
@@ -366,7 +371,7 @@
     CPDFDoc.prototype.getWidgetsByName = function(sName) {
         let aFields = [];
         for (let i = 0; i < this._widgets.length; i++) {
-            if (this._widgets[i].name == sName)
+            if (this._widgets[i]._apiForm.name == sName)
                 aFields.push(this._widgets[i]);
         }
 

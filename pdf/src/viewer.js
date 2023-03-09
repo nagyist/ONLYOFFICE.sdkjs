@@ -898,22 +898,58 @@
 		this.openForms = function() {
 			let aFormsInfo = this.file.nativeFile.getInteractiveForms();
 
-			let oFormInfo, oForm, oRect;
+			let oFormInfo, oForm, aRect;
 			for (let i = 0; i < aFormsInfo.length; i++)
 			{
 				oFormInfo = aFormsInfo[i];
 
-				let nScaseY = this.drawingPages[oFormInfo.page].H / this.file.pages[oFormInfo.page].H * AscCommon.AscBrowser.retinaPixelRatio;
-				let nScaseX = this.drawingPages[oFormInfo.page].W / this.file.pages[oFormInfo.page].W * AscCommon.AscBrowser.retinaPixelRatio;
+				let nScaleY = this.drawingPages[oFormInfo.page].H / this.file.pages[oFormInfo.page].H;
+				let nScaleX = this.drawingPages[oFormInfo.page].W / this.file.pages[oFormInfo.page].W;
 
-				oRect = [oFormInfo.x1 * nScaseX, oFormInfo.y2 * nScaseY, oFormInfo.x2 * nScaseX, oFormInfo.y1 * nScaseY];
+				aRect = [oFormInfo.x1 * nScaleX, oFormInfo.y2 * nScaleY, oFormInfo.x2 * nScaleX, oFormInfo.y1 * nScaleY];
 				
-				oForm = this.doc.private_addField(oFormInfo.name, oFormInfo.type, oFormInfo.page, oRect);
+				oForm = this.doc.private_addField(oFormInfo.name, oFormInfo.type, oFormInfo.page, aRect);
+				oForm._origRect = [oFormInfo.x1, oFormInfo.y2, oFormInfo.x2, oFormInfo.y1];
+
 				if (!oForm) {
 					console.log(Error("Error while reading form, index " + i));
 					continue;
 				}
 
+				// actions
+				if (oFormInfo.AA != null)
+				{
+					// format
+					if (oFormInfo.AA.F)
+					{
+						oForm.SetAction("Format", oFormInfo.AA.F.JS);
+					}
+					// keystroke
+					if (oFormInfo.AA.K)
+					{
+						oForm.SetAction("Keystroke", oFormInfo.AA.K.JS);
+					}
+				}
+				
+				// appearance
+				if (oFormInfo.borderStyle != null)
+				{
+					oForm.SetBorderType(oFormInfo.borderStyle);
+				}
+				if (oFormInfo.borderWidth != null)
+				{
+					oForm.SetBorderWidth(oFormInfo.borderWidth);
+				}
+
+				// members
+				if (oFormInfo.NameOfYes)
+				{
+					oForm.SetExportValue(oFormInfo.NameOfYes);
+				}
+				if (oFormInfo.radiosInUnison)
+				{
+					oForm.SetRadiosInUnison(Boolean(oFormInfo.radiosInUnison));
+				}
 				if (oFormInfo.commitOnSelChange)
 				{
 					// to do
@@ -981,12 +1017,19 @@
 					// to do
 					oForm.SetRichText(Boolean(oFormInfo.richText));
 				}
-				if (oFormInfo.value != null)
+				if (oFormInfo.value != null && oForm.type != "button")
 				{
 					oForm.SetValue(oFormInfo.value);
 				}
-				if (oFormInfo.NoToggleToOff) {
-					oForm.SetNoTogleToOff(Boolean(oFormInfo.richText));
+				if (oFormInfo.NoToggleToOff)
+				{
+					oForm.SetNoTogleToOff(Boolean(oFormInfo.NoToggleToOff));
+				}
+				if (oFormInfo.positionCaption != null) {
+					oForm.SetLayout(oFormInfo.positionCaption);
+				}
+				if (oFormInfo.caption != null) {
+					oForm.SetCaption(oFormInfo.caption);
 				}
 			}
 
@@ -1277,28 +1320,24 @@
 		};
 		this.getPageFieldByMouse = function()
 		{
-			let pageObject = this.getPageByCoords(AscCommon.global_mouseEvent.X - this.x, AscCommon.global_mouseEvent.Y - this.y);
+			var pageObject = this.getPageByCoords(AscCommon.global_mouseEvent.X - this.x, AscCommon.global_mouseEvent.Y - this.y);
 			if (!pageObject)
 				return null;
 
-			let pageFields = this.pagesInfo.pages[pageObject.index];
-
-			let mouseXInPage = (AscCommon.global_mouseEvent.X - this.x) * AscCommon.AscBrowser.retinaPixelRatio;
-			let mouseYInPage = (AscCommon.global_mouseEvent.Y - this.y) * AscCommon.AscBrowser.retinaPixelRatio;
+			var pageFields = this.pagesInfo.pages[pageObject.index];
 			if (pageFields.fields)
 			{
-				for (let i = 0, len = pageFields.fields.length; i < len; i++)
+				for (var i = 0, len = pageFields.fields.length; i < len; i++)
 				{
-					let fieldW = pageFields.fields[i]._pagePos.w;
-					let fieldH = pageFields.fields[i]._pagePos.h;
-					if (mouseXInPage >= pageFields.fields[i]._pagePos.realX && mouseXInPage <= (pageFields.fields[i]._pagePos.realX + fieldW) &&
-						mouseYInPage >= pageFields.fields[i]._pagePos.realY && mouseYInPage <= (pageFields.fields[i]._pagePos.realY + fieldH))
+					if (pageObject.x >= pageFields.fields[i]._origRect[0] && pageObject.x <= pageFields.fields[i]._origRect[2] &&
+						pageObject.y >= pageFields.fields[i]._origRect[1] && pageObject.y <= pageFields.fields[i]._origRect[3])
 					{
 						return pageFields.fields[i];
 					}
 				}
 			}
 			return null;
+
 		};
 
 		this.onMouseDown = function(e)
@@ -1378,7 +1417,7 @@
 				let oFieldToSkip = null;
 				if (oThis.mouseDownFieldObject.type == "listbox") {
 					oThis.mouseDownFieldObject.UpdateScroll(false, false);
-					if (oField && oField.name == oThis.mouseDownFieldObject.name && oField._multipleSelection == false) {
+					if (oField && oField.GetFullName() == oThis.mouseDownFieldObject.GetFullName() && oField._multipleSelection == false) {
 						oFieldToSkip = oField;
 					}
 				}
@@ -1396,14 +1435,16 @@
 					}
 					else if (oThis.mouseDownFieldObject.HasShiftView()) {
 						oThis.mouseDownFieldObject.MoveCursorToStartPos();
+						oThis.mouseDownFieldObject.AddToRedraw();
 						oThis.mouseDownFieldObject = null;
 						oThis._paintForms();
 					}
 					else if (oThis.mouseDownFieldObject._actions.Format && oThis.mouseDownFieldObject.value != "") {
 						oThis.mouseDownFieldObject = null;
+						oThis.mouseDownFieldObject.AddToRedraw();
 						oThis._paintForms();
 					}
-											
+
 					oThis.Api.WordControl.m_oDrawingDocument.TargetEnd();
 					oThis._paintFormsHighlight();
 				}
@@ -2237,7 +2278,7 @@
 				ctx.fill();
 				ctx.beginPath();
 			}
-			if (this.mouseDownFieldObject && this.mouseDownFieldObject._content.IsSelectionUse())
+			if (this.mouseDownFieldObject && this.mouseDownFieldObject._content.IsSelectionUse() && this.mouseDownFieldObject._content.IsSelectionEmpty() == false)
 			{
 				this.mouseDownFieldObject._content.DrawSelectionOnPage(0);
 				ctx.globalAlpha = 0.2;
@@ -2367,25 +2408,58 @@
 		};
 		this._paintForms = function()
 		{
-			let canvas = this.canvasForms;
-			const ctx = canvas.getContext('2d');
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const ctx = this.canvasForms.getContext('2d');
+			ctx.clearRect(0, 0, this.canvasForms.width, this.canvasForms.height);
 
-			for (let i = 0; i < this.pageDetector.pages.length; i++)
+			let xCenter = this.width >> 1;
+			let yPos = this.scrollY >> 0;
+			if (this.documentWidth > this.width)
 			{
-				let nPage = this.pageDetector.pages[i].num;
-				let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
-				let nPageIndX = this.pageDetector.pages[i].x;
-				let nPageIndY = this.pageDetector.pages[i].y;
-				
+				xCenter = (this.documentWidth >> 1) - (this.scrollX) >> 0;
+			}
+
+			for (let i = this.startVisiblePage; i <= this.endVisiblePage; i++)
+			{
+				let aForms = this.pagesInfo.pages[i].fields != null ? this.pagesInfo.pages[i].fields : null;
+
 				if (!aForms)
 					continue;
 
-				if (this.pagesInfo.pages[nPage].fields != null) {
-					this.pagesInfo.pages[nPage].fields.forEach(function(field) {
-						field.Draw(ctx, nPageIndX, nPageIndY);
-					});
+				// рисуем на отдельном канвасе, кешируем
+				let tmpCanvas = document.createElement('canvas');
+				let page = this.drawingPages[i];
+				if (!page)
+					break;
+
+				let cachedImg = page.ImageForms;
+				let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio);
+				let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio);
+
+				if (this.pagesInfo.pages[i].pageZoom == undefined) {
+					this.pagesInfo.pages[i].pageZoom = this.zoom;
 				}
+
+				if (!cachedImg || this.pagesInfo.pages[i].pageZoom != this.zoom || this.pagesInfo.pages[i].needRedrawForms)
+				{
+					tmpCanvas.width = w;
+					tmpCanvas.height = h;
+
+					let tmpCanvasCtx = tmpCanvas.getContext('2d');
+					if (this.pagesInfo.pages[i].fields != null) {
+						this.pagesInfo.pages[i].fields.forEach(function(field) {
+							field.Draw(tmpCanvasCtx);
+						});
+					}
+
+					page.ImageForms = tmpCanvas;
+					this.pagesInfo.pages[i].needRedrawForms = false;
+					this.pagesInfo.pages[i].pageZoom = this.zoom;
+				}
+				
+				let x = ((xCenter * AscCommon.AscBrowser.retinaPixelRatio) >> 0) - (w >> 1);
+				let y = ((page.Y - yPos) * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+				
+				ctx.drawImage(page.ImageForms, 0, 0, page.ImageForms.width, page.ImageForms.height, x, y, w, h);
 			}
 		};
 		this._paintFormsHighlight = function()
@@ -2394,20 +2468,44 @@
 			const ctx = canvas.getContext('2d');
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-			for (let i = 0; i < this.pageDetector.pages.length; i++)
+			let xCenter = this.width >> 1;
+			let yPos = this.scrollY >> 0;
+			if (this.documentWidth > this.width)
 			{
-				let nPage = this.pageDetector.pages[i].num;
-				let aForms = this.pagesInfo.pages[nPage].fields != null ? this.pagesInfo.pages[nPage].fields : null;
+				xCenter = (this.documentWidth >> 1) - (this.scrollX) >> 0;
+			}
+
+			for (let i = this.startVisiblePage; i <= this.endVisiblePage; i++)
+			{
+				let aForms = this.pagesInfo.pages[i].fields != null ? this.pagesInfo.pages[i].fields : null;
 				
 				if (!aForms)
 					continue;
 
-				if (this.pagesInfo.pages[nPage].fields != null) {
-					this.pagesInfo.pages[nPage].fields.forEach(function(field) {
+				// рисуем на отдельном канвасе
+				let tmpCanvas = document.createElement('canvas');
+				let page = this.drawingPages[i];
+				if (!page)
+					break;
+
+				let w = (page.W * AscCommon.AscBrowser.retinaPixelRatio);
+				let h = (page.H * AscCommon.AscBrowser.retinaPixelRatio);
+				
+				tmpCanvas.width = w;
+				tmpCanvas.height = h;
+
+				let tmpCanvasCtx = tmpCanvas.getContext('2d');
+				let x = ((xCenter * AscCommon.AscBrowser.retinaPixelRatio) >> 0) - (w >> 1);
+				let y = ((page.Y - yPos) * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+
+				if (this.pagesInfo.pages[i].fields != null) {
+					this.pagesInfo.pages[i].fields.forEach(function(field) {
 						if (field._needDrawHighlight)
-							field.DrawHighlight(ctx);
+							field.DrawHighlight(tmpCanvasCtx);
 					});
 				}
+
+				ctx.drawImage(tmpCanvas, 0, 0, page.ImageForms.width, page.ImageForms.height, x, y, w, h);
 			}
 		};
 		this.Get_PageLimits = function() {

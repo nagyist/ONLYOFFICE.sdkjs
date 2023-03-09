@@ -3212,18 +3212,15 @@ function CDrawingDocument()
 			return {X: 0, Y: 0, Error: true};
 		}
 
-		var dKoef = ((this.m_oWordControl.m_nZoomValue / 100) * g_dKoef_mm_to_pix );
-
-		var x_pix = x * dKoef;
-		var y_pix = y * dKoef;
+		let {X, Y} = AscPDFEditor.private_getGlobalCoordsByPageCoords(x, y, pageIndex);
 
 		if (true !== isNoRound)
 		{
-			x_pix = (x_pix + 0.5) >> 0;
-			y_pix = (y_pix + 0.5) >> 0;
+			X = (X + 0.5) >> 0;
+			Y = (Y + 0.5) >> 0;
 		}
 
-		return {X: x_pix, Y: y_pix, Error: false};
+		return {X: X, Y: Y, Error: false};
 	};
 
 	this.InitViewer = function ()
