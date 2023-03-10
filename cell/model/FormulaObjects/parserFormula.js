@@ -8093,12 +8093,13 @@ function parserFormula( formula, parent, _ws ) {
 
 	//for chrome63(real maximum call stack size is 12575) MAXRECURSION that cause excaption is 783
 	//by measurement: stack size in doctrenderer is one fourth smaller than chrome
-	CalcRecursion.prototype.MAXRECURSION = 300;
+	CalcRecursion.prototype.MAXRECURSION = 5;
 	CalcRecursion.prototype.incLevel = function () {
+		// возвращает true/false в зависимости от того достигнут ли максимальный уровень рекурсии
 		if (this.getIsForceBacktracking()) {
 			return false;
 		}
-		var res = this.level <= CalcRecursion.prototype.MAXRECURSION;
+		let res = this.level <= CalcRecursion.prototype.MAXRECURSION;
 		if (res) {
 			this.level++;
 		} else {
@@ -8116,9 +8117,9 @@ function parserFormula( formula, parent, _ws ) {
 		this.elemsPart.push(val);
 	};
 	CalcRecursion.prototype.foreachInReverse = function (callback) {
-		for (var i = this.elems.length - 1; i >= 0; --i) {
-			var elemsPart = this.elems[i];
-			for (var j = 0; j < elemsPart.length; ++j) {
+		for (let i = this.elems.length - 1; i >= 0; --i) {
+			let elemsPart = this.elems[i];
+			for (let j = 0; j < elemsPart.length; ++j) {
 				callback(elemsPart[j]);
 				if (this.getIsForceBacktracking()) {
 					return;
@@ -8142,7 +8143,7 @@ function parserFormula( formula, parent, _ws ) {
 	CalcRecursion.prototype.getIsProcessRecursion = function () {
 		return this.isProcessRecursion;
 	};
-	var g_cCalcRecursion =  new CalcRecursion();
+	var g_cCalcRecursion = new CalcRecursion();
 
 	function parseNum(str) {
 		if (str.indexOf("x") > -1 || str == "" || str.match(/^\s+$/))//исключаем запись числа в 16-ричной форме из числа.

@@ -725,11 +725,26 @@ $(function () {
 		var newNameW = new Asc.asc_CDefName("w", "'" + ws.getName() + "'!A1");
 		wb.editDefinesNames(null, newNameW);
 		ws.getRange2("Q4").setValue("=w");
-		assert.strictEqual(ws.getRange2("Q4").getValueWithFormat(), "#REF!");
+		assert.strictEqual(ws.getRange2("Q4").getValueWithFormat(), "0");	// return #REF! if is not iterable
 		//clean up
 		ws.getRange2("Q1:Q4").cleanAll();
 		wb.delDefinesNames(newNameW);
 		wb.delDefinesNames(newNameQ);
+	});
+
+	QUnit.test("Test: \"RecursionTest\"", function (assert) {
+		let array;
+
+		ws.getRange2("A101").setValue();
+		ws.getRange2("B101").setValue("3");
+		ws.getRange2("C101").setValue("4");
+		ws.getRange2("D101").setValue("10");
+
+		oParser = new parserFormula('A101+B101+C101', "A101", ws);
+		assert.ok(oParser.parse(), 'A101+B101+C101');
+		assert.strictEqual(oParser.calculate().getValue(), 7, 'Result of A101+B101+C101');
+
+		ws.getRange2("A101:D101").cleanAll();
 	});
 
 	QUnit.test("Test: \"Parse intersection\"", function (assert) {
