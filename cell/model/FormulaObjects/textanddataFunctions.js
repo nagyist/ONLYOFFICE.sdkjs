@@ -799,35 +799,48 @@ function (window, undefined) {
 	cEXACT.prototype.argumentsMax = 2;
 	cEXACT.prototype.argumentsType = [argType.text, argType.text];
 	cEXACT.prototype.Calculate = function (arg) {
-		var arg0 = arg[0], arg1 = arg[1];
-		if (arg0 instanceof cArea || arg0 instanceof cArea3D) {
+		let arg0 = arg[0], arg1 = arg[1];
+
+		if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
 			arg0 = arg0.cross(arguments[1]);
-		} else if (arg0 instanceof cRef || arg0 instanceof cRef3D) {
+		} else if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
 			arg0 = arg0.getValue();
 		}
-		if (arg1 instanceof cArea || arg1 instanceof cArea3D) {
+
+		if (cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
 			arg1 = arg1.cross(arguments[1]);
-		} else if (arg1 instanceof cRef || arg1 instanceof cRef3D) {
+		} else if (cElementType.cell === arg1.type || cElementType.cell3D === arg1.type) {
 			arg1 = arg1.getValue();
 		}
 
-		if (arg0 instanceof cArray && arg1 instanceof cArray) {
+		if (cElementType.array === arg0.type && cElementType.array === arg1.type) {
 			arg0 = arg0.getElementRowCol(0, 0);
 			arg1 = arg1.getElementRowCol(0, 0);
-		} else if (arg0 instanceof cArray) {
+		} else if (cElementType.array === arg0.type) {
 			arg0 = arg0.getElementRowCol(0, 0);
-		} else if (arg1 instanceof cArray) {
+		} else if (cElementType.array === arg1.type) {
 			arg1 = arg1.getElementRowCol(0, 0);
 		}
 
-		if (arg0 instanceof cError) {
+		if (cElementType.error === arg0.type) {
 			return arg0;
 		}
-		if (arg1 instanceof cError) {
+		if (cElementType.error === arg1.type) {
 			return arg1;
 		}
 
-		var arg0val = arg0.toLocaleString(), arg1val = arg1.toLocaleString();
+		// round the value
+		// TODO doesn't work with 0.6 * 3 and 0.1 + 0.2
+		if (cElementType.number === arg0.type) {
+			let rounded = (arg0.toNumber() * 100) / 100;
+			arg0 = new cNumber(rounded);
+		}
+		if (cElementType.number === arg1.type) {
+			let rounded = (arg1.toNumber() * 100) / 100;
+			arg1 = new cNumber(rounded);
+		}
+
+		let arg0val = arg0.toLocaleString(), arg1val = arg1.toLocaleString();
 		return new cBool(arg0val === arg1val);
 	};
 

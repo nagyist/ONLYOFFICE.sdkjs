@@ -4150,6 +4150,64 @@ $(function () {
 		ws.getRange2("B2").setValue("word");
 		ws.getRange2("B3").setValue("word");
 		ws.getRange2("B4").setValue("word");
+		ws.getRange2("B102").setValue("");
+		ws.getRange2("B103").setValue();
+
+		oParser = new parserFormula("EXACT(1.8,0.6*3)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");		// TRUE
+
+		oParser = new parserFormula("EXACT(0.8,0.7+0.1)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");			// TRUE
+
+		oParser = new parserFormula("EXACT(0.3,0.2+0.1)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");		// TRUE
+
+		oParser = new parserFormula("EXACT(1.8,1.7999999999999998)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");
+
+		oParser = new parserFormula("EXACT(0.3,0.30000000000000004)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");
+
+		oParser = new parserFormula("EXACT(0.8,0.7999999999999999)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");
+
+		oParser = new parserFormula("EXACT(,)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(B102,)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(,B102)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(B102, B102)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(B103,)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(,B103)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(B103, B103)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
+
+		oParser = new parserFormula("EXACT(,)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE");
 
 		oParser = new parserFormula("EXACT(A2,B2)", "A2", ws);
 		assert.ok(oParser.parse());
