@@ -5659,7 +5659,7 @@
 						if (content) {
 							if (ctrlKey) // Ctrl + End - переход в конец документа
 							{
-								content.MoveCursorToEndPos();
+								content.MoveCursorToEndPos(e.shiftKey);
 								drawingObjectsController.updateSelectionState();
 								drawingObjectsController.updateOverlay();
 								this.drawingObjects.sendGraphicObjectProps();
@@ -5679,7 +5679,7 @@
 						if (content) {
 							if (ctrlKey) // Ctrl + End - переход в конец документа
 							{
-								content.MoveCursorToStartPos();
+								content.MoveCursorToStartPos(e.shiftKey);
 								drawingObjectsController.updateSelectionState();
 								drawingObjectsController.updateOverlay();
 								this.drawingObjects.sendGraphicObjectProps();
@@ -8136,14 +8136,17 @@
 					return oShape;
 				},
 
-				GetSelectedText: function (bCleartText, oPr) {
+				GetSelectedText: function (bClearText, oPr) {
+					oPr = oPr || {};
+					if (bClearText === undefined)
+						bClearText = false;
 					const oObject = getTargetTextObject(this);
 					if (oObject && oObject.GetSelectedText) {
-						return oObject.GetSelectedText(bCleartText, oPr);
+						return oObject.GetSelectedText(bClearText, oPr);
 					} else {
 						const oContent = this.getTargetDocContent();
 						if (oContent) {
-							return oContent.GetSelectedText(bCleartText, oPr);
+							return oContent.GetSelectedText(bClearText, oPr);
 						}
 					}
 					return "";
