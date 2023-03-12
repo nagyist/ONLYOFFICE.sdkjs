@@ -33,6 +33,7 @@
 
 (function (window)
 {
+	const editor = Asc.editor;
 	const {
 		wbModel,
 		wbView,
@@ -89,6 +90,308 @@
 		activeCellRange
 	} = window.AscTestShortcut;
 
+	const pxToMm = AscCommon.g_dKoef_pix_to_mm;
+
+	function addHyperlink(sLink, sText)
+	{
+		const oHyperlink = new AscCommonExcel.Hyperlink();
+		oHyperlink.Hyperlink = sLink;
+
+		const oAscHyperlink = new Asc.asc_CHyperlink(oHyperlink);
+		oAscHyperlink.text = sText;
+		editor.asc_insertHyperlink(oAscHyperlink);
+	}
+
+	function createMathInShape()
+	{
+		const {oShape, oParagraph} = createShapeWithContent('', true);
+		selectOnlyObjects([oShape]);
+		moveToParagraph(oParagraph, true);
+		editor.asc_AddMath2(c_oAscMathType.FractionVertical);
+		return {oShape, oParagraph};
+	}
+
+	function moveCursorRight(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveRight(bAddToSelect, bWord);
+	}
+
+	function moveCursorLeft(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveLeft(bAddToSelect, bWord);
+	}
+
+	function moveCursorUp(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveUp(bAddToSelect, bWord);
+	}
+
+	function moveCursorDown(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveDown(bAddToSelect, bWord);
+
+	}
+
+	function checkMoveContentShapeHelper(arrExpected, oEvent, oAssert)
+	{
+		const {deep, equal} = createTest(oAssert);
+		const {oShape} = createShapeWithContent('Hello World Hello World Hello World Hello World Hello World');
+		moveToShapeParagraph(oShape, 0);
+		onKeyDown(oEvent);
+		equal(contentPosition(), arrExpected[0]);
+
+		moveToShapeParagraph(oShape, 0, true);
+		onKeyDown(oEvent);
+		equal(contentPosition(), arrExpected[1]);
+	}
+
+	function contentPosition()
+	{
+		const arrContentPosition = graphicController().getTargetDocContent().GetContentPosition();
+		return arrContentPosition[arrContentPosition.length - 1].Position;
+	}
+
+	function selectedContent()
+	{
+		return graphicController().GetSelectedText(false, {TabSymbol: '\t'});
+	}
+
+	function checkSelectContentShapeHelper(arrExpected, oEvent, oAssert)
+	{
+		const {deep, equal} = createTest(oAssert);
+		const {oShape} = createShapeWithContent('Hello World Hello World Hello World Hello World Hello World');
+		moveToShapeParagraph(oShape, 0, true);
+		onKeyDown(oEvent);
+		equal(selectedContent(), arrExpected[0]);
+
+		moveToShapeParagraph(oShape, 0);
+		onKeyDown(oEvent);
+		equal(selectedContent(), arrExpected[1]);
+	}
+
+	function round(nNumber, nAmount)
+	{
+		const nPower = Math.pow(10, nAmount);
+		return Math.round(nNumber * nPower) / nPower;
+	}
+
+	function moveShapeHelper(oExpected, oEvent, oAssert)
+	{
+		const oShape = createShape();
+		const {deep, equal} = createTest(oAssert);
+		selectOnlyObjects([oShape]);
+
+		onKeyDown(oEvent);
+		oShape.recalculateTransform();
+		deep({x: round(oShape.x, 12), y: round(oShape.y, 12)}, {x: round(oExpected.x, 12), y: round(oExpected.y, 12)});
+	}
+
+	function createTable()
+	{
+		moveToCell(0, 0);
+		enterText('Hello');
+
+		moveToCell(1, 0);
+		enterText('1');
+		moveToCell(2, 0);
+		enterText('2');
+		moveToCell(3, 0);
+		enterText('3');
+		moveToCell(4, 0);
+		enterText('4');
+		moveToCell(0, 0);
+		selectToCell(4, 0);
+
+		editor.asc_addAutoFilter('TableStyleMedium2', editor.asc_getAddFormatTableOptions());
+	}
+	function createSlicer()
+	{
+		createTable();
+		editor.asc_insertSlicer(['Hello']);
+		return graphicController().getSelectedArray()[0];
+	}
+
+	function moveToShapeParagraph(oShape, nParagraph, bIsMoveToStart)
+	{
+		const oParagraph = oShape.getDocContent().Content[nParagraph];
+		moveToParagraph(oParagraph, bIsMoveToStart);
+
+		return oParagraph;
+	}
+
+
+	function addProperty(oPr)
+	{
+		graphicController().paragraphAdd(new AscCommonWord.ParaTextPr(oPr), true);
+	}
+
+	function targetContent()
+	{
+		return graphicController().getTargetDocContent();
+	}
+
+	function textPr()
+	{
+		return graphicController().getParagraphTextPr();
+	}
+
+	function paraPr()
+	{
+		return graphicController().getParagraphParaPr();
+	}
+
+	function moveToParagraph(oParagraph, bToStart)
+	{
+		oParagraph.SetThisElementCurrent();
+		if (bToStart)
+		{
+			oParagraph.MoveCursorToStartPos();
+		} else
+		{
+			oParagraph.MoveCursorToEndPos();
+		}
+
+		graphicController().recalculateCurPos(true, true);
+	}
+
+	function selectedObjects()
+	{
+		return graphicController().getSelectedArray();
+	}
+
+	function cleanGraphic()
+	{
+		graphicController().resetSelection();
+		graphicController().selectAll();
+		graphicController().remove();
+	}
+
+	function graphicController()
+	{
+		return editor.getGraphicController();
+	}
+
+	function createShape()
+	{
+		const oGraphicController = graphicController();
+		const oTrack = new AscFormat.NewShapeTrack('rect', 0, 0, wbModel().theme, null, null, null, 0, oGraphicController);
+		const oShape = oTrack.getShape(false, drawingDocument(), oGraphicController.drawingObjects);
+		oShape.setWorksheet(wbView().getWorksheet().model);
+		oShape.spPr.xfrm.setOffX(100);
+		oShape.spPr.xfrm.setOffY(100);
+		oShape.spPr.xfrm.setExtX(100);
+		oShape.spPr.xfrm.setExtY(100);
+		oShape.setPaddings({Left:0,Right:0,Top:0,Bottom:0});
+		oShape.setParent(oGraphicController.drawingObjects);
+		oShape.setRecalculateInfo();
+
+		oShape.addToDrawingObjects(undefined, AscCommon.c_oAscCellAnchorType.cellanchorTwoCell);
+		oShape.checkDrawingBaseCoords();
+		oGraphicController.checkChartTextSelection();
+		oGraphicController.resetSelection();
+		oShape.select(oGraphicController, 0);
+		oGraphicController.startRecalculate();
+		oGraphicController.drawingObjects.sendGraphicObjectProps();
+		oGraphicController.recalculate();
+		oShape.recalculateTransform();
+
+		return oShape;
+	}
+
+	function drawingDocument()
+	{
+		return wbModel().DrawingDocument;
+	}
+
+	function selectOnlyObjects(arrShapes)
+	{
+		const oController = graphicController();
+		oController.resetSelection();
+		for (let i = 0; i < arrShapes.length; i += 1)
+		{
+			const oObject = arrShapes[i];
+			if (oObject.group)
+			{
+				const oMainGroup = oObject.group.getMainGroup();
+				oMainGroup.select(oController, 0);
+				oController.selection.groupSelection = oMainGroup;
+			}
+			oObject.select(oController, 0);
+		}
+	}
+
+	function createShapeWithContent(sText)
+	{
+		const oShape = createShape();
+		selectOnlyObjects([oShape])
+		oShape.setTxBody(AscFormat.CreateTextBodyFromString(sText, drawingDocument(), oShape));
+		const oParagraph = oShape.txBody.content.Content[0];
+		oShape.recalculateContentWitCompiledPr();
+		return {oShape, oParagraph};
+	}
+
+	function checkTextAfterKeyDownHelperHelloWorld(sCheckText, oEvent, oAssert, sPrompt)
+	{
+		checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, 'Hello World');
+	}
+
+	function getParagraphText(oParagraph)
+	{
+		return oParagraph.GetText({ParaEndToSpace: false});
+	}
+
+	function checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, sInitText)
+	{
+		const {oParagraph} = createShapeWithContent(sInitText);
+		moveToParagraph(oParagraph);
+		onKeyDown(oEvent);
+		const sTextAfterKeyDown = getParagraphText(oParagraph);
+		oAssert.strictEqual(sTextAfterKeyDown, sCheckText, sPrompt);
+	}
+
+	function checkDirectTextPrAfterKeyDown(fCallback, oEvent, oAssert, nExpectedValue, sPrompt)
+	{
+		const {oParagraph} = createShapeWithContent('Hello World');
+		let oTextPr = getDirectTextPrHelper(oParagraph, oEvent);
+		oAssert.strictEqual(fCallback(oTextPr), nExpectedValue, sPrompt);
+		return function continueCheck(fCallback2, oEvent2, oAssert2, nExpectedValue2, sPrompt2)
+		{
+			oTextPr = getDirectTextPrHelper(oParagraph, oEvent2);
+			oAssert2.strictEqual(fCallback2(oTextPr), nExpectedValue2, sPrompt2);
+			return continueCheck;
+		}
+	}
+
+	function checkDirectParaPrAfterKeyDown(fCallback, oEvent, oAssert, nExpectedValue, sPrompt)
+	{
+		const {oParagraph} = createShapeWithContent('Hello World');
+		let oParaPr = getDirectParaPrHelper(oParagraph, oEvent);
+		oAssert.strictEqual(fCallback(oParaPr), nExpectedValue, sPrompt);
+
+		return function continueCheck(fCallback2, oEvent2, oAssert2, nExpectedValue2, sPrompt2)
+		{
+			oParaPr = getDirectParaPrHelper(oParagraph, oEvent2);
+			oAssert2.strictEqual(fCallback2(oParaPr), nExpectedValue2, sPrompt2);
+			return continueCheck;
+		}
+	}
+
+
+	function getDirectTextPrHelper(oParagraph, oEvent)
+	{
+		oParagraph.SetThisElementCurrent();
+		graphicController().selectAll();
+		onKeyDown(oEvent);
+		return textPr();
+	}
+
+	function getDirectParaPrHelper(oParagraph, oEvent)
+	{
+		oParagraph.SetThisElementCurrent();
+		graphicController().selectAll();
+		onKeyDown(oEvent);
+		return paraPr();
+	}
 
 	$(
 		function ()
@@ -110,7 +413,11 @@
 			QUnit.test('Test change format table info', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
-
+				createTable();
+				moveToCell(4, 0);
+				onKeyDown(82, true, true, false, false, false);
+				moveToCell(5, 0);
+				equal(getCellText(), '10');
 			});
 
 			QUnit.test('Test calculate all', (oAssert) =>
@@ -170,6 +477,7 @@
 
 			QUnit.test('Test remove active cell text', (oAssert) =>
 			{
+				cleanAll();
 				const {deep, equal} = createTest(oAssert);
 				moveToCell(0, 0);
 				enterText('hello World');
@@ -232,7 +540,18 @@
 			QUnit.test('Test reset', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
+				editor.asc_startAddShape('rect');
+				onKeyDown(27, false, false, false, false);
+				equal(graphicController().checkEndAddShape(), false);
+				moveToCell(0, 0);
+				editor.asc_SelectionCut();
+				onKeyDown(27, false, false, false, false);
+				equal(wsView().copyCutRange, null);
 
+				moveToCell(0, 0);
+				editor.asc_Copy();
+				onKeyDown(27, false, false, false, false);
+				equal(wsView().copyCutRange, null);
 			});
 
 			QUnit.test('Test disable num lock', (oAssert) =>
@@ -577,26 +896,7 @@
 				deep(cleanSelection(), checkRange(0, 5, 0, 25));
 			});
 
-			QUnit.test('Test move to right edge cell', (oAssert) =>
-			{
-				const {deep, equal} = createTest(oAssert);
 
-				cleanAll()
-				moveAndEnterText('Hello', 5, 5);
-				moveAndEnterText('Hello', 4, 8);
-				moveToCell(0, 0);
-
-				onKeyDown(35, false, false, false, false, false);
-				deep(cleanActiveCell(), checkActiveCell(0, 23));
-
-				moveToCell(4, 0);
-				onKeyDown(35, false, false, false, false, false);
-				deep(cleanActiveCell(), checkActiveCell(4, 8));
-
-				moveToCell(5, 0);
-				onKeyDown(35, false, false, false, false, false);
-				deep(cleanActiveCell(), checkActiveCell(5, 5));
-			});
 
 			QUnit.test('Test select to right edge cell', (oAssert) =>
 			{
@@ -617,6 +917,26 @@
 				moveToCell(5, 0);
 				onKeyDown(35, false, true, false, false, false);
 				deep(cleanSelection(), checkRange(5, 5, 0, 5));
+			});
+
+			QUnit.test('Test move to right edge cell', (oAssert) =>
+			{
+				const {deep, equal} = createTest(oAssert);
+				cleanAll();
+				moveAndEnterText('Hello', 5, 5);
+				moveAndEnterText('Hello', 4, 8);
+				moveToCell(0, 0);
+
+				onKeyDown(35, false, false, false, false, false);
+				deep(cleanActiveCell(), checkActiveCell(0, 23));
+
+				moveToCell(4, 0);
+				onKeyDown(35, false, false, false, false, false);
+				deep(cleanActiveCell(), checkActiveCell(4, 8));
+
+				moveToCell(5, 0);
+				onKeyDown(35, false, false, false, false, false);
+				deep(cleanActiveCell(), checkActiveCell(5, 5));
 			});
 
 			QUnit.test('Test move to right bottom edge cell', (oAssert) =>
@@ -764,13 +1084,6 @@
 				equal(xfs().asc_getFontItalic(), false);
 			});
 
-
-			QUnit.test('Test save', (oAssert) =>
-			{
-				const {deep, equal} = createTest(oAssert);
-
-			});
-
 			QUnit.test('Test underline', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
@@ -806,7 +1119,7 @@
 				moveToCell(6, 6);
 				enterText('0.1');
 				undo();
-				onKeyDown(85, true, false, false, false, false);
+				onKeyDown(89, true, false, false, false, false);
 				equal(getCellText(), '0.1');
 			});
 
@@ -817,7 +1130,7 @@
 				cleanAll();
 				moveToCell(6, 6);
 				enterText('0.1');
-				onKeyDown(85, true, false, false, false, false);
+				onKeyDown(90, true, false, false, false, false);
 				equal(getCellText(), '');
 			});
 
@@ -832,9 +1145,16 @@
 			{
 				const {deep, equal} = createTest(oAssert);
 				cleanAll();
-				moveToCell(6, 6);
-				onKeyDown(85, true, false, false, false, false);
-				equal(getCellText(), false);
+				goToSheet(0);
+				moveToCell(0, 0);
+				enterText('1');
+				moveToCell(0, 1);
+				enterText('2');
+				moveToCell(7, 7);
+				setCellFormat(Asc.c_oAscNumFormatType.General);
+				onKeyDown(61, false, false, true, false, false);
+				enterTextWithoutClose('A1,B1');
+				equal(getCellText(), "3");
 			});
 
 			QUnit.test('Test context menu', (oAssert) =>
@@ -853,6 +1173,8 @@
 				beforeEach: function ()
 				{
 					setCheckOpenCellEditor(false);
+					goToSheet(0);
+					cleanAll();
 				},
 				afterEach : function ()
 				{
@@ -1291,498 +1613,13 @@
 				equal(getCellText(), oDate.getDateString(editor), 'Check insert current date');
 			});
 
-
-			QUnit.module("Test graphic shortcuts");
-
-			// QUnit.module('test shortcuts');
-			// QUnit.test('Test common shortcuts', function (oAssert)
-			// {
-			// 	let oEvent;
-			// 	oEvent = createEvent(9, false, false, false, false, false);
-			// 	editor.onKeyDown(oEvent);
-			// 	moveRight();
-			// 	cleanActiveCell(checkActiveCell((2,  0));
-			//
-			// 	moveToCell(5, 5);
-			// 	cleanActiveCell(checkActiveCell((5,  5));
-			// 	//ch-eck events controller
-			// 	oEvent = createEvent(116, true, false, true, false, false);
-			// 	checkRefreshAllConnections(oEvent, oAssert);
-			// 	oEvent = createEvent(116, false, false, false, true, false);
-			// 	//checkRefreshSelectedConnections(oEvent, oAssert);
-			// 	oEvent = createEvent(82, true, true, false, false, false);
-			// 	//checkChangeFormatTableInfo(oEvent, oAssert);
-			// 	oEvent = createEvent(120, true, true, true, false, false);
-			// 	checkCalculateAll(oEvent, oAssert);
-			// 	oEvent = createEvent(120, true, false, true, false, false);
-			// 	checkCalculateWorkbook(oEvent, oAssert);
-			// 	oEvent = createEvent(120, false, true, false, false, false);
-			// 	checkCalculateActiveSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(120, false, false, false, false, false);
-			// 	checkCalculateOnlyChanged(oEvent, oAssert);
-			// 	oEvent = createEvent(113, false, false, false, false, false);
-			// 	checkFocusOnEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(186, true, false, false, false, false);
-			// 	checkAddDateOrTime(oEvent, oAssert);
-			// 	oEvent = createEvent(8, false, false, false, false, false);
-			// 	checkRemoveCellText(oEvent, oAssert);
-			// 	oEvent = createEvent(46, false, false, false, false, false);
-			// 	checkEmpty(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, true, false, false, false);
-			// 	checkMoveToLeftCell(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, false, false, false, false);
-			// 	checkMoveToRightCell(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, true, false, false, false);
-			// 	checkMoveToUpCell(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkMoveToDownCell(oEvent, oAssert);
-			// 	oEvent = createEvent(27, false, false, false, false, false);
-			// 	checkReset(oEvent, oAssert);
-			// 	oEvent = createEvent(144, false, false, false, false, false);
-			// 	checkDisableNumlock(oEvent, oAssert);
-			// 	oEvent = createEvent(145, false, false, false, false, false);
-			// 	checkDisableScrollLock(oEvent, oAssert);
-			// 	oEvent = createEvent(32, true, false, false, false, false);
-			// 	checkSelectColumn(oEvent, oAssert);
-			// 	oEvent = createEvent(32, false, true, false, false, false);
-			// 	checkSelectRow(oEvent, oAssert);
-			// 	oEvent = createEvent(32, true, true, false, false, false);
-			// 	checkSelectSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(32, false, false, false, false, false);
-			// 	checkAddSpace(oEvent, oAssert);
-			// 	oEvent = createEvent(110, false, false, false, false, false);
-			// 	checkAddRegionalDecimal(oEvent, oAssert);
-			// 	oEvent = createEvent(33, true, false, false, false, false);
-			// 	checkGoToPreviousSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(33, false, false, true, false, false);
-			// 	checkGoToPreviousSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(33, false, false, false, false, false);
-			// 	checkMoveToTopCell(oEvent, oAssert);
-			// 	oEvent = createEvent(34, true, false, false, false, false);
-			// 	checkMoveToNextSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(34, false, false, true, false, false);
-			// 	checkMoveToNextSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(34, false, false, false, false, false);
-			// 	checkMoveToBottomCell(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, false, false, false, false);
-			// 	checkMoveToLeftEdgeCell(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, false, false, false, false);
-			// 	checkMoveToLeftCell(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, false, false, false, false);
-			// 	checkMoveToRightEdgeCell(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, false, false, false, false);
-			// 	checkMoveToRightCell(oEvent, oAssert);
-			// 	oEvent = createEvent(38, true, false, false, false, false);
-			// 	checkMoveToTopCell(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, false, false, false, false);
-			// 	checkMoveToUpCell(oEvent, oAssert);
-			// 	oEvent = createEvent(40, true, false, false, false, false);
-			// 	checkMoveToBottomCell(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, false, false, false, false);
-			// 	checkMoveToDownCell(oEvent, oAssert);
-			// 	oEvent = createEvent(36, false, false, false, false, false);
-			// 	checkMoveToLeftEdgeCell(oEvent, oAssert);
-			// 	oEvent = createEvent(36, true, false, false, false, false);
-			// 	checkMoveToLeftEdgeTopCell(oEvent, oAssert);
-			// 	oEvent = createEvent(35, false, false, false, false, false);
-			// 	checkMoveToRightEdgeCell(oEvent, oAssert);
-			// 	oEvent = createEvent(35, true, false, false, false, false);
-			// 	checkMoveToRightEdgeBottomCell(oEvent, oAssert);
-			// 	oEvent = createEvent(49, true, true, false, false, false);
-			// 	checkSetNumberFormat(oEvent, oAssert);
-			// 	oEvent = createEvent(50, true, true, false, false, false);
-			// 	checkSetTimeFormat(oEvent, oAssert);
-			// 	oEvent = createEvent(51, true, true, false, false, false);
-			// 	checkSetDateTime(oEvent, oAssert);
-			// 	oEvent = createEvent(52, true, true, false, false, false);
-			// 	checkSetCurrencyFormat(oEvent, oAssert);
-			// 	oEvent = createEvent(53, true, false, false, false, false);
-			// 	checkStrikethrough(oEvent, oAssert);
-			// 	oEvent = createEvent(54, true, true, false, false, false);
-			// 	checkSetExponentialFormat(oEvent, oAssert);
-			// 	oEvent = createEvent(66, true, false, false, false, false);
-			// 	checkBold(oEvent, oAssert);
-			// 	oEvent = createEvent(73, true, false, false, false, false);
-			// 	checkItalic(oEvent, oAssert);
-			// 	oEvent = createEvent(83, false, false, false, false, false);
-			// 	checkSave(oEvent, oAssert);
-			// 	oEvent = createEvent(85, true, false, false, false, false);
-			// 	checkUnderline(oEvent, oAssert);
-			// 	oEvent = createEvent(192, true, true, false, false, false);
-			// 	checkSetGeneralFormat(oEvent, oAssert);
-			// 	oEvent = createEvent(89, true, false, false, false, false);
-			// 	checkRedo(oEvent, oAssert);
-			// 	oEvent = createEvent(90, true, false, false, false, false);
-			// 	checkUndo(oEvent, oAssert);
-			// 	oEvent = createEvent(65, true, false, false, false, false);
-			// 	checkSelectSheet(oEvent, oAssert);
-			// 	oEvent = createEvent(80, true, false, false, false, false);
-			// 	checkPrint(oEvent, oAssert);
-			// 	oEvent = createEvent(61, false, false, true, false, false);
-			// 	checkAddSumFunction(oEvent, oAssert);
-			// 	oEvent = createEvent(187, false, false, true, false, false);
-			// 	checkAddSumFunction(oEvent, oAssert);
-			//
-			// 	//check for mac os
-			// 	oEvent = createEvent(61, true, false, true, false, false);
-			// 	checkAddSumFunction(oEvent, oAssert);
-			// 	oEvent = createEvent(187, true, false, true, false, false);
-			// 	checkAddSumFunction(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(93, false, false, false, false, false);
-			// 	checkContextMenu(oEvent, oAssert);
-			//
-			// 	//ch-eckChangeSelectionInOleEditor
-			//
-			// 	function checkAddRegionalDecimal()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkAddNewLineMenuEditorMode()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkCloseEditorAndMoveDown()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkCloseEditorAndMoveUp()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkCloseEditorAndMoveRight()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkAddRegionalDecimalCellEditor()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkRemoveCharShape()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkRemoveWordShape()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkMoveToStartLineContent()
-			// 	{
-			//
-			// 	}
-			//
-			// 	function checkRemoveContentCharFrontShape()
-			// 	{
-			//
-			// 	}
-			//
-			//
-			// 	//ch-eck cell editor shortcuts
-			// 	oEvent = createEvent(27, false, false, false, false, false);
-			// 	checkCloseCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, true, false, false);
-			// 	checkAddNewLine(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkAddNewLineMenuEditorMode(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkCloseEditorAndMoveDown(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, true, false, false, false);
-			// 	checkCloseEditorAndMoveUp(oEvent, oAssert);
-			// 	oEvent = createEvent(13, true, true, false, false, false);
-			// 	checkCloseCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(13, true, false, false, false, false);
-			// 	checkCloseCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, false, false, false, false);
-			// 	checkCloseEditorAndMoveRight(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, true, false, false, false);
-			// 	checkCloseEditorAndMoveRight(oEvent, oAssert);
-			// 	oEvent = createEvent(8, false, false, false, false, false);
-			// 	checkRemoveCharBack(oEvent, oAssert);
-			// 	oEvent = createEvent(8, true, false, false, false, false);
-			// 	checkRemoveWordBack(oEvent, oAssert);
-			// 	oEvent = createEvent(32, false, false, false, false, false);
-			// 	checkAddSpace(oEvent, oAssert);
-			// 	oEvent = createEvent(35, false, false, false, false, false);
-			// 	checkMoveToEndLine(oEvent, oAssert);
-			// 	oEvent = createEvent(35, true, false, false, false, false);
-			// 	checkMoveToEndPos(oEvent, oAssert);
-			// 	oEvent = createEvent(35, false, true, false, false, false);
-			// 	checkSelectToEndLine(oEvent, oAssert);
-			// 	oEvent = createEvent(35, true, true, false, false, false);
-			// 	checkSelectToEndPos(oEvent, oAssert);
-			// 	oEvent = createEvent(36, false, false, false, false, false);
-			// 	checkMoveToStartLine(oEvent, oAssert);
-			// 	oEvent = createEvent(36, true, false, false, false, false);
-			// 	checkMoveToStartPos(oEvent, oAssert);
-			// 	oEvent = createEvent(36, false, true, false, false, false);
-			// 	checkSelectToStartLine(oEvent, oAssert);
-			// 	oEvent = createEvent(36, true, true, false, false, false);
-			// 	checkSelectToStartPos(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, false, false, false, false);
-			// 	checkMoveToLeftChar(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, false, false, false, false);
-			// 	checkMoveToLeftWord(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, true, false, false, false);
-			// 	checkSelectToLeftChar(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, true, false, false, false);
-			// 	checkSelectToLeftWord(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, false, false, false, false);
-			// 	checkMoveToUpLine(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, true, false, false, false);
-			// 	checkSelectToUpLine(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, false, false, false, false);
-			// 	checkMoveToRightChar(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, false, false, false, false);
-			// 	checkMoveToRightWord(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, true, false, false, false);
-			// 	checkSelectToRightChar(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, true, false, false, false);
-			// 	checkSelectToRightWord(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, false, false, false, false);
-			// 	checkMoveToDownLine(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, true, false, false, false);
-			// 	checkSelectToDownLine(oEvent, oAssert);
-			// 	oEvent = createEvent(46, false, false, false, false, false);
-			// 	checkRemoveFrontChar(oEvent, oAssert);
-			// 	oEvent = createEvent(46, true, false, false, false, false);
-			// 	checkRemoveFrontWord(oEvent, oAssert);
-			// 	oEvent = createEvent(53, true, false, false, false, false);
-			// 	checkStrikethroughCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(65, true, false, false, false, false);
-			// 	checkSelectAllCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(66, true, false, false, false, false);
-			// 	checkBoldCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(73, true, false, false, false, false);
-			// 	checkItalicCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(85, true, false, false, false, false);
-			// 	checkUnderlineCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(144, false, false, false, false, false);
-			// 	checkDisableScrollLockCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(145, false, false, false, false, false);
-			// 	checkDisableNumLockCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(80, true, false, false, false, false);
-			// 	checkPrintCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(90, false, false, false, false, false);
-			// 	checkUndoCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(89, false, false, false, false, false);
-			// 	checkRedoCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(110, false, false, false, false, false);
-			// 	checkAddRegionalDecimalCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(113, false, false, false, false, false);
-			// 	checkDisableF2InOperaCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(115, false, false, false, false, false);
-			// 	checkSwitchReference(oEvent, oAssert);
-			// 	oEvent = createEvent(186, true, true, false, false, false);
-			// 	checkAddTimeCellEditor(oEvent, oAssert);
-			// 	oEvent = createEvent(186, false, true, false, false, false);
-			// 	checkAddDateCellEditor(oEvent, oAssert);
-			//
-			// 	// ch-eck common controllers shortcuts
-			//
-			// 	oEvent = createEvent(8, false, false, false, false, false);
-			// 	checkRemoveShape(oEvent, oAssert);
-			// 	oEvent = createEvent(8, false, false, false, false, false);
-			// 	checkRemoveCharShape(oEvent, oAssert);
-			// 	oEvent = createEvent(8, true, false, false, false, false);
-			// 	checkRemoveWordShape(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, false, false, false, false);
-			// 	checkAddTab(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, false, false, false, false);
-			// 	checkSelectNextObject(oEvent, oAssert);
-			// 	oEvent = createEvent(9, false, true, false, false, false);
-			// 	checkSelectPreviousObject(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkVisitHyperlink(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkAddNewLineMath(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, true, false, false, false);
-			// 	checkAddBreakLine(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkAddNewParagraph(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkCreateTxBoxContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkCreateTxBodyContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkMoveCursorToStartPosShape(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkSelectAllContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkMoveCursorToStartPosChartTitle(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkSelectAllContentChartTitle(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkRemoveSelectionCellGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(13, false, false, false, false, false);
-			// 	checkMoveCursorToStartPosAndSelectAllTable(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(27, false, false, false, false, false);
-			// 	checkStepRemoveSelection(oEvent, oAssert);
-			// 	oEvent = createEvent(27, false, false, false, false, false);
-			// 	checkResetAddShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(35, true, false, false, false, false);
-			// 	checkMoveCursorToEndPositionContent(oEvent, oAssert);
-			// 	oEvent = createEvent(35, false, false, false, false, false);
-			// 	checkMoveCursorToEndLineContent(oEvent, oAssert);
-			// 	oEvent = createEvent(35, false, true, false, false, false);
-			// 	checkSelectToEndLineContent(oEvent, oAssert);
-			// 	oEvent = createEvent(36, true, false, false, false, false);
-			// 	checkMoveCursorToStartPositionContent(oEvent, oAssert);
-			// 	oEvent = createEvent(36, false, false, false, false, false);
-			// 	checkMoveToStartLineContent(oEvent, oAssert);
-			// 	oEvent = createEvent(36, false, true, false, false, false);
-			// 	checkSelectToStartLineContent(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(37, false, false, false, false, false);
-			// 	checkMoveCursorLeftCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, false, false, false, false);
-			// 	checkMoveCursorLeftWordContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, true, false, false, false);
-			// 	checkSelectLeftCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, true, false, false, false);
-			// 	checkSelectLeftWordContentGraphicFrame(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(37, false, false, false, false, false);
-			// 	checkMoveCursorLeftCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, false, false, false, false);
-			// 	checkMoveCursorLeftWordContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, true, false, false, false);
-			// 	checkSelectLeftCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(37, true, true, false, false, false);
-			// 	checkSelectLeftWordContentShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(37, true, false, false, false, false);
-			// 	checkSmallMoveLeftShape(oEvent, oAssert);
-			// 	oEvent = createEvent(37, false, false, false, false, false);
-			// 	checkBigMoveLeftShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(39, false, false, false, false, false);
-			// 	checkMoveCursorRightCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, false, false, false, false);
-			// 	checkMoveCursorRightWordContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, true, false, false, false);
-			// 	checkSelectRightCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, true, false, false, false);
-			// 	checkSelectRightWordContentGraphicFrame(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(39, false, false, false, false, false);
-			// 	checkMoveCursorRightCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, false, false, false, false);
-			// 	checkMoveCursorRightWordContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, true, false, false, false);
-			// 	checkSelectRightCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(39, true, true, false, false, false);
-			// 	checkSelectRightWordContentShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(39, true, false, false, false, false);
-			// 	checkSmallMoveRightShape(oEvent, oAssert);
-			// 	oEvent = createEvent(39, false, false, false, false, false);
-			// 	checkBigMoveRightShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(38, false, false, false, false, false);
-			// 	checkMoveCursorUpCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, true, false, false, false);
-			// 	checkSelectUpCharContentGraphicFrame(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(38, false, false, false, false, false);
-			// 	checkMoveCursorUpCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, true, false, false, false);
-			// 	checkSelectUpCharContentShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(38, true, false, false, false, false);
-			// 	checkSmallMoveUpShape(oEvent, oAssert);
-			// 	oEvent = createEvent(38, false, false, false, false, false);
-			// 	checkBigMoveUpShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(40, false, false, false, false, false);
-			// 	checkMoveCursorDownCharContentGraphicFrame(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, true, false, false, false);
-			// 	checkSelectDownCharContentGraphicFrame(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(40, false, false, false, false, false);
-			// 	checkMoveCursorDownCharContentShape(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, true, false, false, false);
-			// 	checkSelectDownCharContentShape(oEvent, oAssert);
-			//
-			// 	oEvent = createEvent(40, true, false, false, false, false);
-			// 	checkSmallMoveDownShape(oEvent, oAssert);
-			// 	oEvent = createEvent(40, false, false, false, false, false);
-			// 	checkBigMoveDownShape(oEvent, oAssert);
-			//
-			// 	function checkRemoveContentWordFrontShape()
-			// 	{
-			//
-			// 	}
-			//
-			// 	//TODO: check remove more
-			// 	oEvent = createEvent(46, false, false, false, false, false);
-			// 	checkRemoveShape(oEvent, oAssert);
-			// 	oEvent = createEvent(46, false, false, false, false, false);
-			// 	checkRemoveContentCharFrontShape(oEvent, oAssert);
-			// 	oEvent = createEvent(46, true, false, false, false, false);
-			// 	checkRemoveContentWordFrontShape(oEvent, oAssert);
-			// 	oEvent = createEvent(65, true, false, false, false, false);
-			// 	checkSelectAllShape(oEvent, oAssert);
-			// 	oEvent = createEvent(66, true, false, false, false, false);
-			// 	checkBoldShape(oEvent, oAssert);
-			// 	oEvent = createEvent(67, false, false, true, false, false);
-			// 	checkClearSlicer(oEvent, oAssert);
-			// 	//macOs
-			// 	oEvent = createEvent(67, true, false, true, false, false);
-			// 	checkClearSlicer(oEvent, oAssert);
-			// 	oEvent = createEvent(69, true, false, false, false, false);
-			// 	checkSetCenterAlign(oEvent, oAssert);
-			// 	oEvent = createEvent(73, true, false, false, false, false);
-			// 	checkSetItalicShape(oEvent, oAssert);
-			// 	oEvent = createEvent(74, true, false, false, false, false);
-			// 	checkSetJustifyAlign(oEvent, oAssert);
-			// 	oEvent = createEvent(76, true, false, false, false, false);
-			// 	checkSetLeftAlign(oEvent, oAssert);
-			// 	oEvent = createEvent(82, true, false, false, false, false);
-			// 	checkSetRightAlign(oEvent, oAssert);
-			// 	oEvent = createEvent(83, false, false, true, false, false);
-			// 	checkSlicerMultiSelect(oEvent, oAssert);
-			// 	oEvent = createEvent(83, true, false, true, false, false);
-			// 	checkSlicerMultiSelect(oEvent, oAssert);
-			// 	oEvent = createEvent(85, true, false, false, false, false);
-			// 	checkUnderlineShape(oEvent, oAssert);
-			// 	oEvent = createEvent(187, true, false, false, false, false);
-			// 	checkSubscriptShape(oEvent, oAssert);
-			// 	oEvent = createEvent(187, true, true, false, false, false);
-			// 	checkSuperscriptShape(oEvent, oAssert);
-			// 	oEvent = createEvent(188, true, false, false, false, false);
-			// 	checkSuperscriptShape(oEvent, oAssert);
-			// 	oEvent = createEvent(189, true, true, false, false, false);
-			// 	checkAddEnDash(oEvent, oAssert);
-			// 	oEvent = createEvent(189, false, true, false, false, false);
-			// 	checkAddLowLine(oEvent, oAssert);
-			// 	oEvent = createEvent(189, false, false, false, false, false);
-			// 	checkAddHyphenMinus(oEvent, oAssert);
-			// 	oEvent = createEvent(190, true, false, false, false, false);
-			// 	checkSubscriptShape(oEvent, oAssert);
-			// 	oEvent = createEvent(219, true, false, false, false, false);
-			// 	checkDecreaseFontSize(oEvent, oAssert);
-			// 	oEvent = createEvent(221, true, false, false, false, false);
-			// 	checkIncreaseFontSize(oEvent, oAssert);
-			// });
-
 			QUnit.module('Test graphic objects shortcuts');
 			QUnit.test('Test remove back text graphic object', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkTextAfterKeyDownHelperHelloWorld('Hello Worl', oEvent, oAssert, 'Check delete with backspace');
 				}, oTypes.removeBackChar);
 			});
 			QUnit.test('Test remove back text graphic object', (oAssert) =>
@@ -1790,32 +1627,69 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkTextAfterKeyDownHelperHelloWorld('Hello ', oEvent, oAssert, 'Check delete word with backspace')
 				}, oTypes.removeBackWord);
 			});
+
+			function createChart()
+			{
+				moveAndEnterText('1', 0, 0);
+				moveAndEnterText('2', 1, 0);
+				moveAndEnterText('3', 2, 0);
+
+				moveAndEnterText('1', 0, 1);
+				moveAndEnterText('2', 1, 1);
+				moveAndEnterText('3', 2, 1);
+
+				selectToCell(0, 0);
+
+				const oProps = editor.asc_getChartObject(true);
+				oProps.changeType(0);
+				editor.asc_addChartDrawingObject(oProps);
+				return selectedObjects()[0];
+			}
 			QUnit.test('Test remove chart', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
-
 				startTest((oEvent) =>
 				{
-
+					const oChart = createChart();
+					selectOnlyObjects([oChart]);
+					onKeyDown(oEvent);
+					oAssert.true(checkRemoveObject(oChart, ws().Drawings.map((el) => el.graphicObject)), "Check remove group");
 				}, oTypes.removeChart);
 			});
+			function checkRemoveObject(oShape, arrShapes)
+			{
+				return !!(arrShapes.indexOf(oShape) === -1 && oShape.bDeleted);
+			}
 			QUnit.test('Test remove shape', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape} = createShapeWithContent('', true);
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					oAssert.true(checkRemoveObject(oShape, ws().Drawings.map((el) => el.graphicObject)), 'Check remove shape');
 				}, oTypes.removeShape);
 			});
+			function createGroup(arrShapes)
+			{
+				graphicController().resetSelection();
+				selectOnlyObjects(arrShapes);
+				return graphicController().createGroup();
+
+			}
 			QUnit.test('Test remove group', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oGroup = createGroup([createShape(), createShape()]);
+					selectOnlyObjects([oGroup]);
+					onKeyDown(oEvent);
+					oAssert.true(checkRemoveObject(oGroup, ws().Drawings.map((el) => el.graphicObject)), 'Check remove group');
 				}, oTypes.removeGroup);
 			});
 			QUnit.test('Test remove shape in group', (oAssert) =>
@@ -1823,7 +1697,12 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oGroupedGroup = createGroup([createShape(), createShape()]);
+					const oRemovedShape = createShape();
+					const oGroup = createGroup([oGroupedGroup, oRemovedShape]);
+					selectOnlyObjects([oRemovedShape]);
+					onKeyDown(oEvent);
+					oAssert.true(checkRemoveObject(oRemovedShape, oGroup.spTree), 'Check remove shape in group');
 				}, oTypes.removeShapeInGroup);
 			});
 
@@ -1832,7 +1711,11 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oParagraph} = createShapeWithContent('');
+					moveToParagraph(oParagraph);
+					onKeyDown(oEvent);
+					selectAll();
+					equal(selectedContent(), '\t');
 				}, oTypes.addTab);
 			});
 			QUnit.test('Test select next object', (oAssert) =>
@@ -1840,7 +1723,16 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oShape1 = createShape();
+					const oShape2 = createShape();
+					const oShape3 = createShape();
+					selectOnlyObjects([oShape1]);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape2, true);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape3, true);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape1, true);
 				}, oTypes.selectNextObject);
 			});
 
@@ -1849,7 +1741,16 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oShape1 = createShape();
+					const oShape2 = createShape();
+					const oShape3 = createShape();
+					selectOnlyObjects([oShape1]);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape3, true);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape2, true);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 1 && selectedObjects()[0] === oShape1, true);
 				}, oTypes.selectPreviousObject);
 			});
 
@@ -1858,7 +1759,17 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape, oParagraph} = createShapeWithContent('', 0, false);
+					moveToParagraph(oParagraph);
+					addHyperlink("https://www.onlyoffice.com/", "Hello");
+					moveCursorLeft();
+					moveCursorLeft();
+					executeTestWithCatchEvent('asc_onHyperlinkClick', (sValue) => sValue, 'https://www.onlyoffice.com/', oEvent, oAssert);
+					moveToParagraph(oParagraph);
+					moveCursorLeft();
+					const oSelectedInfo = new CSelectedElementsInfo();
+					graphicController().getTargetDocContent().GetSelectedElementsInfo(oSelectedInfo);
+					equal(oSelectedInfo.m_oHyperlink.Visited, true);
 				}, oTypes.visitHyperink);
 			});
 
@@ -1867,7 +1778,19 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oParagraph} = createMathInShape();
+					moveToParagraph(oParagraph, true);
+					moveCursorRight();
+					moveCursorRight();
+					enterText('fffffff');
+					moveCursorLeft();
+					moveCursorLeft();
+					onKeyDown(oEvent);
+					const oParaMath = oParagraph.GetAllParaMaths()[0];
+					const oFraction = oParaMath.Root.GetFirstElement();
+					const oNumerator = oFraction.getNumerator();
+					const oEqArray = oNumerator.GetFirstElement();
+					oAssert.strictEqual(oEqArray.getRowsCount(), 2, 'Check add new line math');
 				}, oTypes.addLineInMath);
 			});
 			QUnit.test('Test add break line', (oAssert) =>
@@ -1875,15 +1798,24 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const {oShape, oParagraph} = createShapeWithContent('');
+					moveToParagraph(oParagraph);
 
+					onKeyDown(oEvent);
+					oAssert.true(oShape.getDocContent().Content.length === 1 && oParagraph.GetLinesCount() === 2, 'Check add break line');
 				}, oTypes.addBreakLine);
 			});
+
 			QUnit.test('Test add paragraph', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const {oShape, oParagraph} = createShapeWithContent('');
+					moveToParagraph(oParagraph);
 
+					onKeyDown(oEvent);
+					oAssert.true(oShape.getDocContent().Content.length === 2, 'Check add new paragraph');
 				}, oTypes.addParagraph);
 			});
 
@@ -1892,7 +1824,10 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oShape = createShape();
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					oAssert.true(!!oShape.txBody, 'Check creating txBody');
 				}, oTypes.createTxBody);
 			});
 
@@ -1901,7 +1836,10 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape, oParagraph} = createShapeWithContent('', true);
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					oAssert.true(oParagraph.IsCursorAtBegin(), 'Check move cursor to start position in shape');
 				}, oTypes.moveToStartInEmptyContent);
 			});
 			QUnit.test('Test select all after enter', (oAssert) =>
@@ -1909,7 +1847,10 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape} = createShapeWithContent('Hello Word', true);
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					oAssert.strictEqual(selectedContent(), 'Hello Word', 'Check select all content in shape');
 				}, oTypes.selectAllAfterEnter);
 			});
 			QUnit.test('Test move cursor to start position in empty title', (oAssert) =>
@@ -1917,7 +1858,15 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const oChart = createChart();
+					selectOnlyObjects([oChart]);
+					const oTitles = oChart.getAllTitles();
+					const oController = graphicController();
+					oController.selection.chartSelection = oChart;
+					oChart.selectTitle(oTitles[0], 0);
 
+					onKeyDown(oEvent);
+					oAssert.strictEqual(selectedContent(), 'Diagram Title', 'Check select all title');
 				}, oTypes.moveCursorToStartPositionInTitle);
 			});
 			QUnit.test('Test select all after enter in title', (oAssert) =>
@@ -1925,7 +1874,18 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const oChart = createChart();
+					const oTitles = oChart.getAllTitles();
+					const oContent = AscFormat.CreateDocContentFromString('', graphicController().drawingObjects.getDrawingDocument(), oTitles[0].txBody);
+					oTitles[0].txBody.content = oContent;
+					selectOnlyObjects([oChart]);
 
+					const oController = graphicController();
+					oController.selection.chartSelection = oChart;
+					oChart.selectTitle(oTitles[0], 0);
+
+					onKeyDown(oEvent);
+					oAssert.true(oContent.IsCursorAtBegin(), 'Check move cursor to begin pos in title');
 				}, oTypes.selectAllTitleAfterEnter);
 			});
 			QUnit.test('Test reset text selection', (oAssert) =>
@@ -1933,7 +1893,10 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape} = createShapeWithContent("Hello world");
+					const oParagraph = moveToShapeParagraph(oShape, 0);
+					onKeyDown(oEvent);
+					equal(!graphicController().selection.textSelection, true);
 				}, oTypes.resetTextSelection);
 			});
 
@@ -1942,16 +1905,23 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					let oGroupedShape1 = createShape();
+					let oGroupedShape2 = createShape();
+					createGroup([oGroupedShape1, oGroupedShape2]);
+					let oTestGroup = oGroupedShape1.group;
+					const oController = graphicController();
+					selectOnlyObjects([oTestGroup, oGroupedShape1]);
+					onKeyDown(oEvent);
+					oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oTestGroup && oTestGroup.selectedObjects.length === 0, 'Check reset step selection');
 
 				}, oTypes.resetStepSelection);
 			});
-
 			QUnit.test('Test move cursor to end', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([59, 18], oEvent, oAssert);
 				}, oTypes.moveCursorToEndLine);
 			});
 
@@ -1960,16 +1930,17 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([59, 59], oEvent, oAssert);
 				}, oTypes.moveCursorToEndDocument);
 			});
+
 
 			QUnit.test('Test select to end', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['Hello World Hello ', ''], oEvent, oAssert);
 				}, oTypes.selectToEndLine);
 			});
 
@@ -1978,7 +1949,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['Hello World Hello World Hello World Hello World Hello World', ''], oEvent, oAssert);
 				}, oTypes.selectToEndDocument);
 			});
 
@@ -1987,7 +1958,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([54, 0], oEvent, oAssert);
 				}, oTypes.moveCursorToStartLine);
 			});
 
@@ -1996,7 +1967,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([0, 0], oEvent, oAssert);
 				}, oTypes.moveCursorToStartDocument);
 			});
 
@@ -2005,7 +1976,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['', 'World'], oEvent, oAssert);
 				}, oTypes.selectToStartLine);
 			});
 
@@ -2014,7 +1985,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['', 'Hello World Hello World Hello World Hello World Hello World'], oEvent, oAssert);
 				}, oTypes.selectToStartDocument);
 			});
 
@@ -2023,6 +1994,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkMoveContentShapeHelper([58, 0], oEvent, oAssert);
 
 				}, oTypes.moveCursorLeftChar);
 			});
@@ -2032,7 +2004,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['', 'd'], oEvent, oAssert);
 				}, oTypes.selectCursorLeftChar);
 			});
 
@@ -2041,7 +2013,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([54, 0], oEvent, oAssert);
 				}, oTypes.moveCursorLeftWord);
 			});
 
@@ -2050,7 +2022,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['', 'World'], oEvent, oAssert);
 				}, oTypes.selectCursorLeftWord);
 			});
 
@@ -2059,7 +2031,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					moveShapeHelper({x: 100 - pxToMm, y: 100}, oEvent, oAssert);
 				}, oTypes.littleMoveGraphicObjectLeft);
 			});
 
@@ -2068,6 +2040,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					moveShapeHelper({x: 100 - 5 * pxToMm, y: 100}, oEvent, oAssert);
 
 				}, oTypes.bigMoveGraphicObjectLeft);
 			});
@@ -2077,6 +2050,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkMoveContentShapeHelper([41, 0], oEvent, oAssert);
 
 				}, oTypes.moveCursorUp);
 			});
@@ -2086,7 +2060,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['', ' World Hello World'], oEvent, oAssert);
 				}, oTypes.selectCursorUp);
 			});
 
@@ -2095,7 +2069,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					moveShapeHelper({x: 100, y: 100 - pxToMm}, oEvent, oAssert);
 				}, oTypes.littleMoveGraphicObjectUp);
 			});
 
@@ -2104,7 +2078,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					moveShapeHelper({x: 100, y: 100 - 5 * pxToMm}, oEvent, oAssert);
 				}, oTypes.bigMoveGraphicObjectUp);
 			});
 
@@ -2113,6 +2087,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkMoveContentShapeHelper([59, 1], oEvent, oAssert);
 
 				}, oTypes.moveCursorRightChar);
 			});
@@ -2122,7 +2097,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['H', ''], oEvent, oAssert);
 				}, oTypes.selectCursorRightChar);
 			});
 
@@ -2131,7 +2106,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([59, 6], oEvent, oAssert);
 				}, oTypes.moveCursorRightWord);
 			});
 
@@ -2140,7 +2115,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['Hello ', ''], oEvent, oAssert);
 				}, oTypes.selectCursorRightWord);
 			});
 
@@ -2149,6 +2124,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					moveShapeHelper({x: 100 + pxToMm, y: 100}, oEvent, oAssert);
 
 				}, oTypes.littleMoveGraphicObjectRight);
 			});
@@ -2158,6 +2134,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					moveShapeHelper({x: 100 + 5 * pxToMm, y: 100}, oEvent, oAssert);
 
 				}, oTypes.bigMoveGraphicObjectRight);
 			});
@@ -2167,7 +2144,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkMoveContentShapeHelper([59, 18], oEvent, oAssert);
 				}, oTypes.moveCursorDown);
 			});
 
@@ -2176,7 +2153,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkSelectContentShapeHelper(['Hello World Hello ', ''], oEvent, oAssert);
 				}, oTypes.selectCursorDown);
 			});
 
@@ -2185,6 +2162,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					moveShapeHelper({x: 100, y: 100 + pxToMm}, oEvent, oAssert);
 
 				}, oTypes.littleMoveGraphicObjectDown);
 			});
@@ -2194,16 +2172,24 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					moveShapeHelper({x: 100, y: 100 + 5 * pxToMm}, oEvent, oAssert);
 				}, oTypes.bigMoveGraphicObjectDown);
 			});
 
+			function getParagraphText2()
+			{
+				const oParagraph = graphicController().getTargetDocContent().GetCurrentParagraph();
+				return getParagraphText(oParagraph);
+			}
 			QUnit.test('Test remove front text graphic object', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oParagraph} = createShapeWithContent('Hello World');
+					moveToParagraph(oParagraph, true);
+					onKeyDown(oEvent);
+					equal(getParagraphText(oParagraph), 'ello World');
 				}, oTypes.removeFrontChar);
 			});
 
@@ -2212,16 +2198,21 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oParagraph} = createShapeWithContent('Hello World');
+					moveToParagraph(oParagraph, true);
+					onKeyDown(oEvent);
+					equal(getParagraphText(oParagraph), 'World');
 				}, oTypes.removeFrontWord);
 			});
-
 			QUnit.test('Test select all content in shape', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const {oShape} = createShapeWithContent('Hello World');
+					const oParagraph = moveToShapeParagraph(oShape, 0);
+					onKeyDown(oEvent);
+					equal(selectedContent(), 'Hello World');
 				}, oTypes.selectAllContent);
 			});
 			QUnit.test('Test select all graphic objects', (oAssert) =>
@@ -2229,7 +2220,12 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oShape1 = createShape();
+					const oShape2 = createShape();
+					const oShape3 = createShape();
+					selectOnlyObjects([oShape1]);
+					onKeyDown(oEvent);
+					equal(selectedObjects().length === 3 && (oShape1.selected && selectedObjects().indexOf(oShape1) !== -1) && (oShape2.selected && selectedObjects().indexOf(oShape2) !== -1) && (oShape3.selected && selectedObjects().indexOf(oShape3) !== -1), true);
 				}, oTypes.selectAllDrawings);
 			});
 
@@ -2238,6 +2234,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetBold(), oEvent, oAssert, true);
 
 				}, oTypes.bold);
 			});
@@ -2247,7 +2244,10 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oSlicer = createSlicer();
+					oSlicer.data.values[0].asc_setVisible(false);
+					onKeyDown(oEvent);
+					equal(oSlicer.data.values[0].asc_getVisible(), true);
 				}, oTypes.cleanSlicer);
 			});
 
@@ -2256,6 +2256,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkDirectParaPrAfterKeyDown((oPara) => oPara.GetJc(), oEvent, oAssert, align_Center);
 
 				}, oTypes.centerAlign);
 			});
@@ -2264,6 +2265,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetItalic(), oEvent, oAssert, true);
 
 				}, oTypes.italic);
 			});
@@ -2272,6 +2274,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkDirectParaPrAfterKeyDown((oPara) => oPara.GetJc(), oEvent, oAssert, align_Justify);
 
 				}, oTypes.justifyAlign);
 			});
@@ -2280,6 +2283,8 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const continueCheck = checkDirectParaPrAfterKeyDown((oPara) => oPara.GetJc(), oEvent, oAssert, align_Justify);
+					continueCheck((oPara) => oPara.GetJc(), oEvent, oAssert, align_Left);
 
 				}, oTypes.leftAlign);
 			});
@@ -2288,7 +2293,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oEvent, oAssert, align_Right);
 				}, oTypes.rightAlign);
 			});
 
@@ -2297,7 +2302,9 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					const oSlicer = createSlicer();
+					onKeyDown(oEvent);
+					equal(oSlicer.isMultiSelect(), true);
 				}, oTypes.invertMultiselectSlicer);
 			});
 			QUnit.test('Test underline', (oAssert) =>
@@ -2305,7 +2312,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetUnderline(), oEvent, oAssert, true);
 				}, oTypes.underline);
 			});
 
@@ -2314,6 +2321,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oEvent, oAssert, AscCommon.vertalign_SuperScript);
 
 				}, oTypes.superscript);
 			});
@@ -2350,7 +2358,7 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
-
+					checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oEvent, oAssert, AscCommon.vertalign_SubScript, 'Check subscript shortcut');
 				}, oTypes.subscript);
 			});
 
@@ -2359,7 +2367,20 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const {oShape} = createShapeWithContent('Hello');
+					selectAll();
+					addProperty({FontSize: 16});
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 14);
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 12);
 
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 11);
+
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 10);
 				}, oTypes.decreaseFontSize);
 			});
 
@@ -2368,7 +2389,20 @@
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
 				{
+					const {oShape} = createShapeWithContent('Hello');
+					moveToShapeParagraph(oShape, 0);
+					selectAll();
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 11);
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 12);
 
+					selectOnlyObjects([oShape]);
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 14);
+
+					onKeyDown(oEvent);
+					equal(textPr().GetFontSize(), 16);
 				}, oTypes.increaseFontSize);
 			});
 		}
@@ -2535,7 +2569,7 @@
 		new CTestEvent(createEvent(oKeyCode.Tab, false, false, false, false, false))
 	];
 	oTestEvents[oTypes.selectPreviousObject] = [
-		new CTestEvent(createEvent(oKeyCode.Tab, true, false, false, false, false))
+		new CTestEvent(createEvent(oKeyCode.Tab, false, true, false, false, false))
 	];
 	oTestEvents[oTypes.visitHyperink] = [
 		new CTestEvent(createEvent(oKeyCode.Enter, false, false, false, false, false))
@@ -2704,8 +2738,8 @@
 
 	];
 	oTestEvents[oTypes.cleanSlicer] = [
-		new CTestEvent(createEvent(oKeyCode.C, true, false, false, false, false), testMacOs),
-		new CTestEvent(createEvent(oKeyCode.C, false, false, false, false, false), testWindows)
+		new CTestEvent(createEvent(oKeyCode.C, true, false, true, false, false), testMacOs),
+		new CTestEvent(createEvent(oKeyCode.C, false, false, true, false, false), testWindows)
 	];
 	oTestEvents[oTypes.centerAlign] = [
 		new CTestEvent(createEvent(oKeyCode.E, true, false, false, false, false))
@@ -2727,8 +2761,8 @@
 		new CTestEvent(createEvent(oKeyCode.R, true, false, false, false, false))
 	];
 	oTestEvents[oTypes.invertMultiselectSlicer] = [
-		new CTestEvent(createEvent(oKeyCode.S, true, false, false, false, false), testMacOs),
-		new CTestEvent(createEvent(oKeyCode.S, false, false, false, false, false), testWindows)
+		new CTestEvent(createEvent(oKeyCode.S, true, false, true, false, false), testMacOs),
+		new CTestEvent(createEvent(oKeyCode.S, false, false, true, false, false), testWindows)
 	];
 	oTestEvents[oTypes.underline] = [
 		new CTestEvent(createEvent(oKeyCode.U, true, false, false, false, false))
@@ -2757,26 +2791,29 @@
 
 	];
 	oTestEvents[oTypes.increaseFontSize] = [
-		new CTestEvent(createEvent(oKeyCode.BracketLeft, true, false, false, false, false))
+		new CTestEvent(createEvent(oKeyCode.BracketRight, true, false, false, false, false))
 
 	];
 	oTestEvents[oTypes.decreaseFontSize] = [
-		new CTestEvent(createEvent(oKeyCode.BracketRight, true, false, false, false, false))
+		new CTestEvent(createEvent(oKeyCode.BracketLeft, true, false, false, false, false))
 
 	];
 
 	function startTest(fCallback, nShortcutType)
 	{
+		cleanGraphic();
 		const arrTestEvents = oTestEvents[nShortcutType];
 
 		for (let i = 0; i < arrTestEvents.length; i += 1)
 		{
+			cleanGraphic();
 			const nTestType = arrTestEvents[i].type;
 			if (nTestType === testAll)
 			{
 				AscCommon.AscBrowser.isMacOs = true;
 				fCallback(arrTestEvents[i].event);
 
+				cleanGraphic();
 				AscCommon.AscBrowser.isMacOs = false;
 				fCallback(arrTestEvents[i].event);
 			} else if (nTestType === testMacOs)

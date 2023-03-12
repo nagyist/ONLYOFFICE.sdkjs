@@ -90,9 +90,7 @@
 //     return new Asc.TextMetrics(fragments.length * 5, 20, 0,15,0);
 // }
 
-	window.editor = new Asc.spreadsheet_api({'id-view': 'editor_sdk', 'id-input': 'ce-cell-content'});
-
-
+	const editor = new Asc.spreadsheet_api({'id-view': 'editor_sdk', 'id-input': 'ce-cell-content'});
 	editor.FontLoader.LoadDocumentFonts = function ()
 	{
 		editor.ServerIdWaitComplete = true;
@@ -109,7 +107,6 @@
 
 	editor.openDocument(oFile);
 	editor.asc_setZoom(1);
-	window.Asc.editor = window.editor;
 
 	function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey)
 	{
@@ -128,6 +125,7 @@
 		oKeyBoardEvent.isDefaultPrevented = false;
 		oKeyBoardEvent.isPropagationStopped = false;
 		oKeyBoardEvent.which = nKeyCode;
+		oKeyBoardEvent.keyCode = nKeyCode;
 		oKeyBoardEvent.shiftKey = bIsShift;
 		oKeyBoardEvent.altKey = bIsAlt;
 		oKeyBoardEvent.ctrlKey = bIsCtrl;
@@ -360,8 +358,7 @@
 
 	function selectAll()
 	{
-		handlers().trigger("selectColumnsByRange");
-		handlers().trigger("selectRowsByRange");
+		wbView().selectAll();
 	}
 
 	function cleanAll()
@@ -369,6 +366,7 @@
 		selectAll();
 		handlers().trigger("empty");
 		cleanCache();
+		wsView().changeZoomResize();
 		moveToCell(0, 0);
 	}
 
