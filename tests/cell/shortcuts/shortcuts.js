@@ -281,7 +281,7 @@
 		oShape.spPr.xfrm.setOffY(100);
 		oShape.spPr.xfrm.setExtX(100);
 		oShape.spPr.xfrm.setExtY(100);
-		oShape.setPaddings({Left:0,Right:0,Top:0,Bottom:0});
+		oShape.setPaddings({Left: 0, Right: 0, Top: 0, Bottom: 0});
 		oShape.setParent(oGraphicController.drawingObjects);
 		oShape.setRecalculateInfo();
 
@@ -1853,7 +1853,7 @@
 					oAssert.strictEqual(selectedContent(), 'Hello Word', 'Check select all content in shape');
 				}, oTypes.selectAllAfterEnter);
 			});
-			QUnit.test('Test move cursor to start position in empty title', (oAssert) =>
+			QUnit.test('Test select all after enter in title', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
@@ -1867,9 +1867,9 @@
 
 					onKeyDown(oEvent);
 					oAssert.strictEqual(selectedContent(), 'Diagram Title', 'Check select all title');
-				}, oTypes.moveCursorToStartPositionInTitle);
+				}, oTypes.selectAllTitleAfterEnter);
 			});
-			QUnit.test('Test select all after enter in title', (oAssert) =>
+			QUnit.test('Test move cursor to start position in empty title', (oAssert) =>
 			{
 				const {deep, equal} = createTest(oAssert);
 				startTest((oEvent) =>
@@ -1886,7 +1886,7 @@
 
 					onKeyDown(oEvent);
 					oAssert.true(oContent.IsCursorAtBegin(), 'Check move cursor to begin pos in title');
-				}, oTypes.selectAllTitleAfterEnter);
+				}, oTypes.moveCursorToStartPositionInTitle);
 			});
 			QUnit.test('Test reset text selection', (oAssert) =>
 			{

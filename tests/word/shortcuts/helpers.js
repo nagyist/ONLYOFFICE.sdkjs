@@ -82,6 +82,10 @@
 		checkText: function (text, _this, callback)
 		{
 			callback.call(_this);
+		},
+		getFontBySymbol: function ()
+		{
+			
 		}
 	};
 
@@ -155,9 +159,12 @@
 		oGlobalLogicDocument.MoveCursorUp(AddToSelect, CtrlKey);
 	}
 
-	function moveToParagraph(oParagraph, bIsStart)
+	function moveToParagraph(oParagraph, bIsStart, bSkipRemoveSelection)
 	{
-		oGlobalLogicDocument.RemoveSelection();
+		if (!bSkipRemoveSelection)
+		{
+			oGlobalLogicDocument.RemoveSelection();
+		}
 		oParagraph.SetThisElementCurrent();
 		if (bIsStart)
 		{

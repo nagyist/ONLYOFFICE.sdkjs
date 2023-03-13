@@ -549,6 +549,12 @@
 			oAssert.true(!!oMath, 'Check insert equation shortcut');
 		});
 
+		function createHyperlink()
+		{
+			const oProps = new Asc.CHyperlinkProperty({Anchor: '_top', Text: "Beginning of document"});
+			editor.add_Hyperlink(oProps);
+		}
+
 		QUnit.module("Test getting desired action by event")
 		QUnit.test("Test getting common desired action by event", (oAssert) =>
 		{
@@ -591,8 +597,8 @@
 			oAssert.strictEqual(editor.getShortcut(createEvent(189, true, true, false, false, false, false)), c_oAscDocumentShortcutType.NonBreakingHyphen, 'Check getting c_oAscDocumentShortcutType.NonBreakingHyphen action');
 			oAssert.strictEqual(editor.getShortcut(createEvent(190, true, false, true, false, false, false)), c_oAscDocumentShortcutType.HorizontalEllipsis, 'Check getting c_oAscDocumentShortcutType.HorizontalEllipsis action');
 			oAssert.strictEqual(editor.getShortcut(createEvent(190, true, false, false, false, false, false)), c_oAscDocumentShortcutType.Subscript, 'Check getting c_oAscDocumentShortcutType.Subscript action');
-			oAssert.strictEqual(editor.getShortcut(createEvent(219, true, false, false, false, false, false)), c_oAscDocumentShortcutType.IncreaseFontSize, 'Check getting c_oAscDocumentShortcutType.IncreaseFontSize action');
-			oAssert.strictEqual(editor.getShortcut(createEvent(221, true, false, false, false, false, false)), c_oAscDocumentShortcutType.DecreaseFontSize, 'Check getting c_oAscDocumentShortcutType.DecreaseFontSize action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(219, true, false, false, false, false, false)), c_oAscDocumentShortcutType.DecreaseFontSize, 'Check getting c_oAscDocumentShortcutType.DecreaseFontSize action');
+			oAssert.strictEqual(editor.getShortcut(createEvent(221, true, false, false, false, false, false)), c_oAscDocumentShortcutType.IncreaseFontSize, 'Check getting c_oAscDocumentShortcutType.IncreaseFontSize action');
 			editor.Shortcuts = new AscCommon.CShortcuts();
 		});
 
@@ -641,14 +647,13 @@
 		function createShape()
 		{
 			AscCommon.History.Create_NewPoint();
-			const oDrawing = new ParaDrawing(100, 100, null, oGlobalLogicDocument.GetDrawingDocument(), oGlobalLogicDocument, null);
+			const oDrawing = new ParaDrawing(200, 100, null, oGlobalLogicDocument.GetDrawingDocument(), oGlobalLogicDocument, null);
 			const oShapeTrack = new AscFormat.NewShapeTrack('rect', 0, 0, oGlobalLogicDocument.theme, null, null, null, 0);
-			oShapeTrack.track({}, 100, 100);
+			oShapeTrack.track({}, 0, 0);
 			const oShape = oShapeTrack.getShape(true, oGlobalLogicDocument.GetDrawingDocument(), null);
 			oShape.setBDeleted(false);
 			oShape.setParent(oDrawing);
 			oDrawing.Set_GraphicObject(oShape);
-			oShape.createTextBoxContent();
 			oDrawing.Set_DrawingType(drawing_Anchor);
 			oDrawing.Set_WrappingType(WRAPPING_TYPE_NONE);
 			oDrawing.Set_Distance(0, 0, 0, 0);
@@ -660,6 +665,22 @@
 			return oDrawing;
 		}
 
+		function getShapeWithText(sText, bStartRecalculate)
+		{
+			const oParaDrawing = createShape();
+			selectParaDrawing(oParaDrawing);
+			const oShape = oParaDrawing.GraphicObj;
+			oShape.createTextBoxContent();
+			const oParagraph = oShape.getDocContent().Content[0];
+			moveToParagraph(oParagraph);
+			addText(sText)
+			if (bStartRecalculate)
+			{
+				startRecalculate();
+			}
+			return {oParagraph};
+		}
+
 		function selectParaDrawing(oParaDrawing)
 		{
 			oGlobalLogicDocument.SelectDrawings([oParaDrawing], oGlobalLogicDocument);
@@ -669,7 +690,7 @@
 		{
 			let oEvent;
 			oEvent = createNativeEvent(8, false, false, false, false);
-			let {oParagraph} = getLogicDocumentWithParagraphs(['Hello World']);
+			let {oParagraph} = getLogicDocumentWithParagraphs(['Hello World'], true);
 			moveToParagraph(oParagraph);
 			onKeyDown(oEvent);
 			selectAll();
@@ -682,19 +703,97 @@
 			oAssert.strictEqual(getSelectedText(), 'Hello ', 'Test remove back word');
 
 			// todo
-			oAssert.strictEqual(true, false, 'Test remove shape');
-			oAssert.strictEqual(true, false, 'Test remove form');
+			moveToParagraph(oParagraph);
+			const oDrawing = createShape();
+			selectParaDrawing(oDrawing);
+			oEvent = createNativeEvent(8, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oGlobalLogicDocument.Content[0].GetRunByElement(oDrawing), null, 'Test remove shape');
+
+			const oInlineLvlSdt = createComboBox();
+			oEvent = createNativeEvent(8, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oParagraph.GetRunByElement(oInlineLvlSdt), null, 'Test remove form');
 		});
 
 		QUnit.test("Test move to next form", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test move to next form');
+			getLogicDocumentWithParagraphs(['']);
+			const oInlineSdt1 = createComboBox();
+			moveCursorRight();
+			const oInlineSdt2 = createComboBox();
+			moveCursorRight();
+			const oInlineSdt3 = createComboBox();
+			setFillingFormsMode(true);
+
+			onKeyDown(createNativeEvent(9, false, false, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt1, 'Test move to next form');
+
+			onKeyDown(createNativeEvent(9, false, false, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt2, 'Test move to next form');
+
+			onKeyDown(createNativeEvent(9, false, false, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt3, 'Test move to next form');
+
+			setFillingFormsMode(false);
+
+		});
+
+		QUnit.test("Test move to previous form", (oAssert) =>
+		{
+			const {oParagraph} = getLogicDocumentWithParagraphs(['']);
+			const oInlineSdt1 = createComboBox();
+			moveCursorRight();
+			const oInlineSdt2 = createComboBox();
+			moveCursorRight();
+			const oInlineSdt3 = createComboBox();
+			setFillingFormsMode(true);
+
+			onKeyDown(createNativeEvent(9, false, true, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt2, 'Test move to next form');
+
+			onKeyDown(createNativeEvent(9, false, true, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt1, 'Test move to next form');
+
+			onKeyDown(createNativeEvent(9, false, true, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetSelectedElementsInfo().GetInlineLevelSdt(), oInlineSdt3, 'Test move to next form');
+
+			setFillingFormsMode(false);
+
 		});
 
 		QUnit.test("Test handle tab in math", (oAssert) =>
 		{
 			oAssert.strictEqual(true, false, 'Test move to next form');
 		});
+
+		function createChart()
+		{
+			var oDrawingDocument = editor.WordControl.m_oDrawingDocument;
+
+			var oDrawing = new ParaDrawing(100, 100, null, oDrawingDocument, null, null);
+			const oChartSpace = AscCommon.getChartByType(Asc.c_oAscChartTypeSettings.lineNormal);
+			oChartSpace.spPr.setXfrm(new AscFormat.CXfrm());
+			oChartSpace.spPr.xfrm.setOffX(0);
+			oChartSpace.spPr.xfrm.setOffY(0);
+			oChartSpace.spPr.xfrm.setExtX(100);
+			oChartSpace.spPr.xfrm.setExtY(100);
+
+			oChartSpace.setParent(oDrawing);
+			oDrawing.Set_GraphicObject(oChartSpace);
+			oDrawing.setExtent(oChartSpace.spPr.xfrm.extX, oChartSpace.spPr.xfrm.extY);
+
+			oDrawing.Set_DrawingType(drawing_Anchor);
+			oDrawing.Set_WrappingType(WRAPPING_TYPE_NONE);
+			oDrawing.Set_Distance(0, 0, 0, 0);
+			const oNearestPos = oGlobalLogicDocument.Get_NearestPos(0, oChartSpace.x, oChartSpace.y, true, oDrawing);
+			oDrawing.Set_XYForAdd(oChartSpace.x, oChartSpace.y, oNearestPos, 0);
+			oDrawing.AddToDocument(oNearestPos);
+			oDrawing.CheckWH();
+			recalculate();
+
+			return oDrawing;
+		}
 
 		QUnit.test("Test move to cell", (oAssert) =>
 		{
@@ -787,44 +886,157 @@
 			oAssert.strictEqual(getSelectedText(), 'H\tello World', 'Test indent');
 		});
 
+		function addToParagraph(oElement)
+		{
+			oGlobalLogicDocument.AddToParagraph(oElement);
+		}
+
+		function addBreakPage()
+		{
+			addToParagraph(new AscWord.CRunBreak(AscWord.break_Page));
+
+		}
+
 		QUnit.test("Test visit hyperlink", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test indent');
-			oAssert.strictEqual(true, false, 'Test unindent');
-			oAssert.strictEqual(true, false, 'Test add tab');
+			const {oParagraph} = getLogicDocumentWithParagraphs(['']);
+			addBreakPage();
+			createHyperlink();
+			moveCursorLeft();
+			moveCursorLeft();
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(oGlobalLogicDocument.GetCurrentParagraph(), oGlobalLogicDocument.Content[0]);
+			//oAssert.strictEqual(contentPosition(), 0);
+			oAssert.strictEqual(oGlobalLogicDocument.Get_CurPage(), 0);
 		});
 
-		QUnit.test("Test go to bookmark", (oAssert) =>
+		// QUnit.test("Test go to bookmark", (oAssert) =>
+		// {
+		// 	oAssert.strictEqual(true, false, 'Test indent');
+		// 	oAssert.strictEqual(true, false, 'Test unindent');
+		// 	oAssert.strictEqual(true, false, 'Test add tab');
+		// });
+
+		function createInlineSdt()
 		{
-			oAssert.strictEqual(true, false, 'Test indent');
-			oAssert.strictEqual(true, false, 'Test unindent');
-			oAssert.strictEqual(true, false, 'Test add tab');
-		});
+			return editor.asc_AddContentControl(c_oAscSdtLevelType.Inline).CC;
+		}
 
 		QUnit.test("Test add break line to inlinelvlsdt", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test indent');
-			oAssert.strictEqual(true, false, 'Test unindent');
-			oAssert.strictEqual(true, false, 'Test add tab');
+			getLogicDocumentWithParagraphs([''], true);
+			const oInlineSdt = createComplexForm();
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(oInlineSdt.Lines[0], 2);
 		});
 
-		QUnit.test("Test handle enter for shapes", (oAssert) =>
+		QUnit.test("Test create textBoxContent", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test indent');
-			oAssert.strictEqual(true, false, 'Test unindent');
-			oAssert.strictEqual(true, false, 'Test add tab');
+			startRecalculate();
+			const oParaDrawing = createShape();
+			selectParaDrawing(oParaDrawing);
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(!!oParaDrawing.GraphicObj.textBoxContent, true);
+		});
+
+		QUnit.test("Test create txBody", (oAssert) =>
+		{
+			startRecalculate();
+			const oParaDrawing = createShape();
+			oParaDrawing.GraphicObj.setWordShape(false);
+			selectParaDrawing(oParaDrawing);
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(!!oParaDrawing.GraphicObj.txBody, true);
 		});
 
 		QUnit.test("Test add new line to math", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test indent');
-			oAssert.strictEqual(true, false, 'Test unindent');
-			oAssert.strictEqual(true, false, 'Test add tab');
+			const {oParagraph} = getLogicDocumentWithParagraphs(['']);
+			createMath(c_oAscMathType.FractionVertical);
+			moveCursorLeft();
+			moveCursorLeft();
+			addText('Hello');
+			moveCursorLeft();
+			moveCursorLeft();
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			const oParaMath = oParagraph.GetAllParaMaths()[0];
+			const oFraction = oParaMath.Root.GetFirstElement();
+			const oNumerator = oFraction.getNumerator();
+			const oEqArray = oNumerator.GetFirstElement();
+			oAssert.strictEqual(oEqArray.getRowsCount(), 2, 'Check add new line math');
+
 		});
 
-		function createMath()
+		QUnit.test("Test move cursor to start position shape", (oAssert) =>
 		{
-			return editor.asc_AddMath();
+			const oParaDrawing = createShape();
+			const oShape = oParaDrawing.GraphicObj;
+			oShape.createTextBoxContent();
+			selectParaDrawing(oParaDrawing);
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(oShape.getDocContent().IsCursorAtBegin(), true);
+		});
+
+
+
+		QUnit.test("Test select all in shape", (oAssert) =>
+		{
+			getLogicDocumentWithParagraphs([''], true)
+			const oParaDrawing = createShape();
+			const oShape = oParaDrawing.GraphicObj;
+			oShape.createTextBoxContent();
+			moveToParagraph(oShape.getDocContent().Content[0]);
+			addText('Hello');
+			selectParaDrawing(oParaDrawing);
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(getSelectedText(), 'Hello');
+		});
+function startRecalculate()
+{
+	if (oGlobalLogicDocument.TurnOffRecalc)
+	{
+		oGlobalLogicDocument.End_SilentMode(true);
+		recalculate();
+		oGlobalLogicDocument.private_UpdateCursorXY(true, true);
+	}
+}
+		QUnit.test("Test move cursor to start position chart title", (oAssert) =>
+		{
+			startRecalculate();
+			const oParaDrawing = createChart();
+			const oChart = oParaDrawing.GraphicObj;
+			const oTitles = oChart.getAllTitles();
+			const oContent = AscFormat.CreateDocContentFromString('', drawingObjects().getDrawingDocument(), oTitles[0].txBody);
+			oTitles[0].txBody.content = oContent;
+			selectParaDrawing(oParaDrawing);
+
+			const oController = drawingObjects();
+			oController.selection.chartSelection = oChart;
+			oChart.selectTitle(oTitles[0], 0);
+
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.true(oContent.IsCursorAtBegin(), 'Check move cursor to begin pos in title');
+
+		});
+
+		QUnit.test("Test select all in chart title", (oAssert) =>
+		{
+			getLogicDocumentWithParagraphs([''], true);
+			const oParaDrawing = createChart();
+			const oChart = oParaDrawing.GraphicObj;
+			selectParaDrawing(oParaDrawing);
+			const oTitles = oChart.getAllTitles();
+			const oController = drawingObjects();
+			oController.selection.chartSelection = oChart;
+			oChart.selectTitle(oTitles[0], 0);
+
+			onKeyDown(createNativeEvent(13, false, false, false, false, false));
+			oAssert.strictEqual(getSelectedText(), 'Diagram Title', 'Check select all title');
+		});
+
+		function createMath(nType)
+		{
+			return editor.asc_AddMath(nType);
 		}
 
 		function addText(sText)
@@ -853,13 +1065,15 @@
 
 		QUnit.test("Test close all window popups", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, 'Test add new paragraph with math');
-			oAssert.strictEqual(true, false, 'Test add new paragraph to content');
-
+			const oEvent = createNativeEvent(27, false, false, false, false, false)
+			executeTestWithCatchEvent('asc_onMouseMoveStart', () => true, true, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onMouseMove', () => true, true, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onMouseMoveEnd', () => true, true, oEvent, oAssert);
 		});
 
 		QUnit.test("Test reset", (oAssert) =>
 		{
+
 			oAssert.strictEqual(true, false, "Test reset drag'n'drop");
 			oAssert.strictEqual(true, false, "Test reset marker");
 			oAssert.strictEqual(true, false, "Test reset formatting by example");
@@ -878,25 +1092,25 @@
 
 		QUnit.test("Test toggle checkbox", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, "Test end editing footer");
-			oAssert.strictEqual(true, false, "Test end editing drawing");
-			oAssert.strictEqual(true, false, "Test end editing form");
+			const oInlineSdt = createCheckBox();
+			setFillingFormsMode(true);
+			onKeyDown(createNativeEvent(32, false, false, false, false, false));
+			oAssert.strictEqual(oInlineSdt.IsCheckBoxChecked(), true);
+			setFillingFormsMode(false);
 		});
 
-		QUnit.test("Test make auto correct in math", (oAssert) =>
-		{
-			oAssert.strictEqual(true, false, "Test end editing footer");
-			oAssert.strictEqual(true, false, "Test end editing drawing");
-			oAssert.strictEqual(true, false, "Test end editing form");
-		});
 
 		QUnit.test("Test actions to page up", (oAssert) =>
 		{
-			oAssert.strictEqual(true, false, "Test move to previous header/footer");
+			const {oParagraph} = getLogicDocumentWithParagraphs(['Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World ']);
+			console.log(oGlobalLogicDocument.Pages.length)
+			moveToParagraph(oParagraph);
+			onKeyDown(33)
 			oAssert.strictEqual(true, false, "Test move to begin of previous page");
 			oAssert.strictEqual(true, false, "Test move to previous page");
 			oAssert.strictEqual(true, false, "Test select to previous page");
 			oAssert.strictEqual(true, false, "Test select to begin of previous page");
+			oAssert.strictEqual(true, false, "Test move to previous header/footer");
 
 		});
 
@@ -1007,6 +1221,30 @@
 			oAssert.strictEqual(getSelectedText(), 'World ', "Test select to next word");
 		});
 
+		// QUnit.test("Test actions to right in shape", (oAssert) =>
+		// {
+		// 	let oEvent
+		// 	const {oParagraph} = getShapeWithText("Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World Hello World", true);
+		// 	moveToParagraph(oParagraph, true, true);
+		//
+		// 	oEvent = createNativeEvent(39, false, false, false, false);
+		// 	onKeyDown(oEvent);
+		// 	oAssert.strictEqual(contentPosition(), 1, "Test move to next symbol");
+		//
+		// 	oEvent = createNativeEvent(39, false, true, false, false);
+		// 	onKeyDown(oEvent);
+		// 	oAssert.strictEqual(getSelectedText(), "e", "Test select to next symbol");
+		//
+		// 	moveCursorRight();
+		// 	oEvent = createNativeEvent(39, true, false, false, false);
+		// 	onKeyDown(oEvent);
+		// 	oAssert.deepEqual(contentPosition(), 6, "Test move to next word");
+		//
+		// 	oEvent = createNativeEvent(39, true, true, false, false);
+		// 	onKeyDown(oEvent);
+		// 	oAssert.strictEqual(getSelectedText(), 'World ', "Test select to next word");
+		// });
+
 		QUnit.test("Test actions to up", (oAssert) =>
 		{
 			let oEvent;
@@ -1024,9 +1262,64 @@
 			onKeyDown(oEvent);
 			oAssert.strictEqual(getSelectedText(), 'Hello World Hello ', "Test select to upper line");
 
-			//todo
-			oAssert.strictEqual(true, false, "Test select previous option in combo box");
+			clean();
+			getLogicDocumentWithParagraphs(['']);
+			createComboBox();
+			setFillingFormsMode(true);
+			oEvent = createNativeEvent(38, false, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(AscTest.GetParagraphText(oGlobalLogicDocument.Content[0]), 'Hello', "Test select next option in combo box");
+			onKeyDown(oEvent);
+			oAssert.strictEqual(AscTest.GetParagraphText(oGlobalLogicDocument.Content[0]), 'World', "Test select next option in combo box");
+			setFillingFormsMode(false);
 		});
+
+		function setFillingFormsMode(bState)
+		{
+			var oRole = new AscCommon.CRestrictionSettings();
+			oRole.put_OFormRole("Anyone");
+			editor.asc_setRestriction(bState ? Asc.c_oAscRestrictionType.OnlyForms : Asc.c_oAscRestrictionType.None, oRole);
+			editor.asc_SetPerformContentControlActionByClick(bState);
+			editor.asc_SetHighlightRequiredFields(bState);
+		}
+
+		let nKeyId = 0;
+
+		function createCheckBox()
+		{
+			const oCheckBox = oGlobalLogicDocument.AddContentControlCheckBox();
+			var props = new AscCommon.CContentControlPr();
+			var specProps = new AscCommon.CSdtCheckBoxPr();
+			var oFormProps = new AscCommon.CSdtFormPr('key' + nKeyId++, '', '', false);
+			props.SetFormPr(oFormProps);
+			props.put_CheckBoxPr(specProps);
+			editor.asc_SetContentControlProperties(props, oCheckBox.GetId());
+			return oCheckBox;
+		}
+		function createComboBox()
+		{
+			const oComboBox = oGlobalLogicDocument.AddContentControlComboBox();
+			var props = new AscCommon.CContentControlPr();
+			var specProps = new AscCommon.CSdtComboBoxPr();
+			var oFormProps = new AscCommon.CSdtFormPr('key' + nKeyId++, '', '', false);
+			props.SetFormPr(oFormProps);
+			specProps.clear();
+			specProps.add_Item('Hello', 'Hello');
+			specProps.add_Item('World', 'World');
+			props.put_ComboBoxPr(specProps);
+			editor.asc_SetContentControlProperties(props, oComboBox.GetId());
+			return oComboBox;
+		}
+		function createComplexForm()
+		{
+			const oComplexForm = oGlobalLogicDocument.AddComplexForm();
+			var props   = new AscCommon.CContentControlPr();
+			var formTextPr = new AscCommon.CSdtTextFormPr();
+			formTextPr.put_MultiLine(true);
+			props.put_TextFormPr(formTextPr);
+			editor.asc_SetContentControlProperties(props, oComplexForm.GetId());
+			return oComplexForm;
+		}
 
 		function contentPosition()
 		{
@@ -1049,15 +1342,23 @@
 			onKeyDown(oEvent);
 			oAssert.strictEqual(getSelectedText(), 'World Hello World ', "Test select to down line");
 
-			// TODO: need resolve
-			oAssert.strictEqual(true, false, "Test select next option in combo box");
+			clean();
+			getLogicDocumentWithParagraphs(['']);
+			createComboBox();
+			setFillingFormsMode(true);
+			oEvent = createNativeEvent(40, false, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(AscTest.GetParagraphText(oGlobalLogicDocument.Content[0]), 'Hello', "Test select next option in combo box");
+			onKeyDown(oEvent);
+			oAssert.strictEqual(AscTest.GetParagraphText(oGlobalLogicDocument.Content[0]), 'World', "Test select next option in combo box");
+			setFillingFormsMode(false);
 		});
 
 		QUnit.test("Test remove front", (oAssert) =>
 		{
 			let oEvent;
 			oEvent = createNativeEvent(46, false, false, false, false);
-			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World"]);
+			const {oParagraph} = getLogicDocumentWithParagraphs(["Hello World"], true);
 			moveToParagraph(oParagraph, true);
 			onKeyDown(oEvent);
 			selectAll();
@@ -1070,8 +1371,17 @@
 			oAssert.strictEqual(getSelectedText(), 'World', 'Test remove front word');
 
 			// todo
-			oAssert.strictEqual(true, false, 'Test remove shape');
-			oAssert.strictEqual(true, false, 'Test remove form');
+			moveToParagraph(oParagraph);
+			const oDrawing = createShape();
+			selectParaDrawing(oDrawing);
+			oEvent = createNativeEvent(46, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oParagraph.GetRunByElement(oDrawing), null, 'Test remove shape');
+
+			const oInlineLvlSdt = createComboBox();
+			oEvent = createNativeEvent(46, false, false, false, false);
+			onKeyDown(oEvent);
+			oAssert.strictEqual(oParagraph.GetRunByElement(oInlineLvlSdt), null, 'Test remove form');
 		});
 
 		QUnit.test("Test replace unicode code to symbol", (oAssert) =>
