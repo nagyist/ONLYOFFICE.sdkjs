@@ -12161,72 +12161,6 @@
 		this.textIndex = null;
 		this._hasChanged = true;
 	};
-	Cell.prototype.setValueOld=function(val,callback, isCopyPaste, byRef, ignoreHyperlink) {
-		let ws = this.ws;
-		let wb = ws.workbook;
-		let DataOld = null;
-		if (History.Is_On()) {
-			DataOld = this.getValueData();
-		}
-		let isFirstArrayFormulaCell = byRef && this.nCol === byRef.c1 && this.nRow === byRef.r1;
-		let newFP = this.setValueGetParsed(val, callback, isCopyPaste, byRef);
-		if (undefined === newFP) {
-			return;
-		}
-
-		let oldFP = this.formulaParsed;
-		//удаляем старые значения
-		this.cleanText();
-		this.setFormulaInternal(null);
-
-		if (newFP) {
-			this.setFormulaInternal(newFP);
-			if(byRef) {
-				if(isFirstArrayFormulaCell) {
-					wb.dependencyFormulas.addToBuildDependencyArray(newFP);
-				}
-			} else {
-				wb.dependencyFormulas.addToBuildDependencyCell(this);
-			}
-			if (this.ws.workbook.handlers) {
-				this.ws.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.cellValue, this);
-			}
-		} else if (val) {
-			this._setValue(val, ignoreHyperlink);
-			if (!ignoreHyperlink && window['AscCommonExcel'].g_AutoCorrectHyperlinks) {
-				this._autoformatHyperlink(val);
-			}
-			wb.dependencyFormulas.addToChangedCell(this);
-		} else {
-			wb.dependencyFormulas.addToChangedCell(this);
-			if (this.ws.workbook.handlers) {
-				this.ws.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.cellValue, this);
-			}
-		}
-
-		let DataNew = null;
-		if (History.Is_On()) {
-			DataNew = this.getValueData();
-		}
-		if (History.Is_On() && false == DataOld.isEqual(DataNew)) {
-			History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(),
-						new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow),
-						new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
-		}
-		//sortDependency вызывается ниже History.Add(AscCH.historyitem_Cell_ChangeValue, потому что в ней может быть выставлен формат ячейки(если это текстовый, то принимая изменения формула станет текстом)
-		this.ws.workbook.sortDependency();
-		if (!this.ws.workbook.dependencyFormulas.isLockRecal()) {
-			this._adjustCellFormat();
-		}
-
-		//todo не должны удаляться ссылки, если сделать merge ее части.
-		if (this.isNullTextString() && !this.isFormula()) {
-			let cell = this.ws.getCell3(this.nRow, this.nCol);
-			cell.removeHyperlink();
-		}
-
-		this.checkRemoveExternalReferences(newFP, oldFP);
-	};
 	Cell.prototype.setValue=function(val,callback, isCopyPaste, byRef, ignoreHyperlink) {
 		let ws = this.ws;
 		let wb = ws.workbook;
@@ -13023,67 +12957,6 @@
 			this.ws.workbook.handlers.trigger("changeDocument", AscCommonExcel.docChangedType.cellValue, this);
 		}
 	};
-	// Cell.prototype._checkDirtyOld = function(){
-	// 	let t = this;
-	// 	if (this.getIsDirty()) {
-	// 		if (g_cCalcRecursion.incLevel()) {
-	// 			let isCalc = this.getIsCalc();
-	// 			this.setIsCalc(true);
-	// 			let calculatedArrayFormulas = [];
-	// 			this.processFormula(function(parsed) {
-	// 				if (!isCalc) {
-	// 					//***array-formula***
-	// 					//добавлен последний параметр для обработки формулы массива
-	// 					if(parsed.getArrayFormulaRef()) {
-	// 						let listenerId = parsed.getListenerId();
-	// 						if(parsed.checkFirstCellArray(t) && !calculatedArrayFormulas[listenerId]) {
-	// 							parsed.calculate();
-	// 							calculatedArrayFormulas[listenerId] = 1;
-	// 						} else {
-	// 							if(null === parsed.value && !calculatedArrayFormulas[listenerId]) {
-	// 								parsed.calculate();
-	// 								calculatedArrayFormulas[listenerId] = 1;
-	// 							}
-	//
-	// 							let oldParent = parsed.parent;
-	// 							parsed.parent = new AscCommonExcel.CCellWithFormula(t.ws, t.nRow, t.nCol);
-	// 							parsed._endCalculate();
-	// 							parsed.parent = oldParent;
-	// 						}
-	// 					} else {
-	// 						parsed.calculate();
-	// 					}
-	// 				} else {
-	// 					// return bad reference err if iterative calculation are not enabled
-	// 					parsed.calculateCycleError();
-	// 				}
-	// 			});
-	//
-	// 			g_cCalcRecursion.decLevel();
-	// 			if (g_cCalcRecursion.getIsForceBacktracking()) {
-	// 				g_cCalcRecursion.insert({ws: this.ws, nRow: this.nRow, nCol: this.nCol});
-	// 				if (0 === g_cCalcRecursion.getLevel() && !g_cCalcRecursion.getIsProcessRecursion()) {
-	// 					g_cCalcRecursion.setIsProcessRecursion(true);
-	// 					do {
-	// 						g_cCalcRecursion.setIsForceBacktracking(false);
-	// 						g_cCalcRecursion.foreachInReverse(function(elem) {
-	// 							elem.ws._getCellNoEmpty(elem.nRow, elem.nCol, function(cell) {
-	// 								if(cell && cell.getIsDirty()){
-	// 									cell.setIsCalc(false);
-	// 									cell._checkDirty();
-	// 								}
-	// 							});
-	// 						});
-	// 					} while (g_cCalcRecursion.getIsForceBacktracking());
-	// 					g_cCalcRecursion.setIsProcessRecursion(false);
-	// 				}
-	// 			} else {
-	// 				this.setIsCalc(false);
-	// 				this.setIsDirty(false);
-	// 			}
-	// 		}
-	// 	}
-	// };
 	Cell.prototype.getIsIterative = function () {
 		return this.isIterative;
 	}
@@ -13124,11 +12997,15 @@
 						// return bad reference err if iterative calculation are not enabled
 						parsed.calculateCycleError();
 					} else {
+						if (t.number === null) {
+							t._setValue("0");
+						}
 						// recursive function call
 						t._checkDirty();
 					}
 				});
 
+				// if incLevel is max, do the reverse calculation
 				g_cCalcRecursion.decLevel();
 				if (g_cCalcRecursion.getIsForceBacktracking()) {
 					g_cCalcRecursion.insert({ws: this.ws, nRow: this.nRow, nCol: this.nCol});
@@ -13140,21 +13017,20 @@
 								elem.ws._getCellNoEmpty(elem.nRow, elem.nCol, function(cell) {
 									if(cell && cell.getIsDirty()){
 										cell.setIsCalc(false);
-										cell._checkDirty();
 									}
 								});
 							});
 						} while (g_cCalcRecursion.getIsForceBacktracking());
 						g_cCalcRecursion.setIsProcessRecursion(false);
+					} else {
+						// do math
+						t.formulaParsed.calculate();
 					}
 				} else {
 					this.setIsCalc(false);
 					this.setIsDirty(false);
 				}
 			} else {
-				// if incLevel is max, do the reverse calculation
-				// a stub for a single function execution
-				this._setValue('0');
 				this.setIsCalc(false);
 				this.setIsDirty(false);
 			}

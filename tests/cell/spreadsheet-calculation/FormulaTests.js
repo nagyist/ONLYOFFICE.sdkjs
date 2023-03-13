@@ -739,10 +739,23 @@ $(function () {
 		ws.getRange2("B101").setValue("3");
 		ws.getRange2("C101").setValue("4");
 		ws.getRange2("D101").setValue("10");
+		ws.getRange2("E101").setValue("1");
 
 		oParser = new parserFormula('A101+B101+C101', "A101", ws);
 		assert.ok(oParser.parse(), 'A101+B101+C101');
-		assert.strictEqual(oParser.calculate().getValue(), 7, 'Result of A101+B101+C101');
+		assert.strictEqual(oParser.calculate().getValue(), 7, 'Result of A101+B101+C101');		// 1: 0+3+4 = 7, 2: 0+3+4 + 0+3+4 = 14, 3: 0+3+4 + 0+3+4 + 0+3+4 = 21 etc.
+
+		oParser = new parserFormula('A101+D101-C101', "A101", ws);
+		assert.ok(oParser.parse(), 'A101+D101-C101');
+		assert.strictEqual(oParser.calculate().getValue(), 6, 'Result of A101+D101-C101');		// 1: 0+10-4 = 6, 2: 0+10-4 + 0+10-4 = 12, 3: 0+10-4 + 0+10-4 + 0+10-4 = 18 etc.
+
+		oParser = new parserFormula('A101+B101*E101', "A101", ws);
+		assert.ok(oParser.parse(), 'A101+B101*E101');
+		assert.strictEqual(oParser.calculate().getValue(), 3, 'Result of A101+B101*E101');		// 1: 0+3*1 = 3, 2: 0+3*1 + 0+3*1 = 6, 3: 0+3*1 + 0+3*1 + 0+3*1 = 9 etc.
+
+		oParser = new parserFormula('A101+D101/E101', "A101", ws);
+		assert.ok(oParser.parse(), 'A101+D101/E101');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of A101+D101/E101');		// 1: 0+10/1 = 10, 2: 0+10/1 + 0+10/1 = 20, 3: 0+10/1 + 0+10/1 + 0+10/1 = 30 etc.
 
 		ws.getRange2("A101:D101").cleanAll();
 	});

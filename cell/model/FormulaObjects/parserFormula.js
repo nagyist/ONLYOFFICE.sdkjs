@@ -8093,13 +8093,13 @@ function parserFormula( formula, parent, _ws ) {
 
 	//for chrome63(real maximum call stack size is 12575) MAXRECURSION that cause excaption is 783
 	//by measurement: stack size in doctrenderer is one fourth smaller than chrome
-	CalcRecursion.prototype.MAXRECURSION = 5;
+	CalcRecursion.prototype.MAXRECURSION = 10;
 	CalcRecursion.prototype.incLevel = function () {
-		// возвращает true/false в зависимости от того достигнут ли максимальный уровень рекурсии
+		// return true/false depending on whether the maximum recursion level has been reached
 		if (this.getIsForceBacktracking()) {
 			return false;
 		}
-		let res = this.level <= CalcRecursion.prototype.MAXRECURSION;
+		let res = this.level < CalcRecursion.prototype.MAXRECURSION;
 		if (res) {
 			this.level++;
 		} else {
