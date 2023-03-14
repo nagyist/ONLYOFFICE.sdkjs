@@ -255,7 +255,7 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._borderStyle = sValue;
-                        field._wasChanged = true;
+                        field.SetWasChanged(true);
                         field._content.GetElement(0).Content.forEach(function(run) {
                             run.RecalcInfo.Measure = true;
                         });
@@ -326,7 +326,7 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._lineWidth = nValue;
-                        field._wasChanged = true;
+                        field.SetWasChanged(true);
                         field._content.GetElement(0).Content.forEach(function(run) {
                             run.RecalcInfo.Measure = true;
                         });
@@ -824,7 +824,7 @@
                 let aFields = this._doc.getWidgetsByName(this.name);
                 aFields.forEach(function(field) {
                     field.SetComb(bValue);
-                    field._wasChanged = true;
+                    field.SetWasChanged(true);
                 });
                 editor.getDocumentRenderer()._paintForms();
             },
@@ -1204,7 +1204,7 @@
                     }
 
                     if (isValid) {
-                        this._needShiftContentView = true;
+                        this._bAutoShiftContentView = true;
 
                         // снимаем выделение с тех, которые не присутсвуютв новых значениях (value)
                         for (let i = 0; i < this._currentValueIndices.length; i++) {

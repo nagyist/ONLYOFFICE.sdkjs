@@ -18188,11 +18188,6 @@ Paragraph.prototype.IsInFixedForm = function()
 	if (oShape && oShape.isForm())
 		return true;
 
-	// for pdf forms
-	let oForm = this.Parent && this.Parent.ParentPDF;
-	if (oForm)
-		return true;
-
 	return false;
 };
 Paragraph.prototype.GetParentShape = function()

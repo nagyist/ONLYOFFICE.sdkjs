@@ -39,8 +39,8 @@
 	//------------------------------------------------------------------------------------------------------------------
 
     let FIELDS_HIGHLIGHT = {
-        r: 201, 
-        g: 200,
+        r: 204, 
+        g: 215,
         b: 255
     }
     let BUTTON_PRESSED = {
@@ -78,6 +78,12 @@
         beveled:    2,
         inset:      3,
         underline:  4
+    }
+
+    let LISTBOX_SELECTED_COLOR = {
+        r: 153,
+        g: 193,
+        b: 218
     }
 
     //------------------------------------------------------------------------------------------------------------------
@@ -261,15 +267,27 @@
         this._actions = new CFormActions();
 
         // internal
-        this._formRelRectMM = {
+        this._contentRect = {
             X: 0,
             Y: 0,
             W: 0,
             H: 0,
             Page: nPage
         }
+        this._formRect = {
+            X: 0,
+            Y: 0,
+            W: 0,
+            H: 0,
+            Page: nPage
+        }
+
         this._oldContentPos = {X: 0, Y: 0, XLimit: 0, YLimit: 0};
-        this._curShiftView = {
+        this._curShiftView = { // смещение, когда мы скролим, т.е. активное смещение
+            x: 0,
+            y: 0
+        }
+        this._originShiftView = { // смещение, когда значение формы применено (т.е. форма не активна)
             x: 0,
             y: 0
         }
@@ -329,8 +347,13 @@
 
     CBaseField.prototype.getFormRelRect = function()
     {
-        return this._formRelRectMM;
+        return this._contentRect;
     };
+    CBaseField.prototype.getFormRect = function()
+    {
+        return this._formRect;
+    };
+    
     CBaseField.prototype.IntersectWithRect = function(X, Y, W, H)
     {
         let oViewer     = editor.getDocumentRenderer();
@@ -904,10 +927,15 @@
         
         contentY = Y * g_dKoef_pix_to_mm;
 
-        this._formRelRectMM.X = contentX;
-        this._formRelRectMM.Y = contentY;
-        this._formRelRectMM.W = contentXLimit - contentX;
-        this._formRelRectMM.H = contentYLimit - contentY;
+        this._formRect.X = X * g_dKoef_pix_to_mm;
+        this._formRect.Y = Y * g_dKoef_pix_to_mm;
+        this._formRect.W = nWidth * g_dKoef_pix_to_mm;
+        this._formRect.H = nHeight * g_dKoef_pix_to_mm;
+        
+        this._contentRect.X = contentX;
+        this._contentRect.Y = contentY;
+        this._contentRect.W = contentXLimit - contentX;
+        this._contentRect.H = contentYLimit - contentY;
 
         // контент посередине
         let oDrawing = this.GetDrawing();
@@ -1455,10 +1483,15 @@
         
         contentY = Y * g_dKoef_pix_to_mm;
 
-        this._formRelRectMM.X = contentX;
-        this._formRelRectMM.Y = contentY;
-        this._formRelRectMM.W = contentXLimit - contentX;
-        this._formRelRectMM.H = contentYLimit - contentY;
+        this._formRect.X = X * g_dKoef_pix_to_mm;
+        this._formRect.Y = Y * g_dKoef_pix_to_mm;
+        this._formRect.W = nWidth * g_dKoef_pix_to_mm;
+        this._formRect.H = nHeight * g_dKoef_pix_to_mm;
+        
+        this._contentRect.X = contentX;
+        this._contentRect.Y = contentY;
+        this._contentRect.W = contentXLimit - contentX;
+        this._contentRect.H = contentYLimit - contentY;
 
         // подгоняем размер галочки
         this.ProcessAutoFitContent();
@@ -1640,7 +1673,7 @@
 
     CCheckBoxField.prototype.SetValue = function(sValue) {
         if (sValue != "Off") {
-            let oRun = field._content.GetElement(0).GetElement(0);
+            let oRun = this._content.GetElement(0).GetElement(0);
             oRun.AddText('✓');
             this._value = sValue;
         }
@@ -1911,13 +1944,17 @@
         }
         else {
             this._comb = false;
-            this._content.GetElement(0).Content.forEach(function(run) {
-                run.RecalcInfo.Measure = true;
-            });
-            this._contentFormat.GetElement(0).Content.forEach(function(run) {
-                run.RecalcInfo.Measure = true;
-            });
         }
+
+        this._content.GetElement(0).Content.forEach(function(run) {
+            run.RecalcInfo.Measure = true;
+        });
+        this._contentFormat.GetElement(0).Content.forEach(function(run) {
+            run.RecalcInfo.Measure = true;
+        });
+    };
+    CTextField.prototype.SetCharLimit = function(nChars) {
+        this._charLimit = nChars;
     };
     CTextField.prototype.SetDoNotScroll = function(bNot) {
         this._doNotScroll = bNot;
@@ -2002,10 +2039,15 @@
             contentY = (Y + nHeight / 2) * g_dKoef_pix_to_mm - nContentH / 2;
         }
 
-        this._formRelRectMM.X = contentX;
-        this._formRelRectMM.Y = contentY;
-        this._formRelRectMM.W = contentXLimit - contentX;
-        this._formRelRectMM.H = contentYLimit - contentY;
+        this._formRect.X = X * g_dKoef_pix_to_mm;
+        this._formRect.Y = Y * g_dKoef_pix_to_mm;
+        this._formRect.W = nWidth * g_dKoef_pix_to_mm;
+        this._formRect.H = nHeight * g_dKoef_pix_to_mm;
+        
+        this._contentRect.X = contentX;
+        this._contentRect.Y = contentY;
+        this._contentRect.W = contentXLimit - contentX;
+        this._contentRect.H = contentYLimit - contentY;
 
         if (contentX != this._oldContentPos.X || contentY != this._oldContentPos.Y ||
         contentXLimit != this._oldContentPos.XLimit) {
@@ -2028,7 +2070,7 @@
             oContentToDraw.ShiftView(this._curShiftView.x, this._curShiftView.y);
         }
 
-        if (this._needShiftContentView)
+        if (this._bAutoShiftContentView)
             this.CheckFormViewWindow();
 
         let oGraphics = new AscCommon.CGraphics();
@@ -2051,13 +2093,6 @@
         
         oGraphics.RemoveClip();
         
-        if (this._doNotScroll == false && this._multiline == true) {
-            if (this._wasChanged == false)
-                this.UpdateScroll(true);
-            else
-                this.UpdateScroll(false, true);
-        }
-
         this.SetWasChanged(false);
     };
     CTextField.prototype.onMouseDown = function(x, y, e) {
@@ -2071,54 +2106,36 @@
         
         this._content.RecalculateCurPos();
         if (this._doNotScroll == false && this._multiline)
-            this.UpdateScroll(false, true);
+            this.UpdateScroll(true);
     };
     CTextField.prototype.SelectionSetStart = function(x, y, e) {
-        let oViewer = private_getViewer();
-        
-        var pageObject = oViewer.getPageByCoords(x - oViewer.x, y - oViewer.y);
-
-        let nScaleY = oViewer.drawingPages[this._page].H / oViewer.file.pages[this._page].H / oViewer.zoom;
-        let nScaleX = oViewer.drawingPages[this._page].W / oViewer.file.pages[this._page].W / oViewer.zoom;
-
-        let X = (pageObject.x) * g_dKoef_pix_to_mm * nScaleX;
-        let Y = (pageObject.y) * g_dKoef_pix_to_mm * nScaleY;
-
+        let {X, Y} = private_getPageCoordsMM(x, y, this._page);
         this._content.Selection_SetStart(X, Y, 0, e);
     };
     CTextField.prototype.SelectionSetEnd = function(x, y, e) {
-        let oViewer = private_getViewer();
-        
-        var pageObject = oViewer.getPageByCoords(x - oViewer.x, y - oViewer.y);
-
-        let nScaleY = oViewer.drawingPages[this._page].H / oViewer.file.pages[this._page].H / oViewer.zoom;
-        let nScaleX = oViewer.drawingPages[this._page].W / oViewer.file.pages[this._page].W / oViewer.zoom;
-
-        let X = (pageObject.x) * g_dKoef_pix_to_mm * nScaleX;
-        let Y = (pageObject.y) * g_dKoef_pix_to_mm * nScaleY;
-
+        let {X, Y} = private_getPageCoordsMM(x, y, this._page);
         this._content.Selection_SetEnd(X, Y, 0, e);
     };
     CTextField.prototype.MoveCursorLeft = function(isShiftKey, isCtrlKey)
     {
         this._content.MoveCursorLeft(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true && this._doNotScroll == false;
+        this._bAutoShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.MoveCursorRight = function(isShiftKey, isCtrlKey)
     {
         this._content.MoveCursorRight(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true && this._doNotScroll == false;
+        this._bAutoShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.MoveCursorDown = function(isShiftKey, isCtrlKey) {
         this._content.MoveCursorDown(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true && this._doNotScroll == false;
+        this._bAutoShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.MoveCursorUp = function(isShiftKey, isCtrlKey) {
         this._content.MoveCursorUp(isShiftKey, isCtrlKey);
-        this._needShiftContentView = true && this._doNotScroll == false;
+        this._bAutoShiftContentView = true && this._doNotScroll == false;
         return this._content.RecalculateCurPos();
     };
     CTextField.prototype.EnterText = function(aChars)
@@ -2162,7 +2179,7 @@
         if (aChars.length > 0) {
             this.SetWasChanged(true);
             this._needApplyToAll = true; // флаг что значение будет применено к остальным формам с таким именем
-            this._needShiftContentView = true && this._doNotScroll == false;
+            this._bAutoShiftContentView = true && this._doNotScroll == false;
         }
 
         return true;
@@ -2209,16 +2226,17 @@
             this._needApplyToAll = false;
 
         for (let i = 0; i < aFields.length; i++) {
-            if (this.HasShiftView()) {
+            if (aFields[i].HasShiftView()) {
                 aFields[i]._content.MoveCursorToStartPos();
+
+                if (aFields[i] == this) {
+                    aFields[i].AddToRedraw();
+                    continue;
+                }
             }
                 
-            if (aFields[i] == this) {
-                if (this.HasShiftView())
-                    this.AddToRedraw();
-
+            if (aFields[i] == this)
                 continue;
-            }
 
             let oFieldPara = aFields[i]._content.GetElement(0);
             let oThisRun, oFieldRun;
@@ -2284,12 +2302,12 @@
 
         i++; // индекс точки, в которую поместим результирующее значение.
         
-        // объединяем только больше 2х точек
+        // если больше 2х точек, то заменяем
         if (i < AscCommon.History.Points.length - 1) {
             AscCommon.History.Index = i;
             AscCommon.History.Points.splice(i, AscCommon.History.Points.length - i, oResultPoint);
         }
-        else
+        else if (AscCommon.History.Points[i])
             AscCommon.History.Points[i].Additional.CanUnion = false; // запрещаем объединять последнюю добавленную точку
     };
     /**
@@ -2434,12 +2452,12 @@
 
         i++; // индекс точки, в которую поместим результирующее значение.
         
-        // объединяем только больше 2х точек
+        // если больше 2х точек, то заменяем
         if (i < AscCommon.History.Points.length - 1) {
             AscCommon.History.Index = i;
             AscCommon.History.Points.splice(i, AscCommon.History.Points.length - i, oResultPoint);
         }
-        else
+        else if (AscCommon.History.Points[i])
             AscCommon.History.Points[i].Additional.CanUnion = !bForbidToUnion; // запрещаем объединять последнюю добавленную точку
     };
 
@@ -2515,10 +2533,15 @@
         let nContentH = this._content.GetElement(0).Get_EmptyHeight();
         contentY = (Y + nHeight / 2) * g_dKoef_pix_to_mm - nContentH / 2;
 
-        this._formRelRectMM.X = contentX;
-        this._formRelRectMM.Y = contentY;
-        this._formRelRectMM.W = contentXLimit - contentX;
-        this._formRelRectMM.H = contentYLimit - contentY;
+        this._formRect.X = X * g_dKoef_pix_to_mm;
+        this._formRect.Y = Y * g_dKoef_pix_to_mm;
+        this._formRect.W = nWidth * g_dKoef_pix_to_mm;
+        this._formRect.H = nHeight * g_dKoef_pix_to_mm;
+        
+        this._contentRect.X = contentX;
+        this._contentRect.Y = contentY;
+        this._contentRect.W = contentXLimit - contentX;
+        this._contentRect.H = contentYLimit - contentY;
 
         if (contentX != this._oldContentPos.X || contentY != this._oldContentPos.Y ||
         contentXLimit != this._oldContentPos.XLimit) {
@@ -2559,25 +2582,20 @@
     };
     CComboBoxField.prototype.onMouseDown = function(x, y, e) {
         let oViewer = private_getViewer();
-        let X = (x - oViewer.x) * AscCommon.AscBrowser.retinaPixelRatio;
-        let Y = (y - oViewer.y) * AscCommon.AscBrowser.retinaPixelRatio;
-        
-        let mouseXInPage = x - oViewer.x;
-        let mouseYInPage = y - oViewer.y;
 
-        let XInContent = mouseXInPage * g_dKoef_pix_to_mm / oViewer.zoom;
-        let YInContent = mouseYInPage * g_dKoef_pix_to_mm / oViewer.zoom;
-        
+        let {X, Y} = private_getPageCoordsMM(x, y, this._page);
+        var pageObject = this.getPageByCoords(x - oViewer.x, y - oViewer.y);
+
         editor.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
         editor.WordControl.m_oDrawingDocument.m_lCurrentPage = 0; // to do
         editor.WordControl.m_oDrawingDocument.m_lPagesCount = 1; //
 
-        if (X >= this._markRect.x1 && X <= this._markRect.x2 && Y >= this._markRect.y1 && Y <= this._markRect.y2 && this._options.length != 0) {
+        if (pageObject.x >= this._markRect.x1 && pageObject.x <= this._markRect.x2 && pageObject.y >= this._markRect.y1 && pageObject.y <= this._markRect.y2 && this._options.length != 0) {
             editor.sendEvent("asc_onShowPDFFormsActions", this, x, y);
             this._content.MoveCursorToStartPos();
         }
         else {
-            this._content.Selection_SetStart(XInContent, YInContent, 0, e);
+            this._content.Selection_SetStart(X, Y, 0, e);
             this._content.RemoveSelection();
         }
         
@@ -2841,6 +2859,7 @@
 
         // internal
         this._scrollInfo = null;
+        this._bAutoShiftContentView = true;
     };
     CListBoxField.scrollCount = 0;
     CListBoxField.prototype = Object.create(CBaseListField.prototype);
@@ -2865,15 +2884,20 @@
         this.DrawBorders(oCtx);
         let oMargins = this.GetBordersWidth();
 
-        let contentX = (X + nWidth * 0.02 + oMargins.left) * g_dKoef_pix_to_mm;
+        let contentX = (X + nWidth * 0.01 + oMargins.left) * g_dKoef_pix_to_mm;
         let contentY = (Y + nWidth * 0.01 + oMargins.top) * g_dKoef_pix_to_mm;
-        let contentXLimit = (X + nWidth * 0.98 - oMargins.right) * g_dKoef_pix_to_mm;
+        let contentXLimit = (X + nWidth * 0.99 - oMargins.right) * g_dKoef_pix_to_mm;
         let contentYLimit = (Y + nHeight - nWidth * 0.01 - oMargins.bottom) * g_dKoef_pix_to_mm;
         
-        this._formRelRectMM.X = contentX;
-        this._formRelRectMM.Y = contentY;
-        this._formRelRectMM.W = contentXLimit - contentX;
-        this._formRelRectMM.H = contentYLimit - contentY;
+        this._formRect.X = X * g_dKoef_pix_to_mm;
+        this._formRect.Y = Y * g_dKoef_pix_to_mm;
+        this._formRect.W = nWidth * g_dKoef_pix_to_mm;
+        this._formRect.H = nHeight * g_dKoef_pix_to_mm;
+
+        this._contentRect.X = contentX;
+        this._contentRect.Y = contentY;
+        this._contentRect.W = contentXLimit - contentX;
+        this._contentRect.H = contentYLimit - contentY;
 
         if (contentX != this._oldContentPos.X || contentY != this._oldContentPos.Y ||
         contentXLimit != this._oldContentPos.XLimit) {
@@ -2890,11 +2914,12 @@
             this.SetWasChanged(false);
         }
         
-        this._content.ResetShiftView();
-        this._content.ShiftView(this._curShiftView.x, this._curShiftView.y);
-
-        if (this._needShiftContentView)
+        if (this._bAutoShiftContentView)
             this.CheckFormViewWindow();
+        else {
+            this._content.ResetShiftView();
+            this._content.ShiftView(this._curShiftView.x, this._curShiftView.y);
+        }
 
         let oGraphics = new AscCommon.CGraphics();
         let widthPx = oViewer.canvas.width;
@@ -2910,8 +2935,6 @@
         this._content.Draw(0, oGraphics);
         
         oGraphics.RemoveClip();
-        
-        this.UpdateScroll(true);
     };
 
     /**
@@ -2963,14 +2986,24 @@
         if (bUnionPoints)
             this.UnionLastHistoryPoints();
 
-        aFields.forEach(function(field) {
-            field.SetWasChanged(true);
+        this.CheckFormViewWindow();
+        this.RevertContentViewToOriginal();
 
+        let oThisBounds = this.getFormRelRect();
+
+        aFields.forEach(function(field) {
+            field._bAutoShiftContentView = false;
+
+            field.SetWasChanged(true);
+            if (field.HasShiftView()) {
+                if (field == oThis) {
+                    field.AddToRedraw();
+                    return;
+                }
+            }
             if (oThis == field || oFieldToSkip == field)
                 return;
-            
-            field._curShiftView.y = oThis._curShiftView.y;
-            field._needShiftContentView = true;
+
             if (oThis._multipleSelection) {
                 // снимаем выделение с тех, которые не присутсвуют в поле, от которого применяем ко всем
                 for (let i = 0; i < field._currentValueIndices.length; i++) {
@@ -2991,9 +3024,21 @@
                 field._currentValueIndices = oThis._currentValueIndices;
                 field.SelectOption(field._currentValueIndices, true, false);
             }
+
+            let oFieldBounds = field.getFormRelRect();
+            if (Math.abs(oFieldBounds.H - oThisBounds.H) > 0.001) {
+                field.CheckFormViewWindow();
+                field.RevertContentViewToOriginal();
+            }
+            else {
+                field._curShiftView.x = oThis._curShiftView.x;
+                field._curShiftView.y = oThis._curShiftView.y;
+                field._originShiftView.x = oThis._originShiftView.x;
+                field._originShiftView.y = oThis._originShiftView.y;
+            }
         });
     };
-
+    
     CListBoxField.prototype.SetMultipleSelection = function(bValue) {
         if (bValue == true) {
             this._multipleSelection = true;
@@ -3032,16 +3077,18 @@
 
         if (oPara) {
             oApiPara = editor.private_CreateApiParagraph(oPara);
-            oApiPara.SetShd('clear', 0, 112, 192);
+            oApiPara.SetShd('clear', LISTBOX_SELECTED_COLOR.r, LISTBOX_SELECTED_COLOR.g, LISTBOX_SELECTED_COLOR.b);
             oApiPara.Paragraph.private_CompileParaPr(true);
         }
 
+        this.SetWasChanged(true);
         this._needApplyToAll = true;
     };
     CListBoxField.prototype.UnselectOption = function(nIdx) {
         let oApiPara = editor.private_CreateApiParagraph(this._content.GetElement(nIdx));
         oApiPara.SetShd('nil');
         oApiPara.Paragraph.private_CompileParaPr(true);
+        this.SetWasChanged(true);
     };
     CListBoxField.prototype.SetOptions = function(aOpt) {
         this._content.Internal_Content_RemoveAll();
@@ -3124,7 +3171,7 @@
         for (let idx of aIndexes) {
             oPara = this._content.GetElement(idx);
             oApiPara = editor.private_CreateApiParagraph(oPara);
-            oApiPara.SetShd('clear', 0, 112, 192);
+            oApiPara.SetShd('clear', LISTBOX_SELECTED_COLOR.r, LISTBOX_SELECTED_COLOR.g, LISTBOX_SELECTED_COLOR.b);
             oPara.private_CompileParaPr(true);
         }
 
@@ -3151,12 +3198,8 @@
         if (this._options.length == 0)
             return;
 
-        let oHTMLPage = private_getViewer();
-        let mouseXInPage = x - oHTMLPage.x;
-        let mouseYInPage = y - oHTMLPage.y;
-
-        let X = mouseXInPage * g_dKoef_pix_to_mm / oHTMLPage.zoom;
-        let Y = mouseYInPage * g_dKoef_pix_to_mm / oHTMLPage.zoom;
+        let oViewer = private_getViewer();
+        let {X, Y} = private_getPageCoordsMM(x, y, this._page);
         
         editor.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
         editor.WordControl.m_oDrawingDocument.m_lCurrentPage = 0;
@@ -3180,26 +3223,26 @@
                 this.SelectOption(nPos, true);
                 this._currentValueIndices = [nPos];
             }
+            this.AddToRedraw();
         }
         else {
             if (nPos == this._currentValueIndices) {
-                this.UpdateScroll(false, true);
+                this.UpdateScroll(true);
                 return;
             }
                 
             this.SelectOption(nPos, true);
             this._currentValueIndices = nPos;
+            this.AddToRedraw();
         }
 
-        this._needShiftContentView = true;
-
+        this._bAutoShiftContentView = true;
         this.UnionLastHistoryPoints(false);
 
-        private_getViewer()._paintForms();
-        this.UpdateScroll(false, true);
+        oViewer._paintForms();
     };
     CListBoxField.prototype.MoveSelectDown = function() {
-        this._needShiftContentView = true;
+        this._bAutoShiftContentView = true;
         this._content.MoveCursorDown();
 
         if (this._multipleSelection == true) {
@@ -3211,11 +3254,13 @@
             this._currentValueIndices = this._content.CurPos.ContentPos;
         }
         
+        this.AddToRedraw();
         private_getViewer()._paintForms();
-        this.UpdateScroll();
+        this.UpdateScroll(true);
+        this
     };
     CListBoxField.prototype.MoveSelectUp = function() {
-        this._needShiftContentView = true;
+        this._bAutoShiftContentView = true;
         this._content.MoveCursorUp();
 
         if (this._multipleSelection == true) {
@@ -3227,94 +3272,108 @@
             this._currentValueIndices = this._content.CurPos.ContentPos;
         }
 
+        this.AddToRedraw();
         private_getViewer()._paintForms();
-        this.UpdateScroll();
+        this.UpdateScroll(true);
     };
-    CListBoxField.prototype.UpdateScroll = function(bUpdateOnlyPos, bShow) {
-        let oContentBounds = this._content.GetContentBounds(0);
-        let oFieldBounds = this._content.ParentPDF.getFormRelRect();
+    CListBoxField.prototype.UpdateScroll = function(bShow) {
+        let oContentBounds  = this._content.GetContentBounds(0);
+        let oContentRect    = this.getFormRelRect();
+        let oFormRect       = this.getFormRect();
+
+        let nContentH       = oContentBounds.Bottom - oContentBounds.Top;
         let oScroll, oScrollDocElm, oScrollSettings;
-        let nContentH = oContentBounds.Bottom - oContentBounds.Top;
-        
-        if (nContentH < oFieldBounds.H || bShow == false)
+
+        if (nContentH < oContentRect.H)
             return;
 
         if (typeof(bShow) != "boolean" && this._scrollInfo)
             bShow = this._scrollInfo.scroll.canvas.style.display == "none" ? false : true;
 
-        let oViewer = private_getViewer();
-        let nKoeff = g_dKoef_pix_to_mm / (oViewer.zoom * AscCommon.AscBrowser.retinaPixelRatio);
+        if (bShow == false) {
+            if (this._scrollInfo)
+                this._scrollInfo.scroll.canvas.style.display = "none";
+            return;
+        }
 
-        if (!bUpdateOnlyPos && !this._scrollInfo && oContentBounds.Bottom - oContentBounds.Top > oFieldBounds.H) {
+        let oViewer = private_getViewer();
+        
+        let oGlobalCoords1  = private_getGlobalCoordsByPageCoords(oFormRect.X, oFormRect.Y, this._page);
+        let oGlobalCoords2  = private_getGlobalCoordsByPageCoords(oFormRect.X + oFormRect.W, oFormRect.Y + oFormRect.H, this._page);
+        let oBorderWidth    = this.GetBordersWidth(true);
+        
+        if (this._scrollInfo == null && oContentBounds.Bottom - oContentBounds.Top > oContentRect.H) {
             CListBoxField.scrollCount++;
             oScrollDocElm = document.createElement('div');
             document.getElementById('editor_sdk').appendChild(oScrollDocElm);
             oScrollDocElm.id = "formScroll_" + CListBoxField.scrollCount;
-            oScrollDocElm.style.top = (this._pagePos.x - 1) / AscCommon.AscBrowser.retinaPixelRatio + 'px';
-            oScrollDocElm.style.left = (this._pagePos.y + this._pagePos.w) / AscCommon.AscBrowser.retinaPixelRatio + 'px';
+            oScrollDocElm.style.top = oGlobalCoords1.Y - oBorderWidth.top / 2 + 'px';
+            oScrollDocElm.style.left = oGlobalCoords2.X + 'px';
             oScrollDocElm.style.position = "absolute";
             oScrollDocElm.style.display = "block";
 			oScrollDocElm.style.width = "14px";
-			oScrollDocElm.style.height = (this._pagePos.h + 2) / AscCommon.AscBrowser.retinaPixelRatio + "px";
+			oScrollDocElm.style.height = (oGlobalCoords2.Y - oGlobalCoords1.Y) + (oBorderWidth.top + oBorderWidth.bottom) / 2 + "px";
+
+            let nMaxShiftY = oContentRect.H - nContentH;
 
             oScrollSettings = editor.WordControl.CreateScrollSettings();
             oScrollSettings.isHorizontalScroll = false;
 		    oScrollSettings.isVerticalScroll = true;
-		    oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
+		    oScrollSettings.contentH = Math.abs(nMaxShiftY);
             oScrollSettings.screenH = 0;
             oScrollSettings.scrollerMinHeight = 5;
             
+            let nScrollCoeff = this._curShiftView.y / nMaxShiftY;
+            
+            let oPara = this._content.GetElement(0);
+            let oCurParaHeight  = oPara.Lines[0].Bottom - oPara.Lines[0].Top;
+
+            oScrollSettings.vscrollStep = oCurParaHeight;
             oScroll = new AscCommon.ScrollObject(oScrollDocElm.id, oScrollSettings);
+
             let oThis = this;
             oScroll.bind("scrollvertical", function(evt) {
                 oThis.ScrollVertical(evt.scrollD, evt.maxScrollY);
             });
+            oScroll.bind("mouseup", function(evt) {
+                if (oThis.type == "listbox")
+                    oThis.ScrollVerticalEnd();
+            });
 
-            let nMaxShiftY = oFieldBounds.H - nContentH;
-            let nScrollCoeff = this._curShiftView.y / nMaxShiftY;
             oScroll.scrollVCurrentY = oScroll.maxScrollY * nScrollCoeff;
-
+            
             this._scrollInfo = {
-                scroll: oScroll,
-                docElem: oScrollDocElm,
-                baseYPos: parseInt(oScrollDocElm.style.top),
-                oldZoom: oViewer.zoom,
-                scrollCoeff: nScrollCoeff // проскроленная часть
+                scroll:         oScroll,
+                docElem:        oScrollDocElm,
+                baseYPos:       parseInt(oScrollDocElm.style.top),
+                oldZoom:        oViewer.zoom,
+                scrollCoeff:    nScrollCoeff // проскроленная часть
             }
 
             oScroll.Repos(oScrollSettings, false);
         }
         else if (this._scrollInfo) {
-            if (bUpdateOnlyPos) {
-                this._scrollInfo.docElem.style.top = (this._pagePos.x - 1) / AscCommon.AscBrowser.retinaPixelRatio  + 'px';
-                this._scrollInfo.docElem.style.left = (this._pagePos.y + this._pagePos.w) / AscCommon.AscBrowser.retinaPixelRatio + 'px';
-                this._scrollInfo.docElem.style.height = (this._pagePos.h + 2) / AscCommon.AscBrowser.retinaPixelRatio  + 'px';
-            }
-            
-            if (this._scrollInfo.oldZoom != oViewer.zoom) {
-                this._scrollInfo.oldZoom = oViewer.zoom;
+            let nMaxShiftY = oContentRect.H - nContentH;
+            let needUpdatePos = this._scrollInfo.oldZoom != oViewer.zoom || oGlobalCoords1.Y - oBorderWidth.top != this._scrollInfo.baseYPos;
+
+            if (needUpdatePos) {
                 oScrollSettings = editor.WordControl.CreateScrollSettings();
                 oScrollSettings.isHorizontalScroll = false;
                 oScrollSettings.isVerticalScroll = true;
-                oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
+                oScrollSettings.contentH = Math.abs(nMaxShiftY);
                 oScrollSettings.screenH = 0;
                 oScrollSettings.scrollerMinHeight = 5;
                 this._scrollInfo.scroll.scrollVCurrentY = this._scrollInfo.scroll.maxScrollY * this._scrollInfo.scrollCoeff;
                 this._scrollInfo.scroll.Repos(oScrollSettings, false);
-            }
-
-            if (!bUpdateOnlyPos) {
-                oScrollSettings = editor.WordControl.CreateScrollSettings();
-                oScrollSettings.isHorizontalScroll = false;
-                oScrollSettings.contentH = (oContentBounds.Bottom - oContentBounds.Top) / nKoeff;
-                oScrollSettings.screenH = 0;
-                oScrollSettings.scrollerMinHeight = 5;
-
-                let nMaxShiftY = oFieldBounds.H - nContentH;
-                let nScrollCoeff = this._curShiftView.y / nMaxShiftY;
-                this._scrollInfo.scroll.scrollVCurrentY = this._scrollInfo.scroll.maxScrollY * nScrollCoeff;
-                this._scrollInfo.scroll.Repos(oScrollSettings, false);
+                let nScrollCoeff = this._content.ShiftViewY / nMaxShiftY;
                 this._scrollInfo.scrollCoeff = nScrollCoeff;
+
+                this._scrollInfo.docElem.style.top      = oGlobalCoords1.Y - oBorderWidth.top / 2 + 'px';
+                this._scrollInfo.docElem.style.left     = oGlobalCoords2.X + 'px';
+                this._scrollInfo.docElem.style.height   = (oGlobalCoords2.Y - oGlobalCoords1.Y) + (oBorderWidth.top + oBorderWidth.bottom) / 2 + "px";
+            
+                this._scrollInfo.oldZoom = oViewer.zoom;
+                this._scrollInfo.baseYPos = parseInt(this._scrollInfo.docElem.style.top);
             }
 
             if (bShow === true)
@@ -3324,16 +3383,26 @@
         }
     };
     CListBoxField.prototype.ScrollVertical = function(scrollY, maxYscroll) {
-        let oContentBounds = this._content.GetContentBounds(0);
+        this._bAutoShiftContentView = false;
 
-        let oFormBounds = this.getFormRelRect();
-        let nContentH = oContentBounds.Bottom - oContentBounds.Top;
-        let nMaxShiftY = oFormBounds.H - nContentH;
+        let nScrollCoeff                = scrollY / maxYscroll;
+        this._curShiftView.y            = -nScrollCoeff * maxYscroll;
+        this._scrollInfo.scrollCoeff    = nScrollCoeff;
+        this.AddToRedraw();
+        private_getViewer()._paintForms();
+    };
+    CListBoxField.prototype.ScrollVerticalEnd = function() {
+        let nHeightPerPara  = this._content.GetElement(1).Y - this._content.GetElement(0).Y;
+        let nShiftCount     = this._curShiftView.y / nHeightPerPara; // количество смещений в длинах параграфов
+        if (Math.abs(Math.round(nShiftCount) - nShiftCount) <= 0.001)
+            return;
 
-        let nScrollCoeff = scrollY / maxYscroll;
-        this._curShiftView.y = nMaxShiftY * nScrollCoeff;
-        this._needShiftContentView = false;
-        this._scrollInfo.scrollCoeff = nScrollCoeff;
+        let nMaxShiftY                  = this._scrollInfo.scroll.maxScrollY;
+        this._curShiftView.y            = Math.round(nShiftCount) * nHeightPerPara;
+        this._bAutoShiftContentView     = false;
+        this._scrollInfo.scrollCoeff    = Math.abs(this._curShiftView.y / nMaxShiftY);
+        
+        this.AddToRedraw();
         private_getViewer()._paintForms();
     };
     /**
@@ -3364,6 +3433,43 @@
 
         this._currentValueIndices = nIdx;
         return nIdx;
+    };
+    CListBoxField.prototype.CheckFormViewWindow = function()
+    {
+        let nFirstSelectedPara = Array.isArray(this._currentValueIndices) ? this._currentValueIndices[0] : this._currentValueIndices;
+        let oParagraph  = this._content.GetElement(nFirstSelectedPara);
+
+        // размеры всего контента
+        let oPageBounds     = this._content.GetContentBounds(0);
+        let oCurParaHeight  = oParagraph.Lines[0].Bottom - oParagraph.Lines[0].Top;
+
+        let oFormBounds = this.getFormRelRect();
+        let nDy = 0, nDx = 0;
+        
+        if (oPageBounds.Bottom - oPageBounds.Top > oFormBounds.H) {
+            if (oParagraph.Y + oCurParaHeight > oFormBounds.Y + oFormBounds.H)
+                nDy = oFormBounds.Y + oFormBounds.H - (oParagraph.Y + oCurParaHeight);
+            else if (oParagraph.Y < oFormBounds.Y)
+                nDy = oFormBounds.Y - oParagraph.Y;
+            else if (oParagraph.Y + oCurParaHeight < oFormBounds.Y)
+                nDy = oCurParaHeight;
+        }
+
+        if (Math.abs(nDx) > 0.001 || Math.abs(nDy))
+        {
+            this._content.ShiftView(nDx, nDy);
+            this._originShiftView = {
+                x: this._content.ShiftViewX,
+                y: this._content.ShiftViewY
+            }
+            
+            this._curShiftView.x = this._originShiftView.x;
+            this._curShiftView.y = this._originShiftView.y;
+        }
+        else {
+            this._originShiftView.x = this._curShiftView.x;
+            this._originShiftView.y = this._curShiftView.y;
+        }
     };
 
     function CSignatureField(sName, nPage, aRect)
@@ -3462,7 +3568,7 @@
         if (Math.abs(nDx) > 0.001 || Math.abs(nDy))
         {
             this._content.ShiftView(nDx, nDy);
-            this._curShiftView = {
+            this._originShiftView = {
                 x: this._content.ShiftViewX,
                 y: this._content.ShiftViewY
             }
@@ -3524,9 +3630,27 @@
             }
         }
     };
+    CBaseField.prototype.RevertContentViewToOriginal = function() {
+        this._content.ResetShiftView();
+        this._curShiftView.x = this._originShiftView.x;
+        this._curShiftView.y = this._originShiftView.y;
+
+        this._bAutoShiftContentView = false;
+        this._content.ShiftView(this._originShiftView.x, this._originShiftView.y);
+
+        if (this._scrollInfo) {
+            let nMaxShiftY                  = this._scrollInfo.scroll.maxScrollY;
+            this._scrollInfo.scrollCoeff    = Math.abs(this._curShiftView.y / nMaxShiftY);
+        }
+    };
+    CBaseField.prototype.IsNeedRevertShiftView = function() {
+        if (this._curShiftView.y != this._originShiftView.y ||
+            this._curShiftView.x != this._originShiftView.x)
+            return true;
+    };
     CBaseField.prototype.GetBordersWidth = function(bZoomed) {
         let oViewer = editor.getDocumentRenderer();
-        let nLineWidth = bZoomed == true ? this._lineWidth * oViewer.zoom : this._lineWidth;
+        let nLineWidth = bZoomed == true ? this._lineWidth * AscCommon.AscBrowser.retinaPixelRatio * oViewer.zoom : this._lineWidth * AscCommon.AscBrowser.retinaPixelRatio;
 
         if (nLineWidth == 0 || this.type == "radiobutton") {
             return {

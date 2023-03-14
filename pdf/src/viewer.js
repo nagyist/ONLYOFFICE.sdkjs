@@ -940,6 +940,10 @@
 				{
 					oForm.SetBorderWidth(oFormInfo.borderWidth);
 				}
+				else
+				{
+					oForm.SetBorderWidth(0);
+				}
 
 				// members
 				if (oFormInfo.NameOfYes)
@@ -971,9 +975,17 @@
 				{
 					oForm.SetAlign(oFormInfo.alignment);
 				}
+				if (oFormInfo.multiline != null)
+				{
+					oForm.SetMultiline(Boolean(oFormInfo.multiline));
+				}
 				if (oFormInfo.comb)
 				{
 					oForm.SetComb(Boolean(oFormInfo.comb));
+				}
+				if (oFormInfo.maxLen != null)
+				{
+					oForm.SetCharLimit(oFormInfo.maxLen);
 				}
 				if (oFormInfo.doNotScroll)
 				{
@@ -1414,15 +1426,16 @@
 			// если попали в другую форму (или снимаем выделение с формы), то применяем значение текущей формы
 			let oField = oThis.getPageFieldByMouse();
 			if (oThis.mouseDownFieldObject && oField != oThis.mouseDownFieldObject) {
-				let oFieldToSkip = null;
+				let oFieldToSkip = null; // для listbox
+
 				if (oThis.mouseDownFieldObject.type == "listbox") {
-					oThis.mouseDownFieldObject.UpdateScroll(false, false);
 					if (oField && oField.GetFullName() == oThis.mouseDownFieldObject.GetFullName() && oField._multipleSelection == false) {
 						oFieldToSkip = oField;
 					}
+					oThis.mouseDownFieldObject.UpdateScroll(false);
 				}
 				else if (oThis.mouseDownFieldObject.UpdateScroll)
-					oThis.mouseDownFieldObject.UpdateScroll(false, false)
+					oThis.mouseDownFieldObject.UpdateScroll(false)
 
 				if (oThis.mouseDownFieldObject.type !== "checkbox" && oThis.mouseDownFieldObject.type !== "radiobutton") {
 					oThis.mouseDownFieldObject._needDrawHighlight = true;
@@ -1433,8 +1446,8 @@
 						oThis.mouseDownFieldObject = null;
 						oThis._paintForms();
 					}
-					else if (oThis.mouseDownFieldObject.HasShiftView()) {
-						oThis.mouseDownFieldObject.MoveCursorToStartPos();
+					else if (oThis.mouseDownFieldObject.IsNeedRevertShiftView()) {
+						oThis.mouseDownFieldObject.RevertContentViewToOriginal();
 						oThis.mouseDownFieldObject.AddToRedraw();
 						oThis.mouseDownFieldObject = null;
 						oThis._paintForms();
@@ -2461,6 +2474,9 @@
 				
 				ctx.drawImage(page.ImageForms, 0, 0, page.ImageForms.width, page.ImageForms.height, x, y, w, h);
 			}
+
+			if (this.mouseDownFieldObject && this.mouseDownFieldObject.UpdateScroll)
+				this.mouseDownFieldObject.UpdateScroll(true);
 		};
 		this._paintFormsHighlight = function()
 		{
@@ -2917,7 +2933,7 @@
 						default:
 							oThis.mouseDownFieldObject._needDrawHighlight = true;
 							if (this.mouseDownFieldObject.UpdateScroll)
-								this.mouseDownFieldObject.UpdateScroll(false, false);
+								this.mouseDownFieldObject.UpdateScroll(false);
 
 							if (this.mouseDownFieldObject._needApplyToAll) {
 								this.fieldFillingMode = false;
@@ -2996,11 +3012,13 @@
 					if (this.mouseDownFieldObject._content.IsSelectionUse())
 						this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 						
-					if ((oCurPos.X < oFieldBounds.X || oCurPos.Y < oFieldBounds.Y) && this.mouseDownFieldObject._doNotScroll == false)
+					let nCursorH = g_oTextMeasurer.GetHeight();
+					if ((oCurPos.X < oFieldBounds.X || oCurPos.Y - nCursorH < oFieldBounds.Y) && this.mouseDownFieldObject._doNotScroll == false)
 					{
+						this.mouseDownFieldObject.AddToRedraw();
 						this._paintForms();
 						if (this.mouseDownFieldObject.UpdateScroll)
-							this.mouseDownFieldObject.UpdateScroll();
+							this.mouseDownFieldObject.UpdateScroll(true);
 					}
 					
 					this.onUpdateOverlay();
@@ -3037,11 +3055,13 @@
 							if (this.mouseDownFieldObject._content.IsSelectionUse())
 								this.Api.WordControl.m_oDrawingDocument.TargetEnd();
 
-							if (oCurPos.Y < oFieldBounds.Y && this.mouseDownFieldObject._doNotScroll == false)
+							let nCursorH = g_oTextMeasurer.GetHeight();
+							if (oCurPos.Y - nCursorH < oFieldBounds.Y && this.mouseDownFieldObject._doNotScroll == false)
 							{
+								this.mouseDownFieldObject.AddToRedraw();
 								this._paintForms();
 								if (this.mouseDownFieldObject.UpdateScroll)
-									this.mouseDownFieldObject.UpdateScroll();
+									this.mouseDownFieldObject.UpdateScroll(true);
 							}
 														
 							this.onUpdateOverlay();
@@ -3083,9 +3103,10 @@
 
 					if ((oCurPos.X > oFieldBounds.X + oFieldBounds.W || oCurPos.Y > oFieldBounds.Y + oFieldBounds.H) && this.mouseDownFieldObject._doNotScroll == false)
 					{
+						this.mouseDownFieldObject.AddToRedraw();
 						this._paintForms();
 						if (this.mouseDownFieldObject.UpdateScroll)
-							this.mouseDownFieldObject.UpdateScroll();
+							this.mouseDownFieldObject.UpdateScroll(true);
 					}
 
 					this.onUpdateOverlay();
@@ -3124,9 +3145,10 @@
 								
 							if (oCurPos.Y > oFieldBounds.Y + oFieldBounds.H && this.mouseDownFieldObject._doNotScroll == false)
 							{
+								this.mouseDownFieldObject.AddToRedraw();
 								this._paintForms();
 								if (this.mouseDownFieldObject.UpdateScroll)
-									this.mouseDownFieldObject.UpdateScroll();
+									this.mouseDownFieldObject.UpdateScroll(true);
 							}
 
 							this.onUpdateOverlay();

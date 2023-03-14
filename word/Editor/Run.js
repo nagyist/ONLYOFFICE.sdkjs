@@ -3501,10 +3501,10 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 
 	}
 	// for pdf text forms
-	else if (oTextFormPDF && oTextFormPDF.comb)
+	else if (oTextFormPDF && oTextFormPDF._comb == true)
 	{
 		isKeepWidth = true;
-		nMaxComb = oTextFormPDF.charLimit;
+		nMaxComb = oTextFormPDF._charLimit;
 		nCombWidth = oTextFormPDF.getFormRelRect().W / nMaxComb;
 	}
 
