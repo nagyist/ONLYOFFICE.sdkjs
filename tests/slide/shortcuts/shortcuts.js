@@ -59,59 +59,25 @@
 		checkRemoveObject,
 		checkTextAfterKeyDownHelperHelloWorld,
 		checkTextAfterKeyDownHelperEmpty,
-		getDirectParaPrHelper,
-		getDirectTextPrHelper,
 		createEvent,
 		getShapeWithParagraphHelper,
 		moveToParagraph,
 		getFirstSlide,
 		selectOnlyObjects,
-		remove,
 		addToSelection,
 		createGroup,
 		getController,
 		oGlobalLogicDocument,
-		oGlobalShape
+		oMainShortcutTypes,
+		oDemonstrationEvents,
+		oDemonstrationTypes,
+		oThumbnailsTypes,
+		oThumbnailsMainFocusTypes,
+		startThumbnailsFocusTest,
+		startThumbnailsMainFocusTest,
+		startMainTest
 	} = window.AscTestShortcut;
-
-	let oUndoShape;
 	let oMockEvent = createNativeEvent();
-
-	function checkEditUndo(oAssert)
-	{
-		oUndoShape = createShape();
-		onKeyDown(oMockEvent);
-		oAssert.strictEqual(getFirstSlide().cSld.spTree.length, 0, 'Check undo shortcut');
-	}
-
-	function checkEditRedo(oAssert)
-	{
-		onKeyDown(oMockEvent);
-		oAssert.strictEqual(getFirstSlide().cSld.spTree.length === 1 && getFirstSlide().cSld.spTree[0] === oUndoShape, true, 'Check redo shortcut');
-	}
-
-	function checkEditSelectAll(oAssert)
-	{
-		onKeyDown(oMockEvent);
-		const oController = getController();
-		oAssert.strictEqual(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oUndoShape, true, 'check select all shortcut');
-	}
-
-	function checkDuplicate(oAssert)
-	{
-		const {oShape} = getShapeWithParagraphHelper('', true);
-		const arrOldSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree.slice();
-		selectOnlyObjects([oShape]);
-		onKeyDown(oMockEvent);
-		const arrUpdatedSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
-		const oNewShape = arrUpdatedSpTree[arrUpdatedSpTree.length - 1];
-		oAssert.true(arrOldSpTree.indexOf(oNewShape) === -1, 'Check duplicate shape');
-	}
-
-	function checkPrint(oAssert)
-	{
-		executeTestWithCatchEvent('asc_onPrint', () => true, true, oMockEvent, oAssert);
-	}
 
 	function checkSave(oAssert)
 	{
@@ -125,816 +91,6 @@
 		onKeyDown(oMockEvent);
 		oAssert.strictEqual(bCheck, true, 'Check save shortcut');
 		editor._onSaveCallbackInner = fOldSave;
-	}
-
-	function checkShowContextMenu(oAssert)
-	{
-		executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oMockEvent, oAssert, () =>
-		{
-			const {oParagraph} = getShapeWithParagraphHelper('');
-			oParagraph.SetThisElementCurrent();
-		});
-	}
-
-	function checkShowParaMarks(oAssert)
-	{
-		editor.put_ShowParaMarks(false);
-		onKeyDown(oMockEvent);
-		oAssert.true(!!editor.get_ShowParaMarks(), 'Check show para marks shortcut');
-	}
-
-	function checkBold(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Bold(), oMockEvent, oAssert, true, 'Check bold shortcut');
-	}
-
-	function checkCenterAlign(oAssert)
-	{
-		checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Center, 'Check center align shortcut');
-	}
-
-	function checkEuroSign(oAssert)
-	{
-		checkTextAfterKeyDownHelperEmpty('€', oMockEvent, oAssert, 'Check euro sign shortcut');
-	}
-
-	let oGroup;
-	let oFirstShape;
-	let oSecondShape;
-
-	function checkGroup(oAssert)
-	{
-		oFirstShape = createShape();
-		oSecondShape = createShape();
-		selectOnlyObjects([oFirstShape, oSecondShape]);
-
-		onKeyDown(oMockEvent);
-		oGroup = oFirstShape.group;
-		oAssert.true(oFirstShape.group && (oFirstShape.group === oSecondShape.group), 'Check group shortcut');
-	}
-
-	function checkUnGroup(oAssert)
-	{
-		selectOnlyObjects([oGroup]);
-
-		onKeyDown(oMockEvent);
-		oAssert.true(!oFirstShape.group && !oSecondShape.group && oGroup.bDeleted, 'Check ungroup shortcut');
-
-	}
-
-	function checkItalic(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Italic(), oMockEvent, oAssert, true, 'Check italic shortcut');
-	}
-
-	function checkJustifyAlign(oAssert)
-	{
-		checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Justify, 'check justify align shortcut');
-	}
-
-	function checkAddHyperlink(oAssert)
-	{
-		executeTestWithCatchEvent('asc_onDialogAddHyperlink', () => true, true, oMockEvent, oAssert, () =>
-		{
-			const {oParagraph} = getShapeWithParagraphHelper('Hello World');
-			moveToParagraph(oParagraph);
-			oGlobalLogicDocument.SelectAll();
-		});
-	}
-
-	function checkBulletList(oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello World');
-		oParagraph.SetThisElementCurrent();
-		oGlobalLogicDocument.SelectAll();
-
-		onKeyDown(oMockEvent);
-		const oBullet = oParagraph.Get_PresentationNumbering();
-		oAssert.true(oBullet.m_nType === AscFormat.numbering_presentationnumfrmt_Char, 'Check bullet list shortcut');
-	}
-
-	function checkLeftAlign(oAssert)
-	{
-		checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Left, 'check right align shortcut');
-	}
-
-	function checkRightAlign(oAssert)
-	{
-		checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Right, 'check right align shortcut');
-
-	}
-
-	function checkUnderline(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Underline(), oMockEvent, oAssert, true, 'Check underline shortcut');
-	}
-
-	function checkStrikethrough(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Strikeout(), oMockEvent, oAssert, true, 'Check strikeout shortcut');
-	}
-
-	let oCopyParagraphTextPr;
-
-	function checkCopyFormat(oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello World');
-		oParagraph.SetThisElementCurrent();
-		oGlobalLogicDocument.SelectAll();
-		addPropertyToDocument({Bold: true, Italic: true, Underline: true});
-
-		onKeyDown(oMockEvent);
-		oCopyParagraphTextPr = new AscCommonWord.CTextPr();
-		oCopyParagraphTextPr.SetUnderline(true);
-		oCopyParagraphTextPr.SetBold(true);
-		oCopyParagraphTextPr.BoldCS = true;
-		oCopyParagraphTextPr.SetItalic(true);
-		oCopyParagraphTextPr.ItalicCS = true;
-		oAssert.deepEqual(editor.getFormatPainterData().TextPr, oCopyParagraphTextPr, 'Check copy format shortcut');
-	}
-
-	function checkPasteFormat(oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello World');
-		oParagraph.SetThisElementCurrent();
-		oGlobalLogicDocument.SelectAll();
-
-		onKeyDown(oMockEvent);
-		const oDirectTextPr = oParagraph.GetDirectTextPr();
-		oAssert.deepEqual(oDirectTextPr, oCopyParagraphTextPr, 'check paste format shortcut');
-	}
-
-	function checkSuperscript(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oMockEvent, oAssert, AscCommon.vertalign_SuperScript, 'Check superscript shortcut');
-	}
-
-	function checkSubscript(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oMockEvent, oAssert, AscCommon.vertalign_SubScript, 'Check subscript shortcut');
-	}
-
-	function checkEnDash(oAssert)
-	{
-		checkTextAfterKeyDownHelperEmpty('–', oMockEvent, oAssert, 'Check en dash shortcut');
-	}
-
-	function checkDecreaseFont(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), oMockEvent, oAssert, 9, 'Check decrease font size shortcut');
-	}
-
-	function checkIncreaseFont(oAssert)
-	{
-		checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), oMockEvent, oAssert, 11, 'Check increase font size shortcut');
-	}
-
-	function checkDeleteBack(oEvent, oAssert)
-	{
-		checkTextAfterKeyDownHelperHelloWorld('Hello Worl', oEvent, oAssert, 'Check delete with backspace')
-	}
-
-	function checkDeleteWordBack(oEvent, oAssert)
-	{
-		checkTextAfterKeyDownHelperHelloWorld('Hello ', oEvent, oAssert, 'Check delete word with backspace')
-	}
-
-	function checkRemoveAnimation(oEvent, oAssert)
-	{
-		const {oShape} = getShapeWithParagraphHelper('', true);
-		selectOnlyObjects([oShape]);
-		oGlobalLogicDocument.AddAnimation(1, 1, 0, false, false);
-
-		onKeyDown(oEvent);
-		const oTiming = oGlobalLogicDocument.GetCurTiming();
-		const arrEffects = oTiming.getObjectEffects(oShape.GetId());
-		oAssert.true(arrEffects.length === 0, 'Check remove animation');
-	}
-
-	function checkRemoveChart(oEvent, oAssert)
-	{
-		const oChart = createChart(getFirstSlide());
-		selectOnlyObjects([oChart]);
-		onKeyDown(oEvent);
-		oAssert.true(checkRemoveObject(oChart, getFirstSlide().cSld.spTree), "Check remove group");
-	}
-
-	function checkRemoveShape(oEvent, oAssert)
-	{
-		const {oShape} = getShapeWithParagraphHelper('', true);
-		selectOnlyObjects([oShape]);
-
-		onKeyDown(oEvent);
-		const arrSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
-		oAssert.true(checkRemoveObject(oShape, arrSpTree), 'Check remove shape');
-	}
-
-	function checkRemoveTable(oEvent, oAssert)
-	{
-		const oGraphicFrame = createTable(3, 3);
-		selectOnlyObjects([oGraphicFrame]);
-		onKeyDown(oEvent);
-		const arrSpTree = getFirstSlide().cSld.spTree;
-		oAssert.true(checkRemoveObject(oGraphicFrame, arrSpTree), "Check remove table");
-	}
-
-	function checkRemoveGroup(oEvent, oAssert)
-	{
-		const oGroup = createGroup([createShape(), createShape()]);
-		selectOnlyObjects([oGroup]);
-		onKeyDown(oEvent);
-		const arrSpTree = getFirstSlide().cSld.spTree;
-		oAssert.true(checkRemoveObject(oGroup, arrSpTree), 'Check remove group');
-	}
-
-	function checkRemoveShapeInGroup(oEvent, oAssert)
-	{
-		const oGroupedGroup = createGroup([createShape(), createShape()]);
-		const oRemovedShape = createShape();
-		const oGroup = createGroup([oGroupedGroup, oRemovedShape]);
-		selectOnlyObjects([oRemovedShape]);
-		onKeyDown(oEvent);
-		oAssert.true(checkRemoveObject(oRemovedShape, oGroup.spTree), 'Check remove shape in group');
-	}
-
-	let oTable
-
-	function checkMoveToNextCell(oEvent, oAssert)
-	{
-		const oGraphicFrame = createTable(3, 3);
-		oTable = oGraphicFrame.graphicObject;
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oTable.CurCell.Index, 1, 'check go to next cell shortcut');
-	}
-
-	function checkMoveToPreviousCell(oEvent, oAssert)
-	{
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oTable.CurCell.Index, 0, 'check go to previous cell shortcut');
-	}
-
-	let oBulletParagraph;
-
-	function checkIncreaseBulletIndent(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello');
-		const oBullet = AscFormat.fGetPresentationBulletByNumInfo({Type: 0, SubType: 1});
-		oParagraph.Add_PresentationNumbering(oBullet);
-		moveToParagraph(oParagraph, true);
-		oParagraph.Set_Ind({Left: 0});
-		onKeyDown(oEvent);
-		oBulletParagraph = oParagraph;
-		oAssert.strictEqual(oParagraph.Pr.Get_IndLeft(), 11.1125, 'Check bullet indent shortcut');
-	}
-
-	function checkDecreaseBulletIndent(oEvent, oAssert)
-	{
-		moveToParagraph(oBulletParagraph, true);
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oBulletParagraph.Pr.Get_IndLeft(), 0, 'Check bullet indent shortcut');
-	}
-
-	function checkAddTab(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('');
-		moveToParagraph(oParagraph);
-		onKeyDown(oEvent);
-		let bCheck = false;
-		for (let i = oParagraph.Content.length - 2; i >= 0; --i)
-		{
-			const oRun = oParagraph.Content[i];
-			if (oRun.Content.length && !oRun.IsParaEndRun())
-			{
-				bCheck = oRun.Content[oRun.Content.length - 1].Type === para_Tab;
-				break;
-			}
-		}
-		oAssert.true(bCheck, 'Check add tab');
-	}
-
-	function checkSelectNextObject(oEvent, oAssert)
-	{
-		const {oShape, oController} = getShapeWithParagraphHelper('', true);
-		selectOnlyObjects([oShape]);
-		onKeyDown(oEvent);
-		const arrSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
-		let oSelectedShape;
-		for (let i = 0; i < arrSpTree.length; i += 1)
-		{
-			if (arrSpTree[i] === oShape)
-			{
-				oSelectedShape = arrSpTree[i < arrSpTree.length - 1 ? i + 1 : 0];
-			}
-		}
-		oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oSelectedShape && oController.selectedObjects[0] !== oShape, 'Check select next object');
-
-	}
-
-	function checkSelectPreviousObject(oEvent, oAssert)
-	{
-		const {oShape, oController} = getShapeWithParagraphHelper('', true);
-
-		selectOnlyObjects([oShape]);
-		onKeyDown(oEvent);
-		const arrSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
-		let oSelectedShape;
-		for (let i = 0; i < arrSpTree.length; i += 1)
-		{
-			if (arrSpTree[i] === oShape)
-			{
-				oSelectedShape = arrSpTree[i > 0 ? i - 1 : arrSpTree.length - 1];
-			}
-		}
-		oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oSelectedShape && oController.selectedObjects[0] !== oShape, 'Check select previous object');
-
-	}
-
-	function checkVisitHyperlink(oEvent, oAssert)
-	{
-		goToPage(1);
-		const {oParagraph} = getShapeWithParagraphHelper('Hello');
-		moveToParagraph(oParagraph);
-		oGlobalLogicDocument.AddHyperlink({
-			Text   : 'abcd',
-			ToolTip: 'abcd',
-			Value  : 'ppaction://hlinkshowjump?jump=firstslide'
-		});
-		moveCursorLeft();
-		moveCursorLeft();
-		onKeyDown(oEvent);
-		const oSelectedInfo = oGlobalLogicDocument.IsCursorInHyperlink();
-		oAssert.true(oSelectedInfo.Visited && oGlobalLogicDocument.GetSelectedSlides()[0] === 0, 'Check visit hyperlink');
-		goToPage(0);
-	}
-
-	function checkSelectNextObjectWithPlaceholder(oEvent, oAssert)
-	{
-		const oFirstShapeWithPlaceholder = createShapeWithTitlePlaceholder();
-		const oSecondShapeWithPlaceholder = createShapeWithTitlePlaceholder();
-
-		const oController = getController();
-		oController.resetSelection();
-		onKeyDown(oEvent);
-		oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oFirstShapeWithPlaceholder && oFirstShapeWithPlaceholder.selected, 'Check select first shape with placeholder');
-
-		onKeyDown(oEvent);
-		oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oSecondShapeWithPlaceholder && oSecondShapeWithPlaceholder.selected, 'Check select second shape with placeholder');
-
-	}
-
-	function checkAddNextSlideAfterSelectLastPlaceholderObject(oEvent, oAssert)
-	{
-		const arrOldSlides = oGlobalLogicDocument.Slides.slice();
-		onKeyDown(oEvent);
-		const arrSelectedSlides = oGlobalLogicDocument.GetSelectedSlides();
-		oAssert.true(arrSelectedSlides.length === 1 && arrSelectedSlides[0] === 1 && arrOldSlides.indexOf(oGlobalLogicDocument.Slides[1]) === -1, 'Check add next slide after selecting last placeholder on current slide');
-		goToPage(0);
-	}
-
-	function checkAddBreakLine(oEvent, oAssert)
-	{
-		const {oShape, oParagraph} = getShapeWithParagraphHelper('');
-		moveToParagraph(oParagraph);
-
-		onKeyDown(oEvent);
-		oAssert.true(oShape.getDocContent().Content.length === 1 && oParagraph.GetLinesCount() === 2, 'Check add break line');
-	}
-
-	function checkAddTitleBreakLine(oEvent, oAssert)
-	{
-		const oShapeWithPlaceholder = createShapeWithTitlePlaceholder();
-		const oContent = oShapeWithPlaceholder.getDocContent();
-		const oParagraph = oContent.GetAllParagraphs()[0];
-		oParagraph.SetThisElementCurrent();
-		onKeyDown(oEvent);
-		oAssert.true(oContent.Content.length === 1 && oParagraph.GetLinesCount() === 2, 'Check add break line in title');
-	}
-
-	function checkAddMathBreakLine(oEvent, oAssert)
-	{
-		const {oParagraph} = createMathInShape();
-		oGlobalLogicDocument.MoveCursorToStartPos();
-		moveCursorRight();
-		moveCursorRight();
-		onInput([56, 56, 56, 56, 56, 56, 56]);
-		moveCursorLeft();
-		moveCursorLeft();
-		onKeyDown(oEvent);
-		const oParaMath = oParagraph.GetAllParaMaths()[0];
-		const oFraction = oParaMath.Root.GetFirstElement();
-		const oNumerator = oFraction.getNumerator();
-		const oEqArray = oNumerator.GetFirstElement();
-		oAssert.strictEqual(oEqArray.getRowsCount(), 2, 'Check add new line math');
-	}
-
-	function checkAddParagraph(oEvent, oAssert)
-	{
-		const {oShape, oParagraph} = getShapeWithParagraphHelper('');
-		moveToParagraph(oParagraph);
-
-		onKeyDown(oEvent);
-		oAssert.true(oShape.getDocContent().Content.length === 2, 'Check add new paragraph');
-	}
-
-	function checkAddTxBodyShape(oEvent, oAssert)
-	{
-		const oShape = createShape();
-		selectOnlyObjects([oShape]);
-		onKeyDown(oEvent);
-		oAssert.true(!!oShape.txBody, 'Check creating txBody');
-	}
-
-	function checkMoveCursorToStartPosShape(oEvent, oAssert)
-	{
-		const {oShape, oParagraph} = getShapeWithParagraphHelper('', true);
-		selectOnlyObjects([oShape]);
-		onKeyDown(oEvent);
-		oAssert.true(oParagraph.IsCursorAtBegin(), 'Check move cursor to start position in shape');
-	}
-
-	function checkSelectAllContentShape(oEvent, oAssert)
-	{
-		const {oShape} = getShapeWithParagraphHelper('Hello Word', true);
-		selectOnlyObjects([oShape]);
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Hello Word', 'Check select all content in shape');
-
-	}
-
-	let oChart;
-
-	function checkSelectAllContentChartTitle(oEvent, oAssert)
-	{
-		oChart = createChart();
-		selectOnlyObjects([oChart]);
-		const oTitles = oChart.getAllTitles();
-		const oController = getController();
-		oController.selection.chartSelection = oChart;
-		oChart.selectTitle(oTitles[0], 0);
-
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Diagram Title', 'Check select all title');
-	}
-
-	function checkMoveCursorToStartPosChartTitle(oEvent, oAssert)
-	{
-		const oTitles = oChart.getAllTitles();
-		const oContent = AscFormat.CreateDocContentFromString('', editor.WordControl.m_oDrawingDocument, oTitles[0].txBody);
-		oTitles[0].txBody.content = oContent;
-		selectOnlyObjects([oChart]);
-
-		const oController = getController();
-		oController.selection.chartSelection = oChart;
-		oChart.selectTitle(oTitles[0], 0);
-
-		onKeyDown(oEvent);
-		oAssert.true(oContent.IsCursorAtBegin(), 'Check move cursor to begin pos in title');
-	}
-
-
-	function checkRemoveAndMoveToStartPosTable(oEvent, oAssert)
-	{
-		const arrSteps = [];
-		const oFrame = createTable(3, 3);
-		oFrame.Set_CurrentElement();
-		const oTable = oFrame.graphicObject;
-		oTable.MoveCursorToStartPos();
-		// First cell
-		moveCursorRight(true, true);
-		moveCursorRight(true, true);
-		// Second cell
-		moveCursorRight(true, true);
-		// Third cell
-		moveCursorRight(true, true);
-
-		onKeyDown(oEvent);
-		arrSteps.push(oTable.IsCursorAtBegin());
-		moveCursorRight(true, true);
-		moveCursorRight(true, true);
-		moveCursorRight(true, true);
-		arrSteps.push(oGlobalLogicDocument.GetSelectedText());
-		oAssert.deepEqual(arrSteps, [true, ''], 'Check remove and move to start position in table');
-	}
-
-	function checkSelectFirstCellContent(oEvent, oAssert)
-	{
-		const oFrame = createTable(3, 3);
-		selectOnlyObjects([oFrame]);
-
-		onKeyDown(oEvent);
-		oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Cell0x0', 'Check select first cell content');
-	}
-
-	function checkResetAddShape(oEvent, oAssert)
-	{
-		const oController = getController();
-		oController.changeCurrentState(new AscFormat.StartAddNewShape(oController, 'rect'));
-
-		onKeyDown(oEvent);
-		oAssert.true(oController.curState instanceof AscFormat.NullState, 'Check reset add new shape');
-	}
-
-	let oGroupedShape1;
-	let oGroupedShape2;
-	let oTestGroup;
-
-	function checkResetAllDrawingSelection(oEvent, oAssert)
-	{
-		const oController = getController();
-		oController.resetSelection();
-		oGroupedShape1 = createShape();
-		oGroupedShape2 = createShape();
-		createGroup([oGroupedShape1, oGroupedShape2]);
-		addToSelection(oGroupedShape1);
-		oTestGroup = oGroupedShape1.group;
-		onKeyDown(oEvent);
-		oAssert.true(oController.selectedObjects.length === 0, 'Check reset all selection');
-
-	}
-
-	function checkResetStepDrawingSelection(oEvent, oAssert)
-	{
-		const oController = getController();
-
-		selectOnlyObjects([oTestGroup, oGroupedShape1]);
-		onKeyDown(oEvent);
-		oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oTestGroup && oTestGroup.selectedObjects.length === 0, 'Check reset step selection');
-	}
-
-	function checkNonBreakingSpace(oEvent, oAssert)
-	{
-		checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x00A0), oEvent, oAssert, 'Check add non breaking space');
-	}
-
-	function checkClearParagraphFormatting(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello World');
-		oParagraph.SetThisElementCurrent();
-		oGlobalLogicDocument.SelectAll();
-		addPropertyToDocument({Bold: true, Italic: true, Underline: true});
-
-		onKeyDown(oEvent);
-		const oTextPr = oGlobalLogicDocument.GetDirectTextPr();
-		oAssert.true(!(oTextPr.GetBold() || oTextPr.GetItalic() || oTextPr.GetUnderline()), 'Check clear paragraph formatting');
-	}
-
-	function checkAddSpace(oEvent, oAssert)
-	{
-		checkTextAfterKeyDownHelperEmpty(' ', oEvent, oAssert, 'Check add space')
-	}
-
-	function checkMoveToEndPosContent(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, false, true, false);
-		oAssert.true(oPos.X === 25 && oPos.Y === 75, 'Check move cursor to end position shortcut');
-	}
-
-	function checkMoveToEndLineContent(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, false, true, false);
-		oAssert.true(oPos.X === 100 && oPos.Y === 15, 'Check move cursor to end line shortcut');
-	}
-
-	function checkSelectToEndLineContent(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
-		oAssert.strictEqual(sSelectedText, 'HelloworldHelloworld', 'Check select text to end line shortcut');
-	}
-
-	function checkMoveToStartPosContent(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 0 && oPos.Y === 15, 'Check move to start position shortcut');
-	}
-
-	function checkMoveToStartLineContent(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 0 && oPos.Y === 75, 'Check move to start line shortcut');
-	}
-
-	function checkSelectToStartLineContent(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
-		oAssert.strictEqual(sSelectedText, 'Hello', 'Check select to start line shortcut');
-	}
-
-	function checkMoveCursorLeft(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 20 && oPos.Y === 75, 'Check move cursor to end position shortcut');
-	}
-
-	function checkSelectCursorLeft(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
-		oAssert.strictEqual(sSelectedText, 'o', 'Check select text to left position shortcut');
-	}
-
-	function checkSelectWordCursorLeft(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
-		oAssert.strictEqual(sSelectedText, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', 'Check select word text to left position shortcut');
-	}
-
-	function checkMoveCursorWordLeft(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 0 && oPos.Y === 15, 'Check move cursor to left word position shortcut');
-	}
-
-	function checkMoveCursorLeftTable(oEvent, oAssert)
-	{
-		const oFrame = createTable(3, 3);
-		oFrame.Set_CurrentElement();
-		const oTable = oFrame.graphicObject;
-		oTable.MoveCursorToStartPos();
-		moveCursorRight(true);
-		moveCursorRight(true);
-		onKeyDown(oEvent);
-		oAssert.deepEqual([oTable.CurCell.Row.Index, oTable.CurCell.Index], [0, 0], 'Check move left in table');
-	}
-
-	function checkMoveCursorRight(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, false, true, false);
-		oAssert.true(oPos.X === 5 && oPos.Y === 15, 'Check move cursor to right position shortcut');
-	}
-
-	function checkSelectCursorRight(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
-		oAssert.strictEqual(sSelectedText, 'H', 'Check select text to right position shortcut');
-	}
-
-	function checkSelectWordCursorRight(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
-		oAssert.strictEqual(sSelectedText, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', 'Check select word text to right position shortcut');
-	}
-
-	function checkMoveCursorWordRight(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 25 && oPos.Y === 75, 'Check move cursor to right word position shortcut');
-	}
-
-	function checkMoveCursorRightTable(oEvent, oAssert)
-	{
-		const oFrame = createTable(3, 3);
-		oFrame.Set_CurrentElement();
-		const oTable = oFrame.graphicObject;
-		oTable.MoveCursorToStartPos();
-		moveCursorRight(true);
-		onKeyDown(oEvent);
-		oAssert.deepEqual([oTable.CurCell.Row.Index, oTable.CurCell.Index], [0, 1], 'Check move right in table');
-	}
-
-	function checkMoveCursorTop(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, true, true, false);
-		oAssert.true(oPos.X === 25 && oPos.Y === 55, 'Check move cursor to top position shortcut');
-	}
-
-	function checkSelectCursorTop(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
-		oAssert.strictEqual(sSelectedText, 'worldHelloworldHello', 'Check select text to top position shortcut');
-	}
-
-	function checkMoveCursorTopTable(oEvent, oAssert)
-	{
-		const oFrame = createTable(3, 3);
-		oFrame.Set_CurrentElement();
-		const oTable = oFrame.graphicObject;
-		oTable.MoveCursorToStartPos();
-		moveCursorDown();
-		onKeyDown(oEvent);
-		oAssert.deepEqual([oTable.CurCell.Row.Index, oTable.CurCell.Index], [0, 0], 'Check move top in table');
-	}
-
-	function checkMoveCursorBottom(oEvent, oAssert)
-	{
-		const {oPos} = testMoveHelper(oEvent, false, true, false);
-		oAssert.true(oPos.X === 0 && oPos.Y === 35, 'Check move cursor to bottom position shortcut');
-	}
-
-	function checkSelectCursorBottom(oEvent, oAssert)
-	{
-		const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
-		oAssert.strictEqual(sSelectedText, 'HelloworldHelloworld', 'Check select text to bottom position shortcut');
-	}
-
-	function checkMoveCursorBottomTable(oEvent, oAssert)
-	{
-		const oFrame = createTable(3, 3);
-		oFrame.Set_CurrentElement();
-		const oTable = oFrame.graphicObject;
-		oTable.MoveCursorToStartPos();
-		onKeyDown(oEvent);
-		oAssert.deepEqual([oTable.CurCell.Row.Index, oTable.CurCell.Index], [1, 0], 'Check move bottom in table');
-	}
-
-	function checkMoveShapeBottom(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.y, 5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape bottom');
-	}
-
-	function checkLittleMoveShapeBottom(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.y, 1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape bottom');
-	}
-
-	function checkMoveShapeTop(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.y, -5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape top');
-	}
-
-	function checkLittleMoveShapeTop(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.y, -1 * AscCommon.g_dKoef_pix_to_mm, 'Check  move shape top');
-	}
-
-	function checkMoveShapeRight(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.x, 5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape right');
-	}
-
-	function checkLittleMoveShapeRight(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.x, 1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape right');
-	}
-
-	function checkMoveShapeLeft(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.x, -5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape left');
-	}
-
-	function checkLittleMoveShapeLeft(oEvent, oAssert)
-	{
-		const oShape = executeCheckMoveShape(oEvent);
-		oAssert.strictEqual(oShape.x, -1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape left');
-	}
-
-	function checkDeleteFront(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello world');
-		moveToParagraph(oParagraph, true);
-
-		onKeyDown(oEvent);
-		oAssert.strictEqual(AscTest.GetParagraphText(oParagraph), 'ello world', 'Check delete front shortcut');
-	}
-
-	function checkDeleteWordFront(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello world');
-		moveToParagraph(oParagraph, true);
-
-		onKeyDown(oEvent);
-		oAssert.strictEqual(AscTest.GetParagraphText(oParagraph), 'world', 'Check delete front word shortcut');
-	}
-
-	function checkIncreaseIndent(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello');
-		oParagraph.Pr.SetInd(0, 0, 0);
-		oParagraph.Set_PresentationLevel(0);
-		moveToParagraph(oParagraph, true);
-
-		onKeyDown(oEvent);
-		const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
-		oAssert.strictEqual(oParaPr.GetIndLeft(), 11.1125, 'Check increase indent');
-	}
-
-	function checkDecreaseIndent(oEvent, oAssert)
-	{
-		const {oParagraph} = getShapeWithParagraphHelper('Hello');
-		oParagraph.Pr.SetInd(0, 12, 0);
-		oParagraph.Set_PresentationLevel(1);
-		moveToParagraph(oParagraph, true);
-
-		onKeyDown(oEvent);
-		const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
-		oAssert.true(AscFormat.fApproxEqual(oParaPr.GetIndLeft(), 0.8875), 'Check decrease indent');
-	}
-
-	function checkNumLock(oEvent, oAssert)
-	{
-		onKeyDown(oEvent);
-		oAssert.true(oEvent.isDefaultPrevented, 'Check prevent default on num lock');
-	}
-
-	function checkScrollLock(oEvent, oAssert)
-	{
-		onKeyDown(oEvent);
-		oAssert.true(oEvent.isDefaultPrevented, 'Check prevent default on scroll lock');
 	}
 
 	$(function ()
@@ -987,9 +143,11 @@
 			editor.WordControl.m_oLogicDocument.OnKeyDown = fOldKeyDown;
 		});
 
-		QUnit.module("Test thumbnails shortcuts", {
+		QUnit.module("Test thumbnails main focus shortcuts", {
 			beforeEach: function ()
 			{
+				cleanPresentation();
+				addSlide();
 				addSlide();
 				addSlide();
 				addSlide();
@@ -1001,70 +159,86 @@
 				cleanPresentation();
 			}
 		});
-
-		QUnit.test('test thumbnails shortcuts', (oAssert) =>
+		QUnit.test('Test add next slide', (oAssert) =>
 		{
-			let oEvent;
-			oEvent = createNativeEvent(77, true, false, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			const arrOldSlides = oGlobalLogicDocument.Slides.slice();
-			onKeyDown(oEvent);
-			const arrSelectedSlides = oGlobalLogicDocument.GetSelectedSlides();
-			oAssert.true(checkSelectedSlides([1]) && (arrOldSlides.indexOf(oGlobalLogicDocument.Slides[arrSelectedSlides[0]]) === -1), 'check add next slide');
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				const arrOldSlides = oGlobalLogicDocument.Slides.slice();
+				onKeyDown(oEvent);
+				const arrSelectedSlides = oGlobalLogicDocument.GetSelectedSlides();
+				oAssert.true(checkSelectedSlides([1]) && (arrOldSlides.indexOf(oGlobalLogicDocument.Slides[arrSelectedSlides[0]]) === -1));
 
-			oEvent = createNativeEvent(38, false, false, false, false, false, false);
-			goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([3]), 'Check move to previous slide');
+			}, oThumbnailsMainFocusTypes.addNextSlide);
+		});
 
-			oEvent = createNativeEvent(39, false, false, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([1]), 'Check move to next slide');
+		QUnit.test('Test move to previous slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([3]));
+			}, oThumbnailsMainFocusTypes.moveToPreviousSlide);
+		});
 
-			oEvent = createNativeEvent(36, false, false, false, false, false, false);
-			goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0]), 'Check move to first slide');
+		QUnit.test('Test move to next slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([1]));
+			}, oThumbnailsMainFocusTypes.moveToNextSlide);
+		});
 
-			oEvent = createNativeEvent(36, false, true, false, false, false, false);
-			goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0, 1, 2, 3, 4]), 'Check select to first slide');
+		QUnit.test('Test move to first slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0]));
+			}, oThumbnailsMainFocusTypes.moveToFirstSlide);
+		});
 
-			oEvent = createNativeEvent(37, false, false, false, false, false, false);
-			goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([3]), 'Check move to previous slide');
+		QUnit.test('Test select to first slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0, 1, 2, 3, 4]));
+			}, oThumbnailsMainFocusTypes.selectToFirstSlide);
+		});
 
-			oEvent = createNativeEvent(40, false, false, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([1]), 'Check move to next slide');
+		QUnit.test('Test move to last slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([4]));
+			}, oThumbnailsMainFocusTypes.moveToLastSlide);
+		});
 
-			oEvent = createNativeEvent(35, false, false, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([4]), 'Check move to last slide');
-
-			oEvent = createNativeEvent(35, false, true, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0, 1, 2, 3, 4]), 'Check select to last slide');
-
-			oEvent = createNativeEvent(33, false, false, false, false, false, false);
-			goToPageWithFocus(4, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([3]), 'Check move to previous slide');
-
-			oEvent = createNativeEvent(34, false, false, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([1]), 'Check move to next slide');
+		QUnit.test('Test select to last slide', (oAssert) =>
+		{
+			startThumbnailsMainFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0, 1, 2, 3, 4]));
+			}, oThumbnailsMainFocusTypes.selectToLastSlide);
 		});
 
 		QUnit.test('Test thumbnails shortcut actions', (oAssert) =>
 		{
+			cleanPresentation();
+			addSlide();
+			addSlide();
+			addSlide();
+			addSlide();
 			const fOldShortcut = editor.getShortcut;
 			goToPage(0);
 
@@ -1091,160 +265,137 @@
 			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
 			executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oMockEvent, oAssert);
 
+			cleanPresentation();
 			editor.getShortcut = fOldShortcut;
 		});
 
-
-		QUnit.test('Test thumbnails hotkeys', (oAssert) =>
+		QUnit.module('Test thumbnails hotkeys', {
+			before: function ()
+			{
+				cleanPresentation();
+				addSlide();
+				addSlide();
+				addSlide();
+				addSlide();
+			},
+			after : function ()
+			{
+				cleanPresentation();
+			}
+		});
+		let arrOldSlides;
+		let oOldSlide;
+		QUnit.test('Test thumbnails focus event', (oAssert) =>
 		{
-			let oEvent;
-			let arrOldSlides;
-			let oOldSlide;
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
+				arrOldSlides = oGlobalLogicDocument.Slides.slice();
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([1]) && arrOldSlides.indexOf(oGlobalLogicDocument.Slides[1]) === -1, 'Check add next slide');
+			}, oThumbnailsTypes.addNextSlide);
 
-			oEvent = createNativeEvent(13, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			arrOldSlides = oGlobalLogicDocument.Slides.slice();
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([1]) && arrOldSlides.indexOf(oGlobalLogicDocument.Slides[1]) === -1, 'Check add next slide');
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
+				oOldSlide = getFirstSlide();
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0]) && oGlobalLogicDocument.Slides.indexOf(oOldSlide) === -1, 'Check remove selected slides');
+			}, oThumbnailsTypes.removeSelectedSlides);
 
-			oEvent = createNativeEvent(46, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			oOldSlide = getFirstSlide();
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0]) && oGlobalLogicDocument.Slides.indexOf(oOldSlide) === -1, 'Check remove selected slides');
-
-			oEvent = createNativeEvent(8, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			oOldSlide = getFirstSlide();
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0]) && oGlobalLogicDocument.Slides.indexOf(oOldSlide) === -1, 'Check remove selected slides');
-
-			const checkMoveSelectedSlidesToEnd = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
 				const oFirstSlide = getFirstSlide();
 				onKeyDown(oEvent);
-				oAssert.true(oGlobalLogicDocument.Slides[2] === oFirstSlide, 'Check move selected slides to end');
-			};
-			oEvent = createNativeEvent(34, true, true, false, false);
-			checkMoveSelectedSlidesToEnd();
-			oEvent = createNativeEvent(40, true, true, false, false);
-			checkMoveSelectedSlidesToEnd();
+				oAssert.true(oGlobalLogicDocument.Slides[3] === oFirstSlide, 'Check move selected slides to end');
+			}, oThumbnailsTypes.moveSelectedSlidesToEnd);
 
-			const checkMoveSelectedSlidesToNextPos = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
 				const oFirstSlide = getFirstSlide();
 				onKeyDown(oEvent);
 				oAssert.true(oGlobalLogicDocument.Slides[1] === oFirstSlide, 'Check move selected slides to next pos');
-			}
-			oEvent = createNativeEvent(34, true, false, false, false);
-			checkMoveSelectedSlidesToNextPos();
-			oEvent = createNativeEvent(40, true, false, false, false);
-			checkMoveSelectedSlidesToNextPos();
+			}, oThumbnailsTypes.moveSelectedSlidesToNextPosition);
 
-			const checkSelectNextSlide = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
 				onKeyDown(oEvent);
 				oAssert.true(checkSelectedSlides([0, 1]), 'Check select next slide');
-			}
-			oEvent = createNativeEvent(34, false, true, false, false);
-			checkSelectNextSlide();
-			oEvent = createNativeEvent(40, false, true, false, false);
-			checkSelectNextSlide();
+			}, oThumbnailsTypes.selectNextSlide);
 
-			const checkMoveToNextSlide = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
 				onKeyDown(oEvent);
 				oAssert.true(checkSelectedSlides([1]), 'Check move to next slide');
-			};
-			oEvent = createNativeEvent(34, true, false, false, false);
-			checkMoveToNextSlide();
-			oEvent = createNativeEvent(40, true, false, false, false);
-			checkMoveToNextSlide();
+			}, oThumbnailsTypes.moveToNextSlide);
 
-			oEvent = createNativeEvent(36, false, false, false, false);
-			goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0]), 'Check move to first slide');
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0]), 'Check move to first slide');
+			}, oThumbnailsTypes.moveToFirstSlide);
 
-			oEvent = createNativeEvent(36, false, true, false, false);
-			goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0, 1, 2]), 'Check select from current position to first slide');
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0, 1, 2]), 'Check select from current position to first slide');
+			}, oThumbnailsTypes.selectToFirstSlide);
 
-			oEvent = createNativeEvent(35, false, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([2]), 'Check move to last slide');
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([3]), 'Check move to last slide');
+			}, oThumbnailsTypes.moveToLastSlide);
 
-			oEvent = createNativeEvent(35, false, true, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([0, 1, 2]), 'Check select from current position to last slide');
+			startThumbnailsFocusTest((oEvent) =>
+			{
+				goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
+				onKeyDown(oEvent);
+				oAssert.true(checkSelectedSlides([0, 1, 2, 3]), 'Check select from current position to last slide');
+			}, oThumbnailsTypes.selectToLastSlide);
 
-
-			const checkMoveSelectedSlidesToStart = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
 				const oLastSlide = oGlobalLogicDocument.Slides[2];
 				onKeyDown(oEvent);
 				oAssert.true(getFirstSlide() === oLastSlide, 'Check move selected slides to start');
-			}
-			oEvent = createNativeEvent(33, true, true, false, false);
-			checkMoveSelectedSlidesToStart();
-			oEvent = createNativeEvent(38, true, true, false, false);
-			checkMoveSelectedSlidesToStart();
+			}, oThumbnailsTypes.moveSelectedSlidesToStart);
 
-
-			const checkMoveSelectedSlidesToPreviousPosition = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
-
 				const oLastSlide = oGlobalLogicDocument.Slides[2];
 				onKeyDown(oEvent);
 				oAssert.true(oGlobalLogicDocument.Slides[1] === oLastSlide, 'Check move selected slides to previous pos');
-			};
-			oEvent = createNativeEvent(33, true, false, false, false);
-			checkMoveSelectedSlidesToPreviousPosition();
-			oEvent = createNativeEvent(38, true, false, false, false);
-			checkMoveSelectedSlidesToPreviousPosition();
+			}, oThumbnailsTypes.moveSelectedSlidesToPreviousPosition);
 
-			const checkSelectPreviousSlide = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
-
 				onKeyDown(oEvent);
 				oAssert.true(checkSelectedSlides([1, 2]), 'Check select previous slide');
-			}
-			oEvent = createNativeEvent(33, false, true, false, false);
-			checkSelectPreviousSlide();
-			oEvent = createNativeEvent(38, false, true, false, false);
-			checkSelectPreviousSlide();
+			}, oThumbnailsTypes.selectPreviousSlide);
 
-			const checkMoveToPreviousSlide = () =>
+			startThumbnailsFocusTest((oEvent) =>
 			{
 				goToPageWithFocus(2, FOCUS_OBJECT_THUMBNAILS);
 				onKeyDown(oEvent);
 				oAssert.true(checkSelectedSlides([1]), 'Check move to previous slide');
-			};
-			oEvent = createNativeEvent(33, true, false, false, false);
-			checkMoveToPreviousSlide();
-			oEvent = createNativeEvent(38, true, false, false, false);
-			checkMoveToPreviousSlide();
-
-			oEvent = createNativeEvent(77, true, false, false, false);
-			goToPageWithFocus(0, FOCUS_OBJECT_THUMBNAILS);
-			arrOldSlides = oGlobalLogicDocument.Slides.slice();
-			onKeyDown(oEvent);
-			oAssert.true(checkSelectedSlides([1]) && arrOldSlides.indexOf(oGlobalLogicDocument.Slides[1]) === -1, 'Check add next slide');
+			}, oThumbnailsTypes.moveToPreviousSlide);
 		});
 
 		QUnit.module('Test demonstration mode shortcuts', {
 			beforeEach: function ()
 			{
+				cleanPresentation();
 				addSlide();
 				addSlide();
 				addSlide();
@@ -1260,41 +411,22 @@
 
 		QUnit.test('Test demonstration mode shortcuts', (oAssert) =>
 		{
-			let oEvent;
-
 			editor.StartDemonstration("presentation-preview", 0);
-			oEvent = createNativeEvent(13, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 1, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 1, oDemonstrationEvents[oDemonstrationTypes.moveToNextSlide][0].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 2, oDemonstrationEvents[oDemonstrationTypes.moveToNextSlide][1].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 3, oDemonstrationEvents[oDemonstrationTypes.moveToNextSlide][2].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 4, oDemonstrationEvents[oDemonstrationTypes.moveToNextSlide][3].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 5, oDemonstrationEvents[oDemonstrationTypes.moveToNextSlide][4].event, oAssert);
 
-			oEvent = createNativeEvent(32, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 2, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 4, oDemonstrationEvents[oDemonstrationTypes.moveToPreviousSlide][0].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 3, oDemonstrationEvents[oDemonstrationTypes.moveToPreviousSlide][1].event, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 2, oDemonstrationEvents[oDemonstrationTypes.moveToPreviousSlide][2].event, oAssert);
 
-			oEvent = createNativeEvent(34, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 3, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 0, oDemonstrationEvents[oDemonstrationTypes.moveToFirstSlide][0].event, oAssert);
 
-			oEvent = createNativeEvent(39, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 4, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 5, oDemonstrationEvents[oDemonstrationTypes.moveToLastSlide][0].event, oAssert);
 
-			oEvent = createNativeEvent(40, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 5, oEvent, oAssert);
-
-			oEvent = createNativeEvent(33, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 4, oEvent, oAssert);
-
-			oEvent = createNativeEvent(37, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 3, oEvent, oAssert);
-
-			oEvent = createNativeEvent(38, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 2, oEvent, oAssert);
-
-			oEvent = createNativeEvent(36, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 0, oEvent, oAssert);
-
-			oEvent = createNativeEvent(35, false, false, false, false);
-			executeTestWithCatchEvent('asc_onDemonstrationSlideChanged', (nSlideNum) => nSlideNum, 5, oEvent, oAssert);
-
-			oEvent = createNativeEvent(27, false, false, false, false);
-			executeTestWithCatchEvent('asc_onEndDemonstration', () => true, true, oEvent, oAssert);
+			executeTestWithCatchEvent('asc_onEndDemonstration', () => true, true, oDemonstrationEvents[oDemonstrationTypes.exitFromDemonstrationMode][0].event, oAssert);
 
 			editor.EndDemonstration();
 		});
@@ -1419,309 +551,1120 @@
 			oAssert.strictEqual(editor.getShortcut(oEvent), Asc.c_oAscPresentationShortcutType.IncreaseFont, 'Check getting increase font size shortcut action');
 		});
 
-		QUnit.test('Test main shortcut actions', (oAssert) =>
-		{
-			const fOldGetShortcut = editor.getShortcut;
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditUndo;};
-			checkEditUndo(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditRedo;};
-			checkEditRedo(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditSelectAll;};
-			checkEditSelectAll(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Duplicate;};
-			checkDuplicate(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Print;};
-			checkPrint(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Save;};
-			checkSave(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.ShowContextMenu;};
-			checkShowContextMenu(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.ShowParaMarks;};
-			checkShowParaMarks(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Bold;};
-			checkBold(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.CopyFormat;};
-			checkCopyFormat(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.PasteFormat;};
-			checkPasteFormat(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.CenterAlign;};
-			checkCenterAlign(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EuroSign;};
-			checkEuroSign(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Group;};
-			checkGroup(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.UnGroup;};
-			checkUnGroup(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Italic;};
-			checkItalic(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.JustifyAlign;};
-			checkJustifyAlign(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.AddHyperlink;};
-			checkAddHyperlink(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.BulletList;};
-			checkBulletList(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.LeftAlign;};
-			checkLeftAlign(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.RightAlign;};
-			checkRightAlign(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Underline;};
-			checkUnderline(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Strikethrough;};
-			checkStrikethrough(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Superscript;};
-			checkSuperscript(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Subscript;};
-			checkSubscript(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EnDash;};
-			checkEnDash(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.DecreaseFont;};
-			checkDecreaseFont(oAssert);
-
-			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.IncreaseFont;};
-			checkIncreaseFont(oAssert);
-
-			editor.getShortcut = fOldGetShortcut;
+		let fOldGetShortcut;
+		QUnit.module('Test main shortcut actions', {
+			before: function ()
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				fOldGetShortcut = editor.getShortcut;
+			},
+			after : function ()
+			{
+				cleanPresentation();
+				editor.getShortcut = fOldGetShortcut;
+			}
 		});
 
-		QUnit.test('Test common shortcuts', function (oAssert)
+		QUnit.test('Test undo shortcut', (oAssert) =>
 		{
-			editor.initDefaultShortcuts();
-			let oEvent;
-			oEvent = createNativeEvent(8, false, false, false, false, false, false);
-			checkDeleteBack(oEvent, oAssert);
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditUndo;};
+			createShape();
+			onKeyDown(oMockEvent);
+			oAssert.strictEqual(getFirstSlide().cSld.spTree.length, 0);
+		});
 
-			oEvent = createNativeEvent(8, true, false, false, false, false, false);
-			checkDeleteWordBack(oEvent, oAssert);
+		QUnit.test('Test redo shortcut', (oAssert) =>
+		{
+			const oUndoShape = createShape();
+			editor.Undo();
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditRedo;};
+			onKeyDown(oMockEvent);
+			oAssert.strictEqual(getFirstSlide().cSld.spTree.length === 1 && getFirstSlide().cSld.spTree[0] === oUndoShape, true);
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveAnimation(oEvent, oAssert);
+		QUnit.test('Test select all shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EditSelectAll;};
+			cleanPresentation();
+			addSlide();
+			goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+			const oFirstShape = createShape();
+			const oSecondShape = createShape();
+			onKeyDown(oMockEvent);
+			const oController = getController();
+			oAssert.strictEqual(oController.selectedObjects.length === 2 && oController.selectedObjects.indexOf(oFirstShape) !== -1 && oController.selectedObjects.indexOf(oSecondShape) !== -1, true);
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveChart(oEvent, oAssert);
+		QUnit.test('Test duplicate shape', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Duplicate;};
+			const {oShape} = getShapeWithParagraphHelper('', true);
+			const arrOldSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree.slice();
+			selectOnlyObjects([oShape]);
+			onKeyDown(oMockEvent);
+			const arrUpdatedSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
+			const oNewShape = arrUpdatedSpTree[arrUpdatedSpTree.length - 1];
+			oAssert.true(arrOldSpTree.indexOf(oNewShape) === -1);
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveShape(oEvent, oAssert);
+		QUnit.test('Test print', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Print;};
+			executeTestWithCatchEvent('asc_onPrint', () => true, true, oMockEvent, oAssert);
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveTable(oEvent, oAssert);
+		QUnit.test('Test save', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Save;};
+			checkSave(oAssert);
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveGroup(oEvent, oAssert);
+		QUnit.test('Test context menu', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.ShowContextMenu;};
+			executeTestWithCatchEvent('asc_onContextMenu', () => true, true, oMockEvent, oAssert, () =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('');
+				oParagraph.SetThisElementCurrent();
+			});
+		});
 
-			oEvent = createNativeEvent(8, false, false, false, false, false);
-			checkRemoveShapeInGroup(oEvent, oAssert);
+		QUnit.test('Test show para marks', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.ShowParaMarks;};
+			editor.put_ShowParaMarks(false);
+			onKeyDown(oMockEvent);
+			oAssert.true(!!editor.get_ShowParaMarks(), 'Check show para marks shortcut');
+		});
 
-			//Tab
-			oEvent = createNativeEvent(9, false, false, false, false, false, false);
-			checkMoveToNextCell(oEvent, oAssert);
+		QUnit.test('Test bold shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Bold;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Bold(), oMockEvent, oAssert, true, 'Check bold shortcut');
+		});
 
-			oEvent = createNativeEvent(9, false, true, false, false, false, false);
-			checkMoveToPreviousCell(oEvent, oAssert);
+		function getCopyParagraphPrTest()
+		{
+			const oCopyParagraphTextPr = new AscCommonWord.CTextPr();
+			oCopyParagraphTextPr.SetUnderline(true);
+			oCopyParagraphTextPr.SetBold(true);
+			oCopyParagraphTextPr.BoldCS = true;
+			oCopyParagraphTextPr.SetItalic(true);
+			oCopyParagraphTextPr.ItalicCS = true;
+			return oCopyParagraphTextPr;
+		}
 
-			oEvent = createNativeEvent(9, false, false, false, false, false, false);
-			checkIncreaseBulletIndent(oEvent, oAssert);
+		QUnit.test('Test copy format', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.CopyFormat;};
+			const {oParagraph} = getShapeWithParagraphHelper('Hello World');
+			oParagraph.SetThisElementCurrent();
+			oGlobalLogicDocument.SelectAll();
+			addPropertyToDocument({Bold: true, Italic: true, Underline: true});
 
-			oEvent = createNativeEvent(9, false, true, false, false, false, false);
-			checkDecreaseBulletIndent(oEvent, oAssert);
+			onKeyDown(oMockEvent);
 
-			oEvent = createNativeEvent(9, false, false, false, false, false, false);
-			checkAddTab(oEvent, oAssert);
+			oAssert.deepEqual(editor.getFormatPainterData().TextPr, getCopyParagraphPrTest(), 'Check copy format shortcut');
+		});
 
-			oEvent = createNativeEvent(9, false, false, false, false, false, false);
-			checkSelectNextObject(oEvent, oAssert);
+		QUnit.test('Test paste format', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.PasteFormat;};
+			const {oParagraph} = getShapeWithParagraphHelper('Hello World');
+			oParagraph.SetThisElementCurrent();
+			oGlobalLogicDocument.SelectAll();
 
-			oEvent = createNativeEvent(9, false, true, false, false, false, false);
-			checkSelectPreviousObject(oEvent, oAssert);
-			// Enter
-			oEvent = createNativeEvent(13, false, false, false, false, false, false);
-			checkVisitHyperlink(oEvent, oAssert);
+			onKeyDown(oMockEvent);
+			const oDirectTextPr = oParagraph.GetDirectTextPr();
+			oAssert.deepEqual(oDirectTextPr, getCopyParagraphPrTest(), 'check paste format shortcut');
+		});
 
-			oEvent = createNativeEvent(13, true, false, false, false, false, false);
-			checkSelectNextObjectWithPlaceholder(oEvent, oAssert);
+		QUnit.test('Test center align', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.CenterAlign;};
+			checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Center, 'Check center align shortcut');
+		});
 
-			oEvent = createNativeEvent(13, true, false, false, false, false, false);
-			checkAddNextSlideAfterSelectLastPlaceholderObject(oEvent, oAssert);
+		QUnit.test('Test insert euro sign', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EuroSign;};
+			checkTextAfterKeyDownHelperEmpty('€', oMockEvent, oAssert, 'Check euro sign shortcut');
+		});
 
-			oEvent = createNativeEvent(13, false, true, false, false, false, false);
-			checkAddBreakLine(oEvent, oAssert);
+		QUnit.test('Test group', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Group;};
+			const oFirstShape = createShape();
+			const oSecondShape = createShape();
+			selectOnlyObjects([oFirstShape, oSecondShape]);
 
-			oEvent = createNativeEvent(13, false, true, false, false, false, false);
-			checkAddMathBreakLine(oEvent, oAssert);
+			onKeyDown(oMockEvent);
+			const oGroup = oFirstShape.group;
+			oAssert.true(oFirstShape.group && (oFirstShape.group === oSecondShape.group), 'Check group shortcut');
+		});
 
-			oEvent = createNativeEvent(13, false, false, false, false, false, false);
-			checkAddTitleBreakLine(oEvent, oAssert);
+		QUnit.test('Test ungroup', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.UnGroup;};
+			const oFirstShape = createShape();
+			const oSecondShape = createShape();
+			const oGroup = createGroup([oFirstShape, oSecondShape]);
+			selectOnlyObjects([oGroup]);
 
-			oEvent = createNativeEvent(13, false, false, false, false, false, false);
-			checkAddMathBreakLine(oEvent, oAssert);
+			onKeyDown(oMockEvent);
+			oAssert.true(!oFirstShape.group && !oSecondShape.group && oGroup.bDeleted, 'Check ungroup shortcut');
+		});
 
-			oEvent = createNativeEvent(13, false, false, false, false, false, false);
-			checkAddParagraph(oEvent, oAssert);
+		QUnit.test('Test italic', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Italic;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Italic(), oMockEvent, oAssert, true, 'Check italic shortcut');
+		});
 
-			oEvent = createNativeEvent(13, false, false, false, false, false, false);
-			checkAddTxBodyShape(oEvent, oAssert);
-			checkMoveCursorToStartPosShape(oEvent, oAssert);
-			checkSelectAllContentShape(oEvent, oAssert);
-			checkSelectAllContentChartTitle(oEvent, oAssert);
-			checkMoveCursorToStartPosChartTitle(oEvent, oAssert);
-			checkRemoveAndMoveToStartPosTable(oEvent, oAssert);
-			checkSelectFirstCellContent(oEvent, oAssert);
-			// Esc
-			oEvent = createNativeEvent(27, false, false, false, false, false, false);
-			checkResetAddShape(oEvent, oAssert);
+		QUnit.test('Test justify align', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.JustifyAlign;};
+			checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Justify, 'check justify align shortcut');
+		});
 
-			oEvent = createNativeEvent(27, false, true, false, false, false, false);
-			checkResetAllDrawingSelection(oEvent, oAssert);
+		QUnit.test('Test open hyperlink dialog', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.AddHyperlink;};
+			executeTestWithCatchEvent('asc_onDialogAddHyperlink', () => true, true, oMockEvent, oAssert, () =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello World');
+				moveToParagraph(oParagraph);
+				oGlobalLogicDocument.SelectAll();
+			});
+		});
 
-			oEvent = createNativeEvent(27, false, false, false, false, false, false);
-			checkResetStepDrawingSelection(oEvent, oAssert);
+		QUnit.test('Test add bullet list to paragraphs', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.BulletList;};
+			const {oParagraph} = getShapeWithParagraphHelper('Hello World');
+			oParagraph.SetThisElementCurrent();
+			oGlobalLogicDocument.SelectAll();
 
-			// Space
-			oEvent = createNativeEvent(32, true, true, false, false, false, false);
-			checkNonBreakingSpace(oEvent, oAssert);
+			onKeyDown(oMockEvent);
+			const oBullet = oParagraph.Get_PresentationNumbering();
+			oAssert.true(oBullet.m_nType === AscFormat.numbering_presentationnumfrmt_Char, 'Check bullet list shortcut');
+		});
 
-			oEvent = createNativeEvent(32, true, false, false, false, false, false);
-			checkClearParagraphFormatting(oEvent, oAssert);
+		QUnit.test('Test left align', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.LeftAlign;};
+			checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Left, 'check right align shortcut');
+		});
 
-			oEvent = createNativeEvent(32, false, false, false, false, false, false);
-			checkAddSpace(oEvent, oAssert);
-			//pgUp
+		QUnit.test('Test right align', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.RightAlign;};
+			checkDirectParaPrAfterKeyDown((oParaPr) => oParaPr.GetJc(), oMockEvent, oAssert, AscCommon.align_Right, 'check right align shortcut');
+		});
 
-			//End
-			oEvent = createNativeEvent(35, true, false, false, false, false, false);
-			checkMoveToEndPosContent(oEvent, oAssert);
+		QUnit.test('Test underline shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Underline;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Underline(), oMockEvent, oAssert, true, 'Check underline shortcut');
+		});
 
-			oEvent = createNativeEvent(35, false, false, false, false, false, false);
-			checkMoveToEndLineContent(oEvent, oAssert);
+		QUnit.test('Test strikeout shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Strikethrough;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_Strikeout(), oMockEvent, oAssert, true, 'Check strikeout shortcut');
+		});
 
-			oEvent = createNativeEvent(35, false, true, false, false, false, false);
-			checkSelectToEndLineContent(oEvent, oAssert);
+		QUnit.test('Test superscript vertalign', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Superscript;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oMockEvent, oAssert, AscCommon.vertalign_SuperScript, 'Check superscript shortcut');
+		});
 
-			// Home
-			oEvent = createNativeEvent(36, true, false, false, false, false, false);
-			checkMoveToStartPosContent(oEvent, oAssert);
+		QUnit.test('Test subscript vertalign', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.Subscript;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.GetVertAlign(), oMockEvent, oAssert, AscCommon.vertalign_SubScript, 'Check subscript shortcut');
+		});
 
-			oEvent = createNativeEvent(36, false, false, false, false, false, false);
-			checkMoveToStartLineContent(oEvent, oAssert);
+		QUnit.test('Test en dash shortcut', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.EnDash;};
+			checkTextAfterKeyDownHelperEmpty('–', oMockEvent, oAssert, 'Check en dash shortcut');
+		});
 
-			oEvent = createNativeEvent(36, false, true, false, false, false, false);
-			checkSelectToStartLineContent(oEvent, oAssert);
+		QUnit.test('Test decrease font size', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.DecreaseFont;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), oMockEvent, oAssert, 9, 'Check decrease font size shortcut');
+		});
 
-			//Left arrow
-			oEvent = createNativeEvent(37, false, false, false, false, false, false);
-			checkMoveCursorLeft(oEvent, oAssert);
+		QUnit.test('Test increase font size', (oAssert) =>
+		{
+			editor.getShortcut = function () {return Asc.c_oAscPresentationShortcutType.IncreaseFont;};
+			checkDirectTextPrAfterKeyDown((oTextPr) => oTextPr.Get_FontSize(), oMockEvent, oAssert, 11, 'Check increase font size shortcut');
+		});
 
-			oEvent = createNativeEvent(37, false, true, false, false, false, false);
-			checkSelectCursorLeft(oEvent, oAssert);
+		QUnit.module('Test hotkeys', {
+			before: function ()
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+			},
+			after : function ()
+			{
+				cleanPresentation();
+			}
+		});
+		QUnit.test('Test delete back char', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				checkTextAfterKeyDownHelperHelloWorld('Hello Worl', oEvent, oAssert, 'Check delete with backspace')
+			}, oMainShortcutTypes.checkDeleteBack);
+		});
 
-			oEvent = createNativeEvent(37, true, true, false, false, false, false);
-			checkSelectWordCursorLeft(oEvent, oAssert);
+		QUnit.test('Test delete back word', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				checkTextAfterKeyDownHelperHelloWorld('Hello ', oEvent, oAssert, 'Check delete word with backspace')
+			}, oMainShortcutTypes.checkDeleteWordBack);
+		});
 
-			oEvent = createNativeEvent(37, true, false, false, false, false, false);
-			checkMoveCursorWordLeft(oEvent, oAssert);
-			checkMoveCursorLeftTable(oEvent, oAssert);
-			//Right arrow
-			oEvent = createNativeEvent(39, false, false, false, false, false, false);
-			checkMoveCursorRight(oEvent, oAssert);
-			checkMoveCursorRightTable(oEvent, oAssert);
+		QUnit.test('Test remove animation', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape} = getShapeWithParagraphHelper('', true);
+				selectOnlyObjects([oShape]);
+				oGlobalLogicDocument.AddAnimation(1, 1, 0, false, false);
 
-			oEvent = createNativeEvent(39, false, true, false, false, false, false);
-			checkSelectCursorRight(oEvent, oAssert);
+				onKeyDown(oEvent);
+				const oTiming = oGlobalLogicDocument.GetCurTiming();
+				const arrEffects = oTiming.getObjectEffects(oShape.GetId());
+				oAssert.true(arrEffects.length === 0, 'Check remove animation');
+			}, oMainShortcutTypes.checkRemoveAnimation);
+		});
 
-			oEvent = createNativeEvent(39, true, true, false, false, false, false);
-			checkSelectWordCursorRight(oEvent, oAssert);
+		QUnit.test('Test remove chart', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oChart1 = createChart(getFirstSlide());
+				selectOnlyObjects([oChart1]);
+				onKeyDown(oEvent);
+				oAssert.true(checkRemoveObject(oChart1, getFirstSlide().cSld.spTree), "Check remove chart");
+			}, oMainShortcutTypes.checkRemoveChart);
+		});
 
-			oEvent = createNativeEvent(39, true, false, false, false, false, false);
-			checkMoveCursorWordRight(oEvent, oAssert);
-			//Top arrow
-			oEvent = createNativeEvent(38, false, false, false, false, false, false);
-			checkMoveCursorTop(oEvent, oAssert);
-			checkMoveCursorTopTable(oEvent, oAssert);
+		QUnit.test('Test remove shape', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape} = getShapeWithParagraphHelper('', true);
+				selectOnlyObjects([oShape]);
 
-			oEvent = createNativeEvent(38, false, true, false, false, false, false);
-			checkSelectCursorTop(oEvent, oAssert);
-			// Bottom arrow
-			oEvent = createNativeEvent(40, false, false, false, false, false, false);
-			checkMoveCursorBottom(oEvent, oAssert);
-			checkMoveCursorBottomTable(oEvent, oAssert);
+				onKeyDown(oEvent);
+				const arrSpTree = oGlobalLogicDocument.Slides[0].cSld.spTree;
+				oAssert.true(checkRemoveObject(oShape, arrSpTree), 'Check remove shape');
+			}, oMainShortcutTypes.checkRemoveShape);
+		});
 
-			oEvent = createNativeEvent(40, false, true, false, false, false, false);
-			checkSelectCursorBottom(oEvent, oAssert);
+		QUnit.test('Test remove table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oGraphicFrame = createTable(3, 3);
+				selectOnlyObjects([oGraphicFrame]);
+				onKeyDown(oEvent);
+				const arrSpTree = getFirstSlide().cSld.spTree;
+				oAssert.true(checkRemoveObject(oGraphicFrame, arrSpTree), "Check remove table");
+			}, oMainShortcutTypes.checkRemoveTable);
+		});
 
-			// Check move shape
-			oEvent = createNativeEvent(40, false, false, false, false, false, false);
-			checkMoveShapeBottom(oEvent, oAssert);
+		QUnit.test('Test remove group', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oGroup1 = createGroup([createShape(), createShape()]);
+				selectOnlyObjects([oGroup1]);
+				onKeyDown(oEvent);
+				const arrSpTree = getFirstSlide().cSld.spTree;
+				oAssert.true(checkRemoveObject(oGroup1, arrSpTree), 'Check remove group');
+			}, oMainShortcutTypes.checkRemoveGroup);
+		});
 
-			oEvent = createNativeEvent(40, true, false, false, false, false, false);
-			checkLittleMoveShapeBottom(oEvent, oAssert);
+		QUnit.test('Test remove shape in group', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oGroupedGroup = createGroup([createShape(), createShape()]);
+				const oRemovedShape = createShape();
+				const oGroup1 = createGroup([oGroupedGroup, oRemovedShape]);
+				selectOnlyObjects([oRemovedShape]);
+				onKeyDown(oEvent);
+				oAssert.true(checkRemoveObject(oRemovedShape, oGroup1.spTree), 'Check remove shape in group');
+			}, oMainShortcutTypes.checkRemoveShapeInGroup);
+		});
 
-			oEvent = createNativeEvent(38, false, false, false, false, false, false);
-			checkMoveShapeTop(oEvent, oAssert);
+		//Tab
+		QUnit.test('Test go to next cell', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oGraphicFrame = createTable(3, 3);
+				const oTable = oGraphicFrame.graphicObject;
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oTable.CurCell.Index, 1, 'check go to next cell shortcut');
+			}, oMainShortcutTypes.checkMoveToNextCell);
+		});
 
-			oEvent = createNativeEvent(38, true, false, false, false, false, false);
-			checkLittleMoveShapeTop(oEvent, oAssert);
+		QUnit.test('Test go to previous cell', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oGraphicFrame = createTable(3, 3);
+				const oTable = oGraphicFrame.graphicObject;
+				moveCursorRight();
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oTable.CurCell.Index, 0, 'check go to previous cell shortcut');
+			}, oMainShortcutTypes.checkMoveToPreviousCell);
+		});
 
-			oEvent = createNativeEvent(39, false, false, false, false, false, false);
-			checkMoveShapeRight(oEvent, oAssert);
+		QUnit.test('Test bullet indent', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello');
+				const oBullet = AscFormat.fGetPresentationBulletByNumInfo({Type: 0, SubType: 1});
+				oParagraph.Add_PresentationNumbering(oBullet);
+				moveToParagraph(oParagraph, true);
+				oParagraph.Set_Ind({Left: 0});
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oParagraph.Pr.Get_IndLeft(), 11.1125, 'Check bullet indent shortcut');
+			}, oMainShortcutTypes.checkIncreaseBulletIndent);
+		});
 
-			oEvent = createNativeEvent(39, true, false, false, false, false, false);
-			checkLittleMoveShapeRight(oEvent, oAssert);
+		QUnit.test('Test bullet unindent', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello');
+				const oBullet = AscFormat.fGetPresentationBulletByNumInfo({Type: 0, SubType: 1});
+				oParagraph.Add_PresentationNumbering(oBullet);
+				oParagraph.Set_PresentationLevel(1);
+				moveToParagraph(oParagraph, true);
+				oParagraph.Set_Ind({Left: 11.1125});
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oParagraph.Pr.Get_IndLeft(), 0, 'Check bullet indent shortcut');
+			}, oMainShortcutTypes.checkDecreaseBulletIndent);
+		});
 
-			oEvent = createNativeEvent(37, false, false, false, false, false, false);
-			checkMoveShapeLeft(oEvent, oAssert);
+		QUnit.test('Test add tab', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('');
+				moveToParagraph(oParagraph);
+				onKeyDown(oEvent);
+				oGlobalLogicDocument.SelectAll();
+				oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(false, {TabSymbol: '\t'}), '\t', 'Check add tab');
+			}, oMainShortcutTypes.checkAddTab);
+		});
 
-			oEvent = createNativeEvent(37, true, false, false, false, false, false);
-			checkLittleMoveShapeLeft(oEvent, oAssert);
+		QUnit.test('Test select next object', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				const oFirstShape = createShape();
+				const oSecondShape = createShape();
+				const oThirdShape = createShape();
+				selectOnlyObjects([oFirstShape]);
+				onKeyDown(oEvent);
+				oAssert.true(getController().getSelectedArray().length === 1 && getController().getSelectedArray()[0] === oSecondShape, 'Check select previous object');
+			}, oMainShortcutTypes.checkSelectNextObject);
+		});
 
-			//Delete
-			oEvent = createNativeEvent(46, false, false, false, false, false, false);
-			checkDeleteFront(oEvent, oAssert);
+		QUnit.test('Test select previous object', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				const oFirstShape = createShape();
+				const oSecondShape = createShape();
+				const oThirdShape = createShape();
+				selectOnlyObjects([oFirstShape]);
+				onKeyDown(oEvent);
+				oAssert.true(getController().getSelectedArray().length === 1 && getController().getSelectedArray()[0] === oThirdShape, 'Check select previous object');
+			}, oMainShortcutTypes.checkSelectPreviousObject);
+		});
+		// Enter
+		QUnit.test('Test check visit hyperlink', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				goToPage(1);
+				const {oParagraph} = getShapeWithParagraphHelper('Hello');
+				moveToParagraph(oParagraph);
+				oGlobalLogicDocument.AddHyperlink({
+					Text   : 'abcd',
+					ToolTip: 'abcd',
+					Value  : 'ppaction://hlinkshowjump?jump=firstslide'
+				});
+				moveCursorLeft();
+				moveCursorLeft();
+				onKeyDown(oEvent);
+				const oSelectedInfo = oGlobalLogicDocument.IsCursorInHyperlink();
+				oAssert.true(oSelectedInfo.Visited && oGlobalLogicDocument.GetSelectedSlides()[0] === 0, 'Check visit hyperlink');
+				goToPage(0);
+			}, oMainShortcutTypes.checkVisitHyperlink);
+		});
 
-			oEvent = createNativeEvent(46, true, false, false, false, false, false);
-			checkDeleteWordFront(oEvent, oAssert);
-			checkRemoveAnimation(oEvent, oAssert);
-			checkRemoveChart(oEvent, oAssert);
-			checkRemoveShape(oEvent, oAssert);
-			checkRemoveTable(oEvent, oAssert);
-			checkRemoveGroup(oEvent, oAssert);
-			checkRemoveShapeInGroup(oEvent, oAssert);
+		QUnit.test('Test select shapes with placeholder', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+				const oFirstShapeWithPlaceholder = createShapeWithTitlePlaceholder();
+				const oSecondShapeWithPlaceholder = createShapeWithTitlePlaceholder();
 
-			oEvent = createNativeEvent(77, true, false, false, false, false, false);
-			checkIncreaseIndent(oEvent, oAssert);
+				const oController = getController();
+				oController.resetSelection();
+				onKeyDown(oEvent);
+				oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oFirstShapeWithPlaceholder && oFirstShapeWithPlaceholder.selected, 'Check select first shape with placeholder');
 
-			oEvent = createNativeEvent(77, true, true, false, false, false, false);
-			checkDecreaseIndent(oEvent, oAssert);
+				onKeyDown(oEvent);
+				oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oSecondShapeWithPlaceholder && oSecondShapeWithPlaceholder.selected, 'Check select second shape with placeholder');
+			}, oMainShortcutTypes.checkSelectNextObjectWithPlaceholder);
 
-			oEvent = createNativeEvent(144, false, false, false, false, false, false);
-			checkNumLock(oEvent, oAssert);
 
-			oEvent = createNativeEvent(145, false, false, false, false, false, false);
-			checkScrollLock(oEvent, oAssert);
+		});
+
+		QUnit.test('Test add next slide after placeholder shape', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				cleanPresentation();
+				addSlide();
+				goToPageWithFocus(0, FOCUS_OBJECT_MAIN);
+
+				const oFirstShapeWithPlaceholder = createShapeWithTitlePlaceholder();
+				selectOnlyObjects([oFirstShapeWithPlaceholder]);
+				const arrOldSlides = oGlobalLogicDocument.Slides.slice();
+				onKeyDown(oEvent);
+				const arrSelectedSlides = oGlobalLogicDocument.GetSelectedSlides();
+				oAssert.true(arrSelectedSlides.length === 1 && arrSelectedSlides[0] === 1 && arrOldSlides.indexOf(oGlobalLogicDocument.Slides[1]) === -1, 'Check add next slide after selecting last placeholder on current slide');
+				goToPage(0);
+			}, oMainShortcutTypes.checkAddNextSlideAfterSelectLastPlaceholderObject);
+		});
+
+		QUnit.test('Test add break line', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape, oParagraph} = getShapeWithParagraphHelper('');
+				moveToParagraph(oParagraph);
+
+				onKeyDown(oEvent);
+				oAssert.true(oShape.getDocContent().Content.length === 1 && oParagraph.GetLinesCount() === 2, 'Check add break line');
+			}, oMainShortcutTypes.checkAddBreakLine);
+		});
+
+		QUnit.test('Test add break line in title', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShapeWithPlaceholder = createShapeWithTitlePlaceholder();
+				const oContent = oShapeWithPlaceholder.getDocContent();
+				const oParagraph = oContent.GetAllParagraphs()[0];
+				oParagraph.SetThisElementCurrent();
+				onKeyDown(oEvent);
+				oAssert.true(oContent.Content.length === 1 && oParagraph.GetLinesCount() === 2, 'Check add break line in title');
+			}, oMainShortcutTypes.checkAddTitleBreakLine);
+		});
+
+		QUnit.test('Test add new line in math equation', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = createMathInShape();
+				oGlobalLogicDocument.MoveCursorToStartPos();
+				moveCursorRight();
+				moveCursorRight();
+				onInput([56, 56, 56, 56, 56, 56, 56]);
+				moveCursorLeft();
+				moveCursorLeft();
+				onKeyDown(oEvent);
+				const oParaMath = oParagraph.GetAllParaMaths()[0];
+				const oFraction = oParaMath.Root.GetFirstElement();
+				const oNumerator = oFraction.getNumerator();
+				const oEqArray = oNumerator.GetFirstElement();
+				oAssert.strictEqual(oEqArray.getRowsCount(), 2, 'Check add new line math');
+			}, oMainShortcutTypes.checkAddMathBreakLine);
+		});
+
+		QUnit.test('Test add new paragraph', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape, oParagraph} = getShapeWithParagraphHelper('');
+				moveToParagraph(oParagraph);
+
+				onKeyDown(oEvent);
+				oAssert.true(oShape.getDocContent().Content.length === 2, 'Check add new paragraph');
+			}, oMainShortcutTypes.checkAddParagraph);
+		});
+
+		QUnit.test('Test creating txBody', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = createShape();
+				selectOnlyObjects([oShape]);
+				onKeyDown(oEvent);
+				oAssert.true(!!oShape.txBody, 'Check creating txBody');
+			}, oMainShortcutTypes.checkAddTxBodyShape);
+		});
+		QUnit.test('Test move cursor to start position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape, oParagraph} = getShapeWithParagraphHelper('', true);
+				selectOnlyObjects([oShape]);
+				onKeyDown(oEvent);
+				oAssert.true(oParagraph.IsCursorAtBegin(), 'Check move cursor to start position in shape');
+			}, oMainShortcutTypes.checkMoveCursorToStartPosShape);
+		});
+		QUnit.test('Test select all content in shape', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oShape} = getShapeWithParagraphHelper('Hello Word', true);
+				selectOnlyObjects([oShape]);
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Hello Word', 'Check select all content in shape');
+			}, oMainShortcutTypes.checkSelectAllContentShape);
+		});
+		QUnit.test('Test select all title', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oChart = createChart();
+				selectOnlyObjects([oChart]);
+				const oTitles = oChart.getAllTitles();
+				const oController = getController();
+				oController.selection.chartSelection = oChart;
+				oChart.selectTitle(oTitles[0], 0);
+
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Diagram Title', 'Check select all title');
+			}, oMainShortcutTypes.checkSelectAllContentChartTitle);
+		});
+		QUnit.test('Test move cursor to begin pos in title', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oChart = createChart();
+				const oTitles = oChart.getAllTitles();
+				const oContent = AscFormat.CreateDocContentFromString('', editor.WordControl.m_oDrawingDocument, oTitles[0].txBody);
+				oTitles[0].txBody.content = oContent;
+				selectOnlyObjects([oChart]);
+
+				const oController = getController();
+				oController.selection.chartSelection = oChart;
+				oChart.selectTitle(oTitles[0], 0);
+
+				onKeyDown(oEvent);
+				oAssert.true(oContent.IsCursorAtBegin(), 'Check move cursor to begin pos in title');
+			}, oMainShortcutTypes.checkMoveCursorToStartPosChartTitle);
+		});
+		QUnit.test('Test remove and move to start position in table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const arrSteps = [];
+				const oFrame = createTable(3, 3);
+				oFrame.Set_CurrentElement();
+				const oTable1 = oFrame.graphicObject;
+				oTable1.MoveCursorToStartPos();
+				// First cell
+				moveCursorRight(true, true);
+				moveCursorRight(true, true);
+				// Second cell
+				moveCursorRight(true, true);
+				// Third cell
+				moveCursorRight(true, true);
+
+				onKeyDown(oEvent);
+				arrSteps.push(oTable1.IsCursorAtBegin());
+				moveCursorRight(true, true);
+				moveCursorRight(true, true);
+				moveCursorRight(true, true);
+				arrSteps.push(oGlobalLogicDocument.GetSelectedText());
+				oAssert.deepEqual(arrSteps, [true, ''], 'Check remove and move to start position in table');
+			}, oMainShortcutTypes.checkRemoveAndMoveToStartPosTable);
+		});
+		QUnit.test('Test select first cell content', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oFrame = createTable(3, 3);
+				selectOnlyObjects([oFrame]);
+
+				onKeyDown(oEvent);
+				oAssert.strictEqual(oGlobalLogicDocument.GetSelectedText(), 'Cell0x0', 'Check select first cell content');
+			}, oMainShortcutTypes.checkSelectFirstCellContent);
+		});
+		// Esc
+		QUnit.test('Test reset add new shape', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oController = getController();
+				oController.changeCurrentState(new AscFormat.StartAddNewShape(oController, 'rect'));
+
+				onKeyDown(oEvent);
+				oAssert.true(oController.curState instanceof AscFormat.NullState, 'Check reset add new shape');
+			}, oMainShortcutTypes.checkResetAddShape);
+		});
+
+		QUnit.test('Test reset all selection', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oController = getController();
+				oController.resetSelection();
+				const oGroupedShape1 = createShape();
+				const oGroupedShape2 = createShape();
+				createGroup([oGroupedShape1, oGroupedShape2]);
+				addToSelection(oGroupedShape1);
+				const oTestGroup = oGroupedShape1.group;
+				onKeyDown(oEvent);
+				oAssert.true(oController.selectedObjects.length === 0, 'Check reset all selection');
+			}, oMainShortcutTypes.checkResetAllDrawingSelection);
+		});
+
+		QUnit.test('Test reset step selection', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oController = getController();
+				const oGroupedShape1 = createShape();
+				const oGroupedShape2 = createShape();
+				createGroup([oGroupedShape1, oGroupedShape2]);
+				addToSelection(oGroupedShape1);
+				const oTestGroup = oGroupedShape1.group;
+
+				selectOnlyObjects([oTestGroup, oGroupedShape1]);
+				onKeyDown(oEvent);
+				oAssert.true(oController.selectedObjects.length === 1 && oController.selectedObjects[0] === oTestGroup && oTestGroup.selectedObjects.length === 0, 'Check reset step selection');
+			}, oMainShortcutTypes.checkResetStepDrawingSelection);
+		});
+
+		// Space
+		QUnit.test('Test add non breaking space', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				checkTextAfterKeyDownHelperEmpty(String.fromCharCode(0x00A0), oEvent, oAssert, 'Check add non breaking space');
+			}, oMainShortcutTypes.checkNonBreakingSpace);
+		});
+
+		QUnit.test('Test clear paragraph formatting', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello World');
+				oParagraph.SetThisElementCurrent();
+				oGlobalLogicDocument.SelectAll();
+				addPropertyToDocument({Bold: true, Italic: true, Underline: true});
+
+				onKeyDown(oEvent);
+				const oTextPr = oGlobalLogicDocument.GetDirectTextPr();
+				oAssert.true(!(oTextPr.GetBold() || oTextPr.GetItalic() || oTextPr.GetUnderline()), 'Check clear paragraph formatting');
+			}, oMainShortcutTypes.checkClearParagraphFormatting);
+		});
+
+		QUnit.test('Test add space', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				checkTextAfterKeyDownHelperEmpty(' ', oEvent, oAssert, 'Check add space')
+			}, oMainShortcutTypes.checkAddSpace);
+		});
+		//pgUp
+
+		//End
+		QUnit.test('Test move cursor to end position shortcut', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, false, true, false);
+				oAssert.true(oPos.X === 25 && oPos.Y === 75, 'Check move cursor to end position shortcut');
+			}, oMainShortcutTypes.checkMoveToEndPosContent);
+		});
+
+		QUnit.test('Test move cursor to end line shortcut', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, false, true, false);
+				oAssert.true(oPos.X === 100 && oPos.Y === 15, 'Check move cursor to end line shortcut');
+			}, oMainShortcutTypes.checkMoveToEndLineContent);
+		});
+
+		QUnit.test('Test select text to end line', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
+				oAssert.strictEqual(sSelectedText, 'HelloworldHelloworld', 'Check select text to end line shortcut');
+			}, oMainShortcutTypes.checkSelectToEndLineContent);
+		});
+
+		// Home
+		QUnit.test('Test move to start position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 0 && oPos.Y === 15, 'Check move to start position shortcut');
+			}, oMainShortcutTypes.checkMoveToStartPosContent);
+		});
+
+		QUnit.test('Test move to start line', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 0 && oPos.Y === 75, 'Check move to start line shortcut');
+			}, oMainShortcutTypes.checkMoveToStartLineContent);
+		});
+
+		QUnit.test('Test select to start line', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
+				oAssert.strictEqual(sSelectedText, 'Hello', 'Check select to start line shortcut');
+			}, oMainShortcutTypes.checkSelectToStartLineContent);
+		});
+
+		//Left arrow
+		QUnit.test('Test move cursor to end position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 20 && oPos.Y === 75, 'Check move cursor to end position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorLeft);
+		});
+
+		QUnit.test('Test select text to left position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
+				oAssert.strictEqual(sSelectedText, 'o', 'Check select text to left position shortcut');
+			}, oMainShortcutTypes.checkSelectCursorLeft);
+		});
+
+		QUnit.test('Test select word text to left position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
+				oAssert.strictEqual(sSelectedText, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', 'Check select word text to left position shortcut');
+			}, oMainShortcutTypes.checkSelectWordCursorLeft);
+		});
+
+		QUnit.test('Test move cursor to left word position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 0 && oPos.Y === 15, 'Check move cursor to left word position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorWordLeft);
+		});
+		QUnit.test('Test move left in table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oFrame = createTable(3, 3);
+				oFrame.Set_CurrentElement();
+				const oTable1 = oFrame.graphicObject;
+				oTable1.MoveCursorToStartPos();
+				moveCursorRight(true);
+				moveCursorRight(true);
+				onKeyDown(oEvent);
+				oAssert.deepEqual([oTable1.CurCell.Row.Index, oTable1.CurCell.Index], [0, 0], 'Check move left in table');
+			}, oMainShortcutTypes.checkMoveCursorLeftTable);
+		});
+		//Right arrow
+		QUnit.test('Test move cursor to right position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, false, true, false);
+				oAssert.true(oPos.X === 5 && oPos.Y === 15, 'Check move cursor to right position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorRight);
+		});
+		QUnit.test('Test move right in table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oFrame = createTable(3, 3);
+				oFrame.Set_CurrentElement();
+				const oTable1 = oFrame.graphicObject;
+				oTable1.MoveCursorToStartPos();
+				moveCursorRight(true);
+				onKeyDown(oEvent);
+				oAssert.deepEqual([oTable1.CurCell.Row.Index, oTable1.CurCell.Index], [0, 1], 'Check move right in table');
+			}, oMainShortcutTypes.checkMoveCursorRightTable);
+		});
+
+		QUnit.test('Test select text to right position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
+				oAssert.strictEqual(sSelectedText, 'H', 'Check select text to right position shortcut');
+			}, oMainShortcutTypes.checkSelectCursorRight);
+		});
+
+		QUnit.test('Test select word text to right position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
+				oAssert.strictEqual(sSelectedText, 'HelloworldHelloworldHelloworldHelloworldHelloworldHelloworldHello', 'Check select word text to right position shortcut');
+			}, oMainShortcutTypes.checkSelectWordCursorRight);
+		});
+
+		QUnit.test('Test move cursor to right word position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 25 && oPos.Y === 75, 'Check move cursor to right word position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorWordRight);
+		});
+		//Top arrow
+		QUnit.test('Test move cursor to top position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, true, true, false);
+				oAssert.true(oPos.X === 25 && oPos.Y === 55, 'Check move cursor to top position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorTop);
+		});
+		QUnit.test('Test move top in table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oFrame = createTable(3, 3);
+				oFrame.Set_CurrentElement();
+				const oTable1 = oFrame.graphicObject;
+				oTable1.MoveCursorToStartPos();
+				moveCursorDown();
+				onKeyDown(oEvent);
+				oAssert.deepEqual([oTable1.CurCell.Row.Index, oTable1.CurCell.Index], [0, 0], 'Check move top in table');
+			}, oMainShortcutTypes.checkMoveCursorTopTable);
+		});
+
+		QUnit.test('Test select text to top position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, true, false, true);
+				oAssert.strictEqual(sSelectedText, 'worldHelloworldHello', 'Check select text to top position shortcut');
+			}, oMainShortcutTypes.checkSelectCursorTop);
+		});
+		// Bottom arrow
+		QUnit.test('Test move cursor to bottom position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oPos} = testMoveHelper(oEvent, false, true, false);
+				oAssert.true(oPos.X === 0 && oPos.Y === 35, 'Check move cursor to bottom position shortcut');
+			}, oMainShortcutTypes.checkMoveCursorBottom);
+		});
+		QUnit.test('Test move bottom in table', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oFrame = createTable(3, 3);
+				oFrame.Set_CurrentElement();
+				const oTable1 = oFrame.graphicObject;
+				oTable1.MoveCursorToStartPos();
+				onKeyDown(oEvent);
+				oAssert.deepEqual([oTable1.CurCell.Row.Index, oTable1.CurCell.Index], [1, 0], 'Check move bottom in table');
+			}, oMainShortcutTypes.checkMoveCursorBottomTable);
+		});
+
+		QUnit.test('Test select text to bottom position', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {sSelectedText} = testMoveHelper(oEvent, false, false, true);
+				oAssert.strictEqual(sSelectedText, 'HelloworldHelloworld', 'Check select text to bottom position shortcut');
+			}, oMainShortcutTypes.checkSelectCursorBottom);
+		});
+
+		// Check move shape
+		QUnit.test('Test big move shape bottom', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.y, 5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape bottom');
+			}, oMainShortcutTypes.checkMoveShapeBottom);
+		});
+
+		QUnit.test('Test little move shape bottom', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.y, 1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape bottom');
+			}, oMainShortcutTypes.checkLittleMoveShapeBottom);
+		});
+
+		QUnit.test('Test big move shape top', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.y, -5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape top');
+			}, oMainShortcutTypes.checkMoveShapeTop);
+		});
+
+		QUnit.test('Test little move shape top', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.y, -1 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape top');
+			}, oMainShortcutTypes.checkLittleMoveShapeTop);
+		});
+
+		QUnit.test('Test big move shape right', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.x, 5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape right');
+			}, oMainShortcutTypes.checkMoveShapeRight);
+		});
+
+		QUnit.test('Test little move shape right', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.x, 1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape right');
+			}, oMainShortcutTypes.checkLittleMoveShapeRight);
+		});
+
+		QUnit.test('Test big move shape left', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.x, -5 * AscCommon.g_dKoef_pix_to_mm, 'Check move shape left');
+			}, oMainShortcutTypes.checkMoveShapeLeft);
+		});
+
+		QUnit.test('Test little move shape left', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const oShape = executeCheckMoveShape(oEvent);
+				oAssert.strictEqual(oShape.x, -1 * AscCommon.g_dKoef_pix_to_mm, 'Check little move shape left');
+			}, oMainShortcutTypes.checkLittleMoveShapeLeft);
+		});
+
+		//Delete
+		QUnit.test('Test delete front symbol', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello world');
+				moveToParagraph(oParagraph, true);
+
+				onKeyDown(oEvent);
+				oAssert.strictEqual(AscTest.GetParagraphText(oParagraph), 'ello world', 'Check delete front shortcut');
+			}, oMainShortcutTypes.checkDeleteFront);
+		});
+
+		QUnit.test('Test delete front word', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello world');
+				moveToParagraph(oParagraph, true);
+
+				onKeyDown(oEvent);
+				oAssert.strictEqual(AscTest.GetParagraphText(oParagraph), 'world', 'Check delete front word shortcut');
+			}, oMainShortcutTypes.checkDeleteWordFront);
+		});
+
+		QUnit.test('Test increase indent', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello');
+				oParagraph.Pr.SetInd(0, 0, 0);
+				oParagraph.Set_PresentationLevel(0);
+				moveToParagraph(oParagraph, true);
+
+				onKeyDown(oEvent);
+				const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
+				oAssert.strictEqual(oParaPr.GetIndLeft(), 11.1125, 'Check increase indent');
+			}, oMainShortcutTypes.checkIncreaseIndent);
+		});
+
+		QUnit.test('Test decrease indent', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				const {oParagraph} = getShapeWithParagraphHelper('Hello');
+				oParagraph.Pr.SetInd(0, 12, 0);
+				oParagraph.Set_PresentationLevel(1);
+				moveToParagraph(oParagraph, true);
+
+				onKeyDown(oEvent);
+				const oParaPr = oGlobalLogicDocument.GetDirectParaPr();
+				oAssert.true(AscFormat.fApproxEqual(oParaPr.GetIndLeft(), 0.8875), 'Check decrease indent');
+			}, oMainShortcutTypes.checkDecreaseIndent);
+		});
+
+		QUnit.test('Test prevent default on num lock', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				onKeyDown(oEvent);
+				oAssert.true(oEvent.isDefaultPrevented, 'Check prevent default on num lock');
+			}, oMainShortcutTypes.checkNumLock);
+		});
+
+		QUnit.test('Test prevent default on scroll lock', (oAssert) =>
+		{
+			startMainTest((oEvent) =>
+			{
+				onKeyDown(oEvent);
+				oAssert.true(oEvent.isDefaultPrevented, 'Check prevent default on scroll lock');
+			}, oMainShortcutTypes.checkScrollLock);
 		});
 	});
 })(window);
