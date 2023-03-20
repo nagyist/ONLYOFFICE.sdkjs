@@ -32,20 +32,45 @@
 
 (function (window)
 {
-	let bIsCellEditorOpened = false;
-	function setCheckOpenCellEditor(oPr)
-	{
-		bIsCellEditorOpened = oPr;
-	}
-	function checkOpenCellEditor()
-	{
-		return bIsCellEditorOpened;
-	}
 	window.AscFonts = AscFonts || {};
+	window.setTimeout = function (callback)
+	{
+		callback();
+	}
+	Asc.spreadsheet_api.prototype._loadFonts = function (fonts, callback)
+	{
+		callback();
+	};
+	AscCommonExcel.WorksheetView.prototype._calcVisibleRows = function ()
+	{
+
+	};
+	AscCommonExcel.WorksheetView.prototype._calcVisibleColumns = function ()
+	{
+
+	};
+	AscCommonExcel.WorksheetView.prototype.scrollVertical = function ()
+	{
+
+	};
+	AscCommonExcel.WorksheetView.prototype.scrollHorizontal = function ()
+	{
+
+	};
+	AscCommonExcel.WorksheetView.prototype._normalizeViewRange = function ()
+	{
+
+	};
+	AscCommonExcel.WorksheetView.prototype._fixVisibleRange = function ()
+	{
+
+	};
+
 	AscCommonExcel.WorkbookView.prototype.sendCursor = function ()
 	{
 
 	}
+
 	const fOldCellEditor = AscCommonExcel.CellEditor.prototype.open;
 	AscCommonExcel.CellEditor.prototype.open = function (options)
 	{
@@ -59,15 +84,10 @@
 	{
 		return Asc.TextMetrics(5, 9, 10, 1, 1, 10, 5);
 	}
-	window.setTimeout = function (callback)
-	{
-		callback();
-	}
 	AscFonts.CFontManager.prototype.MeasureChar = function ()
 	{
 		return {fAdvanceX: 5, oBBox: {fMaxX: 0, fMinX: 0}};
 	};
-	delete AscCommon.EncryptionWorker;
 	AscCommon.ZLib = function ()
 	{
 		this.open = function ()
@@ -86,27 +106,31 @@
 	{
 		return {ascender: 15, descender: 4, lineGap: 1, nat_scale: 1000, nat_y1: 1000, nat_y2: -1000};
 	};
-// AscCommonExcel.StringRender.prototype.measureString = function (fragments, flags, maxWidth) {
-//     return new Asc.TextMetrics(fragments.length * 5, 20, 0,15,0);
-// }
 
-	const editor = new Asc.spreadsheet_api({'id-view': 'editor_sdk', 'id-input': 'ce-cell-content'});
-	editor.FontLoader.LoadDocumentFonts = function ()
+	function initEditor()
 	{
-		editor.ServerIdWaitComplete = true;
-		editor._coAuthoringInitEnd();
-		editor.asyncFontsDocumentEndLoaded();
+		const editor = new Asc.spreadsheet_api({'id-view': 'editor_sdk', 'id-input': 'ce-cell-content'});
+		editor.FontLoader.LoadDocumentFonts = function ()
+		{
+			editor.ServerIdWaitComplete = true;
+			editor._coAuthoringInitEnd();
+			editor.asyncFontsDocumentEndLoaded();
+		}
+
+
+		const sStream = AscCommon.getEmpty();
+		const oFile = new AscCommon.OpenFileResult();
+		oFile.bSerFormat = AscCommon.checkStreamSignature(sStream, AscCommon.c_oSerFormat.Signature);
+		oFile.data = sStream;
+
+		editor.openDocument(oFile);
+
+
+		editor.asc_setZoom(1);
+		return editor;
 	}
 
-
-	const oOleObjectInfo = {"binary": AscCommon.getEmpty()};
-	const sStream = oOleObjectInfo["binary"];
-	const oFile = new AscCommon.OpenFileResult();
-	oFile.bSerFormat = AscCommon.checkStreamSignature(sStream, AscCommon.c_oSerFormat.Signature);
-	oFile.data = sStream;
-
-	editor.openDocument(oFile);
-	editor.asc_setZoom(1);
+	const editor = initEditor();
 
 	function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey)
 	{
@@ -215,6 +239,12 @@
 			editor.onKeyDown(oRetEvent);
 			return oRetEvent;
 		}
+	}
+
+
+	function checkTextAfterKeyDownHelperEmpty(sCheckText, oEvent, oAssert, sPrompt)
+	{
+		checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, '');
 	}
 
 	function remove()
@@ -348,7 +378,7 @@
 
 	function checkActiveCell(nRow, nCol)
 	{
-		return cleanActiveCell(new Asc.Range(nCol, nRow, nCol, nRow, true));
+		return cleanCell(new Asc.Range(nCol, nRow, nCol, nRow, true));
 	}
 
 	function cleanCache()
@@ -367,6 +397,7 @@
 		handlers().trigger("empty");
 		cleanCache();
 		wsView().changeZoomResize();
+		wsView().visibleRange = new Asc.Range(0, 0, 23, 37);
 		moveToCell(0, 0);
 	}
 
@@ -407,6 +438,7 @@
 	{
 		return wsView().getCellEditMode();
 	}
+
 	function testPreventDefaultAndStopPropagation(oEvent, oAssert, bInvert)
 	{
 		onKeyDown(oEvent);
@@ -439,59 +471,439 @@
 		return ws().getRange3(activeCell().r1, activeCell().c1, activeCell().r2, activeCell().c2);
 	}
 
-	window.AscTestShortcut = {
-		wbModel,
-		wbView,
-		executeTestWithCatchEvent,
-		getFragments,
-		getSelectionCellEditor,
-		moveToStartCellEditor,
-		moveToEndCellEditor,
-		moveRight,
-		moveToCell,
-		selectToCell,
-		onKeyDown,
-		remove,
-		closeCellEditor,
-		enterTextWithoutClose,
-		enterText,
-		cellEditor,
-		getCellText,
-		getCellTextWithoutFormat,
-		moveDown,
-		wsView,
-		ws,
-		moveAndEnterText,
-		createTest,
-		moveAndGetCellText,
-		goToSheet,
-		createWorksheet,
-		removeCurrentWorksheet,
-		cleanCell,
-		cleanRange,
-		cleanSelection,
-		cleanActiveCell,
-		checkRange,
-		openCellEditor,
-		checkActiveCell,
-		cleanCache,
-		selectAll,
-		cleanAll,
-		setCellFormat,
-		selectionInfo,
-		xfs,
-		undo,
-		createEvent,
-		selectAllCell,
-		cellPosition,
-		getCellEditMode,
-		testPreventDefaultAndStopPropagation,
-		controller,
-		handlers,
-		activeCell,
-		selectionRange,
-		checkOpenCellEditor,
-		setCheckOpenCellEditor,
-		activeCellRange
-	};
+	function addHyperlink(sLink, sText)
+	{
+		const oHyperlink = new AscCommonExcel.Hyperlink();
+		oHyperlink.Hyperlink = sLink;
+
+		const oAscHyperlink = new Asc.asc_CHyperlink(oHyperlink);
+		oAscHyperlink.text = sText;
+		editor.asc_insertHyperlink(oAscHyperlink);
+	}
+
+	function createMathInShape()
+	{
+		const {oShape, oParagraph} = createShapeWithContent('', true);
+		selectOnlyObjects([oShape]);
+		moveToParagraph(oParagraph, true);
+		editor.asc_AddMath2(c_oAscMathType.FractionVertical);
+		return {oShape, oParagraph};
+	}
+
+	function moveCursorRight(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveRight(bAddToSelect, bWord);
+	}
+
+	function moveCursorLeft(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveLeft(bAddToSelect, bWord);
+	}
+
+	function moveCursorUp(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveUp(bAddToSelect, bWord);
+	}
+
+	function moveCursorDown(bAddToSelect, bWord)
+	{
+		graphicController().cursorMoveDown(bAddToSelect, bWord);
+
+	}
+
+	function checkMoveContentShapeHelper(arrExpected, oEvent, oAssert)
+	{
+		const {deep, equal} = createTest(oAssert);
+		const {oShape} = createShapeWithContent('Hello World Hello World Hello World Hello World Hello World');
+		moveToShapeParagraph(oShape, 0);
+		onKeyDown(oEvent);
+		equal(contentPosition(), arrExpected[0]);
+
+		moveToShapeParagraph(oShape, 0, true);
+		onKeyDown(oEvent);
+		equal(contentPosition(), arrExpected[1]);
+	}
+
+	function contentPosition()
+	{
+		const arrContentPosition = graphicController().getTargetDocContent().GetContentPosition();
+		return arrContentPosition[arrContentPosition.length - 1].Position;
+	}
+
+	function selectedContent()
+	{
+		return graphicController().GetSelectedText(false, {TabSymbol: '\t'});
+	}
+
+	function checkSelectContentShapeHelper(arrExpected, oEvent, oAssert)
+	{
+		const {deep, equal} = createTest(oAssert);
+		const {oShape} = createShapeWithContent('Hello World Hello World Hello World Hello World Hello World');
+		moveToShapeParagraph(oShape, 0, true);
+		onKeyDown(oEvent);
+		equal(selectedContent(), arrExpected[0]);
+
+		moveToShapeParagraph(oShape, 0);
+		onKeyDown(oEvent);
+		equal(selectedContent(), arrExpected[1]);
+	}
+
+	function round(nNumber, nAmount)
+	{
+		const nPower = Math.pow(10, nAmount);
+		return Math.round(nNumber * nPower) / nPower;
+	}
+
+	function moveShapeHelper(oExpected, oEvent, oAssert)
+	{
+		const oShape = createShape();
+		const {deep, equal} = createTest(oAssert);
+		selectOnlyObjects([oShape]);
+
+		onKeyDown(oEvent);
+		oShape.recalculateTransform();
+		deep({x: round(oShape.x, 12), y: round(oShape.y, 12)}, {x: round(oExpected.x, 12), y: round(oExpected.y, 12)});
+	}
+
+	function createTable()
+	{
+		moveToCell(0, 0);
+		enterText('Hello');
+
+		moveToCell(1, 0);
+		enterText('1');
+		moveToCell(2, 0);
+		enterText('2');
+		moveToCell(3, 0);
+		enterText('3');
+		moveToCell(4, 0);
+		enterText('4');
+		moveToCell(0, 0);
+		selectToCell(4, 0);
+
+		editor.asc_addAutoFilter('TableStyleMedium2', editor.asc_getAddFormatTableOptions());
+	}
+
+	function createSlicer()
+	{
+		createTable();
+		editor.asc_insertSlicer(['Hello']);
+		return graphicController().getSelectedArray()[0];
+	}
+
+	function moveToShapeParagraph(oShape, nParagraph, bIsMoveToStart)
+	{
+		const oParagraph = oShape.getDocContent().Content[nParagraph];
+		moveToParagraph(oParagraph, bIsMoveToStart);
+
+		return oParagraph;
+	}
+
+
+	function addProperty(oPr)
+	{
+		graphicController().paragraphAdd(new AscCommonWord.ParaTextPr(oPr), true);
+	}
+
+	function targetContent()
+	{
+		return graphicController().getTargetDocContent();
+	}
+
+	function textPr()
+	{
+		return graphicController().getParagraphTextPr();
+	}
+
+	function paraPr()
+	{
+		return graphicController().getParagraphParaPr();
+	}
+
+	function moveToParagraph(oParagraph, bToStart)
+	{
+		oParagraph.SetThisElementCurrent();
+		if (bToStart)
+		{
+			oParagraph.MoveCursorToStartPos();
+		} else
+		{
+			oParagraph.MoveCursorToEndPos();
+		}
+
+		graphicController().recalculateCurPos(true, true);
+	}
+
+	function selectedObjects()
+	{
+		return graphicController().getSelectedArray();
+	}
+
+	function cleanGraphic()
+	{
+		graphicController().resetSelection();
+		graphicController().selectAll();
+		graphicController().remove();
+	}
+
+	function graphicController()
+	{
+		return editor.getGraphicController();
+	}
+
+	function createShape()
+	{
+		const oGraphicController = graphicController();
+		const oTrack = new AscFormat.NewShapeTrack('rect', 0, 0, wbModel().theme, null, null, null, 0, oGraphicController);
+		const oShape = oTrack.getShape(false, drawingDocument(), oGraphicController.drawingObjects);
+		oShape.setWorksheet(wbView().getWorksheet().model);
+		oShape.spPr.xfrm.setOffX(100);
+		oShape.spPr.xfrm.setOffY(100);
+		oShape.spPr.xfrm.setExtX(100);
+		oShape.spPr.xfrm.setExtY(100);
+		oShape.setPaddings({Left: 0, Right: 0, Top: 0, Bottom: 0});
+		oShape.setParent(oGraphicController.drawingObjects);
+		oShape.setRecalculateInfo();
+
+		oShape.addToDrawingObjects(undefined, AscCommon.c_oAscCellAnchorType.cellanchorTwoCell);
+		oShape.checkDrawingBaseCoords();
+		oGraphicController.checkChartTextSelection();
+		oGraphicController.resetSelection();
+		oShape.select(oGraphicController, 0);
+		oGraphicController.startRecalculate();
+		oGraphicController.drawingObjects.sendGraphicObjectProps();
+		oGraphicController.recalculate();
+		oShape.recalculateTransform();
+
+		return oShape;
+	}
+
+	function drawingDocument()
+	{
+		return wbModel().DrawingDocument;
+	}
+
+	function selectOnlyObjects(arrShapes)
+	{
+		const oController = graphicController();
+		oController.resetSelection();
+		for (let i = 0; i < arrShapes.length; i += 1)
+		{
+			const oObject = arrShapes[i];
+			if (oObject.group)
+			{
+				const oMainGroup = oObject.group.getMainGroup();
+				oMainGroup.select(oController, 0);
+				oController.selection.groupSelection = oMainGroup;
+			}
+			oObject.select(oController, 0);
+		}
+	}
+
+	function createShapeWithContent(sText)
+	{
+		const oShape = createShape();
+		selectOnlyObjects([oShape])
+		oShape.setTxBody(AscFormat.CreateTextBodyFromString(sText, drawingDocument(), oShape));
+		const oParagraph = oShape.txBody.content.Content[0];
+		oShape.recalculateContentWitCompiledPr();
+		return {oShape, oParagraph};
+	}
+
+	function checkTextAfterKeyDownHelperHelloWorld(sCheckText, oEvent, oAssert, sPrompt)
+	{
+		checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, 'Hello World');
+	}
+
+	function getParagraphText(oParagraph)
+	{
+		return oParagraph.GetText({ParaEndToSpace: false});
+	}
+
+	function checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, sInitText)
+	{
+		const {oParagraph} = createShapeWithContent(sInitText);
+		moveToParagraph(oParagraph);
+		onKeyDown(oEvent);
+		const sTextAfterKeyDown = getParagraphText(oParagraph);
+		oAssert.strictEqual(sTextAfterKeyDown, sCheckText, sPrompt);
+	}
+
+	function checkDirectTextPrAfterKeyDown(fCallback, oEvent, oAssert, nExpectedValue, sPrompt)
+	{
+		const {oParagraph} = createShapeWithContent('Hello World');
+		let oTextPr = getDirectTextPrHelper(oParagraph, oEvent);
+		oAssert.strictEqual(fCallback(oTextPr), nExpectedValue, sPrompt);
+		return function continueCheck(fCallback2, oEvent2, oAssert2, nExpectedValue2, sPrompt2)
+		{
+			oTextPr = getDirectTextPrHelper(oParagraph, oEvent2);
+			oAssert2.strictEqual(fCallback2(oTextPr), nExpectedValue2, sPrompt2);
+			return continueCheck;
+		}
+	}
+
+	function checkDirectParaPrAfterKeyDown(fCallback, oEvent, oAssert, nExpectedValue, sPrompt)
+	{
+		const {oParagraph} = createShapeWithContent('Hello World');
+		let oParaPr = getDirectParaPrHelper(oParagraph, oEvent);
+		oAssert.strictEqual(fCallback(oParaPr), nExpectedValue, sPrompt);
+
+		return function continueCheck(fCallback2, oEvent2, oAssert2, nExpectedValue2, sPrompt2)
+		{
+			oParaPr = getDirectParaPrHelper(oParagraph, oEvent2);
+			oAssert2.strictEqual(fCallback2(oParaPr), nExpectedValue2, sPrompt2);
+			return continueCheck;
+		}
+	}
+
+	function getDirectTextPrHelper(oParagraph, oEvent)
+	{
+		oParagraph.SetThisElementCurrent();
+		graphicController().selectAll();
+		onKeyDown(oEvent);
+		return textPr();
+	}
+
+	function getDirectParaPrHelper(oParagraph, oEvent)
+	{
+		oParagraph.SetThisElementCurrent();
+		graphicController().selectAll();
+		onKeyDown(oEvent);
+		return paraPr();
+	}
+
+	function checkRemoveObject(oShape, arrShapes)
+	{
+		return !!(arrShapes.indexOf(oShape) === -1 && oShape.bDeleted);
+	}
+
+	function createGroup(arrShapes)
+	{
+		graphicController().resetSelection();
+		selectOnlyObjects(arrShapes);
+		return graphicController().createGroup();
+	}
+
+	function createChart()
+	{
+		moveAndEnterText('1', 0, 0);
+		moveAndEnterText('2', 1, 0);
+		moveAndEnterText('3', 2, 0);
+
+		moveAndEnterText('1', 0, 1);
+		moveAndEnterText('2', 1, 1);
+		moveAndEnterText('3', 2, 1);
+
+		selectToCell(0, 0);
+
+		const oProps = editor.asc_getChartObject(true);
+		oProps.changeType(0);
+		editor.asc_addChartDrawingObject(oProps);
+		return selectedObjects()[0];
+	}
+
+	let bIsCellEditorOpened = false;
+
+	function setCheckOpenCellEditor(oPr)
+	{
+		bIsCellEditorOpened = oPr;
+	}
+
+	function checkOpenCellEditor()
+	{
+		return bIsCellEditorOpened;
+	}
+
+	window.AscTestShortcut = window.AscTestShortcut || {};
+	AscTestShortcut.wbModel = wbModel;
+	AscTestShortcut.wbView = wbView;
+	AscTestShortcut.executeTestWithCatchEvent = executeTestWithCatchEvent;
+	AscTestShortcut.getFragments = getFragments;
+	AscTestShortcut.getSelectionCellEditor = getSelectionCellEditor;
+	AscTestShortcut.moveToStartCellEditor = moveToStartCellEditor;
+	AscTestShortcut.moveToEndCellEditor = moveToEndCellEditor;
+	AscTestShortcut.moveRight = moveRight;
+	AscTestShortcut.moveToCell = moveToCell;
+	AscTestShortcut.selectToCell = selectToCell;
+	AscTestShortcut.onKeyDown = onKeyDown;
+	AscTestShortcut.remove = remove;
+	AscTestShortcut.closeCellEditor = closeCellEditor;
+	AscTestShortcut.enterTextWithoutClose = enterTextWithoutClose;
+	AscTestShortcut.enterText = enterText;
+	AscTestShortcut.cellEditor = cellEditor;
+	AscTestShortcut.getCellText = getCellText;
+	AscTestShortcut.getCellTextWithoutFormat = getCellTextWithoutFormat;
+	AscTestShortcut.moveDown = moveDown;
+	AscTestShortcut.wsView = wsView;
+	AscTestShortcut.ws = ws;
+	AscTestShortcut.moveAndEnterText = moveAndEnterText;
+	AscTestShortcut.createTest = createTest;
+	AscTestShortcut.moveAndGetCellText = moveAndGetCellText;
+	AscTestShortcut.goToSheet = goToSheet;
+	AscTestShortcut.createWorksheet = createWorksheet;
+	AscTestShortcut.removeCurrentWorksheet = removeCurrentWorksheet;
+	AscTestShortcut.cleanCell = cleanCell;
+	AscTestShortcut.cleanRange = cleanRange;
+	AscTestShortcut.cleanSelection = cleanSelection;
+	AscTestShortcut.cleanActiveCell = cleanActiveCell;
+	AscTestShortcut.checkRange = checkRange;
+	AscTestShortcut.openCellEditor = openCellEditor;
+	AscTestShortcut.checkActiveCell = checkActiveCell;
+	AscTestShortcut.cleanCache = cleanCache;
+	AscTestShortcut.selectAll = selectAll;
+	AscTestShortcut.cleanAll = cleanAll;
+	AscTestShortcut.setCellFormat = setCellFormat;
+	AscTestShortcut.selectionInfo = selectionInfo;
+	AscTestShortcut.xfs = xfs;
+	AscTestShortcut.undo = undo;
+	AscTestShortcut.createEvent = createEvent;
+	AscTestShortcut.selectAllCell = selectAllCell;
+	AscTestShortcut.cellPosition = cellPosition;
+	AscTestShortcut.getCellEditMode = getCellEditMode;
+	AscTestShortcut.testPreventDefaultAndStopPropagation = testPreventDefaultAndStopPropagation;
+	AscTestShortcut.controller = controller;
+	AscTestShortcut.handlers = handlers;
+	AscTestShortcut.activeCell = activeCell;
+	AscTestShortcut.selectionRange = selectionRange;
+	AscTestShortcut.checkOpenCellEditor = checkOpenCellEditor;
+	AscTestShortcut.setCheckOpenCellEditor = setCheckOpenCellEditor;
+	AscTestShortcut.activeCellRange = activeCellRange;
+	AscTestShortcut.addHyperlink = addHyperlink;
+	AscTestShortcut.createMathInShape = createMathInShape;
+	AscTestShortcut.moveCursorRight = moveCursorRight;
+	AscTestShortcut.moveCursorLeft = moveCursorLeft;
+	AscTestShortcut.moveCursorUp = moveCursorUp;
+	AscTestShortcut.moveCursorDown = moveCursorDown;
+	AscTestShortcut.checkMoveContentShapeHelper = checkMoveContentShapeHelper;
+	AscTestShortcut.contentPosition = contentPosition;
+	AscTestShortcut.selectedContent = selectedContent;
+	AscTestShortcut.checkSelectContentShapeHelper = checkSelectContentShapeHelper;
+	AscTestShortcut.round = round;
+	AscTestShortcut.moveShapeHelper = moveShapeHelper;
+	AscTestShortcut.createTable = createTable;
+	AscTestShortcut.createSlicer = createSlicer;
+	AscTestShortcut.moveToShapeParagraph = moveToShapeParagraph;
+	AscTestShortcut.addProperty = addProperty;
+	AscTestShortcut.targetContent = targetContent;
+	AscTestShortcut.textPr = textPr;
+	AscTestShortcut.paraPr = paraPr;
+	AscTestShortcut.moveToParagraph = moveToParagraph;
+	AscTestShortcut.selectedObjects = selectedObjects;
+	AscTestShortcut.cleanGraphic = cleanGraphic;
+	AscTestShortcut.graphicController = graphicController;
+	AscTestShortcut.createShape = createShape;
+	AscTestShortcut.drawingDocument = drawingDocument;
+	AscTestShortcut.selectOnlyObjects = selectOnlyObjects;
+	AscTestShortcut.createShapeWithContent = createShapeWithContent;
+	AscTestShortcut.checkTextAfterKeyDownHelperHelloWorld = checkTextAfterKeyDownHelperHelloWorld;
+	AscTestShortcut.checkTextAfterKeyDownHelperEmpty = checkTextAfterKeyDownHelperEmpty;
+	AscTestShortcut.getParagraphText = getParagraphText;
+	AscTestShortcut.checkTextAfterKeyDownHelper = checkTextAfterKeyDownHelper;
+	AscTestShortcut.checkDirectTextPrAfterKeyDown = checkDirectTextPrAfterKeyDown;
+	AscTestShortcut.checkDirectParaPrAfterKeyDown = checkDirectParaPrAfterKeyDown;
+	AscTestShortcut.getDirectTextPrHelper = getDirectTextPrHelper;
+	AscTestShortcut.getDirectParaPrHelper = getDirectParaPrHelper;
+	AscTestShortcut.checkRemoveObject = checkRemoveObject;
+	AscTestShortcut.createGroup = createGroup;
+	AscTestShortcut.createChart = createChart;
 })(window);

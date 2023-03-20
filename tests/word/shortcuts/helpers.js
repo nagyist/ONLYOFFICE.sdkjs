@@ -39,17 +39,18 @@
 	AscCommon.CTableId = Object;
 	const AscTestShortcut = window.AscTestShortcut = {};
 
+	AscCommon.CGraphics.prototype.SetFontSlot = function () {};
+	AscCommon.CGraphics.prototype.SetFont = function () {};
+	AscCommon.CGraphics.prototype.SetFontInternal = function () {};
+
 	let editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
 	window.editor = editor;
+	editor.WordControl.m_oDrawingDocument.GetVisibleMMHeight = () => 100;
+	editor.WordControl.OnUpdateOverlay = () => {};
 	AscCommon.loadSdk = function ()
 	{
 		editor._onEndLoadSdk();
 	}
-
-
-	AscCommon.CGraphics.prototype.SetFontSlot = function () {};
-	AscCommon.CGraphics.prototype.SetFont = function () {};
-	AscCommon.CGraphics.prototype.SetFontInternal = function () {};
 
 	window.AscFonts = window.AscFonts || {};
 	AscFonts.g_fontApplication = {
@@ -79,13 +80,13 @@
 	};
 
 	AscFonts.FontPickerByCharacter = {
-		checkText: function (text, _this, callback)
+		checkText      : function (text, _this, callback)
 		{
 			callback.call(_this);
 		},
 		getFontBySymbol: function ()
 		{
-			
+
 		}
 	};
 
@@ -112,7 +113,7 @@
 		oGlobalLogicDocument = editor.WordControl.m_oLogicDocument;
 		editor.WordControl.m_oDrawingDocument.m_oLogicDocument = oGlobalLogicDocument;
 		oGlobalLogicDocument.UpdateAllSectionsInfo();
-		oGlobalLogicDocument.Set_DocumentPageSize(100, 200);
+		oGlobalLogicDocument.Set_DocumentPageSize(100, 100);
 		var props = new Asc.CDocumentSectionProps();
 		props.put_TopMargin(0);
 		props.put_LeftMargin(0);
@@ -145,6 +146,7 @@
 	{
 		oGlobalLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr(oPr), true);
 	}
+
 	function checkTextAfterKeyDownHelperEmpty(sCheckText, oEvent, oAssert, sPrompt)
 	{
 		checkTextAfterKeyDownHelper(sCheckText, oEvent, oAssert, sPrompt, '');
@@ -154,6 +156,7 @@
 	{
 		oGlobalLogicDocument.MoveCursorDown(AddToSelect, CtrlKey);
 	}
+
 	function moveCursorUp(AddToSelect, CtrlKey)
 	{
 		oGlobalLogicDocument.MoveCursorUp(AddToSelect, CtrlKey);
@@ -165,6 +168,11 @@
 		{
 			oGlobalLogicDocument.RemoveSelection();
 		}
+		if (oParagraph.Parent.SetThisElementCurrent)
+		{
+			oParagraph.Parent.SetThisElementCurrent();
+		}
+
 		oParagraph.SetThisElementCurrent();
 		if (bIsStart)
 		{
@@ -176,14 +184,23 @@
 		oGlobalLogicDocument.private_UpdateCursorXY(true, true);
 	}
 
+	function insertManualBreak()
+	{
+		const oProps = new CMathMenuBase();
+		oProps.insert_ManualBreak()
+		editor.asc_SetMathProps(oProps);
+	}
+
 	function resetLogicDocument(oLogicDocument)
 	{
 		oLogicDocument.SetDocPosType(AscCommonWord.docpostype_Content);
 	}
+
 	function clean()
 	{
 		oGlobalLogicDocument.RemoveFromContent(0, oGlobalLogicDocument.GetElementsCount(), false);
 	}
+
 	function getLogicDocumentWithParagraphs(arrText, bRecalculate)
 	{
 		resetLogicDocument(oGlobalLogicDocument);
@@ -211,10 +228,12 @@
 		const oFirstParagraph = oGlobalLogicDocument.Content[0];
 		return {oLogicDocument: oGlobalLogicDocument, oParagraph: oFirstParagraph};
 	}
+
 	function recalculate()
 	{
 		oGlobalLogicDocument.RecalculateFromStart(false);
 	}
+
 	function addParagraphToDocumentWithText(sText)
 	{
 		const oParagraph = AscTest.CreateParagraph();
@@ -319,6 +338,7 @@
 		onKeyDown(oEvent);
 		return oGlobalLogicDocument.GetDirectParaPr();
 	}
+
 	function getParagraphText(oParagraph)
 	{
 		return AscTest.GetParagraphText(oParagraph);
@@ -351,6 +371,7 @@
 	{
 		oGlobalLogicDocument.MoveCursorRight(AddToSelect, Word);
 	}
+
 	function moveCursorLeft(AddToSelect, Word)
 	{
 		oGlobalLogicDocument.MoveCursorLeft(AddToSelect, Word);
@@ -363,7 +384,368 @@
 
 	function getSelectedText()
 	{
-		return oGlobalLogicDocument.GetSelectedText(false, {TabSymbol:'\t'});
+		return oGlobalLogicDocument.GetSelectedText(false, {TabSymbol: '\t'});
+	}
+
+	function createTest(oAssert)
+	{
+		return {deep: oAssert.deepEqual.bind(oAssert), equal: oAssert.strictEqual.bind(oAssert)};
+	}
+
+	function createChart()
+	{
+		var oDrawingDocument = editor.WordControl.m_oDrawingDocument;
+
+		var oDrawing = new ParaDrawing(100, 100, null, oDrawingDocument, null, null);
+		const oChartSpace = AscCommon.getChartByType(Asc.c_oAscChartTypeSettings.lineNormal);
+		oChartSpace.spPr.setXfrm(new AscFormat.CXfrm());
+		oChartSpace.spPr.xfrm.setOffX(0);
+		oChartSpace.spPr.xfrm.setOffY(0);
+		oChartSpace.spPr.xfrm.setExtX(100);
+		oChartSpace.spPr.xfrm.setExtY(100);
+
+		oChartSpace.setParent(oDrawing);
+		oDrawing.Set_GraphicObject(oChartSpace);
+		oDrawing.setExtent(oChartSpace.spPr.xfrm.extX, oChartSpace.spPr.xfrm.extY);
+
+		oDrawing.Set_DrawingType(drawing_Anchor);
+		oDrawing.Set_WrappingType(WRAPPING_TYPE_NONE);
+		oDrawing.Set_Distance(0, 0, 0, 0);
+		const oNearestPos = oGlobalLogicDocument.Get_NearestPos(0, oChartSpace.x, oChartSpace.y, true, oDrawing);
+		oDrawing.Set_XYForAdd(oChartSpace.x, oChartSpace.y, oNearestPos, 0);
+		oDrawing.AddToDocument(oNearestPos);
+		oDrawing.CheckWH();
+		recalculate();
+
+		return oDrawing;
+	}
+
+	function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey)
+	{
+		const oKeyBoardEvent = new AscCommon.CKeyboardEvent();
+		oKeyBoardEvent.KeyCode = nKeyCode;
+		oKeyBoardEvent.ShiftKey = bIsShift;
+		oKeyBoardEvent.AltKey = bIsAlt;
+		oKeyBoardEvent.CtrlKey = bIsCtrl;
+		oKeyBoardEvent.MacCmdKey = bIsMacCmdKey;
+		oKeyBoardEvent.AltGr = bIsAltGr;
+		return oKeyBoardEvent;
+	}
+
+	function checkInsertElementByType(nType, sPrompt, oAssert, oEvent)
+	{
+		const {oParagraph} = getLogicDocumentWithParagraphs(['']);
+		onKeyDown(oEvent);
+		let bCheck = false;
+		for (let i = 0; i < oParagraph.Content.length; i += 1)
+		{
+			const oRun = oParagraph.Content[i];
+			for (let j = 0; j < oRun.Content.length; j += 1)
+			{
+				if (oRun.Content[j].Type === nType)
+				{
+					bCheck = true;
+				}
+			}
+		}
+		oAssert.true(bCheck, sPrompt);
+	}
+
+	function createParagraphWithText(sText)
+	{
+		const oParagraph = AscTest.CreateParagraph();
+		const oRun = new AscWord.CRun();
+		oParagraph.AddToContent(0, oRun);
+		oRun.AddText(sText);
+		return oParagraph;
+	}
+
+	function checkApplyParagraphStyle(sStyleName, sPrompt, oEvent, oAssert)
+	{
+		const {oLogicDocument} = getLogicDocumentWithParagraphs(['Hello World']);
+		oLogicDocument.SelectAll();
+		onKeyDown(oEvent);
+		const oParagraphPr = oLogicDocument.GetDirectParaPr();
+		const sPStyleName = oLogicDocument.Styles.Get_Name(oParagraphPr.Get_PStyle());
+		oAssert.strictEqual(sPStyleName, sStyleName, sPrompt);
+	}
+
+	function createHyperlink()
+	{
+		const oProps = new Asc.CHyperlinkProperty({Anchor: '_top', Text: "Beginning of document"});
+		editor.add_Hyperlink(oProps);
+	}
+
+	function createTable(nRows, nCols)
+	{
+		const {oLogicDocument} = getLogicDocumentWithParagraphs(['']);
+		return oLogicDocument.AddInlineTable(nCols, nRows);
+	}
+
+	function moveToTable(oTable, bToStart)
+	{
+		oTable.Document_SetThisElementCurrent();
+		if (bToStart)
+		{
+			oTable.MoveCursorToStartPos();
+		} else
+		{
+			oTable.MoveCursorToEndPos();
+		}
+	}
+
+	function createShape()
+	{
+		AscCommon.History.Create_NewPoint();
+		const oDrawing = new ParaDrawing(200, 100, null, oGlobalLogicDocument.GetDrawingDocument(), oGlobalLogicDocument, null);
+		const oShapeTrack = new AscFormat.NewShapeTrack('rect', 0, 0, oGlobalLogicDocument.theme, null, null, null, 0);
+		oShapeTrack.track({}, 0, 0);
+		const oShape = oShapeTrack.getShape(true, oGlobalLogicDocument.GetDrawingDocument(), null);
+		oShape.setBDeleted(false);
+		oShape.setParent(oDrawing);
+		oDrawing.Set_GraphicObject(oShape);
+		oDrawing.Set_DrawingType(drawing_Anchor);
+		oDrawing.Set_WrappingType(WRAPPING_TYPE_NONE);
+		oDrawing.Set_Distance(0, 0, 0, 0);
+		const oNearestPos = oGlobalLogicDocument.Get_NearestPos(0, oShape.x, oShape.y, true, oDrawing);
+		oDrawing.Set_XYForAdd(oShape.x, oShape.y, oNearestPos, 0);
+		oDrawing.AddToDocument(oNearestPos);
+		oDrawing.CheckWH();
+		recalculate();
+		return oDrawing;
+	}
+
+	function getShapeWithText(sText, bStartRecalculate)
+	{
+		const oParaDrawing = createShape();
+		selectParaDrawing(oParaDrawing);
+		const oShape = oParaDrawing.GraphicObj;
+		oShape.createTextBoxContent();
+		const oParagraph = oShape.getDocContent().Content[0];
+		moveToParagraph(oParagraph);
+		addText(sText)
+		if (bStartRecalculate)
+		{
+			startRecalculate();
+		}
+		return {oParaDrawing, oParagraph};
+	}
+
+	function createGroup(arrDrawings)
+	{
+		selectOnlyObjects(arrDrawings);
+		return drawingObjects().groupSelectedObjects();
+	}
+
+	function selectOnlyObjects(arrDrawings)
+	{
+		const oController = drawingObjects();
+		oController.resetSelection();
+		for (let i = 0; i < arrDrawings.length; i += 1)
+		{
+			const oObject = arrDrawings[i].GraphicObj;
+			if (oObject.group)
+			{
+				const oMainGroup = oObject.group.getMainGroup();
+				oMainGroup.select(oController, 0);
+				oController.selection.groupSelection = oMainGroup;
+			}
+			oObject.select(oController, 0);
+		}
+	}
+
+	function selectParaDrawing(oParaDrawing)
+	{
+		oGlobalLogicDocument.SelectDrawings([oParaDrawing], oGlobalLogicDocument);
+	}
+
+	function drawingObjects()
+	{
+		return oGlobalLogicDocument.DrawingObjects;
+	}
+
+	function logicContent()
+	{
+		return oGlobalLogicDocument.Content;
+	}
+
+	function directParaPr()
+	{
+		return oGlobalLogicDocument.GetDirectParaPr();
+	}
+
+	function mouseClick(x, y, page, isRight, count)
+	{
+		mouseDown(x, y, page, isRight, count);
+		mouseUp(x, y, page, isRight, count);
+	}
+
+	function mouseDown(x, y, page, isRight, count)
+	{
+		if (!oGlobalLogicDocument)
+			return;
+
+		let e = new AscCommon.CMouseEventHandler();
+
+		e.Button = isRight ? AscCommon.g_mouse_button_right : AscCommon.g_mouse_button_left;
+		e.ClickCount = count ? count : 1;
+
+		e.Type = AscCommon.g_mouse_event_type_down;
+		oGlobalLogicDocument.OnMouseDown(e, x, y, page);
+	}
+
+	function mouseUp(x, y, page, isRight, count)
+	{
+		if (!oGlobalLogicDocument)
+			return;
+
+		let e = new AscCommon.CMouseEventHandler();
+
+		e.Button = isRight ? AscCommon.g_mouse_button_right : AscCommon.g_mouse_button_left;
+		e.ClickCount = count ? count : 1;
+
+		e.Type = AscCommon.g_mouse_event_type_up;
+		oGlobalLogicDocument.OnMouseUp(e, x, y, page);
+	}
+
+	function mouseMove(x, y, page, isRight, count)
+	{
+		if (!oGlobalLogicDocument)
+			return;
+
+		let e = new AscCommon.CMouseEventHandler();
+
+		e.Button = isRight ? AscCommon.g_mouse_button_right : AscCommon.g_mouse_button_left;
+		e.ClickCount = count ? count : 1;
+
+		e.Type = AscCommon.g_mouse_event_type_move;
+		oGlobalLogicDocument.OnMouseMove(e, x, y, page);
+	}
+
+	function directTextPr()
+	{
+		return oGlobalLogicDocument.GetDirectTextPr();
+	}
+
+	function addToParagraph(oElement)
+	{
+		oGlobalLogicDocument.AddToParagraph(oElement);
+	}
+
+	function addBreakPage()
+	{
+		addToParagraph(new AscWord.CRunBreak(AscWord.break_Page));
+	}
+
+	function startRecalculate()
+	{
+		if (oGlobalLogicDocument.TurnOffRecalc)
+		{
+			oGlobalLogicDocument.End_SilentMode(true);
+		}
+		recalculate();
+		oGlobalLogicDocument.private_UpdateCursorXY(true, true);
+	}
+
+	function createMath(nType)
+	{
+		return editor.asc_AddMath(nType);
+	}
+
+	function addText(sText)
+	{
+		oGlobalLogicDocument.AddTextWithPr(sText);
+	}
+
+	function moveShapeHelper(nX, nY, oAssert, oEvent)
+	{
+		getLogicDocumentWithParagraphs([''], true);
+		const oParaDrawing = createShape();
+		const oShape = oParaDrawing.GraphicObj;
+		selectOnlyObjects([oParaDrawing]);
+		onKeyDown(oEvent);
+		oAssert.deepEqual({x: round(oShape.x, 13), y: round(oShape.y, 13)}, {
+			x: round(nX * AscCommon.g_dKoef_pix_to_mm, 13),
+			y: round(nY * AscCommon.g_dKoef_pix_to_mm, 13)
+		});
+	}
+
+	function drawingContentPosition()
+	{
+		const arrPos = drawingObjects().getTargetDocContent().GetContentPosition();
+		return arrPos[arrPos.length - 1].Position;
+	}
+
+	let fOldCheckOFormUserMaster;
+	function setFillingFormsMode(bState)
+	{
+		if (bState)
+		{
+			fOldCheckOFormUserMaster = oGlobalLogicDocument.CheckOFormUserMaster;
+			oGlobalLogicDocument.CheckOFormUserMaster = function ()
+			{
+				return true;
+			}
+		}
+		else
+		{
+			oGlobalLogicDocument.CheckOFormUserMaster = fOldCheckOFormUserMaster;
+		}
+		var oRole = new AscCommon.CRestrictionSettings();
+		oRole.put_OFormRole("Anyone");
+		editor.asc_setRestriction(bState ? Asc.c_oAscRestrictionType.OnlyForms : Asc.c_oAscRestrictionType.None, oRole);
+		editor.asc_SetPerformContentControlActionByClick(bState);
+		editor.asc_SetHighlightRequiredFields(bState);
+	}
+
+	let nKeyId = 0;
+
+	function createCheckBox()
+	{
+		const oCheckBox = oGlobalLogicDocument.AddContentControlCheckBox();
+		var props = new AscCommon.CContentControlPr();
+		var specProps = new AscCommon.CSdtCheckBoxPr();
+		var oFormProps = new AscCommon.CSdtFormPr('key' + nKeyId++, '', '', false);
+		props.SetFormPr(oFormProps);
+		props.put_CheckBoxPr(specProps);
+		editor.asc_SetContentControlProperties(props, oCheckBox.GetId());
+		return oCheckBox;
+	}
+
+	function createComboBox()
+	{
+		const oComboBox = oGlobalLogicDocument.AddContentControlComboBox();
+		var props = new AscCommon.CContentControlPr();
+		var specProps = new AscCommon.CSdtComboBoxPr();
+		var oFormProps = new AscCommon.CSdtFormPr('key' + nKeyId++, '', '', false);
+		props.SetFormPr(oFormProps);
+		specProps.clear();
+		specProps.add_Item('Hello', 'Hello');
+		specProps.add_Item('World', 'World');
+		props.put_ComboBoxPr(specProps);
+		editor.asc_SetContentControlProperties(props, oComboBox.GetId());
+		return oComboBox;
+	}
+	function round(nNumber, nAmount)
+	{
+		const nPower = Math.pow(10, nAmount);
+		return Math.round(nNumber * nPower) / nPower;
+	}
+	function createComplexForm()
+	{
+		const oComplexForm = oGlobalLogicDocument.AddComplexForm();
+		var props = new AscCommon.CContentControlPr();
+		var formTextPr = new AscCommon.CSdtTextFormPr();
+		formTextPr.put_MultiLine(true);
+		props.put_TextFormPr(formTextPr);
+		editor.asc_SetContentControlProperties(props, oComplexForm.GetId());
+		return oComplexForm;
+	}
+
+	function contentPosition()
+	{
+		const oPos = oGlobalLogicDocument.GetContentPosition();
+		return oPos[oPos.length - 1].Position;
 	}
 
 	AscTestShortcut.addPropertyToDocument = addPropertyToDocument;
@@ -388,4 +770,41 @@
 	AscTestShortcut.moveCursorRight = moveCursorRight;
 	AscTestShortcut.selectAll = selectAll;
 	AscTestShortcut.getSelectedText = getSelectedText;
+	AscTestShortcut.createTest = createTest;
+	AscTestShortcut.createChart = createChart;
+	AscTestShortcut.createEvent = createEvent;
+	AscTestShortcut.checkInsertElementByType = checkInsertElementByType;
+	AscTestShortcut.createParagraphWithText = createParagraphWithText;
+	AscTestShortcut.checkApplyParagraphStyle = checkApplyParagraphStyle;
+	AscTestShortcut.createHyperlink = createHyperlink;
+	AscTestShortcut.createTable = createTable;
+	AscTestShortcut.moveToTable = moveToTable;
+	AscTestShortcut.createShape = createShape;
+	AscTestShortcut.getShapeWithText = getShapeWithText;
+	AscTestShortcut.createGroup = createGroup;
+	AscTestShortcut.selectOnlyObjects = selectOnlyObjects;
+	AscTestShortcut.selectParaDrawing = selectParaDrawing;
+	AscTestShortcut.drawingObjects = drawingObjects;
+	AscTestShortcut.logicContent = logicContent;
+	AscTestShortcut.directParaPr = directParaPr;
+	AscTestShortcut.directTextPr = directTextPr;
+	AscTestShortcut.addToParagraph = addToParagraph;
+	AscTestShortcut.addBreakPage = addBreakPage;
+	AscTestShortcut.startRecalculate = startRecalculate;
+	AscTestShortcut.createMath = createMath;
+	AscTestShortcut.addText = addText;
+	AscTestShortcut.moveShapeHelper = moveShapeHelper;
+	AscTestShortcut.drawingContentPosition = drawingContentPosition;
+	AscTestShortcut.setFillingFormsMode = setFillingFormsMode;
+	AscTestShortcut.createCheckBox = createCheckBox;
+	AscTestShortcut.createComboBox = createComboBox;
+	AscTestShortcut.createComplexForm = createComplexForm;
+	AscTestShortcut.contentPosition = contentPosition;
+
+	AscTestShortcut.mouseDown = mouseDown;
+	AscTestShortcut.mouseUp = mouseUp;
+	AscTestShortcut.mouseClick = mouseClick;
+	AscTestShortcut.mouseMove = mouseMove;
+	AscTestShortcut.resetLogicDocument = resetLogicDocument;
+	AscTestShortcut.insertManualBreak = insertManualBreak;
 })(window);
