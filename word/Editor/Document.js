@@ -12360,8 +12360,8 @@ CDocument.prototype.Document_Redo = function()
 };
 CDocument.prototype.UpdateAfterUndoRedo = function(changes)
 {
-	// if (this.OFormDocument)
-	// 	this.OFormDocument.onUndoRedo();
+	if (this.OFormDocument)
+		this.OFormDocument.onUndoRedo();
 	
 	this.DocumentOutline.UpdateAll(); // TODO: надо бы подумать как переделать на более легкий пересчет
 	this.Comments.UpdateAll();        // TODO: Надо переделать как на Start/Finalize
