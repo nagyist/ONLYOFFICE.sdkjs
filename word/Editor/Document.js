@@ -9239,29 +9239,6 @@ CDocument.prototype.OnKeyDown = function(e)
 				}
 				oCheckBox.SkipSpecialContentControlLock(false);
 			}
-			else
-			{
-				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, isFormFieldEditing))
-				{
-					this.StartAction(AscDFH.historydescription_Document_SpaceButton);
-
-					// Если мы находимся в формуле, тогда пытаемся выполнить автозамену
-					if (null !== oMath && true === oMath.Make_AutoCorrect())
-					{
-						// Ничего тут не делаем. Все делается в автозамене
-					}
-					else
-					{
-						this.DrawingDocument.TargetStart();
-						this.DrawingDocument.TargetShow();
-
-						this.CheckLanguageOnTextAdd = true;
-						this.AddToParagraph(new AscWord.CRunSpace());
-						this.CheckLanguageOnTextAdd = false;
-					}
-					this.FinalizeAction();
-				}
-			}
 
 			bRetValue = keydownresult_PreventNothing;
 		}
@@ -9415,7 +9392,7 @@ CDocument.prototype.OnKeyDown = function(e)
 					oForm = null;
 
 				if (oForm)
-					this.TurnComboBoxFormValue(oForm, true);
+					this.TurnComboBoxFormValue(oForm, false);
 			}
 			else
 			{
@@ -9486,7 +9463,7 @@ CDocument.prototype.OnKeyDown = function(e)
 				bRetValue = keydownresult_PreventAll;
 			}
 		}
-		else if (e.KeyCode === 88 && true === e.AltKey && true !== e.ShiftKey && (bIsMacOs && true === e.CtrlKey || !bIsMacOs)) //Alt + X on Windows or Alt + Ctrl + X on Mac
+		else if (e.KeyCode === 88 && true === e.AltKey && true !== e.ShiftKey && (bIsMacOs && true === e.IsCtrl() || !bIsMacOs)) //Alt + X on Windows or Alt + Ctrl + X on Mac
 		{
 			var arrParagraphs = this.GetSelectedParagraphs();
 			if (arrParagraphs.length === 1)
