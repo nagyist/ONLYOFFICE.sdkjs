@@ -30,6 +30,7 @@
  *
  */
 
+"use strict";
 
 (function (window)
 {

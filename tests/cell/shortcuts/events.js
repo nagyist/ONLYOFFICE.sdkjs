@@ -30,9 +30,12 @@
  *
  */
 
+"use strict";
+
 (function (window)
 {
-	const {createEvent, cleanGraphic} = AscTestShortcut;
+	const createEvent = AscTestShortcut.createEvent;
+	const cleanGraphic = AscTestShortcut.cleanGraphic;
 	const testAll = 0;
 	const testWindows = 1;
 	const testMacOs = 2;

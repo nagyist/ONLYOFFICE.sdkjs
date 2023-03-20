@@ -25,6 +25,11 @@
 <script type="text/javascript">
 	window.sdk_scripts.forEach(function (item)
 	{
+		if (item === '../../../../sdkjs/common/TableId.js')
+		{
+			document.write('<script type="text/javascript" src="TableId.js"><\/script>');
+			return;
+		}
 		if (item === "../../../../sdkjs/common/libfont/fonts.js" || item === "../../../../sdkjs/common/zlib/zlib.js")
 		{
 			return;

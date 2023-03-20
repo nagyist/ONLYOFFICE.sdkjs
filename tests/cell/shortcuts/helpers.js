@@ -30,6 +30,9 @@
  *
  */
 
+"use strict";
+
+var AscTestShortcut = AscTestShortcut || {};
 (function (window)
 {
 	window.AscFonts = AscFonts || {};
@@ -42,6 +45,16 @@
 		callback();
 	};
 	Asc.spreadsheet_api.prototype._loadModules = function () {};
+	AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function() {
+		this.ImageLoader = AscCommon.g_image_loader;
+		this.chartPreviewManager   = new AscCommon.ChartPreviewManager();
+		this.textArtPreviewManager = new AscCommon.TextArtPreviewManager();
+
+		AscFormat.initStyleManager();
+	};
+	Asc.spreadsheet_api.prototype._loadFonts = function(fonts, callback) {
+		callback();
+	};
 	AscCommonExcel.WorksheetView.prototype._calcVisibleRows = function ()
 	{
 
@@ -111,11 +124,13 @@
 	function initEditor()
 	{
 		const editor = new Asc.spreadsheet_api({'id-view': 'editor_sdk', 'id-input': 'ce-cell-content'});
-		editor.FontLoader.LoadDocumentFonts = function ()
+		editor.FontLoader = {
+			LoadDocumentFonts: function ()
 		{
 			editor.ServerIdWaitComplete = true;
 			editor._coAuthoringInitEnd();
 			editor.asyncFontsDocumentEndLoaded();
+		}
 		}
 
 
@@ -135,8 +150,6 @@
 
 	function createEvent(nKeyCode, bIsCtrl, bIsShift, bIsAlt, bIsAltGr, bIsMacCmdKey)
 	{
-		bIsPrevent = false;
-		bIsStopPropogation = false;
 		const oKeyBoardEvent = {
 			preventDefault : function ()
 			{
@@ -815,7 +828,6 @@
 		return bIsCellEditorOpened;
 	}
 
-	window.AscTestShortcut = window.AscTestShortcut || {};
 	AscTestShortcut.wbModel = wbModel;
 	AscTestShortcut.wbView = wbView;
 	AscTestShortcut.executeTestWithCatchEvent = executeTestWithCatchEvent;

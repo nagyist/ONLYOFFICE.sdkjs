@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2022
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -34,26 +34,24 @@
 
 (function (window)
 {
-	Asc.asc_docs_api.prototype._loadModules = function () {};
-	AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function() {
-		this.ImageLoader = AscCommon.g_image_loader;
-		this.chartPreviewManager   = new AscCommon.ChartPreviewManager();
-		this.textArtPreviewManager = new AscCommon.TextArtPreviewManager();
+	AscCommon.g_oTableId = {
+		map : {},
+		Add : function(c, id)
+		{
+			this.map[id] = c;
+		},
+		Get_ById : function(id)
+		{
+			if (!this.map[id])
+				return null;
 
-		AscFormat.initStyleManager();
+			return this.map[id];
+		},
+		TurnOff : function(){},
+		TurnOn : function(){},
+		init : function () {},
 	};
-	const editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
-	editor.ShowThumbnails(true);
-	AscCommon.loadSdk = function ()
-	{
-		editor._onEndLoadSdk();
-	}
-	editor.WordControl.DemonstrationManager.OnPaintSlide = function () {};
 
-	//--------------------------------------------------------export----------------------------------------------------
-	AscTest.DrawingDocument = editor.WordControl.m_oDrawingDocument;
-	AscTest.Editor = editor;
-
-	window.editor = editor;
-
+	AscCommon.g_oIdCounter.m_bLoad = false;
+	AscCommon.g_oIdCounter.m_bRead = false;
 })(window);

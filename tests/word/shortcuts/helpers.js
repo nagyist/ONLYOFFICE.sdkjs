@@ -36,22 +36,6 @@
 	{
 		callback();
 	}
-	AscCommon.CTableId = Object;
-	const AscTestShortcut = window.AscTestShortcut = {};
-
-	AscCommon.CGraphics.prototype.SetFontSlot = function () {};
-	AscCommon.CGraphics.prototype.SetFont = function () {};
-	AscCommon.CGraphics.prototype.SetFontInternal = function () {};
-
-	Asc.asc_docs_api.prototype._loadModules = function () {};
-	let editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
-	window.editor = editor;
-	editor.WordControl.m_oDrawingDocument.GetVisibleMMHeight = () => 100;
-	editor.WordControl.OnUpdateOverlay = () => {};
-	AscCommon.loadSdk = function ()
-	{
-		editor._onEndLoadSdk();
-	}
 
 	window.AscFonts = window.AscFonts || {};
 	AscFonts.g_fontApplication = {
@@ -74,6 +58,29 @@
 	}
 
 	window.g_fontApplication = AscFonts.g_fontApplication;
+	AscCommon.CTableId = Object;
+	const AscTestShortcut = window.AscTestShortcut = {};
+
+	AscCommon.CGraphics.prototype.SetFontSlot = function () {};
+	AscCommon.CGraphics.prototype.SetFont = function () {};
+	AscCommon.CGraphics.prototype.SetFontInternal = function () {};
+
+	Asc.asc_docs_api.prototype._loadModules = function () {};
+	AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function() {
+		this.ImageLoader = AscCommon.g_image_loader;
+		this.chartPreviewManager   = new AscCommon.ChartPreviewManager();
+		this.textArtPreviewManager = new AscCommon.TextArtPreviewManager();
+
+		AscFormat.initStyleManager();
+	};
+	let editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
+	window.editor = editor;
+	editor.WordControl.m_oDrawingDocument.GetVisibleMMHeight = () => 100;
+	editor.WordControl.OnUpdateOverlay = () => {};
+	AscCommon.loadSdk = function ()
+	{
+		editor._onEndLoadSdk();
+	}
 
 	Asc.createPluginsManager = function ()
 	{
