@@ -1001,9 +1001,9 @@
 		let result = "DocumentInfo:";
 
 		if (logicDocument.Action.Start)
-			result += "\nAction: " + logicDocument.Action.Description;
+			result += "\n Action: " + logicDocument.Action.Description;
 
-		result += "\nSelection: " + logicDocument.IsSelectionUse();
+		result += "\n Selection: " + logicDocument.IsSelectionUse();
 
 		return result;
 	};
@@ -1217,7 +1217,14 @@
 
 	asc_docs_api.prototype.SetMobileTopOffset = function(offset, offsetScrollTop)
 	{
-		this.WordControl && this.WordControl.setOffsetTop(offset, offsetScrollTop);
+		if (!this.WordControl || !this.WordControl.IsInitControl)
+		{
+			this.startMobileOffset = { offset : offset, offsetScrollTop : offsetScrollTop };
+		}
+		else
+		{
+			this.WordControl.setOffsetTop(offset, offsetScrollTop);
+		}
 	};
 
 	asc_docs_api.prototype.CreateCSS = function()
@@ -1982,8 +1989,7 @@ background-repeat: no-repeat;\
 		{
 			if (e && true === AscCommon.CollaborativeEditing.Is_Fast())
 			{
-				var CursorInfo = JSON.parse(e);
-				AscCommon.CollaborativeEditing.Add_ForeignCursorToUpdate(CursorInfo.UserId, CursorInfo.CursorInfo, CursorInfo.UserShortId);
+				AscCommon.CollaborativeEditing.UpdateForeignCursorByAdditionalInfo(JSON.parse(e));
 			}
 		};
 	};
@@ -2811,9 +2817,9 @@ background-repeat: no-repeat;\
 		{
 			// Пересылаем свои изменения
 			AscCommon.CollaborativeEditing.Send_Changes(this.IsUserSave, {
-				UserId      : this.CoAuthoringApi.getUserConnectionId(),
-				UserShortId : this.DocInfo.get_UserId(),
-				CursorInfo  : CursorInfo
+				"UserId"      : this.CoAuthoringApi.getUserConnectionId(),
+				"UserShortId" : this.DocInfo.get_UserId(),
+				"CursorInfo"  : CursorInfo
 			}, HaveOtherChanges, true);
 		}
 	};
@@ -8830,7 +8836,9 @@ background-repeat: no-repeat;\
 			oAdditionalData["c"] = 'savefromorigin';
 			if (this.currentPassword) {
 				oAdditionalData["password"] = this.currentPassword;
-				oAdditionalData["savepassword"] = this.currentPassword;
+				if (DownloadType.Print !== downloadType) {
+					oAdditionalData["savepassword"] = this.currentPassword;
+				}
 			}
 		}
 
@@ -13441,6 +13449,25 @@ background-repeat: no-repeat;\
 			return;
 		}
 		return oDocument.PutImageToSelection(sImageSrc, nWidth, nHeight);
+	};
+	asc_docs_api.prototype.getPluginContextMenuInfo = function (sImageSrc, nWidth, nHeight)
+	{
+		const oLogicDocument = this.private_GetLogicDocument();
+		if(!oLogicDocument)
+		{
+			return new AscCommon.CPluginCtxMenuInfo();
+		}
+		if (!oLogicDocument.IsSelectionUse())
+		{
+			return new AscCommon.CPluginCtxMenuInfo(Asc.c_oPluginContextMenuTypes.Target);
+		}
+		const oDrawingObjects = oLogicDocument.DrawingObjects;
+		const aSelectedObjects = oDrawingObjects.selectedObjects;
+		if(aSelectedObjects.length < 1)
+		{
+			return new AscCommon.CPluginCtxMenuInfo(Asc.c_oPluginContextMenuTypes.Selection);
+		}
+		return oDrawingObjects.getPluginSelectionInfo();
 	};
 
 	asc_docs_api.prototype.asc_getDocumentProtection = function () {

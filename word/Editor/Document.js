@@ -10528,6 +10528,10 @@ CDocument.prototype.GetNumbering = function()
 {
 	return this.Numbering;
 };
+CDocument.prototype.GetNumberingManager = function()
+{
+	return this.GetNumbering();
+};
 /**
  * Получаем стиль по выделенному фрагменту
  */
@@ -11787,8 +11791,9 @@ CDocument.prototype.private_UpdateTracks = function(bSelection, bEmptySelection)
 	{
 		if (oInlineLevelSdt.IsForm())
 			oCurrentForm = oInlineLevelSdt;
-
-		oInlineLevelSdt.DrawContentControlsTrack(AscCommon.ContentControlTrack.In);
+		
+		if (!oInlineLevelSdt.IsForm() || !oInlineLevelSdt.IsFixedForm() || this.IsFillingOFormMode())
+			oInlineLevelSdt.DrawContentControlsTrack(AscCommon.ContentControlTrack.In);
 	}
 	else if (oBlockLevelSdt)
 	{
@@ -23078,6 +23083,8 @@ CDocument.prototype.UpdateFields = function(isBySelection)
 	{
 		this.StartAction(AscDFH.historydescription_Document_UpdateFields);
 
+		// TODO: Функция работает плохо. Обновляются вообще все поля, даже вложенные в другие
+		//       Вложенные сами по себе обновятся при обновлении внешних
 		for (var nIndex = 0, nCount = arrFields.length; nIndex < nCount; ++nIndex)
 		{
 			arrFields[nIndex].Update(false, false);

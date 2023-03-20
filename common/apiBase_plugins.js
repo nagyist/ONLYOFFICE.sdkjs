@@ -1585,4 +1585,37 @@
         return langName;
     };
 
+	/**
+	 * @typedef {Object} ContextMenuItem
+	 * The context menu item
+	 * @property {string} id - The item id.
+	 * @property {localeTranslate} text - The item text.
+	 * @property {boolean} [disabled] - Is disabled item.
+	 * @property {ContextMenuItem[]} items - An array containing the items for current item.
+	 */
+
+	/**
+	 * Add item to context menu
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @alias AddContextMenuItem
+	 * @param {ContextMenuItem[]} items - Array of items
+	 */
+	Api.prototype["pluginMethod_AddContextMenuItem"] = function(items)
+	{
+		this.onPluginAddContextMenuItem(items);
+	};
+
+	/**
+	 * Update items in context menu
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @alias UpdateContextMenuItem
+	 * @param {ContextMenuItem[]} items - Array of items
+	 */
+	Api.prototype["pluginMethod_UpdateContextMenuItem"] = function(items)
+	{
+		this.onPluginUpdateContextMenuItem(items);
+	};
+
 })(window);
