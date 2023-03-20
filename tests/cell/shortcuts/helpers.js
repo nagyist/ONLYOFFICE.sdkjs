@@ -41,6 +41,7 @@
 	{
 		callback();
 	};
+	Asc.spreadsheet_api.prototype._loadModules = function () {};
 	AscCommonExcel.WorksheetView.prototype._calcVisibleRows = function ()
 	{
 

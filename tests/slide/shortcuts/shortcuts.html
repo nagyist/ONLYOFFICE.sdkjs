@@ -30,6 +30,10 @@
 			document.write('<script type="text/javascript" src="../common/common.js"><\/script>');
 		} else
 		{
+			if (item === "../../../../sdkjs/common/libfont/fonts.js" || item === "../../../../sdkjs/common/zlib/zlib.js")
+			{
+				return;
+			}
 			document.write('<script type="text/javascript" src="' + item + '"><\/script>');
 			if (item === '../../../../sdkjs/common/Controls.js')
 			{

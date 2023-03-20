@@ -34,6 +34,7 @@
 
 (function (window)
 {
+	Asc.asc_docs_api.prototype._loadModules = function () {};
 	const editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
 	editor.ShowThumbnails(true);
 	AscCommon.loadSdk = function ()

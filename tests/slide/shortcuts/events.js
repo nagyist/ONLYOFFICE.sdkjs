@@ -31,7 +31,7 @@
  */
 
 
-(function ()
+(function (window)
 {
 	const {createNativeEvent} = AscTestShortcut;
 	const testAll = 0;
@@ -391,4 +391,4 @@
 	AscTestShortcut.oThumbnailsTypes = oThumbnailsTypes;
 	AscTestShortcut.oDemonstrationTypes = oDemonstrationTypes;
 	AscTestShortcut.oDemonstrationEvents = oDemonstrationEvents;
-})();
+})(window);

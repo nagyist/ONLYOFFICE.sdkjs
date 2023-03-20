@@ -43,6 +43,7 @@
 	AscCommon.CGraphics.prototype.SetFont = function () {};
 	AscCommon.CGraphics.prototype.SetFontInternal = function () {};
 
+	Asc.asc_docs_api.prototype._loadModules = function () {};
 	let editor = new Asc.asc_docs_api({'id-view': 'editor_sdk'});
 	window.editor = editor;
 	editor.WordControl.m_oDrawingDocument.GetVisibleMMHeight = () => 100;
@@ -722,6 +723,7 @@
 		specProps.clear();
 		specProps.add_Item('Hello', 'Hello');
 		specProps.add_Item('World', 'World');
+		specProps.add_Item('yo', 'yo');
 		props.put_ComboBoxPr(specProps);
 		editor.asc_SetContentControlProperties(props, oComboBox.GetId());
 		return oComboBox;

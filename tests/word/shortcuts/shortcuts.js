@@ -1565,10 +1565,10 @@
 				createComboBox();
 				setFillingFormsMode(true);
 				onKeyDown(oEvent);
-				oAssert.strictEqual(AscTest.GetParagraphText(logicContent()[0]), 'World', "Test select next option in combo box");
+				oAssert.strictEqual(AscTest.GetParagraphText(logicContent()[0]), 'Hello', "Test select previous option in combo box");
 
 				onKeyDown(oEvent);
-				oAssert.strictEqual(AscTest.GetParagraphText(logicContent()[0]), 'Hello', "Test select next option in combo box");
+				oAssert.strictEqual(AscTest.GetParagraphText(logicContent()[0]), 'yo', "Test select previous option in combo box");
 				setFillingFormsMode(false);
 			}, oTestTypes.previousOptionComboBox);
 		});

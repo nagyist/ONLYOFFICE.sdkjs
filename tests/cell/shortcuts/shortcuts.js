@@ -188,37 +188,37 @@
 					equal(getCellText(), '10');
 				}, oTableTypes.changeFormatTableInfo);
 			});
-
-			QUnit.test.todo('Test calculate all', (oAssert) =>
-			{
-				const {deep, equal} = createTest(oAssert);
-				startTableTest((oEvent) =>
-				{
-
-				}, oTableTypes.calculateAll);
-
-			});
-
-
-			QUnit.test.todo('Test calculate active sheet', (oAssert) =>
-			{
-				const {deep, equal} = createTest(oAssert);
-				startTableTest((oEvent) =>
-				{
-
-				}, oTableTypes.calculateActiveSheet);
-
-			});
-
-			QUnit.test.todo('Test calculate only changed', (oAssert) =>
-			{
-				const {deep, equal} = createTest(oAssert);
-				startTableTest((oEvent) =>
-				{
-
-				}, oTableTypes.calculateOnlyChanged);
-
-			});
+			// todo
+			// QUnit.test.todo('Test calculate all', (oAssert) =>
+			// {
+			// 	const {deep, equal} = createTest(oAssert);
+			// 	startTableTest((oEvent) =>
+			// 	{
+			//
+			// 	}, oTableTypes.calculateAll);
+			//
+			// });
+			//
+			//
+			// QUnit.test.todo('Test calculate active sheet', (oAssert) =>
+			// {
+			// 	const {deep, equal} = createTest(oAssert);
+			// 	startTableTest((oEvent) =>
+			// 	{
+			//
+			// 	}, oTableTypes.calculateActiveSheet);
+			//
+			// });
+			//
+			// QUnit.test.todo('Test calculate only changed', (oAssert) =>
+			// {
+			// 	const {deep, equal} = createTest(oAssert);
+			// 	startTableTest((oEvent) =>
+			// 	{
+			//
+			// 	}, oTableTypes.calculateOnlyChanged);
+			//
+			// });
 
 			QUnit.test('Test focus on cell editor', (oAssert) =>
 			{
