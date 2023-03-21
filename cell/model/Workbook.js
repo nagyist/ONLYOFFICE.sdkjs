@@ -12964,7 +12964,7 @@
 		let t = this;
 		let isIterative = this.getIsIterative();	// is iterative calculations are enabled
 		if (this.getIsDirty()) {
-			if (g_cCalcRecursion.incLevel()) {
+			if (g_cCalcRecursion.incLevel(this)) {
 				// if incLevel is possible, do the calculation
 				let isCalc = this.getIsCalc();
 				// the isCalc flag is set to true during the calculation of the cyclic formula, and is set to false at the end
@@ -13006,21 +13006,21 @@
 				});
 
 				// if incLevel is max, do the reverse calculation
-				g_cCalcRecursion.decLevel();
-				if (g_cCalcRecursion.getIsForceBacktracking()) {
+				g_cCalcRecursion.decLevel(this);
+				if (g_cCalcRecursion.getIsForceBacktracking(this)) {
 					g_cCalcRecursion.insert({ws: this.ws, nRow: this.nRow, nCol: this.nCol});
-					if (0 === g_cCalcRecursion.getLevel() && !g_cCalcRecursion.getIsProcessRecursion()) {
+					if (g_cCalcRecursion.getAllLevelsZero(this) && !g_cCalcRecursion.getIsProcessRecursion()) {
 						g_cCalcRecursion.setIsProcessRecursion(true);
 						do {
-							g_cCalcRecursion.setIsForceBacktracking(false);
-							g_cCalcRecursion.foreachInReverse(function(elem) {
+							g_cCalcRecursion.setIsForceBacktracking(false, this);
+							/*g_cCalcRecursion.foreachInReverse(function(elem) {
 								elem.ws._getCellNoEmpty(elem.nRow, elem.nCol, function(cell) {
 									if(cell && cell.getIsDirty()){
 										cell.setIsCalc(false);
 									}
 								});
-							});
-						} while (g_cCalcRecursion.getIsForceBacktracking());
+							});*/
+						} while (g_cCalcRecursion.getIsForceBacktracking(this));
 						g_cCalcRecursion.setIsProcessRecursion(false);
 					} else {
 						// do math

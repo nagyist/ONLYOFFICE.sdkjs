@@ -8089,14 +8089,37 @@ function parserFormula( formula, parent, _ws ) {
 		this.elems = [];
 		this.isForceBacktracking = false;
 		this.isProcessRecursion = false;
+
+		this.levelsMap = {};
+		this.ForceBacktrackingMap = {};
 	}
 
 	//for chrome63(real maximum call stack size is 12575) MAXRECURSION that cause excaption is 783
 	//by measurement: stack size in doctrenderer is one fourth smaller than chrome
-	CalcRecursion.prototype.MAXRECURSION = 10;
-	CalcRecursion.prototype.incLevel = function () {
+	CalcRecursion.prototype.MAXRECURSION = 2;
+	CalcRecursion.prototype.incLevel = function (cell) {
+
+
+		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
+
+		if (this.getIsForceBacktracking(cell)) {
+			return false;
+		}
+		if (!this.levelsMap[cellIndex]) {
+			this.levelsMap[cellIndex] = 0;
+		}
+		let res = this.levelsMap[cellIndex] < CalcRecursion.prototype.MAXRECURSION;
+		if (res) {
+			this.levelsMap[cellIndex]++;
+		} else {
+			this.setIsForceBacktracking(true, cell);
+		}
+		return res;
+
+
+
 		// return true/false depending on whether the maximum recursion level has been reached
-		if (this.getIsForceBacktracking()) {
+		/*if (this.getIsForceBacktracking()) {
 			return false;
 		}
 		let res = this.level < CalcRecursion.prototype.MAXRECURSION;
@@ -8105,13 +8128,23 @@ function parserFormula( formula, parent, _ws ) {
 		} else {
 			this.setIsForceBacktracking(true);
 		}
-		return res;
+		return res;*/
 	};
-	CalcRecursion.prototype.decLevel = function () {
-		this.level--;
+	CalcRecursion.prototype.decLevel = function (cell) {
+		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
+		this.levelsMap[cellIndex]--;
 	};
-	CalcRecursion.prototype.getLevel = function () {
-		return this.level;
+	CalcRecursion.prototype.getLevel = function (cell) {
+		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
+		return this.levelsMap[cellIndex];
+	};
+	CalcRecursion.prototype.getAllLevelsZero = function () {
+		for (let i in this.levelsMap) {
+			if (this.levelsMap[i] !== 0) {
+				return false;
+			}
+		}
+		return true;
 	};
 	CalcRecursion.prototype.insert = function (val) {
 		this.elemsPart.push(val);
@@ -8127,15 +8160,17 @@ function parserFormula( formula, parent, _ws ) {
 			}
 		}
 	};
-	CalcRecursion.prototype.setIsForceBacktracking = function (val) {
-		if (!this.isForceBacktracking) {
+	CalcRecursion.prototype.setIsForceBacktracking = function (val, cell) {
+		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
+		if (!this.ForceBacktrackingMap[cellIndex]) {
 			this.elemsPart = [];
 			this.elems.push(this.elemsPart);
 		}
-		this.isForceBacktracking = val;
+		this.ForceBacktrackingMap[cellIndex] = val;
 	};
-	CalcRecursion.prototype.getIsForceBacktracking = function () {
-		return this.isForceBacktracking;
+	CalcRecursion.prototype.getIsForceBacktracking = function (cell) {
+		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
+		return this.ForceBacktrackingMap[cellIndex];
 	};
 	CalcRecursion.prototype.setIsProcessRecursion = function (val) {
 		this.isProcessRecursion = val;
@@ -8143,6 +8178,17 @@ function parserFormula( formula, parent, _ws ) {
 	CalcRecursion.prototype.getIsProcessRecursion = function () {
 		return this.isProcessRecursion;
 	};
+	CalcRecursion.prototype.clean = function () {
+		this.level = 0;
+		this.elemsPart = [];
+		this.elems = [];
+		this.isForceBacktracking = false;
+		this.isProcessRecursion = false;
+
+		this.levelsMap = {};
+		this.ForceBacktrackingMap = {};
+	};
+
 	var g_cCalcRecursion = new CalcRecursion();
 
 	function parseNum(str) {
