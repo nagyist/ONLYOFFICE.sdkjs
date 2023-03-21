@@ -559,10 +559,10 @@ else
 		Module["_free"](ext);
 		return res;
 	};
-	CFile.prototype["getInteractiveForms"] = function()
+	CFile.prototype["getInteractiveForms"] = function(pageIndex, width, height, backgroundColor)
 	{
 		var res = [];
-		var ext = Module["_GetInteractiveForms"](this.nativeFile);
+		var ext = Module["_GetInteractiveForms"](this.nativeFile, pageIndex, width, height, backgroundColor === undefined ? 0xFFFFFF : backgroundColor);
 		if (ext == 0)
 			return res;
 		
@@ -592,13 +592,21 @@ else
 			rec["locked"]   = rec["annotflag"] & (1 << 7); // Locked
 			rec["lockedC"]  = rec["annotflag"] & (1 << 9); // LockedContents
 
-			rec["name"] = reader.readString();
-			rec["page"] = reader.readInt();
+			rec["name"] = reader.readString(); 
 			// Необходимо смещение полученных координат как у getStructure и viewer.navigate
 			rec["x1"] = reader.readDouble();
 			rec["y1"] = reader.readDouble();
 			rec["x2"] = reader.readDouble();
 			rec["y2"] = reader.readDouble();
+			
+			// Внешний вид аннотации
+			rec["wAP"] = reader.readInt();
+			rec["hAP"] = reader.readInt();
+			let np1 = reader.readInt();
+			let np2 = reader.readInt();
+			// Указатель на память, аналогичный возвращаемому getPagePixmap. Память необходимо освободить
+			rec["retValueWidget"] = np2 << 32 | np1;
+			
 			rec["alignment"] = reader.readInt();
 			rec["type"] = reader.readString();
 			rec["flag"] = reader.readInt();
