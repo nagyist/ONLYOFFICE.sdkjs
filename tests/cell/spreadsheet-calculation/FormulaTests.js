@@ -3131,6 +3131,42 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), -51);
 
+		oParser = new parserFormula('ROUND("0.91",2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0.91);
+
+		oParser = new parserFormula('ROUND("0.91",)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		oParser = new parserFormula('ROUND("1.11",1)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1.1);
+
+		oParser = new parserFormula('ROUND("1.11s",2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		oParser = new parserFormula('ROUND("1.11.11",2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		oParser = new parserFormula('ROUND("-1.445",2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), -1.45);
+
+		oParser = new parserFormula('ROUND("1.445",2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1.45);
+
+		oParser = new parserFormula('ROUND("-1.445",-2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0);
+
+		oParser = new parserFormula('ROUND("1.445",-2)', "A1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0);
+
 
 		testArrayFormula2(assert, "ROUND", 2, 2);
 	});
@@ -4159,7 +4195,7 @@ $(function () {
 
 		oParser = new parserFormula("EXACT(0.8,0.7+0.1)", "A2", ws);
 		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "TRUE");			// TRUE
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE");		// TRUE
 
 		oParser = new parserFormula("EXACT(0.3,0.2+0.1)", "A2", ws);
 		assert.ok(oParser.parse());

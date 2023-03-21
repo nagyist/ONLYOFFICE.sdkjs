@@ -3954,11 +3954,11 @@
 		}
 
 		function Floor(number, significance) {
-			var quotient = number / significance;
+			let quotient = number / significance;
 			if (quotient == 0) {
 				return 0;
 			}
-			var nolpiat = 5 * Math.sign(quotient) *
+			let nolpiat = 5 * Math.sign(quotient) *
 				Math.pow(10, Math.floor(Math.log10(Math.abs(quotient))) - cExcelSignificantDigits);
 			return truncate(quotient + nolpiat) * significance;
 		}
@@ -3978,7 +3978,7 @@
 				return new cNumber(0);
 			}
 
-			var significance = SignZeroPositive(number) * Math.pow(10, -truncate(num_digits));
+			let significance = SignZeroPositive(number) * Math.pow(10, -truncate(num_digits));
 
 			number += significance / 2;
 
@@ -3990,19 +3990,19 @@
 
 		}
 
-		var arg0 = arg[0], arg1 = arg[1];
-		if (arg0 instanceof cArea || arg0 instanceof cArea3D) {
+		let arg0 = arg[0], arg1 = arg[1];
+		if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
 			arg0 = arg0.cross(arguments[1]);
 		}
-		if (arg1 instanceof cArea || arg1 instanceof cArea3D) {
+		if (cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
 			arg1 = arg1.cross(arguments[1]);
 		}
 
-		if (arg0 instanceof cRef || arg0 instanceof cRef3D) {
+		if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
 			arg0 = arg0.getValue();
-			if (arg0 instanceof cError) {
+			if (cElementType.error === arg0.type) {
 				return arg0;
-			} else if (arg0 instanceof cString) {
+			} else if (cElementType.string === arg0.type) {
 				return new cError(cErrorType.wrong_value_type);
 			} else {
 				arg0 = arg0.tocNumber();
@@ -4011,11 +4011,11 @@
 			arg0 = arg0.tocNumber();
 		}
 
-		if (arg1 instanceof cRef || arg1 instanceof cRef3D) {
+		if (cElementType.cell === arg1.type || cElementType.cell3D === arg1.type) {
 			arg1 = arg1.getValue();
-			if (arg1 instanceof cError) {
+			if (cElementType.error === arg1.type) {
 				return arg1;
-			} else if (arg1 instanceof cString) {
+			} else if (cElementType.string === arg1.type) {
 				return new cError(cErrorType.wrong_value_type);
 			} else {
 				arg1 = arg1.tocNumber();
@@ -4024,45 +4024,48 @@
 			arg1 = arg1.tocNumber();
 		}
 
-		if (arg0 instanceof cError) {
+		if (cElementType.error === arg0.type) {
 			return arg0;
 		}
-		if (arg1 instanceof cError) {
+		if (cElementType.error === arg1.type) {
 			return arg1;
 		}
 
-		if (arg0 instanceof cArray && arg1 instanceof cArray) {
+		if (cElementType.array === arg0.type && cElementType.array === arg1.type) {
 			if (arg0.getCountElement() != arg1.getCountElement() || arg0.getRowCount() != arg1.getRowCount()) {
 				return new cError(cErrorType.not_available);
 			} else {
 				arg0.foreach(function (elem, r, c) {
-					var a = elem;
-					var b = arg1.getElementRowCol(r, c);
-					if (a instanceof cNumber && b instanceof cNumber) {
-						this.array[r][c] = roundHelper(a.getValue(), b.getValue())
+					let a = elem,
+						b = arg1.getElementRowCol(r, c);
+					
+					if (cElementType.number === a.type && cElementType.number === b.type) {
+						this.array[r][c] = roundHelper(a.getValue(), b.getValue());
 					} else {
 						this.array[r][c] = new cError(cErrorType.wrong_value_type);
 					}
 				});
 				return arg0;
 			}
-		} else if (arg0 instanceof cArray) {
+		} else if (cElementType.array === arg0.type) {
 			arg0.foreach(function (elem, r, c) {
-				var a = elem;
-				var b = arg1;
-				if (a instanceof cNumber && b instanceof cNumber) {
-					this.array[r][c] = roundHelper(a.getValue(), b.getValue())
+				let a = elem,
+					b = arg1;
+				
+				if (cElementType.number === a.type && cElementType.number === b.type) {
+					this.array[r][c] = roundHelper(a.getValue(), b.getValue());
 				} else {
 					this.array[r][c] = new cError(cErrorType.wrong_value_type);
 				}
 			});
 			return arg0;
-		} else if (arg1 instanceof cArray) {
+		} else if (cElementType.array === arg1.type) {
 			arg1.foreach(function (elem, r, c) {
-				var a = arg0;
-				var b = elem;
-				if (a instanceof cNumber && b instanceof cNumber) {
-					this.array[r][c] = roundHelper(a.getValue(), b.getValue())
+				let a = arg0,
+					b = elem;
+
+				if (cElementType.number === a.type && cElementType.number === b.type) {
+					this.array[r][c] = roundHelper(a.getValue(), b.getValue());
 				} else {
 					this.array[r][c] = new cError(cErrorType.wrong_value_type);
 				}
@@ -4070,9 +4073,11 @@
 			return arg1;
 		}
 
-		var number = arg0.getValue(), num_digits = arg1.getValue();
+		let number = arg0.getValue(), num_digits = arg1.getValue();
 
-		return roundHelper(number, num_digits);
+		// 0.6*3, 0.1+0.7, 0.1+0.2 and other
+		let roundNum = roundHelper(number, num_digits);
+		return new cNumber((roundNum.getValue() * 100) / 100);
 
 	};
 

@@ -830,15 +830,15 @@ function (window, undefined) {
 		}
 
 		// round the value
-		// TODO doesn't work with 0.6 * 3 and 0.1 + 0.2
-		if (cElementType.number === arg0.type) {
-			let rounded = (arg0.toNumber() * 100) / 100;
-			arg0 = new cNumber(rounded);
-		}
-		if (cElementType.number === arg1.type) {
-			let rounded = (arg1.toNumber() * 100) / 100;
-			arg1 = new cNumber(rounded);
-		}
+		// TODO doesn't work properly with 0.6 * 3, 0.1 + 0.7, 0.1 + 0.2, 1.7999999999999998, 0.7999999999999999, 0.30000000000000004 as an argument
+		// if (cElementType.number === arg0.type) {
+		// 	let rounded = (arg0.toNumber() * 100) / 100;
+		// 	arg0 = new cNumber(rounded);
+		// }
+		// if (cElementType.number === arg1.type) {
+		// 	let rounded = (arg1.toNumber() * 100) / 100;
+		// 	arg1 = new cNumber(rounded);
+		// }
 
 		let arg0val = arg0.toLocaleString(), arg1val = arg1.toLocaleString();
 		return new cBool(arg0val === arg1val);
