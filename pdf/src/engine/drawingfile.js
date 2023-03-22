@@ -606,7 +606,7 @@ else
 			let np1 = reader.readInt();
 			let np2 = reader.readInt();
 			// Указатель на память, аналогичный возвращаемому getPagePixmap. Память необходимо освободить
-			rec["AP"]["retValue"] = rnp2 << 32 | np1;
+			rec["AP"]["retValue"] = np2 << 32 | np1;
 			
 			rec["alignment"] = reader.readInt();
 			rec["type"] = reader.readString();
