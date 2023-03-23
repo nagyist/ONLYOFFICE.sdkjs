@@ -292,14 +292,17 @@
             y: 0
         }
 
-        this._needDrawHighlight = true;
-        this._wasChanged = false; // было ло изменено содержимое формы
+        this._apIdx = -1; // индекс формы на странице в исходном файле (в массиве метода getInteractiveForms), используется для получения appearance
+        
+        this._needDrawHighlight = false;
+        this._needRecalc        = false;
+        this._wasChanged        = false; // была ли изменена форма
 
         private_getViewer().ImageMap = {};
         private_getViewer().InitDocument = function() {return};
 
         this._partialName = sName;
-        this._apiForm = this.GetApiForm();
+        this._apiForm = this.GetFormApi();
     }
     
     /**
@@ -356,7 +359,7 @@
     
     CBaseField.prototype.IntersectWithRect = function(X, Y, W, H)
     {
-        let oViewer     = editor.getDocumentRenderer();
+        let oViewer     = private_getViewer();
         var arrRects    = [];
         var oBounds     = this.getFormRelRect();
 
@@ -435,7 +438,7 @@
     };
 
     CBaseField.prototype.DrawHighlight = function(oCtx) {
-        let oViewer = editor.getDocumentRenderer();
+        let oViewer = private_getViewer();
         let nScale = AscCommon.AscBrowser.retinaPixelRatio * oViewer.zoom;
 
         if (this.type == "button" && this._buttonPressed) {
@@ -462,11 +465,17 @@
         let nWidth  = this._pagePos.w * nScale;
         let nHeight = this._pagePos.h * nScale;
 
+        let color = {
+            r: this._borderColor[0] * 255,
+            g: this._borderColor[1] * 255,
+            b: this._borderColor[2] * 255
+        }
         switch (this._borderStyle) {
             case BORDER_TYPES.solid:
                 oCtx.setLineDash([]);
                 oCtx.beginPath();
                 oCtx.rect(X, Y, nWidth, nHeight);
+                oCtx.strokeStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
                 oCtx.stroke();
                 break;
             case BORDER_TYPES.beveled:
@@ -584,10 +593,15 @@
         }
 
         // draw comb cells
-        if ((this._borderStyle == "solid" || this._borderStyle == "dashed") && (this.type == "text" && this._comb == true)) {
-            let nCombWidth = nWidth / this._charLimit;
-            let nIndentX = nCombWidth;
+        if ((this._borderStyle == BORDER_TYPES.solid || this._borderStyle == BORDER_TYPES.dashed) && (this.type == "text" && this._comb == true)) {
+            let oMargins = this.GetBordersWidth(true);
+            let nWidth = (this._rect[2] - this._rect[0]) * 0.98 - oMargins.left - oMargins.right;
+            
+            let nCombWidth = (nWidth / this._charLimit) * nScale;
+            X = X + (this._rect[2] - this._rect[0]) * 0.01 + oMargins.left;
 
+            let nIndentX = nCombWidth;
+            
             for (let i = 0; i < this._charLimit - 1; i++) {
                 oCtx.moveTo(X + nIndentX, Y);
                 oCtx.lineTo(X + nIndentX, Y + nHeight);
@@ -596,17 +610,23 @@
             }
         }
     };
-    CBaseField.prototype.SetWasChanged = function(isChanged) {
+    CBaseField.prototype.SetNeedRecalc = function(isChanged) {
         if (isChanged == false) {
-            this._wasChanged = false;
+            this._needRecalc = false;
         }
         else {
-            this._wasChanged = true;
+            this._needRecalc = true;
             this.AddToRedraw();
         }
     };
+    CBaseField.prototype.SetWasChanged = function(isChanged) {
+        this._wasChanged = isChanged;
+    };
+    CBaseField.prototype.IsChanged = function() {
+        return this._wasChanged;  
+    };
     CBaseField.prototype.AddToRedraw = function() {
-        let oViewer = editor.getDocumentRenderer();
+        let oViewer = private_getViewer();
         oViewer.pagesInfo.pages[this._page].needRedrawForms = true;
     };
 
@@ -622,6 +642,10 @@
         if (this.type != "button")
             this._required = bRequired;
     };
+    CBaseField.prototype.SetBorderColor = function(aColor) {
+        this._borderColor = aColor;
+    };
+
 
     /**
 	 * Gets Api class for this form.
@@ -631,7 +655,7 @@
 	 * @typeofeditors ["PDF"]
      * @returns {ApiBaseField}
 	 */
-    CBaseField.prototype.GetApiForm = function() {
+    CBaseField.prototype.GetFormApi = function() {
         if (this._apiForm)
             return this._apiForm;
 
@@ -806,7 +830,7 @@
 		oDrawing.Set_Parent(oRunForImg);
 
         oShape.recalculate();
-		this.SetWasChanged(true);
+		this.SetNeedRecalc(true);
 	};
     /**
 	 * Gets the caption associated with a button.
@@ -969,7 +993,7 @@
                 oDrawing.GraphicObj.recalculateTxBoxContent();
             }
         }
-        else if (this._wasChanged) {
+        else if (this._needRecalc) {
             this._content.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
@@ -977,7 +1001,7 @@
                 oDrawing.GraphicObj.recalculateTxBoxContent();
             }
 
-            this.SetWasChanged(false);
+            this.SetNeedRecalc(false);
         }
 
         let oGraphics = new AscCommon.CGraphics();
@@ -1431,7 +1455,7 @@
                 }
             }
 
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
         }
     };
 
@@ -1508,11 +1532,11 @@
             this._content.YLimit = this._oldContentPos.YLimit   = 20000;
             this._content.Recalculate_Page(0, true);
         }
-        else if (this._wasChanged) {
+        else if (this._needRecalc) {
             this._content.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
-            this.SetWasChanged(false);
+            this.SetNeedRecalc(false);
         }
 
         let oGraphics = new AscCommon.CGraphics();
@@ -1593,7 +1617,7 @@
                 oRun.AddText('✓');
             }
 
-            field.SetWasChanged(true);
+            field.SetNeedRecalc(true);
         });
         
         private_getViewer()._paintForms();
@@ -1624,7 +1648,7 @@
                 oFieldRun.AddToContent(nRunPos, AscCommon.IsSpace(oThisRun.Content[nRunPos].Value) ? new AscWord.CRunSpace(oThisRun.Content[nRunPos].Value) : new AscWord.CRunText(oThisRun.Content[nRunPos].Value));
             }
 
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
             aFields[i].CheckValue();
         }
     };
@@ -1737,7 +1761,7 @@
             if (this._value != "Off") {
                 if (this._noToggleToOff == false) {
                     this.SetChecked(false);
-                    this.SetWasChanged(true);
+                    this.SetNeedRecalc(true);
                 }
                 if (AscCommon.History.Is_LastPointEmpty())
                     AscCommon.History.Remove_LastPoint();
@@ -1746,7 +1770,7 @@
             }
             else {
                 this.SetChecked(true);
-                this.SetWasChanged(true);
+                this.SetNeedRecalc(true);
             }
 
             aFields.forEach(function(field) {
@@ -1755,7 +1779,7 @@
 
                 if (field._value != "Off") {
                     field.SetChecked(false);
-                    field.SetWasChanged(true);
+                    field.SetNeedRecalc(true);
                 }
             }); 
         }
@@ -1763,12 +1787,12 @@
             if (this._value != "Off") {
                 if (this._noToggleToOff == false) {
                     this.SetChecked(false);
-                    this.SetWasChanged(true);
+                    this.SetNeedRecalc(true);
                 }
             }
             else {
                 this.SetChecked(true);
-                this.SetWasChanged(true);
+                this.SetNeedRecalc(true);
             }
 
             aFields.forEach(function(field) {
@@ -1777,15 +1801,15 @@
 
                 if (field._exportValue != oThis._exportValue && field._value != "Off") {
                     field.SetChecked(false);
-                    field.SetWasChanged(true);
+                    field.SetNeedRecalc(true);
                 }
                 else if (field._exportValue == oThis._exportValue && oThis._value == "Off") {
                     field.SetChecked(false);
-                    field.SetWasChanged(true);
+                    field.SetNeedRecalc(true);
                 }
                 else if (field._exportValue == oThis._exportValue && field._value == "Off") {
                     field.SetChecked(true);
-                    field.SetWasChanged(true);
+                    field.SetNeedRecalc(true);
                 }
             });
 
@@ -1871,7 +1895,7 @@
         let aFields = this._doc.getWidgetsByName(this.GetFullName());
         for (let i = 0; i < aFields.length; i++) {
             aFields[i].CheckValue();
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
         }
     };
     /**
@@ -2017,6 +2041,17 @@
             h: nHeight
         };
 
+        // рисуем внешний вид из потока, до тех пор, пока не изменим форму
+        if (this.IsChanged() == false) {
+            let originView = this.GetOriginView();
+            let nScale = AscCommon.AscBrowser.retinaPixelRatio * oViewer.zoom;
+
+            if (originView) {
+                oCtx.drawImage(originView, X * nScale, Y * nScale, nWidth * nScale, nHeight * nScale);
+                return;
+            }
+        }
+
         this.DrawBorders(oCtx);
         let oMargins = this.GetBordersWidth();
 
@@ -2058,11 +2093,11 @@
             this._content.Recalculate_Page(0, true);
             this._contentFormat.Recalculate_Page(0, true);
         }
-        else if (this._wasChanged) {
+        else if (this._needRecalc) {
             oContentToDraw.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
-            this.SetWasChanged(false);
+            this.SetNeedRecalc(false);
         }
         
         if (this._multiline == true) {
@@ -2093,7 +2128,7 @@
         
         oGraphics.RemoveClip();
         
-        this.SetWasChanged(false);
+        this.SetNeedRecalc(false);
     };
     CTextField.prototype.onMouseDown = function(x, y, e) {
         let {X, Y} = private_getPageCoordsMM(x, y, this._page);
@@ -2177,7 +2212,7 @@
         }
 
         if (aChars.length > 0) {
-            this.SetWasChanged(true);
+            this.SetNeedRecalc(true);
             this._needApplyToAll = true; // флаг что значение будет применено к остальным формам с таким именем
             this._bAutoShiftContentView = true && this._doNotScroll == false;
         }
@@ -2200,7 +2235,7 @@
         TurnOffHistory();
 
         if (this._actions.Format) {
-            this.SetWasChanged(true);
+            this.SetNeedRecalc(true);
             this._doc.activeForm = this;
             let isValidFormat = eval(this._actions.Format.script);
             // проверка для форматов, не ограниченных на какие-либо символы своей функцией keystroke
@@ -2218,7 +2253,7 @@
                 return;
             }
         }
-            
+        
         if (bUnionPoints)
             this.UnionLastHistoryPoints();
 
@@ -2226,6 +2261,8 @@
             this._needApplyToAll = false;
 
         for (let i = 0; i < aFields.length; i++) {
+            aFields[i].SetWasChanged(true); // фиксируем, что форма была изменена
+
             if (aFields[i].HasShiftView()) {
                 aFields[i]._content.MoveCursorToStartPos();
 
@@ -2250,7 +2287,7 @@
                 }
             }
 
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
         }
 
         let oParaFromFormat = this._contentFormat.GetElement(0);
@@ -2270,7 +2307,7 @@
                 }
             }
 
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
         }
     };
     
@@ -2337,7 +2374,7 @@
         if (AscCommon.History.Is_LastPointEmpty())
             AscCommon.History.Remove_LastPoint();
         else {
-            this.SetWasChanged(true);
+            this.SetNeedRecalc(true);
             this._needApplyToAll = true;
         }
     };
@@ -2552,11 +2589,11 @@
             this._content.Recalculate_Page(0, true);
             this._contentFormat.Recalculate_Page(0, true);
         }
-        else if (this._wasChanged) {
+        else if (this._needRecalc) {
             oContentToDraw.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
-            this.SetWasChanged(false);
+            this.SetNeedRecalc(false);
         }
         
         this.CheckFormViewWindow();
@@ -2633,7 +2670,7 @@
             this._value = this._options[nIdx];
         }
 
-        this.SetWasChanged(true);
+        this.SetNeedRecalc(true);
         this._needApplyToAll = true;
     };
 
@@ -2722,7 +2759,7 @@
         }
 
         this.CheckCurValueIndex();
-        this.SetWasChanged(true);
+        this.SetNeedRecalc(true);
         this._needApplyToAll = true; // флаг что значение будет применено к остальным формам с таким именем
         
         return true;
@@ -2743,7 +2780,7 @@
         TurnOffHistory();
 
         if (this._actions.Format) {
-            this.SetWasChanged(true);
+            this.SetNeedRecalc(true);
             this._doc.activeForm = this;
             let isValidFormat = eval(this._actions.Format.script);
             // проверка для форматов, не ограниченных на какие-либо символы своей функцией keystroke
@@ -2794,7 +2831,7 @@
             }
 
             aFields[i]._currentValueIndices = this._currentValueIndices;
-            aFields[i].SetWasChanged(true);
+            aFields[i].SetNeedRecalc(true);
         }
     };
     /**
@@ -2907,11 +2944,11 @@
             this._content.YLimit = this._oldContentPos.YLimit   = 20000;
             this._content.Recalculate_Page(0, true);
         }
-        else if (this._wasChanged) {
+        else if (this._needRecalc) {
             this._content.Content.forEach(function(element) {
                 element.Recalculate_Page(0);
             });
-            this.SetWasChanged(false);
+            this.SetNeedRecalc(false);
         }
         
         if (this._bAutoShiftContentView)
@@ -2994,7 +3031,7 @@
         aFields.forEach(function(field) {
             field._bAutoShiftContentView = false;
 
-            field.SetWasChanged(true);
+            field.SetNeedRecalc(true);
             if (field.HasShiftView()) {
                 if (field == oThis) {
                     field.AddToRedraw();
@@ -3081,14 +3118,14 @@
             oApiPara.Paragraph.private_CompileParaPr(true);
         }
 
-        this.SetWasChanged(true);
+        this.SetNeedRecalc(true);
         this._needApplyToAll = true;
     };
     CListBoxField.prototype.UnselectOption = function(nIdx) {
         let oApiPara = editor.private_CreateApiParagraph(this._content.GetElement(nIdx));
         oApiPara.SetShd('nil');
         oApiPara.Paragraph.private_CompileParaPr(true);
-        this.SetWasChanged(true);
+        this.SetNeedRecalc(true);
     };
     CListBoxField.prototype.SetOptions = function(aOpt) {
         this._content.Internal_Content_RemoveAll();
@@ -3649,7 +3686,7 @@
             return true;
     };
     CBaseField.prototype.GetBordersWidth = function(bZoomed) {
-        let oViewer = editor.getDocumentRenderer();
+        let oViewer = private_getViewer();
         let nLineWidth = bZoomed == true ? this._lineWidth * AscCommon.AscBrowser.retinaPixelRatio * oViewer.zoom : this._lineWidth * AscCommon.AscBrowser.retinaPixelRatio;
 
         if (nLineWidth == 0 || this.type == "radiobutton") {
@@ -3728,6 +3765,55 @@
         this._borderWidth = nType;
         this._lineWidth = nType;
     };
+    /**
+     * Returns a canvas with origin view (from appearance stream) of current form.
+	 * @memberof CBaseField
+	 * @typeofeditors ["PDF"]
+     * @returns {canvas}
+	 */
+    CBaseField.prototype.GetOriginView = function() {
+        if (this._apIdx == -1)
+            return null;
+
+        let oViewer = private_getViewer();
+        let oFile   = oViewer.file;
+        let oPage   = oViewer.drawingPages[this._page];
+
+        let w = (oPage.W * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+        let h = (oPage.H * AscCommon.AscBrowser.retinaPixelRatio) >> 0;
+
+        let aFormsInfo      = oFile.nativeFile.getInteractiveFormsAP(this._page, w, h);
+        let oApearanceInfo  = aFormsInfo[this._apIdx];
+
+        let canvas  = document.createElement("canvas");
+        let nWidth  = oApearanceInfo["w"];
+        let nHeight = oApearanceInfo["h"];
+
+        canvas.width    = nWidth;
+        canvas.height   = nHeight;
+        
+        let supportImageDataConstructor = (AscCommon.AscBrowser.isIE && !AscCommon.AscBrowser.isIeEdge) ? false : true;
+
+        let ctx             = canvas.getContext("2d");
+        let mappedBuffer    = new Uint8ClampedArray(oFile.memory().buffer, oApearanceInfo["retValue"], 4 * nWidth * nHeight);
+        let imageData       = null;
+
+        if (supportImageDataConstructor)
+        {
+            imageData = new ImageData(mappedBuffer, nWidth, nHeight);
+        }
+        else
+        {
+            imageData = ctx.createImageData(nWidth, nHeight);
+            imageData.data.set(mappedBuffer, 0);                    
+        }
+        if (imageData)
+            ctx.putImageData(imageData, 0, 0);
+        
+        oViewer.file.free(oApearanceInfo["retValue"]);
+
+        return canvas;
+    };
 
     // for format
 
@@ -3743,7 +3829,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFNumber_Format(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
 
         let oInfoObj = {
@@ -3836,7 +3922,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFNumber_Keystroke(nDec, sepStyle, negStyle, currStyle, strCurrency, bCurrencyPrepend) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         let aEnteredChars = oDoc.enteredFormChars;
 
@@ -3903,7 +3989,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFPercent_Format(nDec, sepStyle) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
 
         let oInfoObj = {
@@ -3963,7 +4049,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFPercent_Keystroke(nDec, sepStyle) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         let aEnteredChars = oDoc.enteredFormChars;
 
@@ -4029,7 +4115,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFDate_Format(cFormat) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
 
         let oNumFormat = AscCommon.oNumFormatCache.get(cFormat, AscCommon.NumFormatType.PDFFormDate);
@@ -4131,7 +4217,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFTime_Format(ptf) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         if (!oCurForm)
             return;
@@ -4221,7 +4307,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFSpecial_Format(psf) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         if (!oCurForm)
             return;
@@ -4313,7 +4399,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFSpecial_Keystroke(psf) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         let aEnteredChars = oDoc.enteredFormChars;
 
@@ -4385,7 +4471,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     function AFSpecial_KeystrokeEx(mask) {
-        let oDoc = editor.getDocumentRenderer().doc;
+        let oDoc = private_getViewer().doc;
         let oCurForm = oDoc.activeForm;
         let aEnteredChars = oDoc.enteredFormChars;
 
@@ -4461,7 +4547,7 @@
 
     function private_getPageCoordsMM(x, y, nPage) {
         // конвертация из глобальных x, y к mm кординатам самой страницы
-        let oViewer = editor.getDocumentRenderer();
+        let oViewer = private_getViewer();
         var pageObject = oViewer.getPageByCoords(x - oViewer.x, y - oViewer.y);
 
         let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
@@ -4473,7 +4559,7 @@
         return {X, Y};
     }
     function private_getGlobalCoordsByPageCoords(x, y, nPage) {
-        let oViewer = editor.getDocumentRenderer();
+        let oViewer = private_getViewer();
 
         let nScaleY = oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H / oViewer.zoom;
         let nScaleX = oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W / oViewer.zoom;

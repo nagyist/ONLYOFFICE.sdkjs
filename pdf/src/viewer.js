@@ -896,20 +896,20 @@
 			this.openForms();
 		};
 		this.openForms = function() {
-			let aFormsInfo = this.file.nativeFile.getInteractiveForms();
+			let aFormsInfo = this.file.nativeFile.getInteractiveFormsInfo();
 
 			let oFormInfo, oForm, aRect;
 			for (let i = 0; i < aFormsInfo.length; i++)
 			{
 				oFormInfo = aFormsInfo[i];
 
-				let nScaleY = this.drawingPages[oFormInfo.page].H / this.file.pages[oFormInfo.page].H;
-				let nScaleX = this.drawingPages[oFormInfo.page].W / this.file.pages[oFormInfo.page].W;
+				let nScaleY = this.drawingPages[oFormInfo["page"]].H / this.file.pages[oFormInfo["page"]].H;
+				let nScaleX = this.drawingPages[oFormInfo["page"]].W / this.file.pages[oFormInfo["page"]].W;
 
-				aRect = [oFormInfo.x1 * nScaleX, oFormInfo.y2 * nScaleY, oFormInfo.x2 * nScaleX, oFormInfo.y1 * nScaleY];
+				aRect = [oFormInfo["x1"] * nScaleX, oFormInfo["y1"] * nScaleY, oFormInfo["x2"] * nScaleX, oFormInfo["y2"] * nScaleY];
 				
-				oForm = this.doc.private_addField(oFormInfo.name, oFormInfo.type, oFormInfo.page, aRect);
-				oForm._origRect = [oFormInfo.x1, oFormInfo.y2, oFormInfo.x2, oFormInfo.y1];
+				oForm = this.doc.private_addField(oFormInfo["name"], oFormInfo["type"], oFormInfo["page"], aRect);
+				oForm._origRect = [oFormInfo["x1"], oFormInfo["y2"], oFormInfo["x2"], oFormInfo["y1"]];
 
 				if (!oForm) {
 					console.log(Error("Error while reading form, index " + i));
@@ -917,131 +917,139 @@
 				}
 
 				// actions
-				if (oFormInfo.AA != null)
+				if (oFormInfo["AA"] != null)
 				{
 					// format
-					if (oFormInfo.AA.F)
+					if (oFormInfo["AA"]["F"])
 					{
-						oForm.SetAction("Format", oFormInfo.AA.F.JS);
+						oForm.SetAction("Format", oFormInfo["AA"]["F"]["JS"]);
 					}
 					// keystroke
-					if (oFormInfo.AA.K)
+					if (oFormInfo["AA"]["K"])
 					{
-						oForm.SetAction("Keystroke", oFormInfo.AA.K.JS);
+						oForm.SetAction("Keystroke", oFormInfo["AA"]["K"]["JS"]);
 					}
 				}
 				
 				// appearance
-				if (oFormInfo.borderStyle != null)
+				if (oFormInfo["borderStyle"] != null)
 				{
-					oForm.SetBorderType(oFormInfo.borderStyle);
+					oForm.SetBorderType(oFormInfo["borderStyle"]);
 				}
-				if (oFormInfo.borderWidth != null)
+
+				if (oFormInfo["borderWidth"] != null)
 				{
-					oForm.SetBorderWidth(oFormInfo.borderWidth);
+					oForm.SetBorderWidth(oFormInfo["borderWidth"]);
 				}
 				else
 				{
-					oForm.SetBorderWidth(0);
+					if (oFormInfo["BC"] == null)
+						oForm.SetBorderWidth(0);
+					else
+						oForm.SetBorderColor(oFormInfo["BC"]);
+				}
+
+				if (oFormInfo["AP"] != null) {
+					oForm._apIdx = oFormInfo["AP"]["i"];
 				}
 
 				// members
-				if (oFormInfo.NameOfYes)
+				if (oFormInfo["NameOfYes"])
 				{
-					oForm.SetExportValue(oFormInfo.NameOfYes);
+					oForm.SetExportValue(oFormInfo["NameOfYes"]);
 				}
-				if (oFormInfo.radiosInUnison)
+				if (oFormInfo["radiosInUnison"])
 				{
-					oForm.SetRadiosInUnison(Boolean(oFormInfo.radiosInUnison));
+					oForm.SetRadiosInUnison(Boolean(oFormInfo["radiosInUnison"]));
 				}
-				if (oFormInfo.commitOnSelChange)
-				{
-					// to do
-					oForm.SetCommitOnSelChange(oFormInfo.commitOnSelChange);
-				}
-				if (oFormInfo.editable)
-				{
-					oForm.SetEditable(oFormInfo.editable);
-				}
-				if (oFormInfo.multipleSelection)
-				{
-					oForm.SetMultipleSelection(oFormInfo.multipleSelection);
-				}
-				if (oFormInfo.opt)
-				{
-					oForm.SetOptions(oFormInfo.opt);
-				}
-				if (oFormInfo.alignment)
-				{
-					oForm.SetAlign(oFormInfo.alignment);
-				}
-				if (oFormInfo.multiline != null)
-				{
-					oForm.SetMultiline(Boolean(oFormInfo.multiline));
-				}
-				if (oFormInfo.comb)
-				{
-					oForm.SetComb(Boolean(oFormInfo.comb));
-				}
-				if (oFormInfo.maxLen != null)
-				{
-					oForm.SetCharLimit(oFormInfo.maxLen);
-				}
-				if (oFormInfo.doNotScroll)
-				{
-					oForm.SetDoNotScroll(Boolean(oFormInfo.doNotScroll));
-				}
-				if (oFormInfo.doNotSpellCheck)
+				if (oFormInfo["commitOnSelChange"])
 				{
 					// to do
-					oForm.SetDoNotSpellCheck(Boolean(oFormInfo.doNotSpellCheck));
+					oForm.SetCommitOnSelChange(oFormInfo["commitOnSelChange"]);
 				}
-				if (oFormInfo.fileSelect)
+				if (oFormInfo["editable"])
+				{
+					oForm.SetEditable(oFormInfo["editable"]);
+				}
+				if (oFormInfo["multipleSelection"])
+				{
+					oForm.SetMultipleSelection(oFormInfo["multipleSelection"]);
+				}
+				if (oFormInfo["opt"])
+				{
+					oForm.SetOptions(oFormInfo["opt"]);
+				}
+				if (oFormInfo["alignment"])
+				{
+					oForm.SetAlign(oFormInfo["alignment"]);
+				}
+				if (oFormInfo["multiline"] != null)
+				{
+					oForm.SetMultiline(Boolean(oFormInfo["multiline"]));
+				}
+				if (oFormInfo["comb"])
+				{
+					oForm.SetComb(Boolean(oFormInfo["comb"]));
+				}
+				if (oFormInfo["maxLen"] != null)
+				{
+					oForm.SetCharLimit(oFormInfo["maxLen"]);
+				}
+				if (oFormInfo["doNotScroll"])
+				{
+					oForm.SetDoNotScroll(Boolean(oFormInfo["doNotScroll"]));
+				}
+				if (oFormInfo["doNotSpellCheck"])
 				{
 					// to do
-					oForm.SetFileSelect(Boolean(oFormInfo.fileSelect));
+					oForm.SetDoNotSpellCheck(Boolean(oFormInfo["doNotSpellCheck"]));
 				}
-				if (oFormInfo.flag != null)
+				if (oFormInfo["fileSelect"])
 				{
 					// to do
+					oForm.SetFileSelect(Boolean(oFormInfo["fileSelect"]));
 				}
-				if (oFormInfo.noexport)
+				if (oFormInfo["flag"] != null)
 				{
 					// to do
 				}
-				if (oFormInfo.password)
+				if (oFormInfo["noexport"])
 				{
 					// to do
-					oForm.SetPassword(Boolean(oFormInfo.password));
 				}
-				if (oFormInfo.readonly)
+				if (oFormInfo["password"])
 				{
 					// to do
-					oForm.SetReadOnly(Boolean(oFormInfo.readonly));
+					oForm.SetPassword(Boolean(oFormInfo["password"]));
 				}
-				if (oFormInfo.required)
+				if (oFormInfo["readonly"])
 				{
 					// to do
-					oForm.SetRequired(Boolean(oFormInfo.required));
+					oForm.SetReadOnly(Boolean(oFormInfo["readonly"]));
 				}
-				if (oFormInfo.richText)
+				if (oFormInfo["required"])
 				{
 					// to do
-					oForm.SetRichText(Boolean(oFormInfo.richText));
+					oForm.SetRequired(Boolean(oFormInfo["required"]));
 				}
-				if (oFormInfo.value != null && oForm.type != "button")
+				if (oFormInfo["richText"])
 				{
-					oForm.SetValue(oFormInfo.value);
+					// to do
+					oForm.SetRichText(Boolean(oFormInfo["richText"]));
 				}
-				if (oFormInfo.NoToggleToOff)
+				if (oFormInfo["value"] != null && oForm.type != "button")
 				{
-					oForm.SetNoTogleToOff(Boolean(oFormInfo.NoToggleToOff));
+					oForm.SetValue(oFormInfo["value"]);
 				}
-				if (oFormInfo.positionCaption != null) {
-					oForm.SetLayout(oFormInfo.positionCaption);
+				if (oFormInfo["NoToggleToOff"])
+				{
+					oForm.SetNoTogleToOff(Boolean(oFormInfo["NoToggleToOff"]));
 				}
-				if (oFormInfo.caption != null) {
-					oForm.SetCaption(oFormInfo.caption);
+				if (oFormInfo["positionCaption"] != null) {
+					oForm.SetLayout(oFormInfo["positionCaption"]);
+				}
+				if (oFormInfo["caption"] != null) {
+					oForm.SetCaption(oFormInfo["caption"]);
 				}
 			}
 
@@ -2900,7 +2908,7 @@
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
 					this.mouseDownFieldObject.Remove(-1, e.CtrlKey == true);
-					if (this.mouseDownFieldObject._wasChanged)
+					if (this.mouseDownFieldObject._needRecalc)
 						this._paintForms();
 
 					this.onUpdateOverlay();
@@ -3183,7 +3191,7 @@
 				if (this.mouseDownFieldObject && this.fieldFillingMode)
 				{
 					this.mouseDownFieldObject.Remove(1, e.CtrlKey == true);
-					if (this.mouseDownFieldObject._wasChanged)
+					if (this.mouseDownFieldObject._needRecalc)
 						this._paintForms();
 
 					this.onUpdateOverlay();
@@ -3274,7 +3282,7 @@
 							oParentForm.RemoveNotAppliedChangesPoints(nCurPoindIdx);
 						}
 
-						oParentForm._wasChanged = true;
+						oParentForm._needRecalc = true;
 
 						if (oCurPoint.Additional.FormFilling.type == "listbox") {
 							oCurPoint.Additional.FormFilling.CheckCurValueIndex();
@@ -3311,7 +3319,7 @@
 					// если мы в форме, то изменения (undo) применяются только для неё
 					// иначе для всех с таким именем
 					if (this.mouseDownFieldObject == null || oCurPoint.Additional && oCurPoint.Additional.CanUnion === false) {
-						oParentForm._wasChanged = true;
+						oParentForm._needRecalc = true;
 
 						// убираем курсор
 						if (oParentForm.type == "combobox" || oParentForm.type == "text") {

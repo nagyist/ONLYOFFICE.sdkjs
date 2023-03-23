@@ -12025,7 +12025,7 @@ background-repeat: no-repeat;\
 			return logicDocument.EnterText(value);
 		else if (documentRenderer.fieldFillingMode) {
 			documentRenderer.mouseDownFieldObject.EnterText(value);
-			if (documentRenderer.mouseDownFieldObject._wasChanged) {
+			if (documentRenderer.mouseDownFieldObject._needRecalc) {
 				documentRenderer._paintForms();
 				documentRenderer.onUpdateOverlay();
 			}

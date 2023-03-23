@@ -255,7 +255,7 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._borderStyle = sValue;
-                        field.SetWasChanged(true);
+                        field.SetNeedRecalc(true);
                         field._content.GetElement(0).Content.forEach(function(run) {
                             run.RecalcInfo.Measure = true;
                         });
@@ -326,7 +326,7 @@
                     let aFields = this._doc.getWidgetsByName(this.name);
                     aFields.forEach(function(field) {
                         field._lineWidth = nValue;
-                        field.SetWasChanged(true);
+                        field.SetNeedRecalc(true);
                         field._content.GetElement(0).Content.forEach(function(run) {
                             run.RecalcInfo.Measure = true;
                         });
@@ -508,7 +508,7 @@
     /**
 	 * Sets the JavaScript action of the field for a given trigger.
      * Note: This method will overwrite any action already defined for the chosen trigger.
-	 * @memberof CTextField
+	 * @memberof ApiBaseField
      * @param {cTrigger} cTrigger - A string that sets the trigger for the action.
      * @param {string} cScript - The JavaScript code to be executed when the trigger is activated.
 	 * @typeofeditors ["PDF"]
@@ -824,7 +824,7 @@
                 let aFields = this._doc.getWidgetsByName(this.name);
                 aFields.forEach(function(field) {
                     field.SetComb(bValue);
-                    field.SetWasChanged(true);
+                    field.SetNeedRecalc(true);
                 });
                 editor.getDocumentRenderer()._paintForms();
             },
