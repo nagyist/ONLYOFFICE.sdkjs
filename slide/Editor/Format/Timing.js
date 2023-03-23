@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -12,7 +12,7 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * You can contact Ascensio System SIA at 20A-6 Ernesta Birznieka-Upish
  * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
@@ -409,7 +409,7 @@
                         }
                     }
                     if (bCanAdvance) {
-                        oPlayer.addExternalEvent(new CExternalEvent(this.eventsProcessor, COND_EVNT_ON_NEXT, null));
+                        oPlayer.addExternalEvent(new CExternalEvent(oPlayer.eventsProcessor, COND_EVNT_ON_NEXT, null));
                         return fTrigger();
                     }
                     return false;
@@ -2906,6 +2906,12 @@
             }
         }
     };
+	CTiming.prototype.resetNodesState = function() {
+		const oRoot = this.getTimingRootNode();
+		if (oRoot) {
+			oRoot.resetState();
+		}
+	};
 
     changesFactory[AscDFH.historyitem_CommonTimingListAdd] = CChangeContent;
     changesFactory[AscDFH.historyitem_CommonTimingListRemove] = CChangeContent;
@@ -11344,11 +11350,8 @@
         }
     };
     CAnimationPlayer.prototype.resetNodesState = function () {
-        for (var nTiming = 0; nTiming < this.timings.length; ++nTiming) {
-            var oRoot = this.timings[nTiming].getTimingRootNode();
-            if (oRoot) {
-                oRoot.resetState();
-            }
+        for (let nTiming = 0; nTiming < this.timings.length; ++nTiming) {
+            this.timings[nTiming].resetNodesState();
         }
     };
     CAnimationPlayer.prototype.scheduleNodesStart = function () {

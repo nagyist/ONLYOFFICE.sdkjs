@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2019
+ * (c) Copyright Ascensio System SIA 2010-2023
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -12,7 +12,7 @@
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR  PURPOSE. For
  * details, see the GNU AGPL at: http://www.gnu.org/licenses/agpl-3.0.html
  *
- * You can contact Ascensio System SIA at 20A-12 Ernesta Birznieka-Upisha
+ * You can contact Ascensio System SIA at 20A-6 Ernesta Birznieka-Upish
  * street, Riga, Latvia, EU, LV-1050.
  *
  * The  interactive user interfaces in modified source and object code versions
@@ -864,6 +864,7 @@
 		oPluginData["data"] = NewObject["Data"];
 		oPluginData["guid"] = NewObject["ApplicationId"];
 		oPluginData["select"] = bSelect;
+		oPluginData["plugin"] = true;
 		this.asc_addOleObject(oPluginData);
 	};
 
@@ -964,6 +965,11 @@
 					oImagesMap[oData["ImageData"]] = oData["ImageData"];
 				}
 				let oApi = this;
+				let sGuid;
+				if(window.g_asc_plugins)
+				{
+					sGuid = window.g_asc_plugins.setPluginMethodReturnAsync();
+				}
 				AscCommon.Check_LoadingDataBeforePrepaste(this, {}, oImagesMap, function() {
 					oLogicDocument.Reassign_ImageUrls(oImagesMap);
 					oLogicDocument.Recalculate();
@@ -971,6 +977,10 @@
 					oLogicDocument.LoadDocumentState(oStartState);
 					oLogicDocument.UpdateSelection();
 					oLogicDocument.FinalizeAction();
+					if(window.g_asc_plugins)
+					{
+						window.g_asc_plugins.onPluginMethodReturn(sGuid);
+					}
 				});
 			}
 			else
@@ -1054,7 +1064,7 @@
 		{
 			let fieldData = AscWord.CAddinFieldData.FromField(field);
 			if (fieldData)
-				result.push(fieldData);
+				result.push(fieldData.ToJson());
 		});
 		
 		return result;
@@ -1078,7 +1088,7 @@
 		let arrAddinData = [];
 		arrData.forEach(function(data)
 		{
-			arrAddinData.push(AscWord.CAddinFieldData.FromObject(data));
+			arrAddinData.push(AscWord.CAddinFieldData.FromJson(data));
 		})
 		
 		logicDocument.UpdateAddinFieldsByData(arrAddinData);
@@ -1099,7 +1109,7 @@
 		if (!logicDocument)
 			return;
 		
-		logicDocument.AddAddinField(AscWord.CAddinFieldData.FromObject(data));
+		logicDocument.AddAddinField(AscWord.CAddinFieldData.FromJson(data));
 	};
 	/**
 	 * Remove field wrapper, leave only the content of the field
@@ -1148,6 +1158,40 @@
 			return;
 		
 		this.asc_setRestriction(_restrictions);
+	};
+	/**
+	 * Get the current word
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias GetCurrentWord
+	 * @since 7.3.4
+	 * @example
+	 * window.Asc.plugin.executeMethod("GetCurrentWord");
+	 */
+	window["asc_docs_api"].prototype["pluginMethod_GetCurrentWord"] = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return "";
+		
+		return logicDocument.GetCurrentWord();
+	};
+	/**
+	 * Get the current sentence
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias GetCurrentWord
+	 * @since 7.3.4
+	 * @example
+	 * window.Asc.plugin.executeMethod("GetCurrentWord");
+	 */
+	window["asc_docs_api"].prototype["pluginMethod_GetCurrentSentence"] = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return "";
+		
+		return logicDocument.GetCurrentSentence();
 	};
 
 	function private_ReadContentControlCommonPr(commonPr)
