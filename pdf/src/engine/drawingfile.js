@@ -803,17 +803,17 @@ else
 		while (reader.isValid())
 		{
 			// Внешний вид аннотации
-			var rec = {};
+			var AP = {};
 			// Номер для сопоставление с AP
-			rec["i"] = reader.readInt();
-			rec["w"] = reader.readInt();
-			rec["h"] = reader.readInt();
+			AP["i"] = reader.readInt();
+			AP["w"] = reader.readInt();
+			AP["h"] = reader.readInt();
 			let np1 = reader.readInt();
 			let np2 = reader.readInt();
 			// Указатель на память, аналогичный возвращаемому getPagePixmap. Память необходимо освободить
-			rec["retValue"] = np2 << 32 | np1;
+			AP["retValue"] = np2 << 32 | np1;
 			
-			res.push(rec);
+			res.push(AP);
 		}
 
 		Module["_free"](ext);

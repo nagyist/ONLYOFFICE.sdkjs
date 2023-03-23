@@ -2028,10 +2028,10 @@
     CTextField.prototype.Draw = function(oCtx) {
         let oViewer = private_getViewer();
 
-        let X = this._rect[0];
-        let Y = this._rect[1];
-        let nWidth = (this._rect[2] - this._rect[0]);
-        let nHeight = (this._rect[3] - this._rect[1]);
+        let X = this._rect[0] >> 0;
+        let Y = this._rect[1] >> 0;
+        let nWidth = ((this._rect[2] >> 0) - (this._rect[0] >> 0));
+        let nHeight = ((this._rect[3] >> 0) - (this._rect[1] >> 0));
 
         // save pos in page.
         this._pagePos = {
@@ -2047,7 +2047,11 @@
             let nScale = AscCommon.AscBrowser.retinaPixelRatio * oViewer.zoom;
 
             if (originView) {
-                oCtx.drawImage(originView, X * nScale, Y * nScale, nWidth * nScale, nHeight * nScale);
+                let x = (X * nScale) >> 0;
+                let y = (Y * nScale) >> 0;
+                let w = ((nWidth + 1) * nScale) >> 0;
+                let h = ((nHeight + 1) * nScale) >> 0;
+                oCtx.drawImage(originView, 0, 0, originView.width, originView.height, x, y, w, h);
                 return;
             }
         }
@@ -3807,7 +3811,7 @@
             imageData = ctx.createImageData(nWidth, nHeight);
             imageData.data.set(mappedBuffer, 0);                    
         }
-        if (imageData)
+        if (ctx)
             ctx.putImageData(imageData, 0, 0);
         
         oViewer.file.free(oApearanceInfo["retValue"]);
