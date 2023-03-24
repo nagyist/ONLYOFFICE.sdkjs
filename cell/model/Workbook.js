@@ -9673,7 +9673,7 @@
 		}
 
 		if (tempDate > tempDigit && tempDate > tempText) {
-			res.data = true;
+			res.date = true;
 		} else {
 			res.text = tempDigit <= tempText;
 		}
