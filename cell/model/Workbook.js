@@ -9674,6 +9674,7 @@
 
 		if (tempDate > tempDigit && tempDate > tempText) {
 			res.date = true;
+			res.text = false;
 		} else {
 			res.text = tempDigit <= tempText;
 		}
