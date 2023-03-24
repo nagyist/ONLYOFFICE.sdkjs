@@ -13513,6 +13513,7 @@ QueryTableField.prototype.clone = function() {
 			levelInfo.colorsFont = rangeInfo.fontColors;
 
 			levelInfo.isText = rangeInfo.text;
+			levelInfo.isDate = rangeInfo.date;
 		}
 
 		return levelInfo;
@@ -13578,6 +13579,7 @@ QueryTableField.prototype.clone = function() {
 		this.colorsFont = null;
 
 		this.isText = null;
+		this.isDate = null;
 
 		return this;
 	}
@@ -13590,6 +13592,9 @@ QueryTableField.prototype.clone = function() {
 	};
 	CSortLevelInfo.prototype.asc_getIsTextData = function () {
 		return this.isText;
+	};
+	CSortLevelInfo.prototype.asc_getIsDate = function () {
+		return this.isDate;
 	};
 
 	function CRemoveDuplicatesProps(ws) {
@@ -15363,6 +15368,7 @@ QueryTableField.prototype.clone = function() {
 	prot["asc_getColorsFill"] = prot.asc_getColorsFill;
 	prot["asc_getColorsFont"] = prot.asc_getColorsFont;
 	prot["asc_getIsTextData"] = prot.asc_getIsTextData;
+	prot["asc_getIsDate"]     = prot.asc_getIsDate;
 
 	window["Asc"]["CRemoveDuplicatesProps"] = window["Asc"].CRemoveDuplicatesProps = CRemoveDuplicatesProps;
 	prot = CRemoveDuplicatesProps.prototype;

@@ -180,112 +180,210 @@
 		};
 
 		var g_oAutoFiltersOptionsProperties = {
-			cellId		: 0,
-			values		: 1,
-			filter		: 2, 
-			automaticRowCount : 3,
+			cellId: 0,
+			values: 1,
+			filter: 2,
+			automaticRowCount: 3,
 			displayName: 4,
 			isTextFilter: 5,
-			namedSheetView: 6
+			namedSheetView: 6,
+			isDateFilter: 7,
 		};
-		function AutoFiltersOptions () {
 
-			if ( !(this instanceof AutoFiltersOptions) ) {return new AutoFiltersOptions();}
+		function AutoFiltersOptions() {
+
+			if (!(this instanceof AutoFiltersOptions)) {
+				return new AutoFiltersOptions();
+			}
 
 			this.Properties = g_oAutoFiltersOptionsProperties;
 
-			this.cellId  = null;
-			this.cellCoord  = null;
-			this.values  = null;
-			this.filter  = null;
-			this.pivotObj  = null;
+			this.cellId = null;
+			this.cellCoord = null;
+			this.values = null;
+			this.filter = null;
+			this.pivotObj = null;
 			this.sortVal = null;
 			this.automaticRowCount = null;
-			this.displayName  = null;
+			this.displayName = null;
 			this.isTextFilter = null;
+			this.isDateFilter = null;
 			this.colorsFill = null;
 			this.colorsFont = null;
 			this.sortColor = null;
 			this.columnName = null;
 			this.sheetColumnName = null;
 			this.namedSheetView = null;
-			
+
 			return this;
 		}
+
 		AutoFiltersOptions.prototype = {
 			constructor: AutoFiltersOptions,
 
-			getType : function () {
+			getType: function () {
 				return UndoRedoDataTypes.AutoFiltersOptions;
 			},
-			getProperties : function () {
+			getProperties: function () {
 				return this.Properties;
 			},
-			getProperty : function (nType) {
+			getProperty: function (nType) {
 				switch (nType) {
-					case this.Properties.cellId: return this.cellId;
-					case this.Properties.values: return this.values;
-					case this.Properties.filter: return this.filter;
-					case this.Properties.automaticRowCount: return this.automaticRowCount;
-					case this.Properties.displayName: return this.displayName;
-					case this.Properties.isTextFilter: return this.isTextFilter;
-					case this.Properties.colorsFill: return this.colorsFill;
-					case this.Properties.colorsFont: return this.colorsFont;
-					case this.Properties.sortColor: return this.sortColor;
-					case this.Properties.namedSheetView: return this.namedSheetView;
+					case this.Properties.cellId:
+						return this.cellId;
+					case this.Properties.values:
+						return this.values;
+					case this.Properties.filter:
+						return this.filter;
+					case this.Properties.automaticRowCount:
+						return this.automaticRowCount;
+					case this.Properties.displayName:
+						return this.displayName;
+					case this.Properties.isTextFilter:
+						return this.isTextFilter;
+					case this.Properties.isDateFilter:
+						return this.isDateFilter;
+					case this.Properties.colorsFill:
+						return this.colorsFill;
+					case this.Properties.colorsFont:
+						return this.colorsFont;
+					case this.Properties.sortColor:
+						return this.sortColor;
+					case this.Properties.namedSheetView:
+						return this.namedSheetView;
 				}
 
 				return null;
 			},
-			setProperty : function (nType, value) {
+			setProperty: function (nType, value) {
 				switch (nType) {
-					case this.Properties.cellId: this.cellId = value;break;
-					case this.Properties.values: this.values = value;break;
-					case this.Properties.filter: this.filter = value;break;
-					case this.Properties.automaticRowCount: this.automaticRowCount = value;break;
-					case this.Properties.displayName: this.displayName = value;break;
-                    case this.Properties.isTextFilter: this.isTextFilter = value;break;
-                    case this.Properties.colorsFill: this.colorsFill = value;break;
-                    case this.Properties.colorsFont: this.colorsFont = value;break;
-                    case this.Properties.sortColor: this.sortColor = value;break;
-					case this.Properties.namedSheetView: this.namedSheetView = value;break;
+					case this.Properties.cellId:
+						this.cellId = value;
+						break;
+					case this.Properties.values:
+						this.values = value;
+						break;
+					case this.Properties.filter:
+						this.filter = value;
+						break;
+					case this.Properties.automaticRowCount:
+						this.automaticRowCount = value;
+						break;
+					case this.Properties.displayName:
+						this.displayName = value;
+						break;
+					case this.Properties.isTextFilter:
+						this.isTextFilter = value;
+						break;
+					case this.Properties.colorsFill:
+						this.colorsFill = value;
+						break;
+					case this.Properties.colorsFont:
+						this.colorsFont = value;
+						break;
+					case this.Properties.sortColor:
+						this.sortColor = value;
+						break;
+					case this.Properties.namedSheetView:
+						this.namedSheetView = value;
+						break;
 				}
 			},
-			
-			asc_setCellId : function(cellId) { this.cellId = cellId;},
-            asc_setCellCoord : function(val) { this.cellCoord = val; },
-			asc_setValues : function(values) { this.values = values; },
-			asc_setFilterObj : function(filter) { this.filter = filter; },
-			asc_setPivotObj : function(obj) { this.pivotObj = obj; },
-			
-			asc_setSortState : function(sortVal) { this.sortVal = sortVal; },
-			asc_setAutomaticRowCount : function(val) { this.automaticRowCount = val; },
-			
-			asc_setDiplayName : function(val) { this.displayName = val; },
-            asc_setIsTextFilter : function(val) { this.isTextFilter = val; },
-            asc_setColorsFill : function(val) { this.colorsFill = val; },
-            asc_setColorsFont : function(val) { this.colorsFont = val; },
-            asc_setSortColor : function(val) { this.sortColor = val; },
-			asc_setColumnName : function(val) { this.columnName = val; },
-			asc_setSheetColumnName : function(val) { this.sheetColumnName = val; },
 
-			
-			asc_getCellId : function() { return this.cellId; },
-            asc_getCellCoord : function() { return this.cellCoord; },
-			asc_getValues : function() { return this.values; },
-			asc_getFilterObj : function() { return this.filter; },
-			asc_getPivotObj : function() { return this.pivotObj; },
-			
-			asc_getSortState : function() { return this.sortVal; },
-			asc_getDisplayName : function() { return this.displayName; },
-            asc_getIsTextFilter : function() { return this.isTextFilter; },
-            asc_getColorsFill : function() { return this.colorsFill; },
-            asc_getColorsFont : function() { return this.colorsFont; },
-            asc_getSortColor : function() { return this.sortColor; },
-			asc_getColumnName : function() { return this.columnName; },
-			asc_getSheetColumnName : function() { return this.sheetColumnName; },
+			asc_setCellId: function (cellId) {
+				this.cellId = cellId;
+			},
+			asc_setCellCoord: function (val) {
+				this.cellCoord = val;
+			},
+			asc_setValues: function (values) {
+				this.values = values;
+			},
+			asc_setFilterObj: function (filter) {
+				this.filter = filter;
+			},
+			asc_setPivotObj: function (obj) {
+				this.pivotObj = obj;
+			},
 
-			setVisibleFromValues: function(visible) {
+			asc_setSortState: function (sortVal) {
+				this.sortVal = sortVal;
+			},
+			asc_setAutomaticRowCount: function (val) {
+				this.automaticRowCount = val;
+			},
+
+			asc_setDiplayName: function (val) {
+				this.displayName = val;
+			},
+			asc_setIsTextFilter: function (val) {
+				this.isTextFilter = val;
+			},
+			asc_setIsDateFilter: function (val) {
+				this.isDateFilter = val;
+			},
+			asc_setColorsFill: function (val) {
+				this.colorsFill = val;
+			},
+			asc_setColorsFont: function (val) {
+				this.colorsFont = val;
+			},
+			asc_setSortColor: function (val) {
+				this.sortColor = val;
+			},
+			asc_setColumnName: function (val) {
+				this.columnName = val;
+			},
+			asc_setSheetColumnName: function (val) {
+				this.sheetColumnName = val;
+			},
+
+
+			asc_getCellId: function () {
+				return this.cellId;
+			},
+			asc_getCellCoord: function () {
+				return this.cellCoord;
+			},
+			asc_getValues: function () {
+				return this.values;
+			},
+			asc_getFilterObj: function () {
+				return this.filter;
+			},
+			asc_getPivotObj: function () {
+				return this.pivotObj;
+			},
+
+			asc_getSortState: function () {
+				return this.sortVal;
+			},
+			asc_getDisplayName: function () {
+				return this.displayName;
+			},
+			asc_getIsTextFilter: function () {
+				return this.isTextFilter;
+			},
+			asc_getIsDateFilter: function () {
+				return this.isDateFilter;
+			},
+			asc_getColorsFill: function () {
+				return this.colorsFill;
+			},
+			asc_getColorsFont: function () {
+				return this.colorsFont;
+			},
+			asc_getSortColor: function () {
+				return this.sortColor;
+			},
+			asc_getColumnName: function () {
+				return this.columnName;
+			},
+			asc_getSheetColumnName: function () {
+				return this.sheetColumnName;
+			},
+
+			setVisibleFromValues: function (visible) {
 				if (!this.values) {
 					return;
 				}
@@ -6373,6 +6471,7 @@
 
 				var filterTypes = ws.getRowColColors(columnRange);
 				autoFilterObject.asc_setIsTextFilter(filterTypes.text);
+				autoFilterObject.asc_setIsDateFilter(filterTypes.date);
 				autoFilterObject.asc_setColorsFill(filterTypes.colors);
 				autoFilterObject.asc_setColorsFont(filterTypes.fontColors);
 
@@ -6398,6 +6497,7 @@
         prot["asc_getCellCoord"]				= prot.asc_getCellCoord;
 		prot["asc_getDisplayName"]				= prot.asc_getDisplayName;
         prot["asc_getIsTextFilter"]				= prot.asc_getIsTextFilter;
+		prot["asc_getIsDateFilter"]				= prot.asc_getIsDateFilter;
         prot["asc_getColorsFill"]				= prot.asc_getColorsFill;
         prot["asc_getColorsFont"]				= prot.asc_getColorsFont;
         prot["asc_getSortColor"]				= prot.asc_getSortColor;
