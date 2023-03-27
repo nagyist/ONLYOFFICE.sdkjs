@@ -12961,11 +12961,27 @@
 		return this.isIterative;
 	}
 	Cell.prototype._checkDirty = function(){
+		// TODO для получения результатов работы итеративных вычислений как в ms/gs нужно вызвать обычный calculate формулы n раз используя уже имеющиеся значения, 
+		// при этом в ячейке вызова базовое значение будет null(т.е. 0).
+		// Сложность состоит в том чтобы заблокировать код, находящийся внутри _checkDirty(), на время исполнения calculate,
+		// но затем разблокировать его после выполнения цикла. Цикл не должен доходить до конца сразу, т.е. если в цикле вызывается calculate
+		// и ячейка A1 использует в формуле B1, то B1 не должна производить вычисление самой себя на первой итерации(или же должна, но значение должно отдаваться
+		// от предыдущих вычислений). Т.е. общее вычисление страницы должно происходить "веерно" слева-направо, сверху-вниз.
+		// Решение может выглядеть так:
+		// Создать объект кэша (Map), который будет хранить значения и зависимости для всех ячеек.
+		// Пройти по всем ячейкам и добавить их значения и зависимости в кэш.
+		// Пройти по всем ячейкам и вычислить их значения в порядке зависимостей, используя значения из кэша.
+		// Решение по шагам будет выглядеть так(maxlevel = 2):
+		// Start: A1=A1+B1(ячейка вызова), B1=B1+C1=2(уже выполняли расчет), C1=1
+		// 1 шаг: A1=0+2=2, B1=2+1=3, C1=1
+		// 2 шаг: A1=2+3=5, B1=3+1=4, C1=1
+		// Также, скорее всего, при включенных итеративных вычислениях стандартный подсчет значений для ячеек, ссылающихся самих на себя, игнорируется, а определять это будет флаг isIterative
+		
 		let t = this;
-		let isIterative = this.getIsIterative();	// is iterative calculations are enabled
 		if (this.getIsDirty()) {
 			if (g_cCalcRecursion.incLevel(t)) {
 				// if incLevel is possible, do the calculation
+				let isIterative = this.getIsIterative();	// is iterative calculations are enabled
 				let isCalc = this.getIsCalc();
 				// the isCalc flag is set to true during the calculation of the cyclic formula, and is set to false at the end
 				this.setIsCalc(true);
@@ -13009,13 +13025,16 @@
 				g_cCalcRecursion.decLevel(t);
 				if (g_cCalcRecursion.getIsForceBacktracking(t)) {
 					g_cCalcRecursion.insert({ws: this.ws, nRow: this.nRow, nCol: this.nCol});
+					// t.formulaParsed.calculate();
 					if (0 === g_cCalcRecursion.getLevel(t) && !g_cCalcRecursion.getIsProcessRecursion()) {
 						g_cCalcRecursion.setIsProcessRecursion(true);
 						do {
 							g_cCalcRecursion.setIsForceBacktracking(false, t);
 							g_cCalcRecursion.foreachInReverse(function(elem) {
 								elem.ws._getCellNoEmpty(elem.nRow, elem.nCol, function(cell) {
-									if(cell && cell.getIsDirty()){
+									console.log(cell);
+									// cell.formulaParsed.calculate();
+									if (cell && cell.getIsDirty()) {
 										cell.setIsCalc(false);
 									}
 								});

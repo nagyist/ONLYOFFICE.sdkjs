@@ -7062,6 +7062,7 @@ function parserFormula( formula, parent, _ws ) {
 						_tmp = formulaArray;
 					} else {
 						_tmp = currentElement.Calculate(arg, opt_bbox, opt_defName, this.ws, bIsSpecialFunction);
+						console.log(_tmp);
 					}
 
 					//_tmp = currentElement.Calculate(arg, opt_bbox, opt_defName, this.ws, bIsSpecialFunction);
@@ -8114,17 +8115,6 @@ function parserFormula( formula, parent, _ws ) {
 		}
 		return res;
 
-		// return true/false depending on whether the maximum recursion level has been reached
-		/*if (this.getIsForceBacktracking()) {
-			return false;
-		}
-		let res = this.level < CalcRecursion.prototype.MAXRECURSION;
-		if (res) {
-			this.level++;
-		} else {
-			this.setIsForceBacktracking(true);
-		}
-		return res;*/
 	};
 	CalcRecursion.prototype.decLevel = function (cell) {
 		let cellIndex = window['AscCommonExcel'].getCellIndex(cell.nRow, cell.nCol);
@@ -8148,9 +8138,9 @@ function parserFormula( formula, parent, _ws ) {
 	CalcRecursion.prototype.foreachInReverse = function (callback) {
 		for (let i = this.elems.length - 1; i >= 0; --i) {
 			let elemsPart = this.elems[i];
-			for (let j = 0; j < elemsPart.length; ++j) {
+			for (let j = 0; j < elemsPart.length - 1; ++j) {
 				callback(elemsPart[j]);
-				if (!this.getIsForceBacktracking(elemsPart[j])) {
+				if (this.getIsForceBacktracking(elemsPart[j])) {
 					return;
 				}
 			}
