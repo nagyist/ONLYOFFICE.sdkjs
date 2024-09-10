@@ -14333,7 +14333,7 @@
     };
     CTitle.prototype.updateReferences = function() {
         if (this.tx) {
-            this.tx.update();
+            this.tx.updateWithHistory();
         }
     };
 
