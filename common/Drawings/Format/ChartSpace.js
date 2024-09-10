@@ -2294,7 +2294,7 @@ function(window, undefined) {
 		//TODO: change work with labels and markers
 		const aPositions = this.getPossibleDLblsPosition();
 		const nDefaultDatalabelsPos = aPositions[0];
-		const oFirstChart = plot_area.charts[0];
+		const oFirstChart = plot_area.isChartEx() ? plot_area.plotAreaRegion : plot_area.charts[0];
 		const aSeries = oFirstChart.series;
 		const oFirstSeries = aSeries[0];
 		const data_labels = oFirstChart.dLbls;
