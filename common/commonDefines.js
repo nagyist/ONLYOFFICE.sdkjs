@@ -4497,6 +4497,12 @@ window.AscCommon.g_cIsBeta = "false";
 		path: 2
 	};
 
+	var c_oAscCalcMode = {
+		auto: 0,
+		autoNoTable: 1,
+		manual: 2
+	};
+
 	//------------------------------------------------------------export--------------------------------------------------
 	var prot;
 	window['Asc']                          = window['Asc'] || {};
@@ -5947,5 +5953,10 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['referenceData'] = prot.referenceData;
 	prot['link'] = prot.link;
 	prot['path'] = prot.path;
+
+	prot = window['Asc']['c_oAscCalcMode'] = window['Asc'].c_oAscCalcMode = c_oAscCalcMode;
+	prot['auto'] = prot.auto;
+	prot['autoNoTable'] = prot.autoNoTable;
+	prot['manual'] = prot.manual;
 
 })(window);
