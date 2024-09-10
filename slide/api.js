@@ -6212,9 +6212,9 @@ background-repeat: no-repeat;\
 		this.goTo();
 
 		this.onNeedUpdateExternalReferenceOnOpen();
-		if (AscCommon.InitDebugSmartArt) {
-			AscCommon.InitDebugSmartArt();
-		}
+		// if (AscCommon.InitDebugSmartArt) {
+		// 	AscCommon.InitDebugSmartArt();
+		// }
 	};
 	asc_docs_api.prototype.asc_IsStartDemonstrationOnOpen = function()
 	{
