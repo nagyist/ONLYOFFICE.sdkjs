@@ -4334,7 +4334,7 @@ var editor;
 		oSmartArt.setWorksheet(oWSModel);
 		oSmartArt.addToDrawingObjects(undefined, AscCommon.c_oAscCellAnchorType.cellanchorTwoCell);
 		oSmartArt.checkDrawingBaseCoords();
-		oSmartArt.fitFontSize();
+		oSmartArt.generateDrawingPart();
 		oController.checkChartTextSelection();
 		oController.resetSelection();
 		oSmartArt.select(oController, 0);
@@ -6252,7 +6252,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.getGraphicController = function () {
-      var ws = this.wb.getWorksheet();
+      var ws = this.wb && this.wb.getWorksheet();
       return ws && ws.objectRender && ws.objectRender.controller;
   };
 

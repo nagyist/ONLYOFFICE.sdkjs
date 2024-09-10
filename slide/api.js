@@ -1902,6 +1902,7 @@ background-repeat: no-repeat;\
 		}
 		var context = reader.context;
 		this.WordControl.m_oLogicDocument.ImageMap = context.loadDataLinks();
+		context.GenerateSmartArts();
 		jsZlib.close();
 		return true;
 	};
@@ -4554,7 +4555,7 @@ background-repeat: no-repeat;\
 			oSlide.addToSpTreeToPos(oSlide.cSld.spTree.length, oSmartArt);
 		}
 		oSmartArt.checkDrawingBaseCoords();
-		oSmartArt.fitFontSize();
+		oSmartArt.generateDrawingPart();
 		oController.checkChartTextSelection();
 		oController.resetSelection();
 		oSmartArt.select(oController, 0);
@@ -6211,6 +6212,9 @@ background-repeat: no-repeat;\
 		this.goTo();
 
 		this.onNeedUpdateExternalReferenceOnOpen();
+		if (AscCommon.InitDebugSmartArt) {
+			AscCommon.InitDebugSmartArt();
+		}
 	};
 	asc_docs_api.prototype.asc_IsStartDemonstrationOnOpen = function()
 	{

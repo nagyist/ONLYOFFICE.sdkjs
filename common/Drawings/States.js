@@ -1043,6 +1043,7 @@ RotateState.prototype =
                 History.Create_NewPoint(AscDFH.historydescription_CommonDrawings_CopyCtrl);
                 for(i = 0; i < tracks.length; ++i)
                 {
+	                tracks[i].checkDrawingPartWithHistory();
                     copy = tracks[i].originalObject.copy(oCopyPr);
                     oIdMap[tracks[i].originalObject.Id] = copy.Id;
                     this.drawingObjects.drawingObjects.getWorksheetModel && copy.setWorksheet(this.drawingObjects.drawingObjects.getWorksheetModel());
@@ -1240,6 +1241,7 @@ RotateState.prototype =
                         this.drawingObjects.checkSelectedObjectsAndCallback(function () {
 
                                 for(i = 0; i < tracks.length; ++i){
+	                                tracks[i].checkDrawingPartWithHistory();
                                     tracks[i].trackEnd(false, bFlag);
                                 }
                                 if(tracks.length === 1 && tracks[0].chartSpace){

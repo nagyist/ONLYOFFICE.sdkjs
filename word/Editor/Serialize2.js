@@ -8308,6 +8308,7 @@ function BinaryFileReader(doc, openParams)
 			AscCommon.pptx_content_loader.Reader.ImageMapChecker = AscCommon.pptx_content_loader.ImageMapChecker;
 			var context = opt_xmlParserContext;
 			context.loadDataLinks();
+			context.GenerateSmartArts();
 		}
 
         this.Document.On_EndLoad();
@@ -8320,6 +8321,7 @@ function BinaryFileReader(doc, openParams)
 				api && api.asc_addRestriction(restrictionType);
 			}
 		}
+	    pptx_content_loader.Reader.GenerateSmartArts();
 		
 		//чтобы удалялся stream с бинарником
 		pptx_content_loader.Clear(true);

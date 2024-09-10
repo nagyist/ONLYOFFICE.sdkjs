@@ -1791,10 +1791,6 @@
 	window['AscDFH'].historyitem_type_DiagramData            = 2092 << 16;
 	window['AscDFH'].historyitem_type_FunctionValue          = 2093 << 16;
 	window['AscDFH'].historyitem_type_PointInfo              = 2094 << 16;
-	window['AscDFH'].historyitem_type_ShapeSmartArtInfo      = 2095 << 16;
-	window['AscDFH'].historyitem_type_SmartArtTree           = 2096 << 16;
-	window['AscDFH'].historyitem_type_SmartArtNode           = 2097 << 16;
-	window['AscDFH'].historyitem_type_SmartArtNodeData       = 2098 << 16;
 	window['AscDFH'].historyitem_type_BuBlip                 = 2099 << 16;
 
 	window['AscDFH'].historyitem_type_VMLArc                 = 2099 << 16;
@@ -3041,10 +3037,8 @@
 	window['AscDFH'].historyitem_ShapeSetTextLink               = window['AscDFH'].historyitem_type_Shape | 13;
 	window['AscDFH'].historyitem_ShapeSetModelId                = window['AscDFH'].historyitem_type_Shape | 14;
 	window['AscDFH'].historyitem_ShapeSetTxXfrm                 = window['AscDFH'].historyitem_type_Shape | 15;
-	window['AscDFH'].historyitem_ShapeSetSmartArtPoint          = window['AscDFH'].historyitem_type_Shape | 16;
 	window['AscDFH'].historyitem_ShapeSetFLocksText             = window['AscDFH'].historyitem_type_Shape | 17;
 	window['AscDFH'].historyitem_ShapeSetClientData             = window['AscDFH'].historyitem_type_Shape | 18;
-	window['AscDFH'].historyitem_ShapeSetShapeSmartArtPointInfo = window['AscDFH'].historyitem_type_Shape | 19;
 
 	window['AscDFH'].historyitem_OleSizeSelectionSetRange = window['AscDFH'].historyitem_type_OleSizeSelection | 1;
 
@@ -3955,27 +3949,6 @@
 	AscDFH.historyitem_FunctionValueBool             = AscDFH.historyitem_type_FunctionValue | 6;
 	AscDFH.historyitem_FunctionValueInt              = AscDFH.historyitem_type_FunctionValue | 7;
 
-	AscDFH.historyitem_ShapeSmartArtInfoSpPrPoint             = AscDFH.historyitem_type_ShapeSmartArtInfo | 1;
-	AscDFH.historyitem_ShapeSmartArtInfoShapePoint            = AscDFH.historyitem_type_ShapeSmartArtInfo | 2;
-	AscDFH.historyitem_ShapeSmartArtInfoAddLstContentPoint    = AscDFH.historyitem_type_ShapeSmartArtInfo | 3;
-	AscDFH.historyitem_ShapeSmartArtInfoRemoveLstContentPoint = AscDFH.historyitem_type_ShapeSmartArtInfo | 4;
-
-	AscDFH.historyitem_SmartArtTreeRoot = AscDFH.historyitem_type_SmartArtTree | 1;
-
-	AscDFH.historyitem_SmartArtNodeInfo                  = AscDFH.historyitem_type_SmartArtNode | 1;
-	AscDFH.historyitem_SmartArtNodeData                  = AscDFH.historyitem_type_SmartArtNode | 2;
-	AscDFH.historyitem_SmartArtNodeAddToLstChildren      = AscDFH.historyitem_type_SmartArtNode | 3;
-	AscDFH.historyitem_SmartArtNodeRemoveFromLstChildren = AscDFH.historyitem_type_SmartArtNode | 4;
-
-	AscDFH.historyitem_SmartArtNodeDataParPoint              = AscDFH.historyitem_type_SmartArtNodeData | 1;
-	AscDFH.historyitem_SmartArtNodeDataSibPoint               = AscDFH.historyitem_type_SmartArtNodeData | 2;
-	AscDFH.historyitem_SmartArtNodeDataCxn                    = AscDFH.historyitem_type_SmartArtNodeData | 3;
-	AscDFH.historyitem_SmartArtNodeDataMainPoint              = AscDFH.historyitem_type_SmartArtNodeData | 4;
-	AscDFH.historyitem_SmartArtNodeDataAddToLstShapes         = AscDFH.historyitem_type_SmartArtNodeData | 5;
-	AscDFH.historyitem_SmartArtNodeDataRemoveFromLstShapes    = AscDFH.historyitem_type_SmartArtNodeData | 6;
-	AscDFH.historyitem_SmartArtNodeDataAddToLstPresPoint      = AscDFH.historyitem_type_SmartArtNodeData | 7;
-	AscDFH.historyitem_SmartArtNodeDataRemoveFromLstPresPoint = AscDFH.historyitem_type_SmartArtNodeData | 8;
-
 	AscDFH.historyitem_BuBlipBlip              = AscDFH.historyitem_type_BuBlip | 1;
 
 	AscDFH.historyitem_PointInfoPoint                = AscDFH.historyitem_type_PointInfo | 1;
@@ -3992,7 +3965,7 @@
 	AscDFH.historyitem_ParameterValConnectorPoint             = AscDFH.historyitem_type_ParameterVal | 9;
 	AscDFH.historyitem_ParameterValConnectorRouting           = AscDFH.historyitem_type_ParameterVal | 10;
 	AscDFH.historyitem_ParameterValContinueDirection          = AscDFH.historyitem_type_ParameterVal | 11;
-	AscDFH.historyitem_ParameterValDiagramHorizontalAlignment = AscDFH.historyitem_type_ParameterVal | 12;
+	AscDFH.historyitem_ParameterValHorizontalAlignment        = AscDFH.historyitem_type_ParameterVal | 12;
 	AscDFH.historyitem_ParameterValDiagramTextAlignment       = AscDFH.historyitem_type_ParameterVal | 13;
 	AscDFH.historyitem_ParameterValFallbackDimension          = AscDFH.historyitem_type_ParameterVal | 14;
 	AscDFH.historyitem_ParameterValFlowDirection              = AscDFH.historyitem_type_ParameterVal | 15;
