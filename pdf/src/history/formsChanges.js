@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -33,7 +33,12 @@
 "use strict";
 
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Value]			= CChangesPDFFormValue;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Add_Kid]			= CChangesPDFFormAddKid;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Remove_Kid]		= CChangesPDFFormRemoveKid;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Change_Display]	= CChangesPDFFormDisplay;
+
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Cur_Idxs]	= CChangesPDFListFormCurIdxs;
+
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Pushbutton_Image]		= CChangesPDFPushbuttonImage;
 
 /**
@@ -49,10 +54,122 @@ CChangesPDFFormValue.prototype.constructor = CChangesPDFFormValue;
 CChangesPDFFormValue.prototype.Type = AscDFH.historyitem_Pdf_Form_Value;
 CChangesPDFFormValue.prototype.private_SetValue = function(Value)
 {
-	var oField = this.Class;
+	let oField = this.Class;
 	oField.SetValue(Value);
+	oField.Commit();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesDrawingsContent}
+ */
+function CChangesPDFFormAddKid(Class, Pos, Items)
+{
+	AscDFH.CChangesDrawingsContent.call(this, Class, this.Type, Pos, Items, true);
 }
-;
+CChangesPDFFormAddKid.prototype = Object.create(AscDFH.CChangesDrawingsContent.prototype);
+CChangesPDFFormAddKid.prototype.constructor = CChangesPDFFormAddKid;
+CChangesPDFFormAddKid.prototype.Type = AscDFH.historyitem_Pdf_Form_Add_Kid;
+
+CChangesPDFFormAddKid.prototype.Undo = function()
+{
+	let oForm	= this.Class;
+	let oDocument = Asc.editor.getPDFDoc();
+	let oDrDoc	= oDocument.GetDrawingDocument();
+	
+	for (var nIndex = 0, nCount = this.Items.length; nIndex < nCount; ++nIndex)
+	{
+		let oKid = this.Items[nIndex];
+
+		oForm.RemoveKid(oKid);
+		oKid.AddToRedraw();
+	}
+	
+	oDocument.SetMouseDownObject(null);
+	oDrDoc.TargetEnd();
+};
+CChangesPDFFormAddKid.prototype.Redo = function()
+{
+	let oForm	= this.Class;
+	let oDocument = Asc.editor.getPDFDoc();
+	let oDrDoc	= oDocument.GetDrawingDocument();
+	
+	for (var nIndex = 0, nCount = this.Items.length; nIndex < nCount; ++nIndex)
+	{
+		let oKid = this.Items[nIndex];
+
+		oForm.AddKid(oKid);
+		oKid.AddToRedraw();
+	}
+	
+	oDocument.SetMouseDownObject(null);
+	oDrDoc.TargetEnd();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesDrawingsContent}
+ */
+function CChangesPDFFormRemoveKid(Class, Pos, Items)
+{
+	AscDFH.CChangesDrawingsContent.call(this, Class, this.Type, Pos, Items, false);
+}
+CChangesPDFFormRemoveKid.prototype = Object.create(AscDFH.CChangesDrawingsContent.prototype);
+CChangesPDFFormRemoveKid.prototype.constructor = CChangesPDFFormRemoveKid;
+CChangesPDFFormRemoveKid.prototype.Type = AscDFH.historyitem_Pdf_Form_Remove_Kid;
+
+CChangesPDFFormRemoveKid.prototype.Undo = function()
+{
+	let oForm	= this.Class;
+	let oDocument = Asc.editor.getPDFDoc();
+	let oDrDoc	= oDocument.GetDrawingDocument();
+	
+	for (var nIndex = 0, nCount = this.Items.length; nIndex < nCount; ++nIndex)
+	{
+		let oKid = this.Items[nIndex];
+
+		oForm.AddKid(oKid);
+		oKid.AddToRedraw();
+	}
+	
+	oDocument.SetMouseDownObject(null);
+	oDrDoc.TargetEnd();
+};
+CChangesPDFFormRemoveKid.prototype.Redo = function()
+{
+	let oForm	= this.Class;
+	let oDocument = Asc.editor.getPDFDoc();
+	let oDrDoc	= oDocument.GetDrawingDocument();
+	
+	for (var nIndex = 0, nCount = this.Items.length; nIndex < nCount; ++nIndex)
+	{
+		let oKid = this.Items[nIndex];
+
+		oForm.RemoveKid(oKid);
+		oKid.AddToRedraw();
+	}
+	
+	oDocument.SetMouseDownObject(null);
+	oDrDoc.TargetEnd();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormDisplay(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormDisplay.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormDisplay.prototype.constructor = CChangesPDFFormDisplay;
+CChangesPDFFormDisplay.prototype.Type = AscDFH.historyitem_Pdf_Form_Change_Display;
+CChangesPDFFormDisplay.prototype.private_SetValue = function(Value)
+{
+	let oField = this.Class;
+	oField.SetDisplay(Value);
+};
+
 /**
  * @constructor
  * @extends {AscDFH.CChangesBaseStringProperty}

@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -424,16 +424,16 @@
             }
 
             // сначала заполним массив
-            if (this.ThemeLoader == null)
-                this.Api.asyncImagesDocumentStartLoaded();
-            else
-                this.ThemeLoader.asyncImagesStartLoaded();
 
             this.images_loading = [];
             for (let id in images)
             {
                 this.images_loading[this.images_loading.length] = AscCommon.getFullImageSrc2(images[id]);
             }
+            if (this.ThemeLoader == null)
+                this.Api.asyncImagesDocumentStartLoaded(this.images_loading);
+            else
+                this.ThemeLoader.asyncImagesStartLoaded(this.images_loading);
 
             if (!this.bIsAsyncLoadDocumentImages)
             {

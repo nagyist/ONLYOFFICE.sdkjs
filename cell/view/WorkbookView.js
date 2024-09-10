@@ -1,5 +1,5 @@
 ﻿/*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -2055,6 +2055,8 @@
 	  }
       t.setCellEditMode(true);
       t.hideSpecialPasteButton();
+      t.handlers.trigger("asc_onToggleAutoCorrectOptions");
+
       ws.openCellEditor(t.cellEditor, enterOptions, selectionRange);
       t.input.disabled = false;
 
@@ -2803,11 +2805,16 @@
 			return res;
 		};
 
+		let oThis = this;
+		let getCompleteMenu = function (_name, _type) {
+			return new AscCommonExcel.asc_CCompleteMenu(_name, _type);
+		};
+
 		let defNamesList, defName, defNameStr, _lastFNameLength, _type;
 		fName = fName.toUpperCase();
 		for (let i = 0; i < this.formulasList.length; ++i) {
 			if (0 === this.formulasList[i].indexOf(fName)) {
-				arrResult.push(new AscCommonExcel.asc_CCompleteMenu(this.formulasList[i], c_oAscPopUpSelectorType.Func));
+				arrResult.push(getCompleteMenu(this.formulasList[i], c_oAscPopUpSelectorType.Func));
 			}
 		}
 
@@ -2827,10 +2834,11 @@
 				} else if (defName.type === Asc.c_oAscDefNameType.table) {
 					_type = c_oAscPopUpSelectorType.Table;
 				}
-				arrResult.push(new AscCommonExcel.asc_CCompleteMenu(defNameStr, _type));
+				arrResult.push(getCompleteMenu(defNameStr, _type));
 			} else if (defName.type === Asc.c_oAscDefNameType.table && 0 === fName.indexOf(defNameStr.toLowerCase())) {
 				if (-1 !== fName.indexOf("[")) {
 					var tableNameParse = fName.split("[");
+					// add only columns to the dropdown menu if @ the last element
 					if (tableNameParse[0] && 0 === defNameStr.toLowerCase().indexOf(tableNameParse[0])) {
 						//ищем совпадения по названию столбцов
 						var table = this.model.getTableByName(defNameStr);
@@ -2841,8 +2849,16 @@
 								for (let j = 0; j < table.TableColumns.length; j++) {
 									_str = table.TableColumns[j].Name;
 									_type = c_oAscPopUpSelectorType.TableColumnName;
-									if (sTableInner === "" || 0 === _str.toLowerCase().indexOf(sTableInner)) {
-										arrResult.push(new AscCommonExcel.asc_CCompleteMenu(_str, _type));
+
+									let newStr;
+									if (sTableInner[0] === "@") {
+										newStr = sTableInner.slice(1);
+										if (newStr === "" || 0 === _str.toLowerCase().indexOf(newStr)) {
+											arrResult.push(getCompleteMenu(_str, _type));
+										}
+									} 
+									else if (sTableInner === "" || 0 === _str.toLowerCase().indexOf(sTableInner)) {
+										arrResult.push(getCompleteMenu(_str, _type));
 									}
 								}
 
@@ -2866,12 +2882,16 @@
 											_type = c_oAscPopUpSelectorType.TableTotals;
 										}
 										if (sTableInner === "" || (0 === _str.toLocaleLowerCase().indexOf(sTableInner) && _type !== c_oAscPopUpSelectorType.TableThisRow)) {
-											arrResult.push(new AscCommonExcel.asc_CCompleteMenu(_str, _type));
+											arrResult.push(getCompleteMenu(_str, _type));
 										}
 									}
 								}
 								fPos += defNameStr.length + (fName.length - defNameStr.length - sTableInner.length);
 								_lastFNameLength = sTableInner.length;
+								// shift for fPos for correct work when we use result from dropdown menu
+								if (sTableInner[0] === "@") {
+									fPos++
+								}
 							}
 						}
 					}
@@ -2906,6 +2926,11 @@
                 }
                 tmp = this.cellEditor.skipTLUpdate;
                 this.cellEditor.skipTLUpdate = false;
+
+				if (type === c_oAscPopUpSelectorType.TableThisRow) {
+					this.skipHelpSelector = false;
+				}
+
                 this.cellEditor.replaceText(this.lastFPos, this.lastFNameLength, type === c_oAscPopUpSelectorType.TableThisRow ? "@" : name);
                 this.cellEditor.skipTLUpdate = tmp;
             } else if (false === this.cellEditor.insertFormula(name, isNotFunction)) {
@@ -3023,7 +3048,7 @@
 				let funcCalc = ws.calculateWizardFormula(_name + '(' + sArguments + ')');
 				_res.functionResult = funcCalc.str;
 				if (funcCalc.obj && funcCalc.obj.type !== AscCommonExcel.cElementType.error) {
-					_res.formulaResult = ws.calculateWizardFormula(t.cellEditor._formula).str;
+					_res.formulaResult = ws.calculateWizardFormula(t.cellEditor.getText().substring(1)).str;
 				}
 			}
 
@@ -3073,7 +3098,7 @@
 
 				let trueName = oFormulaList[name] && oFormulaList[name].prototype && oFormulaList[name].prototype.name;
 				if (allowCompleteFunctions[trueName]) {
-					cellRange = wsView.autoCompleteFormula(trueName);
+					cellRange = wsView.autoCompleteFormula(trueName, t.isWizardMode);
 				}
 
 				t.cellEditor.insertFormula(name, null, cellRange && !cellRange.notEditCell && cellRange.text);
@@ -3086,6 +3111,7 @@
 			if (!res) {
 				res = name ? new AscCommonExcel.CFunctionInfo(name) : null;
 			}
+
 			t.handlers.trigger("asc_onSendFunctionWizardInfo", res);
         };
 
@@ -5374,7 +5400,11 @@
 										oBinaryFileReader.Read(binaryData, wb);
 									});
 								});
-
+								//g_DefNameWorksheet use on parse def name ref. here need use external ws.
+								let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
+								AscCommonExcel.g_DefNameWorksheet = new AscCommonExcel.Worksheet(wb, -1);
+								wb.dependencyFormulas.initOpen();
+								AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;
 								if (wb.aWorksheets) {
 									eR && eR.updateData(wb.aWorksheets, _arrAfterPromise[i].data);
 								}
@@ -5752,10 +5782,47 @@
 
 	WorkbookView.prototype.addCustomFunction = function(func, options) {
 		if (!this.customFunctionEngine) {
-			this.customFunctionEngine = new AscCommonExcel.CCustomFunctionEngine(this);
+			this.initCustomEngine();
 		}
 		this.customFunctionEngine.add(func, options);
 	};
+	/**
+	 * Updates calculating settings properties
+	 * @memberof WorkbookView
+	 * @param {asc_CCalcSettings} oCalcSettings
+	 */
+	WorkbookView.prototype.updateCalcSettings = function (oCalcSettings) {
+		if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
+			return;
+		}
+		const oCalcPr = this.model.calcPr;
+		if (!oCalcSettings || oCalcSettings.asc_isEqual(oCalcPr)) {
+			return;
+		}
+
+		const ws = this.getWorksheet();
+		const oThis = this;
+		const callback = function (isSuccess) {
+			const g_cCalcRecursion = AscCommonExcel.g_cCalcRecursion;
+			History.Create_NewPoint();
+			History.StartTransaction();
+			oCalcPr.updateCalcProperties(oCalcSettings, oThis.model);
+			g_cCalcRecursion.initCalcProperties(oCalcPr);
+			History.EndTransaction();
+
+			ws._updateRange(new Asc.Range(0, 0, ws.model.getColsCount(), ws.model.getRowsCount()), true);
+			ws.draw();
+		};
+
+		callback();
+	};
+
+	WorkbookView.prototype.initCustomEngine = function() {
+		if (!this.customFunctionEngine) {
+			this.customFunctionEngine = new AscCommonExcel.CCustomFunctionEngine(this);
+		}
+	};
+
 
 
 	//временно добавляю сюда. в идеале - использовать общий класс из документов(или сделать базовый, от него наследоваться) - CDocumentSearch
@@ -6017,8 +6084,12 @@
 		if (-1 !== this.CurId) {
 			return this.Direction ? this.CurId + 1 : this.CurId - 1;
 		} else {
-			let ws = this.wb.getActiveWS();
-			let selectionRange = (this.props && this.props.selectionRange) || ws.selectionRange || ws.copySelection;
+			// it's necessary because into the docbuilder "this.wb.wsActive" is "-1" and search doesn't work
+			let ws = this.wb.model.getActiveWs();
+			if (!ws) {
+				ws = this.wb && this.wb.model && this.wb.model.getActiveWs && this.wb.model.getActiveWs();
+			}
+			let selectionRange = (this.props && this.props.selectionRange) || (ws && ws.selectionRange) || (ws && ws.copySelection);
 
 			let activeCell = this.props.activeCell ? this.props.activeCell : selectionRange.activeCell;
 			if (this.props && this.props.lastSearchElem) {
@@ -6055,7 +6126,7 @@
 			let sheetArr = [];
 			let checkElem = function (indexElem, index) {
 				//нужный нам лист
-				if (ws.sName === t.Elements[indexElem].sheet) {
+				if (ws && ws.sName === t.Elements[indexElem].sheet) {
 
 					let prevNextI = bReverse ? indexArr[index - 1] : indexArr[index + 1];
 					let prevNextElemRowCol = getRowCol(t.Elements[prevNextI]);
@@ -6126,6 +6197,9 @@
 			case AscCommonExcel.docChangedType.rangeValues:
 				this.changeRangeValue(arg1, arg2);
 				break;
+			case AscCommonExcel.docChangedType.removeRows:
+				this.changeRemoveRows(arg1, arg2);
+				break;
 			case AscCommonExcel.docChangedType.sheetContent:
 				this.changeSheetContent(arg1, arg2);
 				break;
@@ -6161,27 +6235,32 @@
 			}
 		}
 	};
+	CDocumentSearchExcel.prototype.changeRemoveRows = function (ws, range) {
+		if (this.isNotEmpty()) {
+			for (let i in this.Elements) {
+				if (this.Elements[i].index === ws.index && this.Elements[i].row > range.r2) {
+					let keyOld = this.Elements[i].index + "-" + this.Elements[i].col + "-" + this.Elements[i].row;
+
+					this.Elements[i].row = this.Elements[i].row - (range.r2 - range.r1 + 1);
+
+					let keyNew = this.Elements[i].index + "-" + this.Elements[i].col + "-" + this.Elements[i].row;
+					let oldId = this.mapFindCells[keyOld];
+					delete this.mapFindCells[keyOld];
+					this.mapFindCells[keyNew] = oldId;
+				}
+			}
+		}
+	};
 	CDocumentSearchExcel.prototype.changeRangeValue = function (bbox, ws) {
 		if (this.wb.Api.selectSearchingResults && bbox && this.props) {
 			let t = this;
-			let aCells;
-			ws.getRange3(bbox.r1, bbox.c1, bbox.r2, bbox.c2)._foreachNoEmpty(function(cell) {
-				if (!aCells) {
-					aCells = [];
-				}
-				if (!aCells[cell.nRow]) {
-					aCells[cell.nRow] = [];
-				}
-				aCells[cell.nRow][cell.nCol] = cell;
-			});
-
+			
 			let newCell = new AscCommonExcel.Cell(ws);
-			for (let i = bbox.c1; i <= bbox.c2; i++) {
-				for (let j = bbox.r1; j <= bbox.r2; j++) {
-					newCell.nCol = i;
-					newCell.nRow = j;
-					let _cell = aCells && aCells[j] && aCells[j][i] ? aCells[j][i] : newCell;
-					this.changeCellValue(_cell);
+			for (let i in this.Elements) {
+				if (this.Elements[i].index === ws.index && bbox.contains(this.Elements[i].col, this.Elements[i].row)) {
+					newCell.nCol = this.Elements[i].col;
+					newCell.nRow = this.Elements[i].row;
+					this.changeCellValue(newCell);
 				}
 			}
 		}

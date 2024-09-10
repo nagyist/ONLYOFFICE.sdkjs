@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -2564,6 +2564,12 @@ function (window, undefined) {
 			} else {
 				wb.onTimelineCacheDelete(Data.from.name);
 			}
+		} else if (AscCH.historyitem_Workbook_CalcPr_iterate === Type) {
+			wb.calcPr.setIterate(bUndo ? Data.from : Data.to);
+		} else if (AscCH.historyitem_Workbook_CalcPr_iterateCount === Type) {
+			wb.calcPr.setIterateCount(bUndo ? Data.from : Data.to);
+		} else if (AscCH.historyitem_Workbook_CalcPr_iterateDelta === Type) {
+			wb.calcPr.setIterateDelta(bUndo ? Data.from : Data.to);
 		}
 	};
 	UndoRedoWorkbook.prototype.forwardTransformationIsAffect = function (Type) {
@@ -4110,6 +4116,9 @@ function (window, undefined) {
 			case AscCH.historyitem_PivotTable_SetShowHeaders:
 				pivotTable.asc_setShowHeaders(value);
 				break;
+			case AscCH.historyitem_PivotTable_SetGrandTotalCaption:
+				pivotTable.asc_setGrandTotalCaption(value);
+				break;
 			case AscCH.historyitem_PivotTable_SetCompact:
 				pivotTable.asc_setCompact(value);
 				break;
@@ -4364,6 +4373,9 @@ function (window, undefined) {
 				break;
 			case AscCH.historyitem_PivotTable_PivotFieldSetSubtotalTop:
 				field.asc_setSubtotalTop(value, pivotTable, index);
+				break;
+			case AscCH.historyitem_PivotTable_PivotFieldSetSubtotalCaption:
+				field.asc_setSubtotalCaption(value, pivotTable, index);
 				break;
 			case AscCH.historyitem_PivotTable_PivotFieldSetShowAll:
 				field.asc_setShowAll(value, pivotTable, index);

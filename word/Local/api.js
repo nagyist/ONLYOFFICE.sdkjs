@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -151,6 +151,7 @@ AscCommon.baseEditorsApi.prototype.asc_setCurrentPassword = AscCommon.baseEditor
 	return this.asc_setCurrentPasswordBase(password);
 };
 
+var isSupportSaveInPDF = true; // Since 8.2.0
 Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isResaveAttack, options)
 {
 	if (!isResaveAttack && !isSaveAs && !this.asc_isDocumentCanSave())
@@ -168,8 +169,13 @@ Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isRes
 	{
 		var _isNaturalSave = this.IsUserSave;
 		this.canSave = false;
+
+		let isSupportBuild = true;
+
+		if (this.isPdfEditor())
+			isSupportBuild = isSupportSaveInPDF;
 		
-		if (this.WordControl.m_oLogicDocument != null)
+		if (isSupportBuild)
 		{
 			var t = this;
 			this.CoAuthoringApi.askSaveChanges(function(e) {
@@ -182,7 +188,7 @@ Asc['asc_docs_api'].prototype.asc_Save = function (isNoUserSave, isSaveAs, isRes
 		else
 		{
 			// TODO:
-			if (this.isPdfEditor() && this.IsUserSave)
+			if (this.IsUserSave)
 			{
 				AscCommon.History.Reset_SavedIndex(this.IsUserSave);
 				this.IsUserSave = false;
@@ -236,7 +242,7 @@ window["DesktopOfflineAppDocumentStartSave"] = function(isSaveAs, password, isFo
  		}
 	}
 
-	if (editor.isUseNativeViewer && editor.isDocumentRenderer())
+	if (!isSupportSaveInPDF && editor.isUseNativeViewer && editor.isDocumentRenderer())
 	{
 		let changes = editor.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Save();
 		if (changes)
@@ -307,7 +313,8 @@ Asc['asc_docs_api'].prototype.AddImageUrl = function(urls, imgProp, token, obj)
 	});
 	this._addImageUrl(_urls, obj);
 };
-Asc['asc_docs_api'].prototype.AddImage = Asc['asc_docs_api'].prototype.asc_addImage = function(obj)
+Asc['asc_docs_api'].prototype.AddImage = Asc['asc_docs_api'].prototype.asc_addImage =
+Asc['PDFEditorApi'].prototype.AddImage = Asc['PDFEditorApi'].prototype.asc_addImage = function(obj)
 {
 	window["AscDesktopEditor"]["OpenFilenameDialog"]("images", false, function(_file) {
 		var file = _file;
@@ -332,10 +339,15 @@ Asc['asc_docs_api'].prototype.asc_changeExternalReference = function(eR)
 Asc['asc_docs_api'].prototype["asc_changeExternalReference"] = Asc['asc_docs_api'].prototype.asc_changeExternalReference;
 
 
-
 Asc['asc_docs_api'].prototype["asc_addImage"] = Asc['asc_docs_api'].prototype.asc_addImage;
 Asc['asc_docs_api'].prototype["AddImageUrl"] = Asc['asc_docs_api'].prototype.AddImageUrl;
 Asc['asc_docs_api'].prototype["AddImage"] = Asc['asc_docs_api'].prototype.AddImage;
+
+Asc['PDFEditorApi'].prototype["asc_addImage"] = Asc['PDFEditorApi'].prototype.asc_addImage;
+Asc['PDFEditorApi'].prototype["AddImageUrl"] = Asc['PDFEditorApi'].prototype.AddImageUrl;
+Asc['PDFEditorApi'].prototype["AddImage"] = Asc['PDFEditorApi'].prototype.AddImage;
+
+
 Asc['asc_docs_api'].prototype["asc_Save"] = Asc['asc_docs_api'].prototype.asc_Save;
 Asc['asc_docs_api'].prototype["asc_DownloadAs"] = Asc['asc_docs_api'].prototype.asc_DownloadAs;
 Asc['asc_docs_api'].prototype["asc_isOffline"] = Asc['asc_docs_api'].prototype.asc_isOffline;

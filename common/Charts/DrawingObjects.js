@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -454,7 +454,7 @@ asc_CChartBinary.prototype = {
         const stream = AscFormat.CreateBinaryReader(binary, 0, binary.length);
         //надо сбросить то, что остался после открытия документа
         AscCommon.pptx_content_loader.Clear();
-        const oNewChartSpace = new AscFormat.CChartSpace();
+        const oNewChartSpace = Asc.editor.isPdfEditor() ? new AscPDF.CPdfChart() : new AscFormat.CChartSpace();
         const oBinaryChartReader = new AscCommon.BinaryChartReader(stream);
         oBinaryChartReader.ExternalReadCT_ChartSpace(stream.size , oNewChartSpace, workSheet);
         return oNewChartSpace;
@@ -3654,15 +3654,19 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 
 		var _img;
         if ( !AscCommon.isNullOrEmptyString(objectProperties.ImageUrl) ) {
-            _img = api.ImageLoader.LoadImage(objectProperties.ImageUrl, 1);
-
-            if (null != _img) {
+            if (window['IS_NATIVE_EDITOR']) {
                 _this.controller.setGraphicObjectProps( objectProperties );
-            }
-            else {
-                _this.asyncImageEndLoaded = function(_image) {
+            } else {
+                _img = api.ImageLoader.LoadImage(objectProperties.ImageUrl, 1);
+
+                if (null != _img) {
                     _this.controller.setGraphicObjectProps( objectProperties );
-                    _this.asyncImageEndLoaded = null;
+                }
+                else {
+                    _this.asyncImageEndLoaded = function(_image) {
+                        _this.controller.setGraphicObjectProps( objectProperties );
+                        _this.asyncImageEndLoaded = null;
+                    }
                 }
             }
         }
@@ -4220,9 +4224,11 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         if(_this.controller.checkSelectedObjectsProtectionText()) {
             return;
         }
+        Asc.editor.sendEvent("asc_onUserActionStart");
         History.Create_NewPoint(AscDFH.historydescription_Document_CompositeInput);
         _this.beginCompositeInput();
         _this.controller.recalculateCurPos(true, true);
+        Asc.editor.sendEvent("asc_onUserActionEnd");
     };
 
 
@@ -4255,12 +4261,14 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     {
         if (null === _this.CompositeInput)
             return;
+        Asc.editor.sendEvent("asc_onUserActionStart");
         History.Create_NewPoint(AscDFH.historydescription_Document_CompositeInputReplace);
         _this.addCompositeText(nCharCode);
         _this.checkCurrentTextObjectExtends();
         _this.controller.recalculate();
         _this.controller.recalculateCurPos(true, true);
         _this.controller.updateSelectionState();
+        Asc.editor.sendEvent("asc_onUserActionEnd");
     };
 
     _this.removeCompositeText = function(nCount){
@@ -4286,6 +4294,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     {
         if (null === _this.CompositeInput)
             return;
+        Asc.editor.sendEvent("asc_onUserActionStart");
         History.Create_NewPoint(AscDFH.historydescription_Document_CompositeInputReplace);
         _this.removeCompositeText(_this.CompositeInput.Length);
         for (var nIndex = 0, nCount = arrCharCodes.length; nIndex < nCount; ++nIndex)
@@ -4296,6 +4305,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 		_this.controller.startRecalculate();
         _this.controller.recalculateCurPos(true, true);
         _this.controller.updateSelectionState();
+        Asc.editor.sendEvent("asc_onUserActionEnd");
     };
     _this.Set_CursorPosInCompositeText = function(nPos)
     {

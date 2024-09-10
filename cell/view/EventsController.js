@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -1302,6 +1302,14 @@
 						return result;
 					}
 
+				case 219:
+				case 221:
+					if (!ctrlKey || t.getCellEditMode() || !canEdit || selectionDialogMode) {
+						return true;
+					}
+					stop();
+					t.view.setFontAttributes("changeFontSize", event.which === 221);
+					return result;
 				default:
 					t._setSkipKeyPress(false);
 					return true;
@@ -2150,7 +2158,7 @@
 				return event.coord;
 			}
 
-			var offs = this.element.getBoundingClientRect();
+			var offs = AscCommon.UI.getBoundingClientRect(this.element);
 			var x = ((event.pageX * AscBrowser.zoom) >> 0) - offs.left;
 			var y = ((event.pageY * AscBrowser.zoom) >> 0) - offs.top;
 

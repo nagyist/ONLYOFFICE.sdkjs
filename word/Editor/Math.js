@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -1301,14 +1301,13 @@ ParaMath.prototype.GetSelectedText = function(bAll, bClearText, oPr)
 
 ParaMath.prototype.GetText = function(isLaTeX)
 {
-    var res = "";
-    if (this.Root && this.Root.GetTextContent) {
-        var textContent = this.Root.GetTextContent(false, isLaTeX);
-        if (textContent && textContent.str) {
-            res = textContent.str;
-        }
-    }
-    return res;
+    let oMathText = this.GetTextOfElement(isLaTeX);
+    return oMathText.GetText();
+};
+
+ParaMath.prototype.GetTextOfElement = function (isLaTeX, isDefaultText)
+{
+    return this.Root.GetTextOfElement(isLaTeX, isDefaultText);
 };
 
 ParaMath.prototype.GetSelectDirection = function()
@@ -3181,47 +3180,34 @@ ParaMath.prototype.CalculateTextToTable = function(oEngine)
 };
 ParaMath.prototype.ConvertFromLaTeX = function()
 {
-	AscMath.SetIsLaTeXGetParaRun(false);
-	var strLaTeX = this.GetText(true);
-	AscMath.SetIsLaTeXGetParaRun(true);
-
-    this.Root.Remove_Content(0, this.Root.Content.length);
-    this.Root.Correct_Content(true);
-    AscMath.ConvertLaTeXToTokensList(strLaTeX, this.Root);
-    this.Root.CorrectAllMathWords(true);
-    this.Root.ConvertAllSpecialWords(true);
+	let oLaTeX = this.GetTextOfElement(true, true);
+	this.Root.Remove_Content(0, this.Root.Content.length);
+	this.Root.CurPos = 0;
+	AscMath.ConvertLaTeXToTokensList(oLaTeX, this.Root);
 	this.Root.Correct_Content(true);
+    this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToLaTeX = function()
 {
-	var strLatex = this.GetText(true);
+	let oLaTeXContent = this.GetTextOfElement(true);
 	this.Root.Remove_Content(0,this.Root.Content.length);
-	this.Root.Add_Text(strLatex, this.Paragraph);
-    this.Root.CurPos = this.Root.Content.length - 1;
+	this.Root.AddDataFromFlatMathTextAndStyles(oLaTeXContent.Flat());
 };
 ParaMath.prototype.ConvertFromUnicodeMath = function()
 {
-    this.Root.CorrectAllMathWords(false);
-    this.Root.ConvertAllSpecialWords(false);
-	var strUnicode = this.GetText();
-	if (strUnicode[strUnicode.length - 1] === " ")
-	{
-		strUnicode = strUnicode.slice(0, -1)
-	}
-	this.Root.Remove_Content(0,this.Root.Content.length);
-    this.Root.Correct_Content(true);
-	AscMath.CUnicodeConverter(strUnicode, this.Root);
+	let oUnicode = this.GetTextOfElement(false);
+	this.Root.Remove_Content(0, this.Root.Content.length);
+	this.Root.CurPos = 0;
+	AscMath.CUnicodeConverter(oUnicode, this.Root);
 	this.Root.Correct_Content(true);
+	this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToUnicodeMath = function()
 {
-	var strUnicode = this.GetText();
-    if (strUnicode[strUnicode.length - 1] === " ")
-    {
-        strUnicode = strUnicode.slice(0, -1)
-    }
+	let oUnicodeContent = this.GetTextOfElement(false);
 	this.Root.Remove_Content(0,this.Root.Content.length);
-	this.Root.Add_Text(strUnicode, this.Paragraph);
+	this.Root.AddDataFromFlatMathTextAndStyles(oUnicodeContent.Flat());
+	this.Paragraph.updateTrackRevisions();
 };
 ParaMath.prototype.ConvertView = function(isToLinear, nInputType)
 {
@@ -3280,12 +3266,6 @@ ParaMath.prototype._convertViewBySelection = function(isToLinear, nInputType)
         isToLinear
     );
 };
-ParaMath.prototype.SplitSelectedContent = function()
-{
-    var oSelection = this.GetSelectContent();
-    var oContent = oSelection.Content;
-    oContent.SplitSelectedContent();
-};
 ParaMath.prototype.CheckSpelling = function(oCollector, nDepth)
 {
 	if (oCollector.IsExceedLimit())
@@ -3325,7 +3305,10 @@ ParaMath.prototype.IsContentControlEquation = function()
 		&& parent.IsContentControlEquation()
 		&& parent.IsPlaceHolder());
 };
-
+ParaMath.prototype.ProcessingOldEquationConvert = function()
+{
+	this.Root.ProcessingOldEquationConvert();
+};
 
 function MatGetKoeffArgSize(FontSize, ArgSize)
 {
@@ -3459,3 +3442,4 @@ CMathRecalculateObject.prototype.Compare = function(PageInfo)
 window['AscCommonWord'] = window['AscCommonWord'] || {};
 window['AscCommonWord'].MathMenu = MathMenu;
 window['AscCommonWord'].ParaMath = ParaMath;
+window['AscWord'].ParaMath = ParaMath;

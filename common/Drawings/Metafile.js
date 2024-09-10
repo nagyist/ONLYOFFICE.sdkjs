@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -1544,6 +1544,8 @@
 		this.ctAnnotFieldDelete	= 165;
 		this.ctWidgetsInfo		= 166;
 
+		this.ctHeadings         = 169;
+
 		this.ctPageWidth  = 200;
 		this.ctPageHeight = 201;
 
@@ -1552,6 +1554,8 @@
 		this.ctDocumentEdit		= 204;
 		this.ctDocumentClose	= 205;
 		this.ctPageEdit			= 206;
+		this.ctPageClear		= 207;
+		this.ctPageRotate		= 208;
 
 		this.ctError = 255;
 	}
@@ -3371,6 +3375,111 @@
 		}
 	};
 
+	function WriteHeadings(memory, headings)
+	{
+		if (!headings.length)
+			return;
+
+		memory.WriteByte(CommandType.ctHeadings);
+
+		let nStartPos = memory.GetCurPosition();
+		memory.Skip(4);
+
+		memory.WriteLong(headings.length);
+		for (let i = 0; i < headings.length; ++i)
+		{
+			memory.WriteLong(headings[i].lvl);
+			memory.WriteLong(headings[i].page);
+			memory.WriteDouble(headings[i].x);
+			memory.WriteDouble(headings[i].y);
+			memory.WriteString(headings[i].desc);
+		}
+
+		let nEndPos = memory.GetCurPosition();
+		memory.Seek(nStartPos);
+		memory.WriteLong(nEndPos - nStartPos);
+		memory.Seek(nEndPos);
+	}
+	
+	function AddHeading(headings, posXY, lvl, text)
+	{
+		if (!posXY)
+			return;
+		
+		let x = posXY.X;
+		let y = posXY.Y;
+		if (posXY.Transform)
+		{
+			x = posXY.Transform.TransformPointX(posXY.X, posXY.Y);
+			y = posXY.Transform.TransformPointY(posXY.X, posXY.Y);
+		}
+		
+		headings.push({
+			lvl  : lvl,
+			page : posXY.PageNum,
+			x    : x,
+			y    : y,
+			desc : text
+		});
+	}
+	
+	function GetHeadingsByHeadings(logicDocument)
+	{
+		let docOutline = logicDocument.GetDocumentOutline();
+		let isUse = docOutline.IsUse();
+		if (!isUse)
+			docOutline.SetUse(true);
+		
+		let count = docOutline.GetElementsCount();
+		let headings = [];
+		for (let i = 0; i < count; ++i)
+		{
+			let posXY = docOutline.GetDestinationXY(i);
+			AddHeading(headings, posXY, docOutline.GetLevel(i), docOutline.GetText(i));
+		}
+		
+		if (!isUse)
+			docOutline.SetUse(false);
+		
+		return headings;
+	}
+	
+	function GetHeadingsByBookmarks(logicDocument)
+	{
+		let bookmarkManager = logicDocument.GetBookmarksManager();
+		
+		let count = bookmarkManager.GetCount();
+		let headings = [];
+		for (let i = 0; i < count; ++i)
+		{
+			let name = bookmarkManager.GetName(i);
+			if (bookmarkManager.IsHiddenBookmark(name))
+				continue;
+			
+			let bookmarkStart = bookmarkManager.GetBookmarkStart(i);
+			if (!bookmarkStart)
+				continue;
+			
+			let posXY = bookmarkStart.GetDestinationXY();
+			AddHeading(headings, posXY, 0, name);
+		}
+		
+		return headings;
+	}
+	CDocumentRenderer.prototype.AddHeadings = function(logicDocument, byHeadings)
+	{
+		if (!logicDocument)
+			return;
+		
+		let headings;
+		if (byHeadings)
+			headings = GetHeadingsByHeadings(logicDocument);
+		else
+			headings = GetHeadingsByBookmarks(logicDocument);
+		
+		WriteHeadings(this.Memory, headings);
+	};
+
 	var MATRIX_ORDER_PREPEND = 0;
 	var MATRIX_ORDER_APPEND  = 1;
 
@@ -3521,6 +3630,12 @@
 		{
 			return x * this.shy + y * this.sy + this.ty;
 		},
+		TransformPoint : function(x, y)
+		{
+			const transformedX = x * this.sx + y * this.shx + this.tx;
+			const transformedY = x * this.shy + y * this.sy + this.ty;
+			return { x: transformedX, y: transformedY };
+		},
 		// calculate rotate angle
 		GetRotation     : function()
 		{
@@ -3602,6 +3717,18 @@
 			var x2 = this.TransformPointX(1, 1);
 			var y2 = this.TransformPointY(1, 1);
 			return Math.sqrt(((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2);
+		},
+
+		exportToObject : function()
+		{
+			return {
+				"SX": this.sx,
+				"SHX": this.shx,
+				"SHY": this.shy,
+				"SY": this.sy,
+				"TX": this.tx,
+				"TY": this.ty
+			};
 		}
 	};
 
@@ -4030,6 +4157,7 @@
 	window['AscCommon'].CFontSetup               = CFontSetup;
 	window['AscCommon'].CGrState                 = CGrState;
 	window['AscCommon'].CMemory                  = CMemory;
+	window['AscCommon'].CMetafile				 = CMetafile;
 	window['AscCommon'].CDocumentRenderer        = CDocumentRenderer;
 	window['AscCommon'].MATRIX_ORDER_PREPEND     = MATRIX_ORDER_PREPEND;
 	window['AscCommon'].MATRIX_ORDER_APPEND      = MATRIX_ORDER_APPEND;

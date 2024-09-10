@@ -66,6 +66,7 @@
 		SelectClear : function() {},
 		Start_CollaborationEditing : function() {},
 		End_CollaborationEditing : function() {},
+		ConvertCoordsToCursorWR : function() {return {X : 0, Y : 0};},
 		onUpdateExternalList : function() {},
 		checkChart : function() {}
 	};
@@ -81,7 +82,6 @@
 	editor.WordControl.m_oDrawingDocument = drawingDocument;
 	editor.WordControl.m_oDrawingDocument.m_oWordControl = drawingDocument;
 	editor.WordControl.m_oApi = editor;
-	editor.externalChartCollector = drawingDocument;
 	editor.sync_BeginCatchRevisionsChanges = function(){};
 	editor.sync_EndCatchRevisionsChanges = function(){};
 	editor.sync_ChangeCommentLogicalPosition = function(){};

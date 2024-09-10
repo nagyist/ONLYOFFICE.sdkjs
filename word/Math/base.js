@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -301,6 +301,13 @@ CMathBase.prototype.SetPlaceholder = function()
 				this.elements[i][j].SetPlaceholder();
 		}
 	}
+};
+CMathBase.prototype.CheckRunContent = function(fCheck)
+{
+    for(var i = 0; i < this.Content.length; ++i)
+    {
+        this.Content[i].CheckRunContent(fCheck);
+    }
 };
 CMathBase.prototype.addMCToContent = function(elements)
 {
@@ -725,6 +732,13 @@ CMathBase.prototype.recalculateSize = function(oMeasure, RPI)
     this.size.height = height;
     this.size.ascent = ascent;
 };
+CMathBase.prototype.ProcessingOldEquationConvert = function ()
+{
+	for (let i = 0; i < this.Content.length; i++)
+	{
+		this.Content[i].ProcessingOldEquationConvert();
+	}
+}
 CMathBase.prototype.recalculateAllSize = function(textMeasurer)
 {
 	this.setDistance();
@@ -1060,7 +1074,18 @@ CMathBase.prototype.Apply_TextPrToCtrPr = function(TextPr, IncFontSize, ApplyToA
 		}
 
 		if (undefined !== TextPr.Color)
+		{
 			this.Set_Color(TextPr.Color);
+
+			if(null !== TextPr.Color)
+			{
+				if (this.CtrPrp.Unifill)
+					this.Set_Unifill(undefined);
+
+				if (this.CtrPrp.TextFill)
+					this.Set_TextFill(undefined);
+			}
+		}
 
 		if (undefined !== TextPr.TextOutline)
 			this.Set_TextOutline(null === TextPr.TextOutline ? undefined : TextPr.TextOutline);
@@ -1994,6 +2019,10 @@ CMathBase.prototype.Make_ShdColor = function(PDSE, CurTextPr)
                     pGraphics.b_color1( CurTextPr.Color.r, CurTextPr.Color.g, CurTextPr.Color.b, 255);
                 }
             }
+			else if (pGraphics.m_bIsTextDrawer)
+			{
+				pGraphics.SetTextPr(CurTextPr, PDSE.Theme);
+			}
         }
     }
 
@@ -2799,9 +2828,10 @@ CMathBase.prototype.ConvertOperatorToStr = function(operator)
     }
     return OPERATOR_EMPTY === operator ? "" : AscCommon.convertUnicodeToUTF16([operator]);
 };
-CMathBase.prototype.GetTextOfElement = function()
+CMathBase.prototype.GetTextOfElement = function(oMathText)
 {
-	return "";
+	oMathText = new AscMath.MathTextAndStyles(oMathText);
+	return oMathText;
 };
 
 CMathBase.prototype.GetStartBracetForGetTextContent = function(isLaTeX) {
@@ -3233,6 +3263,150 @@ CMathMenuBase.prototype.Set_DeleteForcedBreak = function()
     this.CanDeleteForcedBreak = true;
 };
 
+
+/**
+ * ctrlPr - Control Properties
+ * @constructor
+ */
+function CMathCtrlPr(oParagraph)
+{
+	this.rPr = new CTextPr(); //по умолчанию должен наследоваться от текущего абзаца
+	this.del = new CTextPr();
+	this.ins = new CTextPr();
+}
+
+/**
+ * Set Run Properties
+ * rPr set properties of control characters that cannot be selected.
+ * Examples of control characters are n-ary operators (excluding their limits and bases),
+ * fraction bars (excluding the numerator and denominator), and grouping characters (excluding the base).
+ * @param rPr {CTextPr}
+ * @constructor
+ */
+CMathCtrlPr.prototype.SetRPr = function (rPr)
+{
+	if (!rPr)
+		return;
+	this.rPr = rPr;
+}
+/**
+ * Get current rPr
+ * @return {CTextPr}
+ * @constructor
+ */
+CMathCtrlPr.prototype.GetRPr = function ()
+{
+	return this.rPr;
+}
+/**
+ * Deleted Math Control Character
+ *
+ * This element specifies that the Office Open XML Math control character which contains this element was
+ * deleted and tracked as a revision
+ *
+ * @param delPr {CTextPr}
+ * @constructor
+ */
+CMathCtrlPr.prototype.SetDel = function (delPr)
+{
+	this.del = delPr
+}
+/**
+ * Inserted Math Control Character
+ *
+ * This element specifies that the Office Open XML Math control character which contains this element was
+ * inserted and tracked as a revision.
+ * @param insPr {CTextPr}
+ * @constructor
+ */
+CMathCtrlPr.prototype.SetIns = function (insPr)
+{
+	this.ins = insPr;
+}
+/**
+ *
+ * @param Obj {Object}
+ * @param Obj.rPr {CTextPr | undefined}
+ * @param Obj.delPr {CTextPr | undefined}
+ * @param Obj.insPr {CTextPr | undefined}
+ * @constructor
+ */
+CMathCtrlPr.prototype.SetFromObject = function (Obj)
+{
+	if (Obj.rPr !== undefined)
+	{
+		this.rPr = Obj.rPr;
+	}
+
+	if (Obj.delPr !== undefined)
+	{
+		this.delPr = Obj.delPr;
+	}
+
+	if (Obj.insPr !== undefined)
+	{
+		this.insPr = Obj.insPr;
+	}
+}
+
+CMathCtrlPr.prototype.Write_ToBinary = function (Writer)
+{
+	if (this.rPr)
+	{
+		Writer.WriteBool(true);
+		this.rPr.WriteToBinary(Writer);
+	}
+	else
+	{
+		Writer.WriteBool(false);
+	}
+
+	if (this.del)
+	{
+		Writer.WriteBool(true);
+		this.del.WriteToBinary(Writer);
+	}
+	else
+	{
+		Writer.WriteBool(false);
+	}
+
+	if (this.ins)
+	{
+		Writer.WriteBool(true);
+		this.ins.WriteToBinary(Writer);
+	}
+	else
+	{
+		Writer.WriteBool(false);
+	}
+}
+
+CMathCtrlPr.prototype.Read_FromBinary = function (Reader)
+{
+	this.rPr = undefined;
+	if (Reader.GetBool())
+	{
+		this.rPr = new CTextPr();
+		this.rPr.ReadFromBinary(Reader);
+	}
+
+	this.del = undefined;
+	if (Reader.GetBool())
+	{
+		this.del = new CTextPr();
+		this.del.ReadFromBinary(Reader);
+	}
+
+	this.ins = undefined;
+	if (Reader.GetBool())
+	{
+		this.ins = new CTextPr();
+		this.ins.ReadFromBinary(Reader);
+	}
+};
+
+window["CMathCtrlPr"]                                  = CMathCtrlPr;
 window["CMathMenuBase"]                                = CMathMenuBase;
 CMathMenuBase.prototype["get_Type"]                    = CMathMenuBase.prototype.get_Type;
 CMathMenuBase.prototype["remove_AccentCharacter"]      = CMathMenuBase.prototype.remove_AccentCharacter;

@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -558,11 +558,12 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 		if (prevGroupKey !== this.CheckBoxPr.GroupKey && undefined !== this.CheckBoxPr.Checked)
 			this.CheckBoxPr.Checked = false;
 		
-		if (undefined !== this.CheckBoxPr.GetChoiceName())
+		let choiceName = this.CheckBoxPr.GetChoiceName(true);
+		if (undefined !== choiceName)
 		{
-			oContentControl.SetFormKey(this.CheckBoxPr.GetChoiceName());
+			oContentControl.SetFormKey(choiceName);
 			if (this.FormPr)
-				this.FormPr.SetKey(this.CheckBoxPr.GetChoiceName());
+				this.FormPr.SetKey(choiceName);
 		}
 		
 		oContentControl.SetCheckBoxPr(this.CheckBoxPr);
@@ -916,6 +917,11 @@ CContentControlPr.prototype.GetNewKey = function()
 
 	return keyGenerator.GetNewKey(this.CC);
 };
+CContentControlPr.prototype.IsSignature = function()
+{
+	let pictPr = this.GetPictureFormPr();
+	return (pictPr && pictPr.IsSignature());
+};
 
 //--------------------------------------------------------export--------------------------------------------------------
 window['AscCommonWord']        = window['AscCommonWord'] || {};
@@ -962,3 +968,4 @@ CContentControlPr.prototype['put_PictureFormPr']      = CContentControlPr.protot
 CContentControlPr.prototype['get_ComplexFormPr']      = CContentControlPr.prototype.GetComplexFormPr;
 CContentControlPr.prototype['put_ComplexFormPr']      = CContentControlPr.prototype.SetComplexFormPr;
 CContentControlPr.prototype['get_NewKey']             = CContentControlPr.prototype.GetNewKey;
+CContentControlPr.prototype['is_Signature']           = CContentControlPr.prototype.IsSignature;

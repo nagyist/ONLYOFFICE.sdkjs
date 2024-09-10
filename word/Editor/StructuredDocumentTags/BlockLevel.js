@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -599,6 +599,9 @@ CBlockLevelSdt.prototype.Add = function(oParaItem)
 };
 CBlockLevelSdt.prototype.PreDelete = function()
 {
+	if (this.isPreventedPreDelete())
+		return;
+	
 	if (this.IsPlaceHolder())
 		return;
 
@@ -1356,29 +1359,41 @@ CBlockLevelSdt.prototype.RemoveContentControlWrapper = function()
 	var nParentCurPos            = this.Parent.CurPos.ContentPos;
 	var nParentSelectionStartPos = this.Parent.Selection.StartPos;
 	var nParentSelectionEndPos   = this.Parent.Selection.EndPos;
-
+	
+	let contentPos     = this.Content.CurPos.ContentPos;
+	let selectionStart = this.Content.Selection.StartPos;
+	let selectionEnd   = this.Content.Selection.EndPos;
+	
+	let logicDocument = this.GetLogicDocument();
+	if (logicDocument && logicDocument.IsDocumentEditor())
+		logicDocument.PreventPreDelete = true;
+	else
+		logicDocument = null;
+	
 	this.Parent.Remove_FromContent(nElementPos, 1);
 	for (var nIndex = 0, nCount = this.Content.Content.length; nIndex < nCount; ++nIndex)
 	{
 		this.Parent.Add_ToContent(nElementPos + nIndex, this.Content.Content[nIndex]);
 	}
-
+	this.Content.RemoveFromContent(0, this.Content.Content.length, false);
+	
+	if (logicDocument)
+		logicDocument.PreventPreDelete = false;
+	
 	if (nParentCurPos === nElementPos)
-		this.Parent.CurPos.ContentPos = nParentCurPos + this.Content.CurPos.ContentPos;
+		this.Parent.CurPos.ContentPos = nParentCurPos + contentPos;
 	else if (nParentCurPos > nElementPos)
 		this.Parent.CurPos.ContentPos = nParentCurPos + nCount - 1;
 
 	if (nParentSelectionStartPos === nElementPos)
-		this.Parent.Selection.StartPos = nParentSelectionStartPos + this.Content.Selection.StartPos;
+		this.Parent.Selection.StartPos = nParentSelectionStartPos + selectionStart;
 	else if (nParentSelectionStartPos > nElementPos)
 		this.Parent.Selection.StartPos = nParentSelectionStartPos + nCount - 1;
 
 	if (nParentSelectionEndPos === nElementPos)
-		this.Parent.Selection.EndPos = nParentSelectionEndPos + this.Content.Selection.EndPos;
+		this.Parent.Selection.EndPos = nParentSelectionEndPos + selectionEnd;
 	else if (nParentSelectionEndPos > nElementPos)
 		this.Parent.Selection.EndPos = nParentSelectionEndPos + nCount - 1;
-
-	this.Content.RemoveFromContent(0, this.Content.Content.length, false);
 };
 CBlockLevelSdt.prototype.IsTableFirstRowOnNewPage = function()
 {
@@ -2414,8 +2429,9 @@ CBlockLevelSdt.prototype.Document_Is_SelectionLocked = function(CheckType, bChec
 	{
 		return AscCommon.CollaborativeEditing.Add_CheckLock(false);
 	}
-
-	var isCheckContentControlLock = this.LogicDocument ? this.LogicDocument.IsCheckContentControlsLock() : true;
+	
+	let logicDocument = this.GetLogicDocument();
+	var isCheckContentControlLock = logicDocument ? logicDocument.IsCheckContentControlsLock() : true;
 
 	if (AscCommon.changestype_Paragraph_TextProperties === CheckType
 		|| ((AscCommon.changestype_Drawing_Props === CheckType || AscCommon.changestype_Image_Properties === CheckType)
@@ -2456,9 +2472,9 @@ CBlockLevelSdt.prototype.Document_Is_SelectionLocked = function(CheckType, bChec
 		var bSelectedOnlyThis = false;
 		// Если это происходит на добавлении текста, тогда проверяем, что выделен только данный элемент
 
-		if (AscCommon.changestype_Remove !== CheckType && AscCommon.changestype_Delete !== CheckType)
+		if (logicDocument && AscCommon.changestype_Remove !== CheckType && AscCommon.changestype_Delete !== CheckType)
 		{
-			var oInfo = this.LogicDocument.GetSelectedElementsInfo();
+			var oInfo = logicDocument.GetSelectedElementsInfo();
 			bSelectedOnlyThis = oInfo.GetBlockLevelSdt() === this ? true : false;
 		}
 
@@ -2668,6 +2684,37 @@ CBlockLevelSdt.prototype.OnContentChange = function()
 	
 	if (this.Parent && this.Parent.OnContentChange)
 		this.Parent.OnContentChange();
+};
+CBlockLevelSdt.prototype.RemoveThisFromParent = function(updatePosition)
+{
+	let docContent = this.Parent;
+	if (!docContent)
+		return;
+	
+	let posInParent = this.GetIndex();
+	
+	let curPos = docContent.CurPos.ContentPos;
+	docContent.RemoveFromContent(posInParent, 1);
+	
+	if (updatePosition)
+	{
+		if (posInParent === curPos)
+		{
+			if (posInParent >= docContent.GetElementsCount())
+			{
+				docContent.MoveCursorToEndPos();
+			}
+			else
+			{
+				docContent.CurPos.ContentPos = Math.max(0, Math.min(docContent.GetElementsCount() - 1, posInParent));
+				docContent.Content[docContent.CurPos.ContentPos].MoveCursorToStartPos();
+			}
+		}
+		else if (posInParent < curPos)
+		{
+			docContent.CurPos.ContentPos = Math.max(0, Math.min(docContent.GetElementsCount() - 1, curPos - 1));
+		}
+	}
 };
 //--------------------------------------------------------export--------------------------------------------------------
 window['AscCommonWord'] = window['AscCommonWord'] || {};
