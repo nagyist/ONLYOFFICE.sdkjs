@@ -1558,6 +1558,20 @@ BinaryChartWriter.prototype.WriteCT_ChartSpace = function (oVal, oCopyPaste) {
 };
 BinaryChartWriter.prototype.WriteCT_ChartExSpace = function (oVal) {
     var oThis = this;
+	let bWriteExternalReference = true;
+	let XLSX = (oVal.XLSX && oVal.XLSX.length) ? oVal.XLSX : null;
+	if (oVal.externalReference && oVal.externalReference.Id) {
+		oThis.memory.WriteByte(c_oserct_chartspaceXLSXEXTERNAL);
+		oThis.memory.WriteString2(AscCommonExcel.encodeXmlPath(oVal.externalReference.Id));
+	} else if (!oVal.isWorkbookChart() && !XLSX) {
+		XLSX = oVal.getXLSXFromCache();
+	}
+	if (XLSX) {
+		const nBinaryType = AscCommon.checkOOXMLSignature(XLSX) ? c_oserct_chartspaceXLSXZIP : c_oserct_chartspaceXLSX;
+		this.bs.WriteItem(nBinaryType, function () {
+			oThis.memory.WriteBuffer(XLSX, 0, XLSX.length);
+		});
+	}
     if(oVal.chartData !== null) {
         this.bs.WriteItem(c_oserct_chartExSpaceCHARTDATA, function() {
            oThis.WriteCT_ChartData(oVal.chartData);
@@ -1593,6 +1607,13 @@ BinaryChartWriter.prototype.WriteCT_ChartExSpace = function (oVal) {
            oThis.WriteCT_ChartColors(oVal.chartColors);
         });
     }
+
+	const arrExt = [];
+	if (bWriteExternalReference && oVal.externalReference && oVal.externalReference.referenceData)
+	{
+		arrExt.push({referenceData: oVal.externalReference.referenceData});
+	}
+	this.WriteExtensions(arrExt);
 };
 BinaryChartWriter.prototype.WriteCT_FromTo = function(oVal){
         this.memory.WriteByte(Asc.c_oSer_DrawingPosType.X);
@@ -7547,6 +7568,20 @@ BinaryChartReader.prototype.ReadCT_ChartExSpace = function (type, length, val) {
             return oThis.ReadCT_ChartStyle(t, l, oNewVal);
         });
         val.setChartStyle(oNewVal);
+    }
+    else if(c_oserct_chartspaceXLSX === type || c_oserct_chartspaceXLSXZIP === type) {
+	    const nCur = this.bcr.stream.cur;
+	    const arrData = this.bcr.stream.data.slice(nCur, nCur + length);
+	    val.setXLSX(arrData);
+	    res = c_oSerConstants.ReadUnknown;
+    }
+    else if (c_oserct_chartspaceXLSXEXTERNAL === type) {
+	    const sExternalPath = this.bcr.stream.GetString2LE(length);
+	    if (sExternalPath)
+	    {
+		    val.setExternalPath(AscCommonExcel.decodeXmlPath(sExternalPath))
+	    }
+	    res = c_oSerConstants.ReadOk;
     }
     else
     {
