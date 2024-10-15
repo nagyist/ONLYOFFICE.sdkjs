@@ -1896,7 +1896,6 @@ background-repeat: no-repeat;\
 			let oContentCustomPr = oCustomPrPart.getDocumentContent();
 			if(oContentCustomPr) {
 				let oCustomPrReader = new StaxParser(oContentCustomPr, oCustomPrPart, xmlParserContext);
-				this.WordControl.m_oLogicDocument.CustomPr = new AscCommon.CCustomProperties();
 				this.WordControl.m_oLogicDocument.CustomPr.fromXml(oCustomPrReader, true);
 			}
 		}
@@ -2491,10 +2490,6 @@ background-repeat: no-repeat;\
 			if (undefined !== window["AscDesktopEditor"])
 			{
 				window["AscDesktopEditor"]["OnSave"]();
-			}
-			if (t.disconnectOnSave) {
-				t.CoAuthoringApi.disconnect(t.disconnectOnSave.code, t.disconnectOnSave.reason);
-				t.disconnectOnSave = null;
 			}
 
 			if (t.canUnlockDocument) {
@@ -6210,11 +6205,7 @@ background-repeat: no-repeat;\
 		// Меняем тип состояния (на никакое)
 		this.advancedOptionsAction = AscCommon.c_oAscAdvancedOptionsAction.None;
 		this.goTo();
-
 		this.onNeedUpdateExternalReferenceOnOpen();
-		// if (AscCommon.InitDebugSmartArt) {
-		// 	AscCommon.InitDebugSmartArt();
-		// }
 	};
 	asc_docs_api.prototype.asc_IsStartDemonstrationOnOpen = function()
 	{
@@ -8599,11 +8590,15 @@ background-repeat: no-repeat;\
 	{
 		return this.asc_canPaste();
 	};
-	asc_docs_api.prototype.onEndBuilderScript = function()
+	asc_docs_api.prototype._onEndBuilderScript = function(callback)
 	{
 		this.asc_Recalculate();
 		let logicDocument = this.getLogicDocument();
 		logicDocument.FinalizeAction();
+
+		if (callback)
+			callback(true)
+
 		return true;
 	};
 
@@ -9387,6 +9382,38 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_changeExternalReference = function(oAscExternalReference, oExternalInfo) {
 		this.externalChartCollector.changeExternalReference(oAscExternalReference, oExternalInfo);
 	};
+
+	asc_docs_api.prototype.getCustomProperties = function() {
+		let oPresentation = this.private_GetLogicDocument();
+		if(!oPresentation)
+			return null;
+		return oPresentation.CustomProperties;
+	};
+
+	asc_docs_api.prototype.addCustomProperty = function(name, type, value)
+	{
+		let oLogicDocument = this.private_GetLogicDocument();
+		if(!oLogicDocument)
+			return;
+		oLogicDocument.AddCustomProperty(name, type, value);
+	};
+
+	asc_docs_api.prototype.modifyCustomProperty = function(idx, name, type, value)
+	{
+		let oLogicDocument = this.private_GetLogicDocument();
+		if(!oLogicDocument)
+			return;
+		oLogicDocument.ModifyCustomProperty(idx, name, type, value);
+	};
+
+	asc_docs_api.prototype.removeCustomProperty = function(idx)
+	{
+		let oLogicDocument = this.private_GetLogicDocument();
+		if(!oLogicDocument)
+			return;
+		oLogicDocument.RemoveCustomProperty(idx);
+	};
+
 	//-------------------------------------------------------------export---------------------------------------------------
 	window['Asc']                                                 = window['Asc'] || {};
 	window['AscCommonSlide']                                      = window['AscCommonSlide'] || {};

@@ -55,6 +55,7 @@
 	AscDFH.changesFactory[AscDFH.historyitem_AutoShapes_SetDrawingBaseExt] = AscDFH.CChangesDrawingsObjectNoId;
 	AscDFH.changesFactory[AscDFH.historyitem_AutoShapes_SetDrawingBaseCoors] = AscDFH.CChangesDrawingsObjectNoId;
 	AscDFH.changesFactory[AscDFH.historyitem_ShapeSetClientData] = AscDFH.CChangesDrawingsObjectNoId;
+	AscDFH.changesFactory[AscDFH.historyitem_ShapeSetUseBgFill] = AscDFH.CChangesDrawingsBool;
 
 
 	var drawingsChangesMap = window['AscDFH'].drawingsChangesMap;
@@ -132,6 +133,9 @@
 	};
 	drawingsChangesMap[AscDFH.historyitem_ShapeSetClientData] = function (oClass, value) {
 		oClass.clientData = value;
+	};
+	drawingsChangesMap[AscDFH.historyitem_ShapeSetUseBgFill] = function (oClass, value) {
+		oClass.useBgFill = value;
 	};
 
 
@@ -969,6 +973,12 @@
 			return false;
 		}
 		return this.getNoRot() === false;
+	};
+	CGraphicObjectBase.prototype.canResize = function () {
+		if (!this.canEdit()) {
+			return false;
+		}
+		return this.getNoResize() === false;
 	};
 	CGraphicObjectBase.prototype.canSelect = function () {
 		return this.getNoSelect() === false;
@@ -3770,6 +3780,7 @@
 	};
 	CGraphicObjectBase.prototype.generateLocalDrawingPart = function () {};
 	CGraphicObjectBase.prototype.generateSmartArtDrawingPart = function () {};
+	CGraphicObjectBase.prototype.checkDrawingPartWithHistory = function () {};
 	var ANIM_LABEL_WIDTH_PIX = 22;
 	var ANIM_LABEL_HEIGHT_PIX = 17;
 

@@ -395,7 +395,6 @@ function BinaryPPTYLoader()
                 // CustomProperties
                 s.Seek2(_main_tables["48"]);
 
-                this.presentation.CustomProperties = new AscCommon.CCustomProperties();
                 this.presentation.CustomProperties.fromStream(s);
             }
         }
@@ -6382,7 +6381,7 @@ function BinaryPPTYLoader()
             {
                 case 0:
                 {
-                    shape.attrUseBgFill = s.GetBool();
+                    shape.setUseBgFill(s.GetBool());
                     break;
                 }
                 default:
@@ -7281,6 +7280,7 @@ function BinaryPPTYLoader()
             _smartArt = new AscFormat.SmartArt();
             _smartArt.fromPPTY(this);
             _smartArt.setBDeleted(false);
+						_smartArt.generateDefaultStructures();
             _smartArt.checkNodePointsAfterRead();
         }
         else
@@ -10585,7 +10585,7 @@ function BinaryPPTYLoader()
                 {
                     case 0:
                     {
-                        shape.attrUseBgFill = s.GetBool();
+                        shape.setUseBgFill(s.GetBool());
                         break;
                     }
                     default:

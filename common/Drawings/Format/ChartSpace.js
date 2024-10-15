@@ -409,7 +409,7 @@ function(window, undefined) {
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetNvGrFrProps] = CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetThemeOverride] = CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetBDeleted] = CChangesDrawingsBool;
-	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetChartData] = CChangesDrawingsObjectNoId;
+	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetChartData] = CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetParent] = CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetChart] = CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_ChartSpace_SetClrMapOvr] = CChangesDrawingsObject;
@@ -1744,10 +1744,11 @@ function(window, undefined) {
 		if(!oPlotArea) return false;
 		return oPlotArea.isChartEx();
 	};
-	CChartSpace.prototype.isLayout = function () {
+	CChartSpace.prototype.isLayoutSizes = function () {
 		let oPlotArea = this.getPlotArea();
 		if(!oPlotArea) return false;
-		return !!oPlotArea.layout;
+		const oLayout = oPlotArea.layout;
+		return oLayout ? ((oLayout.h === null && oLayout.w === null && oLayout.x === null && oLayout.y === null) ? false : true): false;
 	};
 	CChartSpace.prototype.fromOther = function(oChartSpace) {
 		if(oChartSpace.nvGraphicFramePr) {
@@ -2491,7 +2492,7 @@ function(window, undefined) {
 		return this.dataRefs;
 	};
 	CChartSpace.prototype.setChartData = function(pr) {
-		History.CanAddChanges() && History.Add(new CChangesDrawingsObjectNoId(this, AscDFH.historyitem_ChartSpace_SetChartData, this.chartData, pr));
+		History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_ChartSpace_SetChartData, this.chartData, pr));
 		this.chartData = pr;
 	};
 	CChartSpace.prototype.clearDataRefs = function () {
@@ -4431,6 +4432,9 @@ function(window, undefined) {
 		if (this.textLink !== null) {
 			copy.setTextLink(this.textLink);
 		}
+		if(this.chartData) {
+			copy.setChartData(this.chartData.createDuplicate());
+		}
 		if (!oPr || false !== oPr.cacheImage) {
 			copy.cachedImage = this.getBase64Img();
 			copy.cachedPixH = this.cachedPixH;
@@ -5229,8 +5233,8 @@ function(window, undefined) {
 				} else if (cachedData.clusteredColumn.results) {
 						return key ? cachedData.clusteredColumn.results[key].occurrence : cachedData.clusteredColumn.results;
 				}
-			} else if (cachedData.waterfall) {
-				return key ? cachedData.waterfall[key] : cachedData.waterfall;
+			} else if (cachedData.waterfall && cachedData.waterfall.numArr) {
+				return key ? cachedData.waterfall.numArr[key].val : cachedData.waterfall.numArr;
 			} else if (cachedData.funnel) {
 				return key ? cachedData.funnel[key] : cachedData.funnel;
 			}
@@ -5846,10 +5850,11 @@ function(window, undefined) {
 	};
 	CChartSpace.prototype.recalculateAxesSet = function(aAxesSet, oRect, oBaseRect, nIndex, fForceContentWidth) {
 		let oCorrectedRect = null;
-		const isLayout = this.isLayout();
+		// check if diagram size affected by laout
+		const isLayoutSizes = this.isLayoutSizes();
 		const oPlotArea = this.getPlotArea();
-		const bWithoutLabels = isLayout && this.chart.plotArea.layout.layoutTarget === AscFormat.LAYOUT_TARGET_INNER;
-		if (isLayout && oPlotArea) {
+		const bWithoutLabels = isLayoutSizes && this.chart.plotArea.layout.layoutTarget === AscFormat.LAYOUT_TARGET_INNER;
+		if (isLayoutSizes && oPlotArea) {
 			oPlotArea.extX = oRect.w;
 			oPlotArea.extY = oRect.h;
 			oPlotArea.x = oRect.x;
@@ -5888,7 +5893,7 @@ function(window, undefined) {
 			let nLabelsPos;
 			let bLabelsExtremePosition = false;
 			let bOnTickMark = oCurAxis.grid.bOnTickMark;
-			if(oCurAxis.bDelete) {
+			if(oCurAxis.bDelete || oCurAxis.hidden) {
 				nLabelsPos = c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE;
 			}
 			else {
@@ -6529,6 +6534,7 @@ function(window, undefined) {
 			}
 
 			let oChartSize = this.getChartSizes(true);
+			oPlotArea.rectChanged = false;
 			this.chart.plotArea.x = oChartSize.startX;
 			this.chart.plotArea.y = oChartSize.startY;
 			this.chart.plotArea.extX = oChartSize.w;
@@ -9980,9 +9986,64 @@ function(window, undefined) {
 		}
 		return oChartStyleCache.getStyleIdx(this.getChartType(), this.chartStyle.id);
 	};
+	CChartSpace.prototype.getDisplayTrendlinesEquation = function () {
+		let aSeries = this.getAllSeries();
+		let bResult = null;
+		if(aSeries.length === 0) {
+			return bResult;
+		}
+		let aAllTrendlines = [];
+		let oTrendline;
+		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
+			oTrendline = aSeries[nSer].trendline;
+			if(oTrendline) {
+				aAllTrendlines.push(oTrendline);
+			}
+		}
+		if(aAllTrendlines.length === 0) {
+			return null;
+		}
+		if(!oTrendline) {
+			return bResult;
+		}
+		oTrendline = aAllTrendlines[0];
+		bResult = oTrendline.trendlineLbl !== null;
+		for(let nIdx = 1; nIdx < aAllTrendlines.length; ++nIdx) {
+			let bLbl = aAllTrendlines[nIdx].trendlineLbl !== null;
+			if(bResult !== bLbl) {
+				return undefined;
+			}
+		}
+		return bResult;
+	};
+	CChartSpace.prototype.setDisplayTrendlinesEquation = function (bValue) {
+		if(bValue === this.getDisplayTrendlinesEquation()) {
+			return;
+		}
+		let aSeries = this.getAllSeries();
+		let bResult = null;
+		if(aSeries.length === 0) {
+			return;
+		}
+		let aAllTrendlines = [];
+		let oTrendline;
+		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
+			oTrendline = aSeries[nSer].trendline;
+			if(oTrendline) {
+				aAllTrendlines.push(oTrendline);
+			}
+		}
+		for(let nIdx = 0; nIdx < aAllTrendlines.length; ++nIdx) {
+			aAllTrendlines[nIdx].setShowLabel(bValue);
+		}
+		return bResult;
+	};
 	CChartSpace.prototype.buildSeries = function (aRefs) {
 		if (!Array.isArray(aRefs)) {
 			return Asc.c_oAscError.ID.No;
+		}
+		if(this.isChartEx()) {
+			return Asc.c_oAscError.ID.CannotFillRange;
 		}
 		if (aRefs.length > MAX_SERIES_COUNT) {
 			return Asc.c_oAscError.ID.MaxDataSeriesError;
@@ -10049,6 +10110,7 @@ function(window, undefined) {
 		}
 	};
 	CChartSpace.prototype.switchRowCol = function () {
+		if(this.isChartEx()) return;
 		var oDataRange = this.getDataRefs();
 		var aRefs = oDataRange.getSwitchedRefs(this.isScatterChartType());
 		if (!aRefs) {
@@ -10062,6 +10124,7 @@ function(window, undefined) {
 		return nResult;
 	};
 	CChartSpace.prototype.fillDataFromTrack = function (oSelectedRange) {
+		if(this.isChartEx()) return;
 		let oSelectedSeries = this.getSelectedSeries();
 		if (oSelectedSeries) {
 			oSelectedSeries.fillFromSelectedRange(oSelectedRange);
@@ -12440,8 +12503,8 @@ function(window, undefined) {
 
 	CLabelsParameters.prototype.calculateParams = function (oLabelsBox, fAxisLength, fRectHeight) {
 		// find max possible space allowed to fill by labels
-		const isLayout = oLabelsBox.chartSpace ? oLabelsBox.chartSpace.isLayout() : false;
-		this.setMaxHeight(oLabelsBox, fRectHeight, isLayout ? oLabelsBox.chartSpace.chart.plotArea.layout : false);
+		const isLayoutSizes = oLabelsBox.chartSpace ? oLabelsBox.chartSpace.isLayoutSizes() : false;
+		this.setMaxHeight(oLabelsBox, fRectHeight, isLayoutSizes ? oLabelsBox.chartSpace.chart.plotArea.layout : false);
 
 		// retrieve startingDate if exist
 		let msg = this.sDataType.split('_');

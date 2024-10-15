@@ -63,25 +63,39 @@
             oContent.SetApplyToAll(false);
         }
     };
+    CPdfShape.prototype.canRotate = function () {
+        if (this.cropObject) {
+            return false;
+        }
+        
+        if (this.signatureLine) {
+            return false;
+        }
+
+        if (!this.canEdit()) {
+			return false;
+		}
+
+        if (this.group && this.group.IsAnnot()) {
+            return false;
+        }
+
+		return this.getNoRot() === false;
+    };
     CPdfShape.prototype.Recalculate = function() {
         if (this.IsNeedRecalc() == false)
             return;
 
-        if (this.txBody && this.txBody.recalcInfo.recalculateBodyPr) {
-            this.recalcTransformText();
-        }
-        
-        this.recalcGeometry();
-        this.recalculateContent();
         this.recalculateTransform();
         this.updateTransformMatrix();
         this.recalculate();
-        this.checkExtentsByDocContent();
         this.recalculateShdw();
         this.SetNeedRecalc(false);
     };
     CPdfShape.prototype.recalculateBounds = function() {
         let boundsChecker = new AscFormat.CSlideBoundsChecker();
+        
+        // boundsChecker.CheckLineWidth(this);
         boundsChecker.DO_NOT_DRAW_ANIM_LABEL = true;
         this.draw(boundsChecker);
         boundsChecker.CorrectBounds();

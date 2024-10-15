@@ -1068,6 +1068,8 @@ function (window, undefined) {
 		this.depthAxes = [];
 
 		this.view3D = null;
+
+		this.displayTrendlinesEquation = false;
 	}
 
 	//TODO:remove this---------------------
@@ -1314,6 +1316,9 @@ function (window, undefined) {
 			return false;
 		}
 		if (this.view3D && oPr.view3D && !this.view3D.isEqual(oPr.view3D)) {
+			return false;
+		}
+		if(this.displayTrendlinesEquation !== oPr.displayTrendlinesEquation) {
 			return false;
 		}
 		return true;
@@ -1680,6 +1685,13 @@ function (window, undefined) {
 			this.updateGeneralChart(bSelect);
 		}
 	};
+	asc_ChartSettings.prototype.getDisplayTrendlinesEquation = function() {
+		return this.displayTrendlinesEquation;
+	};
+	asc_ChartSettings.prototype.putDisplayTrendlinesEquation = function(v) {
+		this.displayTrendlinesEquation = v;
+	};
+
 	asc_ChartSettings.prototype.setFUpdateGeneralChart = function(fUpdate) {
 		this.fUpdateGeneralChart = fUpdate;
 	};
@@ -6195,6 +6207,8 @@ function (window, undefined) {
 	prot["getView3d"] = prot.getView3d;
 	prot["putView3d"] = prot.putView3d;
 	prot["setView3d"] = prot.setView3d;
+	prot["getDisplayTrendlinesEquation"] = prot.getDisplayTrendlinesEquation;
+	prot["putDisplayTrendlinesEquation"] = prot.putDisplayTrendlinesEquation;
 
 	prot["getExternalReference"] = prot.getExternalReference;
 

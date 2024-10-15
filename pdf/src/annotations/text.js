@@ -73,9 +73,9 @@
 	 * Class representing a text annotation.
 	 * @constructor
     */
-    function CAnnotationText(sName, nPage, aRect, oDoc)
+    function CAnnotationText(sName, nPage, aOrigRect, oDoc)
     {
-        AscPDF.CAnnotationBase.call(this, sName, AscPDF.ANNOTATIONS_TYPES.Text, nPage, aRect, oDoc);
+        AscPDF.CAnnotationBase.call(this, sName, AscPDF.ANNOTATIONS_TYPES.Text, nPage, aOrigRect, oDoc);
 
         this._noteIcon      = NOTE_ICONS_TYPES.Comment;
         this._point         = undefined;
@@ -108,8 +108,8 @@
     CAnnotationText.prototype.ClearReplies = function() {
         this._replies = [];
     };
-    CAnnotationText.prototype.AddReply = function(CommentData) {
-        let oReply = new CAnnotationText(AscCommon.CreateGUID(), this.GetPage(), this.GetRect().slice(), this.GetDocument());
+    CAnnotationText.prototype.AddReply = function(CommentData, nPos) {
+        let oReply = new CAnnotationText(AscCommon.CreateGUID(), this.GetPage(), this.GetOrigRect().slice(), this.GetDocument());
 
         oReply.SetContents(CommentData.m_sText);
         oReply.SetCreationDate(CommentData.m_sOOTime);
@@ -117,14 +117,20 @@
         oReply.SetAuthor(CommentData.m_sUserName);
         oReply.SetDisplay(window["AscPDF"].Api.Objects.display["visible"]);
         oReply.SetReplyTo(this.GetReplyTo() || this);
+        CommentData.SetUserData(oReply.GetId());
 
-        oReply.SetApIdx(this.GetDocument().GetMaxApIdx() + 2);
-        CommentData.m_sUserData = oReply.GetApIdx();
+        if (!nPos) {
+            nPos = this._replies.length;
+        }
 
-        this._replies.push(oReply);
+        this._replies.splice(nPos, 0, oReply);
     };
     CAnnotationText.prototype.GetAscCommentData = function() {
         let oAscCommData = new Asc.asc_CCommentDataWord(null);
+        if (null == this.GetContents()) {
+            return undefined;
+        }
+
         oAscCommData.asc_putText(this.GetContents());
         let sModDate = this.GetModDate();
         if (sModDate)
@@ -138,7 +144,7 @@
             bSolved = true;
         oAscCommData.asc_putSolved(bSolved);
         oAscCommData.asc_putQuoteText("");
-        oAscCommData.m_sUserData = this.GetApIdx();
+        oAscCommData.m_sUserData = this.GetId();
 
         this._replies.forEach(function(reply) {
             oAscCommData.m_aReplies.push(reply.GetAscCommentData());
@@ -199,24 +205,11 @@
 
         oNewAnnot.lazyCopy = true;
 
-        if (this._pagePos) {
-            oNewAnnot._pagePos = {
-                x: this._pagePos.x,
-                y: this._pagePos.y,
-                w: this._pagePos.w,
-                h: this._pagePos.h
-            }
-        }
-
-        
-        if (this._origRect)
-            oNewAnnot._origRect = this._origRect.slice();
-
         let aFillColor = this.GetFillColor();
 
         oNewAnnot._originView = this._originView;
         oNewAnnot._apIdx = this._apIdx;
-        oNewAnnot.SetFillColor(aFillColor.slice());
+        aFillColor && oNewAnnot.SetFillColor(aFillColor.slice());
         oNewAnnot.SetOriginPage(this.GetOriginPage());
         oNewAnnot.SetAuthor(this.GetAuthor());
         oNewAnnot.SetModDate(this.GetModDate());
@@ -238,13 +231,13 @@
         let oRGB            = this.GetRGBColor(this.GetFillColor());
         let ICON_TO_DRAW    = this.GetIconImg();
 
-        let aRect       = this.GetRect();
+        let oDoc        = this.GetDocument();
         let nPage       = this.GetPage();
         let aOrigRect   = this.GetOrigRect();
-        let nRotAngle   = this.GetDocument().Viewer.getPageRotate(nPage);
+        let nRotAngle   = oDoc.Viewer.getPageRotate(nPage);
 
-        let nWidth  = (aRect[2] - aRect[0]) * AscCommon.AscBrowser.retinaPixelRatio;
-        let nHeight = (aRect[3] - aRect[1]) * AscCommon.AscBrowser.retinaPixelRatio;
+        let nWidth  = (aOrigRect[2] - aOrigRect[0]) * oDoc.Viewer.getDrawingPageScale(nPage) * AscCommon.AscBrowser.retinaPixelRatio;
+        let nHeight = (aOrigRect[3] - aOrigRect[1]) * oDoc.Viewer.getDrawingPageScale(nPage) * AscCommon.AscBrowser.retinaPixelRatio;
         
         let imgW = ICON_TO_DRAW.width;
         let imgH = ICON_TO_DRAW.height;

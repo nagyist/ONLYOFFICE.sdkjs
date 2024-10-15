@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2023
+ * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -47,6 +47,7 @@
 		TargetStart : function(){},
 		TargetShow : function(){},
 		TargetEnd : function(){},
+		showTarget : function(){},
 		Set_RulerState_Start : function(){},
 		Set_RulerState_Paragraph : function(){},
 		Set_RulerState_End : function(){},
@@ -68,7 +69,8 @@
 		End_CollaborationEditing : function() {},
 		ConvertCoordsToCursorWR : function() {return {X : 0, Y : 0};},
 		onUpdateExternalList : function() {},
-		checkChart : function() {}
+		checkChart : function() {},
+		Set_RulerState_Table : function() {}
 	};
 
 	drawingDocument.CanvasHit = document.createElement('canvas');
@@ -147,6 +149,19 @@
 	{
 		return AscTest.GetLogicDocument().getSpeechDescription(...arguments);
 	};
+	editor.getGraphicController = function()
+	{
+		return AscTest.GetLogicDocument().DrawingObjects;
+	};
+	editor._addRemoveSpaceBeforeAfterParagraph = AscCommon.DocumentEditorApi.prototype._addRemoveSpaceBeforeAfterParagraph.bind(editor);
+	editor.asc_addSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_addSpaceBeforeParagraph.bind(editor);
+	editor.asc_addSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_addSpaceAfterParagraph.bind(editor);
+	editor.asc_removeSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_removeSpaceBeforeParagraph.bind(editor);
+	editor.asc_removeSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_removeSpaceAfterParagraph.bind(editor);
+	editor.asc_haveSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceBeforeParagraph.bind(editor);
+	editor.asc_haveSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceAfterParagraph.bind(editor);
+	editor.initCollaborativeEditing = AscCommon.DocumentEditorApi.prototype.initCollaborativeEditing.bind(editor);
+	
 	//--------------------------------------------------------export----------------------------------------------------
 	AscTest.DrawingDocument = drawingDocument;
 	AscTest.Editor          = editor;
@@ -154,4 +169,6 @@
 	window.editor = editor;
 	Asc['editor'] = Asc.editor = editor;
 
+	// TODO: Заменить на вызов onEndLoadSdk
+	editor.initCollaborativeEditing();
 })(window);

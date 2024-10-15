@@ -2181,6 +2181,7 @@ window.AscCommon.g_cIsBeta = "false";
 	var changestype_Timing                    = 78;
 	var changestype_ViewPr                    = 79;
 	var changestype_DocumentProtection        = 80;
+	var changestype_CustomPr                  = 81;
 
 	var changestype_2_InlineObjectMove       = 1; // Передвигаем объект в заданную позцию (проверяем место, в которое пытаемся передвинуть)
 	var changestype_2_HdrFtr                 = 2; // Изменения с колонтитулом
@@ -5289,6 +5290,7 @@ window.AscCommon.g_cIsBeta = "false";
 	window["AscCommon"].changestype_Timing                    = changestype_Timing;
 	window["AscCommon"].changestype_ViewPr                    = changestype_ViewPr;
 	window["AscCommon"].changestype_DocumentProtection        = changestype_DocumentProtection;
+	window["AscCommon"].changestype_CustomPr                  = changestype_CustomPr;
 
 	window["AscCommon"].changestype_2_InlineObjectMove        = changestype_2_InlineObjectMove;
 	window["AscCommon"].changestype_2_HdrFtr                  = changestype_2_HdrFtr;

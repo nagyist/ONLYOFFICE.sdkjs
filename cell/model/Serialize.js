@@ -5433,6 +5433,8 @@
                 this.bs.WriteItem(c_oSer_SheetView.TopLeftCell, function(){oThis.memory.WriteString3(oSheetView.topLeftCell.getName());});
             if (null !== oSheetView.view && !oThis.isCopyPaste)
                 this.bs.WriteItem(c_oSer_SheetView.View, function(){oThis.memory.WriteByte(oSheetView.view);});
+            if (null !== oSheetView.rightToLeft && !oThis.isCopyPaste)
+                this.bs.WriteItem(c_oSer_SheetView.RightToLeft, function(){oThis.memory.WriteBool(oSheetView.rightToLeft);});
         };
         this.WriteSheetViewPane = function (oPane) {
             var oThis = this;
@@ -7001,7 +7003,7 @@
                     pptx_content_writer.BinaryFileWriter.ImportFromMemory(old);
                 }});
             }
-            if (this.wb.CustomProperties) {
+            if (this.wb.CustomProperties && this.wb.CustomProperties.hasProperties()) {
                 this.WriteTable(c_oSerTableTypes.CustomProperties, {Write: function(){
                     var old = new AscCommon.CMemory(true);
                     pptx_content_writer.BinaryFileWriter.ExportToMemory(old);
@@ -11488,7 +11490,7 @@
 			} else if (c_oSer_SheetView.DefaultGridColor === type) {
 				this.stream.GetBool();
 			} else if (c_oSer_SheetView.RightToLeft === type) {
-				this.stream.GetBool();
+                oSheetView.rightToLeft = this.stream.GetBool();
 			} else if (c_oSer_SheetView.ShowFormulas === type) {
 				oSheetView.showFormulas = this.stream.GetBool();
 			} else if (c_oSer_SheetView.ShowGridLines === type) {
@@ -12472,7 +12474,6 @@
                         case c_oSerTableTypes.CustomProperties:
                             this.stream.Seek2(mtiOffBits);
                             fileStream = this.stream.ToFileStream();
-                            wb.CustomProperties = new AscCommon.CCustomProperties();
                             wb.CustomProperties.fromStream(fileStream);
                             this.stream.FromFileStream(fileStream);
                             break;
@@ -13854,7 +13855,7 @@
     InitOpenManager.prototype.ParseNum = function(oNum, oNumFmts, _useNumId) {
         var oRes = new AscCommonExcel.Num();
         var useNumId = false;
-        if (null != oNum && null != oNum.f) {
+        if (null != oNum && oNum.f) {//Excel ignors empty format. bug 70667
             oRes.f = oNum.f;
         } else {
             var sStandartNumFormat = AscCommonExcel.aStandartNumFormats[oNum.id];

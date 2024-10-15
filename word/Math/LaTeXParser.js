@@ -34,19 +34,18 @@
 (function (window) {
 	const Literals			= AscMath.MathLiterals;
 	const Struc				= AscMath.MathStructures;
-
 	const ConvertTokens		= AscMath.ConvertTokens;
 	const Tokenizer			= AscMath.Tokenizer;
-	const LimitFunctions	= AscMath.LimitFunctions;
 	const GetTypeFont		= AscMath.GetTypeFont;
 	const GetMathFontChar	= AscMath.GetMathFontChar;
 
-	function CLaTeXParser() {
-		this.oTokenizer = new Tokenizer(true);
-		this.intMathFontType = -1;
-		this.isReceiveOneTokenAtTime = false;
-		this.isNowMatrix = false;
-		this.EscapeSymbol = "";
+	function CLaTeXParser()
+	{
+		this.oTokenizer					= new Tokenizer(true);
+		this.intMathFontType			= -1;
+		this.isReceiveOneTokenAtTime	= false;
+		this.isNowMatrix				= false;
+		this.EscapeSymbol				= "";
 	}
 	CLaTeXParser.prototype.IsNotEscapeSymbol = function ()
 	{
@@ -76,7 +75,9 @@
 		}
 		else
 		{
-			while (this.oLookahead.class === arrTypeOfLiteral.id && this.EscapeSymbol !== this.oLookahead.data)
+			while (this.oLookahead.class === arrTypeOfLiteral.id
+				&& this.EscapeSymbol !== this.oLookahead.data
+				&& (styles.length === 0 || styles[styles.length - 1].IsStyleEqual(this.oLookahead.style)))
 			{
 				let oCurrentItem	= this.oLookahead;
 				let strCurrent		= oCurrentItem.data;
@@ -364,7 +365,11 @@
 
 			this.EatToken(this.oLookahead.class);
 
-			if (this.oLookahead.class === Literals.lBrackets.id || this.oLookahead.data === "." || this.oLookahead.class === Literals.lrBrackets.id || this.oLookahead.class === Literals.rBrackets.id)
+			if (this.oLookahead.data !== "\\left"
+				&& this.oLookahead.class === Literals.lBrackets.id
+					|| this.oLookahead.data === "."
+					|| this.oLookahead.class === Literals.lrBrackets.id
+					|| this.oLookahead.class === Literals.rBrackets.id)
 			{
 				startStyle = this.oLookahead.style;
 				strLeftSymbol = this.EatToken(this.oLookahead.class).data;
@@ -391,7 +396,11 @@
 					isRightAndLeft = false;
 
 				this.EatToken(this.oLookahead.class);
-				if (this.oLookahead.class === Literals.rBrackets.id || this.oLookahead.data === "." || this.oLookahead.class === Literals.lrBrackets.id || this.oLookahead.class === Literals.lBrackets.id)
+				if (this.oLookahead.data !== "\\right"
+					&& this.oLookahead.class === Literals.rBrackets.id
+						|| this.oLookahead.data === "."
+						|| this.oLookahead.class === Literals.lrBrackets.id
+						|| this.oLookahead.class === Literals.lBrackets.id)
 				{
 					endStyle = this.oLookahead.style;
 					strRightSymbol = this.EatToken(this.oLookahead.class).data;
@@ -450,31 +459,38 @@
 		let arrContent = [];
 		let intCountOfBracketBlock = 1;
 
-		while (this.IsElementLiteral() || this.oLookahead.data === "∣" || this.oLookahead.data === "\\mid"|| this.oLookahead.data === "ⓜ")
+		while (this.IsElementLiteral()
+			|| this.oLookahead.data === "∣"
+			|| this.oLookahead.data === "\\mid"
+			|| this.oLookahead.data === "ⓜ")
 		{
 			if (strLeftSymbol && this.oLookahead.data === strLeftSymbol)
 				break;
+
 			if (this.oLookahead.data === "\\right")
 				break;
 
 			if (this.IsElementLiteral())
 			{
-				if (arrContent.length === 0)
-				{
-					this.SkipFreeSpace();
-				}
+				// normal space always skip in LaTeX brackets
+				this.SkipFreeSpace();
 
 				let oToken = [this.GetExpressionLiteral([strLeftSymbol])];
 				if ((oToken && !Array.isArray(oToken)) || Array.isArray(oToken) && oToken.length > 0)
 				{
 					arrContent.push(oToken)
 				}
+
+				// normal space always skip in LaTeX brackets
+				this.SkipFreeSpace();
 			}
 			else
 			{
 				arrMiddleStyles.push(this.oLookahead.style)
 				this.EatToken(this.oLookahead.class);
 				intCountOfBracketBlock++;
+				// normal space always skip in LaTeX brackets
+				this.SkipFreeSpace();
 			}
 		}
 
@@ -781,33 +797,41 @@
 				type: Struc.nary,
 				value: Literals.nary.LaTeX[oFuncContent.data],
 				style: oPr,
-				third: oThirdContent,
+				third: oThirdContent
 			}
 		}
-		// else if (AscMath.MathLiterals.func.IsLaTeXIncludeLimit(name))
-		// {
-		// 	return {
-		// 		type: Struc.func_lim,
-		// 		value: {
-		// 			type: Struc.char,
-		// 			value: name.slice(1),
-		// 			style: oPr,
-		// 		},
-		// 		style: oPr,
-		// 		third: oThirdContent,
-		// 	}
-		// }
-		else if (AscMath.MathLiterals.func.IsLaTeXIncludeNormal(name) || AscMath.MathLiterals.func.IsLaTeXIncludeLimit(name))
+		else if (!oThirdContent)
+		{
+			return {
+				type: Struc.func,
+				value: oFuncContent.data.slice(1),
+				style: oPr
+			}
+		}
+		else if (AscMath.MathLiterals.func.IsLaTeXIncludeNormal(name))
 		{
 			return {
 				type: Struc.func,
 				value: {
 					type: Struc.char,
-					value: name.slice(1),
-					style: oPr,
+					value: oFuncContent.data.slice(1),
+					style: oPr
 				},
 				style: oPr,
-				third: oThirdContent,
+				third: oThirdContent
+			}
+		}
+		else if (AscMath.MathLiterals.func.IsLaTeXIncludeLimit(name))
+		{
+			return {
+				type: Struc.func_lim,
+				value: {
+					type: Struc.char,
+					value: oFuncContent.data.slice(1),
+					style: oPr
+				},
+				style: oPr,
+				third: oThirdContent
 			}
 		}
 	};
@@ -984,7 +1008,7 @@
 			isLimits = true;
 		}
 
-		if (oBaseContent.type === Struc.bracket_block && oBaseContent.left === "{" && oBaseContent.right === "}")
+		if (oBaseContent && oBaseContent.type === Struc.bracket_block && oBaseContent.left === "{" && oBaseContent.right === "}")
 		{
 			oBaseContent = oBaseContent.value;
 		}
@@ -1026,8 +1050,9 @@
 			}
 		}
 
-		if (oBaseContent && (oBaseContent.type === Struc.func || oBaseContent.type == Struc.func_lim || oBaseContent.type ===  Struc.nary))
+		if (oBaseContent && (oBaseContent.type === Struc.func || oBaseContent.type == Struc.func_lim || oBaseContent.type === Struc.nary))
 		{
+			this.SkipOneSpace();
 			oThirdContent = this.GetArguments(1);
 		}
 
@@ -1165,17 +1190,16 @@
 	};
 	CLaTeXParser.prototype.IsMatrixLiteral = function ()
 	{
-		return (
-			this.oLookahead.class === Literals.matrix.id && !this.IsEndMatrixLiteral() ||
-			this.oLookahead.data === "█" ||
-			this.oLookahead.data === "■" ||
-			this.oLookahead.data === "\\substack"
-		)
+		return this.oLookahead.class === Literals.matrix.id
+			|| this.oLookahead.data === "\\substack"
+			&& !this.IsEndMatrixLiteral()
 	};
 	CLaTeXParser.prototype.IsEndMatrixLiteral = function ()
 	{
-		return this.oLookahead.class === Literals.matrix.id && Literals.matrix.LaTeX[this.oLookahead.data] === 2 || this.oLookahead.data === "}";
-	}
+		return this.oLookahead.class === Literals.matrix.id
+			&& Literals.matrix.LaTeX[this.oLookahead.data] === 2
+			|| this.oLookahead.data === "}";
+	};
 	CLaTeXParser.prototype.IsAlignBlockForArray = function ()
 	{
 		if (this.oLookahead.data !== "{")
@@ -1211,10 +1235,11 @@
 		{
 			this.RestoreState();
 		}
-	}
+	};
 	CLaTeXParser.prototype.GetMatrixLiteral = function ()
 	{
 		let strMatrixType;
+		let isArray = this.oLookahead.data === "\\substack";
 
 		switch (this.oLookahead.data)
 		{
@@ -1287,10 +1312,16 @@
 		while (this.oLookahead.data !== "}" && !this.IsEndMatrixLiteral())
 		{
 			let oContent = this.GetRayOfMatrixLiteral(styles.cols, styles.rows, nRow)
+
 			if (oContent)
 				arrMatrixContent.push(oContent);
+			else if (oContent === false)
+				arrMatrixContent.push({}, {});
+			else if (oContent === undefined)
+				arrMatrixContent.push({});
 			else if (this.IsEndMatrixLiteral())
 				arrMatrixContent.push({}, {});
+
 			nRow++;
 		}
 
@@ -1324,7 +1355,7 @@
 		this.isNowMatrix = false;
 
 		return {
-			type: Struc.matrix,
+			type: isArray ? Struc.array : Struc.matrix,
 			value: arrMatrixContent,
 			style: styles,
 			strMatrixType: strMatrixType,
@@ -1336,15 +1367,18 @@
 
 		while (this.oLookahead.class !== Literals.arrayMatrix.id && !this.IsEndMatrixLiteral())
 		{
-			rows[nRow] = {}
-			arrRayContent = this.GetElementOfMatrix(rows[nRow]);
+			rows[nRow]		= {}
+			arrRayContent	= this.GetElementOfMatrix(rows[nRow]);
 			nRow++;
 		}
 
 		if (this.oLookahead.class === Literals.arrayMatrix.id)
 		{
-			cols[nRow] = this.oLookahead.style;
+			cols[nRow]		= this.oLookahead.style;
 			this.EatToken(this.oLookahead.class)
+
+			if (!arrRayContent && this.IsEndMatrixLiteral())
+				return false;
 		}
 
 		this.SkipFreeSpace();
@@ -1398,6 +1432,10 @@
 			{
 				arrRow.push({});
 			}
+		}
+		else if (arrRow.length === 1 && arrRow[0].length === 0)
+		{
+			arrRow.push([]);
 		}
 
 		return arrRow;
@@ -1457,6 +1495,12 @@
 			this.oLookahead = this.oTokenizer.GetNextToken();
 		}
 	};
+	CLaTeXParser.prototype.SkipOneSpace = function ()
+	{
+		if (this.oLookahead.data === " ") {
+			this.oLookahead = this.oTokenizer.GetNextToken();
+		}
+	}
 	CLaTeXParser.prototype.GetArguments = function (intCountOfArguments)
 	{
 		let oArgument = [];

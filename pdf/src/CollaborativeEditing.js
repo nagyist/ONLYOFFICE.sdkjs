@@ -42,6 +42,7 @@ function CPDFCollaborativeEditing(oDoc) {
     this.m_aSkipContentControlsOnCheckEditingLock = {};
     this.m_oLogicDocument = oDoc;
     this.m_oSelectedObjects = {};
+    this.m_aEndLoadCallbacks = [];
 }
 
 CPDFCollaborativeEditing.prototype = Object.create(AscCommon.CWordCollaborativeEditing.prototype);
@@ -112,12 +113,19 @@ CPDFCollaborativeEditing.prototype.Send_Changes = function(IsUserSave, Additiona
 	if (!this.canSendChanges())
 		return;
 	
-    // Пересчитываем позиции
-    this.Refresh_DCChanges();
+	let oDoc        = this.GetDocument();
+	let oHistory    = oDoc.History;
+	
+	let localHistory = AscCommon.History;
+	AscCommon.History = oHistory;
+	
+	// Пересчитываем позиции
+	this.Refresh_DCChanges();
 
-    let oDoc        = this.GetDocument();
-    let oHistory    = oDoc.History;
-
+	
+	AscCommon.DocumentEditorApi.prototype.asc_Save.apply(this, arguments);
+	
+	
     // Генерируем свои изменения
     let StartPoint = ( null === oHistory.SavedIndex ? 0 : oHistory.SavedIndex + 1 );
     let LastPoint = -1;
@@ -222,6 +230,7 @@ CPDFCollaborativeEditing.prototype.Send_Changes = function(IsUserSave, Additiona
     }
 
     editor.WordControl.m_oLogicDocument.getCompositeInput().checkState();
+	AscCommon.History = localHistory;
 };
 CPDFCollaborativeEditing.prototype.OnEnd_Load_Objects = function()
 {
@@ -241,9 +250,10 @@ CPDFCollaborativeEditing.prototype.OnEnd_Load_Objects = function()
 	this.m_oLogicDocument.RecalculateByChanges(this.CoHistory.GetAllChanges(), this.m_nRecalcIndexStart, this.m_nRecalcIndexEnd, false, undefined);
 	this.m_oLogicDocument.UpdateTracks();
 	
-	let oform = this.m_oLogicDocument.GetOFormDocument();
-	if (oform)
-		oform.onEndLoadChanges();
+    this.m_aEndLoadCallbacks.forEach(function(callback) {
+        callback();
+    });
+    this.m_aEndLoadCallbacks.length = 0;
 
     editor.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.ApplyChanges);
 };
@@ -255,13 +265,16 @@ CPDFCollaborativeEditing.prototype.canSendChanges = function(){
     return oApi && oApi.canSendChanges() && !oActionQueue.IsInProgress();
 };
 CPDFCollaborativeEditing.prototype.Apply_Changes = function(fEndCallBack) {
-    if (this.m_aChanges.length > 0) {
-        this.GetDocument().currInkInDrawingProcess = null; // останавливаем ink рисование
-        AscCommon.CCollaborativeEditingBase.prototype.Apply_Changes.call(this, fEndCallBack);
-    } else {
-		if (fEndCallBack)
-			fEndCallBack();
-	}
+	if (!this.m_aChanges.length)
+		return fEndCallBack ? fEndCallBack() : null;
+
+	let docHistory = this.GetDocument().History;
+	docHistory.TurnOff();
+	
+	this.GetDocument().currInkInDrawingProcess = null; // останавливаем ink рисование
+	AscCommon.CCollaborativeEditingBase.prototype.Apply_Changes.call(this, fEndCallBack);
+	
+	docHistory.TurnOn();
 };
 CPDFCollaborativeEditing.prototype.OnEnd_ReadForeignChanges = function() {
 	AscCommon.CCollaborativeEditingBase.prototype.OnEnd_ReadForeignChanges.apply(this, arguments);

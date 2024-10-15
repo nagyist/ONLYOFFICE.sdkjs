@@ -265,6 +265,12 @@
         image.requestHeight = requestH;
         return image;
     };
+    CFile.prototype.addPage = function(pageIndex, pageObj) {
+        return this.nativeFile["addPage"](pageIndex, pageObj);
+    };
+    CFile.prototype.removePage = function(pageIndex) {
+        return this.nativeFile["removePage"](pageIndex);
+    };
     CFile.prototype.getPageWidth = function(nPage) {
         return this.pages[nPage].W;
     };
@@ -1756,7 +1762,7 @@ void main() {\n\
     {
         var stream = this.getPageTextStream(pageIndex);
         if (!stream)
-            return;
+            return "";
 
         var ret = "";
 

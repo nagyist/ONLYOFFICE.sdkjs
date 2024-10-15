@@ -1525,7 +1525,7 @@
 
 
 						if (AscFormat.isLeftButtonDoubleClick(e) && !e.ShiftKey && !e.CtrlKey && ((this.selection.groupSelection && this.selection.groupSelection.selectedObjects.length === 1) || this.selectedObjects.length === 1)) {
-							var drawing = this.selectedObjects[0].parent;
+							var drawing = this.selectedObjects[0] && this.selectedObjects[0].parent;
 
 							if (object.getObjectType() === AscDFH.historyitem_type_ChartSpace && this.handleChartDoubleClick) {
 								this.handleChartDoubleClick(drawing, object, e, x, y, pageIndex);
@@ -2152,7 +2152,7 @@
 										false,
 										false,
 										undefined,
-										isDrawHandles && cropObject.canEdit()
+										isDrawHandles && cropObject.canEdit() && cropObject.canResize()
 									);
 									drawingDocument.DrawTrack(
 										AscFormat.TYPE_TRACK.CROP,
@@ -2164,7 +2164,7 @@
 										false,
 										false,
 										undefined,
-										isDrawHandles && oCrop.canEdit()
+										isDrawHandles && oCrop.canEdit() && oCrop.canResize()
 									);
 								}
 							}
@@ -2184,7 +2184,7 @@
 									AscFormat.CheckObjectLine(oTx),
 									oTx.canRotate(),
 									undefined,
-									isDrawHandles && oTx.canEdit()
+									isDrawHandles && oTx.canEdit() && oTx.canResize()
 								);
 								oTx.drawAdjustments(drawingDocument);
 							}
@@ -2201,7 +2201,7 @@
 								false,
 								oGrp.canRotate(),
 								undefined,
-								isDrawHandles && oGrp.canEdit()
+								isDrawHandles && oGrp.canEdit() && oGrp.canResize()
 							);
 							const oGrpTx = oGrp.selection.textSelection;
 							const oGrpChart = oGrp.selection.chartSelection;
@@ -2217,7 +2217,7 @@
 									AscFormat.CheckObjectLine(oGrpTx),
 									oGrpTx.canRotate(),
 									undefined,
-									isDrawHandles && this.selection.groupSelection.canEdit()
+									isDrawHandles && this.selection.groupSelection.canEdit() && this.selection.groupSelection.canResize()
 								);
 							} else if (oGrpChart) {
 								oGrpChart.drawSelect(drawingDocument, pageIndex);
@@ -2237,7 +2237,7 @@
 										AscFormat.CheckObjectLine(oDrawing),
 										oDrawing.canRotate() && !Asc.editor.isPdfEditor(),
 										undefined,
-										isDrawHandles && oGrp.canEdit());
+										isDrawHandles && oGrp.canEdit() && oGrp.canResize());
 								}
 							}
 							if (aGrpSelected.length === 1) {
@@ -2268,7 +2268,7 @@
 									AscFormat.CheckObjectLine(oDrawing),
 									oDrawing.canRotate(),
 									undefined,
-									isDrawHandles && oDrawing.canEdit()
+									isDrawHandles && oDrawing.canEdit() && oDrawing.canResize()
 								);
 							}
 						}
@@ -4268,6 +4268,65 @@
 						return;
 					}
 					if(oChartSpace.isChartEx()) {
+
+						var oChart = oChartSpace.chart;
+						var oPlotArea = oChart.plotArea;
+						var nTitle = oProps.getTitle(), oTitle, bOverlay;
+						if (nTitle === c_oAscChartTitleShowSettings.none) {
+							if (oChart.title) {
+								oChart.setTitle(null);
+							}
+						} else if (nTitle === c_oAscChartTitleShowSettings.noOverlay
+							|| nTitle === c_oAscChartTitleShowSettings.overlay) {
+							oTitle = oChart.title;
+							if (!oTitle) {
+								oTitle = new AscFormat.CTitle();
+								oChart.setTitle(oTitle);
+							}
+							bOverlay = (nTitle === c_oAscChartTitleShowSettings.overlay);
+							if (oTitle.overlay !== bOverlay) {
+								oTitle.setOverlay(bOverlay);
+							}
+						}
+
+
+						var nLegend = oProps.getLegendPos(), oLegend;
+						bOverlay = (c_oAscChartLegendShowSettings.leftOverlay === nLegend || nLegend === c_oAscChartLegendShowSettings.rightOverlay);
+						if (bOverlay) {
+							if (c_oAscChartLegendShowSettings.leftOverlay === nLegend) {
+								nLegend = c_oAscChartLegendShowSettings.left;
+							}
+							if (c_oAscChartLegendShowSettings.rightOverlay === nLegend) {
+								nLegend = c_oAscChartLegendShowSettings.right;
+							}
+						}
+						if (nLegend !== null) {
+							if (nLegend === c_oAscChartLegendShowSettings.none) {
+								if (oChart.legend) {
+									oChart.setLegend(null);
+								}
+							} else {
+								oLegend = oChart.legend;
+								var bChange = false;
+								if (!oLegend) {
+									oLegend = new AscFormat.CLegend();
+									oChart.setLegend(oLegend);
+									bChange = true;
+								}
+								if (oLegend.legendPos !== nLegend && nLegend !== c_oAscChartLegendShowSettings.layout) {
+									oLegend.setLegendPos(nLegend);
+									bChange = true;
+								}
+								if (oLegend.overlay !== bOverlay) {
+									oLegend.setOverlay(bOverlay);
+									bChange = true;
+								}
+								if (bChange) {
+									oLegend.setLayout(new AscFormat.CLayout());
+								}
+								oChartSpace.checkElementChartStyle(oLegend);
+							}
+						}
 						return;
 					}
 					oChartSpace.resetSelection(true);
@@ -4454,6 +4513,7 @@
 					if (isRealObject(chart) && typeof chart["binary"] === "string" && chart["binary"].length > 0) {
 						var asc_chart_binary = new Asc.asc_CChartBinary();
 						asc_chart_binary.asc_setBinary(chart["binary"]);
+						asc_chart_binary.asc_setIsChartEx(chart["IsChartEx"]);
 						ret = asc_chart_binary.getChartSpace(editor.WordControl.m_oLogicDocument);
 						if (ret.spPr && ret.spPr.xfrm) {
 							ret.spPr.xfrm.setOffX(0);

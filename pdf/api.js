@@ -51,6 +51,9 @@
 		this.DocumentType     = 1;
 		
 		this.compositeInput = null;
+		this.isPdfViewer    = false; // Было решено, что флаг isViewMode присылается всегда false, т.к. пдф всегда
+		                             // можно редактировать (во вьювере заполнять поля, например)
+		                             // Данный флаг различает в каком режиме загружен документ (edit/view)
 	}
 	
 	PDFEditorApi.prototype = Object.create(AscCommon.DocumentEditorApi.prototype);
@@ -59,8 +62,7 @@
 	PDFEditorApi.prototype.openDocument = function(file) {
 		let perfStart = performance.now();
 		
-		this.isOnlyReaderMode     = false;
-		this.ServerIdWaitComplete = true;
+		this.isOnlyReaderMode = false;
 		
 		window["AscViewer"]["baseUrl"] = (typeof document !== 'undefined' && document.currentScript) ? "" : "./../../../../sdkjs/pdf/src/engine/";
 		window["AscViewer"]["baseEngineUrl"] = "./../../../../sdkjs/pdf/src/engine/";
@@ -73,8 +75,14 @@
 		if (AscCommon.g_inputContext)
 			AscCommon.g_inputContext.onResize(this.HtmlElementName);
 		
-		if (this.isMobileVersion)
-			this.WordControl.initEventsMobile();
+		this.WordControl.initEventsMobile();
+		this.DocumentRenderer.touchManager = this.WordControl.MobileTouchManager;
+
+		if (undefined !== this.startMobileOffset)
+		{
+			this.WordControl.setOffsetTop(this.startMobileOffset.offset, this.startMobileOffset.offsetScrollTop);
+			delete this.startMobileOffset;
+		}
 		
 		// destroy unused memory
 		let isEditForms = true;
@@ -153,7 +161,7 @@
 			"H": 25.4 * page.H / page.Dpi
 		}
 	};
-	PDFEditorApi.prototype["asc_nativeOpenFile"] = function(base64File, version) {
+	PDFEditorApi.prototype["asc_nativeOpenFile"] = function(data, version) {
 		this.SpellCheckUrl = '';
 
 		this.User = new AscCommon.asc_CUser();
@@ -171,10 +179,16 @@
 		if (undefined !== version)
 			AscCommon.CurFileVersion = version;
 
-		let openParams        = {};
-		let oBinaryFileReader = new AscCommonWord.BinaryFileReader(this.WordControl.m_oLogicDocument, openParams);
-		if (!oBinaryFileReader.Read(base64File))
-			this.sendEvent("asc_onError", Asc.c_oAscError.ID.MobileUnexpectedCharCount, Asc.c_oAscError.Level.Critical);
+		let viewer = this.DocumentRenderer;
+		viewer.file = window["AscViewer"].createFile(data);
+
+		if (viewer.file)
+		{
+			viewer.SearchResults = viewer.file.SearchResults;
+			viewer.file.viewer = viewer;
+		}
+
+		viewer.afterOpen();
 
 		AscCommon.g_oIdCounter.Set_Load(false);
 		this.LoadedObject = 1;
@@ -192,6 +206,31 @@
 			};
 		}
 	};
+	PDFEditorApi.prototype["asc_nativeCalculateFile"] = function() {
+		let pdfDoc = this.getPDFDoc();
+		if (!pdfDoc)
+			return;
+
+		pdfDoc.RecalculateAll();
+	};
+	PDFEditorApi.prototype["asc_nativePrintPagesCount"] = function()
+	{
+		// the result is unimportant
+		return 0;
+	};
+	PDFEditorApi.prototype["asc_nativeGetPDF"] = function(options)
+	{
+		if (this.DocumentRenderer)
+		{
+			let result = this.DocumentRenderer.Save();
+			if (!result)
+				return null;
+			window["native"]["Save_End"]("", result.length);
+			return result;
+		}
+		return null;
+	};
+
 	PDFEditorApi.prototype.Undo           = function()
 	{
 		var oDoc = this.getPDFDoc();
@@ -219,7 +258,7 @@
 		let oActiveDrawing	= oDoc.activeDrawing;
 
 		if (oActiveForm && oActiveForm.content.IsSelectionUse()) {
-			let sText = oActiveForm.content.GetSelectedText(false);
+			let sText = oActiveForm.content.GetSelectedText(false, {NewLine: true});
 			if (!sText)
 				return;
 
@@ -230,7 +269,7 @@
 				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, "<div><p><span>" + sText + "</span></p></div>");
 		}
 		else if (oActiveAnnot && oActiveAnnot.IsFreeText() && oActiveAnnot.IsInTextBox()) {
-			let sText = oActiveAnnot.GetDocContent().GetSelectedText(false);
+			let sText = oActiveAnnot.GetDocContent().GetSelectedText(false, {NewLine: true});
 			if (!sText)
 				return;
 
@@ -330,15 +369,18 @@
 		
 		let oDoc			= this.DocumentRenderer.getPDFDoc();
 		let data			= typeof(text_data) == "string" ? text_data : data1;
-		let oActiveForm		= oDoc.activeForm;
-		let oActiveAnnot	= oDoc.mouseDownAnnot;
 		let oActiveDrawing	= oDoc.activeDrawing;
 
 		oDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
 		
 		this.needPasteText = false; // если не вставили бинарник, то вставляем текст
 		// пока что копирование бинарником только внутри drawings или самих drawings
-		if ([AscCommon.c_oAscClipboardDataFormat.Internal, AscCommon.c_oAscClipboardDataFormat.HtmlElement].includes(_format) && ((oDoc.GetActiveObject() == null) || oActiveDrawing)) {
+		if ([AscCommon.c_oAscClipboardDataFormat.Internal, AscCommon.c_oAscClipboardDataFormat.HtmlElement, AscCommon.c_oAscClipboardDataFormat.Text].includes(_format) && ((oDoc.GetActiveObject() == null) || oActiveDrawing)) {
+			if (this.isRestrictionView()) {
+				oDoc.FinalizeAction(true)
+				return;
+			}
+
 			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);
 			AscCommon.Editor_Paste_Exec(this, _format, data1, data2, text_data, undefined, callback);
 		}
@@ -348,9 +390,6 @@
 		
 		if (!this.needPasteText || typeof(data) != "string")
 			return;
-
-		if (oActiveForm && (oActiveForm.GetType() != AscPDF.FIELD_TYPES.text || oActiveForm.IsMultiline() == false))
-			data = data.trim().replace(/[\n\r]/g, ' ');
 
 		AscFonts.FontPickerByCharacter.checkText(data, this, processPaste);
 
@@ -950,19 +989,27 @@
 		let oDoc = this.getPDFDoc();
 		return oDoc.GetPageHeightEMU();
 	};
+	PDFEditorApi.prototype.asc_SetFastCollaborative = function(isOn)
+	{
+		if (!AscCommon.CollaborativeEditing)
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_Fast(isOn);
+	};
 	/////////////////////////////////////////////////////////////
 	///////// For annots
 	////////////////////////////////////////////////////////////
 	PDFEditorApi.prototype.AddFreeTextAnnot = function(nType) {
 		let oDoc = this.getPDFDoc();
 
+		oDoc.BlurActiveObject();
 		function addFreeText() {
 			oDoc.DoAction(function() {
 				oDoc.AddFreeTextAnnot(nType, oDoc.Viewer.currentPage);
 			}, AscDFH.historydescription_Pdf_AddAnnot, this);
 		}
 
-		if (oDoc.checkDefaultFonts(addFreeText)) {
+		if (oDoc.checkFonts(["Arial"], addFreeText)) {
 			addFreeText();
 		}
 	};
@@ -1711,13 +1758,24 @@
 			window["AscDesktopEditor"]["onDocumentModifiedChanged"](bValue);
 		}
 	};
+	PDFEditorApi.prototype.CheckChangedDocument = function() {
+		let oDoc = this.getPDFDoc();
+
+		if (true === oDoc.History.Have_Changes()) {
+			this.SetDocumentModified(true);
+		}
+		else {
+			this.SetDocumentModified(false);
+		}
+
+		this._onUpdateDocumentCanSave();
+	};
 	PDFEditorApi.prototype._autoSaveInner = function() {
 		let _curTime = new Date();
 		if (null === this.lastSaveTime) {
 			this.lastSaveTime = _curTime;
 		}
-
-
+		
 		if (AscCommon.CollaborativeEditing.Is_Fast() && !AscCommon.CollaborativeEditing.Is_SingleUser()) {
 			this.WordControl.m_oLogicDocument.Continue_FastCollaborativeEditing();
 		}
@@ -1761,7 +1819,10 @@
 	};
 	PDFEditorApi.prototype._autoSave = function () {
 
-		if (this.canSave && (!this.isViewMode || this.isLiveViewer()) && (this.canUnlockDocument || 0 !== this.autoSaveGap)) {
+		if (this.canSave
+			&& (!this.isViewMode || this.isLiveViewer())
+			&& (this.canUnlockDocument || 0 !== this.autoSaveGap || AscCommon.CollaborativeEditing.Is_Fast()))
+		{
 			if (this.canUnlockDocument) {
 				this.lastSaveTime = new Date();
 				// Check edit mode after unlock document http://bugzilla.onlyoffice.com/show_bug.cgi?id=35971
@@ -1771,6 +1832,10 @@
 				this._autoSaveInner();
 			}
 		}
+	};
+	PDFEditorApi.prototype._haveChanges = function() {
+		let oDoc = this.getPDFDoc();
+		return oDoc.History.Have_Changes();
 	};
 	PDFEditorApi.prototype.pre_Save = function(_images) {
 		this.isSaveFonts_Images = true;
@@ -2019,10 +2084,8 @@
 		let nNativeW		= oViewer.file.pages[nPage].W;
 		let nNativeH		= oViewer.file.pages[nPage].H;
 		let nPageRotate		= oViewer.getPageRotate(nPage);
-		let nScaleY			= oViewer.drawingPages[nPage].H / oViewer.file.pages[nPage].H;
-        let nScaleX			= oViewer.drawingPages[nPage].W / oViewer.file.pages[nPage].W;
-		let nCommentWidth	= 40 * nScaleX;
-		let nCommentHeight	= 40 * nScaleY;
+		let nCommentWidth	= 40;
+		let nCommentHeight	= 40;
 		let oDoc			= oViewer.getPDFDoc();
 
 		let oBasePos = {
@@ -2406,6 +2469,7 @@
 		this.isDocumentEditor = false;
 		AscCommon.PasteElementsId.g_bIsDocumentCopyPaste = false;
 		AscCommon.PasteElementsId.g_bIsPDFCopyPaste = true;
+		
 		if (this.isApplyChangesOnOpenEnabled)
 		{
 			if (AscCommon.EncryptionWorker)
@@ -2420,31 +2484,64 @@
 
 			// TODO: onDocumentContentReady вызываем в конце загрузки всех изменений (и объектов для этих изменений)
 			let oThis = this;
-
-			let perfStart = performance.now();
-			let OtherChanges = AscCommon.CollaborativeEditing.Have_OtherChanges();
-			AscCommon.CollaborativeEditing.Apply_Changes(function()
+			
+			// Принимаем изменения на открытии только если это редактор, либо LiveViewer (т.е. включена быстрая совместка)
+			if (this.isLiveViewer() || !this.isPdfViewer)
 			{
-				let perfEnd = performance.now();
-				if (OtherChanges) {
-					AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onApplyChanges", perfEnd - perfStart), oThis);
-				}
-				oThis.onDocumentContentReady();
-			});
-			AscCommon.CollaborativeEditing.Release_Locks();
+				let perfStart    = performance.now();
+				let OtherChanges = AscCommon.CollaborativeEditing.Have_OtherChanges();
+				AscCommon.CollaborativeEditing.Apply_Changes(function()
+				{
+					let perfEnd = performance.now();
+					if (OtherChanges)
+					{
+						AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onApplyChanges", perfEnd - perfStart), oThis);
+					}
+					oThis.onDocumentContentReady();
+				});
+				AscCommon.CollaborativeEditing.Release_Locks();
+			}
+			else
+			{
+				this.onDocumentContentReady();
+			}
 
 			this.isApplyChangesOnOpen = true;
 		}
 	};
+	PDFEditorApi.prototype._canSyncCollaborativeChanges = function(isFirstLoad)
+	{
+		return (!this.isPdfViewer && (!isFirstLoad || this.isApplyChangesOnOpen));
+	};
+	PDFEditorApi.prototype.sync_CollaborativeChanges = function()
+	{
+		if (AscCommon.CollaborativeEditing.Is_Fast())
+			return;
+		
+		this.sendEvent("asc_onCollaborativeChanges");
+	};
 	PDFEditorApi.prototype.sync_ContextMenuCallback = function(Data) {
 		this.sendEvent("asc_onContextMenu", new CPdfContextMenuData(Data));
+	};
+	PDFEditorApi.prototype._finalizeAction = function() {
+		let oDoc = this.getPDFDoc();
+		if (!oDoc){
+			return;
+		}
+		oDoc.FinalizeAction(true);
 	};
 
 	PDFEditorApi.prototype._waitPrint = function(actionType, options)
 	{
 		return false;
 	};
-
+	PDFEditorApi.prototype.asc_setPdfViewer = function(isPdfViewer) {
+		this.isPdfViewer = isPdfViewer;
+	};
+	PDFEditorApi.prototype.isLiveViewer = function() {
+		return this.isPdfViewer && AscCommon.CollaborativeEditing.Is_Fast() && !this.VersionHistory;
+	};
+	
 	function CPdfContextMenuData(obj) {
 		if (obj) {
 			this.Type  		= ( undefined != obj.Type ) ? obj.Type : Asc.c_oAscPdfContextMenuTypes.Common;
@@ -2523,6 +2620,7 @@
 	PDFEditorApi.prototype['asc_getHeaderFooterProperties']	= PDFEditorApi.prototype.asc_getHeaderFooterProperties;
 	PDFEditorApi.prototype['ChangeReaderMode']				= PDFEditorApi.prototype.ChangeReaderMode;
 
+	PDFEditorApi.prototype['CheckChangedDocument']		   = PDFEditorApi.prototype.CheckChangedDocument;
 	PDFEditorApi.prototype['SetDrawingFreeze']             = PDFEditorApi.prototype.SetDrawingFreeze;
 	PDFEditorApi.prototype['OnMouseUp']                    = PDFEditorApi.prototype.OnMouseUp;
 
