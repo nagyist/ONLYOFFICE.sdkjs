@@ -2272,7 +2272,7 @@ function(window, undefined) {
 		}
 
 		ret.putStyle(this.getChartStyleIdx());
-
+		ret.putDisplayTrendlinesEquation(this.getDisplayTrendlinesEquation());
 		ret.putTitle(isRealObject(chart.title) ? (chart.title.overlay ? c_oAscChartTitleShowSettings.overlay : c_oAscChartTitleShowSettings.noOverlay) : c_oAscChartTitleShowSettings.none);
 
 		const oOrderedAxes = this.getOrderedAxes();
@@ -2335,6 +2335,66 @@ function(window, undefined) {
 		ret.putView3d(this.getView3d());
 		return ret;
 	};
+	CChartSpace.prototype.applyChartExSettings = function (oProps) {
+		const oChart = this.chart;
+		const nTitle = oProps.getTitle();
+		let oTitle, bOverlay;
+		if (nTitle === c_oAscChartTitleShowSettings.none) {
+			if (oChart.title) {
+				oChart.setTitle(null);
+			}
+		} else if (nTitle === c_oAscChartTitleShowSettings.noOverlay
+			|| nTitle === c_oAscChartTitleShowSettings.overlay) {
+			oTitle = oChart.title;
+			if (!oTitle) {
+				oTitle = new AscFormat.CTitle();
+				oChart.setTitle(oTitle);
+			}
+			bOverlay = (nTitle === c_oAscChartTitleShowSettings.overlay);
+			if (oTitle.overlay !== bOverlay) {
+				oTitle.setOverlay(bOverlay);
+			}
+		}
+
+
+		var nLegend = oProps.getLegendPos(), oLegend;
+		bOverlay = (c_oAscChartLegendShowSettings.leftOverlay === nLegend || nLegend === c_oAscChartLegendShowSettings.rightOverlay);
+		if (bOverlay) {
+			if (c_oAscChartLegendShowSettings.leftOverlay === nLegend) {
+				nLegend = c_oAscChartLegendShowSettings.left;
+			}
+			if (c_oAscChartLegendShowSettings.rightOverlay === nLegend) {
+				nLegend = c_oAscChartLegendShowSettings.right;
+			}
+		}
+		if (nLegend !== null) {
+			if (nLegend === c_oAscChartLegendShowSettings.none) {
+				if (oChart.legend) {
+					oChart.setLegend(null);
+				}
+			} else {
+				oLegend = oChart.legend;
+				var bChange = false;
+				if (!oLegend) {
+					oLegend = new AscFormat.CLegend();
+					oChart.setLegend(oLegend);
+					bChange = true;
+				}
+				if (oLegend.legendPos !== nLegend && nLegend !== c_oAscChartLegendShowSettings.layout) {
+					oLegend.setLegendPos(nLegend);
+					bChange = true;
+				}
+				if (oLegend.overlay !== bOverlay) {
+					oLegend.setOverlay(bOverlay);
+					bChange = true;
+				}
+				if (bChange) {
+					oLegend.setLayout(new AscFormat.CLayout());
+				}
+				this.checkElementChartStyle(oLegend);
+			}
+		}
+	};
 	CChartSpace.prototype.applyChartSettings = function (oProps)
 	{
 		const oCurProps = this.getAscSettings();
@@ -2359,6 +2419,7 @@ function(window, undefined) {
 		//Set the properties which was already set. It needs for the fast coediting. TODO: check it
 		this.setChart(this.chart.createDuplicate());
 		this.setStyle(this.style);
+		this.setDisplayTrendlinesEquation(oProps.displayTrendlinesEquation);
 
 		//Apply chart preset TODO: remove this when chartStyle will be implemented
 		const oChart = this.chart;
