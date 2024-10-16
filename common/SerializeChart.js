@@ -1411,31 +1411,31 @@ BinaryChartWriter.prototype.WriteCT_extLst = function (oVal) {
 			}
 		});
 	}
-BinaryChartWriter.prototype.WriteCT_ChartSpace = function (oVal, oCopyPaste) {
-    const oThis = this;
+	BinaryChartWriter.prototype.WriteCT_ChartXLSX = function (oVal, oCopyPaste) {
+		const oThis = this;
 		let bWriteExternalReference = true;
 		if (oCopyPaste && oCopyPaste.isExcel)
 		{
 			const wb = oCopyPaste.wb;
-				let isLocalDesktop = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]();
-				if (isLocalDesktop && window["AscDesktopEditor"]["LocalFileGetSaved"]())
-				{
-					const sPath = window["AscDesktopEditor"]["LocalFileGetSourcePath"]();
-					oThis.memory.WriteByte(c_oserct_chartspaceXLSXEXTERNAL);
-					oThis.memory.WriteString2(AscCommonExcel.encodeXmlPath(sPath));
-				}
-				else if (wb && wb.oApi && wb.oApi.DocInfo && wb.oApi.DocInfo.ReferenceData)
-				{
-					this.WriteCT_PortalData(wb.oApi.DocInfo.ReferenceData);
-					bWriteExternalReference = false;
-				}
-				const arrXLSX = oCopyPaste.getCachedWorkbookBinaryData();
-				if (arrXLSX && arrXLSX.length)
-				{
-					this.bs.WriteItem(c_oserct_chartspaceXLSX, function () {
-						oThis.memory.WriteBuffer(arrXLSX, 0, arrXLSX.length);
-					});
-				}
+			let isLocalDesktop = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]();
+			if (isLocalDesktop && window["AscDesktopEditor"]["LocalFileGetSaved"]())
+			{
+				const sPath = window["AscDesktopEditor"]["LocalFileGetSourcePath"]();
+				oThis.memory.WriteByte(c_oserct_chartspaceXLSXEXTERNAL);
+				oThis.memory.WriteString2(AscCommonExcel.encodeXmlPath(sPath));
+			}
+			else if (wb && wb.oApi && wb.oApi.DocInfo && wb.oApi.DocInfo.ReferenceData)
+			{
+				this.WriteCT_PortalData(wb.oApi.DocInfo.ReferenceData);
+				bWriteExternalReference = false;
+			}
+			const arrXLSX = oCopyPaste.getCachedWorkbookBinaryData();
+			if (arrXLSX && arrXLSX.length)
+			{
+				this.bs.WriteItem(c_oserct_chartspaceXLSX, function () {
+					oThis.memory.WriteBuffer(arrXLSX, 0, arrXLSX.length);
+				});
+			}
 		}
 		else
 		{
@@ -1453,6 +1453,12 @@ BinaryChartWriter.prototype.WriteCT_ChartSpace = function (oVal, oCopyPaste) {
 				});
 			}
 		}
+		return bWriteExternalReference;
+	};
+BinaryChartWriter.prototype.WriteCT_ChartSpace = function (oVal, oCopyPaste) {
+    const oThis = this;
+		const bWriteExternalReference = this.WriteCT_ChartXLSX(oVal, oCopyPaste);
+
     if (null != oVal.date1904) {
         this.bs.WriteItem(c_oserct_chartspaceDATE1904, function () {
             oThis.WriteCT_Boolean(oVal.date1904);
@@ -1560,22 +1566,9 @@ BinaryChartWriter.prototype.WriteCT_ChartSpace = function (oVal, oCopyPaste) {
         });
     }
 };
-BinaryChartWriter.prototype.WriteCT_ChartExSpace = function (oVal) {
+BinaryChartWriter.prototype.WriteCT_ChartExSpace = function (oVal, oCopyPaste) {
     var oThis = this;
-	let bWriteExternalReference = true;
-	let XLSX = (oVal.XLSX && oVal.XLSX.length) ? oVal.XLSX : null;
-	if (oVal.externalReference && oVal.externalReference.Id) {
-		oThis.memory.WriteByte(c_oserct_chartspaceXLSXEXTERNAL);
-		oThis.memory.WriteString2(AscCommonExcel.encodeXmlPath(oVal.externalReference.Id));
-	} else if (!oVal.isWorkbookChart() && !XLSX) {
-		XLSX = oVal.getXLSXFromCache();
-	}
-	if (XLSX) {
-		const nBinaryType = AscCommon.checkOOXMLSignature(XLSX) ? c_oserct_chartspaceXLSXZIP : c_oserct_chartspaceXLSX;
-		this.bs.WriteItem(nBinaryType, function () {
-			oThis.memory.WriteBuffer(XLSX, 0, XLSX.length);
-		});
-	}
+	const bWriteExternalReference = this.WriteCT_ChartXLSX(oVal, oCopyPaste);
     if(oVal.chartData !== null) {
         this.bs.WriteItem(c_oserct_chartExSpaceCHARTDATA, function() {
            oThis.WriteCT_ChartData(oVal.chartData);
@@ -7543,6 +7536,21 @@ BinaryChartReader.prototype.ReadCT_ChartExSpace = function (type, length, val) {
     var res = c_oSerConstants.ReadOk;
     var oThis = this;
     var oNewVal;
+	if (type > 0x80)
+	{
+		const oExt = {val: {}};
+		res = this.ReadExtensions(type, length, oExt);
+		if (type === c_oserct_chartExternalReference && res === c_oSerConstants.ReadOk)
+		{
+			let sFileKey = oExt.val['fileKey'];
+			if (sFileKey)
+			{
+				sFileKey = AscCommonExcel.decodeXmlPath(oExt.val['fileKey'], true);
+			}
+			val.setPortalData(sFileKey, oExt.val['instanceId']);
+		}
+		return res;
+	}
     if(c_oserct_chartExSpaceCHARTDATA === type)
     {
         oNewVal = new AscFormat.CChartData();
@@ -7568,10 +7576,6 @@ BinaryChartReader.prototype.ReadCT_ChartExSpace = function (type, length, val) {
     else if (c_oserct_chartExSpaceCLRMAPOVR === type) {
         val.setClrMapOvr(this.ReadClrOverride(length));
     }
-    // else if(c_oserct_chartExSpaceXLSX === type) {
-    //     //todo
-    //     res = c_oSerConstants.ReadUnknown;
-    // }
     else if(c_oserct_chartExSpaceCOLORS === type) {
         oNewVal = new AscFormat.CChartColors();
         res = this.bcr.Read1(length, function (t, l) {

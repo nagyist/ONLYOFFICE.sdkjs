@@ -877,6 +877,7 @@
 				{
 					this.frameManager.isSaveZipWorkbook = oInformation["isOpenOnClient"];
 				}
+				break;
 			}
 			default:
 			{

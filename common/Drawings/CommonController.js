@@ -4483,6 +4483,7 @@
 					if (isRealObject(chart) && typeof chart["binary"] === "string" && chart["binary"].length > 0) {
 						var asc_chart_binary = new Asc.asc_CChartBinary();
 						asc_chart_binary.asc_setBinary(chart["binary"]);
+						asc_chart_binary.asc_setIsChartEx(chart["IsChartEx"]);
 						ret = asc_chart_binary.getChart();
 					}
 					return ret;

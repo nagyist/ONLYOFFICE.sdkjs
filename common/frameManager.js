@@ -457,6 +457,7 @@
 	{
 			const asc_chart_binary = new Asc.asc_CChartBinary();
 			asc_chart_binary.asc_setBinary(oInfo["binary"]);
+			asc_chart_binary.asc_setIsChartEx(oInfo["IsChartEx"]);
 			const oModel = this.api.wb.getWorksheet().model;
 			const oNewChartSpace = asc_chart_binary.getChartSpace(oModel);
 			oNewChartSpace.setWorksheet(oModel);

@@ -1930,12 +1930,36 @@ function(window, undefined) {
 
 		function fillTableFromRef(ref)
 		{
-			const oCache = ref.numCache ? ref.numCache : (ref.strCache ? ref.strCache : null);
+			let oCache;
+			if (ref.numCache) {
+				oCache = ref.numCache;
+			} else if (ref.strCache) {
+				oCache = ref.strCache;
+			} else if (Array.isArray(ref.levelData)) {
+				oCache = ref.levelData[0];
+			} else if (typeof ref.v === "string") {
+				oCache = AscFormat.ExecuteNoHistory(
+					function() {
+						let oStrCache = new AscFormat.CStrCache();
+						let oPt = new AscFormat.CStringPoint();
+						oPt.idx = 0;
+						oPt.val = ref.v;
+						oStrCache.addPt(oPt);
+						return oStrCache;
+					}, this, []
+				);
+			}
 			if (oCache)
 			{
 				const sFormatCode = (typeof oCache.formatCode === "string" && oCache.formatCode.length > 0) ? oCache.formatCode : "General";
 
-				let sFormula = ref.f + "";
+				let sFormula;
+				if (typeof ref.f === "string") {
+					sFormula = ref.f;
+				} else if (ref.f && ref.f.content) {
+					sFormula = ref.f.content;
+				}
+
 				if (sFormula[0] === '(')
 					sFormula = sFormula.slice(1);
 				if (sFormula[sFormula.length - 1] === ')')
@@ -2067,31 +2091,49 @@ function(window, undefined) {
 		}
 
 		const arrSeries = this.getAllSeries();
-		for (let i = 0; i < arrSeries.length; i += 1)
-		{
-			const oSeria = arrSeries[i];
-			const oVal = oSeria.val || oSeria.yVal;
-			if (oVal && oVal.numRef)
-			{
-				fillTableFromRef(oVal.numRef);
-			}
-			const oCat = oSeria.cat || oSeria.xVal;
-			if (oCat)
-			{
-				if (oCat.numRef)
-				{
-					fillTableFromRef(oCat.numRef);
+		if (this.isChartEx()) {
+			for(let i = 0; i < arrSeries.length; i += 1) {
+				let oSeries = arrSeries[i];
+				let oData = oSeries.getData();
+				if(oData) {
+					let aDims = oData.dimension;
+					for(let nDim = 0; nDim < aDims.length; ++nDim) {
+						let oDim = aDims[nDim];
+						fillTableFromRef(oDim);
+					}
 				}
-				if (oCat.strRef)
-				{
-					fillTableFromRef(oCat.strRef);
+				if(oSeries.tx && oSeries.tx.txData) {
+					fillTableFromRef(oSeries.tx.txData);
 				}
 			}
-			if (oSeria.tx && oSeria.tx.strRef)
+		} else {
+			for (let i = 0; i < arrSeries.length; i += 1)
 			{
-				fillTableFromRef(oSeria.tx.strRef);
+				const oSeria = arrSeries[i];
+				const oVal = oSeria.val || oSeria.yVal;
+				if (oVal && oVal.numRef)
+				{
+					fillTableFromRef(oVal.numRef);
+				}
+				const oCat = oSeria.cat || oSeria.xVal;
+				if (oCat)
+				{
+					if (oCat.numRef)
+					{
+						fillTableFromRef(oCat.numRef);
+					}
+					if (oCat.strRef)
+					{
+						fillTableFromRef(oCat.strRef);
+					}
+				}
+				if (oSeria.tx && oSeria.tx.strRef)
+				{
+					fillTableFromRef(oSeria.tx.strRef);
+				}
 			}
 		}
+
 		return mapWorksheets;
 	};
 	CChartSpace.prototype.isEqualCacheAndWorkbookData = function ()

@@ -444,8 +444,13 @@ function asc_CChartBinary(chart) {
 			}
 			else if (chart.getObjectType() === AscDFH.historyitem_type_Chart)
 			{
+				this["IsChartEx"] = chart.isChartEx();
 				const writer = new AscCommon.BinaryChartWriter(new AscCommon.CMemory(false));
-				writer.WriteCT_Chart(chart);
+				if (this["IsChartEx"]) {
+					writer.WriteCT_ChartEx(chart);
+				} else {
+					writer.WriteCT_Chart(chart);
+				}
 				this["binary"] = writer.memory.GetBase64Memory();
 				this["documentImageUrls"] = AscCommon.g_oDocumentUrls.urls;
 			}
@@ -477,6 +482,7 @@ asc_CChartBinary.prototype = {
 	getChart: function()
 	{
 		const binary = this["binary"];
+		const isChartEx = this["IsChartEx"];
 		const stream = AscFormat.CreateBinaryReader(binary, 0, binary.length);
 		//надо сбросить то, что остался после открытия документа
 		AscCommon.pptx_content_loader.Clear();
@@ -484,7 +490,11 @@ asc_CChartBinary.prototype = {
 		const oBinaryChartReader = new AscCommon.BinaryChartReader(stream);
 		oBinaryChartReader.curChart = {};
 		oBinaryChartReader.bcr.Read1(stream.size, function (t, l) {
-			return oBinaryChartReader.ReadCT_Chart(t, l, oNewChart);
+			if (isChartEx) {
+				return oBinaryChartReader.ReadCT_ChartEx(t, l, oNewChart);
+			} else {
+				return oBinaryChartReader.ReadCT_Chart(t, l, oNewChart);
+			}
 		});
 		return oNewChart;
 	},
