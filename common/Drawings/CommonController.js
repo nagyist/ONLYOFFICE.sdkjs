@@ -4478,15 +4478,15 @@
 					return ret;
 				},
 
-				getChart: function (chart) {
-					var ret = null;
+				getChartInfo: function (chart) {
 					if (isRealObject(chart) && typeof chart["binary"] === "string" && chart["binary"].length > 0) {
 						var asc_chart_binary = new Asc.asc_CChartBinary();
 						asc_chart_binary.asc_setBinary(chart["binary"]);
 						asc_chart_binary.asc_setIsChartEx(chart["IsChartEx"]);
-						ret = asc_chart_binary.getChart();
+						asc_chart_binary.asc_setBinaryChartData(chart["binaryChartData"]);
+						return {chart: asc_chart_binary.getChart(), chartData: asc_chart_binary.getChartData()};
 					}
-					return ret;
+					return null;
 				},
 
 				getSeriesDefault: function (type) {

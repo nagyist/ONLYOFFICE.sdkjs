@@ -445,13 +445,18 @@ function asc_CChartBinary(chart) {
 			else if (chart.getObjectType() === AscDFH.historyitem_type_Chart)
 			{
 				this["IsChartEx"] = chart.isChartEx();
-				const writer = new AscCommon.BinaryChartWriter(new AscCommon.CMemory(false));
+				const chartWriter = new AscCommon.BinaryChartWriter(new AscCommon.CMemory(false));
 				if (this["IsChartEx"]) {
-					writer.WriteCT_ChartEx(chart);
+					chartWriter.WriteCT_ChartEx(chart);
+					if (chart.parent && chart.parent.chartData) {
+						const chartDataWriter = new AscCommon.BinaryChartWriter(new AscCommon.CMemory(false));
+						chartDataWriter.WriteCT_ChartData(chart.parent.chartData);
+						this["binaryChartData"] = chartDataWriter.memory.GetBase64Memory();
+					}
 				} else {
-					writer.WriteCT_Chart(chart);
+					chartWriter.WriteCT_Chart(chart);
 				}
-				this["binary"] = writer.memory.GetBase64Memory();
+				this["binary"] = chartWriter.memory.GetBase64Memory();
 				this["documentImageUrls"] = AscCommon.g_oDocumentUrls.urls;
 			}
 		}
@@ -461,6 +466,8 @@ asc_CChartBinary.prototype = {
 
     asc_getBinary: function() { return this["binary"]; },
     asc_setBinary: function(val) { this["binary"] = val; },
+	asc_getBinaryChartData: function() { return this["binaryChartData"]; },
+	asc_setBinaryChartData: function(val) { this["binaryChartData"] = val; },
 	asc_setIsChartEx: function(val){this["IsChartEx"] = val;},
 	asc_getIsChartEx: function(){return this["IsChartEx"];},
     getChartSpace: function(workSheet)
@@ -497,6 +504,24 @@ asc_CChartBinary.prototype = {
 			}
 		});
 		return oNewChart;
+	},
+	getChartData: function()
+	{
+		const binary = this["binaryChartData"];
+		if (!binary) {
+			return null;
+		}
+
+		const stream = AscFormat.CreateBinaryReader(binary, 0, binary.length);
+		//надо сбросить то, что остался после открытия документа
+		AscCommon.pptx_content_loader.Clear();
+		const oChartData = new AscFormat.CChartData();
+		const oBinaryChartReader = new AscCommon.BinaryChartReader(stream);
+		oBinaryChartReader.curChart = {};
+		oBinaryChartReader.bcr.Read1(stream.size, function (t, l) {
+				return oBinaryChartReader.ReadCT_ChartData(t, l, oChartData);
+		});
+		return oChartData;
 	},
 		getWorkbookBinary: function() { return this["workbookBinary"]; },
 		setWorkbookBinary: function(val) { this["workbookBinary"] = val; }
@@ -4551,8 +4576,17 @@ ClickCounter.prototype.getClickCount = function() {
 
     window["Asc"]["asc_CChartBinary"] = window["Asc"].asc_CChartBinary = asc_CChartBinary;
     prot = asc_CChartBinary.prototype;
-    prot["asc_getBinary"] = prot.asc_getBinary;
-    prot["asc_setBinary"] = prot.asc_setBinary;
+	prot["asc_getBinary"] = prot.asc_getBinary;
+	prot["asc_setBinary"] = prot.asc_setBinary;
+	prot["asc_getBinaryChartData"] = prot.asc_getBinaryChartData;
+	prot["asc_setBinaryChartData"] = prot.asc_setBinaryChartData;
+	prot["asc_setIsChartEx"] = prot.asc_setIsChartEx;
+	prot["asc_getIsChartEx"] = prot.asc_getIsChartEx;
+	prot["getChartSpace"] = prot.getChartSpace;
+	prot["getChart"] = prot.getChart;
+	prot["getWorkbookBinary"] = prot.getWorkbookBinary;
+	prot["setWorkbookBinary"] = prot.setWorkbookBinary;
+	prot["getChartData"] = prot.getChartData;
 
     window["AscFormat"].asc_CChartSeria = asc_CChartSeria;
     prot = asc_CChartSeria.prototype;

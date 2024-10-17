@@ -318,7 +318,7 @@ CGraphicObjects.prototype =
     getOleObject: DrawingObjectsController.prototype.getOleObject,
     getChartObject: DrawingObjectsController.prototype.getChartObject,
     getChartSpace2: DrawingObjectsController.prototype.getChartSpace2,
-    getChart: DrawingObjectsController.prototype.getChart,
+    getChartInfo: DrawingObjectsController.prototype.getChartInfo,
     CreateDocContent: DrawingObjectsController.prototype.CreateDocContent,
     isSlideShow: function()
     {
@@ -1309,9 +1309,14 @@ CGraphicObjects.prototype =
 		const oSelectedChart = this.getSingleSelectedChart();
 		if (oSelectedChart)
 		{
-			const oChart = this.getChart(binary, null);
+			const oChartInfo = this.getChartInfo(binary);
+			const oChart = oChartInfo.chart;
+			const oChartData = oChartInfo.chartData;
 			oChart.setParent(oSelectedChart);
 			oSelectedChart.setChart(oChart);
+			if (oChartData) {
+				oSelectedChart.setChartData(oChartData);
+			}
 			oSelectedChart.handleUpdateChart();
 			this.document.Recalculate();
 		}
