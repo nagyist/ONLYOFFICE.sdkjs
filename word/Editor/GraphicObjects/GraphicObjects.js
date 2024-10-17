@@ -1309,6 +1309,8 @@ CGraphicObjects.prototype =
 		const oSelectedChart = this.getSingleSelectedChart();
 		if (oSelectedChart)
 		{
+			const oApi = this.getEditorApi();
+			oApi.frameManager.saveChartData(oSelectedChart);
 			const oChartInfo = this.getChartInfo(binary);
 			const oChart = oChartInfo.chart;
 			const oChartData = oChartInfo.chartData;

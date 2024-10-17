@@ -117,8 +117,23 @@
 		this.isInitFrameManager = true;
 		this.isLoadingOleEditor = false;
 		this.isLoadingChartEditor = false;
+		this.chartData = null;
 	}
 	InitClassWithoutType(CMainEditorFrameManager, CFrameManagerBase);
+	CMainEditorFrameManager.prototype.saveChartData = function (chartSpace) {
+		if (!this.chartData) {
+			const chart = chartSpace.chart;
+			const chartData = chartSpace.chartData;
+			this.chartData = {chart: chart, chartData: chartData};
+		}
+	}
+	CMainEditorFrameManager.prototype.loadChartData = function (chartSpace) {
+		if (this.chartData) {
+			chartSpace.chartData = this.chartData.chartData;
+			chartSpace.chart = this.chartData.chart;
+			this.chartData = null;
+		}
+	}
 	CMainEditorFrameManager.prototype.isGeneralEditor = function ()
 	{
 		return true;

@@ -6176,7 +6176,6 @@ CDocument.prototype.AddSignatureLine = function(oSignatureDrawing){
 };
 CDocument.prototype.FinalizeEditChart = function(chartBinary)
 {
-	const arrChanges = AscCommon.History.UndoChartPreviewPoint();
 	if (chartBinary['noHistory'])
 	{
 		if (arrChanges)

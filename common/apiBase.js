@@ -862,7 +862,6 @@
 				const oBinaryData = oInformation["binary"];
 				if (oLogicDocument)
 				{
-					AscCommon.History.CreateChartPreviewPoint();
 					oLogicDocument.UpdateChart(oBinaryData);
 				}
 				break;
