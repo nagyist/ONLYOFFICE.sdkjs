@@ -761,7 +761,10 @@ CHeaderFooter.prototype =
     {
         this.Content.AddTextArt(nStyle);
     },
-
+	LoadChartData : function()
+	{
+		this.Content.LoadChartData();
+	},
 	EditChart : function(Chart)
     {
         this.Content.EditChart( Chart );
@@ -2075,7 +2078,11 @@ CHeaderFooterController.prototype =
         if ( null != this.CurHdrFtr )
             return this.CurHdrFtr.AddTextArt(nStyle);
     },
-
+	LoadChartData : function()
+	{
+		if ( null != this.CurHdrFtr )
+			return this.CurHdrFtr.LoadChartData();
+	},
 	EditChart : function(Chart)
     {
         if ( null != this.CurHdrFtr )

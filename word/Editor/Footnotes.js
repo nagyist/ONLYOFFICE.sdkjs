@@ -1481,6 +1481,13 @@ CFootnotesController.prototype.AddOleObject = function(W, H, nWidthPix, nHeightP
 
 	return this.CurFootnote.AddOleObject(W, H, nWidthPix, nHeightPix, Img, Data, sApplicationId, bSelect, arrImagesForAddToHistory);
 };
+CFootnotesController.prototype.LoadChartData = function()
+{
+	if (false === this.private_CheckFootnotesSelectionBeforeAction())
+		return;
+
+	this.CurFootnote.LoadChartData();
+};
 CFootnotesController.prototype.EditChart = function(Chart)
 {
 	if (false === this.private_CheckFootnotesSelectionBeforeAction())

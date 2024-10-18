@@ -1303,7 +1303,13 @@ CGraphicObjects.prototype =
             }
         }
     },
-
+	loadChartData: function () {
+		const chart = this.getSingleSelectedChart();
+		const api = this.getEditorApi();
+		if (chart && api) {
+			api.frameManager.loadChartData(chart);
+		}
+	},
 	updateChart: function (binary)
 	{
 		const oSelectedChart = this.getSingleSelectedChart();
@@ -1314,7 +1320,6 @@ CGraphicObjects.prototype =
 			const oChartInfo = this.getChartInfo(binary);
 			const oChart = oChartInfo.chart;
 			const oChartData = oChartInfo.chartData;
-			oChart.setParent(oSelectedChart);
 			oSelectedChart.setChart(oChart);
 			if (oChartData) {
 				oSelectedChart.setChartData(oChartData);

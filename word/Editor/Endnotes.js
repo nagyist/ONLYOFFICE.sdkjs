@@ -1498,6 +1498,13 @@ CEndnotesController.prototype.AddSignatureLine = function(oSignatureDrawing)
 
 	return this.CurEndnote.AddSignatureLine(oSignatureDrawing);
 };
+CEndnotesController.prototype.LoadChartData = function()
+{
+	if (false === this.private_CheckEndnotesSelectionBeforeAction())
+		return;
+
+	this.CurEndnote.LoadChartData();
+};
 CEndnotesController.prototype.EditChart = function(oChartPr)
 {
 	if (false === this.private_CheckEndnotesSelectionBeforeAction())

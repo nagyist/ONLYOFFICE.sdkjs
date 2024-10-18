@@ -123,6 +123,10 @@ CDrawingsController.prototype.AddTextArt = function(nStyle)
 		this.LogicDocument.AddTextArt(nStyle);
 	}
 };
+CDrawingsController.prototype.LoadChartData = function()
+{
+	this.DrawingObjects.loadChartData();
+};
 CDrawingsController.prototype.EditChart = function(Chart)
 {
 	this.DrawingObjects.editChart(Chart);

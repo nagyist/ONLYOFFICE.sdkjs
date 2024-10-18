@@ -362,7 +362,13 @@ DrawingObjectsController.prototype.editChart = function(binary)
         }
     }
 };
-
+DrawingObjectsController.prototype.loadChartData = function () {
+	const chart = this.getSingleSelectedChart();
+	const api = this.getEditorApi();
+	if (chart && api) {
+		api.frameManager.loadChartData(chart);
+	}
+};
 DrawingObjectsController.prototype.updateChart = function (binary)
 {
 	const oSelectedChart = this.getSingleSelectedChart();
@@ -373,7 +379,6 @@ DrawingObjectsController.prototype.updateChart = function (binary)
 		const oChartInfo = this.getChartInfo(binary);
 		const oChart = oChartInfo.chart;
 		const oChartData = oChartInfo.chartData;
-		oChart.setParent(oSelectedChart);
 		oSelectedChart.setChart(oChart);
 		if (oChartData) {
 			oSelectedChart.setChartData(oChartData);

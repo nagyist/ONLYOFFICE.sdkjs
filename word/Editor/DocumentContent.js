@@ -3127,6 +3127,13 @@ CDocumentContent.prototype.AddSignatureLine = function(oSignatureDrawing)
         }
 	}
 };
+CDocumentContent.prototype.LoadChartData = function()
+{
+	if (docpostype_DrawingObjects === this.CurPos.Type)
+	{
+		return this.LogicDocument.DrawingObjects.loadChartData();
+	}
+};
 CDocumentContent.prototype.EditChart = function(Chart)
 {
 	if (docpostype_DrawingObjects === this.CurPos.Type)

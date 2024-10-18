@@ -129,8 +129,10 @@
 	}
 	CMainEditorFrameManager.prototype.loadChartData = function (chartSpace) {
 		if (this.chartData) {
-			chartSpace.chartData = this.chartData.chartData;
-			chartSpace.chart = this.chartData.chart;
+			AscFormat.ExecuteNoHistory(function () {
+				chartSpace.setChart(this.chartData.chart);
+				chartSpace.setChartData(this.chartData.chartData);
+			}, this, []);
 			this.chartData = null;
 		}
 	}

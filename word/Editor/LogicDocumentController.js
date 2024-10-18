@@ -77,6 +77,10 @@ CLogicDocumentController.prototype.AddTextArt = function(nStyle)
 {
 	this.LogicDocument.controller_AddTextArt(nStyle);
 };
+CLogicDocumentController.prototype.LoadChartData = function(Chart)
+{
+	// Ничего не делаем
+};
 CLogicDocumentController.prototype.EditChart = function(Chart)
 {
 	// Ничего не делаем

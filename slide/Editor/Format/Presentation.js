@@ -3956,7 +3956,6 @@ CPresentation.prototype.UpdateChart = function (binary) {
 	{
 		oSlide.graphicObjects.updateChart(binary);
 		this.Recalculate();
-		this.DrawingDocument.OnRecalculatePage(this.CurPage, oSlide);
 	}
 };
 CPresentation.prototype.FinalizeEditChart = function (binary)
@@ -3965,17 +3964,8 @@ CPresentation.prototype.FinalizeEditChart = function (binary)
 	const oSlide = this.GetCurrentSlide();
 	if (oSlide)
 	{
-		const oSelectedChart = oSlide.graphicObjects.getSingleSelectedChart();
-		this.api.frameManager.loadChartData(oSelectedChart);
-		if (binary['noHistory'])
-		{
-			if (arrChanges)
-			{
-				this.Recalculate();
-			}
-			this.UpdateInterface();
-		}
-		else
+		oSlide.graphicObjects.loadChartData();
+		if (!binary['noHistory'])
 		{
 			oSlide.graphicObjects.checkSelectedObjectsAndCallback(function () {
 				oThis.EditChart(binary);

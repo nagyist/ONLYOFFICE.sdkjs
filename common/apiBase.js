@@ -862,7 +862,9 @@
 				const oBinaryData = oInformation["binary"];
 				if (oLogicDocument)
 				{
-					oLogicDocument.UpdateChart(oBinaryData);
+					AscFormat.ExecuteNoHistory(function () {
+						oLogicDocument.UpdateChart(oBinaryData);
+					}, this, []);
 				}
 				break;
 			}
