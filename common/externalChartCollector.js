@@ -156,6 +156,7 @@ function (window, undefined) {
 						wb.DrawingDocument = oLogicDocument.DrawingDocument;
 						wb.theme = oLogicDocument.theme ? oLogicDocument.theme : oLogicDocument.Get_Theme();
 						Asc.getBinaryOtherTableGVar(wb);
+						AscCommonExcel.g_DefNameWorksheet = new AscCommonExcel.Worksheet(wb, -1);
 						let nEditor;
 						if (!(oApi)["asc_isSupportFeature"]("ooxml") || isLocalDesktop) {
 							let binaryData = stream;
@@ -184,6 +185,7 @@ function (window, undefined) {
 									AscCommon.pptx_content_loader.Reader.ClearConnectedObjects();
 									oBinaryFileReader.Read(binaryData, wb);
 									AscCommon.pptx_content_loader.Reader.AssignConnectedObjects();
+									wb.dependencyFormulas.initOpen();
 								});
 
 								for (let j = 0; j < arrExternalChartReferences.length; j += 1) {
@@ -201,6 +203,7 @@ function (window, undefined) {
 							let updatedData = wb.getExternalReferenceSheetsFromZip(stream);
 							wb.aWorksheets = updatedData;
 							wb._updateWorksheetIndexes();
+							wb.dependencyFormulas.initOpen();
 							if (updatedData) {
 								for (let j = 0; j < arrExternalChartReferences.length; j += 1) {
 									const oExternalReference = arrExternalChartReferences[j].externalReference;
@@ -210,6 +213,7 @@ function (window, undefined) {
 								}
 							}
 						}
+						AscCommonExcel.g_DefNameWorksheet = null;
 					} else {
 						if (arrExternalChartReferences) {
 							oApi.sendEvent("asc_onErrorUpdateExternalReference", externalReferenceId);

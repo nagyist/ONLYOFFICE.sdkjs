@@ -485,7 +485,7 @@
 
 			this.ref = ref;
 			//all ref should be 3d, so worksheet can be anyone
-			this.parsedRef = new parserFormula(ref, this, AscCommonExcel.g_DefNameWorksheet);
+			this.parsedRef = new AscCommonExcel.parserFormula(ref, this, AscCommonExcel.g_DefNameWorksheet);
 			this.parsedRef.setIsTable(this.type);
 			var t = this;
 			if (opt_forceBuild) {
