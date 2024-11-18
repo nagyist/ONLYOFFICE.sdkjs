@@ -1193,6 +1193,7 @@ CHistory.prototype.private_UpdateContentChangesOnRedo = function(Item)
 };
 CHistory.prototype.private_IsContentChange = function(Class, Data)
 {
+	// TODO: Заменить на проверку через change.IsContentChange
 	var bPresentation = !(typeof CPresentation === "undefined");
 	var bSlide = !(typeof Slide === "undefined");
 	if ( ( Class instanceof CDocument        && ( AscDFH.historyitem_Document_AddItem        === Data.Type || AscDFH.historyitem_Document_RemoveItem        === Data.Type ) ) ||

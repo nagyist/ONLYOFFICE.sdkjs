@@ -2924,10 +2924,14 @@
 		//var regExpExceptExternalLink = /('?[a-zA-Z0-9\s\[\]\.]{1,99})?'?!?\$?[a-zA-Z]{1,3}\$?[0-9]{1,7}(:\$?[a-zA-Z]{1,3}\$?[0-9]{1,7})?/;
 
 		//'path/[name]Sheet1'!A1
-		var path, name, startLink, i;
+		let path, name, startLink, i, exclamationMarkIndex;
 		if (url && url.indexOf("[") !== -1) {
 			//todo check on other separators, exm -> SUM(A2 '[new.xlsx]Sheet1'!A1 '[new.xlsx]Sheet1'!A2)
 			for (let j = 0; j < url.length; j++) {
+				if (!exclamationMarkIndex && url[j] === "!") {
+					exclamationMarkIndex = j;
+				}
+				
 				if (url[j] === FormulaSeparators.functionArgumentSeparator || url[j] === FormulaSeparators.functionArgumentSeparatorDef || url[j] === ";")  {
 					url = url.substring(0, j);
 					break;
@@ -2936,7 +2940,7 @@
 
 
 			if (url && url[0] === "'"/*url.match(/('[^\[]*\[[^\]]+\]([^'])+'!)/g)*/) {
-				for (i = url.length - 1; i >= 0; i--) {
+				for (i = exclamationMarkIndex ? exclamationMarkIndex : url.length - 1; i >= 0; i--) {
 					if (url[i] === "!" && url[i - 1] === "'") {
 						startLink = true;
 						i--;
@@ -14632,6 +14636,32 @@
 	function getArrayRandomElement(aArray) {
 		return aArray[Math.random() * aArray.length | 0];
 	}
+
+	function registerServiceWorker() {
+		if ('serviceWorker' in navigator) {
+			const serviceWorkerName = 'document_editor_service_worker.js';
+			const serviceWorkerPath = '../../../../' + serviceWorkerName;
+			let reg;
+			navigator.serviceWorker.register(serviceWorkerPath)
+				.then(function (registration) {
+					reg = registration;
+					return navigator.serviceWorker.getRegistrations();
+				})
+				.then(function (registrations) {
+					//delete stale service workers
+					for (const registration of registrations) {
+						if (registration !== reg && registration.active && registration.active.scriptURL.endsWith(serviceWorkerName)) {
+							registration.unregister();
+						}
+					}
+				})
+				.catch(function (err) {
+					console.error('Registration failed with ' + err);
+				});
+		}
+	}
+	registerServiceWorker();
+
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
 	window["AscCommon"].getSockJs = getSockJs;

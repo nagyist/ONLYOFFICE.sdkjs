@@ -245,11 +245,16 @@ function (window, undefined) {
 		oCopy.setHidden(this.hidden);
 	};
 
-	// initialize the ax position, 0 is horizontal and 1 is vertical
+	// initialize the ax position, 0 is horizontal 1 is vertical left, and 2 is vertical right
 	CAxis.prototype.initializeAxPos = function (isVertAxis) {
-		const axPos = isVertAxis ? window['AscFormat'].AX_POS_L : window['AscFormat'].AX_POS_B;
+		const axPos = isVertAxis ? ((isVertAxis === 1) ? window['AscFormat'].AX_POS_L : window['AscFormat'].AX_POS_R) : window['AscFormat'].AX_POS_B;
 		CAxisBase.prototype.setAxPos.call(this, axPos);
 	}
+
+	// rewrite isReversed method
+	CAxis.prototype.isReversedRepresentation = function () {
+		return (this.axPos === window['AscFormat'].AX_POS_R || this.axPos === window['AscFormat'].AX_POS_T);
+	};
 
 	CAxis.prototype.setUnits = function (pr) {
 		History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_Axis_SetUnits, this.units, pr));
@@ -2668,6 +2673,7 @@ function (window, undefined) {
 			oPt.setIdx(nPtIdx);
 			oPt.setVal(dVal);
 			oLvl.addPt(oPt);
+			oPt.setFormatCode(oCell.getNumFormatStr());
 		}
 	};
 
@@ -2987,6 +2993,11 @@ function (window, undefined) {
 	CPlotAreaRegion.prototype.getAllSeries = function () {
 		return [].concat(this.series);
 	};
+	CPlotAreaRegion.prototype.getAllRasterImages = function (images) {
+		for(let nIdx = 0; nIdx < this.series.length; ++nIdx) {
+			this.series[nIdx].getAllRasterImages(images);
+		}
+	};
 
 	// PlotSurface
 	drawingsChangesMap[AscDFH.historyitem_PlotSurface_SetSpPr] = function (oClass, value) {
@@ -3138,7 +3149,15 @@ function (window, undefined) {
 	}
 
 	InitClass(CSeries, AscFormat.CSeriesBase, AscDFH.historyitem_type_Series);
-
+	CSeries.prototype.isSupported = function () {
+		let nType = this.layoutId;
+		if(nType === AscFormat.SERIES_LAYOUT_CLUSTERED_COLUMN ||
+			nType === AscFormat.SERIES_LAYOUT_WATERFALL ||
+			nType === AscFormat.SERIES_LAYOUT_FUNNEL) {
+			return true;
+		}
+		return false;
+	};
 	CSeries.prototype.fillObject = function (oCopy) {
 		AscFormat.CSeriesBase.prototype.fillObject.call(this, oCopy);
 		if (this.dataLabels) {
@@ -3273,9 +3292,20 @@ function (window, undefined) {
 		}
 		return null;
 	};
+	CSeries.prototype.getAllRasterImages = function (images) {
+		for (let nDpt = 0; nDpt < this.dPt.length; ++nDpt) {
+			let oDPt = this.dPt[nDpt];
+			if(oDPt && oDPt.spPr) {
+				oDPt.spPr.checkBlipFillRasterImage(images);
+			}
+		}
+	};
 	CSeries.prototype.getValPts = function () {
 		const numLit = this.getValLit();
 		return numLit ? numLit.pts : [];
+	};
+	CSeries.prototype.getNumPts = function() {
+		return this.getValPts();
 	};
 	CSeries.prototype.getCatLit = function (type) {
 		let oSeriesData = this.getData();
@@ -3306,18 +3336,27 @@ function (window, undefined) {
 		}
 		return null;
 	};
+	CSeries.prototype.getPtByIdx = function (idx) {
+		let aPts = this.getNumPts();
+		for (let nIdx = 0; nIdx < aPts.length; ++nIdx) {
+			if (aPts[nIdx].idx === idx) {
+				return aPts[nIdx];
+			}
+		}
+		return null;
+	};
 	CSeries.prototype.getPtPen = function (nIdx) {
-		let oDpt = this.getDptByIdx(nIdx);
-		if (oDpt && oDpt.pen) {
-			return oDpt.pen;
+		let oPt = this.getPtByIdx(nIdx);
+		if (oPt && oPt.pen) {
+			return oPt.pen;
 		}
 		return this.compiledSeriesPen;
 	};
 
 	CSeries.prototype.getPtBrush = function (nIdx) {
-		let oDpt = this.getDptByIdx(nIdx);
-		if (oDpt && oDpt.brush) {
-			return oDpt.brush;
+		let oPt = this.getPtByIdx(nIdx);
+		if (oPt && oPt.brush) {
+			return oPt.brush;
 		}
 		return this.compiledSeriesBrush;
 	};
@@ -3686,12 +3725,12 @@ function (window, undefined) {
 	AscDFH.changesFactory[AscDFH.historyitem_TextData_SetV] = window['AscDFH'].CChangesDrawingsString;
 
 	function CTextData() {
-		CBaseChartObject.call(this);
+		AscFormat.CChartRefBase.call(this);
 		this.f = null;
 		this.v = null;
 	}
 
-	InitClass(CTextData, CBaseChartObject, AscDFH.historyitem_type_TextData);
+	InitClass(CTextData, AscFormat.CChartRefBase, AscDFH.historyitem_type_TextData);
 
 	CTextData.prototype.fillObject = function (oCopy) {
 		CBaseChartObject.prototype.fillObject.call(this, oCopy);
@@ -3711,6 +3750,30 @@ function (window, undefined) {
 		this.v = pr;
 	};
 
+	CTextData.prototype.updateCache = function() {
+		AscFormat.ExecuteNoHistory(function () {
+			if(this.f) {
+				let sContent = this.f.content;
+
+				let aParsedRef = AscFormat.fParseChartFormula(sContent);
+				if (!Array.isArray(aParsedRef) || aParsedRef.length === 0) {
+					return false;
+				}
+				if (aParsedRef.length > 0) {
+					let oRef = aParsedRef[0];
+					let oBBox = oRef.bbox;
+					let oWS = oRef.worksheet;
+					let oCell = oWS.getCell3(oBBox.r1, oBBox.c1);
+					if(oCell) {
+						let sVal = oCell.getValueWithFormat();
+						if (typeof sVal === "string" && sVal.length > 0) {
+							this.setV(sVal);
+						}
+					}
+				}
+			}
+		}, this, []);
+	};
 
 	// // TickLabels (unused, bool instead this class)
 	// function CTickLabels() {

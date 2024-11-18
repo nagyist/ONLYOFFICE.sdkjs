@@ -3839,6 +3839,9 @@
 						for (i = 0; i < objects_by_type.smartArts.length; ++i) {
 							objects_by_type.smartArts[i].changeFill(props.fill);
 						}
+						for (i = 0; i < objects_by_type.images.length; ++i) {
+							objects_by_type.images[i].changeFill(props.fill);
+						}
 					}
 					if (isRealObject(props.shadow) || props.shadow === null) {
 						for (i = 0; i < objects_by_type.shapes.length; ++i) {
@@ -3955,6 +3958,13 @@
 									oRun.CheckParentFormKey()
 								}
 							}
+						}
+					}
+					if (AscFormat.isRealNumber(props.transparent)) {
+						var oImg;
+						for (i = 0; i < objects_by_type.images.length; ++i) {
+							oImg = objects_by_type.images[i];
+							oImg.setTransparent(props.transparent);
 						}
 					}
 					if (props.resetCrop) {
@@ -7042,6 +7052,8 @@
 								new_image_props =
 									{
 										ImageUrl: drawing.getImageUrl(),
+										transparent: drawing.getTransparent(),
+										isCrop: drawing.hasCrop(),
 										w: drawing.extX,
 										h: drawing.extY,
 										rot: drawing.rot,
@@ -7064,6 +7076,10 @@
 								else {
 									if (image_props.ImageUrl !== null && image_props.ImageUrl !== new_image_props.ImageUrl)
 										image_props.ImageUrl = null;
+									if (image_props.transparent != null && image_props.transparent !== new_image_props.transparent)
+										image_props.transparent = null;
+									if (image_props.isCrop != null && image_props.isCrop !== new_image_props.isCrop)
+										image_props.isCrop = false;
 									if (image_props.w != null && image_props.w !== new_image_props.w)
 										image_props.w = null;
 									if (image_props.h != null && image_props.h !== new_image_props.h)
@@ -7146,6 +7162,8 @@
 								new_image_props =
 									{
 										ImageUrl: drawing.getImageUrl(),
+										isCrop: drawing.hasCrop(),
+										transparent: null,
 										w: drawing.extX,
 										h: drawing.extY,
 										locked: locked,
@@ -7168,6 +7186,10 @@
 									image_props.ImageUrl = null;
 									if (image_props.w != null && image_props.w !== new_image_props.w)
 										image_props.w = null;
+									if (image_props.transparent != null && image_props.transparent !== new_image_props.transparent)
+										image_props.transparent = null;
+									if (image_props.isCrop != null && image_props.isCrop !== new_image_props.isCrop)
+										image_props.isCrop = false;
 									if (image_props.h != null && image_props.h !== new_image_props.h)
 										image_props.h = null;
 									if (image_props.x != null && image_props.x !== new_image_props.x)
@@ -7471,6 +7493,10 @@
 									else {
 										if (image_props.ImageUrl !== null && image_props.ImageUrl !== group_drawing_props.imageProps.ImageUrl)
 											image_props.ImageUrl = null;
+										if (image_props.transparent !== null && image_props.transparent !== group_drawing_props.imageProps.transparent)
+											image_props.transparent = null;
+										if (image_props.isCrop !== null && image_props.isCrop !== group_drawing_props.imageProps.isCrop)
+											image_props.isCrop = null;
 
 										if (image_props.w != null && image_props.w !== group_drawing_props.imageProps.w)
 											image_props.w = null;
@@ -7879,6 +7905,8 @@
 						image_props.flipH = props.imageProps.flipH;
 						image_props.flipV = props.imageProps.flipV;
 						image_props.ImageUrl = props.imageProps.ImageUrl;
+						image_props.isCrop = props.imageProps.isCrop;
+						image_props.transparent = props.imageProps.transparent;
 						image_props.Locked = props.imageProps.locked === true;
 						image_props.lockAspect = props.imageProps.lockAspect;
 						image_props.anchor = props.imageProps.anchor;

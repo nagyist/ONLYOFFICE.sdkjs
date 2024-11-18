@@ -4102,10 +4102,18 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
                 }
                 case para_Math_BreakOperator:
                 {
-                    var BrkLen = Item.Get_Width2()/AscWord.TEXTWIDTH_DIVIDER;
+					var BrkLen = Item.Get_Width2()/AscWord.TEXTWIDTH_DIVIDER;
 
-                    var bCompareOper = Item.Is_CompareOperator();
-                    var bOperBefore = this.ParaMath.Is_BrkBinBefore() == true;
+					var oFirstContent	= (PRS.Word === false && this.Content.length > 0)
+						? this.Content[0]
+						: null;
+					var strFirstLetter	= oFirstContent !== null
+						? String.fromCharCode(oFirstContent.value)
+						: "";
+					var isFirstOperator	= PRS.Word === false && AscMath.MathLiterals.operator.SearchU(strFirstLetter);
+
+                    var bCompareOper	= Item.Is_CompareOperator();
+                    var bOperBefore		= isFirstOperator || this.ParaMath.Is_BrkBinBefore() == true;
 
                     var bOperInEndContent = bOperBefore === false && bEndRunToContent === true && Pos == ContentLen - 1 && Word == true, // необходимо для того, чтобы у контентов мат объектов (к-ые могут разбиваться на строки) не было отметки Set_LineBreakPos, иначе скобка (или GapLeft), перед которой стоит break_Operator, перенесется на следующую строку (без текста !)
                         bLowPriority      = bCompareOper == false && bContainCompareOper == false;
@@ -4688,8 +4696,30 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 					PRS.ComplexFields.processFieldChar(Item);
 
 					isHiddenCFPart = PRS.ComplexFields.isComplexFieldCode();
-
-					if (Item.IsEnd() && !isHiddenCFPart)
+					
+					if (Item.IsSeparate())
+					{
+						var oComplexField = Item.GetComplexField();
+						var oHdrFtr       = Para.Parent.IsHdrFtr(true);
+						if (oHdrFtr && !oComplexField && this.Paragraph)
+						{
+							// Т.к. Recalculate_Width запускается после Recalculate_Range, то возможен случай, когда у нас
+							// поля еще не собраны, но в колонтитулах они нам нужны уже собранные
+							this.Paragraph.ProcessComplexFields();
+							oComplexField = Item.GetComplexField();
+						}
+						
+						var oInstruction = oComplexField ? oComplexField.GetInstruction() : null;
+						
+						let isHiddenValue = !!(oHdrFtr
+							&& oInstruction
+							&& (AscWord.fieldtype_NUMPAGES === oInstruction.GetType()
+								|| AscWord.fieldtype_PAGE === oInstruction.GetType()
+								|| AscWord.fieldtype_FORMULA === oInstruction.GetType()));
+						
+						Item.SetHiddenValue(isHiddenValue);
+					}
+					else if (Item.IsEnd() && !isHiddenCFPart)
 					{
 						// Специальная ветка, для полей PAGE и NUMPAGES, находящихся в колонтитуле
 						var oComplexField = Item.GetComplexField();
@@ -4762,13 +4792,14 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 							var oParent = this.GetParent();
 							var nRunPos = this.private_GetPosInParent(oParent);
 							
-							// Заглушка на случай, когда настройки текущего рана не совпадают с настройками рана, где расположен текст
-							if (Pos >= ContentLen - 1 && oParent && oParent.Content[nRunPos + 1] instanceof ParaRun)
-							{
-								var oNumValuePr = oParent.Content[nRunPos + 1].Get_CompiledPr(false);
-								g_oTextMeasurer.SetTextPr(oNumValuePr, this.Paragraph.Get_Theme());
-								Item.Measure(g_oTextMeasurer, oNumValuePr);
-							}
+							// Заглушка на случай, когда настройки текущего рана не совпадают с настройками рана,
+							// где расположено значение поля, либо начало поля
+							let numValueTextPr = this.Get_CompiledPr(false);
+							if (Pos <= 0 && oParent && nRunPos > 0 && oParent.Content[nRunPos - 1] instanceof AscWord.Run)
+								numValueTextPr = oParent.Content[nRunPos - 1].Get_CompiledPr(false);
+
+							g_oTextMeasurer.SetTextPr(numValueTextPr, this.Paragraph.Get_Theme());
+							Item.Measure(g_oTextMeasurer, numValueTextPr);
 							
 							// Если до этого было слово, тогда не надо проверять убирается ли оно, но если стояли пробелы,
 							// тогда мы их учитываем при проверке убирается ли данный элемент, и добавляем только если
@@ -5558,7 +5589,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                         if ( true === LDRecalcInfo.Can_RecalcObject() )
                         {
 							// Обновляем позицию объекта
-							Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
+							Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[_CurLine].Y - Para.Lines[_CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
 							
 							if (PRSA.getCompatibilityMode() >= AscCommon.document_compatibility_mode_Word15
 								&& 0 === CurPage
@@ -11259,6 +11290,18 @@ ParaRun.prototype.GetFootnoteRefsInRange = function(arrFootnotes, _CurLine, _Cur
 	{
 		if (para_FootnoteReference === this.Content[CurPos].Type || para_EndnoteReference === this.Content[CurPos].Type)
 			arrFootnotes.push(this.Content[CurPos]);
+	}
+};
+ParaRun.prototype.GetSelectedContentControls = function(arrContentControls)
+{
+	let startPos = (this.Selection.StartPos < this.Selection.EndPos ? this.Selection.StartPos : this.Selection.EndPos);
+	let endPos   = (this.Selection.StartPos < this.Selection.EndPos ? this.Selection.EndPos : this.Selection.StartPos);
+	
+	for (let i = startPos; i < endPos; ++i)
+	{
+		let item = this.Content[i];
+		if (item.IsDrawing())
+			item.GetAllContentControls(arrContentControls);
 	}
 };
 ParaRun.prototype.GetAllContentControls = function(arrContentControls)

@@ -54,6 +54,7 @@ function ParaFieldChar(Type, LogicDocument)
 	this.numText  = null;
 	this.textPr   = null;
 	this.checkBox = null;
+	this.hidden   = false;
 }
 ParaFieldChar.prototype = Object.create(AscWord.CRunElementBase.prototype);
 ParaFieldChar.prototype.constructor = ParaFieldChar;
@@ -261,6 +262,14 @@ ParaFieldChar.prototype.SetNumValue = function(value, numFormat)
 	this.numText = AscCommon.IntToNumberFormat(value, numFormat, {lang: this.textPr && this.textPr.Lang, isFromField: true, isSkipFractPart: true});
 	this.private_UpdateWidth();
 };
+ParaFieldChar.prototype.SetHiddenValue = function(isHidden)
+{
+	this.hidden = isHidden;
+};
+ParaFieldChar.prototype.IsHiddenValue = function()
+{
+	return this.hidden;
+};
 /**
  * Специальная функция для работы с полями FORUMULA в колонтитулах
  * @param value {number|string}
@@ -402,6 +411,18 @@ ParaFieldChar.prototype.PreDelete = function()
 {
 	if (this.LogicDocument && this.ComplexField)
 		this.LogicDocument.ValidateComplexField(this.ComplexField);
+};
+ParaFieldChar.prototype.FindNextFillingForm = function(isNext, isCurrent, isStart)
+{
+	if (!this.ComplexField
+		|| !this.ComplexField.IsFormField()
+		|| !this.ComplexField.IsFormFieldEnabled())
+		return null;
+	
+	if (isNext)
+		return (this.IsBegin() && (!isCurrent || isNext) ? this.ComplexField : null);
+	else
+		return (this.IsEnd() && (!isCurrent || isNext) ? this.ComplexField : null);
 };
 
 /**
@@ -1819,12 +1840,7 @@ CComplexField.prototype.IsHidden = function()
 	if (!oInstruction)
 		return false;
 	
-	if (this.EndChar
-		&& this.EndChar.IsVisual()
-		&& (AscWord.fieldtype_NUMPAGES === oInstruction.GetType()
-			|| AscWord.fieldtype_PAGE === oInstruction.GetType()
-			|| AscWord.fieldtype_FORMULA === oInstruction.GetType()
-			|| AscWord.fieldtype_FORMCHECKBOX === oInstruction.GetType()))
+	if (this.SeparateChar && this.SeparateChar.IsHiddenValue())
 		return true;
 	
 	if (!this.BeginChar || !this.SeparateChar)
@@ -2138,3 +2154,4 @@ window['AscCommonWord'].CComplexField = CComplexField;
 window['AscWord'] = window['AscWord'] || {};
 window['AscWord'].getRefInstruction = getRefInstruction;
 window['AscWord'].CComplexField = CComplexField;
+window['AscWord'].ComplexField = CComplexField;

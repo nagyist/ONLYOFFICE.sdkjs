@@ -3691,6 +3691,8 @@ function (window, undefined) {
 			this.protectionPrint = obj.protectionPrint;
 
 			this.bSetOriginalSize = obj.bSetOriginalSize;
+			this.transparent = obj.transparent;
+			this.isCrop      = obj.isCrop;
 
 		}
 		else {
@@ -3749,6 +3751,9 @@ function (window, undefined) {
 			this.protectionLocked = undefined;
 			this.protectionPrint = undefined;
 			this.bSetOriginalSize = undefined;
+
+			this.transparent = undefined;
+			this.isCrop      = undefined;
 		}
 	}
 
@@ -4128,7 +4133,16 @@ function (window, undefined) {
 	asc_CImgProperty.prototype.asc_putProtectionPrint = function (v) {
 		this.protectionPrint = v;
 	};
+	asc_CImgProperty.prototype.asc_getTransparent = function () {
+		return this.transparent;
+	};
+	asc_CImgProperty.prototype.asc_putTransparent = function (v) {
+		this.transparent = v;
+	};
 
+	asc_CImgProperty.prototype.asc_getIsCrop = function () {
+		return this.isCrop;
+	};
 	/** @constructor */
 	function asc_CSelectedObject(type, val) {
 		this.Type = (undefined != type) ? type : null;
@@ -4141,6 +4155,8 @@ function (window, undefined) {
 	asc_CSelectedObject.prototype.asc_getObjectValue = function () {
 		return this.Value;
 	};
+
+
 
 	/** @constructor */
 	function asc_CShapeFill() {
@@ -5110,7 +5126,13 @@ function (window, undefined) {
 			let ctx = canvasTransparent.getContext("2d");
 			ctx.globalAlpha = this.transparent;
 			ctx.drawImage(this.image, 0, 0);
-			this.imageBase64 = canvasTransparent.toDataURL("image/png");
+			try {
+				this.imageBase64 = canvasTransparent.toDataURL("image/png");
+			}
+			catch (e) {
+				this.imageBase64 = undefined;
+				this.api.sendEvent("asc_onError", Asc.c_oAscError.ID.CannotSaveWatermark, Asc.c_oAscError.Level.NoCritical);
+			}
 			canvasTransparent = null;
 		};
 		this.EndRenderer = function () {
@@ -5120,6 +5142,9 @@ function (window, undefined) {
 			this.imageBase64 = undefined;
 		};
 		this.DrawOnRenderer = function (renderer, w, h) {
+			if(!this.imageBase64) {
+				return;
+			}
 			let wMM = this.width * AscCommon.g_dKoef_pix_to_mm / this.zoom;
 			let hMM = this.height * AscCommon.g_dKoef_pix_to_mm / this.zoom;
 			let x = (w - wMM) / 2;
@@ -5223,7 +5248,11 @@ function (window, undefined) {
 				if (undefined != align) {
 					oShape.setVerticalAlign(align);
 				}
+				else {
 
+					oShape.setVerticalAlign(1);//ctr
+				}
+				oShape.setVertOverflowType(AscFormat.nVOTOverflow);
 				if (Array.isArray(obj['margins']) && obj['margins'].length === 4) {
 					oShape.setPaddings({
 						Left: obj['margins'][0],
@@ -5484,6 +5513,13 @@ function (window, undefined) {
 			this.zoom = 1;
 			this.calculatezoom = 0;
 			this.CheckParams();
+
+			if (this.contentObjects && "string" === typeof this.contentObjects["fill"])
+			{
+				this.imageBackgroundUrl = this.contentObjects["fill"];
+				this.imageBackground = {};
+			}
+
 			this.Generate();
 		};
 	}
@@ -6732,7 +6768,9 @@ function (window, undefined) {
 	prot["put_ProtectionLocked"] = prot["asc_putProtectionLocked"] = prot.asc_putProtectionLocked;
 	prot["get_ProtectionPrint"] = prot["asc_getProtectionPrint"] = prot.asc_getProtectionPrint;
 	prot["put_ProtectionPrint"] = prot["asc_putProtectionPrint"] = prot.asc_putProtectionPrint;
-
+	prot["get_Transparent"] = prot["asc_getTransparent"] = prot.asc_getTransparent;
+	prot["put_Transparent"] = prot["asc_putTransparent"] = prot.asc_putTransparent;
+	prot["get_IsCrop"] = prot["asc_getIsCrop"] = prot.asc_getIsCrop;
 
 	window["AscCommon"].asc_CSelectedObject = asc_CSelectedObject;
 	prot = asc_CSelectedObject.prototype;

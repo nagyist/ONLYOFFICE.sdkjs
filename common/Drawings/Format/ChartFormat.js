@@ -2975,6 +2975,7 @@
                     style.TextPr.Merge(chart_text_pr);
                 }
             }
+            let bChartEx = this.isChartEx && this.isChartEx();
             if(this instanceof CTitle || this.parent instanceof CTitle) {
                 style.TextPr.Bold = true;
                 if(this.parent instanceof CChart || (this.parent && (this.parent.parent instanceof CChart))) {
@@ -2983,6 +2984,25 @@
                     else
                         style.TextPr.FontSize = 18;
                 }
+
+
+                if(bChartEx) {
+                    if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                        let oTxPr;
+                        if(this.parent instanceof CChart ) {
+                            if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                                 oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.title, oChartSpace.chartColors.generateColors(1), 0);
+                            }
+                        }
+                        else if(this.parent instanceof AscFormat.CAxis) {
+                            oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.axisTitle, oChartSpace.chartColors.generateColors(1), 0);
+                        }
+                        if(oTxPr) {
+                            let oParaPr = oTxPr.content.Content[0].Pr;
+                            style.TextPr.Merge(oParaPr.DefaultRunPr);
+                        }
+                    }
+                }
             }
             if(this instanceof CalcLegendEntry && this.legend) {
                 oParaPr = this.legend.getTxPrParaPr();
@@ -2990,6 +3010,16 @@
                     style.ParaPr.Merge(oParaPr);
                     if(oParaPr.DefaultRunPr)
                         style.TextPr.Merge(oParaPr.DefaultRunPr);
+                }
+                if(bChartEx) {
+                    if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                        let oTxPr;
+                        oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.legend, oChartSpace.chartColors.generateColors(1), 0);
+                        if(oTxPr) {
+                            let oParaPr = oTxPr.content.Content[0].Pr;
+                            style.TextPr.Merge(oParaPr.DefaultRunPr);
+                        }
+                    }
                 }
                 if(AscFormat.isRealNumber(this.idx)) {
                     var aLegendEntries = this.legend.legendEntryes;
@@ -3007,6 +3037,16 @@
                     }
                 }
 
+            }
+            if(this.parent && this.parent instanceof AscFormat.CAxis) {
+                if (oChartSpace.chartStyle && oChartSpace.chartColors) {
+                    let oTxPr;
+                    oTxPr = oChartSpace.getTxPrFormStyleEntry(oChartSpace.chartStyle.categoryAxis, oChartSpace.chartColors.generateColors(1), 0);
+                    if(oTxPr) {
+                        let oParaPr = oTxPr.content.Content[0].Pr;
+                        style.TextPr.Merge(oParaPr.DefaultRunPr);
+                    }
+                }
             }
             if(!(this instanceof CTitle)) {
                 if(this.parent) {
@@ -3154,7 +3194,7 @@
         if (this.showChartExVal) {
             //TODO: format the passed number
             const val = this.pt;
-            compiled_string = "" + val;
+            compiled_string += this.getValueString();
         }
         return compiled_string;
     };
@@ -3862,6 +3902,9 @@
                 }
                 return "";
             }
+        }
+        if(this.tx &&  this.tx.txData && this.tx.txData.v) {
+            return this.tx.txData.v;
         }
         return AscCommon.translateManager.getValue('Series') + " " + (this.idx + 1);
     };
@@ -11882,7 +11925,15 @@
             }
         }
     };
-
+    CStrRef.prototype.onUpdateCache = function() {
+        CChartRefBase.prototype.onUpdateCache.call(this);
+        if(this.parent && this.parent.getObjectType() === AscDFH.historyitem_type_ChartText) {
+            let oParentObject = this.parent.parent;
+            if(oParentObject && oParentObject.recalcInfo && oParentObject.recalcInfo.recalculateTxBody === false) {
+                oParentObject.recalcInfo.recalculateTxBody = true;
+            }
+        }
+    };
     function CNumericPoint() {
         CBaseChartObject.call(this);
         this.formatCode = null;
@@ -16330,6 +16381,13 @@
     };
     CalcLegendEntry.prototype.GetParaDrawing = function() {
         return null;
+    };
+    CalcLegendEntry.prototype.isChartEx = function() {
+        let oCS = this.getChartSpace();
+        if(oCS) {
+            return oCS.isChartEx();
+        }
+        return false;
     };
 
     function CompiledMarker() {
