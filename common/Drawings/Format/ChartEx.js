@@ -2617,6 +2617,12 @@ function (window, undefined) {
 			this.updateReferences();
 		}, this, []);
 	};
+	CDimension.prototype.Refresh_RecalcData = function (data) {
+		const chartSpace = this.getChartSpace();
+		if (chartSpace) {
+			chartSpace.Refresh_RecalcData(data);
+		}
+	};
 	// NumericDimension
 	drawingContentChanges[AscDFH.historyitem_NumericDimension_AddLevelData] =
 		drawingContentChanges[AscDFH.historyitem_NumericDimension_RemoveLevelData] = function (oClass) {

@@ -2714,8 +2714,14 @@ function(window, undefined) {
 		return this.dataRefs;
 	};
 	CChartSpace.prototype.setChartData = function(pr) {
+		if (this.chartData) {
+			this.chartData.setParent(null);
+		}
 		History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_ChartSpace_SetChartData, this.chartData, pr));
 		this.chartData = pr;
+		if (this.chartData) {
+			this.chartData.setParent(this);
+		}
 	};
 	CChartSpace.prototype.clearDataRefs = function () {
 		if (this.dataRefs) {
@@ -4903,6 +4909,8 @@ function(window, undefined) {
 			case AscDFH.historyitem_type_StrCache:
 			case AscDFH.historyitem_type_MultiLvlStrCache:
 			case AscDFH.historyitem_type_NumLit:
+			case AscDFH.historyitem_type_NumericDimension:
+			case AscDFH.historyitem_type_StringDimension:
 			case AscDFH.historyitem_ChartSpace_SetChart: {
 				this.handleUpdateType();
 				break;
