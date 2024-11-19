@@ -2773,7 +2773,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                         imgProps.ShapeProperties = shapeProp;
                         shapeProp.fill = new Asc.asc_CShapeFill();
                         shapeProp.fill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-                        shapeProp.fill.fill = new Asc.asc_CFillBlip();
+                        shapeProp.fill.fill = new AscFormat.CBlipFill();
                         shapeProp.fill.fill.asc_putUrl(_image.src);
                         if(obj.textureType !== null && obj.textureType !== undefined){
                             shapeProp.fill.fill.asc_putType(obj.textureType);
@@ -2787,7 +2787,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                         imgProps.ShapeProperties = AscShapeProp;
                         var oFill = new Asc.asc_CShapeFill();
                         oFill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-                        oFill.fill = new Asc.asc_CFillBlip();
+                        oFill.fill = new AscFormat.CBlipFill();
                         oFill.fill.asc_putUrl(imageUrl);
                         if(obj.textureType !== null && obj.textureType !== undefined){
                             oFill.fill.asc_putType(obj.textureType);

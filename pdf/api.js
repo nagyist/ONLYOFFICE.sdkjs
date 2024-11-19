@@ -773,7 +773,7 @@
 			let AscShapeProp       = new Asc.asc_CShapeProperty();
 			AscShapeProp.fill      = new Asc.asc_CShapeFill();
 			AscShapeProp.fill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-			AscShapeProp.fill.fill = new Asc.asc_CFillBlip();
+			AscShapeProp.fill.fill = new AscFormat.CBlipFill();
 			AscShapeProp.fill.fill.asc_putUrl(src);
 			if(obj.textureType !== null && obj.textureType !== undefined){
                 AscShapeProp.fill.fill.asc_putType(obj.textureType);
@@ -789,7 +789,7 @@
 			let AscShapeProp = new Asc.asc_CShapeProperty();
 			let oFill        = new Asc.asc_CShapeFill();
 			oFill.type       = Asc.c_oAscFill.FILL_TYPE_BLIP;
-			oFill.fill       = new Asc.asc_CFillBlip();
+			oFill.fill       = new AscFormat.CBlipFill();
 			oFill.fill.asc_putUrl(src);
             if(obj.textureType !== null && obj.textureType !== undefined){
 				oFill.fill.asc_putType(obj.textureType);

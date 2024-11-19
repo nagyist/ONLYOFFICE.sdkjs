@@ -4160,33 +4160,7 @@ function (window, undefined) {
 		return false;
 	};
 
-	/** @constructor */
-	function asc_CFillBlip() {
-		this.type = c_oAscFillBlipType.STRETCH;
-		this.url = "";
-		this.token = undefined;
-		this.texture_id = null;
-	}
-
-	asc_CFillBlip.prototype.asc_getType = function () {
-		return this.type
-	};
-	asc_CFillBlip.prototype.asc_putType = function (v) {
-		this.type = v;
-	};
-	asc_CFillBlip.prototype.asc_getUrl = function () {
-		return this.url;
-	};
-	asc_CFillBlip.prototype.asc_putUrl = function (v, sToken) {
-		this.url = v;
-		this.token = sToken;
-	};
-	asc_CFillBlip.prototype.asc_getTextureId = function () {
-		return this.texture_id;
-	};
-	asc_CFillBlip.prototype.asc_putTextureId = function (v) {
-		this.texture_id = v;
-	};
+	// There was asc_CFillBlip
 
 	/** @constructor */
 	function asc_CFillHatch() {
@@ -6711,15 +6685,6 @@ function (window, undefined) {
 	prot["get_transparent"] = prot["asc_getTransparent"] = prot.asc_getTransparent;
 	prot["put_transparent"] = prot["asc_putTransparent"] = prot.asc_putTransparent;
 	prot["asc_CheckForseSet"] = prot["asc_CheckForseSet"] = prot.asc_CheckForseSet;
-
-	window["Asc"]["asc_CFillBlip"] = window["Asc"].asc_CFillBlip = asc_CFillBlip;
-	prot = asc_CFillBlip.prototype;
-	prot["get_type"] = prot["asc_getType"] = prot.asc_getType;
-	prot["put_type"] = prot["asc_putType"] = prot.asc_putType;
-	prot["get_url"] = prot["asc_getUrl"] = prot.asc_getUrl;
-	prot["put_url"] = prot["asc_putUrl"] = prot.asc_putUrl;
-	prot["get_texture_id"] = prot["asc_getTextureId"] = prot.asc_getTextureId;
-	prot["put_texture_id"] = prot["asc_putTextureId"] = prot.asc_putTextureId;
 
 	window["Asc"]["asc_CFillHatch"] = window["Asc"].asc_CFillHatch = asc_CFillHatch;
 	prot = asc_CFillHatch.prototype;

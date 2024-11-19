@@ -72,7 +72,7 @@
 	var c_oAscFill                  = Asc.c_oAscFill;
 	var asc_CImgProperty            = Asc.asc_CImgProperty;
 	var asc_CShapeFill              = Asc.asc_CShapeFill;
-	var asc_CFillBlip               = Asc.asc_CFillBlip;
+	var CBlipFill                   = AscFormat.CBlipFill;
 	var c_oAscSdtLockType           = Asc.c_oAscSdtLockType;
 
 	function CAscSection()
@@ -5937,7 +5937,7 @@ background-repeat: no-repeat;\
 				var AscShapeProp       = new Asc.asc_CShapeProperty();
 				AscShapeProp.fill      = new asc_CShapeFill();
 				AscShapeProp.fill.type = c_oAscFill.FILL_TYPE_BLIP;
-				AscShapeProp.fill.fill = new asc_CFillBlip();
+				AscShapeProp.fill.fill = new CBlipFill();
 				AscShapeProp.fill.fill.asc_putUrl(src);
 				if(obj.textureType !== null && obj.textureType !== undefined){
                     AscShapeProp.fill.fill.asc_putType(obj.textureType);
@@ -6000,7 +6000,7 @@ background-repeat: no-repeat;\
 					var AscShapeProp       = new Asc.asc_CShapeProperty();
 					AscShapeProp.fill      = new asc_CShapeFill();
 					AscShapeProp.fill.type = c_oAscFill.FILL_TYPE_BLIP;
-					AscShapeProp.fill.fill = new asc_CFillBlip();
+					AscShapeProp.fill.fill = new CBlipFill();
 					AscShapeProp.fill.fill.asc_putUrl(src);
 
                     if(obj.textureType !== null && obj.textureType !== undefined){

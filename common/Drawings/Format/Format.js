@@ -3014,6 +3014,12 @@
 			this.tile = null;
 			this.rotWithShape = null;
 			this.Effects = [];
+
+			// From asc_CFillBlip
+			this.type = c_oAscFillBlipType.STRETCH;
+			this.url = "";
+			this.token = undefined;
+			this.texture_id = null;
 		}
 
 		InitClass(CBlipFill, CBaseFill, 0);
@@ -3322,6 +3328,27 @@
 					this.Effects.push(oEffect);
 				}
 			}
+		};
+
+		// From asc_CFillBlip
+		CBlipFill.prototype.asc_getType = function () {
+			return this.type;
+		};
+		CBlipFill.prototype.asc_putType = function (v) {
+			this.type = v;
+		};
+		CBlipFill.prototype.asc_getUrl = function () {
+			return this.url;
+		};
+		CBlipFill.prototype.asc_putUrl = function (v, sToken) {
+			this.url = v;
+			this.token = sToken;
+		};
+		CBlipFill.prototype.asc_getTextureId = function () {
+			return this.texture_id;
+		};
+		CBlipFill.prototype.asc_putTextureId = function (v) {
+			this.texture_id = v;
 		};
 
 //-----Effects-----
@@ -14782,7 +14809,7 @@
 				}
 				case c_oAscFill.FILL_TYPE_BLIP: {
 					ret.type = c_oAscFill.FILL_TYPE_BLIP;
-					ret.fill = new Asc.asc_CFillBlip();
+					ret.fill = new AscFormat.CBlipFill();
 
 					ret.fill.url = _fill.RasterImageId;
 					ret.fill.type = (_fill.tile == null) ? c_oAscFillBlipType.STRETCH : c_oAscFillBlipType.TILE;
@@ -18624,7 +18651,15 @@
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
 		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
-		window['AscFormat'].CBlipFill = CBlipFill;
+
+		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = CBlipFill;
+		CBlipFill.prototype['get_type'] = CBlipFill.prototype['asc_getType'] = CBlipFill.prototype.asc_getType;
+		CBlipFill.prototype['put_type'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype.asc_putType;
+		CBlipFill.prototype['get_url'] = CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype.asc_getUrl;
+		CBlipFill.prototype['put_url'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype.asc_putUrl;
+		CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype.asc_getTextureId;
+		CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype.asc_putTextureId;
+
 		window['AscFormat'].CBlip = CBlip;
 		window['AscFormat'].CSolidFill = CSolidFill;
 		window['AscFormat'].CGs = CGs;
