@@ -2527,12 +2527,14 @@ function (window, undefined) {
 
 		this.clearLevelData();
 		if (!this.f) {
+			this.onUpdateCache();
 			return;
 		}
 		let sContent = this.f.content;
 
 		let aParsedRef = AscFormat.fParseChartFormula(sContent);
 		if (!Array.isArray(aParsedRef) || aParsedRef.length === 0) {
+			this.onUpdateCache();
 			return false;
 		}
 		let nPtCount = 0;
@@ -2611,6 +2613,7 @@ function (window, undefined) {
 				}
 			}
 		}
+		this.onUpdateCache();
 	};
 	CDimension.prototype.updateCache = function() {
 		AscFormat.ExecuteNoHistory(function () {
