@@ -1006,8 +1006,9 @@
 		}
 
 		function writeObject(w, val) {
-			w.WriteBool(isRealObject(val));
-			if (isRealObject(val)) {
+			const bIsRealObject = isRealObject(val);
+			w.WriteBool(bIsRealObject);
+			if (bIsRealObject) {
 				w.WriteString2(val.Get_Id());
 			}
 		}
@@ -2857,179 +2858,36 @@
 
 // -----------------------------
 
-		function CSrcRect() {
-			CBaseNoIdObject.call(this);
-			this.l = null;
-			this.t = null;
-			this.r = null;
-			this.b = null;
-		}
-
-		InitClass(CSrcRect, CBaseNoIdObject, 0);
-		CSrcRect.prototype.setLTRB = function (l, t, r, b) {
-			this.l = l;
-			this.t = t;
-			this.r = r;
-			this.b = b;
-		};
-		CSrcRect.prototype.setValueForFitBlipFill = function (shapeWidth, shapeHeight, imageWidth, imageHeight) {
-			if ((imageHeight / imageWidth) > (shapeHeight / shapeWidth)) {
-				this.l = 0;
-				this.r = 100;
-				var widthAspectRatio = imageWidth / shapeWidth;
-				var heightAspectRatio = shapeHeight / imageHeight;
-				var stretchPercentage = ((1 - widthAspectRatio * heightAspectRatio) / 2) * 100;
-				this.t = stretchPercentage;
-				this.b = 100 - stretchPercentage;
-			} else {
-				this.t = 0;
-				this.b = 100;
-				heightAspectRatio = imageHeight / shapeHeight;
-				widthAspectRatio = shapeWidth / imageWidth;
-				stretchPercentage = ((1 - heightAspectRatio * widthAspectRatio) / 2) * 100;
-				this.l = stretchPercentage;
-				this.r = 100 - stretchPercentage;
-			}
-		};
-		CSrcRect.prototype.Write_ToBinary = function (w) {
-			writeDouble(w, this.l);
-			writeDouble(w, this.t);
-			writeDouble(w, this.r);
-			writeDouble(w, this.b);
-		};
-		CSrcRect.prototype.Read_FromBinary = function (r) {
-			this.l = readDouble(r);
-			this.t = readDouble(r);
-			this.r = readDouble(r);
-			this.b = readDouble(r);
-		};
-		CSrcRect.prototype.createDublicate = function () {
-			var _ret = new CSrcRect();
-			_ret.l = this.l;
-			_ret.t = this.t;
-			_ret.r = this.r;
-			_ret.b = this.b;
-			return _ret;
-		};
-		CSrcRect.prototype.isFullRect = function() {
-			let r = this;
-			let fAE = AscFormat.fApproxEqual;
-			if(fAE(r.l, 0) && fAE(r.t, 0) && fAE(r.r, 100) && fAE(r.b, 100)) {
-				return true;
-			}
-			return false;
-		};
-		CSrcRect.prototype.isEqual = function(r) {
-			if(!r) {
-				return false;
-			}
-			if(r.l !== this.l) {
-				return false;
-			}
-			if(r.t !== this.t) {
-				return false;
-			}
-			if(r.r !== this.r) {
-				return false;
-			}
-			if(r.b !== this.v) {
-				return false;
-			}
-			return true;
-		};
-
-		function CBlipFillTile() {
-			CBaseNoIdObject.call(this)
-			this.tx = null;
-			this.ty = null;
-			this.sx = null;
-			this.sy = null;
-			this.flip = null;
-			this.algn = null;
-		}
-
-		InitClass(CBlipFillTile, CBaseNoIdObject, 0);
-		CBlipFillTile.prototype.Write_ToBinary = function (w) {
-			writeLong(w, this.tx);
-			writeLong(w, this.ty);
-			writeLong(w, this.sx);
-			writeLong(w, this.sy);
-			writeLong(w, this.flip);
-			writeLong(w, this.algn);
-		};
-		CBlipFillTile.prototype.Read_FromBinary = function (r) {
-			this.tx = readLong(r);
-			this.ty = readLong(r);
-			this.sx = readLong(r);
-			this.sy = readLong(r);
-			this.flip = readLong(r);
-			this.algn = readLong(r);
-		};
-		CBlipFillTile.prototype.createDuplicate = function () {
-			var ret = new CBlipFillTile();
-			ret.tx = this.tx;
-			ret.ty = this.ty;
-			ret.sx = this.sx;
-			ret.sy = this.sy;
-			ret.flip = this.flip;
-			ret.algn = this.algn;
-			return ret;
-		};
-		CBlipFillTile.prototype.IsIdentical = function (o) {
-			if (!o) {
-				return false;
-			}
-			return (o.tx == this.tx &&
-				o.ty == this.ty &&
-				o.sx == this.sx &&
-				o.sy == this.sy &&
-				o.flip == this.flip &&
-				o.algn == this.algn)
-		};
-
-		function CBaseFill() {
-			CBaseNoIdObject.call(this);
-		}
-
-		InitClass(CBaseFill, CBaseNoIdObject, 0);
-		CBaseFill.prototype.type = c_oAscFill.FILL_TYPE_NONE;
-
-
-
-
-		function CBlip(oBlipFill) {
-			CBaseNoIdObject.call(this);
-			this.blipFill = oBlipFill;
-			this.link = null;
-		}
-
-		InitClass(CBlip, CBaseNoIdObject, 0);
-
-
 		function CBlipFill() {
 			CBaseFill.call(this);
-			this.RasterImageId = "";
-			this.srcRect = null;
-			this.stretch = null;
-			this.tile = null;
-			this.rotWithShape = null;
-			this.Effects = [];
 
-			// From asc_CFillBlip
+			// Attributes:
+			this.rotWithShape = null;
+
+			// Content:
+			this.blip;
+			this.srcRect = null;
+			this.tile = null;
+			this.stretch = null;
+
+			// this.Effects is used instead of this.blip
+			this.RasterImageId = "";
+			this.Effects = [];
 			this.type = c_oAscFillBlipType.STRETCH;
-			this.url = "";
-			this.token = undefined;
 			this.texture_id = null;
 		}
-
 		InitClass(CBlipFill, CBaseFill, 0);
+
 		CBlipFill.prototype.type = c_oAscFill.FILL_TYPE_BLIP;
 		CBlipFill.prototype.saveSourceFormatting = function () {
 			return this.createDuplicate();
 		};
 		CBlipFill.prototype.Write_ToBinary = function (w) {
-			writeString(w, this.RasterImageId);
-			if (this.srcRect) {
+			// Attributes:
+			writeBool(w, this.rotWithShape);
+
+			// Content:
+			if (isRealObject(this.srcRect)) {
 				writeBool(w, true);
 				writeDouble(w, this.srcRect.l);
 				writeDouble(w, this.srcRect.t);
@@ -3038,14 +2896,23 @@
 			} else {
 				writeBool(w, false);
 			}
-			writeBool(w, this.stretch);
+
 			if (isRealObject(this.tile)) {
 				w.WriteBool(true);
 				this.tile.Write_ToBinary(w);
 			} else {
 				w.WriteBool(false);
 			}
-			writeBool(w, this.rotWithShape);
+
+			if (isRealObject(this.stretch)) {
+				w.WriteBool(true);
+				this.stretch.Write_ToBinary(w);
+			} else {
+				w.WriteBool(false);
+			}
+
+			// Others:
+			writeString(w, this.RasterImageId);
 
 			w.WriteLong(this.Effects.length);
 			for (var i = 0; i < this.Effects.length; ++i) {
@@ -3053,19 +2920,11 @@
 			}
 		};
 		CBlipFill.prototype.Read_FromBinary = function (r) {
-			this.RasterImageId = readString(r);
+			// Attributes:
+			this.rotWithShape = readBool(r);
 
-			var _correct_id = AscCommon.getImageFromChanges(this.RasterImageId);
-			if (null != _correct_id)
-				this.RasterImageId = _correct_id;
-
-			//var srcUrl = readString(r);
-			//if(srcUrl) {
-			//    AscCommon.g_oDocumentUrls.addImageUrl(this.RasterImageId, srcUrl);
-			//}
-
+			// Content:
 			if (readBool(r)) {
-
 				this.srcRect = new CSrcRect();
 				this.srcRect.l = readDouble(r);
 				this.srcRect.t = readDouble(r);
@@ -3074,20 +2933,32 @@
 			} else {
 				this.srcRect = null;
 			}
-			this.stretch = readBool(r);
+
 			if (r.GetBool()) {
 				this.tile = new CBlipFillTile();
 				this.tile.Read_FromBinary(r);
 			} else {
 				this.tile = null;
 			}
-			this.rotWithShape = readBool(r);
-			var count = r.GetLong();
-			for (var i = 0; i < count; ++i) {
-				var effect = fReadEffect(r);
-				if (!effect) {
+
+			if (r.GetBool()) {
+				this.stretch = new CBlipFillStretch();
+				this.stretch.Read_FromBinary(r);
+			} else {
+				this.stretch = null;
+			}
+
+			// Others:
+			this.RasterImageId = readString(r);
+			const _correct_id = AscCommon.getImageFromChanges(this.RasterImageId);
+			if (null != _correct_id)
+				this.RasterImageId = _correct_id;
+
+			const effectsCount = r.GetLong();
+			for (let i = 0; i < effectsCount; ++i) {
+				const effect = fReadEffect(r);
+				if (!effect)
 					break;
-				}
 				this.Effects.push(effect);
 			}
 		};
@@ -3329,20 +3200,11 @@
 				}
 			}
 		};
-
-		// From asc_CFillBlip
 		CBlipFill.prototype.asc_getType = function () {
 			return this.type;
 		};
 		CBlipFill.prototype.asc_putType = function (v) {
 			this.type = v;
-		};
-		CBlipFill.prototype.asc_getUrl = function () {
-			return this.url;
-		};
-		CBlipFill.prototype.asc_putUrl = function (v, sToken) {
-			this.url = v;
-			this.token = sToken;
 		};
 		CBlipFill.prototype.asc_getTextureId = function () {
 			return this.texture_id;
@@ -3350,6 +3212,179 @@
 		CBlipFill.prototype.asc_putTextureId = function (v) {
 			this.texture_id = v;
 		};
+
+		function CSrcRect(l, t, r, b) {
+			CBaseNoIdObject.call(this);
+
+			// Attributes (offset as a percentage):
+			this.l = isRealNumber(l) ? l : null;
+			this.t = isRealNumber(t) ? t : null;
+			this.r = isRealNumber(r) ? r : null;
+			this.b = isRealNumber(b) ? b : null;
+		}
+		InitClass(CSrcRect, CBaseNoIdObject, 0);
+
+		CSrcRect.prototype.setLTRB = function (l, t, r, b) {
+			this.l = l;
+			this.t = t;
+			this.r = r;
+			this.b = b;
+		};
+		CSrcRect.prototype.setValueForFitBlipFill = function (shapeWidth, shapeHeight, imageWidth, imageHeight) {
+			if ((imageHeight / imageWidth) > (shapeHeight / shapeWidth)) {
+				const widthAspectRatio = imageWidth / shapeWidth;
+				const heightAspectRatio = shapeHeight / imageHeight;
+				const stretchPercentage = ((1 - widthAspectRatio * heightAspectRatio) / 2) * 100;
+				this.l = 0;
+				this.t = stretchPercentage;
+				this.r = 100;
+				this.b = 100 - stretchPercentage;
+			} else {
+				const widthAspectRatio = shapeWidth / imageWidth;
+				const heightAspectRatio = imageHeight / shapeHeight;
+				const stretchPercentage = ((1 - heightAspectRatio * widthAspectRatio) / 2) * 100;
+				this.l = stretchPercentage;
+				this.t = 0;
+				this.r = 100 - stretchPercentage;
+				this.b = 100;
+			}
+		};
+		CSrcRect.prototype.Write_ToBinary = function (w) {
+			writeDouble(w, this.l);
+			writeDouble(w, this.t);
+			writeDouble(w, this.r);
+			writeDouble(w, this.b);
+		};
+		CSrcRect.prototype.Read_FromBinary = function (r) {
+			this.l = readDouble(r);
+			this.t = readDouble(r);
+			this.r = readDouble(r);
+			this.b = readDouble(r);
+		};
+		CSrcRect.prototype.createDublicate = function () {
+			const copy = new CSrcRect(this.l, this.t, this.r, this.b);
+			return copy;
+		};
+		CSrcRect.prototype.isFullRect = function () {
+			const approximatelyEqual = AscFormat.fApproxEqual;
+			return approximatelyEqual(this.l, 0) &&
+				approximatelyEqual(this.t, 0) &&
+				approximatelyEqual(this.r, 100) &&
+				approximatelyEqual(this.b, 100);
+		};
+		CSrcRect.prototype.isEqual = function (other) {
+			return other &&
+				other.l === this.l &&
+				other.t === this.t &&
+				other.r === this.r &&
+				other.b === this.b;
+		};
+
+		function CBlipFillTile(tx, ty, sx, sy, flip, algn) {
+			CBaseNoIdObject.call(this);
+
+			// Attributes:
+			this.tx = isRealNumber(tx) ? tx : null;
+			this.ty = isRealNumber(ty) ? ty : null;
+			this.sx = isRealNumber(sx) ? sx : null;
+			this.sy = isRealNumber(sy) ? sy : null;
+			this.flip = isRealNumber(flip) ? ip : null;
+			this.algn = isRealNumber(algn) ? gn : null;
+		}
+		InitClass(CBlipFillTile, CBaseNoIdObject, 0);
+
+		CBlipFillTile.prototype.Write_ToBinary = function (w) {
+			writeLong(w, this.tx);
+			writeLong(w, this.ty);
+			writeLong(w, this.sx);
+			writeLong(w, this.sy);
+			writeLong(w, this.flip);
+			writeLong(w, this.algn);
+		};
+		CBlipFillTile.prototype.Read_FromBinary = function (r) {
+			this.tx = readLong(r);
+			this.ty = readLong(r);
+			this.sx = readLong(r);
+			this.sy = readLong(r);
+			this.flip = readLong(r);
+			this.algn = readLong(r);
+		};
+		CBlipFillTile.prototype.createDuplicate = function () {
+			const copy = new CBlipFillTile(this.tx, this.ty, this.sx, this.sy, this.flip, this.algn);
+			return copy;
+		};
+		CBlipFillTile.prototype.IsIdentical = function (other) {
+			return other &&
+				other.tx == this.tx &&
+				other.ty == this.ty &&
+				other.sx == this.sx &&
+				other.sy == this.sy &&
+				other.flip == this.flip &&
+				other.algn == this.algn;
+		};
+
+		function CBlipFillStretch(fillRect) {
+			CBaseNoIdObject.call(this);
+
+			// Content:
+			this.fillRect = isRealObject(fillRect) ? fillRect : new CFillRect();
+		}
+		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
+
+		CBlipFillStretch.prototype.Write_ToBinary = function (w) {
+			this.fillRect.Write_ToBinary(w);
+		};
+		CBlipFillStretch.prototype.Read_FromBinary = function (r) {
+			const fillRect = new CFillRect();
+			fillRect.Read_FromBinary(r);
+			this.fillRect = fillRect;
+		};
+		CBlipFillStretch.prototype.createDuplicate = function () {
+			const copy = new CBlipFillStretch();
+			copy.fillRect = this.fillRect.createDublicate();
+			return copy;
+		};
+
+		function CFillRect(l, t, r, b) {
+			CBaseNoIdObject.call(this);
+
+			// Attributes (offset as a percentage):
+			this.l = isRealNumber(l) ? l : 0;
+			this.t = isRealNumber(t) ? t : 0;
+			this.r = isRealNumber(r) ? r : 0;
+			this.b = isRealNumber(b) ? b : 0;
+		}
+		InitClass(CFillRect, CBaseNoIdObject, 0);
+
+		CFillRect.prototype.Write_ToBinary = function (w) {
+			writeDouble(w, this.l);
+			writeDouble(w, this.t);
+			writeDouble(w, this.r);
+			writeDouble(w, this.b);
+		};
+		CFillRect.prototype.Read_FromBinary = function (r) {
+			this.l = readDouble(r);
+			this.t = readDouble(r);
+			this.r = readDouble(r);
+			this.b = readDouble(r);
+		};
+		CFillRect.prototype.createDuplicate = function () {
+			const copy = new CFillRect(this.l, this.t, this.r, this.b);
+			return copy;
+		};
+
+		function CBaseFill() {
+			CBaseNoIdObject.call(this);
+		}
+		InitClass(CBaseFill, CBaseNoIdObject, 0);
+		CBaseFill.prototype.type = c_oAscFill.FILL_TYPE_NONE;
+
+		function CBlip(oBlipFill) {
+			CBaseNoIdObject.call(this);
+			this.blipFill = oBlipFill;
+			this.link = null;
+		}
+		InitClass(CBlip, CBaseNoIdObject, 0);
 
 //-----Effects-----
 		var EFFECT_TYPE_NONE = 0;
