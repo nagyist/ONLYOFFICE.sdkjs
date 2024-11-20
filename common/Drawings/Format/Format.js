@@ -3288,8 +3288,8 @@
 			this.ty = isRealNumber(ty) ? ty : null;
 			this.sx = isRealNumber(sx) ? sx : null;
 			this.sy = isRealNumber(sy) ? sy : null;
-			this.flip = isRealNumber(flip) ? ip : null;
-			this.algn = isRealNumber(algn) ? gn : null;
+			this.flip = isRealNumber(flip) ? flip : null;
+			this.algn = isRealNumber(algn) ? algn : null;
 		}
 		InitClass(CBlipFillTile, CBaseNoIdObject, 0);
 
@@ -18694,8 +18694,6 @@
 		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = CBlipFill;
 		CBlipFill.prototype['get_type'] = CBlipFill.prototype['asc_getType'] = CBlipFill.prototype.asc_getType;
 		CBlipFill.prototype['put_type'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype.asc_putType;
-		CBlipFill.prototype['get_url'] = CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype.asc_getUrl;
-		CBlipFill.prototype['put_url'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype.asc_putUrl;
 		CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype.asc_getTextureId;
 		CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype.asc_putTextureId;
 
