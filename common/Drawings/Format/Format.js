@@ -14813,6 +14813,7 @@
 
 					ret.fill.url = _fill.RasterImageId;
 					ret.fill.type = (_fill.tile == null) ? c_oAscFillBlipType.STRETCH : c_oAscFillBlipType.TILE;
+					ret.fill.tile = AscCommon.isRealObject(_fill.tile) ? _fill.tile.createDuplicate() : null;
 					break;
 				}
 				case c_oAscFill.FILL_TYPE_NOFILL: {
