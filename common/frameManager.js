@@ -467,7 +467,9 @@
 		const mapWorksheets = this.mainDiagram.getWorksheetsFromCache(this.api.wbModel, true);
 		const wsView = this.api.wb.getWorksheet();
 		const oSheetData = mapWorksheets[wsView.model.sName];
-		wsView._updateRange(new Asc.Range(0, 0, oSheetData.maxC , oSheetData.maxR));
+		if (oSheetData) {
+			wsView._updateRange(new Asc.Range(0, 0, oSheetData.maxC , oSheetData.maxR));
+		}
 		wsView.draw();
 	}
 	CDiagramCellFrameManager.prototype.setMainDiagram = function (oInfo)

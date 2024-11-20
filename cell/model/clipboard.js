@@ -574,6 +574,13 @@
 			}
 			return this.cachedWbBinaryData;
 		};
+		CCopyPasteExcelOptions.prototype.getChartRangeWithReplaceDefinedName = function(sRange) {
+			const wb = this.wb;
+			if (wb && sRange && sRange.includes("_xlchart")) {
+				return wb.getDefinesNames(sRange) || sRange;
+			}
+			return sRange;
+		};
 
 
 		function CopyProcessorExcel() {
