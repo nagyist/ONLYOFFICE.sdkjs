@@ -2868,9 +2868,25 @@ function CBinaryFileWriter()
                     oThis.WriteUChar(g_nodeAttributeEnd);
                     oThis.EndRecord();
                 }
-                else
+                else if (fill.stretch != null)
                 {
                     oThis.StartRecord(3);
+
+                    if (fill.stretch.fillRect) {
+                        oThis.StartRecord(0);
+                        oThis.WriteUChar(g_nodeAttributeStart);
+
+                        // Writing as string since value in a percent
+                        const fillRect = fill.stretch.fillRect;
+                        oThis._WriteString1(0, '' + (fillRect.l * 1000 >> 0));
+                        oThis._WriteString1(1, '' + (fillRect.t * 1000 >> 0));
+                        oThis._WriteString1(2, '' + ((100 - fillRect.r) * 1000 >> 0));
+                        oThis._WriteString1(3, '' + ((100 - fillRect.b) * 1000 >> 0));
+
+                        oThis.WriteUChar(g_nodeAttributeEnd);
+                        oThis.EndRecord();
+                    }
+
                     oThis.EndRecord();
                 }
 

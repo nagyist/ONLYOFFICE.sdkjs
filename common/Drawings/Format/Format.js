@@ -3331,6 +3331,10 @@
 		}
 		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
 
+
+		CBlipFillStretch.prototype.setFillRect = function (fillRect) {
+			this.fillRect = fillRect;
+		};
 		CBlipFillStretch.prototype.Write_ToBinary = function (w) {
 			this.fillRect.Write_ToBinary(w);
 		};
@@ -3341,7 +3345,7 @@
 		};
 		CBlipFillStretch.prototype.createDuplicate = function () {
 			const copy = new CBlipFillStretch();
-			copy.fillRect = this.fillRect.createDublicate();
+			copy.fillRect = this.fillRect.createDuplicate();
 			return copy;
 		};
 
@@ -14849,6 +14853,7 @@
 					ret.fill.url = _fill.RasterImageId;
 					ret.fill.type = (_fill.tile == null) ? c_oAscFillBlipType.STRETCH : c_oAscFillBlipType.TILE;
 					ret.fill.tile = AscCommon.isRealObject(_fill.tile) ? _fill.tile.createDuplicate() : null;
+					ret.fill.stretch = AscCommon.isRealObject(_fill.stretch) ? _fill.stretch.createDuplicate() : null;
 					break;
 				}
 				case c_oAscFill.FILL_TYPE_NOFILL: {
@@ -18685,8 +18690,6 @@
 		window['AscFormat'].CreateSolidFillRGB = CreateSolidFillRGB;
 		window['AscFormat'].CreateSolidFillRGBA = CreateSolidFillRGBA;
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
-		window['AscFormat'].CSrcRect = CSrcRect;
-		window['AscFormat'].CBlipFillTile = CBlipFillTile;
 
 		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = CBlipFill;
 		CBlipFill.prototype['get_type'] = CBlipFill.prototype['asc_getType'] = CBlipFill.prototype.asc_getType;
@@ -18696,7 +18699,12 @@
 		CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype.asc_getTextureId;
 		CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype.asc_putTextureId;
 
+		window['AscFormat'].CSrcRect = CSrcRect;
+		window['AscFormat'].CBlipFillTile = CBlipFillTile;
+		window['AscFormat'].CBlipFillStretch = CBlipFillStretch;
+		window['AscFormat'].CFillRect = CFillRect;
 		window['AscFormat'].CBlip = CBlip;
+
 		window['AscFormat'].CSolidFill = CSolidFill;
 		window['AscFormat'].CGs = CGs;
 		window['AscFormat'].GradLin = GradLin;

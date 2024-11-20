@@ -1821,7 +1821,7 @@ function BinaryPPTYLoader()
 
     // UNIFILL ----------------------------------
 
-    this.ReadRect = function(bIsMain)
+    this.ReadRect = function(bIsMain, rectConstructor)
     {
         var _ret = {};
 
@@ -1905,8 +1905,9 @@ function BinaryPPTYLoader()
             _ret.t = _ret.b;
             _ret.b = tmp;
         }
-        var ret = new AscFormat.CSrcRect();
-        ret.setLTRB(_ret.l, _ret.t, _ret.r, _ret.b);
+        var ret = rectConstructor
+            ? new rectConstructor(_ret.l, _ret.t, _ret.r, _ret.b)
+            : new AscFormat.CSrcRect(_ret.l, _ret.t, _ret.r, _ret.b);
         return ret;
     };
 
@@ -3293,8 +3294,10 @@ function BinaryPPTYLoader()
                             }
                             case 3:
                             {
-                                var _e2 = s.cur + s.GetLong() + 4;
+                                const stretch = new AscFormat.CBlipFillStretch();
+                                uni_fill.fill.setStretch(stretch);
 
+                                var _e2 = s.cur + s.GetLong() + 4;
                                 while (s.cur < _e2)
                                 {
                                     var _t = s.GetUChar();
@@ -3303,9 +3306,9 @@ function BinaryPPTYLoader()
                                     {
                                         case 0:
                                         {
-                                            var _srcRect = this.ReadRect(false);
-                                            if (_srcRect != null)
-                                                uni_fill.fill.setSrcRect(_srcRect);
+                                            const fillRect = this.ReadRect(true, AscFormat.CFillRect);
+                                            if (fillRect != null)
+                                                stretch.setFillRect(fillRect);
                                             break;
                                         }
                                         default:
