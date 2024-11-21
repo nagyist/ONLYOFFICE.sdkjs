@@ -573,6 +573,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		{
 			this.setExternalReference(null);
 		}
+		this.checkChartExRefs();
 	}
 	CChartSpace.prototype.canPasteExternal = function ()
 	{
@@ -612,6 +613,28 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 	};
 	CChartSpace.prototype.isWorkbookChart = function () {
 		return true;
+	};
+	CChartSpace.prototype.checkChartExRefs = function() {
+		const wbModel = Asc.editor && Asc.editor.wbModel;
+		if (this.isChartEx() && wbModel) {
+			const series = this.getAllSeries();
+			const data = series.getData();
+			if (data) {
+				const dimensions = data.dimension;
+				const chartDefNames = wbModel.getXlChartDefNamesByRef();
+				for (let i = 0; i < dimensions.length; i++) {
+					const dimension = dimensions[i];
+					const formula = dimension.f;
+					const formulaText = formula && formula.content;
+					if (formulaText) {
+						const defName = chartDefNames[formulaText];
+						if (defName) {
+							formula.setContent(defName.name);
+						}
+					}
+				}
+			}
+		}
 	};
 
 })(window);

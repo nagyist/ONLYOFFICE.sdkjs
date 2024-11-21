@@ -4974,6 +4974,11 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			}
 		};
 
+		forEachElementInRef(pushRanges, ref, ws, checkFormula);
+		return ranges;
+	}
+
+	function forEachElementInRef(callback, ref, ws, checkFormula) {
 		//TODO вызываю проверку на то, что это может быть формула только для печати. необходимо проверить везде - для этого необходимо просмотреть весь смежный функционал
 		var isFormula;
 		if(checkFormula && ref) {
@@ -4984,7 +4989,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		}
 
 		if (isFormula && isFormula.type !== cElementType.error) {
-			pushRanges({oper: isFormula});
+			callback({oper: isFormula});
 		} else {
 			// ToDo in parser formula
 			if (ref[0] === '(') {
@@ -5005,12 +5010,10 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 				var _f = new AscCommonExcel.parserFormula(refItem, null, ws);
 				var parseResult = new AscCommonExcel.ParseResult([]);
 				if (_f.parse(null, null, parseResult)) {
-					parseResult.refPos.forEach(pushRanges);
+					parseResult.refPos.forEach(callback);
 				}
 			});
 		}
-
-		return ranges;
 	}
 
 /*--------------------------------------------------------------------------*/

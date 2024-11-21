@@ -618,7 +618,7 @@
 		//lock
 		this.lockCounter = 0;
 		//defined name
-		this.defNames = {wb: {}, sheet: {}};
+		this.defNames = {wb: {}, sheet: {}, xlchartIndex: null};
 		this.tableNamePattern = "Table";
 		this.tableNameIndex = 0;
 		this.pivotNamePattern = "PivotTable";
@@ -1252,6 +1252,36 @@
 			return this._foreachDefName(function(defName) {
 				return defName.isLock;
 			});
+		},
+		getXlChartDefNamesByRef: function() {
+			const defNames = {};
+			this._foreachDefNameBook(function(defName) {
+				const name = defName.name;
+				if (name.startsWith("_xlchart")) {
+					defNames[defName.ref] = defName;
+				}
+			});
+			return defNames;
+		},
+		getNewXlChartIndex: function() {
+			if (this.defNames.xlchartIndex === null) {
+				let startIndex = -1;
+				this._foreachDefNameBook(function(defName) {
+					const name = defName.name;
+					if (name.startsWith("_xlchart")) {
+						const splitName = name.split(".");
+						const index = parseInt(splitName[splitName.length - 1], 10);
+						if (AscFormat.isRealNumber(index) && index > startIndex) {
+							startIndex = index;
+						}
+					}
+				});
+				this.defNames.xlchartIndex = startIndex;
+			}
+			return this.defNames.xlchartIndex++;
+		},
+		getNewXlChartId: function() {
+			return "_xlchart.v1." + this.getNewXlChartIndex();
 		},
 		//defined name table
 		getNextTableName: function() {
@@ -3669,6 +3699,9 @@
 	};
 	Workbook.prototype.checkDefNameLock = function(){
 		return this.dependencyFormulas.checkDefNameLock();
+	};
+	Workbook.prototype.getXlChartDefNamesByRef = function(){
+		return this.dependencyFormulas.getXlChartDefNamesByRef();
 	};
 	Workbook.prototype._SerializeHistoryItem = function (oMemory, item) {
 		if (this.oApi.binaryChanges) {
