@@ -1148,10 +1148,34 @@ CShapeDrawer.prototype =
                         koefY /= AscCommon.AscBrowser.retinaPixelRatio;
                     }
 
-                    // TODO: !!!
-                    _ctx.translate(this.min_x, this.min_y);
+                    // Эти параметры надо будет определить из blipFill
+                    const scaleX = 1;
+                    const scaleY = 1;
+                    const offsetX = 0;
+                    const offsetY = 0;
+                    const flipH = false;
+                    const flipV = false;
+                    const rotation = 80; // degrees
 
-                    _ctx.scale(koefX * __graphics.TextureFillTransformScaleX, koefY * __graphics.TextureFillTransformScaleY);
+                    // Применение смещения и трансформаций
+                    _ctx.translate(this.min_x + offsetX, this.min_y + offsetY);
+
+                    // Применение отражения
+                    if (flipH || flipV) {
+                        _ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+                    }
+
+                    // Применение поворота
+                    if (rotation !== 0) {
+                        const centerX = (this.max_x - this.min_x) / 2;
+                        const centerY = (this.max_y - this.min_y) / 2;
+                        _ctx.translate(centerX, centerY);
+                        _ctx.rotate((rotation * Math.PI) / 180);
+                        _ctx.translate(-centerX, -centerY);
+                    }
+
+                    // Применение масштаба
+                    _ctx.scale(koefX * __graphics.TextureFillTransformScaleX * scaleX, koefY * __graphics.TextureFillTransformScaleY * scaleY);
 
                     if (_is_ctx === true)
                     {

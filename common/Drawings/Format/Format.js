@@ -3212,6 +3212,12 @@
 		CBlipFill.prototype.asc_putTextureId = function (v) {
 			this.texture_id = v;
 		};
+		CBlipFill.prototype.asc_getUrl = function () {
+			return this.RasterImageId;
+		};
+		CBlipFill.prototype.asc_putUrl = function (v) {
+			this.RasterImageId = v;
+		};
 
 		function CSrcRect(l, t, r, b) {
 			CBaseNoIdObject.call(this);
@@ -18696,6 +18702,8 @@
 		CBlipFill.prototype['put_type'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype.asc_putType;
 		CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype.asc_getTextureId;
 		CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype.asc_putTextureId;
+		CBlipFill.prototype['get_url'] = CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype.asc_getUrl;
+		CBlipFill.prototype['put_url'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype.asc_putUrl;
 
 		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
