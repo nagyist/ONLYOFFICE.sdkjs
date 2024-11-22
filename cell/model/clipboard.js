@@ -577,7 +577,8 @@
 		CCopyPasteExcelOptions.prototype.getChartRangeWithReplaceDefinedName = function(sRange) {
 			const wb = this.wb;
 			if (wb && sRange && sRange.includes("_xlchart")) {
-				return wb.getDefinesNames(sRange) || sRange;
+				const definedName = wb.getDefinesNames(sRange);
+				return definedName ? definedName.ref : sRange;
 			}
 			return sRange;
 		};

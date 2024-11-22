@@ -538,7 +538,7 @@
 			return new Asc.asc_CDefName(this.name, this.getRef(bLocale), index, this.type, this.hidden, this.isLock, this.isXLNM);
 		},
 		getUndoDefName: function() {
-			return new UndoRedoData_DefinedNames(this.name, this.ref, this.sheetId, this.type, this.isXLNM);
+			return new UndoRedoData_DefinedNames(this.name, this.ref, this.sheetId, this.type, this.isXLNM, this.hidden);
 		},
 		setUndoDefName: function(newUndoName, doNotChangeRef) {
 			this.name = newUndoName.name;
@@ -1074,18 +1074,18 @@
 			}
 			this.wb.handlers && this.wb.handlers.trigger("onChangePageSetupProps", sheetId);
 		},
-		editDefinesNames: function(oldUndoName, newUndoName) {
+		editDefinesNames: function(oldUndoName, newUndoName, isFromHistory) {
 			var res = null;
 			var isSlicer = oldUndoName && this.wb.getSlicerCacheByCacheName(oldUndoName.name);
 
-			if (!AscCommon.rx_defName.test(getDefNameIndex(newUndoName.name)) || (!newUndoName.ref && !isSlicer) ||
-				(newUndoName.ref.length === 0 && !isSlicer) || newUndoName.name.length > g_nDefNameMaxLength) {
+			if (!isFromHistory && (!AscCommon.rx_defName.test(getDefNameIndex(newUndoName.name)) || (!newUndoName.ref && !isSlicer) ||
+				(newUndoName.ref.length === 0 && !isSlicer) || newUndoName.name.length > g_nDefNameMaxLength)) {
 				return res;
 			}
 			if (oldUndoName) {
 				res = this.getDefNameByName(oldUndoName.name, oldUndoName.sheetId);
 			} else {
-				res = this.addDefName(newUndoName.name, newUndoName.ref, newUndoName.sheetId, false, newUndoName.type, newUndoName.isXLNM);
+				res = this.addDefName(newUndoName.name, newUndoName.ref, newUndoName.sheetId, newUndoName.hidden, newUndoName.type, newUndoName.isXLNM);
 			}
 			AscCommon.History.Create_NewPoint();
 			if (res && oldUndoName) {
@@ -1253,16 +1253,6 @@
 				return defName.isLock;
 			});
 		},
-		getXlChartDefNamesByRef: function() {
-			const defNames = {};
-			this._foreachDefNameBook(function(defName) {
-				const name = defName.name;
-				if (name.startsWith("_xlchart")) {
-					defNames[defName.ref] = defName;
-				}
-			});
-			return defNames;
-		},
 		getNewXlChartIndex: function() {
 			if (this.defNames.xlchartIndex === null) {
 				let startIndex = -1;
@@ -1278,7 +1268,7 @@
 				});
 				this.defNames.xlchartIndex = startIndex;
 			}
-			return this.defNames.xlchartIndex++;
+			return ++this.defNames.xlchartIndex;
 		},
 		getNewXlChartId: function() {
 			return "_xlchart.v1." + this.getNewXlChartIndex();
@@ -3680,8 +3670,8 @@
 	Workbook.prototype.editDefinesNames = function ( oldName, newName ) {
 		return this.editDefinesNamesUndoRedo(this.getUndoDefName(oldName), this.getUndoDefName(newName));
 	};
-	Workbook.prototype.editDefinesNamesUndoRedo = function ( oldName, newName ) {
-		var res = this.dependencyFormulas.editDefinesNames( oldName, newName );
+	Workbook.prototype.editDefinesNamesUndoRedo = function ( oldName, newName, isFromHistory ) {
+		var res = this.dependencyFormulas.editDefinesNames( oldName, newName, isFromHistory );
 		this.dependencyFormulas.calcTree();
 		return res;
 	};
@@ -3700,8 +3690,8 @@
 	Workbook.prototype.checkDefNameLock = function(){
 		return this.dependencyFormulas.checkDefNameLock();
 	};
-	Workbook.prototype.getXlChartDefNamesByRef = function(){
-		return this.dependencyFormulas.getXlChartDefNamesByRef();
+	Workbook.prototype.getNewXlChartId = function () {
+		return this.dependencyFormulas.getNewXlChartId();
 	};
 	Workbook.prototype._SerializeHistoryItem = function (oMemory, item) {
 		if (this.oApi.binaryChanges) {
@@ -4318,7 +4308,7 @@
 			return ascName;
 		}
 		var sheetId = this.getSheetIdByIndex(ascName.LocalSheetId);
-		return new UndoRedoData_DefinedNames(ascName.Name, ascName.Ref, sheetId, ascName.type, ascName.isXLNM);
+		return new UndoRedoData_DefinedNames(ascName.Name, ascName.Ref, sheetId, ascName.type, ascName.isXLNM, ascName.Hidden);
 	};
 	Workbook.prototype.changeColorScheme = function (sSchemeName) {
 		var scheme = AscCommon.getColorSchemeByName(sSchemeName);

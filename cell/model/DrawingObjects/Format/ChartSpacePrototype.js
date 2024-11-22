@@ -561,10 +561,11 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 	};
 	CChartSpace.prototype.applySpecialPasteProps = function (oExternalWb)
 	{
-		if (!(this.XLSX && this.XLSX.length))
+		if (!this.XLSX || this.XLSX.length)
 		{
 			this.setXLSX(new Uint8Array(0));
 		}
+		this.setExternalReference(null);
 		if (oExternalWb)
 		{
 			this.addExternalReferenceToEditor(oExternalWb);
@@ -616,22 +617,42 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 	};
 	CChartSpace.prototype.checkChartExRefs = function() {
 		const wbModel = Asc.editor && Asc.editor.wbModel;
-		if (this.isChartEx() && wbModel) {
-			const series = this.getAllSeries();
-			const data = series.getData();
-			if (data) {
-				const dimensions = data.dimension;
-				const chartDefNames = wbModel.getXlChartDefNamesByRef();
-				for (let i = 0; i < dimensions.length; i++) {
-					const dimension = dimensions[i];
-					const formula = dimension.f;
-					const formulaText = formula && formula.content;
-					if (formulaText) {
-						const defName = chartDefNames[formulaText];
-						if (defName) {
-							formula.setContent(defName.name);
+		const ws = wbModel && wbModel.getWorksheet(0);
+		if (this.isChartEx() && ws) {
+			function checkFormula(formula) {
+				const formulaText = formula && formula.content;
+				if (formulaText) {
+					let isDefName = false;
+					AscCommonExcel.forEachElementInRef(function (item) {
+						switch (item.oper.type) {
+							case AscCommonExcel.cElementType.name:
+							case AscCommonExcel.cElementType.name3D:
+								isDefName = true;
+								return true;
 						}
+					}, formulaText, ws);
+					if (!isDefName) {
+						const xlchartDefName = wbModel.getNewXlChartId();
+						const defName = wbModel.addDefName(xlchartDefName, formulaText, undefined, true);
+						AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_DefinedNamesChange, null, null,
+							new AscCommonExcel.UndoRedoData_FromTo(null, defName.getUndoDefName()));
+						formula.setContent(xlchartDefName);
 					}
+				}
+			}
+			const series = this.getAllSeries();
+			for (let i = 0; i < series.length; i += 1) {
+				const seria = series[i];
+				const data = seria.getData();
+				if (data) {
+					const dimensions = data.dimension;
+					for (let j = 0; j < dimensions.length; j++) {
+						const dimension = dimensions[j];
+						checkFormula(dimension.f);
+					}
+				}
+				if (seria.tx && seria.tx.txData) {
+					checkFormula(seria.tx.txData.f);
 				}
 			}
 		}

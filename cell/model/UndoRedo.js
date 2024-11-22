@@ -1644,16 +1644,17 @@ function (window, undefined) {
 		}
 	};
 
-	function UndoRedoData_DefinedNames(name, ref, sheetId, type, isXLNM) {
+	function UndoRedoData_DefinedNames(name, ref, sheetId, type, isXLNM, hidden) {
 		this.name = name;
 		this.ref = ref;
 		this.sheetId = sheetId;
 		this.type = type;
 		this.isXLNM = isXLNM;
+		this.hidden = hidden;
 	}
 
 	UndoRedoData_DefinedNames.prototype.Properties = {
-		name: 0, ref: 1, sheetId: 2, type: 4, isXLNM: 5
+		name: 0, ref: 1, sheetId: 2, type: 4, isXLNM: 5, hidden: 6
 	};
 	UndoRedoData_DefinedNames.prototype.getType = function () {
 		return UndoRedoDataTypes.DefinedName;
@@ -1673,6 +1674,8 @@ function (window, undefined) {
 				return this.type;
 			case this.Properties.isXLNM:
 				return this.isXLNM;
+			case this.Properties.hidden:
+				return this.hidden;
 		}
 		return null;
 	};
@@ -1692,6 +1695,9 @@ function (window, undefined) {
 				break;
 			case this.Properties.isXLNM:
 				this.isXLNM = value;
+				break;
+			case this.Properties.hidden:
+				this.hidden = value;
 				break;
 		}
 	};
@@ -2566,7 +2572,7 @@ function (window, undefined) {
 					wb.delDefinesNamesUndoRedo(oldName);
 					wb.handlers.trigger("asc_onDelDefName")
 				} else {
-					wb.editDefinesNamesUndoRedo(oldName, newName);
+					wb.editDefinesNamesUndoRedo(oldName, newName, true);
 					wb.handlers.trigger("asc_onEditDefName", oldName, newName);
 				}
 				// clear traces
