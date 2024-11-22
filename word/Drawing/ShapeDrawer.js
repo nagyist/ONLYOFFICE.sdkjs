@@ -1126,7 +1126,7 @@ CShapeDrawer.prototype =
                     const imgSource = !_img_native ? _img.Image : _img_native;
                     const repetition = "repeat"; // "repeat", "repeat-x", "repeat-y", "no-repeat"
                     const patt = _ctx.createPattern(imgSource, repetition);
-
+                    
                     // Global graphics scaling factors
                     const __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
                     const bIsThumbnail = __graphics.IsThumbnail === true;
@@ -1134,19 +1134,42 @@ CShapeDrawer.prototype =
                     const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
                     const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
 
-                    // Parameters from blippFill
+                    // Parameters from blipFill
                     const scaleX = 1;
                     const scaleY = 1;
                     const offsetX = 0;
                     const offsetY = 0;
                     const flipH = false;
                     const flipV = false;
-                    const rotation = 80; // degrees
+                    const rotation = 0; // degrees
+                    const algn = 'tl';
 
                     _ctx.save();
 
                     // Translation (offsets)
-                    _ctx.translate(this.min_x + offsetX, this.min_y + offsetY);
+                    const imageWidth = _img.Image.width * koefX * __graphics.TextureFillTransformScaleX;
+                    const imageHeight = _img.Image.height * koefY * __graphics.TextureFillTransformScaleY;
+                    const shapeWidth = this.max_x - this.min_x;
+                    const shapeHeight = this.max_y - this.min_y;
+                    const widthDiff = shapeWidth - imageWidth;
+                    const heightDiff = shapeHeight - imageHeight;
+
+                    const alignmentMap = {
+                        'tl': [0, 0],
+                        't': [widthDiff / 2, 0],
+                        'tr': [widthDiff, 0],
+                        'l': [0, heightDiff / 2],
+                        'ctr': [widthDiff / 2, heightDiff / 2],
+                        'r': [widthDiff, heightDiff / 2],
+                        'bl': [0, heightDiff],
+                        'b': [widthDiff / 2, heightDiff],
+                        'br': [widthDiff, heightDiff]
+                    };
+
+                    const alignmentOffsetX = alignmentMap[algn][0];
+                    const alignmentOffsetY = alignmentMap[algn][1];
+
+                    _ctx.translate(this.min_x + offsetX + alignmentOffsetX, this.min_y + offsetY + alignmentOffsetY);
 
                     // Mirroring
                     if (flipH || flipV) {
