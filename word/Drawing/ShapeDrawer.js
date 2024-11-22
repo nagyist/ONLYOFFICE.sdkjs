@@ -1114,41 +1114,27 @@ CShapeDrawer.prototype =
 
                     this.Graphics.restore();
                 }
-                else
-                {
-                    var _is_ctx = false;
-                    if (!this.Graphics.isSupportTextDraw() || undefined === this.Graphics.m_oContext || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255))
-                    {
-                        _is_ctx = false;
-                    }
-                    else
-                    {
-                        _is_ctx = true;
-                    }
+                else {
+                    const _is_ctx = this.Graphics.isSupportTextDraw() &&
+                        this.Graphics.m_oContext !== undefined &&
+                        this.UniFill.transparent != null &&
+                        this.UniFill.transparent != 255;
 
-                    var _gr = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
-                    var _ctx = _gr.m_oContext;
+                    const _gr = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
+                    const _ctx = _gr.m_oContext;
 
-                    var patt = !_img_native ? _ctx.createPattern(_img.Image, "repeat") : _ctx.createPattern(_img_native, "repeat");
+                    const imgSource = !_img_native ? _img.Image : _img_native;
+                    const repetition = "repeat"; // "repeat", "repeat-x", "repeat-y", "no-repeat"
+                    const patt = _ctx.createPattern(imgSource, repetition);
 
-                    _ctx.save();
+                    // Global graphics scaling factors
+                    const __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
+                    const bIsThumbnail = __graphics.IsThumbnail === true;
 
-                    var __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
-                    var bIsThumbnail = (__graphics.IsThumbnail === true) ? true : false;
+                    const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
+                    const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
 
-                    var koefX = editorInfo.scale;
-                    var koefY = editorInfo.scale;
-
-                    if (bIsThumbnail)
-                    {
-                        koefX = __graphics.m_dDpiX / AscCommon.g_dDpiX;
-                        koefY = __graphics.m_dDpiY / AscCommon.g_dDpiX;
-
-                        koefX /= AscCommon.AscBrowser.retinaPixelRatio;
-                        koefY /= AscCommon.AscBrowser.retinaPixelRatio;
-                    }
-
-                    // Эти параметры надо будет определить из blipFill
+                    // Parameters from blippFill
                     const scaleX = 1;
                     const scaleY = 1;
                     const offsetX = 0;
@@ -1157,15 +1143,17 @@ CShapeDrawer.prototype =
                     const flipV = false;
                     const rotation = 80; // degrees
 
-                    // Применение смещения и трансформаций
+                    _ctx.save();
+
+                    // Translation (offsets)
                     _ctx.translate(this.min_x + offsetX, this.min_y + offsetY);
 
-                    // Применение отражения
+                    // Mirroring
                     if (flipH || flipV) {
                         _ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
                     }
 
-                    // Применение поворота
+                    // Rotation
                     if (rotation !== 0) {
                         const centerX = (this.max_x - this.min_x) / 2;
                         const centerY = (this.max_y - this.min_y) / 2;
@@ -1174,20 +1162,17 @@ CShapeDrawer.prototype =
                         _ctx.translate(-centerX, -centerY);
                     }
 
-                    // Применение масштаба
+                    // Scaling
                     _ctx.scale(koefX * __graphics.TextureFillTransformScaleX * scaleX, koefY * __graphics.TextureFillTransformScaleY * scaleY);
 
-                    if (_is_ctx === true)
-                    {
-                        var _old_global_alpha = _ctx.globalAlpha;
+                    // Pattern drawing
+                    _ctx.fillStyle = patt;
+                    if (_is_ctx) {
+                        const _old_global_alpha = _ctx.globalAlpha;
                         _ctx.globalAlpha = this.UniFill.transparent / 255;
-                        _ctx.fillStyle = patt;
                         _ctx.fill();
                         _ctx.globalAlpha = _old_global_alpha;
-                    }
-                    else
-                    {
-                        _ctx.fillStyle = patt;
+                    } else {
                         _ctx.fill();
                     }
 
