@@ -1133,9 +1133,6 @@ CShapeDrawer.prototype =
                     const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
                     const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
 
-                    let imageWidth = _img.Image.width * koefX * __graphics.TextureFillTransformScaleX;
-                    let imageHeight = _img.Image.height * koefY * __graphics.TextureFillTransformScaleY;
-
                     // Parameters from blipFill
                     const scaleX = 1;
                     const scaleY = 1;
@@ -1175,19 +1172,17 @@ CShapeDrawer.prototype =
                     }
 
                     let resultPatternCanvas = document.createElement('canvas');
-                    resultPatternCanvas.width = imageWidth;
-                    resultPatternCanvas.height = imageHeight;
+                    resultPatternCanvas.width = _img.Image.width;
+                    resultPatternCanvas.height = _img.Image.height;
 
                     const resultPatternCtx = resultPatternCanvas.getContext('2d');
-                    resultPatternCtx.drawImage(imgSource, 0, 0, imageWidth, imageHeight);
+                    resultPatternCtx.drawImage(imgSource, 0, 0, resultPatternCanvas.width, resultPatternCanvas.height);
 
                     if (flipV) {
-                        resultPatternCanvas = createVerticalFlipPattern(resultPatternCanvas, imageWidth, imageHeight);
-                        imageHeight *= 2;
+                        resultPatternCanvas = createVerticalFlipPattern(resultPatternCanvas, resultPatternCanvas.width, resultPatternCanvas.height);
                     }
                     if (flipH) {
-                        resultPatternCanvas = createHorizontalFlipPattern(resultPatternCanvas, imageWidth, imageHeight);
-                        imageWidth *= 2;
+                        resultPatternCanvas = createHorizontalFlipPattern(resultPatternCanvas, resultPatternCanvas.width, resultPatternCanvas.height);
                     }
 
                     const patt = _ctx.createPattern(resultPatternCanvas, repetition);
@@ -1195,8 +1190,8 @@ CShapeDrawer.prototype =
                     // Translation (offsets)
                     const shapeWidth = this.max_x - this.min_x;
                     const shapeHeight = this.max_y - this.min_y;
-                    const widthDiff = shapeWidth - imageWidth;
-                    const heightDiff = shapeHeight - imageHeight;
+                    const widthDiff = shapeWidth - resultPatternCanvas.width * koefY * __graphics.TextureFillTransformScaleX;
+                    const heightDiff = shapeHeight - resultPatternCanvas.height * koefY * __graphics.TextureFillTransformScaleY;
 
                     const alignmentCoefficientsMap = {
                         'tl': [0, 0],
