@@ -1125,56 +1125,95 @@ CShapeDrawer.prototype =
 
                     const imgSource = !_img_native ? _img.Image : _img_native;
                     const repetition = "repeat"; // "repeat", "repeat-x", "repeat-y", "no-repeat"
-                    const patt = _ctx.createPattern(imgSource, repetition);
                     
                     // Global graphics scaling factors
                     const __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
-                    const bIsThumbnail = __graphics.IsThumbnail === true;
+                    const bIsThumbnail = __graphics.IsThumbnail;
 
                     const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
                     const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
+
+                    let imageWidth = _img.Image.width * koefX * __graphics.TextureFillTransformScaleX;
+                    let imageHeight = _img.Image.height * koefY * __graphics.TextureFillTransformScaleY;
 
                     // Parameters from blipFill
                     const scaleX = 1;
                     const scaleY = 1;
                     const offsetX = 0;
                     const offsetY = 0;
-                    const flipH = false;
-                    const flipV = false;
+                    const flipH = true;
+                    const flipV = true;
                     const rotation = 0; // degrees
-                    const algn = 'tl';
+                    const algn = 'ctr';
 
                     _ctx.save();
 
+                    // Mirroring
+                    function createVerticalFlipPattern(sourceCanvas, width, height) {
+                        const newCanvas = document.createElement('canvas');
+                        newCanvas.width = width;
+                        newCanvas.height = height * 2;
+                    
+                        const newCtx = newCanvas.getContext('2d');
+                        newCtx.drawImage(sourceCanvas, 0, 0, width, height);
+                        newCtx.scale(1, -1);
+                        newCtx.drawImage(sourceCanvas, 0, -height * 2, width, height);
+                    
+                        return newCanvas;
+                    }
+                    function createHorizontalFlipPattern(sourceCanvas, width, height) {
+                        const newCanvas = document.createElement('canvas');
+                        newCanvas.width = width * 2;
+                        newCanvas.height = height;
+                    
+                        const newCtx = newCanvas.getContext('2d');
+                        newCtx.drawImage(sourceCanvas, 0, 0, width, height);
+                        newCtx.scale(-1, 1);
+                        newCtx.drawImage(sourceCanvas, -width * 2, 0, width, height);
+                    
+                        return newCanvas;
+                    }
+
+                    let resultPatternCanvas = document.createElement('canvas');
+                    resultPatternCanvas.width = imageWidth;
+                    resultPatternCanvas.height = imageHeight;
+
+                    const resultPatternCtx = resultPatternCanvas.getContext('2d');
+                    resultPatternCtx.drawImage(imgSource, 0, 0, imageWidth, imageHeight);
+
+                    if (flipV) {
+                        resultPatternCanvas = createVerticalFlipPattern(resultPatternCanvas, imageWidth, imageHeight);
+                        imageHeight *= 2;
+                    }
+                    if (flipH) {
+                        resultPatternCanvas = createHorizontalFlipPattern(resultPatternCanvas, imageWidth, imageHeight);
+                        imageWidth *= 2;
+                    }
+
+                    const patt = _ctx.createPattern(resultPatternCanvas, repetition);
+
                     // Translation (offsets)
-                    const imageWidth = _img.Image.width * koefX * __graphics.TextureFillTransformScaleX;
-                    const imageHeight = _img.Image.height * koefY * __graphics.TextureFillTransformScaleY;
                     const shapeWidth = this.max_x - this.min_x;
                     const shapeHeight = this.max_y - this.min_y;
                     const widthDiff = shapeWidth - imageWidth;
                     const heightDiff = shapeHeight - imageHeight;
 
-                    const alignmentMap = {
+                    const alignmentCoefficientsMap = {
                         'tl': [0, 0],
-                        't': [widthDiff / 2, 0],
-                        'tr': [widthDiff, 0],
-                        'l': [0, heightDiff / 2],
-                        'ctr': [widthDiff / 2, heightDiff / 2],
-                        'r': [widthDiff, heightDiff / 2],
-                        'bl': [0, heightDiff],
-                        'b': [widthDiff / 2, heightDiff],
-                        'br': [widthDiff, heightDiff]
+                        't': [0.5, 0],
+                        'tr': [1, 0],
+                        'l': [0, 0.5],
+                        'ctr': [0.5, 0.5],
+                        'r': [1, 0.5],
+                        'bl': [0, 1],
+                        'b': [0.5, 1],
+                        'br': [1, 1]
                     };
 
-                    const alignmentOffsetX = alignmentMap[algn][0];
-                    const alignmentOffsetY = alignmentMap[algn][1];
+                    const alignmentOffsetX = alignmentCoefficientsMap[algn][0] * widthDiff;
+                    const alignmentOffsetY = alignmentCoefficientsMap[algn][1] * heightDiff;
 
                     _ctx.translate(this.min_x + offsetX + alignmentOffsetX, this.min_y + offsetY + alignmentOffsetY);
-
-                    // Mirroring
-                    if (flipH || flipV) {
-                        _ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
-                    }
 
                     // Rotation
                     if (rotation !== 0) {
