@@ -1190,8 +1190,8 @@ CShapeDrawer.prototype =
                     // Translation (offsets)
                     const shapeWidth = this.max_x - this.min_x;
                     const shapeHeight = this.max_y - this.min_y;
-                    const widthDiff = shapeWidth - resultPatternCanvas.width * koefY * __graphics.TextureFillTransformScaleX;
-                    const heightDiff = shapeHeight - resultPatternCanvas.height * koefY * __graphics.TextureFillTransformScaleY;
+                    const widthDiff = shapeWidth - resultPatternCanvas.width * koefY * __graphics.TextureFillTransformScaleX * scaleX * (flipH ? 0.5 : 1);
+                    const heightDiff = shapeHeight - resultPatternCanvas.height * koefY * __graphics.TextureFillTransformScaleY * scaleY * (flipV ? 0.5 : 1);
 
                     const alignmentCoefficientsMap = {
                         'tl': [0, 0],
