@@ -11540,7 +11540,8 @@
 	{
 		const oApi = Asc.editor || editor;
 		const oWb = oApi.wbModel;
-		if (typeof this.f === 'string' && oWb)
+      const ws = oWb.getWorksheet(0);
+		if (typeof this.f === 'string' && ws)
 		{
 			let sFormula = this.f + "";
 			let bFirstBrace = false;
@@ -11561,6 +11562,40 @@
 			const arrResult = [];
 			for (let i = 0; i < arrF.length; i += 1)
 			{
+          //todo
+          var parseResult = new AscCommonExcel.ParseResult([]);
+          var parsed = new AscCommonExcel.parserFormula(arrF[i], null, ws);
+          if (parsed.parse(undefined, undefined, parseResult)) {
+              parseResult.refPos.forEach(function(item) {
+                if (item.externalLink) {
+                    const nIndex = parseInt(item.externalLink, 10);
+                    const oPastedReference = arrPastedExternalReferences[nIndex - 1];
+                    if (oPastedReference)
+                    {
+                        let nExternalReference;
+                        const oReferenceData = oApi.DocInfo && oApi.DocInfo.ReferenceData;
+                        const oPastedReferenceData = oPastedReference.referenceData;
+                        let bIsCurDocReference = false;
+                        if (oReferenceData && oPastedReferenceData)
+                        {
+                            bIsCurDocReference = oReferenceData.fileKey === oPastedReferenceData.fileKey && oReferenceData.instanceId === oPastedReferenceData.instanceId;
+                        }
+                        if (!bIsCurDocReference)
+                        {
+                            nExternalReference = oWb.getExternalLinkIndexByName(oPastedReference.Id);
+                            if (nExternalReference === null)
+                            {
+                                oWb.addExternalReferences([oPastedReference]);
+                                nExternalReference = oWb.externalReferences.length;
+                            }
+                        }
+                        arrResult.push(this.getExternal3DRef([oParsedRef.sheet, oParsedRef.sheet2], oParsedRef.range, nExternalReference));
+                    }
+                } else {
+
+                }
+              });
+          }
 				const oParsedRef = AscCommon.parserHelp.parse3DRef(arrF[i]);
 				if (!oParsedRef.external)
 				{
