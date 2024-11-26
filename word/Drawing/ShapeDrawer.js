@@ -1125,7 +1125,7 @@ CShapeDrawer.prototype =
 
                     const imgSource = !_img_native ? _img.Image : _img_native;
                     const repetition = "repeat"; // "repeat", "repeat-x", "repeat-y", "no-repeat"
-                    
+
                     // Global graphics scaling factors
                     const __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
                     const bIsThumbnail = __graphics.IsThumbnail;
@@ -1150,24 +1150,24 @@ CShapeDrawer.prototype =
                         const newCanvas = document.createElement('canvas');
                         newCanvas.width = width;
                         newCanvas.height = height * 2;
-                    
+
                         const newCtx = newCanvas.getContext('2d');
                         newCtx.drawImage(sourceCanvas, 0, 0, width, height);
                         newCtx.scale(1, -1);
                         newCtx.drawImage(sourceCanvas, 0, -height * 2, width, height);
-                    
+
                         return newCanvas;
                     }
                     function createHorizontalFlipPattern(sourceCanvas, width, height) {
                         const newCanvas = document.createElement('canvas');
                         newCanvas.width = width * 2;
                         newCanvas.height = height;
-                    
+
                         const newCtx = newCanvas.getContext('2d');
                         newCtx.drawImage(sourceCanvas, 0, 0, width, height);
                         newCtx.scale(-1, 1);
                         newCtx.drawImage(sourceCanvas, -width * 2, 0, width, height);
-                    
+
                         return newCanvas;
                     }
 
@@ -1187,10 +1187,19 @@ CShapeDrawer.prototype =
 
                     const patt = _ctx.createPattern(resultPatternCanvas, repetition);
 
+                    // Rotation
+                    if (rotation !== 0) {
+                        const centerX = (this.max_x - this.min_x) / 2;
+                        const centerY = (this.max_y - this.min_y) / 2;
+                        _ctx.translate(centerX, centerY);
+                        _ctx.rotate((rotation * Math.PI) / 180);
+                        _ctx.translate(-centerX, -centerY);
+                    }
+
                     // Translation (offsets)
                     const shapeWidth = this.max_x - this.min_x;
                     const shapeHeight = this.max_y - this.min_y;
-                    const widthDiff = shapeWidth - resultPatternCanvas.width * koefY * __graphics.TextureFillTransformScaleX * scaleX * (flipH ? 0.5 : 1);
+                    const widthDiff = shapeWidth - resultPatternCanvas.width * koefX * __graphics.TextureFillTransformScaleX * scaleX * (flipH ? 0.5 : 1);
                     const heightDiff = shapeHeight - resultPatternCanvas.height * koefY * __graphics.TextureFillTransformScaleY * scaleY * (flipV ? 0.5 : 1);
 
                     const alignmentCoefficientsMap = {
@@ -1209,15 +1218,6 @@ CShapeDrawer.prototype =
                     const alignmentOffsetY = alignmentCoefficientsMap[algn][1] * heightDiff;
 
                     _ctx.translate(this.min_x + offsetX + alignmentOffsetX, this.min_y + offsetY + alignmentOffsetY);
-
-                    // Rotation
-                    if (rotation !== 0) {
-                        const centerX = (this.max_x - this.min_x) / 2;
-                        const centerY = (this.max_y - this.min_y) / 2;
-                        _ctx.translate(centerX, centerY);
-                        _ctx.rotate((rotation * Math.PI) / 180);
-                        _ctx.translate(-centerX, -centerY);
-                    }
 
                     // Scaling
                     _ctx.scale(koefX * __graphics.TextureFillTransformScaleX * scaleX, koefY * __graphics.TextureFillTransformScaleY * scaleY);
@@ -1240,8 +1240,7 @@ CShapeDrawer.prototype =
                 }
             }
 
-            if (bIsIntegerGridTRUE)
-            {
+            if (bIsIntegerGridTRUE) {
                 this.Graphics.SetIntegerGrid(true);
             }
             return;
