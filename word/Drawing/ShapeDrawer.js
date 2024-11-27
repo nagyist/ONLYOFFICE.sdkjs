@@ -1154,7 +1154,8 @@ CShapeDrawer.prototype =
                         const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
                         const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
                         const algn = swapKeysAndValues(AscCommon.c_oAscRectAlignType)[tile.algn];
-                        let rotation = this.UniFill.fill.rotWithShape ? 0 : -this.Shape.getFullRotate();
+                        let rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
+                            ? 0 : -this.Shape.getFullRotate();
 
                         function swapKeysAndValues(obj) {
                             const swapped = {};

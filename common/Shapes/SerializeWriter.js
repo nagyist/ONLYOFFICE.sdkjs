@@ -2810,6 +2810,7 @@ function CBinaryFileWriter()
                 oThis.StartRecord(c_oAscFill.FILL_TYPE_BLIP);
 
                 oThis.WriteUChar(g_nodeAttributeStart);
+                oThis.WriteUChar(1);
                 oThis.WriteBool(fill.rotWithShape);
                 oThis.WriteUChar(g_nodeAttributeEnd);
 
