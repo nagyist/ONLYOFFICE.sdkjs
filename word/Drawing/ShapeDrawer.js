@@ -1133,21 +1133,37 @@ CShapeDrawer.prototype =
                     const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
                     const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
 
-                    let resultCanvas = document.createElement('canvas');
-                    resultCanvas.width = _img.Image.width;
-                    resultCanvas.height = _img.Image.height;
+                    const isTile = AscCommon.isRealObject(this.UniFill.fill.tile);
+                    const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch);
 
-                    const isTile = true;
+                    let patternSource = imgSource;
+                    if (isTile || isStretch) {
+                        patternSource = document.createElement('canvas');
+                        patternSource.width = _img.Image.width;
+                        patternSource.height = _img.Image.height;
+                    }
+
                     if (isTile) {
+                        const tile = this.UniFill.fill.tile;
+
                         // Parameters from blipFill.tile
-                        const scaleX = 1;
-                        const scaleY = 1;
-                        const offsetX = 0;
-                        const offsetY = 0;
-                        const flipH = true;
-                        const flipV = true;
-                        const rotation = 0; // degrees
-                        const algn = 'ctr';
+                        const scaleX = (tile.sx / 1000) / 100;
+                        const scaleY = (tile.sy / 1000) / 100;
+                        const offsetX = tile.tx / 1000;
+                        const offsetY = tile.ty / 1000;
+                        const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+                        const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+                        const algn = swapKeysAndValues(AscCommon.c_oAscRectAlignType)[tile.algn];
+                        let rotation = this.UniFill.fill.rotWithShape ? 0 : -this.Shape.getFullRotate();
+
+                        function swapKeysAndValues(obj) {
+                            const swapped = {};
+                            for (let key in obj) {
+                                if (obj.hasOwnProperty(key))
+                                    swapped[obj[key]] = key;
+                            }
+                            return swapped;
+                        }
 
                         // Mirroring
                         function createVerticalFlipPattern(sourceCanvas, width, height) {
@@ -1175,14 +1191,14 @@ CShapeDrawer.prototype =
                             return newCanvas;
                         }
 
-                        const resultPatternCtx = resultCanvas.getContext('2d');
-                        resultPatternCtx.drawImage(imgSource, 0, 0, resultCanvas.width, resultCanvas.height);
+                        const resultPatternCtx = patternSource.getContext('2d');
+                        resultPatternCtx.drawImage(imgSource, 0, 0, patternSource.width, patternSource.height);
 
                         if (flipV) {
-                            resultCanvas = createVerticalFlipPattern(resultCanvas, resultCanvas.width, resultCanvas.height);
+                            patternSource = createVerticalFlipPattern(patternSource, patternSource.width, patternSource.height);
                         }
                         if (flipH) {
-                            resultCanvas = createHorizontalFlipPattern(resultCanvas, resultCanvas.width, resultCanvas.height);
+                            patternSource = createHorizontalFlipPattern(patternSource, patternSource.width, patternSource.height);
                         }
 
                         // Rotation
@@ -1190,15 +1206,15 @@ CShapeDrawer.prototype =
                             const centerX = (this.max_x - this.min_x) / 2;
                             const centerY = (this.max_y - this.min_y) / 2;
                             _ctx.translate(centerX, centerY);
-                            _ctx.rotate((rotation * Math.PI) / 180);
+                            _ctx.rotate(rotation);
                             _ctx.translate(-centerX, -centerY);
                         }
 
                         // Translation (offsets)
                         const shapeWidth = this.max_x - this.min_x;
                         const shapeHeight = this.max_y - this.min_y;
-                        const widthDiff = shapeWidth - resultCanvas.width * koefX * __graphics.TextureFillTransformScaleX * scaleX * (flipH ? 0.5 : 1);
-                        const heightDiff = shapeHeight - resultCanvas.height * koefY * __graphics.TextureFillTransformScaleY * scaleY * (flipV ? 0.5 : 1);
+                        const widthDiff = shapeWidth - patternSource.width * koefX * __graphics.TextureFillTransformScaleX * scaleX * (flipH ? 0.5 : 1);
+                        const heightDiff = shapeHeight - patternSource.height * koefY * __graphics.TextureFillTransformScaleY * scaleY * (flipV ? 0.5 : 1);
 
                         const alignmentCoefficientsMap = {
                             'tl': [0, 0],
@@ -1218,10 +1234,10 @@ CShapeDrawer.prototype =
                         _ctx.translate(this.min_x + offsetX + alignmentOffsetX, this.min_y + offsetY + alignmentOffsetY);
 
                         // Scaling
-                        _ctx.scale(koefX * __graphics.TextureFillTransformScaleX * scaleX, koefY * __graphics.TextureFillTransformScaleY * scaleY);
-                    } else {
+                        _ctx.scale(scaleX, scaleY);
+                    } else if (isStretch) {
                         // Parameters from blipFill.stretch.fillRect
-                        const fillRect = { l: 25, t: 0, r: 0, b: 0 }; // percents
+                        const fillRect = this.UniFill.fill.stretch.fillRect; // percents
 
                         const shapeWidth = this.max_x - this.min_x;
                         const shapeHeight = this.max_y - this.min_y;
@@ -1231,16 +1247,18 @@ CShapeDrawer.prototype =
                         const paddedWidth = shapeWidth * (1 - fillRect.r / 100 - fillRect.l / 100);
                         const paddedHeight = shapeHeight * (1 - fillRect.t / 100 - fillRect.b / 100);
 
-                        const resultCtx = resultCanvas.getContext('2d');
+                        const resultCtx = patternSource.getContext('2d');
                         resultCtx.drawImage(
                             imgSource, 0, 0, _img.Image.width, _img.Image.height,
                             paddedX, paddedY, paddedWidth, paddedHeight
                         );
                     }
 
+                    _ctx.scale(koefX * __graphics.TextureFillTransformScaleX, koefY * __graphics.TextureFillTransformScaleY);
+
                     // Pattern drawing
                     const repetition = isTile ? 'repeat' : 'no-repeat'; // "repeat", "repeat-x", "repeat-y", "no-repeat"
-                    const patt = _ctx.createPattern(resultCanvas, repetition);
+                    const patt = _ctx.createPattern(patternSource, repetition);
                     _ctx.fillStyle = patt;
                     if (_is_ctx) {
                         const _old_global_alpha = _ctx.globalAlpha;

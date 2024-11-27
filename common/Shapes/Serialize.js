@@ -3209,7 +3209,7 @@ function BinaryPPTYLoader()
                                 s.Skip2(4); // dpi
                                 break;
                             case 1:
-                                s.Skip2(1); // rotWithShape
+                                uni_fill.fill.rotWithShape = s.GetBool();
                                 break;
                             default:
                                 break;

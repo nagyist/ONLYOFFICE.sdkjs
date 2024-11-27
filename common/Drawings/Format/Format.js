@@ -3219,6 +3219,13 @@
 			this.RasterImageId = v;
 		};
 
+		CBlipFill.flipTypes = {
+			'none': 0,
+			'x': 1,
+			'y': 2,
+			'xy': 3,
+		};
+
 		function CSrcRect(l, t, r, b) {
 			CBaseNoIdObject.call(this);
 
@@ -18705,8 +18712,10 @@
 		CBlipFill.prototype['get_url'] = CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype.asc_getUrl;
 		CBlipFill.prototype['put_url'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype.asc_putUrl;
 
-		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
+		CBlipFillTile['flipTypes'] = CBlipFill.flipTypes;
+
+		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillStretch = CBlipFillStretch;
 		window['AscFormat'].CFillRect = CFillRect;
 		window['AscFormat'].CBlip = CBlip;

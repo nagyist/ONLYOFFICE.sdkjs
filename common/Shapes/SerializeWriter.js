@@ -2810,6 +2810,7 @@ function CBinaryFileWriter()
                 oThis.StartRecord(c_oAscFill.FILL_TYPE_BLIP);
 
                 oThis.WriteUChar(g_nodeAttributeStart);
+                oThis.WriteBool(fill.rotWithShape);
                 oThis.WriteUChar(g_nodeAttributeEnd);
 
                 var _src = fill.RasterImageId;
