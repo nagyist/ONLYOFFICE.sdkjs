@@ -11522,135 +11522,19 @@
             }
         }
     };
-	CChartRefBase.prototype.getExternal3DRef = function (sheet, range, external)
+
+	CChartRefBase.prototype.updateToExternal = function (oMainExternalReference, arrPastedExternalReferences, oMockWb)
 	{
-		let sSheet;
-		if (sheet[1])
-		{
-			sSheet = sheet.join(':');
-		}
-		else
-		{
-			sSheet = sheet[0];
-		}
-		const sExternal = typeof external === 'number' ? '[' + external + ']' : '';
-		return AscCommon.parserHelp.getRaw3DRef(sExternal + sSheet, range);
-	};
-	CChartRefBase.prototype.updateToExternal = function (oMainExternalReference, arrPastedExternalReferences)
-	{
-		const oApi = Asc.editor || editor;
-		const oWb = oApi.wbModel;
-      const ws = oWb.getWorksheet(0);
-		if (typeof this.f === 'string' && ws)
-		{
-			let sFormula = this.f + "";
-			let bFirstBrace = false;
-			let bLastBrace = false;
-			if (sFormula[0] === '(')
-			{
-				bFirstBrace = true;
-				sFormula = sFormula.slice(1);
+		if (typeof this.f === 'string') {
+			const result = updateRefToExternal(this.f, oMainExternalReference, arrPastedExternalReferences, oMockWb);
+			if (result !== null) {
+				this.setF(result);
 			}
-			if (sFormula[sFormula.length - 1] === ')')
-			{
-				bLastBrace = true;
-				sFormula = sFormula.slice(0, -1);
+		} else if (this.f && this.f.content) {
+			const result = updateRefToExternal(this.f && this.f.content, oMainExternalReference, arrPastedExternalReferences, oMockWb);
+			if (result !== null) {
+				this.f.setContent(result);
 			}
-
-			const f1 = sFormula;
-			const arrF = f1.split(",");
-			const arrResult = [];
-			for (let i = 0; i < arrF.length; i += 1)
-			{
-          //todo
-          var parseResult = new AscCommonExcel.ParseResult([]);
-          var parsed = new AscCommonExcel.parserFormula(arrF[i], null, ws);
-          if (parsed.parse(undefined, undefined, parseResult)) {
-              parseResult.refPos.forEach(function(item) {
-                if (item.externalLink) {
-                    const nIndex = parseInt(item.externalLink, 10);
-                    const oPastedReference = arrPastedExternalReferences[nIndex - 1];
-                    if (oPastedReference)
-                    {
-                        let nExternalReference;
-                        const oReferenceData = oApi.DocInfo && oApi.DocInfo.ReferenceData;
-                        const oPastedReferenceData = oPastedReference.referenceData;
-                        let bIsCurDocReference = false;
-                        if (oReferenceData && oPastedReferenceData)
-                        {
-                            bIsCurDocReference = oReferenceData.fileKey === oPastedReferenceData.fileKey && oReferenceData.instanceId === oPastedReferenceData.instanceId;
-                        }
-                        if (!bIsCurDocReference)
-                        {
-                            nExternalReference = oWb.getExternalLinkIndexByName(oPastedReference.Id);
-                            if (nExternalReference === null)
-                            {
-                                oWb.addExternalReferences([oPastedReference]);
-                                nExternalReference = oWb.externalReferences.length;
-                            }
-                        }
-                        arrResult.push(this.getExternal3DRef([oParsedRef.sheet, oParsedRef.sheet2], oParsedRef.range, nExternalReference));
-                    }
-                } else {
-
-                }
-              });
-          }
-				const oParsedRef = AscCommon.parserHelp.parse3DRef(arrF[i]);
-				if (!oParsedRef.external)
-				{
-					let nDefaultExternalLinIndex;
-					if (oMainExternalReference)
-					{
-						nDefaultExternalLinIndex = oWb.getExternalLinkIndexByName(oMainExternalReference.Id);
-						if (nDefaultExternalLinIndex === null)
-						{
-							oWb.addExternalReferences([oMainExternalReference]);
-							nDefaultExternalLinIndex = oWb.externalReferences.length;
-						}
-						arrResult.push('[' + nDefaultExternalLinIndex + ']' + arrF[i]);
-					}
-					else
-					{
-						arrResult.push(arrF[i]);
-					}
-				}
-				else
-				{
-					const nIndex = parseInt(oParsedRef.external, 10);
-					const oPastedReference = arrPastedExternalReferences[nIndex - 1];
-					if (oPastedReference)
-					{
-						let nExternalReference;
-						const oReferenceData = oApi.DocInfo && oApi.DocInfo.ReferenceData;
-						const oPastedReferenceData = oPastedReference.referenceData;
-						let bIsCurDocReference = false;
-						if (oReferenceData && oPastedReferenceData)
-						{
-							bIsCurDocReference = oReferenceData.fileKey === oPastedReferenceData.fileKey && oReferenceData.instanceId === oPastedReferenceData.instanceId;
-						}
-						if (!bIsCurDocReference)
-						{
-							nExternalReference = oWb.getExternalLinkIndexByName(oPastedReference.Id);
-							if (nExternalReference === null)
-							{
-								oWb.addExternalReferences([oPastedReference]);
-								nExternalReference = oWb.externalReferences.length;
-							}
-						}
-						arrResult.push(this.getExternal3DRef([oParsedRef.sheet, oParsedRef.sheet2], oParsedRef.range, nExternalReference));
-					}
-				}
-			}
-			let sResult = arrResult.join(',');
-			if (bFirstBrace)
-				sResult = '(' + sResult;
-
-			if (bLastBrace)
-				sResult = sResult + ')';
-
-
-			this.setF(sResult);
 		}
 	};
     CChartRefBase.prototype.onUpdateCache = function() {
@@ -16993,6 +16877,93 @@
             }
         }
     }
+
+	function updateRefToExternal(f, oMainExternalReference, arrPastedExternalReferences, oMockWb) {
+		const oApi = Asc.editor || editor;
+		const oWb = oApi.wbModel;
+		if (!(oWb && typeof f === "string")) {
+			return null;
+		}
+		const ws = oMockWb.getWorksheet(0);
+		let sFormula = f + "";
+		let bFirstBrace = false;
+		let bLastBrace = false;
+		if (sFormula[0] === '(')
+		{
+			bFirstBrace = true;
+			sFormula = sFormula.slice(1);
+		}
+		if (sFormula[sFormula.length - 1] === ')')
+		{
+			bLastBrace = true;
+			sFormula = sFormula.slice(0, -1);
+		}
+
+		const f1 = sFormula;
+		const arrF = f1.split(",");
+		const arrResult = [];
+		for (let i = 0; i < arrF.length; i += 1)
+		{
+			var parseResult = new AscCommonExcel.ParseResult([]);
+			var parsed = new AscCommonExcel.parserFormula(arrF[i], null, ws);
+			if (parsed.parse(undefined, undefined, parseResult)) {
+				parseResult.refPos.forEach(function(item) {
+					const oper = item.oper;
+					if (oper.externalLink) {
+						const nIndex = oper.externalLink;
+						const oPastedReference = arrPastedExternalReferences[nIndex - 1];
+						if (oPastedReference)
+						{
+							let nExternalReference = null;
+							const oReferenceData = oApi.DocInfo && oApi.DocInfo.ReferenceData;
+							const oPastedReferenceData = oPastedReference.referenceData;
+							let bIsCurDocReference = false;
+							if (oReferenceData && oPastedReferenceData)
+							{
+								bIsCurDocReference = oReferenceData.fileKey === oPastedReferenceData.fileKey && oReferenceData.instanceId === oPastedReferenceData.instanceId;
+							}
+							if (!bIsCurDocReference)
+							{
+								nExternalReference = oWb.getExternalLinkIndexByName(oPastedReference.Id);
+								if (nExternalReference === null)
+								{
+									oWb.addExternalReferences([oPastedReference]);
+									nExternalReference = oWb.externalReferences.length;
+								}
+							}
+							oper.externalLink = nExternalReference;
+							arrResult.push(oper.toString());
+						}
+					} else {
+						let nDefaultExternalLinIndex;
+						if (oMainExternalReference)
+						{
+							nDefaultExternalLinIndex = oWb.getExternalLinkIndexByName(oMainExternalReference.Id);
+							if (nDefaultExternalLinIndex === null)
+							{
+								oWb.addExternalReferences([oMainExternalReference]);
+								nDefaultExternalLinIndex = oWb.externalReferences.length;
+							}
+							oper.externalLink = nDefaultExternalLinIndex;
+							arrResult.push(oper.toString());
+						}
+						else
+						{
+							arrResult.push(oper.toString());
+						}
+					}
+				});
+			}
+		}
+		let sResult = arrResult.join(',');
+		if (bFirstBrace)
+			sResult = '(' + sResult;
+
+		if (bLastBrace)
+			sResult = sResult + ')';
+
+		return sResult;
+	}
 
     var SERIES_FLAG_HOR_VALUE = 1;
     var SERIES_FLAG_VERT_VALUE = 2;

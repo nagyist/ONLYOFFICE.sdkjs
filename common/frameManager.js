@@ -468,7 +468,7 @@
 		const wsView = this.api.wb.getWorksheet();
 		const oSheetData = mapWorksheets[wsView.model.sName];
 		if (oSheetData) {
-			wsView._updateRange(new Asc.Range(0, 0, oSheetData.maxC , oSheetData.maxR));
+			wsView._updateRange(new Asc.Range(oSheetData.minC, oSheetData.minR, oSheetData.maxC , oSheetData.maxR));
 		}
 		wsView.draw();
 	}

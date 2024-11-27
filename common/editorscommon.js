@@ -3908,14 +3908,6 @@
 			return "'" + (wsFrom !== wsTo ? wsFrom + ":" + wsTo : wsFrom) + "'!" + range;
 		}
 	};
-	// Возвращает ссылку на диапазон с листом (название листа не экранируется)
-	parserHelper.prototype.getRaw3DRef = function (sheet, range)
-	{
-		sheet = sheet.split(":");
-		var wsFrom = sheet[0],
-			wsTo   = sheet[1] === undefined ? wsFrom : sheet[1];
-			return (wsFrom !== wsTo ? wsFrom + ":" + wsTo : wsFrom) + "!" + range;
-	};
 // Возвращает экранируемое название листа
 	parserHelper.prototype.getEscapeSheetName = function (sheet)
 	{

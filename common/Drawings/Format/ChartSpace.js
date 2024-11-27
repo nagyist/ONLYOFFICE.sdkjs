@@ -2111,24 +2111,57 @@ function(window, undefined) {
 							}
 							mapWorksheets[sSheetName] = {};
 							mapWorksheets[sSheetName].ws = ws;
-							mapWorksheets[sSheetName].maxR = 0;
-							mapWorksheets[sSheetName].maxC = 0;
+							mapWorksheets[sSheetName].maxR = null;
+							mapWorksheets[sSheetName].maxC = null;
+							mapWorksheets[sSheetName].minC = null;
+							mapWorksheets[sSheetName].minR = null;
+							mapWorksheets[sSheetName].isInit = false;
 						}
-						const oWorksheet = mapWorksheets[sSheetName].ws;
+						const oWorksheetInfo = mapWorksheets[sSheetName];
+						const oWorksheet = oWorksheetInfo.ws;
 						var range = oWorksheet.getRange2(oParsedRef.range);
 						if (range)
 						{
 							range = range.bbox;
 
-							if (range.r1 > mapWorksheets[sSheetName].maxR)
-								mapWorksheets[sSheetName].maxR = range.r1;
-							if (range.r2 > mapWorksheets[sSheetName].maxR)
-								mapWorksheets[sSheetName].maxR = range.r2;
+							if (!oWorksheetInfo.isInit) {
+								if (range.r1 > range.r2) {
+									oWorksheetInfo.maxR = range.r1;
+									oWorksheetInfo.minR = range.r2;
+								} else {
+									oWorksheetInfo.minR = range.r1;
+									oWorksheetInfo.maxR = range.r2;
+								}
+								if (range.c1 > range.c2) {
+									oWorksheetInfo.maxC = range.c1;
+									oWorksheetInfo.minC = range.c2;
+								} else {
+									oWorksheetInfo.minC = range.c1;
+									oWorksheetInfo.maxC = range.c2;
+								}
+								oWorksheetInfo.isInit = true;
+							}
+							if (range.r1 > oWorksheetInfo.maxR) {
+								oWorksheetInfo.maxR = range.r1;
+							} else if (range.r1 < oWorksheetInfo.minR) {
+								oWorksheetInfo.minR = range.r1;
+							}
+							if (range.r2 > oWorksheetInfo.maxR) {
+								oWorksheetInfo.maxR = range.r2;
+							} else if (range.r2 < oWorksheetInfo.minR) {
+								oWorksheetInfo.minR = range.r2;
+							}
 
-							if (range.c1 > mapWorksheets[sSheetName].maxC)
-								mapWorksheets[sSheetName].maxC = range.c1;
-							if (range.c2 > mapWorksheets[sSheetName].maxC)
-								mapWorksheets[sSheetName].maxC = range.c2;
+							if (range.c1 > oWorksheetInfo.maxC) {
+								oWorksheetInfo.maxC = range.c1;
+							} else if (range.c1 < oWorksheetInfo.minC) {
+								oWorksheetInfo.minC = range.c1;
+							}
+							if (range.c2 > oWorksheetInfo.maxC) {
+								oWorksheetInfo.maxC = range.c2;
+							} else if (range.c2 < oWorksheetInfo.minC) {
+								oWorksheetInfo.minC = range.c2;
+							}
 
 							if (i === arrF.length - 1)
 							{

@@ -448,34 +448,20 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 
 		const oCellPasteHelper = oWs.cellPasteHelper;
 
-		const oMockWb = oWbModel.getTemporaryExternalWb();
-		//todo: do we want to read already created links when copy-pasting?
-		//const oConvertedExternalReference = oExternalReference.convertToExternalReference();
+		const oMockWb = new AscCommonExcel.Workbook();
+		oMockWb.externalReferences = oPastedWb.externalReferences;
 		const oCachedWorksheets = this.getWorksheetsFromCache(oMockWb);
+		for (let i in oCachedWorksheets) {
+			oMockWb.aWorksheets.push(oCachedWorksheets[i].ws);
+		}
+
 		let bNeedConvert = false;
 
 		let oMainExternalReference;
-		const sChartRange = this.getCommonRange();
-		const arrChartRanges = AscFormat.fParseChartFormulaExternal(sChartRange);
-		if (!(arrChartRanges && arrChartRanges.length)) {
-			return;
-		}
-		const mapRangeWorksheets = {};
-		for (let i = 0; i < arrChartRanges.length; i++) {
-			const oRange = arrChartRanges[i];
-			const oRangeWorksheet = oRange.worksheet;
-			const sWorksheetName = oRangeWorksheet.getName();
-			if (!mapRangeWorksheets[sWorksheetName]) {
-				mapRangeWorksheets[sWorksheetName] = [];
-			}
-			mapRangeWorksheets[sWorksheetName].push(oRange.bbox);
-		}
 		for (let sSheetName in oCachedWorksheets)
 		{
-			const arrRanges = mapRangeWorksheets[sSheetName];
-			if (!arrRanges) {
-				continue;
-			}
+			const oWorksheetInfo = oCachedWorksheets[sSheetName];
+			const arrRanges = [new Asc.Range(oWorksheetInfo.minC, oWorksheetInfo.minR, oWorksheetInfo.maxC, oWorksheetInfo.maxR)];
 			const oPastedWS = oCachedWorksheets[sSheetName].ws;
 			const oPastedLinkInfo = oCellPasteHelper.getPastedLinkInfo(oPastedWb, oPastedWS);
 
@@ -526,35 +512,52 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		}
 		if (bNeedConvert)
 		{
-			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences);
+			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences, oMockWb);
 		}
 	}
-	CChartSpace.prototype.convertRefsToExternal = function (oMainExternalReference, arrPastedExternalReferences)
+	CChartSpace.prototype.convertRefsToExternal = function (oMainExternalReference, arrPastedExternalReferences, oMockWb)
 	{
 		const aSeries = this.getAllSeries();
-		for (let i = 0; i < aSeries.length; i += 1)
-		{
-			const oSeria = aSeries[i];
-			const oVal = oSeria.val || oSeria.yVal;
-			if (oVal && oVal.numRef)
-			{
-				oVal.numRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences);
-			}
-			const oCat = oSeria.cat || oSeria.xVal;
-			if (oCat)
-			{
-				if (oCat.numRef)
-				{
-					oCat.numRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences);
+		if (this.isChartEx()) {
+			for (let i = 0; i < aSeries.length; i += 1) {
+				const oSeria = aSeries[i];
+				let oData = oSeria.getData();
+				if(oData) {
+					let aDims = oData.dimension;
+					for(let nDim = 0; nDim < aDims.length; ++nDim) {
+						let oDim = aDims[nDim];
+						oDim.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
+					}
 				}
-				if (oCat.strRef)
-				{
-					oCat.strRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences);
+				if(oSeria.tx && oSeria.tx.txData) {
+					oSeria.tx.txData.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
 				}
 			}
-			if (oSeria.tx && oSeria.tx.strRef)
+		} else {
+			for (let i = 0; i < aSeries.length; i += 1)
 			{
-				oSeria.tx.strRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences);
+				const oSeria = aSeries[i];
+				const oVal = oSeria.val || oSeria.yVal;
+				if (oVal && oVal.numRef)
+				{
+					oVal.numRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
+				}
+				const oCat = oSeria.cat || oSeria.xVal;
+				if (oCat)
+				{
+					if (oCat.numRef)
+					{
+						oCat.numRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
+					}
+					if (oCat.strRef)
+					{
+						oCat.strRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
+					}
+				}
+				if (oSeria.tx && oSeria.tx.strRef)
+				{
+					oSeria.tx.strRef.updateToExternal(oMainExternalReference, arrPastedExternalReferences, oMockWb);
+				}
 			}
 		}
 		this.onDataUpdateRecalc();
