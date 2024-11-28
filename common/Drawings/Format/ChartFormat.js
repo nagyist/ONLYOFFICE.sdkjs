@@ -16904,8 +16904,12 @@
 		const arrResult = [];
 		for (let i = 0; i < arrF.length; i += 1)
 		{
+        let f = arrF[i];
+        if (f.startsWith('[0]!')) {
+            f = f.slice(4);
+        }
 			var parseResult = new AscCommonExcel.ParseResult([]);
-			var parsed = new AscCommonExcel.parserFormula(arrF[i], null, ws);
+			var parsed = new AscCommonExcel.parserFormula(f, null, ws);
 			if (parsed.parse(undefined, undefined, parseResult)) {
 				parseResult.refPos.forEach(function(item) {
 					const oper = item.oper;
@@ -16931,8 +16935,9 @@
 									nExternalReference = oWb.externalReferences.length;
 								}
 							}
-							oper.externalLink = nExternalReference;
-							arrResult.push(oper.toString());
+              const toStringOper = oper.clone();
+                toStringOper.externalLink = nExternalReference;
+							arrResult.push(toStringOper.toString());
 						}
 					} else {
 						let nDefaultExternalLinIndex;
@@ -16944,8 +16949,18 @@
 								oWb.addExternalReferences([oMainExternalReference]);
 								nDefaultExternalLinIndex = oWb.externalReferences.length;
 							}
-							oper.externalLink = nDefaultExternalLinIndex;
-							arrResult.push(oper.toString());
+              let toStringOper;
+              if (oper.type === AscCommonExcel.cElementType.name) {
+                  toStringOper = new AscCommonExcel.cName3D(oper.value, oper.ws);
+              } else if (oper.type === AscCommonExcel.cElementType.cell) {
+                  toStringOper = new AscCommonExcel.cRef3D(oper.value, oper.ws);
+              } else if (oper.type === AscCommonExcel.cElementType.cellsRange) {
+                  toStringOper = new AscCommonExcel.cArea3D(oper.value, oper.ws);
+              } else {
+                  toStringOper = oper.clone();
+              }
+                toStringOper.externalLink = nDefaultExternalLinIndex;
+							arrResult.push(toStringOper.toString());
 						}
 						else
 						{

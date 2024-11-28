@@ -450,6 +450,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 
 		const oMockWb = new AscCommonExcel.Workbook();
 		oMockWb.externalReferences = oPastedWb.externalReferences;
+		oMockWb.dependencyFormulas = oPastedWb.dependencyFormulas;
 		const oCachedWorksheets = this.getWorksheetsFromCache(oMockWb);
 		for (let i in oCachedWorksheets) {
 			oMockWb.aWorksheets.push(oCachedWorksheets[i].ws);
@@ -564,19 +565,15 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 	};
 	CChartSpace.prototype.applySpecialPasteProps = function (oExternalWb)
 	{
+		if (oExternalWb)
+		{
+			this.addExternalReferenceToEditor(oExternalWb);
+		}
 		if (!this.XLSX || this.XLSX.length)
 		{
 			this.setXLSX(new Uint8Array(0));
 		}
 		this.setExternalReference(null);
-		if (oExternalWb)
-		{
-			this.addExternalReferenceToEditor(oExternalWb);
-		}
-		else
-		{
-			this.setExternalReference(null);
-		}
 		this.checkChartExRefs();
 	}
 	CChartSpace.prototype.canPasteExternal = function ()

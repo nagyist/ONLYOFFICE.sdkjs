@@ -2047,6 +2047,48 @@ function(window, undefined) {
 			}
 		}
 
+		const depFormulas = oParentWb.dependencyFormulas;
+		function fGetParsedRef(sFormula) {
+			if (sFormula.startsWith("[0]!")) {
+				sFormula = sFormula.slice(4);
+			}
+
+			const isName = AscCommon.parserHelp.isName3D(sFormula, 0) || AscCommon.parserHelp.isDefName(sFormula, 0);
+			if (isName) {
+				if (!isName.external) {
+					const sheetName = isName.sheet;
+					const worksheet = depFormulas.wb.getWorksheetByName(sheetName);
+					const defName = depFormulas.getDefNameByName(isName.defName, worksheet && worksheet.Id);
+					if (defName) {
+						const parsed3DRef = AscCommon.parserHelp.parse3DRef(defName.ref, 0);
+						if (!parsed3DRef.external) {
+							return parsed3DRef;
+						}
+					}
+				}
+				return null;
+			}
+			const parsed3DRef = AscCommon.parserHelp.parse3DRef(sFormula, 0);
+			return parsed3DRef.external ? null : parsed3DRef;
+		}
+		function fGetArrF(sFormula) {
+			const result = [];
+			if (sFormula[0] === '(')
+				sFormula = sFormula.slice(1);
+			if (sFormula[sFormula.length - 1] === ')')
+				sFormula = sFormula.slice(0, -1);
+
+			const f1 = sFormula;
+			const arrF = f1.split(",");
+			for (let i = 0; i < arrF.length; i++) {
+				let parsedRef = fGetParsedRef(arrF[i]);
+				if (parsedRef) {
+					result.push(parsedRef);
+				}
+			}
+			return result;
+		}
+
 		function fillTableFromRef(ref)
 		{
 			let oCache;
@@ -2084,13 +2126,12 @@ function(window, undefined) {
 				if (sFormula[sFormula.length - 1] === ')')
 					sFormula = sFormula.slice(0, -1);
 
-				const f1 = sFormula;
-				const arrF = f1.split(",");
+				const arrF = fGetArrF(sFormula);
 
 				let nPtIndex = 0, nPtCount;
 				for (let i = 0; i < arrF.length; ++i)
 				{
-					var oParsedRef = AscCommon.parserHelp.parse3DRef(arrF[i]);
+					var oParsedRef = arrF[i];
 					if (oParsedRef)
 					{
 						const sSheetName  = oParsedRef.sheet;

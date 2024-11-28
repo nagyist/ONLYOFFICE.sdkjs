@@ -3691,6 +3691,15 @@
 		}
 		return false;
 	};
+	parserHelper.prototype.isDefName = function(formula, start_pos) {
+		var _isArea = this.isArea(formula, start_pos);
+		var _isRef = !_isArea && this.isRef(formula, start_pos);
+		var _isName = !_isRef && !_isArea && this.isName(formula, start_pos);
+		if (_isName) {
+			return {defName: this.operand_str};
+		}
+		return false;
+	};
 	parserHelper.prototype.isName3D = function (formula, start_pos)
 	{
 		if (this instanceof parserHelper)
@@ -3701,10 +3710,10 @@
 		var _is3DRef = this.is3DRef(formula, start_pos);
 		if(_is3DRef && _is3DRef[0] && _is3DRef[1] && _is3DRef[1].length)
 		{
-			var _startPos = this.pCurrPos;
-			var _isArea = this.isArea(formula, _startPos);
-			var _isRef = !_isArea && this.isRef(formula, _startPos);
-			return !_isRef && !_isArea && this.isName(formula, _startPos);
+			var _isName = this.isDefName(formula, this.pCurrPos);
+			if (_isName) {
+				return {defName: _isName.defName, sheet: _is3DRef[1], external: _is3DRef[3]};
+			}
 		}
 
 		return false;
