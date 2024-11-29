@@ -1138,7 +1138,7 @@ CShapeDrawer.prototype =
 
                     let patternSource = imgSource;
                     if (isTile || isStretch) {
-                        patternSource = document.createElement('canvas');
+                        patternSource = this.cachedPatternSource ? this.cachedPatternSource : this.patternSource = document.createElement('canvas');
                         patternSource.width = _img.Image.width;
                         patternSource.height = _img.Image.height;
                     }
@@ -1149,13 +1149,16 @@ CShapeDrawer.prototype =
                         // Parameters from blipFill.tile
                         const scaleX = (tile.sx / 1000) / 100;
                         const scaleY = (tile.sy / 1000) / 100;
-                        const offsetX = tile.tx / 1000;
-                        const offsetY = tile.ty / 1000;
+                        const offsetX = tile.tx * AscCommonWord.g_dKoef_emu_to_mm;
+                        const offsetY = tile.ty * AscCommonWord.g_dKoef_emu_to_mm;
                         const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
                         const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-                        const algn = swapKeysAndValues(AscCommon.c_oAscRectAlignType)[tile.algn];
-                        let rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
-                            ? 0 : -this.Shape.getFullRotate();
+                        const algn = AscFormat.isRealNumber(tile.algn)
+                            ? swapKeysAndValues(AscCommon.c_oAscRectAlignType)[tile.algn]
+                            : 'tl';
+                        const rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
+                            ? 0
+                            : -this.Shape.getFullRotate();
 
                         function swapKeysAndValues(obj) {
                             const swapped = {};

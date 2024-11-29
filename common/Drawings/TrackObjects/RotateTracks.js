@@ -186,7 +186,7 @@ function OverlayObject(geometry, extX, extY, brush, pen, transform )
 }
 
 OverlayObject.prototype.getFullRotate = function () {
-    return -1 * Math.atan2(this.TransformMatrix.shx, this.TransformMatrix.sy);
+    return this.TransformMatrix.GetRotation() * Math.PI / 180;
 };
 
 function ObjectToDraw(brush, pen, extX, extY, geometry, transform, x, y, oComment, Code)
