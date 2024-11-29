@@ -2069,7 +2069,7 @@ function(window, undefined) {
 				return null;
 			}
 			const parsed3DRef = AscCommon.parserHelp.parse3DRef(sFormula, 0);
-			return parsed3DRef.external ? null : parsed3DRef;
+			return (!parsed3DRef || parsed3DRef.external) ? null : parsed3DRef;
 		}
 		function fGetArrF(sFormula) {
 			const result = [];

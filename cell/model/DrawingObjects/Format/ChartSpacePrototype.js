@@ -622,16 +622,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 			function checkFormula(formula) {
 				const formulaText = formula && formula.content;
 				if (formulaText) {
-					let isDefName = false;
-					AscCommonExcel.forEachElementInRef(function (item) {
-						switch (item.oper.type) {
-							case AscCommonExcel.cElementType.name:
-							case AscCommonExcel.cElementType.name3D:
-								isDefName = true;
-								return true;
-						}
-					}, formulaText, ws);
-					if (!isDefName) {
+					if (!(AscCommon.parserHelp.isName3D(formulaText, 0) || AscCommon.parserHelp.isDefName(formulaText, 0))) {
 						const xlchartDefName = wbModel.getNewXlChartId();
 						const defName = wbModel.addDefName(xlchartDefName, formulaText, undefined, true);
 						AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_DefinedNamesChange, null, null,

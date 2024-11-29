@@ -16904,9 +16904,11 @@
 		const arrResult = [];
 		for (let i = 0; i < arrF.length; i += 1)
 		{
+			let isWorkbookRef = false;
         let f = arrF[i];
         if (f.startsWith('[0]!')) {
             f = f.slice(4);
+	        isWorkbookRef = true;
         }
 			var parseResult = new AscCommonExcel.ParseResult([]);
 			var parsed = new AscCommonExcel.parserFormula(f, null, ws);
@@ -16935,8 +16937,10 @@
 									nExternalReference = oWb.externalReferences.length;
 								}
 							}
+							const oExternalReference = oWb.getExternalLinkByIndex(nExternalReference - 1);
               const toStringOper = oper.clone();
                 toStringOper.externalLink = nExternalReference;
+							// oExternalReference.initDefinedName();
 							arrResult.push(toStringOper.toString());
 						}
 					} else {
@@ -16949,22 +16953,33 @@
 								oWb.addExternalReferences([oMainExternalReference]);
 								nDefaultExternalLinIndex = oWb.externalReferences.length;
 							}
-              let toStringOper;
-              if (oper.type === AscCommonExcel.cElementType.name) {
-                  toStringOper = new AscCommonExcel.cName3D(oper.value, oper.ws);
-              } else if (oper.type === AscCommonExcel.cElementType.cell) {
-                  toStringOper = new AscCommonExcel.cRef3D(oper.value, oper.ws);
-              } else if (oper.type === AscCommonExcel.cElementType.cellsRange) {
-                  toStringOper = new AscCommonExcel.cArea3D(oper.value, oper.ws);
-              } else {
-                  toStringOper = oper.clone();
-              }
-                toStringOper.externalLink = nDefaultExternalLinIndex;
-							arrResult.push(toStringOper.toString());
+
+							let result;
+							if (isWorkbookRef) {
+								result = "[" + nDefaultExternalLinIndex + "]!" + oper.toString();
+							} else {
+								let toStringOper;
+								if (oper.type === AscCommonExcel.cElementType.name) {
+									toStringOper = new AscCommonExcel.cName3D(oper.value, oper.ws);
+								} else if (oper.type === AscCommonExcel.cElementType.cell) {
+									toStringOper = new AscCommonExcel.cRef3D(oper.value, oper.ws);
+								} else if (oper.type === AscCommonExcel.cElementType.cellsRange) {
+									toStringOper = new AscCommonExcel.cArea3D(oper.value, oper.ws);
+								} else {
+									toStringOper = oper.clone();
+								}
+								toStringOper.externalLink = nDefaultExternalLinIndex;
+								result = toStringOper.toString();
+							}
+							arrResult.push(result);
 						}
 						else
 						{
-							arrResult.push(oper.toString());
+							let result = oper.toString();
+							if (isWorkbookRef) {
+								result = "[0]!" + result;
+							}
+							arrResult.push(result);
 						}
 					}
 				});
