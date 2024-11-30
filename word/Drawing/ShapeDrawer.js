@@ -1036,76 +1036,98 @@ CShapeDrawer.prototype =
                 return;
             }
 
-			var bIsUnusePattern = false;
-			if (AscCommon.AscBrowser.isIE)
-			{
+			let isSvgPatternUnsupported = false;
+			if (AscCommon.AscBrowser.isIE) {
 				// ie падает иначе !!!
-				if (this.UniFill.fill.RasterImageId)
-				{
+				if (this.UniFill.fill.RasterImageId) {
 					if (this.UniFill.fill.RasterImageId.lastIndexOf(".svg") == this.UniFill.fill.RasterImageId.length - 4)
-						bIsUnusePattern = true;
+						isSvgPatternUnsupported = true;
 				}
 			}
 
-            if (bIsUnusePattern || null == this.UniFill.fill.tile || this.Graphics.m_oContext === undefined)
-            {
-                if (this.IsRectShape)
-                {
-                    if(this.UniFill.IsTransitionTextures)
-                    {
+            if (isSvgPatternUnsupported || null == this.UniFill.fill.tile || this.Graphics.m_oContext === undefined) {
+
+                const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch);
+                const fillRect = this.UniFill.fill.stretch.fillRect;
+                const paddedFillRect = isStretch && {
+                    l: 0 - 100 * fillRect.l / (100 - fillRect.l),
+                    t: 0 - 100 * fillRect.t / (100 - fillRect.t),
+                    r: 100 + 100 * (100 - fillRect.r) / (100 + 100 - fillRect.r),
+                    b: 100 + 100 * (100 - fillRect.b) / (100 + 100 - fillRect.b),
+                };
+
+                console.log(fillRect);
+                console.log(paddedFillRect);
+
+                function drawRectShape() {
+                    if (this.UniFill.IsTransitionTextures) {
                         this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
-                    }
-                    else if ((null == this.UniFill.transparent) || (this.UniFill.transparent == 255))
-                    {
-                        this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y), undefined, this.UniFill.fill.srcRect, this.UniFill.fill.canvas);
-                    }
-                    else
-                    {
-                        var _old_global_alpha = this.Graphics.m_oContext.globalAlpha;
-                        this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
-                        this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y), undefined, this.UniFill.fill.srcRect, this.UniFill.fill.canvas);
-                        this.Graphics.m_oContext.globalAlpha = _old_global_alpha;
+                    } else {
+                        if ((null == this.UniFill.transparent) || (this.UniFill.transparent == 255)) {
+                            this.Graphics.drawImage(
+                                getFullImageSrc2(this.UniFill.fill.RasterImageId),
+                                this.min_x, this.min_y,
+                                (this.max_x - this.min_x), (this.max_y - this.min_y),
+                                undefined,
+                                isStretch ? paddedFillRect : this.UniFill.fill.srcRect,
+                                this.UniFill.fill.canvas
+                            );
+                        } else {
+                            drawImageWithOptionalTransparency();
+                        }
                     }
                 }
-                else
-                {
+
+                function drawNonRectShape() {
                     this.Graphics.save();
                     this.Graphics.clip();
 
-                    if(this.UniFill.IsTransitionTextures)
-                    {
+                    if (this.UniFill.IsTransitionTextures) {
                         this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
+                    } else {
+                        if (!this.Graphics.isSupportTextDraw() || this.Graphics.isTrack() || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255)) {
+                            this.Graphics.drawImage(
+                                getFullImageSrc2(this.UniFill.fill.RasterImageId),
+                                this.min_x, this.min_y,
+                                (this.max_x - this.min_x), (this.max_y - this.min_y),
+                                undefined,
+                                isStretch ? paddedFillRect : this.UniFill.fill.srcRect,
+                                this.UniFill.fill.canvas);
+                        } else {
+                            drawImageWithOptionalTransparency.call(this);
+                        }
                     }
-                    else if (!this.Graphics.isSupportTextDraw() || this.Graphics.isTrack() || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255))
-                    {
-                        this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y), undefined, this.UniFill.fill.srcRect, this.UniFill.fill.canvas);
-                    }
-                    else
-                    {
-                        var _old_global_alpha = this.Graphics.m_oContext.globalAlpha;
-                        this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
-                        this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y), undefined, this.UniFill.fill.srcRect, this.UniFill.fill.canvas);
-                        this.Graphics.m_oContext.globalAlpha = _old_global_alpha;
-                    }
-
+                    
                     this.Graphics.restore();
                 }
-            }
-            else
-            {
+
+                function drawImageWithOptionalTransparency() {
+                    const _old_global_alpha = this.Graphics.m_oContext.globalAlpha;
+                    this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
+
+                    this.Graphics.drawImage(
+                        getFullImageSrc2(this.UniFill.fill.RasterImageId),
+                        this.min_x, this.min_y,
+                        (this.max_x - this.min_x), (this.max_y - this.min_y),
+                        undefined,
+                        this.UniFill.fill.srcRect,
+                        this.UniFill.fill.canvas
+                    );
+
+                    this.Graphics.m_oContext.globalAlpha = _old_global_alpha;
+                }
+
+                this.IsRectShape ? drawRectShape.call(this) : drawNonRectShape.call(this);
+            } else {
                 var _img = editorInfo.editor.ImageLoader.map_image_index[getFullImageSrc2(this.UniFill.fill.RasterImageId)];
                 var _img_native = this.UniFill.fill.canvas;
-                if ((!_img_native) && (_img == undefined || _img.Image == null || _img.Status == AscFonts.ImageLoadStatus.Loading))
-                {
+                if ((!_img_native) && (_img == undefined || _img.Image == null || _img.Status == AscFonts.ImageLoadStatus.Loading)) {
                     this.Graphics.save();
                     this.Graphics.clip();
 
-                    if (!this.Graphics.isSupportTextDraw() || this.Graphics.isTrack() || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255))
-                    {
+                    if (!this.Graphics.isSupportTextDraw() || this.Graphics.isTrack() || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255)) {
                         this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y));
-                    }
-                    else
-                    {
+                    } else {
                         var _old_global_alpha = this.Graphics.m_oContext.globalAlpha;
                         this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
                         this.Graphics.drawImage(getFullImageSrc2(this.UniFill.fill.RasterImageId), this.min_x, this.min_y, (this.max_x - this.min_x), (this.max_y - this.min_y));
@@ -1113,8 +1135,7 @@ CShapeDrawer.prototype =
                     }
 
                     this.Graphics.restore();
-                }
-                else {
+                } else {
                     const _is_ctx = this.Graphics.isSupportTextDraw() &&
                         this.Graphics.m_oContext !== undefined &&
                         this.UniFill.transparent != null &&
@@ -1125,6 +1146,7 @@ CShapeDrawer.prototype =
                     _ctx.save();
 
                     const imgSource = !_img_native ? _img.Image : _img_native;
+                    let patternSource = imgSource;
 
                     // Global graphics scaling factors
                     const __graphics = (this.Graphics.MaxEpsLine === undefined) ? this.Graphics : this.Graphics.Graphics;
@@ -1133,18 +1155,12 @@ CShapeDrawer.prototype =
                     const koefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
                     const koefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
 
-                    const isTile = AscCommon.isRealObject(this.UniFill.fill.tile);
-                    const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch);
-
-                    let patternSource = imgSource;
-                    if (isTile || isStretch) {
+                    const tile = this.UniFill.fill.tile;
+                    const isTile = AscCommon.isRealObject(tile);
+                    if (isTile) {
                         patternSource = this.cachedPatternSource ? this.cachedPatternSource : this.patternSource = document.createElement('canvas');
                         patternSource.width = _img.Image.width;
                         patternSource.height = _img.Image.height;
-                    }
-
-                    if (isTile) {
-                        const tile = this.UniFill.fill.tile;
 
                         // Parameters from blipFill.tile
                         const scaleX = (tile.sx / 1000) / 100;
@@ -1239,23 +1255,6 @@ CShapeDrawer.prototype =
 
                         // Scaling
                         _ctx.scale(scaleX, scaleY);
-                    } else if (isStretch) {
-                        // Parameters from blipFill.stretch.fillRect
-                        const fillRect = this.UniFill.fill.stretch.fillRect; // percents
-
-                        const shapeWidth = this.max_x - this.min_x;
-                        const shapeHeight = this.max_y - this.min_y;
-
-                        const paddedX = shapeWidth * (fillRect.l / 100);
-                        const paddedY = shapeHeight * (fillRect.t / 100);
-                        const paddedWidth = shapeWidth * (1 - fillRect.r / 100 - fillRect.l / 100);
-                        const paddedHeight = shapeHeight * (1 - fillRect.t / 100 - fillRect.b / 100);
-
-                        const resultCtx = patternSource.getContext('2d');
-                        resultCtx.drawImage(
-                            imgSource, 0, 0, _img.Image.width, _img.Image.height,
-                            paddedX, paddedY, paddedWidth, paddedHeight
-                        );
                     }
 
                     _ctx.scale(koefX * __graphics.TextureFillTransformScaleX, koefY * __graphics.TextureFillTransformScaleY);
