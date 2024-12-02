@@ -2998,7 +2998,9 @@
 			var duplicate = new CBlipFill();
 			duplicate.RasterImageId = this.RasterImageId;
 
-			duplicate.stretch = this.stretch;
+			if (isRealObject(this.stretch)) {
+				duplicate.stretch = this.stretch.createDuplicate();
+			}
 			if (isRealObject(this.tile)) {
 				duplicate.tile = this.tile.createDuplicate();
 			}
@@ -3072,15 +3074,11 @@
 			if (this.RasterImageId == fill.RasterImageId) {
 				_ret.RasterImageId = this.RasterImageId;
 			}
-			if (fill.stretch == this.stretch) {
-				_ret.stretch = this.stretch;
+			if (isRealObject(fill.stretch)) {
+				_ret.stretch = this.stretch.isIdentical(fill.stretch) ? this.stretch.createDuplicate() : new CBlipFillStretch();
 			}
 			if (isRealObject(fill.tile)) {
-				if (fill.tile.IsIdentical(this.tile)) {
-					_ret.tile = this.tile.createDuplicate();
-				} else {
-					_ret.tile = new CBlipFillTile();
-				}
+				_ret.tile = fill.tile.IsIdentical(this.tile) ? this.tile.createDuplicate() : new CBlipFillTile();
 			}
 			if (fill.rotWithShape === this.rotWithShape) {
 				_ret.rotWithShape = this.rotWithShape;
@@ -3344,7 +3342,6 @@
 		}
 		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
 
-
 		CBlipFillStretch.prototype.setFillRect = function (fillRect) {
 			this.fillRect = fillRect;
 		};
@@ -3360,6 +3357,13 @@
 			const copy = new CBlipFillStretch();
 			copy.fillRect = this.fillRect.createDuplicate();
 			return copy;
+		};
+		CBlipFillStretch.prototype.isIdentical = function (other) {
+			return other &&
+				other.fillRect.l == this.fillRect.l &&
+				other.fillRect.t == this.fillRect.t &&
+				other.fillRect.r == this.fillRect.r &&
+				other.fillRect.b == this.fillRect.b;
 		};
 
 		function CFillRect(l, t, r, b) {
@@ -15788,7 +15792,7 @@
 			if (sBlipFillType === "tile") {
 				oUniFill.fill.tile = new AscFormat.CBlipFillTile();
 			} else if (sBlipFillType === "stretch") {
-				oUniFill.fill.stretch = true;
+				oUniFill.fill.stretch = new AscFormat.CBlipFillStretch();
 			}
 			return oUniFill;
 		}

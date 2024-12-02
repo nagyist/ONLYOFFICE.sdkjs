@@ -1046,18 +1046,25 @@ CShapeDrawer.prototype =
 			}
 
             if (isSvgPatternUnsupported || null == this.UniFill.fill.tile || this.Graphics.m_oContext === undefined) {
-
                 const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch);
-                const fillRect = this.UniFill.fill.stretch.fillRect;
-                const paddedFillRect = isStretch && {
-                    l: 0 - 100 * fillRect.l / (100 - fillRect.l),
-                    t: 0 - 100 * fillRect.t / (100 - fillRect.t),
-                    r: 100 + 100 * (100 - fillRect.r) / (100 + 100 - fillRect.r),
-                    b: 100 + 100 * (100 - fillRect.b) / (100 + 100 - fillRect.b),
-                };
 
-                console.log(fillRect);
-                console.log(paddedFillRect);
+                let paddedFillRect = {l: 0, t: 0, r: 100, b: 100};
+                if (isStretch) {
+                    const fillRect = this.UniFill.fill.stretch.fillRect;
+                    const fillWidth = fillRect.r - fillRect.l;
+                    const fillHeight = fillRect.b - fillRect.t;
+                    const supplementLeft = 100 * fillRect.l / fillWidth;
+                    const supplementRight = 100 * (100 - fillRect.r) / fillWidth;
+                    const supplementTop = 100 * fillRect.t / fillHeight;
+                    const supplementBottom = 100 * (100 - fillRect.b) / fillHeight;
+
+                    paddedFillRect = {
+                        l: 0 - supplementLeft,
+                        t: 0 - supplementTop,
+                        r: 100 + supplementRight,
+                        b: 100 + supplementBottom,
+                    }
+                }
 
                 function drawRectShape() {
                     if (this.UniFill.IsTransitionTextures) {
@@ -1163,10 +1170,10 @@ CShapeDrawer.prototype =
                         patternSource.height = _img.Image.height;
 
                         // Parameters from blipFill.tile
-                        const scaleX = (tile.sx / 1000) / 100;
-                        const scaleY = (tile.sy / 1000) / 100;
-                        const offsetX = tile.tx * AscCommonWord.g_dKoef_emu_to_mm;
-                        const offsetY = tile.ty * AscCommonWord.g_dKoef_emu_to_mm;
+                        const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
+                        const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
+                        const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
+                        const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
                         const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
                         const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
                         const algn = AscFormat.isRealNumber(tile.algn)
