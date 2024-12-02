@@ -3211,10 +3211,12 @@
 			this.texture_id = v;
 		};
 		CBlipFill.prototype.asc_getUrl = function () {
-			return this.RasterImageId;
+			return this.url;
 		};
-		CBlipFill.prototype.asc_putUrl = function (v) {
+		CBlipFill.prototype.asc_putUrl = function (v, sToken) {
 			this.RasterImageId = v;
+			this.url = v;
+			this.token = sToken;
 		};
 
 		CBlipFill.flipTypes = {

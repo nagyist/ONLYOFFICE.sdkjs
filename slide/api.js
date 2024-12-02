@@ -59,7 +59,6 @@
 	var c_oAscTypeSelectElement = Asc.c_oAscTypeSelectElement;
 	var c_oAscFill              = Asc.c_oAscFill;
 	var asc_CShapeFill          = Asc.asc_CShapeFill;
-	var CBlipFill               = AscFormat.CBlipFill;
     var c_oAscFontRenderingModeType = Asc.c_oAscFontRenderingModeType;
 
 	function CAscSlideProps()
@@ -5016,7 +5015,7 @@ background-repeat: no-repeat;\
 			var AscShapeProp       = new Asc.asc_CShapeProperty();
 			AscShapeProp.fill      = new asc_CShapeFill();
 			AscShapeProp.fill.type = c_oAscFill.FILL_TYPE_BLIP;
-			AscShapeProp.fill.fill = new CBlipFill();
+			AscShapeProp.fill.fill = new AscFormat.CBlipFill();
 			AscShapeProp.fill.fill.asc_putUrl(src);
 			if(obj.textureType !== null && obj.textureType !== undefined){
                 AscShapeProp.fill.fill.asc_putType(obj.textureType);
@@ -5029,7 +5028,7 @@ background-repeat: no-repeat;\
 		}
 		else if (obj && obj.isImageBullet)
 		{
-			var fillBlip = new CBlipFill();
+			var fillBlip = new AscFormat.CBlipFill();
 			fillBlip.asc_putUrl(src, null);
 			this.put_ListType(undefined, undefined, fillBlip);
 		}
@@ -5038,7 +5037,7 @@ background-repeat: no-repeat;\
 			var AscSlideProp             = new CAscSlideProps();
 			AscSlideProp.Background      = new asc_CShapeFill();
 			AscSlideProp.Background.type = c_oAscFill.FILL_TYPE_BLIP;
-			AscSlideProp.Background.fill = new CBlipFill();
+			AscSlideProp.Background.fill = new AscFormat.CBlipFill();
 			AscSlideProp.Background.fill.asc_putUrl(src);
 			if(obj.textureType !== null && obj.textureType !== undefined){
                 AscSlideProp.Background.fill.asc_putType(obj.textureType);
@@ -5056,7 +5055,7 @@ background-repeat: no-repeat;\
 			var AscShapeProp = new Asc.asc_CShapeProperty();
 			var oFill        = new asc_CShapeFill();
 			oFill.type       = c_oAscFill.FILL_TYPE_BLIP;
-			oFill.fill       = new CBlipFill();
+			oFill.fill       = new AscFormat.CBlipFill();
 			oFill.fill.asc_putUrl(src);
             if(obj.textureType !== null && obj.textureType !== undefined){
 				oFill.fill.asc_putType(obj.textureType);
