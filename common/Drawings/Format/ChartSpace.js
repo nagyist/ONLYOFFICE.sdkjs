@@ -2062,7 +2062,7 @@ function(window, undefined) {
 					if (defName) {
 						const parsed3DRef = AscCommon.parserHelp.parse3DRef(defName.ref, 0);
 						if (!parsed3DRef.external) {
-							return parsed3DRef;
+							return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref}});
 						}
 					}
 				}
@@ -2151,6 +2151,7 @@ function(window, undefined) {
 								ws.sName = sSheetName;
 							}
 							mapWorksheets[sSheetName] = {};
+							mapWorksheets[sSheetName].defNames = [];
 							mapWorksheets[sSheetName].ws = ws;
 							mapWorksheets[sSheetName].maxR = null;
 							mapWorksheets[sSheetName].maxC = null;
@@ -2202,6 +2203,10 @@ function(window, undefined) {
 								oWorksheetInfo.maxC = range.c2;
 							} else if (range.c2 < oWorksheetInfo.minC) {
 								oWorksheetInfo.minC = range.c2;
+							}
+
+							if (oParsedRef.defName) {
+								oWorksheetInfo.defNames.push(oParsedRef.defName);
 							}
 
 							if (i === arrF.length - 1)

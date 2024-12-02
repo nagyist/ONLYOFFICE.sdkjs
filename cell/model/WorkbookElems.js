@@ -15552,9 +15552,16 @@ function RangeDataManagerElem(bbox, data)
 		if (!val) {
 			return;
 		}
+		this.initDefinedNameFromObj({worksheetName: val.ws.sName, defName: val.value, ref: null});
+	};
 
-		const index = this.getSheetByName(val.ws.sName);
-		const name = val.value;
+	ExternalReference.prototype.initDefinedNameFromObj = function (val) {
+		if (!val) {
+			return;
+		}
+
+		const index = this.getSheetByName(val.worksheetName);
+		const name = val.defName;
 
 		//check on exist
 		if (this.getDefName(name, index)) {
@@ -15564,6 +15571,7 @@ function RangeDataManagerElem(bbox, data)
 		let defName = new ExternalDefinedName(this);
 		defName.Name = name;
 		defName.SheetId = index;
+		defName.RefersTo = val.ref || null;
 		this.addDefName(defName);
 	};
 
@@ -15609,6 +15617,9 @@ function RangeDataManagerElem(bbox, data)
 				}
 			}
 		}
+	};
+	ExternalReference.prototype.addDefNameFromInfo = function (defNameInfo) {
+
 	};
 	function asc_CExternalReference() {
 		this.type = null;
