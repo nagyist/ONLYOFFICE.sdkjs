@@ -153,12 +153,6 @@ CChartSpace.prototype.handleUpdateFlip = function()
     this.recalcTransform();
     this.addToRecalculate();
 };
-CChartSpace.prototype.handleUpdateChart = function()
-{
-    this.recalcChart();
-    this.setRecalculateInfo();
-    this.addToRecalculate();
-};
 CChartSpace.prototype.handleUpdateStyle = function()
 {
     this.recalcInfo.recalculateSeriesColors = true;

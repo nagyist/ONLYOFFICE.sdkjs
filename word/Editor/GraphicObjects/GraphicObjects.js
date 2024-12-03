@@ -1325,9 +1325,10 @@ CGraphicObjects.prototype =
 			if (oChartData) {
 				oSelectedChart.setChartData(oChartData);
 			}
-			oSelectedChart.handleUpdateChart();
-      oSelectedChart.recalculate();
-			this.document.Recalculate();
+			oSelectedChart.handleUpdateType();
+      const oRecalcData = new AscCommon.RecalcData();
+			oRecalcData.Drawings.Map[oSelectedChart.Id] = oSelectedChart;
+			this.document.RecalculateWithParams(oRecalcData);
 		}
 	},
 

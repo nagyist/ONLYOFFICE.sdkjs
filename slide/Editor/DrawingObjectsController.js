@@ -383,8 +383,11 @@ DrawingObjectsController.prototype.updateChart = function (binary)
 		if (oChartData) {
 			oSelectedChart.setChartData(oChartData);
 		}
-		oSelectedChart.handleUpdateChart();
-		oSelectedChart.recalculate();
+		oSelectedChart.handleUpdateType();
+		const oPresentation = this.getPresentation();
+		const oRecalcData = new AscCommon.RecalcData();
+		oRecalcData.Drawings.Map[oSelectedChart.Id] = oSelectedChart;
+		oPresentation.Recalculate(oRecalcData);
 	}
 };
 
