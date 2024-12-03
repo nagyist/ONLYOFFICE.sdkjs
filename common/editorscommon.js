@@ -962,12 +962,6 @@
 	function sendCommand(editor, fCallback, rdata, dataContainer)
 	{
 		//json не должен превышать размера 2097152, иначе при его чтении будет exception
-		var docConnectionId = editor.CoAuthoringApi.getDocId();
-		if (docConnectionId && docConnectionId !== rdata["id"])
-		{
-			//на случай если поменялся documentId в Version History
-			rdata['docconnectionid'] = docConnectionId;
-		}
 		if (null == rdata["savetype"])
 		{
 			editor.CoAuthoringApi.openDocument(rdata);
@@ -14800,7 +14794,19 @@
 	registerServiceWorker();
 
 	function consoleLog(val) {
-		//console.log(val);
+		// console.log(val);
+		const showMessages = false;
+
+		if (!showMessages) {
+			return;
+		}
+
+		// see v8 arguments leak - performance loss
+		// console.log.apply(console, arguments);
+
+		for (let i = 0; i < arguments.length; i++) {
+			console.log(arguments[i]);
+		}
 	}
 
 	//------------------------------------------------------------export---------------------------------------------------

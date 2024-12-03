@@ -2513,8 +2513,9 @@ background-repeat: no-repeat;\
 			this.WordControl.m_oLogicDocument.Document_Undo();
 			
 			_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
-			AscCommon.Editor_Paste_Exec(this, null, null, null, null, props);
-			_logicDoc.FinalizeAction();
+			AscCommon.Editor_Paste_Exec(this, null, null, null, null, props, function () {
+				_logicDoc.FinalizeAction();
+			});
 		}
 	};
 	
@@ -9749,6 +9750,7 @@ background-repeat: no-repeat;\
 		AscCommon.CollaborativeEditing.Clear();
 		this.isApplyChangesOnOpenEnabled = true;
 		this.isDocumentLoadComplete = false;
+		this.ServerImagesWaitComplete = false;
 		this.turnOffSpecialModes();
 
 		var oLogicDocument = this.WordControl.m_oLogicDocument;
@@ -13618,7 +13620,11 @@ background-repeat: no-repeat;\
 
 		return true;
 	};
-	
+	asc_docs_api.prototype.canEnterText = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		return logicDocument ? logicDocument.canEnterText() : false;
+	};
 	asc_docs_api.prototype.updateDarkMode = function()
 	{
 		if (!this.WordControl || !this.WordControl.m_oDrawingDocument)

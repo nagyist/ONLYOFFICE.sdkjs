@@ -351,6 +351,8 @@
 		this.m_oFactoryClass[AscDFH.historyitem_type_SmartArtDrawing   ]     = AscFormat.Drawing;
 		this.m_oFactoryClass[AscDFH.historyitem_type_DiagramData       ]     = AscFormat.DiagramData;
 		this.m_oFactoryClass[AscDFH.historyitem_type_CEffectProperties ]     = AscFormat.CEffectProperties;
+		this.m_oFactoryClass[AscDFH.historyitem_type_ParagraphPermStart]     = AscWord.ParagraphPermStart;
+		this.m_oFactoryClass[AscDFH.historyitem_type_ParagraphPermEnd  ]     = AscWord.ParagraphPermEnd;
 
 		if (window['AscCommonSlide'])
 		{
@@ -503,7 +505,6 @@
 		this.m_oFactoryClass[AscDFH.historyitem_type_GeoLocations] = AscFormat.CGeoLocations;
 		this.m_oFactoryClass[AscDFH.historyitem_type_GeoPolygon] = AscFormat.CGeoPolygon;
 		this.m_oFactoryClass[AscDFH.historyitem_type_GeoPolygons] = AscFormat.CGeoPolygons;
-		this.m_oFactoryClass[AscDFH.historyitem_type_Gridlines] = AscFormat.CGridlines;
 		this.m_oFactoryClass[AscDFH.historyitem_type_Dimension] = AscFormat.CDimension;
 		this.m_oFactoryClass[AscDFH.historyitem_type_NumericDimension] = AscFormat.CNumericDimension;
 		this.m_oFactoryClass[AscDFH.historyitem_type_PercentageColorPosition] = AscFormat.CPercentageColorPosition;

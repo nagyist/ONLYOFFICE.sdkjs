@@ -623,7 +623,9 @@
 		let oFile	= oViewer.file;
 		let oDoc 	= this.getPDFDoc();
 
-		let nPos = bBefore ? oViewer.currentPage : oViewer.currentPage + 1;
+		let oThumbnails = oViewer.thumbnails;
+		let aIndexes = oThumbnails.getSelectedPages();
+		let nPos = bBefore ? Math.min.apply(null, aIndexes) : Math.max.apply(null, aIndexes) + 1;
 
 		oDoc.DoAction(function() {
 			let oPageToClone = bBefore ? oFile.pages[oViewer.currentPage] : (oFile.pages[oViewer.currentPage + 1] || oFile.pages[oViewer.currentPage]);
@@ -1877,13 +1879,13 @@
                         Lock.Set_Type(AscCommon.c_oAscLockTypes.kLockTypeOther, true);
                     }
 
-					if (Class.IsAnnot()) {
+					if (Class.IsAnnot && Class.IsAnnot()) {
 						// если аннотация коммент или аннотация с комментом то блокируем и комментарий тоже
 						if (Class.IsComment() || (Class.IsUseContentAsComment() && Class.GetContents() != undefined) || Class.GetReply(0) != null) {
 							t.sync_LockComment(Class.Get_Id(), e["user"]);
 						}
 					}
-					Class.AddToRedraw();
+					Class.AddToRedraw && Class.AddToRedraw();
                     oDoc.UpdateInterface();
                 }
                 else {
@@ -1929,7 +1931,7 @@
 					oDoc.UpdateInterface();
 				}
 
-				if (Class.IsAnnot()) {
+				if (Class.IsAnnot && Class.IsAnnot()) {
 					// если аннотация коммент или аннотация с комментом то блокируем и комментарий тоже
 					if (Class.IsComment() || (Class.IsUseContentAsComment() && Class.GetContents() != undefined) || Class.GetReply(0) != null) {
 						t.sync_UnLockComment(Class.Get_Id());
@@ -2488,6 +2490,14 @@
 		oDoc.SearchEngine.Show = isShow;
 		this.DocumentRenderer.onUpdateOverlay();
 	};
+	PDFEditorApi.prototype.canEnterText = function()
+	{
+		return this.canEdit();
+	};
+	PDFEditorApi.prototype.asc_GetTableOfContentsPr = function()
+	{
+		return null;
+	};
 	PDFEditorApi.prototype._printDesktop = function(options) {
 		if (!this.DocumentRenderer)
 			return false;
@@ -2877,5 +2887,7 @@
 	PDFEditorApi.prototype['asc_getTableStylesPreviews']	= PDFEditorApi.prototype.asc_getTableStylesPreviews;
 	PDFEditorApi.prototype['asc_GetSelectionBounds']		= PDFEditorApi.prototype.asc_GetSelectionBounds;
 	PDFEditorApi.prototype['asc_setPdfViewer']		        = PDFEditorApi.prototype.asc_setPdfViewer;
+
+	PDFEditorApi.prototype['asc_GetTableOfContentsPr']      = PDFEditorApi.prototype.asc_GetTableOfContentsPr;
 
 })(window, window.document);

@@ -370,24 +370,54 @@
 	 * @memberOf CVisioDocument
 	 */
 	CVisioDocument.prototype.loadFonts = function() {
-		let api = this.api;
-
-		let aFonts = this.loadedFonts;
-		// load Arial by default
-		aFonts.push(new AscFonts.CFont("Arial", 0, "", 0));
-		let newFontIndex = 1;
-		this.faceNames.forEach(function (faceName_Type) {
-			let nameU = faceName_Type.nameU;
+		/**
+		 * load font to aFonts
+		 * @param fontName
+		 * @param {AscFonts.CFont[]} aFonts
+		 * @param api
+		 */
+		function loadFontByName(fontName, aFonts, api) {
+			if (aFonts.findIndex(function (cFont) {
+				return cFont.name === fontName;
+			}) !== -1) {
+				return;
+			}
+			aFonts.push(new AscFonts.CFont(fontName, newFontIndex, "", 0));
+			newFontIndex++;
 			let fontInfo = api.FontLoader.fontInfos.find(function(cFontInfo) {
-				return cFontInfo.Name === nameU;
+				return cFontInfo.Name === fontName;
 			});
 			if (fontInfo === undefined || fontInfo === null) {
-				console.log("Unknown font used in visio file: " + nameU);
+				AscCommon.consoleLog("Unknown font used in visio file: " + fontName);
 			} else {
-				console.log("Font", nameU, "will be loaded");
-				aFonts.push(new AscFonts.CFont(nameU, newFontIndex, "", 0));
-				newFontIndex += 1;
+				AscCommon.consoleLog("Font: " + fontName + " will be loaded");
 			}
+		}
+
+		let api = this.api;
+		let aFonts = this.loadedFonts;
+
+		let newFontIndex = 0;
+
+		// load Arial and Calibri by default
+		loadFontByName("Arial", aFonts, api);
+		loadFontByName("Calibri", aFonts, api);
+
+		// read theme.xml fonts
+		var oFontMap = {};
+		this.themes.forEach(function (theme) {
+			theme.Document_Get_AllFontNames(oFontMap);
+		});
+		for (const fontName in oFontMap) {
+			if (oFontMap.hasOwnProperty(fontName)) {
+				loadFontByName(fontName, aFonts, api);
+			}
+		}
+
+		// read document.xml FaceNames tag
+		this.faceNames.forEach(function (faceName_Type) {
+			let nameU = faceName_Type.nameU;
+			loadFontByName(nameU, aFonts, api);
 		});
 
 		// may immediately call callback
@@ -1030,7 +1060,7 @@
 						// if masterNumber is number
 						mastersSort[masterNumber - 1] = masters[i];
 					} else {
-						console.log('check sdkjs/draw/model/VisioDocument.js : parseMasters');
+						AscCommon.consoleLog('check sdkjs/draw/model/VisioDocument.js : parseMasters');
 						mastersSort = masters;
 						break;
 					}
@@ -1067,7 +1097,7 @@
 						// if masterNumber is number
 						pagesSort[pageNumber - 1] = pages[i];
 					} else {
-						console.log('check sdkjs/draw/model/VisioDocument.js : parsePages');
+						AscCommon.consoleLog('check sdkjs/draw/model/VisioDocument.js : parsePages');
 						pagesSort = pages;
 						break;
 					}
@@ -1096,7 +1126,7 @@
 					// if themeNumber is number
 					themesSort[themeNumber - 1] = themeParts[i];
 				} else {
-					console.log('check sdkjs/draw/model/VisioDocument.js : parseThemes');
+					AscCommon.consoleLog('check sdkjs/draw/model/VisioDocument.js : parseThemes');
 					themesSort = themeParts;
 					break;
 				}
@@ -1184,7 +1214,7 @@
 						// if masterNumber is number
 						solutionsSort[solutionNumber - 1] = solutions[i];
 					} else {
-						console.log('check sdkjs/draw/model/VisioDocument.js : parseSolutions');
+						AscCommon.consoleLog('check sdkjs/draw/model/VisioDocument.js : parseSolutions');
 						solutionsSort = solutions;
 						break;
 					}

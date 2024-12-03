@@ -155,6 +155,7 @@
 			"cell/model/FormulaObjects/parserFormula.js",
 			"cell/view/DrawingObjectsController.js",
 
+			"word/Editor/Paragraph/RunContent/Types.js",
 			"word/Math/mathTypes.js",
 			"word/Editor/Styles.js",
 			"word/Math/math-settings.js",
@@ -217,7 +218,6 @@
 			"slide/Editor/Format/Notes.js",
 			"word/Editor/StylesChanges.js",
 			"word/Editor/RevisionsChange.js",
-			"word/Editor/Paragraph/RunContent/Types.js",
 			"word/Editor/Paragraph/RunContent/Base.js",
 			"word/Editor/Paragraph/RunContent/FootnoteReference.js",
 			"word/Editor/Paragraph/RunContent/FootnoteRef.js",

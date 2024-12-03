@@ -2264,10 +2264,12 @@ CTable.prototype.getRowBounds = function(iRow, relPage)
 		|| undefined === rowInfo.Y[relPage])
 		return new CDocumentBounds(0, 0, 0, 0);
 	
+	// Возвращаем границы, по которым реально происходит отрисовка
+	let leftCorrection = this.GetTableOffsetCorrection();
 	return new CDocumentBounds(
-		rowInfo.X0 + page.X_origin,
+		rowInfo.X0 + page.X_origin + leftCorrection,
 		rowInfo.Y[relPage],
-		rowInfo.X1 + page.X_origin,
+		rowInfo.X1 + page.X_origin + leftCorrection,
 		rowInfo.Y[relPage] + rowInfo.H[relPage]
 	);
 };
