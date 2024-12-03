@@ -459,6 +459,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		let bNeedConvert = false;
 
 		let oMainExternalReference;
+		const allDefNames = [];
 		for (let sSheetName in oCachedWorksheets)
 		{
 			const oWorksheetInfo = oCachedWorksheets[sSheetName];
@@ -479,6 +480,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 						oMainExternalReference.updateSheetData(pasteSheetLinkName, oPastedWS, arrRanges);
 						oWbModel.changeExternalReference(oPastedLinkInfo.index, oMainExternalReference);
 					}
+					allDefNames.push.apply(allDefNames, defNames);
 					bNeedConvert = true;
 				}
 				else if (oPastedLinkInfo.type === -2)
@@ -506,12 +508,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 						oMainExternalReference.Id = name;
 					}
 
-					for (let i = 0; i < defNames.length; i++) {
-						const defNameInfo = defNames[i];
-						const defName = defNameInfo.defName;
-						const ref = defNameInfo.ref;
-						oMainExternalReference.initDefinedNameFromObj({worksheetName: defName.sheet, defName: defName.defName, ref: ref});
-					}
+					allDefNames.push.apply(allDefNames, defNames);
 					oMainExternalReference.addSheet(oPastedWS, arrRanges);
 					oWbModel.addExternalReferences([oMainExternalReference]);
 					bNeedConvert = true;
@@ -520,6 +517,12 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		}
 		if (bNeedConvert)
 		{
+			for (let i = 0; i < allDefNames.length; i++) {
+				const defNameInfo = allDefNames[i];
+				const defName = defNameInfo.defName;
+				const ref = defNameInfo.ref;
+				oMainExternalReference.initDefinedNameFromObj({worksheetName: defName.sheet, defName: defName.defName, ref: ref});
+			}
 			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences, oMockWb);
 		}
 	}
