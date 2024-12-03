@@ -2982,18 +2982,6 @@
 		CBlipFill.prototype.setRasterImageId = function (rasterImageId) {
 			this.RasterImageId = checkRasterImageId(rasterImageId);
 		};
-		CBlipFill.prototype.setSrcRect = function (srcRect) {
-			this.srcRect = srcRect;
-		};
-		CBlipFill.prototype.setStretch = function (stretch) {
-			this.stretch = stretch;
-		};
-		CBlipFill.prototype.setTile = function (tile) {
-			this.tile = tile;
-		};
-		CBlipFill.prototype.setRotWithShape = function (rotWithShape) {
-			this.rotWithShape = rotWithShape;
-		};
 		CBlipFill.prototype.createDuplicate = function () {
 			var duplicate = new CBlipFill();
 			duplicate.RasterImageId = this.RasterImageId;
@@ -3198,24 +3186,25 @@
 				}
 			}
 		};
-		CBlipFill.prototype.asc_getType = function () {
-			return this.type;
-		};
-		CBlipFill.prototype.asc_putType = function (v) {
-			this.type = v;
-		};
-		CBlipFill.prototype.asc_getTextureId = function () {
-			return this.texture_id;
-		};
-		CBlipFill.prototype.asc_putTextureId = function (v) {
-			this.texture_id = v;
-		};
-		CBlipFill.prototype.asc_getUrl = function () {
-			return this.url;
-		};
-		CBlipFill.prototype.asc_putUrl = function (v, sToken) {
-			this.RasterImageId = v;
-			this.url = v;
+
+		CBlipFill.prototype.getTile = function () { return this.tile; };
+		CBlipFill.prototype.setTile = function (tile) { this.tile = tile; };
+		CBlipFill.prototype.getStretch = function () { return this.stretch; };
+		CBlipFill.prototype.setStretch = function (stretch) { this.stretch = stretch; };
+		CBlipFill.prototype.getSrcRect = function () { return this.srcRect; };
+		CBlipFill.prototype.setSrcRect = function (srcRect) { this.srcRect = srcRect; };
+		CBlipFill.prototype.getBlip = function () { return this.blip; };
+		CBlipFill.prototype.setBlip = function (blip) { this.blip = blip; };
+		CBlipFill.prototype.getRotWithShape = function () { return this.rotWithShape; };
+		CBlipFill.prototype.setRotWithShape = function (rotWithShape) { this.rotWithShape = rotWithShape; };
+
+		CBlipFill.prototype.getType = function () { return this.type; };
+		CBlipFill.prototype.setType = function (type) { this.type = type; };
+		CBlipFill.prototype.getTextureId = function () { return this.texture_id; };
+		CBlipFill.prototype.setTextureId = function (textureId) { this.texture_id = textureId; };
+		CBlipFill.prototype.getUrl = function () { return this.url; };
+		CBlipFill.prototype.setUrl = function (url, sToken) {
+			this.url = this.RasterImageId = url;
 			this.token = sToken;
 		};
 
@@ -3336,6 +3325,19 @@
 				other.algn == this.algn;
 		};
 
+		CBlipFillTile.prototype.getTx = function () { return this.tx; };
+		CBlipFillTile.prototype.setTx = function (tx) { this.tx = tx; };
+		CBlipFillTile.prototype.getTy = function () { return this.ty; };
+		CBlipFillTile.prototype.setTy = function (ty) { this.ty = ty; };
+		CBlipFillTile.prototype.getSx = function () { return this.sx; };
+		CBlipFillTile.prototype.setSx = function (sx) { this.sx = sx; };
+		CBlipFillTile.prototype.getSy = function () { return this.sy; };
+		CBlipFillTile.prototype.setSy = function (sy) { this.sy = sy; };
+		CBlipFillTile.prototype.getFlip = function () { return this.flip; };
+		CBlipFillTile.prototype.setFlip = function (flip) { this.flip = flip; };
+		CBlipFillTile.prototype.getAlgn = function () { return this.algn; };
+		CBlipFillTile.prototype.setAlgn = function (algn) { this.algn = algn; };
+
 		function CBlipFillStretch(fillRect) {
 			CBaseNoIdObject.call(this);
 
@@ -3344,8 +3346,16 @@
 		}
 		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
 
-		CBlipFillStretch.prototype.setFillRect = function (fillRect) {
-			this.fillRect = fillRect;
+		CBlipFillStretch.prototype.setFillRect = function () {
+			if (arguments[0] instanceof CFillRect) {
+				return this.fillRect = arguments[0];
+			}
+			if (typeof arguments[0] === 'number' && arguments.length === 4) {
+				return this.fillRect = new CFillRect(arguments[0], arguments[1], arguments[2], arguments[3]);
+			}
+		};
+		CBlipFillStretch.prototype.getFillRect = function () {
+			return this.fillRect;
 		};
 		CBlipFillStretch.prototype.Write_ToBinary = function (w) {
 			this.fillRect.Write_ToBinary(w);
@@ -18711,18 +18721,44 @@
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
 
 		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = CBlipFill;
-		CBlipFill.prototype['get_type'] = CBlipFill.prototype['asc_getType'] = CBlipFill.prototype.asc_getType;
-		CBlipFill.prototype['put_type'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype.asc_putType;
-		CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype.asc_getTextureId;
-		CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype.asc_putTextureId;
-		CBlipFill.prototype['get_url'] = CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype.asc_getUrl;
-		CBlipFill.prototype['put_url'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype.asc_putUrl;
+		CBlipFill.prototype['asc_getTile'] = CBlipFill.prototype['getTile'] = CBlipFill.prototype.getTile;
+		CBlipFill.prototype['asc_setTile'] = CBlipFill.prototype['setTile'] = CBlipFill.prototype.setTile;
+		CBlipFill.prototype['asc_getStretch'] = CBlipFill.prototype['getStretch'] = CBlipFill.prototype.getStretch;
+		CBlipFill.prototype['asc_setStretch'] = CBlipFill.prototype['setStretch'] = CBlipFill.prototype.setStretch;
+		CBlipFill.prototype['asc_getSrcRect'] = CBlipFill.prototype['getSrcRect'] = CBlipFill.prototype.getSrcRect;
+		CBlipFill.prototype['asc_setSrcRect'] = CBlipFill.prototype['setSrcRect'] = CBlipFill.prototype.setSrcRect;
+		CBlipFill.prototype['asc_getBlip'] = CBlipFill.prototype['getBlip'] = CBlipFill.prototype.getBlip;
+		CBlipFill.prototype['asc_setBlip'] = CBlipFill.prototype['setBlip'] = CBlipFill.prototype.setBlip;
+		CBlipFill.prototype['asc_getRotWithShape'] = CBlipFill.prototype['getRotWithShape'] = CBlipFill.prototype.getRotWithShape;
+		CBlipFill.prototype['asc_setRotWithShape'] = CBlipFill.prototype['setRotWithShape'] = CBlipFill.prototype.setRotWithShape;
+
+		CBlipFill.prototype['asc_getType'] = CBlipFill.prototype['getType'] = CBlipFill.prototype['get_type'] = CBlipFill.prototype.getType;
+		CBlipFill.prototype['asc_setType'] = CBlipFill.prototype['setType'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype['putType'] = CBlipFill.prototype['put_type'] = CBlipFill.prototype.setType;
+		CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype['getTextureId'] = CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype.getTextureId;
+		CBlipFill.prototype['asc_setTextureId'] = CBlipFill.prototype['setTextureId'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype['putTextureId'] = CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype.setTextureId;
+		CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype['getUrl'] = CBlipFill.prototype['get_url'] = CBlipFill.prototype.getUrl;
+		CBlipFill.prototype['asc_setUrl'] = CBlipFill.prototype['setUrl'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype['putUrl'] = CBlipFill.prototype['put_url'] = CBlipFill.prototype.setUrl;
 
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
 		CBlipFillTile['flipTypes'] = CBlipFill.flipTypes;
+		CBlipFillTile.prototype['getTx'] = CBlipFillTile.prototype.getTx;
+		CBlipFillTile.prototype['setTx'] = CBlipFillTile.prototype.setTx;
+		CBlipFillTile.prototype['getTy'] = CBlipFillTile.prototype.getTy;
+		CBlipFillTile.prototype['setTy'] = CBlipFillTile.prototype.setTy;
+		CBlipFillTile.prototype['getSx'] = CBlipFillTile.prototype.getSx;
+		CBlipFillTile.prototype['setSx'] = CBlipFillTile.prototype.setSx;
+		CBlipFillTile.prototype['getSy'] = CBlipFillTile.prototype.getSy;
+		CBlipFillTile.prototype['setSy'] = CBlipFillTile.prototype.setSy;
+		CBlipFillTile.prototype['getFlip'] = CBlipFillTile.prototype.getFlip;
+		CBlipFillTile.prototype['setFlip'] = CBlipFillTile.prototype.setFlip;
+		CBlipFillTile.prototype['getAlgn'] = CBlipFillTile.prototype.getAlgn;
+		CBlipFillTile.prototype['setAlgn'] = CBlipFillTile.prototype.setAlgn;
 
 		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillStretch = CBlipFillStretch;
+		CBlipFillStretch.prototype['getFillRect'] = CBlipFillStretch.prototype.getFillRect;
+		CBlipFillStretch.prototype['setFillRect'] = CBlipFillStretch.prototype.setFillRect;
+
 		window['AscFormat'].CFillRect = CFillRect;
 		window['AscFormat'].CBlip = CBlip;
 
