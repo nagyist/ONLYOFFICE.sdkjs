@@ -151,11 +151,11 @@
 			"common/wordcopypaste.js",
 			"common/intervalTree.js",
 
+			"cell/model/FormulaObjects/parserFormula.js",
 			"cell/model/WorkbookElems.js",
 			"cell/model/Workbook.js",
 			"cell/model/Serialize.js",
 			"cell/model/CellInfo.js",
-			"cell/model/FormulaObjects/parserFormula.js",
 			
 			"word/Editor/Paragraph/RunContent/Types.js",
 			"word/Math/mathTypes.js",
