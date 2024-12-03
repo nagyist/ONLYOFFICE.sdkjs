@@ -1326,6 +1326,7 @@ CGraphicObjects.prototype =
 				oSelectedChart.setChartData(oChartData);
 			}
 			oSelectedChart.handleUpdateChart();
+      oSelectedChart.recalculate();
 			this.document.Recalculate();
 		}
 	},
