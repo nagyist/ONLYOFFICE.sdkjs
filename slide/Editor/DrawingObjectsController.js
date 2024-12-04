@@ -44,12 +44,15 @@ DrawingObjectsController.prototype.handleChartDoubleClick = function()
 {
 	var drawingObjects = this.drawingObjects;
 	var oThis = this;
-	this.checkSelectedObjectsAndFireCallback(function(){
-		oThis.clearTrackObjects();
-		oThis.clearPreTrackObjects();
-		oThis.changeCurrentState(new AscFormat.NullState(this));
-		drawingObjects.openChartEditor();
-	}, []);
+	var oApi = this.getEditorApi();
+	if (oApi && !oApi.isOpenedFrameEditor) {
+		this.checkSelectedObjectsAndFireCallback(function(){
+			oThis.clearTrackObjects();
+			oThis.clearPreTrackObjects();
+			oThis.changeCurrentState(new AscFormat.NullState(this));
+			drawingObjects.openChartEditor();
+		}, []);
+	}
 };
 
 DrawingObjectsController.prototype.getTheme = function()

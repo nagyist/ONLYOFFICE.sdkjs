@@ -8251,7 +8251,7 @@ background-repeat: no-repeat;\
 		const oLogicDocument = this.private_GetLogicDocument();
 		if (!oLogicDocument)
 			return;
-		if(oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
+		if(!this.isOpenedFrameEditor && oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
 			oLogicDocument.Slides[oLogicDocument.CurPage].openChartEditor();
 		}

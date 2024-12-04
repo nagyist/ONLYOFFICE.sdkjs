@@ -118,6 +118,12 @@ function (window, undefined) {
 
 		return this.logicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {Type: AscCommon.changestype_2_ElementsArray_and_Type, CheckType: AscCommon.changestype_Drawing_Props, Elements:arrCharts});
 	}
+	CExternalChartCollector.prototype.startLongLock = function () {
+		this.api.asc_onOpenFrameEditor();
+	};
+	CExternalChartCollector.prototype.endLongLock = function () {
+		this.api.asc_onCloseFrameEditor();
+	};
 	CExternalChartCollector.prototype.updateExternalReferences = function (arrExternalReferences, fCallback) {
 		if (!this.isInit) {
 			return;
@@ -131,7 +137,7 @@ function (window, undefined) {
 		if (this.isLocked(arrCharts)) {
 			return;
 		}
-		oApi.asc_onOpenFrameEditor();
+		this.startLongLock();
 
 		if (arrExternalReferences && arrExternalReferences.length) {
 			let isLocalDesktop = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]();
@@ -139,7 +145,7 @@ function (window, undefined) {
 				if (!_arrAfterPromise.length) {
 					fCallback && fCallback(true);
 					oApi.sendEvent("asc_onStartUpdateExternalReference", false);
-					oApi.asc_onCloseFrameEditor();
+					oThis.endLongLock();
 					oThis.isLocked(arrCharts);
 					return;
 				}
@@ -227,7 +233,7 @@ function (window, undefined) {
 				}
 				oLogicDocument.FinalizeAction(true);
 				oThis.onUpdateExternalList();
-				oApi.asc_onCloseFrameEditor();
+				oThis.endLongLock();
 				oLogicDocument.UpdateInterface();
 				oThis.isLocked(arrCharts);
 			};

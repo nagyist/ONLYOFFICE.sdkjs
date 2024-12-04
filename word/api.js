@@ -9276,7 +9276,7 @@ background-repeat: no-repeat;\
 		if (!oLogicDocument)
 			return;
 
-		if(false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props))
+		if(!this.isOpenedFrameEditor && false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props))
 		{
 			oLogicDocument.OpenChartEditor();
 		}

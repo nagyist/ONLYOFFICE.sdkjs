@@ -1702,8 +1702,8 @@ CGraphicObjects.prototype =
 
     handleChartDoubleClick: function(drawing, chart, e, x, y, pageIndex)
     {
-
-	    if(false === this.document.Document_Is_SelectionLocked(changestype_Drawing_Props))
+	    const oApi = this.getEditorApi();
+	    if(oApi && !oApi.isOpenedFrameEditor && false === this.document.Document_Is_SelectionLocked(changestype_Drawing_Props))
 	    {
 		    this.openChartEditor(chart);
 		    this.clearTrackObjects();
