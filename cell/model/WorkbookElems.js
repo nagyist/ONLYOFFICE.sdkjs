@@ -15244,9 +15244,6 @@ function RangeDataManagerElem(bbox, data)
 		var isChanged = false;
 		var cloneER = this.clone();
 
-		const oWb = arr[0] && arr[0].workbook;
-		oWb.aWorksheets = [];
-
 		let existedWsArray = [];
 		for (var i = 0; i < arr.length; i++) {
 			//если есть this.worksheets, если нет - проверить и обработать
@@ -15276,7 +15273,6 @@ function RangeDataManagerElem(bbox, data)
 						var oAllRange = wsTo.getRange3(0, 0, wsTo.getRowsCount(), wsTo.getColsCount());
 						oAllRange.cleanAll();
 						wsTo.copyFrom(arr[i], wsTo.sName);
-						oWb.aWorksheets.push(wsTo);
 					});
 				});
 				//this.worksheets[sheetName] = arr[i];
@@ -15796,7 +15792,7 @@ function RangeDataManagerElem(bbox, data)
 					});
 				}
 			}
-			wbView.handleChartsOnWorkbookChange(aRanges);
+			wbView && wbView.handleChartsOnWorkbookChange(aRanges);
 		}
 		return isChanged;
 	};
