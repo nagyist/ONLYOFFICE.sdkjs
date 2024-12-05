@@ -148,7 +148,33 @@
 	var nMaxPrintRows = 150000;
 
 
+function isAllowPasteLink(pastedWb) {
+	var api = window["Asc"]["editor"];
+	let _core = pastedWb && pastedWb.Core;
+	if (!api || !_core) {
+		return false;
+	}
 
+	//for portals:
+	//wb.Core.contentStatus -> DocInfo.ReferenceData.fileKey
+	//wb.Core.category -> DocInfo.ReferenceData.instanceId
+
+	//for desktops:
+	//contentStatus -> filePath
+
+	if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
+		let pasteProcessor = AscCommonExcel.g_clipboardExcel && AscCommonExcel.g_clipboardExcel.pasteProcessor;
+		let sameDoc = pasteProcessor && pasteProcessor._checkPastedInOriginalDoc(pastedWb, true);
+		return sameDoc || (_core.contentStatus && !_core.category && window["AscDesktopEditor"]["LocalFileGetSaved"]());
+	}
+	if (_core.contentStatus && _core.category) {
+		//работаем внутри одного портала
+		//если разные документу, то вставляем ссылку на другой документ, если один и тот же, то вставляем обычную ссылку
+		return api.DocInfo && api.DocInfo.ReferenceData && _core.category === api.DocInfo.ReferenceData["instanceId"];
+	}
+
+	return false;
+}
     function getMergeType(merged) {
 		var res = c_oAscMergeType.none;
 		if (null !== merged) {
@@ -27565,34 +27591,6 @@
 				}
 				return _res;
 			};
-			var isAllowPasteLink = function () {
-				var _res = false;
-				var api = window["Asc"]["editor"];
-
-				//for portals:
-				//wb.Core.contentStatus -> DocInfo.ReferenceData.fileKey
-				//wb.Core.category -> DocInfo.ReferenceData.instanceId
-
-				//for desktops:
-				//contentStatus -> filePath
-
-				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
-					let _core = pasteInfo.wb.Core;
-					let pasteProcessor = AscCommonExcel.g_clipboardExcel && AscCommonExcel.g_clipboardExcel.pasteProcessor;
-					let sameDoc = pasteProcessor && pasteProcessor._checkPastedInOriginalDoc(pasteInfo.wb, true);
-					if (sameDoc || (_core.contentStatus && !_core.category && window["AscDesktopEditor"]["LocalFileGetSaved"]())) {
-						_res = true;
-					}
-				} else if (pasteInfo.wb && pasteInfo.wb.Core && pasteInfo.wb.Core.contentStatus && pasteInfo.wb.Core.category) {
-					//работаем внутри одного портала
-					//если разные документу, то вставляем ссылку на другой документ, если один и тот же, то вставляем обычную ссылку
-					if (api.DocInfo && api.DocInfo.ReferenceData && pasteInfo.wb.Core.category === api.DocInfo.ReferenceData["instanceId"]) {
-						_res = true;
-					}
-				}
-
-				return _res;
-			};
 
 			if (!(pasteInfo && pasteInfo.originalSelectBeforePaste && pasteInfo.originalSelectBeforePaste.ranges && pasteInfo.originalSelectBeforePaste.ranges.length === 1) && ws.isMultiSelect()) {
 				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
@@ -27609,7 +27607,7 @@
 							sProps.valueNumberFormat, sProps.valueAllFormating, sProps.pasteOnlyFormating, sProps.comments,
 							sProps.columnWidth];
 
-					if (isAllowPasteLink()) {
+					if (isAllowPasteLink(pasteInfo.wb)) {
 						allowedSpecialPasteProps.push(sProps.link);
 					}
 					if (!isTablePasted) {
@@ -29444,5 +29442,6 @@
 
 	window['AscCommonExcel'].getPivotButtonsForLoad = getPivotButtonsForLoad;
 	window['AscCommonExcel'].buildRelativePath = buildRelativePath;
+	window['AscCommonExcel'].isAllowPasteLink = isAllowPasteLink;
 
 })(window);

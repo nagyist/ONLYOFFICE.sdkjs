@@ -569,7 +569,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 	};
 	CChartSpace.prototype.applySpecialPasteProps = function (oExternalWb)
 	{
-		if (oExternalWb)
+		if (oExternalWb && this.canPasteExternal(oExternalWb))
 		{
 			this.addExternalReferenceToEditor(oExternalWb);
 		}
@@ -580,41 +580,8 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		this.setExternalReference(null);
 		this.checkChartExRefs();
 	}
-	CChartSpace.prototype.canPasteExternal = function ()
-	{
-		const oExternalReference = this.getExternalReference();
-		if (oExternalReference)
-		{
-			const oReferenceData = oExternalReference.referenceData;
-			if (oReferenceData)
-			{
-				const oApi = Asc.editor || editor;
-				const oDocInfo = oApi.DocInfo;
-				const oDocumentReferenceData = oDocInfo && oDocInfo.ReferenceData;
-				if (oDocumentReferenceData)
-				{
-					return oDocumentReferenceData['fileKey'] === oReferenceData['fileKey'] && oDocumentReferenceData['instanceId'] === oReferenceData['instanceId'];
-				}
-			}
-			return true;
-		}
-		return false;
-
-	};
-	CChartSpace.prototype.getSpecialPasteProps = function ()
-	{
-		const oSpecialProps = Asc.c_oSpecialPasteProps;
-		const mapProps = {};
-
-		mapProps[oSpecialProps.destinationFormatting] = [];
-		mapProps[oSpecialProps.sourceformatting] = [];
-		mapProps[oSpecialProps.picture] = [oSpecialProps.picture];
-		if (this.canPasteExternal())
-		{
-			mapProps[oSpecialProps.destinationFormatting].push(oSpecialProps.destinationFormattingLink);
-			mapProps[oSpecialProps.sourceformatting].push(oSpecialProps.sourceFormattingLink);
-		}
-		return mapProps;
+	CChartSpace.prototype.canPasteExternal = function(oExternalWb) {
+		return AscCommonExcel.isAllowPasteLink(oExternalWb);
 	};
 	CChartSpace.prototype.isWorkbookChart = function () {
 		return true;
