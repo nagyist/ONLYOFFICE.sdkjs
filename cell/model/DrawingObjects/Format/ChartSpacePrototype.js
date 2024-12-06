@@ -572,14 +572,14 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		if (oExternalWb && this.canPasteExternal(oExternalWb))
 		{
 			this.addExternalReferenceToEditor(oExternalWb);
+			this.checkChartExRefs();
 		}
 		if (!this.XLSX || this.XLSX.length)
 		{
 			this.setXLSX(new Uint8Array(0));
 		}
 		this.setExternalReference(null);
-		this.checkChartExRefs();
-	}
+	};
 	CChartSpace.prototype.canPasteExternal = function(oExternalWb) {
 		return AscCommonExcel.isAllowPasteLink(oExternalWb);
 	};
