@@ -70,8 +70,6 @@
 		ConvertCoordsToCursorWR : function() {return {X : 0, Y : 0};},
 		Set_RulerState_Table : function() {},
 		scrollToTarget : function() {},
-		onUpdateExternalList : function() {},
-		checkChart : function() {}
 	};
 
 	drawingDocument.CanvasHit = document.createElement('canvas');
@@ -162,7 +160,10 @@
 	editor.asc_haveSpaceBeforeParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceBeforeParagraph.bind(editor);
 	editor.asc_haveSpaceAfterParagraph = AscCommon.DocumentEditorApi.prototype.asc_haveSpaceAfterParagraph.bind(editor);
 	editor.initCollaborativeEditing = AscCommon.DocumentEditorApi.prototype.initCollaborativeEditing.bind(editor);
-	
+	editor.externalChartCollector = {
+		onUpdateExternalList: function () {},
+		checkChart          : function () {}
+	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscTest.DrawingDocument = drawingDocument;
 	AscTest.Editor          = editor;

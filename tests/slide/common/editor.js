@@ -74,8 +74,6 @@
 		GetMMPerDot : function(value){return value / this.GetDotsPerMM(1);},
 		m_oNotesApi: {},
 		clear: function () {},
-		onUpdateExternalList: function() {},
-		checkChart: function() {},
 		GetSlidesCount: function () {
 			return editor.getCountSlides();
 		},
@@ -96,7 +94,10 @@
 	editor.WordControl.m_oApi = editor;
 
 	editor.textArtPreviewManager = drawingDocument;
-	editor.externalChartCollector = drawingDocument;
+	editor.externalChartCollector = {
+		onUpdateExternalList: function () {},
+		checkChart          : function () {}
+	};
 
 	editor.asc_hideComments = function () {};
 	editor.isSlideShow = function () {return false};
