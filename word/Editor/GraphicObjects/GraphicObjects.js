@@ -1304,11 +1304,17 @@ CGraphicObjects.prototype =
             }
         }
     },
-	loadChartData: function () {
-		const chart = this.getSingleSelectedChart();
-		const api = this.getEditorApi();
-		if (chart && api) {
-			api.frameManager.loadChartData(chart);
+	loadChartData: function (bNeedRecalculate) {
+		const oChart = this.getSingleSelectedChart();
+		const oApi = this.getEditorApi();
+		if (oChart && oApi) {
+			oApi.frameManager.loadChartData(oChart);
+			if (bNeedRecalculate) {
+				oChart.handleUpdateType();
+				const oRecalcData = new AscCommon.RecalcData();
+				oRecalcData.Drawings.Map[oChart.Id] = oChart;
+				this.document.RecalculateWithParams(oRecalcData);
+			}
 		}
 	},
 	updateChart: function (binary)

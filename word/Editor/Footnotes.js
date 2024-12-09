@@ -1481,12 +1481,12 @@ CFootnotesController.prototype.AddOleObject = function(W, H, nWidthPix, nHeightP
 
 	return this.CurFootnote.AddOleObject(W, H, nWidthPix, nHeightPix, Img, Data, sApplicationId, bSelect, arrImagesForAddToHistory);
 };
-CFootnotesController.prototype.LoadChartData = function()
+CFootnotesController.prototype.LoadChartData = function(bNeedRecalculate)
 {
 	if (false === this.private_CheckFootnotesSelectionBeforeAction())
 		return;
 
-	this.CurFootnote.LoadChartData();
+	this.CurFootnote.LoadChartData(bNeedRecalculate);
 };
 CFootnotesController.prototype.EditChart = function(Chart)
 {

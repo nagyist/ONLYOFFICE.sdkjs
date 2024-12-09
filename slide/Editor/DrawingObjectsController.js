@@ -365,11 +365,18 @@ DrawingObjectsController.prototype.editChart = function(binary)
         }
     }
 };
-DrawingObjectsController.prototype.loadChartData = function () {
-	const chart = this.getSingleSelectedChart();
-	const api = this.getEditorApi();
-	if (chart && api) {
-		api.frameManager.loadChartData(chart);
+DrawingObjectsController.prototype.loadChartData = function (bNeedRecalculate) {
+	const oChart = this.getSingleSelectedChart();
+	const oApi = this.getEditorApi();
+	if (oChart && oApi) {
+		oApi.frameManager.loadChartData(oChart);
+		if (bNeedRecalculate) {
+			oChart.handleUpdateType();
+			const oPresentation = this.getPresentation();
+			const oRecalcData = new AscCommon.RecalcData();
+			oRecalcData.Drawings.Map[oChart.Id] = oChart;
+			oPresentation.Recalculate(oRecalcData);
+		}
 	}
 };
 DrawingObjectsController.prototype.updateChart = function (binary)

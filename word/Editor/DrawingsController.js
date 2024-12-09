@@ -123,9 +123,9 @@ CDrawingsController.prototype.AddTextArt = function(nStyle)
 		this.LogicDocument.AddTextArt(nStyle);
 	}
 };
-CDrawingsController.prototype.LoadChartData = function()
+CDrawingsController.prototype.LoadChartData = function(bNeedRecalculate)
 {
-	this.DrawingObjects.loadChartData();
+	this.DrawingObjects.loadChartData(bNeedRecalculate);
 };
 CDrawingsController.prototype.EditChart = function(Chart)
 {

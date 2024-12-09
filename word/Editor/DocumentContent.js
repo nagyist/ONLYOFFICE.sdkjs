@@ -3130,11 +3130,11 @@ CDocumentContent.prototype.AddSignatureLine = function(oSignatureDrawing)
         }
 	}
 };
-CDocumentContent.prototype.LoadChartData = function()
+CDocumentContent.prototype.LoadChartData = function(bNeedRecalculate)
 {
 	if (docpostype_DrawingObjects === this.CurPos.Type)
 	{
-		return this.LogicDocument.DrawingObjects.loadChartData();
+		return this.LogicDocument.DrawingObjects.loadChartData(bNeedRecalculate);
 	}
 };
 CDocumentContent.prototype.EditChart = function(Chart)

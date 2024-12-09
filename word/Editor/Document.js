@@ -6247,7 +6247,7 @@ CDocument.prototype.AddSignatureLine = function(oSignatureDrawing){
 };
 CDocument.prototype.FinalizeEditChart = function(chartBinary)
 {
-	this.LoadChartData();
+	this.LoadChartData(chartBinary['noHistory']);
 	if (AscFormat.isObject(chartBinary) && !chartBinary['noHistory'])
 	{
 		if (false === this.Document_Is_SelectionLocked(changestype_Paragraph_Content))
@@ -6258,9 +6258,9 @@ CDocument.prototype.FinalizeEditChart = function(chartBinary)
 		}
 	}
 };
-CDocument.prototype.LoadChartData = function()
+CDocument.prototype.LoadChartData = function(bNeedRecalculate)
 {
-	this.Controller.LoadChartData();
+	this.Controller.LoadChartData(bNeedRecalculate);
 };
 CDocument.prototype.EditChart = function(Chart)
 {

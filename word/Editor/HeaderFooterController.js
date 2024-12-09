@@ -91,9 +91,9 @@ CHdrFtrController.prototype.AddTextArt = function(nStyle)
 {
 	this.HdrFtr.AddTextArt(nStyle);
 };
-CHdrFtrController.prototype.LoadChartData = function()
+CHdrFtrController.prototype.LoadChartData = function(bNeedRecalculate)
 {
-	this.HdrFtr.LoadChartData();
+	this.HdrFtr.LoadChartData(bNeedRecalculate);
 };
 CHdrFtrController.prototype.EditChart = function(Chart)
 {

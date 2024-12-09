@@ -329,8 +329,9 @@ CDocumentControllerBase.prototype.AddTextArt = function(nStyle){};
 CDocumentControllerBase.prototype.AddSignatureLine = function(oSignatureDrawing){};
 /**
  * Возвращаем значения из истории
+ * @param bNeedRecalculate
  */
-CDocumentControllerBase.prototype.LoadChartData = function(){};
+CDocumentControllerBase.prototype.LoadChartData = function(bNeedRecalculate){};
 /**
  * Редактируем диаграмму.
  * @param Chart

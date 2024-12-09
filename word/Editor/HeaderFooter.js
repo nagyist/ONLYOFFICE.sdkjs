@@ -761,9 +761,9 @@ CHeaderFooter.prototype =
     {
         this.Content.AddTextArt(nStyle);
     },
-	LoadChartData : function()
+	LoadChartData : function(bNeedRecalculate)
 	{
-		this.Content.LoadChartData();
+		this.Content.LoadChartData(bNeedRecalculate);
 	},
 	EditChart : function(Chart)
     {
@@ -2078,10 +2078,10 @@ CHeaderFooterController.prototype =
         if ( null != this.CurHdrFtr )
             return this.CurHdrFtr.AddTextArt(nStyle);
     },
-	LoadChartData : function()
+	LoadChartData : function(bNeedRecalculate)
 	{
 		if ( null != this.CurHdrFtr )
-			return this.CurHdrFtr.LoadChartData();
+			return this.CurHdrFtr.LoadChartData(bNeedRecalculate);
 	},
 	EditChart : function(Chart)
     {

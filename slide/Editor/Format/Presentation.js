@@ -3981,7 +3981,7 @@ CPresentation.prototype.FinalizeEditChart = function (binary)
 	const oSlide = this.GetCurrentSlide();
 	if (oSlide)
 	{
-		oSlide.graphicObjects.loadChartData();
+		oSlide.graphicObjects.loadChartData(binary['noHistory']);
 		if (!binary['noHistory'])
 		{
 			oSlide.graphicObjects.checkSelectedObjectsAndCallback(function () {
