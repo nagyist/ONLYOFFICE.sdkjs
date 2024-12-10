@@ -12009,12 +12009,24 @@
 	{
 		return ((nCode << 8) | (isCtrl ? 4 : 0) | (isShift ? 2 : 0) | (isAlt ? 1 : 0));
 	}
+	CShortcuts.prototype.GetAscShortcutObject = function(nIndex) {
+		const oShortcutObject = this.GetShortcutObject(nIndex);
+		const oAscShortcutObject = {};
+		oAscShortcutObject["KeyCode"] = oShortcutObject.KeyCode;
+		oAscShortcutObject["CtrlKey"] = oShortcutObject.CtrlKey;
+		oAscShortcutObject["ShiftKey"] = oShortcutObject.ShiftKey;
+		oAscShortcutObject["AltKey"] = oShortcutObject.AltKey;
+		return oAscShortcutObject;
+	};
+	CShortcuts.prototype.GetShortcutObject = function(nIndex) {
+		return {KeyCode : nIndex >>> 8, CtrlKey : !!(nIndex & 4), ShiftKey : !!(nIndex & 2), AltKey : !!(nIndex & 1)};
+	};
 	CShortcuts.prototype.CheckType = function(nType)
 	{
 		for (var nIndex in this.List)
 		{
 			if (this.List[nIndex] === nType)
-				return {KeyCode : nIndex >>> 8, CtrlKey : !!(nIndex & 4), ShiftKey : !!(nIndex & 2), AltKey : !!(nIndex & 1)};
+				return this.GetShortcutObject(nIndex);
 		}
 
 		return null;
@@ -12048,6 +12060,17 @@
 		var nType = this.GetNewCustomType();
 		this.CustomActions[nType] = new CCustomShortcutActionSymbol(nCharCode, sFont);
 		return nType;
+	};
+	CShortcuts.prototype.GetAscShortcuts = function() {
+		const oAscShortcuts = [];
+		for (let nIndex in this.List) {
+			const nType = this.List[nIndex];
+			if (!oAscShortcuts[nType]) {
+				oAscShortcuts[nType] = [];
+			}
+			oAscShortcuts[nType].push(this.GetAscShortcutObject(nIndex));
+		}
+		return oAscShortcuts;
 	};
 
 	function CCustomShortcutActionSymbol(nCharCode, sFont)
