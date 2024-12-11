@@ -4560,7 +4560,7 @@
 			if (true === isRemoveBeforeAdd)
 				this.Shortcuts.RemoveByType(s[0]);
 
-			this.Shortcuts.Add(s[0], s[1], s[2], s[3], s[4]);
+			this.Shortcuts.Add(s[0], s[1], s[2], s[3], s[4], s[5]);
 		}
 	};
 	baseEditorsApi.prototype.initDefaultShortcuts = function()
