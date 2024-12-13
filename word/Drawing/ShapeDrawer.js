@@ -1046,9 +1046,10 @@ CShapeDrawer.prototype =
 			}
 
             if (isSvgPatternUnsupported || null == this.UniFill.fill.tile || this.Graphics.m_oContext === undefined) {
-                const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch);
+                const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
+                    && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
 
-                let paddedFillRect = {l: 0, t: 0, r: 100, b: 100};
+                let paddedFillRect = { l: 0, t: 0, r: 100, b: 100 };
                 if (isStretch) {
                     const fillRect = this.UniFill.fill.stretch.fillRect;
                     const fillWidth = fillRect.r - fillRect.l;
@@ -1080,7 +1081,7 @@ CShapeDrawer.prototype =
                                 this.UniFill.fill.canvas
                             );
                         } else {
-                            drawImageWithOptionalTransparency();
+                            drawImageWithOptionalTransparency.call(this);
                         }
                     }
                 }

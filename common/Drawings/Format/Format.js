@@ -3342,7 +3342,7 @@
 			CBaseNoIdObject.call(this);
 
 			// Content:
-			this.fillRect = isRealObject(fillRect) ? fillRect : new CFillRect();
+			this.fillRect = isRealObject(fillRect) ? fillRect : null;
 		}
 		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
 
@@ -3358,24 +3358,31 @@
 			return this.fillRect;
 		};
 		CBlipFillStretch.prototype.Write_ToBinary = function (w) {
-			this.fillRect.Write_ToBinary(w);
+			const hasFillRect = AscCommon.isRealObject(this.fillRect);
+			writeBool(w, hasFillRect);
+			if (hasFillRect)
+				this.fillRect.Write_ToBinary(w);
 		};
 		CBlipFillStretch.prototype.Read_FromBinary = function (r) {
-			const fillRect = new CFillRect();
-			fillRect.Read_FromBinary(r);
-			this.fillRect = fillRect;
+			const hasFillRect = readBool(r);
+			if (hasFillRect) {
+				const fillRect = new CFillRect();
+				fillRect.Read_FromBinary(r);
+				this.fillRect = fillRect;
+			}
 		};
 		CBlipFillStretch.prototype.createDuplicate = function () {
 			const copy = new CBlipFillStretch();
-			copy.fillRect = this.fillRect.createDuplicate();
+			copy.fillRect = AscCommon.isRealObject(this.fillRect) ? this.fillRect.createDuplicate() : null;
 			return copy;
 		};
 		CBlipFillStretch.prototype.isIdentical = function (other) {
-			return other &&
+			return other && (
+				this.fillRect == null && other.fillRect == null ||
 				other.fillRect.l == this.fillRect.l &&
 				other.fillRect.t == this.fillRect.t &&
 				other.fillRect.r == this.fillRect.r &&
-				other.fillRect.b == this.fillRect.b;
+				other.fillRect.b == this.fillRect.b);
 		};
 
 		function CFillRect(l, t, r, b) {
