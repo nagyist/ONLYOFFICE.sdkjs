@@ -351,7 +351,9 @@ var c_oAscDocumentShortcutType = {
 	HorizontalEllipsis            : 140,
 	ReplaceUnicodeToSymbol        : 141,
 	SoftHyphen                    : 142,
-	SpeechWorker                  : 143
+	SpeechWorker                  : 143,
+	EditChart                     : 144,
+	InsertLineBreakMultilineForm  : 145
 };
 
 var c_oAscDocumentRefenceToType = {
@@ -608,6 +610,7 @@ prot['InsertTab']                     = prot.InsertTab;
 prot['MixedIndent']                   = prot.MixedIndent;
 prot['MixedUnIndent']                 = prot.MixedUnIndent;
 prot['EditShape']                     = prot.EditShape;
+prot['EditChart']                     = prot.EditChart;
 prot['LittleMoveObjectLeft']          = prot.LittleMoveObjectLeft;
 prot['LittleMoveObjectRight']         = prot.LittleMoveObjectRight;
 prot['LittleMoveObjectUp']            = prot.LittleMoveObjectUp;
@@ -631,6 +634,7 @@ prot['MoveToNextForm']                = prot.MoveToNextForm;
 prot['MoveToPreviousForm']            = prot.MoveToPreviousForm;
 prot['ChooseNextComboBoxOption']      = prot.ChooseNextComboBoxOption;
 prot['ChoosePreviousComboBoxOption']  = prot.ChoosePreviousComboBoxOption;
+prot['InsertLineBreakMultilineForm']  = prot.InsertLineBreakMultilineForm;
 prot['InsertEquation']                = prot.InsertEquation;
 prot['EmDash']                        = prot.EmDash;
 prot['EnDash']                        = prot.EnDash;
