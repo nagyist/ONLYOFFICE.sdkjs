@@ -353,7 +353,9 @@ var c_oAscDocumentShortcutType = {
 	SoftHyphen                    : 142,
 	SpeechWorker                  : 143,
 	EditChart                     : 144,
-	InsertLineBreakMultilineForm  : 145
+	InsertLineBreakMultilineForm  : 145,
+	MoveToNextPage                : 146,
+	MoveToPreviousPage            : 147
 };
 
 var c_oAscDocumentRefenceToType = {
@@ -525,6 +527,8 @@ prot['MoveToEndLine']                 = prot.MoveToEndLine;
 prot['MoveToEndDocument']             = prot.MoveToEndDocument;
 prot['MoveToStartPreviousPage']       = prot.MoveToStartPreviousPage;
 prot['MoveToStartNextPage']           = prot.MoveToStartNextPage;
+prot['MoveToNextPage']                = prot.MoveToNextPage;
+prot['MoveToPreviousPage']            = prot.MoveToPreviousPage;
 prot['ScrollDown']                    = prot.ScrollDown;
 prot['ScrollUp']                      = prot.ScrollUp;
 prot['ZoomIn']                        = prot.ZoomIn;

@@ -4569,9 +4569,9 @@
 	baseEditorsApi.prototype.getShortcut = function(e)
 	{
 		if (e.GetKeyCode)
-			return this.Shortcuts.Get(e.GetKeyCode(), e.IsCtrl(), e.IsShift(), e.IsAlt());
+			return this.Shortcuts.Get(e.GetKeyCode(), e.IsShortcutCtrl(), e.IsShift(), e.IsAlt(), e.IsCmd());
 		else
-			return this.Shortcuts.Get(e.KeyCode, e.CtrlKey, e.ShiftKey, e.AltKey);
+			return this.Shortcuts.Get(e.KeyCode, e.CtrlKey, e.ShiftKey, e.AltKey, e.MacCmdKey);
 	};
 	baseEditorsApi.prototype.getCustomShortcutAction = function(nActionType)
 	{

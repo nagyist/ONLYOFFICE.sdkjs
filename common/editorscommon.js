@@ -11996,18 +11996,18 @@
 		this.CustomCounter = 0;
 		this.CustomActions = {};
 	}
-	CShortcuts.prototype.Add = function(nType, nCode, isCtrl, isShift, isAlt, isMacCmd)
+	CShortcuts.prototype.Add = function(nType, nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isMacCmd)] = nType;
+		this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)] = nType;
 	};
-	CShortcuts.prototype.Get = function(nCode, isCtrl, isShift, isAlt, isMacCmd)
+	CShortcuts.prototype.Get = function(nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		var nType = this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isMacCmd)];
+		var nType = this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
 		return (undefined !== nType ? nType : 0);
 	};
-	CShortcuts.prototype.private_GetIndex = function(nCode, isCtrl, isShift, isAlt, isMacCmd)
+	CShortcuts.prototype.private_GetIndex = function(nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		return ((nCode << 16) | (isCtrl ? 8 : 0) | (isShift ? 4 : 0) | (isAlt ? 2 : 0) | (isMacCmd ? 1 : 0));
+		return ((nCode << 16) | (isCtrl ? 8 : 0) | (isShift ? 4 : 0) | (isAlt ? 2 : 0) | (isCommand ? 1 : 0));
 	}
 	CShortcuts.prototype.GetAscShortcutObject = function(nIndex) {
 		const oShortcutObject = this.GetShortcutObject(nIndex);
@@ -12031,9 +12031,9 @@
 
 		return null;
 	};
-	CShortcuts.prototype.Remove = function(nCode, isCtrl, isShift, isAlt, isMacCmd)
+	CShortcuts.prototype.Remove = function(nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		delete this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isMacCmd)];
+		delete this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
 	};
 	CShortcuts.prototype.RemoveByType = function(nType)
 	{
