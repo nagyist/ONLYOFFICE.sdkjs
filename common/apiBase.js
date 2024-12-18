@@ -4582,7 +4582,30 @@
 	};
 	baseEditorsApi.prototype.initDefaultShortcuts = function()
 	{
+		if (this.Shortcuts) {
+			const arrShortcutActions = this.getDefaultShortcutActionTypes();
+			for (let i = 0; i < arrShortcutActions.length; i += 1) {
+				const nShortcutAction = arrShortcutActions[i];
+				const oShortcutAction = AscCommon.ShortcutActionKeycodes[nShortcutAction];
+				if (oShortcutAction) {
+					oShortcutAction.initSdkAction(this.Shortcuts);
+				}
+			}
+		}
 	};
+	baseEditorsApi.prototype.getDefaultShortcutActionTypes = function()
+	{
+		return [];
+	};
+	baseEditorsApi.prototype.asc_initShortcutActions = function(arrShortcutActions)
+	{
+		if (this.Shortcuts) {
+			for (let i = 0; i < arrShortcutActions.length; i++) {
+				arrShortcutActions[i].initSdkAction(this.Shortcuts);
+			}
+		}
+	};
+	baseEditorsApi.prototype.asc_resetShortcutActions
 	baseEditorsApi.prototype.getShortcut = function(e)
 	{
 		if (e.GetKeyCode)

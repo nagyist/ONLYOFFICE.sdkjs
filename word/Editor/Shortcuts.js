@@ -43,11 +43,41 @@
 	AscShortcutAction.prototype.IsLocked = function() {
 		return this.isLocked;
 	};
+	AscShortcutAction.prototype.initSdkAction = function (oSdkShortcuts) {
+		if (this.isLocked) {
+			return;
+		}
+		for (let i = 0; i < this.shortcuts.length; i += 1) {
+			const oShortcut = this.shortcuts[i];
+			oShortcut.initSdkShortcut(this.type, oSdkShortcuts);
+		}
+	}
 	AscShortcutAction.prototype.initShortcuts = function(shortcuts) {
 		for (let i = 0; i < shortcuts.length; i += 1) {
 			this.shortcuts.push(shortcuts[i]);
 		}
 	}
+	AscShortcutAction.prototype.fromJSON = function (obj) {
+		this.type = obj["type"];
+		this.isHidden = obj["isHidden"];
+		this.isLocked = obj["isLocked"];
+		for (let i = 0; i < obj["shortcuts"].length; i += 1) {
+			const oAscShortcut = new AscShortcut();
+			this.shortcuts.push(oAscShortcut);
+			oAscShortcut.fromJSON(obj["shortcuts"][i]);
+		}
+	};
+	AscShortcutAction.prototype.toJSON = function () {
+		const res = {};
+		res["type"] = this.type;
+		res["shortcuts"] = [];
+		for (let i = 0; i < this.shortcuts.length; i += 1) {
+			res["shortcuts"].push(this.shortcuts[i].toJSON());
+		}
+		res["isHidden"] = this.isHidden;
+		res["isLocked"] = this.isLocked;
+		return res;
+	};
 	function AscShortcut(keyCode, isCtrl, isShift, isAlt, isCommand, isLocked) {
 		this.keyCode = keyCode;
 		this.ctrlKey = isCtrl;
@@ -55,77 +85,126 @@
 		this.altKey = isAlt;
 		this.commandKey = isCommand;
 
-		this.isLocked = isLocked;
+		this.isLocked = !!isLocked;
 	}
-	AscShortcut.prototype.IsLocked = function() {
+	AscShortcut.prototype.asc_GetKeyCode = function() {
 		return !!this.isLocked;
+	};
+	AscShortcut.prototype.asc_IsCtrl = function() {
+		return this.ctrlKey;
+	};
+	AscShortcut.prototype.asc_IsShift = function() {
+		return this.shiftKey;
+	};
+	AscShortcut.prototype.asc_IsAlt = function() {
+		return this.altKey;
+	};
+	AscShortcut.prototype.asc_IsCommand = function() {
+		return this.commandKey;
+	};
+	AscShortcut.prototype.asc_IsLocked = function() {
+		return this.isLocked;
+	};
+	AscShortcut.prototype.initSdkShortcut = function (type, oSdkShortcuts) {
+		oSdkShortcuts.Add(type, this.keyCode, this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+		const addKeyCodes = keyCodeAnalogues[this.keyCode];
+		if (addKeyCodes) {
+			for (let i = 0; i < addKeyCodes.length; i += 1) {
+				oSdkShortcuts.Add(type, addKeyCodes[i], this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+			}
+		}
+	};
+	AscShortcut.prototype.toJSON = function () {
+		const res = {};
+		res["keyCode"] = this.keyCode;
+		res["ctrlKey"] = this.ctrlKey;
+		res["shiftKey"] = this.shiftKey;
+		res["altKey"] = this.altKey;
+		res["commandKey"] = this.commandKey;
+		return res;
+	};
+	AscShortcut.prototype.fromJSON = function (obj) {
+		this.keyCode = obj["keyCode"];
+		this.ctrlKey = obj["ctrlKey"];
+		this.shiftKey = obj["shiftKey"];
+		this.altKey = obj["altKey"];
+		this.commandKey = obj["commandKey"];
 	};
 	const ShortcutActionKeycodes = {};
 	const keyCodes = {
-		Digit0      : 48,
-		Digit1      : 49,
-		Digit2      : 50,
-		Digit3      : 51,
-		Digit4      : 52,
-		Digit5      : 53,
-		Digit6      : 54,
-		Digit7      : 55,
-		Digit8      : 56,
-		Digit9      : 57,
-		KeyA        : 65,
-		KeyB        : 66,
-		KeyC        : 67,
-		KeyD        : 68,
-		KeyE        : 69,
-		KeyF        : 70,
-		KeyG        : 71,
-		KeyH        : 72,
-		KeyI        : 73,
-		KeyJ        : 74,
-		KeyK        : 75,
-		KeyL        : 76,
-		KeyM        : 77,
-		KeyN        : 78,
-		KeyO        : 79,
-		KeyP        : 80,
-		KeyQ        : 81,
-		KeyR        : 82,
-		KeyS        : 83,
-		KeyT        : 84,
-		KeyU        : 85,
-		KeyV        : 86,
-		KeyW        : 87,
-		KeyX        : 88,
-		KeyY        : 89,
-		KeyZ        : 90,
-		KeyMinus    : 63,
-		KeyEqual    : 61,
-		Tab         : 9,
-		Escape      : 27,
-		Enter       : 13,
-		Backspace   : 8,
-		Delete      : 46,
-		Space       : 32,
-		Home        : 36,
-		End         : 35,
-		PageUp      : 33,
-		PageDown    : 34,
-		Insert      : 45,
-		NumpadPlus  : 107,
-		NumpadMinus : 109,
-		ArrowLeft   : 37,
-		ArrowRight  : 39,
-		ArrowUp     : 38,
-		ArrowDown   : 40,
-		Period      : 190,
-		Comma       : 188,
-		BracketRight: 221,
-		BracketLeft : 219,
-		Numpad8     : 104,
-		F1          : 112,
-		F9          : 120,
-		F10         : 121
+		Digit0             : 48,
+		Digit1             : 49,
+		Digit2             : 50,
+		Digit3             : 51,
+		Digit4             : 52,
+		Digit5             : 53,
+		Digit6             : 54,
+		Digit7             : 55,
+		Digit8             : 56,
+		Digit9             : 57,
+		KeyA               : 65,
+		KeyB               : 66,
+		KeyC               : 67,
+		KeyD               : 68,
+		KeyE               : 69,
+		KeyF               : 70,
+		KeyG               : 71,
+		KeyH               : 72,
+		KeyI               : 73,
+		KeyJ               : 74,
+		KeyK               : 75,
+		KeyL               : 76,
+		KeyM               : 77,
+		KeyN               : 78,
+		KeyO               : 79,
+		KeyP               : 80,
+		KeyQ               : 81,
+		KeyR               : 82,
+		KeyS               : 83,
+		KeyT               : 84,
+		KeyU               : 85,
+		KeyV               : 86,
+		KeyW               : 87,
+		KeyX               : 88,
+		KeyY               : 89,
+		KeyZ               : 90,
+		KeyMinus           : 189,
+		KeyFirefoxMinus    : 173,
+		KeyFirefoxEqual    : 61,
+		KeyEqual           : 187,
+		Tab                : 9,
+		Escape             : 27,
+		Enter              : 13,
+		Backspace          : 8,
+		Delete             : 46,
+		Space              : 32,
+		Home               : 36,
+		End                : 35,
+		PageUp             : 33,
+		PageDown           : 34,
+		Insert             : 45,
+		NumpadPlus         : 107,
+		NumpadMinus        : 109,
+		ArrowLeft          : 37,
+		ArrowRight         : 39,
+		ArrowUp            : 38,
+		ArrowDown          : 40,
+		Period             : 190,
+		Comma              : 188,
+		BracketRight       : 221,
+		BracketLeft        : 219,
+		Numpad8            : 104,
+		F1                 : 112,
+		F9                 : 120,
+		F10                : 121,
+		KeySemicolon       : 186,
+		KeyFirefoxSemicolon: 59
 	};
+	const keyCodeAnalogues = {};
+	keyCodeAnalogues[keyCodes.KeyMinus] = [keyCodes.KeyFirefoxMinus];
+	keyCodeAnalogues[keyCodes.KeyEqual] = [keyCodes.KeyFirefoxEqual];
+	keyCodeAnalogues[keyCodes.KeySemicolon] = [keyCodes.KeyFirefoxSemicolon];
+
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenFindDialog] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenFindDialog, [new AscShortcut(keyCodes.KeyF, true, false, false, false)],true);
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenFindAndReplaceMenu] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenFindAndReplaceMenu, [new AscShortcut(keyCodes.KeyH, true, false, false, false)],true);
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenCommentsPanel] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenCommentsPanel, [new AscShortcut(keyCodes.KeyH, true, true, false, false)],true);
@@ -239,7 +318,6 @@
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.RegisteredSign] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.RegisteredSign, [new AscShortcut(keyCodes.KeyR, true, false, true, false)]);
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.TrademarkSign] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.TrademarkSign, [new AscShortcut(keyCodes.KeyT, true, false, true, false)]);
 	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.SpeechWorker] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.SpeechWorker, [new AscShortcut(keyCodes.KeyZ, true, false, true, false)]);
-	ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.SoftHyphen] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.SoftHyphen, [],false, true);
 
 	if (AscCommon.AscBrowser.isMacOs) {
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenFilePanel] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenFilePanel, [new AscShortcut(keyCodes.KeyF, true, false, true, false)],true);
@@ -270,8 +348,9 @@
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.InsertEquation] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.InsertEquation, [new AscShortcut(keyCodes.KeyEqual, true, false, true, false), new AscShortcut(keyCodes.KeyEqual, false, false, true, true)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.EmDash] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.EmDash, [new AscShortcut(keyCodes.KeyMinus, false, true, true, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.EnDash] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.EnDash, [new AscShortcut(keyCodes.KeyMinus, false, false, true, false)]);
-		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.HorizontalEllipsis] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.HorizontalEllipsis, [new AscShortcut(keyCodes.Semicolon, false, false, true, false)]);
+		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.HorizontalEllipsis] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.HorizontalEllipsis, [new AscShortcut(keyCodes.KeySemicolon, false, false, true, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol, [new AscShortcut(keyCodes.KeyX, false, false, true, true), new AscShortcut(keyCodes.KeyX, true, false, true, false)],true);
+		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.SoftHyphen] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.SoftHyphen, [new AscShortcut(keyCodes.KeyMinus, true, false, true, false), new AscShortcut(keyCodes.KeyMinus, false, false, true, true)],false, true);
 
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenFindDialog].initShortcuts([new AscShortcut(keyCodes.KeyF, false, false, false, true)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.OpenCommentsPanel].initShortcuts([new AscShortcut(keyCodes.KeyH, false, true, false, true)]);
@@ -351,12 +430,14 @@
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.LittleMoveObjectDown] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.LittleMoveObjectDown, [new AscShortcut(keyCodes.ArrowDown, true, false, false, false)],true);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.InsertFootnoteNow] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.InsertFootnoteNow, [new AscShortcut(keyCodes.KeyF, true, false, true, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.InsertEquation] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.InsertEquation, [new AscShortcut(keyCodes.KeyEqual, false, false, true, false)]);
+		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.SoftHyphen] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.SoftHyphen, [new AscShortcut(keyCodes.KeyMinus, false, false, true, false)],false, true);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.EmDash] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.EmDash, [new AscShortcut(keyCodes.NumpadMinus, true, false, true, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.EnDash] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.EnDash, [new AscShortcut(keyCodes.NumpadMinus, true, false, false, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.HorizontalEllipsis] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.HorizontalEllipsis, [new AscShortcut(keyCodes.Period, true, false, true, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol, [new AscShortcut(keyCodes.KeyX, false, false, true, false)],true);
-
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.ZoomIn].initShortcuts([new AscShortcut(keyCodes.NumpadPlus, true, false, false, false)]);
 		ShortcutActionKeycodes[Asc.c_oAscDocumentShortcutType.ShowAll].initShortcuts([new AscShortcut(keyCodes.Numpad8, true, true, false, false)]);
 	}
+
+	AscCommon.ShortcutActionKeycodes = ShortcutActionKeycodes;
 })();

@@ -1340,131 +1340,56 @@ background-repeat: no-repeat;\
 		return text_data.data;
 	};
 
-	asc_docs_api.prototype._InitCommonShortcuts = function () 
+	asc_docs_api.prototype.getDefaultShortcutActionTypes = function()
 	{
-		// ActionType, Key, Ctrl, Shift, Alt
-		this.initShortcuts([
-			[c_oAscDocumentShortcutType.InsertPageBreak, 13, true, false, false, false],
-			[c_oAscDocumentShortcutType.InsertLineBreak, 13, false, true, false, false],
-			[c_oAscDocumentShortcutType.InsertColumnBreak, 13, true, true, false, false],
-			[c_oAscDocumentShortcutType.ResetChar, 32, true, false, false, false],
-			[c_oAscDocumentShortcutType.NonBreakingSpace, 32, true, true, false, false],
-			[c_oAscDocumentShortcutType.ShowAll, 56, true, true, false, false],
-			[c_oAscDocumentShortcutType.EditSelectAll, 65, true, false, false, false],
-			[c_oAscDocumentShortcutType.Bold, 66, true, false, false, false],
-			[c_oAscDocumentShortcutType.CopyFormat, 67, true, false, true, false],
-			[c_oAscDocumentShortcutType.InsertEndnoteNow, 68, true, false, true, false],
-			[c_oAscDocumentShortcutType.CenterPara, 69, true, false, false, false],
-			[c_oAscDocumentShortcutType.EuroSign, 69, true, false, true, false],
-			[c_oAscDocumentShortcutType.CopyrightSign, 71, true, false, true, false],
-			[c_oAscDocumentShortcutType.Italic, 73, true, false, false, false],
-			[c_oAscDocumentShortcutType.JustifyPara, 74, true, false, false, false],
-			[c_oAscDocumentShortcutType.InsertHyperlink, 75, true, false, false, false],
-			[c_oAscDocumentShortcutType.ApplyListBullet, 76, true, true, false, false],
-			[c_oAscDocumentShortcutType.LeftPara, 76, true, false, false, false],
-			[c_oAscDocumentShortcutType.Indent, 77, true, false, false, false],
-			[c_oAscDocumentShortcutType.UnIndent, 77, true, true, false, false],
-			[c_oAscDocumentShortcutType.PrintPreviewAndPrint, 80, true, false, false, false],
-			[c_oAscDocumentShortcutType.InsertPageNumber, 80, true, true, false, false],
-			[c_oAscDocumentShortcutType.RightPara, 82, true, false, false, false],
-			[c_oAscDocumentShortcutType.RegisteredSign, 82, true, false, true, false],
-			[c_oAscDocumentShortcutType.Save, 83, true, false, false, false],
-			[c_oAscDocumentShortcutType.TrademarkSign, 84, true, false, true, false],
-			[c_oAscDocumentShortcutType.Underline, 85, true, false, false, false],
-			[c_oAscDocumentShortcutType.PasteFormat, 86, true, false, true, false],
-			[c_oAscDocumentShortcutType.EditRedo, 89, true, false, false, false],
-			[c_oAscDocumentShortcutType.EditUndo, 90, true, false, false, false],
-			[c_oAscDocumentShortcutType.UpdateFields, 120, false, false, false, false],
-			[c_oAscDocumentShortcutType.Superscript, 188, true, false, false, false],
-			[c_oAscDocumentShortcutType.NonBreakingHyphen, 189, true, true, false, false],
-			[c_oAscDocumentShortcutType.NonBreakingHyphen, 173, true, true, false, false],
-			[c_oAscDocumentShortcutType.Subscript, 190, true, false, false, false],
-			[c_oAscDocumentShortcutType.IncreaseFontSize, 221, true, false, false, false],
-			[c_oAscDocumentShortcutType.DecreaseFontSize, 219, true, false, false, false],
-			[c_oAscDocumentShortcutType.SpeechWorker, 90, true, false, true, false]
-		]);
-	}
-
-	asc_docs_api.prototype._InitWindowsShortcuts = function ()
-	{
-		// ActionType, Key, Ctrl, Shift, Alt
-		this.initShortcuts([
-			[c_oAscDocumentShortcutType.ApplyHeading1, 49, false, false, true, false],
-			[c_oAscDocumentShortcutType.ApplyHeading2, 50, false, false, true, false],
-			[c_oAscDocumentShortcutType.ApplyHeading3, 51, false, false, true, false],
-			[c_oAscDocumentShortcutType.Strikeout, 53, true, false, false, false],
-			[c_oAscDocumentShortcutType.InsertFootnoteNow, 70, true, false, true, false],
-			[c_oAscDocumentShortcutType.InsertEquation, 187, false, false, true, false],
-			[c_oAscDocumentShortcutType.InsertEquation, 61, false, false, true, false],
-			[c_oAscDocumentShortcutType.SoftHyphen, 189, false, false, true, false],
-			[c_oAscDocumentShortcutType.SoftHyphen, 173, false, false, true, false],
-			[c_oAscDocumentShortcutType.HorizontalEllipsis, 190, true, false, true, false],
-			[c_oAscDocumentShortcutType.EnDash, 109, true, false, false, false],
-			[c_oAscDocumentShortcutType.EmDash, 109, true, false, true, false]
-		]);
-	}
-
-	asc_docs_api.prototype._InitMacOsShortcuts = function () {
-		// ActionType, Key, Ctrl, Shift, Alt
-		this.initShortcuts([
-			[c_oAscDocumentShortcutType.ApplyHeading1, 49, true, false, true, false],
-			[c_oAscDocumentShortcutType.ApplyHeading2, 50, true, false, true, false],
-			[c_oAscDocumentShortcutType.ApplyHeading3, 51, true, false, true, false],
-			[c_oAscDocumentShortcutType.Strikeout, 88, true, true, false, false],
-			[c_oAscDocumentShortcutType.InsertEquation, 187, true, false, true, false],
-			[c_oAscDocumentShortcutType.InsertEquation, 61, true, false, true, false],
-			[c_oAscDocumentShortcutType.SoftHyphen, 189, true, false, true, false],
-			[c_oAscDocumentShortcutType.SoftHyphen, 173, true, false, true, false],
-			[c_oAscDocumentShortcutType.InsertPageBreak, 13, false, false, false, true],
-			[c_oAscDocumentShortcutType.InsertColumnBreak, 13, false, true, false, true],
-			[c_oAscDocumentShortcutType.ResetChar, 32, false, false, false, true],
-			[c_oAscDocumentShortcutType.NonBreakingSpace, 32, false, true, false, true],
-			[c_oAscDocumentShortcutType.ShowAll, 56, false, true, false, true],
-			[c_oAscDocumentShortcutType.EditSelectAll, 65, false, false, false, true],
-			[c_oAscDocumentShortcutType.Bold, 66, false, false, false, true],
-			[c_oAscDocumentShortcutType.CopyFormat, 67, false, false, true, true],
-			[c_oAscDocumentShortcutType.CenterPara, 69, false, false, false, true],
-			[c_oAscDocumentShortcutType.EuroSign, 69, false, false, true, true],
-			[c_oAscDocumentShortcutType.CopyrightSign, 71, false, false, true, true],
-			[c_oAscDocumentShortcutType.Italic, 73, false, false, false, true],
-			[c_oAscDocumentShortcutType.JustifyPara, 74, false, false, false, true],
-			[c_oAscDocumentShortcutType.InsertHyperlink, 75, false, false, false, true],
-			[c_oAscDocumentShortcutType.ApplyListBullet, 76, false, true, false, true],
-			[c_oAscDocumentShortcutType.LeftPara, 76, false, false, false, true],
-
-			[c_oAscDocumentShortcutType.Indent, 77, false, false, false, true],
-			[c_oAscDocumentShortcutType.UnIndent, 77, false, true, false, true],
-			[c_oAscDocumentShortcutType.PrintPreviewAndPrint, 80, false, false, false, true],
-			[c_oAscDocumentShortcutType.InsertPageNumber, 80, false, true, false, true],
-			[c_oAscDocumentShortcutType.RightPara, 82, false, false, false, true],
-			[c_oAscDocumentShortcutType.RegisteredSign, 82, false, false, true, true],
-			[c_oAscDocumentShortcutType.Save, 83, false, false, false, true],
-			[c_oAscDocumentShortcutType.TrademarkSign, 84, false, false, true, true],
-			[c_oAscDocumentShortcutType.Underline, 85, false, false, false, true],
-			[c_oAscDocumentShortcutType.PasteFormat, 86, false, false, true, true],
-			[c_oAscDocumentShortcutType.EditRedo, 89, false, false, false, true],
-			[c_oAscDocumentShortcutType.EditUndo, 90, false, false, false, true],
-			[c_oAscDocumentShortcutType.Superscript, 188, false, false, false, true],
-			[c_oAscDocumentShortcutType.NonBreakingHyphen, 189, false, true, false, true],
-			[c_oAscDocumentShortcutType.NonBreakingHyphen, 173, false, true, false, true],
-			[c_oAscDocumentShortcutType.Subscript, 190, false, false, false, true],
-			[c_oAscDocumentShortcutType.IncreaseFontSize, 221, false, false, false, true],
-			[c_oAscDocumentShortcutType.DecreaseFontSize, 219, false, false, false, true],
-			[c_oAscDocumentShortcutType.SpeechWorker, 90, false, false, true, true]
-		]);
-	}
-
-	asc_docs_api.prototype.initDefaultShortcuts = function()
-	{
-		this._InitCommonShortcuts();
-		if (AscCommon.AscBrowser.isMacOs) 
-		{
-			this._InitMacOsShortcuts();
-		} 
-		else 
-		{
-			this._InitWindowsShortcuts();
-		}
+		return [
+			c_oAscDocumentShortcutType.InsertPageBreak,
+			c_oAscDocumentShortcutType.InsertLineBreak,
+			c_oAscDocumentShortcutType.InsertColumnBreak,
+			c_oAscDocumentShortcutType.ResetChar,
+			c_oAscDocumentShortcutType.NonBreakingSpace,
+			c_oAscDocumentShortcutType.ShowAll,
+			c_oAscDocumentShortcutType.EditSelectAll,
+			c_oAscDocumentShortcutType.Bold,
+			c_oAscDocumentShortcutType.CopyFormat,
+			c_oAscDocumentShortcutType.InsertEndnoteNow,
+			c_oAscDocumentShortcutType.CenterPara,
+			c_oAscDocumentShortcutType.EuroSign,
+			c_oAscDocumentShortcutType.CopyrightSign,
+			c_oAscDocumentShortcutType.Italic,
+			c_oAscDocumentShortcutType.JustifyPara,
+			c_oAscDocumentShortcutType.InsertHyperlink,
+			c_oAscDocumentShortcutType.ApplyListBullet,
+			c_oAscDocumentShortcutType.LeftPara,
+			c_oAscDocumentShortcutType.Indent,
+			c_oAscDocumentShortcutType.UnIndent,
+			c_oAscDocumentShortcutType.PrintPreviewAndPrint,
+			c_oAscDocumentShortcutType.InsertPageNumber,
+			c_oAscDocumentShortcutType.RightPara,
+			c_oAscDocumentShortcutType.RegisteredSign,
+			c_oAscDocumentShortcutType.Save,
+			c_oAscDocumentShortcutType.TrademarkSign,
+			c_oAscDocumentShortcutType.Underline,
+			c_oAscDocumentShortcutType.PasteFormat,
+			c_oAscDocumentShortcutType.EditRedo,
+			c_oAscDocumentShortcutType.EditUndo,
+			c_oAscDocumentShortcutType.UpdateFields,
+			c_oAscDocumentShortcutType.Superscript,
+			c_oAscDocumentShortcutType.NonBreakingHyphen,
+			c_oAscDocumentShortcutType.Subscript,
+			c_oAscDocumentShortcutType.IncreaseFontSize,
+			c_oAscDocumentShortcutType.DecreaseFontSize,
+			c_oAscDocumentShortcutType.SpeechWorker,
+			c_oAscDocumentShortcutType.ApplyHeading1,
+			c_oAscDocumentShortcutType.ApplyHeading2,
+			c_oAscDocumentShortcutType.ApplyHeading3,
+			c_oAscDocumentShortcutType.Strikeout,
+			c_oAscDocumentShortcutType.InsertFootnoteNow,
+			c_oAscDocumentShortcutType.InsertEquation,
+			c_oAscDocumentShortcutType.SoftHyphen,
+			c_oAscDocumentShortcutType.HorizontalEllipsis,
+			c_oAscDocumentShortcutType.EnDash,
+			c_oAscDocumentShortcutType.EmDash];
 	};
 
 	asc_docs_api.prototype.InitEditor = function()
