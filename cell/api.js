@@ -87,6 +87,8 @@ var editor;
     this.tmpGroupSeparator = null;
     this.tmpLocalization = null;
 
+	this.activeLocalization = null;
+
     // spellcheck
     this.defaultLanguage = 1033;
     this.spellcheckState = new AscCommonExcel.CSpellcheckState();
@@ -980,9 +982,9 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_addAutoFilter = function(styleName, addFormatTableOptionsObj) {
+  spreadsheet_api.prototype.asc_addAutoFilter = function(styleName, addFormatTableOptionsObj, range) {
     var ws = this.wb.getWorksheet();
-    return ws.addAutoFilter(styleName, addFormatTableOptionsObj);
+    return ws.addAutoFilter(styleName, addFormatTableOptionsObj, range);
   };
 
   spreadsheet_api.prototype.asc_changeAutoFilter = function(tableName, optionType, val) {
@@ -5275,6 +5277,22 @@ var editor;
     ws.objectRender.unGroupGraphicObjects();
   };
 
+    spreadsheet_api.prototype.asc_canMergeSelectedShapes = function (operation) {
+      return AscFormat.canMergeSelectedShapes(operation);
+    };
+    spreadsheet_api.prototype.asc_mergeSelectedShapesAction = function (operation) {
+      const controller = this.wb.getWorksheet().objectRender.controller;
+      if (controller.checkSelectedObjectsProtection())
+        return;
+
+      if (this.asc_canMergeSelectedShapes(operation)) {
+        controller.checkSelectedObjectsAndCallback(
+          AscFormat.mergeSelectedShapes, [operation], false,
+          AscDFH.historydescription_Presentation_MergeSelectedShapes
+        );
+      }
+    };
+
   spreadsheet_api.prototype.asc_changeShapeType = function(value) {
     this.asc_setGraphicObjectProps(new Asc.asc_CImgProperty({ShapeProperties: {type: value}}));
   };
@@ -6721,6 +6739,11 @@ var editor;
 			return;
 		}
 
+		if (this.activeLocalization === sLang) {
+			return;
+		}
+		this.activeLocalization = sLang;
+
 		if (null == oLocalizedData) {
 			AscCommonExcel.cFormulaFunctionLocalized = null;
 			AscCommonExcel.cFormulaFunctionToLocale = null;
@@ -6764,6 +6787,18 @@ var editor;
 			if (AscFonts.FontPickerByCharacter.getFontsByString(constError["nil"])) {
 				this._loadFonts([], function() {});
 			}
+		}
+
+		//update
+		if (this.wb && this.wb.wsViews) {
+			let allRange = new Asc.Range(0, 0, AscCommon.gc_nMaxCol0, AscCommon.gc_nMaxRow0);
+			for (let i in this.wb.wsViews) {
+				let item = this.wb.wsViews[i];
+				item._updateRange(allRange);
+			}
+
+			let ws = this.wb.getWorksheet();
+			ws && ws.draw();
 		}
 	};
 
@@ -9879,6 +9914,7 @@ var editor;
   prot["asc_groupGraphicsObjects"] = prot.asc_groupGraphicsObjects;
   prot["asc_canUnGroupGraphicsObjects"] = prot.asc_canUnGroupGraphicsObjects;
   prot["asc_unGroupGraphicsObjects"] = prot.asc_unGroupGraphicsObjects;
+  prot["asc_canMergeSelectedShapes"] = prot.asc_canMergeSelectedShapes;
   prot["asc_getGraphicObjectProps"] = prot.asc_getGraphicObjectProps;
   prot["asc_GetSelectedText"] = prot.asc_GetSelectedText;
   prot["asc_setGraphicObjectProps"] = prot.asc_setGraphicObjectProps;

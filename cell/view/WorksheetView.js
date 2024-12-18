@@ -1778,7 +1778,7 @@
             if(t.objectRender) {
                 t.objectRender.bUpdateMetrics = false;
             }
-			t.changeWorksheet("update", {reinitRanges: true});
+			t.changeWorksheet("update", {reinitRanges: true, viewModeUpdate: viewMode});
 			t._updateGroups(true, undefined, undefined, true);
 			t._updateVisibleColsCount();
 			t.cellCommentator.updateActiveComment();
@@ -1923,7 +1923,7 @@
             if(t.objectRender) {
                 t.objectRender.bUpdateMetrics = false;
             }
-			t.changeWorksheet("update", {reinitRanges: true});
+			t.changeWorksheet("update", {reinitRanges: true, viewModeUpdate: viewMode});
 			t._updateGroups(false, undefined, undefined, true);
 			t._updateVisibleRowsCount();
 			t.cellCommentator.updateActiveComment();
@@ -9871,6 +9871,55 @@
         }
     };
 
+	WorksheetView.prototype._selectAllByRange = function () {
+		var ar = this.model.selectionRange.getLast();
+		var type = ar.getType();
+		if (this.isMultiSelect() || c_oAscSelectionType.RangeCol === type || c_oAscSelectionType.RangeRow === type) {
+			this._selectColumnsByRange();
+			this._selectRowsByRange();
+		} else if (c_oAscSelectionType.RangeMax !== type) {
+			this.cleanSelection();
+			if (c_oAscSelectionType.RangeCol === type || c_oAscSelectionType.RangeRow === type) {
+				ar.assign(0, 0, gc_nMaxCol0, gc_nMaxRow0);
+			} else {
+				let ar = this.model.selectionRange.getLast();
+				let newRange;
+				let tableParts = this.model.TableParts;
+				if (tableParts && tableParts.length) {
+					for (let i = 0; i < tableParts.length; i++) {
+						if (tableParts[i].Ref.containsRange(ar)) {
+							//into body table
+							let _dataRange = tableParts[i].getTableRangeForFormula({param: AscCommon.FormulaTablePartInfo.data});
+							if (_dataRange && _dataRange.containsRange(ar) && !_dataRange.isEqual(ar)) {
+								newRange = _dataRange;
+							} else if (!tableParts[i].Ref.isEqual(ar)) {
+								newRange = tableParts[i].Ref;
+							} else {
+								newRange = ar;
+							}
+							break;
+						}
+					}
+				}
+
+				if (!newRange) {
+					newRange = this.model.autoFilters.expandRange(ar, true);
+				}
+
+				if (newRange) {
+					if (newRange.isEqual(ar)) {
+						ar.assign(0, 0, gc_nMaxCol0, gc_nMaxRow0);
+					} else {
+						ar.assign(newRange.c1, newRange.r1, newRange.c2, newRange.r2);
+					}
+				}
+			}
+
+			this._drawSelection();
+			this._updateSelectionNameAndInfo();
+		}
+	};
+
     /**
      * Возвращает true, если диапазон больше видимой области, и операции над ним могут привести к задержкам
      * @param {Asc.Range} range  Диапазон для проверки
@@ -16619,7 +16668,8 @@
 
 	WorksheetView.prototype.changeWorksheet = function (prop, val, callback, lockDraw) {
 		// Проверка глобального лока
-		if (this.collaborativeEditing.getGlobalLock() || (!window["Asc"]["editor"].canEdit() && !this.workbook.Api.VersionHistory)) {
+		let isViewModeUpdate = val && val.viewModeUpdate;
+		if (this.collaborativeEditing.getGlobalLock() || (!window["Asc"]["editor"].canEdit() && !this.workbook.Api.VersionHistory && !isViewModeUpdate)) {
 			return;
 		}
 
@@ -19021,7 +19071,7 @@
         this.oOtherRanges = null;
     };
 
-	WorksheetView.prototype.addAutoFilter = function (styleName, addFormatTableOptionsObj) {
+	WorksheetView.prototype.addAutoFilter = function (styleName, addFormatTableOptionsObj, range) {
 		// Проверка глобального лока
 		if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
 			return;
@@ -19037,7 +19087,7 @@
 		}
 
 		var t = this;
-		var ar = this.model.selectionRange.getLast().clone();
+		var ar = range ? range : this.model.selectionRange.getLast().clone();
 
 		var isChangeAutoFilterToTablePart = function (addFormatTableOptionsObj) {
 			var res = false;
@@ -28298,7 +28348,7 @@
 
 					ws.model.workbook.addExternalReferences([newExternalReference]);
 
-					pasteLinkIndex = ws.model.workbook.getExternalLinkIndexByName(name);
+					pasteLinkIndex = referenceData ? ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true) : ws.model.workbook.getExternalLinkIndexByName(name);
 					if (pasteLinkIndex != null) {
 						pasteSheetLinkName = pastedSheetName;
 					}
@@ -29156,14 +29206,14 @@
 				type = 1;
 				sheet = externalSheetSameWb;
 			} else {
-				let externalReference;
+				let externalReferenceIndex;
 				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
 					let fromPath = pastedWb.Core.contentStatus;
 					let thisPath = window["AscDesktopEditor"]["LocalFileGetSourcePath"]();
 					relativePath = buildRelativePath(fromPath, thisPath);
-					externalReference = ws.model.workbook.getExternalLinkIndexByName(relativePath);
+					externalReferenceIndex = ws.model.workbook.getExternalLinkIndexByName(relativePath);
 				} else {
-					//сначала ищем по дополнительной информации
+					//first we look by additional information
 					//fileId -> contentStatus, portalName -> category
 					let referenceData;
 					if (pastedWb && pastedWb.Core) {
@@ -29171,20 +29221,27 @@
 						referenceData["fileKey"] = pastedWb.Core.contentStatus;
 						referenceData["instanceId"] = pastedWb.Core.category;
 					}
-					externalReference = referenceData && ws.model.workbook.getExternalLinkByReferenceData(referenceData);
-					externalReference = externalReference && externalReference.index;
-					if (null == externalReference) {
+
+					/* get external link index by reference data */
+					externalReferenceIndex = referenceData && ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true);
+
+					if (null == externalReferenceIndex) {
 						//потом пробуем по имени найти
-						externalReference = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						let tempER = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						if (tempER && !referenceData) {
+							// if there is no data, but an existing link with the same name is found, we refer to the existing data without updating
+							externalReferenceIndex = tempER;
+						}
+						// if there is data and it doesn't match, and we have a link with the same name, we write a new link (duplicated by name, but not by data)
 					}
 				}
 
-				//если всё-таки не нашли, то добавляем новый external reference
-				if (!externalReference) {
+				//if we still haven’t found the ER, then we add a new external reference
+				if (!externalReferenceIndex) {
 					type = -2;
 				} else {
 					type = -1;
-					index = externalReference;
+					index = externalReferenceIndex;
 					sheet = pastedWb.aWorksheets[0].sName;
 				}
 			}

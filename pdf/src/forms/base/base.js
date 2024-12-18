@@ -737,7 +737,13 @@
         
         oActionsQueue.Start();
     };
+    CBaseField.prototype.IsUseInDocument = function() {
+        let oDoc = Asc.editor.getPDFDoc();
+        if (oDoc.widgets.indexOf(this) == -1)
+            return false;
 
+        return true;
+    };
     CBaseField.prototype.DrawHighlight = function(oCtx) {
         if (this.IsHidden() == true)
             return;
@@ -1227,6 +1233,9 @@
     CBaseField.prototype.Get_Id = function() {
         return this._id;
     };
+    CBaseField.prototype.GetId = function() {
+        return this._id;
+    };
     CBaseField.prototype.SetNeedRecalc = function(bRecalc, bSkipAddToRedraw) {
         if (bRecalc == false) {
             this._needRecalc = false;
@@ -1245,9 +1254,15 @@
     };
     CBaseField.prototype.Refresh_RecalcData = function(){};
     CBaseField.prototype.SetWasChanged = function(isChanged) {
-        let oViewer = editor.getDocumentRenderer();
+        if (this._wasChanged == isChanged) {
+            return;
+        }
 
+        let oViewer = editor.getDocumentRenderer();
         if (oViewer.IsOpenFormsInProgress == false) {
+            // let oDoc = this.GetDocument();
+            // oDoc.History.Add(new CChangesPDFFormChanged(this, this._wasChanged, isChanged));
+
             this._wasChanged = isChanged;
             this.IsWidget() && this.SetDrawFromStream(!isChanged);
         }
@@ -1297,6 +1312,10 @@
     CBaseField.prototype.AddToRedraw = function() {
         let oViewer = editor.getDocumentRenderer();
         let nPage   = this.GetPage();
+        
+        if (false == this.IsUseInDocument()) {
+            return;
+        }
         
         function setRedrawPageOnRepaint() {
             if (oViewer.pagesInfo.pages[nPage]) {
@@ -1833,6 +1852,24 @@
         // oGraphicsPDF.BeginPath();
         // oGraphicsPDF.Rect(X, Y, nWidth, nHeight);
         // oGraphicsPDF.Stroke();
+
+        this.DrawLocks(oGraphicsPDF);
+    };
+    CBaseField.prototype.DrawLocks = function(oGraphicsPDF) {
+        let aOrigRect   = this.GetRect();
+        let nX          = aOrigRect[0];
+        let nY          = aOrigRect[1];
+        let nWidth      = (aOrigRect[2] - aOrigRect[0]);
+        let nHeight     = (aOrigRect[3] - aOrigRect[1]);
+
+        let aRegions = [[
+            [nX + nWidth, nY],
+            [nX, nY],
+            [nX, nY + nHeight],
+            [nX + nWidth, nY + nHeight]
+        ]];
+
+        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aRegions);
     };
 	CBaseField.prototype.DrawFromTextBox = function(pdfGraphics, textBoxGraphics, pageIndex) {
 		this.Draw(pdfGraphics, textBoxGraphics);

@@ -50,6 +50,12 @@
 	 * @constructor
 	 */
 	function Text_Type() {
+		/**
+		 * if text is inherited so we consider that text fields in it have wrong values,
+		 * and we recalculate values them
+		 */
+		this.isInherited = false;
+
 		this.elements = []
 		// array to store elems below. see ShapeSheet element
 		// this.cp = [];
@@ -406,62 +412,6 @@
 		}
 	}
 
-
-	/**
-	 *
-	 * @param obj
-	 * @param {string} constructorName
-	 * @param {string} [attributeName]
-	 * @param attributeValue
-	 * @return {*|undefined}
-	 */
-	function findObject(obj, constructorName, attributeName, attributeValue) {
-		let attributeCheck = true;
-		if (attributeName === undefined) {
-			attributeCheck = false;
-		}
-		// Base case: if the object is null or undefined, or if it's not an object
-		if (!obj || typeof obj !== 'object') {
-			return null;
-		}
-		// Check if the current object has the desired attribute, value, and constructor name
-		if (obj.constructor.name === constructorName && (attributeCheck ? obj[attributeName] === attributeValue : true)) {
-			return obj;
-		}
-		// Iterate over object properties and recursively search for the attribute and constructor name
-		for (const key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				const result = findObject(obj[key], constructorName, attributeName, attributeValue);
-				if (result) {
-					return result;
-				}
-			}
-		}
-		// If the attribute was not found, return undefined
-		return undefined;
-	}
-
-	function findObjects(obj, constructorName, attributeName, attributeValue, results) {
-		if (typeof results === "undefined") {
-			results = [];
-		}
-		// Base case: if the object is null or undefined, or if it's not an object
-		if (!obj || typeof obj !== 'object') {
-			return [];
-		}
-		// Check if the current object has the desired attribute, value, and constructor name
-		if (obj.constructor.name === constructorName && obj[attributeName] === attributeValue) {
-			results.push(obj);
-		}
-		// Iterate over object properties and recursively search for the attribute and constructor name
-		for (const key in obj) {
-			if (obj.hasOwnProperty(key)) {
-				findObjects(obj[key], constructorName, attributeName, attributeValue, results);
-			}
-		}
-		return results;
-	}
-
 	/**
 	 * Always use it see Shape_Type.prototype.realizeMasterToShapeInheritanceRecursive js docs for explanation.
 	 * Finds shape section by formula. Compares N with string argument. For Geometry use find sections.
@@ -594,6 +544,28 @@
 		});
 		return resultArr;
 		// return findObjects(this.elements, "Section_Type", "n", formula);
+	}
+
+	/**
+	 * Always use it see Shape_Type.prototype.realizeMasterToShapeInheritanceRecursive js docs for explanation.
+	 * Used with no argument to get all rows
+	 * @memberof SheetStorage
+	 * @returns {Row_Type[]}
+	 */
+	SheetStorage.prototype.getRows = function() {
+		// TODO check may be optimized. maybe use binary search for elements with maximum number as index bcs geometry
+		// rows have Row.ix as index and it is number.
+		let resultArr = [];
+		for (const key in this.elements) {
+			const element = this.elements[key];
+			if (element.kind === c_oVsdxSheetStorageKind.Row_Type) {
+				resultArr.push(element);
+			}
+		}
+		resultArr.sort(function (a, b) {
+			return a.iX - b.iX;
+		});
+		return resultArr;
 	}
 
 	/**
@@ -1157,7 +1129,7 @@
 	 * Realizes Master-To-Shape inheritance.
 	 * Comes through the shape recursively through all subshapes
 	 * and copies properties from their masters if master exist.
-	 * Uses clone function so copied objects are unlinked from master.
+	 * Not uses clone function.
 	 *
 	 * This function erases original shape object and after function call we cant find what props are
 	 * inherited.
@@ -1420,6 +1392,7 @@
 	 */
 	function realizeStyleToSheetObjInheritanceRecursive(thisArgument, styles, stylesWithRealizedInheritance) {
 		if (stylesWithRealizedInheritance.has(thisArgument)) {
+			// thisArgument is style not shape and it has realized inheritance already
 			// AscCommon.consoleLog("style has realized inheritance already. return");
 			return;
 		}
@@ -1517,6 +1490,7 @@
 			return;
 		}
 
+		// if lineStyle === textStyle === fillStyle so let's take lineStyle
 		let styleId = Number(thisArgument.lineStyle);
 		let styleSheet = styles.find(function(style) {
 			return style.iD === styleId;
@@ -1534,8 +1508,10 @@
 	/**
 	 * Style-To-Shape inheritance
 	 * Copy all style elements (sections, rows, cells) to shape.
-	 * (Doesnt take much memory < 300MB with master inheritance for the most large files).
+	 * (Doesn't take much memory < 300MB with master inheritance for the most large files).
 	 * stylesWithRealizedInheritance was added for optimization.
+	 * Check if this shape or sub-shapes have lineStyle/fillStyle/textStyle if so realize inheritance with
+	 * recursive style inheritance
 	 * @param styles
 	 * @param {?Set} [stylesWithRealizedInheritance]
 	 * @memberOf Shape_Type
@@ -1573,6 +1549,17 @@
 			return elementsObject[objKey];
 		}
 
+		/**
+		 * if text is inherited so we consider that text fields in it have wrong values
+		 * and we recalculate values them
+		 * @param masterElement
+		 */
+		function setIsInheritedForText(masterElement) {
+			if (masterElement.kind === c_oVsdxSheetStorageKind.Text_Type) {
+				masterElement.isInherited = true;
+			}
+		}
+
 		let mergeAll = false;
 
 		if (elementsToMerge === undefined) {
@@ -1585,8 +1572,8 @@
 			let overrideObject = findObjectIn(shapeElements, masterElement);
 			let elementExistsAlready = overrideObject !== undefined;
 
-			let elementIsInList = elementsToMerge !== undefined && elementsToMerge.includes(masterElement.n);
-			let listCheck = mergeAll || isParentInList || elementIsInList;
+			let isElementInList = elementsToMerge !== undefined && elementsToMerge.includes(masterElement.n);
+			let listCheck = mergeAll || isParentInList || isElementInList;
 
 			if (!elementExistsAlready) {
 				if (listCheck) {
@@ -1596,8 +1583,11 @@
 
 					// mb lets not add cell after section
 					// let elementCopy = clone(masterElement);
+					setIsInheritedForText(masterElement);
+
 					let elementLink = masterElement;
 					shapeElements[key] = elementLink;
+
 				}
 			} else {
 				// merge inner elements recursive if not cell
@@ -1606,7 +1596,7 @@
 					let shapeElement = overrideObject;
 					if (masterElement.kind === c_oVsdxSheetStorageKind.Section_Type || masterElement.kind === c_oVsdxSheetStorageKind.Row_Type) {
 						// for future checks
-						isParentInList = elementIsInList || isParentInList;
+						isParentInList = isElementInList || isParentInList;
 						// recursive calls
 						mergeElementArrays(shapeElement.elements, masterElement.elements, elementsToMerge, isParentInList);
 					}
