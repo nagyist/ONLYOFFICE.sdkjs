@@ -9015,6 +9015,10 @@ function RangeDataManagerElem(bbox, data)
 			let startCol = this.getTableNameColumnByIndex(handleSelectionRange.c1 - this.Ref.c1);
 			let endCol = this.getTableNameColumnByIndex(handleSelectionRange.c2 - this.Ref.c1);
 
+			/* add special character escaping for string inside the table (escaping with single quote) */
+			startCol = parserHelp.escapeTableCharacters(startCol, true);
+			endCol = parserHelp.escapeTableCharacters(endCol, true);
+
 			if (this.Ref.isEqual(handleSelectionRange)) {
 				//Table1[#All]
 				return this.DisplayName + "[" + AscCommon.cStrucTableReservedWords.all + "]";
@@ -10340,6 +10344,10 @@ function RangeDataManagerElem(bbox, data)
 			}
 		}
 
+		let visibleDropDown = obj.asc_getVisibleDropDown();
+		this.ShowButton = visibleDropDown === false ? false : null;
+
+
 		return allFilterOpenElements;
 	};
 
@@ -11150,6 +11158,9 @@ function RangeDataManagerElem(bbox, data)
 		} else {
 			var isNumberFilter = this.Operator === c_oAscCustomAutoFilter.isGreaterThan || this.Operator === c_oAscCustomAutoFilter.isGreaterThanOrEqualTo || this.Operator === c_oAscCustomAutoFilter.isLessThan || this.Operator === c_oAscCustomAutoFilter.isLessThanOrEqualTo;
 
+			if (isLabelFilter && !isNumberFilter) {
+				isDigitValue = false;
+			}
 			if (c_oAscCustomAutoFilter.equals === this.Operator || c_oAscCustomAutoFilter.doesNotEqual === this.Operator) {
 				filterVal = isNaN(this.Val) ? this.Val.toLowerCase() : this.Val;
 			} else if (isNumberFilter) {
@@ -11322,9 +11333,6 @@ function RangeDataManagerElem(bbox, data)
 
 	CustomFilter.prototype.asc_setOperator = function (val) { this.Operator = val; };
 	CustomFilter.prototype.asc_setVal = function (val) {
-
-
-
 		this.Val = val;
 	};
 
@@ -15524,7 +15532,9 @@ function RangeDataManagerElem(bbox, data)
 	asc_CExternalReference.prototype.asc_getSource = function () {
 		let id = this.externalReference && this.externalReference.Id;
 		if (id) {
-			let lastIndex =0 === id.indexOf("file:///") ? id.lastIndexOf('\\') : id.lastIndexOf('/');
+			let diskRegex = /^[a-zA-Z]\:/gi; 
+			let lastIndex = 0 === id.indexOf("file:///") || id.match(diskRegex) ? id.lastIndexOf('\\') : id.lastIndexOf('/');
+
 			if (lastIndex === -1) {
 				lastIndex = id.lastIndexOf('/\/');
 			}
@@ -16345,6 +16355,7 @@ function RangeDataManagerElem(bbox, data)
 		return isChanged ? this : null;
 	};
 
+
 	/**
 	 * Class representing a Series settings for fills data of context menu and dialog window - "Series"
 	 * @property {c_oAscSeriesInType} seriesIn - Series in. Contains: Rows, Columns
@@ -16530,9 +16541,9 @@ function RangeDataManagerElem(bbox, data)
 							seriesSettings.asc_setType(Asc.c_oAscSeriesType.date);
 
 							contextMenuAllowedProps[Asc.c_oAscFillType.fillDays] = true;
-							//contextMenuAllowedProps[Asc.c_oAscFillType.fillWeekdays] = true;
-							//contextMenuAllowedProps[Asc.c_oAscFillType.fillMonths] = true;
-							//contextMenuAllowedProps[Asc.c_oAscFillType.fillYears] = true;
+							contextMenuAllowedProps[Asc.c_oAscFillType.fillWeekdays] = true;
+							contextMenuAllowedProps[Asc.c_oAscFillType.fillMonths] = true;
+							contextMenuAllowedProps[Asc.c_oAscFillType.fillYears] = true;
 						}
 					}
 				}
@@ -16624,9 +16635,9 @@ function RangeDataManagerElem(bbox, data)
 		contextMenuAllowedProps[Asc.c_oAscFillType.fillFormattingOnly] = null;
 		contextMenuAllowedProps[Asc.c_oAscFillType.fillWithoutFormatting] = null;
 		contextMenuAllowedProps[Asc.c_oAscFillType.fillDays] = false;
-		contextMenuAllowedProps[Asc.c_oAscFillType.fillWeekdays] = null;
-		contextMenuAllowedProps[Asc.c_oAscFillType.fillMonths] = null;
-		contextMenuAllowedProps[Asc.c_oAscFillType.fillYears] = null;
+		contextMenuAllowedProps[Asc.c_oAscFillType.fillWeekdays] = false;
+		contextMenuAllowedProps[Asc.c_oAscFillType.fillMonths] = false;
+		contextMenuAllowedProps[Asc.c_oAscFillType.fillYears] = false;
 		contextMenuAllowedProps[Asc.c_oAscFillType.linearTrend] = false;
 		contextMenuAllowedProps[Asc.c_oAscFillType.growthTrend] = false;
 		contextMenuAllowedProps[Asc.c_oAscFillType.flashFill] = null;
@@ -17426,6 +17437,115 @@ function RangeDataManagerElem(bbox, data)
 	};
 
 	/**
+	 * This element defines a collection of workbook properties
+	 * @constructor
+	 */
+	function CWorkbookPr() {
+		this.Date1904 = null;
+		this.DateCompatibility = null;
+		this.HidePivotFieldList = null;
+		this.ShowPivotChartFilter = null;
+		this.UpdateLinks = null;
+	}
+	/**
+	 * Method clones calculation options
+	 * @memberof CWorkbookPr
+	 * @returns {CWorkbookPr}
+	 */
+	CWorkbookPr.prototype.clone = function () {
+		let res = new CWorkbookPr();
+
+		res.Date1904 = this.Date1904;
+		res.DateCompatibility = this.DateCompatibility;
+		res.HidePivotFieldList = this.HidePivotFieldList;
+		res.ShowPivotChartFilter = this.ShowPivotChartFilter;
+		res.UpdateLinks = this.UpdateLinks;
+
+		return res;
+	};
+	/**
+	 * Method returns "1904" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getDate1904 = function () {
+		return this.Date1904;
+	};
+	/**
+	 * Method set "1904" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setDate1904 = function (val) {
+		this.Date1904 = val;
+	};
+	/**
+	 * Method returns "DateCompatibility" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getDateCompatibility = function () {
+		return this.DateCompatibility;
+	};
+	/**
+	 * Method set "DateCompatibility" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setDateCompatibility = function (val) {
+		this.DateCompatibility = val;
+	};
+	/**
+	 * Method returns "HidePivotFieldList" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getHidePivotFieldList = function () {
+		return this.HidePivotFieldList;
+	};
+	/**
+	 * Method set "HidePivotFieldList" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setHidePivotFieldList = function (val) {
+		this.HidePivotFieldList = val;
+	};
+	/**
+	 * Method returns "ShowPivotChartFilter" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getShowPivotChartFilter = function () {
+		return this.ShowPivotChartFilter;
+	};
+	/**
+	 * Method set "ShowPivotChartFilter" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setShowPivotChartFilter = function (val) {
+		this.ShowPivotChartFilter = val;
+	};
+	/**
+	 * Method returns "UpdateLinks" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.getUpdateLinks = function () {
+		return this.UpdateLinks;
+	};
+	/**
+	 * Method set "UpdateLinks" flag
+	 * @memberof CWorkbookPr
+	 * @returns {boolean}
+	 */
+	CWorkbookPr.prototype.setUpdateLinks = function (val) {
+		this.UpdateLinks = val;
+	};
+
+
+	/**
 	 * Class representing calculation settings for UI interface
 	 * @constructor
 	 */
@@ -18032,6 +18152,10 @@ function RangeDataManagerElem(bbox, data)
 
 	CCustomFunctionEngine.prototype.setActiveLocale = function (sLocale) {
 		this.activeLocale = sLocale;
+	};
+
+	CCustomFunctionEngine.prototype.getActiveLocale = function () {
+		return this.activeLocale;
 	};
 
 	CCustomFunctionEngine.prototype._getParamsInfo = function (func, params) {
@@ -19104,6 +19228,8 @@ function RangeDataManagerElem(bbox, data)
 	prot["asc_setMaxChange"] = prot.asc_setMaxChange;
 	prot["asc_initSettings"] = prot.asc_initSettings;
 
+	window["AscCommonExcel"].CWorkbookPr = CWorkbookPr;
+	
 	window["AscCommonExcel"].CMetadata = CMetadata;
 	window["AscCommonExcel"].CMetadataType = CMetadataType;
 	window["AscCommonExcel"].CMetadataString = CMetadataString;
@@ -19143,6 +19269,7 @@ function RangeDataManagerElem(bbox, data)
 	prot = CWorksheetInfo.prototype;
 	prot["asc_getName"] = prot.asc_getName;
 	prot["asc_getIndex"] = prot.asc_getIndex;
+
 
 
 

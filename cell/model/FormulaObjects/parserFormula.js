@@ -75,7 +75,7 @@ function (window, undefined) {
 	var arrayFunctionsMap = {"SUMPRODUCT": 1, "FILTER": 1, "SUM": 1, "LOOKUP": 1, "AGGREGATE": 1};
 
 	var importRangeLinksState = {importRangeLinks: null, startBuildImportRangeLinks: null};
-	const aExcludeRecursiveFomulas = ['ISFORMULA', 'SHEETS', 'AREAS', 'COLUMN', 'COLUMNS', 'ROW', 'ROWS'];
+	const aExcludeRecursiveFormulas = ['ISFORMULA', 'SHEETS', 'AREAS', 'COLUMN', 'COLUMNS', 'ROW', 'ROWS', 'CELL', 'INDIRECT'];
 
 	function getArrayCopy(arr) {
 		var newArray = [];
@@ -493,7 +493,8 @@ var cElementType = {
 		table       : 14,
 		name3D      : 15,
 		specialFunctionStart: 16,
-		specialFunctionEnd  : 17
+		specialFunctionEnd  : 17,
+		pivotTable  : 18
 
   };
 /** @enum */
@@ -665,7 +666,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		return res;
 	};
 
-	cBaseType.prototype.toArray = function (putValue, checkOnError, fPrepareElem) {
+	cBaseType.prototype.toArray = function (putValue, checkOnError, fPrepareElem, bSaveBoolean) {
 		let arr = [];
 		if (this.getMatrix) {
 			arr = this.getMatrix();
@@ -689,7 +690,11 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 								}
 							}
 							if (putValue) {
-								arr[i][j] = arr[i][j].getValue();
+								if (bSaveBoolean && arr[i][j].type === cElementType.bool) {
+									arr[i][j] = arr[i][j].toBool();
+								} else {
+									arr[i][j] = arr[i][j].getValue();
+								}
 							}
 						}
 					}
@@ -2337,9 +2342,10 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			tblStr = table.name;
 		}
 
+		/* escapeTableCharacters - add special character escaping for string inside the table (escaping with single quote) */
 		if (this.oneColumnIndex) {
 			// TODO add this.isCrossSign to use?
-			columns_1 = this.oneColumnIndex.name.replace(/([#[\]])/g, "'$1");
+			columns_1 = parserHelp.escapeTableCharacters(this.oneColumnIndex.name, true/*doEscape*/);
 
 			if (this.isDynamic && isLocal) {
 				columns_1 = "@" + columns_1;
@@ -2350,8 +2356,9 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 
 			tblStr += "[" + columns_1 + "]";
 		} else if (this.colStartIndex && this.colEndIndex) {
-			columns_1 = this.colStartIndex.name.replace(/([#[\]])/g, "'$1");
-			columns_2 = this.colEndIndex.name.replace(/([#[\]])/g, "'$1");
+			columns_1 = parserHelp.escapeTableCharacters(this.colStartIndex.name, true/*doEscape*/);
+			columns_2 = parserHelp.escapeTableCharacters(this.colEndIndex.name, true/*doEscape*/);
+
 			tblStr += "[[" + columns_1 + "]:[" + columns_2 + "]]";
 		} else if (null != this.reservedColumnIndex) {
 			if (this.isDynamic && isLocal && this.reservedColumnIndex === AscCommon.FormulaTablePartInfo.thisRow) {
@@ -2364,8 +2371,8 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			let i;
 
 			if (this.hdtIndexes.length > 0 && this.isDynamic && isLocal && this.hdtIndexes[0] === AscCommon.FormulaTablePartInfo.thisRow) {
-				let hdtcstart = this.hdtcstartIndex ? this.hdtcstartIndex.name.replace(/([#[\]])/g, "'$1") : null;
-				let hdtcend = this.hdtcendIndex ? this.hdtcendIndex.name.replace(/([#[\]])/g, "'$1") : null;
+				let hdtcstart = this.hdtcstartIndex ? parserHelp.escapeTableCharacters(this.hdtcstartIndex.name, true) : null;
+				let hdtcend = this.hdtcendIndex ? parserHelp.escapeTableCharacters(this.hdtcendIndex.name, true) : null;
 				
 				tblStr += "@";
 				if (hdtcstart && !hdtcend) {
@@ -2403,10 +2410,12 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 							tblStr += FormulaSeparators.functionArgumentSeparatorDef;
 						}
 					}
-					let hdtcstart = this.hdtcstartIndex.name.replace(/([#[\]])/g, "'$1");
+					let hdtcstart = parserHelp.escapeTableCharacters(this.hdtcstartIndex.name, true);
+
 					tblStr += "[" + hdtcstart + "]";
 					if (this.hdtcendIndex) {
-						let hdtcend = this.hdtcendIndex.name.replace(/([#[\]])/g, "'$1");
+						let hdtcend = parserHelp.escapeTableCharacters(this.hdtcendIndex.name, true);
+
 						tblStr += ":[" + hdtcend + "]";
 					}
 				}
@@ -2421,8 +2430,10 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 	cStrucTable.prototype._parseVal = function (val) {
 		let bRes = true, startCol, endCol;
 		this.tableName = val['tableName'];
+
+		// inside .getTableIndexColumnByName() we perform .replace for the column name we are looking for
 		if (val['oneColumn']) {
-			startCol = val['oneColumn'].replace(/'([#[\]])/g, '$1');
+			startCol = val['oneColumn']
 			if (startCol[0] === "@") {
 				this.isDynamic = true;
 			}
@@ -2430,8 +2441,9 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			this.oneColumnIndex = this.wb.getTableIndexColumnByName(this.tableName, this.isDynamic ? startCol.slice(1) : startCol);
 			bRes = !!this.oneColumnIndex;
 		} else if (val['columnRange']) {
-			startCol = val['colStart'].replace(/'([#[\]])/g, '$1');
-			endCol = val['colEnd'].replace(/'([#[\]])/g, '$1');
+			startCol = val['colStart'];
+			endCol = val['colEnd'];
+
 			if (!endCol) {
 				endCol = startCol;
 			}
@@ -2466,11 +2478,11 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			}
 
 			if (hdtcstart) {
-				startCol = hdtcstart.replace(/'([#[\]])/g, '$1');
+				startCol = hdtcstart;
 				this.hdtcstartIndex = this.wb.getTableIndexColumnByName(this.tableName, startCol);
 				bRes = !!this.hdtcstartIndex;
 				if (bRes && hdtcend) {
-					endCol = hdtcend.replace(/'([#[\]])/g, '$1');
+					endCol = hdtcend;
 					this.hdtcendIndex = this.wb.getTableIndexColumnByName(this.tableName, endCol);
 					bRes = !!this.hdtcendIndex;
 				}
@@ -2770,6 +2782,50 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 	};
 	cStrucTable.prototype.getRange = function () {
 		return this.area && this.area.getRange && this.area.getRange();
+	};
+
+	/**
+	 * @constructor
+	 * @extends {cBaseType}
+	 */
+	function cStrucPivotTable(val) {
+		cBaseType.call(this, val);
+		if (val) {
+			this.isIndex = false;
+			this.fieldString = val[0];
+			this.itemString = val[1];
+			if (!isNaN(val[1])) {
+				this.isIndex = true;
+			}
+		}
+	}
+
+	cStrucPivotTable.prototype = Object.create(cBaseType.prototype);
+	cStrucPivotTable.prototype.constructor = cStrucPivotTable;
+
+	cStrucPivotTable.prototype.type = cElementType.pivotTable;
+	cStrucPivotTable.prototype.createFromVal = function (val) {
+		//TODO check on error
+		let res = new cStrucPivotTable(val);
+		return res;
+	};
+	cStrucPivotTable.prototype.clone = function () {
+
+	};
+	cStrucPivotTable.prototype.Calculate = function (callback) {
+		return callback(this.fieldString, this.itemString, this.isIndex);
+	};
+	cStrucPivotTable.prototype.toString = function () {
+		return this._toString(false);
+	};
+	cStrucPivotTable.prototype.toLocaleString = function () {
+		return this._toString(true);
+	};
+	cStrucPivotTable.prototype._toString = function (isLocal) {
+		if (this.fieldString) {
+			return this.fieldString + '[' + this.itemString + ']';
+		}
+		return this.itemString;
 	};
 
 	/**
@@ -3484,7 +3540,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 
 		return calculateFunc(argsArray);
 	};
-	cBaseFunction.prototype._prepareArguments = function (args, arg1, bAddFirstArrElem, typeArray, bFirstRangeElem) {
+	cBaseFunction.prototype._prepareArguments = function (args, arg1, bAddFirstArrElem, typeArray, bFirstRangeElem, notArrayError) {
 		var newArgs = [];
 		var indexArr = null;
 
@@ -3503,7 +3559,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 				} else if (cElementType.error === arg.type) {
 					newArgs[i] = arg;
 				} else {
-					newArgs[i] = new cError(cErrorType.division_by_zero);
+					newArgs[i] = new cError(notArrayError ? notArrayError : cErrorType.division_by_zero);
 				}
 			} else if (cElementType.cellsRange === arg.type || cElementType.cellsRange3D === arg.type) {
 				newArgs[i] = bFirstRangeElem ? arg.getValueByRowCol(0,0) : arg.cross(arg1);
@@ -6150,7 +6206,7 @@ _func[cElementType.cell3D] = _func[cElementType.cell];
 					res = [];
 				}
 
-				if (i === this.argPosArr.length - 1 && this.error !== undefined) {
+				if (i === this.argPosArr.length - 1 && this.error === c_oAscError.ID.FrmlParenthesesCorrectCount) {
 					// We don't cut off the line at the last element, but only if the formula is parsed with an error (the formula is not closed or not entered completely)
 					res.push(sFormula.substring(this.argPosArr[i].start - 1, this.argPosArr[i].end));
 					continue
@@ -6867,10 +6923,17 @@ function parserFormula( formula, parent, _ws ) {
 		const oFormula = aLogicalTest[0];
 		const aArgs =  aLogicalTest[2];
 		const oParentCell = this.getParent();
+		const oBbox = oParentCell.onFormulaEvent && oParentCell.onFormulaEvent(AscCommon.c_oNotifyParentType.GetRangeCell);
+		if (!oBbox) {
+			return new cError(cErrorType.not_numeric);
+		}
 
 		for (let i = 0, len = aArgs.length; i < len; i++) {
 			if (aArgs[i] && aNameType.includes(aArgs[i].type)) {
 				aArgs[i] = aArgs[i].toRef();
+			}
+			if (aArgs[i] && aArgs[i].type === cElementType.table) {
+				aArgs[i] = aArgs[i].toRef(oBbox);
 			}
 			if (aArgs[i] && Array.isArray(aArgs[i])) {
 				g_cCalcRecursion.incRecursionCounter();
@@ -6886,10 +6949,6 @@ function parserFormula( formula, parent, _ws ) {
 					return null;
 				}
 			}
-		}
-		const oBbox = oParentCell.onFormulaEvent && oParentCell.onFormulaEvent(AscCommon.c_oNotifyParentType.GetRangeCell);
-		if (!oBbox) {
-			return new cError(cErrorType.not_numeric);
 		}
 
 		return oFormula.Calculate(aArgs, oBbox, undefined, this.ws);
@@ -7112,7 +7171,7 @@ function parserFormula( formula, parent, _ws ) {
 		}
 		return false;
 	};
-	parserFormula.prototype.parse = function (local, digitDelim, parseResult, ignoreErrors, renameSheetMap, tablesMap) {
+	parserFormula.prototype.parse = function (local, digitDelim, parseResult, ignoreErrors, renameSheetMap, tablesMap, opt_pivotNamesList) {
 		var elemArr = [];
 		var ph = {operand_str: null, pCurrPos: 0};
 		var needAssemble = false;
@@ -7909,7 +7968,7 @@ function parserFormula( formula, parent, _ws ) {
 			if (parserFormula.ca) {
 				return bRecursiveCell;
 			}
-			if (sFunctionName && aExcludeRecursiveFomulas.includes(sFunctionName)) {
+			if (sFunctionName && aExcludeRecursiveFormulas.includes(sFunctionName)) {
 				return bRecursiveCell;
 			}
 			if (bConditionalFormula) {
@@ -7962,7 +8021,29 @@ function parserFormula( formula, parent, _ws ) {
 			var prevCurrPos = ph.pCurrPos;
 
 			/* Booleans */
-			if (parserHelp.isBoolean.call(ph, t.Formula, ph.pCurrPos, local)) {
+			if (opt_pivotNamesList && (_tableTMP = opt_pivotNamesList.length === 0 ? parserHelp.isPivotRaw.call(ph, t.Formula, ph.pCurrPos, local) : parserHelp.isPivot.call(ph, t.Formula, ph.pCurrPos, local, opt_pivotNamesList))) {
+
+				found_operand = cStrucPivotTable.prototype.createFromVal(_tableTMP);
+
+				//todo undo delete column
+				if (found_operand.type === cElementType.error) {
+					/*используется неверный именованный диапазон или таблица*/
+					parseResult.setError(c_oAscError.ID.FrmlAnotherParsingError);
+					if (!ignoreErrors) {
+						t.outStack = [];
+						return false;
+					}
+				}
+
+				if (!_checkReferenceCount(2)) {
+					return false;
+				}
+
+				/*if (found_operand.type !== cElementType.error) {
+					parseResult.addRefPos(ph.pCurrPos - ph.operand_str.length, ph.pCurrPos, t.outStack.length, found_operand, true);
+				}*/
+
+			} else if (parserHelp.isBoolean.call(ph, t.Formula, ph.pCurrPos, local)) {
 				if (!_checkReferenceCount(0.5)) {
 					return false;
 				}
@@ -8590,6 +8671,8 @@ function parserFormula( formula, parent, _ws ) {
 						}
 					} else if (currentElement.type === cElementType.table) {
 						elemArr.push(currentElement.toRef(opt_bbox));
+					} else if (currentElement.type === cElementType.pivotTable) {
+						elemArr.push(currentElement.Calculate());
 					} else {
 						elemArr.push(currentElement);
 					}
@@ -8600,7 +8683,7 @@ function parserFormula( formula, parent, _ws ) {
 			return false;
 		}
 	};
-	parserFormula.prototype.calculate = function (opt_defName, opt_bbox, opt_offset, checkMultiSelect, opt_oCalculateResult) {
+	parserFormula.prototype.calculate = function (opt_defName, opt_bbox, opt_offset, checkMultiSelect, opt_oCalculateResult, opt_pivotCallback) {
 		if (this.outStack.length < 1) {
 			this.value = new cError(cErrorType.wrong_name);
 			this._endCalculate();
@@ -8721,6 +8804,8 @@ function parserFormula( formula, parent, _ws ) {
 				}
 			} else if (currentElement.type === cElementType.table) {
 				elemArr.push(currentElement.toRef(opt_bbox));
+			} else if (currentElement.type === cElementType.pivotTable) {
+				elemArr.push(currentElement.Calculate(opt_pivotCallback));
 			} else if (opt_offset) {
 				elemArr.push(this.applyOffset(currentElement, opt_offset));
 			} else {
@@ -9919,8 +10004,12 @@ function parserFormula( formula, parent, _ws ) {
 	 */
 	function CalcRecursion() {
 		this.nLevel = 0;
-		this.nIterStep = 1;
 		this.bIsForceBacktracking = false;
+		this.bIsProcessRecursion = false;
+		this.aElems = [];
+		this.aElemsPart = [];
+
+		this.nIterStep = 1;
 		this.oStartCellIndex = null;
 		this.nRecursionCounter = 0;
 		this.oGroupChangedCells = null;
@@ -9954,6 +10043,10 @@ function parserFormula( formula, parent, _ws ) {
 	 * @param {boolean} bIsForceBacktracking
 	 */
 	CalcRecursion.prototype.setIsForceBacktracking = function (bIsForceBacktracking) {
+		if (!this.getIsForceBacktracking()) {
+			this.aElemsPart = [];
+			this.aElems.push(this.aElemsPart);
+		}
 		this.bIsForceBacktracking = bIsForceBacktracking;
 	};
 	/**
@@ -9965,6 +10058,22 @@ function parserFormula( formula, parent, _ws ) {
 	CalcRecursion.prototype.getIsForceBacktracking = function () {
 		return this.bIsForceBacktracking;
 	};
+	/**
+	 * Method sets a flag who recognizes work with aElems in _checkDirty method is already in process.
+	 * @memberof CalcRecursion
+	 * @param {boolean} bIsProcessRecursion
+	 */
+	CalcRecursion.prototype.setIsProcessRecursion = function (bIsProcessRecursion) {
+		this.bIsProcessRecursion = bIsProcessRecursion;
+	};
+	/**
+	 * Method returns a flag who recognizes work with aElems in _checkDirty method is already in process.
+	 * @memberof CalcRecursion
+	 * @returns {boolean}
+	 */
+	CalcRecursion.prototype.getIsProcessRecursion = function () {
+		return this.bIsProcessRecursion;
+	}
 	/**
 	 * Method increases recursion level. Uses for tracking a level of recursion in _checkDirty method.
 	 * @memberof CalcRecursion
@@ -10005,6 +10114,32 @@ function parserFormula( formula, parent, _ws ) {
 		}
 
 		return res;
+	};
+	/**
+	 * Method inserts cells which need to be processed in _checkDirty method again.
+	 * Uses for formula chains that reached max recursion level.
+	 * @memberof CalcRecursion
+	 * @param {{ws:Worksheet, nRow:number, nCol:number}} oCellCoordinate
+	 */
+	CalcRecursion.prototype.insert = function (oCellCoordinate) {
+		this.aElemsPart.push(oCellCoordinate);
+	};
+	/**
+	 * Method executes callback for each cell from aElems in reverse order.
+	 * aElems stores cell coordinates which need to be processed in _checkDirty method again.
+	 * @memberof CalcRecursion
+	 * @param {Function} fCallback
+	 */
+	CalcRecursion.prototype.foreachInReverse = function (fCallback) {
+		for (let i = this.aElems.length - 1; i >= 0; i--) {
+			let aElemsPart = this.aElems[i];
+			for (let j = 0, length = aElemsPart.length; j < length; j++) {
+				fCallback(aElemsPart[j]);
+				if (this.getIsForceBacktracking()) {
+					return;
+				}
+			}
+		}
 	};
 	/**
 	 * Method increases iteration step.
@@ -11276,7 +11411,7 @@ function parserFormula( formula, parent, _ws ) {
 	window['AscCommonExcel'].bIsSupportArrayFormula = bIsSupportArrayFormula;
 	window['AscCommonExcel'].bIsSupportDynamicArrays = bIsSupportDynamicArrays;
 
-	window['AscCommonExcel'].aExcludeRecursiveFomulas = aExcludeRecursiveFomulas;
+	window['AscCommonExcel'].aExcludeRecursiveFormulas = aExcludeRecursiveFormulas;
 
 	window['AscCommonExcel'].cNumber = cNumber;
 	window['AscCommonExcel'].cString = cString;
@@ -11295,6 +11430,7 @@ function parserFormula( formula, parent, _ws ) {
 	window['AscCommonExcel'].cUnknownFunction = cUnknownFunction;
 	window['AscCommonExcel'].cStrucTable = cStrucTable;
 	window['AscCommonExcel'].cBaseOperator = cBaseOperator;
+	window['AscCommonExcel'].cStrucPivotTable = cStrucPivotTable;
 
 	window['AscCommonExcel'].checkTypeCell = checkTypeCell;
 	window['AscCommonExcel'].cFormulaFunctionGroup = cFormulaFunctionGroup;

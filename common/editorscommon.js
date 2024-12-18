@@ -815,27 +815,37 @@
 		let contentTypes = contentTypesBytes ? AscCommon.UTF8ArrayToString(contentTypesBytes, 0, contentTypesBytes.length) : "";
 		jsZlib.close();
 
-		if (-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml") ||
+		let isWord = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-word.document.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-word.template.macroEnabledTemplate.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.oform") ||
-			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.docxf")) {
-			return AscCommon.c_oEditorId.Word;
-		} else if (-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.wordprocessingml.document.docxf");
+		let isExcel = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-excel.template.macroEnabled.main+xml") ||
-			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.binary.macroEnabled.main")) {
-			return AscCommon.c_oEditorId.Spreadsheet;
-		} else if (-1 !== contentTypes.indexOf(
-				"application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-excel.sheet.binary.macroEnabled.main");
+		let isSlide = -1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.slideshow.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.openxmlformats-officedocument.presentationml.template.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml") ||
 			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.slideshow.macroEnabled.main+xml") ||
-			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.template.macroEnabled.main+xml")) {
+			-1 !== contentTypes.indexOf("application/vnd.ms-powerpoint.template.macroEnabled.main+xml");
+		let isVisio = -1 !== contentTypes.indexOf("application/vnd.ms-visio.drawing.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.stencil.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.template.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.drawing.macroEnabled.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.stencil.macroEnabled.main+xml") ||
+			-1 !== contentTypes.indexOf("application/vnd.ms-visio.template.macroEnabled.main+xml");
+		if (isWord) {
+			return AscCommon.c_oEditorId.Word;
+		} else if (isExcel) {
+			return AscCommon.c_oEditorId.Spreadsheet;
+		} else if (isSlide) {
 			return AscCommon.c_oEditorId.Presentation;
+		} else if (isVisio) {
+			return AscCommon.c_oEditorId.Visio;
 		} else {
 			return null;
 		}
@@ -952,12 +962,6 @@
 	function sendCommand(editor, fCallback, rdata, dataContainer)
 	{
 		//json не должен превышать размера 2097152, иначе при его чтении будет exception
-		var docConnectionId = editor.CoAuthoringApi.getDocId();
-		if (docConnectionId && docConnectionId !== rdata["id"])
-		{
-			//на случай если поменялся documentId в Version History
-			rdata['docconnectionid'] = docConnectionId;
-		}
 		if (null == rdata["savetype"])
 		{
 			editor.CoAuthoringApi.openDocument(rdata);
@@ -1908,7 +1912,24 @@
 			case c_oAscFileType.OTP:
 				return 'otp';
 				break;
-
+			case c_oAscFileType.VSDX:
+				return 'vsdx';
+				break;
+			case c_oAscFileType.VSSX:
+				return 'vssx';
+				break;
+			case c_oAscFileType.VSTX:
+				return 'vstx';
+				break;
+			case c_oAscFileType.VSDM:
+				return 'vsdm';
+				break;
+			case c_oAscFileType.VSSM:
+				return 'vssm';
+				break;
+			case c_oAscFileType.VSTM:
+				return 'vstm';
+				break;
 			case c_oAscFileType.IMG:
 				return 'zip';
 				break;
@@ -2019,7 +2040,18 @@
 				return c_oAscFileType.FODP;
 			case 'otp':
 				return c_oAscFileType.OTP;
-
+			case 'vsdx':
+				return c_oAscFileType.VSDX;
+			case 'vssx':
+				return c_oAscFileType.VSSX;
+			case 'vstx':
+				return c_oAscFileType.VSTX;
+			case 'vsdm':
+				return c_oAscFileType.VSDM;
+			case 'vssm':
+				return c_oAscFileType.VSSM;
+			case 'vstm':
+				return c_oAscFileType.VSTM;
 			case 'xlsx':
 				return c_oAscFileType.XLSX;
 			case 'xls':
@@ -2135,7 +2167,7 @@
 
 							if (data["subType"] === "connector")
 							{
-								window.g_asc_plugins.externalConnectorMessage(data["data"]);
+								window.g_asc_plugins.externalConnectorMessage(data["data"], event.origin);
 								return;
 							}
 
@@ -2215,7 +2247,7 @@
 							callback(e);
 					}
 					else
-						callback(Asc.c_oAscError.ID.Unknown);
+					callback(Asc.c_oAscError.ID.Unknown);
 				}
 			});
 
@@ -2233,9 +2265,9 @@
 					Asc.editor.sendEvent("asc_onOpenFilePdfForm", fileName.click.bind(fileName), cancelFileDialog);
 				}
 				else 
-					fileName.click();
-			}
-			else
+			fileName.click();
+		}
+		else
 				fileName.click();
 		}
 		else
@@ -3402,6 +3434,11 @@
 			//пока не реализовываем с открытыми файлами, работаем только с путями
 			external = parseExternalLink(subSTR);
 			if (external) {
+				if (external.name && (external.name.indexOf("[") !== -1 || external.name.indexOf(":") !== -1)) {
+					// if the name contains '[' and ':' , then we return an error
+					return [false, null, null, external, externalLength];
+				}
+
 				externalLength = external.fullname.length;
 				subSTR = formula.substring(start_pos + externalLength);
 				const posQuote =  subSTR.indexOf("'");
@@ -3763,7 +3800,6 @@
 		{
 			this._reset();
 		}
-
 		let subSTR = formula.substring(start_pos),
 		match = XRegExp.exec(subSTR, local ? rx_table_local : rx_table);
 
@@ -3774,6 +3810,71 @@
 			return match;
 		}
 
+		return false;
+	};
+	parserHelper.prototype.isPivot = function (formula, start_pos, local, opt_namesList)
+	{
+		if (this instanceof parserHelper)
+		{
+			this._reset();
+		}
+		const subSTR = formula.substring(start_pos);
+		const fullPatterns = [];
+		for (let i = 0; i < opt_namesList[0].length; i += 1) {
+			for (let j = 0; j < opt_namesList[1].length; j += 1) {
+				fullPatterns.push('^(' + opt_namesList[0][i] + ')\\s*\\[\\s*(' + opt_namesList[1][j] + ')\\s*\\]');
+			}
+		}
+		const fullRegs = fullPatterns.map(function(pattern) {
+			return new RegExp(pattern, 'i');
+		});
+		for (let i = 0; i < fullRegs.length; i += 1) {
+			const match = fullRegs[i].exec(subSTR);
+			if (match !== null) {
+				this.operand_str = match[0];
+				this.pCurrPos += match[0].length;
+				return [match[1], match[2]];
+			}
+		}
+		const shortPatterns = opt_namesList[1].map(function(name) {
+			return '^(' + name + ')(?:\\W|$)'
+		});
+		const shortRegs = shortPatterns.map(function(pattern) {
+			return new RegExp(pattern, 'i');
+		});
+		for (let i = 0; i < shortRegs.length; i += 1) {
+			const match = shortRegs[i].exec(subSTR);
+			if (match !== null) {
+				this.operand_str = match[1];
+				this.pCurrPos += match[1].length;
+				return [null, match[2] ? match[2] : match[1]];
+			}
+		}
+		return false;
+	};
+	parserHelper.prototype.isPivotRaw = function (formula, start_pos, local)
+	{
+		if (this instanceof parserHelper)
+		{
+			this._reset();
+		}
+		const subSTR = formula.substring(start_pos);
+		const reg = XRegExp.build('(?x) ^({{fieldName}})\\[({{itemName}})\\]', {
+			'fieldName': XRegExp.build('{{simple}}|{{quotes}}', {
+				'simple': '[\\p{L}_][\\p{L}\\p{N}_]*',
+				'quotes': "\\'.+?\\'(?!\\')",
+			}),
+			'itemName': XRegExp.build('{{simple}}|{{quotes}}', {
+				'simple': '[\\p{L}\\p{N}_]+',
+				'quotes': "\\'.+?\\'(?!\\')",
+			})
+		});
+		const match = reg.exec(subSTR);
+		if (match !== null && match[1] && match[2]) {
+			this.operand_str = match[0];
+			this.pCurrPos += match[0].length;
+			return [match[1], match[2]];
+		}
 		return false;
 	};
 // Парсим ссылку на диапазон в листе
@@ -4002,7 +4103,7 @@
 					if (sheetModel)
 					{
 						range = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
-					}
+		}
 				}
 
 				if (!sheetModel) {
@@ -4116,6 +4217,19 @@
 			}
 		}
 		return null;
+	};
+	parserHelper.prototype.escapeTableCharacters = function (string, doEscape) {
+		if (!string) {
+			return "";
+		}
+		
+		// make escape for the special character inside the string
+		if (doEscape) {
+			return string.replace(/(['#@\[\]])/g, "'$1");
+		}
+
+		// return only the character from the capture group(without escaping)
+		return string.replace(/'(['#@\[\]])/g, "$1");
 	};
 
 	var parserHelp = new parserHelper();
@@ -10677,6 +10791,44 @@
 		change.Redo();
 	}
 
+	function mockLogicDoc(doc){
+		doc.Get_PageLimits = function(PageAbs) {
+			return {X: 0, Y: 0, XLimit: Page_Width, YLimit: Page_Height};
+		};
+		doc.Get_PageFields = function (PageAbs, isInHdrFtr) {
+			return {X: 0, Y: 0, XLimit: 2000, YLimit: 2000};
+		};
+
+		doc.IsTrackRevisions = function() {
+			return false;
+		};
+
+		doc.IsDocumentEditor = function() {
+			return false;
+		};
+		doc.Spelling = {
+			AddParagraphToCheck: function(Para) {}
+		};
+
+		doc.IsSplitPageBreakAndParaMark = function () {
+			return false;
+		};
+		doc.IsDoNotExpandShiftReturn = function () {
+			return false;
+		};
+
+		doc.GetApi = function() {
+			return Asc.editor;
+		};
+
+		doc.GetDrawingDocument = function() {
+			return Asc.editor.getDrawingDocument();
+		};
+
+		doc.SearchEngine = {
+			Selection: []
+		};
+	}
 	/**
 	 * Функция сравнивает две строки (они могут быть не заданы)
 	 * @param s1 {?string}
@@ -11241,6 +11393,10 @@
 
 	function loadChartStyles(onSuccess, onError) {
 		loadScript('../../../../sdkjs/common/Charts/ChartStyles.js', onSuccess, onError);
+	}
+
+	function loadPathBoolean(onSuccess, onError) {
+		loadScript('../../../../sdkjs/common/Drawings/Format/path-boolean-min.js', onSuccess, onError);
 	}
 
 	function getAltGr(e)
@@ -14629,33 +14785,25 @@
 		return aArray[Math.random() * aArray.length | 0];
 	}
 
-	function registerServiceWorker() {
-		if ('serviceWorker' in navigator) {
-			const serviceWorkerName = 'document_editor_service_worker.js';
-			const serviceWorkerPath = '../../../../' + serviceWorkerName;
-			let reg;
-			navigator.serviceWorker.register(serviceWorkerPath)
-				.then(function (registration) {
-					reg = registration;
-					return navigator.serviceWorker.getRegistrations();
-				})
-				.then(function (registrations) {
-					//delete stale service workers
-					for (const registration of registrations) {
-						if (registration !== reg && registration.active && registration.active.scriptURL.endsWith(serviceWorkerName)) {
-							registration.unregister();
-						}
-					}
-				})
-				.catch(function (err) {
-					console.error('Registration failed with ' + err);
-				});
+	function consoleLog(val) {
+		// console.log(val);
+		const showMessages = false;
+
+		if (!showMessages) {
+			return;
+		}
+
+		// see v8 arguments leak - performance loss
+		// console.log.apply(console, arguments);
+
+		for (let i = 0; i < arguments.length; i++) {
+			console.log(arguments[i]);
 		}
 	}
-	registerServiceWorker();
 
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
+	window["AscCommon"].consoleLog = consoleLog;
 	window["AscCommon"].getSockJs = getSockJs;
 	window["AscCommon"].getSocketIO = getSocketIO;
 	window["AscCommon"].getBaseUrl = getBaseUrl;
@@ -14748,10 +14896,12 @@
 	window["AscCommon"].CompareStrings = CompareStrings;
 	window["AscCommon"].IsSupportAscFeature = IsSupportAscFeature;
 	window["AscCommon"].IsSupportOFormFeature = IsSupportOFormFeature;
+	window["AscCommon"].mockLogicDoc = mockLogicDoc;
 
 	window["AscCommon"].loadSdk = loadSdk;
     window["AscCommon"].loadScript = loadScript;
     window["AscCommon"].loadChartStyles = loadChartStyles;
+    window["AscCommon"].loadPathBoolean = loadPathBoolean;
 	window["AscCommon"].getAltGr = getAltGr;
 	window["AscCommon"].getColorSchemeByName = getColorSchemeByName;
 	window["AscCommon"].getColorSchemeByIdx = getColorSchemeByIdx;
