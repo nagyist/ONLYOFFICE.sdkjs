@@ -4582,14 +4582,15 @@
 	};
 	baseEditorsApi.prototype.initDefaultShortcuts = function()
 	{
-		if (this.Shortcuts) {
-			const arrShortcutActions = this.getDefaultShortcutActionTypes();
-			for (let i = 0; i < arrShortcutActions.length; i += 1) {
-				const nShortcutAction = arrShortcutActions[i];
-				const oShortcutAction = AscCommon.ShortcutActionKeycodes[nShortcutAction];
-				if (oShortcutAction) {
-					oShortcutAction.initSdkAction(this.Shortcuts);
-				}
+		if (!this.Shortcuts) {
+			return;
+		}
+		const arrShortcutActions = this.getDefaultShortcutActionTypes();
+		for (let i = 0; i < arrShortcutActions.length; i += 1) {
+			const nShortcutAction = arrShortcutActions[i];
+			const oShortcutAction = Asc.c_oAscDefaultShortcuts[nShortcutAction];
+			if (oShortcutAction) {
+				oShortcutAction.applyFromStorage(this.Shortcuts);
 			}
 		}
 	};
@@ -4597,15 +4598,30 @@
 	{
 		return [];
 	};
-	baseEditorsApi.prototype.asc_initShortcutActions = function(arrShortcutActions)
-	{
-		if (this.Shortcuts) {
-			for (let i = 0; i < arrShortcutActions.length; i++) {
-				arrShortcutActions[i].initSdkAction(this.Shortcuts);
-			}
+	baseEditorsApi.prototype.asc_resetAscShortcuts = function(arrAscShortcutActions) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		for (let i = 0; i < arrAscShortcutActions.length; i++) {
+			const oAscShortcutAction = arrAscShortcutActions[i];
+			oAscShortcutAction.resetFromStorage(this.Shortcuts);
 		}
 	};
-	baseEditorsApi.prototype.asc_resetShortcutActions
+	baseEditorsApi.prototype.asc_applyAscShortcuts = function(arrAscShortcutActions) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		for (let i = 0; i < arrAscShortcutActions.length; i++) {
+			const oAscShortcutAction = arrAscShortcutActions[i];
+			oAscShortcutAction.applyFromStorage(this.Shortcuts);
+		}
+	};
+	baseEditorsApi.prototype.asc_addAscShortcut = function(nType, oAscShortcut) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		oAscShortcut.applyFromStorage(nType, this.Shortcuts);
+	};
 	baseEditorsApi.prototype.getShortcut = function(e)
 	{
 		if (e.GetKeyCode)
@@ -5460,6 +5476,9 @@
 	prot['asc_onMediaPlayerEvent'] = prot.asc_onMediaPlayerEvent;
 	prot['asc_hideMediaControl'] = prot.asc_hideMediaControl;
 	prot['asc_getInputLanguage'] = prot.asc_getInputLanguage;
+	prot['asc_resetAscShortcuts'] = prot.asc_resetAscShortcuts;
+	prot['asc_applyAscShortcuts'] = prot.asc_applyAscShortcuts;
+	prot['asc_addAscShortcut'] = prot.asc_addAscShortcut;
 
 	prot['setPluginsOptions'] = prot.setPluginsOptions;
 

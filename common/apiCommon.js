@@ -6002,6 +6002,169 @@ function (window, undefined) {
 		this.SymbolsWSCount = v;
 	};
 
+	function CAscShortcutAction(type, shortcuts, isLocked) {
+		this.type = type;
+		this.shortcuts = {};
+		this.isLocked = !!isLocked;
+		this.initShortcuts(shortcuts);
+	}
+	CAscShortcutAction.prototype.asc_GetShortcuts = function() {
+		const result = [];
+		for (let shortcutIndex in this.shortcuts) {
+			result.push(this.shortcuts[shortcutIndex]);
+		}
+		return result;
+	};
+	CAscShortcutAction.prototype.asc_IsLocked = function() {
+		return this.isLocked;
+	};
+	CAscShortcutAction.prototype.asc_AddChangedShortcut = function(shortcut) {
+		const shortcutIndex = shortcut.getShortcutIndex();
+		const currentShortcut = this.shortcuts[shortcutIndex];
+		if (currentShortcut) {
+			delete this.shortcuts[shortcutIndex];
+		} else {
+			this.shortcuts[shortcutIndex] = shortcut;
+		}
+	};
+	CAscShortcutAction.prototype.asc_IsHaveShortcuts = function() {
+		for (let shortcutIndex in this.shortcuts) {
+			return true;
+		}
+		return false;
+	};
+	CAscShortcutAction.prototype.asc_IsHaveShortcut = function(shortcut) {
+		const shortcutIndex = shortcut.getShortcutIndex();
+		return !!this.shortcuts[shortcutIndex];
+	};
+	CAscShortcutAction.prototype.asc_ToJson = function() {
+		const res = {};
+		res["type"] = AscCommon.getStringFromShortcutType(this.type);
+		res["shortcuts"] = [];
+		for (let i in this.shortcuts) {
+			res["shortcuts"].push(this.shortcuts[i].asc_ToJson());
+		}
+		res["isHidden"] = this.isHidden;
+		res["isLocked"] = this.isLocked;
+		return res;
+	};
+	CAscShortcutAction.prototype.asc_FromJson = function(obj) {
+		this.type = AscCommon.getShortcutTypeFromString(obj["type"]);
+		this.isHidden = obj["isHidden"];
+		this.isLocked = obj["isLocked"];
+		for (let i = 0; i < obj["shortcuts"].length; i += 1) {
+			const oAscShortcut = new CAscShortcut();
+			oAscShortcut.asc_FromJson(obj["shortcuts"][i]);
+			this.shortcuts[oAscShortcut.getShortcutIndex()] = oAscShortcut;
+		}
+	};
+	CAscShortcutAction.prototype.initShortcuts = function(shortcuts) {
+		if (!shortcuts) {
+			return;
+		}
+		for (let i = 0; i < shortcuts.length; i += 1) {
+			const shortcut = shortcuts[i];
+			this.shortcuts[shortcut.getShortcutIndex()] = shortcut;
+		}
+	};
+	CAscShortcutAction.prototype.applyFromStorage = function(sdkShortcuts) {
+		for (let i in this.shortcuts) {
+			this.shortcuts[i].applyFromStorage(this.type, sdkShortcuts);
+		}
+	};
+	CAscShortcutAction.prototype.resetFromStorage = function(sdkShortcuts) {
+		for (let i in this.shortcuts) {
+			this.shortcuts[i].resetFromStorage(this.type, sdkShortcuts);
+		}
+	};
+
+	function CAscShortcut(keyCode, isCtrl, isShift, isAlt, isCommand, isLocked) {
+		this.keyCode = keyCode;
+		this.ctrlKey = isCtrl;
+		this.shiftKey = isShift;
+		this.altKey = isAlt;
+		this.commandKey = isCommand;
+
+		this.isLocked = !!isLocked;
+		this.isHidden = false;
+	}
+
+	CAscShortcut.prototype.asc_GetKeyCode = function() {
+		return !!this.isLocked;
+	};
+	CAscShortcut.prototype.asc_IsCtrl = function() {
+		return this.ctrlKey;
+	};
+	CAscShortcut.prototype.asc_IsShift = function() {
+		return this.shiftKey;
+	};
+	CAscShortcut.prototype.asc_IsAlt = function() {
+		return this.altKey;
+	};
+	CAscShortcut.prototype.asc_IsCommand = function() {
+		return this.commandKey;
+	};
+	CAscShortcut.prototype.asc_IsLocked = function() {
+		return this.isLocked;
+	};
+	CAscShortcut.prototype.asc_IsHidden = function() {
+		return this.isHidden;
+	};
+	CAscShortcut.prototype.asc_SetIsHidden = function(pr) {
+		this.isHidden = pr;
+	};
+	CAscShortcut.prototype.asc_ToJson = function() {
+		const res = {};
+		res["keyCode"] = this.keyCode;
+		res["ctrlKey"] = this.ctrlKey;
+		res["shiftKey"] = this.shiftKey;
+		res["altKey"] = this.altKey;
+		res["commandKey"] = this.commandKey;
+		return res;
+	};
+	CAscShortcut.prototype.asc_FromJson = function(obj) {
+		this.keyCode = obj["keyCode"];
+		this.ctrlKey = obj["ctrlKey"];
+		this.shiftKey = obj["shiftKey"];
+		this.altKey = obj["altKey"];
+		this.commandKey = obj["commandKey"];
+	};
+	CAscShortcut.prototype.getShortcutIndex = function() {
+		return AscCommon.CShortcuts.GetShortcutIndex(this.asc_GetKeyCode(), this.asc_IsCtrl(), this.asc_IsShift(), this.asc_IsAlt(), this.asc_IsCommand());
+	};
+	CAscShortcut.prototype.applyFromStorage = function(actionType, sdkShortcuts) {
+		if (this.isHidden) {
+			this.removeFromSdk(sdkShortcuts);
+		} else {
+			this.addToSdk(actionType, sdkShortcuts);
+		}
+	};
+	CAscShortcut.prototype.resetFromStorage = function(actionType, sdkShortcuts) {
+		if (this.isHidden) {
+			this.addToSdk(actionType, sdkShortcuts);
+		} else {
+			this.removeFromSdk(sdkShortcuts);
+		}
+	};
+	CAscShortcut.prototype.removeFromSdk = function(sdkShortcuts) {
+		sdkShortcuts.Remove(this.keyCode, this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+		const addKeyCodes = Asc.c_oAscKeyCodeAnalogues[this.keyCode];
+		if (addKeyCodes) {
+			for (let i = 0; i < addKeyCodes.length; i += 1) {
+				sdkShortcuts.Remove(addKeyCodes[i], this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+			}
+		}
+	};
+	CAscShortcut.prototype.addToSdk = function(actionType, sdkShortcuts) {
+		sdkShortcuts.Add(actionType, this.keyCode, this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+		const addKeyCodes = Asc.c_oAscKeyCodeAnalogues[this.keyCode];
+		if (addKeyCodes) {
+			for (let i = 0; i < addKeyCodes.length; i += 1) {
+				sdkShortcuts.Add(actionType, addKeyCodes[i], this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
+			}
+		}
+	};
+
 	/*
 	 * Export
 	 * -----------------------------------------------------------------------------
@@ -7029,7 +7192,28 @@ function (window, undefined) {
 	CDocInfoProp.prototype['put_SymbolsCount'] = CDocInfoProp.prototype.put_SymbolsCount;
 	CDocInfoProp.prototype['get_SymbolsWSCount'] = CDocInfoProp.prototype.get_SymbolsWSCount;
 	CDocInfoProp.prototype['put_SymbolsWSCount'] = CDocInfoProp.prototype.put_SymbolsWSCount;
-	
+
+	window["Asc"]["CAscShortcutAction"] = window["Asc"].CAscShortcutAction = CAscShortcutAction;
+	CAscShortcutAction.prototype["asc_GetShortcuts"] = CAscShortcutAction.prototype.asc_GetShortcuts;
+	CAscShortcutAction.prototype["asc_IsLocked"] = CAscShortcutAction.prototype.asc_IsLocked;
+	CAscShortcutAction.prototype["asc_AddChangedShortcut"] = CAscShortcutAction.prototype.asc_AddChangedShortcut;
+	CAscShortcutAction.prototype["asc_IsHaveShortcuts"] = CAscShortcutAction.prototype.asc_IsHaveShortcuts;
+	CAscShortcutAction.prototype["asc_IsHaveShortcut"] = CAscShortcutAction.prototype.asc_IsHaveShortcut;
+	CAscShortcutAction.prototype["asc_ToJson"] = CAscShortcutAction.prototype.asc_ToJson;
+	CAscShortcutAction.prototype["asc_FromJson"] = CAscShortcutAction.prototype.asc_FromJson;
+
+	window["Asc"]["CAscShortcut"] = window["Asc"].CAscShortcut = CAscShortcut;
+	CAscShortcut.prototype["asc_GetKeyCode"] = CAscShortcut.prototype.asc_GetKeyCode;
+	CAscShortcut.prototype["asc_IsCtrl"] = CAscShortcut.prototype.asc_IsCtrl;
+	CAscShortcut.prototype["asc_IsShift"] = CAscShortcut.prototype.asc_IsShift;
+	CAscShortcut.prototype["asc_IsAlt"] = CAscShortcut.prototype.asc_IsAlt;
+	CAscShortcut.prototype["asc_IsCommand"] = CAscShortcut.prototype.asc_IsCommand;
+	CAscShortcut.prototype["asc_IsLocked"] = CAscShortcut.prototype.asc_IsLocked;
+	CAscShortcut.prototype["asc_IsHidden"] = CAscShortcut.prototype.asc_IsHidden;
+	CAscShortcut.prototype["asc_SetIsHidden"] = CAscShortcut.prototype.asc_SetIsHidden;
+	CAscShortcut.prototype["asc_ToJson"] = CAscShortcut.prototype.asc_ToJson;
+	CAscShortcut.prototype["asc_FromJson"] = CAscShortcut.prototype.asc_FromJson;
+
 	window["AscCommon"]["pix2mm"] = window["AscCommon"].pix2mm = function(pix)
 	{
 		return pix * AscCommon.g_dKoef_pix_to_mm;

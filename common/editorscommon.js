@@ -12009,27 +12009,17 @@
 		this.CustomCounter = 0;
 		this.CustomActions = {};
 	}
+	CShortcuts.GetShortcutIndex = function(nCode, isCtrl, isShift, isAlt, isCommand) {
+		return ((nCode << 16) | (isCtrl ? 8 : 0) | (isShift ? 4 : 0) | (isAlt ? 2 : 0) | (isCommand ? 1 : 0));
+	};
 	CShortcuts.prototype.Add = function(nType, nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)] = nType;
+		this.List[CShortcuts.GetShortcutIndex(nCode, isCtrl, isShift, isAlt, isCommand)] = nType;
 	};
 	CShortcuts.prototype.Get = function(nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		var nType = this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
+		var nType = this.List[CShortcuts.GetShortcutIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
 		return (undefined !== nType ? nType : 0);
-	};
-	CShortcuts.prototype.private_GetIndex = function(nCode, isCtrl, isShift, isAlt, isCommand)
-	{
-		return ((nCode << 16) | (isCtrl ? 8 : 0) | (isShift ? 4 : 0) | (isAlt ? 2 : 0) | (isCommand ? 1 : 0));
-	}
-	CShortcuts.prototype.GetAscShortcutObject = function(nIndex) {
-		const oShortcutObject = this.GetShortcutObject(nIndex);
-		const oAscShortcutObject = {};
-		oAscShortcutObject["KeyCode"] = oShortcutObject.KeyCode;
-		oAscShortcutObject["CtrlKey"] = oShortcutObject.CtrlKey;
-		oAscShortcutObject["ShiftKey"] = oShortcutObject.ShiftKey;
-		oAscShortcutObject["AltKey"] = oShortcutObject.AltKey;
-		return oAscShortcutObject;
 	};
 	CShortcuts.prototype.GetShortcutObject = function(nIndex) {
 		return {KeyCode : nIndex >>> 16, CtrlKey : !!(nIndex & 8), ShiftKey : !!(nIndex & 4), AltKey : !!(nIndex & 2), MacCmdKey : !!(nIndex & 1)};
@@ -12046,7 +12036,7 @@
 	};
 	CShortcuts.prototype.Remove = function(nCode, isCtrl, isShift, isAlt, isCommand)
 	{
-		delete this.List[this.private_GetIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
+		delete this.List[CShortcuts.GetShortcutIndex(nCode, isCtrl, isShift, isAlt, isCommand)];
 	};
 	CShortcuts.prototype.RemoveByType = function(nType)
 	{
@@ -12073,17 +12063,6 @@
 		var nType = this.GetNewCustomType();
 		this.CustomActions[nType] = new CCustomShortcutActionSymbol(nCharCode, sFont);
 		return nType;
-	};
-	CShortcuts.prototype.GetAscShortcuts = function() {
-		const oAscShortcuts = [];
-		for (let nIndex in this.List) {
-			const nType = this.List[nIndex];
-			if (!oAscShortcuts[nType]) {
-				oAscShortcuts[nType] = [];
-			}
-			oAscShortcuts[nType].push(this.GetAscShortcutObject(nIndex));
-		}
-		return oAscShortcuts;
 	};
 
 	function CCustomShortcutActionSymbol(nCharCode, sFont)
