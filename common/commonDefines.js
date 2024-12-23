@@ -4640,6 +4640,8 @@ window.AscCommon.g_cIsBeta = "false";
 		F10                : 121,
 		F11                : 122,
 		F12                : 123,
+		ContextMenu        : 93,
+		ContextMenuHigh    : 57351,
 		KeySemicolon       : 186,
 		KeyFirefoxSemicolon: 59
 	};
@@ -4648,6 +4650,7 @@ window.AscCommon.g_cIsBeta = "false";
 	c_oAscKeyCodeEquals[c_oAscKeyCodes.KeyFirefoxMinus] = c_oAscKeyCodes.KeyMinus;
 	c_oAscKeyCodeEquals[c_oAscKeyCodes.KeyFirefoxEqual] = c_oAscKeyCodes.KeyEqual;
 	c_oAscKeyCodeEquals[c_oAscKeyCodes.KeyFirefoxSemicolon] = c_oAscKeyCodes.KeySemicolon;
+	c_oAscKeyCodeEquals[c_oAscKeyCodes.ContextMenuHigh] = c_oAscKeyCodes.ContextMenu;
 	const c_oAscKeyCodeAnalogues = {};
 	for (let anotherKeyCode in c_oAscKeyCodeEquals) {
 		const normalKeyCode = c_oAscKeyCodeEquals[anotherKeyCode];
@@ -6198,6 +6201,8 @@ window.AscCommon.g_cIsBeta = "false";
 	prot["F10"] = prot.F10;
 	prot["F11"] = prot.F11;
 	prot["F12"] = prot.F12;
+	prot["ContextMenu"] = prot.ContextMenu;
+	prot["ContextMenuHigh"] = prot.ContextMenuHigh;
 	prot["KeySemicolon"] = prot.KeySemicolon;
 	prot["KeyFirefoxSemicolon"] = prot.KeyFirefoxSemicolon;
 

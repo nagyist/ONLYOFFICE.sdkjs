@@ -230,6 +230,8 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.RegisteredSign].initShortcuts([new AscShortcut(keyCodes.KeyR, false, false, true, true)]);
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.TrademarkSign].initShortcuts([new AscShortcut(keyCodes.KeyT, false, false, true, true)]);
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.SpeechWorker].initShortcuts([new AscShortcut(keyCodes.KeyZ, false, false, true, true)]);
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartLine].initShortcuts([new AscShortcut(keyCodes.ArrowLeft, false, false, false, true)]);
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToEndLine].initShortcuts([new AscShortcut(keyCodes.ArrowRight, false, false, false, true)]);
 	} else {
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenFilePanel] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenFilePanel, [new AscShortcut(keyCodes.KeyF, false, false, true, false)], true);
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenCommentField] = new AscShortcutAction(Asc.c_oAscDocumentShortcutType.OpenCommentField, [new AscShortcut(keyCodes.KeyH, false, false, true, false)], true);

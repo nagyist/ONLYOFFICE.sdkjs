@@ -1721,48 +1721,40 @@ background-repeat: no-repeat;\
 
 	};
 
-	asc_docs_api.prototype.initDefaultShortcuts = function()
+	asc_docs_api.prototype.getDefaultShortcutActionTypes = function ()
 	{
-		// // [[ActionType, KeyCode, Ctrl, Shift, Alt]]
-		// var aShortcuts =
-		// [
-		// 	[Asc.c_oAscPresentationShortcutType.EditSelectAll, 65, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.EditUndo, 90, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.EditRedo, 89, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Cut, 88, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Copy, 67, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Paste, 86, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Duplicate, 68, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Print, 80, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Save, 83, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.ShowContextMenu, 93, false, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.ShowContextMenu, 121, false, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.ShowContextMenu, 57351, false, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.ShowParaMarks, 56, true, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Bold, 66, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.CopyFormat, 67, true, false, true, false],
-		// 	[Asc.c_oAscPresentationShortcutType.CenterAlign, 69, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.EuroSign, 69, true, false, true, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Group, 71, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.UnGroup, 71, true, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Italic, 73, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.JustifyAlign, 74, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.AddHyperlink, 75, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.BulletList, 76, true, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.LeftAlign, 76, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.RightAlign, 82, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Underline, 85, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Strikethrough, 53, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.PasteFormat, 86, true, false, true, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Superscript, 188, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.Subscript, 190, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.EnDash, 189, true, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.EnDash, 173, true, true, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.DecreaseFont, 219, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.IncreaseFont, 221, true, false, false, false],
-		// 	[Asc.c_oAscPresentationShortcutType.SpeechWorker, 90, true, false, true, false]
-		// ];
-		// this.initShortcuts(aShortcuts, false)
+		return [Asc.c_oAscPresentationShortcutType.EditSelectAll,
+			Asc.c_oAscPresentationShortcutType.EditUndo,
+			Asc.c_oAscPresentationShortcutType.EditRedo,
+			Asc.c_oAscPresentationShortcutType.Cut,
+			Asc.c_oAscPresentationShortcutType.Copy,
+			Asc.c_oAscPresentationShortcutType.Paste,
+			Asc.c_oAscPresentationShortcutType.Duplicate,
+			Asc.c_oAscPresentationShortcutType.Print,
+			Asc.c_oAscPresentationShortcutType.Save,
+			Asc.c_oAscPresentationShortcutType.ShowContextMenu,
+			Asc.c_oAscPresentationShortcutType.ShowParaMarks,
+			Asc.c_oAscPresentationShortcutType.Bold,
+			Asc.c_oAscPresentationShortcutType.CopyFormat,
+			Asc.c_oAscPresentationShortcutType.CenterAlign,
+			Asc.c_oAscPresentationShortcutType.EuroSign,
+			Asc.c_oAscPresentationShortcutType.Group,
+			Asc.c_oAscPresentationShortcutType.UnGroup,
+			Asc.c_oAscPresentationShortcutType.Italic,
+			Asc.c_oAscPresentationShortcutType.JustifyAlign,
+			Asc.c_oAscPresentationShortcutType.AddHyperlink,
+			Asc.c_oAscPresentationShortcutType.BulletList,
+			Asc.c_oAscPresentationShortcutType.LeftAlign,
+			Asc.c_oAscPresentationShortcutType.RightAlign,
+			Asc.c_oAscPresentationShortcutType.Underline,
+			Asc.c_oAscPresentationShortcutType.Strikethrough,
+			Asc.c_oAscPresentationShortcutType.PasteFormat,
+			Asc.c_oAscPresentationShortcutType.Superscript,
+			Asc.c_oAscPresentationShortcutType.Subscript,
+			Asc.c_oAscPresentationShortcutType.EnDash,
+			Asc.c_oAscPresentationShortcutType.DecreaseFont,
+			Asc.c_oAscPresentationShortcutType.IncreaseFont,
+			Asc.c_oAscPresentationShortcutType.SpeechWorker];
 	};
 
 	asc_docs_api.prototype.InitEditor = function()

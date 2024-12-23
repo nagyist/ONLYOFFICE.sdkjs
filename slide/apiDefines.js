@@ -587,7 +587,6 @@ var c_oAscPresentationShortcutType = {
 	InsertLineBreak               : 112,
 	EndParagraph                  : 113,
 	EuroSign                      : 114,
-	EmDash                        : 115,
 	EnDash                        : 116,
 	NonBreakingSpace              : 117,
 	MoveToRightChar               : 118,
@@ -800,7 +799,6 @@ prot["EquationAddPlaceholder"] = prot.EquationAddPlaceholder;
 prot["InsertLineBreak"] = prot.InsertLineBreak;
 prot["EndParagraph"] = prot.EndParagraph;
 prot["EuroSign"] = prot.EuroSign;
-prot["EmDash"] = prot.EmDash;
 prot["EnDash"] = prot.EnDash;
 prot["NonBreakingSpace"] = prot.NonBreakingSpace;
 prot["MoveToRightChar"] = prot.MoveToRightChar;
