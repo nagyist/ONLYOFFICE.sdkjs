@@ -167,6 +167,7 @@
 		this.forceSaveForm = null;
 		this.disconnectRestrictions = null;//to restore restrictions after disconnect
 		this.forceSaveUndoRequest = false; // Флаг нужен, чтобы мы знали, что данное сохранение пришло по запросу Undo в совместке
+		this.saveRelativePrev = {};
 
 		// Version History
 		this.VersionHistory = null;				// Объект, который отвечает за точку в списке версий
@@ -282,9 +283,10 @@
 
 		this._loadModules();
 
+		const noop = function () { };
 		if (!this.isPdfEditor())
 		{
-			AscCommon.loadChartStyles(function() {}, function(err) {
+			AscCommon.loadChartStyles(noop, function (err) {
 				t.sendEvent("asc_onError", Asc.c_oAscError.ID.LoadingScriptError, c_oAscError.Level.NoCritical);
 			});
 		}
@@ -1395,7 +1397,15 @@
 	 * @param callback {saveRelativeFromChangesCallback}
 	 */
 	baseEditorsApi.prototype.saveRelativeFromChanges = function(docId, token, timeout, callback) {
-		if (!this.CoAuthoringApi.callPRC({'type': 'saveRelativeFromChanges', 'docId': docId, 'token': token}, timeout, callback)) {
+		let t = this;
+		let time = this.saveRelativePrev[docId];
+		let callbackWrapper = function (timeout, data) {
+			if (data && data.time) {
+				t.saveRelativePrev[docId] = data.time;
+			}
+			callback(timeout, data);
+		}
+		if (!this.CoAuthoringApi.callPRC({'type': 'saveRelativeFromChanges', 'docId': docId, 'token': token, 'time': time}, timeout, callbackWrapper)) {
 			callback(true, undefined);
 		}
 	};
@@ -3369,8 +3379,15 @@
 	{
 		if (null != this.pluginsManager)
 		{
-			this.pluginsManager.register(basePath, plugins);
+			let runnedArray = [];
+			this.pluginsManager.register(basePath, plugins, undefined, runnedArray);
 			this.checkInstalledPlugins();
+
+			for (let i = 0, len = runnedArray.length; i < len; i++)
+			{
+				if (!this.pluginsManager.isRunned(runnedArray[i]))
+					this.pluginsManager.run(runnedArray[i], 0, "");
+			}
 		}
 		else
 		{
@@ -4418,24 +4435,18 @@
 		return 0;
 	};
 
-	baseEditorsApi.prototype.asc_decodeBuffer = function(buffer, options, callback) {
+	baseEditorsApi.prototype.asc_decodeBuffer = function(buffer, codePage, callback) {
+		//todo TextDecoder (ie11)
 		var reader = new FileReader();
 		//todo onerror
 		reader.onload = reader.onerror = function(e) {
-			var text = e.target.result ? e.target.result : "";
-			if (options instanceof Asc.asc_CTextOptions) {
-				callback(AscCommon.parseText(text, options));
-			} else {
-				callback(text.match(/[^\r\n]+/g));
-			}
+			callback(e.target.result ? e.target.result : "");
 		};
-
 		var encoding = "UTF-8";
-		var codePage = options.asc_getCodePage();
 		var encodingsLen = AscCommon.c_oAscEncodings.length;
 		for (var i = 0; i < encodingsLen; ++i)
 		{
-			if (AscCommon.c_oAscEncodings[i][0] == codePage)
+			if (AscCommon.c_oAscEncodings[i][0] === codePage)
 			{
 				encoding = AscCommon.c_oAscEncodings[i][2];
 				break;
@@ -4444,6 +4455,9 @@
 
 		reader.readAsText(new Blob([buffer]), encoding);
 	};
+	baseEditorsApi.prototype.asc_parseText = function(text, options) {
+		return AscCommon.parseText(text, options, true);
+	}
 
 	baseEditorsApi.prototype.asc_setVisiblePasteButton = function(val)
 	{
@@ -5455,6 +5469,24 @@
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
 
+
+	baseEditorsApi.prototype.asc_mergeSelectedShapes = function(operation) {
+		if(AscCommon['PathBoolean']) {
+			this.asc_mergeSelectedShapesAction(operation);
+			return;
+		}
+		let oThis = this;
+		AscCommon.loadPathBoolean(function () {
+			oThis.asc_mergeSelectedShapesAction(operation);
+		}, function () {
+			oThis.sendEvent("asc_onError", Asc.c_oAscError.ID.LoadingScriptError, c_oAscError.Level.NoCritical)
+		})
+	};
+
+	baseEditorsApi.prototype.asc_mergeSelectedShapesAction = function(operation) {
+
+	};
+
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
 	window['AscCommon'].baseEditorsApi = baseEditorsApi;
@@ -5476,6 +5508,7 @@
 	prot['asc_runAutostartMacroses'] = prot.asc_runAutostartMacroses;
 	prot['asc_runMacros'] = prot.asc_runMacros;
 	prot['asc_getAllMacrosNames'] = prot.asc_getAllMacrosNames;
+	prot['asc_parseText'] = prot.asc_parseText;
 	prot['asc_setVisiblePasteButton'] = prot.asc_setVisiblePasteButton;
 	prot['asc_getAutoCorrectMathSymbols'] = prot.asc_getAutoCorrectMathSymbols;
 	prot['asc_getAutoCorrectMathFunctions'] = prot.asc_getAutoCorrectMathFunctions;
@@ -5567,6 +5600,7 @@
 	prot["asc_removeCustomProperty"] = prot.asc_removeCustomProperty;
 	
 	prot["asc_setPdfViewer"] = prot.asc_setPdfViewer;
+	prot["asc_mergeSelectedShapes"] = prot.asc_mergeSelectedShapes;
 
 	prot["callCommand"] = prot.callCommand;
 	prot["callMethod"] = prot.callMethod;

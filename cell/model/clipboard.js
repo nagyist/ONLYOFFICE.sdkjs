@@ -2779,7 +2779,7 @@
 							curCol = xfrm.offX;
 							curRow = xfrm.offY;
 						} else {
-							curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(activeCol) - ws._getColLeft(0), 0, 3);
+							curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(activeCol + 1*ws.getRightToLeft()) - ws._getColLeft(0), 0, 3);
 							curRow = xfrm.offY - startRow + ws.objectRender.convertMetric(ws._getRowTop(activeRow) - ws._getRowTop(0), 0, 3);
 						}
 
@@ -2789,7 +2789,7 @@
 
 						drawingObject.graphicObject.setDrawingObjects(ws.objectRender);
 						drawingObject.graphicObject.setWorksheet(ws.model);
-						xfrm.setOffX(curCol);
+						xfrm.setOffX(ws.checkRtl(curCol, null, 3));
 						xfrm.setOffY(curRow);
 						aDrawings.push(drawingObject.graphicObject);
 						drawingObject.graphicObject.getAllRasterImages(aImagesSync);

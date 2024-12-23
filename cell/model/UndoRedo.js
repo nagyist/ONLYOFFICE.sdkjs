@@ -2743,20 +2743,34 @@ function (window, undefined) {
 
 			if (from && !to) {//удаление
 				from.initWorksheetsFromSheetDataSet();
-				externalReferenceIndex = wb.getExternalLinkIndexByName(from.Id);
+				/* the first call is a search by referenceData, if we get null, we make a second call to search by Id below and then add or re-assign the link */
+				externalReferenceIndex = wb.getExternalReferenceByReferenceData(from.referenceData, true);
+				if (!externalReferenceIndex) {
+					externalReferenceIndex = wb.getExternalLinkIndexByName(from.Id);
+				}
+
 				if (externalReferenceIndex !== null) {
 					wb.externalReferences[externalReferenceIndex - 1] = from;
 				} else {
 					wb.externalReferences.push(from);
 				}
 			} else if (!from && to) { //добавление
-				externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				/* the first call is a search by referenceData, if we get null, we make a second call to search by Id below and then delete the link */
+				externalReferenceIndex = wb.getExternalReferenceByReferenceData(to.referenceData, true);
+				if (!externalReferenceIndex) {
+					externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				}
+
 				if (externalReferenceIndex !== null) {
 					wb._removeExternalReference(externalReferenceIndex - 1);
 				}
 			} else if (from && to) { //изменение
 				//TODO нужно сохранить ссылки на текущий лист
-				externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				/* the first call is a search by referenceData, if we get null, we make a second call to search by Id below and then change the link */
+				externalReferenceIndex = wb.getExternalReferenceByReferenceData(to.referenceData, true);
+				if (!externalReferenceIndex) {
+					externalReferenceIndex = wb.getExternalLinkIndexByName(to.Id);
+				}
 
 				if (externalReferenceIndex !== null) {
 					from.worksheets = wb.externalReferences[externalReferenceIndex - 1].worksheets;
@@ -3644,10 +3658,7 @@ function (window, undefined) {
 				ws.setShowFormulas(bUndo ? Data.from : Data.to);
 			}
 		} else if (AscCH.historyitem_Worksheet_SetTopLeftCell === Type) {
-			//накатываем только при открытии
-			if (!bUndo && this.wb.bCollaborativeChanges) {
-				ws.setTopLeftCell(Data.to ? new Asc.Range(Data.to.c1, Data.to.r1, Data.to.c2, Data.to.r2) : null);
-			}
+			ws.setTopLeftCell(Data.to ? new Asc.Range(Data.to.c1, Data.to.r1, Data.to.c2, Data.to.r2) : null);
 		} else if (AscCH.historyitem_Worksheet_AddProtectedRange === Type) {
 			if (bUndo) {
 				ws.deleteProtectedRange(Data.id);
@@ -3759,6 +3770,11 @@ function (window, undefined) {
 				ws.timelines.push(Data.from);
 			} else {
 				wb.onTimelinesDelete(Data.from.name);
+			}
+		} else if (AscCH.historyitem_Worksheet_SetRightToLeft === Type) {
+			//накатываем только при открытии
+			if (!bUndo && this.wb.bCollaborativeChanges) {
+				ws.setRightToLeft(bUndo ? Data.from : Data.to);
 			}
 		}
 	};

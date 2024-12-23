@@ -314,6 +314,19 @@
 
 		this.WordControl.GoToPage(this.Document.getCurrentPage());
 	};
+	VisioEditorApi.prototype._coAuthoringInitEnd = function()
+	{
+		//todo other events
+		var t                                        = this;
+		this.CoAuthoringApi.onConnectionStateChanged = function(e)
+		{
+			// if (true === AscCommon.CollaborativeEditing.Is_Fast() && false === e['state'])
+			// {
+			// 	editor.WordControl.m_oLogicDocument.Remove_ForeignCursor(e['id']);
+			// }
+			t.sendEvent("asc_onConnectionStateChanged", e);
+		};
+	};
 
 	VisioEditorApi.prototype.OpenDocumentFromZip = function(data)
 	{
@@ -381,6 +394,18 @@
 	{
 		return this.WordControl && this.WordControl.m_oLogicDocument && this.WordControl.m_oLogicDocument.core;
 	};
+	VisioEditorApi.prototype.asc_CheckCopy = function()
+	{
+		//todo
+		return;
+	};
+	VisioEditorApi.prototype.asc_PasteData = function(_format, data1, data2, text_data, useCurrentPoint, callback, checkLocks) {
+		if (!this.canEdit())
+			return;
+		//todo
+		return;
+	}
+
 	window["VisioEditorApi"]                                 = VisioEditorApi;
 	window["VisioEditorApi"].prototype["asc_nativeOpenFile"] = function(base64File, version)
 	{
@@ -987,6 +1012,8 @@
 
 	prot['asc_CloseFile']             				= prot.asc_CloseFile;
 	prot['asc_getAppProps']             			= prot.asc_getAppProps;
+	prot['asc_CheckCopy']             				= prot.asc_CheckCopy;
+	prot['asc_PasteData']             				= prot.asc_PasteData;
 	prot['asc_setSpellCheck']             			= prot.asc_setSpellCheck;
 	prot['asc_setSpellCheckSettings']             	= prot.asc_setSpellCheckSettings;
 	prot['asc_setLocale']             				= prot.asc_setLocale;

@@ -4909,7 +4909,6 @@ background-repeat: no-repeat;\
             this.WordControl.m_oLogicDocument.GetCurrentSlide().graphicObjects.startEditCurrentOleObject();
     };
 
-
     // signatures
     asc_docs_api.prototype.asc_addSignatureLine = function (oPr, Width, Height, sImgUrl) {
         if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false){
@@ -6720,6 +6719,17 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.unGroupShapes = function()
 	{
 		this.WordControl.m_oLogicDocument.unGroupShapes();
+	};
+
+	asc_docs_api.prototype.asc_canMergeSelectedShapes = function (operation) {
+		return AscFormat.canMergeSelectedShapes(operation);
+	};
+	asc_docs_api.prototype.asc_mergeSelectedShapesAction = function (operation) {
+		const isSelectionLocked = this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props);
+		const canMerge = this.asc_canMergeSelectedShapes(operation);
+		if (!isSelectionLocked && canMerge) {
+			this.WordControl.m_oLogicDocument.mergeSelectedShapes(operation);
+		}
 	};
 
 	asc_docs_api.prototype.setVerticalAlign = function(align)
@@ -9012,10 +9022,7 @@ background-repeat: no-repeat;\
 		if (isFull)
 		{
 			AscCommon.CollaborativeEditing.m_aChanges = [];
-
-			// У новых элементов выставляем указатели на другие классы
-			AscCommon.CollaborativeEditing.Apply_LinkData();
-
+			
 			// Делаем проверки корректности новых изменений
 			AscCommon.CollaborativeEditing.Check_MergeData();
 
@@ -9844,6 +9851,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['AddText']                             = asc_docs_api.prototype.AddText;
 	asc_docs_api.prototype['groupShapes']                         = asc_docs_api.prototype.groupShapes;
 	asc_docs_api.prototype['unGroupShapes']                       = asc_docs_api.prototype.unGroupShapes;
+	asc_docs_api.prototype['asc_canMergeSelectedShapes']          = asc_docs_api.prototype.asc_canMergeSelectedShapes;
 	asc_docs_api.prototype['setVerticalAlign']                    = asc_docs_api.prototype.setVerticalAlign;
 	asc_docs_api.prototype['setVert']                             = asc_docs_api.prototype.setVert;
 	asc_docs_api.prototype['sync_MouseMoveStartCallback']         = asc_docs_api.prototype.sync_MouseMoveStartCallback;

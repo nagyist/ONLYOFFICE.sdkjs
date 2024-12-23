@@ -1804,7 +1804,7 @@ function isAllowPasteLink(pastedWb) {
             if(t.objectRender) {
                 t.objectRender.bUpdateMetrics = false;
             }
-			t.changeWorksheet("update", {reinitRanges: true});
+			t.changeWorksheet("update", {reinitRanges: true, viewModeUpdate: viewMode});
 			t._updateGroups(true, undefined, undefined, true);
 			t._updateVisibleColsCount();
 			t.cellCommentator.updateActiveComment();
@@ -1949,7 +1949,7 @@ function isAllowPasteLink(pastedWb) {
             if(t.objectRender) {
                 t.objectRender.bUpdateMetrics = false;
             }
-			t.changeWorksheet("update", {reinitRanges: true});
+			t.changeWorksheet("update", {reinitRanges: true, viewModeUpdate: viewMode});
 			t._updateGroups(false, undefined, undefined, true);
 			t._updateVisibleRowsCount();
 			t.cellCommentator.updateActiveComment();
@@ -3733,7 +3733,12 @@ function isAllowPasteLink(pastedWb) {
 
 		return result;
 	};
-
+	WorksheetView.prototype.getPrintOleRangePosition = function (oRange) {
+		const oRangeSizes = this.getRangePosition(oRange);
+		oRangeSizes.width += 3;
+		oRangeSizes.height += 3;
+		return oRangeSizes;
+	};
 	WorksheetView.prototype.drawForPrint = function (drawingCtx, printPagesData, indexPrintPage, pages) {
 		let t = this;
 		let countPrintPages = pages && pages.length;
@@ -3760,7 +3765,6 @@ function isAllowPasteLink(pastedWb) {
 			vector_koef /= t.getRetinaPixelRatio();
 		}
 
-
 		this.stringRender.fontNeedUpdate = true;
 		if (null === printPagesData) {
 			// Напечатаем пустую страницу
@@ -3779,6 +3783,7 @@ function isAllowPasteLink(pastedWb) {
 			}
 			drawingCtx.EndPage && drawingCtx.EndPage();
 		} else {
+			let printScale = (printPagesData && printPagesData.scale) ? printPagesData.scale : this.getPrintScale();
 			if (this.getRightToLeft()) {
 				let renderingSettings = this.getRenderingSettings();
 				if (!renderingSettings) {
@@ -3788,6 +3793,7 @@ function isAllowPasteLink(pastedWb) {
 				renderingSettings && renderingSettings.setPageLeftOffset(printPagesData.leftFieldInPx);
 				let pageRightField = c_oAscPrintDefaultSettings.PageRightField;
 				renderingSettings && renderingSettings.setPageRightOffset(pageRightField / vector_koef);
+				renderingSettings.printScale = printScale;
 				this.objectRender.updateDrawingsTransform({target: c_oTargetType.ColumnResize, col: 0});
 			}
 
@@ -3797,11 +3803,12 @@ function isAllowPasteLink(pastedWb) {
 			let printOptionsJson = this.workbook && this.workbook.getPrintOptionsJson();
 			let curPrintOptionsJson = (printOptionsJson && printOptionsJson["spreadsheetLayout"]) ? printOptionsJson["spreadsheetLayout"] : printOptionsJson;
 			let thumbnailFirst = curPrintOptionsJson && curPrintOptionsJson["thumbnail"] && curPrintOptionsJson["thumbnail"]["first"];
+			let renderingSettings;
 			if (thumbnailFirst === true || (typeof thumbnailFirst === "string" && thumbnailFirst.toLowerCase() === "true")) {
 				let thumbnailMaxRowCount = 100;
 				let currentRowCount = (printPagesData.pageRange.r2 - printPagesData.pageRange.r1) + (printPagesData.titleRowRange ? (printPagesData.titleRowRange.r2 - printPagesData.titleRowRange.r1) : 0);
 				if (currentRowCount > thumbnailMaxRowCount) {
-					let renderingSettings = this.getRenderingSettings();
+					renderingSettings = this.getRenderingSettings();
 					if (!renderingSettings) {
 						renderingSettings = this.initRenderingSettings();
 					}
@@ -3830,7 +3837,7 @@ function isAllowPasteLink(pastedWb) {
 			let clipLeftShape, clipTopShape, clipWidthShape, clipHeightShape;
 
 			let doDraw = function(range, titleWidth, titleHeight) {
-				drawingCtx.AddClipRect && drawingCtx.AddClipRect(clipLeft, clipTop, clipWidth, clipHeight);
+				drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipLeft, clipTop, clipWidth, clipHeight);
 
 				let transformMatrix;
 				let _transform = drawingCtx.Transform;
@@ -3845,7 +3852,7 @@ function isAllowPasteLink(pastedWb) {
 				}
 
 				if (t.getRightToLeft()) {
-					if (!_transform) {
+					/*if (!_transform) {
 						_transform = new AscCommon.CMatrix();
 					}
 					transformMatrix = new AscCommon.CMatrix();
@@ -3853,7 +3860,7 @@ function isAllowPasteLink(pastedWb) {
 					transformMatrix.tx = t.getCtxWidth() * (drawingCtx instanceof AscCommonExcel.CPdfPrinter ? vector_koef : 1);
 					let newTransformMatrix = _transform.Multiply(transformMatrix);
 					drawingCtx.setTransform(newTransformMatrix.sx, newTransformMatrix.shy, newTransformMatrix.shx, newTransformMatrix.sy, newTransformMatrix.tx, newTransformMatrix.ty);
-					drawingCtx.updateTransforms && drawingCtx.updateTransforms();
+					drawingCtx.updateTransforms && drawingCtx.updateTransforms();*/
 				}
 
 
@@ -3934,7 +3941,7 @@ function isAllowPasteLink(pastedWb) {
 					if (oDocRenderer.m_oCoordTransform) {
 						oldTx = oDocRenderer.m_oCoordTransform.tx;
 						oldTy = oDocRenderer.m_oCoordTransform.ty;
-						oDocRenderer.m_oCoordTransform.tx = (t.getCellLeft(0) - offsetX);
+						oDocRenderer.m_oCoordTransform.tx = !t.getRightToLeft() ? (t.getCellLeft(0) - offsetX) : (-t.getCellLeft(0) + ((printPagesData.leftFieldInPx + offsetCols - titleWidth) + t.getCellLeft(Math.max(0,range.c1-1))));
 						oDocRenderer.m_oCoordTransform.ty =  (t.getCellTop(0) - offsetY);
 					}
 					oDocRenderer.SaveGrState();
@@ -3945,12 +3952,16 @@ function isAllowPasteLink(pastedWb) {
 					clipTopShape = (t.getCellTop(range.r1) - offsetY) >> 0;
 					let clipRightShape = (t.getCellLeft(range.c2 + 1) + 0.5 - offsetX) >> 0;
 					let clipBottomShape = (t.getCellTop(range.r2 + 1) + 0.5 - offsetY) >> 0;
+					if (t.getRightToLeft()) {
+						clipRightShape = t.checkRtl(clipRightShape);
+						clipLeftShape = t.checkRtl(clipLeftShape);
+					}
 					clipL = oInvertBaseTransform.TransformPointX(clipLeftShape, clipTopShape);
 					clipT = oInvertBaseTransform.TransformPointY(clipLeftShape, clipTopShape);
 					clipR = oInvertBaseTransform.TransformPointX(clipRightShape, clipBottomShape);
 					clipB = oInvertBaseTransform.TransformPointY(clipRightShape, clipBottomShape);
 					oDocRenderer.SaveGrState();
-					oDocRenderer.AddClipRect(clipL, clipT, clipR - clipL, clipB - clipT);
+					t._AddClipRect(oDocRenderer, clipL, clipT, clipR - clipL, clipB - clipT, true);
 					t.objectRender.print(drawingPrintOptions);
 					delete oDocRenderer.IsPrintPreview;
 					oDocRenderer.RestoreGrState();
@@ -3969,7 +3980,7 @@ function isAllowPasteLink(pastedWb) {
 					clipT = clipTopShape >> 0;
 					clipR = (clipLeftShape + clipWidthShape + 0.5) >> 0;
 					clipB = (clipTopShape + clipHeightShape + 0.5) >> 0;
-					drawingCtx.AddClipRect && drawingCtx.AddClipRect(clipL, clipT, clipR - clipL, clipB - clipT);
+					drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipL, clipT, clipR - clipL, clipB - clipT);
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oBaseTransform);
 					}
@@ -3981,8 +3992,6 @@ function isAllowPasteLink(pastedWb) {
 				}
 				t.visibleRange = tmpVisibleRange;
 			};
-
-			let printScale = printPagesData.scale ? printPagesData.scale : this.getPrintScale();
 
 
 			let cellsLeft = printPagesData.pageHeadings ? this.cellsLeft : 0;
@@ -4541,7 +4550,6 @@ function isAllowPasteLink(pastedWb) {
 		this._recalculate();
 		this.handlers.trigger("checkLastWork");
 		this._clean();
-		this._startRtlRendering();
 		this._drawCorner();
 		this._drawColumnHeaders(null);
 		this._drawRowHeaders(null);
@@ -4553,7 +4561,6 @@ function isAllowPasteLink(pastedWb) {
 		this._drawFrozenPaneLines();
 		this._fixSelectionOfMergedCells();
 		this._drawElements(this.af_drawButtons);
-		this._endRtlRendering();
 		this.cellCommentator.drawCommentCells();
 		this.objectRender.showDrawingObjects();
 		if (this.overlayCtx) {
@@ -4565,9 +4572,8 @@ function isAllowPasteLink(pastedWb) {
 	};
 
     WorksheetView.prototype._clean = function () {
-        this.drawingCtx
-            .setFillStyle( this.settings.cells.defaultState.background )
-            .fillRect( 0, 0, this.drawingCtx.getWidth(), this.drawingCtx.getHeight() );
+        this.drawingCtx.setFillStyle( this.settings.cells.defaultState.background );
+		this._fillRect( this.drawingCtx, 0, 0, this.drawingCtx.getWidth(), this.drawingCtx.getHeight() );
         if ( this.overlayCtx ) {
             this.overlayCtx.clear();
         }
@@ -4597,11 +4603,9 @@ function isAllowPasteLink(pastedWb) {
 
     WorksheetView.prototype._activateOverlayCtx = function () {
         this.drawingCtx = this.buffers.overlay;
-		this._startRtlRendering();
     };
 
     WorksheetView.prototype._deactivateOverlayCtx = function () {
-		this._endRtlRendering();
 		this.drawingCtx = this.buffers.main;
     };
 
@@ -4692,23 +4696,14 @@ function isAllowPasteLink(pastedWb) {
 
         this._drawHeader(null, this.headersLeft, this.headersTop, this.headersWidth,
           this.headersHeight, kHeaderDefault, true, -1);
-        this.drawingCtx.beginPath()
-          .moveTo(x2 - dx, y1 + dy)
-          .lineTo(x2 - dx, y2 - dy)
-          .lineTo(x1 + dx, y2 - dy)
-          .lineTo(x2 - dx, y1 + dy)
-          .setFillStyle(activeNamedSheetView ? this.settings.header.cornerColorSheetView : this.settings.header.cornerColor)
+        this.drawingCtx.beginPath();
+		this._moveTo(this.drawingCtx, x2 - dx, y1 + dy);
+		this._lineTo(this.drawingCtx, x2 - dx, y2 - dy);
+		this._lineTo(this.drawingCtx, x1 + dx, y2 - dy);
+		this._lineTo(this.drawingCtx, x2 - dx, y1 + dy);
+		this.drawingCtx.setFillStyle(activeNamedSheetView ? this.settings.header.cornerColorSheetView : this.settings.header.cornerColor)
           .fill();
     };
-	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color) {
-		stringRender.render(ctx, /*window.rightToleft ? (ctx.getWidth() - textX - textW) : */textX, textY, textW, color);
-		return stringRender;
-	};
-	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
-		ctx.fillText(text, x, y, maxWidth, charWidths, angle);
-		return ctx;
-
-	};
 
     /** Рисует заголовки видимых колонок */
     WorksheetView.prototype._drawColumnHeaders = function (drawingCtx, start, end, style, offsetXForDraw, offsetYForDraw) {
@@ -4754,7 +4749,7 @@ function isAllowPasteLink(pastedWb) {
 		let isUseMainClip = (window["IS_NATIVE_EDITOR"] !== true);
 
 		if (isUseMainClip)
-			ctx.AddClipRect(clipRectX, this.headersTop - this.groupHeight, ctxW, ctxH);
+			this._AddClipRect(ctx, clipRectX, this.headersTop - this.groupHeight, ctxW, ctxH);
 
           // draw column headers
 		  var l = this._getColLeft(start) - offsetX, w;
@@ -4806,7 +4801,7 @@ function isAllowPasteLink(pastedWb) {
         let isUseMainClip = (window["IS_NATIVE_EDITOR"] !== true);
 
         if (isUseMainClip)
-            ctx.AddClipRect(this.headersLeft - this.groupWidth, clipRectY, ctxW, ctxH);
+            this._AddClipRect(ctx, this.headersLeft - this.groupWidth, clipRectY, ctxW, ctxH);
         // draw row headers
         var t = this._getRowTop(start) - offsetY, h;
         for (var i = start; i <= end; ++i) {
@@ -4895,8 +4890,8 @@ function isAllowPasteLink(pastedWb) {
         // background только для видимых
         if (!isZeroHeader) {
             // draw background
-            ctx.setFillStyle(backgroundColor)
-              .fillRect(x, y, w, h);
+            ctx.setFillStyle(backgroundColor);
+			this._fillRect(ctx, x, y, w, h);
         }
 
         let t = this;
@@ -4907,13 +4902,13 @@ function isAllowPasteLink(pastedWb) {
 		let drawTopBorder = function (_selected) {
 			if (style !== kHeaderDefault && !isColHeader && !window["IS_NATIVE_EDITOR"]) {
 				// Select row (top border)
-				ctx.lineHorPrevPx(x, y, x2);
+				t._lineHorPrevPx(ctx, x, y, x2);
 			}
 		};
 		let drawLeftBorder = function (_selected) {
 			if ((style !== kHeaderDefault || t.getRightToLeft()) && isColHeader) {
 				// Select col (left border)
-				ctx.lineVerPrevPx(x, y, y2);
+				t._lineVerPrevPx(ctx, x, y, y2);
 			}
 		};
 
@@ -4949,7 +4944,7 @@ function isAllowPasteLink(pastedWb) {
 					y1Diff = (isFirstColSelection ? (_toRetina(1) + 1) : 1);
 					y2Diff = (isFirstColSelection ? _toRetina(1) : 0);
 				}
-				ctx.lineVerPrevPx(x2, y - y1Diff, y2 + y2Diff);
+				t._lineVerPrevPx(ctx, x2, y - y1Diff, y2 + y2Diff);
 			}
 		};
 		let drawBottomBorder = function (_selected) {
@@ -4960,7 +4955,7 @@ function isAllowPasteLink(pastedWb) {
 					x1Diff = (isFirstRowSelection ? (_toRetina(1) + 1) : (1 - t.getRightToLeftOffset()));
 					x2Diff = (isFirstRowSelection ? _toRetina(1) : 0);
 				}
-				ctx.lineHorPrevPx(x - x1Diff, y2, x2 + x2Diff);
+				t._lineHorPrevPx(ctx, x - x1Diff, y2, x2 + x2Diff);
 			}
 		};
 
@@ -5009,7 +5004,7 @@ function isAllowPasteLink(pastedWb) {
         var textX = this._calcTextHorizPos(x, x2WithoutBorder, tm, tm.width < w ? AscCommon.align_Center : AscCommon.align_Left);
         var textY = this._calcTextVertPos(y, h, bl, tm, Asc.c_oAscVAlign.Bottom);
 
-		ctx.AddClipRect(x, y, w, h);
+		this._AddClipRect(ctx, x, y, w, h);
 		ctx.setFillStyle(color);
 
 		let charsWidth = 0;
@@ -5018,10 +5013,6 @@ function isAllowPasteLink(pastedWb) {
 				charsWidth += sr.charWidths[i];
 			}
 			textX = textX + charsWidth;
-			if (ctx.Transform) {
-				ctx.DocumentRenderer.transform(1, 0, 0, 1, 0, 0);
-				textX = this.getCtxWidth() - textX;
-			}
 		}
 
 		this._fillText(ctx, text, textX, textY + Asc.round(tm.baseline * this.getZoom()), undefined, sr.charWidths);
@@ -5262,7 +5253,7 @@ function isAllowPasteLink(pastedWb) {
 
             oGraphics.SaveGrState();
             oGraphics.transform3(new AscCommon.CMatrix());
-            oGraphics.AddClipRect(left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
+            this._AddClipRect(oGraphics, left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
             oShape.draw(oGraphics);
 
             oGraphics.RestoreGrState();
@@ -5305,7 +5296,7 @@ function isAllowPasteLink(pastedWb) {
         for (i = colStartTmp; i <= colEndTmp; ++i) {
         	w = this._getColumnWidth(i);
         	if (0 !== w) {
-				this.drawingCtx.clearRectByX(l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
+				this._clearRectByX(this.drawingCtx, l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
 				l += w;
 			}
         }
@@ -5318,7 +5309,7 @@ function isAllowPasteLink(pastedWb) {
             for (i = colStart; i <= colEnd; ++i) {
 				w = this._getColumnWidth(i);
 				if (0 !== w) {
-					this.drawingCtx.clearRectByX(l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
+					this._clearRectByX(this.drawingCtx, l + correctX, this.headersTop + correctY, w + correctW, this.headersHeight + correctH);
 					l += w;
 				}
             }
@@ -5353,7 +5344,7 @@ function isAllowPasteLink(pastedWb) {
         for (i = rowStartTmp; i <= rowEndTmp; ++i) {
 			h = this._getRowHeight(i);
             if (0 !== h) {
-				this.drawingCtx.clearRectByY(this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
+				this._clearRectByY(this.drawingCtx, this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
 				t += h;
             }
         }
@@ -5366,7 +5357,7 @@ function isAllowPasteLink(pastedWb) {
             for (i = rowStart; i <= rowEnd; ++i) {
 				h = this._getRowHeight(i);
                 if (0 !== h) {
-					this.drawingCtx.clearRectByY(this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
+					this._clearRectByY(this.drawingCtx, this.headersLeft + correctX, t + correctY, this.headersWidth + correctW, h + correctH);
 					t += h;
                 }
             }
@@ -5374,7 +5365,7 @@ function isAllowPasteLink(pastedWb) {
     };
 
     WorksheetView.prototype._cleanColumnHeadersRect = function () {
-        this.drawingCtx.clearRect(this.cellsLeft, this.headersTop, this.drawingCtx.getWidth() - this.cellsLeft,
+        this._clearRect(this.drawingCtx, this.cellsLeft, this.headersTop, this.drawingCtx.getWidth() - this.cellsLeft,
           this.headersHeight);
     };
 
@@ -5430,8 +5421,8 @@ function isAllowPasteLink(pastedWb) {
 		let y2 = Math.min(this._getRowTop(range.r2 + 1) - offsetY, heightCtx);
 		let isPrint = this.usePrintScale;
 		if (!ctx.isNotDrawBackground && !isPrint) {
-			ctx.setFillStyle(this.settings.cells.defaultState.background)
-				.fillRect(x1, y1, x2 - x1, y2 - y1);
+			ctx.setFillStyle(this.settings.cells.defaultState.background);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
 		}
 
 		//рисуем текст для преварительного просмотра
@@ -5441,30 +5432,24 @@ function isAllowPasteLink(pastedWb) {
 			.setLineWidth(1).beginPath();
 
 		let i, d, l;
-		if (ctx.isPreviewOleObjectContext) {
-			ctx.lineVerPrevPx(1, y1, y2);
-		}
 		if (needDrawFirstVLine) {
-			ctx.lineVerPrevPx(x1, y1, y2);
+			this._lineVerPrevPx(ctx, x1, y1, y2);
 		}
 		for (i = range.c1, d = x1; i <= range.c2 && d <= x2; ++i) {
 			l = this._getColumnWidth(i);
 			d += l;
 			if (0 < l) {
-				ctx.lineVerPrevPx(d, y1, y2);
+				this._lineVerPrevPx(ctx, d, y1, y2);
 			}
 		}
-		if (ctx.isPreviewOleObjectContext) {
-			ctx.lineHorPrevPx(x1, 1, x2);
-		}
 		if (needDrawFirstHLine) {
-			ctx.lineHorPrevPx(x1, y1, x2);
+			this._lineHorPrevPx(ctx, x1, y1, x2);
 		}
 		for (i = range.r1, d = y1; i <= range.r2 && d <= y2; ++i) {
 			l = this._getRowHeight(i);
 			d += l;
 			if (0 < l) {
-				ctx.lineHorPrevPx(x1, d, x2);
+				this._lineHorPrevPx(ctx, x1, d, x2);
 			}
 		}
 
@@ -5481,7 +5466,7 @@ function isAllowPasteLink(pastedWb) {
 			x2 = Math.min(this._getColLeft(clearRange.c2 + 1) - offsetX - (clearRange.c2 === pivotRange.c2 ? 1 : 0), widthCtx);
 			y2 = Math.min(this._getRowTop(clearRange.r2 + 1) - offsetY - (clearRange.r2 === pivotRange.r2 ? 1 : 0), heightCtx);
 
-			ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
 		}
 
 		if (!drawingCtx && !window['IS_NATIVE_EDITOR'] && isClip) {
@@ -5765,7 +5750,7 @@ function isAllowPasteLink(pastedWb) {
 				break;
 		}
 
-		drawingCtx.AddClipRect(clipX, clipY, clipWidth, clipHeight);
+		this._AddClipRect(drawingCtx, clipX, clipY, clipWidth, clipHeight);
 		//for test
 		//console.log(" range: " + range.getName() + " clipX: " + clipX + " clipY: " + clipY + " clipWidth: " + clipWidth + " clipHeight: " + clipHeight + " caset: " + caset)
 		//drawingCtx.setLineWidth(3).setStrokeStyle(AscCommonExcel.c_oAscCoAuthoringOtherBorderColor).strokeRect(clipX + 1, clipY + 1, clipWidth - 1, clipHeight - 1);
@@ -5912,7 +5897,7 @@ function isAllowPasteLink(pastedWb) {
                     fill = new AscCommonExcel.Fill();
 					fill.fromColor(findFillColor);
                 }
-                AscCommonExcel.drawFillCell(ctx, graphics, fill, new AscCommon.asc_CRect(x - offsetX, y - offsetY, w, h));
+                AscCommonExcel.drawFillCell(ctx, graphics, fill, new AscCommon.asc_CRect((this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w + offsetX) : x - offsetX), y - offsetY, w, h));
 			}
 
 			if (this.isPageBreakPreview(true) && mc) {
@@ -5929,7 +5914,7 @@ function isAllowPasteLink(pastedWb) {
 
 							let _fill = new AscCommonExcel.Fill();
 							_fill.fromColor(this.settings.cells.defaultState.border);
-							AscCommonExcel.drawFillCell(ctx, graphics, _fill, new AscCommon.asc_CRect(_x - offsetX, _y - offsetY, _w, _h));
+							AscCommonExcel.drawFillCell(ctx, graphics, _fill, new AscCommon.asc_CRect((this.getRightToLeft() ? (this.getCtxWidth(ctx) - _x - w + offsetX) : _x - offsetX), _y - offsetY, _w, _h));
 						}
 					}
 				}
@@ -6067,9 +6052,11 @@ function isAllowPasteLink(pastedWb) {
 				if (oRuleElement.AxisColor) {
 					ctx.setLineWidth(1).setLineDash([3, 1]).setStrokeStyle(oRuleElement.AxisColor);
 					if (automaticAxisPos) {
-						ctx.beginPath().lineVer(x + middleX, top - 1, top - 1 + height - 1).stroke();
+						ctx.beginPath();
+						this._lineVer(ctx, x + middleX, top - 1, top - 1 + height - 1).stroke();
 					} else {
-						ctx.beginPath().lineVer(x + Asc.floor(width / 2), top - 1, top - 1 + height - 1).stroke();
+						ctx.beginPath();
+						this._lineVer(ctx, x + Asc.floor(width / 2), top - 1, top - 1 + height - 1).stroke();
 					}
 				}
 
@@ -6117,11 +6104,12 @@ function isAllowPasteLink(pastedWb) {
 			} else {
 				fill.fromColor(color);
 			}
-			AscCommonExcel.drawFillCell(ctx, graphics, fill, new AscCommon.asc_CRect(x, top, dataBarLength, height - 3));
+			AscCommonExcel.drawFillCell(ctx, graphics, fill, new AscCommon.asc_CRect((this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - dataBarLength) : x), top, dataBarLength, height - 3));
 
 			var color = (isPositive || oRuleElement.NegativeBarBorderColorSameAsPositive) ? oRuleElement.BorderColor : oRuleElement.NegativeBorderColor;
 			if (color) {
-				ctx.setLineWidth(1).setLineDash([]).setStrokeStyle(color).strokeRect(x, top, dataBarLength - 1, height - 4);
+				ctx.setLineWidth(1).setLineDash([]).setStrokeStyle(color);
+				this._strokeRect(ctx, x, top, dataBarLength - 1, height - 4);
 			}
 		}
 	};
@@ -6225,9 +6213,9 @@ function isAllowPasteLink(pastedWb) {
 			return null;
 		}
 
-		if (this.getRightToLeft()) {
+		/*if (this.getRightToLeft()) {
 			offsetX = -offsetX;
-		}
+		}*/
 
 		var c = this._getVisibleCell(col, row);
 
@@ -6259,21 +6247,21 @@ function isAllowPasteLink(pastedWb) {
 			}
 		}
 
-		var x1 = this.checkRtl(this._getColLeft(colL), ctx) - offsetX;
+		var x1 = this._getColLeft(colL) - offsetX;
 		var y1 = this._getRowTop(rowT) - offsetY;
-		var w = this.checkRtl(this._getColLeft(colR  + 1), ctx) - offsetX - x1;
+		var w = this._getColLeft(colR  + 1) - offsetX - x1;
 		var h = this._getRowTop(rowB + 1) - offsetY - y1;
 		var x2 = x1 + w - (isTrimmedR ? 0 : gridlineSize);
 		var y2 = y1 + h;
 		var bl = y2 - Asc.round(
 				(isMerged ? (ct.metrics.height - ct.metrics.baseline) : this._getRowDescender(rowB)) * this.getZoom());
-		if (this.getRightToLeft()) {
+		/*if (this.getRightToLeft()) {
 			let temp = x1;
 			x1 = x2;
 			x2 = temp;
 			w = -w;
-		}
-		var x1ct = isMerged ? x1 : this._getColLeft(col, true, ctx) - offsetX;
+		}*/
+		var x1ct = isMerged ? x1 : this._getColLeft(col, false, ctx) - offsetX;
 		var x2ct = isMerged ? x2 : x1ct + this._getColumnWidth(col) - gridlineSize;
 		var textX = this._calcTextHorizPos(x1ct, x2ct, ct.metrics, ct.cellHA);
 		var textY = this._calcTextVertPos(y1, h, bl, ct.metrics, ct.cellVA);
@@ -6296,13 +6284,13 @@ function isAllowPasteLink(pastedWb) {
 			txtRotW = ct.textBound.width + xb1 - ct.textBound.offsetX;
 
 			if (isMerged) {
-				wb = this._getColLeft(colR + 1, null, ctx) - this._getColLeft(colL, null, ctx);
-				if (this.getRightToLeft()) {
+				wb = this._getColLeft(colR + 1, true, ctx) - this._getColLeft(colL, true, ctx);
+				//if (this.getRightToLeft()) {
 					xb1 += this._getColumnWidth(col) - wb;
-				}
+				//}
 
 				hb = this._getRowTop(rowB + 1) - this._getRowTop(rowT);
-				ctx.AddClipRect(xb1, yb1, wb, hb);
+				this._AddClipRect(ctx, xb1, yb1, wb, hb);
 				clipUse = true;
 			}
 
@@ -6312,13 +6300,13 @@ function isAllowPasteLink(pastedWb) {
 			if (90 === ct.angle || -90 === ct.angle) {
 				// клип по ячейке
 				if (!isMerged) {
-					ctx.AddClipRect(xb1, yb1, wb, hb);
+					this._AddClipRect(ctx, xb1, yb1, wb, hb, true);
 					clipUse = true;
 				}
 			} else {
 				// клип по строке
 				if (!isMerged) {
-					ctx.AddClipRect(0, y1, this.drawingCtx.getWidth(), h);
+					this._AddClipRect(ctx, 0, y1, this.drawingCtx.getWidth(), h);
 					clipUse = true;
 				}
 
@@ -6405,7 +6393,7 @@ function isAllowPasteLink(pastedWb) {
 				}
 			}
 
-			this._drawText(this.stringRender, drawingCtx, 0, 0, textW, color);
+			this._drawText(this.stringRender, drawingCtx, 0, 0, textW, color, true);
 			this.stringRender.resetTransform(isPrintPreview ? null : drawingCtx);
 
 			if (transformMatrix) {
@@ -6421,7 +6409,7 @@ function isAllowPasteLink(pastedWb) {
 				ctx.RemoveClipRect();
 			}
 		} else {
-			ctx.AddClipRect(x1, y1, w, h);
+			this._AddClipRect(ctx, x1, y1, w, h);
 			if (this._getCellCF(cfIterator, c, row, col, Asc.ECfType.iconSet) /*&& AscCommon.align_Left === ct.cellHA*/) {
 				var iconSize = AscCommon.AscBrowser.convertToRetinaValue(getCFIconSize(font.getSize()) * this.getZoom(), true);
 				//TODO оставляю отступ 0, пересмотреть!
@@ -6440,6 +6428,7 @@ function isAllowPasteLink(pastedWb) {
 				textX += (this._getFilterButtonSize(true) + _diff) * this.getZoom();
 			}
 			if (ct.indent) {
+				let rtlKf = this.getRightToLeft() ? -1 : 1;
 				var verticalText = ct.angle === AscCommonExcel.g_nVerticalTextAngle ||
 					(ct.flags && ct.flags.verticalText);
 				var _defaultSpaceWidth = this.workbook.printPreviewState && this.workbook.printPreviewState.isStart() ? this.defaultSpaceWidth * this.getZoom(true) : this.defaultSpaceWidth;
@@ -6447,18 +6436,18 @@ function isAllowPasteLink(pastedWb) {
 					if (Asc.c_oAscVAlign.Bottom === ct.cellVA) {
 						//textY -= ct.indent * 3 * this.defaultSpaceWidth;
 					} else if (Asc.c_oAscVAlign.Top === ct.cellVA) {
-						textY += ct.indent * 3 * _defaultSpaceWidth;
+						textY += rtlKf*ct.indent * 3 * _defaultSpaceWidth;
 					}
 				} else {
 					if (AscCommon.align_Right === ct.cellHA) {
-						textX -= ct.indent * 3 * _defaultSpaceWidth;
+						textX -= rtlKf*ct.indent * 3 * _defaultSpaceWidth;
 					} else if (AscCommon.align_Left === ct.cellHA) {
-						textX += ct.indent * 3 * _defaultSpaceWidth;
+						textX += rtlKf*ct.indent * 3 * _defaultSpaceWidth;
 					}
 				}
 			}
 
-			this._drawText(this.stringRender.restoreInternalState(ct.state), drawingCtx, textX, textY, textW, color)
+			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color)
 			ctx.RemoveClipRect();
 		}
 
@@ -6609,7 +6598,7 @@ function isAllowPasteLink(pastedWb) {
 		let t = this;
 
 		// clip by visible area
-		ctx.AddClipRect(t._getColLeft(visibleRange.c1) - offsetX, t._getRowTop(visibleRange.r1) - offsetY, Math.abs(t._getColLeft(visibleRange.c2 + 1) - t._getColLeft(visibleRange.c1)), Math.abs(t._getRowTop(visibleRange.r2 + 1) - t._getRowTop(visibleRange.r1)));
+		this._AddClipRect(ctx, t._getColLeft(visibleRange.c1) - offsetX, t._getRowTop(visibleRange.r1) - offsetY, Math.abs(t._getColLeft(visibleRange.c2 + 1) - t._getColLeft(visibleRange.c1)), Math.abs(t._getRowTop(visibleRange.r2 + 1) - t._getRowTop(visibleRange.r1)));
 		
 		const doDrawArrow = function (_from, _to, external, isPrecedent) {
 			// drawing line, arrow, dot, minitable as part of a whole dependency line
@@ -6672,7 +6661,7 @@ function isAllowPasteLink(pastedWb) {
 			let extLength = Math.sqrt(Math.pow((x2 - x1), 2) + Math.pow((y2 - y1), 2));
 			if (extLength === 0 && angle === 0) {
 				// temporary exception
-				ctx.lineDiag(x1, y1, x2, y2);
+				t._lineDiag(ctx, x1, y1, x2, y2);
 				ctx.stroke();
 
 				!external ? drawDot(x1, y1, lineColor) : drawDot(x1, y1, externalLineColor);
@@ -6694,8 +6683,8 @@ function isAllowPasteLink(pastedWb) {
 				} else {
 					ctx.beginPath();
 					ctx.setStrokeStyle(!external ? lineColor : externalLineColor);
-					ctx.moveTo(x1, y1);
-					ctx.lineTo(newX2, newY2);
+					t._moveTo(ctx, x1, y1);
+					t._lineTo(ctx, newX2, newY2);
 					ctx.stroke();
 					drawArrowHead(newX2, newY2, arrowSize, angle, lineColor);
 					drawDot(x1, y1, lineColor);
@@ -6780,13 +6769,13 @@ function isAllowPasteLink(pastedWb) {
 			ctx.setLineWidth(widthLine);
 			ctx.beginPath();
 			ctx.setStrokeStyle(externalLineColor);
-			ctx.lineDiag(x1, y1, x2, y2);
+			t._lineDiag(ctx, x1, y1, x2, y2);
 			ctx.stroke();
 
 			ctx.setStrokeStyle(whiteColor);
 			for (let i = 0; i < dashCount; i++) {
 				ctx.beginPath();
-				ctx.lineDiag(x1, y1, x1 - xStep * 0.2, y1 - yStep * 0.2);
+				t._lineDiag(ctx, x1, y1, x1 - xStep * 0.2, y1 - yStep * 0.2);
 				ctx.stroke();
 				x1 += xStep;
 				y1 += yStep;
@@ -6817,10 +6806,10 @@ function isAllowPasteLink(pastedWb) {
 				lineDeg2 = -90 + angle * 180 / Math.PI;
 
 			ctx.beginPath();
-			ctx.moveTo(x2, y2);
-			ctx.lineTo(x2 + Math.cos(lineDeg1 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg1 * Math.PI / 180) * arrowSize / 2);
-			ctx.lineTo(x2 + Math.cos(lineDeg * Math.PI / 180) * arrowSize, y2 + Math.sin(lineDeg * Math.PI / 180) * arrowSize);
-			ctx.lineTo(x2 + Math.cos(lineDeg2 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg2 * Math.PI / 180) * arrowSize / 2);
+			t._moveTo(ctx, x2, y2);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg1 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg1 * Math.PI / 180) * arrowSize / 2);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg * Math.PI / 180) * arrowSize, y2 + Math.sin(lineDeg * Math.PI / 180) * arrowSize);
+			t._lineTo(ctx, x2 + Math.cos(lineDeg2 * Math.PI / 180) * arrowSize / 2, y2 + Math.sin(lineDeg2 * Math.PI / 180) * arrowSize / 2);
 			ctx.closePath().fill();
 		};
 		const drawDot = function (x, y, color) {
@@ -6853,7 +6842,7 @@ function isAllowPasteLink(pastedWb) {
 			// draw white canvas behind the table
 			ctx.setFillStyle(whiteColor);
 			ctx.beginPath();
-			ctx.fillRect(x1, y1 - lineWidth, tableWidth, tableHeight + (lineWidth * 2));
+			t._fillRect(ctx, x1, y1 - lineWidth, tableWidth, tableHeight + (lineWidth * 2));
 
 			ctx.setLineWidth(lineWidth);
 			ctx.setFillStyle(cellStrokesColor);
@@ -6861,18 +6850,18 @@ function isAllowPasteLink(pastedWb) {
 
 			// draw main rectangle
 			ctx.beginPath();
-			ctx.strokeRect(x1, y1, tableWidth, tableHeight);
+			t._strokeRect(ctx, x1, y1, tableWidth, tableHeight);
 
 			let isEven = lineWidth % 2 !== 0 ? 0.5 : 0;
 			ctx.beginPath();
-			ctx.fillRect(x1, y1 - lineWidth, tableWidth + isEven, lineWidth + isEven);
-			ctx.strokeRect(x1, y1 - lineWidth, tableWidth, tableHeight + lineWidth);
+			t._fillRect(ctx, x1, y1 - lineWidth, tableWidth + isEven, lineWidth + isEven);
+			t._strokeRect(ctx, x1, y1 - lineWidth, tableWidth, tableHeight + lineWidth);
 
 			// Vertical lines
 			for (let i = 1; i < 3; i++) {
 				let x2 = i * cellWidth;
 				ctx.beginPath();
-				ctx.lineVer(x2 + x1, y1, y1 + tableHeight);
+				t._lineVer(ctx, x2 + x1, y1, y1 + tableHeight);
 				ctx.stroke();
 			}
 
@@ -6880,7 +6869,7 @@ function isAllowPasteLink(pastedWb) {
 			for (let j = 1; j < 3; j++) {
 				let y2 = j * cellHeight;
 				ctx.beginPath();
-				ctx.lineHor(x1, y1 + y2, x1 + tableWidth);
+				t._lineHor(ctx, x1, y1 + y2, x1 + tableWidth);
 				ctx.stroke();
 			}
 		};
@@ -6902,7 +6891,7 @@ function isAllowPasteLink(pastedWb) {
 				ctx.beginPath();
 				ctx.setStrokeStyle(lineColor);
 				ctx.setLineWidth(1);
-				ctx.strokeRect(x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1));
+				t._strokeRect(ctx, x1, y1, Math.abs(x2 - x1), Math.abs(y2 - y1));
 				// then go to the next area
 			}
 		};
@@ -7071,7 +7060,7 @@ function isAllowPasteLink(pastedWb) {
 				let _y1 = Math.max(tY1, y1);
 				let _y2 = Math.min(tY1 + textHeight * _zoom, y2);
 				if (_x1 < _x2 && _y1 < _y2) {
-					ctx.AddClipRect(x1, y1, x2 - x1, y2 - y1);
+					this._AddClipRect(ctx, x1, y1, x2 - x1, y2 - y1);
 					this._drawText(this.stringRender, undefined, tX1, tY1, 100, this.settings.activeCellBorderColor);
 					ctx.RemoveClipRect();
 				}
@@ -7113,6 +7102,7 @@ function isAllowPasteLink(pastedWb) {
         if ( colBeg >= colEnd ) {
             return;
         }
+		let rtlKf = this.getRightToLeft() ? -1 : 1;
         var nextCell = -1;
         var ctx = drawingCtx || this.drawingCtx;
         ctx.setFillStyle( this.settings.cells.defaultState.background );
@@ -7129,7 +7119,7 @@ function isAllowPasteLink(pastedWb) {
                 continue;
             }
 
-            ctx.fillRect( this._getColLeft(col + 1) - offsetX - gridlineSize, this._getRowTop(row) - offsetY, gridlineSize, this._getRowHeight(row) - gridlineSize );
+			this._fillRect( ctx, this._getColLeft(col + 1) - offsetX - rtlKf*gridlineSize, this._getRowTop(row) - offsetY, rtlKf*gridlineSize, this._getRowHeight(row) - gridlineSize );
         }
     };
 
@@ -7192,13 +7182,13 @@ function isAllowPasteLink(pastedWb) {
 
 			switch (type) {
 				case c_oAscBorderType.Hor:
-					ctx.lineHor(x1 + t.getRightToLeftOffset(), y1, x2 + t.getRightToLeftOffset());
+					t._lineHor(ctx, x1 + t.getRightToLeftOffset(), y1, x2 + t.getRightToLeftOffset());
 					break;
 				case c_oAscBorderType.Ver:
-					ctx.lineVer(x1 + 2*t.getRightToLeftOffset(), y1, y2);
+					t._lineVer(ctx, x1 + 2*t.getRightToLeftOffset(), y1, y2);
 					break;
 				case c_oAscBorderType.Diag:
-					ctx.lineDiag(x1, y1, x2, y2);
+					t._lineDiag(ctx, x1, y1, x2, y2);
 					break;
 			}
 		}
@@ -7586,45 +7576,45 @@ function isAllowPasteLink(pastedWb) {
 			fHorLine = this._dashLineCleverHor;
 			fVerLine = this._dashLineCleverVer;
 		} else {
-			fHorLine = ctx.lineHorPrevPx;
-			fVerLine = ctx.lineVerPrevPx;
+			fHorLine = this._lineHorPrevPx;
+			fVerLine = this._lineVerPrevPx;
 		}
 
 		if (this.topLeftFrozenCell) {
 			var row = this.topLeftFrozenCell.getRow0();
 			var col = this.topLeftFrozenCell.getCol0();
 			if (0 < row) {
-				fHorLine.apply(ctx, [0, this._getRowTop(row), ctx.getWidth(), this]);
+				fHorLine.apply(this, [ctx, 0, this._getRowTop(row), ctx.getWidth(), this]);
 			} else {
-				fHorLine.apply(ctx, [this.headersLeft, this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
+				fHorLine.apply(this, [ctx, this.headersLeft, this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
 			}
 
 			if (0 < col) {
-				fVerLine.apply(ctx, [this._getColLeft(col), 0, ctx.getHeight(), this]);
+				fVerLine.apply(this, [ctx, this._getColLeft(col), 0, ctx.getHeight(), this]);
 			} else {
-				fVerLine.apply(ctx, [this.headersLeft + this.headersWidth, this.headersTop, this.headersTop + this.headersHeight, this]);
+				fVerLine.apply(this, [ctx, this.headersLeft + this.headersWidth, this.headersTop, this.headersTop + this.headersHeight, this]);
 
 			}
 			ctx.stroke();
 
 		} else if (this.model.getSheetView().asc_getShowRowColHeaders()) {
-			fHorLine.apply(ctx, [this.headersLeft + this.getRightToLeftOffset(), this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
-			fVerLine.apply(ctx, [this.headersWidth + this.headersLeft, this.headersTop, this.headersTop + this.headersHeight, this]);
+			fHorLine.apply(this, [ctx, this.headersLeft + this.getRightToLeftOffset(), this.headersTop + this.headersHeight, this.headersLeft + this.headersWidth, this]);
+			fVerLine.apply(this, [ctx, this.headersWidth + this.headersLeft, this.headersTop, this.headersTop + this.headersHeight, this]);
 			ctx.stroke();
 		}
 	};
 
-	WorksheetView.prototype._dashLineCleverVer = function (x, y1, y2, _this) {
+	/*WorksheetView.prototype._dashLineCleverVer = function (x, y1, y2, _this) {
 		let ctx = this;
 		ctx.dashLineCleverVer(_this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x) : x, y1, y2)
 		return ctx;
-	};
+	};*/
 
-	WorksheetView.prototype._dashLineCleverHor = function (x1, y, x2, _this) {
+	/*WorksheetView.prototype._dashLineCleverHor = function (x1, y, x2, _this) {
 		let ctx = this;
 		ctx.dashLineCleverHor(_this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x2) : x1, y, _this.getRightToLeft() ? (_this.getCtxWidth(ctx) - x1) : x2)
 		return ctx;
-	};
+	};*/
 
     WorksheetView.prototype.drawFrozenGuides = function ( x, y, target ) {
         var data, offsetFrozen;
@@ -7643,8 +7633,8 @@ function isAllowPasteLink(pastedWb) {
                         var offsetX = this._getOffsetX();
                         offsetFrozen = this.getFrozenPaneOffset( false, true );
                         offsetX -= offsetFrozen.offsetX;
-                        ctx.setFillPattern( this.settings.ptrnLineDotted1 )
-                            .fillRect( this._getColLeft(data.col) - offsetX - gridlineSize, 0, 1, h );
+                        ctx.setFillPattern( this.settings.ptrnLineDotted1 );
+						this._fillRect( ctx, this._getColLeft(data.col) - offsetX - gridlineSize, 0, 1, h );
                     }
                 }
                 break;
@@ -7657,8 +7647,8 @@ function isAllowPasteLink(pastedWb) {
                         var offsetY = this._getOffsetY();
                         offsetFrozen = this.getFrozenPaneOffset( true, false );
                         offsetY -= offsetFrozen.offsetY;
-                        ctx.setFillPattern( this.settings.ptrnLineDotted1 )
-                            .fillRect( 0, this._getRowTop(data.row) - offsetY - 1, w, 1 );
+                        ctx.setFillPattern( this.settings.ptrnLineDotted1 );
+						this._fillRect( ctx, 0, this._getRowTop(data.row) - offsetY - 1, w, 1 );
                     }
                 }
                 break;
@@ -7932,8 +7922,8 @@ function isAllowPasteLink(pastedWb) {
             fHorLine = this._dashLineCleverHor;
             fVerLine = this._dashLineCleverVer;
         } else {
-            fHorLine = ctx.lineHorPrevPx;
-            fVerLine = ctx.lineVerPrevPx;
+            fHorLine = this._lineHorPrevPx;
+            fVerLine = this._lineVerPrevPx;
         }
 
         let firstCol = oIntersection.c1 === visibleRange.c1 && !isAllRange;
@@ -7967,7 +7957,8 @@ function isAllowPasteLink(pastedWb) {
         if (canFill) {
             let fillColor = strokeColor.Copy();
             fillColor.a = 0.15;
-            ctx.setFillStyle(fillColor).fillRect(x1, y1, x2 - x1, y2 - y1);
+            ctx.setFillStyle(fillColor);
+			this._fillRect(ctx, x1, y1, x2 - x1, y2 - y1);
         }
 
 
@@ -7998,16 +7989,16 @@ function isAllowPasteLink(pastedWb) {
             ctx.beginPath();
 
             if (drawTopSide && !firstRow) {
-                fHorLine.apply(ctx, [x1 - !isDashLine * (2 + isRetina * 1) + _diff + this.getRightToLeftOffset()*1, y1, x2 + !isDashLine * (1 + isRetina * 1) - _diff + this.getRightToLeftOffset()*1, this]);
+                fHorLine.apply(this, [ctx, x1 - !isDashLine * (2 + isRetina * 1) + _diff + this.getRightToLeftOffset()*1, y1, x2 + !isDashLine * (1 + isRetina * 1) - _diff + this.getRightToLeftOffset()*1, this]);
             }
             if (drawBottomSide) {
-                fHorLine.apply(ctx, [x1, y2 + !isDashLine * 1 - thinLineDiff, x2, this]);
+                fHorLine.apply(this, [ctx, x1, y2 + !isDashLine * 1 - thinLineDiff, x2, this]);
             }
             if (drawLeftSide && !firstCol) {
-                fVerLine.apply(ctx, [x1 - this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1) - _diff, this]);
+                fVerLine.apply(this, [ctx, x1 - this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1) - _diff, this]);
             }
             if (drawRightSide) {
-                fVerLine.apply(ctx, [x2 + !isDashLine * 1 - thinLineDiff -this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1), this]);
+                fVerLine.apply(this, [ctx, x2 + !isDashLine * 1 - thinLineDiff -this.getRightToLeftOffset()*1, y1, y2 + !isDashLine * (1 + isRetina * 1), this]);
             }
             ctx.closePath().stroke();
 		}
@@ -8026,7 +8017,7 @@ function isAllowPasteLink(pastedWb) {
 				let _w = this._getColLeft(fs.c2 + 1) - left - 2 - isRetina * 1;
 				let _h = this._getRowTop(fs.r2 + 1) - top - 2  - isRetina * 1;
 				if (0 < _w && 0 < _h) {
-					ctx.clearRect(_x1, _y1, _w, _h);
+					this._clearRect(ctx, _x1, _y1, _w, _h);
 				}
 			}
 		}
@@ -8036,16 +8027,16 @@ function isAllowPasteLink(pastedWb) {
             ctx.setStrokeStyle(colorN);
             ctx.beginPath();
             if (drawTopSide) {
-                fHorLine.apply(ctx, [x1 + isRetina * 1 + this.getRightToLeftOffset()*1, y1 + 1 + isRetina * !firstRow * 1, x2 - 1 - isRetina * 1 + this.getRightToLeftOffset()*1, ctx]);
+                fHorLine.apply(this, [ctx, x1 + isRetina * 1 + this.getRightToLeftOffset()*1, y1 + 1 + isRetina * !firstRow * 1, x2 - 1 - isRetina * 1 + this.getRightToLeftOffset()*1, ctx]);
             }
             if (drawBottomSide) {
-                fHorLine.apply(ctx, [x1 + isRetina * 1+ this.getRightToLeftOffset()*1, y2 - 1 - isRetina * 1, x2 - 1 - isRetina * 1+ this.getRightToLeftOffset()*1, ctx]);
+                fHorLine.apply(this, [ctx, x1 + isRetina * 1+ this.getRightToLeftOffset()*1, y2 - 1 - isRetina * 1, x2 - 1 - isRetina * 1+ this.getRightToLeftOffset()*1, ctx]);
             }
             if (drawLeftSide) {
-                fVerLine.apply(ctx, [x1 + 1 + isRetina * !firstCol * 1, y1 + isRetina * 1, y2 - 2 - isRetina * !firstCol * 1, ctx]);
+                fVerLine.apply(this, [ctx, x1 + 1 + isRetina * !firstCol * 1, y1 + isRetina * 1, y2 - 2 - isRetina * !firstCol * 1, ctx]);
             }
             if (drawRightSide) {
-                fVerLine.apply(ctx, [x2 - 1 - isRetina * 1, y1 + isRetina * 1, y2 - 2 - isRetina * 1, ctx]);
+                fVerLine.apply(this, [ctx, x2 - 1 - isRetina * 1, y1 + isRetina * 1, y2 - 2 - isRetina * 1, ctx]);
             }
             ctx.closePath().stroke();
         }
@@ -8065,33 +8056,33 @@ function isAllowPasteLink(pastedWb) {
 
 			ctx.setFillStyle(colorN);
             if (drawRightSide && drawBottomSide) {
-                ctx.fillRect(x2 - diffBorder + this.getRightToLeftOffset()*1, y2 - diffBorder, sizeBorder, sizeBorder);
+                this._fillRect(ctx, x2 - diffBorder + this.getRightToLeftOffset()*1, y2 - diffBorder, sizeBorder, sizeBorder);
             }
             ctx.setFillStyle(strokeColor);
             if (drawRightSide && drawBottomSide) {
-                ctx.fillRect(x2 - diff + this.getRightToLeftOffset()*1, y2 - diff, size, size);
+				this._fillRect(ctx, x2 - diff + this.getRightToLeftOffset()*1, y2 - diff, size, size);
             }
 
             if (isResize) {
                 ctx.setFillStyle(colorN);
                 if (drawLeftSide && drawTopSide) {
-                    ctx.fillRect(x1 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x1 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
                 }
                 if (drawRightSide && drawTopSide) {
-                    ctx.fillRect(x2 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x2 - diffBorder, y1 - diffBorder, sizeBorder, sizeBorder);
                 }
                 if (drawLeftSide && drawBottomSide) {
-                    ctx.fillRect(x1 - diffBorder, y2 - diffBorder, sizeBorder, sizeBorder);
+					this._fillRect(ctx, x1 - diffBorder, y2 - diffBorder, sizeBorder, sizeBorder);
                 }
                 ctx.setFillStyle(strokeColor);
                 if (drawLeftSide && drawTopSide) {
-                    ctx.fillRect(x1 - diff, y1 - diff, size, size);
+					this._fillRect(ctx, x1 - diff, y1 - diff, size, size);
                 }
                 if (drawRightSide && drawTopSide) {
-                    ctx.fillRect(x2 - diff, y1 - diff, size, size);
+					this._fillRect(ctx, x2 - diff, y1 - diff, size, size);
                 }
                 if (drawLeftSide && drawBottomSide) {
-                    ctx.fillRect(x1 - diff, y2 - diff, size, size);
+					this._fillRect(ctx, x1 - diff, y2 - diff, size, size);
                 }
             }
         }
@@ -8125,9 +8116,9 @@ function isAllowPasteLink(pastedWb) {
 				let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(oFrozenRange.c1);
 				let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(oFrozenRange.r1);
 
-				this.overlayCtx.save().beginPath()
-					.rect(clipX, clipY, clipW, clipH)
-					.clip();
+				this.overlayCtx.save().beginPath();
+				this._rect(this.overlayCtx, clipX, clipY, clipW, clipH)
+				this.overlayCtx.clip();
 				res = drawFunction.call(this, oFrozenRange, this._getColLeft(0) - this.cellsLeft, offsetY, args);
 				this.overlayCtx.restore();
 
@@ -8142,9 +8133,9 @@ function isAllowPasteLink(pastedWb) {
 				let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(oFrozenRange.c1);
 				let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(oFrozenRange.r1);
 
-				this.overlayCtx.save().beginPath()
-					.rect(clipX, clipY, clipW, clipH)
-					.clip();
+				this.overlayCtx.save().beginPath();
+				this._rect(this.overlayCtx, clipX, clipY, clipW, clipH);
+				this.overlayCtx.clip();
 				res = drawFunction.call(this, oFrozenRange, offsetX, this._getOffsetY(0, true), args);
 				this.overlayCtx.restore();
 
@@ -8160,9 +8151,9 @@ function isAllowPasteLink(pastedWb) {
         let clipW = this._getColLeft(this.visibleRange.c2 + 1) - this._getColLeft(this.visibleRange.c1);
         let clipH = this._getRowTop(this.visibleRange.r2 + 1) - this._getRowTop(this.visibleRange.r1);
 
-        this.overlayCtx.save().beginPath()
-            .rect(clipX, clipY, clipW, clipH)
-            .clip();
+        this.overlayCtx.save().beginPath();
+		this._rect(this.overlayCtx, clipX, clipY, clipW, clipH)
+		this.overlayCtx.clip();
         drawFunction.call(this, this.visibleRange, offsetX, offsetY, args);
         this.overlayCtx.restore();
     };
@@ -8193,11 +8184,9 @@ function isAllowPasteLink(pastedWb) {
         // set clipping rect to cells area
         var ctx = this.overlayCtx;
 
-		this._startRtlRendering(ctx);
-
-        ctx.save().beginPath()
-          .rect(this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
-          .clip();
+        ctx.save().beginPath();
+		this._rect(ctx, this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
+		ctx.clip();
 
 		//draw foreign cursors
 		if ((this.collaborativeEditing.getCollaborativeEditing() || api.isLiveViewer()) && this.collaborativeEditing.getFast()) {
@@ -8325,7 +8314,6 @@ function isAllowPasteLink(pastedWb) {
         if (!isOtherSelectionMode && !isShapeSelect) {
             this._drawActiveHeaders();
         }
-		this._endRtlRendering(ctx);
     };
 
 	WorksheetView.prototype.Show_ForeignCursorLabel = function(userId, foreignCursor, index, color) {
@@ -8551,8 +8539,6 @@ function isAllowPasteLink(pastedWb) {
         var i;
 		var arnIntersection;
 
-		this._startRtlRendering(ctx);
-
         if (this.topLeftFrozenCell) {
             var cFrozen = this.topLeftFrozenCell.getCol0();
             var rFrozen = this.topLeftFrozenCell.getRow0();
@@ -8591,7 +8577,6 @@ function isAllowPasteLink(pastedWb) {
             offsetY = this._getOffsetY() - diffHeight;
         }
 
-		this._endRtlRendering(ctx);
         this._activateOverlayCtx();
         var t = this;
 		var isRetinaWidth = this.getRetinaPixelRatio() >= 2;
@@ -8625,7 +8610,6 @@ function isAllowPasteLink(pastedWb) {
             }
         });
         this._deactivateOverlayCtx();
-		this._startRtlRendering(ctx);
 
         // Если есть активное автозаполнения, то нужно его тоже очистить
         if (this.activeFillHandle !== null) {
@@ -8840,13 +8824,12 @@ function isAllowPasteLink(pastedWb) {
                 y2 += nRad;
             }
             ctx.save()
-              .beginPath()
-              .rect(this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
-              .clip()
-              .clearRect(x1, y1, x2 - x1, y2 - y1)
-              .restore();
+              .beginPath();
+			this._rect(ctx, this.cellsLeft, this.cellsTop, ctx.getWidth() - this.cellsLeft, ctx.getHeight() - this.cellsTop)
+			ctx.clip()
+			this._clearRect(ctx, x1, y1, x2 - x1, y2 - y1)
+			ctx.restore();
         }
-		this._endRtlRendering(ctx);
         return this;
     };
 
@@ -9703,6 +9686,14 @@ function isAllowPasteLink(pastedWb) {
 			width /= 2;
 		}
 
+		if (this.getRightToLeft()) {
+			if (textAlign === AscCommon.align_Left) {
+				textAlign = AscCommon.align_Right;
+			} else if (textAlign === AscCommon.align_Right) {
+				textAlign = AscCommon.align_Left;
+			}
+		}
+
 		var maxWidth = 0;
 		if (textAlign !== AscCommon.align_Left) {
 			size = width;
@@ -9897,6 +9888,55 @@ function isAllowPasteLink(pastedWb) {
             this._updateSelectionNameAndInfo();
         }
     };
+
+	WorksheetView.prototype._selectAllByRange = function () {
+		var ar = this.model.selectionRange.getLast();
+		var type = ar.getType();
+		if (this.isMultiSelect() || c_oAscSelectionType.RangeCol === type || c_oAscSelectionType.RangeRow === type) {
+			this._selectColumnsByRange();
+			this._selectRowsByRange();
+		} else if (c_oAscSelectionType.RangeMax !== type) {
+			this.cleanSelection();
+			if (c_oAscSelectionType.RangeCol === type || c_oAscSelectionType.RangeRow === type) {
+				ar.assign(0, 0, gc_nMaxCol0, gc_nMaxRow0);
+			} else {
+				let ar = this.model.selectionRange.getLast();
+				let newRange;
+				let tableParts = this.model.TableParts;
+				if (tableParts && tableParts.length) {
+					for (let i = 0; i < tableParts.length; i++) {
+						if (tableParts[i].Ref.containsRange(ar)) {
+							//into body table
+							let _dataRange = tableParts[i].getTableRangeForFormula({param: AscCommon.FormulaTablePartInfo.data});
+							if (_dataRange && _dataRange.containsRange(ar) && !_dataRange.isEqual(ar)) {
+								newRange = _dataRange;
+							} else if (!tableParts[i].Ref.isEqual(ar)) {
+								newRange = tableParts[i].Ref;
+							} else {
+								newRange = ar;
+							}
+							break;
+						}
+					}
+				}
+
+				if (!newRange) {
+					newRange = this.model.autoFilters.expandRange(ar, true);
+				}
+
+				if (newRange) {
+					if (newRange.isEqual(ar)) {
+						ar.assign(0, 0, gc_nMaxCol0, gc_nMaxRow0);
+					} else {
+						ar.assign(newRange.c1, newRange.r1, newRange.c2, newRange.r2);
+					}
+				}
+			}
+
+			this._drawSelection();
+			this._updateSelectionNameAndInfo();
+		}
+	};
 
     /**
      * Возвращает true, если диапазон больше видимой области, и операции над ним могут привести к задержкам
@@ -10113,7 +10153,14 @@ function isAllowPasteLink(pastedWb) {
     };
 
     WorksheetView.prototype._calcTextHorizPos = function (x1, x2, tm, align) {
-        switch (align) {
+        if (this.getRightToLeft()) {
+			if (align === AscCommon.align_Right) {
+				align = AscCommon.align_Left;
+			} else if (align === AscCommon.align_Left) {
+				align = AscCommon.align_Right;
+			}
+		}
+		switch (align) {
             case AscCommon.align_Center:
 			case AscCommon.align_Distributed:
                 return Asc.round(0.5 * (x1 + x2 + 1 - tm.width));
@@ -10471,8 +10518,6 @@ function isAllowPasteLink(pastedWb) {
         var lastRowHeight = (scrollDown && oldVRE_isPartial) ?
         ctxH - (this._getRowTop(oldEnd) - topOldStart + this.cellsTop + diffHeight) : 0;
 
-		this._startRtlRendering();
-
         //TODO рассмотреть все случаи, когда необходимо вычитать groupWidth
         if (x !== this.cellsLeft) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollHorizontal;
@@ -10524,9 +10569,9 @@ function isAllowPasteLink(pastedWb) {
 				clearOffset = clearTop - firstDrawRowPos;
 			}
 		}
-        ctx.setFillStyle(this.settings.cells.defaultState.background)
-          .fillRect(this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
-        this.drawingGraphicCtx.clearRect(this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+        ctx.setFillStyle(this.settings.cells.defaultState.background);
+		this._fillRect(ctx, this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+        this._clearRect(this.drawingGraphicCtx, this.headersLeft - this.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
 
 		this._updateDrawingArea();
 
@@ -10561,8 +10606,8 @@ function isAllowPasteLink(pastedWb) {
 
             let startClip = function () {
                 if (t.workbook.getSmoothScrolling()) {
-                    ctx.AddClipRect(t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
-                    t.drawingGraphicCtx.AddClipRect && t.drawingGraphicCtx.AddClipRect(t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+                    t._AddClipRect(ctx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
+                    t.drawingGraphicCtx.AddClipRect && t._AddClipRect(t.drawingGraphicCtx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
                 }
             };
 
@@ -10661,7 +10706,6 @@ function isAllowPasteLink(pastedWb) {
 			editor.move();
 		}
 
-		this._endRtlRendering();
 
         //ToDo this.drawDepCells();
         this.cellCommentator.updateActiveComment();
@@ -10870,22 +10914,16 @@ function isAllowPasteLink(pastedWb) {
         ctxW - (this._getColLeft(oldEnd) - leftOldStart + this.cellsLeft + diffWidth) : 0;
 
 
-		this._startRtlRendering();
-		this._startRtlDrawingRendering();
-
 
         // Перемещаем область
         var moveWidth = oldW - lastColWidth;
         if (moveWidth > 0) {
-            ctx.drawImage(ctx.getCanvas(), x + this.getRightToLeftOffset(), y, moveWidth, ctxH, x - dx + this.getRightToLeftOffset(), y, moveWidth, ctxH);
+            this._drawImage(ctx, ctx.getCanvas(), x + this.getRightToLeftOffset(), y, moveWidth, ctxH, x - dx + this.getRightToLeftOffset(), y, moveWidth, ctxH);
 
             // Заглушка для safari (http://bugzilla.onlyoffice.com/show_bug.cgi?id=25546). Режим 'copy' сначала затирает, а
             // потом рисует (а т.к. мы рисуем сами на себе, то уже картинка будет пустой)
-            if (AscBrowser.isSafari) {
-                this.drawingGraphicCtx.moveImageDataSafari(x, y, moveWidth, ctxH, x - dx, y);
-            } else {
-                this.drawingGraphicCtx.moveImageData(x, y, moveWidth, ctxH, x - dx, y);
-            }
+
+			this._moveImageData(x, y, moveWidth, ctxH, x - dx, y, moveWidth, ctxH);
         }
         // Очищаем область
         var clearLeft = this.cellsLeft + diffWidth + (scrollRight && moveWidth > 0 ? moveWidth : 0);
@@ -10904,18 +10942,17 @@ function isAllowPasteLink(pastedWb) {
 			}
 		}
 
-        ctx.setFillStyle(this.settings.cells.defaultState.background)
-          .fillRect(clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset, ctxH);
-        this.drawingGraphicCtx.clearRect(clearLeft - clearOffset, y, clearWidth + clearOffset, ctxH);
+        ctx.setFillStyle(this.settings.cells.defaultState.background);
+		this._fillRect(ctx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset, ctxH);
+        this._clearRect(this.drawingGraphicCtx, clearLeft - clearOffset, y, clearWidth + clearOffset, ctxH);
 
 		this._updateDrawingArea();
 
-
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.AddClipRect(clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
-			this.drawingGraphicCtx.AddClipRect && this.drawingGraphicCtx.AddClipRect(clearLeft - clearOffset, y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
+			this._AddClipRect(ctx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
+			this.drawingGraphicCtx.AddClipRect && this._AddClipRect(this.drawingGraphicCtx, clearLeft - clearOffset + this.getRightToLeftOffset(), y, clearWidth + clearOffset + this.getRightToLeftOffset(), ctxH);
 		}
-		this._endRtlDrawingRendering();
+
         // Дорисовываем необходимое
         if (dx < 0 || vr.c2 !== oldEnd || oldVCE_isPartial || (clearWidth !== 0 && this.workbook.getSmoothScrolling())) {
             var c1, c2;
@@ -10999,8 +11036,6 @@ function isAllowPasteLink(pastedWb) {
 		if (editor && this.model.getSelection().activeCell.col >= cFrozen) {
 			editor.move();
 		}
-
-		this._endRtlRendering();
 
         //ToDo this.drawDepCells();
         this.cellCommentator.updateActiveComment();
@@ -16609,7 +16644,7 @@ function isAllowPasteLink(pastedWb) {
 				t.model.setShowFormulas(val);
 				fullUpdate = true;
 			} else if (AscCH.historyitem_Worksheet_SetRightToLeft === type) {
-				t.model.setRightToLeft(val);
+				t.model.setRightToLeft(val, true);
 				t.workbook.checkScrollRtl(val);
 				if (t.objectRender) {
 					t.objectRender.updateDrawingsTransform({target: c_oTargetType.ColumnResize, col: 0});
@@ -16646,7 +16681,8 @@ function isAllowPasteLink(pastedWb) {
 
 	WorksheetView.prototype.changeWorksheet = function (prop, val, callback, lockDraw) {
 		// Проверка глобального лока
-		if (this.collaborativeEditing.getGlobalLock() || (!window["Asc"]["editor"].canEdit() && !this.workbook.Api.VersionHistory)) {
+		let isViewModeUpdate = val && val.viewModeUpdate;
+		if (this.collaborativeEditing.getGlobalLock() || (!window["Asc"]["editor"].canEdit() && !this.workbook.Api.VersionHistory && !isViewModeUpdate)) {
 			return;
 		}
 
@@ -19048,7 +19084,7 @@ function isAllowPasteLink(pastedWb) {
         this.oOtherRanges = null;
     };
 
-	WorksheetView.prototype.addAutoFilter = function (styleName, addFormatTableOptionsObj) {
+	WorksheetView.prototype.addAutoFilter = function (styleName, addFormatTableOptionsObj, range) {
 		// Проверка глобального лока
 		if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
 			return;
@@ -19064,7 +19100,7 @@ function isAllowPasteLink(pastedWb) {
 		}
 
 		var t = this;
-		var ar = this.model.selectionRange.getLast().clone();
+		var ar = range ? range : this.model.selectionRange.getLast().clone();
 
 		var isChangeAutoFilterToTablePart = function (addFormatTableOptionsObj) {
 			var res = false;
@@ -20213,14 +20249,14 @@ function isAllowPasteLink(pastedWb) {
 			ctx.fillRect(startX + _diff, startY + _diff, width - _diff, height - _diff);
 			if (isPivotCollapsed) {
 				ctx.beginPath();
-				ctx.lineHor(startX + _diff, startY, startX + width);
-				ctx.lineHor(startX + _diff, startY + height, startX + width);
-				ctx.lineVer(startX, startY + _diff, startY + height);
-				ctx.lineVer(startX + width, startY + _diff, startY + height);
+				t._lineHor(ctx, startX + _diff, startY, startX + width);
+				t._lineHor(ctx, startX + _diff, startY + height, startX + width);
+				t._lineVer(ctx, startX, startY + _diff, startY + height);
+				t._lineVer(ctx, startX + width, startY + _diff, startY + height);
 
 				ctx.stroke();
 			} else {
-				ctx.strokeRect(startX, startY, width, height);
+				t._strokeRect(ctx, startX, startY, width, height);
 			}
 		};
 
@@ -20228,7 +20264,7 @@ function isAllowPasteLink(pastedWb) {
 			//isDescending = true - стрелочка смотрит вниз
 			//рисуем сверху вниз
 			ctx.beginPath();
-			ctx.lineVer(startX, startY, startY + heightArrow * scaleIndex);
+			t._lineVer(ctx, startX, startY, startY + heightArrow * scaleIndex);
 
 			var tmp;
 			var x = startX;
@@ -20243,11 +20279,11 @@ function isAllowPasteLink(pastedWb) {
 					x1 = x - tmp;
 					x2 = x - tmp + 1;
 					y1 = y - tmp + heightArrow1 - 1;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 					x1 = x + tmp;
 					x2 = x + tmp + 1;
 					y1 = y - tmp + heightArrow1 - 1;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 				}
 			} else {
 				for (i = 0; i < height; i++) {
@@ -20255,11 +20291,11 @@ function isAllowPasteLink(pastedWb) {
 					x1 = x - tmp;
 					x2 = x - tmp + 1;
 					y1 = y + tmp;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 					x1 = x + tmp;
 					x2 = x + tmp + 1;
 					y1 = y + tmp;
-					ctx.lineHor(x1, y1, x2);
+					t._lineHor(ctx, x1, y1, x2);
 				}
 			}
 
@@ -20279,8 +20315,8 @@ function isAllowPasteLink(pastedWb) {
 
 			ctx.beginPath();
 
-			ctx.moveTo(x, y);
-			ctx.lineTo(x, y - heightCleanLine);
+			t._moveTo(ctx, x, y);
+			t._lineTo(ctx, x, y - heightCleanLine);
 			ctx.setLineWidth(2 * t.getRetinaPixelRatio() * (isMobileRetina ? 2 : 1));
 			ctx.setStrokeStyle(m_oColor);
 			ctx.stroke();
@@ -20303,7 +20339,7 @@ function isAllowPasteLink(pastedWb) {
 			var diffY = (height / 2);
 			height = height * scaleIndex;
 			for (var i = 0; i < height; i++) {
-				ctx.lineHor(x - (i + base), y + (height - i) - diffY, x + i)
+				t._lineHor(ctx, x - (i + base), y + (height - i) - diffY, x + i)
 			}
 
 			ctx.setStrokeStyle(m_oColor);
@@ -20526,8 +20562,8 @@ function isAllowPasteLink(pastedWb) {
 
 		var diff = Math.floor((lnW - 1) / 2);
 		ctx.beginPath();
-		ctx.lineVer(x1 - diff, y1 + 1, y1 - lnSize + 1);
-		ctx.lineHor(x1 + 1, y1 - diff, x1 - lnSize + 1);
+		t._lineVer(ctx, x1 - diff, y1 + 1, y1 - lnSize + 1);
+		t._lineHor(ctx, x1 + 1, y1 - diff, x1 - lnSize + 1);
 
 
 		ctx.setStrokeStyle(m_oColor);
@@ -22969,7 +23005,7 @@ function isAllowPasteLink(pastedWb) {
 			//фон для группировки
 			ctx.setFillStyle(this.settings.header.style[kHeaderDefault].background).fillRect(x1, y1, x2 - x1, y2 - y1);
 			ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-			ctx.lineHorPrevPx(x1, y2, x2);
+			this._lineHorPrevPx(ctx, x1, y2, x2);
 			ctx.stroke();
 
 			groupData = this.arrColGroups ? this.arrColGroups : this.getGroupDataArray(true, range.r1, range.r2);
@@ -23031,13 +23067,13 @@ function isAllowPasteLink(pastedWb) {
 							collasedEndRow = this._getGroupCollapsed(arrayLines[i][j].end + 1, bCol);
 							//var collasedEndRow = rowLevelMap[arrayLines[i][j].end + 1] && rowLevelMap[arrayLines[i][j].end + 1].collapsed
 							if(!collasedEndRow) {
-								ctx.lineHorPrevPx(startPos, posY, endPos + paddingTop);
+								this._lineHorPrevPx(ctx, startPos, posY, endPos + paddingTop);
 							}
 
 							// _
 							//|
 							if(!collasedEndRow && startX === arrayLines[i][j].start) {
-								ctx.lineVerPrevPx(startPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
+								t._lineVerPrevPx(ctx, startPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
 							}
 						} else {
 
@@ -23081,14 +23117,14 @@ function isAllowPasteLink(pastedWb) {
 							if( endPos > startPos + paddingTop - 1*padding) {
 								if(!collasedEndRow && endPos > startPos + paddingTop - 1*padding) {
 									//ctx.lineVerPrevPx(posX, startPos - paddingTop - 1*padding, endPos);
-									ctx.lineHorPrevPx(startPos + paddingTop - 1*padding, posY, endPos);
+									t._lineHorPrevPx(ctx, startPos + paddingTop - 1*padding, posY, endPos);
 								}
 
 								// _
 								//  |
 								if(!collasedEndRow && endX === arrayLines[i][j].end + 1 && endPos > startPos + paddingTop - 1*padding) {
-									//ctx.lineHorPrevPx(posX - lineWidth + thickLineDiff, endPos, posX + 4*padding);
-									ctx.lineVerPrevPx(endPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
+									//this._lineHorPrevPx(ctx, posX - lineWidth + thickLineDiff, endPos, posX + 4*padding);
+									t._lineVerPrevPx(ctx, endPos, posY - lineWidthDiff + thickLineDiff, posY + 4 * padding);
 								}
 							}
 						}
@@ -23110,8 +23146,8 @@ function isAllowPasteLink(pastedWb) {
 				if(pointLevel === 0 || (tempButtonMap[pointLevel + 1] && tempButtonMap[pointLevel + 1][l]) || colWidth === 0) {
 					continue;
 				}
-				ctx.lineVerPrevPx(this._getColLeft(l) - offsetX + colWidth / 2, 7 * padding + pointLevel * buttonSize, 7 * padding + (pointLevel) * buttonSize + 2 * padding);
-				//ctx.lineHorPrevPx(7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + colWidth / 2, 7 + (pointLevel) * buttonSize + 2);
+				t._lineVerPrevPx(ctx, this._getColLeft(l) - offsetX + colWidth / 2, 7 * padding + pointLevel * buttonSize, 7 * padding + (pointLevel) * buttonSize + 2 * padding);
+				//this._lineHorPrevPx(ctx, 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + colWidth / 2, 7 + (pointLevel) * buttonSize + 2);
 			}
 
 			ctx.stroke();
@@ -23125,7 +23161,7 @@ function isAllowPasteLink(pastedWb) {
 
 			ctx.setFillStyle(this.settings.header.style[kHeaderDefault].background).fillRect(x1, y1, x2 - x1, y2 - y1);
 			ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-			ctx.lineVerPrevPx(x2, y1, y2);
+			t._lineVerPrevPx(ctx, x2, y1, y2);
 			ctx.stroke();
 
 			groupData = this.arrRowGroups ? this.arrRowGroups : this.getGroupDataArray(null, range.r1, range.r2);
@@ -23202,13 +23238,13 @@ function isAllowPasteLink(pastedWb) {
 							var collasedEndCol = this._getGroupCollapsed(arrayLines[i][j].end + 1);
 							//var collasedEndCol = rowLevelMap[arrayLines[i][j].end + 1] && rowLevelMap[arrayLines[i][j].end + 1].collapsed;
 							if(!collasedEndCol) {
-								ctx.lineVerPrevPx(posX - this.getRightToLeftOffset(), startPos, endPos + paddingTop);
+								this._lineVerPrevPx(ctx, posX - this.getRightToLeftOffset(), startPos, endPos + paddingTop);
 							}
 
 							// _
 							//|
 							if(!collasedEndCol && startY === arrayLines[i][j].start) {
-								ctx.lineHorPrevPx(posX - lineWidthDiff + thickLineDiff  + this.getRightToLeftOffset(), startPos, posX + 4*padding + this.getRightToLeftOffset());
+								this._lineHorPrevPx(ctx, posX - lineWidthDiff + thickLineDiff  + this.getRightToLeftOffset(), startPos, posX + 4*padding + this.getRightToLeftOffset());
 							}
 						} else {
 							if(endPosArr[arrayLines[i][j].start]) {
@@ -23250,12 +23286,12 @@ function isAllowPasteLink(pastedWb) {
 								var collapsedStartRow = this._getGroupCollapsed(arrayLines[i][j].start - 1);
 								var hiddenStartRow = this._getHidden(arrayLines[i][j].start);
 								if(!collapsedStartRow && !hiddenStartRow) {
-									ctx.lineVerPrevPx(posX, startPos - paddingTop - 1*padding, endPos);
+									this._lineVerPrevPx(ctx, posX, startPos - paddingTop - 1*padding, endPos);
 								}
 
 								// |_
 								if(!collapsedStartRow && !hiddenStartRow && endY === arrayLines[i][j].end + 1 && !checkPrevHideLevel(i, arrayLines[i][j].start)) {
-									ctx.lineHorPrevPx(posX - lineWidthDiff + thickLineDiff, endPos, posX + 4*padding);
+									this._lineHorPrevPx(ctx, posX - lineWidthDiff + thickLineDiff, endPos, posX + 4*padding);
 								}
 							}
 						}
@@ -23277,7 +23313,7 @@ function isAllowPasteLink(pastedWb) {
 				if(pointLevel === 0 || (tempButtonMap[pointLevel + 1] && tempButtonMap[pointLevel + 1][l]) || rowHeight === 0) {
 					continue;
 				}
-				ctx.lineHorPrevPx(padding * 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + rowHeight / 2, padding * 7 + (pointLevel) * buttonSize + padding * 2);
+				this._lineHorPrevPx(ctx, padding * 7 + pointLevel * buttonSize, this._getRowTop(l) - offsetY + rowHeight / 2, padding * 7 + (pointLevel) * buttonSize + padding * 2);
 			}
 
 			ctx.stroke();
@@ -23347,17 +23383,17 @@ function isAllowPasteLink(pastedWb) {
 			x = x - offsetX;
 			y = y - offsetY;
 
-			ctx.AddClipRect(bCol ? pos.pos - borderSize - offsetX : x - borderSize, bCol ? y - borderSize : pos.pos - borderSize - offsetY, bCol ? pos.size + borderSize : w + borderSize + this.getRightToLeftOffset(), bCol ? h + borderSize : pos.size + borderSize);
+			this._AddClipRect(ctx, bCol ? pos.pos - borderSize - offsetX : x - borderSize, bCol ? y - borderSize : pos.pos - borderSize - offsetY, bCol ? pos.size + borderSize : w + borderSize + this.getRightToLeftOffset(), bCol ? h + borderSize : pos.size + borderSize);
 			ctx.beginPath();
 
 			if(buttons[i].clean) {
-				ctx.clearRect(x, y, w, h);
+				this._clearRect(ctx, x, y, w, h);
 			}
 
-			ctx.lineHorPrevPx(x, y, x + w + this.getRightToLeftOffset());
-			ctx.lineHorPrevPx(x + w, y + h, x);
-			ctx.lineVerPrevPx(x + w, y, y + h);
-			ctx.lineVerPrevPx(x, y + h, y - borderSize);
+			this._lineHorPrevPx(ctx, x, y, x + w + this.getRightToLeftOffset());
+			this._lineHorPrevPx(ctx, x + w, y + h, x);
+			this._lineVerPrevPx(ctx, x + w, y, y + h);
+			this._lineVerPrevPx(ctx, x, y + h, y - borderSize);
 
 			ctx.stroke();
 			ctx.RemoveClipRect();
@@ -23392,11 +23428,11 @@ function isAllowPasteLink(pastedWb) {
 
 			if(w > sizeLine + 2) {
 				if(this._getGroupCollapsed(val, bCol)/*rowLevelMap[val] && rowLevelMap[val].collapsed*/) {
-					ctx.lineHorPrevPx(x + paddingLine + this.getRightToLeftOffset(), y + h / 2 + 1, x + sizeLine + paddingLine + this.getRightToLeftOffset());
-					ctx.lineVerPrevPx(x + paddingLine + sizeLine / 2 + 1 - this.getRightToLeftOffset(), y + h / 2 - sizeLine / 2,  y + h / 2 + sizeLine / 2);
+					this._lineHorPrevPx(ctx, x + paddingLine + this.getRightToLeftOffset(), y + h / 2 + 1, x + sizeLine + paddingLine + this.getRightToLeftOffset());
+					this._lineVerPrevPx(ctx, x + paddingLine + sizeLine / 2 + 1 - this.getRightToLeftOffset(), y + h / 2 - sizeLine / 2,  y + h / 2 + sizeLine / 2);
 				} else {
 					x += this.getRightToLeftOffset();
-					ctx.lineHorPrevPx(x + paddingLine, y + h / 2 + diff, x + sizeLine + paddingLine);
+					this._lineHorPrevPx(ctx, x + paddingLine, y + h / 2 + diff, x + sizeLine + paddingLine);
 				}
 			}
 
@@ -23501,11 +23537,11 @@ function isAllowPasteLink(pastedWb) {
 		ctx.setFillStyle(st.background).fillRect(0, 0, this.headersLeft, this.headersTop);
 
 		ctx.setStrokeStyle(this.settings.header.editorBorder).setLineWidth(1).beginPath();
-		ctx.lineHorPrevPx(x1, y2, x2);
-		ctx.lineVerPrevPx(x2, y1, y2);
+		this._lineHorPrevPx(ctx, x1, y2, x2);
+		this._lineVerPrevPx(ctx, x2, y1, y2);
 		//угол до кнопок
-		ctx.lineHorPrevPx(0, this.headersTop, this.headersLeft);
-		ctx.lineVerPrevPx(this.headersLeft, 0, this.headersTop);
+		this._lineHorPrevPx(ctx, 0, this.headersTop, this.headersLeft);
+		this._lineVerPrevPx(ctx, this.headersLeft, 0, this.headersTop);
 		ctx.stroke();
 		ctx.closePath();
 
@@ -23536,17 +23572,17 @@ function isAllowPasteLink(pastedWb) {
 		var h = props.h;
 
 		if(bClean) {
-			this.drawingCtx.clearRect(x, y, w, h);
+			this._clearRect(this.drawingCtx, x, y, w, h);
 		}
 
 		ctx.beginPath();
 
 		ctx.setStrokeStyle(this.settings.header.style[kHeaderDefault].border).setLineWidth( AscCommon.AscBrowser.convertToRetinaValue(1, true)).beginPath();
 
-		ctx.lineHorPrevPx(x, y, x + w);
-		ctx.lineVerPrevPx(x + w, y, y + h);
-		ctx.lineHorPrevPx(x + w, y + h, x);
-		ctx.lineVerPrevPx(x, y + h, y - AscCommon.AscBrowser.convertToRetinaValue(1, true));
+		this._lineHorPrevPx(ctx, x, y, x + w);
+		this._lineVerPrevPx(ctx, x + w, y, y + h);
+		this._lineHorPrevPx(ctx, x + w, y + h, x);
+		this._lineVerPrevPx(ctx, x, y + h, y - AscCommon.AscBrowser.convertToRetinaValue(1, true));
 
 		var text = level + 1 + "";
 		var sr = this.stringRender;
@@ -26898,19 +26934,6 @@ function isAllowPasteLink(pastedWb) {
 		sheetViewSettings.rightToLeft = val;
 	};
 
-	WorksheetView.prototype._startRtlRendering = function (ctx) {
-		if (!ctx) {
-			ctx = this.drawingCtx;
-		}
-		if (this.getRightToLeft()) {
-			let _transform = ctx.Transform ? ctx.Transform : new AscCommon.CMatrix();
-			let transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
-			ctx.setTransform(-1, transformMatrix.shy, transformMatrix.shx, transformMatrix.sy, this.getCtxWidth(ctx), transformMatrix.ty);
-
-			ctx.updateTransforms();
-		}
-	};
-
 	WorksheetView.prototype.getCtxWidth = function (ctx, checkOffsets) {
 		if (!ctx) {
 			ctx = this.drawingCtx;
@@ -26919,46 +26942,12 @@ function isAllowPasteLink(pastedWb) {
 		let renderingSettings = this.getRenderingSettings();
 		if (renderingSettings && renderingSettings.getCtxWidth()) {
 			let offset = checkOffsets ? (renderingSettings.getPageLeftOffset() + renderingSettings.getPageLeftOffset()) : 0;
-			res = renderingSettings.getCtxWidth() - offset;
+			let printScale = renderingSettings.printScale ? renderingSettings.printScale : 1;
+			res = (renderingSettings.getCtxWidth()/printScale - offset);
 		} else {
 			res = ctx.getWidth();
 		}
 		return res;
-	};
-
-	WorksheetView.prototype._endRtlRendering = function (ctx) {
-		if (!ctx) {
-			ctx = this.drawingCtx;
-		}
-		if (this.getRightToLeft()) {
-			let _transform = ctx.Transform ? ctx.Transform : new AscCommon.CMatrix();
-			let transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
-			ctx.setTransform(1, transformMatrix.shy, transformMatrix.shx, transformMatrix.sy, 0, transformMatrix.ty);
-
-			ctx.updateTransforms()
-		}
-	};
-
-	WorksheetView.prototype._startRtlDrawingRendering = function () {
-		if (this.getRightToLeft()) {
-			let ctx = this.drawingGraphicCtx;
-			let _transform = ctx.Transform ? ctx.Transform : new AscCommon.CMatrix();
-			let transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
-			ctx.setTransform(-1, transformMatrix.shy, transformMatrix.shx, transformMatrix.sy, this.getCtxWidth(ctx), transformMatrix.ty);
-
-			ctx.updateTransforms && ctx.updateTransforms();
-		}
-	};
-
-	WorksheetView.prototype._endRtlDrawingRendering = function () {
-		if (this.getRightToLeft()) {
-			let ctx = this.drawingGraphicCtx;
-			let _transform = ctx.Transform ? ctx.Transform : new AscCommon.CMatrix();
-			let transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
-			ctx.setTransform(1, transformMatrix.shy, transformMatrix.shx, transformMatrix.sy, 0, transformMatrix.ty);
-
-			ctx.updateTransforms && ctx.updateTransforms();
-		}
 	};
 
 	WorksheetView.prototype.getRightToLeftOffset = function () {
@@ -26970,6 +26959,99 @@ function isAllowPasteLink(pastedWb) {
 		this.objectRender.updateDrawingsTransform({target: c_oTargetType.ColumnResize, col: 100});
 		this.objectRender.updateRange(new Asc.Range(0, 0, gc_nMaxCol0, gc_nMaxCol0));
 	};
+
+	WorksheetView.prototype._lineHor = function (ctx, x1, y, x2) {
+		ctx.lineHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineVer = function (ctx, x, y1, y2) {
+		ctx.lineVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) :  x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineDiag = function (ctx, x1, y1, x2, y2) {
+		ctx.lineDiag(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y1, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2, y2);
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineVerPrevPx = function (ctx, x, y1, y2) {
+		ctx.lineVerPrevPx(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) :  x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._lineHorPrevPx = function (ctx, x1, y, x2) {
+		ctx.lineHorPrevPx(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._dashLineCleverHor = function (ctx, x, y1, y2) {
+		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2)
+		return ctx;
+	};
+
+	WorksheetView.prototype._dashLineCleverVer = function (ctx, x1, y, x2) {
+		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
+		return ctx;
+	};
+
+
+	WorksheetView.prototype._AddClipRect = function (ctx, x, y, w, h, skipRtl) {
+		ctx.AddClipRect(this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h)
+		return ctx;
+	};
+	WorksheetView.prototype._moveTo = function (ctx, x, y) {
+		ctx.moveTo(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y);
+		return ctx;
+	};
+	WorksheetView.prototype._lineTo = function (ctx, x, y) {
+		ctx.lineTo(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y);
+		return ctx;
+	};
+	WorksheetView.prototype._fillRect = function (ctx, x, y, w, h) {
+		ctx.fillRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRect = function (ctx, x, y, w, h) {
+		ctx.clearRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._rect = function (ctx, x, y, w, h) {
+		ctx.rect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRectByY = function (ctx, x, y, w, h) {
+		ctx.clearRectByY(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._clearRectByX = function (ctx, x, y, w, h) {
+		ctx.clearRectByX(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._drawText = function (stringRender, ctx, textX, textY, textW, color, skipRtl) {
+		stringRender.render(ctx, this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - textX - textW) : textX, textY, textW, color);
+		return stringRender;
+	};
+	WorksheetView.prototype._fillText = function (ctx, text, x, y, maxWidth, charWidths, angle) {
+		ctx.fillText( text, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y, maxWidth, charWidths, angle)
+		return ctx;
+	};
+	WorksheetView.prototype._strokeRect = function (ctx, x, y, w, h) {
+		ctx.strokeRect(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h);
+		return ctx;
+	};
+	WorksheetView.prototype._drawImage = function (ctx, img, sx, sy, sw, sh, dx, dy, dw, dh) {
+		ctx.drawImage(img, this.getRightToLeft() ? (this.getCtxWidth(ctx) - sx - sw) : sx, sy, sw, sh, this.getRightToLeft() ? (this.getCtxWidth(ctx) - dx - dw) : dx, dy, dw, dh);
+		return ctx;
+	};
+	WorksheetView.prototype._moveImageData = function (sx, sy, sw, sh, dx, dy, dw, dh) {
+		if (AscBrowser.isSafari) {
+			this.drawingGraphicCtx.moveImageDataSafari(this.getRightToLeft() ? (this.getCtxWidth() - sx - sw) : sx, sy, sw, sh, this.getRightToLeft() ? (this.getCtxWidth() - dx - dw) : dx, dy);
+		} else {
+			this.drawingGraphicCtx.moveImageData(this.getRightToLeft() ? (this.getCtxWidth() - sx - sw) : sx, sy, sw, sh, this.getRightToLeft() ? (this.getCtxWidth() - dx - dw) : dx, dy);
+		}
+	};
+
 
 
 	function CRenderingSettings() {
@@ -28297,7 +28379,7 @@ function isAllowPasteLink(pastedWb) {
 
 					ws.model.workbook.addExternalReferences([newExternalReference]);
 
-					pasteLinkIndex = ws.model.workbook.getExternalLinkIndexByName(name);
+					pasteLinkIndex = referenceData ? ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true) : ws.model.workbook.getExternalLinkIndexByName(name);
 					if (pasteLinkIndex != null) {
 						pasteSheetLinkName = pastedSheetName;
 					}
@@ -29155,14 +29237,14 @@ function isAllowPasteLink(pastedWb) {
 				type = 1;
 				sheet = externalSheetSameWb;
 			} else {
-				let externalReference;
+				let externalReferenceIndex;
 				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
 					let fromPath = pastedWb.Core.contentStatus;
 					let thisPath = window["AscDesktopEditor"]["LocalFileGetSourcePath"]();
 					relativePath = buildRelativePath(fromPath, thisPath);
-					externalReference = ws.model.workbook.getExternalLinkIndexByName(relativePath);
+					externalReferenceIndex = ws.model.workbook.getExternalLinkIndexByName(relativePath);
 				} else {
-					//сначала ищем по дополнительной информации
+					//first we look by additional information
 					//fileId -> contentStatus, portalName -> category
 					let referenceData;
 					if (pastedWb && pastedWb.Core) {
@@ -29170,20 +29252,27 @@ function isAllowPasteLink(pastedWb) {
 						referenceData["fileKey"] = pastedWb.Core.contentStatus;
 						referenceData["instanceId"] = pastedWb.Core.category;
 					}
-					externalReference = referenceData && ws.model.workbook.getExternalLinkByReferenceData(referenceData);
-					externalReference = externalReference && externalReference.index;
-					if (null == externalReference) {
+
+					/* get external link index by reference data */
+					externalReferenceIndex = referenceData && ws.model.workbook.getExternalReferenceByReferenceData(referenceData, true);
+
+					if (null == externalReferenceIndex) {
 						//потом пробуем по имени найти
-						externalReference = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						let tempER = pastedWb && pastedWb.Core && ws.model.workbook.getExternalLinkIndexByName(pastedWb.Core.title);
+						if (tempER && !referenceData) {
+							// if there is no data, but an existing link with the same name is found, we refer to the existing data without updating
+							externalReferenceIndex = tempER;
+						}
+						// if there is data and it doesn't match, and we have a link with the same name, we write a new link (duplicated by name, but not by data)
 					}
 				}
 
-				//если всё-таки не нашли, то добавляем новый external reference
-				if (!externalReference) {
+				//if we still haven’t found the ER, then we add a new external reference
+				if (!externalReferenceIndex) {
 					type = -2;
 				} else {
 					type = -1;
-					index = externalReference;
+					index = externalReferenceIndex;
 					sheet = pastedWs.sName;
 				}
 			}

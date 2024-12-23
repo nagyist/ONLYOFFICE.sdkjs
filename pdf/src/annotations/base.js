@@ -157,6 +157,9 @@
             let oFill   = AscFormat.CreateSolidFillRGBA(oRGB.r, oRGB.g, oRGB.b, 255);
             this.setFill(oFill);
         }
+        else {
+            this.AddToRedraw();
+        }
     };
     CAnnotationBase.prototype.GetFillColor = function() {
         return this._fillColor;
@@ -253,6 +256,9 @@
             this.handleUpdateLn();
             this.handleUpdateFill();
         }
+        else {
+            this.AddToRedraw();
+        }
     };
     CAnnotationBase.prototype.GetOpacity = function() {
         return this._opacity;
@@ -292,13 +298,13 @@
         if (originView) {
             let aOrigRect = this.GetOrigRect();
             
-            let X = aOrigRect[0] >> 0;
-            let Y = aOrigRect[1] >> 0;
+            let X = aOrigRect[0];
+            let Y = aOrigRect[1];
 
             if (this.IsHighlight())
                 AscPDF.startMultiplyMode(oGraphicsPDF.GetContext());
             
-            oGraphicsPDF.DrawImageXY(originView, X, Y);
+            oGraphicsPDF.DrawImageXY(originView, X, Y, undefined, true);
             AscPDF.endMultiplyMode(oGraphicsPDF.GetContext());
         }
 
@@ -1064,6 +1070,9 @@
             let oLine   = this.spPr.ln;
             oLine.setFill(oFill);
             this.handleUpdateLn();
+        }
+        else {
+            this.AddToRedraw();
         }
     };
     CAnnotationBase.prototype.GetStrokeColor = function() {

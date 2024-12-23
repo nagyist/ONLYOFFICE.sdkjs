@@ -194,7 +194,6 @@
 	var oZipImages = null;
 	var sDownloadServiceLocalUrl = "../../../../downloadas";
 	var sUploadServiceLocalUrl = "../../../../upload";
-	var sUploadServiceLocalUrlOld = "../../../../uploadold";
 	var sSaveFileLocalUrl = "../../../../savefile";
 	var sDownloadFileLocalUrl = "../../../../downloadfile";
 	var nMaxRequestLength = 5242880;//5mb <requestLimits maxAllowedContentLength="30000000" /> default 30mb
@@ -2278,48 +2277,7 @@
 	function ShowImageFileDialog(documentId, documentUserId, jwt, shardKey, wopiSrc, userSessionId, callback, callbackOld)
 	{
 		if (false === _ShowFileDialog(getAcceptByArray(c_oAscImageUploadProp.SupportedFormats), true, true, ValidateUploadImage, callback)) {
-			//todo remove this compatibility
-			var frameWindow = GetUploadIFrame();
-			let url = sUploadServiceLocalUrlOld + '/' + documentId;
-			let queryParams = [];
-			if (shardKey) {
-				queryParams.push(Asc.c_sShardKeyName + '=' + encodeURIComponent(shardKey));
-			}
-			if (wopiSrc) {
-				queryParams.push(Asc.c_sWopiSrcName + '=' + encodeURIComponent(wopiSrc));
-			}
-			if (userSessionId) {
-				queryParams.push(Asc.c_sUserSessionIdName + '=' + encodeURIComponent(userSessionId));
-			}
-			if (jwt) {
-				queryParams.push('token=' + encodeURIComponent(jwt));
-			}
-			if (queryParams.length > 0) {
-				url += '?' + queryParams.join('&');
-			}
-			var content = '<html><head></head><body><form action="' + url + '" method="POST" enctype="multipart/form-data"><input id="apiiuFile" name="apiiuFile" type="file" accept="image/*" size="1"><input id="apiiuSubmit" name="apiiuSubmit" type="submit" style="display:none;"></form></body></html>';
-			frameWindow.document.open();
-			frameWindow.document.write(content);
-			frameWindow.document.close();
-
-			var fileName = frameWindow.document.getElementById("apiiuFile");
-			var fileSubmit = frameWindow.document.getElementById("apiiuSubmit");
-
-			fileName.onchange = function (e)
-			{
-				if (e && e.target && e.target.files)
-				{
-					var nError = ValidateUploadImage(e.target.files);
-					if (c_oAscServerError.NoError != nError)
-					{
-						callbackOld(mapAscServerErrorToAscError(nError));
-						return;
-					}
-				}
-				callbackOld(Asc.c_oAscError.ID.No);
-				fileSubmit.click();
-			};
-			fileName.click();
+			callback(Asc.c_oAscError.ID.Unknown);
 		}
 	}
 	function ShowDocumentFileDialog(callback, isAllowMultiple) {
@@ -3434,6 +3392,11 @@
 			//пока не реализовываем с открытыми файлами, работаем только с путями
 			external = parseExternalLink(subSTR);
 			if (external) {
+				if (external.name && (external.name.indexOf("[") !== -1 || external.name.indexOf(":") !== -1)) {
+					// if the name contains '[' and ':' , then we return an error
+					return [false, null, null, external, externalLength];
+				}
+
 				externalLength = external.fullname.length;
 				subSTR = formula.substring(start_pos + externalLength);
 				const posQuote =  subSTR.indexOf("'");
@@ -3827,13 +3790,13 @@
 		{
 			this._reset();
 		}
-		// todo если строка подстрока другой
 		const subSTR = formula.substring(start_pos);
-		const fieldName = opt_namesList[0][0];
-		const itemNames = opt_namesList[1];
-		const fullPatterns = itemNames.map(function(name) {
-			return '^' + fieldName + '\\s*\\[\\s*(' + name + ')\\s*\\]'
-		});
+		const fullPatterns = [];
+		for (let i = 0; i < opt_namesList[0].length; i += 1) {
+			for (let j = 0; j < opt_namesList[1].length; j += 1) {
+				fullPatterns.push('^(' + opt_namesList[0][i] + ')\\s*\\[\\s*(' + opt_namesList[1][j] + ')\\s*\\]');
+			}
+		}
 		const fullRegs = fullPatterns.map(function(pattern) {
 			return new RegExp(pattern, 'i');
 		});
@@ -3842,10 +3805,10 @@
 			if (match !== null) {
 				this.operand_str = match[0];
 				this.pCurrPos += match[0].length;
-				return [fieldName, match[1]];
+				return [match[1], match[2]];
 			}
 		}
-		const shortPatterns = itemNames.map(function(name) {
+		const shortPatterns = opt_namesList[1].map(function(name) {
 			return '^(' + name + ')(?:\\W|$)'
 		});
 		const shortRegs = shortPatterns.map(function(pattern) {
@@ -3856,7 +3819,7 @@
 			if (match !== null) {
 				this.operand_str = match[1];
 				this.pCurrPos += match[1].length;
-				return [null, match[1]];
+				return [null, match[2] ? match[2] : match[1]];
 			}
 		}
 		return false;
@@ -3868,7 +3831,16 @@
 			this._reset();
 		}
 		const subSTR = formula.substring(start_pos);
-		const reg = /^(\w+|(?:\'.+?\'(?!\')))\[(\w+|(?:\'.+?\'(?!\')))\]/;
+		const reg = XRegExp.build('(?x) ^({{fieldName}})\\[({{itemName}})\\]', {
+			'fieldName': XRegExp.build('{{simple}}|{{quotes}}', {
+				'simple': '[\\p{L}_][\\p{L}\\p{N}_]*',
+				'quotes': "\\'.+?\\'(?!\\')",
+			}),
+			'itemName': XRegExp.build('{{simple}}|{{quotes}}', {
+				'simple': '[\\p{L}\\p{N}_]+',
+				'quotes': "\\'.+?\\'(?!\\')",
+			})
+		});
 		const match = reg.exec(subSTR);
 		if (match !== null && match[1] && match[2]) {
 			this.operand_str = match[0];
@@ -11395,6 +11367,10 @@
 		loadScript('../../../../sdkjs/common/Charts/ChartStyles.js', onSuccess, onError);
 	}
 
+	function loadPathBoolean(onSuccess, onError) {
+		loadScript('../../../../sdkjs/common/Drawings/Format/path-boolean-min.js', onSuccess, onError);
+	}
+
 	function getAltGr(e)
 	{
 		if (true === e["altGraphKey"])
@@ -13874,7 +13850,12 @@
 		var textQualifier = options.asc_getTextQualifier();
 		var matrix = [];
 		//var rows = text.match(/[^\r\n]+/g);
-		var rows = text.split(/\r?\n/);
+		var rows;
+		if (delimiterChar === '\n') {
+			rows = [text];
+		} else {
+			rows = text.split(/\r?\n/);
+		}
 		for (var i = 0; i < rows.length; ++i) {
 			var row = rows[i];
 			if(" " === delimiterChar && bTrimSpaces) {
@@ -14781,31 +14762,6 @@
 		return aArray[Math.random() * aArray.length | 0];
 	}
 
-	function registerServiceWorker() {
-		if ('serviceWorker' in navigator) {
-			const serviceWorkerName = 'document_editor_service_worker.js';
-			const serviceWorkerPath = '../../../../' + serviceWorkerName;
-			let reg;
-			navigator.serviceWorker.register(serviceWorkerPath)
-				.then(function (registration) {
-					reg = registration;
-					return navigator.serviceWorker.getRegistrations();
-				})
-				.then(function (registrations) {
-					//delete stale service workers
-					for (const registration of registrations) {
-						if (registration !== reg && registration.active && registration.active.scriptURL.endsWith(serviceWorkerName)) {
-							registration.unregister();
-						}
-					}
-				})
-				.catch(function (err) {
-					console.error('Registration failed with ' + err);
-				});
-		}
-	}
-	registerServiceWorker();
-
 	function consoleLog(val) {
 		// console.log(val);
 		const showMessages = false;
@@ -14922,6 +14878,7 @@
 	window["AscCommon"].loadSdk = loadSdk;
     window["AscCommon"].loadScript = loadScript;
     window["AscCommon"].loadChartStyles = loadChartStyles;
+    window["AscCommon"].loadPathBoolean = loadPathBoolean;
 	window["AscCommon"].getAltGr = getAltGr;
 	window["AscCommon"].getColorSchemeByName = getColorSchemeByName;
 	window["AscCommon"].getColorSchemeByIdx = getColorSchemeByIdx;

@@ -35,6 +35,7 @@
 (function (window) {
 
 	function getLocalFileLink(path) {
+		// todo should we make .replace to the local link here?
 		if (path) {
 			path = path.replace(/^file:\/\/\//, '');
 			path = path.replace(/^file:\/\//, '');
