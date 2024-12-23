@@ -4585,42 +4585,33 @@
 		if (!this.Shortcuts) {
 			return;
 		}
-		const arrShortcutActions = this.getDefaultShortcutActionTypes();
-		for (let i = 0; i < arrShortcutActions.length; i += 1) {
-			const nShortcutAction = arrShortcutActions[i];
-			const oShortcutAction = Asc.c_oAscDefaultShortcuts[nShortcutAction];
-			if (oShortcutAction) {
-				oShortcutAction.applyFromStorage(this.Shortcuts);
+		const mapShortcutActions = Asc.c_oAscUnlockedShortcutActionTypes;
+		for (let sShortcutAction in mapShortcutActions) {
+			const arrShortcuts = Asc.c_oAscDefaultShortcuts[sShortcutAction];
+			if (arrShortcuts) {
+				for (let i = 0; i < arrShortcuts.length; i += 1) {
+					arrShortcuts[i].applyFromStorage(this.Shortcuts);
+				}
 			}
 		}
 	};
-	baseEditorsApi.prototype.getDefaultShortcutActionTypes = function()
-	{
-		return [];
-	};
-	baseEditorsApi.prototype.asc_resetAscShortcuts = function(arrAscShortcutActions) {
+	baseEditorsApi.prototype.asc_resetAscShortcuts = function(arrAscShortcuts) {
 		if (!this.Shortcuts) {
 			return;
 		}
-		for (let i = 0; i < arrAscShortcutActions.length; i++) {
-			const oAscShortcutAction = arrAscShortcutActions[i];
-			oAscShortcutAction.resetFromStorage(this.Shortcuts);
+		for (let i = 0; i < arrAscShortcuts.length; i++) {
+			const oAscShortcut = arrAscShortcuts[i];
+			oAscShortcut.resetFromStorage(this.Shortcuts);
 		}
 	};
-	baseEditorsApi.prototype.asc_applyAscShortcuts = function(arrAscShortcutActions) {
+	baseEditorsApi.prototype.asc_applyAscShortcuts = function(arrAscShortcuts) {
 		if (!this.Shortcuts) {
 			return;
 		}
-		for (let i = 0; i < arrAscShortcutActions.length; i++) {
-			const oAscShortcutAction = arrAscShortcutActions[i];
-			oAscShortcutAction.applyFromStorage(this.Shortcuts);
+		for (let i = 0; i < arrAscShortcuts.length; i++) {
+			const oAscShortcut = arrAscShortcuts[i];
+			oAscShortcut.applyFromStorage(this.Shortcuts);
 		}
-	};
-	baseEditorsApi.prototype.asc_addAscShortcut = function(nType, oAscShortcut) {
-		if (!this.Shortcuts) {
-			return;
-		}
-		oAscShortcut.applyFromStorage(nType, this.Shortcuts);
 	};
 	baseEditorsApi.prototype.getShortcut = function(e)
 	{
@@ -5478,7 +5469,6 @@
 	prot['asc_getInputLanguage'] = prot.asc_getInputLanguage;
 	prot['asc_resetAscShortcuts'] = prot.asc_resetAscShortcuts;
 	prot['asc_applyAscShortcuts'] = prot.asc_applyAscShortcuts;
-	prot['asc_addAscShortcut'] = prot.asc_addAscShortcut;
 
 	prot['setPluginsOptions'] = prot.setPluginsOptions;
 

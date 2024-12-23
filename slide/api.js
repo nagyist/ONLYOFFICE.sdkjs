@@ -1721,42 +1721,6 @@ background-repeat: no-repeat;\
 
 	};
 
-	asc_docs_api.prototype.getDefaultShortcutActionTypes = function ()
-	{
-		return [Asc.c_oAscPresentationShortcutType.EditSelectAll,
-			Asc.c_oAscPresentationShortcutType.EditUndo,
-			Asc.c_oAscPresentationShortcutType.EditRedo,
-			Asc.c_oAscPresentationShortcutType.Cut,
-			Asc.c_oAscPresentationShortcutType.Copy,
-			Asc.c_oAscPresentationShortcutType.Paste,
-			Asc.c_oAscPresentationShortcutType.Duplicate,
-			Asc.c_oAscPresentationShortcutType.Print,
-			Asc.c_oAscPresentationShortcutType.Save,
-			Asc.c_oAscPresentationShortcutType.ShowContextMenu,
-			Asc.c_oAscPresentationShortcutType.ShowParaMarks,
-			Asc.c_oAscPresentationShortcutType.Bold,
-			Asc.c_oAscPresentationShortcutType.CopyFormat,
-			Asc.c_oAscPresentationShortcutType.CenterAlign,
-			Asc.c_oAscPresentationShortcutType.EuroSign,
-			Asc.c_oAscPresentationShortcutType.Group,
-			Asc.c_oAscPresentationShortcutType.UnGroup,
-			Asc.c_oAscPresentationShortcutType.Italic,
-			Asc.c_oAscPresentationShortcutType.JustifyAlign,
-			Asc.c_oAscPresentationShortcutType.AddHyperlink,
-			Asc.c_oAscPresentationShortcutType.BulletList,
-			Asc.c_oAscPresentationShortcutType.LeftAlign,
-			Asc.c_oAscPresentationShortcutType.RightAlign,
-			Asc.c_oAscPresentationShortcutType.Underline,
-			Asc.c_oAscPresentationShortcutType.Strikethrough,
-			Asc.c_oAscPresentationShortcutType.PasteFormat,
-			Asc.c_oAscPresentationShortcutType.Superscript,
-			Asc.c_oAscPresentationShortcutType.Subscript,
-			Asc.c_oAscPresentationShortcutType.EnDash,
-			Asc.c_oAscPresentationShortcutType.DecreaseFont,
-			Asc.c_oAscPresentationShortcutType.IncreaseFont,
-			Asc.c_oAscPresentationShortcutType.SpeechWorker];
-	};
-
 	asc_docs_api.prototype.InitEditor = function()
 	{
 		this.WordControl.m_oLogicDocument                    = new AscCommonSlide.CPresentation(this.WordControl.m_oDrawingDocument);

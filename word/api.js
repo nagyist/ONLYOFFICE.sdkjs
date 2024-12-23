@@ -1340,58 +1340,6 @@ background-repeat: no-repeat;\
 		return text_data.data;
 	};
 
-	asc_docs_api.prototype.getDefaultShortcutActionTypes = function()
-	{
-		return [
-			c_oAscDocumentShortcutType.InsertPageBreak,
-			c_oAscDocumentShortcutType.InsertLineBreak,
-			c_oAscDocumentShortcutType.InsertColumnBreak,
-			c_oAscDocumentShortcutType.ResetChar,
-			c_oAscDocumentShortcutType.NonBreakingSpace,
-			c_oAscDocumentShortcutType.ShowAll,
-			c_oAscDocumentShortcutType.EditSelectAll,
-			c_oAscDocumentShortcutType.Bold,
-			c_oAscDocumentShortcutType.CopyFormat,
-			c_oAscDocumentShortcutType.InsertEndnoteNow,
-			c_oAscDocumentShortcutType.CenterPara,
-			c_oAscDocumentShortcutType.EuroSign,
-			c_oAscDocumentShortcutType.CopyrightSign,
-			c_oAscDocumentShortcutType.Italic,
-			c_oAscDocumentShortcutType.JustifyPara,
-			c_oAscDocumentShortcutType.InsertHyperlink,
-			c_oAscDocumentShortcutType.ApplyListBullet,
-			c_oAscDocumentShortcutType.LeftPara,
-			c_oAscDocumentShortcutType.Indent,
-			c_oAscDocumentShortcutType.UnIndent,
-			c_oAscDocumentShortcutType.PrintPreviewAndPrint,
-			c_oAscDocumentShortcutType.InsertPageNumber,
-			c_oAscDocumentShortcutType.RightPara,
-			c_oAscDocumentShortcutType.RegisteredSign,
-			c_oAscDocumentShortcutType.Save,
-			c_oAscDocumentShortcutType.TrademarkSign,
-			c_oAscDocumentShortcutType.Underline,
-			c_oAscDocumentShortcutType.PasteFormat,
-			c_oAscDocumentShortcutType.EditRedo,
-			c_oAscDocumentShortcutType.EditUndo,
-			c_oAscDocumentShortcutType.UpdateFields,
-			c_oAscDocumentShortcutType.Superscript,
-			c_oAscDocumentShortcutType.NonBreakingHyphen,
-			c_oAscDocumentShortcutType.Subscript,
-			c_oAscDocumentShortcutType.IncreaseFontSize,
-			c_oAscDocumentShortcutType.DecreaseFontSize,
-			c_oAscDocumentShortcutType.SpeechWorker,
-			c_oAscDocumentShortcutType.ApplyHeading1,
-			c_oAscDocumentShortcutType.ApplyHeading2,
-			c_oAscDocumentShortcutType.ApplyHeading3,
-			c_oAscDocumentShortcutType.Strikeout,
-			c_oAscDocumentShortcutType.InsertFootnoteNow,
-			c_oAscDocumentShortcutType.InsertEquation,
-			c_oAscDocumentShortcutType.SoftHyphen,
-			c_oAscDocumentShortcutType.HorizontalEllipsis,
-			c_oAscDocumentShortcutType.EnDash,
-			c_oAscDocumentShortcutType.EmDash];
-	};
-
 	asc_docs_api.prototype.InitEditor = function()
 	{
 		this.WordControl.m_oLogicDocument                    = new AscCommonWord.CDocument(this.WordControl.m_oDrawingDocument);
