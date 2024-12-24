@@ -38,9 +38,6 @@
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EditSelectAll] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EditUndo] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EditRedo] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Cut] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Copy] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Paste] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Duplicate] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Print] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Save] = true;
