@@ -75,8 +75,6 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Print] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Print, keyCodes.KeyP, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SaveAs] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.SaveAs, keyCodes.KeyS, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenHelpMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenHelpMenu, keyCodes.F1, false, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ShowContextMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.F10, false, true, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.ContextMenu, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseMenu, keyCodes.Esc, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Zoom100] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Zoom100, keyCodes.Digit0, true, false, false, false)];
@@ -176,8 +174,6 @@
 
 	if (AscCommon.AscBrowser.isMacOs) {
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenFilePanel] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenFilePanel, keyCodes.KeyF, true, false, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveSlideUp] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveSlideUp, keyCodes.ArrowUp, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveSlideDown] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveSlideDown, keyCodes.ArrowDown, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LittleMoveObjectLeft] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.LittleMoveObjectLeft, keyCodes.ArrowLeft, false, false, false, true)];
@@ -195,7 +191,7 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DeleteRightWord] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DeleteRightWord, keyCodes.Delete, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveToStartWord] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveToStartWord, keyCodes.ArrowLeft, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveToEndWord] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveToEndWord, keyCodes.ArrowRight, false, false, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EnDash] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EnDash, keyCodes.KeyMinus, false, false, true, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EnDash] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EnDash, keyCodes.KeyMinus, false, false, true, false, true)];
 
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenFindDialog].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenFindDialog, keyCodes.KeyF, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenCommentsPanel].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenCommentsPanel, keyCodes.KeyH, false, true, false, true));
@@ -242,8 +238,6 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SpeechWorker].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.SpeechWorker, keyCodes.KeyZ, false, false, true, true));
 	} else {
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenFilePanel] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenFilePanel, keyCodes.KeyF, false, false, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.F4, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveSlideUp] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveSlideUp, keyCodes.ArrowUp, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveSlideDown] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveSlideDown, keyCodes.ArrowDown, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LittleMoveObjectLeft] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.LittleMoveObjectLeft, keyCodes.ArrowLeft, true, false, false, false)];
@@ -262,6 +256,18 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveToStartWord] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveToStartWord, keyCodes.ArrowLeft, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.MoveToEndWord] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.MoveToEndWord, keyCodes.ArrowRight, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EnDash] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EnDash, keyCodes.KeyMinus, true, true, false, false)];
+	}
+
+	if (window["AscDesktopEditor"]) {
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
+		if (AscCommon.AscBrowser.isMacOs) {
+			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
+			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
+		} else {
+			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
+			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.F4, true, false, false, false)];
+		}
 	}
 	function getStringFromShortcutType(type) {
 		switch (type) {

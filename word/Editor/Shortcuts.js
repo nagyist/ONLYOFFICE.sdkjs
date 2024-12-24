@@ -90,8 +90,6 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.PrintPreviewAndPrint] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.PrintPreviewAndPrint, keyCodes.KeyP, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.SaveAs] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.SaveAs, keyCodes.KeyS, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenHelpMenu] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenHelpMenu, keyCodes.F1, false, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenContextMenu] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenContextMenu, keyCodes.F10, false, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.CloseMenu] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseMenu, keyCodes.Escape, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.Zoom100] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.Zoom100, keyCodes.Digit0, true, false, false, false)];
@@ -201,8 +199,6 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenFilePanel] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenFilePanel, keyCodes.KeyF, true, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenCommentField] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenCommentField, keyCodes.KeyA, false, false, true, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenChatPanel] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenChatPanel, keyCodes.KeyQ, true, false, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartPreviousPage] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartPreviousPage, keyCodes.PageUp, false, false, true, false), new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartPreviousPage, keyCodes.PageUp, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartNextPage] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartNextPage, keyCodes.PageDown, false, false, true, false), new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartNextPage, keyCodes.PageDown, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartWord] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartWord, keyCodes.ArrowLeft, false, false, true, false)];
@@ -224,8 +220,8 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.LittleMoveObjectUp] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.LittleMoveObjectUp, keyCodes.ArrowUp, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.LittleMoveObjectDown] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.LittleMoveObjectDown, keyCodes.ArrowDown, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.InsertEquation] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.InsertEquation, keyCodes.KeyEqual, true, false, true, false), new AscShortcut(Asc.c_oAscDocumentShortcutType.InsertEquation, keyCodes.KeyEqual, false, false, true, true)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.EmDash] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.EmDash, keyCodes.KeyMinus, false, true, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.EnDash] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.EnDash, keyCodes.KeyMinus, false, false, true, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.EmDash] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.EmDash, keyCodes.KeyMinus, false, true, true, false, true)];
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.EnDash] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.EnDash, keyCodes.KeyMinus, false, false, true, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.HorizontalEllipsis] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.HorizontalEllipsis, keyCodes.KeySemicolon, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol, keyCodes.KeyX, false, false, true, true), new AscShortcut(Asc.c_oAscDocumentShortcutType.ReplaceUnicodeToSymbol, keyCodes.KeyX, true, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.SoftHyphen] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.SoftHyphen, keyCodes.KeyMinus, true, false, true, false), new AscShortcut(Asc.c_oAscDocumentShortcutType.SoftHyphen, keyCodes.KeyMinus, false, false, true, true)];
@@ -284,8 +280,6 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenFilePanel] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenFilePanel, keyCodes.KeyF, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenCommentField] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenCommentField, keyCodes.KeyH, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenChatPanel] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenChatPanel, keyCodes.KeyQ, false, false, true, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartPreviousPage] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartPreviousPage, keyCodes.PageUp, true, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToStartNextPage] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToStartNextPage, keyCodes.PageDown, true, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.MoveToNextPage] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.MoveToNextPage, keyCodes.PageDown, false, false, true, false)];
@@ -318,6 +312,18 @@
 
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.ZoomIn].push(new AscShortcut(Asc.c_oAscDocumentShortcutType.ZoomIn, keyCodes.NumpadPlus, true, false, false, false));
 		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.ShowAll].push(new AscShortcut(Asc.c_oAscDocumentShortcutType.ShowAll, keyCodes.Numpad8, true, true, false, false));
+	}
+
+	if (window["AscDesktopEditor"]) {
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
+		if (AscCommon.AscBrowser.isMacOs) {
+			c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
+			c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
+		} else {
+			c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
+			c_oAscDefaultShortcuts[Asc.c_oAscDocumentShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false), new AscShortcut(Asc.c_oAscDocumentShortcutType.CloseFile, keyCodes.F4, true, false, false, false)];
+		}
 	}
 
 	function getStringFromShortcutType(type) {
