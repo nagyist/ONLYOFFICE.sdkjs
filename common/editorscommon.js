@@ -12064,6 +12064,33 @@
 		this.CustomActions[nType] = new CCustomShortcutActionSymbol(nCharCode, sFont);
 		return nType;
 	};
+	CShortcuts.prototype.Reset = function()
+	{
+		this.List = {};
+	};
+	CShortcuts.prototype.ApplyFromStorage = function(oAscShortcut)
+	{
+		const arrKeyCodes = [oAscShortcut.keyCode];
+		const arrAddKeyCodes = Asc.c_oAscKeyCodeAnalogues[oAscShortcut.keyCode];
+		if (arrAddKeyCodes)
+		{
+			arrKeyCodes.push.apply(arrKeyCodes, arrAddKeyCodes);
+		}
+		if (oAscShortcut.isHidden)
+		{
+			for (let i = 0; i < arrKeyCodes.length; i += 1)
+			{
+				this.Remove(arrKeyCodes[i], oAscShortcut.ctrlKey, oAscShortcut.shiftKey, oAscShortcut.altKey, oAscShortcut.commandKey);
+			}
+		}
+		else
+		{
+			for (let i = 0; i < arrKeyCodes.length; i += 1)
+			{
+				this.Add(oAscShortcut.type, arrKeyCodes[i], oAscShortcut.ctrlKey, oAscShortcut.shiftKey, oAscShortcut.altKey, oAscShortcut.commandKey);
+			}
+		}
+	};
 
 	function CCustomShortcutActionSymbol(nCharCode, sFont)
 	{

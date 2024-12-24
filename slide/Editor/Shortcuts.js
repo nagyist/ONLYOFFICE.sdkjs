@@ -521,6 +521,8 @@
 				return "MoveToEndContent";
 			case Asc.c_oAscPresentationShortcutType.SpeechWorker:
 				return "SpeechWorker";
+			default:
+				return null;
 		}
 	}
 	function getShortcutTypeFromString(str) {
@@ -781,6 +783,8 @@
 				return Asc.c_oAscPresentationShortcutType.MoveToEndContent;
 			case "SpeechWorker":
 				return Asc.c_oAscPresentationShortcutType.SpeechWorker;
+			default:
+				return null;
 		}
 	}
 	window["Asc"]["c_oAscDefaultShortcuts"] = window["Asc"].c_oAscDefaultShortcuts = c_oAscDefaultShortcuts;

@@ -616,8 +616,9 @@
 				return "MoveToNextPage";
 			case Asc.c_oAscDocumentShortcutType.MoveToPreviousPage:
 				return "MoveToPreviousPage";
+			default:
+				return null;
 		}
-		return null;
 	}
 
 	function getShortcutTypeFromString(str) {
@@ -916,6 +917,8 @@
 				return Asc.c_oAscDocumentShortcutType.MoveToNextPage;
 			case "MoveToPreviousPage":
 				return Asc.c_oAscDocumentShortcutType.MoveToPreviousPage;
+			default:
+				return null;
 		}
 	}
 

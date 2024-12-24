@@ -4590,18 +4590,28 @@
 			const arrShortcuts = Asc.c_oAscDefaultShortcuts[sShortcutAction];
 			if (arrShortcuts) {
 				for (let i = 0; i < arrShortcuts.length; i += 1) {
-					arrShortcuts[i].applyFromStorage(this.Shortcuts);
+					this.Shortcuts.ApplyFromStorage(arrShortcuts[i]);
 				}
 			}
 		}
 	};
-	baseEditorsApi.prototype.asc_resetAscShortcuts = function(arrAscShortcuts) {
+	baseEditorsApi.prototype.asc_resetAllShortcutTypes = function() {
 		if (!this.Shortcuts) {
 			return;
 		}
-		for (let i = 0; i < arrAscShortcuts.length; i++) {
-			const oAscShortcut = arrAscShortcuts[i];
-			oAscShortcut.resetFromStorage(this.Shortcuts);
+		this.Shortcuts.Reset();
+		this.initDefaultShortcuts();
+	};
+	baseEditorsApi.prototype.asc_resetShortcutType = function(nShortcutType) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		this.Shortcuts.RemoveByType(nShortcutType);
+		const arrDefaultShortcuts = Asc.c_oAscDefaultShortcuts[nShortcutType];
+		if (arrDefaultShortcuts) {
+			for (let i = 0; i < arrDefaultShortcuts.length; i += 1) {
+				this.Shortcuts.ApplyFromStorage(arrDefaultShortcuts[i]);
+			}
 		}
 	};
 	baseEditorsApi.prototype.asc_applyAscShortcuts = function(arrAscShortcuts) {
@@ -4609,8 +4619,7 @@
 			return;
 		}
 		for (let i = 0; i < arrAscShortcuts.length; i++) {
-			const oAscShortcut = arrAscShortcuts[i];
-			oAscShortcut.applyFromStorage(this.Shortcuts);
+			this.Shortcuts.ApplyFromStorage(arrAscShortcuts[i]);
 		}
 	};
 	baseEditorsApi.prototype.getShortcut = function(e)
@@ -5467,7 +5476,8 @@
 	prot['asc_onMediaPlayerEvent'] = prot.asc_onMediaPlayerEvent;
 	prot['asc_hideMediaControl'] = prot.asc_hideMediaControl;
 	prot['asc_getInputLanguage'] = prot.asc_getInputLanguage;
-	prot['asc_resetAscShortcuts'] = prot.asc_resetAscShortcuts;
+	prot['asc_resetAllShortcutTypes'] = prot.asc_resetAllShortcutTypes;
+	prot['asc_resetShortcutType'] = prot.asc_resetShortcutType;
 	prot['asc_applyAscShortcuts'] = prot.asc_applyAscShortcuts;
 
 	prot['setPluginsOptions'] = prot.setPluginsOptions;

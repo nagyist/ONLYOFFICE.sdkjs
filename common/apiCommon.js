@@ -6015,7 +6015,10 @@ function (window, undefined) {
 	}
 
 	CAscShortcut.prototype.asc_GetKeyCode = function() {
-		return !!this.isLocked;
+		return this.keyCode;
+	};
+	CAscShortcut.prototype.asc_GetType = function() {
+		return this.type;
 	};
 	CAscShortcut.prototype.asc_IsCtrl = function() {
 		return this.ctrlKey;
@@ -6057,7 +6060,7 @@ function (window, undefined) {
 		this.isLocked = pr;
 	};
 	CAscShortcut.prototype.asc_SetType = function(pr) {
-		this.type = type;
+		this.type = pr;
 	};
 	CAscShortcut.prototype.asc_ToJson = function() {
 		const res = {};
@@ -6067,6 +6070,8 @@ function (window, undefined) {
 		res["shiftKey"] = this.shiftKey;
 		res["altKey"] = this.altKey;
 		res["commandKey"] = this.commandKey;
+		res["isLocked"] = this.isLocked;
+		res["isHidden"] = this.isHidden;
 		return res;
 	};
 	CAscShortcut.prototype.asc_FromJson = function(obj) {
@@ -6076,41 +6081,11 @@ function (window, undefined) {
 		this.shiftKey = obj["shiftKey"];
 		this.altKey = obj["altKey"];
 		this.commandKey = obj["commandKey"];
+		this.isLocked = obj["isLocked"];
+		this.isHidden = obj["isHidden"];
 	};
 	CAscShortcut.prototype.asc_GetShortcutIndex = function() {
 		return AscCommon.CShortcuts.GetShortcutIndex(this.asc_GetKeyCode(), this.asc_IsCtrl(), this.asc_IsShift(), this.asc_IsAlt(), this.asc_IsCommand());
-	};
-	CAscShortcut.prototype.applyFromStorage = function(sdkShortcuts) {
-		if (this.isHidden) {
-			this.removeFromSdk(sdkShortcuts);
-		} else {
-			this.addToSdk(sdkShortcuts);
-		}
-	};
-	CAscShortcut.prototype.resetFromStorage = function(sdkShortcuts) {
-		if (this.isHidden) {
-			this.addToSdk(sdkShortcuts);
-		} else {
-			this.removeFromSdk(sdkShortcuts);
-		}
-	};
-	CAscShortcut.prototype.removeFromSdk = function(sdkShortcuts) {
-		sdkShortcuts.Remove(this.keyCode, this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
-		const addKeyCodes = Asc.c_oAscKeyCodeAnalogues[this.keyCode];
-		if (addKeyCodes) {
-			for (let i = 0; i < addKeyCodes.length; i += 1) {
-				sdkShortcuts.Remove(addKeyCodes[i], this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
-			}
-		}
-	};
-	CAscShortcut.prototype.addToSdk = function(sdkShortcuts) {
-		sdkShortcuts.Add(this.type, this.keyCode, this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
-		const addKeyCodes = Asc.c_oAscKeyCodeAnalogues[this.keyCode];
-		if (addKeyCodes) {
-			for (let i = 0; i < addKeyCodes.length; i += 1) {
-				sdkShortcuts.Add(this.type, addKeyCodes[i], this.ctrlKey, this.shiftKey, this.altKey, this.commandKey);
-			}
-		}
 	};
 
 	/*
@@ -7143,6 +7118,7 @@ function (window, undefined) {
 
 	window["Asc"]["CAscShortcut"] = window["Asc"].CAscShortcut = CAscShortcut;
 	CAscShortcut.prototype["asc_GetKeyCode"] = CAscShortcut.prototype.asc_GetKeyCode;
+	CAscShortcut.prototype["asc_GetType"] = CAscShortcut.prototype.asc_GetType;
 	CAscShortcut.prototype["asc_IsCtrl"] = CAscShortcut.prototype.asc_IsCtrl;
 	CAscShortcut.prototype["asc_IsShift"] = CAscShortcut.prototype.asc_IsShift;
 	CAscShortcut.prototype["asc_IsAlt"] = CAscShortcut.prototype.asc_IsAlt;
