@@ -1678,86 +1678,54 @@ CShapeDrawer.prototype =
 			}
 
             if (isSvgPatternUnsupported || null == this.UniFill.fill.tile || this.Graphics.m_oContext === undefined) {
-                const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
-                    && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
+                this.Graphics.save();
+                this.Graphics.clip();
 
-                let paddedFillRect = { l: 0, t: 0, r: 100, b: 100 };
-                if (isStretch) {
-                    const fillRect = this.UniFill.fill.stretch.fillRect;
-                    const fillWidth = fillRect.r - fillRect.l;
-                    const fillHeight = fillRect.b - fillRect.t;
-                    const supplementLeft = 100 * fillRect.l / fillWidth;
-                    const supplementRight = 100 * (100 - fillRect.r) / fillWidth;
-                    const supplementTop = 100 * fillRect.t / fillHeight;
-                    const supplementBottom = 100 * (100 - fillRect.b) / fillHeight;
+                if (this.UniFill.IsTransitionTextures) {
+                    this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
+                } else {
+                    // const coefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
+                    // const coefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
+                    const coefX = editorInfo.scale;
+                    const coefY = editorInfo.scale;
 
-                    paddedFillRect = {
-                        l: 0 - supplementLeft,
-                        t: 0 - supplementTop,
-                        r: 100 + supplementRight,
-                        b: 100 + supplementBottom,
-                    }
-                }
+                    const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
+                        && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
 
-                function drawRectShape() {
-                    if (this.UniFill.IsTransitionTextures) {
-                        this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
-                    } else {
-                        if ((null == this.UniFill.transparent) || (this.UniFill.transparent == 255)) {
-                            this.Graphics.drawImage(
-                                getFullImageSrc2(this.UniFill.fill.RasterImageId),
-                                this.min_x, this.min_y,
-                                (this.max_x - this.min_x), (this.max_y - this.min_y),
-                                undefined,
-                                isStretch ? paddedFillRect : this.UniFill.fill.srcRect,
-                                this.UniFill.fill.canvas
-                            );
-                        } else {
-                            drawImageWithOptionalTransparency.call(this);
+                    const fillRect = calculateFillRect.call(this);
+
+                    function calculateFillRect() {
+                        return {
+                            x: this.min_x,
+                            y: this.min_y,
+                            width: this.max_x - this.min_x,
+                            height: this.max_y - this.min_y
                         }
                     }
-                }
 
-                function drawNonRectShape() {
-                    this.Graphics.save();
-                    this.Graphics.clip();
+                    const isTransparent = (this.UniFill.transparent != null) && (this.UniFill.transparent !== 255);
+                    const isTransparencySupported = this.IsRectShape
+                        ? true
+                        : this.Graphics.isSupportTextDraw() && !this.Graphics.isTrack();
 
-                    if (this.UniFill.IsTransitionTextures) {
-                        this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
-                    } else {
-                        if (!this.Graphics.isSupportTextDraw() || this.Graphics.isTrack() || (null == this.UniFill.transparent) || (this.UniFill.transparent == 255)) {
-                            this.Graphics.drawImage(
-                                getFullImageSrc2(this.UniFill.fill.RasterImageId),
-                                this.min_x, this.min_y,
-                                (this.max_x - this.min_x), (this.max_y - this.min_y),
-                                undefined,
-                                isStretch ? paddedFillRect : this.UniFill.fill.srcRect,
-                                this.UniFill.fill.canvas);
-                        } else {
-                            drawImageWithOptionalTransparency.call(this);
-                        }
-                    }
-                    
-                    this.Graphics.restore();
-                }
+                    const oldGlobalAlpha = this.Graphics.m_oContext.globalAlpha;
+                    if (isTransparent && isTransparencySupported)
+                        this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
 
-                function drawImageWithOptionalTransparency() {
-                    const _old_global_alpha = this.Graphics.m_oContext.globalAlpha;
-                    this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
-
+                    const alpha = undefined; // Not supported in this.Graphics.drawImage yet?
                     this.Graphics.drawImage(
                         getFullImageSrc2(this.UniFill.fill.RasterImageId),
-                        this.min_x, this.min_y,
-                        (this.max_x - this.min_x), (this.max_y - this.min_y),
-                        undefined,
+                        fillRect.x, fillRect.y, fillRect.width, fillRect.height,
+                        alpha,
                         this.UniFill.fill.srcRect,
                         this.UniFill.fill.canvas
                     );
 
-                    this.Graphics.m_oContext.globalAlpha = _old_global_alpha;
+                    if (isTransparent && isTransparencySupported)
+                        this.Graphics.m_oContext.globalAlpha = oldGlobalAlpha;
                 }
 
-                this.IsRectShape ? drawRectShape.call(this) : drawNonRectShape.call(this);
+                this.Graphics.restore();
             } else {
                 var _img = editorInfo.editor.ImageLoader.map_image_index[getFullImageSrc2(this.UniFill.fill.RasterImageId)];
                 var _img_native = this.UniFill.fill.canvas;
