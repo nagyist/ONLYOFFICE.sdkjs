@@ -1684,22 +1684,29 @@ CShapeDrawer.prototype =
                 if (this.UniFill.IsTransitionTextures) {
                     this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
                 } else {
-                    // const coefX = bIsThumbnail ? __graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
-                    // const coefY = bIsThumbnail ? __graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorInfo.scale;
-                    const coefX = editorInfo.scale;
-                    const coefY = editorInfo.scale;
-
-                    const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
-                        && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
-
                     const fillRect = calculateFillRect.call(this);
 
                     function calculateFillRect() {
+                        const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
+                            && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
+
+                        const originalFillRect = isStretch
+                            ? this.UniFill.fill.stretch.fillRect
+                            : new AscFormat.CFillRect();
+
+                        const relativeWidth = originalFillRect.r - originalFillRect.l;
+                        const relativeHeight = originalFillRect.b - originalFillRect.t;
+                        const absoluteWidth = (this.max_x - this.min_x) * relativeWidth / 100;
+                        const absoluteHeight = (this.max_y - this.min_y) * relativeHeight / 100;
+
+                        const absoluteX = this.min_x + (this.max_x - this.min_x) * originalFillRect.l / 100;
+                        const absoluteY = this.min_y + (this.max_y - this.min_y) * originalFillRect.t / 100;
+
                         return {
-                            x: this.min_x,
-                            y: this.min_y,
-                            width: this.max_x - this.min_x,
-                            height: this.max_y - this.min_y
+                            x: absoluteX,
+                            y: absoluteY,
+                            width: absoluteWidth,
+                            height: absoluteHeight
                         }
                     }
 

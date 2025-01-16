@@ -3623,8 +3623,8 @@
 			// Attributes (offset as a percentage):
 			this.l = isRealNumber(l) ? l : 0;
 			this.t = isRealNumber(t) ? t : 0;
-			this.r = isRealNumber(r) ? r : 0;
-			this.b = isRealNumber(b) ? b : 0;
+			this.r = isRealNumber(r) ? r : 100;
+			this.b = isRealNumber(b) ? b : 100;
 		}
 		InitClass(CFillRect, CBaseNoIdObject, 0);
 
