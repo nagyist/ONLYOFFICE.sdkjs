@@ -1707,7 +1707,7 @@ CShapeDrawer.prototype =
                             y: absoluteY,
                             width: absoluteWidth,
                             height: absoluteHeight
-                        }
+                        };
                     }
 
                     const isTransparent = (this.UniFill.transparent != null) && (this.UniFill.transparent !== 255);
@@ -1716,8 +1716,22 @@ CShapeDrawer.prototype =
                         : this.Graphics.isSupportTextDraw() && !this.Graphics.isTrack();
 
                     const oldGlobalAlpha = this.Graphics.m_oContext.globalAlpha;
-                    if (isTransparent && isTransparencySupported)
+                    if (isTransparent && isTransparencySupported) {
                         this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
+                    }
+
+                    const rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
+                        ? 0
+                        : -this.Shape.getFullRotate();
+
+                    if (rotation !== 0) {
+                        const centerX = (this.min_x + this.max_x) / 2;
+                        const centerY = (this.min_y + this.max_y) / 2;
+
+                        this.Graphics.m_oContext.translate(centerX, centerY);
+                        this.Graphics.m_oContext.rotate(rotation);
+                        this.Graphics.m_oContext.translate(-centerX, -centerY);
+                    }
 
                     const alpha = undefined; // Not supported in this.Graphics.drawImage yet?
                     this.Graphics.drawImage(
@@ -1728,8 +1742,9 @@ CShapeDrawer.prototype =
                         this.UniFill.fill.canvas
                     );
 
-                    if (isTransparent && isTransparencySupported)
+                    if (isTransparent && isTransparencySupported) {
                         this.Graphics.m_oContext.globalAlpha = oldGlobalAlpha;
+                    }
                 }
 
                 this.Graphics.restore();
