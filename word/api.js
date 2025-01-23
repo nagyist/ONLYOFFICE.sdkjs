@@ -1353,7 +1353,14 @@ background-repeat: no-repeat;\
 		
 		return text_data.data;
 	};
-
+	asc_docs_api.prototype.executeShortcut = function(type)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return false;
+		
+		return logicDocument.executeShortcut(type);
+	};
 	asc_docs_api.prototype._InitCommonShortcuts = function () 
 	{
 		// ActionType, Key, Ctrl, Shift, Alt
@@ -1576,11 +1583,12 @@ background-repeat: no-repeat;\
 
 		let reader, openParams = {};
 		let oBinaryFileReader = new AscCommonWord.BinaryFileReader(this.WordControl.m_oLogicDocument, openParams);
-		oBinaryFileReader.PreLoadPrepare();
+		//очищать pptx_content_loader не надо, т.к. открываем zip
+		oBinaryFileReader.PreLoadPrepare(undefined, false);
 
 		this.WordControl.m_oLogicDocument.fromZip(jsZlib, xmlParserContext, oBinaryFileReader.oReadResult);
 
-		oBinaryFileReader.PostLoadPrepare(xmlParserContext);
+		oBinaryFileReader.PostLoadPrepare(xmlParserContext, false);
 		jsZlib.close();
 		return true;
 	};
@@ -8414,6 +8422,28 @@ background-repeat: no-repeat;\
 
 		return lPage2;
 	};
+	asc_docs_api.prototype.GetCurrentVisiblePages = function() {
+		let start, end;
+		
+		if (window["IS_NATIVE_EDITOR"]) {
+			start = window["native"]["GetDrawingStartPage"]();
+			end = window["native"]["GetDrawingEndPage"]();
+		} else {
+			start = this.WordControl.m_oDrawingDocument.m_lDrawingFirst;
+			end = this.WordControl.m_oDrawingDocument.m_lDrawingEnd;
+		}
+		
+		if (start == -1 || end == -1) {
+			return [];
+		}
+		
+		const pages = [];
+		for (let i = start; i <= end; i++) {
+			pages.push(i);
+		}
+	
+		return pages;
+	};
 
 	asc_docs_api.prototype.asc_SetDocumentPlaceChangedEnabled = function(bEnabled)
 	{
@@ -13815,6 +13845,15 @@ background-repeat: no-repeat;\
 			}
 		};
 
+		let prepareHash = function (_val) {
+			//todo check end of base64
+			//"L6VzBw==d==  d" and "L6VzBw==" in ms equal
+			if (_val && _val.length) {
+				return _val.replace(/\s/g, "");
+			}
+			return _val;
+		};
+
 		let password = props.temporaryPassword;
 		props.temporaryPassword = null;
 		let documentProtection = oDocument.Settings.DocumentProtection;
@@ -13822,7 +13861,7 @@ background-repeat: no-repeat;\
 		let cryptProviderType = AscCommonWord.ECryptAlgType.TypeAny;
 		if (password !== "" && password != null) {
 			if (documentProtection) {
-				salt = documentProtection.saltValue;
+				salt = prepareHash(documentProtection.saltValue);
 				spinCount =  documentProtection.spinCount;
 				alg = documentProtection.cryptAlgorithmSid;
 			}
@@ -13848,7 +13887,8 @@ background-repeat: no-repeat;\
 					callback(true);
 				} else {
 					//пробуем снять защиту
-					if (documentProtection && hash && (hash[0] === documentProtection.hashValue || hash[1] === documentProtection.hashValue)) {
+					let documentHashValue = prepareHash(documentProtection.hashValue);
+					if (documentProtection && hash && (hash[0] === documentHashValue || hash[1] === documentHashValue)) {
 						salt = null;
 						alg = null;
 						spinCount = null;
@@ -14583,6 +14623,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['GetDocHeightPx']                            = asc_docs_api.prototype.GetDocHeightPx;
 	asc_docs_api.prototype['ClearSearch']                               = asc_docs_api.prototype.ClearSearch;
 	asc_docs_api.prototype['GetCurrentVisiblePage']                     = asc_docs_api.prototype.GetCurrentVisiblePage;
+	asc_docs_api.prototype['GetCurrentVisiblePages']                    = asc_docs_api.prototype.GetCurrentVisiblePages;
 	asc_docs_api.prototype['asc_setAutoSaveGap']                        = asc_docs_api.prototype.asc_setAutoSaveGap;
 	asc_docs_api.prototype['asc_SetDocumentPlaceChangedEnabled']        = asc_docs_api.prototype.asc_SetDocumentPlaceChangedEnabled;
 	asc_docs_api.prototype['asc_SetViewRulers']                         = asc_docs_api.prototype.asc_SetViewRulers;

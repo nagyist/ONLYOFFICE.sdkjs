@@ -3929,7 +3929,7 @@ function isAllowPasteLink(pastedWb) {
 				oBaseTransform.sx = printScale;
 				oBaseTransform.sy = printScale;
 
-				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
+				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getRightToLeft() ? -1 : 1) * (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
 				oBaseTransform.ty = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * (printPagesData.pageClipRectTop + (printPagesData.topFieldInPx - printPagesData.pageClipRectTop + titleHeight) * printScale) - (t.getCellTop(range.r1, 3) - t.getCellTop(0, 3)) * printScale;
 
 				//oDocRenderer.transform(oDocRenderer.m_oFullTransform.sx, oDocRenderer.m_oFullTransform.shy, oDocRenderer.m_oFullTransform.shx, oDocRenderer.m_oFullTransform.sy, 100,200)
@@ -3941,7 +3941,7 @@ function isAllowPasteLink(pastedWb) {
 					if (oDocRenderer.m_oCoordTransform) {
 						oldTx = oDocRenderer.m_oCoordTransform.tx;
 						oldTy = oDocRenderer.m_oCoordTransform.ty;
-						oDocRenderer.m_oCoordTransform.tx = !t.getRightToLeft() ? (t.getCellLeft(0) - offsetX) : (-t.getCellLeft(0) + ((printPagesData.leftFieldInPx + offsetCols - titleWidth) + t.getCellLeft(Math.max(0,range.c1-1))));
+						oDocRenderer.m_oCoordTransform.tx = !t.getRightToLeft() ? (t.getCellLeft(0) - offsetX) : (-t.getCellLeft(0) + t.getCellLeft(Math.max(0, range.c1)) + printPagesData.leftFieldInPx + offsetCols - titleWidth);
 						oDocRenderer.m_oCoordTransform.ty =  (t.getCellTop(0) - offsetY);
 					}
 					oDocRenderer.SaveGrState();
@@ -5253,7 +5253,7 @@ function isAllowPasteLink(pastedWb) {
 
             oGraphics.SaveGrState();
             oGraphics.transform3(new AscCommon.CMatrix());
-            this._AddClipRect(oGraphics, left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
+            t._AddClipRect(oGraphics, left / printScale - dLIns / printScale, top / printScale, (width - (left + right)) / printScale + (dLIns + dRIns) / printScale, (height - (top + bottom)) / printScale);
             oShape.draw(oGraphics);
 
             oGraphics.RestoreGrState();
@@ -12467,7 +12467,7 @@ function isAllowPasteLink(pastedWb) {
         return d;
     };
 
-    WorksheetView.prototype._calcRangeOffset = function (range, diffRange) {
+    WorksheetView.prototype._calcRangeOffset = function (range, diffRange, checkFrozen) {
         let vr = this.visibleRange;
         let ar = range || this._getSelection().getLast();
         if (this.getFormulaEditMode()) {
@@ -12515,6 +12515,17 @@ function isAllowPasteLink(pastedWb) {
             }
             return res;
         };
+
+		if (checkFrozen && this.topLeftFrozenCell) {
+			let cFrozen = this.topLeftFrozenCell.getCol0();
+			let rFrozen = this.topLeftFrozenCell.getRow0();
+			if (ar.r2 < rFrozen) {
+				incY = 0;
+			}
+			if (ar.c2 < cFrozen) {
+				incX = 0;
+			}
+		}
 
         if (adjustRight) {
             //isMC: if visible range can contains merge range -> try to find offset
@@ -13552,7 +13563,7 @@ function isAllowPasteLink(pastedWb) {
 			comment = this.cellCommentator.getComment(x, y, true);
 			// move active range to offset x,y
 			this._moveActiveCellToOffset(activeCell, x, y);
-			ret = this._calcRangeOffset();
+			ret = this._calcRangeOffset(null, null, true);
 		}
 
 		if (!comment) {
@@ -13738,7 +13749,7 @@ function isAllowPasteLink(pastedWb) {
 
         this.model.workbook.handlers.trigger("asc_onHideComment");
 
-        return isCoord ? this._calcActiveRangeOffsetIsCoord(x, y) : this._calcRangeOffset(undefined, diffRange);
+        return isCoord ? this._calcActiveRangeOffsetIsCoord(x, y) : this._calcRangeOffset(undefined, diffRange, true);
     };
 
     // Окончание выделения
@@ -15733,6 +15744,35 @@ function isAllowPasteLink(pastedWb) {
 				return false;
 			};
 
+			const doByAllRange = function (_range, callback) {
+				let isAllProperty = false;
+				let _allColProps = t.model.getAllCol();
+				if (!_allColProps || !_allColProps.xfs) {
+					let _allRowProps = t.model.getAllRow();
+					if (!_allRowProps || !_allRowProps.xfs) {
+						_range._foreachColNoEmpty(function (_col) {
+							if (_col && _col.xfs) {
+								isAllProperty = true;
+								return true;
+							}
+						});
+						if (!isAllProperty) {
+							_range._foreachRowNoEmpty(function (_row) {
+								if (_row && _row.xfs) {
+									isAllProperty = true;
+									return true;
+								}
+							});
+						}
+					}
+				}
+
+				if (isAllProperty) {
+					callback(_range, true);
+				} else {
+					callback(_range);
+				}
+			};
 
             History.Create_NewPoint();
             History.StartTransaction();
@@ -15996,7 +16036,9 @@ function isAllowPasteLink(pastedWb) {
 
                         switch(val) {
 							case c_oAscCleanOptions.All:
-							    range.cleanAll();
+								doByAllRange (range, function (_range, ignoreNoEmpty) {
+									_range.cleanAll(ignoreNoEmpty);
+								});
 								t.model.deletePivotTables(range.bbox);
 								t.model.removeSparklines(range.bbox);
 								t.model.clearDataValidation([range.bbox], true);
@@ -16014,7 +16056,9 @@ function isAllowPasteLink(pastedWb) {
 								break;
 							case c_oAscCleanOptions.Format:
 								t.model.clearConditionalFormattingRulesByRanges([range.bbox]);
-							    range.cleanFormat();
+								doByAllRange (range, function (_range, ignoreNoEmpty) {
+									_range.cleanFormat(ignoreNoEmpty);
+								});
 								break;
 							case c_oAscCleanOptions.Hyperlinks:
 							    range.cleanHyperlinks();
@@ -18363,6 +18407,7 @@ function isAllowPasteLink(pastedWb) {
 			if (!newFP.parse(AscCommonExcel.oFormulaLocaleInfo.Parse, AscCommonExcel.oFormulaLocaleInfo.DigitSep, parseResult)) {
 				if (parseResult.error !== c_oAscError.ID.FrmlWrongFunctionName && parseResult.error !== c_oAscError.ID.FrmlParenthesesCorrectCount) {
 					this.model.workbook.handlers.trigger("asc_onError", parseResult.error, c_oAscError.Level.NoCritical);
+					endTransaction();
 					return;
 				}
 			} else {
@@ -26339,7 +26384,7 @@ function isAllowPasteLink(pastedWb) {
 						let type = fP.outStack[i].type;
 						if ((AscCommonExcel.cElementType.cellsRange3D === type || AscCommonExcel.cElementType.cell3D === type ||
 							AscCommonExcel.cElementType.name3D === type) && fP.outStack[i].externalLink) {
-							let eR = t.model.workbook.getExternalWorksheet(fP.outStack[i].externalLink);
+							let eR = t.model.workbook.getExternalLink(fP.outStack[i].externalLink);
 							if (eR) {
 								externalReferences.push(opt_get_only_ids ? eR.Id : eR.getAscLink());
 								if (initStructure) {
@@ -26359,7 +26404,7 @@ function isAllowPasteLink(pastedWb) {
 					let importRangeLinks = fP.importFunctionsRangeLinks;
 					if (importRangeLinks) {
 						for (let i in importRangeLinks) {
-							let eR = t.model.workbook.getExternalWorksheet(i);
+							let eR = t.model.workbook.getExternalLink(i);
 							if (eR) {
 								externalReferences.push(opt_get_only_ids ? eR.Id : eR.getAscLink());
 								if (initStructure) {

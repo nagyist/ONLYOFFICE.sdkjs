@@ -48,6 +48,27 @@
     CAnnotationTextMarkup.prototype = Object.create(AscPDF.CAnnotationBase.prototype);
 	CAnnotationTextMarkup.prototype.constructor = CAnnotationTextMarkup;
 
+    CAnnotationTextMarkup.prototype.select = AscFormat.CGraphicObjectBase.prototype.select;
+    CAnnotationTextMarkup.prototype.deselect = AscFormat.CGraphicObjectBase.prototype.deselect;
+    CAnnotationTextMarkup.prototype.canChangeAdjustments = function() {};
+    CAnnotationTextMarkup.prototype.hitToHandles = function() {};
+    CAnnotationTextMarkup.prototype.hitInBoundingRect = function() {};
+    CAnnotationTextMarkup.prototype.getNoChangeAspect = function() {};
+    CAnnotationTextMarkup.prototype.getMainGroup = function() {};
+    CAnnotationTextMarkup.prototype.getObjectName = function() {};
+    CAnnotationTextMarkup.prototype.isShape = function() {};
+    CAnnotationTextMarkup.prototype.isImage = function() {};
+    CAnnotationTextMarkup.prototype.createMoveTrack = function() {};
+    CAnnotationTextMarkup.prototype.canMove = function() {
+        return false;
+    };
+    CAnnotationTextMarkup.prototype.canResize = function() {
+        return false;
+    };
+    CAnnotationTextMarkup.prototype.canRotate = function() {
+        return false;
+    };
+
     CAnnotationTextMarkup.prototype.IsTextMarkup = function() {
         return true;
     };
@@ -260,6 +281,7 @@
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints     = aQuads[i];
             
+            oGraphicsPDF.SetGlobalAlpha(this.GetOpacity());
             oGraphicsPDF.SetStrokeStyle(oRGBFill.r, oRGBFill.g, oRGBFill.b);
             oGraphicsPDF.BeginPath();
 
@@ -420,6 +442,7 @@
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints = aQuads[i];
             
+            oGraphicsPDF.SetGlobalAlpha(this.GetOpacity());
             oGraphicsPDF.SetStrokeStyle(oRGBFill.r, oRGBFill.g, oRGBFill.b);
             
             let oPoint1 = { x: aPoints[0], y: aPoints[1] };
@@ -532,6 +555,7 @@
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints     = aQuads[i];
             
+            oGraphicsPDF.SetGlobalAlpha(this.GetOpacity());
             oGraphicsPDF.SetStrokeStyle(oRGBFill.r, oRGBFill.g, oRGBFill.b);
             oGraphicsPDF.BeginPath();
 
@@ -808,6 +832,8 @@
     window["AscPDF"].CAnnotationStrikeout   = CAnnotationStrikeout;
     window["AscPDF"].CAnnotationSquiggly    = CAnnotationSquiggly;
     window["AscPDF"].CAnnotationCaret       = CAnnotationCaret;
+    window["AscPDF"].fillRegion             = fillRegion;
     window["AscPDF"].IsInQuads              = IsInQuads;
+    
 })();
 

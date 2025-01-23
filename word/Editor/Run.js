@@ -3713,30 +3713,41 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
             if (PRS.ComplexFields.isHiddenFieldContent() && para_End !== ItemType && para_FieldChar !== ItemType)
             	continue;
 
-			if (para_InstrText === ItemType && !PRS.IsFastRecalculate())
+			if (para_InstrText === ItemType)
 			{
-				var oInstrText = Item;
-				if (!PRS.ComplexFields.isComplexFieldCode())
+				if (PRS.IsFastRecalculate())
 				{
-					if (AscCommon.IsSpace(Item.Value))
+					if (Item.GetReplacementItem())
 					{
-						Item     = new AscWord.CRunSpace(Item.Value);
-						ItemType = para_Space;
-						Item.Measure(g_oTextMeasurer, this.getCompiledPr());
+						Item = Item.GetReplacementItem();
+						ItemType = Item.Type;
 					}
-					else
-					{
-						// TODO: Пока для такого текста не шейпим по-нормальному, а как по-старому по одному отдельному символу
-						Item     = new AscWord.CRunText(Item.Value);
-						ItemType = para_Text;
-						AscWord.ParagraphTextShaper.ShapeRunTextItem(Item, this.getCompiledPr());
-					}
-					
-					oInstrText.SetReplacementItem(Item);
 				}
 				else
 				{
-					oInstrText.SetReplacementItem(null);
+					var oInstrText = Item;
+					if (!PRS.ComplexFields.isComplexFieldCode())
+					{
+						if (AscCommon.IsSpace(Item.Value))
+						{
+							Item     = new AscWord.CRunSpace(Item.Value);
+							ItemType = para_Space;
+							Item.Measure(g_oTextMeasurer, this.getCompiledPr());
+						}
+						else
+						{
+							// TODO: Пока для такого текста не шейпим по-нормальному, а как по-старому по одному отдельному символу
+							Item     = new AscWord.CRunText(Item.Value);
+							ItemType = para_Text;
+							AscWord.ParagraphTextShaper.ShapeRunTextItem(Item, this.getCompiledPr());
+						}
+						
+						oInstrText.SetReplacementItem(Item);
+					}
+					else
+					{
+						oInstrText.SetReplacementItem(null);
+					}
 				}
 			}
 
@@ -4996,16 +5007,33 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 	// TODO: Пока для формул сделаем, чтобы работало по-старому, в дальнейшем надо будет переделать на fontslot
 	let fontSlot = this.IsMathRun() ? AscWord.fontslot_ASCII : AscWord.fontslot_None;
 	
+	let fontMap = {};
+	
 	for (var CurPos = StartPos; CurPos < EndPos; CurPos++)
 	{
 		var Item = this.private_CheckInstrText(this.Content[CurPos]);
-		fontSlot |= Item.GetFontSlot(textPr);
-
 		if (Item === Para.Numbering.Item)
 		{
 			PRS.LineAscent = Para.Numbering.LineAscent;
 		}
-
+		
+		if (para_Text === Item.Type)
+		{
+			let fontId = AscFonts.GetGraphemeFontId(Item.GetGrapheme());
+			if (fontId)
+			{
+				let fontSize = Item.GetFontSlot(textPr) === fontslot_CS ? textPr.FontSizeCS : textPr.FontSize;
+				if (undefined === fontMap[fontId])
+					fontMap[fontId] = fontSize;
+				else
+					fontMap[fontId] = Math.max(fontSize, fontMap[fontId]);
+			}
+			UpdateLineMetricsText = true;
+			continue;
+		}
+		
+		fontSlot |= Item.GetFontSlot(textPr);
+		
 		switch (Item.Type)
 		{
 			case para_Sym:
@@ -5086,6 +5114,13 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 			fontSlot = textPr.CS || textPr.RTL ? AscWord.fontslot_CS : AscWord.fontslot_ASCII;
 		
 		let metrics = textPr.GetTextMetrics(fontSlot, this.Paragraph.GetTheme());
+		
+		for (let fontId in fontMap)
+		{
+			let fontName  = AscFonts.GetFontNameByFontId(fontId);
+			let fontStyle = AscFonts.GetFontStyleByFontId(fontId);
+			metrics.Update(fontName, fontMap[fontId], fontStyle);
+		}
 		
 		let textDescent = metrics.Descent;
 		let textAscent  = metrics.Ascent + metrics.LineGap;
@@ -10997,8 +11032,8 @@ ParaRun.prototype.RejectRevisionChanges = function(nType, bAll)
 			CenterRun.Set_Pr(CenterRun.Pr.PrChange);
 		}
 
-		var oReviewInfo = this.GetReviewInfo();
-		var oPrevInfo   = oReviewInfo.GetPrevAdded();
+		let reviewInfo = this.GetReviewInfo();
+		let prevInfo   = reviewInfo ? reviewInfo.GetPrevAdded() : null;
 		if ((reviewtype_Add === ReviewType
 			&& (undefined === nType
 			|| c_oAscRevisionsChangeType.TextAdd === nType
@@ -11006,11 +11041,11 @@ ParaRun.prototype.RejectRevisionChanges = function(nType, bAll)
 			&& Asc.c_oAscRevisionsMove.NoMove !== this.GetReviewMoveType()
 			&& oProcessMove
 			&& !oProcessMove.IsFrom()
-			&& oProcessMove.GetUserId() === this.GetReviewInfo().GetUserId())))
+			&& oProcessMove.GetUserId() === reviewInfo.GetUserId())))
 			|| (undefined === nType
 			&& bAll
 			&& reviewtype_Remove === ReviewType
-			&& oPrevInfo))
+			&& prevInfo))
 		{
 			Parent.RemoveFromContent(CenterRunPos, 1);
 			CenterRun.ClearContent();
@@ -11029,11 +11064,11 @@ ParaRun.prototype.RejectRevisionChanges = function(nType, bAll)
 			&& Asc.c_oAscRevisionsMove.NoMove !== this.GetReviewMoveType()
 			&& oProcessMove
 			&& oProcessMove.IsFrom()
-			&& oProcessMove.GetUserId() === this.GetReviewInfo().GetUserId())))
+			&& oProcessMove.GetUserId() === reviewInfo.GetUserId())))
 		{
-			if (oPrevInfo && c_oAscRevisionsChangeType.MoveMark !== nType)
+			if (prevInfo && c_oAscRevisionsChangeType.MoveMark !== nType)
 			{
-				CenterRun.SetReviewTypeWithInfo(reviewtype_Add, oPrevInfo.Copy());
+				CenterRun.SetReviewTypeWithInfo(reviewtype_Add, prevInfo.Copy());
 			}
 			else
 			{

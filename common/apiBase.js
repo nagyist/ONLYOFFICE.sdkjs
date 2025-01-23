@@ -103,6 +103,8 @@
 		this.IsLongActionCurrent       = 0;
 		this.LongActionCallbacks       = [];
 		this.LongActionCallbacksParams = [];
+		this.IsActionRestrictionCurrent  = 0;
+		this.IsActionRestrictionPrev  = null;
 
 		// AutoSave
 		this.autoSaveGap = 0;					// Интервал автосохранения (0 - означает, что автосохранения нет) в милесекундах
@@ -165,7 +167,6 @@
         this.forceSaveButtonContinue = false;
         this.forceSaveTimeoutTimeout = null;
 		this.forceSaveForm = null;
-		this.disconnectRestrictions = null;//to restore restrictions after disconnect
 		this.forceSaveUndoRequest = false; // Флаг нужен, чтобы мы знали, что данное сохранение пришло по запросу Undo в совместке
 		this.saveRelativePrev = {};
 
@@ -290,19 +291,17 @@
 				t.sendEvent("asc_onError", Asc.c_oAscError.ID.LoadingScriptError, c_oAscError.Level.NoCritical);
 			});
 		}
-
-		var oldOnError = window.onerror;
-		window.onerror = function(errorMsg, url, lineNumber, column, errorObj) {
-			//send only first error to reduce number of requests. also following error may be consequences of first
-			window.onerror = oldOnError;
+		const sendUnhandledError  = function(errorMsg, url, lineNumber, column, stack) {
 			let editorInfo = t.getEditorErrorInfo();
 			let memoryInfo = AscCommon.getMemoryInfo();
-			var msg = 'Error: ' + errorMsg + '\n Script: ' + url + '\n Line: ' + lineNumber + ':' + column +
+			lineNumber = undefined !== lineNumber ? lineNumber : "";
+			column = undefined !== column ? column : "";
+			var msg = 'Error: ' + errorMsg + '\n Script: ' + (url || "") + '\n Line: ' + lineNumber + ':' + column +
 				'\n userAgent: ' + (navigator.userAgent || navigator.vendor || window.opera) + '\n platform: ' +
 				navigator.platform + '\n isLoadFullApi: ' + t.isLoadFullApi + '\n isDocumentLoadComplete: ' +
 				t.isDocumentLoadComplete + (editorInfo ? '\n ' + editorInfo : "") +
 				(memoryInfo ? '\n performance.memory: ' + memoryInfo : "") +
-				'\n StackTrace: ' + (errorObj ? errorObj.stack : "");
+				'\n StackTrace: ' + (stack || "");
 			AscCommon.sendClientLog("error", "changesError: " + msg, t);
 			if (t.isLoadFullApi ) {
 				if(t.isDocumentLoadComplete) {
@@ -318,6 +317,25 @@
 					t.sendEvent("asc_onError", Asc.c_oAscError.ID.ConvertationOpenError, c_oAscError.Level.Critical);
 				}
 			}
+		}
+		var oldOnunhandledrejection = window.onunhandledrejection;
+		window.onunhandledrejection = function(errorEvent) {
+			//send only first error to reduce number of requests. also following error may be consequences of first
+			window.onunhandledrejection = oldOnunhandledrejection;
+			const errorMsg = errorEvent.reason.message || errorEvent.reason;
+			const stack = errorEvent.reason.stack || "";
+			sendUnhandledError(errorMsg, undefined, undefined, undefined, stack);
+			if (oldOnunhandledrejection) {
+				return oldOnunhandledrejection.apply(this, arguments);
+			} else {
+				return false;
+			}
+		}
+		var oldOnError = window.onerror;
+		window.onerror = function(errorMsg, url, lineNumber, column, errorObj) {
+			//send only first error to reduce number of requests. also following error may be consequences of first
+			window.onerror = oldOnError;
+			sendUnhandledError(errorMsg, url, lineNumber, column, (errorObj ? errorObj.stack : ""));
 			if (oldOnError) {
 				return oldOnError.apply(this, arguments);
 			} else {
@@ -681,7 +699,12 @@
 			this.sendEvent("asc_onInitEditorFonts", gui_fonts);
 		}
 	};
-	baseEditorsApi.prototype.sync_StartAction                = function(type, id)
+	/**
+	 * @param {Asc.c_oAscAsyncAction} type
+	 * @param {Asc.c_oAscAsyncActionType} id
+	 * @param {Asc.c_oAscRestrictionType} [actionRestriction]
+	 */
+	baseEditorsApi.prototype.sync_StartAction                = function(type, id, actionRestriction)
 	{
 		if (type !== c_oAscAsyncActionType.Empty)
 			this.sendEvent('asc_onStartAction', type, id);
@@ -691,8 +714,20 @@
 		{
 			this.incrementCounterLongAction();
 		}
+		if (undefined !== actionRestriction)
+		{
+			//для некоторых действий не хочется показывать модальный loader, который закрывает всю страницу
+			//если для них делать incrementCounterLongAction, то будут проблемы, что не заблокированы линейки, resize окна не работает
+			//И скорее всего другие проблемы, поэтому делается через asc_setRestriction
+			this.incrementCounterActionRestriction(actionRestriction);
+		}
 	};
-	baseEditorsApi.prototype.sync_EndAction                  = function(type, id)
+	/**
+	 * @param type {Asc.c_oAscAsyncAction}
+	 * @param id {Asc.c_oAscAsyncActionType}
+	 * @param {Asc.c_oAscRestrictionType} [actionRestriction]
+	 */
+	baseEditorsApi.prototype.sync_EndAction                  = function(type, id, actionRestriction)
 	{
 		if (type !== c_oAscAsyncActionType.Empty)
 			this.sendEvent('asc_onEndAction', type, id);
@@ -702,10 +737,10 @@
 		{
 			this.decrementCounterLongAction();
 		}
-	};
-	baseEditorsApi.prototype.sync_TryUndoInFastCollaborative = function()
-	{
-		this.sendEvent("asc_OnTryUndoInFastCollaborative");
+		if (undefined !== actionRestriction)
+		{
+			this.decrementCounterActionRestriction();
+		}
 	};
 	baseEditorsApi.prototype.asc_setViewMode                 = function()
 	{
@@ -1090,6 +1125,34 @@
 			}
 			this.LongActionCallbacks.splice(0, _length);
 			this.LongActionCallbacksParams.splice(0, _length);
+		}
+	};
+
+	baseEditorsApi.prototype.isActionWithRestriction                   = function()
+	{
+		return 0 !== this.IsActionRestrictionCurrent;
+	};
+	baseEditorsApi.prototype.incrementCounterActionRestriction      = function(restrictions)
+	{
+		if (0 === this.IsActionRestrictionCurrent)
+		{
+			this.IsActionRestrictionPrev = this.restrictions;
+			this.asc_setRestriction(restrictions);
+		}
+		++this.IsActionRestrictionCurrent;
+	};
+	baseEditorsApi.prototype.decrementCounterActionRestriction      = function()
+	{
+		this.IsActionRestrictionCurrent--;
+		if (this.IsActionRestrictionCurrent < 0)
+		{
+			this.IsActionRestrictionCurrent = 0;
+		}
+
+		if (0 === this.IsActionRestrictionCurrent && null !== this.IsActionRestrictionPrev)
+		{
+			this.asc_setRestriction(this.IsActionRestrictionPrev);
+			this.IsActionRestrictionPrev = null;
 		}
 	};
 	baseEditorsApi.prototype.checkLongActionCallback         = function(_callback, _param)
@@ -1713,11 +1776,7 @@
 			t.sendEvent('asc_onCoAuthoringChatReceiveMessage', e, clear);
 		};
 		this.CoAuthoringApi.onServerVersion = function (buildVersion, buildNumber) {
-			if (null !== t.disconnectRestrictions) {
-				t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
-				t.asc_setRestriction(t.disconnectRestrictions);
-				t.disconnectRestrictions = null;
-			}
+			t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 
 			t.sendEvent('asc_onServerVersion', buildVersion, buildNumber);
 		};
@@ -1929,11 +1988,7 @@
 			}
 			let isSessionIdleDisconnect = AscCommon.c_oCloseCode.sessionIdle === opt_closeCode;
 			if (null != opt_closeCode && !isSessionIdleDisconnect) {
-				if (null !== t.disconnectRestrictions) {
-					t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
-					t.asc_setRestriction(t.disconnectRestrictions);
-					t.disconnectRestrictions = null;
-				}
+				t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				let allowRefresh = [c_oCloseCode.updateVersion, c_oCloseCode.noCache, c_oCloseCode.restore, c_oCloseCode.quiet];
 				if (-1 !== allowRefresh.indexOf(opt_closeCode) && !t.isDocumentModified() && t.canRefreshFile())  {
 					t.onRefreshFile();
@@ -1947,10 +2002,8 @@
 						t.sendEvent('asc_onError', error, level);
 					}
 				}
-			} else if (null === t.disconnectRestrictions){
-				t.disconnectRestrictions = t.restrictions;
-				t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect);
-				t.asc_setRestriction(Asc.c_oAscRestrictionType.View);
+			} else if (!t.isActionWithRestriction()){
+				t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				if (isSessionIdleDisconnect) {
 					t.waitNotIdle(undefined, function () {
 						t.CoAuthoringApi.connect();
@@ -2789,7 +2842,7 @@
 		return this.VersionHistory;
 	};
 	baseEditorsApi.prototype.asc_refreshFile = function(docInfo) {
-		this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.RefreshFile);
+		this.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.RefreshFile, Asc.c_oAscRestrictionType.View);
 		//todo always call asc_CloseFile ?
 		let isInfinityLoop = this.documentIsWopi
 			? docInfo.get_Wopi()["Version"] === this.DocInfo.get_Wopi()["Version"]
@@ -2811,7 +2864,7 @@
 	}
 	baseEditorsApi.prototype.onRefreshFile = function () {
 		let t = this;
-		this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.RefreshFile);
+		this.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.RefreshFile, Asc.c_oAscRestrictionType.View);
 		if (this.documentIsWopi) {
 			let callback = function (isTimeout, response) {
 				if (response) {
@@ -4673,6 +4726,10 @@
 		else
 			return this.Shortcuts.Get(e.KeyCode, e.CtrlKey, e.ShiftKey, e.AltKey);
 	};
+	baseEditorsApi.prototype.executeShortcut = function(type)
+	{
+		
+	};
 	baseEditorsApi.prototype.getCustomShortcutAction = function(nActionType)
 	{
 		return this.Shortcuts.GetCustomAction(nActionType);
@@ -5188,6 +5245,23 @@
 	baseEditorsApi.prototype.asc_StopInkDrawer = function() {
 		this.stopInkDrawer();
 	};
+	baseEditorsApi.prototype.asc_RemoveAllInks = function() {
+		this.removeAllInks();
+	};
+	baseEditorsApi.prototype.removeAllInks = function() {
+	};
+	baseEditorsApi.prototype.asc_HaveInks = function() {
+        return this.haveInks();
+	};
+	baseEditorsApi.prototype.haveInks = function() {
+        return true;
+	};
+	baseEditorsApi.prototype.asc_CanRemoveAllInks = function() {
+        return this.canRemoveAllInks();
+	};
+	baseEditorsApi.prototype.canRemoveAllInks = function() {
+        return true;
+	};
 	baseEditorsApi.prototype.stopInkDrawer = function() {
 		this.inkDrawer.turnOff();
 	};
@@ -5394,6 +5468,14 @@
 		});
 	};
 
+	baseEditorsApi.prototype.wrapShortcut = function(methodName, shortcutType)
+	{
+		this[methodName] = function() {
+			this.executeShortcut.call(this, shortcutType);
+		};
+		this.wrapFunction(methodName);
+	};
+
 	baseEditorsApi.prototype.setPluginsOptions = function(options)
 	{
 		this.externalPluginsOptions = options;
@@ -5551,6 +5633,9 @@
 	prot['asc_StartDrawInk'] = prot.asc_StartDrawInk;
 	prot['asc_StartInkEraser'] = prot.asc_StartInkEraser;
 	prot['asc_StopInkDrawer'] = prot.asc_StopInkDrawer;
+	prot['asc_RemoveAllInks'] = prot.asc_RemoveAllInks;
+	prot['asc_HaveInks'] = prot.asc_HaveInks;
+	prot['asc_CanRemoveAllInks'] = prot.asc_CanRemoveAllInks;
 	prot['startGetDocInfo'] = prot.startGetDocInfo;
 	prot['stopGetDocInfo'] = prot.stopGetDocInfo;
 	prot["can_CopyCut"] = prot.can_CopyCut;

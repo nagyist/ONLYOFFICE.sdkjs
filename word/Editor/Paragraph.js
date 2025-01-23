@@ -5953,6 +5953,10 @@ Paragraph.prototype.private_CorrectPosInCombiningMark = function(oContentPos, is
  */
 Paragraph.prototype.getSearchPosByXY = function(x, y, page, yIsLine, stepEnd, centerMode)
 {
+	let logicDocument = this.GetLogicDocument();
+	if (stepEnd && logicDocument && logicDocument.IsSelectParagraphEndMark)
+		stepEnd = logicDocument.IsSelectParagraphEndMark();
+	
 	let searchPos = new AscWord.ParagraphSearchPositionXY();
 	searchPos.init(this, stepEnd, centerMode);
 	
@@ -6653,7 +6657,7 @@ Paragraph.prototype.Get_StartRangePos2 = function(CurLine, CurRange)
 	this.Content[Pos].Get_StartRangePos2(CurLine, CurRange, ContentPos, Depth + 1);
 	return ContentPos;
 };
-Paragraph.prototype.Get_EndRangePos2 = function(CurLine, CurRange)
+Paragraph.prototype.Get_EndRangePos2 = function(CurLine, CurRange, stepEnd)
 {
 	var ContentPos = new AscWord.CParagraphContentPos();
 	if (!this.Lines[CurLine] || !this.Lines[CurLine].Ranges[CurRange])
@@ -6661,8 +6665,12 @@ Paragraph.prototype.Get_EndRangePos2 = function(CurLine, CurRange)
 
 	var Depth = 0;
 	var Pos   = this.Lines[CurLine].Ranges[CurRange].EndPos;
+	if (false === stepEnd && Pos === this.Content.length - 1 && Pos > 0)
+		--Pos;
+	
 	ContentPos.Update(Pos, Depth);
 	this.Content[Pos].Get_EndRangePos2(CurLine, CurRange, ContentPos, Depth + 1);
+	
 	return ContentPos;
 };
 Paragraph.prototype.Get_StartPos = function()
@@ -7469,17 +7477,17 @@ Paragraph.prototype.CanCorrectContent = function()
 /**
  * Корректируем содержимое параграфа
  */
-Paragraph.prototype.CorrectContent = function()
+Paragraph.prototype.CorrectContent = function(startPos, endPos, preserveEmptyElements)
 {
 	if (!this.CanCorrectContent())
 		return;
 
-	this.Correct_Content();
+	this.Correct_Content(startPos, endPos, preserveEmptyElements);
 
 	if (this.CurPos.ContentPos >= this.Content.length - 1)
 		this.MoveCursorToEndPos();
 };
-Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, bDoNotDeleteEmptyRuns)
+Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, preserveEmptyElements)
 {
 	if (!this.CanCorrectContent())
 		return;
@@ -7512,7 +7520,8 @@ Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, bDoNotDeleteE
 				|| para_Field === CurElement.Type
 				|| (para_InlineLevelSdt === CurElement.Type && !CurElement.IsPlaceHolder()))
 			&& true === CurElement.Is_Empty()
-			&& true !== CurElement.Is_CheckingNearestPos())
+			&& true !== CurElement.Is_CheckingNearestPos()
+			&& true !== preserveEmptyElements)
 		{
 			this.Internal_Content_Remove(CurPos);
 		}
@@ -7533,7 +7542,7 @@ Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, bDoNotDeleteE
 		}
 		else
 		{
-			if (true !== bDoNotDeleteEmptyRuns)
+			if (true !== preserveEmptyElements)
 			{
 				// TODO (Para_End): Предпоследний элемент мы не проверяем, т.к. на ран с Para_End мы не ориентируемся
 				if (true === CurElement.Is_Empty() && (0 < CurPos || para_Run !== this.Content[CurPos].Type) && CurPos < this.Content.length - 2 && para_Run === this.Content[CurPos + 1].Type)
@@ -8727,6 +8736,12 @@ Paragraph.prototype.DrawSelectionOnPage = function(CurPage, clipInfo)
 					
 					drawSelectionState.beginRange(iRange);
 					
+					if (rangeEnd === this.Content.length - 1
+						&& this.GetLogicDocument()
+						&& this.GetLogicDocument().IsSelectParagraphEndMark
+						&& !this.GetLogicDocument().IsSelectParagraphEndMark())
+						--rangeEnd;
+					
 					for (let pos = rangeStart; pos <= rangeEnd; ++pos)
 					{
 						this.Content[pos].drawSelectionInRange(iLine, iRange, drawSelectionState);
@@ -9139,6 +9154,12 @@ Paragraph.prototype.GetSelectionBounds = function()
 				
 				if (StartPos > rangeEnd || EndPos < rangeStart)
 					continue;
+				
+				if (rangeEnd === this.Content.length - 1
+					&& this.GetLogicDocument()
+					&& this.GetLogicDocument().IsSelectParagraphEndMark
+					&& !this.GetLogicDocument().IsSelectParagraphEndMark())
+					--rangeEnd;
 				
 				drawSelectionState.beginRange(iRange);
 				for (var CurPos = rangeStart; CurPos <= rangeEnd; CurPos++)

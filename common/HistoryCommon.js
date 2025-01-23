@@ -1808,8 +1808,8 @@
 	window['AscDFH'].historyitem_type_Pdf_List_Form			= 2228 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Drawing			= 2229 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Page				= 2230 << 16;
-	window['AscDFH'].historyitem_type_Pdf_Annot_Stamp		= 2230 << 16;
-
+	window['AscDFH'].historyitem_type_Pdf_Annot_Stamp		= 2231 << 16;
+	
 	window['AscDFH'].historyitem_type_CustomProperties      = 2301 << 16;
 
 	window['AscDFH'].historyitem_type_CEffectProperties      = 2302 << 16;
@@ -4067,6 +4067,7 @@
 
 	// annot stamp
 	AscDFH.historyitem_Pdf_Stamp_Type			= AscDFH.historyitem_type_Pdf_Annot_Stamp | 1;
+	AscDFH.historyitem_Pdf_Stamp_InRect			= AscDFH.historyitem_type_Pdf_Annot_Stamp | 2;
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в PDF drawing prototype
@@ -4650,6 +4651,10 @@
 			this.Class.Refresh_RecalcData(this);
 	};
 	CChangesBase.prototype.IsContentChange = function()
+	{
+		return false;
+	};
+	CChangesBase.prototype.IsSpreadsheetChange = function()
 	{
 		return false;
 	};

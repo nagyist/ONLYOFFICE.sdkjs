@@ -304,6 +304,7 @@
             if (this.IsHighlight())
                 AscPDF.startMultiplyMode(oGraphicsPDF.GetContext());
             
+            oGraphicsPDF.SetGlobalAlpha(1);
             oGraphicsPDF.DrawImageXY(originView, X, Y, undefined, true);
             AscPDF.endMultiplyMode(oGraphicsPDF.GetContext());
         }
@@ -743,6 +744,12 @@
         // oGraphicsPDF.Rect(X, Y, nWidth, nHeight);
         // oGraphicsPDF.Stroke();
     };
+    CAnnotationBase.prototype.changeFlipH = function () {
+        return false;
+    };
+    CAnnotationBase.prototype.changeFlipV = function () {
+        return false;
+    };
     CAnnotationBase.prototype.GetReplies = function() {
         return this._replies;
     };
@@ -750,8 +757,8 @@
         return this._replies[nPos];
     };
     CAnnotationBase.prototype.RemoveComment = function() {
-        this.SetContents(null);
         this.EditCommentData(undefined);
+        this.SetContents(undefined);
     };
     CAnnotationBase.prototype.EditCommentData = function(oCommentData) {
         let oDoc = this.GetDocument();

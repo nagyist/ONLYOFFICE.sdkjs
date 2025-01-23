@@ -470,15 +470,21 @@
 	/**
 	 * Calls getCell on object and tries to parse as Number(cell.v) if cell exists otherwise return undefined.
 	 * @param {String} formula
+	 * @param {number?} defaultValue
 	 * @return {Number | undefined} number
 	 */
-	SheetStorage.prototype.getCellNumberValue = function (formula) {
+	SheetStorage.prototype.getCellNumberValue = function (formula, defaultValue) {
 		let cell = this.getCell(formula);
+		let result;
 		if (cell !== undefined) {
-			return Number(cell.v);
+			result = Number(cell.v);
 		} else {
-			return undefined;
+			result = undefined;
 		}
+		if (defaultValue !== undefined) {
+			result = result === undefined ? defaultValue : result;
+		}
+		return result;
 	}
 	/**
 	 * Calls getCell on object and tries to parse as Number(cell.v) if cell exists otherwise return undefined.
@@ -754,7 +760,7 @@
 		let fillResultCells = ["LineColor", "FillForegnd", "FillBkgnd"];
 		let fillColorResultCells = ["Color", "GradientStopColor"];
 		let numberResultCells = ["LinePattern", "LineWeight", "GradientStopColorTrans", "GradientStopPosition",
-		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern"];
+		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap"];
 		let stringResultCells = ["EndArrow", "BeginArrow"];
 		let booleanResultCells = ["FillGradientEnabled"];
 
@@ -894,6 +900,18 @@
 						angle = 5400000;
 					}
 					cellNumberValue = angle;
+				} else if (cellName === "LineCap") {
+					switch (cellNumberValue) {
+						case 0:
+							cellNumberValue = 1;
+							break;
+						case 1:
+							cellNumberValue = 0;
+							break;
+						case 2:
+							cellNumberValue = 2;
+							break;
+					}
 				}
 				return cellNumberValue;
 			}

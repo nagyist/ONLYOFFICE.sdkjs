@@ -1835,6 +1835,7 @@
         let Y = aOringRect[1];
 
         if (originView) {
+            oGraphicsPDF.SetGlobalAlpha(1);
             oGraphicsPDF.DrawImageXY(originView, X, Y, undefined, true);
         }
 
@@ -1863,10 +1864,10 @@
         let nHeight     = (aOrigRect[3] - aOrigRect[1]);
 
         let aRegions = [[
-            [nX + nWidth, nY],
             [nX, nY],
-            [nX, nY + nHeight],
-            [nX + nWidth, nY + nHeight]
+            [nX + nWidth, nY],
+            [nX + nWidth, nY + nHeight],
+            [nX, nY + nHeight]
         ]];
 
         oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aRegions);

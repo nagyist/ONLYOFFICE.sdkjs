@@ -1738,7 +1738,7 @@
 			_pasteFromBinaryExcel: function (worksheet, base64, isIntoShape, isCellEditMode, isPasteAll) {
 				var t = this;
 				var newFonts;
-				var tempWorkbook = new AscCommonExcel.Workbook();
+				var tempWorkbook = new AscCommonExcel.Workbook(undefined, undefined, false);
 				tempWorkbook.DrawingDocument = Asc.editor.wbModel.DrawingDocument;
 				var aPastedImages = this._readExcelBinary(base64, tempWorkbook);
 
@@ -2789,7 +2789,16 @@
 
 						drawingObject.graphicObject.setDrawingObjects(ws.objectRender);
 						drawingObject.graphicObject.setWorksheet(ws.model);
-						xfrm.setOffX(ws.checkRtl(curCol, null, 3));
+						let _left = ws.checkRtl(curCol, null, 3);
+						if (ws.getRightToLeft()) {
+							let mmToPx = Asc.getCvtRatio(3/*px*/, 0/*pt*/, ws._getPPIX());
+							let _widthDrawing = drawingObject.getWidthFromTo() / mmToPx;
+							let _widthCtx = ws.getCtxWidth() / mmToPx;
+							if (_left + _widthDrawing > _widthCtx) {
+								_left -= _left + _widthDrawing - _widthCtx;
+							}
+						}
+						xfrm.setOffX( _left);
 						xfrm.setOffY(curRow);
 						aDrawings.push(drawingObject.graphicObject);
 						drawingObject.graphicObject.getAllRasterImages(aImagesSync);
