@@ -157,7 +157,7 @@ function (window, undefined) {
 
 					const arrExternalChartReferences = mapExternalReferences[externalReferenceId];
 					if (stream && arrExternalChartReferences) {
-						let wb = new AscCommonExcel.Workbook();
+						let wb = new AscCommonExcel.Workbook(undefined, undefined, false);
 						wb.dependencyFormulas.lockRecal();
 						wb.DrawingDocument = oLogicDocument.DrawingDocument;
 						wb.theme = oLogicDocument.theme ? oLogicDocument.theme : oLogicDocument.Get_Theme();

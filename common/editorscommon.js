@@ -3782,13 +3782,13 @@
 		}
 
 		var _is3DRef = this.is3DRef(formula, start_pos);
-		if(_is3DRef && (_is3DRef[0] && _is3DRef[1] && _is3DRef[1].length || _is3DRef[3]))
+		if(_is3DRef && _is3DRef[0])
 		{
 			let _isName = false;
-			if (_is3DRef[0] && _is3DRef[1] && _is3DRef[1].length) {
+			if (_is3DRef[1] && _is3DRef[1].length) {
 				_isName = this.isDefName(formula, this.pCurrPos);
-			} else if (_is3DRef[3] && _is3DRef[4]) {
-				_isName = this.isDefName(formula, formula.indexOf("!") + 1);
+			} else {
+				_isName = _is3DRef[4];
 			}
 			if (_isName) {
 				return {defName: _isName.defName, sheet: _is3DRef[1], external: _is3DRef[3]};

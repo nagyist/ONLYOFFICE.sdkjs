@@ -442,7 +442,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 
 		const oCellPasteHelper = oWs.cellPasteHelper;
 
-		const oMockWb = new AscCommonExcel.Workbook();
+		const oMockWb = new AscCommonExcel.Workbook(undefined, undefined, false);
 		oMockWb.externalReferences = oPastedWb.externalReferences;
 		oMockWb.dependencyFormulas = oPastedWb.dependencyFormulas;
 		const oCachedWorksheets = this.getWorksheetsFromCache(oMockWb);

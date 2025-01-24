@@ -2067,7 +2067,7 @@ function(window, undefined) {
 					if (defName) {
 						const parsed3DRef = AscCommon.parserHelp.parse3DRef(defName.ref, 0);
 						if (!parsed3DRef.external) {
-							return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref}});
+							return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref, worksheetName: parsed3DRef.sheet}});
 						}
 					}
 				}
