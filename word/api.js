@@ -951,6 +951,12 @@
 		this.isHandMode = false;
 
 		//g_clipboardBase.Init(this);
+		
+		if (config["headings-color"])
+		{
+			let rgba = AscCommon.RgbaHexToRGBA(config["headings-color"]);
+			AscWord.setDefaultHeadingColor(rgba.R, rgba.G, rgba.B)
+		}
 
 		this.externalChartCollector = new AscCommon.CExternalChartCollector();
 		this._init();
@@ -2761,8 +2767,8 @@ background-repeat: no-repeat;\
 				window["AscDesktopEditor"]["emulateCloudPrinting"](false);
 		}
 
-		if (changes) {
-			if (isCloudLocal) {
+		if (changes || this.watermarkDraw) {
+			if (changes && isCloudLocal) {
 				this.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.DownloadAs);
 				this.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.Save);
 

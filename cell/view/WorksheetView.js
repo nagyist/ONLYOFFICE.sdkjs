@@ -3789,7 +3789,7 @@ function isAllowPasteLink(pastedWb) {
 				if (!renderingSettings) {
 					renderingSettings = this.initRenderingSettings();
 				}
-				renderingSettings && renderingSettings.setCtxWidth(printPagesData.pageWidth / vector_koef);
+				renderingSettings && !renderingSettings.getCtxWidth() && renderingSettings.setCtxWidth(printPagesData.pageWidth / vector_koef);
 				renderingSettings && renderingSettings.setPageLeftOffset(printPagesData.leftFieldInPx);
 				let pageRightField = c_oAscPrintDefaultSettings.PageRightField;
 				renderingSettings && renderingSettings.setPageRightOffset(pageRightField / vector_koef);
@@ -6285,9 +6285,9 @@ function isAllowPasteLink(pastedWb) {
 
 			if (isMerged) {
 				wb = this._getColLeft(colR + 1, true, ctx) - this._getColLeft(colL, true, ctx);
-				//if (this.getRightToLeft()) {
+				if (this.getRightToLeft()) {
 					xb1 += this._getColumnWidth(col) - wb;
-				//}
+				}
 
 				hb = this._getRowTop(rowB + 1) - this._getRowTop(rowT);
 				this._AddClipRect(ctx, xb1, yb1, wb, hb);
@@ -13199,6 +13199,7 @@ function isAllowPasteLink(pastedWb) {
 
         // Получаем гиперссылку (//ToDo)
         var ar = selectionRange.getLast().clone();
+		let isOneColSelected = Math.abs(ar.c2 - ar.c1) + 1;
         var range = this.model.getRange3(ar.r1, ar.c1, ar.r2, ar.c2);
         var hyperlink = range.getHyperlink();
         var oHyperlink;
@@ -13282,7 +13283,7 @@ function isAllowPasteLink(pastedWb) {
 			cell_info.isLockedHeaderFooter = true;
 		}
 
-		cell_info.selectedColsCount = Math.abs(ar.c2 - ar.c1) + 1;
+		cell_info.selectedColsCount = isOneColSelected;
 
         return cell_info;
 	};
@@ -20291,7 +20292,7 @@ function isAllowPasteLink(pastedWb) {
 			ctx.setStrokeStyle(t.settings.cells.defaultState.border);
 
 			var _diff = isPivotCollapsed ? 1 : 0;
-			ctx.fillRect(startX + _diff, startY + _diff, width - _diff, height - _diff);
+			t._fillRect(ctx, startX + _diff, startY + _diff, width - _diff, height - _diff);
 			if (isPivotCollapsed) {
 				ctx.beginPath();
 				t._lineHor(ctx, startX + _diff, startY, startX + width);

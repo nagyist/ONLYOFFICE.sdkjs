@@ -2932,6 +2932,8 @@
 		this.handlers = eventsHandlers;
 		this.dependencyFormulas = new DependencyGraph(this);
 		this.nActive = 0;
+		this.showVerticalScroll = null;
+		this.showHorizontalScroll = null;
 		this.App = null;
 		this.Core = null;
 
@@ -3418,7 +3420,14 @@
 
 			this._insertWorksheetFormula(indexTo);
 
-			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SheetMove, null, null, new UndoRedoData_FromTo(indexFrom, indexTo));
+			if (!AscCommon.g_oTableId.Get_ById(oWsFrom.getId())) {
+				//todo add in constructor with history
+				AscFormat.ExecuteNoHistory(function () {
+					AscCommon.g_oTableId.Add(oWsFrom, oWsFrom.getId())
+				}, this, [], true);
+			}
+			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SheetRemove, null, null, new AscCommonExcel.UndoRedoData_SheetRemove(indexFrom, oWsFrom.getId(), oWsFrom));
+			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SheetAdd, null, null, new UndoRedoData_SheetAdd(indexTo, oWsFrom.getName(), null, oWsFrom.getId(), null, oWsFrom, oWsFrom.getId()));
 			this.dependencyFormulas.unlockRecal();
 
 			if (!this.bUndoChanges && !this.bRedoChanges) {
@@ -3488,6 +3497,12 @@
 				oVisibleWs = this.findSheetNoHidden(nIndex);
 				if (null != oVisibleWs)
 					wsActive = oVisibleWs;
+			}
+			if (!AscCommon.g_oTableId.Get_ById(removedSheet.getId())) {
+				//todo add in constructor with history
+				AscFormat.ExecuteNoHistory(function () {
+					AscCommon.g_oTableId.Add(removedSheet, removedSheet.getId())
+				}, this, [], true);
 			}
 			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SheetRemove, null, null, new AscCommonExcel.UndoRedoData_SheetRemove(nIndex, removedSheetId, removedSheet));
 			if (null != oVisibleWs) {
@@ -5362,6 +5377,23 @@
 		return new Workbook(undefined, undefined, false);
 	};
 
+	Workbook.prototype.getExternalIndexByWorksheet = function (ws) {
+		let checkedWb = ws && ws.workbook;
+		for (let i = 0; i < this.externalReferences.length; i++) {
+			let externalWb = this.externalReferences[i] && this.externalReferences[i].getWb && this.externalReferences[i].getWb();
+			if (checkedWb === externalWb) {
+				if (this.externalReferences[i].worksheets) {
+					for (let j in this.externalReferences[i].worksheets) {
+						if (this.externalReferences[i].worksheets[j] === ws) {
+							return i + 1;
+						}
+					}
+				}
+			}
+		}
+		return null;
+	};
+
 	Workbook.prototype.removeExternalReferences = function (arr) {
 		//пока предполагаю, что здесь будет массив asc_CExternalReference
 		if (arr) {
@@ -5862,6 +5894,36 @@
 	Workbook.prototype.getDefaultDirection = function() {
 		return this.defaultDirection;
 	};
+	Workbook.prototype.setShowVerticalScroll = function(val, addToHistory) {
+		var from = this.showVerticalScroll == null || this.showVerticalScroll === true;
+		val = (val === true || val == null) ? null : false;
+		if (from !== val) {
+			if (addToHistory) {
+				AscCommon.History.Create_NewPoint();
+				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_ShowVerticalScroll, null, null, new UndoRedoData_FromTo(from, val));
+			}
+			this.showVerticalScroll = val;
+			this.handlers && this.handlers.trigger("updateScrollVisibility");
+		}
+	};
+	Workbook.prototype.getShowVerticalScroll = function() {
+		return this.showVerticalScroll;
+	};
+	Workbook.prototype.setShowHorizontalScroll = function(val, addToHistory) {
+		var from = this.showHorizontalScroll == null || this.showHorizontalScroll === true;
+		val = (val === true || val == null) ? null : false;
+		if (from !== val) {
+			if (addToHistory) {
+				AscCommon.History.Create_NewPoint();
+				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_ShowHorizontalScroll, null, null, new UndoRedoData_FromTo(from, val));
+			}
+			this.showHorizontalScroll = val;
+			this.handlers && this.handlers.trigger("updateScrollVisibility");
+		}
+	};
+	Workbook.prototype.getShowHorizontalScroll = function() {
+		return this.showHorizontalScroll;
+	};
 
 
 
@@ -6086,7 +6148,7 @@
 		this.bHidden = false;
 		this.oSheetFormatPr = new AscCommonExcel.SheetFormatPr();
 		this.index = _index;
-		this.Id = null != sId ? sId : AscCommon.g_oIdCounter.Get_NewId();
+		this.Id = null != sId ? sId : AscCommon.g_oIdCounter.Get_NewId();//todo AscCommon.g_oTableId.Add
 		this.nRowsCount = 0;
 		this.nColsCount = 0;
 		this.rowsData = new SheetMemory(AscCommonExcel.g_nRowStructSize, gc_nMaxRow0);
@@ -6218,9 +6280,6 @@
 		this.activeFillType = null;
 		this.timelines = [];
 		this.changedArrays = null;
-		AscFormat.ExecuteNoHistory(function () {
-			AscCommon.g_oTableId.Add(this, this.Id);
-		}, this, [], true);
 	}
 
 	Worksheet.prototype.getCompiledStyle = function (row, col, opt_cell, opt_styleComponents) {
@@ -14777,7 +14836,6 @@
 		if(AscCommon.History.Is_On())
 			DataNew = this.getValueData();
 		if(AscCommon.History.Is_On() && false == DataOld.isEqual(DataNew)) {
-			// History.Add(new AscDFH.CChangesCellValueChange(this.ws, DataOld, DataNew, new AscDFH.CCellCoordsWritable(this.nRow, this.nCol)));
 			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(), new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
 		}
 		//todo не должны удаляться ссылки, если сделать merge ее части.
@@ -15577,6 +15635,28 @@
 		return nCellIndex === nCompareCellIndex && sWsName === sCompareWsName;
 	};
 	/**
+	 * Checks cell contains in formula.
+	 * @memberof Cell
+	 * @returns {boolean}
+	 */
+	Cell.prototype.containInFormula = function () {
+		const oThis = this;
+		const formulaParsed = this.getFormulaParsed();
+		const aOutStack = formulaParsed && formulaParsed.outStack;
+		if (!aOutStack) {
+			return false;
+		}
+		let bContainsInFormula = false;
+		_foreachRefElements(function (oRange) {
+			if (oRange.containCell2(oThis)) {
+				bContainsInFormula = true;
+				return true;
+			}
+		}, aOutStack);
+
+		return bContainsInFormula;
+	};
+	/**
 	 * Method finds a start cell index of recursion formula.
 	 * Uses for only with enabled iterative calculations setting.
 	 * @param {Cell} [oPrevCell] - Previous cell in recursion.
@@ -15608,8 +15688,9 @@
 		oFirstCell = oFirstCell || this;
 		let nFirstCellIndex = getCellIndex(oFirstCell.nRow, oFirstCell.nCol);
 		aPassedCells = aPassedCells || [];
+		let bBreakFunction = false
 		_foreachListeners(function (oListenerCell, oThis) {
-			if (oThis.compareCellIndex(oListenerCell)) {
+			if (oThis.compareCellIndex(oListenerCell) && oThis.containInFormula()) {
 				g_cCalcRecursion.setStartCellIndex({cellId: nCellIndex, wsName: oThis.ws.getName().toLowerCase()});
 				g_cCalcRecursion.resetRecursionCounter();
 				return true;
@@ -15625,7 +15706,7 @@
 				}
 				g_cCalcRecursion.resetRecursionCounter();
 				return true;
-			} else if (oFirstCell.compareCellIndex(oListenerCell)) {
+			} else if (oFirstCell.compareCellIndex(oListenerCell) && g_cCalcRecursion.getRecursionCounter() > 0) {
 				g_cCalcRecursion.setStartCellIndex({cellId: nFirstCellIndex, wsName: oFirstCell.ws.getName().toLowerCase()});
 				g_cCalcRecursion.resetRecursionCounter();
 				return true;
@@ -15634,6 +15715,11 @@
 				oWs._getCell(oListenerCell.nRow, oListenerCell.nCol, function (oCell) {
 					oCellFromListener = oCell;
 				});
+				if (oCellFromListener.compareCellIndex(oThis)) {
+					g_cCalcRecursion.resetRecursionCounter();
+					bBreakFunction = true;
+					return;
+				}
 				let bPassedCell = aPassedCells.some(function (oPassedCell) {
 					let nPassedCellIndex = getCellIndex(oPassedCell.nRow, oPassedCell.nCol);
 					let nCellIndex = getCellIndex(oCellFromListener.nRow, oCellFromListener.nCol);
@@ -15652,7 +15738,7 @@
 				}
 			}
 		}, this, oListeners);
-		if (!g_cCalcRecursion.getStartCellIndex()) {
+		if (!g_cCalcRecursion.getStartCellIndex() && !bBreakFunction) {
 			let oTableStructOperand = oParserFormula && oParserFormula.outStack.find(function (oOperand) {
 				return oOperand.type === cElementType.table;
 			});
@@ -15715,10 +15801,17 @@
 		}
 		let nLastIndex = aRefElements.length - 1;
 		for (let i = 0; i < aRefElements.length; i++) {
-			let oRefElement = aRefElements[i];
-			let nRefType = oRefElement.type;
+			const oRefElement = aRefElements[i];
+			const nRefType = oRefElement.type;
+			const b3D = nRefType === cElementType.cell3D || nRefType === cElementType.cellsRange3D;
+			const bArea = nRefType === cElementType.cellsRange;
+			const bDefName = nRefType === cElementType.name || nRefType === cElementType.name3D;
+			const bTable = nRefType === cElementType.table;
 			let oRange = null;
 
+			if (nRefType !== cElementType.cell && !b3D && !bArea && !bDefName && !bTable) {
+				continue;
+			}
 			if (nRefType === cElementType.name || nRefType === cElementType.name3D) {
 				const oElemValue = oRefElement.getValue();
 				const oElemType = oElemValue.type;
@@ -23270,9 +23363,10 @@
 	function _calculateDate(oCellInfo, bAutofill) {
 		const nStep = oCellInfo.step;
 		const nDateUnit = oCellInfo.dateUnit;
+		const bDate1904 = AscCommon.bDate1904;
 		let nPrevValue = oCellInfo.previousValue;
 		let nPrevIntValue = oCellInfo.previousIntValue;
-		let dtExpectedDayValue = new Asc.cDate().getDateFromExcel(oCellInfo.expectedDayValue < 60 ? oCellInfo.expectedDayValue + 1 : oCellInfo.expectedDayValue);
+		let dtExpectedDayValue = new Asc.cDate().getDateFromExcel(oCellInfo.expectedDayValue < 59 && !bDate1904 ? oCellInfo.expectedDayValue + 1 : oCellInfo.expectedDayValue);
 		let oReturn = {};
 
 		// Condition: nPrevVal < 60 is temporary solution for "01/01/1900 - 01/03/1900" dates
@@ -23295,13 +23389,13 @@
 					nCurrentVal = _smartRound(nCurrentVal + nFinalStep, nStep);
 				}
 				// Convert number to cDate object
-				oCurrentValDate = new Asc.cDate().getDateFromExcel(nPrevValue < 60 ? nCurrentVal + 1 : nCurrentVal);
+				oCurrentValDate = new Asc.cDate().getDateFromExcel(nPrevValue < 59 && !bDate1904 ? nCurrentVal + 1 : nCurrentVal);
 				let nDayOfWeek = nPrevValue < 60 ? oCurrentValDate.getDay() - 1 : oCurrentValDate.getDay();
 				if (!aWeekdays.includes(nDayOfWeek)) {
 					while (true) {
 						nCurrentVal += Math.sign(nStep);
-						oCurrentValDate = new Asc.cDate().getDateFromExcel(nCurrentVal < 60 ? nCurrentVal + 1 : nCurrentVal);
-						nDayOfWeek = nCurrentVal < 60 ? oCurrentValDate.getDay() - 1 : oCurrentValDate.getDay();
+						oCurrentValDate = new Asc.cDate().getDateFromExcel(nCurrentVal < 59 && !bDate1904 ? nCurrentVal + 1 : nCurrentVal);
+						nDayOfWeek = nCurrentVal < 60 && !bDate1904 ? oCurrentValDate.getDay() - 1 : oCurrentValDate.getDay();
 						if (aWeekdays.includes(nDayOfWeek)) {
 							i++;
 							break;
@@ -23329,7 +23423,7 @@
 			return oReturn;
 		}
 		let nIntegerVal = nPrevIntValue;
-		let oCurrentValDate = new Asc.cDate().getDateFromExcel(nIntegerVal < 60 ? nIntegerVal + 1 : nIntegerVal);
+		let oCurrentValDate = new Asc.cDate().getDateFromExcel(nIntegerVal < 59 && !bDate1904 ? nIntegerVal + 1 : nIntegerVal);
 		let nFinalStep = _smartRound(nCurrentVal - nIntegerVal, nStep);
 		if (nFinalStep < 0 && !bAutofill) {
 			oReturn.currentValue = NaN;

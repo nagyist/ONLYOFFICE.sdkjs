@@ -1048,12 +1048,22 @@ var editor;
 		this.wb.undo();
 		this.wb.restoreFocus();
 	};
-	spreadsheet_api.prototype.Undo = spreadsheet_api.prototype.asc_Redo = function () {
+	spreadsheet_api.prototype.Redo = spreadsheet_api.prototype.asc_Redo = function () {
 		if (!this.canUndoRedoByRestrictions()) {
 			return;
 		}
 		this.wb.redo();
 		this.wb.restoreFocus();
+	};
+
+	spreadsheet_api.prototype.asc_getCanUndo = function () {
+		let bCanUndo = History.Can_Undo();
+
+		if (true !== bCanUndo && this.collaborativeEditing && true === this.collaborativeEditing.Is_Fast() && true !== this.collaborativeEditing.Is_SingleUser()) {
+			bCanUndo = this.collaborativeEditing.CanUndo();
+		}
+
+		return bCanUndo;
 	};
 
   spreadsheet_api.prototype.asc_Resize = function () {
@@ -2860,7 +2870,7 @@ var editor;
           excelAdditionalInfo = {"indexCols": recalcIndexColumns, "indexRows": recalcIndexRows};
         }
       }
-      if (true) {
+	  if (0 < arrChanges.length || null !== deleteIndex || null !== excelAdditionalInfo) {
           var oWs = this.wb.getWorksheet();
           var sCursorBinary = "";
           if (oWs && oWs.objectRender) {
@@ -5984,7 +5994,7 @@ var editor;
 	  if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
      return;
     }
-
+	  
   	let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBold) {
       ws.objectRender.controller.setCellBold(isBold);
@@ -9684,6 +9694,38 @@ var editor;
 		}
 	};
 
+	spreadsheet_api.prototype.asc_SetShowVerticalScroll = function (val) {
+		let wb = this.wb;
+		if (!wb) {
+			return;
+		}
+		return wb.setShowVerticalScroll(val);
+	};
+
+	spreadsheet_api.prototype.asc_GetShowVerticalScroll = function () {
+		let wb = this.wb;
+		if (!wb) {
+			return;
+		}
+		return wb.getShowVerticalScroll();
+	};
+
+	spreadsheet_api.prototype.asc_SetShowHorizontalScroll = function (val) {
+		let wb = this.wb;
+		if (!wb) {
+			return;
+		}
+		return wb.setShowHorizontalScroll(val);
+	};
+
+	spreadsheet_api.prototype.asc_GetShowHorizontalScroll = function () {
+		let wb = this.wb;
+		if (!wb) {
+			return;
+		}
+		return wb.getShowHorizontalScroll();
+	};
+
   /*
    * Export
    * -----------------------------------------------------------------------------
@@ -10287,6 +10329,11 @@ var editor;
 
   prot["asc_SetSmoothScrolling"]= prot.asc_SetSmoothScrolling;
   prot["asc_GetSmoothScrolling"]= prot.asc_GetSmoothScrolling;
+
+  prot["asc_SetShowVerticalScroll"]= prot.asc_SetShowVerticalScroll;
+  prot["asc_GetShowVerticalScroll"]= prot.asc_GetShowVerticalScroll;
+  prot["asc_SetShowHorizontalScroll"]= prot.asc_SetShowHorizontalScroll;
+  prot["asc_GetShowHorizontalScroll"]= prot.asc_GetShowHorizontalScroll;
 
 
 

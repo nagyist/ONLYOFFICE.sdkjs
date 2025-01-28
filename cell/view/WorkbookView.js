@@ -1107,6 +1107,14 @@
 	this.model.handlers.add("changeUpdateLinks", function(val) {
 		self.changeUpdateLinks(val);
 	});
+	this.model.handlers.add("updateScrollVisibility", function() {
+		self.controller.showVerticalScroll(self.getShowVerticalScroll());
+		self.controller.showHorizontalScroll(self.getShowHorizontalScroll());
+		self._canResize();
+
+		let ws = self.getWorksheet();
+		ws.draw();
+	});
     this.cellCommentator = new AscCommonExcel.CCellCommentator({
       model: new WorkbookCommentsModel(this.handlers, this.model.aComments),
       collaborativeEditing: this.collaborativeEditing,
@@ -2547,9 +2555,17 @@
   };
 
   WorkbookView.prototype._canResize = function() {
-    var styleWidth, styleHeight;
-    styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion ? 0 : this.defaults.scroll.widthPx);
-    styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion ? 0 : this.defaults.scroll.heightPx);
+	  let showVerticalScroll = this.Api.isMobileVersion || this.getShowVerticalScroll();
+	  let showHorizontalScroll = this.Api.isMobileVersion || this.getShowHorizontalScroll();
+
+	  let styleWidth, styleHeight;
+	  styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion || !showVerticalScroll ? 0 : this.defaults.scroll.widthPx);
+	  styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion || !showHorizontalScroll ? 0 : this.defaults.scroll.heightPx);
+
+	  this.canvasOverlay.parentNode.style.right = !showVerticalScroll ? 0 : 14 + 'px';
+	  this.canvasOverlay.parentNode.style.bottom = !showHorizontalScroll ? 0 : 14 + 'px';
+
+
 
     this.isInit = true;
 
@@ -3881,7 +3897,12 @@
     var page = this.getSimulatePageForOleObject(sizes, oRange);
     var previewOleObjectContext = AscCommonExcel.getContext(sizes.width, sizes.height, this);
     previewOleObjectContext.DocumentRenderer = AscCommonExcel.getGraphics(previewOleObjectContext);
-		previewOleObjectContext.isNotDrawBackground = !this.Api.frameManager.isFromSheetEditor;
+    previewOleObjectContext.isNotDrawBackground = !this.Api.frameManager.isFromSheetEditor;
+    let renderingSettings = ws.getRenderingSettings();
+    if (!renderingSettings) {
+       renderingSettings = ws.initRenderingSettings();
+    }
+    renderingSettings && renderingSettings.setCtxWidth(page.pageWidth);
     ws.drawForPrint(previewOleObjectContext, page, 0, 1);
     return previewOleObjectContext;
   };
@@ -5611,10 +5632,10 @@
 
 					let oPortalData = _arrAfterPromise[i].data;
 					let path = oPortalData && oPortalData["path"];
-					let referenceData = oPortalData.referenceData;
+					let referenceData = oPortalData && oPortalData.referenceData;
 
 					//if after update get short path, check on added such link
-					let eR = t.model.getExternalReferenceByReferenceData(referenceData);
+					let eR = referenceData && t.model.getExternalReferenceByReferenceData(referenceData);
 					let noRefDataER = t.model.getExternalReferenceById(eRId);
 
 					if (!eR && noRefDataER) {
@@ -6287,6 +6308,56 @@
 
 		this.Api.sendEvent.apply(this.Api, arguments);
 	};
+	WorkbookView.prototype.setShowVerticalScroll = function(val) {
+		// Проверка глобального лока
+		if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
+			return;
+		}
+
+		let t = this;
+		let verticalScroll = this.getShowVerticalScroll();
+		if (verticalScroll !== val) {
+			var callback = function () {
+				History.Create_NewPoint();
+				History.StartTransaction();
+
+				t.model.setShowVerticalScroll(val, true);
+
+				History.EndTransaction();
+			};
+			callback();
+		}
+	};
+	WorkbookView.prototype.getShowVerticalScroll = function() {
+		let val = this.model.getShowVerticalScroll();
+		return val == null || val === true;
+	};
+	WorkbookView.prototype.setShowHorizontalScroll = function(val) {
+		// Проверка глобального лока
+		if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
+			return;
+		}
+
+		let t = this;
+		let horizontalScroll = this.getShowHorizontalScroll();
+		if (horizontalScroll !== val) {
+			var callback = function () {
+				History.Create_NewPoint();
+				History.StartTransaction();
+
+				t.model.setShowHorizontalScroll(val, true);
+
+				History.EndTransaction();
+			};
+			callback();
+		}
+	};
+	WorkbookView.prototype.getShowHorizontalScroll = function() {
+		let val = this.model.getShowHorizontalScroll();
+		return val == null || val === true;
+	};
+
+
 
 	//временно добавляю сюда. в идеале - использовать общий класс из документов(или сделать базовый, от него наследоваться) - CDocumentSearch
 	function CDocumentSearchExcel(wb) {

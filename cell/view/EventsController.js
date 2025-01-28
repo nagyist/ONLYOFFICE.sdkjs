@@ -456,6 +456,7 @@
 			this.vsb = document.createElement('div');
 			this.vsb.id = "ws-v-scrollbar";
 			this.vsb.style.backgroundColor = AscCommon.GlobalSkin.ScrollBackgroundColor;
+
 			//TODO test rtl
 			/*if (window.rightToleft) {
 				this.vsb.style.left = "0px";
@@ -536,7 +537,8 @@
 				this.vsb.style.display = "none";
 			}
 
-
+			this.showVerticalScroll(this.view.getShowVerticalScroll());
+			this.showHorizontalScroll(this.view.getShowHorizontalScroll());
 		};
 
 		/**
@@ -2718,6 +2720,20 @@
 				deltaY = 0;
 			}
 
+			//TODO!!! while only check direction. need refactor, and replace up code on checkMouseWhell function
+			let values = AscCommon.checkMouseWhell(event, {
+				isSupportBidirectional : false,
+				isAllowHorizontal : true,
+				isUseMaximumDelta : true
+			});
+
+			if (values.x === 0) {
+				deltaX = 0;
+			}
+			if (values.y === 0) {
+				deltaY = 0;
+			}
+
 			if (this.smoothWheelCorrector && !wb.smoothScroll) {
 				deltaX = this.smoothWheelCorrector.get_DeltaX(deltaX);
 				deltaY = this.smoothWheelCorrector.get_DeltaY(deltaY);
@@ -2788,6 +2804,22 @@
 		asc_CEventsController.prototype._setSkipKeyPress = function (val) {
 			this.skipKeyPress = val;
 		};
+
+		asc_CEventsController.prototype.showHorizontalScroll = function (val) {
+			this.hsb.style.visibility = val ? "visible" : "hidden";
+			let cornerStyle = !val && this.vsb.style.visibility === "hidden" ? "hidden" : "visible";
+			let corner = document.getElementById("ws-scrollbar-corner");
+			corner.style.visibility = cornerStyle;
+		};
+
+		asc_CEventsController.prototype.showVerticalScroll = function (val) {
+			this.vsb.style.visibility = val ? "visible" : "hidden";
+			let cornerStyle = !val && this.hsb.style.visibility === "hidden" ? "hidden" : "visible";
+			let corner = document.getElementById("ws-scrollbar-corner");
+			corner.style.visibility = cornerStyle;
+		};
+
+
 
 		//------------------------------------------------------------export---------------------------------------------------
 		window['AscCommonExcel'] = window['AscCommonExcel'] || {};
