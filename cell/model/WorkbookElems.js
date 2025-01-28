@@ -14856,8 +14856,17 @@ function RangeDataManagerElem(bbox, data)
 		//fileId
 		//portalName
 		this.referenceData = null;
-	}
 
+		//temp for update
+		this.sKey = null;
+
+	}
+	ExternalReferenceBase.prototype.getKey = function() {
+		return this.sKey;
+	};
+	ExternalReferenceBase.prototype.setKey = function(val) {
+		this.sKey = val;
+	};
 	ExternalReferenceBase.prototype.createDuplicate = function ()
 	{
 		const oCopy = new this.constructor();
@@ -15059,9 +15068,6 @@ function RangeDataManagerElem(bbox, data)
 		this.DefinedNames = [];
 		this.SheetDataSet = [];
 		this.SheetNames = [];
-
-		//temp for update
-		this.sKey = null;
 
 		this.worksheets = {};
 	}
@@ -15798,9 +15804,6 @@ function RangeDataManagerElem(bbox, data)
 	ExternalReference.prototype.addDefNameFromInfo = function (defNameInfo) {
 
 	};
-	ExternalReference.prototype.getKey = function() {
-		return this.sKey;
-	};
 	ExternalReference.prototype.shiftData = function () {
 		/* shift data to 1 position left */
 		for (let i in this.SheetDataSet) {
@@ -15811,9 +15814,6 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	ExternalReference.prototype.setKey = function(val) {
-		this.sKey = val;
-	};
 	function asc_CExternalReference() {
 		this.type = null;
 		this.data = null;
