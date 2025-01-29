@@ -2065,9 +2065,19 @@ function(window, undefined) {
 					const worksheet = depFormulas.wb.getWorksheetByName(sheetName);
 					const defName = depFormulas.getDefNameByName(isName.defName, worksheet && worksheet.Id);
 					if (defName) {
-						const parsed3DRef = AscCommon.parserHelp.parse3DRef(defName.ref, 0);
-						if (!parsed3DRef.external) {
-							return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref, worksheetName: parsed3DRef.sheet}});
+						let defNameRef = defName.ref;
+						if (defNameRef[0] === "(") {
+							defNameRef = defNameRef.slice(1);
+						}
+						if (defNameRef[defNameRef.length - 1] === ")") {
+							defNameRef = defNameRef.slice(0, defNameRef.length - 1);
+						}
+						const arrRefs = defNameRef.split(",");
+						for (let i = 0; i < arrRefs.length; i++) {
+							const parsed3DRef = AscCommon.parserHelp.parse3DRef(arrRefs[i], 0);
+							if (parsed3DRef && !parsed3DRef.external) {
+								return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref, worksheetName: parsed3DRef.sheet}});
+							}
 						}
 					}
 				}
