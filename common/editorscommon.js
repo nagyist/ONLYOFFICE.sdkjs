@@ -3775,7 +3775,7 @@
 		var _isRef = !_isArea && this.isRef(formula, start_pos);
 		var _isName = !_isRef && !_isArea && this.isName(formula, start_pos);
 		if (_isName) {
-			return {defName: this.operand_str};
+			return {defname: this.operand_str};
 		}
 		return false;
 	};
@@ -3796,7 +3796,7 @@
 				_isName = _is3DRef[4];
 			}
 			if (_isName) {
-				return {defName: _isName.defName, sheet: _is3DRef[1], external: _is3DRef[3]};
+				return {defName: _isName.defname, sheet: _is3DRef[1], external: _is3DRef[3]};
 			}
 		}
 

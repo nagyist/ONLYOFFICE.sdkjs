@@ -513,9 +513,7 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 		{
 			for (let i = 0; i < allDefNames.length; i++) {
 				const defNameInfo = allDefNames[i];
-				const defName = defNameInfo.defName;
-				const ref = defNameInfo.ref;
-				oMainExternalReference.initDefinedNameFromObj({worksheetName: defName.sheet, defName: defName.defName, ref: ref});
+				oMainExternalReference.initDefinedNameFromObj(defNameInfo);
 			}
 			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences, oMockWb);
 		}

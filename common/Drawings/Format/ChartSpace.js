@@ -2053,7 +2053,7 @@ function(window, undefined) {
 		}
 
 		const depFormulas = oParentWb.dependencyFormulas;
-		function fGetParsedRef(sFormula) {
+		function fGetParsedRef(sFormula, arrParsedRefs) {
 			if (sFormula.startsWith("[0]!")) {
 				sFormula = sFormula.slice(4);
 			}
@@ -2063,21 +2063,13 @@ function(window, undefined) {
 				if (!isName.external) {
 					const sheetName = isName.sheet;
 					const worksheet = depFormulas.wb.getWorksheetByName(sheetName);
-					const defName = depFormulas.getDefNameByName(isName.defName, worksheet && worksheet.Id);
+					const defName = depFormulas.getDefNameByName(isName.defname, worksheet && worksheet.Id);
 					if (defName) {
-						let defNameRef = defName.ref;
-						if (defNameRef[0] === "(") {
-							defNameRef = defNameRef.slice(1);
-						}
-						if (defNameRef[defNameRef.length - 1] === ")") {
-							defNameRef = defNameRef.slice(0, defNameRef.length - 1);
-						}
-						const arrRefs = defNameRef.split(",");
-						for (let i = 0; i < arrRefs.length; i++) {
-							const parsed3DRef = AscCommon.parserHelp.parse3DRef(arrRefs[i], 0);
-							if (parsed3DRef && !parsed3DRef.external) {
-								return Object.assign(parsed3DRef, {defName: {defName: isName, ref: defName.ref, worksheetName: parsed3DRef.sheet}});
-							}
+						const nOldLength = arrParsedRefs.length;
+						fGetArrF(defName.ref, arrParsedRefs);
+						if (nOldLength < arrParsedRefs.length) {
+							const oLastParsedRef = arrParsedRefs[arrParsedRefs.length - 1];
+							Object.assign(oLastParsedRef, {defName: {defName: isName.defname, ref: defName.ref, worksheetName: oLastParsedRef.sheet, shortLink: true}});
 						}
 					}
 				}
@@ -2086,8 +2078,8 @@ function(window, undefined) {
 			const parsed3DRef = AscCommon.parserHelp.parse3DRef(sFormula, 0);
 			return (!parsed3DRef || parsed3DRef.external) ? null : parsed3DRef;
 		}
-		function fGetArrF(sFormula) {
-			const result = [];
+		function fGetArrF(sFormula, arrParsedRefs) {
+			const result = arrParsedRefs || [];
 			if (sFormula[0] === '(')
 				sFormula = sFormula.slice(1);
 			if (sFormula[sFormula.length - 1] === ')')
@@ -2096,7 +2088,7 @@ function(window, undefined) {
 			const f1 = sFormula;
 			const arrF = f1.split(",");
 			for (let i = 0; i < arrF.length; i++) {
-				let parsedRef = fGetParsedRef(arrF[i]);
+				let parsedRef = fGetParsedRef(arrF[i], result);
 				if (parsedRef) {
 					result.push(parsedRef);
 				}
