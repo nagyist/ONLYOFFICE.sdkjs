@@ -15609,46 +15609,54 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	ExternalReference.prototype.initWorkbook = function () {
-		if (this.DefinedNames) {
-			let wb = this.getWb();
-			for (let i = 0; i < this.DefinedNames.length; i++) {
-				let defName = this.DefinedNames[i];
-				let ws = this.getSheetByIndex(defName.SheetId);
-				if (!ws && defName.RefersTo) {
-					// try to find sheetname by RefersTo string
-					let exclamationMarkIndex = defName.RefersTo.lastIndexOf("!");
-					if (exclamationMarkIndex !== -1) {
-						let sheetNamePart = defName.RefersTo.slice(0, exclamationMarkIndex);
-						// remove equal sign
-						if (sheetNamePart[0] === "=") {
-							sheetNamePart = sheetNamePart.substring(1);
-						}
-
-						// regex to find string enclosed in single qoutes
-						let regex = /^'(.*)'$/;
-						let match = regex.exec(sheetNamePart);
-						if (match && match[1]) {
-							sheetNamePart = match[1];
-						}
-
-						ws = this.worksheets[sheetNamePart];
+	ExternalReference.prototype.initDefinedNamesInWorkbook = function (definedNames) {
+		let wb = this.getWb();
+		const workbookDefinedNames = [];
+		for (let i = 0; i < definedNames.length; i++) {
+			let defName = definedNames[i];
+			let ws = this.getSheetByIndex(defName.SheetId);
+			if (!ws && defName.RefersTo) {
+				// try to find sheetname by RefersTo string
+				let exclamationMarkIndex = defName.RefersTo.lastIndexOf("!");
+				if (exclamationMarkIndex !== -1) {
+					let sheetNamePart = defName.RefersTo.slice(0, exclamationMarkIndex);
+					// remove equal sign
+					if (sheetNamePart[0] === "=") {
+						sheetNamePart = sheetNamePart.substring(1);
 					}
-				}
 
-				if (ws != null) {
-					//on parse name3d use g_DefNameWorksheet
-					let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
-					AscCommonExcel.g_DefNameWorksheet = ws;
-					let stringToParse;
-					if (defName && defName.RefersTo && defName.RefersTo[0] === "=") {
-						stringToParse = defName.RefersTo.substring(1);
+					// regex to find string enclosed in single qoutes
+					let regex = /^'(.*)'$/;
+					let match = regex.exec(sheetNamePart);
+					if (match && match[1]) {
+						sheetNamePart = match[1];
 					}
-					let oDefName = new Asc.asc_CDefName(defName.Name, stringToParse ? stringToParse : defName.RefersTo);
-					wb && wb.editDefinesNames(null, oDefName);
-					AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;	
+
+					ws = this.worksheets[sheetNamePart];
 				}
 			}
+
+			if (ws != null) {
+				//on parse name3d use g_DefNameWorksheet
+				let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
+				AscCommonExcel.g_DefNameWorksheet = ws;
+				let stringToParse;
+				if (defName && defName.RefersTo && defName.RefersTo[0] === "=") {
+					stringToParse = defName.RefersTo.substring(1);
+				}
+				let oDefName = new Asc.asc_CDefName(defName.Name, stringToParse ? stringToParse : defName.RefersTo);
+				const workbookDefName = wb && wb.editDefinesNames(null, oDefName);
+				if  (workbookDefName) {
+					workbookDefinedNames.push(workbookDefName);
+				}
+				AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;
+			}
+		}
+		return workbookDefinedNames;
+	};
+	ExternalReference.prototype.initWorkbook = function () {
+		if (this.DefinedNames) {
+			this.initDefinedNamesInWorkbook(this.DefinedNames);
 		}
 	};
 
@@ -15747,6 +15755,22 @@ function RangeDataManagerElem(bbox, data)
 		defName.SheetId = val.shortLink ? null : index;
 		defName.RefersTo = val.ref || null;
 		this.addDefName(defName);
+		return defName;
+	};
+	ExternalReference.prototype.initDefinedNamesOnCopyPaste = function (definedNameInfos) {
+		const externalDefinedNames = [];
+		for (let i = 0; i < definedNameInfos.length; i++) {
+			const defNameInfo = definedNameInfos[i];
+			const oExternalDefName = this.initDefinedNameFromObj(defNameInfo);
+			if (oExternalDefName) {
+				externalDefinedNames.push(oExternalDefName);
+			}
+		}
+		const workbookDefNames = this.initDefinedNamesInWorkbook(externalDefinedNames);
+		for (let i = 0; i < workbookDefNames.length; i += 1) {
+			const workbookDefName = workbookDefNames[i];
+			workbookDefName.parsedRef.parse();
+		}
 	};
 
 	ExternalReference.prototype.addDefName = function (defName) {
