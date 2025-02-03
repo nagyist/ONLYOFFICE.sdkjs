@@ -2574,8 +2574,12 @@ function (window, undefined) {
 		return null;
 	};
 	CDimension.prototype.clearLevelData = function () {
+		const isClear = !!this.levelData.length;
 		for(let nIdx = this.levelData.length; nIdx > -1; --nIdx) {
 			this.removeLevelDataByPos(nIdx)
+		}
+		if (isClear) {
+			this.onUpdateCache();
 		}
 	};
 	CDimension.prototype.removeLevelDataByPos = function (nIdx) {
@@ -2584,14 +2588,12 @@ function (window, undefined) {
 
 		this.clearLevelData();
 		if (!this.f) {
-			this.onUpdateCache();
 			return;
 		}
 		let sContent = this.f.content;
 
 		let aParsedRef = AscFormat.fParseChartFormula(sContent);
 		if (!Array.isArray(aParsedRef) || aParsedRef.length === 0) {
-			this.onUpdateCache();
 			return false;
 		}
 		let nPtCount = 0;

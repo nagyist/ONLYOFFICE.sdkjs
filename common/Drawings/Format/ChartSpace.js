@@ -5002,6 +5002,8 @@ function(window, undefined) {
 			case AscDFH.historyitem_type_MultiLvlStrCache:
 			case AscDFH.historyitem_type_NumLit:
 			case AscDFH.historyitem_type_NumericDimension:
+			case AscDFH.historyitem_NumericDimension_RemoveLevelData:
+			case AscDFH.historyitem_StringDimension_RemoveLevelData:
 			case AscDFH.historyitem_type_StringDimension:
 			case AscDFH.historyitem_ChartSpace_SetChart: {
 				this.handleUpdateType();
