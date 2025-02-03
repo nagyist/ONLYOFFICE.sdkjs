@@ -450,7 +450,6 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 			oMockWb.aWorksheets.push(oCachedWorksheets[i].ws);
 		}
 
-		let bNeedConvert = false;
 		let nChangeExternalReferenceIndex = null;
 		let oMainExternalReference;
 		const allDefNames = [];
@@ -475,7 +474,6 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 						nChangeExternalReferenceIndex = oPastedLinkInfo.index;
 					}
 					allDefNames.push.apply(allDefNames, defNames);
-					bNeedConvert = true;
 				}
 				else if (oPastedLinkInfo.type === -2)
 				{
@@ -504,11 +502,10 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 
 					allDefNames.push.apply(allDefNames, defNames);
 					oMainExternalReference.addSheet(oPastedWS, arrRanges);
-					bNeedConvert = true;
 				}
 			}
 		}
-		if (bNeedConvert)
+		if (oMainExternalReference)
 		{
 			oMainExternalReference.initDefinedNamesOnCopyPaste(allDefNames);
 			if (nChangeExternalReferenceIndex === null) {
@@ -517,6 +514,8 @@ CChartSpace.prototype.Get_ColorMap = CShape.prototype.Get_ColorMap;
 				oWbModel.changeExternalReference(nChangeExternalReferenceIndex, oMainExternalReference);
 			}
 			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences, oMockWb);
+		} else if (oPastedWb.externalReferences.length) {
+			this.convertRefsToExternal(oMainExternalReference, oPastedWb.externalReferences, oPastedWb);
 		}
 	}
 	CChartSpace.prototype.convertRefsToExternal = function (oMainExternalReference, arrPastedExternalReferences, oMockWb)

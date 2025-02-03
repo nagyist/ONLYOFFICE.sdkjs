@@ -16942,10 +16942,8 @@
 									nExternalReference = oWb.externalReferences.length;
 								}
 							}
-							const oExternalReference = oWb.getExternalLinkByIndex(nExternalReference - 1);
               const toStringOper = oper.clone();
-                toStringOper.externalLink = nExternalReference;
-							// oExternalReference.initDefinedName();
+              toStringOper.externalLink = nExternalReference;
 							arrResult.push(toStringOper.toString());
 						}
 					} else {
