@@ -3020,7 +3020,7 @@ function (window, undefined) {
 			var externalReferenceIndex;
 
 			if (from && !to) {//удаление
-				from.initWorksheetsFromSheetDataSet();
+				from.initExternalReference();
 				/* the first call is a search by referenceData, if we get null, we make a second call to search by Id below and then add or re-assign the link */
 				externalReferenceIndex = wb.getExternalReferenceByReferenceData(from.referenceData, true);
 				if (!externalReferenceIndex) {
@@ -3052,7 +3052,7 @@ function (window, undefined) {
 
 				if (externalReferenceIndex !== null) {
 					from.worksheets = wb.externalReferences[externalReferenceIndex - 1].worksheets;
-					from.initWorksheetsFromSheetDataSet();
+					from.initExternalReference();
 					from.putToChangedCells();
 					wb.externalReferences[externalReferenceIndex - 1] = from;
 				}

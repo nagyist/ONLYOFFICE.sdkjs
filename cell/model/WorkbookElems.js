@@ -15229,7 +15229,12 @@ function RangeDataManagerElem(bbox, data)
 				this.DefinedNames[i].parent = this;
 			}
 		}
+		this.initExternalReference();
 
+		return res;
+	};
+
+	ExternalReference.prototype.initExternalReference = function () {
 		let api = Asc.editor || editor;
 		let originalWb = api.wbModel;
 		originalWb && originalWb.dependencyFormulas.lockRecal();
@@ -15239,8 +15244,6 @@ function RangeDataManagerElem(bbox, data)
 		this.prepareDefNames();
 
 		originalWb && originalWb.dependencyFormulas.unlockRecal();
-
-		return res;
 	};
 
 	ExternalReference.prototype.getDefinedNamesBySheetIndex = function (index, wb) {
