@@ -2003,7 +2003,7 @@ function(window, undefined) {
 	CChartSpace.prototype.getXLSXFromCache = function () {
 		const oApi = Asc.editor;
 		return AscFormat.ExecuteNoHistory(function () {
-			const oWorkbook = new AscCommonExcel.Workbook(undefined, oApi);
+			const oWorkbook = new AscCommonExcel.Workbook(undefined, oApi, false);
 			oWorkbook.dependencyFormulas.lockRecal();
 			oWorkbook.DrawingDocument = oApi.getDrawingDocument();
 			const oInitOpenManager = new AscCommonExcel.InitOpenManager();
