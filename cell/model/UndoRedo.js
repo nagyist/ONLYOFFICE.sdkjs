@@ -454,6 +454,18 @@ function (window, undefined) {
 	};
 	UndoRedoItemSerializable.prototype.CommuteRelated = function (oActionToUndo, oActionOther) {
 		if (oActionToUndo.oClass && oActionToUndo.oClass.CommuteRelated) {
+			//ничего не делаем если есть изменения на удаленном листе
+			if (!AscCommonExcel.g_oUndoRedoWorkbook.CommuteRelatedRemoveSheet(oActionToUndo.nSheetId, oActionOther)) {
+				return false;
+			}
+
+			//todo don't use global api
+			let api = window["Asc"]["editor"];
+			if (api && api.wbModel && api.collaborativeEditing.oRedoObjectParam && api.collaborativeEditing.oRedoObjectParam.snapshot) {
+				let snapshot = api.collaborativeEditing.oRedoObjectParam.snapshot;
+				//todo batch transform
+				api.wbModel._forwardTransformation(snapshot, [oActionToUndo], [oActionOther], true);
+			}
 			return oActionToUndo.oClass.CommuteRelated(oActionToUndo, oActionOther);
 		} else if (oActionToUndo.oClass.WriteToBinary) {
 			//todo просмотреть измнения автофигур которые зависят от сдвигов
@@ -497,12 +509,25 @@ function (window, undefined) {
 
 	function CChangesPointChange(Class, Point, snapshot)
 	{
+		//todo наследование от CChangesTableIdDescription
 		AscDFH.CChangesBase.call(this, Class);
 		this.Point = Point;
 		this.snapshot = snapshot;
 	}
 	CChangesPointChange.prototype = Object.create(AscDFH.CChangesBase.prototype);
 	CChangesPointChange.prototype.constructor = CChangesPointChange;
+	CChangesPointChange.prototype.Properties = {};
+	CChangesPointChange.prototype.getType = function () {
+		return UndoRedoDataTypes.Unknown;
+	};
+	CChangesPointChange.prototype.getProperties = function () {
+		return this.Properties;
+	};
+	CChangesPointChange.prototype.getProperty = function (nType) {
+		return null;
+	};
+	CChangesPointChange.prototype.setProperty = function (nType, value) {
+	}
 	CChangesPointChange.prototype.CreateReverseChangeSpreadsheet = function()
 	{
 		let Point = Object.assign({}, this.Point);
@@ -2840,6 +2865,10 @@ function (window, undefined) {
 		//for CHistory.prototype.Add
 		return false;
 	};
+	UndoRedoClassBase.prototype.GetClass = function () {
+		//for CChangesBaseContentChange.prototype.IsRelated
+		return undefined;
+	};
 
 	function UndoRedoWorkbook(wb) {
 		UndoRedoClassBase.call(this);
@@ -2896,6 +2925,9 @@ function (window, undefined) {
 		}
 		return new UndoRedoItemSerializable(ToClass, Type, nSheetId, oRange, Data, LocalChange);
 	};
+	UndoRedoWorkbook.prototype.CommuteRelatedRemoveSheet = function (sheetId, oActionOther) {
+		return !(AscCH.historyitem_Workbook_SheetRemove === oActionOther.nActionType && oActionOther.oData && sheetId === oActionOther.oData.sheetId);
+	}
 	UndoRedoWorkbook.prototype.CommuteRelated = function (oActionToUndo, oActionOther) {
 		return true;
 	}
@@ -3141,16 +3173,7 @@ function (window, undefined) {
 			oActionToUndo.oData.CommuteRelated(oActionToUndo, oActionOther);
 			return true;
 		}
-		if (this.wb.oApi.collaborativeEditing.oRedoObjectParam && this.wb.oApi.collaborativeEditing.oRedoObjectParam.snapshot) {
-			let snapshot = this.wb.oApi.collaborativeEditing.oRedoObjectParam.snapshot;
-			//todo batch transform
-			this.wb._forwardTransformation(snapshot, [oActionToUndo], [oActionOther], true);
-		}
-		let res = true;
-		if (AscCommonExcel.g_oUndoRedoWorksheet === oActionOther.oClass) {
-			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData, oActionOther);
-		}
-		return res;
+		return AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData, oActionOther);
 	};
 	UndoRedoCell.prototype.UndoRedo = function (Type, Data, nSheetId, bUndo) {
 		let ws = this.wb.getWorksheetById(nSheetId), t = this;
@@ -3322,10 +3345,10 @@ function (window, undefined) {
 		let isAddColUndo = AscCH.historyitem_Worksheet_AddCols === oActionToUndo.nActionType;
 		let isRemoveRowUndo = AscCH.historyitem_Worksheet_RemoveRows === oActionToUndo.nActionType;
 		let isRemoveColUndo = AscCH.historyitem_Worksheet_RemoveCols === oActionToUndo.nActionType;
-		let isAddRowOther = AscCH.historyitem_Worksheet_AddRows === oActionOther.nActionType;
-		let isAddColOther = AscCH.historyitem_Worksheet_AddCols === oActionOther.nActionType;
-		let isRemoveRowOther = AscCH.historyitem_Worksheet_RemoveRows === oActionOther.nActionType;
-		let isRemoveColOther = AscCH.historyitem_Worksheet_RemoveCols === oActionOther.nActionType;
+		let isAddRowOther = AscCommonExcel.g_oUndoRedoWorksheet === oActionOther.oClass && AscCH.historyitem_Worksheet_AddRows === oActionOther.nActionType;
+		let isAddColOther = AscCommonExcel.g_oUndoRedoWorksheet === oActionOther.oClass && AscCH.historyitem_Worksheet_AddCols === oActionOther.nActionType;
+		let isRemoveRowOther = AscCommonExcel.g_oUndoRedoWorksheet === oActionOther.oClass && AscCH.historyitem_Worksheet_RemoveRows === oActionOther.nActionType;
+		let isRemoveColOther = AscCommonExcel.g_oUndoRedoWorksheet === oActionOther.oClass && AscCH.historyitem_Worksheet_RemoveCols === oActionOther.nActionType;
 		let isAddUndo = isAddRowUndo || isAddColUndo;
 		let isAddOther = isAddRowOther || isAddColOther;
 		let isRemoveUndo = isRemoveRowUndo || isRemoveColUndo;
@@ -3349,6 +3372,7 @@ function (window, undefined) {
 					}
 				} else if(isRemoveOther){
 					//todo
+
 					let heightUndo = oActionOther.oData.to - oActionOther.oData.from + 1;
 					let heightOther = oActionOther.oData.to - oActionOther.oData.from + 1;
 					if (oActionToUndo.oData.from > oActionOther.oData.to) {
@@ -3364,6 +3388,7 @@ function (window, undefined) {
 			} else if(isRemoveUndo){
 				if(isAddOther) {
 					//todo
+
 					let heightUndo = oActionOther.oData.to - oActionOther.oData.from + 1;
 					let heightOther = oActionOther.oData.to - oActionOther.oData.from + 1;
 					if (oActionToUndo.oData.from >= oActionOther.oData.from) {
@@ -3401,8 +3426,7 @@ function (window, undefined) {
 				AscCH.historyitem_Worksheet_CollapsedRow === oActionToUndo.nActionType) {
 			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRowCol(oActionToUndo.oData, true, oActionOther);
 		} else if (AscCH.historyitem_Worksheet_RowHide === oActionToUndo.nActionType) {
-			//todo
-			// res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRowCol(oActionToUndo.oData, true, oActionOther);
+			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRowColFromTo(oActionToUndo.oData, true, oActionOther);
 		} else if (AscCH.historyitem_Worksheet_Sort === oActionToUndo.nActionType) {
 			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRange(oActionToUndo.oData.bbox, oActionOther);
 		} else if (AscCH.historyitem_Worksheet_MoveRange === oActionToUndo.nActionType ||
@@ -3444,9 +3468,11 @@ function (window, undefined) {
 				oLockInfo["rangeOrObjectId"] = new Asc.Range(nCol, nRow, nCol, nRow);
 				wb.aCollaborativeChangeElements.push(oLockInfo);
 			}
+
+			let oValue, oStyle;
 			if (bUndo) {
-				var oValue = Data.oOldVal.value;
-				var oStyle = Data.oOldVal.style;
+				oValue = Data.oOldVal.value;
+				oStyle = Data.oOldVal.style;
 				ws._getCell(nRow, nCol, function (cell) {
 					cell.setValueData(oValue);
 					if (null != oStyle) {
@@ -3457,7 +3483,20 @@ function (window, undefined) {
 				});
 
 			} else {
-				ws._removeCell(nRow, nCol);
+				if (Data.oNewVal) {
+					oValue = Data.oNewVal.value;
+					oStyle = Data.oNewVal.style;
+					ws._getCell(nRow, nCol, function (cell) {
+						cell.setValueData(oValue);
+						if (null != oStyle) {
+							cell.setStyle(oStyle);
+						} else {
+							cell.setStyle(null);
+						}
+					});
+				} else {
+					ws._removeCell(nRow, nCol);
+				}
 			}
 		} else if (AscCH.historyitem_Worksheet_ColProp === Type) {
 			index = Data.index;
@@ -3498,7 +3537,9 @@ function (window, undefined) {
 			//нужно для того, чтобы грамотно выставлялись цвета в ф/т при ручном скрытии строк, затрагивающих ф/т(undo/redo)
 			//TODO для случая скрытия строк фильтром(undo), может два раза вызываться функция setColorStyleTable - пересмотреть
 			workSheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			workSheetView.model.autoFilters.reDrawFilter(null, index);
+			if (workSheetView) {
+				workSheetView.model.autoFilters.reDrawFilter(null, index);
+			}
 		} else if (AscCH.historyitem_Worksheet_RowHide === Type) {
 			from = Data.from;
 			to = Data.to;
@@ -3522,7 +3563,9 @@ function (window, undefined) {
 			ws.setRowHidden(nRow, from, to);
 
 			workSheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			workSheetView.model.autoFilters.reDrawFilter(new Asc.Range(0, from, ws.nColsCount - 1, to));
+			if (workSheetView) {
+				workSheetView.model.autoFilters.reDrawFilter(new Asc.Range(0, from, ws.nColsCount - 1, to));
+			}
 		} else if (AscCH.historyitem_Worksheet_AddRows === Type || AscCH.historyitem_Worksheet_RemoveRows === Type) {
 			from = Data.from;
 			to = Data.to;
@@ -3557,16 +3600,17 @@ function (window, undefined) {
 
 			// ToDo Так делать неправильно, нужно поправить (перенести логику в model, а отрисовку отделить)
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range);
-			worksheetView.shiftCellWatches(bInsert, operType, range);
+			if (workSheetView) {
+				worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range);
+				worksheetView.shiftCellWatches(bInsert, operType, range);
 
-			if (wb.bCollaborativeChanges) {
-				changeFreezePane = worksheetView._getFreezePaneOffset(operType, range, bInsert);
-				if (changeFreezePane) {
-					worksheetView._updateFreezePane(changeFreezePane.col, changeFreezePane.row, true);
+				if (wb.bCollaborativeChanges) {
+					changeFreezePane = worksheetView._getFreezePaneOffset(operType, range, bInsert);
+					if (changeFreezePane) {
+						worksheetView._updateFreezePane(changeFreezePane.col, changeFreezePane.row, true);
+					}
 				}
 			}
-
 			//ws.shiftDataValidation(bInsert, operType, range);
 		} else if (AscCH.historyitem_Worksheet_AddCols === Type || AscCH.historyitem_Worksheet_RemoveCols === Type) {
 			from = Data.from;
@@ -3603,16 +3647,17 @@ function (window, undefined) {
 
 			// ToDo Так делать неправильно, нужно поправить (перенести логику в model, а отрисовку отделить)
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range);
-			worksheetView.shiftCellWatches(bInsert, operType, range);
+			if (workSheetView) {
+				worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range);
+				worksheetView.shiftCellWatches(bInsert, operType, range);
 
-			if (wb.bCollaborativeChanges) {
-				changeFreezePane = worksheetView._getFreezePaneOffset(operType, range, bInsert);
-				if (changeFreezePane) {
-					worksheetView._updateFreezePane(changeFreezePane.col, changeFreezePane.row, true);
+				if (wb.bCollaborativeChanges) {
+					changeFreezePane = worksheetView._getFreezePaneOffset(operType, range, bInsert);
+					if (changeFreezePane) {
+						worksheetView._updateFreezePane(changeFreezePane.col, changeFreezePane.row, true);
+					}
 				}
 			}
-
 			//ws.shiftDataValidation(bInsert, operType, range)
 		} else if (AscCH.historyitem_Worksheet_ShiftCellsLeft === Type ||
 			AscCH.historyitem_Worksheet_ShiftCellsRight === Type) {
@@ -3649,8 +3694,10 @@ function (window, undefined) {
 
 			// ToDo Так делать неправильно, нужно поправить (перенести логику в model, а отрисовку отделить)
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range.bbox);
-			worksheetView.shiftCellWatches(bInsert, operType, range.bbox);
+			if (workSheetView) {
+				worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range.bbox);
+				worksheetView.shiftCellWatches(bInsert, operType, range.bbox);
+			}
 		} else if (AscCH.historyitem_Worksheet_ShiftCellsTop === Type ||
 			AscCH.historyitem_Worksheet_ShiftCellsBottom === Type) {
 			r1 = Data.r1;
@@ -3686,8 +3733,10 @@ function (window, undefined) {
 
 			// ToDo Так делать неправильно, нужно поправить (перенести логику в model, а отрисовку отделить)
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range.bbox);
-			worksheetView.shiftCellWatches(bInsert, operType, range.bbox);
+			if (workSheetView) {
+				worksheetView.cellCommentator.updateCommentsDependencies(bInsert, operType, range.bbox);
+				worksheetView.shiftCellWatches(bInsert, operType, range.bbox);
+			}
 		} else if (AscCH.historyitem_Worksheet_Sort == Type) {
 			var bbox = Data.bbox;
 			var places = Data.places;
@@ -3712,7 +3761,9 @@ function (window, undefined) {
 			range._sortByArray(bbox, places, null, sortByRow);
 
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			worksheetView.model.autoFilters.resetTableStyles(bbox);
+			if (workSheetView) {
+				worksheetView.model.autoFilters.resetTableStyles(bbox);
+			}
 		} else if (AscCH.historyitem_Worksheet_MoveRange == Type) {
 			//todo worksheetView.autoFilters._moveAutoFilters(worksheetView ,null, null, g_oUndoRedoAutoFiltersMoveData);
 			from = new Asc.Range(Data.from.c1, Data.from.r1, Data.from.c2, Data.from.r2);
@@ -3720,45 +3771,49 @@ function (window, undefined) {
 			var copyRange = Data.copyRange;
 
 			var wsTo = wb.getWorksheetById(Data.sheetIdTo);
-			if (bUndo) {
-				temp = from;
-				from = to;
-				to = temp;
-				if (wsTo) {
-					temp = wsTo;
-					wsTo = ws;
-					ws = temp;
+			if (wsTo) {
+				if (bUndo) {
+					temp = from;
+					from = to;
+					to = temp;
+					if (wsTo) {
+						temp = wsTo;
+						wsTo = ws;
+						ws = temp;
+					}
+				}
+				if (wb.bCollaborativeChanges) {
+					var coBBoxTo = new Asc.Range(0, 0, 0, 0), coBBoxFrom = new Asc.Range(0, 0, 0, 0);
+
+					coBBoxTo.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, to.r1);
+					coBBoxTo.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, to.c1);
+					coBBoxTo.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, to.r2);
+					coBBoxTo.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, to.c2);
+
+					coBBoxFrom.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, from.r1);
+					coBBoxFrom.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, from.c1);
+					coBBoxFrom.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, from.r2);
+					coBBoxFrom.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, from.c2);
+
+					ws._moveRange(coBBoxFrom, coBBoxTo, copyRange, wsTo);
+				} else {
+					ws._moveRange(from, to, copyRange, wsTo);
 				}
 			}
-			if (wb.bCollaborativeChanges) {
-				var coBBoxTo = new Asc.Range(0, 0, 0, 0), coBBoxFrom = new Asc.Range(0, 0, 0, 0);
-
-				coBBoxTo.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, to.r1);
-				coBBoxTo.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, to.c1);
-				coBBoxTo.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, to.r2);
-				coBBoxTo.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, to.c2);
-
-				coBBoxFrom.r1 = collaborativeEditing.getLockOtherRow2(nSheetId, from.r1);
-				coBBoxFrom.c1 = collaborativeEditing.getLockOtherColumn2(nSheetId, from.c1);
-				coBBoxFrom.r2 = collaborativeEditing.getLockOtherRow2(nSheetId, from.r2);
-				coBBoxFrom.c2 = collaborativeEditing.getLockOtherColumn2(nSheetId, from.c2);
-
-				ws._moveRange(coBBoxFrom, coBBoxTo, copyRange, wsTo);
-			} else {
-				ws._moveRange(from, to, copyRange, wsTo);
-			}
 			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
-			if (bUndo)//если на Undo перемещается диапазон из форматированной таблицы - стиль форматированной таблицы не должен цепляться
-			{
-				worksheetView.model.autoFilters._cleanStyleTable(to);
-			}
+			if (workSheetView) {
+				if (bUndo)//если на Undo перемещается диапазон из форматированной таблицы - стиль форматированной таблицы не должен цепляться
+				{
+					worksheetView.model.autoFilters._cleanStyleTable(to);
+				}
 
-			worksheetView.model.autoFilters.reDrawFilter(to);
-			worksheetView.model.autoFilters.reDrawFilter(from);
+				worksheetView.model.autoFilters.reDrawFilter(to);
+				worksheetView.model.autoFilters.reDrawFilter(from);
 
-			// clear traces
-			if (worksheetView.traceDependentsManager) {
-				worksheetView.traceDependentsManager.clearAll();
+				// clear traces
+				if (worksheetView.traceDependentsManager) {
+					worksheetView.traceDependentsManager.clearAll();
+				}
 			}
 		} else if (AscCH.historyitem_Worksheet_Rename == Type) {
 			if (bUndo) {
@@ -3868,7 +3923,6 @@ function (window, undefined) {
 				ws.hyperlinkManager.add(to, data);
 			}
 		} else if (AscCH.historyitem_Worksheet_ChangeFrozenCell === Type) {
-			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
 			var updateData = bUndo ? Data.from : Data.to;
 
 			var _r1 = updateData.r1 > 0 ? collaborativeEditing.getLockOtherRow2(nSheetId, updateData.r1 - 1) : null;
@@ -3884,8 +3938,10 @@ function (window, undefined) {
 			} else {
 				_c1 = updateData.c1;
 			}
-
-			worksheetView._updateFreezePane(_c1, _r1, /*lockDraw*/true);
+			worksheetView = wb.oApi.wb.getWorksheetById(nSheetId);
+			if (workSheetView) {
+				worksheetView._updateFreezePane(_c1, _r1, /*lockDraw*/true);
+			}
 		} else if (AscCH.historyitem_Worksheet_SetTabColor === Type) {
 			ws.setTabColor(bUndo ? Data.from : Data.to);
 		} else if (AscCH.historyitem_Worksheet_SetSummaryRight === Type) {
@@ -4230,11 +4286,13 @@ function (window, undefined) {
 			AscCH.historyitem_Worksheet_ShiftCellsLeft === Type || AscCH.historyitem_Worksheet_ShiftCellsRight ===
 			Type || AscCH.historyitem_Worksheet_ShiftCellsTop === Type ||
 			AscCH.historyitem_Worksheet_ShiftCellsBottom === Type || AscCH.historyitem_Worksheet_MoveRange === Type ||
-			AscCH.historyitem_Worksheet_Rename === Type;
+			AscCH.historyitem_Worksheet_Rename === Type || AscCH.historyitem_Worksheet_RemoveCell === Type;
 	};
 	UndoRedoWoorksheet.prototype.forwardTransformationGet = function (Type, Data, nSheetId) {
 		if (AscCH.historyitem_Worksheet_Rename === Type) {
 			return {from: Data.from, name: Data.to};
+		} else if (AscCH.historyitem_Worksheet_RemoveCell === Type && Data.oNewVal && Data.oNewVal.value && Data.oNewVal.value.formula) {
+			return {formula: Data.oNewVal.value.formula};
 		}
 		return null;
 	};
@@ -4242,6 +4300,10 @@ function (window, undefined) {
 		if (AscCH.historyitem_Worksheet_Rename === Type) {
 			Data.from = getRes.from;
 			Data.to = getRes.name;
+		} else if (AscCH.historyitem_Worksheet_RemoveCell === Type) {
+			if (Data && Data.oNewVal && Data.oNewVal.value) {
+				Data.oNewVal.value.formula = getRes.formula;
+			}
 		}
 		return null;
 	};
@@ -4496,21 +4558,36 @@ function (window, undefined) {
 		return true;
 	}
 	UndoRedoWoorksheet.prototype.CommuteRelatedRowCol = function (oData, isRow, oActionOther) {
-		let res = this.CommuteRelatedRowCol2(oData.index, isRow, oActionOther);
+		let res = this.CommuteRelatedRowCol2(oData.index, oData.index, isRow, oActionOther);
 		if (res) {
 			oData.index = isRow ? this.tmpRange.r1 : this.tmpRange.c1;
 		}
 		return res;
 	}
-	UndoRedoWoorksheet.prototype.CommuteRelatedRowCol2 = function (index, isRow, oActionOther) {
+	UndoRedoWoorksheet.prototype.CommuteRelatedRowColFromTo = function (oData, isRow, oActionOther) {
+		let res = this.CommuteRelatedRowCol2(oData.from, oData.to, isRow, oActionOther);
+		if (res) {
+			if (isRow) {
+				oData.from = this.tmpRange.r1;
+				oData.to = this.tmpRange.r2;
+			} else {
+				oData.from = this.tmpRange.c1;
+				oData.to = this.tmpRange.c2;
+			}
+		}
+		return res;
+	}
+	UndoRedoWoorksheet.prototype.CommuteRelatedRowCol2 = function (from, to, isRow, oActionOther) {
 		let r1 = 0;
 		let c1 = 0;
 		let r2 = gc_nMaxRow0;
 		let c2 = gc_nMaxCol0;
 		if (isRow) {
-			r1 = r2 = index;
+			r1 = from;
+			r2 = to;
 		} else {
-			c1 = c2 = index;
+			c1 = from;
+			c2 = to;
 		}
 		return this.CommuteRelatedRange2(r1, c1, r2, c2, oActionOther);
 	}
@@ -4650,6 +4727,29 @@ function (window, undefined) {
 	UndoRedoComment.prototype.getClassType = function () {
 		return this.nType;
 	};
+	UndoRedoComment.prototype.CreateReverseChangeSpreadsheet = function (ToClass, Type, nSheetId, oRange, Data, LocalChange) {
+		if (Type === AscCH.historyitem_Comment_Add) {
+			Type = AscCH.historyitem_Comment_Remove;
+		} else if (Type === AscCH.historyitem_Comment_Remove) {
+			Type = AscCH.historyitem_Comment_Add;
+		} else if (Type === AscCH.historyitem_Comment_Change || Type === AscCH.historyitem_Comment_Coords) {
+			Data = Data.CreateReverseChangeSpreadsheet();
+		}
+		return new AscCommonExcel.UndoRedoItemSerializable(ToClass, Type, nSheetId, oRange, Data, LocalChange);
+	};
+	UndoRedoComment.prototype.CommuteRelated = function (oActionToUndo, oActionOther) {
+		let res = true;
+		if (AscCH.historyitem_Comment_Add === oActionToUndo.nActionType || AscCH.historyitem_Comment_Add === oActionToUndo.nActionType) {
+			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData, oActionOther);
+			if(oActionToUndo.oData.coords) {
+				res = res && AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData.coords, oActionOther);
+			}
+		} else if (AscCH.historyitem_Comment_Change === oActionToUndo.nActionType || AscCH.historyitem_Comment_Coords === oActionToUndo.nActionType) {
+			res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData.from, oActionOther);
+			res = res && AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedCell(oActionToUndo.oData.to, oActionOther);
+		}
+		return res;
+	}
 	UndoRedoComment.prototype.Undo = function (Type, Data, nSheetId) {
 		this.UndoRedo(Type, Data, nSheetId, true);
 	};
@@ -4789,6 +4889,30 @@ function (window, undefined) {
 		return AscCH.historyitem_AutoFilter_Add === Type || AscCH.historyitem_AutoFilter_ChangeTableName === Type ||
 			AscCH.historyitem_AutoFilter_Empty === Type || AscCH.historyitem_AutoFilter_ChangeColumnName === Type;
 	};
+	UndoRedoAutoFilters.prototype.CreateReverseChangeSpreadsheet = function (ToClass, nActionType, nSheetId, oRange, oData, LocalChange) {
+		let type, data;
+		if (AscCH.historyitem_AutoFilter_Add === nActionType) {
+			type = AscCH.historyitem_AutoFilter_Empty;
+			data = new AscCommonExcel.UndoRedoData_AutoFilter();
+			data.activeCells = oData.activeCells;
+		} else {
+			return;
+		}
+		return new UndoRedoItemSerializable(ToClass, type, nSheetId, oRange, data, LocalChange);
+	};
+	UndoRedoAutoFilters.prototype.CommuteRelated = function (oActionToUndo, oActionOther) {
+		if (AscCommonExcel.g_oUndoRedoAutoFilters === oActionOther.oClass) {
+			//изменения в форматированной таблице. например добавление total
+			return false;
+		}
+		let res = true;
+		if (AscCH.historyitem_AutoFilter_Empty === oActionToUndo.nActionType) {
+			if(oActionToUndo.oData.activeCells) {
+				res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRange(oActionToUndo.oData.activeCells, oActionOther);
+			}
+		}
+		return res;
+	}
 
 	function UndoRedoSparklines(wb) {
 		UndoRedoClassBase.call(this);
@@ -5072,15 +5196,6 @@ function (window, undefined) {
 				break;
 			case AscCH.historyitem_PivotTable_SetName:
 				pivotTable.asc_setName(value);
-				break;
-			case AscCH.historyitem_PivotTable_SetRowHeaderCaption:
-				pivotTable.asc_setRowHeaderCaption(value);
-				break;
-			case AscCH.historyitem_PivotTable_SetColHeaderCaption:
-				pivotTable.asc_setColHeaderCaption(value);
-				break;
-			case AscCH.historyitem_PivotTable_SetDataCaption:
-				pivotTable.asc_setDataCaption(value);
 				break;
 			case AscCH.historyitem_PivotTable_SetRowHeaderCaption:
 				pivotTable.asc_setRowHeaderCaption(value);

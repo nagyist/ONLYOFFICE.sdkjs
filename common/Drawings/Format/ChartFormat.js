@@ -14503,7 +14503,7 @@
         this.drawerData = null;
 
         let oDrawerData = oChartSpace.chartObj.recalculatePositionText(this);
-        if(!oDrawerData) {
+        if(!oDrawerData || !oDrawerData.coefficients) {
             return;
         }
         this.drawerData = oDrawerData;

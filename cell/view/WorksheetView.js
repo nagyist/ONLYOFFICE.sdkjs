@@ -6275,22 +6275,27 @@ function isAllowPasteLink(pastedWb) {
 
 		if (ct.angle) {
 
-			xb1 = this._getColLeft(col, true, ctx) - offsetX;
+			xb1 = this._getColLeft(col, false, ctx) - offsetX;
 			yb1 = this._getRowTop(row) - offsetY;
 			wb = this._getColumnWidth(col);
 			hb = this._getRowHeight(row);
+
+			xb1 = this.checkRtl(xb1);
+			if (!isMerged && this.getRightToLeft()) {
+				xb1 -= wb;
+			}
 
 			txtRotX = xb1 - ct.textBound.offsetX;
 			txtRotW = ct.textBound.width + xb1 - ct.textBound.offsetX;
 
 			if (isMerged) {
-				wb = this._getColLeft(colR + 1, true, ctx) - this._getColLeft(colL, true, ctx);
+				wb = this._getColLeft(colR + 1, false, ctx) - this._getColLeft(colL, false, ctx);
 				if (this.getRightToLeft()) {
-					xb1 += this._getColumnWidth(col) - wb;
+					xb1 -= wb;
 				}
 
 				hb = this._getRowTop(rowB + 1) - this._getRowTop(rowT);
-				this._AddClipRect(ctx, xb1, yb1, wb, hb);
+				this._AddClipRect(ctx, xb1, yb1, wb, hb, true);
 				clipUse = true;
 			}
 
@@ -8878,7 +8883,7 @@ function isAllowPasteLink(pastedWb) {
 				ws.removeSparklines(locationRange);
 
 				var modelSparkline = new AscCommonExcel.sparklineGroup(true);
-				modelSparkline.worksheet = ws;
+				modelSparkline.setWorksheet(ws);
 				modelSparkline.set(newSparkLine);
 				modelSparkline.setSparklinesFromRange(dataRange, locationRange, true);
 				ws.addSparklineGroups(modelSparkline);

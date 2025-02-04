@@ -59,7 +59,6 @@
 			AscCommon.CCollaborativeEditingBase.call(this);
 
 			this.m_nUseType					= 1;  // 1 - 1 клиент и мы сохраняем историю, -1 - несколько клиентов, 0 - переход из -1 в 1
-			this.m_bIsCollaborativeWithLiveViewer = false;//todo remove after implementing undo in spreadsheet
 
 			this.handlers					= new AscCommonExcel.asc_CHandlersList(handlers);
 			this.m_bIsViewerMode			= !!isViewerMode; // Режим Viewer-а
@@ -409,10 +408,6 @@
 
 				if (0 === this.m_nUseType)
 					this.m_nUseType = 1;
-			} else if (this.m_bIsCollaborativeWithLiveViewer) {
-				//todo remove
-				// Чистим Undo/Redo
-				AscCommon.History.Clear();
 			} else {
 				// Обновляем точку последнего сохранения в истории
 				AscCommon.History.Reset_SavedIndex(IsUserSave);
@@ -1066,7 +1061,7 @@
 				if (!oOtherAction) {
 					continue;
 				}
-				if (oChange.CommuteRelated && false === oChange.CommuteRelated(oChange, oOtherAction)) {
+				if (true !== oOtherAction.IsReverted() && oChange.CommuteRelated && false === oChange.CommuteRelated(oChange, oOtherAction)) {
 					return false;
 				}
 			}

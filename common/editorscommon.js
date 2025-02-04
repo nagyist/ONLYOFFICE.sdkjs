@@ -15345,6 +15345,9 @@ window["buildCryptoFile_End"] = function(url, error, hash, password)
 				case AscCommon.c_oEditorId.Spreadsheet:
 					ext = ".xlsx";
 					break;
+				case AscCommon.c_oEditorId.Visio:
+					ext = ".vsdx";
+					break;
 				default:
 					break;
 			}
