@@ -127,6 +127,14 @@
 	AscFormat.InitClass(CPageInfo, AscFormat.CBaseNoIdObject, AscDFH.historyitem_type_Pdf_Page);
 	CPageInfo.prototype.constructor = CPageInfo;
 
+	Object.defineProperties(CPageInfo.prototype, {
+		PageNum: {
+			get: function () {
+				return this.GetIndex();
+			}
+		}
+	});
+
 	CPageInfo.prototype.RedrawDrawings = function() {
 		let oViewer = Asc.editor.getDocumentRenderer();
 		let _t = this;
@@ -151,13 +159,19 @@
 
         oViewer.paint(setRedrawPageOnRepaint);
 	};
-	CPageInfo.prototype.RedrawAnnots = function() {
+	CPageInfo.prototype.RedrawAnnots = function(isTextMarkup) {
 		let oViewer = Asc.editor.getDocumentRenderer();
 		let _t = this;
 
 		let nIdx = _t.GetIndex();
 		function setRedrawPageOnRepaint() {
-            _t.needRedrawAnnots = true;
+			if (isTextMarkup) {
+				_t.needRedrawMarkups = true;
+			}
+			else {
+				_t.needRedrawAnnots = true;
+			}
+
 			nIdx != -1 && oViewer.thumbnails && oViewer.thumbnails._repaintPage(nIdx);
         }
 
@@ -198,10 +212,10 @@
         }
 
 		this.drawings.splice(nPos, 0, oDrawing);
+        oDrawing.SetParentPage(this);
+
 		AscCommon.History.Add(new CChangesPDFDocumentDrawingsContent(this, nPos, [oDrawing], true));
 
-		oDrawing.SetPage(this.GetIndex());
-        oDrawing.SetParentPage(this);
 		this.RedrawDrawings();
 	};
 	CPageInfo.prototype.RemoveDrawing = function(sId) {
@@ -224,9 +238,9 @@
         }
 
         this.annots.splice(nPos, 0, oAnnot);
+        oAnnot.SetParentPage(this);
 
         AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], true));
-		oAnnot.SetParentPage(this);
 		this.RedrawAnnots();
 	};
 	CPageInfo.prototype.RemoveAnnot = function(sId) {
@@ -241,7 +255,7 @@
         this.annots.splice(nPos, 1);
         
         AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], false));
-		this.RedrawAnnots();
+		this.RedrawAnnots(oAnnot.IsTextMarkup());
 	};
 	CPageInfo.prototype.AddField = function(oField, nPos) {
 		if (nPos == undefined) {
@@ -249,9 +263,9 @@
         }
 
 		this.fields.splice(nPos, 0, oField);
+		oField.SetParentPage(this);
 
         AscCommon.History.Add(new CChangesPDFDocumentFieldsContent(this, nPos, [oField], true));
-		oField.SetParentPage(this);
 		this.RedrawForms();
 	};
 	CPageInfo.prototype.RemoveField = function(sId) {
@@ -804,10 +818,10 @@
 			let oThumbnails = this.thumbnails;
 			for (var i = 0, len = pages.length; i < len; i++)
 			{
+				oThumbnails && oThumbnails._repaintPage(pages[i]);
 				if (pages[i] >= this.startVisiblePage && pages[i] <= this.endVisiblePage)
 				{
 					delete this.drawingPages[pages[i]].Image;
-					oThumbnails && oThumbnails._repaintPage(pages[i]);
 				}
 			}
 
@@ -817,8 +831,9 @@
 			let oThis = this;
 			if (this.scheduledRepaintTimer == null) {
 				this.scheduledRepaintTimer = setTimeout(function() {
-					oThis.isRepaint = true;
-	
+					oThis.scheduledRepaintTimer = null;
+					oThis.isRepaint = false;
+
 					oThis.onRepaintFormsCallbacks.forEach(function(callback) {
 						callback();
 					});
@@ -831,7 +846,7 @@
 					if (oThis.Api && oThis.Api.printPreview)
 						oThis.Api.printPreview.update();
 
-					oThis.scheduledRepaintTimer = null;
+					oThis.isRepaint = true;
 				});
 			}
 			
@@ -973,6 +988,10 @@
 					AscCommon.addMouseEvent(_t.canvasForms, "move", _t.onMouseMove);
 					AscCommon.addMouseEvent(_t.canvasForms, "up", _t.onMouseUp);
 
+					let targetElem = document.getElementById('id_target_cursor');
+					if (targetElem)
+						targetElem.style.pointerEvents = "none";
+
 					global_mouseEvent.Sender = _t.canvasForms;
 
 					_t.parent.onmousewheel = _t.onMouseWhell;
@@ -1021,8 +1040,6 @@
 			if (this.drawingPages[0]) {
 				this.navigateToPage(0, 0, this.scrollMaxX / 2);
 			}
-
-			this.doc.TurnOnHistory();
 		};
 
 		this.open = function(data, password)
@@ -1309,6 +1326,10 @@
 				if (oFormInfo["opt"])
 				{
 					oForm.SetOptions(oFormInfo["opt"]);
+				}
+				if (null != oFormInfo["TI"])
+				{
+					oForm.SetTopIndex(oFormInfo["TI"]);
 				}
 
 				// checkbox - radiobutton
@@ -2102,8 +2123,8 @@
 				for (let i = page.annots.length -1; i >= 0; i--)
 				{
 					let oAnnot = page.annots[i];
-					let nAnnotWidth		= AscCommon.AscBrowser.retinaPixelRatio * 16 / (this.zoom);
-					let nAnnotHeight	= AscCommon.AscBrowser.retinaPixelRatio * 16 / (this.zoom);
+					let nAnnotWidth		= 20 / (this.zoom);
+					let nAnnotHeight	= 20 / (this.zoom);
 					
 					if (true !== bGetHidden && oAnnot.IsHidden() == true || false == oAnnot.IsComment())
 						continue;
@@ -2235,7 +2256,7 @@
 							return pageQuads.page == pageCoords.index;
 						}) : null;
 
-						if (oThis.canSelectPageText() && pageCoords && isSelectionUse && AscPDF.IsInQuads(pageSelQuads.quads, pageCoords.x, pageCoords.y))
+						if (oThis.canSelectPageText() && (pageCoords && isSelectionUse && pageSelQuads) && AscPDF.IsInQuads(pageSelQuads.quads, pageCoords.x, pageCoords.y))
 						{
 							isInSelection = true;
 						}
@@ -2511,52 +2532,16 @@
 				return false;
 			}
 
-			var delta  = 0;
-			var deltaX = 0;
-			var deltaY = 0;
-
-			if (undefined != e.wheelDelta && e.wheelDelta != 0)
-			{
-				//delta = (e.wheelDelta > 0) ? -45 : 45;
-				delta = -45 * e.wheelDelta / 120;
-			}
-			else if (undefined != e.detail && e.detail != 0)
-			{
-				//delta = (e.detail > 0) ? 45 : -45;
-				delta = 45 * e.detail / 3;
-			}
-
-			// New school multidimensional scroll (touchpads) deltas
-			deltaY = delta;
-
-			if (oThis.isVisibleHorScroll)
-			{
-				if (e.axis !== undefined && e.axis === e.HORIZONTAL_AXIS)
-				{
-					deltaY = 0;
-					deltaX = delta;
-				}
-
-				// Webkit
-				if (undefined !== e.wheelDeltaY && 0 !== e.wheelDeltaY)
-				{
-					//deltaY = (e.wheelDeltaY > 0) ? -45 : 45;
-					deltaY = -45 * e.wheelDeltaY / 120;
-				}
-				if (undefined !== e.wheelDeltaX && 0 !== e.wheelDeltaX)
-				{
-					//deltaX = (e.wheelDeltaX > 0) ? -45 : 45;
-					deltaX = -45 * e.wheelDeltaX / 120;
-				}
-			}
-
-			deltaX >>= 0;
-			deltaY >>= 0;
-
-			if (0 != deltaX)
-				oThis.m_oScrollHorApi.scrollBy(deltaX, 0, false);
-			else if (0 != deltaY)
-				oThis.m_oScrollVerApi.scrollBy(0, deltaY, false);
+			let values = AscCommon.checkMouseWhell(e, {
+				isSupportBidirectional : false,
+				isAllowHorizontal : oThis.isVisibleHorScroll,
+				isUseMaximumDelta : true
+			});
+			
+			if (0 !== values.x)
+				oThis.m_oScrollHorApi.scrollBy(values.x, 0, false);
+			if (0 !== values.y)
+				oThis.m_oScrollVerApi.scrollBy(0, values.y, false);
 
 			// здесь - имитируем моус мув ---------------------------
 			var _e   = {};
@@ -2785,7 +2770,9 @@
 			if (oDoc.fontLoader.isWorking() || this.IsOpenFormsInProgress)
 				return;
 
-			this.overlay.Clear()
+			this.overlay.Clear();
+
+			oDrDoc.AutoShapesTrack.PageIndex = -1;
 
 			if (!this.file)
 				return;
@@ -2871,15 +2858,9 @@
 						oDoc.mouseDownAnnot.GetDocContent().DrawSelectionOnPage(0);
 						oDrDoc.private_EndDrawSelection();
 					}
-					if (oDoc.mouseDownAnnot.IsTextMarkup())
-					{
-						oDrDoc.AutoShapesTrack.SetCurrentPage(oDoc.mouseDownAnnot.GetPage(), true);
-						oDoc.mouseDownAnnot.DrawSelected(this.overlay);
-					}
-					else if (oDoc.mouseDownAnnot.IsComment() == false)
-					{
+					else {
 						let nPage = oDoc.mouseDownAnnot.GetPage();
-						oDrDoc.AutoShapesTrack.PageIndex = nPage;
+						oDrDoc.AutoShapesTrack.SetCurrentPage(nPage, true);
 						this.DrawingObjects.drawSelect(nPage);
 					}
 				}
@@ -3268,7 +3249,7 @@
 			return landscapeAngles.includes(angle);
 		};
 		this.Get_PageLimits = function(nPage) {
-			let oPage = this.file.pages[nPage];
+			let oPage = this.file.pages[nPage] || this.file.pages[0];
 
 			return {
 				X: 0,
@@ -3597,14 +3578,18 @@
 			let oDoc		= this.getPDFDoc();
 			let oDrDoc		= oDoc.GetDrawingDocument();
 
-			if (e.KeyCode === 112 && e.CtrlKey == true) {
-				editor.AddStampAnnot();
+			let shortcutType = this.Api.getShortcut(e);
+			if (oDoc.executeShortcut(shortcutType))
+			{
+				bRetValue = keydownresult_PreventAll;
 			}
-			if (e.KeyCode === 8) // BackSpace
+			else if (e.KeyCode === 8) // BackSpace
 			{
 				oDoc.DoAction(function() {
 					oDoc.Remove(-1, e.CtrlKey == true);
 				}, AscDFH.historydescription_Document_BackSpaceButton);
+
+				bRetValue = true;
 			}
 			else if (e.KeyCode === 9) // Tab
 			{
@@ -3632,11 +3617,14 @@
 					else
 						this.SelectNextForm();
 				}
+
+				bRetValue = true;
 			}
 			else if (e.KeyCode === 13) // Enter
 			{
 				window.event.stopPropagation();
 				oDoc.EnterDown(e.ShiftKey === true);
+				bRetValue = true;
 			}
 			else if (e.KeyCode === 27) // Esc
 			{
@@ -3659,21 +3647,12 @@
 					const oController = oDoc.GetController();
 					oController.resetSelection();
 					this.onUpdateOverlay();
-				oDoc.EscapeForm();
-				oDoc.EscapeForm();
-				
 					oDoc.EscapeForm();
 				
 					editor.sync_HideComment();
 				}
-			}
-			else if (e.KeyCode === 32) // Space
-			{
-				if (oDoc.activeForm)
-				{
-					
-				}
-				// to do включить checkbox/radio
+
+				bRetValue = true;
 			}
 			else if ( e.KeyCode == 33 ) // PgUp
 			{
@@ -3692,6 +3671,8 @@
 					this.m_oScrollVerApi.scrollByY(-this.height, false);
 					this.timerSync();
 				}
+
+				bRetValue = true;
 			}
 			else if ( e.KeyCode == 34 ) // PgDn
 			{
@@ -3715,6 +3696,8 @@
 					this.m_oScrollVerApi.scrollByY(this.height, false);
 					this.timerSync();
 				}
+
+				bRetValue = true;
 			}
 			else if ( e.KeyCode == 35 ) // End
 			{
@@ -3790,32 +3773,10 @@
 				oDoc.DoAction(function() {
 					oDoc.Remove(1, e.CtrlKey == true);
 				}, AscDFH.historydescription_Document_DeleteButton);
-			}
-			else if ( e.KeyCode == 65 && true === e.CtrlKey ) // Ctrl + A
-			{
-				oDoc.SelectAll();
-			}
-			else if ( e.KeyCode == 80 && true === e.CtrlKey ) // Ctrl + P + ...
-			{
-				this.Api.onPrint();
-				bRetValue = true;
-			}
-			else if ( e.KeyCode == 83 && true === e.CtrlKey ) // Ctrl + S + ...
-			{
-				this.Api.asc_Save(false);
-				bRetValue = true;
-			}
-			else if ( e.KeyCode == 89 && true === e.CtrlKey ) // Ctrl + Y
-			{
-				this.doc.DoRedo();
-				bRetValue = true;
-			}
-			else if ( e.KeyCode == 90 && true === e.CtrlKey ) // Ctrl + Z
-			{
-				this.doc.DoUndo();
-				bRetValue = true;
-			}
 
+				bRetValue = true;
+			}
+			
 			oDoc.UpdateCopyCutState();
 			return bRetValue;
 		};
@@ -4444,6 +4405,9 @@
 	};
 	CHtmlPage.prototype.createComponents = function()
 	{
+		if (AscCommon.g_inputContext)
+			AscCommon.g_inputContext = null;
+
 		var elements = "<div id=\"id_main\" class=\"block_elem\" style=\"touch-action:none;-ms-touch-action:none;-moz-user-select:none;user-select:none;-webkit-user-select:none;background-color:" + AscCommon.GlobalSkin.BackgroundColor + ";overflow:hidden;\" UNSELECTABLE=\"on\">";
 		elements += "<canvas id=\"id_viewer\" class=\"block_elem\" style=\"touch-action:none;-ms-touch-action:none;-moz-user-select:none;user-select:none;-webkit-user-select:none;left:0px;top:0px;width:100;height:100;\"></canvas>";
 		elements += "<canvas id=\"id_forms\" class=\"block_elem\" style=\"touch-action:none;-ms-touch-action:none;-moz-user-select:none;user-select:none;-webkit-user-select:none;left:0px;top:0px;width:100;height:100;\"></canvas>";

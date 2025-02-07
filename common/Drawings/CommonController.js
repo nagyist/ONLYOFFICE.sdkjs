@@ -5698,8 +5698,11 @@
 
 					if (selectedObject && (selectedObject instanceof AscFormat.CShape)) {
 						this.selection.geometrySelection = new CGeometryEditSelection(this, selectedObject, null, null);
+						this.selection.textSelection = null;
 						this.updateSelectionState();
 						this.updateOverlay();
+
+						Asc.editor.sendEvent("asc_onSelectionEnd");
 					}
 				},
 
@@ -5770,6 +5773,9 @@
 									if (null !== oMath && oMath.Is_InInnerContent()) {
 										this.checkSelectedObjectsAndCallback(function () {
 											oMath.Handle_AddNewLine();
+											let oShape = target_doc_content.Is_DrawingShape(true);
+											if(oShape)
+												oShape.checkExtentsByDocContent();
 										}, [], false, AscDFH.historydescription_Spreadsheet_AddNewParagraph, undefined, window["Asc"]["editor"].collaborativeEditing.getFast());
 										this.recalculate();
 									} else {
@@ -6408,7 +6414,7 @@
 							var oParagraph = oDocContent.GetElement(0);
 							var oForm;
 							if (oParagraph && oParagraph.IsParagraph() && oParagraph.IsInFixedForm() && (oForm = oParagraph.GetInnerForm())) {
-								oDocContent.ResetShiftView();
+								oDocContent.ShiftViewToFirstLine();
 								bRedraw = true;
 							}
 						}
@@ -10954,12 +10960,28 @@
 			if(this.controller.handleEventMode === HANDLE_EVENT_MODE_HANDLE) {
 				if(e.IsLocked) {
 					this.inkDrawer.startSilentMode();
-					const aDrawings = this.controller.getDrawingObjects(pageIndex);
+					let aDrawings = this.controller.getDrawingObjects(pageIndex);
+					if(Asc.editor.isDrawSlideshowAnnotations()) {
+						let oAnnots = Asc.editor.getAnnotations();
+						if(oAnnots) {
+							aDrawings = Asc.editor.getAnnotations().getInks(this.controller.drawingObjects);
+						}
+						else {
+							aDrawings = [];
+						}
+					}
 					let bDocStartAction = false;
 					for(let nIdx = aDrawings.length - 1; nIdx > -1; --nIdx) {
 						let oDrawing = aDrawings[nIdx];
 						if(oDrawing.isInk())  {
 							if(oDrawing.hit(x, y)) {
+								if(Asc.editor.isDrawSlideshowAnnotations()) {
+									let oAnnots = Asc.editor.getAnnotations();
+									if(oAnnots) {
+										oAnnots.eraseInk(oDrawing.parent, nIdx);
+									}
+									break;
+								}
 								this.controller.resetSelection();
 								this.controller.selectObject(oDrawing, pageIndex);
 								if(this.controller.document) {
@@ -11320,7 +11342,12 @@
 			const selectedArray = graphicController.getSelectedArray();
 			if (selectedArray.length < 2) return false;
 
-			const hasLocked = selectedArray.some(function(item) {
+			const hasShape = selectedArray.some(function (item) {
+				return item instanceof AscFormat.CShape;
+			});
+			if (!hasShape) return false;
+
+			const hasLocked = selectedArray.some(function (item) {
 				return item.Lock &&
 					item.Lock.Type !== AscCommon.c_oAscLockTypes.kLockTypeNone &&
 					item.Lock.Type !== AscCommon.c_oAscLockTypes.kLockTypeMine;
@@ -11332,17 +11359,31 @@
 			});
 			if (hasInvalidGeometry) return false;
 
+			const forbiddenTypes = [
+				AscFormat.CGraphicFrame,
+				AscFormat.CChartSpace,
+				AscFormat.CGroupShape,
+				AscFormat.CConnectionShape,
+			];
 			const hasForbiddenTypesInSelection = selectedArray.some(function (item) {
-				return item instanceof AscFormat.CGraphicFrame || item instanceof AscFormat.CChartSpace;
+				return forbiddenTypes.some(function (forbiddenType) {
+					return item instanceof forbiddenType;
+				});
 			});
 			if (hasForbiddenTypesInSelection) return false;
+
+			const hasGroupedItem = selectedArray.some(function (item) {
+				// return item.group != null;
+				return item.group instanceof AscFormat.CGroupShape;
+			});
+			if (hasGroupedItem) return false;
 
 			if (operation) {
 				const operations = ['unite', 'intersect', 'subtract', 'exclude', 'divide'];
 				if (operations.indexOf(operation) === -1) return false;
 
 				if (operation === 'intersect') {
-					const rects = selectedArray.map(function (item) {return item.getRectBounds();});
+					const rects = selectedArray.map(function (item) { return item.getRectBounds(); });
 					const hasIntersection = rects.every(function (rectA, indexA) {
 						return rects.some(function (rectB, indexB) {
 							return indexA !== indexB && rectA.isIntersectOther(rectB);
@@ -11368,7 +11409,7 @@
 					return convertFormatPathToCompoundPath(path, shape.transform);
 				});
 				const unitedCompoundPath = compoundPaths.reduce(function (resultPath, currentPath) {
-					return resultPath.unite(currentPath);
+					return resultPath['unite'](currentPath);
 				})
 				return unitedCompoundPath;
 			});
@@ -11512,23 +11553,45 @@
 			if (AscCommon.isRealObject(referenceShape.blipFill)) {
 				const blipFill = referenceShape.blipFill.createDuplicate();
 
-				const refX = referenceShape.bounds.x;
-				const refY = referenceShape.bounds.y;
-				const refW = referenceShape.bounds.w;
-				const refH = referenceShape.bounds.h;
+				const refX = referenceShape.bounds.l;
+				const refY = referenceShape.bounds.t;
+				const refW = referenceShape.bounds.r - referenceShape.bounds.l;
+				const refH = referenceShape.bounds.b - referenceShape.bounds.t;
 				const resX = compoundPathBounds['getLeft']();
 				const resY = compoundPathBounds['getTop']();
 				const resW = compoundPathBounds['getWidth']();
 				const resH = compoundPathBounds['getHeight']();
 
-				blipFill.srcRect = {
-					l: 100 * (resX - refX) / refW,
-					t: 100 * (resY - refY) / refH,
-					r: 100 * (resX + resW - refX) / refW,
-					b: 100 * (resY + resH - refY) / refH,
-				};
+				blipFill.srcRect = new AscFormat.CSrcRect();
+				blipFill.srcRect.setLTRB(
+					100 * (resX - refX) / refW,
+					100 * (resY - refY) / refH,
+					100 * (resX + resW - refX) / refW,
+					100 * (resY + resH - refY) / refH
+				);
 
 				resultShape.setBlipFill(blipFill);
+			}
+
+			if (referenceShape.bWordShape) {
+				resultShape.bWordShape = true;
+				if (AscCommon.isRealObject(referenceShape.textBoxContent)) {
+					const textBoxContent = referenceShape.textBoxContent.Copy(resultShape, referenceShape.textBoxContent.DrawingDocument);
+					resultShape.setTextBoxContent(textBoxContent);
+				}
+				if (AscCommon.isRealObject(referenceShape.style)) {
+					const style = referenceShape.style.createDuplicate();
+					resultShape.setStyle(style);
+				}
+				if (AscCommon.isRealObject(referenceShape.bodyPr)) {
+					const bodyPr = referenceShape.bodyPr.createDuplicate();
+					resultShape.setBodyPr(bodyPr);
+				}
+			} else {
+				if (AscCommon.isRealObject(referenceShape.txBody)) {
+					const txBody = referenceShape.txBody.createDuplicate();
+					resultShape.setTxBody(txBody);
+				}
 			}
 
 			resultShape.setSpPr(new AscFormat.CSpPr());
@@ -11542,6 +11605,11 @@
 
 			resultGeometry.setParent(resultShape);
 			resultShape.spPr.setGeometry(resultGeometry);
+
+			if (AscCommon.isRealObject(referenceShape.spPr.effectProps)) {
+				const effectProps = referenceShape.spPr.effectProps.createDuplicate();
+				resultShape.spPr.setEffectPr(effectProps);
+			}
 
 			return resultShape;
 		}

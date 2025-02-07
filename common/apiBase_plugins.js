@@ -1353,6 +1353,11 @@
 			// UPD: done. Ничего не изменять в менеджере плагинов, если guid пуст
 
             let result = window["AscDesktopEditor"]["PluginInstall"](JSON.stringify(config));
+
+			if (result && window.g_asc_plugins.isRunned(config["guid"]))
+			{
+				window.g_asc_plugins.close(config["guid"]);
+			}
 			
 			return {
 				"type" : loadFuncName,
@@ -2063,13 +2068,14 @@
 	};
 
 	/**
-	 * Show an error/warning message.
+	 * Shows an error/warning message.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE", "PDF"]
-	 * @param {string} error - error text.
-	 * @param {number} level - -1 or 0 for error or warning
+	 * @param {string} error - The error text.
+	 * @param {number} level - -1 or 0 for error or warning.
 	 * @alias ShowError
 	 * @since 8.3.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/ShowError.js
 	 */
 	Api.prototype["pluginMethod_ShowError"] = function(error, level)
 	{

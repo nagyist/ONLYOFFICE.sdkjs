@@ -3079,7 +3079,14 @@ CInlineLevelSdt.prototype.ConvertFormToFixed = function(nW, nH)
 		nW = _nW;
 		nH = _nH;
 	}
-
+	
+	// Для текстовых форм делаем по умолчанию размер как в Адобе 150ptх22pt
+	if (!this.IsPictureForm() && !this.IsCheckBox())
+	{
+		nW = Math.max(nW, 150 * g_dKoef_pt_to_mm);
+		nH = Math.max(nH, 22 * g_dKoef_pt_to_mm);
+	}
+	
 	// Для билдера, чтобы мы могли конвертить форму, даже если она нигде не лежит
 	if (!oParent)
 		return this.private_ConvertFormToFixed(nW, nH);
@@ -3092,20 +3099,23 @@ CInlineLevelSdt.prototype.ConvertFormToFixed = function(nW, nH)
 		|| oParagraph.IsInFixedForm())
 		return null;
 	
+	let x = 0;
+	let y = 0;
+	
 	// TODO: Разобраться, почему мы посылаем useWrap=true, хотя по факту не true
 	let layout = oParagraph.GetLayout(this.GetStartPosInParagraph(), true);
-	if (!layout)
-		return null;
-	
-	let anchorPosition = new CAnchorPosition();
-	layout.ParagraphLayout.X = X;
-	layout.ParagraphLayout.Y = Y + nH;
-	anchorPosition.Set(nW, nH, 0, {L :0, T : 0, R : 0, B : 0}, 0, layout.ParagraphLayout, layout.PageLimits);
-	anchorPosition.Calculate_X(true);
-	anchorPosition.Calculate_Y(true);
-	
-	let x = anchorPosition.Calculate_X_Value(Asc.c_oAscRelativeFromH.Page);
-	let y = anchorPosition.Calculate_Y_Value(Asc.c_oAscRelativeFromV.Page);
+	if (layout)
+	{
+		let anchorPosition = new CAnchorPosition();
+		layout.ParagraphLayout.X = X;
+		layout.ParagraphLayout.Y = Y + nH;
+		anchorPosition.Set(nW, nH, 0, {L : 0, T : 0, R : 0, B : 0}, 0, layout.ParagraphLayout, layout.PageLimits);
+		anchorPosition.Calculate_X(true);
+		anchorPosition.Calculate_Y(true);
+		
+		x = anchorPosition.Calculate_X_Value(Asc.c_oAscRelativeFromH.Page);
+		y = anchorPosition.Calculate_Y_Value(Asc.c_oAscRelativeFromV.Page);
+	}
 
 	let drawing = this.private_ConvertFormToFixed(nW, nH);
 	drawing.Set_PositionH(Asc.c_oAscRelativeFromH.Page, false, x, false);

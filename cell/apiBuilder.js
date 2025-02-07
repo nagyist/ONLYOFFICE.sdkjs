@@ -305,13 +305,42 @@
 	/**
      * Any valid drawing element.
      * @typedef {(ApiShape | ApiImage | ApiGroup | ApiOleObject | ApiChart )} Drawing
+	 * @see office-js-api/Examples/Enumerations/Drawing.js
 	 */
 
 	/**
-     * Available drwaing element for grouping
+     * Available drawing element for grouping.
      * @typedef {(ApiShape | ApiGroup | ApiImage | ApiChart)} DrawingForGroup
+	 * @see office-js-api/Examples/Enumerations/DrawingForGroup.js
 	 */
 
+	/**
+	 * @typedef {object} PivotTableFilterAreaInfo
+	 * @property {FieldsInReportFilterType} Type - Specifies how the report filter fields are located.
+	 * @property {number} ReportFilterFields - Defines the number of the report filter fields.
+	 */
+
+	/**
+	 * @typedef {object} PivotTableFieldOptions
+	 * @property {number | string | number[] | string[]} [rows] - An array of field names or IDs to be added as rows or added to the category axis.
+	 * @property {number | string | number[] | string[]} [columns] - An array of field names or IDs to be added as columns or added to the series axis.
+	 * @property {number | string | number[] | string[]} [pages] - An array of field names or IDs to be added as pages or added to the page area.
+	 * @property {boolean} [addToTable=false] - Specifies whether to apply fields only to the pivot table reports. If `true`, the specified fields will be added to the report 
+	 * without replacing existing fields. If `false`, existing fields will be replaced with the new fields.
+	 */
+
+	/**
+     * Any valid element which can be added to the document structure.
+	 * @typedef {(ApiParagraph)} DocumentElement
+	 * @see office-js-api/Examples/Enumerations/DocumentElement.js
+	 */
+
+	/**
+	 * The types of elements that can be added to the paragraph structure.
+	 * @typedef {(ApiUnsupported | ApiRun | ApiHyperlink)} ParagraphContent
+	 * @see office-js-api/Examples/Enumerations/ParagraphContent.js
+	 */
+	
 	/**
 	 * Class representing a base class for the color types.
 	 * @constructor
@@ -8857,11 +8886,12 @@
 	};
 
 	/**
-     * Groups an array of drawings in worksheet.
+     * Groups an array of drawings in the current worksheet.
      * @memberof ApiWorksheet
      * @typeofeditors ["CSE"]
-     * @param {DrawingForGroup} aDrawings - The array of drawings not in document.
+     * @param {DrawingForGroup[]} aDrawings - An array of drawings to group.
      * @returns {ApiGroup}
+	 * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GroupDrawings.js
 	 */
     ApiWorksheet.prototype.GroupDrawings = function(aDrawings) {
@@ -11365,7 +11395,7 @@
 	 */
 
 	/**
-	 * Adds a AutoFilter to the current worksheet.
+	 * Adds an AutoFilter to the current range.
 	 * @memberof ApiRange
 	 * @typeofeditors ["CSE"]
 	 * @param {?number} Field - The integer offset of the field on which you want to base the filter (from the left of the list; the leftmost field is field one).
@@ -12015,9 +12045,10 @@
 	};
 
 	/**
-	 * Gets drawing parent Sheet
+	 * Returns the parent sheet of the current drawing.
 	 * @typeofeditors ["CSE"]
 	 * @returns {?ApiWorksheet}
+	 * @since 8.3.0
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetParentSheet.js
 	 */
 	ApiDrawing.prototype.GetParentSheet = function () {
@@ -12040,6 +12071,7 @@
      * @memberof ApiGroup
      * @typeofeditors ["CSE"]
      * @returns {"group"}
+	 * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiGroup/Methods/GetClassType.js
      */
     ApiGroup.prototype.GetClassType = function() {
@@ -12047,10 +12079,11 @@
     };
 
     /**
-     * Ungroups current group drawing.
+     * Ungroups the current group of drawings.
      * @memberof ApiGroup
      * @typeofeditors ["CSE"]
      * @returns {boolean}
+	 * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiGroup/Methods/Ungroup.js
      */
     ApiGroup.prototype.Ungroup = function() {
@@ -14661,13 +14694,7 @@
 	 * Adds the row, column, and page fields to the pivot table report.
 	 * @memberof ApiPivotTable
 	 * @typeofeditors ["CSE"]
-	 * @param {Object} options - The settings for adding row, column, and page fields to the pivot table report.
-	 * @param {number | string | number[] | string[]} [options.rows] - An array of field names or IDs to be added as rows or added to the category axis.
-	 * @param {number | string | number[] | string[]} [options.columns] - An array of field names or IDs to be added as columns or added to the series axis.
-	 * @param {number | string | number[] | string[]} [options.pages] - An array of field names or IDs to be added as pages or added to the page area.
-	 * @param {boolean} [options.addToTable] - Specifies whether to apply fields only to the pivot table reports. If this parameter is set to <b>true</b>,
-	 * the specified fields will be added to the report (none of the existing fields are replaced).
-	 * If <b>false</b>, the existing fields will be replaced with the new fields. The default value is <b>false</b>.
+	 * @param {PivotTableFieldOptions} options - The settings for adding row, column, and page fields to the pivot table report.
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/{Editor}/ApiPivotTable/Methods/AddFields.js
 	 */
@@ -15338,11 +15365,9 @@
 
 	/**
 	 * Returns the pivot table display fields in the report filter area settings.
-	 * The returned object has the following structure: <em>{Type: FieldsInReportFilterType, ReportFilterFields: number}</em>,
-	 * where <b>Type</b> specifies how the report filter fields are located, <b>ReportFilterFields</b> defines a number of the report filter fields.
 	 * @memberof ApiPivotTable
 	 * @typeofeditors ["CSE"]
-	 * @returns {object}
+	 * @returns {PivotTableFilterAreaInfo}
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/{Editor}/ApiPivotTable/Methods/GetDisplayFieldsInReportFilterArea.js
 	 */
@@ -18747,7 +18772,11 @@
 	function private_MakeError(message) {
 		console.error(new Error(message) );
 	}
-
+	window['AscBuilder'] = window['AscBuilder'] || {};
+	window['AscBuilder'].ApiShape           = ApiShape;
+	window['AscBuilder'].ApiImage           = ApiImage;
+	window['AscBuilder'].ApiGroup           = ApiGroup;
+	window['AscBuilder'].ApiOleObject       = ApiOleObject;
 
 }(window, null));
 

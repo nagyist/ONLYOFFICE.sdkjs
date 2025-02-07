@@ -470,15 +470,21 @@
 	/**
 	 * Calls getCell on object and tries to parse as Number(cell.v) if cell exists otherwise return undefined.
 	 * @param {String} formula
+	 * @param {number?} defaultValue
 	 * @return {Number | undefined} number
 	 */
-	SheetStorage.prototype.getCellNumberValue = function (formula) {
+	SheetStorage.prototype.getCellNumberValue = function (formula, defaultValue) {
 		let cell = this.getCell(formula);
+		let result;
 		if (cell !== undefined) {
-			return Number(cell.v);
+			result = Number(cell.v);
 		} else {
-			return undefined;
+			result = undefined;
 		}
+		if (defaultValue !== undefined) {
+			result = result === undefined ? defaultValue : result;
+		}
+		return result;
 	}
 	/**
 	 * Calls getCell on object and tries to parse as Number(cell.v) if cell exists otherwise return undefined.
@@ -746,6 +752,7 @@
 																		 gradientEnabled, themedColorsRow) {
 		let cellValue = this.v;
 		let cellName = this.n;
+		let cellFunction = this.f;
 
 		let returnValue;
 
@@ -753,13 +760,13 @@
 		let fillResultCells = ["LineColor", "FillForegnd", "FillBkgnd"];
 		let fillColorResultCells = ["Color", "GradientStopColor"];
 		let numberResultCells = ["LinePattern", "LineWeight", "GradientStopColorTrans", "GradientStopPosition",
-		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern"];
+		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap"];
 		let stringResultCells = ["EndArrow", "BeginArrow"];
 		let booleanResultCells = ["FillGradientEnabled"];
 
 		// TODO handle 2.2.7.5	Fixed Theme
 
-		if (cellValue === "Themed") {
+		if (cellValue === "Themed" || cellFunction === "THEMEVAL()") {
 			// equal to THEMEVAL() call
 			// add themeval support for every supported cell
 			returnValue = AscVisio.themeval(this, shape, pageInfo, themes, undefined,
@@ -854,7 +861,14 @@
 						case 23:
 							rgba = AscCommon.RgbaHexToRGBA('#1A1A1A');
 							break;
+						default:
+							AscCommon.consoleLog("error: unknown color index");
+							rgba = AscCommon.RgbaHexToRGBA('#000000');
+							break;
 					}
+				} else {
+					AscCommon.consoleLog("error: color index is null");
+					rgba = AscCommon.RgbaHexToRGBA('#000000');
 				}
 			}
 
@@ -886,6 +900,18 @@
 						angle = 5400000;
 					}
 					cellNumberValue = angle;
+				} else if (cellName === "LineCap") {
+					switch (cellNumberValue) {
+						case 0:
+							cellNumberValue = 1;
+							break;
+						case 1:
+							cellNumberValue = 0;
+							break;
+						case 2:
+							cellNumberValue = 2;
+							break;
+					}
 				}
 				return cellNumberValue;
 			}
@@ -1005,6 +1031,12 @@
 		 */
 		this.cImageShape = null;
 
+		/**
+		 * see MS-VSDX 2.2.7.4.9	Connector. if true shape is connector
+		 * @type {boolean}
+		 */
+		this.isConnectorStyleIherited = false;
+
 		// call parent class constructor
 		let parentClassConstructor = SheetStorageAndStyles;
 		parentClassConstructor.call(this);
@@ -1053,7 +1085,7 @@
 			} else {
 				// compare with previous shape layer
 				for (const cellKey in layerInfo.getElements()) {
-					const cell = previousLayer.getCell(cellKey);
+					const cell = layerInfo.getCell(cellKey);
 					let previousLayerCell = previousLayer.getCell(cell.n);
 					if (previousLayerCell.v !== cell.v) {
 						unEqualProperties.add(cell.n);
@@ -1397,6 +1429,15 @@
 			return;
 		}
 
+		/**
+		 * see MS-VSDX 2.2.7.4.9	Connector.
+		 * @param {Shape_Type | StyleSheet_Type} object
+		 * @param {StyleSheet_Type} style
+		 */
+		function setIsConnectorStyleInherited(object, style) {
+			object.isConnectorStyleIherited = object.isConnectorStyleIherited ? true : style.nameU === "Connector";
+		}
+
 		if (!(thisArgument.lineStyle === thisArgument.fillStyle && thisArgument.lineStyle === thisArgument.textStyle)) {
 			// Attribute	Cell_Type elements
 
@@ -1456,6 +1497,7 @@
 				let styleSheet = styles.find(function(style) {
 					return style.iD === styleId;
 				});
+				setIsConnectorStyleInherited(thisArgument, styleSheet);
 				realizeStyleToSheetObjInheritanceRecursive(styleSheet, styles, stylesWithRealizedInheritance);
 				mergeElementArrays(thisArgument.elements, styleSheet.elements, lineStyleElements);
 			}
@@ -1465,6 +1507,7 @@
 				let styleSheet = styles.find(function(style) {
 					return style.iD === styleId;
 				});
+				setIsConnectorStyleInherited(thisArgument, styleSheet);
 				realizeStyleToSheetObjInheritanceRecursive(styleSheet, styles, stylesWithRealizedInheritance);
 				mergeElementArrays(thisArgument.elements, styleSheet.elements, fillStyleElements);
 			}
@@ -1474,6 +1517,7 @@
 				let styleSheet = styles.find(function(style) {
 					return style.iD === styleId;
 				});
+				setIsConnectorStyleInherited(thisArgument, styleSheet);
 				realizeStyleToSheetObjInheritanceRecursive(styleSheet, styles, stylesWithRealizedInheritance);
 				mergeElementArrays(thisArgument.elements, styleSheet.elements, textStyleElements);
 			}
@@ -1495,9 +1539,9 @@
 		let styleSheet = styles.find(function(style) {
 			return style.iD === styleId;
 		});
+		setIsConnectorStyleInherited(thisArgument, styleSheet);
 
 		realizeStyleToSheetObjInheritanceRecursive(styleSheet, styles, stylesWithRealizedInheritance);
-
 		mergeElementArrays(thisArgument.elements, styleSheet.elements)
 		if (thisArgument.constructor === AscVisio.StyleSheet_Type) {
 			// memorize: that style has realized inheritance
@@ -1734,6 +1778,12 @@
 		this.nameU = null;
 		this.isCustomName = null;
 		this.isCustomNameU = null;
+
+		/**
+		 * see MS-VSDX 2.2.7.4.9	Connector.
+		 * @type {boolean}
+		 */
+		this.isConnectorStyleIherited = false;
 
 		// call parent class constructor
 		let parentClassConstructor = SheetStorageAndStyles;
