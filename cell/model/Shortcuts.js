@@ -400,7 +400,9 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.ExitAddingShapesMode] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.ExitAddingShapesMode, keyCodes.Esc, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SpeechWorker] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SpeechWorker, keyCodes.KeyZ, true, false, true, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.DrawingEnDash] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.DrawingEnDash, keyCodes.KeyMinus, true, true, false, false)];
-
+	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft, keyCodes.ArrowLeft, true, true, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown, keyCodes.ArrowDown, true, true, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp, keyCodes.ArrowUp, true, true, false, false)];
 	if (AscCommon.AscBrowser.isMacOs) {
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.OpenFilePanel] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.OpenFilePanel, keyCodes.KeyF, true, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.OpenCommentField] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.OpenCommentField, keyCodes.KeyA, false, false, true, true)];
@@ -408,9 +410,6 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveLeftNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveLeftNonBlank, keyCodes.ArrowLeft, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveBottomNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveBottomNonBlank, keyCodes.ArrowDown, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveTopNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveTopNonBlank, keyCodes.ArrowUp, false, false, false, true)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft, keyCodes.Key, false, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown, keyCodes.Key, false, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp, keyCodes.Key, false, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Cut] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Cut, keyCodes.KeyX, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Copy] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Copy, keyCodes.KeyC, false, false, false, true)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Paste] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Paste, keyCodes.KeyV, false, false, false, true)];
@@ -477,6 +476,9 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.DrawingLeftPara].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.DrawingLeftPara, keyCodes.KeyL, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SpeechWorker].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SpeechWorker, keyCodes.KeyZ, false, false, true, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.DrawingEnDash].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.DrawingEnDash, keyCodes.KeyMinus, false, true, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft, keyCodes.ArrowLeft, false, true, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown, keyCodes.ArrowDown, false, true, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp].push(new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp, keyCodes.ArrowUp, false, true, false, true));
 	} else {
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.OpenFilePanel] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.OpenFilePanel, keyCodes.KeyF, false, false, true, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.OpenCommentField] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.OpenCommentField, keyCodes.KeyH, false, false, true, false)];
@@ -484,9 +486,6 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveLeftNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveLeftNonBlank, keyCodes.ArrowLeft, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveBottomNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveBottomNonBlank, keyCodes.ArrowDown, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.CellMoveTopNonBlank] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.CellMoveTopNonBlank, keyCodes.ArrowUp, true, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNonblankLeft, keyCodes.ArrowLeft, true, true, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankDown, keyCodes.ArrowDown, true, true, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.SelectNearestNonblankUp, keyCodes.ArrowUp, true, true, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Cut] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Cut, keyCodes.KeyX, true, false, false, false), new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Cut, keyCodes.Delete, false, true, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Copy] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Copy, keyCodes.KeyC, true, false, false, false), new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Copy, keyCodes.Insert, true, false, false, false)];
 		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutTypes.Paste] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Paste, keyCodes.KeyV, true, false, false, false), new AscShortcut(Asc.c_oAscSpreadsheetShortcutTypes.Paste, keyCodes.Insert, false, true, false, false)];
