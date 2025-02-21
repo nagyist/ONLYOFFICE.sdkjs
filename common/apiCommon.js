@@ -1668,6 +1668,18 @@ function (window, undefined) {
 	asc_ChartSettings.prototype.putDisplayTrendlinesEquation = function(v) {
 		this.displayTrendlinesEquation = v;
 	};
+	asc_ChartSettings.prototype.setDisplayTrendlines = function(shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? this.chartSpace.createTrendlines()
+			: this.chartSpace.removeTrendlines();
+
+		this.updateChart();
+	};
 
 	/** @constructor */
 	function asc_CRect(x, y, width, height) {

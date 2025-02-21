@@ -4596,6 +4596,13 @@
 	CSeriesBase.prototype.checkSeriesAfterChangeType = function() {
 
 	};
+    CSeriesBase.prototype.removeTrendline = function () {
+        if (History.CanAddChanges()) {
+            const changes = new CChangesDrawingsObject(this, AscDFH.historyitem_AreaSeries_SetTrendline, this.trendline, null);
+            History.Add(changes);
+            this.trendline = null;
+        }
+    };
     CSeriesBase.prototype.recalculateTrendline = function() {
         let oTrendline = this.trendline;
         if(oTrendline) {

@@ -9189,15 +9189,53 @@ function(window, undefined) {
 
 		this.recalculateTrendlines();
 	};
-
-
 	CChartSpace.prototype.recalculateTrendlines = function () {
 		let aSeries = this.getAllSeries();
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
 			aSeries[nSer].recalculateTrendline();
 		}
 	};
+	CChartSpace.prototype.createTrendlines = function () {
+		const allSeries = this.getAllSeries();
+		allSeries.forEach(function (ser) {
+			const trendline = createStandartTrendline(ser);
+			ser.setTrendline(trendline);
+		});
+		
+		function createStandartTrendline(parent) {
+			const ln = new AscFormat.CLn();
+			ln.setFill(AscFormat.CreateUnifillSolidFillSchemeColor(0));
+			ln.setCap(1);
+			ln.setPrstDash(10);
+			ln.setW(19050);
 
+			const effectProps = new AscFormat.CEffectProperties();
+			effectProps.EffectLst = new AscFormat.CEffectLst();
+
+			const spPr = new AscFormat.CSpPr();
+			spPr.setLn(ln);
+			spPr.setEffectPr(effectProps);
+
+			const trendline = new AscFormat.CTrendLine();
+			trendline.dispEq = false;
+			trendline.dispRSqr = false;
+			trendline.trendlineType = AscFormat.TRENDLINE_TYPE_LINEAR;
+
+			trendline.setParent(parent);
+			trendline.setSpPr(spPr);
+			spPr.setParent(trendline);
+
+			trendline.recalculatePen();
+
+			return trendline;
+		}
+	};
+	CChartSpace.prototype.removeTrendlines = function () {
+		const allSeries = this.getAllSeries();
+		allSeries.forEach(function (ser) {
+			ser.removeTrendline();
+		});
+	};
 	CChartSpace.prototype.GetRevisionsChangeElement = function (SearchEngine) {
 		var titles = this.getAllTitles(), i;
 		if (titles.length === 0) {
