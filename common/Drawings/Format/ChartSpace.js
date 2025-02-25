@@ -2922,6 +2922,25 @@ function(window, undefined) {
 		}
 		return null;
 	};
+	CChartSpace.prototype.createChartTitle = function () {
+		if (!this.chart) {
+			return;
+		}
+
+		const title = new AscFormat.CTitle();
+		title.setParent(this.chart);
+
+		const spPr = createDefaultSpPr(title);
+		title.setSpPr(spPr);
+
+		const txPr = createDefaultTxPr(title);
+		title.setTxPr(txPr);
+
+		this.chart.setTitle(title);
+	};
+	CChartSpace.prototype.removeChartTitle = function () {
+		this.chart && this.chart.setTitle(null);
+	};
 	CChartSpace.prototype.getAllTitles = function () {
 		var ret = [];
 		if (this.chart) {
@@ -9810,63 +9829,36 @@ function(window, undefined) {
 			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
 
 			if (!AscCommon.isRealObject(axis.spPr)) {
-				const spPr = createSpPr(axis);
+				const spPr = createDefaultSpPr(axis);
+				const line = createLine();
+				spPr.setLn(line);
 				axis.setSpPr(spPr);
 			}
 
 			if (!AscCommon.isRealObject(axis.txPr)) {
-				const txPr = createTxPr(axis);
+				const txPr = createDefaultTxPr(axis);
+				txPr.bodyPr.rot = -60000000;
 				axis.setTxPr(txPr);
 			}
 		});
 
-		function createTxPr(axis) {
-			const txPr = new AscFormat.CTextBody();
-			txPr.setParent(axis);
-
-			const bodyPr = new AscFormat.CBodyPr();
-			bodyPr.rot = -60000000;
-			bodyPr.anchor = AscFormat.VERTICAL_ANCHOR_TYPE_CENTER;
-			bodyPr.anchorCtr = true;
-			bodyPr.spcFirstLastPara = true;
-			bodyPr.vert = AscFormat.nVertTThorz;
-			bodyPr.vertOverflow = AscFormat.nVOTEllipsis;
-			bodyPr.wrap = AscFormat.nTWTSquare;
-			txPr.setBodyPr(bodyPr);
-
-			const content = new AscFormat.CDrawingDocContent(txPr, axis.getDrawingDocument(), 0, 0, 0, 0);
-			content.CurPos.TableMove = 1;
-			txPr.setContent(content);
-
-			const lstStyle = new AscFormat.TextListStyle();
-			txPr.setLstStyle(lstStyle);
-
-			return txPr;
-		};
-		function createSpPr(axis) {
-			const spPr = new AscFormat.CSpPr();
-			spPr.setParent(axis);
-
-			spPr.setFill(AscFormat.CreateNoFillUniFill());
-
-			const effectProps = new AscFormat.CEffectProperties();
-			effectProps.EffectLst = new AscFormat.CEffectLst();
-			spPr.setEffectPr(effectProps);
-
+		function createLine() {
 			const line = new AscFormat.CLn();
+
 			line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
-			line.setJoin(new AscFormat.LineJoin());
-			line.Join.setType(AscFormat.LineJoinType.Round);
 			line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
 			line.Fill.fill.color.Mods.addMod("lumMod", 15000);
 			line.Fill.fill.color.Mods.addMod("lumOff", 85000);
-			line.setCap(0)
+
+			line.setJoin(new AscFormat.LineJoin());
+			line.Join.setType(AscFormat.LineJoinType.Round);
+
+			line.setCap(0);
 			line.setAlgn(0);
 			line.setCmpd(1);
 			line.setW(9525);
-			spPr.setLn(line);
 
-			return spPr;
+			return line;
 		};
 	};
 	CChartSpace.prototype.hideAxes = function () {
@@ -9874,15 +9866,87 @@ function(window, undefined) {
 		if (!axes) return;
 
 		axes.forEach(function (axis) {
-			axis.delete = 1;
-			axis.majorTickMark = Asc.c_oAscTickMark.TICK_MARK_NONE;
-			axis.minorTickMark = Asc.c_oAscTickMark.TICK_MARK_NONE;
-			axis.tickLblPos = Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE;
+			axis.setDelete(true);
+			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE);
 
 			axis.setSpPr(null);
 			axis.setTxPr(null);
 		});
-	};	
+	};
+	CChartSpace.prototype.createAxisTitles = function () {
+		const axes = this.getAllAxes();
+
+		axes.forEach(function (axis) {
+			const title = createTitle(axis);
+			axis.setTitle(title);
+		});
+
+		function createTitle(axis) {
+			const title = new AscFormat.CTitle();
+			title.setParent(axis);
+
+			const spPr = createDefaultSpPr(title);
+			title.setSpPr(spPr);
+
+			const txPr = createDefaultTxPr(title);
+			txPr.bodyPr.rot = title.parent instanceof AscFormat.CValAx ? -5400000 : 0;
+			title.setTxPr(txPr);
+
+			// title.pen = new AscFormat.CLn();
+
+			return title;
+		}
+	};
+	CChartSpace.prototype.removeAxisTitles = function () {
+		const axes = this.getAllAxes();
+		axes.forEach(function (axis) {
+			axis.setTitle(null);
+		});
+	};
+
+	function createDefaultSpPr(parent) {
+		const spPr = new AscFormat.CSpPr();
+		spPr.setParent(parent);
+
+		spPr.setFill(AscFormat.CreateNoFillUniFill());
+
+		const effectProps = new AscFormat.CEffectProperties();
+		effectProps.EffectLst = new AscFormat.CEffectLst();
+		spPr.setEffectPr(effectProps);
+
+		const line = new AscFormat.CLn();
+		line.setFill(AscFormat.CreateNoFillUniFill());
+		spPr.setLn(line);
+
+		return spPr;
+	}
+	function createDefaultTxPr(parent) {
+		const txPr = new AscFormat.CTextBody();
+		txPr.setParent(parent);
+
+		const bodyPr = new AscFormat.CBodyPr();
+		bodyPr.rot = 0;
+		bodyPr.anchor = AscFormat.VERTICAL_ANCHOR_TYPE_CENTER;
+		bodyPr.anchorCtr = true;
+		bodyPr.spcFirstLastPara = true;
+		bodyPr.vert = AscFormat.nVertTThorz;
+		bodyPr.vertOverflow = AscFormat.nVOTEllipsis;
+		bodyPr.wrap = AscFormat.nTWTSquare;
+		txPr.setBodyPr(bodyPr);
+
+		const drawingDocument = parent.getDrawingDocument && parent.getDrawingDocument();
+		const content = new AscFormat.CDrawingDocContent(txPr, drawingDocument, 0, 0, 0, 0);
+		content.CurPos.TableMove = 1;
+		txPr.setContent(content);
+
+		const lstStyle = new AscFormat.TextListStyle();
+		txPr.setLstStyle(lstStyle);
+
+		return txPr;
+	};
+
 	CChartSpace.prototype.SetValuesToDataPoints = function (aData, nSeria) {
 		if (editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
 			return false;

@@ -1693,14 +1693,36 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
-	// asc_ChartSettings.prototype.setDisplayAxisTitles = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayChartTitle = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayDataLabels = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayDataTable = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayErrorBars = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayGridlines = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayLegend = function(shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayUpDownBars = function(shouldDisplay) {};
+	asc_ChartSettings.prototype.setDisplayAxisTitles = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? this.chartSpace.createAxisTitles()
+			: this.chartSpace.removeAxisTitles()
+
+		this.updateChart();
+	};
+	asc_ChartSettings.prototype.setDisplayChartTitle = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? this.chartSpace.createChartTitle()
+			: this.chartSpace.removeChartTitle()
+
+		this.updateChart();
+	};
+	// asc_ChartSettings.prototype.setDisplayDataLabels = function (shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayDataTable = function (shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayGridlines = function (shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayLegend = function (shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {};
 
 	/** @constructor */
 	function asc_CRect(x, y, width, height) {
