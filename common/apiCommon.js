@@ -1668,7 +1668,20 @@ function (window, undefined) {
 	asc_ChartSettings.prototype.putDisplayTrendlinesEquation = function(v) {
 		this.displayTrendlinesEquation = v;
 	};
-	asc_ChartSettings.prototype.setDisplayTrendlines = function(shouldDisplay) {
+
+	asc_ChartSettings.prototype.setDisplayAxes = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? this.chartSpace.showAxes()
+			: this.chartSpace.hideAxes();
+
+		this.updateChart();
+	};
+	asc_ChartSettings.prototype.setDisplayTrendlines = function (shouldDisplay) {
 		if (!this.chartSpace) {
 			return;
 		}
@@ -1680,6 +1693,14 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
+	// asc_ChartSettings.prototype.setDisplayAxisTitles = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayChartTitle = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayDataLabels = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayDataTable = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayErrorBars = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayGridlines = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayLegend = function(shouldDisplay) {};
+	// asc_ChartSettings.prototype.setDisplayUpDownBars = function(shouldDisplay) {};
 
 	/** @constructor */
 	function asc_CRect(x, y, width, height) {

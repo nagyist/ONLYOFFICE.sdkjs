@@ -9797,6 +9797,92 @@ function(window, undefined) {
 			}
 		}
 	};
+	CChartSpace.prototype.showAxes = function () {
+		const axes = this.getAllAxes();
+		if (!axes.length) {
+			return;
+		}
+
+		axes.forEach(function (axis) {
+			axis.setDelete(false);
+			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_OUT);
+			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
+
+			if (!AscCommon.isRealObject(axis.spPr)) {
+				const spPr = createSpPr(axis);
+				axis.setSpPr(spPr);
+			}
+
+			if (!AscCommon.isRealObject(axis.txPr)) {
+				const txPr = createTxPr(axis);
+				axis.setTxPr(txPr);
+			}
+		});
+
+		function createTxPr(axis) {
+			const txPr = new AscFormat.CTextBody();
+			txPr.setParent(axis);
+
+			const bodyPr = new AscFormat.CBodyPr();
+			bodyPr.rot = -60000000;
+			bodyPr.anchor = AscFormat.VERTICAL_ANCHOR_TYPE_CENTER;
+			bodyPr.anchorCtr = true;
+			bodyPr.spcFirstLastPara = true;
+			bodyPr.vert = AscFormat.nVertTThorz;
+			bodyPr.vertOverflow = AscFormat.nVOTEllipsis;
+			bodyPr.wrap = AscFormat.nTWTSquare;
+			txPr.setBodyPr(bodyPr);
+
+			const content = new AscFormat.CDrawingDocContent(txPr, axis.getDrawingDocument(), 0, 0, 0, 0);
+			content.CurPos.TableMove = 1;
+			txPr.setContent(content);
+
+			const lstStyle = new AscFormat.TextListStyle();
+			txPr.setLstStyle(lstStyle);
+
+			return txPr;
+		};
+		function createSpPr(axis) {
+			const spPr = new AscFormat.CSpPr();
+			spPr.setParent(axis);
+
+			spPr.setFill(AscFormat.CreateNoFillUniFill());
+
+			const effectProps = new AscFormat.CEffectProperties();
+			effectProps.EffectLst = new AscFormat.CEffectLst();
+			spPr.setEffectPr(effectProps);
+
+			const line = new AscFormat.CLn();
+			line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
+			line.setJoin(new AscFormat.LineJoin());
+			line.Join.setType(AscFormat.LineJoinType.Round);
+			line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
+			line.Fill.fill.color.Mods.addMod("lumMod", 15000);
+			line.Fill.fill.color.Mods.addMod("lumOff", 85000);
+			line.setCap(0)
+			line.setAlgn(0);
+			line.setCmpd(1);
+			line.setW(9525);
+			spPr.setLn(line);
+
+			return spPr;
+		};
+	};
+	CChartSpace.prototype.hideAxes = function () {
+		const axes = this.getAllAxes();
+		if (!axes) return;
+
+		axes.forEach(function (axis) {
+			axis.delete = 1;
+			axis.majorTickMark = Asc.c_oAscTickMark.TICK_MARK_NONE;
+			axis.minorTickMark = Asc.c_oAscTickMark.TICK_MARK_NONE;
+			axis.tickLblPos = Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE;
+
+			axis.setSpPr(null);
+			axis.setTxPr(null);
+		});
+	};	
 	CChartSpace.prototype.SetValuesToDataPoints = function (aData, nSeria) {
 		if (editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
 			return false;
