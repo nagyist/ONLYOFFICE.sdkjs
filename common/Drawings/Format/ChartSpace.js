@@ -9906,7 +9906,7 @@ function(window, undefined) {
 		});
 	};
 
-	function createDefaultSpPr(parent) {
+	CChartSpace.createDefaultSpPr = function createDefaultSpPr(parent) {
 		const spPr = new AscFormat.CSpPr();
 		spPr.setParent(parent);
 
@@ -9921,8 +9921,8 @@ function(window, undefined) {
 		spPr.setLn(line);
 
 		return spPr;
-	}
-	function createDefaultTxPr(parent) {
+	};
+	CChartSpace.createDefaultTxPr = function createDefaultTxPr(parent) {
 		const txPr = new AscFormat.CTextBody();
 		txPr.setParent(parent);
 

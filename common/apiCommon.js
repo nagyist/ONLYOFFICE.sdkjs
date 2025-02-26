@@ -1701,7 +1701,7 @@ function (window, undefined) {
 		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 		shouldDisplay
 			? this.chartSpace.createAxisTitles()
-			: this.chartSpace.removeAxisTitles()
+			: this.chartSpace.removeAxisTitles();
 
 		this.updateChart();
 	};
@@ -1717,7 +1717,23 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
-	// asc_ChartSettings.prototype.setDisplayDataLabels = function (shouldDisplay) {};
+	asc_ChartSettings.prototype.setDisplayDataLabels = function (shouldDisplay) {
+		if (!this.chartSpace || !this.chartSpace.chart) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+
+		const chart = this.chartSpace.chart.plotArea.chart;
+		shouldDisplay
+			? chart.createDataLabels()
+			: chart.removeDataLabels();
+
+		const dLbls = this.chartSpace.chart.plotArea.chart.dLbls;
+		dLbls.setShowVal(shouldDisplay);
+
+		this.updateChart();
+	};
 	// asc_ChartSettings.prototype.setDisplayDataTable = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayGridlines = function (shouldDisplay) {};

@@ -6841,6 +6841,33 @@
             this.series[i].checkSpPrRasterImages(images);
         }
     };
+    CChartBase.prototype.createDataLabels = function () {
+        this.series.forEach(function (ser) {
+            const dataLabels = new AscFormat.CDLbls();
+            dataLabels.setDLblPos(Asc.c_oAscChartDataLabelsPos.t);
+            dataLabels.setShowBubbleSize(false);
+            dataLabels.setShowCatName(false);
+            dataLabels.setShowLeaderLines(false);
+            dataLabels.setShowLegendKey(false);
+            dataLabels.setShowPercent(false);
+            dataLabels.setShowSerName(false);
+            dataLabels.setShowVal(true);
+
+            const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataLabels);
+            dataLabels.setSpPr(spPr);
+
+            const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataLabels);
+            txPr.bodyPr.textFit = new AscFormat.CTextFit(AscFormat.text_fit_Auto);
+            // values from Excel
+            txPr.bodyPr.lIns = 38100 * g_dKoef_emu_to_mm;
+            txPr.bodyPr.tIns = 19050 * g_dKoef_emu_to_mm;
+            txPr.bodyPr.rIns = 38100 * g_dKoef_emu_to_mm;
+            txPr.bodyPr.bIns = 19050 * g_dKoef_emu_to_mm;
+            dataLabels.setTxPr(txPr);
+
+            ser.setDLbls(dataLabels);
+        });
+    };
     CChartBase.prototype.removeDataLabels = function() {
         var i;
         for(i = 0; i < this.series.length; ++i) {
