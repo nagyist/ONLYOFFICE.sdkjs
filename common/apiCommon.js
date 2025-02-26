@@ -1713,7 +1713,7 @@ function (window, undefined) {
 		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 		shouldDisplay
 			? this.chartSpace.createChartTitle()
-			: this.chartSpace.removeChartTitle()
+			: this.chartSpace.removeChartTitle();
 
 		this.updateChart();
 	};
@@ -1751,8 +1751,50 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
+	asc_ChartSettings.prototype.setDisplayGridlines = function (displayOptions) {
+		// displayOptions - array of bool values [displayHorMajor, displayVerMajor, displayHorMinor, displayVerMinor]
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const displayHorMajor = displayOptions[0];
+		const displayVerMajor = displayOptions[1];
+		const displayHorMinor = displayOptions[2];
+		const displayVerMinor = displayOptions[3];
+
+		function getGridlinesSetting(displayMajor, displayMinor) {
+			if (displayMajor && displayMinor) {
+				return Asc.c_oAscGridLinesSettings.majorMinor;
+			} else if (displayMajor) {
+				return Asc.c_oAscGridLinesSettings.major;
+			} else if (displayMinor) {
+				return Asc.c_oAscGridLinesSettings.minor;
+			} else {
+				return Asc.c_oAscGridLinesSettings.none;
+			}
+		}
+
+		const categoryAxis = plotArea.catAx;
+		const valueAxis = plotArea.valAx;
+
+		if (categoryAxis) {
+			const catAxSettings = getGridlinesSetting(displayVerMajor, displayVerMinor);
+			categoryAxis.setGridlinesSetting(catAxSettings);
+		}
+		if (valueAxis) {
+			const valAxSettings = getGridlinesSetting(displayHorMajor, displayHorMinor);
+			valueAxis.setGridlinesSetting(valAxSettings);
+		}
+
+		this.updateChart();
+	};
+
 	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayGridlines = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayLegend = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {};
 
