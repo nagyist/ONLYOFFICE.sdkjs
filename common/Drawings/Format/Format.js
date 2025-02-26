@@ -9791,6 +9791,11 @@
 					if(oPresentation && aSlideIndexes && aSlideIndexes.length > 0) {
 						oPresentation.Refresh_RecalcData2({Type: AscDFH.historyitem_ThemeSetFontScheme, aIndexes: aSlideIndexes});
 					}
+				} else if (oData.Type === AscDFH.historyitem_ThemeSetName) {
+					let oPresentation = this.GetPresentation();
+					if (oPresentation) {
+						oPresentation.Refresh_RecalcData2({Type: AscDFH.historyitem_ThemeSetName});
+					}
 				}
 			}
 		};
@@ -10087,6 +10092,28 @@
 		}
 
 		InitClass(CSld, CBaseNoIdObject, 0);
+		CSld.prototype.removeAllInks = function () {
+			const oController = this.parent && this.parent.graphicObjects;
+			if (!oController) {
+				return;
+			}
+
+			const arrInks = this.getAllInks();
+			oController.removeAllInks(arrInks);
+		};
+		CSld.prototype.getAllInks = function (arrInks) {
+			arrInks = arrInks || [];
+			const arrSpTree = this.spTree;
+			for (let i = arrSpTree.length - 1; i >= 0; i -= 1) {
+				const oDrawing = arrSpTree[i];
+				if (oDrawing.isInk() || oDrawing.isHaveOnlyInks()) {
+					arrInks.push(oDrawing);
+				} else {
+					oDrawing.getAllInks(arrInks);
+				}
+			}
+			return arrInks;
+		};
 		CSld.prototype.getObjectsNamesPairs = function () {
 			var aPairs = [];
 			var aSpTree = this.spTree;
@@ -15208,7 +15235,7 @@
 			master.Theme = theme;
 
 			master.sldLayoutLst[0] = GenerateDefaultSlideLayout(master);
-
+			master.setPreserve(true);
 			return master;
 		}
 
@@ -15216,6 +15243,7 @@
 			var layout = new SlideLayout();
 			layout.Theme = master.Theme;
 			layout.Master = master;
+			layout.setPreserve(true);
 			return layout;
 		}
 
