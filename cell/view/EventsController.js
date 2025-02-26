@@ -1191,7 +1191,7 @@
 						if (oThis.getCellEditMode()) {
 							break;
 						}
-						const bIsSelectColumns = oEvent.IsShortcutCtrl() || oEvent.IsMacCmd();
+						const bIsSelectColumns = oEvent.IsShortcutCtrl() || oEvent.IsCmd();
 						if (bIsSelectColumns && bIsSelect && bIsMacOs) {
 							break;
 						}

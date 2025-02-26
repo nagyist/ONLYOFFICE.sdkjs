@@ -4649,7 +4649,7 @@ window.AscCommon.g_cIsBeta = "false";
 		Numpad9            : 105,
 		NumpadMultiply     : 106,
 		NumpadDivide       : 111,
-		NumpadDecimal      : 46,
+		NumpadDecimal      : 110,
 		NumpadPlus         : 107,
 		NumpadMinus        : 109,
 		F1                 : 112,
