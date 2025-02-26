@@ -1734,7 +1734,23 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
-	// asc_ChartSettings.prototype.setDisplayDataTable = function (shouldDisplay) {};
+	asc_ChartSettings.prototype.setDisplayDataTable = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? plotArea.createDTable()
+			: plotArea.removeDTable();
+
+		this.updateChart();
+	};
 	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayGridlines = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayLegend = function (shouldDisplay) {};

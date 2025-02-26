@@ -5293,6 +5293,40 @@
         this.dTable = pr;
         this.setParentToChild(pr);
     };
+    CPlotArea.prototype.createDTable = function () {
+        const dataTable = new AscFormat.CDTable();
+
+        dataTable.setShowHorzBorder(true);
+        dataTable.setShowKeys(true);
+        dataTable.setShowOutline(true);
+        dataTable.setShowVertBorder(true);
+
+        const line = new AscFormat.CLn();
+        line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
+        line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
+        line.Fill.fill.color.Mods.addMod("lumMod", 15000);
+        line.Fill.fill.color.Mods.addMod("lumOff", 85000);
+
+        line.setJoin(new AscFormat.LineJoin());
+        line.Join.setType(AscFormat.LineJoinType.Round);
+
+        line.setCap(0);
+        line.setAlgn(0);
+        line.setCmpd(1);
+        line.setW(9525);
+
+        const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataTable);
+        spPr.setLn(line);
+        dataTable.setSpPr(spPr);
+
+        const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataTable);
+        dataTable.setTxPr(txPr);
+
+        this.setDTable(dataTable);
+    };
+    CPlotArea.prototype.removeDTable = function () {
+        this.setDTable(null);
+    };
     CPlotArea.prototype.setLayout = function(pr) {
         History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_PlotArea_SetLayout, this.layout, pr));
         this.layout = pr;
