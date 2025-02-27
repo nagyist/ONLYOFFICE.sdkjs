@@ -15574,6 +15574,23 @@
             this.plotArea.updateReferences(bDisplayEmptyCellsAs, bDisplayHidden);
         }
     };
+    CChart.prototype.createLegend = function () {
+        const legend = new AscFormat.CLegend();
+        legend.setLegendPos(Asc.c_oAscChartLegendShowSettings.right);
+
+        const pen = AscFormat.CreateNoFillLine();
+        pen.setW(0);
+        legend.pen = pen;
+
+        const spPr = AscFormat.CChartSpace.createDefaultSpPr(legend);
+        legend.setSpPr(spPr);
+
+        const txPr = AscFormat.CChartSpace.createDefaultTxPr(legend);
+        legend.setTxPr(txPr);
+
+        this.setLegend(legend);
+    };
+
     function CChartWall() {
         CBaseChartObject.call(this);
         this.pictureOptions = null;

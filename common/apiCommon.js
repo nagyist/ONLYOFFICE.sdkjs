@@ -1782,6 +1782,9 @@ function (window, undefined) {
 		const categoryAxis = plotArea.catAx;
 		const valueAxis = plotArea.valAx;
 
+		if (categoryAxis || valueAxis) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		}
 		if (categoryAxis) {
 			const catAxSettings = getGridlinesSetting(displayVerMajor, displayVerMinor);
 			categoryAxis.setGridlinesSetting(catAxSettings);
@@ -1793,9 +1796,20 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
+	asc_ChartSettings.prototype.setDisplayLegend = function (shouldDisplay) {
+		if (!this.chartSpace || !this.chartSpace.chart) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? this.chartSpace.chart.createLegend()
+			: this.chartSpace.chart.setLegend(null);
+
+		this.updateChart();
+	};
 
 	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
-	// asc_ChartSettings.prototype.setDisplayLegend = function (shouldDisplay) {};
 	// asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {};
 
 	/** @constructor */
