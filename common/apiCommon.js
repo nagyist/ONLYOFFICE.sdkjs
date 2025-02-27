@@ -1820,8 +1820,30 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
+	asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
 
-	// asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {};
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const chart = plotArea.chart;
+		const isAllowedChartType = chart instanceof AscFormat.CLineChart || chart instanceof AscFormat.CStockChart;
+		if (!chart || !isAllowedChartType) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		shouldDisplay
+			? chart.createUpDownBars()
+			: chart.setUpDownBars(null);
+
+		this.chartSpace.recalculateUpDownBars();
+		this.updateChart();
+	};
 
 	/** @constructor */
 	function asc_CRect(x, y, width, height) {

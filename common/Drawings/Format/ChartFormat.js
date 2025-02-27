@@ -3850,6 +3850,7 @@
         errBars.setErrDir(AscFormat.st_errdirY);
         errBars.setErrValType(AscFormat.st_errvaltypeSTDDEV);
         errBars.setNoEndCap(false);
+        errBars.setVal(1);
         
         const line = new AscFormat.CLn();
         line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
@@ -7359,6 +7360,42 @@
     CChartBase.prototype.updateReferences = function(bDisplayEmptyCellsAs, bDisplayHidden) {
         for(let nSeries = 0; nSeries < this.series.length; ++nSeries) {
             this.series[nSeries].updateData(bDisplayEmptyCellsAs, bDisplayHidden);
+        }
+    };
+    CChartBase.prototype.createUpDownBars = function () {
+        const upDownBars = new AscFormat.CUpDownBars();
+        upDownBars.setGapWidth(150);
+
+        // UpBars settings
+        const upBars = AscFormat.CChartSpace.createDefaultSpPr();
+        const upBarsLn = createLine(true);
+        upBars.setLn(upBarsLn);
+        const upBarsFill = AscFormat.CreateUnifillSolidFillSchemeColorByIndex(12);
+        upBarsFill.fill.color.setMods(new AscFormat.CColorModifiers());
+        upBars.setFill(upBarsFill);
+        upDownBars.setUpBars(upBars);
+
+        // DownBars settings
+        const downBars = AscFormat.CChartSpace.createDefaultSpPr();
+        const downBarsLn = createLine();
+        downBars.setLn(downBarsLn);
+        const downBarsFill = AscFormat.CreateUnifillSolidFillSchemeColorByIndex(8);
+        downBarsFill.fill.color.setMods(new AscFormat.CColorModifiers());
+        downBarsFill.fill.color.Mods.addMod("lumMod", 65000);
+        downBarsFill.fill.color.Mods.addMod("lumOff", 35000);
+        downBars.setFill(downBarsFill);
+        upDownBars.setDownBars(downBars);
+
+        this.setUpDownBars(upDownBars);
+
+        function createLine(isUpBars) {
+            const line = new AscFormat.CLn();
+            line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
+            line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
+            line.Fill.fill.color.Mods.addMod("lumMod", isUpBars ? 15000 : 65000);
+            line.Fill.fill.color.Mods.addMod("lumOff", isUpBars ? 85000 : 35000);
+            line.setW(9525);
+            return line;
         }
     };
 
