@@ -3841,7 +3841,39 @@
             this.addErrBars(aErrBars[nIdx]);
         }
     };
+    CSeriesBase.prototype.createAllErrBars = function () {
+        this.removeAllErrBars();
+        debugger
 
+        const errBars = new AscFormat.CErrBars();
+        errBars.setErrBarType(AscFormat.st_errbartypeBOTH);
+        errBars.setErrDir(AscFormat.st_errdirY);
+        errBars.setErrValType(AscFormat.st_errvaltypeSTDDEV);
+        errBars.setNoEndCap(false);
+        
+        const line = new AscFormat.CLn();
+        line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
+        line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
+        line.Fill.fill.color.Mods.addMod("lumMod", 65000);
+        line.Fill.fill.color.Mods.addMod("lumOff", 35000);
+        line.setJoin(new AscFormat.LineJoin(AscFormat.LineJoinType.Round));
+        line.setCap(0); // "flat"
+        line.setCmpd(1); // "sng"
+        line.setAlgn(0); // "ctr"
+        line.setW(9525);
+
+        const spPr = AscFormat.CChartSpace.createDefaultSpPr(errBars);
+        spPr.setLn(line);
+        errBars.setSpPr(spPr);
+
+        const errBarsArray = [errBars];
+        this.addErrBarsArray(errBarsArray);
+    };
+    CSeriesBase.prototype.removeAllErrBars = function () {
+        while (this.errBars.length) {
+            this.removeErrBars(0);
+        }
+    };    
     CSeriesBase.prototype.removeErrBars = function(idx) {
         if(this.errBars[idx]) {
             this.errBars[idx].setParent(null);

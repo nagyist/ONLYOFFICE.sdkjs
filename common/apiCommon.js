@@ -1751,8 +1751,7 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
-	asc_ChartSettings.prototype.setDisplayGridlines = function (displayOptions) {
-		// displayOptions - array of bool values [displayHorMajor, displayVerMajor, displayHorMinor, displayVerMinor]
+	asc_ChartSettings.prototype.setDisplayGridlines = function (displayHorMajor, displayVerMajor, displayHorMinor, displayVerMinor) {
 		if (!this.chartSpace) {
 			return;
 		}
@@ -1761,11 +1760,6 @@ function (window, undefined) {
 		if (!plotArea) {
 			return;
 		}
-
-		const displayHorMajor = displayOptions[0];
-		const displayVerMajor = displayOptions[1];
-		const displayHorMinor = displayOptions[2];
-		const displayVerMinor = displayOptions[3];
 
 		function getGridlinesSetting(displayMajor, displayMinor) {
 			if (displayMajor && displayMinor) {
@@ -1808,8 +1802,25 @@ function (window, undefined) {
 
 		this.updateChart();
 	};
+	asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {
+		if (!this.chartSpace) {
+			return;
+		}
 
-	// asc_ChartSettings.prototype.setDisplayErrorBars = function (shouldDisplay) {};
+		const series = this.chartSpace.getAllSeries();
+		if (series.length) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		}
+
+		series.forEach(function (ser) {
+			shouldDisplay
+				? ser.createAllErrBars()
+				: ser.removeAllErrBars();
+		});
+
+		this.updateChart();
+	};
+
 	// asc_ChartSettings.prototype.setDisplayUpDownBars = function (shouldDisplay) {};
 
 	/** @constructor */
