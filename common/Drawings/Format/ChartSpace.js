@@ -2930,10 +2930,10 @@ function(window, undefined) {
 		const title = new AscFormat.CTitle();
 		title.setParent(this.chart);
 
-		const spPr = createDefaultSpPr(title);
+		const spPr = CChartSpace.createDefaultSpPr(title);
 		title.setSpPr(spPr);
 
-		const txPr = createDefaultTxPr(title);
+		const txPr = CChartSpace.createDefaultTxPr(title);
 		title.setTxPr(txPr);
 
 		this.chart.setTitle(title);
@@ -9829,14 +9829,14 @@ function(window, undefined) {
 			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
 
 			if (!AscCommon.isRealObject(axis.spPr)) {
-				const spPr = createDefaultSpPr(axis);
+				const spPr = CChartSpace.createDefaultSpPr(axis);
 				const line = createLine();
 				spPr.setLn(line);
 				axis.setSpPr(spPr);
 			}
 
 			if (!AscCommon.isRealObject(axis.txPr)) {
-				const txPr = createDefaultTxPr(axis);
+				const txPr = CChartSpace.createDefaultTxPr(axis);
 				txPr.bodyPr.rot = -60000000;
 				axis.setTxPr(txPr);
 			}
@@ -9887,10 +9887,10 @@ function(window, undefined) {
 			const title = new AscFormat.CTitle();
 			title.setParent(axis);
 
-			const spPr = createDefaultSpPr(title);
+			const spPr = CChartSpace.createDefaultSpPr(title);
 			title.setSpPr(spPr);
 
-			const txPr = createDefaultTxPr(title);
+			const txPr = CChartSpace.createDefaultTxPr(title);
 			txPr.bodyPr.rot = title.parent instanceof AscFormat.CValAx ? -5400000 : 0;
 			title.setTxPr(txPr);
 

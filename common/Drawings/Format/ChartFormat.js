@@ -3843,7 +3843,6 @@
     };
     CSeriesBase.prototype.createAllErrBars = function () {
         this.removeAllErrBars();
-        debugger
 
         const errBars = new AscFormat.CErrBars();
         errBars.setErrBarType(AscFormat.st_errbartypeBOTH);
