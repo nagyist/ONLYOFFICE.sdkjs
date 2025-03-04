@@ -1669,17 +1669,19 @@ function (window, undefined) {
 		this.displayTrendlinesEquation = v;
 	};
 
-	asc_ChartSettings.prototype.setDisplayAxes = function (shouldDisplay) {
-		if (!this.chartSpace) {
-			return;
+	asc_ChartSettings.prototype.setDisplayAxes = function (bShowCatAx, bShowValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
+			this.updateChart();
 		}
-
-		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-		shouldDisplay
-			? this.chartSpace.showAxes()
-			: this.chartSpace.hideAxes();
-
-		this.updateChart();
+	};
+	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowCatAx, bShowValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxisTitlesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
+			this.updateChart();
+		}
 	};
 	asc_ChartSettings.prototype.setDisplayTrendlines = function (shouldDisplay) {
 		if (!this.chartSpace) {
@@ -1690,18 +1692,6 @@ function (window, undefined) {
 		shouldDisplay
 			? this.chartSpace.createTrendlines()
 			: this.chartSpace.removeTrendlines();
-
-		this.updateChart();
-	};
-	asc_ChartSettings.prototype.setDisplayAxisTitles = function (shouldDisplay) {
-		if (!this.chartSpace) {
-			return;
-		}
-
-		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-		shouldDisplay
-			? this.chartSpace.createAxisTitles()
-			: this.chartSpace.removeAxisTitles();
 
 		this.updateChart();
 	};

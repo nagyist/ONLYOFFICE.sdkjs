@@ -9816,13 +9816,31 @@ function(window, undefined) {
 			}
 		}
 	};
-	CChartSpace.prototype.showAxes = function () {
-		const axes = this.getAllAxes();
-		if (!axes.length) {
+	CChartSpace.prototype.showAxesByTypes = function (bShowCatAx, bShowValAx, bShowSerAx) {
+		const bShowDateAx = bShowCatAx;
+
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
 			return;
 		}
 
-		axes.forEach(function (axis) {
+		const axesByTypes = plotArea.getAxisByTypes();
+		axesByTypes.dateAx.forEach(bShowDateAx ? showAxis : hideAxis);
+		axesByTypes.catAx.forEach(bShowCatAx ? showAxis : hideAxis);
+		axesByTypes.valAx.forEach(bShowValAx ? showAxis : hideAxis);
+		axesByTypes.serAx.forEach(bShowSerAx ? showAxis : hideAxis);
+		
+		function hideAxis(axis) {
+			axis.setDelete(true);
+			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE);
+
+			axis.setSpPr(null);
+			axis.setTxPr(null);
+		}
+
+		function showAxis(axis) {
 			axis.setDelete(false);
 			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_OUT);
 			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
@@ -9840,7 +9858,7 @@ function(window, undefined) {
 				txPr.bodyPr.rot = -60000000;
 				axis.setTxPr(txPr);
 			}
-		});
+		}
 
 		function createLine() {
 			const line = new AscFormat.CLn();
@@ -9859,51 +9877,41 @@ function(window, undefined) {
 			line.setW(9525);
 
 			return line;
-		};
-	};
-	CChartSpace.prototype.hideAxes = function () {
-		const axes = this.getAllAxes();
-		if (!axes) return;
-
-		axes.forEach(function (axis) {
-			axis.setDelete(true);
-			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
-			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
-			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE);
-
-			axis.setSpPr(null);
-			axis.setTxPr(null);
-		});
-	};
-	CChartSpace.prototype.createAxisTitles = function () {
-		const axes = this.getAllAxes();
-
-		axes.forEach(function (axis) {
-			const title = createTitle(axis);
-			axis.setTitle(title);
-		});
-
-		function createTitle(axis) {
-			const title = new AscFormat.CTitle();
-			title.setParent(axis);
-
-			const spPr = CChartSpace.createDefaultSpPr(title);
-			title.setSpPr(spPr);
-
-			const txPr = CChartSpace.createDefaultTxPr(title);
-			txPr.bodyPr.rot = title.parent instanceof AscFormat.CValAx ? -5400000 : 0;
-			title.setTxPr(txPr);
-
-			// title.pen = new AscFormat.CLn();
-
-			return title;
 		}
 	};
-	CChartSpace.prototype.removeAxisTitles = function () {
-		const axes = this.getAllAxes();
-		axes.forEach(function (axis) {
+	CChartSpace.prototype.showAxisTitlesByTypes = function (bShowCatAx, bShowValAx, bShowSerAx) {
+		const bShowDateAx = bShowCatAx;
+
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const axesByTypes = plotArea.getAxisByTypes();
+		axesByTypes.dateAx.forEach(bShowDateAx ? createTitle : removeTitle);
+		axesByTypes.catAx.forEach(bShowCatAx ? createTitle : removeTitle);
+		axesByTypes.valAx.forEach(bShowValAx ? createTitle : removeTitle);
+		axesByTypes.serAx.forEach(bShowSerAx ? createTitle : removeTitle);
+
+		function removeTitle(axis) {
 			axis.setTitle(null);
-		});
+		}
+
+		function createTitle(axis) {
+			if (!axis.title) {
+				const title = new AscFormat.CTitle();
+				title.setParent(axis);
+
+				const spPr = CChartSpace.createDefaultSpPr(title);
+				title.setSpPr(spPr);
+
+				const txPr = CChartSpace.createDefaultTxPr(title);
+				txPr.bodyPr.rot = title.parent instanceof AscFormat.CValAx ? -5400000 : 0;
+				title.setTxPr(txPr);
+
+				axis.setTitle(title);
+			}
+		}
 	};
 
 	CChartSpace.createDefaultSpPr = function createDefaultSpPr(parent) {
