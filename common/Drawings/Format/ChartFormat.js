@@ -3841,13 +3841,13 @@
             this.addErrBars(aErrBars[nIdx]);
         }
     };
-    CSeriesBase.prototype.createAllErrBars = function () {
+    CSeriesBase.prototype.createAllErrBars = function (valueType) {
         this.removeAllErrBars();
 
         const errBars = new AscFormat.CErrBars();
         errBars.setErrBarType(AscFormat.st_errbartypeBOTH);
         errBars.setErrDir(AscFormat.st_errdirY);
-        errBars.setErrValType(AscFormat.st_errvaltypeSTDDEV);
+        errBars.setErrValType(AscFormat.isRealNumber(valueType) ? valueType : AscFormat.st_errvaltypeSTDDEV);
         errBars.setNoEndCap(false);
         errBars.setVal(1);
         
@@ -5324,40 +5324,6 @@
         History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_PlotArea_SetDTable, this.dTable, pr));
         this.dTable = pr;
         this.setParentToChild(pr);
-    };
-    CPlotArea.prototype.createDTable = function () {
-        const dataTable = new AscFormat.CDTable();
-
-        dataTable.setShowHorzBorder(true);
-        dataTable.setShowKeys(true);
-        dataTable.setShowOutline(true);
-        dataTable.setShowVertBorder(true);
-
-        const line = new AscFormat.CLn();
-        line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
-        line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
-        line.Fill.fill.color.Mods.addMod("lumMod", 15000);
-        line.Fill.fill.color.Mods.addMod("lumOff", 85000);
-
-        line.setJoin(new AscFormat.LineJoin());
-        line.Join.setType(AscFormat.LineJoinType.Round);
-
-        line.setCap(0);
-        line.setAlgn(0);
-        line.setCmpd(1);
-        line.setW(9525);
-
-        const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataTable);
-        spPr.setLn(line);
-        dataTable.setSpPr(spPr);
-
-        const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataTable);
-        dataTable.setTxPr(txPr);
-
-        this.setDTable(dataTable);
-    };
-    CPlotArea.prototype.removeDTable = function () {
-        this.setDTable(null);
     };
     CPlotArea.prototype.setLayout = function(pr) {
         History.CanAddChanges() && History.Add(new CChangesDrawingsObject(this, AscDFH.historyitem_PlotArea_SetLayout, this.layout, pr));
@@ -6906,33 +6872,6 @@
         for(var i = 0; i < this.series.length; ++i) {
             this.series[i].checkSpPrRasterImages(images);
         }
-    };
-    CChartBase.prototype.createDataLabels = function () {
-        this.series.forEach(function (ser) {
-            const dataLabels = new AscFormat.CDLbls();
-            dataLabels.setDLblPos(Asc.c_oAscChartDataLabelsPos.t);
-            dataLabels.setShowBubbleSize(false);
-            dataLabels.setShowCatName(false);
-            dataLabels.setShowLeaderLines(false);
-            dataLabels.setShowLegendKey(false);
-            dataLabels.setShowPercent(false);
-            dataLabels.setShowSerName(false);
-            dataLabels.setShowVal(true);
-
-            const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataLabels);
-            dataLabels.setSpPr(spPr);
-
-            const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataLabels);
-            txPr.bodyPr.textFit = new AscFormat.CTextFit(AscFormat.text_fit_Auto);
-            // values from Excel
-            txPr.bodyPr.lIns = 38100 * g_dKoef_emu_to_mm;
-            txPr.bodyPr.tIns = 19050 * g_dKoef_emu_to_mm;
-            txPr.bodyPr.rIns = 38100 * g_dKoef_emu_to_mm;
-            txPr.bodyPr.bIns = 19050 * g_dKoef_emu_to_mm;
-            dataLabels.setTxPr(txPr);
-
-            ser.setDLbls(dataLabels);
-        });
     };
     CChartBase.prototype.removeDataLabels = function() {
         var i;
@@ -15642,9 +15581,9 @@
             this.plotArea.updateReferences(bDisplayEmptyCellsAs, bDisplayHidden);
         }
     };
-    CChart.prototype.createLegend = function () {
+    CChart.prototype.createLegend = function (legendPosition) {
         const legend = new AscFormat.CLegend();
-        legend.setLegendPos(Asc.c_oAscChartLegendShowSettings.right);
+        legend.setLegendPos(legendPosition != null ? legendPosition : Asc.c_oAscChartLegendShowSettings.right);
 
         const pen = AscFormat.CreateNoFillLine();
         pen.setW(0);
