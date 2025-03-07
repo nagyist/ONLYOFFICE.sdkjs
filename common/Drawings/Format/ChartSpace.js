@@ -2927,22 +2927,28 @@ function(window, undefined) {
 			return;
 		}
 
-		const title = bDisplay ? this.createChartTitle(bOverlay) : null;
+		const title = bDisplay ? createChartTitle(this.chart, bOverlay) : null;
 		this.chart.setTitle(title);
-	};
-	CChartSpace.prototype.createChartTitle = function (bOverlay) {
-		const title = new AscFormat.CTitle();
-		title.setParent(this.chart);
 
-		const spPr = CChartSpace.createDefaultSpPr(title);
-		title.setSpPr(spPr);
+		function createChartTitle(parent, bOverlay) {
+			const title = new AscFormat.CTitle();
+			title.setParent(parent);
 
-		const txPr = CChartSpace.createDefaultTxPr(title);
-		title.setTxPr(txPr);
+			const chartSpace = title.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				title.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				title.resetFormatting();
+			}
 
-		title.setOverlay(bOverlay);
-
-		return title;
+			title.setOverlay(bOverlay);
+			return title;
+		};
 	};
 	CChartSpace.prototype.getAllTitles = function () {
 		var ret = [];
@@ -7957,7 +7963,6 @@ function(window, undefined) {
 			return;
 		}
 
-		// nDataLabelPos - from Asc.c_oAscChartDataLabelsPos
 		if (!AscFormat.isRealNumber(nDataLabelPos)) {
 			nDataLabelPos = Asc.c_oAscChartDataLabelsPos.t;
 		}
@@ -7977,26 +7982,14 @@ function(window, undefined) {
 				return;
 			}
 
-			const dLbls = ser.dLbls || createDLbls();
+			const dLbls = ser.dLbls || createDLbls(ser);
 			dLbls.setDLblPos(nDataLabelPos);
 			ser.setDLbls(dLbls);
 		});
 
-		function createDLbls() {
+		function createDLbls(parent) {
 			const dataLabels = new AscFormat.CDLbls();
-
-			const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataLabels);
-			dataLabels.setSpPr(spPr);
-
-			const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataLabels);
-			txPr.bodyPr.textFit = new AscFormat.CTextFit(AscFormat.text_fit_Auto);
-
-			// values from Excel
-			txPr.bodyPr.lIns = 38100 * g_dKoef_emu_to_mm;
-			txPr.bodyPr.tIns = 19050 * g_dKoef_emu_to_mm;
-			txPr.bodyPr.rIns = 38100 * g_dKoef_emu_to_mm;
-			txPr.bodyPr.bIns = 19050 * g_dKoef_emu_to_mm;
-			dataLabels.setTxPr(txPr);
+			dataLabels.setParent(parent);
 
 			dataLabels.setShowBubbleSize(false);
 			dataLabels.setShowCatName(false);
@@ -8005,6 +7998,18 @@ function(window, undefined) {
 			dataLabels.setShowPercent(false);
 			dataLabels.setShowSerName(false);
 			dataLabels.setShowVal(true);
+
+			const chartSpace = dataLabels.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				dataLabels.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				dataLabels.resetFormatting();
+			}
 
 			return dataLabels;
 		}
@@ -9289,29 +9294,24 @@ function(window, undefined) {
 		});
 		
 		function createTrendline(parent, trendlineType) {
-			const ln = new AscFormat.CLn();
-			ln.setFill(AscFormat.CreateUnifillSolidFillSchemeColor(0));
-			ln.setCap(1);
-			ln.setPrstDash(10);
-			ln.setW(19050);
-
-			const effectProps = new AscFormat.CEffectProperties();
-			effectProps.EffectLst = new AscFormat.CEffectLst();
-
-			const spPr = new AscFormat.CSpPr();
-			spPr.setLn(ln);
-			spPr.setEffectPr(effectProps);
-
 			const trendline = new AscFormat.CTrendLine();
+			trendline.setParent(parent);
+
 			trendline.dispEq = false;
 			trendline.dispRSqr = false;
 			trendline.trendlineType = AscFormat.isRealNumber(trendlineType) ? trendlineType : AscFormat.TRENDLINE_TYPE_LINEAR;
 
-			trendline.setParent(parent);
-			trendline.setSpPr(spPr);
-			spPr.setParent(trendline);
-
-			trendline.recalculatePen();
+			const chartSpace = trendline.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				trendline.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					AscFormat.g_oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				trendline.resetFormatting();
+			}
 
 			return trendline;
 		}
@@ -9803,38 +9803,30 @@ function(window, undefined) {
 			return;
 		}
 
-		const dTable = plotArea.dTable || createDTable();
-		const showLegendKeys = bWithKeys === undefined ? true : bWithKeys;
+		const dTable = plotArea.dTable || createDTable(plotArea);
+		const showLegendKeys = bWithKeys == null ? true : bWithKeys;
 		dTable.setShowKeys(showLegendKeys);
 		plotArea.setDTable(dTable);
 
-		function createDTable() {
+		function createDTable(parent) {
 			const dataTable = new AscFormat.CDTable();
+			dataTable.setParent(parent);
 
 			dataTable.setShowHorzBorder(true);
 			dataTable.setShowOutline(true);
 			dataTable.setShowVertBorder(true);
 
-			const line = new AscFormat.CLn();
-			line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
-			line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
-			line.Fill.fill.color.Mods.addMod("lumMod", 15000);
-			line.Fill.fill.color.Mods.addMod("lumOff", 85000);
-
-			line.setJoin(new AscFormat.LineJoin());
-			line.Join.setType(AscFormat.LineJoinType.Round);
-
-			line.setCap(0);
-			line.setAlgn(0);
-			line.setCmpd(1);
-			line.setW(9525);
-
-			const spPr = AscFormat.CChartSpace.createDefaultSpPr(dataTable);
-			spPr.setLn(line);
-			dataTable.setSpPr(spPr);
-
-			const txPr = AscFormat.CChartSpace.createDefaultTxPr(dataTable);
-			dataTable.setTxPr(txPr);
+			const chartSpace = dataTable.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				dataTable.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				dataTable.resetFormatting();
+			}
 		}
 	};
 	CChartSpace.prototype.getSpPrFormStyleEntry = function (oStyleEntry, aColors, nIdx) {
@@ -9951,37 +9943,17 @@ function(window, undefined) {
 			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
 			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
 
-			if (!AscCommon.isRealObject(axis.spPr)) {
-				const spPr = CChartSpace.createDefaultSpPr(axis);
-				const line = createLine();
-				spPr.setLn(line);
-				axis.setSpPr(spPr);
+			const chartSpace = axis.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				axis.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					false
+				);
+			} else {
+				axis.resetFormatting();
 			}
-
-			if (!AscCommon.isRealObject(axis.txPr)) {
-				const txPr = CChartSpace.createDefaultTxPr(axis);
-				txPr.bodyPr.rot = -60000000;
-				axis.setTxPr(txPr);
-			}
-		}
-
-		function createLine() {
-			const line = new AscFormat.CLn();
-
-			line.setFill(AscFormat.CreateUnifillSolidFillSchemeColorByIndex(15));
-			line.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
-			line.Fill.fill.color.Mods.addMod("lumMod", 15000);
-			line.Fill.fill.color.Mods.addMod("lumOff", 85000);
-
-			line.setJoin(new AscFormat.LineJoin());
-			line.Join.setType(AscFormat.LineJoinType.Round);
-
-			line.setCap(0);
-			line.setAlgn(0);
-			line.setCmpd(1);
-			line.setW(9525);
-
-			return line;
 		}
 	};
 	CChartSpace.prototype.showAxisTitlesByTypes = function (bShowCatAx, bShowValAx, bShowSerAx) {
@@ -10007,59 +9979,22 @@ function(window, undefined) {
 				const title = new AscFormat.CTitle();
 				title.setParent(axis);
 
-				const spPr = CChartSpace.createDefaultSpPr(title);
-				title.setSpPr(spPr);
-
-				const txPr = CChartSpace.createDefaultTxPr(title);
-				txPr.bodyPr.rot = title.parent instanceof AscFormat.CValAx ? -5400000 : 0;
-				title.setTxPr(txPr);
+				const chartSpace = title.getChartSpace();
+				if (chartSpace.chartStyle && chartSpace.chartColors) {
+					title.applyChartStyle(
+						chartSpace.chartStyle,
+						chartSpace.chartColors,
+						oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+						true
+					);
+				} else {
+					title.resetFormatting();
+				}
 
 				axis.setTitle(title);
 			}
 		}
 	};
-
-	CChartSpace.createDefaultSpPr = function createDefaultSpPr(parent) {
-		const spPr = new AscFormat.CSpPr();
-		spPr.setParent(parent);
-
-		spPr.setFill(AscFormat.CreateNoFillUniFill());
-
-		const effectProps = new AscFormat.CEffectProperties();
-		effectProps.EffectLst = new AscFormat.CEffectLst();
-		spPr.setEffectPr(effectProps);
-
-		const line = new AscFormat.CLn();
-		line.setFill(AscFormat.CreateNoFillUniFill());
-		spPr.setLn(line);
-
-		return spPr;
-	};
-	CChartSpace.createDefaultTxPr = function createDefaultTxPr(parent) {
-		const txPr = new AscFormat.CTextBody();
-		txPr.setParent(parent);
-
-		const bodyPr = new AscFormat.CBodyPr();
-		bodyPr.rot = 0;
-		bodyPr.anchor = AscFormat.VERTICAL_ANCHOR_TYPE_CENTER;
-		bodyPr.anchorCtr = true;
-		bodyPr.spcFirstLastPara = true;
-		bodyPr.vert = AscFormat.nVertTThorz;
-		bodyPr.vertOverflow = AscFormat.nVOTEllipsis;
-		bodyPr.wrap = AscFormat.nTWTSquare;
-		txPr.setBodyPr(bodyPr);
-
-		const drawingDocument = parent.getDrawingDocument && parent.getDrawingDocument();
-		const content = new AscFormat.CDrawingDocContent(txPr, drawingDocument, 0, 0, 0, 0);
-		content.CurPos.TableMove = 1;
-		txPr.setContent(content);
-
-		const lstStyle = new AscFormat.TextListStyle();
-		txPr.setLstStyle(lstStyle);
-
-		return txPr;
-	};
-
 	CChartSpace.prototype.SetValuesToDataPoints = function (aData, nSeria) {
 		if (editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
 			return false;
