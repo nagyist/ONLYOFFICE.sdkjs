@@ -777,6 +777,7 @@ CGraphicObjects.prototype =
 
     checkSelectedObjectsForMove: DrawingObjectsController.prototype.checkSelectedObjectsForMove,
 
+    getDrawingProps: DrawingObjectsController.prototype.getDrawingProps,
     getDrawingPropsFromArray: DrawingObjectsController.prototype.getDrawingPropsFromArray,
     getPropsFromChart: DrawingObjectsController.prototype.getPropsFromChart,
     getSelectedObjectsByTypes: DrawingObjectsController.prototype.getSelectedObjectsByTypes,

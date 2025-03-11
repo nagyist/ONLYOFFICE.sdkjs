@@ -1674,6 +1674,10 @@ function (window, undefined) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 			this.chartSpace.showAxesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
 			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
 		}
 	};
 	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowCatAx, bShowValAx, bShowSerAx) {
@@ -1681,6 +1685,10 @@ function (window, undefined) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 			this.chartSpace.showAxisTitlesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
 			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
 		}
 	};
 	asc_ChartSettings.prototype.setDisplayChartTitle = function (bDisplay, bOverlay) {
@@ -1688,6 +1696,10 @@ function (window, undefined) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 			this.chartSpace.showChartTitle(bDisplay, bOverlay);
 			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
 		}
 	};
 	asc_ChartSettings.prototype.setDisplayDataLabels = function (bDisplay, nDataLabelPos) {
@@ -1695,6 +1707,10 @@ function (window, undefined) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 			this.chartSpace.showDataLabels(bDisplay, nDataLabelPos);
 			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
 		}
 	};
 	asc_ChartSettings.prototype.setDisplayDataTable = function (bDisplayDataTable, bDisplayLegendKeys) {
@@ -1702,6 +1718,10 @@ function (window, undefined) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 			this.chartSpace.showDataTable(bDisplayDataTable, bDisplayLegendKeys);
 			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
 		}
 	};
 	asc_ChartSettings.prototype.setDisplayErrorBars = function (bShowErrorBars, nErrorValueType) {
@@ -1722,6 +1742,10 @@ function (window, undefined) {
 		});
 
 		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
 	};
 	asc_ChartSettings.prototype.setDisplayGridlines = function (bShowHorMajor, bShowVerMajor, bShowHorMinor, bShowVerMinor) {
 		if (!this.chartSpace) {
@@ -1761,6 +1785,10 @@ function (window, undefined) {
 		}
 
 		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
 	};
 	asc_ChartSettings.prototype.setDisplayLegend = function (bShow, nLegendPosition) {
 		if (!this.chartSpace || !this.chartSpace.chart) {
@@ -1773,10 +1801,12 @@ function (window, undefined) {
 			: this.chartSpace.chart.setLegend(null);
 
 		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
 	};
-	asc_ChartSettings.prototype.setDisplayLines = function (bShow, nLineType) {
-
-	};
+	// asc_ChartSettings.prototype.setDisplayLines = function (bShow, nLineType) {};
 	asc_ChartSettings.prototype.setDisplayTrendlines = function (bShow, nTrendlineType) {
 		if (!this.chartSpace) {
 			return;
@@ -1785,6 +1815,10 @@ function (window, undefined) {
 		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
 		this.chartSpace.showTrendlines(bShow, nTrendlineType);
 		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
 	};
 	asc_ChartSettings.prototype.setDisplayUpDownBars = function (bShow) {
 		if (!this.chartSpace) {
@@ -1809,6 +1843,10 @@ function (window, undefined) {
 
 		this.chartSpace.recalculateUpDownBars();
 		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
 	};
 
 	/** @constructor */
