@@ -6600,6 +6600,16 @@ function (window, undefined) {
 	prot["setView3d"] = prot.setView3d;
 	prot["getDisplayTrendlinesEquation"] = prot.getDisplayTrendlinesEquation;
 	prot["putDisplayTrendlinesEquation"] = prot.putDisplayTrendlinesEquation;
+	prot["setDisplayAxes"] = prot.setDisplayAxes;
+	prot["setDisplayAxisTitles"] = prot.setDisplayAxisTitles;
+	prot["setDisplayChartTitle"] = prot.setDisplayChartTitle;
+	prot["setDisplayDataLabels"] = prot.setDisplayDataLabels;
+	prot["setDisplayDataTable"] = prot.setDisplayDataTable;
+	prot["setDisplayErrorBars"] = prot.setDisplayErrorBars;
+	prot["setDisplayGridlines"] = prot.setDisplayGridlines;
+	prot["setDisplayLegend"] = prot.setDisplayLegend;
+	prot["setDisplayTrendlines"] = prot.setDisplayTrendlines;
+	prot["setDisplayUpDownBars"] = prot.setDisplayUpDownBars;
 
 	window["AscCommon"].asc_CRect = asc_CRect;
 	prot = asc_CRect.prototype;
