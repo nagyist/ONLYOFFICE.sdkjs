@@ -2111,91 +2111,85 @@ CShapeDrawer.prototype =
             this.Graphics.m_oContext.lineJoin = this.OldLineJoin;
         }
 
-        if (isArrowsPresent)
-        {
-            this.IsArrowsDrawing = true;
-            this.Graphics.p_dash(null);
-            // значит стрелки есть. теперь:
-            // определяем толщину линии "как есть"
-            // трансформируем точки в окончательные.
-            // и отправляем на отрисовку (с матрицей)
+		if (isArrowsPresent) {
+			// значит стрелки есть. теперь:
+			// определяем толщину линии "как есть"
+			// трансформируем точки в окончательные.
+			// и отправляем на отрисовку (с матрицей)
 
-			var _graphicsCtx = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
+			this.IsArrowsDrawing = true;
+			this.Graphics.p_dash(null);
 
-			var trans = _graphicsCtx.m_oFullTransform;
-            var trans1 = AscCommon.global_MatrixTransformer.Invert(trans);
+			const graphicsCtx = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
 
-            var x1 = trans.TransformPointX(0, 0);
-            var y1 = trans.TransformPointY(0, 0);
-            var x2 = trans.TransformPointX(1, 1);
-            var y2 = trans.TransformPointY(1, 1);
-            var dKoef = Math.sqrt(((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2);
-            var _pen_w = this.Graphics.isTrack() ? (this.Graphics.Graphics.m_oContext.lineWidth * dKoef) : (this.Graphics.m_oContext.lineWidth * dKoef);
-			var _max_w = undefined;
-			if (_graphicsCtx.IsThumbnail === true)
-			    _max_w = 2;
+			const fullTransform = graphicsCtx.m_oFullTransform;
+			const inverseTransform = AscCommon.global_MatrixTransformer.Invert(fullTransform);
 
-            var _max_delta_eps2 = 0.001;
+			const point1 = { x: fullTransform.TransformPointX(0, 0), y: fullTransform.TransformPointY(0, 0) };
+			const point2 = { x: fullTransform.TransformPointX(1, 1), y: fullTransform.TransformPointY(1, 1) };
+			const transformScaleFactor = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)) / Math.sqrt(2);
 
-            var arrKoef = this.isArrPix ? (1 / AscCommon.g_dKoef_mm_to_pix) : 1;
+			const penWidth = graphicsCtx.m_oContext.lineWidth * transformScaleFactor;
+			const maxWidth = graphicsCtx.IsThumbnail === true ? 2 : undefined;
+			const arrCoef = this.isArrPix ? (1 / AscCommon.g_dKoef_mm_to_pix) : 1;
 
-            if (this.Ln.headEnd != null)
-            {
-                var _x1 = trans.TransformPointX(arr[0].x, arr[0].y);
-                var _y1 = trans.TransformPointY(arr[0].x, arr[0].y);
-                var _x2 = trans.TransformPointX(arr[1].x, arr[1].y);
-                var _y2 = trans.TransformPointY(arr[1].x, arr[1].y);
+			if (this.Ln.headEnd != null) {
+				const path = this.Shape.getGeometry().pathLst[0];
+				const headAngle = path.getHeadArrowAngle();
 
-                var _max_delta_eps = Math.max(this.Ln.headEnd.GetLen(_pen_w), 5);
+				if (AscFormat.isRealNumber(headAngle)) {
+					const arrowEndPoint = {
+						x: fullTransform.TransformPointX(arr[0].x, arr[0].y),
+						y: fullTransform.TransformPointY(arr[0].x, arr[0].y)
+					};
+					const arrowStartPoint = {
+						x: arrowEndPoint.x - Math.cos(headAngle * Math.PI / 180),
+						y: arrowEndPoint.y - Math.sin(headAngle * Math.PI / 180)
+					};
 
-                var _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                var cur_point = 2;
-                while (_max_delta < _max_delta_eps && cur_point < arr.length)
-                {
-                    _x2 = trans.TransformPointX(arr[cur_point].x, arr[cur_point].y);
-                    _y2 = trans.TransformPointY(arr[cur_point].x, arr[cur_point].y);
-                    _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                    cur_point++;
-                }
+					graphicsCtx.ArrayPoints = null;
+					DrawLineEnd(
+						arrowEndPoint.x, arrowEndPoint.y,
+						arrowStartPoint.x, arrowStartPoint.y,
+						this.Ln.headEnd.type,
+						arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
+						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
+						this, inverseTransform
+					);
+					graphicsCtx.ArrayPoints = arr;
+				}
+			}
 
-                if (_max_delta > _max_delta_eps2)
-                {
-					_graphicsCtx.ArrayPoints = null;
-					DrawLineEnd(_x1, _y1, _x2, _y2, this.Ln.headEnd.type, arrKoef * this.Ln.headEnd.GetWidth(_pen_w, _max_w), arrKoef * this.Ln.headEnd.GetLen(_pen_w, _max_w), this, trans1);
-					_graphicsCtx.ArrayPoints = arr;
-                }
-            }
-            if (this.Ln.tailEnd != null)
-            {
-                var _1 = arr.length-1;
-                var _2 = arr.length-2;
-                var _x1 = trans.TransformPointX(arr[_1].x, arr[_1].y);
-                var _y1 = trans.TransformPointY(arr[_1].x, arr[_1].y);
-                var _x2 = trans.TransformPointX(arr[_2].x, arr[_2].y);
-                var _y2 = trans.TransformPointY(arr[_2].x, arr[_2].y);
+			if (this.Ln.tailEnd != null) {
+				const path = this.Shape.getGeometry().pathLst[0];
+				const tailAngle = path.getTailArrowAngle();
 
-                var _max_delta_eps = Math.max(this.Ln.tailEnd.GetLen(_pen_w), 5);
+				if (AscFormat.isRealNumber(tailAngle)) {
+					const arrowEndPoint = {
+						x: fullTransform.TransformPointX(arr[arr.length - 1].x, arr[arr.length - 1].y),
+						y: fullTransform.TransformPointY(arr[arr.length - 1].x, arr[arr.length - 1].y)
+					};
+					const arrowStartPoint = {
+						x: arrowEndPoint.x - Math.cos(tailAngle * Math.PI / 180),
+						y: arrowEndPoint.y - Math.sin(tailAngle * Math.PI / 180)
+					};
 
-                var _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                var cur_point = _2 - 1;
-                while (_max_delta < _max_delta_eps && cur_point >= 0)
-                {
-                    _x2 = trans.TransformPointX(arr[cur_point].x, arr[cur_point].y);
-                    _y2 = trans.TransformPointY(arr[cur_point].x, arr[cur_point].y);
-                    _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                    cur_point--;
-                }
+					graphicsCtx.ArrayPoints = null;
+					DrawLineEnd(
+						arrowEndPoint.x, arrowEndPoint.y,
+						arrowStartPoint.x, arrowStartPoint.y,
+						this.Ln.tailEnd.type,
+						arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
+						arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
+						this, inverseTransform
+					);
+					graphicsCtx.ArrayPoints = arr;
+				}
+			}
 
-                if (_max_delta > _max_delta_eps2)
-                {
-					_graphicsCtx.ArrayPoints = null;
-					DrawLineEnd(_x1, _y1, _x2, _y2, this.Ln.tailEnd.type, arrKoef * this.Ln.tailEnd.GetWidth(_pen_w, _max_w), arrKoef * this.Ln.tailEnd.GetLen(_pen_w, _max_w), this, trans1);
-					_graphicsCtx.ArrayPoints = arr;
-                }
-            }
-            this.IsArrowsDrawing = false;
-            this.CheckDash();
-        }
+			this.IsArrowsDrawing = false;
+			this.CheckDash();
+		}
     },
 
     drawFillStroke : function(bIsFill, fill_mode, bIsStroke)

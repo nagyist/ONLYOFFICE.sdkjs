@@ -213,8 +213,9 @@ function Path()
     this.ArrPathCommand = [];
 }
 AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_Path);
-    Path.prototypeRefresh_RecalcData = function()
-    {};
+    Path.prototype.Refresh_RecalcData = function() {
+
+	};
     Path.prototype.createDuplicate = function()
     {
         var p = new Path();
@@ -1942,6 +1943,41 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
         }
         return true;
     };
+	Path.prototype.getHeadArrowAngle = function () {
+		const convertedPath = new AscFormat.Path();
+		const transform = new AscCommon.CMatrix();
+		this.convertToBezierCurves(convertedPath, transform);
+
+		const cmdCount = convertedPath.ArrPathCommand.length;
+		if (cmdCount < 2) {
+			return null;
+		}
+
+		const firstCommand = convertedPath.ArrPathCommand[0];
+		if (firstCommand.id !== moveTo) {
+			return null;
+		}
+
+		let endArrowPoint = {
+			x: firstCommand.X,
+			y: firstCommand.Y
+		};
+		let startArrowPoint = {
+			x: convertedPath.ArrPathCommand[1].X2,
+			y: convertedPath.ArrPathCommand[1].Y2
+		};
+
+		const diffX = endArrowPoint.x - startArrowPoint.x;
+		const diffY = endArrowPoint.y - startArrowPoint.y;
+
+		const angelInRadians = Math.atan2(diffY, diffX);
+		const angelInDegrees = angelInRadians * 180 / Math.PI;
+		return angelInDegrees;
+	};
+	Path.prototype.getTailArrowAngle = function () {
+		return 270;
+	};
+
     function CPathCmd() {
         AscFormat.CBaseNoIdObject.call(this);
         this.pts = [];

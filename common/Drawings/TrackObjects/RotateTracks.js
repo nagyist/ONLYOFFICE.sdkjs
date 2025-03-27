@@ -184,6 +184,9 @@ function OverlayObject(geometry, extX, extY, brush, pen, transform )
         }
     };
 }
+OverlayObject.prototype.getGeometry = function () {
+	return this.geometry;
+};
 
 function ObjectToDraw(brush, pen, extX, extY, geometry, transform, x, y, oComment, Code)
 {
