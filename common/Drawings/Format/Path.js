@@ -1946,7 +1946,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 	Path.prototype.getHeadArrowAngle = function () {
 		const convertedPath = new AscFormat.Path();
 		const transform = new AscCommon.CMatrix();
-		this.convertToBezierCurves(convertedPath, transform);
+		AscFormat.ExecuteNoHistory(this.convertToBezierCurves, this, [convertedPath, transform]);
 
 		const cmdCount = convertedPath.ArrPathCommand.length;
 		if (cmdCount < 2) {
