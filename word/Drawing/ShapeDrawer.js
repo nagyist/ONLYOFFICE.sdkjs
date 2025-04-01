@@ -2135,7 +2135,8 @@ CShapeDrawer.prototype =
 
 			if (this.Ln.headEnd != null) {
 				const path = this.Shape.getGeometry().pathLst[0];
-				const headAngle = path.getHeadArrowAngle();
+				const minRequiredSegmentLength = Math.max(this.Ln.headEnd.GetLen(penWidth), 5);
+				const headAngle = path.getHeadArrowAngle(minRequiredSegmentLength);
 
 				if (AscFormat.isRealNumber(headAngle)) {
 					const arrowEndPoint = {
@@ -2162,6 +2163,7 @@ CShapeDrawer.prototype =
 
 			if (this.Ln.tailEnd != null) {
 				const path = this.Shape.getGeometry().pathLst[0];
+				const minRequiredSegmentLength = Math.max(this.Ln.tailEnd.GetLen(penWidth), 5);
 				const tailAngle = path.getTailArrowAngle();
 
 				if (AscFormat.isRealNumber(tailAngle)) {
