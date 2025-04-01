@@ -1943,83 +1943,105 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
         }
         return true;
     };
-	Path.prototype.getHeadArrowAngle = function () {
-		const cmdCount = this.ArrPathCommand.length;
-		if (cmdCount < 2) {
+
+	function getTangentAt(t, p0, p1, p2, p3) {
+		const x = 3 * (1 - t) * (1 - t) * (p1.x - p0.x) + 6 * (1 - t) * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
+		const y = 3 * (1 - t) * (1 - t) * (p1.y - p0.y) + 6 * (1 - t) * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
+		return Math.atan2(y, x);
+	}
+
+	Path.prototype.getHeadArrowAngle = function (arrowLength) {
+		debugger
+		const MIN_SEGMENT_LENGTH = 0.001;
+
+		const convertedPath = new AscFormat.Path();
+		const transform = new AscCommon.CMatrix();
+		AscFormat.ExecuteNoHistory(this.convertToBezierCurves, this, [convertedPath, transform, true]);
+		// Now path contains only cubicBezierTo, lineTo, and moveTo commands
+
+		const commands = convertedPath.ArrPathCommand;
+		if (commands.length <= 0) {
 			return null;
 		}
 
-		const firstCommand = this.ArrPathCommand[0];
-		if (firstCommand.id !== moveTo) {
-			return null;
-		}
-
+		let arrowTipPoint;
 		let arrowTipPointIndex;
-		const arrowTipPoint = calculateArrowTipPoint.call(this);
-		const arrowBasePoint = arrowTipPoint ? calculateArrowBasePoint.call(this) : null;
+		for (let index = 0; index < commands.length; index++) {
+			const command = commands[index];
 
-		function calculateArrowTipPoint() {
-			let moveToPoint = null;
+			if (command.id === AscFormat.moveTo) {
+				arrowTipPoint = { x: command.X, y: command.Y };
+				arrowTipPointIndex = index;
+				continue;
+			}
 
-			for (let i = 0; i < cmdCount; i++) {
-				const cmd = this.ArrPathCommand[i];
-
-				if (cmd.id === moveTo) {
-					moveToPoint = { x: cmd.X, y: cmd.Y };
+			if (command.id === AscFormat.lineTo) {
+				if (!arrowTipPoint) {
+					arrowTipPoint = { x: command.X, y: command.Y };
+					arrowTipPointIndex = index;
 					continue;
 				}
 
-				if (moveToPoint) {
-					arrowTipPointIndex = i;
-					return moveToPoint;
+				const lineLength = Math.sqrt(
+					Math.pow(command.X - arrowTipPoint.x, 2) + Math.pow(command.Y - arrowTipPoint.y, 2)
+				);
+				if (lineLength < MIN_SEGMENT_LENGTH) {
+					arrowTipPoint = { x: command.X, y: command.Y };
+					arrowTipPointIndex = index;
+					continue;
 				}
+
+				break;
 			}
 
-			return null;
+			if (command.id === AscFormat.bezier4) {
+				if (!arrowTipPoint) {
+					continue;
+				}
+
+				// Проверку на длину кривой пока не делаем.
+				// Считаем, что кривая всегда достаточно длинная.
+
+				// Когда сделаем проверку на длину кривой,
+				// нужно будет также обновить arrowTipPointIndex, чтоб arrowBasePoint искать уже со следующей команды
+
+				break;
+			}
 		}
-
-		function calculateArrowBasePoint() {
-			let currentPoint = null;
-
-			for (let i = arrowTipPointIndex; i < cmdCount; i++) {
-				const cmd = this.ArrPathCommand[i];
-				if (cmd.id === lineTo) {
-					currentPoint = { x: cmd.X, y: cmd.Y };
-				}
-				if (cmd.id === bezier3 || cmd.id === bezier4) {
-					currentPoint = { x: cmd.X0, y: cmd.Y0 };
-				}
-				if (cmd.id === arcTo) {
-					const tangentAngle = Math.atan(-1 * (cmd.hR / cmd.wR) / Math.tan(cmd.stAng));
-
-					const offsetX = cmd.stAng < 0
-						? Math.cos(tangentAngle)
-						: Math.cos(tangentAngle) * (-1);
-					const offsetY = cmd.stAng < 0
-						? Math.sin(tangentAngle)
-						: Math.sin(tangentAngle) * (-1);
 		
-					currentPoint = {
-						x: cmd.stX + offsetX,
-						y: cmd.stY + offsetY
-					};
-				}
-				
-				return currentPoint;
-			}
-
+		if (!arrowTipPoint) {
 			return null;
 		}
 
-		if (arrowTipPoint === null || arrowBasePoint === null) {
+		let arrowBasePoint;
+		for (let index = arrowTipPointIndex + 1; index < commands.length; index++) {
+			const command = commands[index];
+
+			if (command.id === AscFormat.moveTo) {
+				// Такого случаться не должно, так как при поиске arrowTipPoint эта moveTo должна была обработаться
+				break;
+			}
+
+			if (command.id === AscFormat.lineTo) {
+				arrowBasePoint = { x: command.X, y: command.Y };
+				break;
+			}
+
+			if (command.id === AscFormat.bezier4) {
+				arrowBasePoint = { x: command.X2, y: command.Y2 };
+				break;
+			}
+		}
+
+		if (!arrowBasePoint) {
 			return null;
 		}
 
 		const diffX = arrowTipPoint.x - arrowBasePoint.x;
 		const diffY = arrowTipPoint.y - arrowBasePoint.y;
 
-		// var _max_delta_eps2 = 0.001; (commit/0fd44a968c3f67be982aab8ae57465e6619eae02)
-		if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 0.001) {
+		const pointsDiff = Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY, 2));
+		if (AscFormat.isRealNumber(arrowLength) && arrowLength > pointsDiff) {
 			return null;
 		}
 
@@ -2028,90 +2050,9 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		return angleInDegrees;
 	};
 	Path.prototype.getTailArrowAngle = function () {
-		const cmdCount = this.ArrPathCommand.length;
-		if (cmdCount < 2) {
-			return null;
-		}
-
-		let arrowTipPointIndex;
-		const arrowTipPoint = calculateArrowTipPoint.call(this);
-		const arrowBasePoint = arrowTipPoint ? calculateArrowBasePoint.call(this) : null;
-
-		function calculateArrowTipPoint() {
-			let tipPoint = null;
-
-			for (let i = cmdCount - 1; i >= 0; i--) {
-				const cmd = this.ArrPathCommand[i];
-
-				if (cmd.id === lineTo) {
-					tipPoint = { x: cmd.X, y: cmd.Y };
-				}
-				if (cmd.id === bezier3) {
-					tipPoint = { x: cmd.X1, y: cmd.Y1 };
-				}
-				if (cmd.id === bezier4) {
-					tipPoint = { x: cmd.X2, y: cmd.Y2 };
-				}
-				if (cmd.id === arcTo) {
-					tipPoint = {
-						x: cmd.stX + cmd.wR * Math.cos(cmd.stAng + cmd.swAng),
-						y: cmd.stY + cmd.hR * Math.sin(cmd.stAng + cmd.swAng),
-					};
-				}
-
-				if (tipPoint) {
-					arrowTipPointIndex = i;
-					return tipPoint;
-				}
-			}
-			return null;
-		}
-
-		function calculateArrowBasePoint() {
-			if (arrowTipPointIndex <= 0) {
-				return null;
-			}
-
-			const cmd = this.ArrPathCommand[arrowTipPointIndex];
-			// const prevCmd = this.ArrPathCommand[arrowTipPointIndex - 1];
-
-			if (cmd.id === moveTo) {
-				return null;
-			}
-			if (cmd.id === lineTo) {
-				return { x: cmd.X, y: cmd.Y };
-			}
-			if (cmd.id === bezier3) {
-				return { x: cmd.X0, y: cmd.Y0 };
-			}
-			if (cmd.id === bezier4) {
-				return { x: cmd.X1, y: cmd.Y1 };
-			}
-			if (cmd.id === arcTo) {
-				const tangentAngle = Math.atan(- (cmd.hR / cmd.wR) * (1 / Math.tan(cmd.stAng + cmd.swAng)));
-				return {
-					x: cmd.stX + cmd.wR * Math.cos(tangentAngle),
-					y: cmd.stY + cmd.hR * Math.sin(tangentAngle),
-				};
-			}
-			return null;
-		}
-
-		if (arrowTipPoint === null || arrowBasePoint === null) {
-			return null;
-		}
-
-		const diffX = arrowTipPoint.x - arrowBasePoint.x;
-		const diffY = arrowTipPoint.y - arrowBasePoint.y;
-
-		if (Math.max(Math.abs(diffX), Math.abs(diffY)) < 0.001) {
-			return null;
-		}
-
-		const angleInRadians = Math.atan2(diffY, diffX);
-		const angleInDegrees = angleInRadians * 180 / Math.PI;
-		return angleInDegrees;
+		return 270;
 	};
+
 
     function CPathCmd() {
         AscFormat.CBaseNoIdObject.call(this);
