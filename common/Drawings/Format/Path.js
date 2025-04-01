@@ -2044,14 +2044,24 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 			}
 
 			if (command.id === AscFormat.bezier4) {
-				const t = 0;
-				const tangentAngle = getTangentAt(
-					t,
+				const numberOfPoints = 3;
+				const step = 0.05;
+
+				const tangentAngle = getAverageTangentAngle(
+					numberOfPoints, step,
 					{ x: arrowTipPoint.x, y: arrowTipPoint.y },
 					{ x: command.X0, y: command.Y0 },
 					{ x: command.X1, y: command.Y1 },
 					{ x: command.X2, y: command.Y2 }
 				);
+
+				function getAverageTangentAngle(numberOfPoints, step, p0, p1, p2, p3) {
+					let tangentAngle = 0;
+					for (let i = 0; i < numberOfPoints; i++) {
+						tangentAngle += getTangentAt(i * step, p0, p1, p2, p3);
+					}
+					return tangentAngle / numberOfPoints;
+				}
 
 				arrowBasePoint = {
 					x: arrowTipPoint.x + Math.cos(tangentAngle),
@@ -2078,7 +2088,8 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		const angleInDegrees = angleInRadians * 180 / Math.PI;
 		return angleInDegrees;
 	};
-	Path.prototype.getTailArrowAngle = function () {
+	Path.prototype.getTailArrowAngle = function (arrowLength) {
+		return 270;
 	};
 
 

@@ -1103,6 +1103,7 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
                 path.setStroke(x2 != undefined ? x2 : true);
                 path.setPathW(y2);
                 path.setPathH(x3);
+                path.setParent(this);
                 this.AddPath(path);
                 break;
             }
