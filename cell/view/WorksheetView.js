@@ -4151,10 +4151,11 @@
 
 		var calcScale = this.calcPrintScale(width, height);
 		if(!isNaN(calcScale)) {
+			let viewMode = this.handlers.trigger('getViewMode');
 			let realLockDraw = this.lockDraw;
 			//TODO add lock draw here. need review all draw calls(try to replace on recalculate)
 			this.lockDraw = true;
-			this._setPrintScale(calcScale);
+			this._setPrintScale(calcScale, viewMode);
 			this.lockDraw = realLockDraw;
 		}
 
@@ -4275,7 +4276,7 @@
 		}
 	};
 
-	WorksheetView.prototype._setPrintScale = function (val) {
+	WorksheetView.prototype._setPrintScale = function (val, isNotHistory) {
 		var pageOptions = this.model.PagePrintOptions;
 		var pageSetup = pageOptions.asc_getPageSetup();
 		var oldScale = pageSetup.asc_getScale();
@@ -4284,7 +4285,7 @@
 			History.Create_NewPoint();
 			History.StartTransaction();
 
-			pageSetup.asc_setScale(val);
+			pageSetup.asc_setScale(val, isNotHistory);
 
 			History.EndTransaction();
 		}
@@ -18368,7 +18369,7 @@
 
 	WorksheetView.prototype._saveCellValueAfterEdit = function (c, val, flags, isNotHistory, lockDraw) {
 		const t = this;
-		const ws = t.model
+		const ws = t.model;
 		let bbox = c.bbox;
 
 		let ctrlKey = flags && flags.ctrlKey;
@@ -28634,7 +28635,9 @@
 
 				pastedRangeProps.hidden = newVal.getHidden();
 
-				pastedRangeProps.locked = newVal.getLocked();
+				if (!t.ws.model.getSheetProtection()) {
+					pastedRangeProps.locked = newVal.getLocked();
+				}
 			}
 
 			var tableDxf = getTableDxf(fromRow, fromCol, newVal);
