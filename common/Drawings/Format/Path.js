@@ -1950,14 +1950,24 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		return Math.atan2(y, x);
 	}
 
+	function getBezierCurveLength(p0, p1, p2, p3) {
+		// stackoverflow.com/questions/29438398/cheap-way-of-calculating-cubic-bezier-length
+
+		const chord = Math.sqrt(Math.pow(p3.x - p0.x, 2) + Math.pow(p3.y - p0.y, 2));
+		const controlNet = Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)) +
+			Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)) +
+			Math.sqrt(Math.pow(p3.x - p2.x, 2) + Math.pow(p3.y - p2.y, 2));
+
+		return (chord + controlNet) / 2;
+	}
+
 	Path.prototype.getHeadArrowAngle = function (arrowLength) {
-		debugger
 		const MIN_SEGMENT_LENGTH = 0.001;
 
 		const convertedPath = new AscFormat.Path();
 		const transform = new AscCommon.CMatrix();
 		AscFormat.ExecuteNoHistory(this.convertToBezierCurves, this, [convertedPath, transform, true]);
-		// Now path contains only cubicBezierTo, lineTo, and moveTo commands
+		// convertedPath contains cubicBezierTo, lineTo, and moveTo commands only
 
 		const commands = convertedPath.ArrPathCommand;
 		if (commands.length <= 0) {
@@ -1999,11 +2009,17 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 					continue;
 				}
 
-				// Проверку на длину кривой пока не делаем.
-				// Считаем, что кривая всегда достаточно длинная.
-
-				// Когда сделаем проверку на длину кривой,
-				// нужно будет также обновить arrowTipPointIndex, чтоб arrowBasePoint искать уже со следующей команды
+				const curveLength = getBezierCurveLength(
+					{ x: arrowTipPoint.x, y: arrowTipPoint.y },
+					{ x: command.X0, y: command.Y0 },
+					{ x: command.X1, y: command.Y1 },
+					{ x: command.X2, y: command.Y2 }
+				);
+				if (curveLength < MIN_SEGMENT_LENGTH) {
+					arrowTipPoint = { x: command.X2, y: command.Y2 };
+					arrowTipPointIndex = index;
+					continue;
+				}
 
 				break;
 			}
@@ -2028,7 +2044,20 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 			}
 
 			if (command.id === AscFormat.bezier4) {
-				arrowBasePoint = { x: command.X2, y: command.Y2 };
+				const t = 0;
+				const tangentAngle = getTangentAt(
+					t,
+					{ x: arrowTipPoint.x, y: arrowTipPoint.y },
+					{ x: command.X0, y: command.Y0 },
+					{ x: command.X1, y: command.Y1 },
+					{ x: command.X2, y: command.Y2 }
+				);
+
+				arrowBasePoint = {
+					x: arrowTipPoint.x + Math.cos(tangentAngle),
+					y: arrowTipPoint.y + Math.sin(tangentAngle)
+				};
+			
 				break;
 			}
 		}
@@ -2050,7 +2079,6 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		return angleInDegrees;
 	};
 	Path.prototype.getTailArrowAngle = function () {
-		return 270;
 	};
 
 
