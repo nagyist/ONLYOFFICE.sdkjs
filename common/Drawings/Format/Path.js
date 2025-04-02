@@ -1944,6 +1944,81 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
         return true;
     };
 
+	function getNonDuplicateCommands(path) {
+		const commands = [];
+		let prevCommand = null;
+
+		function isDuplicate(cmd1, cmd2) {
+			if (cmd1.id !== cmd2.id)
+				return false;
+
+			if (cmd1.id === AscFormat.moveTo || cmd1.id === AscFormat.lineTo)
+				return cmd1.X === cmd2.X && cmd1.Y === cmd2.Y;
+
+			if (cmd1.id === AscFormat.bezier3)
+				return cmd1.X0 === cmd2.X0 && cmd1.Y0 === cmd2.Y0 &&
+					cmd1.X1 === cmd2.X1 && cmd1.Y1 === cmd2.Y1;
+
+			if (cmd1.id === AscFormat.bezier4)
+				return cmd1.X0 === cmd2.X0 && cmd1.Y0 === cmd2.Y0 &&
+					cmd1.X1 === cmd2.X1 && cmd1.Y1 === cmd2.Y1 &&
+					cmd1.X2 === cmd2.X2 && cmd1.Y2 === cmd2.Y2;
+
+			if (cmd1.id === AscFormat.arcTo)
+				return cmd1.wR === cmd2.wR && cmd1.hR === cmd2.hR &&
+					cmd1.stAng === cmd2.stAng && cmd1.swAng === cmd2.swAng;
+
+			return false;
+		}
+
+		path.ArrPathCommand.forEach(function (command) {
+			if (prevCommand) {
+				if (command.id === AscFormat.moveTo && prevCommand.id === AscFormat.moveTo) {
+					prevCommand = command;
+					return;
+				}
+
+				if (isDuplicate(prevCommand, command)) {
+					return;
+				}
+			}
+
+			commands.push(command);
+			prevCommand = command;
+		});
+
+		return commands;
+	}
+
+	Path.prototype.getContinuousSubpaths = function () {
+		const convertedPath = new AscFormat.Path();
+		const transform = new AscCommon.CMatrix();
+		AscFormat.ExecuteNoHistory(this.convertToBezierCurves, this, [convertedPath, transform, true]);
+		// convertedPath contains cubicBezierTo, lineTo, and moveTo commands only
+
+		const subpaths = [];
+		let currentSubpath;
+
+		// Since we only draw geometries that start with a "moveTo" command,
+		// the first command in the 'commands' array is guaranteed to be "moveTo"
+		const commands = getNonDuplicateCommands(convertedPath);
+		commands.forEach(function (command, index) {
+			if (command.id === AscFormat.moveTo) {
+				if (currentSubpath) {
+					subpaths.push(currentSubpath);
+				}
+				currentSubpath = new Path();
+			}
+			currentSubpath.ArrPathCommand.push(command);
+		});
+
+		if (currentSubpath) {
+			subpaths.push(currentSubpath);
+		}
+
+		return subpaths;
+	};
+
 	function getTangentAt(t, p0, p1, p2, p3) {
 		const x = 3 * (1 - t) * (1 - t) * (p1.x - p0.x) + 6 * (1 - t) * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
 		const y = 3 * (1 - t) * (1 - t) * (p1.y - p0.y) + 6 * (1 - t) * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
@@ -1962,14 +2037,11 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 	}
 
 	Path.prototype.getHeadArrowAngle = function (arrowLength) {
+		// This path should contain cubicBezierTo, lineTo, and moveTo commands only
+
 		const MIN_SEGMENT_LENGTH = 0.001;
 
-		const convertedPath = new AscFormat.Path();
-		const transform = new AscCommon.CMatrix();
-		AscFormat.ExecuteNoHistory(this.convertToBezierCurves, this, [convertedPath, transform, true]);
-		// convertedPath contains cubicBezierTo, lineTo, and moveTo commands only
-
-		const commands = convertedPath.ArrPathCommand;
+		const commands = this.ArrPathCommand;
 		if (commands.length <= 0) {
 			return null;
 		}
@@ -2161,6 +2233,9 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
             this.ArrPathCommand = aNewArray;
         }
     };
+	Path2.prototype.setParent = function (oParent) {
+		this.parent = oParent;
+	};
     Path2.prototype.setStroke = function (pr) {
 
         this.stroke = pr;

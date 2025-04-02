@@ -17002,23 +17002,21 @@ CGeometry2.prototype =
 };
 
 	/** @constructor */
-function CColorObj(pen, brush, geometry)
-{
-    this.pen = pen;
-	this.brush = brush;
-	this.geometry = geometry;
-}
+	function CColorObj(pen, brush, geometry) {
+		this.pen = pen;
+		this.brush = brush;
+		this.geometry = geometry;
+	}
 
-CColorObj.prototype =
-{
-	constructor: CColorObj,
-	
-	check_bounds: function (checker) {
+	CColorObj.prototype.constructor = CColorObj;
+	CColorObj.prototype.check_bounds = function (checker) {
 		if (this.geometry) {
 			this.geometry.check_bounds(checker);
 		}
-	}
-};
+	};
+	CColorObj.prototype.getGeometry = function () {
+		return this.geometry;
+	};
 
 	/** @constructor */
 	function calcShapesHelper(chartsDrawer)

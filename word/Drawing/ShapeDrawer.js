@@ -2133,31 +2133,37 @@ CShapeDrawer.prototype =
 			const maxWidth = graphicsCtx.IsThumbnail === true ? 2 : undefined;
 			const arrCoef = this.isArrPix ? (1 / AscCommon.g_dKoef_mm_to_pix) : 1;
 
+			const geometry = this.Shape.getGeometry();
+			const paths = geometry.getContinuousSubpaths();
+
 			if (this.Ln.headEnd != null) {
-				const path = this.Shape.getGeometry().pathLst[0];
-				const minRequiredSegmentLength = Math.max(this.Ln.headEnd.GetLen(penWidth), 5);
-				const headAngle = path.getHeadArrowAngle();
+				for (let i = 0; i < paths.length; i++) {
+					const path = paths[i];
+					const headAngle = path.getHeadArrowAngle();
 
-				if (AscFormat.isRealNumber(headAngle)) {
-					const arrowEndPoint = {
-						x: fullTransform.TransformPointX(arr[0].x, arr[0].y),
-						y: fullTransform.TransformPointY(arr[0].x, arr[0].y)
-					};
-					const arrowStartPoint = {
-						x: arrowEndPoint.x - Math.cos(headAngle * Math.PI / 180),
-						y: arrowEndPoint.y - Math.sin(headAngle * Math.PI / 180)
-					};
+					if (AscFormat.isRealNumber(headAngle)) {
+						// Each continuous subpath starts with a moveTo command
+						// so we can use the first point of the path as the arrow tip point
+						const arrowEndPoint = {
+							x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
+							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
+						};
+						const arrowStartPoint = {
+							x: arrowEndPoint.x - Math.cos(headAngle * Math.PI / 180),
+							y: arrowEndPoint.y - Math.sin(headAngle * Math.PI / 180)
+						};
 
-					graphicsCtx.ArrayPoints = null;
-					DrawLineEnd(
-						arrowEndPoint.x, arrowEndPoint.y,
-						arrowStartPoint.x, arrowStartPoint.y,
-						this.Ln.headEnd.type,
-						arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
-						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
-						this, inverseTransform
-					);
-					graphicsCtx.ArrayPoints = arr;
+						graphicsCtx.ArrayPoints = null;
+						DrawLineEnd(
+							arrowEndPoint.x, arrowEndPoint.y,
+							arrowStartPoint.x, arrowStartPoint.y,
+							this.Ln.headEnd.type,
+							arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
+							arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
+							this, inverseTransform
+						);
+						graphicsCtx.ArrayPoints = arr;
+					}
 				}
 			}
 

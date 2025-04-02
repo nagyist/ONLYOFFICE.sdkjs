@@ -1088,6 +1088,7 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
     Geometry.prototype.AddPath = function(pr)
     {
         AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsContent(this, AscDFH.historyitem_GeometryAddPath, this.pathLst.length, [pr], true));
+        pr.setParent(this);
         this.pathLst.push(pr);
     };
 
@@ -1103,7 +1104,6 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
                 path.setStroke(x2 != undefined ? x2 : true);
                 path.setPathW(y2);
                 path.setPathH(x3);
-                path.setParent(this);
                 this.AddPath(path);
                 break;
             }
@@ -1329,6 +1329,17 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
 
     Geometry.prototype.draw = function(shape_drawer)
     {
+		if (Asc.editor.isPresentationEditor) {
+			const hasInvalidPath = this.pathLst.some(function (path) {
+				return path.ArrPathCommand[0].id !== AscFormat.moveTo;
+			});
+
+			if (hasInvalidPath) {
+				debugger
+				return;
+			}
+		}
+
         if(shape_drawer.Graphics && shape_drawer.Graphics.IsDrawSmart || this.bDrawSmart)
         {
             this.drawSmart(shape_drawer);
@@ -1673,6 +1684,15 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
         return true;
     };
 
+	Geometry.prototype.getContinuousSubpaths = function () {
+		const subpaths = [];
+		this.pathLst.forEach(function (path) {
+			path.getContinuousSubpaths().forEach(function (subpath) {
+				subpaths.push(subpath);
+			});
+		});
+		return subpaths;
+	};
 
     function CAvLst(oGeometry, bAdjustments) {
         AscFormat.CBaseNoIdObject.call(this);
