@@ -2151,8 +2151,8 @@ CShapeDrawer.prototype =
 							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
 						};
 						const arrowStartPoint = {
-							x: arrowEndPoint.x - Math.cos(headAngle * Math.PI / 180),
-							y: arrowEndPoint.y - Math.sin(headAngle * Math.PI / 180)
+							x: fullTransform.TransformPointX(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180)),
+							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
 						};
 
 						graphicsCtx.ArrayPoints = null;
@@ -2202,8 +2202,8 @@ CShapeDrawer.prototype =
                             y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
                         };
                         const arrowStartPoint = {
-                            x: arrowEndPoint.x - Math.cos(tailAngle * Math.PI / 180),
-                            y: arrowEndPoint.y - Math.sin(tailAngle * Math.PI / 180)
+							x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
+							y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
                         };
 
                         graphicsCtx.ArrayPoints = null;

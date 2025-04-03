@@ -1331,13 +1331,15 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
     {
 		if (Asc.editor.isPresentationEditor) {
 			const hasInvalidPath = this.pathLst.some(function (path) {
-                if (path instanceof AscFormat.Path) {
-                    return path.ArrPathCommandInfo[0].id !== AscFormat.moveTo;
-                }
-                if (path instanceof AscFormat.Path2) {
-                    return path.getCommandByIndex(0).id !== AscFormat.moveTo;
-                }
-                return false;
+				let firstCommand = null;
+				if (path instanceof AscFormat.Path) {
+					firstCommand = path.ArrPathCommandInfo[0];
+				}
+				if (path instanceof AscFormat.Path2) {
+					firstCommand = path.getCommandByIndex(0);
+				}
+
+				return firstCommand && firstCommand.id !== AscFormat.moveTo;
 			});
 
 			if (hasInvalidPath) {
