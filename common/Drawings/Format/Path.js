@@ -2111,21 +2111,23 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 	}
 
 	function getCircleIntersectionsWithBezierCurve(circleCenter, circleRadius, p0, p1, p2, p3) {
-		// Bisection method
+
+		// Method of Newton-Raphson (keldysh.ru/comma/html/nonlinear/newton.html)
 		function findIntersection() {
 			const intersections = [];
 			const epsilon = 1e-6;
 			const maxIterations = 100;
+			const step = 0.01;
 
-			for (let t = 0; t <= 1; t += 0.01) {
-				let tLow = t;
-				let tHigh = t + 0.01;
+			for (let t = 0; t <= 1; t += step) {
+				const tLow = t;
+				const tHigh = t + step;
 
-				let lowPoint = getBezierCurvePointAt(tLow, p0, p1, p2, p3);
-				let highPoint = getBezierCurvePointAt(tHigh, p0, p1, p2, p3);
+				const lowPoint = getBezierCurvePointAt(tLow, p0, p1, p2, p3);
+				const highPoint = getBezierCurvePointAt(tHigh, p0, p1, p2, p3);
 
-				let lowDist = getLineLength(lowPoint, circleCenter) - circleRadius;
-				let highDist = getLineLength(highPoint, circleCenter) - circleRadius;
+				const lowDist = getLineLength(lowPoint, circleCenter) - circleRadius;
+				const highDist = getLineLength(highPoint, circleCenter) - circleRadius;
 
 				if (Math.abs(lowDist) < epsilon) {
 					intersections.push(lowPoint);
@@ -2135,23 +2137,34 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 				}
 
 				if (lowDist * highDist < 0) {
-					for (let i = 0; i < maxIterations; i++) {
-						let midT = (tLow + tHigh) / 2;
-						let midPoint = getBezierCurvePointAt(midT, p0, p1, p2, p3);
-						let midDist = getLineLength(midPoint, circleCenter) - circleRadius;
+					let tNew = (tLow + tHigh) / 2;
 
-						if (Math.abs(midDist) < epsilon) {
-							intersections.push(midPoint);
+					for (let i = 0; i < maxIterations; i++) {
+						const point = getBezierCurvePointAt(tNew, p0, p1, p2, p3);
+						const dist = getLineLength(point, circleCenter) - circleRadius;
+
+						if (Math.abs(dist) < epsilon) {
+							intersections.push(point);
 							break;
-						} else if (lowDist * midDist < 0) {
-							tHigh = midT;
-						} else {
-							tLow = midT;
 						}
+
+						const dt = 1e-4;
+						const pointDt = getBezierCurvePointAt(tNew + dt, p0, p1, p2, p3);
+						const distDt = getLineLength(pointDt, circleCenter) - circleRadius;
+						const derivative = (distDt - dist) / dt;
+
+						if (Math.abs(derivative) < epsilon) {
+							break;
+						}
+
+						tNew = tNew - dist / derivative;
+
+						if (tNew < 0 || tNew > 1) {
+							break
+						};
 					}
 				}
 			}
-
 			return intersections;
 		}
 

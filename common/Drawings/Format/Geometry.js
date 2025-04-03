@@ -1692,9 +1692,11 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
 	Geometry.prototype.getContinuousSubpaths = function () {
 		const subpaths = [];
 		this.pathLst.forEach(function (path) {
-			path.getContinuousSubpaths().forEach(function (subpath) {
-				subpaths.push(subpath);
-			});
+            if (path.stroke) {   
+                path.getContinuousSubpaths().forEach(function (subpath) {
+                    subpaths.push(subpath);
+                });
+            }
 		});
 		return subpaths;
 	};
