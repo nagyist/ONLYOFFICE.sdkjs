@@ -1329,15 +1329,21 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
 
     Geometry.prototype.draw = function(shape_drawer)
     {
-		// if (Asc.editor.isPresentationEditor) {
-		// 	const hasInvalidPath = this.pathLst.some(function (path) {
-		// 		return path.ArrPathCommand[0].id !== AscFormat.moveTo;
-		// 	});
+		if (Asc.editor.isPresentationEditor) {
+			const hasInvalidPath = this.pathLst.some(function (path) {
+                if (path instanceof AscFormat.Path) {
+                    return path.ArrPathCommandInfo[0].id !== AscFormat.moveTo;
+                }
+                if (path instanceof AscFormat.Path2) {
+                    return path.getCommandByIndex(0).id !== AscFormat.moveTo;
+                }
+                return false;
+			});
 
-		// 	if (hasInvalidPath) {
-		// 		return;
-		// 	}
-		// }
+			if (hasInvalidPath) {
+				return;
+			}
+		}
 
         if(shape_drawer.Graphics && shape_drawer.Graphics.IsDrawSmart || this.bDrawSmart)
         {
