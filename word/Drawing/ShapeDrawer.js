@@ -2137,7 +2137,7 @@ CShapeDrawer.prototype =
 			const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
 
 			if (this.Ln.headEnd != null) {
-                const arrowLength = 1;
+                const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
 
                 for (let i = 0; i < paths.length; i++) {
                     const path = paths[i];
@@ -2170,7 +2170,7 @@ CShapeDrawer.prototype =
 			}
 
             if (this.Ln.tailEnd != null) {
-                const arrowLength = 1;
+                const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
                 for (let i = 0; i < paths.length; i++) {
                     const path = paths[i];
                     const tailAngle = path.getTailArrowAngle(arrowLength);
