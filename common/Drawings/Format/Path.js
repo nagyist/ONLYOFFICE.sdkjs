@@ -2019,130 +2019,166 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		return subpaths;
 	};
 
-	function getTangentAt(t, p0, p1, p2, p3) {
-		const x = 3 * (1 - t) * (1 - t) * (p1.x - p0.x) + 6 * (1 - t) * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
-		const y = 3 * (1 - t) * (1 - t) * (p1.y - p0.y) + 6 * (1 - t) * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
-		return Math.atan2(y, x);
+	function getClosestIntersectionWithPath(circleCenter, circleRadius, pathCommands) {
+		let prevPoint;
+		const allIntersections = [];
+
+		for (let i = 0; i < pathCommands.length; i++) {
+			const command = pathCommands[i];
+			let intersections = [];
+
+			if (command.id === AscFormat.moveTo) {
+				prevPoint = { x: command.X, y: command.Y };
+				continue;
+			}
+
+			if (command.id === AscFormat.lineTo) {
+				intersections = getCircleIntersectionsWithLine(circleCenter, circleRadius, prevPoint, { x: command.X, y: command.Y });
+				prevPoint = { x: command.X, y: command.Y };
+			}
+
+			if (command.id === AscFormat.bezier4) {
+				intersections = getCircleIntersectionsWithBezierCurve(
+					circleCenter, circleRadius,
+					prevPoint,
+					{ x: command.X0, y: command.Y0 },
+					{ x: command.X1, y: command.Y1 },
+					{ x: command.X2, y: command.Y2 },
+				)
+				prevPoint = { x: command.X2, y: command.Y2 };
+			}
+
+			Array.prototype.push.apply(allIntersections, intersections);
+		}
+
+		if (allIntersections.length === 0) {
+			return null;
+		}
+
+		let closestPoint = allIntersections[0];
+		let minDistance = getLineLength(circleCenter, closestPoint);
+
+		for (let i = 1; i < allIntersections.length; i++) {
+			const distance = getLineLength(circleCenter, allIntersections[i]);
+			if (distance < minDistance) {
+				closestPoint = allIntersections[i];
+				minDistance = distance;
+			}
+		}
+
+		return closestPoint;
 	}
 
-	function getBezierCurveLength(p0, p1, p2, p3) {
-		// stackoverflow.com/questions/29438398/cheap-way-of-calculating-cubic-bezier-length
+	function getCircleIntersectionsWithLine(circleCenter, circleRadius, lineStart, lineEnd) {
+		const cx = circleCenter.x, cy = circleCenter.y;
+		const x1 = lineStart.x, y1 = lineStart.y;
+		const x2 = lineEnd.x, y2 = lineEnd.y;
 
-		const chord = Math.sqrt(Math.pow(p3.x - p0.x, 2) + Math.pow(p3.y - p0.y, 2));
-		const controlNet = Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2)) +
-			Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2)) +
-			Math.sqrt(Math.pow(p3.x - p2.x, 2) + Math.pow(p3.y - p2.y, 2));
+		const dx = x2 - x1;
+		const dy = y2 - y1;
 
-		return (chord + controlNet) / 2;
+		// At² + Bt + C = 0
+		const A = Math.pow(dx, 2) + Math.pow(dy, 2);
+		const B = 2 * (dx * (x1 - cx) + dy * (y1 - cy));
+		const C = (x1 - cx) * (x1 - cx) + (y1 - cy) * (y1 - cy) - Math.pow(circleRadius, 2);
+
+		const D = Math.pow(B, 2) - 4 * A * C;
+		if (D < 0) {
+			return [];
+		}
+
+		const sqrtD = Math.sqrt(D);
+		const t1 = (-B - sqrtD) / (2 * A);
+		const t2 = (-B + sqrtD) / (2 * A);
+
+		const intersections = [];
+
+		// Проверяем, находятся ли точки пересечения в пределах отрезка (t в диапазоне [0,1])
+		if (t1 >= 0 && t1 <= 1) {
+			intersections.push({
+				x: x1 + t1 * dx,
+				y: y1 + t1 * dy
+			});
+		}
+		if (t2 >= 0 && t2 <= 1) {
+			intersections.push({
+				x: x1 + t2 * dx,
+				y: y1 + t2 * dy
+			});
+		}
+
+		return intersections;
+	}
+
+	function getCircleIntersectionsWithBezierCurve(circleCenter, circleRadius, p0, p1, p2, p3) {
+		// Bisection method
+		function findIntersection() {
+			const intersections = [];
+			const epsilon = 1e-6;
+			const maxIterations = 100;
+
+			for (let t = 0; t <= 1; t += 0.01) {
+				let tLow = t;
+				let tHigh = t + 0.01;
+
+				let lowPoint = getBezierCurvePointAt(tLow, p0, p1, p2, p3);
+				let highPoint = getBezierCurvePointAt(tHigh, p0, p1, p2, p3);
+
+				let lowDist = getLineLength(lowPoint, circleCenter) - circleRadius;
+				let highDist = getLineLength(highPoint, circleCenter) - circleRadius;
+
+				if (Math.abs(lowDist) < epsilon) {
+					intersections.push(lowPoint);
+				}
+				if (Math.abs(highDist) < epsilon) {
+					intersections.push(highPoint);
+				}
+
+				if (lowDist * highDist < 0) {
+					for (let i = 0; i < maxIterations; i++) {
+						let midT = (tLow + tHigh) / 2;
+						let midPoint = getBezierCurvePointAt(midT, p0, p1, p2, p3);
+						let midDist = getLineLength(midPoint, circleCenter) - circleRadius;
+
+						if (Math.abs(midDist) < epsilon) {
+							intersections.push(midPoint);
+							break;
+						} else if (lowDist * midDist < 0) {
+							tHigh = midT;
+						} else {
+							tLow = midT;
+						}
+					}
+				}
+			}
+
+			return intersections;
+		}
+
+		return findIntersection();
+	}
+
+	function getBezierCurvePointAt(t, p0, p1, p2, p3) {
+		const x = Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x;
+		const y = Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y;
+		return { x: x, y: y };
 	}
 
 	Path.prototype.getHeadArrowAngle = function (arrowLength) {
-		// This path should contain cubicBezierTo, lineTo, and moveTo commands only
+		// This path should contain cubicBezierTo, lineTo, and moveTo commands only,
+		// describe a continuous curve and start with the "moveTo" command
 
-		const MIN_SEGMENT_LENGTH = 0.001;
+		if (!AscFormat.isRealNumber(arrowLength)) {
+			arrowLength = 0.01;
+		}
 
 		const commands = this.ArrPathCommand;
 		if (commands.length <= 0) {
 			return null;
 		}
 
-		let arrowTipPoint;
-		let arrowTipPointIndex;
-		for (let index = 0; index < commands.length; index++) {
-			const command = commands[index];
-
-			if (command.id === AscFormat.moveTo) {
-				arrowTipPoint = { x: command.X, y: command.Y };
-				arrowTipPointIndex = index;
-				continue;
-			}
-
-			if (command.id === AscFormat.lineTo) {
-				if (!arrowTipPoint) {
-					arrowTipPoint = { x: command.X, y: command.Y };
-					arrowTipPointIndex = index;
-					continue;
-				}
-
-				const lineLength = Math.sqrt(
-					Math.pow(command.X - arrowTipPoint.x, 2) + Math.pow(command.Y - arrowTipPoint.y, 2)
-				);
-				if (lineLength < MIN_SEGMENT_LENGTH) {
-					arrowTipPoint = { x: command.X, y: command.Y };
-					arrowTipPointIndex = index;
-					continue;
-				}
-
-				break;
-			}
-
-			if (command.id === AscFormat.bezier4) {
-				if (!arrowTipPoint) {
-					continue;
-				}
-
-				const curveLength = getBezierCurveLength(
-					{ x: arrowTipPoint.x, y: arrowTipPoint.y },
-					{ x: command.X0, y: command.Y0 },
-					{ x: command.X1, y: command.Y1 },
-					{ x: command.X2, y: command.Y2 }
-				);
-				if (curveLength < MIN_SEGMENT_LENGTH) {
-					arrowTipPoint = { x: command.X2, y: command.Y2 };
-					arrowTipPointIndex = index;
-					continue;
-				}
-
-				break;
-			}
-		}
-		
-		if (!arrowTipPoint) {
-			return null;
-		}
-
-		let arrowBasePoint;
-		for (let index = arrowTipPointIndex + 1; index < commands.length; index++) {
-			const command = commands[index];
-
-			if (command.id === AscFormat.moveTo) {
-				// Такого случаться не должно, так как при поиске arrowTipPoint эта moveTo должна была обработаться
-				break;
-			}
-
-			if (command.id === AscFormat.lineTo) {
-				arrowBasePoint = { x: command.X, y: command.Y };
-				break;
-			}
-
-			if (command.id === AscFormat.bezier4) {
-				const numberOfPoints = 3;
-				const step = 0.05;
-
-				const tangentAngle = getAverageTangentAngle(
-					numberOfPoints, step,
-					{ x: arrowTipPoint.x, y: arrowTipPoint.y },
-					{ x: command.X0, y: command.Y0 },
-					{ x: command.X1, y: command.Y1 },
-					{ x: command.X2, y: command.Y2 }
-				);
-
-				function getAverageTangentAngle(numberOfPoints, step, p0, p1, p2, p3) {
-					let tangentAngle = 0;
-					for (let i = 0; i < numberOfPoints; i++) {
-						tangentAngle += getTangentAt(i * step, p0, p1, p2, p3);
-					}
-					return tangentAngle / numberOfPoints;
-				}
-
-				arrowBasePoint = {
-					x: arrowTipPoint.x + Math.cos(tangentAngle),
-					y: arrowTipPoint.y + Math.sin(tangentAngle)
-				};
-			
-				break;
-			}
-		}
+		const arrowTipPoint = { x: commands[0].X, y: commands[0].Y };
+		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands);
 
 		if (!arrowBasePoint) {
 			return null;
@@ -2151,17 +2187,51 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		const diffX = arrowTipPoint.x - arrowBasePoint.x;
 		const diffY = arrowTipPoint.y - arrowBasePoint.y;
 
-		const pointsDiff = Math.sqrt(Math.pow(diffX, 2) + Math.pow(diffY, 2));
-		if (AscFormat.isRealNumber(arrowLength) && arrowLength > pointsDiff) {
-			return null;
-		}
-
 		const angleInRadians = Math.atan2(diffY, diffX);
 		const angleInDegrees = angleInRadians * 180 / Math.PI;
 		return angleInDegrees;
 	};
 	Path.prototype.getTailArrowAngle = function (arrowLength) {
-		return 270;
+		// This path should contain cubicBezierTo, lineTo, and moveTo commands only,
+		// describe a continuous curve and start with the "moveTo" command
+
+		if (!AscFormat.isRealNumber(arrowLength)) {
+			arrowLength = 0.01;
+		}
+
+		const commands = this.ArrPathCommand;
+		if (commands.length <= 0) {
+			return null;
+		}
+
+		function getPathEndPoint(commands) {
+			for (let i = commands.length - 1; i >= 0; i--) {
+				const command = commands[i];
+				if (command.id === AscFormat.lineTo) {
+					return { x: command.X, y: command.Y };
+				}
+				if (command.id === AscFormat.bezier4) {
+					return { x: command.X2, y: command.Y2 };
+				}
+			}
+			return null;
+		}
+
+		const pathEndPoint = getPathEndPoint(commands);
+
+		const arrowTipPoint = { x: pathEndPoint.x, y: pathEndPoint.y };
+		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands);
+
+		if (!arrowBasePoint) {
+			return null;
+		}
+
+		const diffX = arrowTipPoint.x - arrowBasePoint.x;
+		const diffY = arrowTipPoint.y - arrowBasePoint.y;
+
+		const angleInRadians = Math.atan2(diffY, diffX);
+		const angleInDegrees = angleInRadians * 180 / Math.PI;
+		return angleInDegrees;
 	};
 
 
