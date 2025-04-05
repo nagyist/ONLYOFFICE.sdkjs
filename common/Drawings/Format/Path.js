@@ -2019,7 +2019,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		return subpaths;
 	};
 
-	function getClosestIntersectionWithPath(circleCenter, circleRadius, pathCommands) {
+	function getClosestIntersectionWithPath(circleCenter, circleRadius, pathCommands, searchFromEnd) {
 		let prevPoint;
 		const allIntersections = [];
 
@@ -2044,27 +2044,29 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 					{ x: command.X0, y: command.Y0 },
 					{ x: command.X1, y: command.Y1 },
 					{ x: command.X2, y: command.Y2 },
-				)
+				);
 				prevPoint = { x: command.X2, y: command.Y2 };
 			}
 
-			Array.prototype.push.apply(allIntersections, intersections);
+			if (intersections.length > 0) {
+				allIntersections.push(intersections);
+			}
 		}
 
 		if (allIntersections.length === 0) {
 			return null;
 		}
 
-		let closestPoint = allIntersections[0];
-		let minDistance = getLineLength(circleCenter, closestPoint);
+		const targetIntersections = searchFromEnd
+			? allIntersections[allIntersections.length - 1]
+			: allIntersections[0];
 
-		for (let i = 1; i < allIntersections.length; i++) {
-			const distance = getLineLength(circleCenter, allIntersections[i]);
-			if (distance < minDistance) {
-				closestPoint = allIntersections[i];
-				minDistance = distance;
-			}
-		}
+		const closestPoint = targetIntersections.reduce(function (best, current) {
+			const isCurrentBetter = searchFromEnd
+				? current.t > best.t
+				: current.t < best.t;
+			return isCurrentBetter ? current : best;
+		}, targetIntersections[0]);
 
 		return closestPoint;
 	}
@@ -2096,12 +2098,14 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		// Проверяем, находятся ли точки пересечения в пределах отрезка (t в диапазоне [0,1])
 		if (t1 >= 0 && t1 <= 1) {
 			intersections.push({
+				t: (t1 + t2) / 2,
 				x: x1 + t1 * dx,
 				y: y1 + t1 * dy
 			});
 		}
 		if (t2 >= 0 && t2 <= 1) {
 			intersections.push({
+				t: (t1 + t2) / 2,
 				x: x1 + t2 * dx,
 				y: y1 + t2 * dy
 			});
@@ -2160,7 +2164,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 						tNew = tNew - dist / derivative;
 
 						if (tNew < 0 || tNew > 1) {
-							break
+							break;
 						};
 					}
 				}
@@ -2174,7 +2178,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 	function getBezierCurvePointAt(t, p0, p1, p2, p3) {
 		const x = Math.pow(1 - t, 3) * p0.x + 3 * Math.pow(1 - t, 2) * t * p1.x + 3 * (1 - t) * Math.pow(t, 2) * p2.x + Math.pow(t, 3) * p3.x;
 		const y = Math.pow(1 - t, 3) * p0.y + 3 * Math.pow(1 - t, 2) * t * p1.y + 3 * (1 - t) * Math.pow(t, 2) * p2.y + Math.pow(t, 3) * p3.y;
-		return { x: x, y: y };
+		return { x: x, y: y, t: t };
 	}
 
 	Path.prototype.getHeadArrowAngle = function (arrowLength) {
@@ -2191,7 +2195,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		}
 
 		const arrowTipPoint = { x: commands[0].X, y: commands[0].Y };
-		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands);
+		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands, false);
 
 		if (!arrowBasePoint) {
 			return null;
@@ -2233,7 +2237,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 		const pathEndPoint = getPathEndPoint(commands);
 
 		const arrowTipPoint = { x: pathEndPoint.x, y: pathEndPoint.y };
-		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands);
+		const arrowBasePoint = getClosestIntersectionWithPath(arrowTipPoint, arrowLength, commands, true);
 
 		if (!arrowBasePoint) {
 			return null;

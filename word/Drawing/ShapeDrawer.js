@@ -2146,6 +2146,7 @@ CShapeDrawer.prototype =
 					if (AscFormat.isRealNumber(headAngle)) {
 						// Each continuous subpath starts with a moveTo command
 						// so we can use the first point of the path as the arrow tip point
+
 						const arrowEndPoint = {
 							x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
 							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
