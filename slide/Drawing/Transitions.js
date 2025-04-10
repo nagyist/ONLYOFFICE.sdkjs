@@ -3009,9 +3009,10 @@ function CDemonstrationManager(htmlpage)
 
         this.HtmlPage.m_oApi.sync_DemonstrationSlideChanged(this.SlideNum);
 
-		this.Canvas.onmousedown  = this.onMouseDown;
-		this.Canvas.onmousemove  = this.onMouseMove;
-        this.Canvas.onmouseup    = this.onMouseUp;
+
+        AscCommon.addMouseEvent(this.Canvas, "down", this.onMouseDown);
+        AscCommon.addMouseEvent(this.Canvas, "move", this.onMouseMove);
+        AscCommon.addMouseEvent(this.Canvas, "up", this.onMouseUp);
 		this.Canvas.onmouseleave = this.onMouseLeave;
 
         this.wrapKeyboard();
@@ -3057,8 +3058,9 @@ function CDemonstrationManager(htmlpage)
 
                 //oThis.DemonstrationDivEndPresentation.onmousedown  = oThis.onMouseDownDemonstration;
                 //oThis.DemonstrationDivEndPresentation.onmousemove  = oThis.onMouseMoveDemonstration;
-				oThis.DivEndPresentation.onmousedown  = oThis.onMouseDown;
-                oThis.DivEndPresentation.onmouseup    = oThis.onMouseUp;
+
+                AscCommon.addMouseEvent(this.DivEndPresentation, "down", oThis.onMouseDown);
+                AscCommon.addMouseEvent(this.DivEndPresentation, "up", oThis.onMouseUp);
 
                 oThis.DivEndPresentation.onmousewheel = oThis.onMouseWhell;
                 if (oThis.DivEndPresentation.addEventListener)
@@ -3244,9 +3246,11 @@ function CDemonstrationManager(htmlpage)
             oThis.Overlay.width = oThis.Canvas.width;
             oThis.Overlay.height = oThis.Canvas.height;
 
-            oThis.Overlay.onmousedown  = oThis.onMouseDown;
-            oThis.Overlay.onmousemove  = oThis.onMouseMove;
-            oThis.Overlay.onmouseup    = oThis.onMouseUp;
+
+
+            AscCommon.addMouseEvent(oThis.Overlay, "down", oThis.onMouseDown);
+            AscCommon.addMouseEvent(oThis.Overlay, "move", oThis.onMouseMove);
+            AscCommon.addMouseEvent(oThis.Overlay, "up", oThis.onMouseUp);
 			oThis.Overlay.onmouseleave = oThis.onMouseLeave;
 
             oThis.Overlay.onmousewheel = oThis.onMouseWhell;
@@ -4100,7 +4104,8 @@ function CDemonstrationManager(htmlpage)
 
         AscCommon.global_mouseEvent.UnLockMouse();
 
-		oThis.isMouseDown = false;
+				const isMouseDown = oThis.isMouseDown;
+				oThis.isMouseDown = false;
 		if (isFromMainToReporter && oThis.PointerDiv && oThis.HtmlPage.m_oApi.isReporterMode)
 		    oThis.PointerRemove();
 
@@ -4133,29 +4138,30 @@ function CDemonstrationManager(htmlpage)
 
         // next slide
         oThis.CorrectSlideNum();
+			if (isMouseDown) {
+				var _is_transition = oThis.Transition.IsPlaying();
+				if (_is_transition)
+				{
+					oThis.OnNextSlide();
+				}
+				else
+				{
+					if (oThis.SlideNum < 0 || oThis.SlideNum >= oThis.GetSlidesCount())
+					{
+						oThis.OnNextSlide();
+					}
+					else
+					{
+						var _slides = oThis.HtmlPage.m_oLogicDocument.Slides;
+						var _transition = _slides[oThis.SlideNum].transition;
 
-        var _is_transition = oThis.Transition.IsPlaying();
-        if (_is_transition)
-        {
-            oThis.OnNextSlide();
-        }
-        else
-        {
-            if (oThis.SlideNum < 0 || oThis.SlideNum >= oThis.GetSlidesCount())
-            {
-                oThis.OnNextSlide();
-            }
-            else
-            {
-                var _slides = oThis.HtmlPage.m_oLogicDocument.Slides;
-                var _transition = _slides[oThis.SlideNum].transition;
-
-                if (_transition.SlideAdvanceOnMouseClick === true)
-                {
-                    oThis.OnNextSlide();
-                }
-            }
-        }
+						if (_transition.SlideAdvanceOnMouseClick === true)
+						{
+							oThis.OnNextSlide();
+						}
+					}
+				}
+			}
 
 		AscCommon.stopEvent(e);
         return false;

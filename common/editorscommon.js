@@ -796,6 +796,8 @@
 					return AscCommon.c_oEditorId.Spreadsheet;
 				case "PPTY":
 					return AscCommon.c_oEditorId.Presentation;
+				case "VSDY":
+					return AscCommon.c_oEditorId.Visio;
 			}
 		}
 		return null;
@@ -1470,6 +1472,7 @@
 		"uf": "#UNSUPPORTED_FUNCTION!",
 		"calc": "#CALC!",
 		"spill": "#SPILL!",
+		"busy": "#BUSY!",
 	};
 	var cErrorLocal = {};
 	let cCellFunctionLocal = {};
@@ -1529,7 +1532,7 @@
 		let argsSeparator = FormulaSeparators.functionArgumentSeparator;
 		return XRegExp.build('^(?<tableName>{{tableName}})\\[(?<columnName1>{{columnName}})?\\]', {
 			"tableName":  new XRegExp("^(:?[" + str_namedRanges + "][" + str_namedRanges + "\\d.]*)"),
-			"columnName": XRegExp.build('(?<hdtcc>{{hdtcc}})|(?<reservedColumn>{{reservedColumn}}|{{thisRow}})|(?<oneColumn>{{userColumn}})|(?<columnRange>{{userColumnRange}})', {
+			"columnName": XRegExp.build('(?<hdtcc>{{hdtcc}})|(?<reservedColumn>{{reservedColumn}}|{{thisRow}})|(?<columnRange>{{userColumnRange}})|(?<oneColumn>{{userColumn}})', {
 				"userColumn":      structured_tables_userColumn,
 				"reservedColumn":  structured_tables_reservedColumn,
 				"thisRow": structured_tables_thisRow,
@@ -1577,7 +1580,8 @@
 			"getdata": "#GETTING_DATA",
 			"uf":      "#UNSUPPORTED_FUNCTION!",
 			"calc":    "#CALC!",
-			"spill":   "#SPILL!"
+			"spill":   "#SPILL!",
+			"busy":    "#BUSY!"
 		};
 		cErrorLocal['nil'] = local['nil'];
 		cErrorLocal['div'] = local['div'];
@@ -1590,6 +1594,7 @@
 		cErrorLocal['uf'] = local['uf'];
 		cErrorLocal['calc'] = local['calc'];
 		cErrorLocal['spill'] = local['spill'];
+		cErrorLocal['busy'] = local['busy'];
 
 		return new RegExp("^(" + cErrorLocal["nil"] + "|" +
 			cErrorLocal["div"] + "|" +
@@ -1601,7 +1606,8 @@
 			cErrorLocal["getdata"] + "|" +
 			cErrorLocal["uf"] + "|" +
 			cErrorLocal["calc"] + "|" +
-			cErrorLocal["spill"] + ")", "i")
+			cErrorLocal["spill"] + "|" +
+			cErrorLocal["busy"] + ")", "i")
 	}
 
 	function build_rx_cell_func(local)
@@ -2122,6 +2128,8 @@
 				return c_oAscFileType.XLSY;
 			case 'pptt':
 				return c_oAscFileType.PPTY;
+			case 'vsdt':
+				return c_oAscFileType.VSDY;
 		}
 		return c_oAscFileType.UNKNOWN;
 	}
@@ -3491,8 +3499,8 @@
 			//также ссылки типа [] + ! + Defname должны обрабатываться аналогично как [] + SheetName + ! + Defname
 			external = parseExternalLink(subSTR);
 			if (external) {
-				if (external.name && (external.name.indexOf("[") !== -1 || external.name.indexOf(":") !== -1)) {
-					// if the name contains '[' and ':' , then we return an error
+				if (external.name && (external.name.indexOf("[") !== -1)) {
+					// if the link/path to the file inside brackets contains '[' then we return an error
 					return [false, null, null, external, externalLength];
 				}
 
@@ -4499,6 +4507,8 @@
 		this.m_nOFormLoadCounter = 0;
 		this.m_nOFormEditCounter = 0;
 		
+		this.m_nPdfNewFormCounter = 0;
+
 		this.m_nTurnOffCounter = 0;
 	}
 
@@ -4535,6 +4545,8 @@
 
 		this.m_nOFormLoadCounter = 0;
 		this.m_nOFormEditCounter = 0;
+
+		this.m_nPdfNewFormCounter = 0;
 	};
 	CIdCounter.prototype.GetNewIdForOForm = function()
 	{
@@ -4542,6 +4554,10 @@
 			return ("_oform_" + (++this.m_nOFormLoadCounter));
 		else
 			return ("" + this.m_sUserId + "_oform_" + (++this.m_nOFormEditCounter));
+	};
+	CIdCounter.prototype.GetNewIdForPdfForm = function()
+	{
+		return ++this.m_nPdfNewFormCounter;
 	};
 
 	function CLock()
@@ -15153,6 +15169,7 @@
 	window["AscCommon"].trimMinMaxValue = trimMinMaxValue;
 	window["AscCommon"].cStrucTableReservedWords = cStrucTableReservedWords;
 	window["AscCommon"].getArrayRandomElement = getArrayRandomElement;
+	window["AscCommon"].rx_error = rx_error;
 })(window);
 
 window["asc_initAdvancedOptions"] = function(_code, _file_hash, _docInfo, csv_data)

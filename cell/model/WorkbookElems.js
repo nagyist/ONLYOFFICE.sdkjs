@@ -1,4 +1,4 @@
-﻿/*
+/*
  * (c) Copyright Ascensio System SIA 2010-2024
  *
  * This program is a free software product. You can redistribute it and/or
@@ -4590,6 +4590,14 @@ var g_oFontProperties = {
 	CellXfs.prototype.isNormalFill = function () {
 		return g_StyleCache.firstXf === this || g_StyleCache.normalXf.fill === this.fill;
 	};
+	/**
+	 * Checks if number format is affecting text display
+	 * @returns {boolean} Returns true if number format affects text display
+	 */
+	CellXfs.prototype.isAffectingText = function () {
+		//todo check isGeneralFormat
+		return !!(this.num && AscCommon.g_cGeneralFormat !== this.num.f);
+	};
     CellXfs.prototype.merge = function (xfs, isTable, isTableBorders) {
         var xfIndexNumber = xfs.getIndexNumber();
         if (undefined === xfIndexNumber) {
@@ -5867,7 +5875,7 @@ StyleManager.prototype =
 			}
 		}
 	};
-	SheetMergedStyles.prototype.getStyle = function(hiddenManager, row, col, opt_ws) {
+	SheetMergedStyles.prototype.getStyle = function(hiddenManager, row, col, opt_ws, opt_AffectingText) {
 		var res = {table: [], conditional: []};
 		if (opt_ws) {
 			opt_ws._updateConditionalFormatting();
@@ -5885,6 +5893,12 @@ StyleManager.prototype =
 			return v2.rule.priority - v1.rule.priority;
 		});
 		for (var i = 0; i < rules.length; ++i) {
+			if (opt_AffectingText) {
+				let rule = rules[i].rule;
+				if (!(rule && rule.dxf && rule.dxf.isAffectingText())) {
+					continue;
+				}
+			}
 			var xf = rules[i].formula(row, col);
 			if (xf) {
 				res.conditional.push(xf);
@@ -5894,6 +5908,9 @@ StyleManager.prototype =
 			var style = this.stylesTablePivot[i];
 			var borderIndex;
 			var xf = style.xf;
+			if (opt_AffectingText && !(xf && xf.isAffectingText())) {
+				continue;
+			}
 			if (style.range.contains(col, row) && (borderIndex = this._getBorderIndex(hiddenManager, style.range, style.stripe, row, col, xf)) >= 0) {
 				if (borderIndex > 0) {
 					if (!style.borders) {
@@ -6146,7 +6163,7 @@ StyleManager.prototype =
 	};
 	Hyperlink.prototype.getProperty = function (nType) {
 		switch (nType) {
-			case this.Properties.Ref: return parserHelp.get3DRef(this.Ref.worksheet.getName(), this.Ref.getName());
+			case this.Properties.Ref: return this.Ref && parserHelp.get3DRef(this.Ref.worksheet.getName(), this.Ref.getName()) || null;
 			case this.Properties.Location: return this.getLocation();
 			case this.Properties.Hyperlink: return this.Hyperlink;
 			case this.Properties.Tooltip: return this.Tooltip;
@@ -13324,10 +13341,10 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	asc_CPageSetup.prototype.asc_setScale = function (newVal) {
+	asc_CPageSetup.prototype.asc_setScale = function (newVal, isNotHistory) {
 		var oldVal = this.scale;
 		this.scale = newVal;
-		if (this.ws && AscCommon.History.Is_On() && oldVal !== this.scale) {
+		if (!isNotHistory && this.ws && AscCommon.History.Is_On() && oldVal !== this.scale) {
 			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoLayout, AscCH.historyitem_Layout_Scale, this.ws.getId(),
 				null, new UndoRedoData_Layout(oldVal, newVal));
 		}
@@ -16077,7 +16094,7 @@ function RangeDataManagerElem(bbox, data)
 				});
 			}
 
-			let newVal = noData ? "#REF" : cell.getValue();
+			let newVal = noData ? "#REF!" : cell.getValue();
 			if (this.CellValue !== newVal) {
 				isChanged = true;
 				this.CellValue = newVal;
@@ -18166,6 +18183,8 @@ function RangeDataManagerElem(bbox, data)
 		this.activeLocale = null;
 
 		this.needRecalculate = null;
+
+		this.promises = null;
 	}
 	CCustomFunctionEngine.prototype.add = function (func, options) {
 		//options ->
@@ -18564,6 +18583,10 @@ function RangeDataManagerElem(bbox, data)
 					res = new AscCommonExcel.cError(AscCommonExcel.cErrorType.wrong_value_type);
 				} else {
 					res = _elem.tocNumber();
+					if (res && res.type === AscCommonExcel.cElementType.error) {
+						return res;
+					}
+
 					if (res.type !== AscCommonExcel.cElementType.error) {
 						res = res.toNumber();
 					} else {
@@ -18577,6 +18600,9 @@ function RangeDataManagerElem(bbox, data)
 					res = new AscCommonExcel.cError(AscCommonExcel.cErrorType.wrong_value_type);
 				} else {
 					res = _elem.tocString();
+					if (res && res.type === AscCommonExcel.cElementType.error) {
+						return res;
+					}
 					if (res.type !== AscCommonExcel.cElementType.error) {
 						res = res.toString();
 					} else {
@@ -18590,6 +18616,10 @@ function RangeDataManagerElem(bbox, data)
 					res = new AscCommonExcel.cError(AscCommonExcel.cErrorType.wrong_value_type);
 				} else {
 					res = _elem.tocBool();
+					if (res && res.type === AscCommonExcel.cElementType.error) {
+						return res;
+					}
+
 					if (res.type !== AscCommonExcel.cElementType.error && res.toBool) {
 						res = res.toBool();
 					} else {
@@ -18605,6 +18635,10 @@ function RangeDataManagerElem(bbox, data)
 					if (_elem.type === AscCommonExcel.cElementType.cell || _elem.type === AscCommonExcel.cElementType.cell3D) {
 						_elem = _elem.getValue();
 					}
+					if (_elem && _elem.type === AscCommonExcel.cElementType.error) {
+						return _elem;
+					}
+
 					res = _elem.getValue();
 				}
 				break;
@@ -18681,6 +18715,18 @@ function RangeDataManagerElem(bbox, data)
 
 	CCustomFunctionEngine.prototype.prepareResult = function (val, _type) {
 		let res = null;
+		//detect promise
+		let t = this;
+		if (val && val.then) {
+			if (!this.promises) {
+				this.promises = [];
+			}
+			let oPromise = {promise: val, callback: function (_val) {
+				return t.prepareResult(_val, _type);
+			}}
+			this.promises.push(oPromise);
+			return oPromise;
+		}
 		switch (_type) {
 			case "number":
 				if (typeof val === "object") {

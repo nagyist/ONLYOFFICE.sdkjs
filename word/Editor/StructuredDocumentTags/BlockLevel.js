@@ -192,18 +192,20 @@ CBlockLevelSdt.prototype.Write_ToBinary2 = function(Writer)
 };
 CBlockLevelSdt.prototype.Read_FromBinary2 = function(Reader)
 {
-	this.LogicDocument = editor.WordControl.m_oLogicDocument;
-
 	// String : Id
 	// String : Content id
-	this.Id          = Reader.GetString2();
-	this.Content     = this.LogicDocument.Get_TableId().Get_ById(Reader.GetString2());
+	this.Id      = Reader.GetString2();
+	this.Content = AscCommon.g_oTableId.Get_ById(Reader.GetString2());
+	
+	this.Content.SetParent(this);
 };
 CBlockLevelSdt.prototype.Draw = function(CurPage, oGraphics)
 {
+	let logicDocument = this.GetLogicDocument();
+	
 	let shdColor = this.getShdColor();
-	if (!shdColor && (this.LogicDocument.GetSdtGlobalShowHighlight() && !oGraphics.isPdf()))
-		shdColor = AscWord.CDocumentColorA.fromObjectRgb(this.LogicDocument.GetSdtGlobalColor());
+	if (logicDocument && !shdColor && (logicDocument.GetSdtGlobalShowHighlight() && !oGraphics.isPdf()))
+		shdColor = AscWord.CDocumentColorA.fromObjectRgb(logicDocument.GetSdtGlobalColor());
 	
 	if (shdColor)
 	{
@@ -1504,6 +1506,12 @@ CBlockLevelSdt.prototype.SetPr = function(oPr)
 
 	if (undefined !== oPr.DataBinding)
 		this.setDataBinding(oPr.DataBinding);
+	
+	if (oPr.BorderColor)
+		this.setBorderColor(oPr.BorderColor.Copy());
+	
+	if (oPr.ShdColor)
+		this.setShdColor(oPr.ShdColor.Copy());
 };
 /**
  * Выставляем настройки текста по умолчанию для данного контрола

@@ -3352,6 +3352,9 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 	var nCombWidth  = null;
 	var oTextForm   = this.GetTextForm();
 	let oTextFormPDF = this.GetFormPDF();
+	if (oTextFormPDF && oTextFormPDF.GetType() !== AscPDF.FIELD_TYPES.text)
+		oTextFormPDF = null;
+	
 	let isKeepWidth = false;
 	if (oTextForm && oTextForm.IsComb())
 	{
@@ -3389,10 +3392,10 @@ ParaRun.prototype.Recalculate_MeasureContent = function()
 
 	}
 	// for pdf text forms
-	else if (oTextFormPDF && oTextFormPDF._comb == true)
+	else if (oTextFormPDF && oTextFormPDF.IsComb() == true)
 	{
 		isKeepWidth = true;
-		nMaxComb = oTextFormPDF._charLimit;
+		nMaxComb = oTextFormPDF.GetCharLimit();
 		nCombWidth = oTextFormPDF.getFormRelRect().W / nMaxComb;
 	}
 
@@ -4514,7 +4517,7 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
                     WordLen = 0;
 
                     var TabPos   = Para.private_RecalculateGetTabPos(PRS, X, ParaPr, PRS.Page, false);
-                    var NewX     = TabPos.NewX;
+                    var NewX     = X + TabPos.TabWidth;
                     var TabValue = TabPos.TabValue;
 
                     Item.SetLeader(TabPos.TabLeader, this.Get_CompiledPr(false));
@@ -4535,8 +4538,11 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 
 						// В Word2013 и раньше, если не левый таб заканчивается правее правой границы, тогда у параграфа
 						// правая граница имеет максимально возможное значение (55см)
-						if (AscCommon.MMToTwips(TabPos.NewX) > AscCommon.MMToTwips(XEnd) && nCompatibilityMode <= AscCommon.document_compatibility_mode_Word14)
+						if (AscCommon.MMToTwips(NewX) > AscCommon.MMToTwips(XEnd) && nCompatibilityMode <= AscCommon.document_compatibility_mode_Word14)
 						{
+							// TODO: Временно сделаем так. По-хорошему надо помечать промежуток, что в нем не учитывается границы при расчете переносов,
+							//  а XEnd не менять
+							Para.Lines[PRS.Line].Ranges[PRS.Range].XEndOrigin = Para.Lines[PRS.Line].Ranges[PRS.Range].XEnd;
 							Para.Lines[PRS.Line].Ranges[PRS.Range].XEnd = 558.7;
 							XEnd                                        = 558.7;
 							PRS.XEnd                                    = XEnd;
@@ -5621,7 +5627,19 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                     // У нас Flow-объект. Если он с обтеканием, тогда мы останавливаем пересчет и
                     // запоминаем текущий объект. В функции Internal_Recalculate_2 пересчитываем
                     // его позицию и сообщаем ее внешнему классу.
-
+					
+					// Не учитываем обтекание, если у нас на странице больше 100 объектов с обтеканием (баг 73462)
+					if (isUseWrap
+						&& DrawingObjects && DrawingObjects.graphicPages
+						&& DrawingObjects.graphicPages[PageAbs]
+						&& DrawingObjects.graphicPages[PageAbs].beforeTextObjects.length >= 100)
+					{
+						isUseWrap = false;
+						let LDRecalcInfo  = Para.Parent.RecalcInfo;
+						if (LDRecalcInfo.FlowObject)
+							LDRecalcInfo.Reset();
+					}
+					
                     if (isUseWrap)
                     {
                         var LogicDocument = Para.Parent;
@@ -5631,7 +5649,9 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
 							// Обновляем позицию объекта
 							Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[_CurLine].Y - Para.Lines[_CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
 							
-							if (PRSA.getCompatibilityMode() >= AscCommon.document_compatibility_mode_Word15
+							// For headers we do not check for exceeding lower bound in this case
+							if (!isInHdrFtr
+								&& PRSA.getCompatibilityMode() >= AscCommon.document_compatibility_mode_Word15
 								&& 0 === CurPage
 								&& Item.Get_Bounds().Bottom >= Y_Bottom_Field
 								&& Item.IsMoveWithTextVertically())
@@ -5749,7 +5769,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
             case para_End:
             {
 				Item.CheckMark(PRSA.Paragraph, PRSA.XEnd - PRSA.X);
-                PRSA.X += Item.GetWidth();
+                PRSA.X += Item.GetWidthVisible();
 
                 break;
             }
@@ -9630,27 +9650,26 @@ function CParaRunLine()
     this.Ranges[0]    = new CParaRunRange( 0, 0 );
     this.RangesLength = 0;
 }
+CParaRunLine.prototype.addRange = function(RangeIndex, StartPos, EndPos)
+{
+	if (0 !== RangeIndex)
+	{
+		this.Ranges[RangeIndex] = new CParaRunRange(StartPos, EndPos);
+		this.RangesLength       = RangeIndex + 1;
+	}
+	else
+	{
+		this.Ranges[0].StartPos = StartPos;
+		this.Ranges[0].EndPos   = EndPos;
+		this.RangesLength       = 1;
+	}
+	
+	if (this.Ranges.length > this.RangesLength)
+		this.Ranges.legth = this.RangesLength;
+};
 
 CParaRunLine.prototype =
 {
-    Add_Range : function(RangeIndex, StartPos, EndPos)
-    {
-        if ( 0 !== RangeIndex )
-        {
-            this.Ranges[RangeIndex] = new CParaRunRange( StartPos, EndPos );
-            this.RangesLength  = RangeIndex + 1;
-        }
-        else
-        {
-            this.Ranges[0].StartPos = StartPos;
-            this.Ranges[0].EndPos   = EndPos;
-            this.RangesLength = 1;
-        }
-
-        if ( this.Ranges.length > this.RangesLength )
-            this.Ranges.legth = this.RangesLength;
-    },
-
     Copy : function()
     {
         var NewLine = new CParaRunLine();

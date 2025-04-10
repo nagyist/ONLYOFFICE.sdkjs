@@ -899,8 +899,6 @@
 		this.CollaborativeMarksShowType = c_oAscCollaborativeMarksShowType.All;
 		
 		this.stylePainter = null;
-		
-		this.forceSaveDisconnectRequest = false;
 
 		// объекты, нужные для отправки в тулбар (шрифты, стили)
 		this._gui_control_colors = null;
@@ -1897,10 +1895,20 @@ background-repeat: no-repeat;\
 		};
 		this.CoAuthoringApi.onChangesIndex = function(changesIndex)
 		{
-			if (t.isLiveViewer() && changesIndex >= 0 && changesIndex < AscCommon.CollaborativeEditing.GetAllChangesCount()) {
-				let count = AscCommon.CollaborativeEditing.GetAllChangesCount() - changesIndex;
-				AscCommon.CollaborativeEditing.UndoGlobal(count);
+			let count = AscCommon.CollaborativeEditing.GetAllChangesCount() - changesIndex;
+			if (count < 0)
+			{
+				// This should never happen
+				return;
 			}
+			
+			if (!t.isViewMode && count > 0)
+			{
+				// TODO: This shouldn't happen too with the current behaviour, but it actually can be handled
+				return;
+			}
+			
+			AscCommon.CollaborativeEditing.UndoGlobal(count);
 		};
 		this.CoAuthoringApi.onRecalcLocks            = function(e)
 		{
@@ -2262,7 +2270,7 @@ background-repeat: no-repeat;\
 		}
 
 		this.sync_ParaSpacingLine(ParaPr.Spacing);
-		this.Update_ParaInd(ParaPr.Ind);
+		this.Update_ParaInd(ParaPr.Ind, ParaPr.Bidi);
 		this.sync_PrAlignCallBack(ParaPr.Jc);
 		
 		let bidi = ParaPr.Bidi;
@@ -2270,6 +2278,15 @@ background-repeat: no-repeat;\
 		{
 			let paragraph = logicDocument.GetCurrentParagraph(false, false, {FirstInSelection : true});
 			bidi = paragraph ? paragraph.GetParagraphBidi() : undefined;
+			
+			ParaPr.Jc = undefined;
+		}
+		else if (bidi)
+		{
+			if (AscCommon.align_Left === ParaPr.Jc)
+				ParaPr.Jc = AscCommon.align_Right;
+			else if (AscCommon.align_Right === ParaPr.Jc)
+				ParaPr.Jc = AscCommon.align_Left;
 		}
 		
 		this.sendEvent("asc_onTextDirection", bidi);
@@ -2714,18 +2731,26 @@ background-repeat: no-repeat;\
 			sendChanges();
 			this._sendForm();
 		}
+		else if (this.forceSaveOformRequest)
+		{
+			this.forceSaveOformRequest = false;
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+			sendChanges();
+			this.sendEvent("asc_onCompletePreparingOForm");
+		}
 		else
 		{
 			sendChanges();
-			
-			if (this.forceSaveDisconnectRequest)
-			{
-				this.forceSaveDisconnectRequest = false;
-				AscCommon.CollaborativeEditing.Set_GlobalLock(false);
-				this.setViewModeDisconnect(true);
-				this.asc_coAuthoringDisconnect();
-				this.sendEvent("asc_onDisconnectEveryone");
-			}
+		}
+		
+		// Этот флаг может быть включен дополнительно к любому другому
+		if (this.forceSaveDisconnectRequest)
+		{
+			this.forceSaveDisconnectRequest = false;
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+			this.setViewModeDisconnect(true);
+			this.asc_coAuthoringDisconnect();
+			this.sendEvent("asc_onDisconnectEveryone");
 		}
 	};
 	asc_docs_api.prototype._autoSaveInner = function () {
@@ -2906,7 +2931,7 @@ background-repeat: no-repeat;\
 					"format"        : this.documentFormat,
 					"c"             : "reopen",
 					"title"         : this.documentTitle,
-					"codepage"      : option.asc_getCodePage(),
+					"codepage"      : option.asc_getCodePageOrDefault(),
 					"nobase64"      : true
 				};
 				sendCommand(this, null, rData);
@@ -5365,45 +5390,12 @@ background-repeat: no-repeat;\
 			}
 		}
 	};
-	asc_docs_api.prototype.Update_ParaInd                = function(Ind)
+	asc_docs_api.prototype.Update_ParaInd                = function(paraInd, isRtl)
 	{
-		var FirstLine = 0,
-			Left      = 0,
-			Right     = 0;
-		if ("undefined" != typeof(Ind))
-		{
-			if ("undefined" != typeof(Ind.FirstLine))
-			{
-				FirstLine = Ind.FirstLine;
-			}
-			if ("undefined" != typeof(Ind.Left))
-			{
-				Left = Ind.Left;
-			}
-			if ("undefined" != typeof(Ind.Right))
-			{
-				Right = Ind.Right;
-			}
-		}
-
-		var bIsUpdate = false;
-		var _ruler    = this.WordControl.m_oHorRuler;
-		if (_ruler.m_dIndentLeft != Left)
-		{
-			_ruler.m_dIndentLeft = Left;
-			bIsUpdate            = true;
-		}
-		if (_ruler != (FirstLine + Left))
-		{
-			_ruler.m_dIndentLeftFirst = (FirstLine + Left);
-			bIsUpdate                 = true;
-		}
-		if (_ruler.m_dIndentRight != Right)
-		{
-			_ruler.m_dIndentRight = Right;
-			bIsUpdate             = true;
-		}
-		if (bIsUpdate)
+		let updateFlag = this.WordControl.m_oHorRuler.UpdateParaInd(paraInd, isRtl);
+		if (updateFlag & 2)
+			this.WordControl.UpdateHorRulerBack(true);
+		if (updateFlag & 1)
 			this.WordControl.UpdateHorRuler();
 	};
 	asc_docs_api.prototype.Internal_Update_Ind_FirstLine = function(FirstLine, Left)
@@ -5434,23 +5426,29 @@ background-repeat: no-repeat;\
 	// "where" где нижний или верхний, align выравнивание
 	asc_docs_api.prototype.put_PageNum = function(where, align)
 	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
 		if (where >= 0)
 		{
-			if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_None, {Type : AscCommon.changestype_2_HdrFtr}))
-			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddPageNumToHdrFtr);
-				this.WordControl.m_oLogicDocument.Document_AddPageNum(where, align);
-				this.WordControl.m_oLogicDocument.FinalizeAction();
-			}
+			if (logicDocument.IsSelectionLocked(AscCommon.changestype_None, {Type : AscCommon.changestype_2_HdrFtr}))
+				return;
+			
+			logicDocument.StartAction(AscDFH.historydescription_Document_AddPageNumToHdrFtr);
+			logicDocument.Document_AddPageNum(where, align);
+			logicDocument.Recalculate();
+			logicDocument.FinalizeAction();
 		}
 		else
 		{
-			if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
-			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddPageNumToCurrentPos);
-				this.WordControl.m_oLogicDocument.Document_AddPageNum(where, align);
-				this.WordControl.m_oLogicDocument.FinalizeAction();
-			}
+			if (logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
+				return;
+			
+			logicDocument.StartAction(AscDFH.historydescription_Document_AddPageNumToCurrentPos);
+			logicDocument.Document_AddPageNum(where, align);
+			logicDocument.Recalculate();
+			logicDocument.FinalizeAction();
 		}
 	};
 
@@ -8880,22 +8878,38 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_startEditCrop = function()
 	{
-		return this.WordControl.m_oLogicDocument.DrawingObjects.startImageCrop();
+		const bRes = this.WordControl.m_oLogicDocument.DrawingObjects.startImageCrop();
+		if (bRes) {
+			this.WordControl.m_oLogicDocument.UpdateInterface();
+		}
+		return bRes;
 	};
 
 	asc_docs_api.prototype.asc_endEditCrop = function()
 	{
-		return this.WordControl.m_oLogicDocument.DrawingObjects.endImageCrop();
+		const bRes = this.WordControl.m_oLogicDocument.DrawingObjects.endImageCrop();
+		if (bRes) {
+			this.WordControl.m_oLogicDocument.UpdateInterface();
+		}
+		return bRes;
 	};
 
 	asc_docs_api.prototype.asc_cropFit = function()
 	{
-		return this.WordControl.m_oLogicDocument.DrawingObjects.cropFit();
+		const bRes = this.WordControl.m_oLogicDocument.DrawingObjects.cropFit();
+		if (bRes) {
+			this.WordControl.m_oLogicDocument.UpdateInterface();
+		}
+		return bRes;
 	};
 
 	asc_docs_api.prototype.asc_cropFill = function()
 	{
-		return this.WordControl.m_oLogicDocument.DrawingObjects.cropFill();
+		const bRes = this.WordControl.m_oLogicDocument.DrawingObjects.cropFill();
+		if (bRes) {
+			this.WordControl.m_oLogicDocument.UpdateInterface();
+		}
+		return bRes;
 	};
 
 	asc_docs_api.prototype.AddTextArt = function(nStyle)
@@ -8966,8 +8980,7 @@ background-repeat: no-repeat;\
 		const isSelectionLocked = this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props);
 		const canMerge = this.asc_canMergeSelectedShapes(operation);
 		if (!isSelectionLocked && canMerge) {
-			// Should rename to "AscDFH.historydescription_Common_ShapesMerge"?
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ShapesMerge);
+			this.WordControl.m_oLogicDocument.StartAction(0);
 			AscFormat.mergeSelectedShapes(operation);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -11193,11 +11206,19 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_ClearAllSpecialForms = function()
 	{
-		var oLogicDocument = this.private_GetLogicDocument();
-		if (!oLogicDocument)
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = this.asc_GetOForm();
+		if (!logicDocument)
 			return;
-
-		oLogicDocument.ClearAllSpecialForms(true);
+		
+		let roleName = oform ? oform.getCurrentRole() : null;
+		let contentControls;
+		if (null !== roleName)
+			contentControls = logicDocument.GetFormsManager().GetAllFormsByRole(roleName);
+		else
+			contentControls = logicDocument.GetAllContentControls();
+		
+		logicDocument.ClearAllSpecialForms(contentControls);
 	};
 	asc_docs_api.prototype.asc_SetSpecialFormsHighlightColor = function(r, g, b)
 	{
@@ -11261,55 +11282,76 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_MoveToFillingForm = function(isNext, isRequired, isNotFilled)
 	{
-		var oLogicDocument = this.private_GetLogicDocument();
-		if (!oLogicDocument)
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
 			return;
+		
+		let oform = this.asc_GetOForm();
+		let role  = oform ? oform.getCurrentRole() : null;
+		
+		function findNextForm(checkFunc)
+		{
+			let startCC  = logicDocument.GetContentControl();
+			let docState = logicDocument.SaveDocumentState(false);
+			
+			let prevCC = null, curCC;
+			while (true)
+			{
+				logicDocument.MoveToFillingForm(isNext);
+				curCC = logicDocument.GetContentControl();
+				
+				if (!curCC || curCC === startCC || curCC === prevCC)
+				{
+					logicDocument.LoadDocumentState(docState);
+					break;
+				}
+				
+				if (checkFunc(curCC))
+					break;
+				
+				if (!startCC)
+					startCC = curCC;
+				
+				prevCC = curCC;
+			}
+		}
 
 		if (true === isRequired)
 		{
-			var oStartCC  = oLogicDocument.GetContentControl();
-			var oDocState = oLogicDocument.SaveDocumentState(false);
-
-			// Защита от зависания, по логике сравнение с предыдущим не нужно
-			var oPrevCC = null, oCurCC;
-			while (1)
+			findNextForm(function(form)
 			{
-				oLogicDocument.MoveToFillingForm(isNext);
-				oCurCC = oLogicDocument.GetContentControl();
-
-				if (!oCurCC || oCurCC === oStartCC || oCurCC === oPrevCC)
-				{
-					oLogicDocument.LoadDocumentState(oDocState);
-					break;
-				}
-
-				if (oCurCC.IsForm()
-					&& oCurCC.IsFormRequired()
-					&& !oCurCC.IsCheckBox()
-					&& (true !== isNotFilled || !oCurCC.IsFormFilled()))
-					break;
-
-				if (!oStartCC)
-					oStartCC = oCurCC;
-
-				oPrevCC = oCurCC;
-			}
+				return (form.IsForm()
+					&& form.IsFormRequired()
+					&& !form.IsCheckBox()
+					&& (true !== isNotFilled || !form.IsFormFilled())
+					&& (null === role || form.GetFormRole() === role));
+			});
 		}
 		else
 		{
-			oLogicDocument.MoveToFillingForm(isNext);
+			if (null !== role)
+			{
+				findNextForm(function(form)
+				{
+					return (form.IsForm() && form.GetFormRole() === role);
+				});
+			}
+			else
+			{
+				logicDocument.MoveToFillingForm(isNext);
+			}
 		}
-
-		oLogicDocument.UpdateSelection();
-		oLogicDocument.UpdateInterface();
+		
+		logicDocument.UpdateSelection();
+		logicDocument.UpdateInterface();
 	};
-	asc_docs_api.prototype.asc_IsAllRequiredFormsFilled = function()
+	asc_docs_api.prototype.asc_IsAllRequiredFormsFilled = function(checkAll)
 	{
 		let oFormsManager = this.private_GetFormsManager();
 		if (!oFormsManager)
 			return true;
-
-		return oFormsManager.IsAllRequiredFormsFilled();
+		
+		return oFormsManager.IsAllRequiredFormsFilled(checkAll);
 	};
 	asc_docs_api.prototype.sync_OnAllRequiredFormsFilled = function(isFilled)
 	{
@@ -11410,13 +11452,40 @@ background-repeat: no-repeat;\
 			return false;
 		
 		logicDocument.StartAction(AscDFH.historydescription_DisconnectEveryone);
-		logicDocument.GetHistory().Add(new CChangesDocumentDisconnectEveryone(logicDocument));
+		logicDocument.GetHistory().Add(new AscDFH.CChangesDocumentDisconnectEveryone(logicDocument));
 		logicDocument.FinalizeAction();
 		
 		this.forceSaveDisconnectRequest = true;
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		this.asc_Save(false);
 	};
+	asc_docs_api.prototype.asc_CompletePreparingOForm = function(disconnect)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return false;
+		
+		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+			return false;
+		
+		logicDocument.StartAction(AscDFH.historydescription_OForm_CompletePreparation);
+		logicDocument.GetOFormDocument().setAllRolesNotFilled();
+		if (disconnect)
+			logicDocument.GetHistory().Add(new AscDFH.CChangesDocumentDisconnectEveryone(logicDocument));
+		
+		logicDocument.FinalizeAction();
+		
+		if (disconnect)
+		{
+			this.forceSaveDisconnectRequest = true;
+			AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+		}
+		
+		this.forceSaveOformRequest = true;
+		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+		this.asc_Save(false);
+	};
+	
 
 	asc_docs_api.prototype.asc_UncheckContentControlButtons = function()
 	{
@@ -12175,24 +12244,26 @@ background-repeat: no-repeat;\
 		return sRet;
 	};
 
-	asc_docs_api.prototype.asc_addDateTime = function(oPr)
+	asc_docs_api.prototype.asc_addDateTime = function(dateTimePr)
 	{
-		var sTextForCheck = null;
-		if (!oPr.get_Update())
-			sTextForCheck = oPr.get_String();
-
-		var oLogicDocument = this.private_GetLogicDocument();
-		if (sTextForCheck)
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
+		return new Promise(function(resolve)
 		{
-			AscFonts.FontPickerByCharacter.checkText(sTextForCheck, this, function()
-			{
-				oLogicDocument.AddDateTime(oPr);
-			});
-		}
-		else
+			AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+			
+			let textToCheck = dateTimePr.get_String();
+			if (textToCheck)
+				AscFonts.FontPickerByCharacter.checkText(textToCheck, this, resolve);
+			else
+				resolve();
+		}).then(function()
 		{
-			oLogicDocument.AddDateTime(oPr);
-		}
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+			logicDocument.AddDateTime(dateTimePr);
+		});
 	};
 
 	asc_docs_api.prototype.asc_AddObjectCaption = function(oPr)
@@ -14941,6 +15012,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['asc_GetAllFormsData']                       = asc_docs_api.prototype.asc_GetAllFormsData;
 	asc_docs_api.prototype['asc_GetOForm']                              = asc_docs_api.prototype.asc_GetOForm;
 	asc_docs_api.prototype['asc_DisconnectEveryone']                    = asc_docs_api.prototype.asc_DisconnectEveryone;
+	asc_docs_api.prototype['asc_CompletePreparingOForm']                = asc_docs_api.prototype.asc_CompletePreparingOForm;
 
 	asc_docs_api.prototype['asc_BeginViewModeInReview']                 = asc_docs_api.prototype.asc_BeginViewModeInReview;
 	asc_docs_api.prototype['asc_EndViewModeInReview']                   = asc_docs_api.prototype.asc_EndViewModeInReview;
