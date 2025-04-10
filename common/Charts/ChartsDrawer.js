@@ -232,6 +232,15 @@ CChartsDrawer.prototype =
 			case AscFormat.SERIES_LAYOUT_PARETO_LINE :
 				this.charts.chartEx = new drawParetoChart(seria, this);
 				break;
+			case AscFormat.SERIES_LAYOUT_TREEMAP :
+				this.charts.chartEx = new drawTreemapChart(seria, this);
+				break;
+			case AscFormat.SERIES_LAYOUT_BOX_WHISKER :
+				this.charts.chartEx = new drawBoxWhiskerChart(seria, this);
+				break;
+			case AscFormat.SERIES_LAYOUT_SUNBURST :
+				this.charts.chartEx = new drawSunburstChart(seria, this);
+				break;
 			default :
 				this.charts.chartEx = null;
 		}
@@ -2808,6 +2817,7 @@ CChartsDrawer.prototype =
 			calculateExtremums(type, axisProperties, numLit);
 			plotArea.plotAreaRegion.setCachedData(this._createCachedData(type, seria, numLit, strLit, axisProperties, secondType, width, height));
 			this._chartExHandleAxesConfigurations(plotArea.axId, axisProperties);
+			console.log("here");
 		}
 	},
 
@@ -2821,6 +2831,10 @@ CChartsDrawer.prototype =
 				return new CCachedFunnel(type, numLit, axisProperties);
 			case AscFormat.SERIES_LAYOUT_TREEMAP:
 				return new CCachedTreemap(type, numLit, strLit, width, height);
+			case AscFormat.SERIES_LAYOUT_BOX_WHISKER:
+				return new CCachedBoxWhisker(type, seria, numLit, strLit, axisProperties);
+			case AscFormat.SERIES_LAYOUT_SUNBURST:
+				return new CCachedSunburst(type, seria, numLit, strLit, axisProperties);
 			default:
 				return null;
 		}
@@ -7904,6 +7918,149 @@ drawParetoChart.prototype.drawParetoLine = function () {
 	}
 };
 
+	function drawSunburstChart(chart, chartsDrawer) {
+		this.chartProp = chartsDrawer.calcProp;
+		this.cChartDrawer = chartsDrawer;
+		this.cChartSpace = chartsDrawer.cChartSpace;
+
+		this.paths = {};
+	}
+
+	drawSunburstChart.prototype = {
+		constructor : drawSunburstChart,
+		recalculate : function () {
+			const cachedData = this.cChartSpace ? this.cChartSpace.getCachedData() : null;
+			if (!cachedData) {
+				return;
+			}
+			if (cachedData.data.length > 0 && this.chartProp && this.chartProp.chartGutter) {
+				const trueWidth = this.chartProp.trueWidth;
+				const trueHeight = this.chartProp.trueHeight;
+
+				const diagramRadius = Math.min(trueHeight, trueWidth) / 2;
+				const coords = {
+					x : this.chartProp.chartGutter._left + trueWidth / 2,
+					y : this.chartProp.chartGutter._top + trueHeight / 2
+				}
+
+				const ringWidth = diagramRadius / (cachedData.layersCount + 1);
+				let innerRadius = ringWidth;
+				let outerRadius = ringWidth * 2;
+				let startingAngle = Math.PI / 2;
+				let elems = 0;
+				let nextLayer = 1;
+				let layersCounter = 0;
+				for (let i = 0; i < cachedData.data.length; i++) {
+					if (!this.paths[i]) {
+						this.paths[i] = [];
+					}
+					for (let j = 0; j < cachedData.data[i].length; j++) {
+						const angle = cachedData.data[i][j].pVal * Math.PI * 2;
+						if (cachedData.data[i][j].name !== null) {
+							this.paths[i].push(this._calculateSegment(startingAngle, angle, outerRadius, innerRadius, coords));
+						}
+						startingAngle += angle;
+						elems += 1;
+					}
+					nextLayer -= 1;
+					if (nextLayer === 0) {
+						layersCounter += 1;
+						if (layersCounter === cachedData.layersCount) {
+							break;
+						}
+						nextLayer = elems;
+						elems = 0;
+						innerRadius = outerRadius;
+						outerRadius = innerRadius + ringWidth;
+					}
+				}
+				// let j = 0;
+				// let totalAngle = Math.PI / 2;
+				// for (let i = 0; i < sunburst.data.length; i++) {
+				// 	if (i === sunburst.layersCount[j]) {
+				// 		innerRadius = outerRadius;
+				// 		outerRadius = innerRadius + ringWidth;
+				// 		j++;
+				// 	}
+				// 	const angle = (sunburst.data[i].pVal * Math.PI * 2);
+				// 	this.paths[i] = this._calculateSegment(totalAngle, angle,  outerRadius, innerRadius, coords);
+				// 	totalAngle += angle;
+				// }
+			}
+		},
+
+		_calculateSegment : function (stAngle, swAngle, outerRadius, innerRadius, coords) {
+			if (!AscFormat.isRealNumber(stAngle) || !AscFormat.isRealNumber(swAngle) || !AscFormat.isRealNumber(outerRadius) || !AscFormat.isRealNumber(innerRadius) || !coords || !AscFormat.isRealNumber(coords.x) || !AscFormat.isRealNumber(coords.y)) {
+				return;
+			}
+
+			const pathId = this.cChartSpace.AllocPath();
+			const path = this.cChartSpace.GetPath(pathId);
+
+			const pathH = this.chartProp.pathH;
+			const pathW = this.chartProp.pathW;
+
+			const pxToMm = this.chartProp.pxToMM;
+
+			const xRight = coords.x + outerRadius * Math.cos(stAngle + swAngle);
+			const yRight = coords.y - outerRadius * Math.sin(stAngle + swAngle);
+
+			const xLeft = coords.x + innerRadius * Math.cos(stAngle);
+			const yLeft = coords.y - innerRadius * Math.sin(stAngle);
+
+			path.moveTo(xLeft / pxToMm * pathW, yLeft / pxToMm * pathH);
+			path.arcTo(innerRadius / pxToMm * pathW, innerRadius / pxToMm * pathH, -1 * stAngle * cToDeg, -1 * swAngle * cToDeg);
+			path.lnTo(xRight / pxToMm * pathW, yRight / pxToMm * pathH);
+			path.arcTo(outerRadius / pxToMm * pathW, outerRadius / pxToMm * pathH, -1 * (stAngle + swAngle) * cToDeg, swAngle * cToDeg);
+			path.lnTo(xLeft / pxToMm * pathW, yLeft / pxToMm * pathH);
+
+			return pathId;
+		},
+		draw : function () {
+			if (!this.cChartDrawer || !this.cChartDrawer.calcProp || !this.cChartDrawer.cShapeDrawer || !this.cChartDrawer.cShapeDrawer.Graphics || !this.cChartDrawer.calcProp.chartGutter) {
+				return;
+			}
+
+			// find chart starting coordinates, width and height;
+			let leftRect = this.cChartDrawer.calcProp.chartGutter._left / this.cChartDrawer.calcProp.pxToMM;
+			let topRect = (this.cChartDrawer.calcProp.chartGutter._top) / this.cChartDrawer.calcProp.pxToMM;
+			let rightRect = this.cChartDrawer.calcProp.trueWidth / this.cChartDrawer.calcProp.pxToMM;
+			let bottomRect = (this.cChartDrawer.calcProp.trueHeight) / this.cChartDrawer.calcProp.pxToMM;
+
+			if (!AscFormat.isRealNumber(leftRect) || !AscFormat.isRealNumber(topRect) || !AscFormat.isRealNumber(rightRect) || !AscFormat.isRealNumber(bottomRect) ) {
+				return;
+			}
+
+			this.cChartDrawer.cShapeDrawer.Graphics.SaveGrState();
+			this.cChartDrawer.cShapeDrawer.Graphics.AddClipRect(leftRect, topRect, rightRect, bottomRect);
+
+			let series = this.cChartSpace.chart.plotArea.plotAreaRegion.series;
+
+			let oSeries = series[0];
+			if(oSeries) {
+				for (let i in this.paths) {
+					if (this.paths.hasOwnProperty(i) && this.paths[i]) {
+						for (let j in this.paths[i]) {
+							let nPtIdx = parseInt(i);
+							let pen = oSeries.getPtPen(nPtIdx);
+							let brush = oSeries.getPtBrush(nPtIdx);
+							pen.Fill = brush.createDuplicate();
+							pen.Fill.fill.color.RGBA.B = 255;
+							pen.Fill.fill.color.RGBA.G = 255;
+							pen.Fill.fill.color.RGBA.R = 255;
+							this.cChartDrawer.drawPath(this.paths[i][j], pen, brush);
+						}
+					}
+				}
+			}
+
+			this.cChartDrawer.cShapeDrawer.Graphics.RestoreGrState();
+		},
+		_calculateDLbl : function () {
+			return {x: null, y: null}
+		}
+	}
+
 /** @constructor */
 function drawWaterfallChart(chart, chartsDrawer) {
 	this.chartProp = chartsDrawer.calcProp;
@@ -8301,6 +8458,360 @@ drawFunnelChart.prototype = {
 		}
 
 		return {x: centerX, y: centerY};
+	}
+}
+
+/** @constructor */
+function drawTreemapChart(chart, chartsDrawer) {
+	this.chartProp = chartsDrawer.calcProp;
+	this.cChartDrawer = chartsDrawer;
+	this.cChartSpace = chartsDrawer.cChartSpace;
+
+	this.chart = chart;
+
+	this.catAx = null;
+	this.valAx = null;
+
+	this.ptCount = null;
+	this.seriesCount = null;
+	this.subType = null;
+
+	this.paths = {};
+	this.linePath = null;
+}
+
+drawTreemapChart.prototype = {
+	constructor: drawTreemapChart,
+
+	recalculate: function () {
+		const cachedData = this.cChartSpace ? this.cChartSpace.getCachedData() : null;
+		if (!cachedData) {
+			return;
+		}
+		if (cachedData.data.length > 0 && this.chartProp && this.chartProp.chartGutter) {
+
+			// getYPoints will not work?
+			// I should find the end of cat and val Axis
+			// get each row inside cahcedData
+			// for each row calculate the x and y component of the resulting block
+
+			// if Row is true then I should add the width to totalX, and for each element add its height
+			// if Row is false then I should add the height to totalY, and for each element add its width
+
+			// for (let i = 0; i < cachedData.data.length; i++) {
+			// 	let x = cachedData.data[i].start.x;
+			// 	let y = cachedData.data[i].start.y;
+			// 	for (let j = 0; j < cachedData.data[i].coords.length; j++) {
+			// 		this.paths[i] = this.cChartDrawer._calculateRect(x, y, cachedData.data[i].coords[j].w, cachedData.data[i].coords[j].h);
+			// 		if (cachedData.data[i].isVert) {
+			// 			y += cachedData.data[i].coords[j].h;
+			// 		} else {
+			// 			x += cachedData.data[i].coords[j].w;
+			// 		}
+			// 	}
+			// }
+			// const plotArea = this.cChartSpace.chart.plotArea;
+			// const x = plotArea.x;
+			// const y = plotArea.y;
+			// // this.paths[0] = this.cChartDrawer._calculateRect(x, y + 54, 100, 54, true);
+			// let pos = 0;
+			// for (let i = 0; i < cachedData.data.length; i++) {
+			// 	let direction = cachedData.data[i].position;
+			// 	// let startX = cachedData.data[i].position ? x + cachedData.data[i].array[0] : x;
+			// 	// let startY = cachedData.data[i].position ? y + cachedData.data[i].array[0] : y;
+			// 	let startX = x;
+			// 	let startY = y;
+			// 	for( let j = 0; j < cachedData.data[i].array.length; j++) {
+			// 		this.paths[pos] = this.cChartDrawer._calculateRect(startX, startY + cachedData.data[i].coords[j].h, cachedData.data[i].coords[j].w, cachedData.data[i].coords[j].h, true);
+			// 		if (direction) {
+			// 			startY += cachedData.data[i].array[j];
+			// 		} else {
+			// 			startX += cachedData.data[i].array[j];
+			// 		}
+			// 		pos += 1;
+			// 	}
+			// }
+		}
+	},
+
+	draw: function () {
+		if (!this.cChartDrawer || !this.cChartDrawer.calcProp || !this.cChartDrawer.cShapeDrawer || !this.cChartDrawer.cShapeDrawer.Graphics || !this.cChartDrawer.calcProp.chartGutter) {
+			return;
+		}
+
+		// find chart starting coordinates, width and height;
+		// let leftRect = this.cChartDrawer.calcProp.chartGutter._left / this.cChartDrawer.calcProp.pxToMM;
+		// let topRect = (this.cChartDrawer.calcProp.chartGutter._top) / this.cChartDrawer.calcProp.pxToMM;
+		// let rightRect = this.cChartDrawer.calcProp.trueWidth / this.cChartDrawer.calcProp.pxToMM;
+		// let bottomRect = (this.cChartDrawer.calcProp.trueHeight) / this.cChartDrawer.calcProp.pxToMM;
+		//
+		// if (!AscFormat.isRealNumber(leftRect) || !AscFormat.isRealNumber(topRect) || !AscFormat.isRealNumber(rightRect) || !AscFormat.isRealNumber(bottomRect) ) {
+		// 	return
+		// }
+		//
+		// this.cChartDrawer.cShapeDrawer.Graphics.SaveGrState();
+		// this.cChartDrawer.cShapeDrawer.Graphics.AddClipRect(leftRect, topRect, rightRect, bottomRect);
+
+		let series = this.cChartSpace.chart.plotArea.plotAreaRegion.series;
+
+		let oSeries = series[0];
+		if(oSeries) {
+			for (let i in this.paths) {
+				if (this.paths.hasOwnProperty(i) && this.paths[i]) {
+					let nPtIdx = parseInt(i);
+					let pen = oSeries.getPtPen(nPtIdx);
+					if (pen) {
+						pen.Fill.fill.color.RGBA.R = 255;
+						pen.Fill.fill.color.RGBA.G = 0;
+						pen.Fill.fill.color.RGBA.B = 0;
+					}
+					let brush = oSeries.getPtBrush(nPtIdx);
+					this.cChartDrawer.drawPath(this.paths[i], pen, brush);
+				}
+			}
+		}
+
+		// this.cChartDrawer.cShapeDrawer.Graphics.RestoreGrState();
+	},
+
+	_calculateDLbl: function (compiledDlb) {
+		return {x: null, y: null}
+	}
+}
+
+/** @constructor */
+function drawBoxWhiskerChart(chart, chartsDrawer) {
+	this.chartProp = chartsDrawer.calcProp;
+	this.cChartDrawer = chartsDrawer;
+	this.cChartSpace = chartsDrawer.cChartSpace;
+
+	this.chart = chart;
+
+	this.catAx = null;
+	this.valAx = null;
+
+	this.ptCount = null;
+	this.seriesCount = null;
+	this.subType = null;
+
+	this.paths = {};
+	this.linePath = null;
+}
+
+drawBoxWhiskerChart.prototype = {
+	constructor: drawBoxWhiskerChart,
+
+	recalculate: function () {
+		const cachedData = this.cChartSpace ? this.cChartSpace.getCachedData() : null;
+		if (!cachedData || !this.cChartSpace.chart.plotArea.axId) {
+			return;
+		}
+
+		if (cachedData.data.length > 0 && this.chartProp && this.chartProp.chartGutter) {
+			const seria = this.cChartSpace.chart.plotArea.plotAreaRegion.series[0];
+			const strLit = seria.getCatLit();
+			const strCache = strLit && strLit.pts;
+			const numLit = seria.getValLit();
+			const catStart = this.chartProp.chartGutter._left;
+
+			const valAxis = this.cChartSpace.chart.plotArea.axId[1];
+			const catAxis = this.cChartSpace.chart.plotArea.axId[0];
+			const data = cachedData.data;
+			const ends = cachedData.ends;
+
+			const coeff = catAxis.scaling.gapWidth;
+
+			// 1 px gap for each section length
+			const gapWidth = 0.5 / this.chartProp.pxToMM;
+			const gapNumber = ends.length;
+
+			//Each bar will have 2 gapWidth and 2 margins , on left and right sides
+			const initialBarWidth = (this.chartProp.trueWidth - (2 * gapWidth * gapNumber)) / ends.length;
+			const barWidth = (initialBarWidth / (1 + coeff));
+			const margin = (initialBarWidth - barWidth) / 2;
+
+			const tailWidth = barWidth / 3;
+
+			// starting cat point
+			let catPoint = catStart + margin + (barWidth / 2);
+
+			// the gap between two bars
+			const gapBetween = 2 * (margin + gapWidth);
+
+			let index = 0;
+
+			const meanLine = [];
+			let j = 0;
+			for (let i = 0; i < data.length; i++) {
+				let valPoint = this.cChartDrawer.getYPosition(data[i].val, valAxis, true);
+
+				switch (data[i].type) {
+					case cachedData.pointType:
+						// Point
+						this.paths[index] = [this.createPoint(catPoint, valPoint, 18 * gapWidth), false];
+						console.log(valPoint)
+						break;
+					case cachedData.tailType:
+						// Tail
+						const boxEdgeValPoint = this.cChartDrawer.getYPosition(data[i].val2, valAxis, true);
+						this.paths[index] = [this.createTail(catPoint, valPoint, boxEdgeValPoint, tailWidth), true];
+						console.log(valPoint, boxEdgeValPoint)
+						break;
+					case cachedData.bottomBoxType:
+						// Bottom of the box
+						const medianValPointTop = this.cChartDrawer.getYPosition(data[i].val2, valAxis, true) * this.chartProp.pxToMM;
+						valPoint *= this.chartProp.pxToMM
+						this.paths[index] = [this.cChartDrawer._calculateRect(catPoint - (barWidth / 2), valPoint, barWidth, valPoint - medianValPointTop ), true];
+						console.log(valPoint, medianValPointTop)
+						break;
+					case cachedData.medianType:
+						// Median of the box
+						valPoint *= this.chartProp.pxToMM
+						this.paths[index] = [this._createLine([[catPoint - (barWidth / 2), valPoint], [catPoint + (barWidth / 2), valPoint]]), true];
+						console.log(valPoint)
+						break;
+					case cachedData.topBoxType:
+						// Top of the box
+						const medianValPointBottom = this.cChartDrawer.getYPosition(data[i].val2, valAxis, true) * this.chartProp.pxToMM;
+						valPoint *= this.chartProp.pxToMM
+						this.paths[index] = [this.cChartDrawer._calculateRect(catPoint - (barWidth / 2), medianValPointBottom, barWidth, medianValPointBottom - valPoint), true];
+						console.log(valPoint, medianValPointBottom)
+						break;
+					case cachedData.meanType:
+						// Mean
+						valPoint *= this.chartProp.pxToMM
+						meanLine.push([catPoint, valPoint]);
+						this.paths[index] = [this._createMeanMarker(catPoint, valPoint, 32 * gapWidth), false];
+						console.log(valPoint)
+						break;
+				}
+
+				if (i === ends[j]) {
+					catPoint += (gapBetween + barWidth);
+					j++;
+				}
+
+				index++;
+			}
+
+			if (cachedData.meanLine) {
+				this.linePath = this._createLine(meanLine);
+			}
+			console.log("here");
+		}
+	},
+
+	_createMeanMarker: function (x, y, halfSize) {
+		const pathId = this.cChartSpace.AllocPath();
+		const path = this.cChartSpace.GetPath(pathId);
+		const pathW = this.chartProp.pathW;
+		const pathH = this.chartProp.pathH;
+		const pxToMm = this.chartProp.pxToMM;
+
+		path.moveTo((x - halfSize) * pathW / pxToMm, (y - halfSize) * pathH / pxToMm );
+		path.lnTo((x + halfSize) * pathW / pxToMm, (y + halfSize) * pathH / pxToMm );
+		path.moveTo((x - halfSize) * pathW / pxToMm, (y + halfSize) * pathH / pxToMm );
+		path.lnTo((x + halfSize) * pathW / pxToMm, (y - halfSize) * pathH / pxToMm );
+
+		return pathId;
+	},
+
+	_createLine: function (arr) {
+		const pathId = this.cChartSpace.AllocPath();
+		const path = this.cChartSpace.GetPath(pathId);
+		const pathW = this.chartProp.pathW;
+		const pathH = this.chartProp.pathH;
+		const pxToMm = this.chartProp.pxToMM;
+
+		if (0 < arr.length) {
+			path.moveTo(arr[0][0] * pathW / pxToMm, arr[0][1] * pathH / pxToMm);
+		}
+		for (let i = 1; i < arr.length; i++) {
+			path.lnTo(arr[i][0] * pathW / pxToMm, arr[i][1] * pathH / pxToMm);
+		}
+
+		return pathId;
+	},
+
+	createTail: function (x, y, y1, size) {
+		const pathId = this.cChartSpace.AllocPath();
+		const path = this.cChartSpace.GetPath(pathId);
+		const pathW = this.chartProp.pathW;
+		const pathH = this.chartProp.pathH;
+		const pxToMm = this.chartProp.pxToMM;
+
+		path.moveTo(x * pathW / pxToMm, y1 * pathH);
+		path.lnTo(x * pathW / pxToMm, y * pathH);
+		path.moveTo((x + (size / 2)) * pathW / pxToMm, y * pathH);
+		path.lnTo((x - (size / 2)) * pathW / pxToMm, y * pathH);
+
+
+		return pathId;
+	},
+
+	createPoint: function (x, y, halfSize) {
+		const pathId = this.cChartSpace.AllocPath();
+		const path = this.cChartSpace.GetPath(pathId);
+		const pathW = this.chartProp.pathW;
+		const pathH = this.chartProp.pathH;
+		const pxToMm = this.chartProp.pxToMM;
+
+		path.moveTo((x + halfSize) * pathW / pxToMm, y * pathH);
+		path.arcTo(halfSize * pathW / pxToMm, halfSize * pathW / pxToMm, 0, Math.PI * 2 * cToDeg);
+
+		return pathId;
+	},
+
+	draw : function () {
+		if (!this.cChartDrawer || !this.cChartDrawer.calcProp || !this.cChartDrawer.cShapeDrawer || !this.cChartDrawer.cShapeDrawer.Graphics || !this.cChartDrawer.calcProp.chartGutter) {
+			return;
+		}
+
+		// find chart starting coordinates, width and height;
+		let leftRect = this.cChartDrawer.calcProp.chartGutter._left / this.cChartDrawer.calcProp.pxToMM;
+		let topRect = (this.cChartDrawer.calcProp.chartGutter._top) / this.cChartDrawer.calcProp.pxToMM;
+		let rightRect = this.cChartDrawer.calcProp.trueWidth / this.cChartDrawer.calcProp.pxToMM;
+		let bottomRect = (this.cChartDrawer.calcProp.trueHeight) / this.cChartDrawer.calcProp.pxToMM;
+
+		if (!AscFormat.isRealNumber(leftRect) || !AscFormat.isRealNumber(topRect) || !AscFormat.isRealNumber(rightRect) || !AscFormat.isRealNumber(bottomRect) ) {
+			return
+		}
+
+		this.cChartDrawer.cShapeDrawer.Graphics.SaveGrState();
+		this.cChartDrawer.cShapeDrawer.Graphics.AddClipRect(leftRect, topRect, rightRect, bottomRect);
+
+		let series = this.cChartSpace.chart.plotArea.plotAreaRegion.series;
+
+		let oSeries = series[0];
+
+		let pen = oSeries.compiledSeriesPen;
+		if (pen) {
+			pen.Fill.fill.color.RGBA.R = 255;
+			pen.Fill.fill.color.RGBA.B = 0;
+			pen.Fill.fill.color.RGBA.G = 0;
+		}
+		let brush = oSeries.compiledSeriesBrush;
+
+		if(oSeries) {
+			this.drawParts(true, pen, brush);
+			this.drawParts(false, pen, brush);
+		}
+
+		// drawLine
+		this.cChartDrawer.drawPath(this.linePath, pen);
+		this.cChartDrawer.cShapeDrawer.Graphics.RestoreGrState();
+	},
+
+	drawParts : function (order, pen, brush) {
+		for (let i in this.paths) {
+			if (this.paths.hasOwnProperty(i) && this.paths[i] && this.paths[i][1] === order) {
+				this.cChartDrawer.drawPath(this.paths[i][0], pen, brush);
+			}
+		}
+	},
+
+	_calculateDLbl : function (compiledDlb) {
+		return;
 	}
 }
 
@@ -19158,6 +19669,499 @@ CColorObj.prototype =
 		this.data = createTreemap(newNumArr, strLit, lastLayer, width, height);
 		console.log(this.data);
 	}
+
+	function CCachedBoxWhisker(type, seria, numLit, strLit, axisProperties) {
+		CCachedChartExData.call(this, type, []);
+		this.exclusive = seria && seria.layoutPr && seria.layoutPr.statistics ? seria.layoutPr.statistics.quartileMethod : AscFormat.QUARTILE_METHOD_EXCLUSIVE;
+		this.outliers = seria && seria.layoutPr && seria.layoutPr.visibility ? seria.layoutPr.visibility.outliers : false;
+		this.nonoutliers = seria && seria.layoutPr && seria.layoutPr.visibility ? seria.layoutPr.visibility.nonoutliers : false;
+		this.meanLine = seria && seria.layoutPr && seria.layoutPr.visibility ? seria.layoutPr.visibility.meanLine : false;
+		this.meanMarker = seria && seria.layoutPr && seria.layoutPr.visibility ? seria.layoutPr.visibility.meanMarker : false;
+		this.ends = [];
+		this.pointType = 0;
+		this.tailType = 1;
+		this.bottomBoxType = 2;
+		this.medianType = 3;
+		this.topBoxType = 4
+		this.meanType = 5;
+		this._calculate(seria, numLit, strLit, axisProperties);
+	}
+
+	AscFormat.InitClassWithoutType(CCachedBoxWhisker, CCachedChartExData);
+
+	CCachedBoxWhisker.prototype._calculate = function (seria, numLit, strLit, axisProperties) {
+		if (!numLit || !axisProperties || !numLit.pts) {
+			return;
+		}
+
+		const strCache = strLit && strLit.pts;
+
+		const resultingArr = this._constructArrays(strCache, numLit.pts);
+		let box = null;
+		for (let i = 0; i < resultingArr.length; i++) {
+			box = this._createBox(resultingArr[i], axisProperties);
+			this._addDataPoints(box, resultingArr[i]);
+		}
+	}
+
+	CCachedBoxWhisker.prototype._constructArrays = function (strCache, numArr) {
+		const resultingArr = [];
+		if (strCache) {
+			const dictSet = {}
+			let index = 0;
+
+			// return value for specific label
+			const getVal = function (strCacheIdx) {
+				for (; index < numArr.length; index++) {
+					if (numArr[index].idx === strCacheIdx) {
+						return numArr[index].val;
+					}
+				}
+			}
+			// create arrays of families of same labels
+			for (let i = 0; i < strCache.length; i++) {
+				const key = strCache[i].val;
+				if (dictSet[key] === undefined) {
+					resultingArr.push([getVal(strCache[i].idx)]);
+					dictSet[key] = resultingArr.length - 1;
+				} else {
+					resultingArr[dictSet[key]].push(getVal(strCache[i].idx));
+				}
+			}
+		} else {
+			// construct single array of values
+			const result = [];
+			for (let i = 0; i < numArr.length; i++) {
+				result.push(numArr[i].val);
+			}
+
+			resultingArr.push(result);
+		}
+		return resultingArr;
+	}
+
+	CCachedBoxWhisker.prototype._createBox = function (arr, axisProperties) {
+
+		if (arr.length === 0) {
+			return {bEmpty : true}
+		}
+
+		const getLowest = function (arr, threshold) {
+			for (let i = 0; i < arr.length; i++) {
+				if (arr[i] >= threshold) {
+					return arr[i];
+				}
+			}
+			return null;
+		}
+
+		const getHighest = function (arr, threshold) {
+			for (let i = arr.length - 1; i >= 0; i--) {
+				if (arr[i] <= threshold) {
+					return arr[i];
+				}
+			}
+			return null;
+		}
+
+		const getMean = function (arr) {
+			if (!arr.length) {
+				return 0;
+			}
+			let sum = 0;
+			for (let i = 0; i < arr.length; i++) {
+				sum += arr[i];
+			}
+			return sum / arr.length;
+		}
+		const fMedian = AscCommonExcel.getMedian(arr);
+
+		// Get the first quartile using the appropriate method based on `exclusive`
+		const fFirstQuartile = this.exclusive
+			? AscCommonExcel.getPercentileExclusive(arr, 0.25, true)
+			: AscCommonExcel.getPercentile(arr, 0.25, true);
+
+		// Get the value of the first quartile, convert "#!Num" to null
+		const fFirstQuartileVal = fFirstQuartile && fFirstQuartile.getValue() !== '#NUM!' ? fFirstQuartile.getValue() : null;
+
+		// Get the second quartile using the appropriate method based on `exclusive`
+		const fThirdQuartile = this.exclusive
+			? AscCommonExcel.getPercentileExclusive(arr, 0.75, true)
+			: AscCommonExcel.getPercentile(arr, 0.75, true);
+
+		// Get the value of the second quartile, convert "#!Num" to null
+		const fThirdQuartileVal = fThirdQuartile && fThirdQuartile.getValue() !== '#NUM!' ? fThirdQuartile.getValue() : null;
+
+		// Calculate the interquartile range (IQR), ensuring null values are handled
+		const fIQR = (fThirdQuartileVal !== null && fFirstQuartileVal !== null)
+			? fThirdQuartileVal - fFirstQuartileVal
+			: null;
+
+		// this multiplier is used insede the formula to detect outliers
+		const fMulitplier = 1.5;
+		const fLowerThreshold = fFirstQuartileVal - (fMulitplier * fIQR);
+		const fUpperThreshold = fThirdQuartileVal + (fMulitplier * fIQR);
+
+		// dont return lowest and highest if arr length is less than 3
+		const fLowestNum = getLowest(arr, fLowerThreshold);
+		const fHighestNum = arr.length > 1 ? getHighest(arr, fUpperThreshold) : null;
+		const fMean = this.meanMarker ? getMean(arr) : null;
+
+		this._chartExSetAxisMinAndMax(axisProperties.val, fLowestNum);
+		this._chartExSetAxisMinAndMax(axisProperties.val, fFirstQuartileVal);
+		this._chartExSetAxisMinAndMax(axisProperties.val, fMedian.getValue());
+		this._chartExSetAxisMinAndMax(axisProperties.val, fMean);
+		this._chartExSetAxisMinAndMax(axisProperties.val, fThirdQuartileVal);
+		this._chartExSetAxisMinAndMax(axisProperties.val, fHighestNum);
+
+		return {fStart: fLowestNum, fFirstQuartile: fFirstQuartileVal, fMedian: fMedian.getValue(), fMean: fMean,  fThirdQuartile: fThirdQuartileVal, fEnd: fHighestNum}
+	}
+
+	CCachedBoxWhisker.prototype._addDataPoints = function (box, arr) {
+		for (let j = 0; j < arr.length; j++) {
+
+			if (arr[j] === box.fStart || arr[j] === box.fEnd) {
+				// point from which to start drawing vertical line to tail
+				const value = arr[j] === box.fStart ? box.fFirstQuartile : box.fThirdQuartile;
+				this.data.push({type: this.tailType, val : arr[j], val2: value})
+			} else {
+				// obtain condition to draw, either outlier or nonoutlier
+				const isDraw = arr[j] < box.fStart || arr[j] > box.fEnd ? this.outliers : this.nonoutliers;
+				if (isDraw) {
+					this.data.push({type : this.pointType, val: arr[j]})
+				}
+			}
+		}
+		this.data.push({type: this.bottomBoxType, val: box.fFirstQuartile, val2: box.fMedian});
+		this.data.push({type: this.medianType, val: box.fMedian});
+		this.data.push({type: this.topBoxType, val: box.fThirdQuartile, val2: box.fMedian});
+
+		if (this.meanLine) {
+			this.data.push({type: this.meanType, val: box.fMean});
+		}
+
+		// store the ending index;
+		this.ends.push(this.data.length - 1);
+	}
+
+	function CCachedSunburst(type, seria, numLit, strLit) {
+		CCachedChartExData.call(this, type, []);
+		this.layersCount = null;
+		this._calculate(seria, numLit, strLit);
+	}
+
+	AscFormat.InitClassWithoutType(CCachedSunburst, CCachedChartExData);
+
+	CCachedSunburst.prototype._calculate = function (seria, numLit, strLit) {
+		const numArr = numLit && numLit.pts;
+		if (!numArr ) {
+			return;
+		}
+
+		// Find index of last layer
+		const getLastLayer = function (strCache) {
+			if (!strCache || strCache.length <= 1) {
+				return null;
+			}
+
+			for (let i = strCache.length - 1; i >= 0; i--) {
+				if (strCache[i].pts.length > 0) {
+					return i;
+				}
+			}
+			return null
+		}
+
+		// Normalize all elements that either negative or have no corresponding label to zero
+		const normalizeNumArr = function (numArr, strCache, lastLayer) {
+			// turn all elements that have no corresponding label into zero
+			const verifiedIdxs = {};
+
+			// Populate `verifiedIdxs` if there are labels in `strCache`
+			if (lastLayer !== null) {
+				for (let i = 0; i < strCache.length; i++) {
+					for (let j = 0; j < strCache[i].pts.length; j++) {
+						verifiedIdxs[strCache[i].pts[j].idx] = true;
+					}
+				}
+			}
+
+			// Normalize `numArr` values
+			const arr = [];
+			for (let k = 0; k < numArr.length; k++) {
+				if (numArr[k].val < 0 || (lastLayer !== null && !verifiedIdxs[numArr[k].idx])) {
+					continue;
+				}
+				arr.push({idx: numArr[k].idx, val: numArr[k].val});
+			}
+			return arr;
+		}
+
+		// Calculate total value of all elements in numArr
+		const getTotalValue = function (numArr) {
+			let sum = 0;
+			for (let i = 0; i < numArr.length; i++) {
+				if (numArr[i].val >= 0) {
+					sum += numArr[i].val;
+				}
+			}
+			return sum;
+		}
+
+		// function to find number of layers before constructing the sunburst.data
+		// const getLayersCount = function (strCache, lastLayer) {
+		// 	if (lastLayer === null) {
+		// 		return 1;
+		// 	}
+		// 	const indexes = [];
+		// 	for (let i = 0; i < strCache.length; i++) {
+		// 		indexes.push(0);
+		// 	}
+		// 	let maxLayer = 0;
+		// 	for (let i = 0; i < strCache[lastLayer].ptCount; i++) {
+		// 		let layersCount = 0;
+		// 		for (let j = 0; j <= lastLayer; j++) {
+		// 			if (indexes[j] < strCache[j].pts.length && strCache[j].pts[indexes[j]].idx === i) {
+		// 				layersCount += 1;
+		// 				indexes[j] += 1;
+		// 			}
+		// 		}
+		// 		maxLayer = Math.max(maxLayer, layersCount);
+		// 	}
+		// 	return maxLayer;
+		//
+		// }
+
+		// Transform strCache and numArr into a sunburst
+		const createSunburst = function (numArr, strCache, totalValue, lastLayer) {
+			const resultingArr = [[]];
+			let layersCount = 0;
+
+			if (lastLayer !== null) {
+				let numIndex = 0;
+				let col = 0;
+				let currentCol = 0;
+				let currentRow = 0;
+				let nullSkip = 0;
+				let start = 0;
+				let prevVal = null;
+				const ptCount = strCache[lastLayer].ptCount;
+				let layerReady = true;
+
+				const createCell = function (name, start, end, cellPos) {
+					const pVal = getPVal(end);
+					return {name: name, pVal: pVal, start: start, end: end, pos: cellPos}
+				}
+
+				const getPVal = function (end) {
+					let sum = 0;
+					for (let i = numIndex; i < numArr.length; i++) {
+						const item = numArr[i];
+						if (item.idx < end) {
+							sum += item.val;
+						} else {
+							numIndex = i;
+							break;
+						}
+					}
+					return sum / totalValue;
+				}
+
+				const copyAndRenameCell = function (cell) {
+					return {name: null, pVal: cell.pVal, start: cell.start, end: cell.end, pos: cell.pos}
+				}
+
+				const isParentExist = function (val) {
+					val = val ? val : 0;
+					return col > 0 && currentCol < resultingArr.length && (currentRow + val) < resultingArr[currentCol].length
+				}
+
+				const handleNextIndex = function (j, arr, ptCount, isLastLayer) {
+					if (j === arr.length) {
+						return isLastLayer ? arr[arr.length - 1].idx + 1 : ptCount;
+					}
+					if (isParentExist() && arr[j].idx > resultingArr[currentCol][currentRow].end) {
+						prevVal = null;
+						return resultingArr[currentCol][currentRow].end;
+					}
+					prevVal = arr[j].val;
+					return arr[j].idx;
+				}
+
+				const updateGroupPositions = function (arr, start, val) {
+					for (let i = start; i < arr.length; i++) {
+						arr[i].pos = val + i;
+					}
+				}
+
+				for (let i = 0; i <= lastLayer; i++) {
+					const strArr = strCache[i].pts;
+					prevVal = strArr.length > 0 && strArr[0].idx === 0 ? strArr[0].val : null;
+					let j = (prevVal === null) ? 0 : 1;
+					const isLastLayer = i === lastLayer;
+					let cellPos = 0;
+					for (; j <= strArr.length; j++) {
+						let isLastElem = (j === strArr.length);
+						const isNewLabel = isLastElem || prevVal !== strArr[j].val;
+						const isOutOfCurrentGroup = isParentExist() && (isLastElem || strArr[j].idx >= resultingArr[currentCol][currentRow].end);
+
+						if (isNewLabel || isOutOfCurrentGroup || isLastLayer) {
+							// find the ending index, it should be either the end of the current group or the end of the parent layer
+							const name = prevVal;
+							let end = handleNextIndex(j, strArr, ptCount, isLastLayer);
+
+
+							const cell = createCell(name, start, start < end ? end : end + 1, cellPos, isLastLayer);
+
+							if (isParentExist() && resultingArr[currentCol][currentRow].name === null && !(resultingArr[currentCol][currentRow].end === cell.end && resultingArr[currentCol][currentRow].start === cell.start)) {
+								nullSkip += 1;
+								resultingArr[currentCol].splice(currentRow + nullSkip, 0, cell);
+								resultingArr[col].push(copyAndRenameCell(cell));
+							} else {
+								// new Layer is starting
+								if (layerReady) {
+									layersCount += 1;
+									layerReady = false;
+								}
+
+								if (isLastElem && isLastLayer && strArr[j - 1].idx < ptCount - 1) {
+									const fakeCell = {idx: ptCount - 1, val: null, fake: true};
+									prevVal = null;
+									strArr.push(fakeCell);
+									isLastElem = false;
+								}
+
+								if (start === ptCount - 1 && strArr[strArr.length - 1].fake) {
+									strArr.pop();
+									isLastElem = true;
+								}
+								resultingArr[col].push(cell);
+							}
+
+							cellPos+=1;
+							start = end;
+						}
+
+						if (nullSkip && isOutOfCurrentGroup) {
+							const lastPos = resultingArr[currentCol][currentRow].pos;
+							resultingArr[currentCol].splice(currentRow, 1);
+							updateGroupPositions(resultingArr[currentCol], currentRow, lastPos - currentRow);
+							currentRow += nullSkip - 1;
+							nullSkip = 0;
+						}
+
+						if (isLastElem || (isParentExist(nullSkip) && strArr[j].idx >= resultingArr[currentCol][currentRow + nullSkip].end)) {
+							// underConsideration
+							if (resultingArr[resultingArr.length - 1].length > 0) {
+								resultingArr.push([]);
+								col += 1;
+							}
+							if (currentRow === resultingArr[currentCol].length - 1) {
+								currentCol += 1;
+								currentRow = 0;
+							} else if (!nullSkip) {
+								currentRow += 1;
+							}
+						}
+
+						// start loop again from the same position, as prevVal changed
+						if (!isLastElem && prevVal === null) {
+							j--;
+						}
+
+					}
+					numIndex = 0;
+					layerReady = true;
+					currentRow = 0;
+					start = 0;
+				}
+				if (resultingArr[resultingArr.length - 1].length === 0) {
+					resultingArr.pop();
+				}
+			} else {
+				const isStrCache = strCache && strCache.length > 0;
+				layersCount = 1;
+				for (let i = 0; i < numArr.length; i++) {
+					// search label in strCache if found get name, and increase labelCounter
+					let name = isStrCache && numArr[i].idx === strCache[0].pts[j].idx ? strCache[0].pts[0].val : numArr[i].idx;
+					resultingArr[0].push({name: name, pVal: numArr[i].val / totalValue, start: i, end: i + 1, pos: i});
+				}
+			}
+
+			return {data : resultingArr, layersCount : layersCount};
+
+		}
+
+		const sortSunburst = function (arr) {
+			// sort group inside each layer
+			for (let i = 0; i < arr.length; i++) {
+				arr[i].sort(function(a, b) {
+					// Move items with null names to the end
+					if (a.name === null && b.name !== null) return 1;
+					if (a.name !== null && b.name === null) return -1;
+
+					// If both names are non-null, or both are null, sort by pVal
+					return a.pVal - b.pVal;
+				});
+			}
+		}
+
+		const normalizeSunburst = function (data, layerCount) {
+			if (layerCount === 1) {
+				return;
+			}
+			// switch groups to the correct position
+			let currIndex = 0;
+			let elems = 0;
+			let nextLayer = 1;
+			// positions of some indexes were changed after swapping
+			const positionsStore = [];
+			let layersCounter = 1;
+
+			for (let i = 0; i < data.length; i++) {
+				positionsStore.push(data[i]);
+			}
+
+			for (let i = 0; i < data.length; i++) {
+				for (let j = 0; j < data[i].length; j++) {
+					const pos = data[i][j].pos;
+					const nextIndex = currIndex + 1 + elems;
+					let targetIndex = currIndex + 1 + pos;
+
+
+
+					// change two indexes
+					if (nextIndex !== targetIndex) {
+						data[nextIndex] = positionsStore[targetIndex];
+					}
+					elems += 1;
+				}
+				nextLayer -= 1;
+				if (nextLayer === 0) {
+					layersCounter += 1;
+					if (layersCounter === layerCount) {
+						return;
+					}
+					nextLayer = elems;
+					currIndex += elems;
+					elems = 0;
+				}
+			}
+		}
+
+		const lastLayer = getLastLayer(strLit);
+		const newNumArr = normalizeNumArr(numArr, strLit, lastLayer);
+		const totalValue = getTotalValue(newNumArr);
+		// const layersCount = getLayersCount(strCache, lastLayer);
+		const sunburst = createSunburst(newNumArr, strLit, totalValue, lastLayer);
+		sortSunburst(sunburst.data);
+		normalizeSunburst(sunburst.data, sunburst.layersCount);
+		console.log(sunburst);
+		this.data = sunburst.data;
+		this.layersCount = sunburst.layersCount;
+
+	}
+
 
 	function CUpDownBars(chartsDrawer) {
 		this.cChartDrawer = chartsDrawer;

@@ -4761,7 +4761,7 @@ function(window, undefined) {
 		
 		// TODO after new succefull implementation of new type remove option here
 		const type = this.chart && this.chart.plotArea && this.chart.plotArea.plotAreaRegion && this.chart.plotArea.plotAreaRegion.series && this.chart.plotArea.plotAreaRegion.series[0] ? this.chart.plotArea.plotAreaRegion.series[0].layoutId : null;
-		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_BOX_WHISKER || type === AscFormat.SERIES_LAYOUT_PARETO_LINE || type === AscFormat.SERIES_LAYOUT_REGION_MAP || type === AscFormat.SERIES_LAYOUT_SUNBURST)) {
+		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_REGION_MAP)) {
 			return ;
 		}
 		//----------------------------------
@@ -5129,7 +5129,7 @@ function(window, undefined) {
 								}
 							}
 						}
-					} else if (type === AscFormat.SERIES_LAYOUT_WATERFALL && strCache) {
+					} else if (strCache && (type === AscFormat.SERIES_LAYOUT_WATERFALL || type === AscFormat.SERIES_LAYOUT_BOX_WHISKER)) {
 						let j = 0;
 						for ( let i = 0; i < cachedData.data.length; i++) {
 							if (j < strCache.pts.length && strCache.pts[j].idx === i) {
@@ -5139,7 +5139,7 @@ function(window, undefined) {
 								aStrings.push('');
 							}
 						}
-					} else if (type === AscFormat.SERIES_LAYOUT_FUNNEL && strCache) {
+					} else if (strCache && type === AscFormat.SERIES_LAYOUT_FUNNEL) {
 						let j = strCache.pts.length - 1;
 						for ( let i = cachedData.data.length - 1; i >= 0; i--) {
 							if (j >= 0 && strCache.pts[j].idx === i) {
@@ -5149,7 +5149,7 @@ function(window, undefined) {
 								aStrings.push('');
 							}
 						}
-					} else if (type === AscFormat.SERIES_LAYOUT_FUNNEL || type === AscFormat.SERIES_LAYOUT_WATERFALL) {
+					} else if (type === AscFormat.SERIES_LAYOUT_FUNNEL || type === AscFormat.SERIES_LAYOUT_WATERFALL || type === AscFormat.SERIES_LAYOUT_BOX_WHISKER) {
 						aStrings = this.getValLabels(oAxis);
 					}
 				}
@@ -5693,7 +5693,7 @@ function(window, undefined) {
 
 		// TODO after new succefull implementation of new type remove option here
 		const type = this.chart && this.chart.plotArea && this.chart.plotArea.plotAreaRegion && this.chart.plotArea.plotAreaRegion.series && this.chart.plotArea.plotAreaRegion.series[0] ? this.chart.plotArea.plotAreaRegion.series[0].layoutId : null;
-		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_BOX_WHISKER || type === AscFormat.SERIES_LAYOUT_PARETO_LINE || type === AscFormat.SERIES_LAYOUT_REGION_MAP || type === AscFormat.SERIES_LAYOUT_SUNBURST)) {
+		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_REGION_MAP)) {
 			return ;
 		}
 		//----------------------------------
@@ -9085,7 +9085,7 @@ function(window, undefined) {
 
 		// TODO after new succefull implementation of new type remove option here
 		const type = this.chart && this.chart.plotArea && this.chart.plotArea.plotAreaRegion && this.chart.plotArea.plotAreaRegion.series && this.chart.plotArea.plotAreaRegion.series[0] ? this.chart.plotArea.plotAreaRegion.series[0].layoutId : null;
-		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_BOX_WHISKER || type === AscFormat.SERIES_LAYOUT_PARETO_LINE || type === AscFormat.SERIES_LAYOUT_REGION_MAP || type === AscFormat.SERIES_LAYOUT_SUNBURST)) {
+		if (isChartEx && !type && (type === AscFormat.SERIES_LAYOUT_REGION_MAP)) {
 			return ;
 		}
 		//----------------------------------
