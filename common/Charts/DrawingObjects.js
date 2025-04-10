@@ -2076,7 +2076,38 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         }
 		_this.recalculate(true);
         worksheet.model.Drawings = aObjects;
-    };
+
+		// Toggle chart elements (bug #67197)
+		Asc.editor.asc_registerCallback('asc_onSelectionChanged', _this.checkChartSelection);
+	};
+
+	_this.checkChartSelection = function () {
+		const ws = _this.getWorksheet();
+		if (!ws) {
+			return;
+		}
+
+		const selectedArray = Asc.editor.getGraphicController().getSelectedArray();
+		if (selectedArray.length !== 1) {
+			return;
+		}
+
+		const selectedObject = selectedArray[0];
+		if (selectedObject.isChart && selectedObject.isChart()) {
+			const bounds = selectedObject.getRectBounds();
+
+			const ppi = ws._getPPIX();
+			const mmToPx = Asc.getCvtRatio(3, 0, ppi);
+
+			const l = AscCommon.AscBrowser.convertToRetinaValue(bounds.l * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+			const t = AscCommon.AscBrowser.convertToRetinaValue(bounds.t * mmToPx - ws._getOffsetY() + ws.cellsTop);
+			const r = AscCommon.AscBrowser.convertToRetinaValue(bounds.r * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+			const b = AscCommon.AscBrowser.convertToRetinaValue(bounds.b * mmToPx - ws._getOffsetY() + ws.cellsTop);
+
+			const chartSpaceRect = new AscCommon.asc_CRect(l, t, r - l, b - t);
+			Asc.editor.sendEvent('asc_onSingleChartSelection', chartSpaceRect);
+		}
+	};
 
     _this.checkImageBullets = function (currentSheet, arrImages) {
         const aObjects = currentSheet.model.Drawings;
