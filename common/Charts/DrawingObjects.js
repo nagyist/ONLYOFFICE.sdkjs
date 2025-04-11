@@ -2086,7 +2086,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 		if (ws) {
 
 			const selectedArray = Asc.editor.getGraphicController().getSelectedArray();
-			if (selectedArray.length !== 1) {
+			if (selectedArray.length === 1) {
 
 				const selectedObject = selectedArray[0];
 				if (selectedObject.isChart && selectedObject.isChart()) {
