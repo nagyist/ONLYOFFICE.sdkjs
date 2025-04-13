@@ -20083,7 +20083,7 @@ CColorObj.prototype =
 				layersCount = 1;
 				for (let i = 0; i < numArr.length; i++) {
 					// search label in strCache if found get name, and increase labelCounter
-					let name = isStrCache && numArr[i].idx === strCache[0].pts[j].idx ? strCache[0].pts[0].val : numArr[i].idx;
+					let name = isStrCache && numArr[i].idx === strCache[0].pts[0].idx ? strCache[0].pts[0].val : numArr[i].idx;
 					resultingArr[0].push({name: name, pVal: numArr[i].val / totalValue, start: i, end: i + 1, pos: i});
 				}
 			}
