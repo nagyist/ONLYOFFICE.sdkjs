@@ -1639,6 +1639,130 @@ CShapeDrawer.prototype =
         this.Graphics.m_oContext.globalAlpha = dOldGlobalAlpha;
     },
 
+	drawArrows: function (bIsSaveToPdfMode) {
+		this.IsArrowsDrawing = true;
+		this.Graphics.p_dash(null);
+
+		const graphicsCtx = this.Graphics.isTrack() && !bIsSaveToPdfMode
+			? this.Graphics.Graphics
+			: this.Graphics;
+
+		const fullTransform = bIsSaveToPdfMode
+			? (this.isPdf() ? this.Graphics.GetTransform() : this.Graphics.m_oFullTransform)
+			: graphicsCtx.m_oFullTransform;
+		const inverseTransform = AscCommon.global_MatrixTransformer.Invert(fullTransform);
+
+		const point1 = { x: fullTransform.TransformPointX(0, 0), y: fullTransform.TransformPointY(0, 0) };
+		const point2 = { x: fullTransform.TransformPointX(1, 1), y: fullTransform.TransformPointY(1, 1) };
+		const transformScaleFactor = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)) / Math.sqrt(2);
+
+		const lineSize = bIsSaveToPdfMode
+			? (this.isPdf() ? this.Graphics.GetLineWidth() : graphicsCtx.m_oContext.lineWidth)
+			: graphicsCtx.m_oContext.lineWidth;
+
+		const penWidth = lineSize * transformScaleFactor;
+		const maxWidth = bIsSaveToPdfMode
+			? 2.5 / AscCommon.g_dKoef_mm_to_pix
+			: (graphicsCtx.IsThumbnail === true ? 2 : undefined);
+
+		const arrCoef = bIsSaveToPdfMode
+			? 1
+			: this.isArrPix ? (1 / AscCommon.g_dKoef_mm_to_pix) : 1;
+
+		const geometry = this.Shape.getGeometry();
+		const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
+
+		if (this.Ln.headEnd != null) {
+			const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
+
+			for (let i = 0; i < paths.length; i++) {
+				const path = paths[i];
+				const headAngle = path.getHeadArrowAngle(arrowLength);
+
+				if (AscFormat.isRealNumber(headAngle)) {
+					// Each continuous subpath starts with a moveTo command
+					// so we can use the first point of the path as the arrow tip point
+
+					const arrowEndPoint = {
+						x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
+						y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
+					};
+					const arrowStartPoint = {
+						x: fullTransform.TransformPointX(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180)),
+						y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
+					};
+
+					const tmpArrayPoints = graphicsCtx.ArrayPoints;
+					graphicsCtx.ArrayPoints = null;
+					DrawLineEnd(
+						arrowEndPoint.x, arrowEndPoint.y,
+						arrowStartPoint.x, arrowStartPoint.y,
+						this.Ln.headEnd.type,
+						arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
+						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
+						this, inverseTransform
+					);
+					graphicsCtx.ArrayPoints = tmpArrayPoints;
+				}
+			}
+		}
+
+		if (this.Ln.tailEnd != null) {
+			const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
+
+			for (let i = 0; i < paths.length; i++) {
+				const path = paths[i];
+				const tailAngle = path.getTailArrowAngle(arrowLength);
+
+				if (AscFormat.isRealNumber(tailAngle)) {
+					// Each continuous subpath starts with a moveTo command
+					// so we can use the first point of the path as the arrow tip point
+
+					function getPathEndPoint(commands) {
+						for (let i = commands.length - 1; i >= 0; i--) {
+							const command = commands[i];
+							if (command.id === AscFormat.lineTo) {
+								return { x: command.X, y: command.Y };
+							}
+							if (command.id === AscFormat.bezier4) {
+								return { x: command.X2, y: command.Y2 };
+							}
+						}
+						return null;
+					}
+
+					const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
+					if (!pathEndPoint) {
+						continue;
+					}
+
+					const arrowEndPoint = {
+						x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
+						y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
+					};
+					const arrowStartPoint = {
+						x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
+						y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
+					};
+
+					const tmpArrayPoints = graphicsCtx.ArrayPoints;
+					graphicsCtx.ArrayPoints = null;
+					DrawLineEnd(
+						arrowEndPoint.x, arrowEndPoint.y,
+						arrowStartPoint.x, arrowStartPoint.y,
+						this.Ln.tailEnd.type,
+						arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
+						arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
+						this, inverseTransform
+					);
+					graphicsCtx.ArrayPoints = tmpArrayPoints;
+				}
+			}
+		}
+
+		this.IsArrowsDrawing = false;
+		this.CheckDash();
+	},
 
     df : function(mode)
     {
@@ -2112,119 +2236,10 @@ CShapeDrawer.prototype =
         }
 
 		if (isArrowsPresent) {
-			// значит стрелки есть. теперь:
-			// определяем толщину линии "как есть"
-			// трансформируем точки в окончательные.
-			// и отправляем на отрисовку (с матрицей)
-
-			this.IsArrowsDrawing = true;
-			this.Graphics.p_dash(null);
-
-			const graphicsCtx = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
-
-			const fullTransform = graphicsCtx.m_oFullTransform;
-			const inverseTransform = AscCommon.global_MatrixTransformer.Invert(fullTransform);
-
-			const point1 = { x: fullTransform.TransformPointX(0, 0), y: fullTransform.TransformPointY(0, 0) };
-			const point2 = { x: fullTransform.TransformPointX(1, 1), y: fullTransform.TransformPointY(1, 1) };
-			const transformScaleFactor = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)) / Math.sqrt(2);
-
-			const penWidth = graphicsCtx.m_oContext.lineWidth * transformScaleFactor;
-			const maxWidth = graphicsCtx.IsThumbnail === true ? 2 : undefined;
-			const arrCoef = this.isArrPix ? (1 / AscCommon.g_dKoef_mm_to_pix) : 1;
-
-			const geometry = this.Shape.getGeometry();
-			const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
-
-			if (this.Ln.headEnd != null) {
-				const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
-
-				for (let i = 0; i < paths.length; i++) {
-					const path = paths[i];
-					const headAngle = path.getHeadArrowAngle(arrowLength);
-
-					if (AscFormat.isRealNumber(headAngle)) {
-						// Each continuous subpath starts with a moveTo command
-						// so we can use the first point of the path as the arrow tip point
-
-						const arrowEndPoint = {
-							x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
-							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
-						};
-						const arrowStartPoint = {
-							x: fullTransform.TransformPointX(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180)),
-							y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
-						};
-
-						graphicsCtx.ArrayPoints = null;
-						DrawLineEnd(
-							arrowEndPoint.x, arrowEndPoint.y,
-							arrowStartPoint.x, arrowStartPoint.y,
-							this.Ln.headEnd.type,
-							arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
-							arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
-							this, inverseTransform
-						);
-						graphicsCtx.ArrayPoints = arr;
-					}
-				}
-			}
-
-			if (this.Ln.tailEnd != null) {
-				const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
-				for (let i = 0; i < paths.length; i++) {
-					const path = paths[i];
-					const tailAngle = path.getTailArrowAngle(arrowLength);
-
-					if (AscFormat.isRealNumber(tailAngle)) {
-						// Each continuous subpath starts with a moveTo command
-						// so we can use the first point of the path as the arrow tip point
-
-						function getPathEndPoint(commands) {
-							for (let i = commands.length - 1; i >= 0; i--) {
-								const command = commands[i];
-								if (command.id === AscFormat.lineTo) {
-									return { x: command.X, y: command.Y };
-								}
-								if (command.id === AscFormat.bezier4) {
-									return { x: command.X2, y: command.Y2 };
-								}
-							}
-							return null;
-						}
-
-						const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
-						if (!pathEndPoint) {
-							continue;
-						}
-
-						const arrowEndPoint = {
-							x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
-							y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
-						};
-						const arrowStartPoint = {
-							x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
-							y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
-						};
-
-						graphicsCtx.ArrayPoints = null;
-						DrawLineEnd(
-							arrowEndPoint.x, arrowEndPoint.y,
-							arrowStartPoint.x, arrowStartPoint.y,
-							this.Ln.tailEnd.type,
-							arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
-							arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
-							this, inverseTransform
-						);
-						graphicsCtx.ArrayPoints = arr;
-					}
-				}
-			}
-
-			this.IsArrowsDrawing = false;
-			this.CheckDash();
+			const bIsSaveToPdfMode = false;
+			this.drawArrows(bIsSaveToPdfMode);
 		}
-    },
+	},
 
     drawFillStroke : function(bIsFill, fill_mode, bIsStroke)
     {
@@ -2453,122 +2468,8 @@ CShapeDrawer.prototype =
             }
 
 			if (isArrowsPresent) {
-				// значит стрелки есть. теперь:
-				// определяем толщину линии "как есть"
-				// трансформируем точки в окончательные.
-				// и отправляем на отрисовку (с матрицей)
-
-				this.IsArrowsDrawing = true;
-				this.Graphics.p_dash(null);
-
-				const graphicsCtx = this.Graphics;
-
-				const fullTransform = this.isPdf()
-					? this.Graphics.GetTransform()
-					: this.Graphics.m_oFullTransform;
-				const inverseTransform = AscCommon.global_MatrixTransformer.Invert(fullTransform);
-
-				const point1 = { x: fullTransform.TransformPointX(0, 0), y: fullTransform.TransformPointY(0, 0) };
-				const point2 = { x: fullTransform.TransformPointX(1, 1), y: fullTransform.TransformPointY(1, 1) };
-				const transformScaleFactor = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)) / Math.sqrt(2);
-
-				const lineSize = this.isPdf()
-					? this.Graphics.GetLineWidth()
-					: this.Graphics.m_oContext.lineWidth;
-				const penWidth = lineSize * transformScaleFactor;
-				const maxWidth = 2.5 / AscCommon.g_dKoef_mm_to_pix;
-
-				const geometry = this.Shape.getGeometry();
-				const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
-
-				if (this.Ln.headEnd != null) {
-					const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
-
-					for (let i = 0; i < paths.length; i++) {
-						const path = paths[i];
-						const headAngle = path.getHeadArrowAngle(arrowLength);
-
-						if (AscFormat.isRealNumber(headAngle)) {
-							// Each continuous subpath starts with a moveTo command
-							// so we can use the first point of the path as the arrow tip point
-
-							const arrowEndPoint = {
-								x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
-								y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
-							};
-							const arrowStartPoint = {
-								x: fullTransform.TransformPointX(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180)),
-								y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
-							};
-
-							graphicsCtx.ArrayPoints = null;
-							DrawLineEnd(
-								arrowEndPoint.x, arrowEndPoint.y,
-								arrowStartPoint.x, arrowStartPoint.y,
-								this.Ln.headEnd.type,
-								this.Ln.headEnd.GetWidth(penWidth, maxWidth),
-								this.Ln.headEnd.GetLen(penWidth, maxWidth),
-								this, inverseTransform
-							);
-							graphicsCtx.ArrayPoints = arr;
-						}
-					}
-				}
-
-				if (this.Ln.tailEnd != null) {
-					const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
-
-					for (let i = 0; i < paths.length; i++) {
-						const path = paths[i];
-						const tailAngle = path.getTailArrowAngle(arrowLength);
-
-						if (AscFormat.isRealNumber(tailAngle)) {
-							// Each continuous subpath starts with a moveTo command
-							// so we can use the first point of the path as the arrow tip point
-
-							function getPathEndPoint(commands) {
-								for (let i = commands.length - 1; i >= 0; i--) {
-									const command = commands[i];
-									if (command.id === AscFormat.lineTo) {
-										return { x: command.X, y: command.Y };
-									}
-									if (command.id === AscFormat.bezier4) {
-										return { x: command.X2, y: command.Y2 };
-									}
-								}
-								return null;
-							}
-
-							const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
-							if (!pathEndPoint) {
-								continue;
-							}
-
-							const arrowEndPoint = {
-								x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
-								y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
-							};
-							const arrowStartPoint = {
-								x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
-								y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
-							};
-
-							graphicsCtx.ArrayPoints = null;
-							DrawLineEnd(
-								arrowEndPoint.x, arrowEndPoint.y,
-								arrowStartPoint.x, arrowStartPoint.y,
-								this.Ln.tailEnd.type,
-								this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
-								this.Ln.tailEnd.GetLen(penWidth, maxWidth),
-								this, inverseTransform
-							);
-							graphicsCtx.ArrayPoints = arr;
-						}
-					}
-				}
-
-				this.IsArrowsDrawing = false;
-				this.CheckDash();
+				const bIsSaveToPdfMode = true;
+				this.drawArrows(bIsSaveToPdfMode);
 			}
         }
     },
