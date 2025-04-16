@@ -1647,6 +1647,8 @@ CShapeDrawer.prototype =
 			? this.Graphics.Graphics
 			: this.Graphics;
 
+		graphicsCtx.ArrayPoints = null;
+
 		const fullTransform = bIsSaveToPdfMode
 			? (this.isPdf() ? this.Graphics.GetTransform() : this.Graphics.m_oFullTransform)
 			: graphicsCtx.m_oFullTransform;
@@ -1692,8 +1694,6 @@ CShapeDrawer.prototype =
 						y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
 					};
 
-					const tmpArrayPoints = graphicsCtx.ArrayPoints;
-					graphicsCtx.ArrayPoints = null;
 					DrawLineEnd(
 						arrowEndPoint.x, arrowEndPoint.y,
 						arrowStartPoint.x, arrowStartPoint.y,
@@ -1702,7 +1702,6 @@ CShapeDrawer.prototype =
 						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
 						this, inverseTransform
 					);
-					graphicsCtx.ArrayPoints = tmpArrayPoints;
 				}
 			}
 		}
@@ -1745,8 +1744,6 @@ CShapeDrawer.prototype =
 						y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
 					};
 
-					const tmpArrayPoints = graphicsCtx.ArrayPoints;
-					graphicsCtx.ArrayPoints = null;
 					DrawLineEnd(
 						arrowEndPoint.x, arrowEndPoint.y,
 						arrowStartPoint.x, arrowStartPoint.y,
@@ -1755,7 +1752,6 @@ CShapeDrawer.prototype =
 						arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
 						this, inverseTransform
 					);
-					graphicsCtx.ArrayPoints = tmpArrayPoints;
 				}
 			}
 		}
