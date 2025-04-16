@@ -2137,10 +2137,10 @@ CShapeDrawer.prototype =
 			const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
 
 			if (this.Ln.headEnd != null) {
-                const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
+				const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
 
-                for (let i = 0; i < paths.length; i++) {
-                    const path = paths[i];
+				for (let i = 0; i < paths.length; i++) {
+					const path = paths[i];
 					const headAngle = path.getHeadArrowAngle(arrowLength);
 
 					if (AscFormat.isRealNumber(headAngle)) {
@@ -2170,56 +2170,56 @@ CShapeDrawer.prototype =
 				}
 			}
 
-            if (this.Ln.tailEnd != null) {
-                const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
-                for (let i = 0; i < paths.length; i++) {
-                    const path = paths[i];
-                    const tailAngle = path.getTailArrowAngle(arrowLength);
+			if (this.Ln.tailEnd != null) {
+				const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
+				for (let i = 0; i < paths.length; i++) {
+					const path = paths[i];
+					const tailAngle = path.getTailArrowAngle(arrowLength);
 
-                    if (AscFormat.isRealNumber(tailAngle)) {
-                        // Each continuous subpath starts with a moveTo command
+					if (AscFormat.isRealNumber(tailAngle)) {
+						// Each continuous subpath starts with a moveTo command
 						// so we can use the first point of the path as the arrow tip point
 
-                        function getPathEndPoint(commands) {
-                            for (let i = commands.length - 1; i >= 0; i--) {
-                                const command = commands[i];
-                                if (command.id === AscFormat.lineTo) {
-                                    return { x: command.X, y: command.Y };
-                                }
-                                if (command.id === AscFormat.bezier4) {
-                                    return { x: command.X2, y: command.Y2 };
-                                }
-                            }
-                            return null;
-                        }
+						function getPathEndPoint(commands) {
+							for (let i = commands.length - 1; i >= 0; i--) {
+								const command = commands[i];
+								if (command.id === AscFormat.lineTo) {
+									return { x: command.X, y: command.Y };
+								}
+								if (command.id === AscFormat.bezier4) {
+									return { x: command.X2, y: command.Y2 };
+								}
+							}
+							return null;
+						}
 
-                        const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
-                        if (!pathEndPoint) {
-                            continue;
-                        }
+						const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
+						if (!pathEndPoint) {
+							continue;
+						}
 
-                        const arrowEndPoint = {
-                            x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
-                            y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
-                        };
-                        const arrowStartPoint = {
+						const arrowEndPoint = {
+							x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
+							y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
+						};
+						const arrowStartPoint = {
 							x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
 							y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
-                        };
+						};
 
-                        graphicsCtx.ArrayPoints = null;
-                        DrawLineEnd(
-                            arrowEndPoint.x, arrowEndPoint.y,
-                            arrowStartPoint.x, arrowStartPoint.y,
-                            this.Ln.tailEnd.type,
-                            arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
-                            arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
-                            this, inverseTransform
-                        );
-                        graphicsCtx.ArrayPoints = arr;
-                    }
-                }
-            }
+						graphicsCtx.ArrayPoints = null;
+						DrawLineEnd(
+							arrowEndPoint.x, arrowEndPoint.y,
+							arrowStartPoint.x, arrowStartPoint.y,
+							this.Ln.tailEnd.type,
+							arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
+							arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
+							this, inverseTransform
+						);
+						graphicsCtx.ArrayPoints = arr;
+					}
+				}
+			}
 
 			this.IsArrowsDrawing = false;
 			this.CheckDash();
@@ -2452,82 +2452,124 @@ CShapeDrawer.prototype =
                 this.Graphics.drawpath(256);
             }
 
-            if (isArrowsPresent)
-            {
-                this.IsArrowsDrawing = true;
-                this.Graphics.p_dash(null);
-                // значит стрелки есть. теперь:
-                // определяем толщину линии "как есть"
-                // трансформируем точки в окончательные.
-                // и отправляем на отрисовку (с матрицей)
+			if (isArrowsPresent) {
+				// значит стрелки есть. теперь:
+				// определяем толщину линии "как есть"
+				// трансформируем точки в окончательные.
+				// и отправляем на отрисовку (с матрицей)
 
-                var trans = (!this.isPdf()) ? this.Graphics.m_oFullTransform : this.Graphics.GetTransform();
-                var trans1 = AscCommon.global_MatrixTransformer.Invert(trans);
+				this.IsArrowsDrawing = true;
+				this.Graphics.p_dash(null);
 
-                var lineSize = (!this.isPdf()) ? this.Graphics.m_oContext.lineWidth : this.Graphics.GetLineWidth();
+				const graphicsCtx = this.Graphics;
 
-                var x1 = trans.TransformPointX(0, 0);
-                var y1 = trans.TransformPointY(0, 0);
-                var x2 = trans.TransformPointX(1, 1);
-                var y2 = trans.TransformPointY(1, 1);
-                var dKoef = Math.sqrt(((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/2);
-                var _pen_w = lineSize * dKoef;
+				const fullTransform = this.isPdf()
+					? this.Graphics.GetTransform()
+					: this.Graphics.m_oFullTransform;
+				const inverseTransform = AscCommon.global_MatrixTransformer.Invert(fullTransform);
 
-                var _pen_w_max = 2.5 / AscCommon.g_dKoef_mm_to_pix;
+				const point1 = { x: fullTransform.TransformPointX(0, 0), y: fullTransform.TransformPointY(0, 0) };
+				const point2 = { x: fullTransform.TransformPointX(1, 1), y: fullTransform.TransformPointY(1, 1) };
+				const transformScaleFactor = Math.sqrt(Math.pow(point2.x - point1.x, 2) + Math.pow(point2.y - point1.y, 2)) / Math.sqrt(2);
 
-                if (this.Ln.headEnd != null)
-                {
-                    var _x1 = trans.TransformPointX(arr[0].x, arr[0].y);
-                    var _y1 = trans.TransformPointY(arr[0].x, arr[0].y);
-                    var _x2 = trans.TransformPointX(arr[1].x, arr[1].y);
-                    var _y2 = trans.TransformPointY(arr[1].x, arr[1].y);
+				const lineSize = this.isPdf()
+					? this.Graphics.GetLineWidth()
+					: this.Graphics.m_oContext.lineWidth;
+				const penWidth = lineSize * transformScaleFactor;
+				const maxWidth = 2.5 / AscCommon.g_dKoef_mm_to_pix;
 
-                    var _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                    var cur_point = 2;
-                    while (_max_delta < 0.001 && cur_point < arr.length)
-                    {
-                        _x2 = trans.TransformPointX(arr[cur_point].x, arr[cur_point].y);
-                        _y2 = trans.TransformPointY(arr[cur_point].x, arr[cur_point].y);
-                        _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                        cur_point++;
-                    }
+				const geometry = this.Shape.getGeometry();
+				const paths = geometry.getContinuousSubpaths ? geometry.getContinuousSubpaths() : [];
 
-                    if (_max_delta > 0.001)
-                    {
-                        this.Graphics.ArrayPoints = null;
-                        DrawLineEnd(_x1, _y1, _x2, _y2, this.Ln.headEnd.type, this.Ln.headEnd.GetWidth(_pen_w, _pen_w_max), this.Ln.headEnd.GetLen(_pen_w, _pen_w_max), this, trans1);
-                        this.Graphics.ArrayPoints = arr;
-                    }
-                }
-                if (this.Ln.tailEnd != null)
-                {
-                    var _1 = arr.length-1;
-                    var _2 = arr.length-2;
-                    var _x1 = trans.TransformPointX(arr[_1].x, arr[_1].y);
-                    var _y1 = trans.TransformPointY(arr[_1].x, arr[_1].y);
-                    var _x2 = trans.TransformPointX(arr[_2].x, arr[_2].y);
-                    var _y2 = trans.TransformPointY(arr[_2].x, arr[_2].y);
+				if (this.Ln.headEnd != null) {
+					const arrowLength = this.Ln.headEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
 
-                    var _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                    var cur_point = _2 - 1;
-                    while (_max_delta < 0.001 && cur_point >= 0)
-                    {
-                        _x2 = trans.TransformPointX(arr[cur_point].x, arr[cur_point].y);
-                        _y2 = trans.TransformPointY(arr[cur_point].x, arr[cur_point].y);
-                        _max_delta = Math.max(Math.abs(_x1 - _x2), Math.abs(_y1 - _y2));
-                        cur_point--;
-                    }
+					for (let i = 0; i < paths.length; i++) {
+						const path = paths[i];
+						const headAngle = path.getHeadArrowAngle(arrowLength);
 
-                    if (_max_delta > 0.001)
-                    {
-                        this.Graphics.ArrayPoints = null;
-                        DrawLineEnd(_x1, _y1, _x2, _y2, this.Ln.tailEnd.type, this.Ln.tailEnd.GetWidth(_pen_w, _pen_w_max), this.Ln.tailEnd.GetLen(_pen_w, _pen_w_max), this, trans1);
-                        this.Graphics.ArrayPoints = arr;
-                    }
-                }
-                this.IsArrowsDrawing = false;
-                this.CheckDash();
-            }
+						if (AscFormat.isRealNumber(headAngle)) {
+							// Each continuous subpath starts with a moveTo command
+							// so we can use the first point of the path as the arrow tip point
+
+							const arrowEndPoint = {
+								x: fullTransform.TransformPointX(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y),
+								y: fullTransform.TransformPointY(path.ArrPathCommand[0].X, path.ArrPathCommand[0].Y)
+							};
+							const arrowStartPoint = {
+								x: fullTransform.TransformPointX(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180)),
+								y: fullTransform.TransformPointY(path.ArrPathCommand[0].X - Math.cos(headAngle * Math.PI / 180), path.ArrPathCommand[0].Y - Math.sin(headAngle * Math.PI / 180))
+							};
+
+							graphicsCtx.ArrayPoints = null;
+							DrawLineEnd(
+								arrowEndPoint.x, arrowEndPoint.y,
+								arrowStartPoint.x, arrowStartPoint.y,
+								this.Ln.headEnd.type,
+								this.Ln.headEnd.GetWidth(penWidth, maxWidth),
+								this.Ln.headEnd.GetLen(penWidth, maxWidth),
+								this, inverseTransform
+							);
+							graphicsCtx.ArrayPoints = arr;
+						}
+					}
+				}
+
+				if (this.Ln.tailEnd != null) {
+					const arrowLength = this.Ln.tailEnd.GetLen(penWidth, maxWidth) / transformScaleFactor;
+
+					for (let i = 0; i < paths.length; i++) {
+						const path = paths[i];
+						const tailAngle = path.getTailArrowAngle(arrowLength);
+
+						if (AscFormat.isRealNumber(tailAngle)) {
+							// Each continuous subpath starts with a moveTo command
+							// so we can use the first point of the path as the arrow tip point
+
+							function getPathEndPoint(commands) {
+								for (let i = commands.length - 1; i >= 0; i--) {
+									const command = commands[i];
+									if (command.id === AscFormat.lineTo) {
+										return { x: command.X, y: command.Y };
+									}
+									if (command.id === AscFormat.bezier4) {
+										return { x: command.X2, y: command.Y2 };
+									}
+								}
+								return null;
+							}
+
+							const pathEndPoint = getPathEndPoint(path.ArrPathCommand);
+							if (!pathEndPoint) {
+								continue;
+							}
+
+							const arrowEndPoint = {
+								x: fullTransform.TransformPointX(pathEndPoint.x, pathEndPoint.y),
+								y: fullTransform.TransformPointY(pathEndPoint.x, pathEndPoint.y)
+							};
+							const arrowStartPoint = {
+								x: fullTransform.TransformPointX(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180)),
+								y: fullTransform.TransformPointY(pathEndPoint.x - Math.cos(tailAngle * Math.PI / 180), pathEndPoint.y - Math.sin(tailAngle * Math.PI / 180))
+							};
+
+							graphicsCtx.ArrayPoints = null;
+							DrawLineEnd(
+								arrowEndPoint.x, arrowEndPoint.y,
+								arrowStartPoint.x, arrowStartPoint.y,
+								this.Ln.tailEnd.type,
+								this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
+								this.Ln.tailEnd.GetLen(penWidth, maxWidth),
+								this, inverseTransform
+							);
+							graphicsCtx.ArrayPoints = arr;
+						}
+					}
+				}
+
+				this.IsArrowsDrawing = false;
+				this.CheckDash();
+			}
         }
     },
 
