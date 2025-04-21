@@ -5889,6 +5889,20 @@ CPresentation.prototype.EnterText = function (value) {
 	}
 	return bRetValue;
 };
+
+CPresentation.prototype.GetCurrentParagraph = function(bIgnoreSelection, bReturnSelectedArray, oPr) {
+
+	let oController = this.GetCurrentController();
+	if (!oController) {
+		return null;
+	}
+	let oContent = oController.getTargetDocContent();
+	if(!oContent) {
+		return null;
+	}
+	return oContent.GetCurrentParagraph(bIgnoreSelection, bReturnSelectedArray, oPr);
+};
+
 CPresentation.prototype.CorrectEnterText = function (oldValue, newValue) {
 	if (undefined === oldValue
 		|| null === oldValue
@@ -8727,6 +8741,7 @@ CPresentation.prototype.Refresh_RecalcData2 = function (Data) {
 			break;
 		}
 		case AscDFH.historyitem_ThemeSetColorScheme: {
+			this.bNeedUpdateThemes = true;
 			History.RecalcData_Add({Type: AscDFH.historyitem_recalctype_Drawing, Theme: true, ThemeObj: Data.Theme});
 			break;
 		}

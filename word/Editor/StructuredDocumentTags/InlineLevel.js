@@ -205,6 +205,7 @@ CInlineLevelSdt.prototype.private_CopyPrTo = function(oContentControl, oPr)
 	oContentControl.SetTag(this.GetTag());
 	oContentControl.SetAlias(this.GetAlias());
 	oContentControl.SetContentControlLock(this.GetContentControlLock());
+	oContentControl.SetContentControlId(this.GetContentControlId());
 	oContentControl.SetAppearance(this.GetAppearance());
 	oContentControl.SetColor(this.GetColor());
 
@@ -3293,8 +3294,8 @@ CInlineLevelSdt.prototype.IsMultiLineForm = function()
 	var oTextFormPr = this.GetTextFormPr();
 	if (oTextFormPr)
 		return oTextFormPr.GetMultiLine();
-
-	return true;
+	
+	return !(this.IsForm() && (this.IsDropDownList() || this.IsComboBox()));
 };
 CInlineLevelSdt.prototype.OnChangeFixedFormTrack = function(nW, nH)
 {

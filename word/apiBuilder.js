@@ -2991,7 +2991,7 @@
 	/**
 	 * Class representing a document.
 	 * @constructor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @extends {ApiDocumentContent}
 	 */
 	function ApiDocument(Document)
@@ -4279,6 +4279,11 @@
 	 */
 
 	/**
+	 * @typedef {string} Base64Img Base64 image string
+	 * @example "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA..."
+	 */
+
+	/**
 	 * Returns the main document.
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
@@ -4479,9 +4484,9 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
 	 * @param {ChartType} [chartType="bar"] - The chart type used for the chart display.
-	 * @param {Array} series - The array of the data used to build the chart from.
-	 * @param {Array} seriesNames - The array of the names (the source table column names) used for the data which the chart will be build from.
-	 * @param {Array} catNames - The array of the names (the source table row names) used for the data which the chart will be build from.
+	 * @param {number[][]} series - The array of the data used to build the chart from.
+	 * @param {number[] | string[]} seriesNames - The array of the names (the source table column names) used for the data which the chart will be build from.
+	 * @param {number[] | string[]} catNames - The array of the names (the source table row names) used for the data which the chart will be build from.
 	 * @param {EMU} width - The chart width in English measure units.
 	 * @param {EMU} height - The chart height in English measure units.
 	 * @param {number} styleIndex - The chart color style index (can be 1 - 48, as described in OOXML specification).
@@ -4594,7 +4599,7 @@
 	 * Creates a linear gradient fill to apply to the object using the selected linear gradient as the object background.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @param {Array} gradientStops - The array of gradient color stops measured in 1000th of percent.
+	 * @param {number[]} gradientStops - The array of gradient color stops measured in 1000th of percent.
 	 * @param {PositiveFixedAngle} angle - The angle measured in 60000th of a degree that will define the gradient direction.
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateLinearGradientFill.js
@@ -4609,7 +4614,7 @@
 	 * Creates a radial gradient fill to apply to the object using the selected radial gradient as the object background.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @param {Array} gradientStops - The array of gradient color stops measured in 1000th of percent.
+	 * @param {number[]} gradientStops - The array of gradient color stops measured in 1000th of percent.
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRadialGradientFill.js
 	 */
@@ -4710,7 +4715,7 @@
 	/**
 	 * Creates a bullet for a paragraph with the numbering character or symbol specified with the numType parameter.
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CPE", "CSE"]
 	 * @param {BulletType} numType - The numbering type the paragraphs will be numbered with.
 	 * @param {number} startAt - The number the first numbered paragraph will start with.
 	 * @returns {ApiBullet}
@@ -5002,14 +5007,12 @@
 		var oResult = null;
 		if (oParsedObj["styles"])
 			oReader.StylesFromJSON(oParsedObj["styles"]);
+		if (oParsedObj["numbering"])
+			oReader.parsedNumbering = oParsedObj["numbering"];
 
 		switch (oParsedObj["type"])
 		{
 			case "document":
-				if (oParsedObj["numbering"])
-				{
-					oReader.parsedNumbering = oParsedObj["numbering"];
-				}
 				if (oParsedObj["textPr"])
 				{
 					var oNewTextPr = oReader.TextPrFromJSON(oParsedObj["textPr"]);
@@ -5527,7 +5530,7 @@
 	 * @memberof ApiDocumentContent
 	 * @typeofeditors ["CDE"]
 	 * @param {boolean} bGetCopies - Specifies if the copies of the document elements will be returned or not.
-	 * @returns {Array}
+	 * @returns {DocumentElement[]}
 	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetContent.js
 	 */
 	ApiDocumentContent.prototype.GetContent = function(bGetCopies)
@@ -6020,30 +6023,42 @@
 	};
 	
 	/**
-	 * Record of one comment.
+	 * Represents a single comment record.
 	 * @typedef {Object} CommentReportRecord
-	 * @property {boolean} [IsAnswer=false] - Specifies whether this is an initial comment or a reply to another comment.
-	 * @property {string} CommentMessage - The text of the current comment.
-	 * @property {number} Date - The time when this change was made in local time.
-	 * @property {number} DateUTC - The time when this change was made in UTC.
-	 * @property {string} [QuoteText=undefined] - The text to which this comment is related.
-	 * @see office-js-api/Examples/Enumerations/CommentReportRecord.js
+	 * @property {boolean} IsAnswer Whether the comment is a response.
+	 * @property {string} CommentMessage The comment text.
+	 * @property {number} Date Local timestamp of the comment.
+	 * @property {number} DateUTC UTC timestamp of the comment.
+	 * @property {string} [QuoteText] The quoted text (if available).
 	 */
-	
+
 	/**
-	 * Report on all comments.
-	 * This is a dictionary where the keys are usernames.
-	 * @typedef {Object.<string, Array.<CommentReportRecord>>} CommentReport
-	 * @example
-	 *  {
-	 *    "John Smith" : [{IsAnswer: false, CommentMessage: 'Good text', Date: 1688588002698, DateUTC: 1688570002698, QuoteText: 'Some text'},
-	 *      {IsAnswer: true, CommentMessage: "I don't think so", Date: 1688588012661, DateUTC: 1688570012661}],
-	 *
-	 *    "Mark Pottato" : [{IsAnswer: false, CommentMessage: 'Need to change this part', Date: 1688587967245, DateUTC: 1688569967245, QuoteText: 'The quick brown fox jumps over the lazy dog'},
-	 *      {IsAnswer: false, CommentMessage: 'We need to add a link', Date: 1688587967245, DateUTC: 1688569967245, QuoteText: 'OnlyOffice'}]
-	 *  }
-	 * @see office-js-api/Examples/Enumerations/CommentReport.js
+	 * Represents a user's comment history.
+	 * @typedef {Object} UserComments
+	 * @property {CommentReportRecord[]} comments List of comments.
 	 */
+
+	/**
+	 * A dictionary of users and their comments.
+	 * @typedef {Object} CommentReport
+	 * @property {UserComments} [username] Comments grouped by username.
+	 * @example
+	 * {
+	 *   "John Smith": {
+	 *     comments: [
+	 *       { IsAnswer: false, CommentMessage: "Good text", Date: 1688588002698, DateUTC: 1688570002698, QuoteText: "Some text" },
+	 *       { IsAnswer: true, CommentMessage: "I don't think so", Date: 1688588012661, DateUTC: 1688570012661 }
+	 *     ]
+	 *   },
+	 *   "Mark Pottato": {
+	 *     comments: [
+	 *       { IsAnswer: false, CommentMessage: "Need to change this part", Date: 1688587967245, DateUTC: 1688569967245, QuoteText: "The quick brown fox jumps over the lazy dog" },
+	 *       { IsAnswer: false, CommentMessage: "We need to add a link", Date: 1688587967245, DateUTC: 1688569967245, QuoteText: "OnlyOffice" }
+	 *     ]
+	 *   }
+	 * }
+	 */
+
 	
 	
 	/**
@@ -6104,28 +6119,41 @@
 	 */
 	
 	/**
-	 * Record of one review change.
+	 * Represents a single review change record.
 	 * @typedef {Object} ReviewReportRecord
-	 * @property {ReviewReportRecordType} Type - Review record type.
-	 * @property {string} [Value=undefined] - Review change value that is set for the "TextAdd" and "TextRem" types only.
-	 * @property {number} Date - The time when this change was made.
-	 * @property {ApiParagraph | ApiTable} ReviewedElement - Element that has been reviewed.
-	 * @see office-js-api/Examples/Enumerations/ReviewReportRecord.js
+	 * @property {ReviewReportRecordType} Type Review record type.
+	 * @property {string} [Value] Review change value (only for "TextAdd" and "TextRem" types).
+	 * @property {number} Date Timestamp of when the change was made.
+	 * @property {ApiParagraph | ApiTable} ReviewedElement The element that was reviewed.
 	 */
-	
+
 	/**
-	 * Report on all review changes.
-	 * This is a dictionary where the keys are usernames.
-	 * @typedef {Object.<string, Array.<ReviewReportRecord>>} ReviewReport
-	 * @example
-	 * 	{
-	 * 	  "John Smith" : [{Type: 'TextRem', Value: 'Hello, Mark!', Date: 1679941734161, Element: ApiParagraph},
-	 * 	                {Type: 'TextAdd', Value: 'Dear Mr. Pottato.', Date: 1679941736189, Element: ApiParagraph}],
-	 * 	  "Mark Pottato" : [{Type: 'ParaRem', Date: 1679941755942, ReviewedElement: ApiParagraph},
-	 * 	                  {Type: 'TextPr', Date: 1679941757832, ReviewedElement: ApiParagraph}]
-	 * 	}
-	 * @see office-js-api/Examples/Enumerations/ReviewReport.js
+	 * Represents a user's review history.
+	 * @typedef {Object} UserReviewChanges
+	 * @property {ReviewReportRecord[]} reviews List of review records.
 	 */
+
+	/**
+	 * A dictionary of users and their review changes.
+	 * @typedef {Object} ReviewReport
+	 * @property {UserReviewChanges} [username] Review changes grouped by username.
+	 * @example
+	 * {
+	 *   "John Smith": {
+	 *     reviews: [
+	 *       { Type: "TextRem", Value: "Hello, Mark!", Date: 1679941734161, ReviewedElement: ApiParagraph },
+	 *       { Type: "TextAdd", Value: "Dear Mr. Pottato.", Date: 1679941736189, ReviewedElement: ApiParagraph }
+	 *     ]
+	 *   },
+	 *   "Mark Pottato": {
+	 *     reviews: [
+	 *       { Type: "ParaRem", Date: 1679941755942, ReviewedElement: ApiParagraph },
+	 *       { Type: "TextPr", Date: 1679941757832, ReviewedElement: ApiParagraph }
+	 *     ]
+	 *   }
+	 * }
+	 */
+
 	
 	/**
 	 * Returns a report about every change which was made to the document in the review mode.
@@ -6305,7 +6333,7 @@
 	/**
 	 * Returns a list of all tags that are used for all forms in the document.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @returns {String[]}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetTagsOfAllForms.js
 	 */
@@ -6357,9 +6385,9 @@
 	/**
 	 * Returns a list of all forms in the document with the specified tag name.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @param sTag {string} - Form tag.
-	 * @returns {ApiBlockLvlSdt[] | ApiInlineLvlSdt[]}
+	 * @returns {ApiForm[]}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetFormsByTag.js
 	 */
 	ApiDocument.prototype.GetFormsByTag = function(sTag)
@@ -6405,7 +6433,7 @@
 	 * Returns the data from all forms present in the current document.
 	 * If a form was created and not assigned to any part of the document, it won't appear in this list.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @returns {Array.<FormData>}
 	 * @since 8.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetFormsData.js
@@ -6417,7 +6445,7 @@
 	/**
 	 * Sets the data to the specified forms.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @param {Array.<FormData>} arrData - An array of form data to set to the specified forms.
 	 * @returns {boolean}
 	 * @since 8.0.0
@@ -6739,12 +6767,20 @@
 	 * Inserts a watermark on each document page.
 	 * @memberof ApiDocument
 	 * @typeofeditors ["CDE"]
-	 * @param {?string} [sText="WATERMARK"] - Watermark text.
-	 * @param {?boolean} [bIsDiagonal=false] - Specifies if the watermark is placed diagonally (true) or horizontally (false).
-	 * @returns {?ApiDrawing} - The object which represents the inserted watermark. Returns null if the watermark type is "none".
+	 * @param {string} [sText="WATERMARK"] - Watermark text.
+	 * @param {boolean} [bIsDiagonal=false] - Specifies if the watermark is placed diagonally (true) or horizontally (false).
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertWatermark.js
 	 */
 	ApiDocument.prototype.InsertWatermark = function(sText, bIsDiagonal){
+		if (typeof(sText) != "string") {
+			sText = "WATERMARK";
+		}
+		if (typeof(bIsDiagonal) != "boolean") {
+			sText = false;
+		}
+
+		let bRes = false;
 		var oSectPrMap = {};
 		if(this.Document.SectPr){
 			oSectPrMap[this.Document.SectPr.Get_Id()] = this.Document.SectPr;
@@ -6780,8 +6816,11 @@
 		for(sId in oHeadersMap){
 			if(oHeadersMap.hasOwnProperty(sId)){
 				privateInsertWatermarkToContent(this.Document.Api, oHeadersMap[sId], sText, bIsDiagonal);
+				bRes = true;
 			}
 		}
+
+		return bRes;
 	};
 
 
@@ -7008,7 +7047,7 @@
 	/**
 	 * Returns all existing forms in the document.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @returns {ApiForm[]}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetAllForms.js
 	 */
@@ -7030,7 +7069,7 @@
 	/**
 	 * Clears all forms in the document.
 	 * @memberof ApiDocument
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/ClearAllFields.js
 	 */
@@ -7048,7 +7087,7 @@
 	 * @param {byte} g - Green color component value.
 	 * @param {byte} b - Blue color component value.
 	 * @param {boolean} [bNone=false] - Defines that highlight will not be set.
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/SetFormsHighlight.js
 	 */
@@ -7460,7 +7499,12 @@
 
 		if (Array.isArray(oTocPr["BuildFrom"]["StylesLvls"]) && oTocPr["BuildFrom"]["StylesLvls"].length > 0)
 		{
-			oTargetPr.Styles = oTocPr["BuildFrom"]["StylesLvls"];
+			oTargetPr.Styles = oTocPr["BuildFrom"]["StylesLvls"].map(function(styleLvl) {
+				return {
+					Name: styleLvl['Name'],
+					Lvl: styleLvl['Lvl']
+				}
+			});
 			oTargetPr.OutlineEnd = -1;
 			oTargetPr.OutlineStart = -1;
 		}
@@ -10569,7 +10613,7 @@
 	/**
 	 * Sets a style to the current run.
 	 * @memberof ApiRun
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 * @param {ApiStyle} oStyle - The style which must be applied to the text run.
 	 * @returns {ApiTextPr}
 	 * @see office-js-api/Examples/{Editor}/ApiRun/Methods/SetStyle.js
@@ -12661,14 +12705,14 @@
 	 * Removes a column containing the current cell.
 	 * @memberof ApiTableCell
 	 * @typeofeditors ["CDE"]
-	 * @returns {bool | null} Is the table empty after removing. Returns null if parent table doesn't exist.
+	 * @returns {boolean} - removes false if table doen't exist
 	 * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/RemoveColumn.js
 	 */
 	ApiTableCell.prototype.RemoveColumn = function()
 	{
 		var oTable = this.GetParentTable();
 		if (!oTable)
-			return null;
+			return false;
 
 		return oTable.RemoveColumn(this);
 	};
@@ -16436,7 +16480,7 @@
      * Returns the lock value for the specified lock type of the current drawing.
      * @typeofeditors ["CDE"]
 	 * @param {DrawingLockType} sType - Lock type in the string format.
-     * @returns {bool}
+     * @returns {boolean}
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetLockValue.js
 	 */
 	ApiDrawing.prototype.GetLockValue = function(sType)
@@ -16456,8 +16500,8 @@
      * Sets the lock value to the specified lock type of the current drawing.
      * @typeofeditors ["CDE"]
 	 * @param {DrawingLockType} sType - Lock type in the string format.
-     * @param {bool} bValue - Specifies if the specified lock is applied to the current drawing.
-	 * @returns {bool}
+     * @param {boolean} bValue - Specifies if the specified lock is applied to the current drawing.
+	 * @returns {boolean}
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetLockValue.js
 	 */
 	ApiDrawing.prototype.SetLockValue = function(sType, bValue)
@@ -16879,7 +16923,7 @@
 	 *  @typeofeditors ["CDE", "CSE", "CPE"]
 	 *  @param {string} sTitle - The title which will be displayed for the current chart.
 	 *  @param {pt} nFontSize - The text size value measured in points.
-	 *  @param {?bool} bIsBold - Specifies if the chart title is written in bold font or not.
+	 *  @param {boolean} bIsBold - Specifies if the chart title is written in bold font or not.
 	 * 	@returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetTitle.js
 	 */
@@ -16895,7 +16939,7 @@
 	 *  @typeofeditors ["CDE", "CSE", "CPE"]
 	 *  @param {string} sTitle - The title which will be displayed for the horizontal axis of the current chart.
 	 *  @param {pt} nFontSize - The text size value measured in points.
-	 *  @param {?bool} bIsBold - Specifies if the horizontal axis title is written in bold font or not.
+	 *  @param {boolean} bIsBold - Specifies if the horizontal axis title is written in bold font or not.
 	 *	@returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisTitle.js
 	 */
@@ -16911,7 +16955,7 @@
 	 *  @typeofeditors ["CDE", "CSE", "CPE"]
 	 *  @param {string} sTitle - The title which will be displayed for the vertical axis of the current chart.
 	 *  @param {pt} nFontSize - The text size value measured in points.
-	 *  @param {?bool} bIsBold - Specifies if the vertical axis title is written in bold font or not.
+	 *  @param {boolean} bIsBold - Specifies if the vertical axis title is written in bold font or not.
 	 *	@returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVerAxisTitle.js
 	 */
@@ -18074,12 +18118,18 @@
 	 * @memberof ApiInlineLvlSdt
 	 * @typeofeditors ["CDE"]
 	 * @since 8.3.2
-	 * @param {string} id - The id which will be specified to the current content control.
+	 * @param {number} id - The numerical id which will be specified to the current content control.
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiInlineLvlSdt/Methods/SetId.js
 	 */
 	ApiInlineLvlSdt.prototype.SetId = function(id)
 	{
-		this.Sdt.SetContentControlId(id);
+		let _id = GetIntParameter(id, null);
+		if (null === _id)
+			return false;
+		
+		this.Sdt.SetContentControlId(_id);
+		return true;
 	};
 	
 	/**
@@ -18837,7 +18887,7 @@
 	 * Adds a new value to the combo box / dropdown list content control.
 	 * @memberof ApiContentControlList
 	 * @param {string} sText - The display text for the list item.
-	 * @param {string} [sValue=sText] - The list item value.
+	 * @param {string} sValue - The list item value. By default is equal to sText parameter
 	 * @param {number} [nIndex=this.GetElementsCount()] - A position where a new value will be added.
 	 * @typeofeditors ["CDE"]
 	 * @returns {boolean}
@@ -19167,13 +19217,10 @@
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
 	 * @since 8.3.2
-	 * @param {string} id - The id which will be specified to the current content control.
+	 * @param {number} id - The numerical id which will be specified to the current content control.
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetId.js
 	 */
-	ApiBlockLvlSdt.prototype.SetId = function(id)
-	{
-		this.Sdt.SetContentControlId(id);
-	};
+	ApiBlockLvlSdt.prototype.SetId = ApiInlineLvlSdt.prototype.SetId;
 	
 	/**
 	 * Gets a unique ID for the current content control.
@@ -20838,7 +20885,7 @@
 	 * Returns an image in the base64 format from the current picture form.
 	 * @memberof ApiPictureForm
 	 * @typeofeditors ["CDE", "CFE"]
-	 * @returns {base64img}
+	 * @returns {Base64Img}
 	 * @see office-js-api/Examples/{Editor}/ApiPictureForm/Methods/GetImage.js
 	 */
 	ApiPictureForm.prototype.GetImage = function()
@@ -21327,7 +21374,7 @@
 	 * Replaces each paragraph (or text in cell) in the select with the corresponding text from an array of strings.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @param {Array} textStrings - An array of replacement strings.
+	 * @param {string[]} textStrings - An array of replacement strings.
 	 * @param {string} [tab="\t"] - A character which is used to specify the tab in the source text.
 	 * @param {string} [newLine="\r\n"] - A character which is used to specify the line break character in the source text.
 	 * @returns {boolean}
@@ -21342,8 +21389,15 @@
 		var textDelta        = null;
 		var arrSelectedParas = null;
 
+		let oDocument = this.GetDocument();
+		let isTrackRevisions = oDocument.IsTrackRevisions();
+
 		function GetRunInfo(oRun)
 		{
+			if (isTrackRevisions && !oRun.CanDeleteInReviewMode() && reviewtype_Remove === oRun.GetReviewType()) {
+				return;
+			}
+
 			var StartPos = 0;
 			var EndPos   = 0;
 			var Item;
@@ -21528,32 +21582,63 @@
 
 		function DelInsertChars()
 		{
-			for (var nChange = textDelta.length - 1; nChange >= 0; nChange--)
+			for (let nChange = textDelta.length - 1; nChange >= 0; nChange--)
 			{
-				var oChange = textDelta[nChange];
-				var DelCount = oChange.deleteCount;
-				var infoToAdd = null;
-				for (var nInfo = 0; nInfo < allRunsInfo.length; nInfo++)
+				let oChange = textDelta[nChange];
+				let DelCount = oChange.deleteCount;
+				let oRunInfoToAdd = null;
+
+				for (let nInfo = 0; nInfo < allRunsInfo.length; nInfo++)
 				{
-					var oInfo = allRunsInfo[nInfo];
-					if (oChange.pos >= oInfo.GlobStartPos || oChange.pos + DelCount > oInfo.GlobStartPos)
+					let oRunInfo = Object.assign({}, allRunsInfo[nInfo]);
+					
+					let oDeleteReviewRun = null;
+					let oInsertReviewRun = null;
+
+					if (oChange.pos >= oRunInfo.GlobStartPos || oChange.pos + DelCount > oRunInfo.GlobStartPos)
 					{
-						var nPosToDel   = Math.max(0, oChange.pos - oInfo.GlobStartPos + oInfo.StartPos);
-						var nPosToAdd   = nPosToDel
-						var nCharsToDel = Math.min(oChange.deleteCount, oInfo.StringCount);
+						let nPosToDel   = Math.max(0, oChange.pos - oRunInfo.GlobStartPos + oRunInfo.StartPos);
+						let nPosToAdd   = nPosToDel
+						let nCharsToDel = Math.min(oChange.deleteCount, oRunInfo.StringCount);
 						
-						if ((nPosToDel >= oInfo.StartPos + oInfo.StringCount && nCharsToDel !== 0) || (nCharsToDel === 0 && oChange.deleteCount !== 0)
-							|| nPosToAdd > oInfo.StartPos + oInfo.StringCount)
+						if ((nPosToDel >= oRunInfo.StartPos + oRunInfo.StringCount && nCharsToDel !== 0) || (nCharsToDel === 0 && oChange.deleteCount !== 0)
+							|| nPosToAdd > oRunInfo.StartPos + oRunInfo.StringCount)
 							continue;
 
-						for (var nChar = 0; nChar < nCharsToDel; nChar++)
+						for (let nChar = 0; nChar < nCharsToDel; nChar++)
 						{
-							if (!oInfo.Run.Content[nPosToDel])
+							if (!oRunInfo.Run.Content[nPosToDel])
 								break;
 								
-							if (para_Text === oInfo.Run.Content[nPosToDel].Type || para_Space === oInfo.Run.Content[nPosToDel].Type || para_Tab === oInfo.Run.Content[nPosToDel].Type || para_NewLine === oInfo.Run.Content[nPosToDel].Type)
+							if ([para_Text, para_Space, para_Tab, para_NewLine].includes(oRunInfo.Run.Content[nPosToDel].Type))
 							{
-								oInfo.Run.RemoveFromContent(nPosToDel, 1);
+								if (isTrackRevisions) {
+									if (!oRunInfo.Run.CanDeleteInReviewMode()) {
+										if (null == oDeleteReviewRun) {
+											let oPara = oRunInfo.Run.Paragraph;
+
+											// split cur run
+											let nCurRunReviewType = oRunInfo.Run.GetReviewType();
+											let oCurReviewInfo = oRunInfo.Run.GetReviewInfo();
+											let nCurRunIdx = oPara.Content.indexOf(oRunInfo.Run);
+											oRunInfo.Run = oRunInfo.Run.Split_Run(nPosToDel);
+											oRunInfo.Run.SetReviewTypeWithInfo(nCurRunReviewType, oCurReviewInfo);
+											oPara.AddToContent(nCurRunIdx + 1, oRunInfo.Run);
+											nPosToDel = 0;
+
+											// create del review run
+											oDeleteReviewRun = new ParaRun(oRunInfo.Run.Paragraph, false);
+											oDeleteReviewRun.Set_Pr(oRunInfo.Run.Pr.Copy(true));
+											oDeleteReviewRun.SetReviewType(reviewtype_Remove);
+											oPara.AddToContent(nCurRunIdx + 1, oDeleteReviewRun);
+										}
+	
+										oDeleteReviewRun.AddToContentToEnd(oRunInfo.Run.Content[nPosToDel].Copy());
+									}
+								}
+								
+								oRunInfo.Run.RemoveFromContent(nPosToDel, 1);
+
 								nChar--;
 								oChange.deleteCount--;
 								nCharsToDel--;
@@ -21570,17 +21655,30 @@
 
 						if (oChange.deleteCount !== 0)
 						{
-							infoToAdd = 
+							oRunInfoToAdd = 
 							{
-								Run: oInfo.Run,
+								Run: oRunInfo.Run,
 								Pos: nPosToAdd
 							};
 							continue;
 						}
 						
-						for (nChar = 0; nChar < oChange.insert.length; nChar++)
+						let oRunToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Run : oRunInfo.Run;
+						nPosToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Pos : nPosToAdd;
+
+						// creting review add run
+						if (oDeleteReviewRun) {
+							let oPara = oDeleteReviewRun.Paragraph;
+							oRunToAdd = new ParaRun(oPara, false);
+							oRunToAdd.Set_Pr(oDeleteReviewRun.Pr.Copy(true));
+							oRunToAdd.SetReviewType(reviewtype_Add);
+							oPara.AddToContent(oPara.Content.indexOf(oDeleteReviewRun) + 1, oRunToAdd);
+							nPosToAdd = 0;
+						}
+
+						for (let nChar = 0; nChar < oChange.insert.length; nChar++)
 						{
-							var itemText = null;
+							let itemText = null;
 							if (oChange.insert[nChar] === 160)
 								oChange.insert[nChar] = 32;
 
@@ -21591,14 +21689,7 @@
 							else
 								itemText = new AscWord.CRunText(oChange.insert[nChar]);
 
-							itemText.Parent = oInfo.Run.GetParagraph();
-							if (oInfo.Run.Content.length === 0 && infoToAdd)
-							{
-								infoToAdd.Run.AddToContent(infoToAdd.Pos, itemText);
-								infoToAdd.Pos++;
-							}
-							else
-								oInfo.Run.AddToContent(nPosToAdd, itemText);
+							oRunToAdd.AddToContent(nPosToAdd, itemText);
 
 							oChange.insert.shift();
 							nChar--;
@@ -21712,7 +21803,6 @@
 		}
 		else 
 		{
-			var oDocument = this.GetDocument();
 			arrSelectedParas = oDocument.Document.GetSelectedParagraphs();
 			if(arrSelectedParas.length <= 0 )
 			{
@@ -23750,6 +23840,14 @@
 
 		return defaultValue;
 	}
+	function GetIntParameter(parameter, defaultValue)
+	{
+		let result = parseInt(parameter);
+		if (isNaN(result) || ("" + result) !== ("" + parameter))
+			return defaultValue;
+		
+		return result;
+	}
 	/**
 	 * В проверке на лок, которую мы делаем после выполнения скрипта, нужно различать действия сделанные через
 	 * разрешенные методы, и действия, которые пользователь пытался сам сделать с формами
@@ -23768,6 +23866,7 @@
 	window['AscBuilder'].GetStringParameter     = GetStringParameter;
 	window['AscBuilder'].GetBoolParameter       = GetBoolParameter;
 	window['AscBuilder'].GetNumberParameter     = GetNumberParameter;
+	window['AscBuilder'].GetIntParameter        = GetIntParameter;
 	window['AscBuilder'].GetArrayParameter      = GetArrayParameter;
 	window['AscBuilder'].executeNoFormLockCheck = executeNoFormLockCheck;
 
