@@ -1669,10 +1669,10 @@ function (window, undefined) {
 		this.displayTrendlinesEquation = v;
 	};
 
-	asc_ChartSettings.prototype.setDisplayAxes = function (bShowCatAx, bShowValAx, bShowSerAx) {
+	asc_ChartSettings.prototype.setDisplayAxes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
 		if (this.chartSpace) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-			this.chartSpace.showAxesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
+			this.chartSpace.showAxesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
 			this.updateChart();
 			const oLogicDocument = Asc.editor.getLogicDocument();
 			if (oLogicDocument) {

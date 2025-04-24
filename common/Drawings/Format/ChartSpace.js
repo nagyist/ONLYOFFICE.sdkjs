@@ -9958,8 +9958,9 @@ function(window, undefined) {
 			}
 		}
 	};
-	CChartSpace.prototype.showAxesByTypes = function (bShowCatAx, bShowValAx, bShowSerAx) {
-		const bShowDateAx = bShowCatAx;
+	CChartSpace.prototype.showAxesByTypes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		const bShowPrimaryDateAx = bShowPrimaryCatAx;
+		const bShowSecondaryDateAx = bShowSecondaryCatAx;
 
 		const plotArea = this.getPlotArea();
 		if (!plotArea) {
@@ -9967,11 +9968,32 @@ function(window, undefined) {
 		}
 
 		const axesByTypes = plotArea.getAxisByTypes();
-		axesByTypes.dateAx.forEach(bShowDateAx ? showAxis : hideAxis);
-		axesByTypes.catAx.forEach(bShowCatAx ? showAxis : hideAxis);
-		axesByTypes.valAx.forEach(bShowValAx ? showAxis : hideAxis);
+		axesByTypes.dateAx.forEach(function (axis) {
+			if (axis.axPos === AscFormat.AX_POS_B) {
+				bShowPrimaryDateAx ? showAxis(axis) : hideAxis(axis);
+			}
+			if (axis.axPos === AscFormat.AX_POS_R) {
+				bShowSecondaryDateAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
+		axesByTypes.catAx.forEach(function (axis) {
+			if (axis.axPos === AscFormat.AX_POS_B) {
+				bShowPrimaryCatAx ? showAxis(axis) : hideAxis(axis);
+			}
+			if (axis.axPos === AscFormat.AX_POS_R) {
+				bShowSecondaryCatAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
+		axesByTypes.valAx.forEach(function (axis) {
+			if (axis.axPos === AscFormat.AX_POS_L) {
+				bShowPrimaryValAx ? showAxis(axis) : hideAxis(axis);
+			}
+			if (axis.axPos === AscFormat.AX_POS_T) {
+				bShowSecondaryValAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
 		axesByTypes.serAx.forEach(bShowSerAx ? showAxis : hideAxis);
-		
+
 		function hideAxis(axis) {
 			axis.setDelete(true);
 			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
