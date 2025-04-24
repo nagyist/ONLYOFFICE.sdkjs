@@ -3864,33 +3864,47 @@
             this.addErrBars(aErrBars[nIdx]);
         }
     };
-    CSeriesBase.prototype.createAllErrBars = function (valueType) {
-        this.removeAllErrBars();
+	CSeriesBase.prototype.createAllErrBars = function (valueType) {
+		this.removeAllErrBars();
 
-        const errBars = new AscFormat.CErrBars();
-        errBars.setParent(this);
+		const errBars = new AscFormat.CErrBars();
+		errBars.setParent(this);
 
-        errBars.setErrBarType(AscFormat.st_errbartypeBOTH);
-        errBars.setErrDir(AscFormat.st_errdirY);
-        errBars.setErrValType(AscFormat.isRealNumber(valueType) ? valueType : AscFormat.st_errvaltypeSTDDEV);
-        errBars.setNoEndCap(false);
-        errBars.setVal(errBars.getDefaultVal());
+		errBars.setErrBarType(AscFormat.st_errbartypeBOTH);
+		errBars.setErrDir(AscFormat.st_errdirY);
+		errBars.setErrValType(AscFormat.isRealNumber(valueType) ? valueType : AscFormat.st_errvaltypeSTDDEV);
+		errBars.setNoEndCap(false);
+		errBars.setVal(errBars.getDefaultVal());
 
-        const chartSpace = errBars.getChartSpace();
-        if (chartSpace.chartStyle && chartSpace.chartColors) {
-            errBars.applyChartStyle(
-                chartSpace.chartStyle,
-                chartSpace.chartColors,
-                AscFormat.g_oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
-                true
-            );
-        } else {
-            errBars.resetFormatting();
-        }
+		function createDefaultMinusPlus() {
+			const minusPlus = new AscFormat.CMinusPlus();
+			const numLit = new AscFormat.CNumLit();
+			numLit.setFormatCode('General');
+			numLit.addNumericPoint(0, 1);
+			minusPlus.setNumLit(numLit);
+			return minusPlus;
+		}
 
-        const errBarsArray = [errBars];
-        this.addErrBarsArray(errBarsArray);
-    };
+		if (valueType === AscFormat.st_errvaltypeCUST) {
+			errBars.setPlus(createDefaultMinusPlus());
+			errBars.setMinus(createDefaultMinusPlus());
+		}
+
+		const chartSpace = errBars.getChartSpace();
+		if (chartSpace.chartStyle && chartSpace.chartColors) {
+			errBars.applyChartStyle(
+				chartSpace.chartStyle,
+				chartSpace.chartColors,
+				AscFormat.g_oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+				true
+			);
+		} else {
+			errBars.resetFormatting();
+		}
+
+		const errBarsArray = [errBars];
+		this.addErrBarsArray(errBarsArray);
+	};
     CSeriesBase.prototype.removeAllErrBars = function () {
         while (this.errBars.length) {
             this.removeErrBars(0);
