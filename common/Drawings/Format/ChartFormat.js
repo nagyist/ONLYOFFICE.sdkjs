@@ -3874,7 +3874,7 @@
         errBars.setErrDir(AscFormat.st_errdirY);
         errBars.setErrValType(AscFormat.isRealNumber(valueType) ? valueType : AscFormat.st_errvaltypeSTDDEV);
         errBars.setNoEndCap(false);
-        errBars.setVal(1);
+        errBars.setVal(errBars.getDefaultVal());
 
         const chartSpace = errBars.getChartSpace();
         if (chartSpace.chartStyle && chartSpace.chartColors) {
@@ -10386,6 +10386,19 @@
         }
         return this.pen;
     };
+	CErrBars.prototype.getDefaultVal = function () {
+		const valuesMap = {
+			[AscFormat.st_errvaltypeCUST]: null,
+			[AscFormat.st_errvaltypeFIXEDVAL]: 0.1,
+			[AscFormat.st_errvaltypePERCENTAGE]: 5,
+			[AscFormat.st_errvaltypeSTDDEV]: 1,
+			[AscFormat.st_errvaltypeSTDERR]: null,
+		};
+
+		return this.errValType in valuesMap
+			? valuesMap[this.errValType]
+			: null;
+	};
 
     function CLayout() {
         CBaseChartObject.call(this);
