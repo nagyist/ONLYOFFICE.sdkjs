@@ -10020,8 +10020,9 @@ function(window, undefined) {
 			}
 		}
 	};
-	CChartSpace.prototype.showAxisTitlesByTypes = function (bShowCatAx, bShowValAx, bShowSerAx) {
-		const bShowDateAx = bShowCatAx;
+	CChartSpace.prototype.showAxisTitlesByTypes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		const bShowPrimaryDateAx = bShowPrimaryCatAx;
+		const bShowSecondaryDateAx = bShowSecondaryCatAx;
 
 		const plotArea = this.getPlotArea();
 		if (!plotArea) {
@@ -10029,9 +10030,27 @@ function(window, undefined) {
 		}
 
 		const axesByTypes = plotArea.getAxisByTypes();
-		axesByTypes.dateAx.forEach(bShowDateAx ? createTitle : removeTitle);
-		axesByTypes.catAx.forEach(bShowCatAx ? createTitle : removeTitle);
-		axesByTypes.valAx.forEach(bShowValAx ? createTitle : removeTitle);
+		axesByTypes.dateAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryDateAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryDateAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
+		axesByTypes.catAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryCatAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryCatAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
+		axesByTypes.valAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryValAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryValAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
 		axesByTypes.serAx.forEach(bShowSerAx ? createTitle : removeTitle);
 
 		function removeTitle(axis) {

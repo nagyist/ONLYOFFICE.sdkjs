@@ -1680,10 +1680,10 @@ function (window, undefined) {
 			}
 		}
 	};
-	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowCatAx, bShowValAx, bShowSerAx) {
+	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
 		if (this.chartSpace) {
 			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-			this.chartSpace.showAxisTitlesByTypes(bShowCatAx, bShowValAx, bShowSerAx);
+			this.chartSpace.showAxisTitlesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
 			this.updateChart();
 			const oLogicDocument = Asc.editor.getLogicDocument();
 			if (oLogicDocument) {
