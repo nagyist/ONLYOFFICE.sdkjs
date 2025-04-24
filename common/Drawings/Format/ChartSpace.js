@@ -9968,27 +9968,24 @@ function(window, undefined) {
 		}
 
 		const axesByTypes = plotArea.getAxisByTypes();
-		axesByTypes.dateAx.forEach(function (axis) {
-			if (axis.axPos === AscFormat.AX_POS_B) {
+		axesByTypes.dateAx.forEach(function (axis, index) {
+			if (index === 0) {
 				bShowPrimaryDateAx ? showAxis(axis) : hideAxis(axis);
-			}
-			if (axis.axPos === AscFormat.AX_POS_R) {
+			} else {
 				bShowSecondaryDateAx ? showAxis(axis) : hideAxis(axis);
 			}
 		});
-		axesByTypes.catAx.forEach(function (axis) {
-			if (axis.axPos === AscFormat.AX_POS_B) {
+		axesByTypes.catAx.forEach(function (axis, index) {
+			if (index === 0) {
 				bShowPrimaryCatAx ? showAxis(axis) : hideAxis(axis);
-			}
-			if (axis.axPos === AscFormat.AX_POS_R) {
+			} else {
 				bShowSecondaryCatAx ? showAxis(axis) : hideAxis(axis);
 			}
 		});
-		axesByTypes.valAx.forEach(function (axis) {
-			if (axis.axPos === AscFormat.AX_POS_L) {
+		axesByTypes.valAx.forEach(function (axis, index) {
+			if (index === 0) {
 				bShowPrimaryValAx ? showAxis(axis) : hideAxis(axis);
-			}
-			if (axis.axPos === AscFormat.AX_POS_T) {
+			} else {
 				bShowSecondaryValAx ? showAxis(axis) : hideAxis(axis);
 			}
 		});
