@@ -9330,21 +9330,25 @@ function(window, undefined) {
 			aSeries[nSer].recalculateTrendline();
 		}
 	};
-	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType) {
+	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
 		const allSeries = this.getAllSeries();
 		allSeries.forEach(function (ser) {
 			bShow
-				? ser.setTrendline(createTrendline(ser, nTrendlineType))
+				? ser.setTrendline(createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward))
 				: ser.removeTrendline();
 		});
 		
-		function createTrendline(parent, trendlineType) {
+		function createTrendline(parent, trendlineType, nForecastForward, nForecastBackward) {
 			const trendline = new AscFormat.CTrendLine();
 			trendline.setParent(parent);
 
-			trendline.dispEq = false;
-			trendline.dispRSqr = false;
-			trendline.trendlineType = AscFormat.isRealNumber(trendlineType) ? trendlineType : AscFormat.TRENDLINE_TYPE_LINEAR;
+			trendline.setDispEq(false);
+			trendline.setDispRSqr(false);
+			trendline.setTrendlineType(AscFormat.isRealNumber(trendlineType) ? trendlineType : AscFormat.TRENDLINE_TYPE_LINEAR);
+			if (AscFormat.isRealNumber(nForecastForward))
+				trendline.setForward(nForecastForward);
+			if (AscFormat.isRealNumber(nForecastBackward))
+				trendline.setBackward(nForecastBackward);
 
 			const chartSpace = trendline.getChartSpace();
 			if (chartSpace.chartStyle && chartSpace.chartColors) {

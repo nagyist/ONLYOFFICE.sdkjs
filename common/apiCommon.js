@@ -1807,13 +1807,13 @@ function (window, undefined) {
 		}
 	};
 	// asc_ChartSettings.prototype.setDisplayLines = function (bShow, nLineType) {};
-	asc_ChartSettings.prototype.setDisplayTrendlines = function (bShow, nTrendlineType) {
+	asc_ChartSettings.prototype.setDisplayTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
 		if (!this.chartSpace) {
 			return;
 		}
 
 		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-		this.chartSpace.showTrendlines(bShow, nTrendlineType);
+		this.chartSpace.showTrendlines(bShow, nTrendlineType, nForecastForward, nForecastBackward);
 		this.updateChart();
 		const oLogicDocument = Asc.editor.getLogicDocument();
 		if (oLogicDocument) {
