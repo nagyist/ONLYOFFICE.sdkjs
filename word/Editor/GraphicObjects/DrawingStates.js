@@ -452,11 +452,20 @@ NullState.prototype =
         }
         else {
             let oViewer = Asc.editor.getDocumentRenderer();
+            let oDoc    = Asc.editor.getPDFDoc();
 
             let aDrawings = [];
 
             aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].drawings);
             aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].annots);
+
+            if (oDoc.IsEditFieldsMode()) {
+                if (this.drawingObjects.selectedObjects.find(function(obj) {
+                    return obj.IsDrawing() && obj.IsEditFieldShape();
+                })) {
+                    aDrawings = aDrawings.concat(this.drawingObjects.selectedObjects);
+                }
+            }
 
             ret = AscFormat.handleFloatObjects(this.drawingObjects, aDrawings, e, x, y, null, pageIndex, true);
 
@@ -828,11 +837,6 @@ RotateState.prototype =
                                 let oAnnot  = oTrack.originalObject;
                                 let aRect   = [bounds.posX * g_dKoef_mm_to_pt, bounds.posY * g_dKoef_mm_to_pt, (bounds.posX + bounds.extX) * g_dKoef_mm_to_pt, (bounds.posY + bounds.extY) * g_dKoef_mm_to_pt];
                                 
-                                if (oTrack.originalFlipV != oTrack.resizedflipV)
-                                    oDoc.History.Add(new CChangesPDFInkFlipV(oAnnot, oTrack.originalFlipV, oTrack.resizedflipV));
-                                if (oTrack.originalFlipH != oTrack.resizedflipH)
-                                    oDoc.History.Add(new CChangesPDFInkFlipH(oAnnot, oTrack.originalFlipH, oTrack.resizedflipH));
-    
                                 if (oAnnot.IsLine()) {
                                     
                                     let aPaths = oTrack.geometry.pathLst[0].ArrPathCommand;
@@ -871,10 +875,10 @@ RotateState.prototype =
                                     // расширяем рект на ширину линии (или на радиус cloud бордера)
                                     let nLineWidth = oAnnot.GetWidth();
                                     if (oAnnot.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.Cloud) {
-                                        aRect[0] -= oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pt;
-                                        aRect[1] -= oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pt;
-                                        aRect[2] += oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pt;
-                                        aRect[3] += oAnnot.GetBorderEffectIntensity() * 2 * g_dKoef_mm_to_pt;
+                                        aRect[0] -= 12 * oAnnot.GetBorderEffectIntensity();
+                                        aRect[1] -= 12 * oAnnot.GetBorderEffectIntensity();
+                                        aRect[2] += 12 * oAnnot.GetBorderEffectIntensity();
+                                        aRect[3] += 12 * oAnnot.GetBorderEffectIntensity();
                                     }
                                     else {
                                         aRect[0] -= nLineWidth;
@@ -910,19 +914,72 @@ RotateState.prototype =
     
                                     oAnnot.SetRect(aResultRect);
                                 }
+                                else if (oAnnot.IsCircle() || oAnnot.IsSquare()) {
+                                    // aRect in this case is an annot OrigRect - Rectangle Diff
+                                    AscCommon.History.StartNoHistoryMode();
+                                    let aCurRect = oAnnot.GetOrigRect().slice();
+                                    let aCurRD = oAnnot.GetRectangleDiff().slice();
+                                    let nLineW = oAnnot.GetWidth() * g_dKoef_pt_to_mm;
+                                    oAnnot.SetRect(aRect);
+                                    oAnnot.SetRectangleDiff([0, 0, 0, 0]);
+                                    oAnnot.recalcBounds();
+                                    oAnnot.recalcGeometry();
+                                    oAnnot.Recalculate(true);
+                                    
+                                    AscCommon.History.EndNoHistoryMode();
+                                    
+                                    let oGrBounds = oAnnot.bounds;
+                                    let oShapeBounds = oAnnot.getRectBounds();
+
+                                    aRect[0] = Math.round(oGrBounds.l - nLineW) * g_dKoef_mm_to_pt;
+                                    aRect[1] = Math.round(oGrBounds.t - nLineW) * g_dKoef_mm_to_pt;
+                                    aRect[2] = Math.round(oGrBounds.r + nLineW) * g_dKoef_mm_to_pt;
+                                    aRect[3] = Math.round(oGrBounds.b + nLineW) * g_dKoef_mm_to_pt;
+
+                                    oAnnot._origRect = aCurRect;
+                                    oAnnot._rectDiff = aCurRD;
+
+                                    oAnnot.SetRect(aRect);
+                                    oAnnot.SetRectangleDiff([
+                                        Math.round(oShapeBounds.l - oGrBounds.l + nLineW) * g_dKoef_mm_to_pt,
+                                        Math.round(oShapeBounds.t - oGrBounds.t + nLineW) * g_dKoef_mm_to_pt,
+                                        Math.round(oGrBounds.r - oShapeBounds.r + nLineW) * g_dKoef_mm_to_pt,
+                                        Math.round(oGrBounds.b - oShapeBounds.b + nLineW) * g_dKoef_mm_to_pt
+                                    ]);
+                                }
                                 else {
                                     oAnnot.SetRect(aRect);
                                 }
                             }
-                            if (oTrack.originalObject.IsDrawing() && oTrack instanceof AscFormat.MoveShapeImageTrack) {
-                                if (oTrack.pageIndex != oTrack.originalObject.GetPage()) {
-                                    oTrack.originalObject.SetPage(oTrack.pageIndex);
+                            if (oTrack.originalObject.IsDrawing()) {
+                                let isMoveShapeImageTrack = oTrack instanceof AscFormat.MoveShapeImageTrack;
+                                let isEditFieldShape = oTrack.originalObject.IsEditFieldShape();
+                                let aRect = [
+                                    bounds.posX * g_dKoef_mm_to_pt,
+                                    bounds.posY * g_dKoef_mm_to_pt,
+                                    (bounds.posX + bounds.extX) * g_dKoef_mm_to_pt,
+                                    (bounds.posY + bounds.extY) * g_dKoef_mm_to_pt
+                                ];
+                            
+                                if (isMoveShapeImageTrack && oTrack.pageIndex !== oTrack.originalObject.GetPage()) {
+                                    if (isEditFieldShape) {
+                                        let oField = oTrack.originalObject.GetEditField();
+                                        oField.SetRect(aRect);
+                                        oField.SetPage(oTrack.pageIndex);
+                                    }
+                                    else {
+                                        oTrack.originalObject.SetPage(oTrack.pageIndex);
+                                    }
+                                }
+                                else if (isEditFieldShape) {
+                                    let oField = oTrack.originalObject.GetEditField();
+                                    oField.SetRect(aRect);
                                 }
                             }
                             
                             oTrack.originalObject.SetNeedRecalc(true);
                         }
-                }, AscDFH.historydescription_CommonDrawings_EndTrack, this);
+                }, AscDFH.historydescription_CommonDrawings_EndTrack, this, pageIndex);
 
                 this.drawingObjects.changeCurrentState(new NullState(this.drawingObjects));
                 this.drawingObjects.clearTrackObjects();
@@ -1744,6 +1801,7 @@ MoveInGroupState.prototype =
                 this.drawingObjects.document.FinalizeAction();
             }
             else {
+                let oDoc = Asc.editor.getPDFDoc();
                 let oViewer = Asc.editor.getDocumentRenderer();
 
                 let xMin;
@@ -1802,10 +1860,10 @@ MoveInGroupState.prototype =
                     // расширяем рект на ширину линии (или на радиус cloud бордера)
                     let nLineWidth = oFreeText.GetWidth();
                     if (oFreeText.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.Cloud) {
-                        aNewTextBoxRect[0] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[1] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[2] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[3] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
+                        aNewTextBoxRect[0] -= 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[1] -= 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[2] += 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[3] += 12 * oFreeText.GetBorderEffectIntensity();
                     }
                     else {
                         aNewTextBoxRect[0] -= nLineWidth;
@@ -1935,10 +1993,10 @@ MoveInGroupState.prototype =
                     // расширяем рект на ширину линии (или на радиус cloud бордера)
                     let nLineWidth = oFreeText.GetWidth();
                     if (oFreeText.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.Cloud) {
-                        aNewTextBoxRect[0] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[1] -= oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[2] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
-                        aNewTextBoxRect[3] += oFreeText.GetBorderEffectIntensity() * 1.5 * g_dKoef_mm_to_pt;
+                        aNewTextBoxRect[0] -= 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[1] -= 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[2] += 12 * oFreeText.GetBorderEffectIntensity();
+                        aNewTextBoxRect[3] += 12 * oFreeText.GetBorderEffectIntensity();
                     }
                     else {
                         aNewTextBoxRect[0] -= nLineWidth;
@@ -1970,6 +2028,7 @@ MoveInGroupState.prototype =
                 oFreeText.SetRect(aNewRect);
                 oFreeText.onAfterMove();
                 oViewer.DrawingObjects.drawingObjects.length = 0;
+                oDoc.FinalizeAction();
             }
         }
         if (isPdf) {

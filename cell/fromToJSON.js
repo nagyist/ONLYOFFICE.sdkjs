@@ -3634,7 +3634,8 @@
 		if (oParsedSheet["protectedRanges"] != null)
 			oWorksheet.protectedRanges = this.ProtectedRangesFromJSON(oParsedSheet["protectedRanges"]);
 
-		oWorksheet.initPostOpenZip(this.pivotCaches, this.oNumFmtsOpen);
+		//todo test. other params?
+		oWorksheet.initPostOpen(oWorkbook.wsHandlers, {}, {}, this.pivotCaches, oWorkbook.oNumFmtsOpen, oWorkbook.dxfsOpen);
 		History.TurnOn();
 
 		return oWorksheet;
@@ -3644,7 +3645,7 @@
 		let api = window["Asc"]["editor"];
 		let WorkbookView = api.wb;
 		let renameSheetMap = {};
-		let oTempWorkBook = new AscCommonExcel.Workbook();
+		let oTempWorkBook = new AscCommonExcel.Workbook(undefined, undefined, false);
 		let aRestoredSheets = [];
 		let oThis = this;
 		oTempWorkBook.DrawingDocument = Asc.editor.wbModel.DrawingDocument;

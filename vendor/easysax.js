@@ -1215,7 +1215,15 @@ StaxParser.prototype.next = function() {
     // ---------------------------------------------
     var w = this.xml.charCodeAt(i + 1);
     if (w === 33) { // 33 == "!"
-        this.index = this.xml.indexOf('>', i);
+        if (i + 3 < this.length && 45 === this.xml.charCodeAt(i + 2) && 45 === this.xml.charCodeAt(i + 3)) { // COMMENT
+            this.index = this.xml.indexOf('-->', i) + 3;
+        } else { // CDATA
+            this.index = this.xml.indexOf(']]>', i) + 3;
+        }
+        if (-1 === this.index) {
+            this.stop = true;
+        }
+        this.eventType = EasySAXEvent.Unknown;
         return this.eventType;
     }
     // QUESTION
@@ -1815,15 +1823,9 @@ XmlParserContext.prototype.loadDataLinks = function() {
             oImageMap[_cur_ind++] = path;
             let data = this.zip.getFile(path);
             if (data) {
-                if (!window["NATIVE_EDITOR_ENJINE"]) {
-                    try {
-                        let blob = this.zip.getImageBlob(path);
-                        let url = window.URL.createObjectURL(blob);
-                        AscCommon.g_oDocumentUrls.addImageUrl(path, url);
-                    } catch (e) {
-                        AscCommon.consoleLog("ERROR: Image blob was not loaded");
-                    }
-                }
+                let blobUrl = AscCommon.g_oDocumentBlobUrls.getBlobUrl(path, this.zip);
+                AscCommon.g_oDocumentUrls.addImageUrl(path, blobUrl);
+
                 this.imageMap[path].forEach(function(blipFill) {
                     AscCommon.pptx_content_loader.Reader.initAfterBlipFill(path, blipFill);
                 });

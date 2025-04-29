@@ -1485,6 +1485,11 @@ function (window, undefined) {
 			return arg0;
 		}
 
+		let argError;
+		if (argError = this._checkErrorArg([arg0, arg1, arg2, arg3])) {
+			return argError;
+		}
+
 		arg1 = arg1.tocNumber();
 		arg2 = arg2.tocNumber();
 		arg3 = arg3.tocNumber();
@@ -2237,6 +2242,9 @@ function (window, undefined) {
 	cSORTBY.prototype.isXLFN = true;
 	// TODO infinite arrayIndexes for even/odd arguments
 	cSORTBY.prototype.arrayIndexes = {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1};
+	cSORTBY.prototype.getArrayIndex = function (index) {
+		return 1;
+	};
 	cSORTBY.prototype.argumentsType = [argType.array, argType.array, argType.number, [argType.array, argType.number]];
 	cSORTBY.prototype.Calculate = function (arg) {
 		function arrayHelper (arr, args) {
@@ -3449,6 +3457,11 @@ function (window, undefined) {
 		let arg0 = arg[0], arg1 = arg[1], arg2, arg3;
 		let isXMatch = arg[4];
 
+		let argError = cBaseFunction.prototype._checkErrorArg.call(this, arg);
+		if (argError) {
+			return argError;
+		}
+
 		if(isXMatch) {
 			if (cElementType.empty === arg1.type) {
 				return new cError(cErrorType.wrong_value_type);
@@ -3474,6 +3487,11 @@ function (window, undefined) {
 			}
 		} else if (cElementType.array === arg0.type) {
 			arg0 = arg0.getElementRowCol(0,0);
+		} else if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
+			let _valueArg0 = arg0.getValue();
+			if (cElementType.error === _valueArg0.type) {
+				return _valueArg0;
+			}
 		} else if (cElementType.error === arg0.type) {
 			return arg0;
 		}

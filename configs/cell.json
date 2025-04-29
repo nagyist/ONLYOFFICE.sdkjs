@@ -27,8 +27,8 @@
 			"cell/view/HandlerList.js",
 			"common/collaborativeHistory.js",
 			"common/CollaborativeEditingBase.js",
-			"cell/model/DrawingObjects/GlobalCounters.js",
 			"cell/model/CollaborativeEditing.js",
+			"cell/model/DrawingObjects/GlobalCounters.js",
 			"common/macros.js",
 			"common/apiBase.js",
 			"common/apiBase_plugins.js",
@@ -75,7 +75,8 @@
 			"common/Drawings/Metafile.js",
 			"common/libfont/textmeasurer.js",
 			"common/Drawings/WorkEvents.js",
-			
+
+			"word/Editor/History.js",
 			"cell/model/History.js",
 
 			"common/Shapes/EditorSettings.js",
@@ -135,6 +136,7 @@
 			"common/Drawings/HatchPattern.js",
 			
 			"common/bidi/bidi-common.js",
+			"common/bidi/bidi-brackets.js",
 			"common/bidi/bidi-types.js",
 			"common/bidi/unicode-data.js",
 			
@@ -169,6 +171,7 @@
 			"cell/model/FormulaObjects/traceDependents.js",
 			"cell/model/CellComment.js",
 			"cell/model/whatIfAnalysis.js",
+			"cell/model/SheetMemory.js",
 			"cell/model/WorkbookElems.js",
 			"cell/model/Workbook.js",
 			"cell/model/Serialize.js",

@@ -568,7 +568,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
         }
         var APCI=this.ArrPathCommandInfo, n = APCI.length, cmd;
         var x0, y0, x1, y1, x2, y2, wR, hR, stAng, swAng, ellipseRotation, lastX, lastY;
-        let handledCommandsNumber = 0;
+        this.ArrPathCommand.length = 0;
         for(var i=0; i<n; ++i)
         {
             cmd=APCI[i];
@@ -579,8 +579,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                 {
                     x0 = this.calculateCommandCoord(gdLst, cmd.X, cw, dCustomPathCoeffW);
                     y0 = this.calculateCommandCoord(gdLst, cmd.Y, ch, dCustomPathCoeffH);
-                    this.ArrPathCommand[handledCommandsNumber] ={id:cmd.id, X:x0, Y:y0};
-                    handledCommandsNumber++;
+                    this.ArrPathCommand.push({id:cmd.id, X:x0, Y:y0});
                     lastX = x0;
                     lastY = y0;
                     break;
@@ -591,8 +590,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                     y0 = this.calculateCommandCoord(gdLst, cmd.Y0, ch, dCustomPathCoeffH);
                     x1 = this.calculateCommandCoord(gdLst, cmd.X1, cw, dCustomPathCoeffW);
                     y1 = this.calculateCommandCoord(gdLst, cmd.Y1, ch, dCustomPathCoeffH);
-                    this.ArrPathCommand[handledCommandsNumber] = {id:bezier3, X0: x0, Y0: y0, X1: x1, Y1: y1};
-                    handledCommandsNumber++;
+                    this.ArrPathCommand.push({id:bezier3, X0: x0, Y0: y0, X1: x1, Y1: y1});
                     lastX = x1;
                     lastY = y1;
                     break;
@@ -605,8 +603,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                     y1 = this.calculateCommandCoord(gdLst, cmd.Y1, ch, dCustomPathCoeffH);
                     x2 = this.calculateCommandCoord(gdLst, cmd.X2, cw, dCustomPathCoeffW);
                     y2 = this.calculateCommandCoord(gdLst, cmd.Y2, ch, dCustomPathCoeffH);
-                    this.ArrPathCommand[handledCommandsNumber] = {id:bezier4, X0:x0, Y0: y0, X1:x1, Y1:y1, X2:x2, Y2:y2};
-                    handledCommandsNumber++;
+                    this.ArrPathCommand.push({id:bezier4, X0:x0, Y0: y0, X1:x1, Y1:y1, X2:x2, Y2:y2});
                     lastX = x2;
                     lastY = y2;
                     break;
@@ -658,14 +655,13 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                     var l1 = 1 / Math.sqrt(_xrad1 * _xrad1 + _yrad1 * _yrad1);
 
                     if (cmd.ellipseRotation === undefined ) {
-                        this.ArrPathCommand[handledCommandsNumber]={id: arcTo,
+                        this.ArrPathCommand.push({id: arcTo,
                             stX: lastX,
                             stY: lastY,
                             wR: wR,
                             hR: hR,
                             stAng: stAng*cToRad,
-                            swAng: swAng*cToRad};
-                        handledCommandsNumber++;
+                            swAng: swAng*cToRad});
 
                         lastX = xc + l1 * cos1;
                         lastY = yc + l1 * sin1;
@@ -686,15 +682,14 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                         if((ellipseRotation < 0) && (a4 > 0)) ellipseRotation += 21600000;
                         if(ellipseRotation == 0 && a4 != 0) ellipseRotation = 21600000;
 
-                        this.ArrPathCommand[handledCommandsNumber]={id: arcTo,
+                        this.ArrPathCommand.push({id: arcTo,
                             stX: lastX,
                             stY: lastY,
                             wR: wR,
                             hR: hR,
                             stAng: stAng*cToRad,
                             swAng: swAng*cToRad,
-                            ellipseRotation: ellipseRotation*cToRad};
-                        handledCommandsNumber++;
+                            ellipseRotation: ellipseRotation*cToRad});
 
                         // https://www.figma.com/file/hs43oiAUyuoqFULVoJ5lyZ/EllipticArcConvert?type=design&node-id=291-34&mode=design&t=LKiEAjzKEzKacCBc-0
 
@@ -737,8 +732,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                 }
                 case close:
                 {
-                    this.ArrPathCommand[handledCommandsNumber]={id: close};
-                    handledCommandsNumber++;
+                    this.ArrPathCommand.push({id: close});
                     break;
                 }
                 case ellipticalArcTo:
@@ -770,7 +764,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                     // check if it not ellipse arc in fact but line (three points on one line)
                     // if this case will not be caught there will be NaN in params and
                     // drawing will be unpredictable
-                    // inaccuracy may be different so commented code below
+                    // inaccuracy may be different
                     // (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By) ) / 2 - triangle square
                     if (isNaN(lastY)) {
                         lastY = 0;
@@ -778,25 +772,23 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                     if (isNaN(lastX)) {
                         lastX = 0;
                     }
-                    // let triangleSquare = (x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
-                    // if ( Math.round(triangleSquare) === 0 || Math.round(triangleSquare) === -0) {
-                    //     AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch:",
-                    //         cmd.x, cmd.y, cmd.a, cmd.b, 0, 1);
-                    //     this.ArrPathCommand[i] ={id: lineTo, X:x, Y:y};
-                    // } else {
-
-                    // change ellipticalArcTo params to draw arc easy
-                    this.ArrPathCommand[handledCommandsNumber]={id: ellipticalArcTo,
-                        stX: lastX,
-                        stY: lastY,
-                        wR: newParams.wR,
-                        hR: newParams.hR,
-                        stAng: newParams.stAng*cToRad,
-                        swAng: newParams.swAng*cToRad,
-                        ellipseRotation: newParams.ellipseRotation*cToRad};
-                    handledCommandsNumber++;
-
-                    // }
+                    let triangleSquare = (x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
+                    let accuracy = 10e4;
+                    if ( Math.round(triangleSquare * accuracy) === 0 || Math.round(triangleSquare * accuracy) === -0) {
+                        AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:",
+                            triangleSquare);
+                        this.ArrPathCommand.push({id: lineTo, X:x, Y:y});
+                    } else {
+                        // change ellipticalArcTo params to draw arc easy
+                        this.ArrPathCommand.push({id: ellipticalArcTo,
+                            stX: lastX,
+                            stY: lastY,
+                            wR: newParams.wR,
+                            hR: newParams.hR,
+                            stAng: newParams.stAng*cToRad,
+                            swAng: newParams.swAng*cToRad,
+                            ellipseRotation: newParams.ellipseRotation*cToRad});
+                    }
 
                     lastX = x;
                     lastY = y;
@@ -813,7 +805,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                      * @param {Number[]} weights
                      * @param {Number[]} knots
                      * @param {Number} multiplicity
-                     * @returns {{controlPoints: {x: Number, y: Number, z? :Number}[], weights: Number[], knots: Number[]}} new bezier data
+                     * @returns {{controlPoints: {x: Number, y: Number, z? :Number}[], weights: Number[], knots: Number[]} || null} new bezier data
                      */
                     function duplicateKnots(controlPoints, weights, knots, multiplicity) {
                         /**
@@ -823,7 +815,7 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                          * @param {Number[]} weights
                          * @param {Number[]} knots
                          * @param {Number} tNew
-                         * @return {{controlPoints: {x: Number, y: Number, z? :Number}[], weights: Number[], knots: Number[]}} new bezier data
+                         * @return {{controlPoints: {x: Number, y: Number, z? :Number}[], weights: Number[], knots: Number[]} || null} new bezier data
                          */
                         function insertKnot(controlPoints, weights, knots, tNew) {
                             let n = controlPoints.length;
@@ -847,7 +839,8 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 
                             // insert tNew
                             if (i === -1) {
-                                throw new Error("Not found position to insert new knot");
+                                AscCommon.consoleLog("Not found position to insert new knot");
+                                return null;
                             } else {
                                 // Copy knots to new array.
                                 for (let j = 0; j < n + k + 1; j++) {
@@ -903,8 +896,33 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                             };
                         }
 
+                        /**
+                         * Checks if all numbers in an array are in increasing order (allows duplicates)
+                         * @param {number[]} arr - The array to check
+                         * @returns {boolean} - True if array is in increasing order, false otherwise
+                         */
+                        function isIncreasingOrder(arr) {
+                            if (arr.length < 2) {
+                                return true; // An empty array or array with one element is considered in order
+                            }
+
+                            for (let i = 0; i < arr.length - 1; i++) {
+                                if (arr[i] > arr[i + 1]) {
+                                    return false; // Found an element that's decreasing
+                                }
+                            }
+
+                            return true;
+                        }
+
                         if (multiplicity === undefined) {
-                            throw new Error('multiplicity is undefined');
+                            AscCommon.consoleLog("Error: multiplicity is undefined");
+                            return null;
+                        }
+
+                        if (!isIncreasingOrder(knots)) {
+                            AscCommon.consoleLog("Error: Knots with decreasing elements is not supported. Knots: " + knots);
+                            return null;
                         }
 
                         let knotValue = knots[0];
@@ -919,12 +937,12 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                             let insertCount = multiplicity - knotsCount;
                             insertCount = insertCount < 0 ? 0 : insertCount;
                             for (let i = 0; i < insertCount; i++) {
-                                let newNURBSdata;
-                                try {
-                                    newNURBSdata = insertKnot(controlPoints, weights, knots, knotValue);
-                                } catch (e) {
+                                let newNURBSdata = insertKnot(controlPoints, weights, knots, knotValue);
+                                if (newNURBSdata == null) {
                                     AscCommon.consoleLog('Unknown error. unexpected t');
+                                    return null;
                                 }
+
                                 controlPoints = newNURBSdata.controlPoints;
                                 weights = newNURBSdata.weights;
                                 knots = newNURBSdata.knots;
@@ -986,6 +1004,15 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
                         controlPoints[j].y = this.calculateCommandCoord(gdLst, controlPoints[j].y, ch, dCustomPathCoeffH);
                     }
 
+                    // if degree === 0 just draw line to SplineStart like visio does
+                    if (degree === 0) {
+                        AscCommon.consoleLog("transform nurbsTo to line because degree is 0");
+                        this.ArrPathCommand.push({id: lineTo, X:controlPoints[1].x, Y:controlPoints[1].y});
+                        lastX = controlPoints[1].x;
+                        lastY = controlPoints[1].y;
+                        break;
+                    }
+
                     if (degree + 1 + controlPoints.length !== knots.length) {
                         AscCommon.consoleLog("Wrong arguments format.", "Degree + 1 + controlPoints.length !== knots.length",
                           degree + 1 + controlPoints.length, "!==", knots.length);
@@ -1011,12 +1038,15 @@ AscFormat.InitClass(Path, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_P
 
                     // Convert to Bezier
                     let newNURBSform = duplicateKnots(controlPoints, weights, knots, degree);
+                    if (newNURBSform === null) {
+                        AscCommon.consoleLog("duplicateKnots() error");
+                        break;
+                    }
                     let bezierArray = NURBSnormalizedToBezier(newNURBSform.controlPoints, degree);
 
                     // change nurbsTo params to draw using bezier
                     // nurbs degree is equal to each bezier degree
-                    this.ArrPathCommand[handledCommandsNumber]={id: nurbsTo, degree: degree, bezierArray: bezierArray};
-                    handledCommandsNumber++;
+                    this.ArrPathCommand.push({id: nurbsTo, degree: degree, bezierArray: bezierArray});
 
                     lastX = bezierArray[bezierArray.length-1].endPoint.x;
                     lastY = bezierArray[bezierArray.length-1].endPoint.y;

@@ -137,19 +137,20 @@
 			"common/Drawings/HatchPattern.js",
 			
 			"common/bidi/bidi-common.js",
+			"common/bidi/bidi-brackets.js",
 			"common/bidi/bidi-types.js",
 			"common/bidi/unicode-data.js",
 			
 			"common/scroll.js",
 			"vendor/iscroll.js",
 			"vendor/delta.js",
-			"vendor/minhash.js",
 			"common/Scrolls/mobileTouchManagerBase.js",
 			"word/Drawing/mobileTouchManager.js",
 
 			"common/wordcopypaste.js",
 			"common/intervalTree.js",
 
+			"cell/model/SheetMemory.js",
 			"cell/model/WorkbookElems.js",
 			"cell/model/Workbook.js",
 			"cell/model/Serialize.js",
@@ -347,6 +348,7 @@
 			"pdf/src/viewer.js",
 			"pdf/src/file.js",
 			"pdf/src/pdfSearch.js",
+			"pdf/src/previews.js",
 			"pdf/src/forms/formActions.js",
 			"pdf/src/forms/base/base.js",
 			"pdf/src/forms/apiFunctions.js",

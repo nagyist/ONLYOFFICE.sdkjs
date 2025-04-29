@@ -177,6 +177,7 @@
 
         this.m_aUsers       = []; // Список текущих пользователей, редактирующих данный документ
         this.m_aChanges     = []; // Массив с изменениями других пользователей
+		this.m_nUndoBeforeApply = 0; // The number of changes we need to undo before the other changes can be accepted
 
         this.m_aNeedUnlock  = []; // Массив со списком залоченных объектов(которые были залочены другими пользователями)
         this.m_aNeedUnlock2 = []; // Массив со списком залоченных объектов(которые были залочены на данном клиенте)
@@ -344,22 +345,30 @@
     CCollaborativeEditingBase.prototype.Add_Unlock2 = function(Lock)
     {
         this.m_aNeedUnlock2.push(Lock);
-        editor._onUpdateDocumentCanSave();
+        (Asc.editor || editor)._onUpdateDocumentCanSave();
     };
     CCollaborativeEditingBase.prototype.Have_OtherChanges = function()
     {
-        return (0 < this.m_aChanges.length);
+        return (0 < this.m_aChanges.length || this.m_nUndoBeforeApply > 0);
     };
     CCollaborativeEditingBase.prototype.Apply_Changes = function(fEndCallBack)
     {
+		if (this.m_nUndoBeforeApply)
+		{
+			let state   = this._PreUndo();
+			let changes = this.CoHistory.UndoGlobalChanges(this.m_nUndoBeforeApply);
+			this._PostUndo(state, changes);
+			this.m_nUndoBeforeApply = 0;
+		}
+		
         if (this.m_aChanges.length > 0)
         {
             this.GetEditorApi().sendEvent("asc_onBeforeApplyChanges");
             AscFonts.IsCheckSymbols = true;
-            editor.WordControl.m_oLogicDocument.PauseRecalculate();
-            editor.WordControl.m_oLogicDocument.EndPreview_MailMergeResult();
+            (Asc.editor || editor).WordControl.m_oLogicDocument.PauseRecalculate();
+            (Asc.editor || editor).WordControl.m_oLogicDocument.EndPreview_MailMergeResult();
 
-            editor.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.ApplyChanges);
+            (Asc.editor || editor).sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.ApplyChanges);
 
             var DocState = this.private_SaveDocumentState();
             this.Clear_NewImages();
@@ -524,7 +533,7 @@
 
 		AscCommon.g_oIdCounter.Set_Load( false );
 
-		editor.WordControl.m_oLogicDocument.RecalculateFromStart();
+		(Asc.editor || editor).WordControl.m_oLogicDocument.RecalculateFromStart();
 
 		return counter;
 	};
@@ -746,10 +755,6 @@
             {
                 var Lock = Class.Lock;
                 Lock.Set_Type( AscCommon.c_oAscLockTypes.kLockTypeOther, false );
-                if(Class.getObjectType && Class.getObjectType() === AscDFH.historyitem_type_Slide)
-                {
-                    editor.WordControl.m_oLogicDocument.DrawingDocument.UnLockSlide && editor.WordControl.m_oLogicDocument.DrawingDocument.UnLockSlide(Class.num);
-                }
                 Lock.Set_UserId( this.m_aNeedLock[Id] );
             }
         }
@@ -828,10 +833,6 @@
 
         };
         CCollaborativeEditingBase.prototype.RewritePosExtChanges = function(changesArr, scale, Binary_Writer)
-        {
-        };
-
-        CCollaborativeEditingBase.prototype.RefreshPosExtChanges = function()
         {
         };
     //-----------------------------------------------------------------------------------
@@ -1079,7 +1080,7 @@
         }
     };
     CCollaborativeEditingBase.prototype.private_SaveDocumentState = function() {
-        var LogicDocument = editor.WordControl.m_oLogicDocument;
+        var LogicDocument = (Asc.editor || editor).WordControl.m_oLogicDocument;
         var DocState;
         if (true !== this.Is_Fast()) {
             DocState = LogicDocument.Get_SelectionState2();
@@ -1094,7 +1095,7 @@
         delete this.m_aForeignCursorsToShow[UserId];
     };
     CCollaborativeEditingBase.prototype.private_RestoreDocumentState = function(DocState) {
-        var LogicDocument = editor.WordControl.m_oLogicDocument;
+        var LogicDocument = (Asc.editor || editor).WordControl.m_oLogicDocument;
         if (true !== this.Is_Fast()) {
             LogicDocument.Set_SelectionState2(DocState);
         }
@@ -1222,39 +1223,58 @@
 
 		return true;
 	};
+	CCollaborativeEditingBase.prototype._PreUndo = function()
+	{
+		// Метод для перегрузки, чтобы в каждом редакторе выполнялись свои действия
+		return null;
+	};
+	CCollaborativeEditingBase.prototype._PostUndo = function(state, changes)
+	{
+		// Метод для перегрузки, чтобы в каждом редакторе выполнялись свои действия
+	};
 	CCollaborativeEditingBase.prototype.PreUndo = function()
 	{
-		let logicDocument = this.m_oLogicDocument;
-		
-		logicDocument.sendEvent("asc_onBeforeUndoRedoInCollaboration");
-		logicDocument.DrawingDocument.EndTrackTable(null, true);
-		logicDocument.TurnOffCheckChartSelection();
-
-		return this.private_SaveDocumentState();
+		this.m_oLogicDocument.sendEvent("asc_onBeforeUndoRedoInCollaboration");
+		return this._PreUndo();
 	};
 	CCollaborativeEditingBase.prototype.PostUndo = function(state, changes)
 	{
-		this.private_RestoreDocumentState(state);
-		this.private_RecalculateDocument(changes);
-
-		let logicDocument = this.m_oLogicDocument;
-		logicDocument.TurnOnCheckChartSelection();
-		logicDocument.UpdateSelection();
-		logicDocument.UpdateInterface();
-		logicDocument.UpdateRulers();
-		logicDocument.sendEvent("asc_onUndoRedoInCollaboration");
+		this._PostUndo(state, changes);
+		this.m_oLogicDocument.sendEvent("asc_onUndoRedoInCollaboration");
 	};
 	CCollaborativeEditingBase.prototype.UndoGlobal = function(count)
 	{
+		// If we have unaccepted changes then we first remove from them
+		if (this.m_aChanges.length >= count)
+		{
+			this.m_aChanges.length -= count;
+			count = 0;
+		}
+		else
+		{
+			count -= this.m_aChanges.length;
+			this.m_aChanges.length = 0;
+		}
+		
 		if (!count)
 			return;
-
-		let state   = this.PreUndo();
-		let changes = this.CoHistory.UndoGlobalChanges(count);
-		this.PostUndo(state, changes);
+		
+		let editor = this.GetEditorApi();
+		if (editor.getViewMode() && !editor.isLiveViewer())
+		{
+			this.m_nUndoBeforeApply += count;
+		}
+		else
+		{
+			let state   = this.PreUndo();
+			let changes = this.CoHistory.UndoGlobalChanges(count);
+			this.PostUndo(state, changes);
+		}
 	};
 	CCollaborativeEditingBase.prototype.UndoGlobalPoint = function()
 	{
+		// TODO: Handle unaccepted changes from this.m_aChanges
+		
 		let state   = this.PreUndo();
 		let changes = this.CoHistory.UndoGlobalPoint();
 		this.PostUndo(state, changes);
@@ -1263,6 +1283,8 @@
 	{
 		if (true === this.Get_GlobalLock())
 			return;
+		
+		// TODO: Handle unaccepted changes from this.m_aChanges
 
 		let state   = this.PreUndo();
 		let changes = this.CoHistory.UndoOwnPoint();
@@ -1274,7 +1296,7 @@
 	};
 	CCollaborativeEditingBase.prototype.GetAllChangesCount = function()
 	{
-		return this.CoHistory.GetChangeCount();
+		return this.CoHistory.GetChangeCount() - this.m_nUndoBeforeApply + this.m_aChanges.length;
 	};
 	CCollaborativeEditingBase.prototype.CanUndo = function()
 	{

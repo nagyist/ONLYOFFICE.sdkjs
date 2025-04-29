@@ -336,6 +336,11 @@ function ResizeTrackShapeImage(originalObject, cardDirection, drawingsController
                 this.brush = originalObject.brush;
             }
             this.pen = originalObject.pen;
+
+            if (originalObject.GetEditField && originalObject.GetEditField()) {
+                this.brush = null;
+                this.pen = null;
+            }
         }
 
 
@@ -1096,13 +1101,18 @@ function ResizeTrackShapeImage(originalObject, cardDirection, drawingsController
             var _vertical_center = this.resizedExtY*0.5;
             global_MatrixTransformer.TranslateAppend(_transform, -_horizontal_center, -_vertical_center);
 
-            if(this.resizedflipH)
+            // no flip inside FreeText annot
+            let isInFreeTextAnnot = this.originalObject.group && this.originalObject.group.IsFreeText && this.originalObject.group.IsFreeText();
+            if (!isInFreeTextAnnot)
             {
-                global_MatrixTransformer.ScaleAppend(_transform, -1, 1);
-            }
-            if(this.resizedflipV)
-            {
-                global_MatrixTransformer.ScaleAppend(_transform, 1, -1);
+                if(this.resizedflipH)
+                {
+                    global_MatrixTransformer.ScaleAppend(_transform, -1, 1);
+                }
+                if(this.resizedflipV)
+                {
+                    global_MatrixTransformer.ScaleAppend(_transform, 1, -1);
+                }
             }
 
             global_MatrixTransformer.RotateRadAppend(_transform, -this.resizedRot);

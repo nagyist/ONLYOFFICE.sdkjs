@@ -1211,13 +1211,19 @@ ParaMath.prototype.Get_Layout = function(DrawingLayout, UseContentPos, ContentPo
 
 ParaMath.prototype.GetNextRunElements = function(oRunElements, isUseContentPos, nDepth)
 {
+	if (oRunElements.IsBreakOnMath())
+		return oRunElements.Stop();
+	
 	if (oRunElements.IsSkipMath())
 		return;
-
+	
 	this.Root.GetNextRunElements(oRunElements, isUseContentPos, nDepth);
 };
 ParaMath.prototype.GetPrevRunElements = function(oRunElements, isUseContentPos, nDepth)
 {
+	if (oRunElements.IsBreakOnMath())
+		return oRunElements.Stop();
+	
 	if (oRunElements.IsSkipMath())
 		return;
 
@@ -1530,6 +1536,18 @@ ParaMath.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 		{
 			// на случай когда у нас несколько неинлайновых формул в одном параграфе
 			PRS.SetMathRecalcInfoObject(null);
+			
+			// TODO: Вообще инлайновая формула должна вести себя как буква на строке, т.е. идти как часть слова, но
+			//       пока будем считать, что на ней всегда заканчивается слово
+			
+			PRS.X += PRS.WordLen + PRS.SpaceLen;
+			
+			PRS.Word            = false;
+			PRS.FirstItemOnLine = false;
+			PRS.EmptyLine       = false;
+			PRS.TextOnLine      = true;
+			PRS.SpaceLen        = 0;
+			PRS.WordLen         = 0;
 		}
 	}
 	else
@@ -2500,7 +2518,9 @@ ParaMath.prototype.Draw_Elements = function(PDSE)
     this.Root.Draw_Elements(PDSE);
 
     PDSE.X = X + this.Root.GetWidth(PDSE.Line, PDSE.Range);
-
+		if (PDSE.Graphics.m_bIsTextDrawer) {
+			PDSE.Graphics.CheckSpaceDraw(null, true);
+		}
     /*PDSE.Graphics.p_color(255,0,0, 255);
      PDSE.Graphics.drawHorLine(0, PDSE.Y - this.Ascent + this.Height, PDSE.X - 30, PDSE.X + this.Width + 30 , 1);*/
 };
@@ -2554,8 +2574,10 @@ ParaMath.prototype.Draw_Lines = function(PDSL)
         var Bound = this.Root.Get_LineBound(PDSL.Line, PDSL.Range),
             Width = Bound.W;
 
-        if ( true === FirstRPrp.Underline )
-            aUnderline.Add( UnderlineY, UnderlineY, X, X + Width, LineW, CurColor.r, CurColor.g, CurColor.b );
+        if ( true === FirstRPrp.Underline ) {
+					aUnderline.set(UnderlineY, LineW);
+	        aUnderline.Add(X, X + Width, CurColor);
+        }
 
 
         this.Root.Draw_Lines(PDSL);

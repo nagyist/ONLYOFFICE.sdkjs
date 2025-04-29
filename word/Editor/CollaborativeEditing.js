@@ -66,6 +66,10 @@ CWordCollaborativeEditing.prototype.Clear = function()
 	AscCommon.CCollaborativeEditingBase.prototype.Clear.apply(this, arguments);
 	this.Remove_AllForeignCursors();
 };
+CWordCollaborativeEditing.prototype.Apply_OtherChanges = function()
+{
+	AscCommon.executeNoRevisions(AscCommon.CCollaborativeEditingBase.prototype.Apply_OtherChanges, this.GetLogicDocument(), this, arguments);
+};
 CWordCollaborativeEditing.prototype.Send_Changes = function(IsUserSave, AdditionalInfo, IsUpdateInterface, isAfterAskSave)
 {
 	if (!this.canSendChanges())
@@ -420,6 +424,26 @@ CWordCollaborativeEditing.prototype.End_CollaborationEditing = function()
 		else
 			this.m_nUseType = 0;
 	}
+};
+CWordCollaborativeEditing.prototype._PreUndo = function()
+{
+	let logicDocument = this.m_oLogicDocument;
+	
+	logicDocument.DrawingDocument.EndTrackTable(null, true);
+	logicDocument.TurnOffCheckChartSelection();
+	
+	return this.private_SaveDocumentState()
+};
+CWordCollaborativeEditing.prototype._PostUndo = function(state, changes)
+{
+	this.private_RestoreDocumentState(state);
+	this.private_RecalculateDocument(changes);
+	
+	let logicDocument = this.m_oLogicDocument;
+	logicDocument.TurnOnCheckChartSelection();
+	logicDocument.UpdateSelection();
+	logicDocument.UpdateInterface();
+	logicDocument.UpdateRulers();
 };
 //----------------------------------------------------------------------------------------------------------------------
 // Функции для работы с сохраненными позициями документа.

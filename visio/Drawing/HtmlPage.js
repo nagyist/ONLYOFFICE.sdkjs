@@ -210,8 +210,7 @@ function CEditorPage(api)
 	// thumbnails
 	this.Thumbnails                 = new CThumbnailsManager();//todo override CThumbnailsManager
 	this.Thumbnails.showContextMenu = function(bPosBySelect) {}
-	this.Thumbnails.onMouseUp = function() {}
-	this.Thumbnails.onMouseMove = function() {}
+	this.Thumbnails.onKeyDown = function(e) {return true;}
 
 	// сплиттеры (для табнейлов и для заметок)
 	this.Splitter1Pos    = 0;
@@ -566,6 +565,10 @@ function CEditorPage(api)
 	this.GetMainContentBounds = function()
 	{
 		return this.m_oMainParent.AbsolutePosition;
+	};
+	this.GetVertRulerLeft = function()
+	{
+		return 0;
 	};
 
 	// splitter
@@ -976,7 +979,7 @@ function CEditorPage(api)
 
 	this.initEventsMobile = function()
 	{
-		if (this.m_oApi.isMobileVersion)
+		if (this.m_oApi.isUseOldMobileVersion())
 		{
 			this.MobileTouchManager = new AscCommon.CMobileTouchManager( { eventsElement : "slides_mobile_element" } );
 			this.MobileTouchManager.Init(this.m_oApi);
@@ -1017,12 +1020,11 @@ function CEditorPage(api)
 		}
 		else
 		{
-			//todo
-			// this.MobileTouchManager = new AscCommon.CMobileTouchManager( { eventsElement : "slides_mobile_element", desktopMode : true } );
-			// this.MobileTouchManager.Init(this.m_oApi);
-			//
-			// this.MobileTouchManagerThumbnails = new AscCommon.CMobileTouchManagerThumbnails( { eventsElement : "slides_mobile_element", desktopMode : true } );
-			// this.MobileTouchManagerThumbnails.Init(this.m_oApi);
+			this.MobileTouchManager = new AscCommon.CMobileTouchManager( { eventsElement : "slides_mobile_element", desktopMode : true } );
+			this.MobileTouchManager.Init(this.m_oApi);
+
+			this.MobileTouchManagerThumbnails = new AscCommon.CMobileTouchManagerThumbnails( { eventsElement : "slides_mobile_element", desktopMode : true } );
+			this.MobileTouchManagerThumbnails.Init(this.m_oApi);
 		}
 	};
 
@@ -2830,51 +2832,18 @@ function CEditorPage(api)
 			return false;
 		}
 
-		var delta  = 0;
-		var deltaX = 0;
-		var deltaY = 0;
-
-		if (undefined != e.wheelDelta && e.wheelDelta != 0)
-		{
-			//delta = (e.wheelDelta > 0) ? -45 : 45;
-			delta = -45 * e.wheelDelta / 120;
-		}
-		else if (undefined != e.detail && e.detail != 0)
-		{
-			//delta = (e.detail > 0) ? 45 : -45;
-			delta = 45 * e.detail / 3;
-		}
-
-		// New school multidimensional scroll (touchpads) deltas
-		deltaY = delta;
-
-		if (e.axis !== undefined && e.axis === e.HORIZONTAL_AXIS)
-		{
-			deltaY = 0;
-			deltaX = delta;
-		}
-
-		// Webkit
-		if (undefined !== e.wheelDeltaY && 0 !== e.wheelDeltaY)
-		{
-			//deltaY = (e.wheelDeltaY > 0) ? -45 : 45;
-			deltaY = -45 * e.wheelDeltaY / 120;
-		}
-		if (undefined !== e.wheelDeltaX && 0 !== e.wheelDeltaX)
-		{
-			//deltaX = (e.wheelDeltaX > 0) ? -45 : 45;
-			deltaX = -45 * e.wheelDeltaX / 120;
-		}
-
-		deltaX >>= 0;
-		deltaY >>= 0;
+		let values = AscCommon.checkMouseWhell(e, {
+			isSupportBidirectional : false,
+			isAllowHorizontal : true,
+			isUseMaximumDelta : true
+		});
 
 		oThis.m_nVerticalSlideChangeOnScrollEnabled = true;
 
-		if (0 != deltaX)
-			oThis.m_oScrollHorApi.scrollBy(deltaX, 0, false);
-		else if (0 != deltaY)
-			oThis.m_oScrollVerApi.scrollBy(0, deltaY, false);
+		if (0 !== values.x)
+			oThis.m_oScrollHorApi.scrollBy(values.x, 0, false);
+		if (0 !== values.y)
+			oThis.m_oScrollVerApi.scrollBy(0, values.y, false);
 
 		oThis.m_nVerticalSlideChangeOnScrollEnabled = false;
 
@@ -3615,14 +3584,8 @@ function CEditorPage(api)
 	this.SaveDocument = function(noBase64)
 	{
 		var writer = new AscCommon.CBinaryFileWriter();
-		this.m_oLogicDocument.CalculateComments();
-		if (noBase64) {
-			return writer.WriteDocument3(this.m_oLogicDocument);;
-		} else {
-			var str = writer.WriteDocument(this.m_oLogicDocument);
-			return str;
-			//console.log(str);
-		}
+		let ser = new AscVisio.BinaryVSDYWriter();
+		return ser.Write(this.m_oLogicDocument, writer);
 	};
 
 	this.UpdateViewMode = function ()

@@ -347,8 +347,8 @@
 	 * Standard numeric format.
 	 * @typedef {("General" | "0" | "0.00" | "#,##0" | "#,##0.00" | "0%" | "0.00%" |
 	 * "0.00E+00" | "# ?/?" | "# ??/??" | "m/d/yyyy" | "d-mmm-yy" | "d-mmm" | "mmm-yy" | "h:mm AM/PM" |
-	 * "h:mm:ss AM/PM" | "h:mm" | "h:mm:ss" | "m/d/yyyy h:mm" | "#,##0_);(#,##0)" | "#,##0_);[Red](#,##0)" | 
-	 * "#,##0.00_);(#,##0.00)" | "#,##0.00_);[Red](#,##0.00)" | "mm:ss" | "[h]:mm:ss" | "mm:ss.0" | "##0.0E+0" | "@")} NumFormat
+	 * "h:mm:ss AM/PM" | "h:mm" | "h:mm:ss" | "m/d/yyyy h:mm" | "#,##0_\);(#,##0)" | "#,##0_\);\[Red\]\(#,##0)" | 
+     * "#,##0.00_\);\(#,##0.00\)" | "#,##0.00_\);\[Red\]\(#,##0.00\)" | "mm:ss" | "[h]:mm:ss" | "mm:ss.0" | "##0.0E+0" | "@")} NumFormat
 	 * @see office-js-api/Examples/Enumerations/NumFormat.js
 	 */
 
@@ -359,11 +359,38 @@
     /**
      * Any valid drawing element.
      * @typedef {(ApiShape | ApiImage | ApiGroup | ApiOleObject | ApiTable | ApiChart )} Drawing
+     * @see office-js-api/Examples/Enumerations/Drawing.js
 	 */
 
     /**
-     * Available drwaing element for grouping
+     * Available drawing element for grouping.
      * @typedef {(ApiShape | ApiGroup | ApiImage | ApiChart)} DrawingForGroup
+     * @see office-js-api/Examples/Enumerations/DrawingForGroup.js
+	 */
+
+    /**
+     * Any valid element which can be added to the document structure.
+	 * @typedef {(ApiParagraph)} DocumentElement
+	 * @see office-js-api/Examples/Enumerations/DocumentElement.js
+	 */
+
+    /**
+	 * The types of elements that can be added to the paragraph structure.
+	 * @typedef {(ApiUnsupported | ApiRun | ApiHyperlink)} ParagraphContent
+	 * @see office-js-api/Examples/Enumerations/ParagraphContent.js
+	 */
+
+    /**
+     * The 1000th of a percent (100000 = 100%).
+     * @typedef {number} PositivePercentage
+     * @see office-js-api/Examples/Enumerations/PositivePercentage.js
+	 */
+
+    /**
+	 * Represents the type of objects in a selection.
+	 * @typedef {("none" | "shapes" | "slides" | "text")} SelectionType - Available selection types.
+     * @see office-js-api/Examples/Enumerations/SelectionType.js
+	 *
 	 */
 
     //------------------------------------------------------------------------------------------------------------------
@@ -373,25 +400,12 @@
     //------------------------------------------------------------------------------------------------------------------
 
     /**
-     * The 1000th of a percent (100000 = 100%).
-     * @typedef {number} PositivePercentage
-     * @see office-js-api/Examples/Enumerations/PositivePercentage.js
-	 */
-
-    /**
      * Returns the main presentation.
      * @typeofeditors ["CPE"]
      * @memberof Api
      * @returns {ApiPresentation}
      * @see office-js-api/Examples/{Editor}/Api/Methods/GetPresentation.js
 	 */
-
-	/**
-	 * Represents the type of objects in a selection.
-	 * @typedef {("none" | "shapes" | "slides" | "text")} SelectionType - Available selection types.
-	 *
-	 */
-
     Api.prototype.GetPresentation = function(){
         if(this.WordControl && this.WordControl.m_oLogicDocument){
             return new ApiPresentation(this.WordControl.m_oLogicDocument);
@@ -420,6 +434,7 @@
         var oThemeCopy = oTheme.ThemeInfo.Theme.createDuplicate();
         var oMaster = new ApiMaster(new AscCommonSlide.MasterSlide());
         oMaster.Master.setTheme(oThemeCopy);
+				oMaster.Master.setPreserve(true);
 
         return oMaster;
     };
@@ -435,6 +450,7 @@
     Api.prototype.CreateLayout = function(oMaster){
         var oLayout = new ApiLayout(new AscCommonSlide.SlideLayout());
 
+				oLayout.Layout.setPreserve(true);
         if (oMaster && oMaster.GetClassType && oMaster.GetClassType() === "master")
             oMaster.AddLayout(undefined, oLayout);
         
@@ -705,9 +721,9 @@
      * @memberof Api
      * @typeofeditors ["CPE"]
      * @param {ChartType} [sType="bar"] - The chart type used for the chart display.
-     * @param {Array} aSeries - The array of the data used to build the chart from.
-     * @param {Array} aSeriesNames - The array of the names (the source table column names) used for the data which the chart will be build from.
-     * @param {Array} aCatNames - The array of the names (the source table row names) used for the data which the chart will be build from.
+     * @param {number[][]} aSeries - The array of the data used to build the chart from.
+     * @param {number[] | string[]} aSeriesNames - The array of the names (the source table column names) used for the data which the chart will be build from.
+     * @param {number[] | string[]} aCatNames - The array of the names (the source table row names) used for the data which the chart will be build from.
      * @param {EMU} nWidth - The chart width in English measure units.
      * @param {EMU} nHeight - The chart height in English measure units.
      * @param {number} nStyleIndex - The chart color style index (can be <b>1 - 48</b>, as described in OOXML specification).
@@ -728,8 +744,9 @@
      * Creates a group of drawings.
      * @memberof Api
      * @typeofeditors ["CPE"]
-     * @param {DrawingForGroup} aDrawings - The array of drawings not in document.
+     * @param {DrawingForGroup[]} aDrawings - An array of drawings to group.
      * @returns {ApiGroup}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateGroup.js
 	 */
     Api.prototype.CreateGroup = function(aDrawings) {
@@ -891,12 +908,13 @@
         let oPresentation = private_GetPresentation();
 		let oParsedObj  = JSON.parse(sMessage);
         let oResult = null;
+
+        if (oParsedObj["tblStyleLst"])
+            oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
+
 		switch (oParsedObj["type"])
 		{
             case "presentation":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
-
                 let oSldSize = oParsedObj["sldSz"] ? oReader.SlideSizeFromJSON(oParsedObj["sldSz"]) : null;
                 let oShowPr  = oParsedObj["showPr"] ? oReader.ShowPrFromJSON(oParsedObj["showPr"]) : null;
                 oSldSize && oPresentation.setSldSz(oSldSize);
@@ -957,8 +975,6 @@
 				oResult = this.private_CreateApiHyperlink(oReader.HyperlinkFromJSON(oParsedObj));
                 break;
             case "graphicFrame":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
                 oResult = new ApiTable(oReader.GraphicObjFromJSON(oParsedObj));
                 break;
 			case "image":
@@ -991,18 +1007,12 @@
 				oResult = this.private_CreateApiUniColor(oReader.ColorFromJSON(oParsedObj));
                 break;
 			case "slide":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
 				oResult = new ApiSlide(oReader.SlideFromJSON(oParsedObj));
                 break;
 			case "sldLayout":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
 				oResult = new ApiLayout(oReader.SlideLayoutFromJSON(oParsedObj));
                 break;
 			case "sldMaster":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
                 oResult = new ApiMaster(oReader.MasterSlideFromJSON(oParsedObj));
                 break;
 			case "fontScheme":
@@ -1015,8 +1025,6 @@
 				oResult = new ApiThemeColorScheme(oReader.ClrSchemeFromJSON(oParsedObj));
                 break;
             case "slides":
-                if (oParsedObj["tblStyleLst"])
-                    oReader.TableStylesFromJSON(oParsedObj["tblStyleLst"]);
                 let aApiSlides = []
                 let aSlides = oReader.SlidesFromJSON(oParsedObj);
                 for (let nSlide = 0; nSlide < aSlides.length; nSlide++)
@@ -1031,10 +1039,12 @@
 
 
     /**
-	 * Converts the specified JSON object into the Document Builder object of the corresponding type.
+	 * Returns the selection from the current presentation.
 	 * @memberof Api
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiSelection}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/Api/Methods/GetSelection.js
 	 */
 	Api.prototype.GetSelection = function()
 	{
@@ -1093,7 +1103,6 @@
         return -1;
     };
 
-
     /**
      * Returns a slide by its position in the presentation.
      * @memberof ApiPresentation
@@ -1120,6 +1129,39 @@
         return this.GetSlideByIndex(this.GetCurSlideIndex());
     };
 
+	/**
+	 * Returns the current visible slide, layout or master.
+	 * @typeofeditors ["CPE"]
+	 * @memberof ApiPresentation
+	 * @returns {ApiSlide | ApiLayout | ApiMaster | null} - returns null if the current slide is not found.
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCurrentVisibleSlide.js
+	 */
+	ApiPresentation.prototype.GetCurrentVisibleSlide = function () {
+		const slideIndex = this.GetCurSlideIndex();
+
+		if (!Asc.editor.isMasterMode()) {
+			return this.GetSlideByIndex(slideIndex);
+		}
+
+		const aMasters = this.GetAllSlideMasters();
+		let accumulatedIndex = 0;
+
+		for (let i = 0; i < aMasters.length; i++) {
+			const master = aMasters[i];
+			if (accumulatedIndex === slideIndex) {
+				return master;
+			}
+
+			const layouts = master.GetAllLayouts();
+			if (slideIndex < accumulatedIndex + layouts.length + 1) {
+				return layouts[slideIndex - accumulatedIndex - 1];
+			}
+
+			accumulatedIndex += layouts.length + 1;
+		}
+
+		return null;
+	};
 
     /**
      * Appends a new slide to the end of the presentation.
@@ -1134,8 +1176,6 @@
             this.Presentation.insertSlide(this.Presentation.Slides.length, oSlide.Slide);
         }
     };
-
-
 
     /**
      * Sets the size to the current presentation.
@@ -1213,9 +1253,11 @@
     };
 
 	/**
-	 * Returns an array of all slides in the presentation.
+	 * Returns an array of all slides from the current presentation.
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiSlide[]}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllSlides.js
 	 */
 	ApiPresentation.prototype.GetAllSlides = function()
 	{
@@ -1240,9 +1282,11 @@
     };
 
     /**
-     * Returns an array of all slide masters in the presentation
+     * Returns an array of all slide masters from the current presentation.
      * @typeofeditors ["CPE"]
      * @returns {ApiMaster[]}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllSlideMasters.js
 	 */
     ApiPresentation.prototype.GetAllSlideMasters = function()
     {
@@ -1367,7 +1411,7 @@
 	 * Converts the ApiPresentation object into the JSON object.
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
-     * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON}
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/ToJSON.js
 	 */
@@ -1382,12 +1426,12 @@
 	 * Converts the slides from the current ApiPresentation object into the JSON objects.
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
-     * @param {bool} [nStart=0] - The index to the start slide.
-     * @param {bool} [nStart=ApiPresentation.GetSlidesCount() - 1] - The index to the end slide.
-     * @param {bool} [bWriteLayout=false] - Specifies if the slide layout will be written to the JSON object or not.
-     * @param {bool} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not (bWriteMaster is false if bWriteLayout === false).
-     * @param {bool} [bWriteAllMasLayouts=false] - Specifies if all child layouts from the slide master will be written to the JSON object or not.
-     * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [nStart=0] - The index to the start slide.
+     * @param {boolean} [nStart=ApiPresentation.GetSlidesCount() - 1] - The index to the end slide.
+     * @param {boolean} [bWriteLayout=false] - Specifies if the slide layout will be written to the JSON object or not.
+     * @param {boolean} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not (bWriteMaster is false if bWriteLayout === false).
+     * @param {boolean} [bWriteAllMasLayouts=false] - Specifies if all child layouts from the slide master will be written to the JSON object or not.
+     * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON[]}
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/SlidesToJSON.js
 	 */
@@ -1423,6 +1467,91 @@
 			aApiComments.push(private_GetApi().private_CreateApiComment(aCommentsData[nComment].comment));
 		}
 		return aApiComments;
+	};
+
+	/**
+	 * Private method to collect all objects of a specific type from the presentation (OleObjects, Charts, Shapes, Images).
+	 * Calls 'getObjectsMethod' method on each slide, master and layout to get the objects.
+	 */
+	ApiPresentation.prototype._collectAllObjects = function (getObjectsMethod) {
+		const aObjects = [];
+
+		function collectObjects(aSource) {
+			aSource.forEach(function (oSource) {
+				oSource[getObjectsMethod]().forEach(function (oObject) {
+					aObjects.push(oObject);
+				});
+			});
+		}
+
+		const aSlides = this.GetAllSlides();
+		const aMasters = this.GetAllSlideMasters();
+
+		// Can't use flatMap because it's not supported in IE11
+		const aLayouts = aMasters.reduce(function (acc, oMaster) {
+			return acc.concat(oMaster.GetAllLayouts());
+		}, []);
+
+		collectObjects(aSlides);
+		collectObjects(aMasters);
+		collectObjects(aLayouts);
+
+		return aObjects;
+	};
+
+	/**
+	 * Returns an array with all the OLE objects from the current presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiOleObject[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllOleObjects.js
+	 */
+	ApiPresentation.prototype.GetAllOleObjects = function () {
+		return this._collectAllObjects('GetAllOleObjects');
+	};
+
+	/**
+	 * Returns an array with all the chart objects from the current presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiChart[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllCharts.js
+	 */
+	ApiPresentation.prototype.GetAllCharts = function () {
+		return this._collectAllObjects('GetAllCharts');
+	};
+
+	/**
+	 * Returns an array with all the shape objects from the current presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiShape[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllShapes.js
+	 */
+	ApiPresentation.prototype.GetAllShapes = function () {
+		return this._collectAllObjects('GetAllShapes');
+	};
+
+	/**
+	 * Returns an array with all the image objects from the current presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiImage[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllImages.js
+	 */
+	ApiPresentation.prototype.GetAllImages = function () {
+		return this._collectAllObjects('GetAllImages');
+	};
+
+	/**
+	 * Returns an array with all the drawing objects from the current presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {Drawing[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllDrawings.js
+	 */
+	ApiPresentation.prototype.GetAllDrawings = function () {
+		return this._collectAllObjects('GetAllDrawings');
 	};
 
 	/**
@@ -1526,6 +1655,21 @@
         return "master";
     };
 
+	/**
+	 * Returns all layouts from the slide master
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiLayout[]} - returns an empty array if the slide master doesn't have layouts.
+	 * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetAllLayouts.js
+	 */
+	ApiMaster.prototype.GetAllLayouts = function () {
+		const aLayouts = this.Master.sldLayoutLst;
+		const aApiLayouts = [];
+		aLayouts.forEach(function (oLayout) {
+			aApiLayouts.push(new ApiLayout(oLayout));
+		});
+		return aApiLayouts;
+	};
+
     /**
      * Returns a layout of the specified slide master by its position.
      * @typeofeditors ["CPE"]
@@ -1610,6 +1754,9 @@
     {
         if (this.Master) 
         {
+            if (oDrawing.Drawing.group || oDrawing.Drawing.IsUseInDocument())
+                return false;
+
             oDrawing.Drawing.setParent(this.Master);
             this.Master.shapeAdd(this.Master.cSld.spTree.length, oDrawing.Drawing);
             editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
@@ -1853,7 +2000,7 @@
 	 * Converts the ApiMaster object into the JSON object.
 	 * @memberof ApiMaster
 	 * @typeofeditors ["CPE"]
-     * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON}
 	 * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/ToJSON.js
 	 */
@@ -1884,11 +2031,12 @@
     };
 
     /**
-     * Groups an array of drawings in master slide.
+     * Groups an array of drawings in the current slide master.
      * @memberof ApiMaster
      * @typeofeditors ["CPE"]
-     * @param {DrawingForGroup[]} aDrawings - The array of drawings in master.
+     * @param {DrawingForGroup[]} aDrawings - An array of drawings to group.
      * @returns {ApiGroup}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GroupDrawings.js
      */
     ApiMaster.prototype.GroupDrawings = function(aDrawings)
@@ -1960,6 +2108,18 @@
     };
 
     /**
+     * Returns a name of the current layout.
+     * @typeofeditors ["CPE"]
+     * @returns {string}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GetName.js
+	 */
+    ApiLayout.prototype.GetName = function()
+    {
+        return this.Layout.getName();
+    };
+
+    /**
      * Adds an object (image, shape or chart) to the current slide layout.
      * @typeofeditors ["CPE"]
      * @memberof ApiLayout
@@ -1971,6 +2131,9 @@
     {
         if (this.Layout) 
         {
+            if (oDrawing.Drawing.group || oDrawing.Drawing.IsUseInDocument())
+                return false;
+
             oDrawing.Drawing.setParent(this.Layout);
             this.Layout.shapeAdd(this.Layout.cSld.spTree.length, oDrawing.Drawing);
             editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
@@ -2235,8 +2398,8 @@
 	 * Converts the ApiLayout object into the JSON object.
 	 * @memberof ApiLayout
      * @typeofeditors ["CPE"]
-     * @param {bool} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not.
-     * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not.
+     * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON}
 	 * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/ToJSON.js
 	 */
@@ -2267,11 +2430,12 @@
     };
 
     /**
-     * Groups an array of drawings in layout.
+     * Groups an array of drawings in the current layout.
      * @memberof ApiLayout
      * @typeofeditors ["CPE"]
-     * @param {DrawingForGroup[]} aDrawings - The array of drawings in layout.
+     * @param {DrawingForGroup[]} aDrawings - An array of drawings to group.
      * @returns {ApiGroup}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GroupDrawings.js
      */
     ApiLayout.prototype.GroupDrawings = function(aDrawings)
@@ -2892,6 +3056,9 @@
 	 */
     ApiSlide.prototype.AddObject = function(oDrawing){
         if(this.Slide){
+            if (oDrawing.Drawing.group || oDrawing.Drawing.IsUseInDocument())
+                return false;
+
             oDrawing.Drawing.setParent(this.Slide);
             this.Slide.shapeAdd(this.Slide.cSld.spTree.length, oDrawing.Drawing);
             editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
@@ -3409,10 +3576,10 @@
 	 * Converts the ApiSlide object into the JSON object.
 	 * @memberof ApiSlide
      * @typeofeditors ["CPE"]
-     * @param {bool} [bWriteLayout=false] - Specifies if the slide layout will be written to the JSON object or not.
-     * @param {bool} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not (bWriteMaster is false if bWriteLayout === false).
-     * @param {bool} [bWriteAllMasLayouts=false] - Specifies if all child layouts from the slide master will be written to the JSON object or not.
-	 * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [bWriteLayout=false] - Specifies if the slide layout will be written to the JSON object or not.
+     * @param {boolean} [bWriteMaster=false] - Specifies if the slide master will be written to the JSON object or not (bWriteMaster is false if bWriteLayout === false).
+     * @param {boolean} [bWriteAllMasLayouts=false] - Specifies if all child layouts from the slide master will be written to the JSON object or not.
+	 * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON}
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/ToJSON.js
 	 */
@@ -3446,6 +3613,8 @@
 	 * Selects the current slide.
 	 * @memberof ApiSlide
 	 * @typeofeditors ["CPE"]
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/Select.js
 	 */
 	ApiSlide.prototype.Select = function() {
 		if(!Asc.editor.isNormalMode())
@@ -3458,11 +3627,12 @@
 	};
 
     /**
-     * Groups an array of drawings in slide.
+     * Groups an array of drawings in the current slide.
      * @memberof ApiSlide
      * @typeofeditors ["CPE"]
-     * @param {DrawingForGroup[]} aDrawings - The array of drawings in slide.
+     * @param {DrawingForGroup[]} aDrawings - An array of drawings to group.
      * @returns {ApiGroup}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GroupDrawings.js
      */
     ApiSlide.prototype.GroupDrawings = function(aDrawings)
@@ -3788,7 +3958,7 @@
      * Returns the lock value for the specified lock type of the current drawing.
      * @typeofeditors ["CPE"]
 	 * @param {DrawingLockType} sType - Lock type in the string format.
-     * @returns {bool}
+     * @returns {boolean}
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetLockValue.js
 	 */
 	ApiDrawing.prototype.GetLockValue = function(sType)
@@ -3808,8 +3978,8 @@
      * Sets the lock value to the specified lock type of the current drawing.
      * @typeofeditors ["CPE"]
 	 * @param {DrawingLockType} sType - Lock type in the string format.
-     * @param {bool} bValue - Specifies if the specified lock is applied to the current drawing.
-	 * @returns {bool}
+     * @param {boolean} bValue - Specifies if the specified lock is applied to the current drawing.
+	 * @returns {boolean}
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetLockValue.js
 	 */
 	ApiDrawing.prototype.SetLockValue = function(sType, bValue)
@@ -3857,6 +4027,44 @@
         oController.updateOverlay();
 	};
 
+    /**
+     * Sets the rotation angle to the current drawing object.
+     * @memberof ApiDrawing
+     * @param {number} nRotAngle - new drawing rot angle
+     * @typeofeditors ["CPE"]
+     * @returns {boolean}
+     * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetRotation.js
+	 */
+	ApiDrawing.prototype.SetRotation = function(nRotAngle)
+	{
+		if (!this.Drawing.canRotate()) {
+			return false;
+		}
+
+		let oXfrm = this.Drawing.getXfrm();
+		oXfrm.setRot(nRotAngle * Math.PI / 180);
+
+		return true;
+	};
+	/**
+     * Gets the rotation angle of the current drawing object.
+     * @memberof ApiDrawing
+     * @typeofeditors ["CPE"]
+     * @returns {number}
+     * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetRotation.js
+	 */
+	ApiDrawing.prototype.GetRotation = function()
+	{
+		if (!this.Drawing.canRotate()) {
+			return 0;
+		}
+
+		let oXfrm = this.Drawing.getXfrm();
+		let nRad = oXfrm.getRot();
+
+		return nRad * 180 / Math.PI
+	};
+
     //------------------------------------------------------------------------------------------------------------------
     //
     // ApiGroup
@@ -3868,6 +4076,7 @@
      * @memberof ApiGroup
      * @typeofeditors ["CPE"]
      * @returns {"group"}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiGroup/Methods/GetClassType.js
      */
     ApiGroup.prototype.GetClassType = function()
@@ -3876,10 +4085,11 @@
     };
 
     /**
-     * Ungroups current group drawing.
+     * Ungroups the current group of drawings.
      * @memberof ApiGroup
-     * @typeofeditors ["CDE"]
+     * @typeofeditors ["CPE"]
      * @returns {boolean}
+     * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/ApiGroup/Methods/Ungroup.js
      */
     ApiGroup.prototype.Ungroup = function()
@@ -4371,7 +4581,7 @@
 	 * Converts the ApiTable object into the JSON object.
 	 * @memberof ApiTable
 	 * @typeofeditors ["CPE"]
-     * @param {bool} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
+     * @param {boolean} [bWriteTableStyles=false] - Specifies whether to write used table styles to the JSON object (true) or not (false).
 	 * @returns {JSON}
 	 * @see office-js-api/Examples/{Editor}/ApiTable/Methods/ToJSON.js
 	 */
@@ -4792,6 +5002,7 @@
     ApiPresentation.prototype["GetCurSlideIndex"]         = ApiPresentation.prototype.GetCurSlideIndex;
     ApiPresentation.prototype["GetSlideByIndex"]          = ApiPresentation.prototype.GetSlideByIndex;
     ApiPresentation.prototype["GetCurrentSlide"]          = ApiPresentation.prototype.GetCurrentSlide;
+    ApiPresentation.prototype["GetCurrentVisibleSlide"]   = ApiPresentation.prototype.GetCurrentVisibleSlide;
     ApiPresentation.prototype["AddSlide"]                 = ApiPresentation.prototype.AddSlide;
     ApiPresentation.prototype["CreateNewHistoryPoint"]    = ApiPresentation.prototype.CreateNewHistoryPoint;
     ApiPresentation.prototype["SetSizes"]                 = ApiPresentation.prototype.SetSizes;
@@ -4809,9 +5020,13 @@
     ApiPresentation.prototype["GetHeight"]                = ApiPresentation.prototype.GetHeight;
     ApiPresentation.prototype["GetAllComments"]           = ApiPresentation.prototype.GetAllComments;
     ApiPresentation.prototype["GetDocumentInfo"]          = ApiPresentation.prototype.GetDocumentInfo;
-
     ApiPresentation.prototype["SlidesToJSON"]             = ApiPresentation.prototype.SlidesToJSON;
     ApiPresentation.prototype["ToJSON"]                   = ApiPresentation.prototype.ToJSON;
+    ApiPresentation.prototype["GetAllOleObjects"]         = ApiPresentation.prototype.GetAllOleObjects;
+    ApiPresentation.prototype["GetAllCharts"]             = ApiPresentation.prototype.GetAllCharts;
+    ApiPresentation.prototype["GetAllShapes"]             = ApiPresentation.prototype.GetAllShapes;
+    ApiPresentation.prototype["GetAllImages"]             = ApiPresentation.prototype.GetAllImages;
+    ApiPresentation.prototype["GetAllDrawings"]           = ApiPresentation.prototype.GetAllDrawings;
 
     ApiMaster.prototype["GetClassType"]                   = ApiMaster.prototype.GetClassType;
     ApiMaster.prototype["GetLayout"]                      = ApiMaster.prototype.GetLayout;
@@ -4941,6 +5156,8 @@
     ApiDrawing.prototype["GetLockValue"]                  = ApiDrawing.prototype.GetLockValue;
     ApiDrawing.prototype["SetLockValue"]                  = ApiDrawing.prototype.SetLockValue;
     ApiDrawing.prototype["Select"]                        = ApiDrawing.prototype.Select;
+    ApiDrawing.prototype["SetRotation"]                   = ApiDrawing.prototype.SetRotation;
+    ApiDrawing.prototype["GetRotation"]                   = ApiDrawing.prototype.GetRotation;
 
     ApiGroup.prototype["GetClassType"]	= ApiGroup.prototype.GetClassType;
 	ApiGroup.prototype["Ungroup"]		= ApiGroup.prototype.Ungroup;
@@ -5007,10 +5224,6 @@
     ApiTableCell.prototype["SetVerticalAlign"]            = ApiTableCell.prototype.SetVerticalAlign;
     ApiTableCell.prototype["SetTextDirection"]            = ApiTableCell.prototype.SetTextDirection;
 
-    ApiSelection.prototype["GetType"]                     = ApiSelection.prototype.GetType;
-    ApiSelection.prototype["GetShapes"]                   = ApiSelection.prototype.GetShapes;
-    ApiSelection.prototype["GetSlides"]                   = ApiSelection.prototype.GetSlides;
-    ApiSelection.prototype["IsEmpty"]                     = ApiSelection.prototype.IsEmpty;
 
 
     Api.prototype.private_CreateApiSlide = function(oSlide){
@@ -5027,7 +5240,7 @@
     };
 
 	/**
-	 * Class representing the selection in the presentation
+	 * Class representing the selection in the presentation.
 	 * @constructor
 	 */
 	function ApiSelection() {
@@ -5038,10 +5251,12 @@
 
 
 	/**
-	 * Returns the type of selection.
+	 * Returns the type of the current selection.
 	 * @memberof ApiSelection
 	 * @typeofeditors ["CPE"]
 	 * @returns {SelectionType}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiSelection/Methods/GetType.js
 	 */
 	ApiSelection.prototype.GetType = function() {
 		let oPresentation = this.getPresentation();
@@ -5064,10 +5279,12 @@
 	};
 
 	/**
-	 * Returns selected shapes.
+	 * Returns the selected shapes.
 	 * @memberof ApiSelection
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiDrawing[]}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiSelection/Methods/GetShapes.js
 	 */
 	ApiSelection.prototype.GetShapes = function() {
 		let oController = Asc.editor.getGraphicController();
@@ -5086,10 +5303,12 @@
 	};
 
 	/**
-	 * Returns selected slides.
+	 * Returns the selected slides.
 	 * @memberof ApiSelection
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiSlide[]}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiSelection/Methods/GetSlides.js
 	 */
 	ApiSelection.prototype.GetSlides = function() {
 		if(!Asc.editor.isNormalMode()) {
@@ -5106,14 +5325,22 @@
 	};
 
 	/**
-	 * Returns is current selection empty or not
+	 * Specifies whether the current selection is empty or not.
 	 * @memberof ApiSelection
 	 * @typeofeditors ["CPE"]
 	 * @returns {boolean}
+     * @since 8.3.0
+     * @see office-js-api/Examples/{Editor}/ApiSelection/Methods/IsEmpty.js
 	 */
 	ApiSelection.prototype.IsEmpty = function() {
 		return this.GetType() === "none";
 	};
+
+	
+	ApiSelection.prototype["GetType"]                     = ApiSelection.prototype.GetType;
+	ApiSelection.prototype["GetShapes"]                   = ApiSelection.prototype.GetShapes;
+	ApiSelection.prototype["GetSlides"]                   = ApiSelection.prototype.GetSlides;
+	ApiSelection.prototype["IsEmpty"]                     = ApiSelection.prototype.IsEmpty;
 
     function private_GetCurrentSlide(){
         var oApiPresentation = editor.GetPresentation();
@@ -5385,7 +5612,12 @@
 		}
 		return aWrappers;
 	}
-
+	window['AscBuilder'] = window['AscBuilder'] || {};
+	window['AscBuilder'].ApiShape = ApiShape;
+	window['AscBuilder'].ApiImage = ApiImage;
+	window['AscBuilder'].ApiGroup = ApiGroup;
+	window['AscBuilder'].ApiOleObject = ApiOleObject;
+	window['AscBuilder'].ApiTable = ApiTable;
 })(window, null);
 
 

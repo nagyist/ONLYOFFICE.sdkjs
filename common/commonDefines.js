@@ -534,6 +534,9 @@ window.AscCommon.g_cIsBeta = "false";
 		VSSM : 0x4005,
 		VSTM : 0x4006,
 
+		VSDY : 0x1004,
+		CANVAS_DIAGRAM : 0x2005,
+
 		//image
 		IMG  : 0x0400,
 		JPG  : 0x0401,
@@ -694,21 +697,25 @@ window.AscCommon.g_cIsBeta = "false";
 	};
 
 	var c_oAscTypeSelectElement = {
-		Paragraph      : 0,
-		Table          : 1,
-		Image          : 2,
-		Header         : 3,
-		Hyperlink      : 4,
-		SpellCheck     : 5,
-		Shape          : 6,
-		Slide          : 7,
-		Chart          : 8,
-		Math           : 9,
-		MailMerge      : 10,
-		ContentControl : 11,
-		Animation      : 12,
-		Text           : 13, // viewer
-		Annot          : 14
+		Paragraph         : 0,
+		Table             : 1,
+		Image             : 2,
+		Header            : 3,
+		Hyperlink         : 4,
+		SpellCheck        : 5,
+		Shape             : 6,
+		Slide             : 7,
+		Chart             : 8,
+		Math              : 9,
+		MailMerge         : 10,
+		ContentControl    : 11,
+		Animation         : 12,
+		UnProtectedRegion : 13,
+		// viewer
+		Text              : 14,
+		Annot             : 15,
+		Field			  : 16,
+		PdfPage           : 17
 	};
 
 	var c_oAscLineDrawingRule = {
@@ -3669,10 +3676,10 @@ window.AscCommon.g_cIsBeta = "false";
 	var availableIdeographLanguages = ['zh-CN', 'vi-VN', 'ko-KR', 'ja-JP', 'zh-Hans', 'zh-TW', 'zh-CN', 'zh-HK', 'zh-SG',
 		'zh-MO', 'zh-Hant', 'zh'];
 	var availableBidiLanguages = [];
-	var document_compatibility_mode_Word11 = 11;
+	var document_compatibility_mode_Word11 = 11; // 2003 (doc)
 	var document_compatibility_mode_Word12 = 12;
-	var document_compatibility_mode_Word14 = 14;
-	var document_compatibility_mode_Word15 = 15;
+	var document_compatibility_mode_Word14 = 14; // 2010
+	var document_compatibility_mode_Word15 = 15; // 2013/2015/2019
 
 	var document_compatibility_mode_Current = document_compatibility_mode_Word12;
 
@@ -3710,6 +3717,12 @@ window.AscCommon.g_cIsBeta = "false";
 			SzScreen16x9: 14,
 			SzScreen4x3: 15,
 			SzWidescreen: 16
+	};
+
+	const thumbnailsPositionMap = {
+		left: 0,
+		right: 1,
+		bottom: 2,
 	};
 
 	var c_oAscPictureFormScaleFlag = {
@@ -4312,6 +4325,9 @@ window.AscCommon.g_cIsBeta = "false";
 		"dd.MM.yyyy",
 		"dddd, d MMMM yyyy 'г.'",
 		"d MMMM yyyy 'г.'",
+		"'«'d'»' MMMM yyyy 'года'",
+		"d MMMM yyyy 'года'",
+		"d MMMM yyyy",
 		"dd.MM.yy",
 		"yyyy-MM-dd",
 		"d-MMM-yy",
@@ -4457,6 +4473,25 @@ window.AscCommon.g_cIsBeta = "false";
 		"yy-MM-dd hh:mm",
 		"h.mm am/pm",
 		"h.mm",
+		"HH:mm",
+		"HH:mm:ss"
+	];
+	c_oAscDateTimeFormat[lcid_sqAL]     = [
+		"d.M.yyyy",
+		"dddd, d MMMM yyyy",
+		"d MMMM yyyy",
+		"d.M.yy",
+		"yyyy-MM-dd",
+		"d-MMM-yy",
+		"d/M/yyyy",
+		"d MMM. yy",
+		"d/M/yy",
+		"MMMM yy",
+		"MMM-yy",
+		"d.M.yyyy h:mm am/pm",
+		"d.M.yyyy h:mm:ss am/pm",
+		"h:mm am/pm",
+		"h:mm:ss am/pm",
 		"HH:mm",
 		"HH:mm:ss"
 	];
@@ -4713,22 +4748,27 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['BringForward']                     = prot.BringForward;
 	prot['SendBackward']                     = prot.SendBackward;
 	window['Asc']['c_oAscTypeSelectElement'] = window['Asc'].c_oAscTypeSelectElement = c_oAscTypeSelectElement;
-	prot                              = c_oAscTypeSelectElement;
-	prot['Paragraph']                 = prot.Paragraph;
-	prot['Table']                     = prot.Table;
-	prot['Image']                     = prot.Image;
-	prot['Header']                    = prot.Header;
-	prot['Hyperlink']                 = prot.Hyperlink;
-	prot['SpellCheck']                = prot.SpellCheck;
-	prot['Shape']                     = prot.Shape;
-	prot['Slide']                     = prot.Slide;
-	prot['Chart']                     = prot.Chart;
-	prot['Math']                      = prot.Math;
-	prot['MailMerge']                 = prot.MailMerge;
-	prot['ContentControl']            = prot.ContentControl;
-	prot['Animation']                 = prot.Animation;
-	prot['Text']                      = prot.Text;
-	prot['Annot']                     = prot.Annot;
+	
+	prot                      = c_oAscTypeSelectElement;
+	prot['Paragraph']         = prot.Paragraph;
+	prot['Table']             = prot.Table;
+	prot['Image']             = prot.Image;
+	prot['Header']            = prot.Header;
+	prot['Hyperlink']         = prot.Hyperlink;
+	prot['SpellCheck']        = prot.SpellCheck;
+	prot['Shape']             = prot.Shape;
+	prot['Slide']             = prot.Slide;
+	prot['Chart']             = prot.Chart;
+	prot['Math']              = prot.Math;
+	prot['MailMerge']         = prot.MailMerge;
+	prot['ContentControl']    = prot.ContentControl;
+	prot['Animation']         = prot.Animation;
+	prot['UnProtectedRegion'] = prot.UnProtectedRegion;
+	prot['Text']              = prot.Text;
+	prot['Annot']             = prot.Annot;
+	prot['Field']             = prot.Field;
+	prot['PdfPage']           = prot.PdfPage;
+	
 	window['Asc']['linerule_AtLeast'] = window['Asc'].linerule_AtLeast = linerule_AtLeast;
 	window['Asc']['linerule_Auto'] = window['Asc'].linerule_Auto = linerule_Auto;
 	window['Asc']['linerule_Exact'] = window['Asc'].linerule_Exact = linerule_Exact;
@@ -5862,6 +5902,11 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['SzScreen16x9'] = prot.SzScreen16x9;
 	prot['SzScreen4x3'] = prot.SzScreen4x3;
 	prot['SzWidescreen'] = prot.SzWidescreen;
+
+	prot = window['AscCommon']['thumbnailsPositionMap'] = window['AscCommon'].thumbnailsPositionMap = thumbnailsPositionMap;
+	prot['left']   = prot.left;
+	prot['right']  = prot.right;
+	prot['bottom'] = prot.bottom;
 
 	prot = window['Asc']['c_oAscPictureFormScaleFlag'] = window['Asc'].c_oAscPictureFormScaleFlag = c_oAscPictureFormScaleFlag;
 	prot['Always']  = prot.Always;

@@ -272,6 +272,16 @@
 		this.cx = AscFormat.readDouble(Reader);
 		this.cy = AscFormat.readDouble(Reader);
 	};
+	CDrawingBasePosWritable.prototype.CommuteRelated = function (oActionToUndo, oActionOther) {
+		let res = AscCommonExcel.g_oUndoRedoWorksheet.CommuteRelatedRange2(this.fromRow, this.fromCol, this.toRow, this.toCol, oActionOther);
+		if (res) {
+			this.fromRow = AscCommonExcel.g_oUndoRedoWorksheet.tmpRange.r1;
+			this.fromCol = AscCommonExcel.g_oUndoRedoWorksheet.tmpRange.c1;
+			this.toRow = AscCommonExcel.g_oUndoRedoWorksheet.tmpRange.r2;
+			this.toCol = AscCommonExcel.g_oUndoRedoWorksheet.tmpRange.c2;
+		}
+		return res;
+	}
 
 	function CClientData(fLocksWithSheet, fPrintsWithSheet) {
 		this.fLocksWithSheet = fLocksWithSheet !== undefined ? fLocksWithSheet : null;
@@ -1180,6 +1190,7 @@
 				}
 				shape.recalculate();
 				this.shdwSp = shape;
+				shape.isShadowSp = true;
 			}, this, []);
 		}
 	};
@@ -1237,6 +1248,9 @@
 		return this.getObjectType() === AscDFH.historyitem_type_ImageShape;
 	};
 	CGraphicObjectBase.prototype.isInk = function () {
+		return false;
+	};
+	CGraphicObjectBase.prototype.isHaveOnlyInks = function () {
 		return false;
 	};
 	CGraphicObjectBase.prototype.isPlaceholder = function () {
@@ -3200,8 +3214,8 @@
 			h: oPresentation.GetHeightMM()
 		}
 	};
-	CGraphicObjectBase.prototype.getAnimTexture = function (scale, bMorph, oAnimParams) {
 
+	CGraphicObjectBase.prototype.getAnimTexture = function (scale, bMorph, oAnimParams, bNoText, oBrushPen) {
 		const oBounds = this.getBoundsByDrawing(bMorph);
 		const oCanvas = oBounds.createCanvas(scale);
 		if(!oCanvas) {
@@ -3215,17 +3229,31 @@
 		AscCommon.IsShapeToImageConverter = true;
 		let oOldBrush = this.brush;
 		let oOldPen = this.pen;
-		if(oAnimParams && IsTrueDrawing(this)) {
+		if(oAnimParams) {
 			this.brush = oAnimParams.brush;
 			this.pen = oAnimParams.pen;
 		}
-		this.draw(oGraphics);
-		if(oAnimParams && IsTrueDrawing(this)) {
-			this.brush = oOldBrush;
-			this.pen = oOldPen;
+		let oCurrentBrush;
+		let oCurrentPen;
+		if (oBrushPen) {
+			this.brush = oBrushPen.brush;
+			this.pen = oBrushPen.pen;
+			oCurrentBrush = this.brush;
+			oCurrentPen = this.pen;
+		} else {
+			oCurrentBrush = this.getBrush();
+			oCurrentPen = this.getPen();
 		}
+		let oOldTextBody = this.txBody;
+		if (bNoText) {
+			this.txBody = null;
+		}
+		this.draw(oGraphics);
+		this.txBody = oOldTextBody;
+		this.brush = oOldBrush;
+		this.pen = oOldPen;
 		AscCommon.IsShapeToImageConverter = false;
-		let oTexture = new AscFormat.CBaseAnimTexture(oCanvas, scale, nX, nY);
+		let oTexture = new AscFormat.CBaseAnimTexture(oCanvas, scale, nX, nY, bNoText, oCurrentBrush, oCurrentPen);
 		if(oAnimParams && oAnimParams.transform) {
 			let oNewBounds = oBounds.copy();
 			oNewBounds.transformRect(oAnimParams.transform);
@@ -3239,10 +3267,11 @@
 			oNewGraphics.m_oCoordTransform.tx = -nX;
 			oNewGraphics.m_oCoordTransform.ty = -nY;
 			oTexture.draw(oNewGraphics, oAnimParams.transform);
-			oTexture = new AscFormat.CBaseAnimTexture(oNewCanvas, scale, nX, nY);
+			oTexture = new AscFormat.CBaseAnimTexture(oNewCanvas, scale, nX, nY, bNoText, oCurrentBrush, oCurrentPen);
 		}
 		return oTexture;
 	};
+	CGraphicObjectBase.prototype.getDocStructure = function (oParagraphSplitOptions, oIdGenerator) {return null;};
 	CGraphicObjectBase.prototype.isOnProtectedSheet = function () {
 		if (this.worksheet) {
 			if (this.worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.objects)) {
@@ -3789,6 +3818,19 @@
 	CGraphicObjectBase.prototype.generateLocalDrawingPart = function () {};
 	CGraphicObjectBase.prototype.generateSmartArtDrawingPart = function () {};
 	CGraphicObjectBase.prototype.checkDrawingPartWithHistory = function () {};
+	CGraphicObjectBase.prototype.getAllInks = function (arrInks) {return arrInks || []};
+	CGraphicObjectBase.prototype.isShapeCrop = function () {return false};
+	CGraphicObjectBase.prototype.forEachAnimationDrawing = function(fCallback) {
+		return !!fCallback(this);
+	};
+	CGraphicObjectBase.prototype.forEachObjectToDraw = function(fCallback) {};
+	CGraphicObjectBase.prototype.onRemoveContent = function () {};
+	CGraphicObjectBase.prototype.getBrush = function() {
+		return this.brush;
+	};
+	CGraphicObjectBase.prototype.getPen = function() {
+		return this.pen;
+	};
 	var ANIM_LABEL_WIDTH_PIX = 22;
 	var ANIM_LABEL_HEIGHT_PIX = 17;
 

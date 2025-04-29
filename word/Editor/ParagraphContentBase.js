@@ -56,6 +56,10 @@ CParagraphContentBase.prototype.GetLogicDocument = function()
 {
 	return this.Paragraph ? this.Paragraph.GetLogicDocument() : null;
 };
+CParagraphContentBase.prototype.GetLinesCount = function()
+{
+	return 0;
+};
 CParagraphContentBase.prototype.CanSplit = function()
 {
 	return false;
@@ -1062,6 +1066,10 @@ CParagraphContentWithContentBase.prototype.getRangePos = function(line, range)
 		this.protected_GetRangeEndPos(_line, _range),
 	];
 };
+CParagraphContentWithContentBase.prototype.GetLinesCount = function()
+{
+	return this.protected_GetLinesCount();
+};
 
 // Здесь предполагается, что строки с номерами меньше, чем LineIndex заданы, а также заданы и отрезки в строке 
 // LineIndex, с номерами меньшими, чем RangeIndex. В данной функции удаляются все записи, которые идут после LineIndex,
@@ -1266,10 +1274,6 @@ CParagraphContentWithContentBase.prototype.private_UpdateDocumentOutline = funct
 CParagraphContentWithContentBase.prototype.IsSolid = function()
 {
 	return false;
-};
-CParagraphContentWithContentBase.prototype.ConvertParaContentPosToRangePos = function(oContentPos, nDepth)
-{
-	return 0;
 };
 CParagraphContentWithContentBase.prototype.ProcessNotInlineObjectCheck = function(oChecker)
 {
@@ -3017,13 +3021,11 @@ CParagraphContentWithParagraphLikeContent.prototype.Draw_HighLights = function(P
 };
 CParagraphContentWithParagraphLikeContent.prototype.Draw_Elements = function(PDSE)
 {
-	var isPlaceHolder = false;
-	var nTextAlpha;
-
-	if (this.IsPlaceHolder && this.IsPlaceHolder() && PDSE.Graphics.setTextGlobalAlpha)
+	let textAlpha;
+	let placeholderAlpha = this.IsPlaceHolder() && this.IsForm && this.IsForm();
+	if (placeholderAlpha)
 	{
-		isPlaceHolder = true;
-		nTextAlpha    = PDSE.Graphics.getTextGlobalAlpha();
+		textAlpha = PDSE.Graphics.getTextGlobalAlpha();
 		PDSE.Graphics.setTextGlobalAlpha(0.5);
 	}
 
@@ -3038,8 +3040,8 @@ CParagraphContentWithParagraphLikeContent.prototype.Draw_Elements = function(PDS
 		this.Content[CurPos].Draw_Elements(PDSE);
 	}
 
-	if (isPlaceHolder)
-		PDSE.Graphics.setTextGlobalAlpha(nTextAlpha);
+	if (placeholderAlpha)
+		PDSE.Graphics.setTextGlobalAlpha(textAlpha);
 };
 CParagraphContentWithParagraphLikeContent.prototype.Draw_Lines = function(PDSL)
 {
@@ -3260,12 +3262,20 @@ CParagraphContentWithParagraphLikeContent.prototype.ConvertParaContentPosToRange
 	var nCurPos = oContentPos ? Math.max(0, Math.min(this.Content.length - 1, oContentPos.Get(nDepth))) : this.Content.length - 1;
 	for (var nPos = 0; nPos < nCurPos; ++nPos)
 	{
+		if (this.Content[nPos] instanceof ParaRun)
+			nRangePos++;
+
 		nRangePos += this.Content[nPos].ConvertParaContentPosToRangePos(null);
 	}
 
 	if (this.Content[nCurPos])
-		nRangePos += this.Content[nCurPos].ConvertParaContentPosToRangePos(oContentPos, nDepth + 1);
+	{
+		if (this.Content[nPos] instanceof ParaRun)
+			nRangePos++;
 
+		nRangePos += this.Content[nCurPos].ConvertParaContentPosToRangePos(oContentPos, nDepth + 1);
+	}
+		
 	return nRangePos;
 };
 CParagraphContentWithParagraphLikeContent.prototype.GetPosByDrawing = function(Id, ContentPos, Depth)
@@ -4579,6 +4589,9 @@ CParagraphContentWithParagraphLikeContent.prototype.GetElementsCount = function(
 };
 CParagraphContentWithParagraphLikeContent.prototype.PreDelete = function()
 {
+	if (this.Paragraph && this.Paragraph.isPreventedPreDelete())
+		return;
+	
 	for (var nIndex = 0, nCount = this.Content.length; nIndex < nCount; ++nIndex)
 	{
 		if (this.Content[nIndex] && this.Content[nIndex].PreDelete)

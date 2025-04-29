@@ -71,10 +71,11 @@
         "thick":  3
     }
 
-    const highlight     = AscPDF.Api.Objects.highlight;
-    const style         = AscPDF.Api.Objects.style;
-    const display       = AscPDF.Api.Objects.display;
-    const border        = AscPDF.Api.Objects.border;
+    const highlight     = AscPDF.Api.Types.highlight;
+    const style         = AscPDF.Api.Types.style;
+    const display       = AscPDF.Api.Types.display;
+    const border        = AscPDF.Api.Types.border;
+    const color         = AscPDF.Api.Types.color;
 
     /**
 	 * A string that sets the trigger for the action. Values are:
@@ -524,7 +525,7 @@
             if (Array.isArray(aColor)) {
                 let aFields = this.field.GetDocument().GetAllWidgets(this.field.GetFullName());
                 aFields.forEach(function(field) {
-                    field.SetApiTextColor(aColor);
+                    field.SetTextColor(aColor.slice(1));
                 });
             }
         },
@@ -747,7 +748,7 @@
         //                         aOpt[i] = arrValues[i];
         //                     }
         //                     if (oField.GetExportValue() == apiExpValue) {
-        //                         apiValueToSet = oField.GetApiValue();
+        //                         apiValueToSet = oField.GetParentValue();
         //                     }
         //                 }
         //             }
@@ -868,7 +869,7 @@
                             field.SetValue(value);
                         });
 
-                        this.field.SetApiValue(value);
+                        this.field.SetParentValue(value);
 
                         if (oCalcInfo.IsInProgress() == false && oDoc.IsNeedDoCalculate()) {
                             oDoc.DoCalculateFields(this.field);
@@ -876,7 +877,7 @@
                         }
                     }
                     else {
-                        this.field.SetApiValue(value);
+                        this.field.SetParentValue(value);
                     }
                 }
                 else {
@@ -885,7 +886,7 @@
                 
             },
             get: function() {
-                return this.field.GetApiValue();
+                return this.field.GetParentValue();
             }
         }
     });
@@ -954,7 +955,7 @@
                                 sApiValueToSet = String(nIdx);
                         }
 
-                        this.field.SetApiValue(sApiValueToSet);
+                        this.field.SetParentValue(sApiValueToSet);
                         this.field.GetKid(0).UpdateAll();
     
                         if (oCalcInfo.IsInProgress() == false && oDoc.IsNeedDoCalculate()) {
@@ -963,7 +964,7 @@
                         }
                     }
                     else {
-                        this.field.SetApiValue(sValue);
+                        this.field.SetParentValue(sValue);
                     }
                 }
                 else {
@@ -973,10 +974,10 @@
             get: function() {
                 let aOpt = this.field.GetOptions();
                 if (aOpt) {
-                    return aOpt[this.field.GetApiValue()];
+                    return aOpt[this.field.GetParentValue()];
                 }
                 else {
-                    return this.field.GetApiValue();
+                    return this.field.GetParentValue();
                 }
             }
         }
@@ -1261,7 +1262,7 @@
                         }
                     }
                     else {
-                        this.field.SetApiValue(value);
+                        this.field.SetParentValue(value);
                     }
                 }
                 else {
@@ -1269,7 +1270,7 @@
                 }
             },
             get: function() {
-                let value = this.field.GetApiValue();
+                let value = this.field.GetParentValue();
                 let isNumber = /^\d+(\.\d+)?$/.test(value);
                 return isNumber ? parseFloat(value) : (value != undefined ? value : "");
             }
@@ -1548,7 +1549,7 @@
                         }
                     }
                     else {
-                        this.field.SetApiValue(value);
+                        this.field.SetParentValue(value);
                     }
                 }
                 else {
@@ -1556,7 +1557,7 @@
                 }
             },
             get: function() {
-                let value = this.field.GetApiValue();
+                let value = this.field.GetParentValue();
                 let isNumber = /^\d+(\.\d+)?$/.test(value);
                 return isNumber ? parseFloat(value) : (value != undefined ? value : "");
             }
@@ -1753,7 +1754,7 @@
                         }
                     }
                     else {
-                        this.field.SetApiValue(value);
+                        this.field.SetParentValue(value);
                     }
                 }
                 else {
@@ -1762,7 +1763,7 @@
                 
             },
             get: function() {
-                let value = this.field.GetApiValue();
+                let value = this.field.GetParentValue();
                 let isNumber = /^\d+(\.\d+)?$/.test(value);
                 return isNumber ? parseFloat(value) : (value != undefined ? value : "");
             }

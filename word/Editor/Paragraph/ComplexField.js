@@ -50,6 +50,8 @@ function ParaFieldChar(Type, LogicDocument)
 	this.X             = 0;
 	this.Y             = 0;
 	this.PageAbs       = 0;
+	
+	this.showFieldCode = false;
 
 	this.numText  = null;
 	this.textPr   = null;
@@ -446,6 +448,32 @@ ParaFieldChar.prototype.FindNextFillingForm = function(isNext, isCurrent, isStar
 	else
 		return (this.IsEnd() && (!isCurrent || isNext) ? this.ComplexField : null);
 };
+ParaFieldChar.prototype.IsShowFieldCode = function()
+{
+	return this.showFieldCode;
+};
+ParaFieldChar.prototype.SetShowFieldCode = function(isShow)
+{
+	this.showFieldCode = isShow;
+};
+ParaFieldChar.prototype.MoveCursorToChar = function(isBefore)
+{
+	let run = this.GetRun();
+	if (!run)
+		return;
+	let inRunPos = run.GetElementPosition(this);
+	if (-1 === inRunPos)
+		return;
+	
+	if (this.LogicDocument)
+		this.LogicDocument.RemoveSelection();
+	
+	if (false === isBefore)
+		inRunPos += 1
+	
+	run.Make_ThisElementCurrent(false);
+	run.SetCursorPosition(inRunPos);
+};
 
 /**
  * @constructor
@@ -521,6 +549,14 @@ ParaInstrText.prototype.GetRun = function()
 ParaInstrText.prototype.GetValue = function()
 {
 	return String.fromCharCode(this.Value);
+};
+ParaInstrText.prototype.GetCodePoint = function()
+{
+	return this.Value;
+};
+ParaInstrText.prototype.GetCharCode = function()
+{
+	return this.Value;
 };
 ParaInstrText.prototype.SetCharCode = function(CharCode)
 {
@@ -855,18 +891,16 @@ CComplexField.prototype.private_InsertContent = function(oSelectedContent)
 CComplexField.prototype.private_UpdateFORMULA = function()
 {
 	this.Instruction.Calculate(this.LogicDocument);
-	if(this.Instruction.ErrStr !== null)
+	if (this.Instruction.ErrStr !== null)
 	{
 		var oTextPr = new CTextPr();
-		oTextPr.Set_FromObject({Bold: true});
+		oTextPr.Set_FromObject({Bold : true});
 		this.private_InsertMessage(this.Instruction.ErrStr, oTextPr);
 	}
-	else
+	else if (null !== this.Instruction.ResultStr)
 	{
-		if(this.Instruction.ResultStr !== null)
-		{
-			this.private_InsertMessage(this.Instruction.ResultStr, null);
-		}
+		
+		this.private_InsertMessage(this.Instruction.GetResultString(), null);
 	}
 };
 CComplexField.prototype.private_CalculateFORMULA = function()
@@ -2116,6 +2150,39 @@ CComplexField.prototype.GetRelatedParagraphs = function()
 		result.push(endPara);
 	
 	return result;
+};
+CComplexField.prototype.IsShowFieldCode = function()
+{
+	if (!this.IsValid())
+		return false;
+	
+	return this.BeginChar.IsShowFieldCode();
+};
+CComplexField.prototype.ToggleFieldCodes = function()
+{
+	let isShowFieldCode = !this.BeginChar.IsShowFieldCode();
+	
+	this.BeginChar.SetShowFieldCode(isShowFieldCode);
+	
+	let logicDocument = this.LogicDocument;
+	if (!logicDocument)
+		return;
+	
+	let history    = logicDocument.GetHistory();
+	let recalcData = history.getRecalcDataByElements([this.BeginChar.GetParagraph()]);
+	logicDocument.RecalculateWithParams(recalcData);
+	
+	if (isShowFieldCode)
+	{
+		this.BeginChar.MoveCursorToChar(false);
+	}
+	else
+	{
+		if (this.SeparateChar)
+			this.SeparateChar.MoveCursorToChar(false);
+		else
+			this.EndChar.MoveCursorToChar(true);
+	}
 };
 
 function getRefInstruction(sBookmarkName, nType, bHyperlink, bAboveBelow, sSeparator)
