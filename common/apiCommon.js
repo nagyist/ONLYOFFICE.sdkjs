@@ -3392,7 +3392,7 @@ function (window, undefined) {
 	};
 	asc_CShapeProperty.prototype.fillBlipFill = function (url, textureType) {
 		this.fill = new Asc.asc_CShapeFill();
-		this.fill.textureType(url, textureType);
+		this.fill.fillBlipFill(url, textureType);
 	};
 
 	/** @constructor */
