@@ -3006,7 +3006,7 @@ function CBinaryFileWriter()
 
                 oThis.WriteBlip(fill, _src);
 
-                oThis.WriteRecord2(1, fill.srcRect, oThis.WriteFillRect);
+                oThis.WriteRecord2(1, fill.srcRect, oThis.WriteUniFillRect);
 
                 if (null != fill.tile)
                 {
@@ -3024,7 +3024,7 @@ function CBinaryFileWriter()
                 else if (fill.stretch != null)
                 {
                     oThis.StartRecord(3);
-                    oThis.WriteRecord2(0, fill.stretch.fillRect, oThis.WriteFillRect);
+                    oThis.WriteRecord2(0, fill.stretch.fillRect, oThis.WriteUniFillRect);
                     oThis.EndRecord();
                 }
 
@@ -3059,7 +3059,7 @@ function CBinaryFileWriter()
         }
     };
 
-    this.WriteFillRect = function (rect)
+    this.WriteUniFillRect = function (rect)
     {
         oThis.WriteUChar(g_nodeAttributeStart);
         let val;

@@ -3847,11 +3847,11 @@
 		InitClass(CBlipFillStretch, CBaseNoIdObject, 0);
 
 		CBlipFillStretch.prototype.setFillRect = function () {
-			if (arguments[0] instanceof CFillRect) {
+			if (arguments[0] instanceof AscFormat.CFillRect) {
 				return this.fillRect = arguments[0];
 			}
 			if (typeof arguments[0] === 'number' && arguments.length === 4) {
-				return this.fillRect = new CFillRect(arguments[0], arguments[1], arguments[2], arguments[3]);
+				return this.fillRect = new AscFormat.CFillRect(arguments[0], arguments[1], arguments[2], arguments[3]);
 			}
 		};
 		CBlipFillStretch.prototype.getFillRect = function () {
@@ -3866,7 +3866,7 @@
 		CBlipFillStretch.prototype.Read_FromBinary = function (r) {
 			const hasFillRect = readBool(r);
 			if (hasFillRect) {
-				const fillRect = new CFillRect();
+				const fillRect = new AscFormat.CFillRect();
 				fillRect.Read_FromBinary(r);
 				this.fillRect = fillRect;
 			}
@@ -3885,33 +3885,6 @@
 				other.fillRect.b == this.fillRect.b);
 		};
 
-		function CFillRect(l, t, r, b) {
-			CBaseNoIdObject.call(this);
-
-			// Attributes (offset as a percentage):
-			this.l = isRealNumber(l) ? l : 0;
-			this.t = isRealNumber(t) ? t : 0;
-			this.r = isRealNumber(r) ? r : 100;
-			this.b = isRealNumber(b) ? b : 100;
-		}
-		InitClass(CFillRect, CBaseNoIdObject, 0);
-
-		CFillRect.prototype.Write_ToBinary = function (w) {
-			writeDouble(w, this.l);
-			writeDouble(w, this.t);
-			writeDouble(w, this.r);
-			writeDouble(w, this.b);
-		};
-		CFillRect.prototype.Read_FromBinary = function (r) {
-			this.l = readDouble(r);
-			this.t = readDouble(r);
-			this.r = readDouble(r);
-			this.b = readDouble(r);
-		};
-		CFillRect.prototype.createDuplicate = function () {
-			const copy = new CFillRect(this.l, this.t, this.r, this.b);
-			return copy;
-		};
 
 		function CBaseFill() {
 			CBaseNoIdObject.call(this);
@@ -19719,9 +19692,9 @@
 		prot['getFillRect'] = prot.getFillRect;
 		prot['setFillRect'] = prot.setFillRect;
 
-		window['AscFormat'].CFillRect = CFillRect;
 		window['AscFormat'].CBlip = CBlip;
 
+		window['AscFormat'].CFillRect = CSrcRect;
 		window['AscFormat'].CSolidFill = CSolidFill;
 		window['AscFormat'].CGs = CGs;
 		window['AscFormat'].GradLin = GradLin;

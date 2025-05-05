@@ -1821,20 +1821,20 @@ function BinaryPPTYLoader()
 
     // UNIFILL ----------------------------------
 
-    this.ReadRect = function(bIsMain, rectConstructor)
+    this.ReadRect = function(bIsMain)
     {
-        var _ret = {};
+        let _ret = {};
 
-        var s = this.stream;
+        let s = this.stream;
 
-        var _rec_start = s.cur;
-        var _end_rec = _rec_start + s.GetLong() + 4;
+        let _rec_start = s.cur;
+        let _end_rec = _rec_start + s.GetLong() + 4;
 
         s.Skip2(1); // start attributes
 
         while (true)
         {
-            var _at = s.GetUChar();
+            let _at = s.GetUChar();
             if (_at == g_nodeAttributeEnd)
                 break;
 
@@ -1895,20 +1895,17 @@ function BinaryPPTYLoader()
 
         if (_ret.l > _ret.r)
         {
-            var tmp = _ret.l;
+            let tmp = _ret.l;
             _ret.l = _ret.r;
             _ret.r = tmp;
         }
         if (_ret.t > _ret.b)
         {
-            var tmp = _ret.t;
+            let tmp = _ret.t;
             _ret.t = _ret.b;
             _ret.b = tmp;
         }
-        var ret = rectConstructor
-            ? new rectConstructor(_ret.l, _ret.t, _ret.r, _ret.b)
-            : new AscFormat.CSrcRect(_ret.l, _ret.t, _ret.r, _ret.b);
-        return ret;
+        return new AscFormat.CSrcRect(_ret.l, _ret.t, _ret.r, _ret.b);
     };
 
     this.ReadGradLin = function()
@@ -3306,7 +3303,7 @@ function BinaryPPTYLoader()
                                     {
                                         case 0:
                                         {
-                                            const fillRect = this.ReadRect(true, AscFormat.CFillRect);
+                                            const fillRect = this.ReadRect(true);
                                             if (fillRect != null)
                                                 stretch.setFillRect(fillRect);
                                             break;
