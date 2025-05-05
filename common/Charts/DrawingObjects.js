@@ -2739,16 +2739,16 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     _this.editImageDrawingObject = function(imageUrl, obj) {
 
         if ( imageUrl ) {
-            var _image = api.ImageLoader.LoadImage(imageUrl, 1);
+            let _image = api.ImageLoader.LoadImage(imageUrl, 1);
 
-            var addImageObject = function (_image) {
+            let addImageObject = function (_image) {
 
                 if ( !_image.Image ) {
                     worksheet.model.workbook.handlers.trigger("asc_onError", c_oAscError.ID.UplImageUrl, c_oAscError.Level.NoCritical);
                 }
                 else {
                     if ( obj && obj.isImageChangeUrl ) {
-                        var imageProp = new Asc.asc_CImgProperty();
+                        let imageProp = new Asc.asc_CImgProperty();
                         imageProp.ImageUrl = _image.src;
                         _this.setGraphicObjectProps(imageProp);
                     }
