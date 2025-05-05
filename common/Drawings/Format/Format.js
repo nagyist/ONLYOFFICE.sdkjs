@@ -19676,7 +19676,7 @@
 		window['AscFormat'].CreateSolidFillRGBA = CreateSolidFillRGBA;
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
 
-		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = CBlipFill;
+		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = window['Asc'].asc_CFillBlip = CBlipFill;
 		CBlipFill.prototype['asc_getTile'] = CBlipFill.prototype['getTile'] = CBlipFill.prototype.getTile;
 		CBlipFill.prototype['asc_setTile'] = CBlipFill.prototype['setTile'] = CBlipFill.prototype.setTile;
 		CBlipFill.prototype['asc_getStretch'] = CBlipFill.prototype['getStretch'] = CBlipFill.prototype.getStretch;
