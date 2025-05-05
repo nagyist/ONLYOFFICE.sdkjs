@@ -185,8 +185,9 @@ function OverlayObject(geometry, extX, extY, brush, pen, transform )
     };
 }
 
-OverlayObject.prototype.getFullRotate = function () {
-    return this.TransformMatrix.GetRotation() * Math.PI / 180;
+OverlayObject.prototype.getFullRotate = function ()
+{
+    return AscCommon.deg2rad(this.TransformMatrix.GetRotation());
 };
 
 function ObjectToDraw(brush, pen, extX, extY, geometry, transform, x, y, oComment, TextElement, oLineStructure, nId, bIsBulletSymbol)
