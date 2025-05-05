@@ -350,9 +350,16 @@
 			return;
 		
 		let oDoc = this.DocumentRenderer.getPDFDoc();
+		let oThumbnails		= oDoc.Viewer.thumbnails;
+
 		if (oDoc.CanCopyCut().cut) {
 			oDoc.DoAction(function() {
-				oDoc.Remove(1);
+				if (oThumbnails && oThumbnails.isInFocus) {
+					oDoc.RemovePages(oThumbnails.selectedPages)
+				}
+				else {
+					oDoc.Remove(1);
+				}
 			}, AscDFH.historydescription_Cut);
 		}
 	};
@@ -420,6 +427,10 @@
 			if (this.isRestrictionView()) {
 				oDoc.FinalizeAction(true)
 				return;
+			}
+
+			if (_format == AscCommon.c_oAscClipboardDataFormat.HtmlElement) {
+				oDoc.Action.PasteHtmlAction = true;
 			}
 
 			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);

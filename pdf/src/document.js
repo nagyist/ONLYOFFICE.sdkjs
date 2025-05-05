@@ -1286,7 +1286,10 @@ var CPresentation = CPresentation || function(){};
         }
 
         // оставляем текущий объет к селекте, если кликнули по нему же
-        let isFloatSelected = oFloatObject && oController.selectedObjects.includes(oFloatObject);
+        let isFloatSelected = oFloatObject && (oController.selectedObjects.includes(oFloatObject) || oController.selectedObjects.find(function(drawing) {
+            return drawing.IsEditFieldShape() && drawing.GetEditField() == oFloatObject;
+        }));
+        
         let isObjectSelected = (oCurObject && ([oMouseDownField, oMouseDownAnnot, oMouseDownDrawing, oMouseDownLink].includes(oCurObject)) || isFloatSelected);
         if (null == oCurObject || !isObjectSelected || !isSameType)
             this.SetMouseDownObject(oMouseDownField || oMouseDownAnnot || oMouseDownDrawing || oMouseDownLink);
@@ -3215,6 +3218,10 @@ var CPresentation = CPresentation || function(){};
     };
 
     CPDFDoc.prototype.FinalizeAction = function(checkEmptyAction) {
+		Asc.editor.htmlPasteSepParagraphs = true;
+		Asc.editor.htmlPastePageIdx = undefined;
+		this.Action.PasteHtmlAction = false;
+
 		let oCurHistory = AscCommon.History;
         
         if (this.GetActionDescription() == AscDFH.historydescription_Pdf_ExecActions) {
@@ -4102,7 +4109,7 @@ var CPresentation = CPresentation || function(){};
         }
         this.Api.sync_pagePropCallback(oCurPage);
         this.Api.sync_EndCatchSelectedElements();
-        this.Api.sendEvent('asc_onCanEditPage', oCurPage.IsRecognized());
+        this.Api.sendEvent('asc_onCanEditPage', oCurPage.IsEditPageLock() || oCurPage.IsRecognized());
     };
     CPDFDoc.prototype.UpdateInterfaceTracks = function() {
         this.UpdateCommentPos();
@@ -4154,6 +4161,7 @@ var CPresentation = CPresentation || function(){};
         editor.sync_CanCopyCutCallback(oCanCopyCut.copy, oCanCopyCut.cut);
     };
     CPDFDoc.prototype.CanCopyCut = function() {
+        let _t              = this;
         let oViewer         = editor.getDocumentRenderer();
         let oActiveForm     = this.activeForm;
         let oActiveAnnot    = this.mouseDownAnnot;
@@ -4182,9 +4190,26 @@ var CPresentation = CPresentation || function(){};
             }
         }
 
+        let oThumbnails = this.Viewer.thumbnails;
+
         if (oContent && oContent.IsSelectionUse() && !oContent.IsSelectionEmpty()) {
             isCanCopy = true;
             isCanCut = true;
+        }
+        else if (oThumbnails && oThumbnails.isInFocus) {
+            let aSelectedPagesIdxs = oThumbnails.selectedPages;
+            isCanCopy = true;
+            isCanCut = false;
+
+            // cant cut last page
+            if (this.Viewer.file.pages.length > 1) {
+                aSelectedPagesIdxs.forEach(function(idx) {
+                    let oPageInfo = _t.GetPageInfo(idx);
+                    if (false == oPageInfo.IsDeleteLock()) {
+                        isCanCut = true;
+                    }
+                });
+            }
         }
 
         return {
@@ -4946,18 +4971,19 @@ var CPresentation = CPresentation || function(){};
         AscCommon.History.EndNoHistoryMode();
 
         return oTextDrawer;
-    }    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// For drawings
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    CPDFDoc.prototype.EditPage = function(nPage) {
+    CPDFDoc.prototype.EditPage = function(nPage, aSpsXmls) {
         if (null == this.Viewer.pagesInfo.pages[nPage] || this.Viewer.file.pages[nPage].isRecognized) {
-            return;
+            return false;
         }
 
         let oFile = this.Viewer.file;
         let nOriginIndex = oFile.pages[nPage].originIndex;
         if (nOriginIndex == undefined) {
-            return;
+            return false;
         }
 
         this.BlurActiveObject();
@@ -4965,7 +4991,7 @@ var CPresentation = CPresentation || function(){};
         this.StartAction(AscDFH.historydescription_Pdf_EditPage);
         if (this.IsSelectionLocked(AscDFH.historydescription_Pdf_EditPage, [nPage])) {
             this.FinalizeAction(true);
-            return;
+            return false;
         }
 
         Asc.editor.canSave = false;
@@ -4974,7 +5000,9 @@ var CPresentation = CPresentation || function(){};
         let oPageInfo = this.GetPageInfo(nPage);
         oPageInfo.SetRecognized(true);
         
-        let aSpsXmls        = oFile.nativeFile["scanPage"](nOriginIndex, 1);
+        if (!aSpsXmls)
+            aSpsXmls = oFile.nativeFile["scanPage"](nOriginIndex, 1);
+
         let oParserContext  = new AscCommon.XmlParserContext();
         let oTableStyles    = this.GetTableStyles();
         Object.keys(this.TableStylesIdMap).forEach(function(styleId) {
@@ -5095,6 +5123,8 @@ var CPresentation = CPresentation || function(){};
         else {
             fEndCallback();
         }
+
+        return true;
     };
     CPDFDoc.prototype.InsertContent2 = function(aSelContent, nIndex) {
         let nCurPage    = this.GetCurPage();
@@ -5126,30 +5156,65 @@ var CPresentation = CPresentation || function(){};
                 return pasteObj.Drawing;
             });
 
-            aDrToPaste.forEach(function(drawing, index) {
-                let oXfrm = drawing.getXfrm();
-                let oPos = oThis.private_computeDrawingAddingPos(nCurPage, oXfrm.extX, oXfrm.extY);
-                oXfrm.setOffX(oPos.x);
-                oXfrm.setOffY(oPos.y);
+            if (true !== this.Action.PasteHtmlAction) {
+                aDrToPaste.forEach(function(drawing, index) {
+                    let oXfrm = drawing.getXfrm();
+                    let oPos = oThis.private_computeDrawingAddingPos(nCurPage, oXfrm.extX, oXfrm.extY);
+                    oXfrm.setOffX(oPos.x);
+                    oXfrm.setOffY(oPos.y);
+    
+                    // чуть-чуть смещаем при вставке, чтобы было видно вставленную фигуру
+                    let nShift = oController.getDrawingsPasteShift([drawing]);
+    
+                    if (nShift > 0) {
+                        oXfrm.shift(nShift, nShift);
+                    }
+    
+                    oThis.AddDrawing(drawing, oThis.GetCurPage());
+    
+                    if (drawing.IsGraphicFrame()) {
+                        oController.Check_GraphicFrameRowHeight(drawing);
+                    }
+                    
+                    if (index == 0) {
+                        oThis.SetMouseDownObject(drawing);
+                    }
+                    drawing.select(oController, nCurPage);
+                });
+            }
+            else {
+				if (Asc.editor.htmlPastePageIdx != undefined) {
+					nCurPage = Asc.editor.htmlPastePageIdx;
+				}
+				
+                let nCurYmm = 10;
+                let nPageW = oThis.GetPageWidthMM(nCurPage);
 
-                // чуть-чуть смещаем при вставке, чтобы было видно вставленную фигуру
-                let nShift = oController.getDrawingsPasteShift([drawing]);
+                aDrToPaste.forEach(function(drawing, index) {
+                    let oXfrm = drawing.getXfrm();
+                    if (drawing.IsShape()) {
+                        oXfrm.setExtX(nPageW * 0.95);
+                        drawing.checkExtentsByDocContent();
+                    }
+                    
+                    oXfrm.setOffX(nPageW * 0.05 / 2);
+                    oXfrm.setOffY(nCurYmm);
 
-                if (nShift > 0) {
-                    oXfrm.shift(nShift, nShift);
-                }
+                    nCurYmm += oXfrm.extY + 2;
 
-                oThis.AddDrawing(drawing, oThis.GetCurPage());
-
-                if (drawing.IsGraphicFrame()) {
-                    oController.Check_GraphicFrameRowHeight(drawing);
-                }
-                
-                if (index == 0) {
-                    oThis.SetMouseDownObject(drawing);
-                }
-                drawing.select(oController, nCurPage);
-            });
+                    oThis.AddDrawing(drawing, nCurPage);
+    
+                    if (drawing.IsGraphicFrame()) {
+                        oController.Check_GraphicFrameRowHeight(drawing);
+                    }
+                    
+                    if (index == 0) {
+                        oThis.SetMouseDownObject(drawing);
+                    }
+                    
+                    drawing.select(oController, nCurPage);
+                });
+            }
 
             bResult = true;
         }
@@ -6119,15 +6184,24 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.GetPagesBinary = function(aIndexes, bytesToBase64) {
         let oDoc = this;
 
-        let aOriginIdexes = [];
+        let aOriginIndexes = [];
+        let nNewPagesStartIdx = this.Viewer.file.originalPagesCount;
+
         aIndexes.forEach(function(idx) {
             let oFilePage = oDoc.Viewer.file.pages[idx];
             if (oFilePage.originIndex != undefined) {
-                aOriginIdexes.push(oFilePage.originIndex);
+                aOriginIndexes.push(oFilePage.originIndex);
             }
-        })
+            else {
+                aOriginIndexes.push(nNewPagesStartIdx++);
+            }
+        });
 
-        let aUint8Array = this.Viewer.file.nativeFile["SplitPages"](aOriginIdexes); 
+        aOriginIndexes.sort(function(a, b) {
+            return a - b;
+        });
+
+        let aUint8Array = this.Viewer.file.nativeFile["SplitPages"](aOriginIndexes, oDoc.Viewer.SaveForSplit()); 
         let base64 = AscCommon.Base64.encode(aUint8Array, 0, aUint8Array.length);
         return bytesToBase64 != false ? base64 : aUint8Array;
     };
@@ -7682,7 +7756,7 @@ var CPresentation = CPresentation || function(){};
 
         oProps.asc_putDeleteLock(pageInfo.IsDeleteLock());
         oProps.asc_putRotateLock(pageInfo.IsRotateLock());
-        oProps.asc_putEditLock(pageInfo.IsEditPageLock());
+        oProps.asc_putEditLock(pageInfo.IsEditPageLock() || pageInfo.IsRecognized());
         return oProps;
     }
 

@@ -3637,6 +3637,7 @@ function BinaryPPTYLoader()
 
     this.ReadClrScheme = function(clrscheme)
     {
+        const t = this;
         var s = this.stream;
         var _e = s.cur + s.GetULong() + 4;
 
@@ -3655,8 +3656,45 @@ function BinaryPPTYLoader()
         while (s.cur < _e)
         {
             var _rec = s.GetUChar();
-
-            clrscheme.addColor(_rec,this.ReadUniColor());
+            if (_rec === 20)
+            {
+                AscFormat.CBaseFormatNoIdObject.prototype.fromPPTY.call({
+                    readChildren: AscFormat.CBaseFormatNoIdObject.prototype.readChildren,
+                    readChild: function(elementType, pReader) {
+                        if (elementType === 0) {
+                            if (!clrscheme.clrSchemeExtLst) {
+                                clrscheme.clrSchemeExtLst = new AscFormat.CClrSchemeExtLst();
+                            }
+                            clrscheme.clrSchemeExtLst.background = new AscFormat.CVarColor();
+                            clrscheme.clrSchemeExtLst.background.unicolor = t.ReadUniColor();
+                            return true;
+                        }
+                        return false;
+                    }
+                }, this);
+            }
+            else if (_rec === 21)
+            {
+                AscFormat.CBaseFormatNoIdObject.prototype.fromPPTY.call({
+                    readChildren: AscFormat.CBaseFormatNoIdObject.prototype.readChildren,
+                    readChild: function(elementType, pReader) {
+                        if (elementType === 0) {
+                            if (!clrscheme.clrSchemeExtLst) {
+                                clrscheme.clrSchemeExtLst = new AscFormat.CClrSchemeExtLst();
+                            }
+                            let variationClrScheme = new AscFormat.CVariationClrScheme();
+                            variationClrScheme.fromPPTY(pReader);
+                            clrscheme.clrSchemeExtLst.variationClrSchemeLst.push(variationClrScheme);
+                            return true;
+                        }
+                        return false;
+                    }
+                }, this);
+            }
+            else
+            {
+                clrscheme.addColor(_rec,this.ReadUniColor());
+            }
         }
 
         s.Seek2(_e);
@@ -4394,11 +4432,11 @@ function BinaryPPTYLoader()
                 var _spd = s.GetUChar();
                 if (!_presentDuration)
                 {
-                    _transition.TransitionDuration = 250;
+                    _transition.TransitionDuration = 500;
                     if (_spd == 1)
-                        _transition.TransitionDuration = 500;
-                    else if (_spd == 2)
                         _transition.TransitionDuration = 750;
+                    else if (_spd == 2)
+                        _transition.TransitionDuration = 1000;
                 }
             }
         }

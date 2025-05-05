@@ -8234,6 +8234,8 @@ background-repeat: no-repeat;\
 
 		// Меняем тип состояния (на никакое)
 		this.advancedOptionsAction = c_oAscAdvancedOptionsAction.None;
+
+		this.initBroadcastChannelListeners();
 	};
 
 	asc_docs_api.prototype.UpdateInterfaceState = function()
@@ -12679,6 +12681,16 @@ background-repeat: no-repeat;\
 
 		return oMath.IsInlineMode();
 	};
+	asc_docs_api.prototype.asc_AddMathML = function(xml)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		AscCommon.g_font_loader.LoadFonts(["Cambria Math"],
+			function()
+			{
+				logicDocument.AddMathML(xml);
+			}
+		);
+	};
 	asc_docs_api.prototype.asc_GetAllNumberedParagraphs = function()
 	{
 		var oLogicDocument = this.private_GetLogicDocument();
@@ -13876,6 +13888,9 @@ background-repeat: no-repeat;\
 				drawingDocument.FirePaint();
 			}
 		}
+		
+		if (oLogicDocument.IsFillingOFormMode())
+			AscCommon.CollaborativeEditing.Remove_AllForeignCursors();
 	};
 	asc_docs_api.prototype.isShowShapeAdjustments = function()
 	{
@@ -14429,6 +14444,21 @@ background-repeat: no-repeat;\
 			&& this.WordControl
 			&& this.WordControl.m_oDrawingDocument)
 			this.WordControl.m_oDrawingDocument.contentControls.onAttachPluginEvent(guid);
+	};
+	asc_docs_api.prototype.initBroadcastChannelListeners = function() {
+		let oThis = this;
+		let docInfo = this.DocInfo;
+		let wb = oThis.wbModel;
+		let broadcastChannel = this.broadcastChannel;
+		if (broadcastChannel) {
+			broadcastChannel.onmessage = function(event) {
+				if ("ClipboardChange" === event.data.type) {
+					if (event.data.editor === oThis.getEditorId()) {
+						AscCommon.g_clipboardBase.ChangeLastCopy(event.data.data);
+					}
+				}
+			}
+		}
 	};
 	
 	//-------------------------------------------------------------export---------------------------------------------------
@@ -15155,7 +15185,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['asc_ConvertEquationToMath']                 = asc_docs_api.prototype.asc_ConvertEquationToMath;
 	asc_docs_api.prototype['asc_ConvertMathDisplayMode']                = asc_docs_api.prototype.asc_ConvertMathDisplayMode;
 	asc_docs_api.prototype['asc_IsInlineMath']                          = asc_docs_api.prototype.asc_IsInlineMath;
-
+	asc_docs_api.prototype['asc_AddMathML']                             = asc_docs_api.prototype.asc_AddMathML;
 
 	//cross-references
 	asc_docs_api.prototype['asc_GetAllNumberedParagraphs']              = asc_docs_api.prototype.asc_GetAllNumberedParagraphs;
