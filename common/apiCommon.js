@@ -3390,6 +3390,10 @@ function (window, undefined) {
 	asc_CShapeProperty.prototype.asc_setCanEditText = function (v) {
 		this.canEditText = v;
 	};
+	asc_CShapeProperty.prototype.fillBlipFill = function (url, textureType) {
+		this.fill = new Asc.asc_CShapeFill();
+		this.fill.textureType(url, textureType);
+	};
 
 	/** @constructor */
 	function asc_CAnnotProperty() {
@@ -4968,6 +4972,15 @@ function (window, undefined) {
 		}
 		return false;
 	};
+	asc_CShapeFill.prototype.fillBlipFill = function (url, textureType) {
+		this.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
+		this.fill = new AscFormat.CBlipFill();
+		this.fill.asc_putUrl(url);
+		if(textureType !== null && textureType !== undefined) {
+			this.fill.asc_putType(textureType);
+		}
+	};
+
 
 	// There was asc_CFillBlip
 

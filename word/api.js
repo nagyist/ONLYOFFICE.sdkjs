@@ -5989,37 +5989,31 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.AddImageUrlAction = function(url, imgProp, obj)
 	{
-		var _image = this.ImageLoader.LoadImage(url, 1);
+		let _image = this.ImageLoader.LoadImage(url, 1);
 		if (null != _image)
 		{
-			var ColumnSize = this.WordControl.m_oLogicDocument.GetColumnSize();
+			let ColumnSize = this.WordControl.m_oLogicDocument.GetColumnSize();
 
-			var _w = Math.max(1, ColumnSize.W);
-			var _h = Math.max(1, ColumnSize.H);
+			let _w = Math.max(1, ColumnSize.W);
+			let _h = Math.max(1, ColumnSize.H);
 			if (_image.Image != null)
 			{
-				var __w = Math.max((_image.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
-				var __h = Math.max((_image.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
+				let __w = Math.max((_image.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
+				let __h = Math.max((_image.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
 				_w      = Math.max(5, Math.min(_w, __w));
 				_h      = Math.max(5, Math.min((_w * __h / __w)));
 			}
 
-			var src = _image.src;
+			let src = _image.src;
 			if (obj && obj.isShapeImageChangeUrl)
 			{
-				var AscShapeProp       = new Asc.asc_CShapeProperty();
-				AscShapeProp.fill      = new asc_CShapeFill();
-				AscShapeProp.fill.type = c_oAscFill.FILL_TYPE_BLIP;
-				AscShapeProp.fill.fill = new CBlipFill();
-				AscShapeProp.fill.fill.asc_putUrl(src);
-				if(obj.textureType !== null && obj.textureType !== undefined){
-                    AscShapeProp.fill.fill.asc_putType(obj.textureType);
-				}
+				let AscShapeProp       = new Asc.asc_CShapeProperty();
+				AscShapeProp.fillBlipFill(src, obj.textureType);
 				this.ImgApply(new asc_CImgProperty({ShapeProperties : AscShapeProp}));
 			}
 			else if (obj && obj.isImageChangeUrl)
 			{
-				var AscImageProp      = new asc_CImgProperty();
+				let AscImageProp      = new asc_CImgProperty();
 				AscImageProp.ImageUrl = src;
 				this.ImgApply(AscImageProp);
 			}
@@ -6035,7 +6029,7 @@ background-repeat: no-repeat;\
 			{
 				if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 				{
-					var imageLocal = g_oDocumentUrls.getImageLocal(src);
+					let imageLocal = g_oDocumentUrls.getImageLocal(src);
 					if (imageLocal)
 					{
 						src = imageLocal;
@@ -6055,35 +6049,28 @@ background-repeat: no-repeat;\
 			this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.LoadImage);
 			this.asyncImageEndLoaded2 = function(_image)
 			{
-				var ColumnSize = this.WordControl.m_oLogicDocument.GetColumnSize();
+				let ColumnSize = this.WordControl.m_oLogicDocument.GetColumnSize();
 
-				var _w = Math.max(1, ColumnSize.W);
-				var _h = Math.max(1, ColumnSize.H);
+				let _w = Math.max(1, ColumnSize.W);
+				let _h = Math.max(1, ColumnSize.H);
 				if (_image.Image != null)
 				{
-					var __w = Math.max((_image.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
-					var __h = Math.max((_image.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
+					let __w = Math.max((_image.Image.width * AscCommon.g_dKoef_pix_to_mm), 1);
+					let __h = Math.max((_image.Image.height * AscCommon.g_dKoef_pix_to_mm), 1);
 					_w      = Math.max(5, Math.min(_w, __w));
 					_h      = Math.max(5, Math.min((_w * __h / __w)));
 				}
-				var src = _image.src;
+				let src = _image.src;
 
 				if (obj && obj.isShapeImageChangeUrl)
 				{
-					var AscShapeProp       = new Asc.asc_CShapeProperty();
-					AscShapeProp.fill      = new asc_CShapeFill();
-					AscShapeProp.fill.type = c_oAscFill.FILL_TYPE_BLIP;
-					AscShapeProp.fill.fill = new CBlipFill();
-					AscShapeProp.fill.fill.asc_putUrl(src);
-
-                    if(obj.textureType !== null && obj.textureType !== undefined){
-                        AscShapeProp.fill.fill.asc_putType(obj.textureType);
-                    }
+					let AscShapeProp       = new Asc.asc_CShapeProperty();
+					AscShapeProp.fillBlipFill(src, obj.textureType);
 					this.ImgApply(new asc_CImgProperty({ShapeProperties : AscShapeProp}));
 				}
 				else if (obj && obj.isImageChangeUrl)
 				{
-					var AscImageProp      = new asc_CImgProperty();
+					let AscImageProp      = new asc_CImgProperty();
 					AscImageProp.ImageUrl = src;
 					this.ImgApply(AscImageProp);
 				}
@@ -6104,7 +6091,7 @@ background-repeat: no-repeat;\
 
 					if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 					{
-						var imageLocal = g_oDocumentUrls.getImageLocal(src);
+						let imageLocal = g_oDocumentUrls.getImageLocal(src);
 						if (imageLocal)
 						{
 							src = imageLocal;

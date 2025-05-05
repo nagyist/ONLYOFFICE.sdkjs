@@ -2753,33 +2753,21 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                         _this.setGraphicObjectProps(imageProp);
                     }
                     else if ( obj && obj.isShapeImageChangeUrl ) {
-                        var imgProps = new Asc.asc_CImgProperty();
-                        var shapeProp = new Asc.asc_CShapeProperty();
+                        let shapeProp = new Asc.asc_CShapeProperty();
+                        shapeProp.fillBlipFill(_image.src, obj.textureType);
+                        let imgProps = new Asc.asc_CImgProperty();
                         imgProps.ShapeProperties = shapeProp;
-                        shapeProp.fill = new Asc.asc_CShapeFill();
-                        shapeProp.fill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-                        shapeProp.fill.fill = new AscFormat.CBlipFill();
-                        shapeProp.fill.fill.asc_putUrl(_image.src);
-                        if(obj.textureType !== null && obj.textureType !== undefined){
-                            shapeProp.fill.fill.asc_putType(obj.textureType);
-                        }
                         _this.setGraphicObjectProps(imgProps);
                     }
                     else if(obj && obj.isTextArtChangeUrl)
                     {
-                        var imgProps = new Asc.asc_CImgProperty();
-                        var AscShapeProp = new Asc.asc_CShapeProperty();
-                        imgProps.ShapeProperties = AscShapeProp;
-                        var oFill = new Asc.asc_CShapeFill();
-                        oFill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-                        oFill.fill = new AscFormat.CBlipFill();
-                        oFill.fill.asc_putUrl(imageUrl);
-                        if(obj.textureType !== null && obj.textureType !== undefined){
-                            oFill.fill.asc_putType(obj.textureType);
-                        }
+                        let AscShapeProp = new Asc.asc_CShapeProperty();
+                        let oFill = new Asc.asc_CShapeFill();
+                        oFill.fillBlipFill(imageUrl, obj.textureType);
                         AscShapeProp.textArtProperties = new Asc.asc_TextArtProperties();
                         AscShapeProp.textArtProperties.asc_putFill(oFill);
-
+                        let imgProps = new Asc.asc_CImgProperty();
+                        imgProps.ShapeProperties = AscShapeProp;
                         _this.setGraphicObjectProps(imgProps);
                     }
                     else if (obj && obj.fAfterUploadOleObjectImage) {
