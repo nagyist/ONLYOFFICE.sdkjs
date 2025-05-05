@@ -40,7 +40,8 @@
 	function (window, undefined) {
 
 
-		var recalcSlideInterval = 30;
+		const recalcSlideInterval = 30;
+		let prot;
 
 // Import
 		var CreateAscColor = AscCommon.CreateAscColor;
@@ -12143,7 +12144,7 @@
 			}
 		};
 		//interface methods
-		var prot = CBullet.prototype;
+		prot = CBullet.prototype;
 		prot["fillBulletImage"] = prot["asc_fillBulletImage"] = CBullet.prototype.fillBulletImage;
 		prot["fillBulletFromCharAndFont"] = prot["asc_fillBulletFromCharAndFont"] = CBullet.prototype.fillBulletFromCharAndFont;
 		prot["drawSquareImage"] = prot["asc_drawSquareImage"] = CBullet.prototype.drawSquareImage;
@@ -19677,43 +19678,46 @@
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
 
 		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = window['Asc'].asc_CFillBlip = CBlipFill;
-		CBlipFill.prototype['asc_getTile'] = CBlipFill.prototype['getTile'] = CBlipFill.prototype.getTile;
-		CBlipFill.prototype['asc_setTile'] = CBlipFill.prototype['setTile'] = CBlipFill.prototype.setTile;
-		CBlipFill.prototype['asc_getStretch'] = CBlipFill.prototype['getStretch'] = CBlipFill.prototype.getStretch;
-		CBlipFill.prototype['asc_setStretch'] = CBlipFill.prototype['setStretch'] = CBlipFill.prototype.setStretch;
-		CBlipFill.prototype['asc_getSrcRect'] = CBlipFill.prototype['getSrcRect'] = CBlipFill.prototype.getSrcRect;
-		CBlipFill.prototype['asc_setSrcRect'] = CBlipFill.prototype['setSrcRect'] = CBlipFill.prototype.setSrcRect;
-		CBlipFill.prototype['asc_getBlip'] = CBlipFill.prototype['getBlip'] = CBlipFill.prototype.getBlip;
-		CBlipFill.prototype['asc_setBlip'] = CBlipFill.prototype['setBlip'] = CBlipFill.prototype.setBlip;
-		CBlipFill.prototype['asc_getRotWithShape'] = CBlipFill.prototype['getRotWithShape'] = CBlipFill.prototype.getRotWithShape;
-		CBlipFill.prototype['asc_setRotWithShape'] = CBlipFill.prototype['setRotWithShape'] = CBlipFill.prototype.setRotWithShape;
-
-		CBlipFill.prototype['asc_getType'] = CBlipFill.prototype['getType'] = CBlipFill.prototype['get_type'] = CBlipFill.prototype.getType;
-		CBlipFill.prototype['asc_setType'] = CBlipFill.prototype['setType'] = CBlipFill.prototype['asc_putType'] = CBlipFill.prototype['putType'] = CBlipFill.prototype['put_type'] = CBlipFill.prototype.setType;
-		CBlipFill.prototype['asc_getTextureId'] = CBlipFill.prototype['getTextureId'] = CBlipFill.prototype['get_texture_id'] = CBlipFill.prototype.getTextureId;
-		CBlipFill.prototype['asc_setTextureId'] = CBlipFill.prototype['setTextureId'] = CBlipFill.prototype['asc_putTextureId'] = CBlipFill.prototype['putTextureId'] = CBlipFill.prototype['put_texture_id'] = CBlipFill.prototype.setTextureId;
-		CBlipFill.prototype['asc_getUrl'] = CBlipFill.prototype['getUrl'] = CBlipFill.prototype['get_url'] = CBlipFill.prototype.getUrl;
-		CBlipFill.prototype['asc_setUrl'] = CBlipFill.prototype['setUrl'] = CBlipFill.prototype['asc_putUrl'] = CBlipFill.prototype['putUrl'] = CBlipFill.prototype['put_url'] = CBlipFill.prototype.setUrl;
+		prot = CBlipFill.prototype;
+		prot['asc_getTile'] = prot.asc_getTile = prot.getTile;
+		prot['asc_setTile'] = prot.asc_setTile = prot.setTile;
+		prot['asc_getStretch'] = prot.asc_getStretch = prot.getStretch;
+		prot['asc_setStretch'] = prot.asc_setStretch = prot.setStretch;
+		prot['asc_getSrcRect'] = prot.asc_getSrcRect = prot.getSrcRect;
+		prot['asc_setSrcRect'] = prot.asc_setSrcRect = prot.setSrcRect;
+		prot['asc_getBlip'] = prot.asc_getBlip = prot.getBlip;
+		prot['asc_setBlip'] = prot.asc_setBlip = prot.setBlip;
+		prot['asc_getRotWithShape'] = prot.asc_getRotWithShape = prot.getRotWithShape;
+		prot['asc_setRotWithShape'] = prot.asc_setRotWithShape = prot.setRotWithShape;
+		prot['asc_getType'] = prot.asc_getType = prot['get_type'] = prot.get_type = prot.getType;
+		prot['asc_setType'] = prot.asc_setType = prot['asc_putType'] = prot.asc_putType = prot['put_type'] = prot.put_type = prot.setType;
+		prot['asc_getTextureId'] = prot.asc_getTextureId = prot['get_texture_id'] = prot.get_texture_id = prot.getTextureId;
+		prot['asc_setTextureId'] = prot.asc_setTextureId = prot['put_texture_id'] = prot.put_texture_id = prot.setTextureId;
+		prot['asc_getUrl'] = prot.asc_getUrl = prot['get_url'] = prot.get_url = prot.getUrl;
+		prot['asc_setUrl'] = prot.asc_setUrl = prot['asc_putUrl'] = prot.asc_putUrl = prot['put_url'] = prot.put_url = prot.setUrl;
 
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
 		CBlipFillTile['flipTypes'] = CBlipFill.flipTypes;
-		CBlipFillTile.prototype['getTx'] = CBlipFillTile.prototype.getTx;
-		CBlipFillTile.prototype['setTx'] = CBlipFillTile.prototype.setTx;
-		CBlipFillTile.prototype['getTy'] = CBlipFillTile.prototype.getTy;
-		CBlipFillTile.prototype['setTy'] = CBlipFillTile.prototype.setTy;
-		CBlipFillTile.prototype['getSx'] = CBlipFillTile.prototype.getSx;
-		CBlipFillTile.prototype['setSx'] = CBlipFillTile.prototype.setSx;
-		CBlipFillTile.prototype['getSy'] = CBlipFillTile.prototype.getSy;
-		CBlipFillTile.prototype['setSy'] = CBlipFillTile.prototype.setSy;
-		CBlipFillTile.prototype['getFlip'] = CBlipFillTile.prototype.getFlip;
-		CBlipFillTile.prototype['setFlip'] = CBlipFillTile.prototype.setFlip;
-		CBlipFillTile.prototype['getAlgn'] = CBlipFillTile.prototype.getAlgn;
-		CBlipFillTile.prototype['setAlgn'] = CBlipFillTile.prototype.setAlgn;
+		prot = CBlipFillTile.prototype;
+		prot['getTx'] = prot.getTx;
+		prot['setTx'] = prot.setTx;
+		prot['getTy'] = prot.getTy;
+		prot['setTy'] = prot.setTy;
+		prot['getSx'] = prot.getSx;
+		prot['setSx'] = prot.setSx;
+		prot['getSy'] = prot.getSy;
+		prot['setSy'] = prot.setSy;
+		prot['getFlip'] = prot.getFlip;
+		prot['setFlip'] = prot.setFlip;
+		prot['getAlgn'] = prot.getAlgn;
+		prot['setAlgn'] = prot.setAlgn;
 
 		window['AscFormat'].CSrcRect = CSrcRect;
 		window['AscFormat'].CBlipFillStretch = CBlipFillStretch;
-		CBlipFillStretch.prototype['getFillRect'] = CBlipFillStretch.prototype.getFillRect;
-		CBlipFillStretch.prototype['setFillRect'] = CBlipFillStretch.prototype.setFillRect;
+
+		prot = CBlipFillStretch.prototype;
+		prot['getFillRect'] = prot.getFillRect;
+		prot['setFillRect'] = prot.setFillRect;
 
 		window['AscFormat'].CFillRect = CFillRect;
 		window['AscFormat'].CBlip = CBlip;
