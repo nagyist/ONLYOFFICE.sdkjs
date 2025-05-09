@@ -4561,6 +4561,66 @@
 					}
 				},
 
+				getAllowedDataLabelsPosition: function (chartType, position) {
+					const types = Asc.c_oAscChartTypeSettings;
+					const positions = Asc.c_oAscChartDataLabelsPos;
+
+					const allowedDataLabelPositions = {
+						[types.barNormal]: [positions.ctr, positions.inBase, positions.inEnd, positions.outEnd],
+						[types.barStacked]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.barStackedPer]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.barNormal3d]: [],
+						[types.barStacked3d]: [],
+						[types.barStackedPer3d]: [],
+						[types.barNormal3dPerspective]: [],
+						[types.lineNormal]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStacked]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedPer]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineNormalMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedPerMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.line3d]: [],
+						[types.pie]: [positions.ctr, positions.inEnd, positions.outEnd, positions.bestFit],
+						[types.pie3d]: [positions.ctr, positions.inEnd, positions.outEnd, positions.bestFit],
+						[types.hBarNormal]: [positions.ctr, positions.inBase, positions.inEnd, positions.outEnd],
+						[types.hBarStacked]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.hBarStackedPer]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.hBarNormal3d]: [],
+						[types.hBarStacked3d]: [],
+						[types.hBarStackedPer3d]: [],
+						[types.areaNormal]: [positions.show],
+						[types.areaStacked]: [positions.show],
+						[types.areaStackedPer]: [positions.show],
+						[types.doughnut]: [positions.show],
+						[types.stock]: [positions.show],
+						[types.scatter]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterLine]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterLineMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterNone]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterSmooth]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterSmoothMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.surfaceNormal]: [],
+						[types.surfaceWireframe]: [],
+						[types.contourNormal]: [],
+						[types.contourWireframe]: [],
+						[types.comboCustom]: [],
+						[types.comboBarLine]: [],
+						[types.comboBarLineSecondary]: [],
+						[types.comboAreaBar]: [],
+						[types.radar]: [positions.show],
+						[types.radarMarker]: [positions.show],
+						[types.radarFilled]: [positions.show],
+						[types.unknown]: []
+					};
+
+					const allowedPositions = allowedDataLabelPositions[chartType] || [];
+
+					return allowedPositions.indexOf(position) > -1
+						? position
+						: allowedPositions[0] || null;
+				},
+
 				checkDlblsPosition: function (chart, chart_type, position) {
 					var finish_dlbl_pos = position;
 

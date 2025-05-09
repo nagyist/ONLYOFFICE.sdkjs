@@ -8012,6 +8012,10 @@ function(window, undefined) {
 			nDataLabelPos = Asc.c_oAscChartDataLabelsPos.t;
 		}
 
+		const controller = this.getDrawingObjectsController();
+		const chartType = this.getChartType();
+		nDataLabelPos = controller.getAllowedDataLabelsPosition(chartType, nDataLabelPos);
+
 		if (chart.dLbls) {
 			chart.dLbls.setShowVal(bDisplay);
 
