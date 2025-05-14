@@ -58,7 +58,7 @@
     AscFormat.InitClass(CComboBoxField, AscPDF.CBaseListField, AscDFH.historyitem_type_Pdf_Combobox_Field);
 
     CComboBoxField.prototype.Draw = function(oGraphicsPDF, oGraphicsWord) {
-        if (this.IsHidden() == true)
+        if (this.IsHidden() && !this.IsEditMode())
             return;
 
         let oDoc = this.GetDocument();
@@ -152,7 +152,11 @@
         if (!this.content)
             return;
 
-        let aRect       = this.GetOrigRect();
+        let aRect = this.GetOrigRect();
+        if (!aRect) {
+            return;
+        }
+
         let X           = aRect[0];
         let Y           = aRect[1];
         let nWidth      = aRect[2] - aRect[0];
@@ -289,6 +293,10 @@
             let hasOptions = aOptions && aOptions.length != 0;
 
             if (pageObject.x >= this._markRect.x1 && pageObject.x <= this._markRect.x2 && pageObject.y >= this._markRect.y1 && pageObject.y <= this._markRect.y2 && hasOptions) {
+                if (this.IsReadOnly()) {
+                    return;
+                }
+                
                 editor.sendEvent("asc_onShowPDFFormsActions", this, x, y);
                 this.content.MoveCursorToStartPos();
             }
@@ -484,22 +492,6 @@
 		this._bAutoShiftContentView = true && this._doNotScroll == false;
 		return true;
 	};
-	CComboBoxField.prototype.CorrectEnterText = function(oldValue, newValue) {
-		if (!this.DoKeystrokeAction(newValue))
-			return false;
-		
-		let doc = this.GetDocument();
-		newValue = AscWord.CTextFormFormat.prototype.GetBuffer(doc.event["change"]);
-		if (!newValue.length && !oldValue.length)
-			return false;
-		
-		let result = this.content.CorrectEnterText(oldValue, newValue, function(run, inRunPos, codePoint){return true;});
-		
-		this.SetNeedRecalc(true);
-		this.SetNeedCommit(true); // флаг что значение будет применено к остальным формам с таким именем
-		this._bAutoShiftContentView = true && this._doNotScroll == false;
-		return result;
-	};
     /**
 	 * Applies value of this field to all field with the same name.
 	 * @memberof CComboBoxField
@@ -618,7 +610,7 @@
     
     CComboBoxField.prototype.SetEditable = function(bValue) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetEditable(bValue);
         }
         else {
@@ -630,21 +622,21 @@
     };
     CComboBoxField.prototype.IsEditable = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsEditable();
 
         return this._editable;
     };
     CComboBoxField.prototype.IsCanEditText = function() {
         let oDoc = this.GetDocument();
-        if (oDoc.activeForm == this && this.IsEditable() && this.IsInForm())
+        if (oDoc.activeForm == this && this.IsEditable() && this.IsInForm() && !this.IsReadOnly())
             return true;
         
         return false;
     };
     CComboBoxField.prototype.AddOption = function(option, nPos) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType())
+        if (oParent && oParent.IsAllKidsWidgets())
             return oParent.AddOption(option, nPos);
 
         if (option == null) return;
@@ -674,7 +666,7 @@
     };
     CComboBoxField.prototype.RemoveOption = function(nPos) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType())
+        if (oParent && oParent.IsAllKidsWidgets())
             return oParent.RemoveOption(nPos);
 
         if (Number.isInteger(nPos) && nPos >= 0 && nPos < this._options.length) {

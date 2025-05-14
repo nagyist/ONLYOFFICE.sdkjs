@@ -72,7 +72,7 @@
 
     CTextField.prototype.SetComb = function(bComb) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             return oParent.SetComb(bComb);
         }
 
@@ -120,7 +120,7 @@
     };
     CTextField.prototype.IsComb = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType()) {
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets()) {
             return oParent.IsComb();
         }
 
@@ -128,14 +128,14 @@
     };
     CTextField.prototype.IsCanEditText = function() {
         let oDoc = this.GetDocument();
-        if (oDoc.activeForm == this && this.IsInForm())
+        if (oDoc.activeForm == this && this.IsInForm() && !this.IsReadOnly())
             return true;
         
         return false;
     };
     CTextField.prototype.SetCharLimit = function(nChars) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetCharLimit(nChars);
             return false;
         }
@@ -171,7 +171,7 @@
     };
     CTextField.prototype.GetCharLimit = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType()) {
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets()) {
             return oParent.GetCharLimit();
         }
 
@@ -179,7 +179,7 @@
     };
     CTextField.prototype.SetDoNotScroll = function(bNot) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetDoNotScroll(bNot);
             return;
         }
@@ -192,14 +192,14 @@
     };
     CTextField.prototype.IsDoNotScroll = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsDoNotScroll();
 
         return this._doNotScroll;
     };
     CTextField.prototype.SetDoNotSpellCheck = function(bNot) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetDoNotSpellCheck(bNot);
             return;
         }
@@ -212,14 +212,14 @@
     };
     CTextField.prototype.IsDoNotSpellCheck = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsDoNotSpellCheck();
 
         return this._doNotSpellCheck;
     };
     CTextField.prototype.SetFileSelect = function(bFileSelect) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetFileSelect(bFileSelect);
             return;
         }
@@ -243,14 +243,14 @@
     };
     CTextField.prototype.IsFileSelect = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsFileSelect();
 
         return this._fileSelect;
     };
     CTextField.prototype.SetMultiline = function(bMultiline) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType()) {
+        if (oParent && oParent.IsAllKidsWidgets()) {
             oParent.SetMultiline(bMultiline);
             return;
         }
@@ -296,14 +296,14 @@
     };
     CTextField.prototype.IsMultiline = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsMultiline();
 
         return this._multiline;
     };
     CTextField.prototype.SetPassword = function(bPassword) {
         let oParent = this.GetParent();
-        if (oParent && oParent.GetType() === this.GetType())
+        if (oParent && oParent.IsAllKidsWidgets())
             return oParent.SetPassword(bPassword);
         
         if (this.IsPassword() == bPassword) {
@@ -323,7 +323,7 @@
     };
     CTextField.prototype.IsPassword = function(bInherit) {
         let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.GetType() === this.GetType())
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
             return oParent.IsPassword();
 
         return this._password;
@@ -402,7 +402,7 @@
             return;
         }
 
-        if (isOnOpen == false && this.GetType() == AscPDF.FIELD_TYPES.text && typeof(displayValue) == "string") {
+        if (isOnOpen == false && this.GetType() == AscPDF.FIELD_TYPES.text && typeof(displayValue) == "string" && Asc.editor.isDocumentLoadComplete) {
             let aChars      = displayValue.codePointsArray();
             let nCharsCount = AscWord.GraphemesCounter.GetCount(aChars, this.content.GetCalculatedTextPr());
             let nCharLimit  = this.GetCharLimit();
@@ -482,7 +482,7 @@
 	};
         
     CTextField.prototype.Draw = function(oGraphicsPDF, oGraphicsWord) {
-        if (this.IsHidden() == true)
+        if (this.IsHidden() && !this.IsEditMode())
             return;
 
         let oDoc = this.GetDocument();
@@ -636,7 +636,7 @@
     };
     CTextField.prototype.SetDrawFromStream = function(bFromStream) {
         let nFormatType = this.GetFormatType();
-        if (this._bDrawFromStream && false == bFromStream && false == [AscPDF.FormatType.REGULAR, AscPDF.FormatType.NONE].includes(nFormatType)) {
+        if (this._bDrawFromStream && false == bFromStream && false == [AscPDF.FormatType.REGULAR, AscPDF.FormatType.NONE].includes(nFormatType) && this.IsChanged()) {
             this.Commit();
         }
 
@@ -1092,7 +1092,11 @@
         if (!this.content)
             return;
 
-        let aRect       = this.GetOrigRect();
+        let aRect = this.GetOrigRect();
+        if (!aRect) {
+            return;
+        }
+
         let X           = aRect[0];
         let Y           = aRect[1];
         let nWidth      = aRect[2] - aRect[0];
@@ -1207,6 +1211,10 @@
         this._scrollInfo = oInfo;
     };
     CTextField.prototype.UpdateScroll = function(bShow) {
+        if (bShow && this.IsEditMode()) {
+            return;
+        }
+
         if (this.IsMultiline() == false)
             return;
         
@@ -1413,38 +1421,59 @@
         
         this._bAutoShiftContentView = true && this.IsDoNotScroll() == false;
     };
-    CTextField.prototype.getRemainCharCount = function(removeCount) {
-		if (0 === this.GetCharLimit())
-			return -1;
-		
-		let charCount = 0;
-		this.content.CheckRunContent(function(oRun) {
-			var nCurPos = oRun.Content.length;
-			for (var nPos = 0; nPos < nCurPos; ++nPos) {
-				if (para_Text === oRun.Content[nPos].Type || para_Space === oRun.Content[nPos].Type || para_Tab === oRun.Content[nPos].Type)
-					++charCount;
-			}
-		});
-		
-		if (removeCount > charCount)
-			removeCount = charCount;
-		
-		return Math.max(0, this.GetCharLimit() - (charCount - removeCount));
-	};
-	CTextField.prototype.EnterText = function(aChars) {
-		let selectedCount = this.content.GetSelectedText(true, {NewLine: true, ParaSeparator: ""}).length;
-		let maxToAdd      = this.getRemainCharCount(selectedCount);
-		
-        let nCharsCount = AscWord.GraphemesCounter.GetCount(aChars, this.content.GetCalculatedTextPr());
-		if (-1 !== maxToAdd && nCharsCount > maxToAdd)
-			aChars.length = maxToAdd;
-		
-		if (!this.DoKeystrokeAction(aChars))
+    CTextField.prototype.clipEnterChars = function(aNewCodePoints) {
+        if (0 === this.GetCharLimit())
+            return aNewCodePoints;
+        
+        let arrCodePoints = [];
+        this.content.CheckRunContent(function(oRun) {
+            let nCurPos = oRun.Content.length;
+            for (let nPos = 0; nPos < nCurPos; ++nPos) {
+                let oItem = oRun.Content[nPos];
+
+                if (oItem.IsText())
+					arrCodePoints.push(oItem.GetCodePoint());
+				else if (oItem.IsSpace())
+					arrCodePoints.push(0x20);
+            }
+        });
+        
+        let oTextPr = this.content.GetCalculatedTextPr();
+        let charCount = AscWord.GraphemesCounter.GetCount(arrCodePoints, oTextPr);
+
+        if (this.GetCharLimit() - charCount < 0) {
+            let aFinalCodePoints = AscWord.GraphemesCounter.Trim(arrCodePoints, this.GetCharLimit(), oTextPr);
+            return aNewCodePoints.slice(arrCodePoints.length - aFinalCodePoints.length);
+        }
+        else {
+            return aNewCodePoints;
+        }
+    };
+	CTextField.prototype.EnterText = function(aChars, isOnCorrect) {
+        let nEnteredCharsCount = aChars.length;
+
+        AscCommon.History.ForbidUnionPoint();
+        AscCommon.History.Create_NewPoint();
+        let curState = this.content.GetSelectionState();
+        this.content.EnterText(aChars);
+        aChars = this.clipEnterChars(aChars);
+        AscCommon.History.ForbidUnionPoint();
+        AscCommon.History.Undo();
+        AscCommon.History.Clear_Redo();
+
+        // We don't allow you to cut the number of characters during the correction text
+        if (nEnteredCharsCount != aChars.length && isOnCorrect) {
+            return false;
+        }
+
+        this.content.SetSelectionState(curState);
+        
+        if (!this.DoKeystrokeAction(aChars))
 			return false;
-		
+
 		let doc = this.GetDocument();
 		aChars = AscWord.CTextFormFormat.prototype.GetBuffer(doc.event["change"]);
-		if (0 === nCharsCount)
+		if (0 === aChars.length)
 			return false;
 		
 		if (!this.content.EnterText(aChars))
@@ -1460,41 +1489,12 @@
 				AscCommon.History.ForbidUnionPoint();
 				AscCommon.History.Undo();
 				AscCommon.History.Clear_Redo();
+                this.AddToRedraw();
+                
+                return false;
 			}
-			this.AddToRedraw();
 		}
 		
-		return true;
-	};
-	CTextField.prototype.CorrectEnterText = function(oldValue, newValue) {
-		let maxToAdd = this.getRemainCharCount(oldValue.length);
-		
-        let nCharsCount = AscWord.GraphemesCounter.GetCount(newValue, this.content.GetCalculatedTextPr());
-		if (-1 !== maxToAdd && nCharsCount > maxToAdd)
-			newValue.length = maxToAdd;
-		
-		if (!this.DoKeystrokeAction(newValue))
-			return false;
-		
-		let doc = this.GetDocument();
-		newValue = AscWord.CTextFormFormat.prototype.GetBuffer(doc.event["change"]);
-		
-		if (!this.content.CorrectEnterText(oldValue, newValue, function(run, inRunPos, codePoint){return true;}))
-			return false;
-		
-		this.SetNeedRecalc(true);
-		this.SetNeedCommit(true); // флаг что значение будет применено к остальным формам с таким именем
-		this._bAutoShiftContentView = true && this.IsDoNotScroll() == false;
-		
-		if (this.IsDoNotScroll()) {
-			let isOutOfForm = this.IsTextOutOfForm(this.content);
-			if ((this.IsMultiline() && isOutOfForm.ver) || (isOutOfForm.hor && this.IsMultiline() == false)) {
-				AscCommon.History.ForbidUnionPoint();
-				AscCommon.History.Undo();
-				AscCommon.History.Clear_Redo();
-			}
-			this.AddToRedraw();
-		}
 		return true;
 	};
     CTextField.prototype.CheckAlignInternal = function() {
@@ -1647,10 +1647,8 @@
         }
 
         if (this.GetParentValue() != sNewValue) {
-            this.RevertContentView();
             this.SetParentValue(sNewValue);
         }
-
         // когда выравнивание посередине или справа, то после того
         // как ширина контента будет больше чем размер формы, выравнивание становится слева, пока текста вновь не станет меньше чем размер формы
         aFields.forEach(function(field) {
@@ -1735,7 +1733,7 @@
             return {nSelStart : preText.length, nSelEnd : preText.length + selectedText.length};
         }
 
-        let sValue      = this.GetValue(true);
+        let sValue = this.GetValue(true);
         let oSelRange   = GetSelectionRange(this.content.GetElement(0));
         let nSelStart   = oSelRange.nSelStart;
         let nSelEnd     = oSelRange.nSelEnd;
@@ -1774,6 +1772,9 @@
             "selEnd": nSelEnd
         });
 
+        if (!sValue && aChars.length == 0) {
+            return isCanEnter;
+        }
         if (oActionRunScript) {
             oActionRunScript.RunScript();
             isCanEnter = oDoc.event["rc"];

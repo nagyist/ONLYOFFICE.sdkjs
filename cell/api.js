@@ -3411,8 +3411,6 @@ var editor;
 		//раньше вызов был закомментирован, потому при при открытии вызывается в Viewport.js(asc_Resize) и Main.js(asc_showComments)
 		//но рассчитывать на внешние вызовы ненадежно и вызовов нет при VersionHistory и refreshFile
 		this.asc_Resize();
-
-		this.initBroadcastChannel();
 		this.initBroadcastChannelListeners();
 	};
 
@@ -9359,35 +9357,97 @@ var editor;
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.startGoalSeek(sFormulaCell, nExpectedValue, sChangingCell);
+		this.wb.startGoalSeek(sFormulaCell, nExpectedValue, sChangingCell);
 	};
 
 	spreadsheet_api.prototype.asc_CloseGoalClose = function (bSave) {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.closeGoalSeek(bSave);
+		this.wb.closeGoalSeek(bSave);
 	};
 
 	spreadsheet_api.prototype.asc_PauseGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.pauseGoalSeek();
+		this.wb.pauseGoalSeek();
 	};
 
 	spreadsheet_api.prototype.asc_ContinueGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.continueGoalSeek();
+		this.wb.continueGoalSeek();
 	};
 
 	spreadsheet_api.prototype.asc_StepGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.stepGoalSeek();
+		this.wb.stepGoalSeek();
+	};
+
+	// Solver
+	/**
+	 *  Starts solver logic.
+	 *  Calls after click "Solver" button.
+	 * @memberof spreadsheet_api
+	 * @param {asc_CSolverParams} solverParams
+	 */
+	spreadsheet_api.prototype.asc_StartSolver = function (solverParams) {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.startSolver(solverParams);
+	};
+
+	/**
+	 * @memberof spreadsheet_api
+	 * @param {boolean} isSave - true - save result of calculation, false - discard changes.
+	 * @param {asc_CSolverParams} solverParams
+	 */
+	spreadsheet_api.prototype.asc_CloseSolver = function (isSave, solverParams) {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.closeSolver(isSave, solverParams);
+	};
+
+	/**
+	 * Start solver logic in "Show iteration results" mode.
+	 * @memberof spreadsheet_api
+	 */
+	spreadsheet_api.prototype.asc_StepSolver = function () {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.stepSolver();
+	};
+
+	/**
+	 * Returns solver parameters object.
+	 * @memberof spreadsheet_api
+	 * @returns {asc_CSolverParams|null}
+	 */
+	spreadsheet_api.prototype.asc_GetSolverParams = function () {
+		if (!this.wb) {
+			return null;
+		}
+
+		return this.wb.getSolverParams();
+	};
+
+	/**
+	 * Returns solver results object.
+	 * @memberof spreadsheet_api
+	 * @returns {asc_CSolverResults}
+	 */
+	spreadsheet_api.prototype.asc_GetSolverResults = function () {
+		return new AscCommonExcel.asc_CSolverResults();
 	};
 
 	spreadsheet_api.prototype.asc_TracePrecedents = function() {
@@ -9693,13 +9753,6 @@ var editor;
 			})
 		}
 	};
-	spreadsheet_api.prototype.initBroadcastChannel = function() {
-		if (!this.broadcastChannel) {
-			if (this.asc_isSupportCopySheetsBetweenBooks()) {
-				this.broadcastChannel = new BroadcastChannel("onlyofficeChannel");
-			}
-		}
-	};
 	spreadsheet_api.prototype.asc_isSupportCopySheetsBetweenBooks = function() {
 		return typeof BroadcastChannel !== "undefined";
 	};
@@ -9749,7 +9802,11 @@ var editor;
 				} else if ("SetFormulaEditMode" === event.data.type) {
 					oThis.wb && oThis.wb.externalSelectionController.onExternalSetFormulaMode(event.data);
 				} else if ("CloseTab" === event.data.type) {
-					console.log("closeTab")
+					//console.log("closeTab")
+				} else if ("ClipboardChange" === event.data.type) {
+					if (event.data.editor === oThis.getEditorId()) {
+						AscCommon.g_clipboardBase.ChangeLastCopy(event.data.data);
+					}
 				}
 			}
 		}

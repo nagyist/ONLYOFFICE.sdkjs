@@ -4228,13 +4228,25 @@
 					if (sheetModel)
 					{
 						range = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
-		}
+					}
 				}
 
 				if (!sheetModel) {
 					sheetModel = model.getActiveWs();
 				}
 				return AscCommonExcel.CGoalSeek.prototype.isValidDataRef(sheetModel, range, dialogType);
+			} else if (cDialogType.Solver_ObjectiveCell) {
+				result = parserHelp.parse3DRef(dataRange);
+				if (result) {
+					sheetModel = model.getWorksheetByName(result.sheet);
+					if (sheetModel) {
+						range = AscCommonExcel.g_oRangeCache.getAscRange(result.range);
+					}
+				}
+				if (!sheetModel) {
+					sheetModel = model.getActiveWs();
+				}
+				return AscCommonExcel.CSolver.prototype.isValidDataRef(sheetModel, range, dialogType);
 			}
 		}
 
@@ -10852,8 +10864,12 @@
 	
 	function ExecuteNoHistory(f, oLogicDocument, oThis, args)
 	{
+		// TODO: Заменить на нормальное обращение Asc.editor.getLogicDocument
+		if (!oLogicDocument && editor && editor.WordControl)
+			oLogicDocument = editor.WordControl.m_oLogicDocument;
+		
+		
 		// TODO: Надо перевести все редакторы на StartNoHistoryMode/EndNoHistoryMode
-
 		let oState = null, isTableId = false;
 		if (oLogicDocument && oLogicDocument.IsDocumentEditor && oLogicDocument.IsDocumentEditor())
 		{
@@ -10898,6 +10914,20 @@
 		logicDocument.SetLocalTrackRevisions(false);
 		let result = f.apply(t, args);
 		logicDocument.SetLocalTrackRevisions(localFlag);
+		return result;
+	}
+	
+	function executeNoPreDelete(f, logicDocument, t, args)
+	{
+		if (!logicDocument
+			|| !logicDocument.IsDocumentEditor
+			|| !logicDocument.IsDocumentEditor())
+			return f.apply(t, args);
+		
+		let preventPreDelete = logicDocument.PreventPreDelete;
+		logicDocument.PreventPreDelete = true;
+		let result = f.apply(t, args);
+		logicDocument.PreventPreDelete = preventPreDelete;
 		return result;
 	}
 	
@@ -15138,6 +15168,7 @@
 	window["AscCommon"].IsAscFontSupport = IsAscFontSupport;
 	window["AscCommon"].ExecuteNoHistory = ExecuteNoHistory;
 	window["AscCommon"].executeNoRevisions = executeNoRevisions;
+	window["AscCommon"].executeNoPreDelete = executeNoPreDelete;
 	window["AscCommon"].ExecuteEditorAction = ExecuteEditorAction;
 	window["AscCommon"].AddAndExecuteChange = AddAndExecuteChange;
 	window["AscCommon"].CompareStrings = CompareStrings;

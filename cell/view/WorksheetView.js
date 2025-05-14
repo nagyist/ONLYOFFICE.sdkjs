@@ -1077,7 +1077,7 @@
         return !this.workbook.isWizardMode;
     };
 
-    WorksheetView.prototype.getCellVisibleRange = function (col, row) {
+    WorksheetView.prototype.getCellVisibleRange = function (col, row, opt_ignore_contains) {
         var vr, offsetX = 0, offsetY = 0, cFrozen, rFrozen;
         if (this.topLeftFrozenCell) {
             cFrozen = this.topLeftFrozenCell.getCol0() - 1;
@@ -1102,12 +1102,12 @@
         offsetX += this._getOffsetX(vr.c1, true);
         offsetY += this._getOffsetY(vr.r1, true);
 
-        return vr.contains(col, row) ? new asc_VR(vr, offsetX, offsetY) : null;
+        return (opt_ignore_contains || !opt_ignore_contains && vr.contains(col, row)) ? new asc_VR(vr, offsetX, offsetY) : null;
     };
 
-    WorksheetView.prototype.getCellMetrics = function (col, row, opt_check_merge) {
+    WorksheetView.prototype.getCellMetrics = function (col, row, opt_check_merge, opt_ignore_contains) {
         let vr;
-        if (vr = this.getCellVisibleRange(col, row)) {
+        if (vr = this.getCellVisibleRange(col, row, opt_ignore_contains)) {
         	let _width, _height, mc;
         	if (opt_check_merge && (mc = this.model.getMergedByCell(row, col))) {
         		col = mc.c1;
@@ -3652,17 +3652,18 @@
 			if (hiddenRow || 0 === self._getColumnWidth(col)) {
 				return;
 			}
+			
+			if (!cell.isEmptyTextString()) {
+				maxCol = Math.max(maxCol, col);
+				maxRow = Math.max(maxRow, row);
+				return;
+			}
 
 			// Check cell style (fills and borders)
 			let style = cell.getStyle();
 			if (style && ((style.fill && style.fill.notEmpty()) || (style.border && style.border.notEmpty()))) {
 				maxCol = Math.max(maxCol, col);
 				maxRow = Math.max(maxRow, row);
-			}
-
-			// Skip empty cells
-			if (cell.isEmptyTextString()) {
-				return;
 			}
 
 			// Get cell properties
@@ -6729,11 +6730,20 @@
 	};
 
 	WorksheetView.prototype._drawCutRange = function () {
-		if(this.copyCutRange) {
-			for (var i in this.copyCutRange) {
-				this._drawElements(this._drawSelectionElement, this.copyCutRange[i], AscCommonExcel.selectionLineType.DashThick, this.settings.activeCellBorderColor);
+		let cutRange = this.getCutRange();
+		if(cutRange) {
+			for (var i in cutRange) {
+				this._drawElements(this._drawSelectionElement, cutRange[i], AscCommonExcel.selectionLineType.DashThick, this.settings.activeCellBorderColor);
 			}
 		}
+	};
+
+	WorksheetView.prototype.setCutRange = function (val) {
+		this.copyCutRange = val;
+	};
+
+	WorksheetView.prototype.getCutRange = function () {
+		return this.copyCutRange;
 	};
 
 	WorksheetView.prototype.drawTraceDependents = function () {
@@ -8830,7 +8840,7 @@
 		//print lines view
 		let isTraceDependents = this.traceDependentsManager.isHaveData();
 		let searchSpecificRange = this.handlers.trigger('selectSearchingResults') && this.workbook.SearchEngine && this.workbook.SearchEngine.isSpecificRange();
-		if(this.viewPrintLines || this.copyCutRange || (this.isPageBreakPreview(true) && this.pagesModeData) || searchSpecificRange || isTraceDependents) {
+		if(this.viewPrintLines || this.getCutRange() || (this.isPageBreakPreview(true) && this.pagesModeData) || searchSpecificRange || isTraceDependents) {
 			this.overlayCtx.clear();
 			if (isTraceDependents) {
 				this.traceDependentsManager.clearCoordsData();
@@ -18804,13 +18814,6 @@
 				return false;
 			}
 
-			// todo Add to history UndoRedo DynamicArray and add to AscCH historyitem_DynamicArrayFormula_AddFormula 
-			//***array-formula***
-			if(applyByArray) {
-				History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula, this.model.getId(),
-					new Asc.Range(c.bbox.c1, c.bbox.r1, c.bbox.c2, c.bbox.r2), new AscCommonExcel.UndoRedoData_ArrayFormula(c.bbox, "=" + c.getFormula()));
-			}
-
 			isFormula = c.isFormula();
 			this.model.checkChangeTablesContent(bbox);
 		} else {
@@ -27312,13 +27315,13 @@
 		return ctx;
 	};
 
-	WorksheetView.prototype._dashLineCleverHor = function (ctx, x, y1, y2) {
-		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2)
+	WorksheetView.prototype._dashLineCleverHor = function (ctx, x1, y, x2) {
+		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x2);
 		return ctx;
 	};
 
-	WorksheetView.prototype._dashLineCleverVer = function (ctx, x1, y, x2) {
-		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
+	WorksheetView.prototype._dashLineCleverVer = function (ctx, x, y1, y2) {
+		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2);
 		return ctx;
 	};
 
@@ -28067,6 +28070,11 @@
 						allowedSpecialPasteProps = [sProps.sourceformatting, sProps.destinationFormatting];
 					}
 				}
+
+				if (specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length) {
+					allowedSpecialPasteProps.push(sProps.picture);
+				}
+
 				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 				window['AscCommon'].g_specialPasteHelper.buttonInfo.asc_setOptions(allowedSpecialPasteProps);
 				if (fromBinary) {
@@ -29748,20 +29756,61 @@
 				ws.model.selectionRange = specialPasteHelper.selectionRange.clone();
 			}
 
-			//транзакция закроется в end_paste
-			History.Create_NewPoint();
-			History.StartTransaction();
+			let pastingData1 = specialPasteData.data1;
+			let pastingData2 = specialPasteData.data2;
 
-			//далее специальная вставка
-			specialPasteHelper.specialPasteProps = props;
-			//TODO пока для закрытия транзации выставляю флаг. пересмотреть!
-			window['AscCommon'].g_specialPasteHelper.bIsEndTransaction = true;
-			AscCommonExcel.g_clipboardExcel.pasteData(ws, specialPasteData._format, specialPasteData.data1, specialPasteData.data2, specialPasteData.text_data);
+			let doPaste = function (isSuccess) {
+				if (!isSuccess) {
+					return;
+				}
+				//транзакция закроется в end_paste
+				History.Create_NewPoint();
+				History.StartTransaction();
+
+				//далее специальная вставка
+				specialPasteHelper.specialPasteProps = props;
+				//TODO пока для закрытия транзации выставляю флаг. пересмотреть!
+				window['AscCommon'].g_specialPasteHelper.bIsEndTransaction = true;
+				AscCommonExcel.g_clipboardExcel.pasteData(ws, specialPasteData._format, pastingData1, pastingData2, specialPasteData.text_data, true);
+
+				if (cPasteProps.none !== pasteProp && cPasteProps.link !== pasteProp && cPasteProps.picture !== pasteProp && cPasteProps.linkedPicture !== pasteProp) {
+					ws.traceDependentsManager && ws.traceDependentsManager.clearAll(true);
+				}
+			};
 
 			const cPasteProps = Asc.c_oSpecialPasteProps;
 			const pasteProp = props && props.property;
-			if (cPasteProps.none !== pasteProp && cPasteProps.link !== pasteProp && cPasteProps.picture !== pasteProp && cPasteProps.linkedPicture !== pasteProp) {
-				ws.traceDependentsManager && ws.traceDependentsManager.clearAll(true);
+			if (cPasteProps.picture === pasteProp) {
+				if (specialPasteData.htmlImage && false) {
+					pastingData1 = specialPasteData.htmlImage;
+					doPaste(true);
+				} else {
+					var blob = specialPasteData.images[0];
+					var reader = new FileReader();
+
+					reader.onload = function(e) {
+						let html = "<img src=\"" + e.target.result + "\"/>";
+						AscCommon.g_clipboardBase.CommonIframe_PasteStart(html, null, function (oHtmlElem) {
+							if (oHtmlElem) {
+								pastingData1 = oHtmlElem;
+								specialPasteData.htmlImage = oHtmlElem;
+								doPaste(true);
+							}
+						});
+					};
+
+					reader.onabort = reader.onerror = function(e) {
+						doPaste(false);
+					};
+
+					try {
+						reader.readAsDataURL(blob);
+					} catch (err) {
+						doPaste(false);
+					}
+				}
+			} else {
+				doPaste(true);
 			}
 		};
 

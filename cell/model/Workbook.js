@@ -543,7 +543,7 @@
 		setUndoDefName: function(newUndoName, doNotChangeRef) {
 			this.name = newUndoName.name;
 			this.sheetId = newUndoName.sheetId;
-			this.hidden = false;
+			this.hidden = newUndoName.hidden;
 			this.type = newUndoName.type;
 			if (!doNotChangeRef && this.ref != newUndoName.ref) {
 				this.setRef(newUndoName.ref);
@@ -1086,7 +1086,7 @@
 			if (oldUndoName) {
 				res = this.getDefNameByName(oldUndoName.name, oldUndoName.sheetId);
 			} else {
-				res = this.addDefName(newUndoName.name, newUndoName.ref, newUndoName.sheetId, false, newUndoName.type, newUndoName.isXLNM);
+				res = this.addDefName(newUndoName.name, newUndoName.ref, newUndoName.sheetId, newUndoName.hidden, newUndoName.type, newUndoName.isXLNM);
 			}
 			AscCommon.History.Create_NewPoint();
 			if (res && oldUndoName) {
@@ -1615,6 +1615,12 @@
 
 			if (!this.wb.asyncFormulasManager.isRecalculating() && this.wb.asyncFormulasManager.getPromises() && !AscCommonExcel.g_LockCustomFunctionRecalculate) {
 				this.wb.asyncFormulasManager.calculatePromises(callback);
+			} else if (!g_cCalcRecursion.needRecursiveCall() && !this.wb.asyncFormulasManager.isRecalculating()) {
+				callback && callback();
+			}
+
+			if (/*!this.wb.asyncFormulasManager.isRecalculating() &&*/ this.wb.asyncFormulasManager.getReplacedFormulas() && !AscCommonExcel.g_LockCustomFunctionRecalculate) {
+				this.wb.asyncFormulasManager.calculateReplacedFormulas(callback);
 			} else if (!g_cCalcRecursion.needRecursiveCall() && !this.wb.asyncFormulasManager.isRecalculating()) {
 				callback && callback();
 			}
@@ -2890,6 +2896,8 @@
 		this.calcProcess = null;
 		this.aParserFormulas = null;
 
+		this.replacedFormulas = null;
+
 		this.endCallback = null;
 	}
 
@@ -2933,6 +2941,21 @@
 	AsyncFormulasManager.prototype.clearPromises = function () {
 		this.promises = null;
 		this.promiseMap = null;
+	};
+	AsyncFormulasManager.prototype.getReplacedFormulas = function () {
+		return this.replacedFormulas;
+	};
+	AsyncFormulasManager.prototype.clearReplacedFormulas = function () {
+		this.replacedFormulas = null;
+	};
+	AsyncFormulasManager.prototype.isReplacedFormulas = function () {
+		return this.replacedFormulas && this.replacedFormulas.length;
+	};
+	AsyncFormulasManager.prototype.addReplacedFormula = function (val) {
+		if (!this.replacedFormulas) {
+			this.replacedFormulas = [];
+		}
+		this.replacedFormulas.push(val);
 	};
 	AsyncFormulasManager.prototype.setRecalculating = function (val) {
 		this.calcProcess = val;
@@ -3016,6 +3039,25 @@
 			doPromises(promises);
 		} else {
 			//t.endCallback && t.endCallback()
+		}
+	};
+
+	AsyncFormulasManager.prototype.calculateReplacedFormulas = function (callback) {
+		let t = this;
+		let replacedFormulas = /*!this.isRecalculating() &&*/ this.getReplacedFormulas();
+		if (replacedFormulas) {
+			let doReplacedFormulas = function (_replacedFormulas) {
+				for (let i = 0; i < _replacedFormulas.length; i++) {
+					t.wb.dependencyFormulas.addToChangedCell(_replacedFormulas[i].parent);
+				}
+
+				t.clearReplacedFormulas();
+				t.setRecalculating(true);
+				t.wb.dependencyFormulas.calcTree();
+				t.wb.handlers && t.wb.handlers.trigger("drawWS");
+				t.setRecalculating(false);
+			};
+			doReplacedFormulas(replacedFormulas);
 		}
 	};
 
@@ -3144,6 +3186,7 @@
 
 		this.customXmls = null;//[]
 		this.oGoalSeek = null;
+		this.oSolver = null;
 
 		this.timelineCaches = [];
 		this.TimelineStyles = null;
@@ -3845,11 +3888,11 @@
 		this.dependencyFormulas.removeDefName( defName.sheetId, defName.name );
 		this.dependencyFormulas.calcTree();
 	};
-	Workbook.prototype.editDefinesNames = function ( oldName, newName ) {
+	Workbook.prototype.editDefinesNames = function (oldName, newName) {
 		return this.editDefinesNamesUndoRedo(this.getUndoDefName(oldName), this.getUndoDefName(newName));
 	};
-	Workbook.prototype.editDefinesNamesUndoRedo = function ( oldName, newName ) {
-		var res = this.dependencyFormulas.editDefinesNames( oldName, newName );
+	Workbook.prototype.editDefinesNamesUndoRedo = function (oldName, newName) {
+		var res = this.dependencyFormulas.editDefinesNames(oldName, newName);
 		this.dependencyFormulas.calcTree();
 		return res;
 	};
@@ -3961,7 +4004,7 @@
 		var res = null;
 		let t = this;
 		this.dependencyFormulas.forEachFormula(function (fP) {
-			if (fP && fP.bUnknownOrCustomFunction && ((fP.ca && isNotUpdate) || !isNotUpdate)) {
+			if (fP && fP.unknownOrCustomFunction && ((fP.ca && isNotUpdate) || !isNotUpdate)) {
 				fP.isParsed = false;
 				fP.outStack = [];
 				fP.parse();
@@ -3973,7 +4016,7 @@
 		});
 		this.forEach(function (ws) {
 			ws.forEachFormula(function (fP) {
-				if (fP && fP.bUnknownOrCustomFunction && ((fP.ca && isNotUpdate) || !isNotUpdate)) {
+				if (fP && fP.unknownOrCustomFunction && ((fP.ca && isNotUpdate) || !isNotUpdate)) {
 					fP.isParsed = false;
 					fP.outStack = [];
 					fP.parse();
@@ -4508,7 +4551,7 @@
 			return ascName;
 		}
 		var sheetId = this.getSheetIdByIndex(ascName.LocalSheetId);
-		return new UndoRedoData_DefinedNames(ascName.Name, ascName.Ref, sheetId, ascName.type, ascName.isXLNM);
+		return new UndoRedoData_DefinedNames(ascName.Name, ascName.Ref, sheetId, ascName.type, ascName.isXLNM, ascName.Hidden);
 	};
 	Workbook.prototype.changeColorScheme = function (sSchemeName) {
 		var scheme = AscCommon.getColorSchemeByName(sSchemeName);
@@ -5861,6 +5904,24 @@
 
 	Workbook.prototype.stepGoalSeek = function() {
 		this.oGoalSeek && this.oGoalSeek.step();
+	};
+
+	/**
+	 * Sets Solver object
+	 * @memberof Workbook
+	 * @param {CSolver} oSolver
+	 */
+	Workbook.prototype.setSolver = function(oSolver) {
+		this.oSolver = oSolver;
+	};
+
+	/**
+	 * Returns Solver object
+	 * @memberof Workbook
+	 * @returns {CSolver}
+	 */
+	Workbook.prototype.getSolver = function() {
+		return this.oSolver;
 	};
 
 	Workbook.prototype.setDefaultDirection = function(val) {
@@ -15433,7 +15494,7 @@
 				const aExcludeFormulas = AscCommonExcel.aExcludeRecursiveFormulas;
 				const oCycleCells = new Map();
 
-				_foreachRefElements(function (oElem, nIndex, nLastIndex) {
+				foreachRefElements(function (oElem, nIndex, nLastIndex) {
 					if (oElem.containCell2(oListenerCell)) {
 						const nIndexWithFunction = nIndex + 2;
 						if (nIndexWithFunction > nLastIndex) {
@@ -15485,7 +15546,7 @@
 			return false;
 		}
 		let bContainsInFormula = false;
-		_foreachRefElements(function (oRange) {
+		foreachRefElements(function (oRange) {
 			if (oRange.containCell2(oThis)) {
 				bContainsInFormula = true;
 				return true;
@@ -15621,9 +15682,8 @@
 	 * Iterative extract reference elements from outStack attribute of parserFormula class.
 	 * @param {Function} fAction - Action with reference element
 	 * @param {[]} aRefElements
-	 * @private
 	 */
-	function _foreachRefElements (fAction, aRefElements) {
+	function foreachRefElements (fAction, aRefElements) {
 		if (!aRefElements.length) {
 			return;
 		}
@@ -15736,7 +15796,7 @@
 		const oThis = this;
 		let bRecursiveFormula = false;
 		aPassedCell = aPassedCell || [];
-		_foreachRefElements(function (oRange) {
+		foreachRefElements(function (oRange) {
 			oRange._foreachNoEmpty(function (oCell) {
 				let bCellIsPassed = aPassedCell.some(function (oElem) {
 					return oCell.compareCellIndex(oElem);
@@ -15791,7 +15851,7 @@
 		}
 
 		const aRefElements = _getRefElements(oFormulaParsed);
-		_foreachRefElements(function (oRange, nIndex, nLastRefElemIndex) {
+		foreachRefElements(function (oRange, nIndex, nLastRefElemIndex) {
 			oRange._foreachNoEmpty(function(oCell) {
 				let nCellIndex = getCellIndex(oCell.nRow, oCell.nCol);
 				let sCellWsName = oCell.ws.getName().toLowerCase();
@@ -16027,10 +16087,31 @@
 			if (AscCommon.History.Is_On()) {
 				DataNew = this.getValueData();
 			}
-			if (AscCommon.History.Is_On() && parsed.bUnknownOrCustomFunction && !(DataNew.value && DataNew.value.type === CellValueType.Error && DataNew.value.text === AscCommon.cErrorOrigin['busy']) && !DataOld.isEqual(DataNew)) {
-				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow),
-					new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
+
+			let _replaceFormulaType = parsed.replaceFormulaAfterCalc;
+			if (AscCommon.History.Is_On() && (parsed.unknownOrCustomFunction || _replaceFormulaType === AscCommonExcel.cReplaceFormulaType.formula)
+				&& !(DataNew.value && DataNew.value.type === CellValueType.Error && DataNew.value.text === AscCommon.cErrorOrigin['busy'])) {
+
+				let wb = Asc["editor"] && Asc["editor"].wb;
+				let currentFunc = wb && wb.customFunctionEngine && wb.customFunctionEngine.getFunc(parsed.unknownOrCustomFunction);
+
+				if ((currentFunc && currentFunc.replaceFormulaToVal) || _replaceFormulaType) {
+					if (_replaceFormulaType === AscCommonExcel.cReplaceFormulaType.formula) {
+						AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(),
+							new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow),
+							new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, this.getValueData()));
+					} else {
+						this.setFormulaInternal(null);
+						AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(),
+							new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow),
+							new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, this.getValueData()));
+					}
+				} else if (!DataOld.isEqual(DataNew)) {
+					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ChangeValue, this.ws.getId(),
+						new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow),
+						new UndoRedoData_CellSimpleData(this.nRow, this.nCol, DataOld, DataNew));
+				}
+				parsed.replaceFormulaAfterCalc = null;
 			}
 
 			this.ws.workbook.dependencyFormulas.addToCleanCellCache(this.ws.getId(), this.nRow, this.nCol);
@@ -17682,6 +17763,14 @@
 			// when creating new array formulas, it is necessary to transfer information about the dynamic array because regular ref is used
 			cell.setValue(_val, callback, isCopyPaste, byRef, ignoreHyperlink, dynamicRange);
 		});
+
+		//***array-formula***
+		let _sFormula = this.getFormula();
+		if(_sFormula && byRef) {
+			History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula, this.worksheet.getId(),
+				new Asc.Range(this.bbox.c1, this.bbox.r1, this.bbox.c2, this.bbox.r2), new AscCommonExcel.UndoRedoData_ArrayFormula(this.bbox, "=" + _sFormula));
+		}
+
 		AscCommon.History.EndTransaction();
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
@@ -23894,5 +23983,6 @@
 	window['AscCommonExcel'].CSerial = CSerial;
 	window['AscCommonExcel'].SweepLineRowIterator = SweepLineRowIterator;
 	window['AscCommonExcel'].BroadcastHelper = BroadcastHelper;
+	window['AscCommonExcel'].foreachRefElements = foreachRefElements;
 
 })(window);
