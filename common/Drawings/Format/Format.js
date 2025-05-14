@@ -3763,7 +3763,7 @@
 			this.r = readDouble(r);
 			this.b = readDouble(r);
 		};
-		CSrcRect.prototype.createDublicate = function () {
+		CSrcRect.prototype.createDuplicate = CSrcRect.prototype.createDublicate = function () {
 			const copy = new CSrcRect(this.l, this.t, this.r, this.b);
 			return copy;
 		};

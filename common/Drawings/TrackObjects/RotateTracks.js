@@ -185,9 +185,23 @@ function OverlayObject(geometry, extX, extY, brush, pen, transform )
     };
 }
 
-OverlayObject.prototype.getFullRotate = function ()
-{
-    return AscCommon.deg2rad(this.TransformMatrix.GetRotation());
+OverlayObject.prototype.getGeometry = function () {
+	return this.geometry;
+};
+OverlayObject.prototype.getBounds = function () {
+	const boundsChecker = new AscFormat.CSlideBoundsChecker();
+	this.draw(boundsChecker, this.TransformMatrix);
+	boundsChecker.CorrectBounds();
+
+	return new AscFormat.CGraphicBounds(
+		boundsChecker.Bounds.min_x,
+		boundsChecker.Bounds.min_y,
+		boundsChecker.Bounds.max_x,
+		boundsChecker.Bounds.max_y
+	);
+};
+OverlayObject.prototype.getFullRotate = function () {
+	return AscCommon.deg2rad(this.TransformMatrix.GetRotation());
 };
 
 function ObjectToDraw(brush, pen, extX, extY, geometry, transform, x, y, oComment, TextElement, oLineStructure, nId, bIsBulletSymbol)

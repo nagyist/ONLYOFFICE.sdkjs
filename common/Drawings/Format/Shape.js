@@ -1798,6 +1798,10 @@
 			return this.compiledFill;
 		};
 
+        CShape.prototype.getBounds = function () {
+            return this.bounds;
+        };
+
 		CShape.prototype.getMargins = function () {
 			if (this.txBody) {
 				return this.txBody.getMargins()
