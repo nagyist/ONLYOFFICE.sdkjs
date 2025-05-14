@@ -189,8 +189,15 @@ OverlayObject.prototype.getGeometry = function () {
 	return this.geometry;
 };
 OverlayObject.prototype.getBounds = function () {
+	const originalDrawer = this.shapeDrawer;
+
+	const tmpDrawer = new AscCommon.CShapeDrawer();
 	const boundsChecker = new AscFormat.CSlideBoundsChecker();
+
+	this.shapeDrawer = tmpDrawer;
 	this.draw(boundsChecker, this.TransformMatrix);
+	this.shapeDrawer = originalDrawer;
+
 	boundsChecker.CorrectBounds();
 
 	return new AscFormat.CGraphicBounds(
