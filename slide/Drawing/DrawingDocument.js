@@ -3502,7 +3502,7 @@ function DrawBackground(graphics, unifill, w, h)
 
 	graphics.SetIntegerGrid(false);
 
-	var _shape = new AscFormat.CShape();
+	var _shape = AscFormat.ExecuteNoHistory(function(){ return new AscFormat.CShape();}, this, [], false);
 
 	_shape.brush           = unifill;
 	_shape.pen             = null;
