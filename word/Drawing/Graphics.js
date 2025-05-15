@@ -878,7 +878,7 @@
 				this.m_oPen.Color.B + "," + (this.m_oPen.Color.A / 255) + ")";
 		}
 	};
-	CGraphics.prototype.drawTilePattern = function (transform, imageUrl, alpha, scaleX, scaleY, offsetX, offsetY, flipH, flipV) {
+	CGraphics.prototype.drawBlipFillTile = function (transform, imageUrl, alpha, scaleX, scaleY, offsetX, offsetY, flipH, flipV) {
 		const ctx = this.m_oContext;
 		if (!ctx) return;
 
@@ -962,6 +962,33 @@
 
 		ctx.restore();
 	};
+	CGraphics.prototype.drawBlipFillStretch = function (transform, imageUrl, alpha, x, y, w, h, srcRect, canvas) {
+		const ctx = this.m_oContext;
+		if (!ctx) return;
+
+		ctx.save();
+
+		if (transform) {
+			ctx.transform(
+				transform.sx,
+				transform.shy,
+				transform.shx,
+				transform.sy,
+				transform.tx,
+				transform.ty
+			);
+		}
+
+		this.drawImage(
+			imageUrl,
+			x, y, w, h,
+			alpha * 255,
+			srcRect,
+			canvas
+		);
+
+		ctx.restore();
+	}
 
 	// text
 	CGraphics.prototype.GetFont = function()

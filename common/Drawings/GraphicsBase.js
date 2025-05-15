@@ -459,7 +459,8 @@
 	CGraphicsBase.prototype.DrawPresentationComment = function(type, x, y, w, h)
 	{
 	};
-	CGraphicsBase.prototype.drawTilePattern = function () { };
+	CGraphicsBase.prototype.drawBlipFillTile = function () { };
+	CGraphicsBase.prototype.drawBlipFillStretch = function () { };
 
 	// INTEGER GRID
 	CGraphicsBase.prototype.SetIntegerGrid = function(param)

@@ -1720,9 +1720,9 @@ CShapeDrawer.prototype =
 			// Opacity
 			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
 			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
-			const alpha = useTransparency ? this.UniFill.transparent / 255 : null;
+			const alpha = useTransparency ? this.UniFill.transparent / 255 : 1;
 
-			graphics.drawTilePattern(
+			graphics.drawBlipFillTile(
 				null,
 				imageData.src,
 				alpha,
@@ -1779,9 +1779,9 @@ CShapeDrawer.prototype =
 			// Opacity
 			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
 			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
-			const alpha = useTransparency ? this.UniFill.transparent / 255 : null;
+			const alpha = useTransparency ? this.UniFill.transparent / 255 : 1;
 
-			graphics.drawTilePattern(
+			graphics.drawBlipFillTile(
 				invertedTransform,
 				imageData.src,
 				alpha,
@@ -1798,7 +1798,76 @@ CShapeDrawer.prototype =
 	},
 
 	drawBlipFillStretch: function (imageData) {
+		const graphics = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
+		if (!graphics) return;
 
+		const transform = this.Shape.getTransformMatrix();
+		const invertedTransform = AscCommon.global_MatrixTransformer.Invert(transform);
+
+		const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
+
+		// TODO: ОБЪЕДИНИТЬ, пока дублирование кода - для тестирования
+		if (rotWithShape) {
+			// Margins
+			const fillRect = AscCommon.isRealObject(this.UniFill.fill.stretch) && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect)
+				? this.UniFill.fill.stretch.fillRect
+				: new AscFormat.CFillRect(0, 0, 100, 100);
+
+			const shapeWidth = this.max_x - this.min_x;
+			const shapeHeight = this.max_y - this.min_y;
+
+			const dstRect = {
+				l: this.min_x + shapeWidth * fillRect.l / 100,
+				t: this.min_y + shapeHeight * fillRect.t / 100,
+				r: this.max_x - shapeWidth * (100 - fillRect.r) / 100,
+				b: this.max_y - shapeHeight * (100 - fillRect.b) / 100,
+			};
+
+			// Opacity
+			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+			const useTransparency = this.IsRectShape ? true : graphics.isSupportTextDraw() && !graphics.isTrack();
+			const alpha = (isTransparent && useTransparency) ? this.UniFill.transparent / 255 : 1;
+
+			graphics.drawBlipFillStretch(
+				null,
+				imageData.src,
+				alpha,
+				dstRect.l, dstRect.t, dstRect.r - dstRect.l, dstRect.b - dstRect.t,
+				this.UniFill.fill.srcRect,
+				this.UniFill.fill.canvas
+			);
+		} else {
+			// Margins
+			const fillRect = AscCommon.isRealObject(this.UniFill.fill.stretch) && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect)
+				? this.UniFill.fill.stretch.fillRect
+				: new AscFormat.CFillRect(0, 0, 100, 100);
+
+			const shapeBounds = this.Shape.getBounds();
+
+			const shapeWidth = shapeBounds.w;
+			const shapeHeight = shapeBounds.h;
+
+			const dstRect = {
+				l: shapeBounds.x + shapeWidth * (fillRect.l / 100),
+				t: shapeBounds.y + shapeHeight * (fillRect.t / 100),
+				r: shapeBounds.x + shapeWidth - shapeWidth * (100 - fillRect.r) / 100,
+				b: shapeBounds.y + shapeHeight - shapeHeight * (100 - fillRect.b) / 100,
+			};
+
+			// Opacity
+			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+			const useTransparency = this.IsRectShape ? true : graphics.isSupportTextDraw() && !graphics.isTrack();
+			const alpha = (isTransparent && useTransparency) ? this.UniFill.transparent / 255 : 1;
+
+			graphics.drawBlipFillStretch(
+				invertedTransform,
+				imageData.src,
+				alpha,
+				dstRect.l, dstRect.t, dstRect.r - dstRect.l, dstRect.b - dstRect.t,
+				this.UniFill.fill.srcRect,
+				this.UniFill.fill.canvas
+			);
+		}
 	},
 
     df: function (mode) {
