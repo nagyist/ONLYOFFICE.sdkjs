@@ -1241,6 +1241,10 @@
 	Api.prototype["pluginMethod_GetFileToDownload"] = function(format)
 	{
 		window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
+		
+		if (format && typeof(format) === "string")
+			format = format.toUpperCase();
+		
 		let dwnldF = Asc.c_oAscFileType[format] || Asc.c_oAscFileType[this.DocInfo.Format.toUpperCase()];
 		let opts = new Asc.asc_CDownloadOptions(dwnldF);
 		let _t = this;
@@ -2178,6 +2182,36 @@
 			this._AI();
 
 		curItem.resolve(data);
+	};
+
+	/**
+	 * Get local image path for image.
+	 * @memberof Api
+	 * @undocumented
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDF"]
+	 * @alias getLocalImagePath
+	 * @param {object} data - Data.
+	 * @since 9.0.0
+	 */
+	Api.prototype["pluginMethod_getLocalImagePath"] = function(url)
+	{
+		window.g_asc_plugins.setPluginMethodReturnAsync();
+		AscCommon.sendImgUrls(this, [url], function(data) {
+			let ret = {
+				"error" : true,
+				"url" : "",
+				"path" : ""
+			};
+
+			if (data[0] && data[0].path != null && data[0].url !== "error")
+			{
+				ret["error"] = false;
+				ret["url"] = AscCommon.g_oDocumentUrls.imagePath2Local(data[0].path);
+				ret["path"] = data[0].path;
+			}
+
+			window.g_asc_plugins.onPluginMethodReturn(ret);
+		});
 	};
 
 })(window);

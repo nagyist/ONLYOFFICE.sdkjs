@@ -3652,6 +3652,12 @@
 			if (hiddenRow || 0 === self._getColumnWidth(col)) {
 				return;
 			}
+			
+			if (!cell.isEmptyTextString()) {
+				maxCol = Math.max(maxCol, col);
+				maxRow = Math.max(maxRow, row);
+				return;
+			}
 
 			// Check cell style (fills and borders)
 			let style = cell.getStyle();
@@ -3660,13 +3666,8 @@
 				maxRow = Math.max(maxRow, row);
 			}
 
-			// Skip empty cells
-			if (cell.isEmptyTextString()) {
-				return;
-			}
-
 			// Get cell properties
-			let align = cell.getAlign();
+			/*let align = cell.getAlign();
 			let angle = align.getAngle();
 			let cellType = cell.getType();
 			let verticalText = angle === AscCommonExcel.g_nVerticalTextAngle;
@@ -3686,7 +3687,7 @@
 			if (angle || verticalText || isNumberFormat || isWrapped) {
 				maxCol = Math.max(maxCol, col);
 				maxRow = Math.max(maxRow, row);
-			}
+			}*/
 
 			// Check formulas
 			if (cell.isFormula()) {
@@ -18813,13 +18814,6 @@
 				return false;
 			}
 
-			// todo Add to history UndoRedo DynamicArray and add to AscCH historyitem_DynamicArrayFormula_AddFormula 
-			//***array-formula***
-			if(applyByArray) {
-				History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula, this.model.getId(),
-					new Asc.Range(c.bbox.c1, c.bbox.r1, c.bbox.c2, c.bbox.r2), new AscCommonExcel.UndoRedoData_ArrayFormula(c.bbox, "=" + c.getFormula()));
-			}
-
 			isFormula = c.isFormula();
 			this.model.checkChangeTablesContent(bbox);
 		} else {
@@ -27321,13 +27315,13 @@
 		return ctx;
 	};
 
-	WorksheetView.prototype._dashLineCleverHor = function (ctx, x, y1, y2) {
-		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2)
+	WorksheetView.prototype._dashLineCleverHor = function (ctx, x1, y, x2) {
+		ctx.dashLineCleverHor(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x2);
 		return ctx;
 	};
 
-	WorksheetView.prototype._dashLineCleverVer = function (ctx, x1, y, x2) {
-		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x1) : x1, y, this.getRightToLeft() ? (this.getCtxWidth(ctx) - x2) : x2)
+	WorksheetView.prototype._dashLineCleverVer = function (ctx, x, y1, y2) {
+		ctx.dashLineCleverVer(this.getRightToLeft() ? (this.getCtxWidth(ctx) - x) : x, y1, y2);
 		return ctx;
 	};
 

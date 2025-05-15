@@ -54,6 +54,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Meta]				= CChangesPDFFormMeta
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Read_Only]		= CChangesPDFFormReadOnly;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_No_Export]		= CChangesPDFFormNoExport;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Border_Width]		= CChangesPDFFormBorderWidth;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Locked]			= CChangesPDFFormLocked;
 
 // text
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Multiline]			= CChangesPDFTextFormMultiline;
@@ -752,6 +753,42 @@ CChangesPDFFormBorderWidth.prototype.private_SetValue = function(Value)
 	oField.SetBorderWidth(Value);
 };
 
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseBoolProperty}
+ */
+function CChangesPDFFormLocked(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseBoolProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormLocked.prototype = Object.create(AscDFH.CChangesBaseBoolProperty.prototype);
+CChangesPDFFormLocked.prototype.constructor = CChangesPDFFormLocked;
+CChangesPDFFormLocked.prototype.Type = AscDFH.historyitem_Pdf_Form_Locked;
+CChangesPDFFormLocked.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._locked = Value;
+	oForm.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormRotate(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormRotate.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormRotate.prototype.constructor = CChangesPDFFormRotate;
+CChangesPDFFormRotate.prototype.Type = AscDFH.historyitem_Pdf_Form_Rotate;
+CChangesPDFFormRotate.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm.SetRotate(Value);
+};
+
+
 //------------------------------------------------------------------------------------------------------------------
 //
 // Text Form
@@ -1271,23 +1308,25 @@ CChangesPDFPushbuttonImage.prototype.private_SetValue = function(Value)
 	let oButtonField = this.Class;
 	oButtonField.lastValue = Value;
 
+	oButtonField.SetImageRasterId(Value, this.APType);
+
 	if (this.FromLoad && typeof Value === "string" && Value.length > 0) {
 		let sImageId = AscCommon.getFullImageSrc2(Value);
 		let _img = Asc.editor.ImageLoader.map_image_index[sImageId];
 		if (_img && _img.Status === AscFonts.ImageLoadStatus.Complete) {
-			oButtonField.AddImage2(Value, this.APType);
+			oButtonField.SetImage(Value);
 			return;
 		}
 
 		AscCommon.CollaborativeEditing.Add_NewImage(Value);
 		AscCommon.CollaborativeEditing.m_aEndLoadCallbacks.push(function() {
 			if (oButtonField.lastValue === Value) {
-				oButtonField.AddImage2(Value, this.APType);
+				oButtonField.SetImage(Value);
 			}
 		}.bind(oButtonField));
 	}
 	else {
-		oButtonField.AddImage2(Value, this.APType);
+		oButtonField.SetImage(Value);
 	}
 };
 

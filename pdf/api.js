@@ -350,17 +350,21 @@
 			return;
 		
 		let oDoc = this.DocumentRenderer.getPDFDoc();
-		let oThumbnails		= oDoc.Viewer.thumbnails;
+		let oThumbnails = oDoc.Viewer.thumbnails;
 
 		if (oDoc.CanCopyCut().cut) {
-			oDoc.DoAction(function() {
-				if (oThumbnails && oThumbnails.isInFocus) {
-					oDoc.RemovePages(oThumbnails.selectedPages)
-				}
-				else {
+			if (oThumbnails && oThumbnails.isInFocus && false == this.isRestrictionView()) {
+				let aPages = oThumbnails.getSelectedPages().slice();
+
+				oDoc.DoAction(function() {
+					oDoc.RemovePages(aPages);
+				}, AscDFH.historydescription_Pdf_RemovePage, this, aPages);
+			}
+			else {
+				oDoc.DoAction(function() {
 					oDoc.Remove(1);
-				}
-			}, AscDFH.historydescription_Cut);
+				}, AscDFH.historydescription_Document_BackSpaceButton);
+			}
 		}
 	};
 	PDFEditorApi.prototype.onUpdateRestrictions = function() {
@@ -427,10 +431,6 @@
 			if (this.isRestrictionView()) {
 				oDoc.FinalizeAction(true)
 				return;
-			}
-
-			if (_format == AscCommon.c_oAscClipboardDataFormat.HtmlElement) {
-				oDoc.Action.PasteHtmlAction = true;
 			}
 
 			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);
@@ -652,7 +652,7 @@
 			AscFonts.IsCheckSymbols = false;
 		}, AscDFH.historydescription_Document_AddChart);
 	};
-	PDFEditorApi.prototype.asc_correctEnterText = function(oldValue, newValue) {
+	PDFEditorApi.prototype.asc_correctEnterText = function(oldCodePoints, newCodePoints) {
 		
 		if (!this.DocumentRenderer)
 			return false;
@@ -660,12 +660,58 @@
 		let viewer = this.DocumentRenderer;
 		let doc    = viewer.getPDFDoc();
 		
+		oldCodePoints = AscWord.CTextFormFormat.prototype.GetBuffer(oldCodePoints);
+		newCodePoints = AscWord.CTextFormFormat.prototype.GetBuffer(newCodePoints);
+
 		return doc.DoAction(function() {
 			let textController = doc.getTextController();
-			if (!textController)
+			if (!textController) {
 				return false;
+			}
+
+			let oContent = textController.GetDocContent();
+
+			let oldText = "";
+			for (let index = 0, count = oldCodePoints.length; index < count; ++index) {
+				oldText += String.fromCodePoint(oldCodePoints[index]);
+			}
+
+			let state    = oContent.GetSelectionState();
+			let paragraph= oContent.GetCurrentParagraph();
+			let startPos = paragraph.getCurrentPos();
+			let endPos   = startPos;
+
+			let paraSearchPos = new CParagraphSearchPos();
+
+			let maxShifts = oldCodePoints.length;
+			let selectedText;
+			oContent.StartSelectionFromCurPos();
+			while (maxShifts >= 0) {
+				paraSearchPos.Reset();
+				paragraph.Get_LeftPos(paraSearchPos, endPos);
+
+				if (!paraSearchPos.IsFound()) {
+					break;
+				}
+
+				endPos = paraSearchPos.GetPos().Copy();
+
+				paragraph.SetSelectionContentPos(startPos, endPos, false);
+				selectedText = paragraph.GetSelectedText(true);
+
+				if (!selectedText || selectedText === oldText) {
+					break;
+				}
+
+				maxShifts--;
+			}
+
+			if (selectedText !== oldText || doc.IsSelectionLocked(AscCommon.changestype_Paragraph_AddText, null, true, false)) {
+				oContent.SetSelectionState(state);
+				return false;
+			}
 			
-			return textController.CorrectEnterText(oldValue, newValue);
+			return textController.EnterText(newCodePoints, true);
 		}, AscDFH.historydescription_Document_AddLetter, this);
 	};
 	PDFEditorApi.prototype.asc_EditPage = function() {
@@ -1269,15 +1315,10 @@
 		]
 	};
 	PDFEditorApi.prototype.asc_getFieldTimeFormatOptions = function() {
-		return [
-			"HH:MM",
-			"h:MM tt",
-			"HH:MM:ss",
-			"h:MM:ss tt"
-		]
+		return AscPDF.TimeFormatType;
 	};
-	PDFEditorApi.prototype.asc_getFieldDateTimeFormatExample = function(sFormat) {
-		return AscPDF.FormatDateValue(new Date().getTime(), sFormat);
+	PDFEditorApi.prototype.asc_getFieldDateTimeFormatExample = function(nFormat) {
+		return AscPDF.FormatDateValue(new Date().getTime(), nFormat);
 	};
 	PDFEditorApi.prototype.ClearFieldFormat = function() {
 		let oDoc = this.getPDFDoc();
@@ -1419,7 +1460,7 @@
 			return res;
 		}, AscDFH.historydescription_Pdf_ChangeField, this);
 	};
-	PDFEditorApi.prototype.SetFieldTimeFormat = function(sFormat) {
+	PDFEditorApi.prototype.SetFieldTimeFormat = function(nFormat) {
 		let oDoc = this.getPDFDoc();
 		let oField = oDoc.activeForm;
 		let oController = oDoc.GetController();
@@ -1440,13 +1481,13 @@
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFTime_Format("' + sFormat + '");'
+					"JS": 'AFTime_Format(' + nFormat + ');'
 				}]
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Format, aActionsFormat);
 
 				let aActionsKeystroke = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFTime_Keystroke("' + sFormat + '");'
+					"JS": 'AFTime_Keystroke(' + nFormat + ');'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
 				oField.Commit();
@@ -1868,6 +1909,24 @@
 			oController.selectedObjects.forEach(function(shape) {
 				let field = shape.GetEditField();
 				field.SetDefaultValue(sValue);
+			});
+
+			return true;
+        }, AscDFH.historydescription_Pdf_ChangeField);
+	};
+	PDFEditorApi.prototype.SetFieldLocked = function(bLocked) {
+		let oDoc = this.getPDFDoc();
+		let oController = oDoc.GetController();
+		let oForm = oDoc.activeForm;
+
+		if (!oForm) {
+			return false;
+		}
+
+		return oDoc.DoAction(function() {
+			oController.selectedObjects.forEach(function(shape) {
+				let field = shape.GetEditField();
+				field.SetLocked(bLocked);
 			});
 
 			return true;
@@ -4265,6 +4324,14 @@
 		oDoc.FinalizeAction(true);
 	};
 
+	PDFEditorApi.prototype.get_TextProps = function() {
+		let oDoc    = this.WordControl.m_oLogicDocument;
+		let oParaPr = oDoc.GetCalculatedParaPr(true);
+		let oTextPr = oDoc.GetCalculatedTextPr(true);
+
+		return new Asc.CParagraphAndTextProp(oParaPr, oTextPr);
+	};
+
 	PDFEditorApi.prototype._waitPrint = function(actionType, options)
 	{
 		return false;
@@ -4398,6 +4465,7 @@
 	PDFEditorApi.prototype['Paste']                        = PDFEditorApi.prototype.Paste;
 	PDFEditorApi.prototype['asc_PasteData']                = PDFEditorApi.prototype.asc_PasteData;
 	PDFEditorApi.prototype['asc_CloseFile']                = PDFEditorApi.prototype.asc_CloseFile;
+	PDFEditorApi.prototype['get_TextProps']                = PDFEditorApi.prototype.get_TextProps;
 
 	PDFEditorApi.prototype['getSelectionState']            = PDFEditorApi.prototype.getSelectionState;
 	PDFEditorApi.prototype['getSpeechDescription']         = PDFEditorApi.prototype.getSpeechDescription;
@@ -4486,6 +4554,7 @@
 	PDFEditorApi.prototype['SetFieldRequired']			= PDFEditorApi.prototype.SetFieldRequired;
 	PDFEditorApi.prototype['SetFieldReadOnly']			= PDFEditorApi.prototype.SetFieldReadOnly;
 	PDFEditorApi.prototype['SetFieldDefaultValue']		= PDFEditorApi.prototype.SetFieldDefaultValue;
+	PDFEditorApi.prototype['SetFieldLocked']			= PDFEditorApi.prototype.SetFieldLocked;
 	// text field
 	PDFEditorApi.prototype['SetTextFieldMultiline']		= PDFEditorApi.prototype.SetTextFieldMultiline;
 	PDFEditorApi.prototype['SetTextFieldCharLimit']		= PDFEditorApi.prototype.SetTextFieldCharLimit;
