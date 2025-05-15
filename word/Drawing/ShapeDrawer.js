@@ -1677,88 +1677,41 @@ CShapeDrawer.prototype =
 		const tile = this.UniFill.fill.tile;
 		const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
 
-		// TODO: ОБЪЕДИНИТЬ, пока дублирование кода - для тестирования
+		// Scaling
+		const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
+		const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
+
+		const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
+		const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
+
+		// Offsets (aligning and direct offsets)
+		const alignmentMap = {
+			[AscCommon.c_oAscRectAlignType.tl]: [0, 0],
+			[AscCommon.c_oAscRectAlignType.t]: [0.5, 0],
+			[AscCommon.c_oAscRectAlignType.tr]: [1, 0],
+			[AscCommon.c_oAscRectAlignType.l]: [0, 0.5],
+			[AscCommon.c_oAscRectAlignType.ctr]: [0.5, 0.5],
+			[AscCommon.c_oAscRectAlignType.r]: [1, 0.5],
+			[AscCommon.c_oAscRectAlignType.bl]: [0, 1],
+			[AscCommon.c_oAscRectAlignType.b]: [0.5, 1],
+			[AscCommon.c_oAscRectAlignType.br]: [1, 1],
+		};
+
+		const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8
+			? tile.algn
+			: AscCommon.c_oAscRectAlignType.tl; // AscCommon.c_oAscRectAlignType
+
+		let alignOffsetX, alignOffsetY;
 		if (rotWithShape) {
-			// Scaling
-			const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
-			const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
-
-			const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
-			const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
-
-			// Offsets (offsets for aligning and direct offsets from tile object) 
-			const alignmentMap = {
-				[AscCommon.c_oAscRectAlignType.tl]: [0, 0],
-				[AscCommon.c_oAscRectAlignType.t]: [0.5, 0],
-				[AscCommon.c_oAscRectAlignType.tr]: [1, 0],
-				[AscCommon.c_oAscRectAlignType.l]: [0, 0.5],
-				[AscCommon.c_oAscRectAlignType.ctr]: [0.5, 0.5],
-				[AscCommon.c_oAscRectAlignType.r]: [1, 0.5],
-				[AscCommon.c_oAscRectAlignType.bl]: [0, 1],
-				[AscCommon.c_oAscRectAlignType.b]: [0.5, 1],
-				[AscCommon.c_oAscRectAlignType.br]: [1, 1],
-			};
-			const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8
-				? tile.algn
-				: AscCommon.c_oAscRectAlignType.tl; // AscCommon.c_oAscRectAlignType
-
 			const shapeWidth = this.max_x - this.min_x;
 			const shapeHeight = this.max_y - this.min_y;
 			const imageWidth = imageData.Image.width * scaleX * scaleCoefX;
-			const imageHeight = imageData.Image.height * scaleX * scaleCoefY;
+			const imageHeight = imageData.Image.height * scaleY * scaleCoefY;
 
-			const alignOffsetX = alignmentMap[align][0] * (shapeWidth - imageWidth);
-			const alignOffsetY = alignmentMap[align][1] * (shapeHeight - imageHeight);
+			alignOffsetX = alignmentMap[align][0] * (shapeWidth - imageWidth);
+			alignOffsetY = alignmentMap[align][1] * (shapeHeight - imageHeight);
 
-			const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
-			const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
-
-			// Mirroring
-			const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-			const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-
-			// Opacity
-			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
-			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
-			const alpha = useTransparency ? this.UniFill.transparent / 255 : 1;
-
-			graphics.drawBlipFillTile(
-				null,
-				imageData.src,
-				alpha,
-				scaleX * scaleCoefX,
-				scaleY * scaleCoefY,
-				offsetX + alignOffsetX,
-				offsetY + alignOffsetY,
-				flipH, flipV
-			);
-
-			graphics.m_bPenColorInit = false;
-			graphics.m_bBrushColorInit = false;
 		} else {
-			// Scaling
-			const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
-			const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
-
-			const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
-			const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
-
-			// Offsets (offsets for aligning and direct offsets from tile object)
-			const alignmentMap = {
-				[AscCommon.c_oAscRectAlignType.tl]: [0, 0],
-				[AscCommon.c_oAscRectAlignType.t]: [0.5, 0],
-				[AscCommon.c_oAscRectAlignType.tr]: [1, 0],
-				[AscCommon.c_oAscRectAlignType.l]: [0, 0.5],
-				[AscCommon.c_oAscRectAlignType.ctr]: [0.5, 0.5],
-				[AscCommon.c_oAscRectAlignType.r]: [1, 0.5],
-				[AscCommon.c_oAscRectAlignType.bl]: [0, 1],
-				[AscCommon.c_oAscRectAlignType.b]: [0.5, 1],
-				[AscCommon.c_oAscRectAlignType.br]: [1, 1],
-			};
-			const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8
-				? tile.algn
-				: AscCommon.c_oAscRectAlignType.tl; // AscCommon.c_oAscRectAlignType
-
 			const shapeBounds = this.Shape.getBounds();
 
 			const shapeWidth = shapeBounds.w;
@@ -1766,35 +1719,35 @@ CShapeDrawer.prototype =
 			const imageWidth = imageData.Image.width * scaleX * scaleCoefX;
 			const imageHeight = imageData.Image.height * scaleY * scaleCoefY;
 
-			const alignOffsetX = shapeBounds.x + alignmentMap[align][0] * (shapeWidth - imageWidth);
-			const alignOffsetY = shapeBounds.y + alignmentMap[align][1] * (shapeHeight - imageHeight);
-
-			const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
-			const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
-
-			// Mirroring
-			const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-			const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-
-			// Opacity
-			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
-			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
-			const alpha = useTransparency ? this.UniFill.transparent / 255 : 1;
-
-			graphics.drawBlipFillTile(
-				invertedTransform,
-				imageData.src,
-				alpha,
-				scaleX * scaleCoefX,
-				scaleY * scaleCoefY,
-				offsetX + alignOffsetX,
-				offsetY + alignOffsetY,
-				flipH, flipV
-			);
-
-			graphics.m_bPenColorInit = false;
-			graphics.m_bBrushColorInit = false;
+			alignOffsetX = shapeBounds.x + alignmentMap[align][0] * (shapeWidth - imageWidth);
+			alignOffsetY = shapeBounds.y + alignmentMap[align][1] * (shapeHeight - imageHeight);
 		}
+
+		const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
+		const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
+
+		// Mirroring
+		const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+		const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+
+		// Opacity
+		const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+		const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
+		const alpha = useTransparency ? this.UniFill.transparent / 255 : 1;
+
+		graphics.drawBlipFillTile(
+			rotWithShape ? null : invertedTransform,
+			imageData.src,
+			alpha,
+			scaleX * scaleCoefX,
+			scaleY * scaleCoefY,
+			offsetX + alignOffsetX,
+			offsetY + alignOffsetY,
+			flipH, flipV
+		);
+
+		graphics.m_bPenColorInit = false;
+		graphics.m_bBrushColorInit = false;
 	},
 
 	drawBlipFillStretch: function (imageData) {
@@ -1806,68 +1759,50 @@ CShapeDrawer.prototype =
 
 		const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
 
-		// TODO: ОБЪЕДИНИТЬ, пока дублирование кода - для тестирования
-		if (rotWithShape) {
-			// Margins
-			const fillRect = AscCommon.isRealObject(this.UniFill.fill.stretch) && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect)
-				? this.UniFill.fill.stretch.fillRect
-				: new AscFormat.CFillRect(0, 0, 100, 100);
+		// Margins
+		const fillRect = AscCommon.isRealObject(this.UniFill.fill.stretch) && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect)
+			? this.UniFill.fill.stretch.fillRect
+			: new AscFormat.CFillRect(0, 0, 100, 100);
 
+		let dstRect;
+		if (rotWithShape) {
 			const shapeWidth = this.max_x - this.min_x;
 			const shapeHeight = this.max_y - this.min_y;
 
-			const dstRect = {
+			dstRect = {
 				l: this.min_x + shapeWidth * fillRect.l / 100,
 				t: this.min_y + shapeHeight * fillRect.t / 100,
 				r: this.max_x - shapeWidth * (100 - fillRect.r) / 100,
 				b: this.max_y - shapeHeight * (100 - fillRect.b) / 100,
 			};
 
-			// Opacity
-			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
-			const useTransparency = this.IsRectShape ? true : graphics.isSupportTextDraw() && !graphics.isTrack();
-			const alpha = (isTransparent && useTransparency) ? this.UniFill.transparent / 255 : 1;
-
-			graphics.drawBlipFillStretch(
-				null,
-				imageData.src,
-				alpha,
-				dstRect.l, dstRect.t, dstRect.r - dstRect.l, dstRect.b - dstRect.t,
-				this.UniFill.fill.srcRect,
-				this.UniFill.fill.canvas
-			);
 		} else {
-			// Margins
-			const fillRect = AscCommon.isRealObject(this.UniFill.fill.stretch) && AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect)
-				? this.UniFill.fill.stretch.fillRect
-				: new AscFormat.CFillRect(0, 0, 100, 100);
-
 			const shapeBounds = this.Shape.getBounds();
 
 			const shapeWidth = shapeBounds.w;
 			const shapeHeight = shapeBounds.h;
 
-			const dstRect = {
+			dstRect = {
 				l: shapeBounds.x + shapeWidth * (fillRect.l / 100),
 				t: shapeBounds.y + shapeHeight * (fillRect.t / 100),
 				r: shapeBounds.x + shapeWidth - shapeWidth * (100 - fillRect.r) / 100,
 				b: shapeBounds.y + shapeHeight - shapeHeight * (100 - fillRect.b) / 100,
 			};
-
-			// Opacity
-			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
-			const useTransparency = this.IsRectShape ? true : graphics.isSupportTextDraw() && !graphics.isTrack();
-			const alpha = (isTransparent && useTransparency) ? this.UniFill.transparent / 255 : 1;
-
-			graphics.drawBlipFillStretch(
-				invertedTransform,
-				imageData.src,
-				alpha,
-				dstRect.l, dstRect.t, dstRect.r - dstRect.l, dstRect.b - dstRect.t,
-				this.UniFill.fill.srcRect,
-				this.UniFill.fill.canvas
-			);
 		}
+
+		// Opacity
+		const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+		const useTransparency = this.IsRectShape ? true : graphics.isSupportTextDraw() && !graphics.isTrack();
+		const alpha = (isTransparent && useTransparency) ? this.UniFill.transparent / 255 : 1;
+
+		graphics.drawBlipFillStretch(
+			rotWithShape ? null : invertedTransform,
+			imageData.src,
+			alpha,
+			dstRect.l, dstRect.t, dstRect.r - dstRect.l, dstRect.b - dstRect.t,
+			this.UniFill.fill.srcRect,
+			this.UniFill.fill.canvas
+		);
 	},
 
     df: function (mode) {
