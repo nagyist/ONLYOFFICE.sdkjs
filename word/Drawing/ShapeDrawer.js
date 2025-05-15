@@ -1704,8 +1704,8 @@ CShapeDrawer.prototype =
 
 			const shapeWidth = this.max_x - this.min_x;
 			const shapeHeight = this.max_y - this.min_y;
-			const imageWidth = imageData.Image.width * scaleCoefX;
-			const imageHeight = imageData.Image.height * scaleCoefY;
+			const imageWidth = imageData.Image.width * scaleX * scaleCoefX;
+			const imageHeight = imageData.Image.height * scaleX * scaleCoefY;
 
 			const alignOffsetX = alignmentMap[align][0] * (shapeWidth - imageWidth);
 			const alignOffsetY = alignmentMap[align][1] * (shapeHeight - imageHeight);
