@@ -3048,6 +3048,12 @@
 			}
 			return null;
 		};
+		CUniColor.prototype.getMod = function (sModName) {
+			if (this.Mods && this.Mods.getMod) {
+				return this.Mods.getMod(sModName);
+			}
+			return null;
+		};
 		CUniColor.prototype.getTransparency = function () {
 			let nAlphaVal = this.getModValue("alpha");
 			if(nAlphaVal === null) {

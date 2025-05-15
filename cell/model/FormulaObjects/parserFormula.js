@@ -77,6 +77,11 @@ function (window, undefined) {
 	var importRangeLinksState = {importRangeLinks: null, startBuildImportRangeLinks: null};
 	const aExcludeRecursiveFormulas = ['ISFORMULA', 'SHEETS', 'AREAS', 'COLUMN', 'COLUMNS', 'ROW', 'ROWS', 'CELL', 'INDIRECT'];
 
+	const cReplaceFormulaType = {
+		val: 1,
+		formula: 2
+	};
+
 	function getArrayCopy(arr) {
 		var newArray = [];
 		for (var i = 0; i < arr.length; i++) {
@@ -6418,9 +6423,10 @@ function parserFormula( formula, parent, _ws ) {
 	this.ref = null;
 
 	this.promiseResult = null;
+	this.replaceFormulaAfterCalc = null;
 
 	//mark function, when need reparse and recalculate on custom function change
-	this.bUnknownOrCustomFunction = null;
+	this.unknownOrCustomFunction = null;
 
 	if (AscFonts.IsCheckSymbols) {
 		AscFonts.FontPickerByCharacter.getFontsByString(this.Formula);
@@ -8566,13 +8572,13 @@ function parserFormula( formula, parent, _ws ) {
 					found_operator.isXLFN = (ph.operand_str.indexOf(xlfnFrefix) === 0);
 					found_operator.isXLWS = found_operator.isXLFN && xlfnFrefix.length === ph.operand_str.indexOf(xlwsFrefix);
 
-					t.bUnknownOrCustomFunction = true;
+					t.unknownOrCustomFunction = operandStr;
 				}
 
 				//mark function, when need reparse and recalculate on custom function change
 				let wb = Asc["editor"] && Asc["editor"].wb;
 				if (wb && wb.customFunctionEngine && wb.customFunctionEngine.getFunc(operandStr)) {
-					t.bUnknownOrCustomFunction = true;
+					t.unknownOrCustomFunction = operandStr;
 				}
 
 				if (found_operator !== null) {
@@ -8918,7 +8924,7 @@ function parserFormula( formula, parent, _ws ) {
 								isRef = true;
 							} else {
 								/* results of SEQUENCE, RANDARRAY etc... can return an array when using regular values ​​in arguments */
-								if (this.bUnknownOrCustomFunction && currentElement.returnValueType !== AscCommonExcel.cReturnFormulaType.array) {
+								if (this.unknownOrCustomFunction && currentElement.returnValueType !== AscCommonExcel.cReturnFormulaType.array) {
 									return false;
 								}
 								_tmp = currentElement.Calculate(arg, opt_bbox, null, this.ws, bIsSpecialFunction);
@@ -8958,7 +8964,7 @@ function parserFormula( formula, parent, _ws ) {
 		}
 	};
 	parserFormula.prototype.calculate = function (opt_defName, opt_bbox, opt_offset, checkMultiSelect, opt_oCalculateResult, opt_pivotCallback) {
-		if (AscCommonExcel.g_LockCustomFunctionRecalculate && this.bUnknownOrCustomFunction) {
+		if (AscCommonExcel.g_LockCustomFunctionRecalculate && this.unknownOrCustomFunction) {
 			return;
 		}
 		if (this.outStack.length < 1) {
@@ -9051,7 +9057,7 @@ function parserFormula( formula, parent, _ws ) {
 							this._endCalculate();
 							opt_oCalculateResult.setError(c_oAscError.ID.FrmlOperandExpected);
 							return this.value;
-						} else {
+						} else if (!(this.promiseResult && this.promiseResult[i])) {
 							formulaArray = cBaseFunction.prototype.checkFormulaArray.call(currentElement, arg, opt_bbox, opt_defName, this, bIsSpecialFunction, argumentsCount);
 						}
 
@@ -9064,7 +9070,7 @@ function parserFormula( formula, parent, _ws ) {
 					} else if(formulaArray) {
 						_tmp = formulaArray;
 					} else {
-						//if recursion - we must rewrite promise, because arguments can changed
+						//if recursion - we must rewrite promise, because arguments can change
 						_tmp = !g_cCalcRecursion.getIsEnabledRecursion() && this.wb.asyncFormulasManager.getPromiseByIndex(this._index, i);
 						if (!_tmp) {
 							_tmp = currentElement.Calculate(arg, opt_bbox, opt_defName, this.ws, bIsSpecialFunction);
@@ -9081,6 +9087,34 @@ function parserFormula( formula, parent, _ws ) {
 							this.wb.asyncFormulasManager.addPromise(_tmp, true);
 						}
 						promiseCounter++;
+					}
+
+					if (this.unknownOrCustomFunction) {
+						/*
+						  \@\@\ - perceive it as text, remove the \. do not delete the first formula. The result of the calculation will be ("\@\@\text" -> "@@...text").
+
+						  @@ - special case. delete the first formula and add the result to the cell without @@. ("@@text" -> "text")
+
+						  @@\= - special case. remove the \. delete the first formula and add the result to the cell without @@. ("@@\=text" -> "=text")
+
+						  @@= - special case. delete the formula and add a new formula(result cell) to the cell without @@. ("@@=formula" -> "=formula")
+
+						  For other combinations \@@=, @\@,\@\@\=,@\@\= do not react. Just text result, do not change formula
+						*/
+						if (_tmp && _tmp.type === cElementType.string) {
+							if (0 === _tmp.value.indexOf("@@\\=")) {
+								_tmp.value = _tmp.value.slice(3);
+								this.replaceFormulaAfterCalc = cReplaceFormulaType.val;
+							} else if (0 === _tmp.value.indexOf("\\@\\@")) {
+								_tmp.value = "@@" + _tmp.value.slice(4);
+							} else if (0 === _tmp.value.indexOf("@@=")) {
+								_tmp.value = _tmp.value.slice(2);
+								this.replaceFormulaAfterCalc = cReplaceFormulaType.formula;
+							} else if (0 === _tmp.value.indexOf("@@")) {
+								_tmp.value = _tmp.value.slice(2);
+								this.replaceFormulaAfterCalc = cReplaceFormulaType.val;
+							}
+						}
 					}
 
 					//_tmp = currentElement.Calculate(arg, opt_bbox, opt_defName, this.ws, bIsSpecialFunction);
@@ -9157,6 +9191,26 @@ function parserFormula( formula, parent, _ws ) {
 			this._endCalculate();
 		} else {
 			let res = elemArr.pop();
+
+			if (this.replaceFormulaAfterCalc === cReplaceFormulaType.formula) {
+				if (res && res.type === cElementType.string) {
+					if (0 === res.value.indexOf("=")) {
+						this.Formula = _tmp.value.slice(1);
+						this.isParsed = false;
+						this.outStack = [];
+						this.unknownOrCustomFunction = null;
+						this.parse();
+						this.isInDependencies = false;
+						this.buildDependencies();
+						this.wb.asyncFormulasManager.addReplacedFormula(this);
+					} else {
+						this.replaceFormulaAfterCalc = null;
+					}
+				} else {
+					this.replaceFormulaAfterCalc = null;
+				}
+			}
+
 			if (cElementType.error === res.type && res.errorType === cErrorType.busy) {
 				this._endCalculate();
 				return;
@@ -11815,6 +11869,9 @@ function parserFormula( formula, parent, _ws ) {
 	window['AscCommonExcel'].bIsSupportDynamicArrays = bIsSupportDynamicArrays;
 
 	window['AscCommonExcel'].aExcludeRecursiveFormulas = aExcludeRecursiveFormulas;
+
+	window['AscCommonExcel'].cReplaceFormulaType = cReplaceFormulaType;
+
 
 	window['AscCommonExcel'].cNumber = cNumber;
 	window['AscCommonExcel'].cString = cString;
