@@ -9970,8 +9970,6 @@
 			this.CalculateFullTransform();
 		};
 
-        CSlideBoundsChecker.prototype.drawTileImage = function () {};
-
 		// path commands
 		CSlideBoundsChecker.prototype._m = function(x, y) {
 			var _x = this.m_oFullTransform.TransformPointX(x, y);

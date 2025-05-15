@@ -878,28 +878,34 @@
 				this.m_oPen.Color.B + "," + (this.m_oPen.Color.A / 255) + ")";
 		}
 	};
-	CGraphics.prototype.drawTileImage = function (imageUrl, alpha, scaleX, scaleY, offsetX, offsetY, flipH, flipV, rotation) {
+	CGraphics.prototype.drawTilePattern = function (transform, imageUrl, alpha, scaleX, scaleY, offsetX, offsetY, flipH, flipV) {
 		const ctx = this.m_oContext;
 		if (!ctx) return;
 
 		ctx.save();
-		
+
+		if (transform) {
+			ctx.transform(
+				transform.sx,
+				transform.shy,
+				transform.shx,
+				transform.sy,
+				transform.tx,
+				transform.ty
+			);
+		}
+
 		const imageData = Asc.editor.ImageLoader.map_image_index[imageUrl];
 		if (!imageData || this.checkLoadingImage(imageData)) return;
 
 		const image = imageData.Image;
 		if (!image) return;
-		
+
 		// Translation (offsets)
 		ctx.translate(offsetX, offsetY);
 
 		// Scaling (local)
 		ctx.scale(scaleX, scaleY);
-
-        //Rotation
-        if (rotation) {
-            ctx.rotate(rotation);
-        }
 
 		// Mirroring
 		function createVerticalFlipPattern(sourceCanvas, width, height) {
@@ -953,7 +959,7 @@
 		const pattern = ctx.createPattern(patternSource, 'repeat');
 		ctx.fillStyle = pattern;
 		ctx.fill();
-		
+
 		ctx.restore();
 	};
 

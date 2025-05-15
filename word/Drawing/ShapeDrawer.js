@@ -1644,20 +1644,11 @@ CShapeDrawer.prototype =
 		if (!graphics) return;
 
 		const imageName = this.UniFill.fill.RasterImageId;
-		// 'image1.png'
-
-		const imageUrl = getFullImageSrc2(imageName);
-		// http:// ... /image1.png
-
+		const imageUrl = AscCommon.getFullImageSrc2(imageName);
 		const imageData = Asc.editor.ImageLoader.map_image_index[imageUrl];
-		// { Image: HTMLImageElement, Status: 1, src: "http:// ... /image1.png" }
 
 		const isImageLoaded = imageData != undefined && imageData.Image != null && imageData.Status == AscFonts.ImageLoadStatus.Complete;
 		if (!isImageLoaded) return;
-
-		if (this.Shape.getBounds) {
-			console.log(this.Shape.getBounds());
-		}
 
 		graphics.save();
 		graphics.clip();
@@ -1670,7 +1661,7 @@ CShapeDrawer.prototype =
 		} else if (this.UniFill.IsTransitionTextures) {
 			this.drawTransitionTextures(this.UniFill.canvas1, this.UniFill.alpha1, this.UniFill.canvas2, this.UniFill.alpha2);
 		} else {
-			this.drawBlipFillStretch();
+			this.drawBlipFillStretch(imageData);
 		}
 
 		graphics.restore();
@@ -1680,130 +1671,134 @@ CShapeDrawer.prototype =
 		const graphics = this.Graphics.isTrack() ? this.Graphics.Graphics : this.Graphics;
 		if (!graphics) return;
 
-		const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
-		const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
-		const alpha = useTransparency ? this.UniFill.transparent / 255 : null;
+		const transform = this.Shape.getTransformMatrix();
+		const invertedTransform = AscCommon.global_MatrixTransformer.Invert(transform);
 
 		const tile = this.UniFill.fill.tile;
+		const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
 
-		// Offsets
-		const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8 // AscCommon.c_oAscRectAlignType
-			? tile.algn
-			: 0;
+		// TODO: ОБЪЕДИНИТЬ, пока дублирование кода - для тестирования
+		if (rotWithShape) {
+			// Scaling
+			const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
+			const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
 
-		// const alignOffsetMap = {
-		// 	[AscCommon.c_oAscRectAlignType.b]: 
-		// 	[AscCommon.c_oAscRectAlignType.bl]:
-		// 	[AscCommon.c_oAscRectAlignType.br]: 
-		// 	[AscCommon.c_oAscRectAlignType.ctr]: 
-		// 	[AscCommon.c_oAscRectAlignType.l]: 
-		// 	[AscCommon.c_oAscRectAlignType.r]: 
-		// 	[AscCommon.c_oAscRectAlignType.t]: 
-		// 	[AscCommon.c_oAscRectAlignType.tl]: 
-		// 	[AscCommon.c_oAscRectAlignType.tr]: 
-		// };
+			const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
+			const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
 
-		const alignOffsetX = 0;
-		const alignOffsetY = 0;
+			// Offsets (offsets for aligning and direct offsets from tile object) 
+			const alignmentMap = {
+				[AscCommon.c_oAscRectAlignType.tl]: [0, 0],
+				[AscCommon.c_oAscRectAlignType.t]: [0.5, 0],
+				[AscCommon.c_oAscRectAlignType.tr]: [1, 0],
+				[AscCommon.c_oAscRectAlignType.l]: [0, 0.5],
+				[AscCommon.c_oAscRectAlignType.ctr]: [0.5, 0.5],
+				[AscCommon.c_oAscRectAlignType.r]: [1, 0.5],
+				[AscCommon.c_oAscRectAlignType.bl]: [0, 1],
+				[AscCommon.c_oAscRectAlignType.b]: [0.5, 1],
+				[AscCommon.c_oAscRectAlignType.br]: [1, 1],
+			};
+			const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8
+				? tile.algn
+				: AscCommon.c_oAscRectAlignType.tl; // AscCommon.c_oAscRectAlignType
 
-		const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
-		const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
+			const shapeWidth = this.max_x - this.min_x;
+			const shapeHeight = this.max_y - this.min_y;
+			const imageWidth = imageData.Image.width * scaleCoefX;
+			const imageHeight = imageData.Image.height * scaleCoefY;
 
-		// Scaling
-		const editorScale = Asc.editor.WordControl.m_nZoomValue / 100;
-		const bIsThumbnail = graphics.IsThumbnail;
-		let globalScaleCoefX = bIsThumbnail ? graphics.m_dDpiX / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorScale;
-		let globalScaleCoefY = bIsThumbnail ? graphics.m_dDpiY / AscCommon.g_dDpiX / AscCommon.AscBrowser.retinaPixelRatio : editorScale;
-		globalScaleCoefX *= graphics.TextureFillTransformScaleX * AscCommon.AscBrowser.retinaPixelRatio * 0.8,
-		globalScaleCoefY *= graphics.TextureFillTransformScaleY * AscCommon.AscBrowser.retinaPixelRatio * 0.8
+			const alignOffsetX = alignmentMap[align][0] * (shapeWidth - imageWidth);
+			const alignOffsetY = alignmentMap[align][1] * (shapeHeight - imageHeight);
 
-		const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
-		const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
+			const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
+			const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
 
-		// Mirroring
-		const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
-		const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+			// Mirroring
+			const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+			const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
 
-		// Rotation
-		const rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
-			? 0
-			: -this.Shape.getFullRotate();
+			// Opacity
+			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
+			const alpha = useTransparency ? this.UniFill.transparent / 255 : null;
 
-		graphics.drawTileImage(
-			imageData.src,
-			alpha,
-			scaleX * globalScaleCoefX, scaleY * globalScaleCoefY,
-			offsetX * alignOffsetX, offsetY + alignOffsetY,
-			flipH, flipV,
-			rotation,
-			align
-		);
+			graphics.drawTilePattern(
+				null,
+				imageData.src,
+				alpha,
+				scaleX * scaleCoefX,
+				scaleY * scaleCoefY,
+				offsetX + alignOffsetX,
+				offsetY + alignOffsetY,
+				flipH, flipV
+			);
 
-		graphics.m_bPenColorInit = false;
-		graphics.m_bBrushColorInit = false;
+			graphics.m_bPenColorInit = false;
+			graphics.m_bBrushColorInit = false;
+		} else {
+			// Scaling
+			const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
+			const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
+
+			const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
+			const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
+
+			// Offsets (offsets for aligning and direct offsets from tile object)
+			const alignmentMap = {
+				[AscCommon.c_oAscRectAlignType.tl]: [0, 0],
+				[AscCommon.c_oAscRectAlignType.t]: [0.5, 0],
+				[AscCommon.c_oAscRectAlignType.tr]: [1, 0],
+				[AscCommon.c_oAscRectAlignType.l]: [0, 0.5],
+				[AscCommon.c_oAscRectAlignType.ctr]: [0.5, 0.5],
+				[AscCommon.c_oAscRectAlignType.r]: [1, 0.5],
+				[AscCommon.c_oAscRectAlignType.bl]: [0, 1],
+				[AscCommon.c_oAscRectAlignType.b]: [0.5, 1],
+				[AscCommon.c_oAscRectAlignType.br]: [1, 1],
+			};
+			const align = AscFormat.isRealNumber(tile.algn) && tile.algn >= 0 && tile.algn <= 8
+				? tile.algn
+				: AscCommon.c_oAscRectAlignType.tl; // AscCommon.c_oAscRectAlignType
+
+			const shapeBounds = this.Shape.getBounds();
+
+			const shapeWidth = shapeBounds.w;
+			const shapeHeight = shapeBounds.h;
+			const imageWidth = imageData.Image.width * scaleX * scaleCoefX;
+			const imageHeight = imageData.Image.height * scaleY * scaleCoefY;
+
+			const alignOffsetX = shapeBounds.x + alignmentMap[align][0] * (shapeWidth - imageWidth);
+			const alignOffsetY = shapeBounds.y + alignmentMap[align][1] * (shapeHeight - imageHeight);
+
+			const offsetX = tile.tx ? tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
+			const offsetY = tile.ty ? tile.ty * AscCommonWord.g_dKoef_emu_to_mm : 0;
+
+			// Mirroring
+			const flipH = tile.flip === AscFormat.CBlipFillTile.flipTypes.x || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+			const flipV = tile.flip === AscFormat.CBlipFillTile.flipTypes.y || tile.flip === AscFormat.CBlipFillTile.flipTypes.xy;
+
+			// Opacity
+			const isTransparent = this.UniFill.transparent != null && this.UniFill.transparent != 255;
+			const useTransparency = this.Graphics.isSupportTextDraw() && isTransparent;
+			const alpha = useTransparency ? this.UniFill.transparent / 255 : null;
+
+			graphics.drawTilePattern(
+				invertedTransform,
+				imageData.src,
+				alpha,
+				scaleX * scaleCoefX,
+				scaleY * scaleCoefY,
+				offsetX + alignOffsetX,
+				offsetY + alignOffsetY,
+				flipH, flipV
+			);
+
+			graphics.m_bPenColorInit = false;
+			graphics.m_bBrushColorInit = false;
+		}
 	},
 
-	drawBlipFillStretch: function () {
-		// const fillRect = calculateFillRect.call(this);
+	drawBlipFillStretch: function (imageData) {
 
-		// function calculateFillRect() {
-		// 	const isStretch = AscCommon.isRealObject(this.UniFill.fill.stretch)
-		// 		&& AscCommon.isRealObject(this.UniFill.fill.stretch.fillRect);
-
-		// 	const originalFillRect = isStretch
-		// 		? this.UniFill.fill.stretch.fillRect
-		// 		: new AscFormat.CFillRect();
-
-		// 	const relativeWidth = originalFillRect.r - originalFillRect.l;
-		// 	const relativeHeight = originalFillRect.b - originalFillRect.t;
-		// 	const absoluteWidth = (this.max_x - this.min_x) * relativeWidth / 100;
-		// 	const absoluteHeight = (this.max_y - this.min_y) * relativeHeight / 100;
-
-		// 	const absoluteX = this.min_x + (this.max_x - this.min_x) * originalFillRect.l / 100;
-		// 	const absoluteY = this.min_y + (this.max_y - this.min_y) * originalFillRect.t / 100;
-
-		// 	return {
-		// 		x: absoluteX,
-		// 		y: absoluteY,
-		// 		width: absoluteWidth,
-		// 		height: absoluteHeight
-		// 	};
-		// }
-
-		// const useTransparency = this.IsRectShape
-		// 	? true
-		// 	: this.Graphics.isSupportTextDraw() && !this.Graphics.isTrack();
-
-		// const oldGlobalAlpha = this.Graphics.m_oContext.globalAlpha;
-		// if (isTransparent && useTransparency) {
-		// 	this.Graphics.m_oContext.globalAlpha = this.UniFill.transparent / 255;
-		// }
-
-		// const rotation = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null
-		// 	? 0
-		// 	: -this.Shape.getFullRotate();
-
-		// if (rotation !== 0) {
-		// 	const centerX = (this.min_x + this.max_x) / 2;
-		// 	const centerY = (this.min_y + this.max_y) / 2;
-
-		// 	this.Graphics.m_oContext.translate(centerX, centerY);
-		// 	this.Graphics.m_oContext.rotate(rotation);
-		// 	this.Graphics.m_oContext.translate(-centerX, -centerY);
-		// }
-
-		// const alpha = undefined; // Not supported in this.Graphics.drawImage yet?
-		// this.Graphics.drawImage(
-		// 	imageUrl,
-		// 	fillRect.x, fillRect.y, fillRect.width, fillRect.height,
-		// 	alpha,
-		// 	this.UniFill.fill.srcRect,
-		// 	this.UniFill.fill.canvas
-		// );
-
-		// if (isTransparent && useTransparency) {
-		// 	this.Graphics.m_oContext.globalAlpha = oldGlobalAlpha;
-		// }
 	},
 
     df: function (mode) {

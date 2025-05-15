@@ -185,6 +185,9 @@ function OverlayObject(geometry, extX, extY, brush, pen, transform )
     };
 }
 
+OverlayObject.prototype.getTransformMatrix = function () {
+	return this.TransformMatrix;
+};
 OverlayObject.prototype.getGeometry = function () {
 	return this.geometry;
 };
