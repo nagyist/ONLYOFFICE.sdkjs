@@ -2830,10 +2830,6 @@ function (window, undefined) {
 						}
 						_ctx.moveTo(_x, _y);
 
-						if (_graphics.ArrayPoints != null) {
-							_graphics.ArrayPoints.push({x: X, y: Y});
-						}
-
 						i += 3;
 						break;
 					}
@@ -2848,10 +2844,6 @@ function (window, undefined) {
 							_y -= 0.5;
 						}
 						_ctx.lineTo(_x, _y);
-
-						if (_graphics.ArrayPoints != null) {
-							_graphics.ArrayPoints.push({x: X, y: Y});
-						}
 
 						i += 3;
 						break;

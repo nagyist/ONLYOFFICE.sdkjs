@@ -1373,10 +1373,6 @@ CShapeDrawer.prototype =
         if (this.Ln == null || this.Ln.Fill == null || this.Ln.Fill.fill == null)
         {
             this.bIsNoStrokeAttack = true;
-            if (graphics.isTrack())
-                graphics.Graphics.ArrayPoints = null;
-            else
-                graphics.ArrayPoints = null;
         }
         else
         {
@@ -1453,14 +1449,7 @@ CShapeDrawer.prototype =
             if (graphics.isBoundsChecker() && !this.bIsNoStrokeAttack)
                 graphics.LineWidth = this.StrokeWidth;
 
-            var isUseArrayPoints = false;
-            if ((this.Ln.headEnd != null && this.Ln.headEnd.type != null) || (this.Ln.tailEnd != null && this.Ln.tailEnd.type != null))
-                isUseArrayPoints = true;
 
-            if (graphics.isTrack() && graphics.Graphics)
-                graphics.Graphics.ArrayPoints = isUseArrayPoints ? [] : null;
-            else
-                graphics.ArrayPoints = isUseArrayPoints ? [] : null;
 
             if (this.Graphics.m_oContext != null && this.Ln.Join != null && this.Ln.Join.type != null)
                 this.OldLineJoin = this.Graphics.m_oContext.lineJoin;
@@ -1508,7 +1497,6 @@ CShapeDrawer.prototype =
             this.drawFillStroke(true, "norm", true && !this.bIsNoStrokeAttack);
             this._e();
         }
-        this.Graphics.ArrayPoints = null;
 
         if (this.isPdf() && (this.bIsTexture || bIsPatt))
         {
@@ -1614,15 +1602,11 @@ CShapeDrawer.prototype =
     {
         this.IsCurrentPathCanArrows = true;
         this.Graphics._s();
-        if (this.Graphics.ArrayPoints != null)
-            this.Graphics.ArrayPoints = [];
     },
     _e : function()
     {
         this.IsCurrentPathCanArrows = true;
         this.Graphics._e();
-        if (this.Graphics.ArrayPoints != null)
-            this.Graphics.ArrayPoints = [];
     },
 
     drawTransitionTextures : function(oCanvas1, dAlpha1, oCanvas2, dAlpha2)
@@ -1647,7 +1631,6 @@ CShapeDrawer.prototype =
 			? this.Graphics.Graphics
 			: this.Graphics;
 
-		graphicsCtx.ArrayPoints = null;
 
 		const fullTransform = bIsSaveToPdfMode
 			? (this.isPdf() ? this.Graphics.GetTransform() : this.Graphics.m_oFullTransform)
@@ -2201,8 +2184,7 @@ CShapeDrawer.prototype =
             }
         }
 
-		var arr = this.Graphics.isTrack() ? this.Graphics.Graphics.ArrayPoints : this.Graphics.ArrayPoints;
-        var isArrowsPresent = (arr != null && arr.length > 1 && this.IsCurrentPathCanArrows === true) ? true : false;
+        var isArrowsPresent = (this.IsCurrentPathCanArrows === true);
 
         var rgba = this.StrokeUniColor;
         let nAlpha = 0xFF;
@@ -2256,8 +2238,7 @@ CShapeDrawer.prototype =
             if (this.bIsNoStrokeAttack)
                 bIsStroke = false;
 
-			var arr = this.Graphics.ArrayPoints;
-			var isArrowsPresent = (arr != null && arr.length > 1 && this.IsCurrentPathCanArrows === true) ? true : false;
+			var isArrowsPresent = (this.IsCurrentPathCanArrows === true);
 
             if (bIsStroke)
             {
