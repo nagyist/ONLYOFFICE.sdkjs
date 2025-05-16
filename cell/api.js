@@ -3334,7 +3334,7 @@ var editor;
 		this.wb = new AscCommonExcel.WorkbookView(this.wbModel, this.controller, this.handlers, this.HtmlElement,
 			this.topLineEditorElement, this, this.collaborativeEditing, this.fontRenderingMode);
 
-		this.registerCustomFunctionsLibrary();
+		this.registerCustomFunctionsLibrary(undefined, true);
 
 		if (this.isCopyOutEnabled && this.topLineEditorElement) {
 			if (this.isCopyOutEnabled() === false) {
@@ -3411,8 +3411,6 @@ var editor;
 		//раньше вызов был закомментирован, потому при при открытии вызывается в Viewport.js(asc_Resize) и Main.js(asc_showComments)
 		//но рассчитывать на внешние вызовы ненадежно и вызовов нет при VersionHistory и refreshFile
 		this.asc_Resize();
-
-		this.initBroadcastChannel();
 		this.initBroadcastChannelListeners();
 	};
 
@@ -3549,12 +3547,21 @@ var editor;
 			this.asc_setRightToLeft(true);
 		}
 		this.wb.showWorksheet();
-		this.wbModel.dependencyFormulas.lockRecal();
+		this.wbModel.dependencyFormulas && this.wbModel.dependencyFormulas.lockRecal();
 		History.EndTransaction();
-		if (this.wbModel.dependencyFormulas.changedCell) {
-			this.wbModel.dependencyFormulas.changedCell = null;
+		if (this.wbModel.dependencyFormulas && this.wbModel.dependencyFormulas.changedCell) {
+		 	AscCommonExcel.g_cCalcRecursion && AscCommonExcel.g_cCalcRecursion.setIsSheetCreating(true);
+			const dependencyFormulas = this.wbModel.dependencyFormulas;
+			dependencyFormulas._foreachChanged(function (cell) {
+				if (cell.isFormula() && cell.getFormulaParsed().ca) {
+					const cellId = AscCommonExcel.getCellIndex(cell.nRow, cell.nCol);
+					const sheetId = cell.ws.getId();
+					delete dependencyFormulas.changedCell[sheetId][cellId];
+				}
+			});
 		}
-		this.wbModel.dependencyFormulas.unlockRecal();
+		this.wbModel.dependencyFormulas && this.wbModel.dependencyFormulas.unlockRecal();
+		AscCommonExcel.g_cCalcRecursion && AscCommonExcel.g_cCalcRecursion.setIsSheetCreating(false);
 		// Посылаем callback об изменении списка листов
 		this.sheetsChanged();
 		this.inkDrawer.endSilentMode();
@@ -7009,12 +7016,12 @@ var editor;
 		res["spreadsheetLayout"]["sheetsProps"] = this.wbModel && this.wbModel.getPrintOptionsJson();
 		res["spreadsheetLayout"]["formulaProps"] = {};
 		res["spreadsheetLayout"]["formulaProps"]["translate"] = AscCommonExcel.cFormulaFunctionToLocale;
+		res["spreadsheetLayout"]["formulaProps"]["docTitle"] = this.DocInfo && this.DocInfo.Title;
 		return res;
 	};
 
   spreadsheet_api.prototype.asc_nativePrint = function (_printer, _page, _options) {
     //calc to fix case where file has formulas with no cache values and no changes
-    this.wbModel.dependencyFormulas.calcTree();
     var _adjustPrint = (window.AscDesktopEditor_PrintOptions && window.AscDesktopEditor_PrintOptions.advancedOptions) || new Asc.asc_CAdjustPrint();
     window.AscDesktopEditor_PrintOptions = undefined;
 
@@ -7128,6 +7135,7 @@ var editor;
     }
 
     this.wb.setPrintOptionsJson(_options);
+    this.wbModel.dependencyFormulas.calcTree();
 
     var _printPagesData = this.wb.calcPagesPrint(_adjustPrint);
 
@@ -9349,35 +9357,97 @@ var editor;
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.startGoalSeek(sFormulaCell, nExpectedValue, sChangingCell);
+		this.wb.startGoalSeek(sFormulaCell, nExpectedValue, sChangingCell);
 	};
 
 	spreadsheet_api.prototype.asc_CloseGoalClose = function (bSave) {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.closeGoalSeek(bSave);
+		this.wb.closeGoalSeek(bSave);
 	};
 
 	spreadsheet_api.prototype.asc_PauseGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.pauseGoalSeek();
+		this.wb.pauseGoalSeek();
 	};
 
 	spreadsheet_api.prototype.asc_ContinueGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.continueGoalSeek();
+		this.wb.continueGoalSeek();
 	};
 
 	spreadsheet_api.prototype.asc_StepGoalSeek = function () {
 		if (!this.wb) {
 			return;
 		}
-		return this.wb.stepGoalSeek();
+		this.wb.stepGoalSeek();
+	};
+
+	// Solver
+	/**
+	 *  Starts solver logic.
+	 *  Calls after click "Solver" button.
+	 * @memberof spreadsheet_api
+	 * @param {asc_CSolverParams} solverParams
+	 */
+	spreadsheet_api.prototype.asc_StartSolver = function (solverParams) {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.startSolver(solverParams);
+	};
+
+	/**
+	 * @memberof spreadsheet_api
+	 * @param {boolean} isSave - true - save result of calculation, false - discard changes.
+	 * @param {asc_CSolverParams} solverParams
+	 */
+	spreadsheet_api.prototype.asc_CloseSolver = function (isSave, solverParams) {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.closeSolver(isSave, solverParams);
+	};
+
+	/**
+	 * Start solver logic in "Show iteration results" mode.
+	 * @memberof spreadsheet_api
+	 */
+	spreadsheet_api.prototype.asc_StepSolver = function () {
+		if (!this.wb) {
+			return;
+		}
+
+		this.wb.stepSolver();
+	};
+
+	/**
+	 * Returns solver parameters object.
+	 * @memberof spreadsheet_api
+	 * @returns {asc_CSolverParams|null}
+	 */
+	spreadsheet_api.prototype.asc_GetSolverParams = function () {
+		if (!this.wb) {
+			return null;
+		}
+
+		return this.wb.getSolverParams();
+	};
+
+	/**
+	 * Returns solver results object.
+	 * @memberof spreadsheet_api
+	 * @returns {asc_CSolverResults}
+	 */
+	spreadsheet_api.prototype.asc_GetSolverResults = function () {
+		return new AscCommonExcel.asc_CSolverResults();
 	};
 
 	spreadsheet_api.prototype.asc_TracePrecedents = function() {
@@ -9606,10 +9676,10 @@ var editor;
 		return wb.customFunctionEngine && wb.customFunctionEngine.clear();
 	};
 
-	spreadsheet_api.prototype.recalculateCustomFunctions = function() {
+	spreadsheet_api.prototype.recalculateCustomFunctions = function(isNotUpdate) {
 		let needDraw = null;
 		if (this.wb && this.wb.customFunctionEngine && this.wb.customFunctionEngine.needRecalculate) {
-			if (this.wbModel.addCustomFunctionToChanged()) {
+			if (this.wbModel.addCustomFunctionToChanged(isNotUpdate)) {
 				needDraw = true;
 			}
 			this.wb.customFunctionEngine.needRecalculate = false;
@@ -9683,13 +9753,6 @@ var editor;
 			})
 		}
 	};
-	spreadsheet_api.prototype.initBroadcastChannel = function() {
-		if (!this.broadcastChannel) {
-			if (this.asc_isSupportCopySheetsBetweenBooks()) {
-				this.broadcastChannel = new BroadcastChannel("onlyofficeChannel");
-			}
-		}
-	};
 	spreadsheet_api.prototype.asc_isSupportCopySheetsBetweenBooks = function() {
 		return typeof BroadcastChannel !== "undefined";
 	};
@@ -9739,7 +9802,11 @@ var editor;
 				} else if ("SetFormulaEditMode" === event.data.type) {
 					oThis.wb && oThis.wb.externalSelectionController.onExternalSetFormulaMode(event.data);
 				} else if ("CloseTab" === event.data.type) {
-					console.log("closeTab")
+					//console.log("closeTab")
+				} else if ("ClipboardChange" === event.data.type) {
+					if (event.data.editor === oThis.getEditorId()) {
+						AscCommon.g_clipboardBase.ChangeLastCopy(event.data.data);
+					}
 				}
 			}
 		}

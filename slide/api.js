@@ -2142,6 +2142,14 @@ background-repeat: no-repeat;\
 		this.sync_ParaStyleName(ParaPr.StyleName);
 		this.sync_ListType(ParaPr.ListType);
 		this.sync_PrPropCallback(ParaPr);
+
+		let bidi = ParaPr.Bidi;
+		if (undefined === bidi)
+		{
+			let paragraph = logicDocument.GetCurrentParagraph(false, false, {FirstInSelection : true});
+			bidi = paragraph ? paragraph.GetParagraphBidi() : undefined;
+		}
+		this.sendEvent("asc_onTextDirection", bidi);
 	};
 	/*----------------------------------------------------------------*/
 	/*functions for working with clipboard, document*/
@@ -3398,6 +3406,12 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_SetLayoutName = function(sName)
 	{
 		this.setSlideObjectName(sName, AscDFH.historyitem_type_SlideLayout);
+	};
+	asc_docs_api.prototype.asc_setRtlTextDirection = function(isRtl)
+	{
+		let oPresentation = this.getLogicDocument();
+		if(!oPresentation) return;
+		oPresentation.SetParagraphBidi(isRtl);
 	};
 
 	asc_docs_api.prototype.put_ShowParaMarks      = function(isShow)
@@ -6041,8 +6055,8 @@ background-repeat: no-repeat;\
 				this.EndActionLoadImages = 2;
 				this.sync_StartAction(c_oAscAsyncActionType.Information, c_oAscAsyncAction.LoadImage);
 			}
-
-			this.ImageLoader.LoadDocumentImages(this.saveImageMap);
+			const oRequiredSyncImagesMap = this.isApplyChangesOnOpen ? this.getFirstSlideImagesMap() : null;
+			this.ImageLoader.LoadDocumentImages(this.saveImageMap, false, oRequiredSyncImagesMap);
 			return;
 		}
 
@@ -6069,8 +6083,16 @@ background-repeat: no-repeat;\
 			this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.LoadDocumentImages);
 		}
 
+		const oRequiredSyncImagesMap = AscCommon.CollaborativeEditing.m_aChanges.length ? null : this.getFirstSlideImagesMap();
 		this.ImageLoader.bIsLoadDocumentFirst = true;
-		this.ImageLoader.LoadDocumentImages(_loader_object.ImageMap);
+		this.ImageLoader.LoadDocumentImages(_loader_object.ImageMap, false, oRequiredSyncImagesMap);
+	};
+	asc_docs_api.prototype.getFirstSlideImagesMap = function () {
+		const oLogicDocument = this.getLogicDocument();
+		if (oLogicDocument) {
+			return oLogicDocument.getFirstSlideImagesMap();
+		}
+		return null;
 	};
 	asc_docs_api.prototype.asyncImagesDocumentEndLoaded  = function()
 	{
@@ -6158,6 +6180,7 @@ background-repeat: no-repeat;\
 						this.isApplyChangesOnOpenEnabled = false;
 						this.bNoSendComments             = true;
 						var OtherChanges                 = AscCommon.CollaborativeEditing.m_aChanges.length > 0;
+						this.isApplyChangesOnOpen = true;
 						this._applyPreOpenLocks();
 						let perfStart = performance.now();
 						AscCommon.CollaborativeEditing.Apply_Changes();
@@ -6167,7 +6190,6 @@ background-repeat: no-repeat;\
 						}
 						AscCommon.CollaborativeEditing.Release_Locks();
 						this.bNoSendComments      = false;
-						this.isApplyChangesOnOpen = true;
 						if(OtherChanges && this.isSaveFonts_Images){
 							return;
 						}
@@ -6270,6 +6292,7 @@ background-repeat: no-repeat;\
 		// Меняем тип состояния (на никакое)
 		this.advancedOptionsAction = AscCommon.c_oAscAdvancedOptionsAction.None;
 		this.goTo();
+		this.initBroadcastChannelListeners();
 	};
 	asc_docs_api.prototype.asc_IsStartDemonstrationOnOpen = function()
 	{
@@ -6977,24 +7000,28 @@ background-repeat: no-repeat;\
 	//-----------------------------------------------------------------
 	// Функции для работы с гиперссылками
 	//-----------------------------------------------------------------
-	asc_docs_api.prototype.can_AddHyperlink = function()
-	{
-		let oPresentation = this.private_GetLogicDocument();
-		if(!oPresentation) return false;
-		var bCanAdd = oPresentation.CanAddHyperlink(true);
-		if (true === bCanAdd)
-		{
-			let oController = oPresentation.GetCurrentController();
-			if(!oController)
-			{
-				return null;
-			}
-			let oTargetContent = oController.getTargetDocContent();
-			if(!oTargetContent) return null;
-			return oPresentation.GetSelectedText(true);
+	asc_docs_api.prototype.can_AddHyperlink = function () {
+		const oPresentation = this.private_GetLogicDocument();
+		if (!oPresentation) {
+			return false;
 		}
 
-		return false;
+		const oController = oPresentation.GetCurrentController();
+		if (!oController) {
+			return false;
+		}
+
+		const oTargetContent = oController.getTargetDocContent();
+		const bCheckInHyperlink = AscCommon.isRealObject(oTargetContent);
+		const bCanAdd = oPresentation.CanAddHyperlink(bCheckInHyperlink);
+
+		if (!bCanAdd) {
+			return false;
+		}
+
+		return oTargetContent
+			? oPresentation.GetSelectedText(true)
+			: false;
 	};
 
 	// HyperProps - объект CHyperlinkProperty
@@ -8161,7 +8188,7 @@ background-repeat: no-repeat;\
 			}
 			else if (undefined !== _obj["mouseUp"])
 			{
-				_this.WordControl.DemonstrationManager.onMouseUp({}, true, true);
+				_this.WordControl.DemonstrationManager.onMouseUp({}, true, true, !!_obj["isMainMouseDown"]);
 			}
 			else if (undefined !== _obj["mouseWhell"])
 			{
@@ -9614,7 +9641,9 @@ background-repeat: no-repeat;\
 		this.demoBackgroundColor = sColor;
 		if(this.isSlideShow())
 		{
-			this.WordControl.DemonstrationManager.CheckBackgroundColor();
+			const oDemonstrationManager = this.WordControl.DemonstrationManager;
+			oDemonstrationManager.CheckBackgroundColor();
+			oDemonstrationManager.Resize(true);
 		}
 	};
 
@@ -9669,6 +9698,21 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.onChangeRTLInterface = function () {
 		this.onUpdateThumbnailsPosition();
+	};
+	asc_docs_api.prototype.initBroadcastChannelListeners = function() {
+		let oThis = this;
+		let docInfo = this.DocInfo;
+		let wb = oThis.wbModel;
+		let broadcastChannel = this.broadcastChannel;
+		if (broadcastChannel) {
+			broadcastChannel.onmessage = function(event) {
+				if ("ClipboardChange" === event.data.type) {
+					if (event.data.editor === oThis.getEditorId()) {
+						AscCommon.g_clipboardBase.ChangeLastCopy(event.data.data);
+					}
+				}
+			}
+		}
 	};
 
 	//-------------------------------------------------------------export---------------------------------------------------
@@ -9826,6 +9870,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['asc_deleteGuide']                     = asc_docs_api.prototype.asc_deleteGuide;
 	asc_docs_api.prototype['asc_SetMasterName']                   = asc_docs_api.prototype.asc_SetMasterName;
 	asc_docs_api.prototype['asc_SetLayoutName']                   = asc_docs_api.prototype.asc_SetLayoutName;
+	asc_docs_api.prototype['asc_setRtlTextDirection']             = asc_docs_api.prototype.asc_setRtlTextDirection;
 	asc_docs_api.prototype['put_ShowParaMarks']                   = asc_docs_api.prototype.put_ShowParaMarks;
 	asc_docs_api.prototype['get_ShowParaMarks']                   = asc_docs_api.prototype.get_ShowParaMarks;
 	asc_docs_api.prototype['put_ShowTableEmptyLine']              = asc_docs_api.prototype.put_ShowTableEmptyLine;

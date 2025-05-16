@@ -2137,6 +2137,15 @@
     }
 
     InitClass(CBaseChartObject, CBaseFormatObject, AscDFH.historyitem_type_Unknown);
+		CBaseChartObject.prototype.getBrush = function() {
+			return this.brush;
+		};
+	CBaseChartObject.prototype.getPen = function() {
+		return this.pen;
+	};
+	CBaseChartObject.prototype.onRemoveContent = function() {};
+	CBaseChartObject.prototype.forEachAnimationDrawing = function(fCallback) {};
+	CBaseChartObject.prototype.forEachObjectToDraw = function(fCallback) {};
 	CBaseChartObject.prototype.generateSmartArtDrawingPart = function () {};
     CBaseChartObject.prototype.notAllowedWithoutId = function() {
         return true;
@@ -2379,6 +2388,21 @@
         }
         return {min: null, max: null};
     }
+	function getStepBetweenPoints(aPoints) {
+		if(Array.isArray(aPoints) && aPoints.length > 1) {
+			const bCheckFirstValues = isRealObject(aPoints[0]) && AscFormat.isRealNumber(aPoints[0].val) && isRealObject(aPoints[1]) && AscFormat.isRealNumber(aPoints[1].val);
+			const bCheckLastValues = isRealObject(aPoints[aPoints.length - 1]) && AscFormat.isRealNumber(aPoints[aPoints.length - 1].val) && isRealObject(aPoints[aPoints.length - 2]) && AscFormat.isRealNumber(aPoints[aPoints.length - 2].val);
+
+			if(bCheckFirstValues && bCheckLastValues) {
+				return Math.min(Math.abs(aPoints[0].val - aPoints[1].val), Math.abs(aPoints[aPoints.length - 1].val - aPoints[aPoints.length - 2].val));
+			} else if (bCheckFirstValues) {
+				return Math.abs(aPoints[0].val - aPoints[1].val);
+			} else if (bCheckLastValues) {
+				return Math.abs(aPoints[aPoints.length - 1].val - aPoints[aPoints.length - 2].val);
+			}
+		}
+		return null;
+	}
 
     var SCALE_INSET_COEFF = 1.016;//Возможно придется уточнять
     function CDLbl() {
@@ -8822,13 +8846,8 @@
             ret.putLogScale(false);
         }
 
-        var oMinMaxOnAxis;
-        if(this.axPos === AX_POS_L || this.axPos === AX_POS_R) {
-            oMinMaxOnAxis = getMinMaxFromArrPoints(this.yPoints);
-        }
-        else {
-            oMinMaxOnAxis = getMinMaxFromArrPoints(this.xPoints);
-        }
+				const aPoints = this.isVertical() ? this.yPoints : this.xPoints;
+        const oMinMaxOnAxis = getMinMaxFromArrPoints(aPoints);
         //настроки максимального значения по оси
         if(scaling && AscFormat.isRealNumber(scaling.max)) {
             ret.putMaxValRule(c_oAscValAxisRule.fixed);
@@ -8925,6 +8944,22 @@
         ret.putLabel(this.getLabelSetting());
         ret.putNumFmt(new AscCommon.asc_CAxNumFmt(this));
 	    ret.putIsRadarAxis(this.isRadarAxis());
+
+			if (this.majorUnit === null) {
+				ret.putMajorUnit(getStepBetweenPoints(aPoints));
+				ret.putMajorUnitRule(c_oAscValAxisRule.auto);
+			} else {
+				ret.putMajorUnit(this.majorUnit);
+				ret.putMajorUnitRule(c_oAscValAxisRule.fixed);
+			}
+
+			if (this.minorUnit === null) {
+				ret.putMinorUnit(null);
+				ret.putMinorUnitRule(c_oAscValAxisRule.auto);
+			} else {
+				ret.putMinorUnit(this.minorUnit);
+				ret.putMinorUnitRule(c_oAscValAxisRule.fixed);
+			}
         return ret;
     };
     CValAx.prototype.setMenuProps = function(props) {
@@ -9036,6 +9071,40 @@
             this.setTickLblPos(props.tickLabelsPos);
             bChanged = true;
         }
+			if (AscFormat.isRealNumber(props.minorUnitRule)) {
+				if (props.minorUnitRule === c_oAscValAxisRule.auto) {
+					if (AscFormat.isRealNumber(this.minorUnit)) {
+						this.setMinorUnit(null);
+						bChanged = true;
+					}
+				} else {
+					if (AscFormat.isRealNumber(props.minorUnit)) {
+						if (!(props.majorUnitRule === c_oAscValAxisRule.fixed && props.majorUnit < props.minorUnit) && this.minorUnit !== props.minorUnit) {
+							this.setMinorUnit(props.minorUnit);
+							bChanged = true;
+						}
+					}
+				}
+			}
+
+			if (AscFormat.isRealNumber(props.majorUnitRule)) {
+				if (props.majorUnitRule === c_oAscValAxisRule.auto) {
+					if (AscFormat.isRealNumber(this.majorUnit)) {
+						this.setMajorUnit(null);
+						bChanged = true;
+					}
+				} else {
+					if (AscFormat.isRealNumber(props.majorUnit)) {
+						if (!AscFormat.isRealNumber(this.minorUnit) || this.minorUnit < props.majorUnit) {
+							if (this.majorUnit !== props.majorUnit) {
+								this.setMajorUnit(props.majorUnit);
+								bChanged = true;
+							}
+						}
+					}
+				}
+			}
+
 
         if(AscFormat.isRealNumber(props.crossesRule) && isRealObject(this.crossAx)) {
             if(props.crossesRule === c_oAscCrossesRule.auto) {
