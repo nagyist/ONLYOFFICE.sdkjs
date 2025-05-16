@@ -19868,13 +19868,14 @@ CColorObj.prototype =
 	 * @param {number} endIdx - The end index of the node.
 	 */
 	function CSunburstNode(name, pVal, idx, parent, children, stIdx, endIdx) {
-		AscCommon.CTree.call(this, children);
+		AscCommon.CTree.call(this);
 		this.name = name;
 		this.pVal = pVal;
 		this.idx = idx;
 		this.parent = parent;
 		this.stIdx = stIdx;
 		this.endIdx = endIdx;
+		this.children = children || [];
 	}
 	AscFormat.InitClassWithoutType(CSunburstNode, AscCommon.CTree);
 
@@ -19895,6 +19896,10 @@ CColorObj.prototype =
 			oCopy.children.push(childCopy);
 		}
 	};
+
+	CSunburstNode.prototype.getChildren = function () {
+		return this.children;
+	}
 
 	function CCachedSunburst(type, numLit, strLit ) {
 		CCachedChartExData.call(this, type, []);

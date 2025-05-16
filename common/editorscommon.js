@@ -14969,14 +14969,13 @@
 		}
 	}
 
-	function CTree(children) {
-		this.children = children || [];
+	function CTree() {
 	}
 
 	CTree.prototype = {
 		constructor: CTree,
 		getChildren: function () {
-			return this.children;
+			return [];
 		},
 		fillObject: function (oCopy, oIdMap) {},
 		traverse: function (fCallback, bReverseOrder) {
