@@ -1327,25 +1327,14 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
         return dLength;
     };
 
+    Geometry.prototype.isValid = function () {
+        if(this.pathLst.length === 0) return false;
+        return this.pathLst[0].isValid();
+    };
+
     Geometry.prototype.draw = function(shape_drawer)
     {
-		if (Asc.editor.isPresentationEditor) {
-			const hasInvalidPath = this.pathLst.some(function (path) {
-				let firstCommand = null;
-				if (path instanceof AscFormat.Path) {
-					firstCommand = path.ArrPathCommandInfo[0];
-				}
-				if (path instanceof AscFormat.Path2) {
-					firstCommand = path.getCommandByIndex(0);
-				}
-
-				return firstCommand && firstCommand.id !== AscFormat.moveTo;
-			});
-
-			if (hasInvalidPath) {
-				return;
-			}
-		}
+		if(!this.isValid()) return;
 
         if(shape_drawer.Graphics && shape_drawer.Graphics.IsDrawSmart || this.bDrawSmart)
         {

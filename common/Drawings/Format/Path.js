@@ -2157,6 +2157,11 @@ function (window, undefined) {
 		const angleInDegrees = angleInRadians * 180 / Math.PI;
 		return angleInDegrees;
 	};
+	Path.prototype.isValid = function () {
+		if(this.ArrPathCommand.length === 0) return false;
+		let oFirstCmd = this.ArrPathCommand[0];
+		return oFirstCmd.id === moveTo;
+	};
 
 
 	function CPathCmd() {
@@ -3289,6 +3294,11 @@ function (window, undefined) {
 		oPath.recalculate({}, true);
 	};
 
+	Path2.prototype.isValid = function () {
+		if(this.isEmpty()) return false;
+		let path = this.getArrPathCommand();
+		return path[this.startPos + 1] === moveTo;
+	};
 
 	function partition_bezier3(x0, y0, x1, y1, x2, y2, epsilon) {
 		let dx01 = x1 - x0;
