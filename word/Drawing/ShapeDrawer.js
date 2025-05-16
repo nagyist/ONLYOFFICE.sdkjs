@@ -1678,8 +1678,10 @@ CShapeDrawer.prototype =
 		const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
 
 		// Scaling
-		const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * 0.8;
-		const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * 0.8;
+        const imageDPI = 96; // Image DPI is not supported yet (so we use a fixed value of 96 DPI)
+        const canvasDPI = 96;
+		const scaleCoefX = AscCommon.g_dKoef_pix_to_mm * (canvasDPI / imageDPI);
+		const scaleCoefY = AscCommon.g_dKoef_pix_to_mm * (canvasDPI / imageDPI);
 
 		const scaleX = tile.sx ? (tile.sx / 1000) / 100 : 1;
 		const scaleY = tile.sy ? (tile.sy / 1000) / 100 : 1;
