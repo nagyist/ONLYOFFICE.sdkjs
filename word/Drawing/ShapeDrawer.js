@@ -2149,6 +2149,13 @@ CShapeDrawer.prototype =
         this.Graphics.df();
     },
 
+    isArrowPresent: function()
+    {
+        if(this.IsCurrentPathCanArrows && this.Ln && this.Ln.isArrowPresent())
+            return true;
+        return false;
+    },
+
     ds : function()
     {
         if (this.bIsNoStrokeAttack)
@@ -2184,7 +2191,7 @@ CShapeDrawer.prototype =
             }
         }
 
-        var isArrowsPresent = (this.IsCurrentPathCanArrows === true);
+        var isArrowsPresent = this.isArrowPresent();
 
         var rgba = this.StrokeUniColor;
         let nAlpha = 0xFF;
@@ -2238,7 +2245,7 @@ CShapeDrawer.prototype =
             if (this.bIsNoStrokeAttack)
                 bIsStroke = false;
 
-			var isArrowsPresent = (this.IsCurrentPathCanArrows === true);
+			var isArrowsPresent = this.isArrowPresent();
 
             if (bIsStroke)
             {
