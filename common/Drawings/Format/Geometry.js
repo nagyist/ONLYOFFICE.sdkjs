@@ -1329,7 +1329,17 @@ function CChangesGeometryAddAdj(Class, Name, OldValue, NewValue, OldAvValue, bRe
 
     Geometry.prototype.isValid = function () {
         if(this.pathLst.length === 0) return false;
-        return this.pathLst[0].isValid();
+        let idx = 0;
+        for(let pathIdx = 0; pathIdx < this.pathLst.length; ++pathIdx) {
+            let curPath = this.pathLst[pathIdx];
+            if(curPath.isValid()) {
+                return true;
+            }
+            if(!curPath.isEmpty()) {
+                return false;
+            }
+        }
+        return false;
     };
 
     Geometry.prototype.draw = function(shape_drawer)
