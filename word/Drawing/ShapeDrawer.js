@@ -2151,7 +2151,7 @@ CShapeDrawer.prototype =
 
     isArrowPresent: function()
     {
-        if(this.IsCurrentPathCanArrows && this.Ln && this.Ln.isArrowPresent())
+        if(this.IsCurrentPathCanArrows && this.Ln && this.Ln.isArrowPresent() && !this.IsArrowsDrawing)
             return true;
         return false;
     },

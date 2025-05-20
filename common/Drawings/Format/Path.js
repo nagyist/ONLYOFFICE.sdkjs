@@ -3291,6 +3291,85 @@ function (window, undefined) {
 		let path = this.getArrPathCommand();
 		return path[this.startPos + 1] === moveTo;
 	};
+	Path2.prototype.getArrPathCommandObjects = function () {
+		let i = 0;
+		let len = this.getMemoryLength();
+		let path = this.getArrPathCommand();
+		let arrPathCommand = [];
+		while (i < len) {
+			let cmd = path[this.startPos + i + 1];
+			switch (cmd) {
+				case moveTo: {
+					arrPathCommand.push({id:moveTo, X: path[this.startPos + i + 2], Y: path[this.startPos + i + 3]});
+					i += 3;
+					break;
+				}
+				case lineTo: {
+					arrPathCommand.push({id:lineTo, X: path[this.startPos + i + 2], Y: path[this.startPos + i + 3]});
+					i += 3;
+					break;
+				}
+				case bezier3: {
+
+					arrPathCommand.push({
+						id:bezier3,
+						X0: path[this.startPos + i + 2],
+						Y0: path[this.startPos + i + 3],
+						X1: path[this.startPos + i + 4],
+						Y1: path[this.startPos + i + 5]
+					});
+					i += 5;
+					break;
+				}
+				case bezier4: {
+					arrPathCommand.push({
+						id:bezier4,
+						X0: path[this.startPos + i + 2],
+						Y0: path[this.startPos + i + 3],
+						X1: path[this.startPos + i + 4],
+						Y1: path[this.startPos + i + 5],
+						X2: path[this.startPos + i + 6],
+						Y2: path[this.startPos + i + 7]
+					});
+					i += 7;
+					break;
+				}
+				case arcTo: {
+					arrPathCommand.push({
+						id:arcTo,
+						stX: path[this.startPos + i + 2],
+						stY: path[this.startPos + i + 3],
+						wR: path[this.startPos + i + 4],
+						hR: path[this.startPos + i + 5],
+						stAng: path[this.startPos + i + 6],
+						swAng: path[this.startPos + i + 7]
+					});
+					i += 7;
+					break;
+				}
+				case close: {
+					i += 1;
+					break;
+				}
+			}
+		}
+
+	};
+	Path2.prototype.executeWithPathCommands = function(fMethod, params) {
+		this.ArrPathCommand = this.getArrPathCommand();
+		let result = fMethod.apply(this, params);
+		this.ArrPathCommand = undefined;
+		return result;
+	};
+	Path2.prototype.getContinuousSubpaths = function () {
+		return this.executeWithPathCommands(Path.prototype.getContinuousSubpaths, []);
+	};
+	Path2.prototype.getHeadArrowAngle = function (arrowLength) {
+		return this.executeWithPathCommands(Path.prototype.getHeadArrowAngle, [arrowLength]);
+	};
+	Path2.prototype.getTailArrowAngle = function (arrowLength) {
+		return this.executeWithPathCommands(Path.prototype.getTailArrowAngle, [arrowLength]);
+	};
 
 	function partition_bezier3(x0, y0, x1, y1, x2, y2, epsilon) {
 		let dx01 = x1 - x0;
