@@ -1799,6 +1799,56 @@
         updatelinksUserSet:  2
     };
 
+		 const c_oSerControlTypes = {
+			 Control: 10,
+			 ControlAnchor: 11,
+			 ObjectType: 12,
+			 Name: 13,
+			 AltText: 14,
+			 AutoFill: 15,
+			 AutoLine: 16,
+			 AutoPict: 17,
+			 DefaultSize: 18,
+			 Disabled: 19,
+			 Locked: 20,
+			 Macro: 21,
+			 RecalcAlways: 22,
+			 Checked: 23,
+			 Colored: 24,
+			 DropLines: 25,
+			 DropStyle: 26,
+			 Dx: 27,
+			 FirstButton: 28,
+			 FmlaGroup: 29,
+			 FmlaLink: 30,
+			 FmlaRange: 31,
+			 FmlaTxbx: 32,
+			 Horiz: 33,
+			 Inc: 34,
+			 JustLastX: 35,
+			 LockText: 36,
+			 Max: 37,
+			 Min: 38,
+			 MultiSel: 39,
+			 NoThreeD: 40,
+			 NoThreeD2: 41,
+			 Page: 42,
+			 Sel: 43,
+			 SelType: 44,
+			 TextHAlign: 45,
+			 TextVAlign: 46,
+			 Val: 47,
+			 WidthMin: 48,
+			 EditVal: 49,
+			 MultiLine: 50,
+			 VerticalBar: 51,
+			 PasswordEdit: 52,
+			 Text: 53,
+			 Print: 54,
+			 ItemLst: 55,
+			 Item: 56
+		 };
+
     var g_nNumsMaxId = 164;
 
     var DocumentPageSize = new function() {
@@ -10174,6 +10224,12 @@
                     return oThis.ReadDrawings(t,l, oWorksheet.Drawings, oWorksheet);
                 });
             }
+						else if (c_oSerWorksheetsTypes.Controls == type)
+            {
+	            res = this.bcr.Read1(length, function(t,l) {
+		            return oThis.ReadControls(t,l, oWorksheet);
+	            });
+            }
             else if ( c_oSerWorksheetsTypes.Autofilter == type )
             {
                 oBinary_TableReader = new Binary_TableReader(this.stream, this.InitOpenManager, oWorksheet);
@@ -10333,6 +10389,220 @@
                 }
             } else
 				res = c_oSerConstants.ReadUnknown;
+			return res;
+		};
+		this.ReadControls = function (type, length) {
+			let res = c_oSerConstants.ReadOk;
+			const oThis = this;
+			if (c_oSerControlTypes.Control == type) {
+				const oControl = new AscFormat.CControl();
+				res = this.bcr.Read1(length, function(t,l){
+					return oThis.ReadControl(t,l, oControl);
+				});
+			} else {
+				res = c_oSerConstants.ReadUnknown;
+			}
+			return res;
+		}
+		this.ReadControl = function (type, length, oControl) {
+			let res = c_oSerConstants.ReadOk;
+			switch (type) {
+				case c_oSerControlTypes.ControlAnchor: {
+					break;
+				}
+				case c_oSerControlTypes.ObjectType: {
+					oControl.objectType = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.Name: {
+					oControl.name = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.AltText: {
+					oControl.altText = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.AutoFill: {
+					oControl.autoFill = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.AutoLine: {
+					oControl.autoLine = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.AutoPict: {
+					oControl.autoPict = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.DefaultSize: {
+					oControl.defaultSize = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Disabled: {
+					oControl.disabled = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Locked: {
+					oControl.locked = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Macro: {
+					oControl.macro = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.Print: {
+					oControl.print = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.RecalcAlways: {
+					oControl.recalcAlways = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Checked: {
+					oControl.checked = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.Colored: {
+					oControl.colored = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.DropLines: {
+					oControl.dropLines = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.DropStyle: {
+					oControl.dropStyle = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.Dx: {
+					oControl.dx = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.FirstButton: {
+					oControl.firstButton = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.FmlaGroup: {
+					oControl.fmlaGroup = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.FmlaLink: {
+					oControl.fmlaLink = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.FmlaRange: {
+					oControl.fmlaRange = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.FmlaTxbx: {
+					oControl.fmlaTxbx = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.Horiz: {
+					oControl.horiz = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Inc: {
+					oControl.inc = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.JustLastX: {
+					oControl.justLastX = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.LockText: {
+					oControl.lockText = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Max: {
+					oControl.max = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.Min: {
+					oControl.min = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.MultiSel: {
+					oControl.multiSel = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.NoThreeD: {
+					oControl.noThreeD = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.NoThreeD2: {
+					oControl.noThreeD2 = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Page: {
+					oControl.page = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.Sel: {
+					oControl.sel = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.SelType: {
+					oControl.selType = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.TextHAlign: {
+					oControl.textHAlign = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.TextVAlign: {
+					oControl.textVAlign = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.Val: {
+					oControl.val = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.WidthMin: {
+					oControl.widthMin = this.stream.GetULong();
+					break;
+				}
+				case c_oSerControlTypes.EditVal: {
+					oControl.editVal = this.stream.GetUChar();
+					break;
+				}
+				case c_oSerControlTypes.MultiLine: {
+					oControl.multiLine = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.VerticalBar: {
+					oControl.verticalBar = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.PasswordEdit: {
+					oControl.passwordEdit = this.stream.GetBool();
+					break;
+				}
+				case c_oSerControlTypes.Text: {
+					oControl.textHAlign = this.stream.GetString1(length);
+					break;
+				}
+				case c_oSerControlTypes.ItemLst: {
+					const oThis = this;
+					res = this.bcr.Read1(length, function(t,l){
+						return oThis.ReadControlItems(t,l);
+					});
+					break;
+				}
+				default: {
+					res = c_oSerConstants.ReadUnknown;
+					break;
+				}
+			}
+			return res;
+		}
+		this.ReadControlItems = function (type, length) {
+			let res = c_oSerConstants.ReadOk;
+			if (c_oSerControlTypes.Item == type) {
+
+			} else {
+				res = c_oSerConstants.ReadUnknown;
+			}
 			return res;
 		};
 		this.ReadPivotCopyPaste = function(type, length, data)
