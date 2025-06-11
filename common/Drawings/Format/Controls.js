@@ -33,12 +33,8 @@
 "use strict";
 
 (function() {
-	function CControls() {
-		this.controls = {};
-		this.alternativeControls = {};
-	}
-
 	function CControl() {
+		AscFormat.CShape.call(this);
 		this.name = null;
 		this.progId = null;
 		this.dvAspect = null;
@@ -47,9 +43,40 @@
 		this.autoLoad = null;
 		this.shapeId = null;
 		this.rId = null;
-		this.controlPr = null;
-		this.formControlPr = null;
+		this.controlPr = new CControlPr();
+		this.formControlPr = new CFormControlPr();
 	}
+	AscFormat.InitClass(CControl, AscFormat.CShape, AscDFH.historyitem_type_Shape);
+	CControl.prototype.superclass = AscFormat.CGraphicObjectBase
+	CControl.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		const oMainTransfrom = transform || this.transform;
+		const checkBoxTransform = oMainTransfrom.CreateDublicate();
+		AscFormat.CShape.prototype.draw.call(this, graphics, transform, transformText, pageIndex, opt);
+		graphics.SaveGrState();
+		checkBoxTransform.tx += 1;
+		checkBoxTransform.ty += (this.extY - 3) / 2;
+		graphics.transform3(checkBoxTransform);
+		graphics.b_color1(255, 255, 255, 255);
+		graphics.p_color(0, 0, 0, 255);
+		graphics.p_width(0);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(0, 3);
+		graphics._l(3, 3);
+		graphics._l(3, 0);
+		graphics._z();
+		graphics.ds();
+		graphics.df();
+		graphics._e();
+		graphics.p_color(0, 0, 0, 255);
+		graphics.p_width(400);
+		graphics._m(2.5, 0.75);
+		graphics._l(1, 2.25);
+		graphics._l(0.5, 1.75);
+		graphics.ds();
+		graphics._e();
+		graphics.RestoreGrState();
+	};
 	
 	function CControlPr() {
 		this.altText = null;
@@ -103,14 +130,7 @@
 		this.multiLine = null;
 		this.verticalBar = null;
 		this.passwordEdit = null;
-	}
-	
-	function CListItems() {
-		this.items = [];
-	}
-
-	function CListItem() {
-		this.val = null;
+		this.itemLst = [];
 	}
 
 	window["AscFormat"] = window["AscFormat"] || {};

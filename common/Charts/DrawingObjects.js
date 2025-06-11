@@ -1759,7 +1759,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         this.graphicObject.handleObject(fCallback);
     };
     DrawingBase.prototype.initAfterSerialize = function(ws) {
-        if(!this.graphicObject) {
+        if(!this.graphicObject || !ws) {
             return;
         }
         let bIsShape = this.graphicObject.isShape();

@@ -10391,7 +10391,7 @@
 				res = c_oSerConstants.ReadUnknown;
 			return res;
 		};
-		this.ReadControls = function (type, length) {
+		this.ReadControls = function (type, length, oWorksheet) {
 			let res = c_oSerConstants.ReadOk;
 			const oThis = this;
 			if (c_oSerControlTypes.Control == type) {
@@ -10399,6 +10399,17 @@
 				res = this.bcr.Read1(length, function(t,l){
 					return oThis.ReadControl(t,l, oControl);
 				});
+				if (oControl.controlPr.anchor) {
+					const oDrawingBase = oControl.controlPr.anchor;
+					oControl.controlPr.anchor = null;
+					oDrawingBase.graphicObject = oControl;
+					var sp_pr = new AscFormat.CSpPr();
+					sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
+					oControl.setSpPr(sp_pr);
+					sp_pr.setParent(oControl);
+
+					oDrawingBase.initAfterSerialize(oWorksheet);
+				}
 			} else {
 				res = c_oSerConstants.ReadUnknown;
 			}
@@ -10408,184 +10419,190 @@
 			let res = c_oSerConstants.ReadOk;
 			switch (type) {
 				case c_oSerControlTypes.ControlAnchor: {
+					const arrAnchors = [];
+					res = this.ReadDrawings(c_oSerWorksheetsTypes.Drawing, length, arrAnchors);
+					const oDrawingBase = arrAnchors[0];
+					if (oDrawingBase) {
+						oControl.controlPr.anchor = oDrawingBase;
+					}
 					break;
 				}
 				case c_oSerControlTypes.ObjectType: {
-					oControl.objectType = this.stream.GetUChar();
+					oControl.formControlPr.objectType = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.Name: {
-					oControl.name = this.stream.GetString1(length);
+					oControl.name = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.AltText: {
-					oControl.altText = this.stream.GetString1(length);
+					oControl.controlPr.altText = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.AutoFill: {
-					oControl.autoFill = this.stream.GetBool();
+					oControl.controlPr.autoFill = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.AutoLine: {
-					oControl.autoLine = this.stream.GetBool();
+					oControl.controlPr.autoLine = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.AutoPict: {
-					oControl.autoPict = this.stream.GetBool();
+					oControl.controlPr.autoPict = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.DefaultSize: {
-					oControl.defaultSize = this.stream.GetBool();
+					oControl.controlPr.defaultSize = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Disabled: {
-					oControl.disabled = this.stream.GetBool();
+					oControl.controlPr.disabled = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Locked: {
-					oControl.locked = this.stream.GetBool();
+					oControl.controlPr.locked = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Macro: {
-					oControl.macro = this.stream.GetString1(length);
+					oControl.controlPr.macro = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.Print: {
-					oControl.print = this.stream.GetBool();
+					oControl.controlPr.print = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.RecalcAlways: {
-					oControl.recalcAlways = this.stream.GetBool();
+					oControl.controlPr.recalcAlways = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Checked: {
-					oControl.checked = this.stream.GetUChar();
+					oControl.formControlPr.checked = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.Colored: {
-					oControl.colored = this.stream.GetBool();
+					oControl.formControlPr.colored = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.DropLines: {
-					oControl.dropLines = this.stream.GetULong();
+					oControl.formControlPr.dropLines = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.DropStyle: {
-					oControl.dropStyle = this.stream.GetUChar();
+					oControl.formControlPr.dropStyle = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.Dx: {
-					oControl.dx = this.stream.GetULong();
+					oControl.formControlPr.dx = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.FirstButton: {
-					oControl.firstButton = this.stream.GetBool();
+					oControl.formControlPr.firstButton = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.FmlaGroup: {
-					oControl.fmlaGroup = this.stream.GetString1(length);
+					oControl.formControlPr.fmlaGroup = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.FmlaLink: {
-					oControl.fmlaLink = this.stream.GetString1(length);
+					oControl.formControlPr.fmlaLink = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.FmlaRange: {
-					oControl.fmlaRange = this.stream.GetString1(length);
+					oControl.formControlPr.fmlaRange = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.FmlaTxbx: {
-					oControl.fmlaTxbx = this.stream.GetString1(length);
+					oControl.formControlPr.fmlaTxbx = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.Horiz: {
-					oControl.horiz = this.stream.GetBool();
+					oControl.formControlPr.horiz = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Inc: {
-					oControl.inc = this.stream.GetULong();
+					oControl.formControlPr.inc = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.JustLastX: {
-					oControl.justLastX = this.stream.GetBool();
+					oControl.formControlPr.justLastX = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.LockText: {
-					oControl.lockText = this.stream.GetBool();
+					oControl.formControlPr.lockText = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Max: {
-					oControl.max = this.stream.GetULong();
+					oControl.formControlPr.max = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.Min: {
-					oControl.min = this.stream.GetULong();
+					oControl.formControlPr.min = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.MultiSel: {
-					oControl.multiSel = this.stream.GetString1(length);
+					oControl.formControlPr.multiSel = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.NoThreeD: {
-					oControl.noThreeD = this.stream.GetBool();
+					oControl.formControlPr.noThreeD = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.NoThreeD2: {
-					oControl.noThreeD2 = this.stream.GetBool();
+					oControl.formControlPr.noThreeD2 = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Page: {
-					oControl.page = this.stream.GetULong();
+					oControl.formControlPr.page = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.Sel: {
-					oControl.sel = this.stream.GetULong();
+					oControl.formControlPr.sel = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.SelType: {
-					oControl.selType = this.stream.GetUChar();
+					oControl.formControlPr.selType = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.TextHAlign: {
-					oControl.textHAlign = this.stream.GetUChar();
+					oControl.formControlPr.textHAlign = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.TextVAlign: {
-					oControl.textVAlign = this.stream.GetUChar();
+					oControl.formControlPr.textVAlign = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.Val: {
-					oControl.val = this.stream.GetULong();
+					oControl.formControlPr.val = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.WidthMin: {
-					oControl.widthMin = this.stream.GetULong();
+					oControl.formControlPr.widthMin = this.stream.GetULong();
 					break;
 				}
 				case c_oSerControlTypes.EditVal: {
-					oControl.editVal = this.stream.GetUChar();
+					oControl.formControlPr.editVal = this.stream.GetUChar();
 					break;
 				}
 				case c_oSerControlTypes.MultiLine: {
-					oControl.multiLine = this.stream.GetBool();
+					oControl.formControlPr.multiLine = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.VerticalBar: {
-					oControl.verticalBar = this.stream.GetBool();
+					oControl.formControlPr.verticalBar = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.PasswordEdit: {
-					oControl.passwordEdit = this.stream.GetBool();
+					oControl.formControlPr.passwordEdit = this.stream.GetBool();
 					break;
 				}
 				case c_oSerControlTypes.Text: {
-					oControl.textHAlign = this.stream.GetString1(length);
+					oControl.formControlPr.text = this.stream.GetString2LE(length);
 					break;
 				}
 				case c_oSerControlTypes.ItemLst: {
 					const oThis = this;
 					res = this.bcr.Read1(length, function(t,l){
-						return oThis.ReadControlItems(t,l);
+						return oThis.ReadControlItems(t,l, oControl.formControlPr.itemLst);
 					});
 					break;
 				}
@@ -10596,10 +10613,10 @@
 			}
 			return res;
 		}
-		this.ReadControlItems = function (type, length) {
+		this.ReadControlItems = function (type, length, arrItems) {
 			let res = c_oSerConstants.ReadOk;
 			if (c_oSerControlTypes.Item == type) {
-
+				arrItems.push(this.stream.GetString2LE(length));
 			} else {
 				res = c_oSerConstants.ReadUnknown;
 			}
@@ -11487,7 +11504,12 @@
                     oNewDrawing.Type = c_oAscCellAnchorType.cellanchorOneCell;
                 else if(false != oFlags.pos && false != oFlags.ext)
                     oNewDrawing.Type = c_oAscCellAnchorType.cellanchorAbsolute;
-                oNewDrawing.initAfterSerialize(ws);
+								if (ws) {
+									oNewDrawing.initAfterSerialize(ws);
+								} else {
+									aDrawings.push(oNewDrawing);
+								}
+
             }
             else
                 res = c_oSerConstants.ReadUnknown;
