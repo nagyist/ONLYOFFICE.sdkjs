@@ -95,19 +95,8 @@ function GetObjectsForImageDownload(aBuilderImages, bSameDoc)
 		let sUrl = oBuilderImg.Url;
         if(!g_oDocumentUrls.getImageLocal(sUrl) && !g_oDocumentUrls.isThemeUrl(sUrl))
         {
-            if(!Array.isArray(oMapImages[sUrl]))
-            {
-                oMapImages[sUrl] = [];
-            }
-            oMapImages[sUrl].push(oBuilderImg);
-        }
-    }
-    for(var key in oMapImages)
-    {
-        if(oMapImages.hasOwnProperty(key))
-        {
-            aUrls.push(key);
-            aBuilderImagesByUrl.push(oMapImages[key]);
+			aUrls.push(sUrl);
+			aBuilderImagesByUrl.push([oBuilderImg]);
         }
     }
     if(bSameDoc !== true){
@@ -1332,8 +1321,8 @@ CopyProcessor.prototype =
 			//в html записываем первый вариант - конечное форматирование
 			//в банарник пишем: 1)конечное форматирование 2)исходное форматирование 3)картинка
 			this.oPDFWriter.WriteULong(elementsContent.length);
-			for(var i = 0; i < elementsContent.length; i++) {
-				if(i === 0) {
+			for (var i = 0; i < elementsContent.length; i++) {
+				if (i === 0) {
 					this.copyPDFContent(elementsContent[i], oDomTarget);
 				}
 			}
@@ -2745,6 +2734,7 @@ function PasteProcessor(api, bUploadImage, bUploadFonts, bNested, pasteInExcel, 
         "mso-border-left-alt": 1, "mso-border-top-alt": 1, "mso-border-right-alt": 1, "mso-border-bottom-alt": 1, "mso-border-between": 1, "mso-list": 1,
 		"mso-comment-reference": 1, "mso-comment-date": 1, "mso-comment-continuation": 1, "mso-data-placement": 1, "mso-table-layout-alt": 1, "mso-table-left": 1,
 		"mso-table-top": 1, "mso-ignore": 1};
+	this.OnlyOfficeStyles = {"oo-latex": 1}
     this.oBorderCache = {};
 
 	this.msoListMap = [];
@@ -2824,47 +2814,75 @@ PasteProcessor.prototype =
         }
         return oDocument;
     },
-    _CalcMaxWidthByCell : function(cell)
-    {
-        var row = cell.Row;
-        var table = row.Table;
-        var grid = table.TableGrid;
-        var nGridBefore = 0;
-        if(null != row.Pr && null != row.Pr.GridBefore)
-            nGridBefore = row.Pr.GridBefore;
-        var nCellIndex = cell.Index;
-        var nCellGrid = 1;
-        if(null != cell.Pr && null != cell.Pr.GridSpan)
-            nCellGrid = cell.Pr.GridSpan;
-        var nMarginLeft = 0;
-        if(null != cell.Pr && null != cell.Pr.TableCellMar && null != cell.Pr.TableCellMar.Left && tblwidth_Mm === cell.Pr.TableCellMar.Left.Type && null != cell.Pr.TableCellMar.Left.W)
-            nMarginLeft = cell.Pr.TableCellMar.Left.W;
-        else if(null != table.Pr && null != table.Pr.TableCellMar && null != table.Pr.TableCellMar.Left && tblwidth_Mm === table.Pr.TableCellMar.Left.Type && null != table.Pr.TableCellMar.Left.W)
-            nMarginLeft = table.Pr.TableCellMar.Left.W;
-        var nMarginRight = 0;
-        if(null != cell.Pr && null != cell.Pr.TableCellMar && null != cell.Pr.TableCellMar.Right && tblwidth_Mm === cell.Pr.TableCellMar.Right.Type && null != cell.Pr.TableCellMar.Right.W)
-            nMarginRight = cell.Pr.TableCellMar.Right.W;
-        else if(null != table.Pr && null != table.Pr.TableCellMar && null != table.Pr.TableCellMar.Right && tblwidth_Mm === table.Pr.TableCellMar.Right.Type && null != table.Pr.TableCellMar.Right.W)
-            nMarginRight = table.Pr.TableCellMar.Right.W;
-        var nPrevSumGrid = nGridBefore;
-        for(var i = 0; i < nCellIndex; ++i)
-        {
-            var oTmpCell = row.Content[i];
-            var nGridSpan = 1;
-            if(null != cell.Pr && null != cell.Pr.GridSpan)
-                nGridSpan = cell.Pr.GridSpan;
-            nPrevSumGrid += nGridSpan;
-        }
-        var dCellWidth = 0;
-        for(var i = nPrevSumGrid, length = grid.length; i < nPrevSumGrid + nCellGrid && i < length; ++i)
-            dCellWidth += grid[i];
+	_CalcMaxWidthByCell: function(cell) {
+		const row = cell.Row;
+		const table = row.Table;
+		const grid = table.TableGrid;
 
-        if(dCellWidth - nMarginLeft - nMarginRight <= 0)
-            dCellWidth = 4;
-        else
-            dCellWidth -= nMarginLeft + nMarginRight;
-        return dCellWidth;
-    },
+		let nGridBefore = 0;
+		if (row.Pr !== null && row.Pr.GridBefore !== null) {
+			nGridBefore = row.Pr.GridBefore;
+		}
+
+		const nCellIndex = cell.Index;
+		let nCellGrid = 1;
+		if (cell.Pr && undefined !== cell.Pr.GridSpan) {
+			nCellGrid = cell.Pr.GridSpan;
+		}
+
+		let nMarginLeft = 0;
+		if (cell.Pr
+			&& cell.Pr.TableCellMar
+			&& cell.Pr.TableCellMar.Left
+			&& tblwidth_Mm === cell.Pr.TableCellMar.Left.Type
+			&& undefined !== cell.Pr.TableCellMar.Left.W) {
+			nMarginLeft = cell.Pr.TableCellMar.Left.W;
+		} else if (table.Pr
+			&& table.Pr.TableCellMar
+			&& table.Pr.TableCellMar.Left
+			&& tblwidth_Mm === table.Pr.TableCellMar.Left.Type
+			&& undefined !== table.Pr.TableCellMar.Left.W) {
+			nMarginLeft = table.Pr.TableCellMar.Left.W;
+		}
+
+		let nMarginRight = 0;
+		if (cell.Pr
+			&& cell.Pr.TableCellMar
+			&& cell.Pr.TableCellMar.Right
+			&& tblwidth_Mm === cell.Pr.TableCellMar.Right.Type
+			&& undefined !== cell.Pr.TableCellMar.Right.W) {
+			nMarginRight = cell.Pr.TableCellMar.Right.W;
+		} else if (table.Pr
+			&& table.Pr.TableCellMar
+			&& table.Pr.TableCellMar.Right
+			&& tblwidth_Mm === table.Pr.TableCellMar.Right.Type
+			&& undefined !== table.Pr.TableCellMar.Right.W) {
+			nMarginRight = table.Pr.TableCellMar.Right.W;
+		}
+
+		let nPrevSumGrid = nGridBefore;
+		for (let i = 0; i < nCellIndex; ++i) {
+			const oTmpCell = row.Content[i];
+			let nGridSpan = 1;
+			if (oTmpCell && oTmpCell.Pr && undefined !== oTmpCell.Pr.GridSpan) {
+				nGridSpan = oTmpCell.Pr.GridSpan;
+			}
+			nPrevSumGrid += nGridSpan;
+		}
+
+		let dCellWidth = 0;
+		for (let i = nPrevSumGrid, length = grid.length; i < nPrevSumGrid + nCellGrid && i < length; ++i) {
+			dCellWidth += grid[i];
+		}
+
+		if (dCellWidth - nMarginLeft - nMarginRight <= 0) {
+			dCellWidth = 4;
+		} else {
+			dCellWidth -= nMarginLeft + nMarginRight;
+		}
+
+		return dCellWidth;
+	},
 	CheckCopyDrawingsBeforePaste: function () {
 			const allDrawings = [];
 		for (let i = 0; i < this.aContent.length; i += 1) {
@@ -5377,9 +5395,6 @@ PasteProcessor.prototype =
 
 			var arr_shapes = content.Drawings;
 			var arrImages = pasteObj.images;
-			if (content.Drawings.length === selectedContent2[1].content.Drawings.length) {
-				AscFormat.checkDrawingsTransformBeforePaste(content, selectedContent2[1].content, null);
-			}
 			//****если записана одна табличка, то вставляем html и поддерживаем все цвета и стили****
 			if (!arrImages.length && arr_shapes.length === 1 && arr_shapes[0] && arr_shapes[0].Drawing &&
 				arr_shapes[0].Drawing.graphicObject) {
@@ -8172,7 +8187,9 @@ PasteProcessor.prototype =
 
 			//принудительно добавляю для математики шрифт Cambria Math
 			if ((child && (child.nodeName.toLowerCase() === "#comment" && this.isSupportPasteMathContent(child.nodeValue, true)
-				&& this.apiEditor["asc_isSupportFeature"]("ooxml")) || child.nodeName.toLowerCase() === "math") && !this.pasteInExcel) {
+				&& this.apiEditor["asc_isSupportFeature"]("ooxml")) || child.nodeName.toLowerCase() === "math" ||
+				(child.className && child.className.indexOf && -1 !== child.className.indexOf("oo-latex")) ||
+				(style && -1 !== style.indexOf("oo-latex"))) && !this.pasteInExcel) {
 				//TODO пока только в документы разрешаю вставку математики математику
 				var mathFont = "Cambria Math";
 				this.oFonts[mathFont] = {
@@ -9321,8 +9338,11 @@ PasteProcessor.prototype =
 				if (aPair && aPair.length > 1) {
 					var prop_name = trimString(aPair[0]);
 					var prop_value = trimString(aPair[1]);
-					if (null != this.MsoStyles[prop_name])
+					if (null != this.MsoStyles[prop_name]) {
 						pPr[prop_name] = prop_value;
+					} else if (null != this.OnlyOfficeStyles[prop_name]) {
+						pPr[prop_name] = prop_value;
+					}
 				}
 			}
 		}
@@ -10245,10 +10265,10 @@ PasteProcessor.prototype =
 		if (nRowCount > 0 && nMaxColCount > 0) {
 			var bUseScaleKoef = this.bUseScaleKoef;
 			var dScaleKoef = this.dScaleKoef;
-			if (dMaxSum * dScaleKoef > this.dMaxWidth) {
+			/*if (dMaxSum * dScaleKoef > this.dMaxWidth) {
 				dScaleKoef = dScaleKoef * this.dMaxWidth / dMaxSum;
 				bUseScaleKoef = true;
-			}
+			}*/
 			//строим Grid
 			var aGrid = [];
 			var nPrevIndex = null;
@@ -11905,6 +11925,30 @@ PasteProcessor.prototype =
 					let oAddedParaMath = paraMath;
 					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oThis.oCurPar);
 					oThis._CommitElemToParagraph(oAddedParaMath);
+					let clonePr = oThis.oCurRun.Pr.Copy();
+					oThis.oCurRun = new ParaRun(oThis.oCurPar);
+					oThis.oCurRun.Set_Pr(clonePr);
+					return;
+				}
+
+				var latexFromStyle = pPr["oo-latex"];
+				let isLatex = (latexFromStyle && latexFromStyle === "display") || (child.className && child.className.indexOf && -1 !== child.className.indexOf("oo-latex"));
+				let isLatexInline =  (latexFromStyle && latexFromStyle === "inline") || (child.className && child.className.indexOf && -1 !== child.className.indexOf("oo-latex-inline"));
+				if (isLatex|| isLatexInline) {
+					let paraMath = AscWord.ParaMath.fromLatex(latexFromStyle ? child.nodeValue : child.innerHTML);
+					bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
+					let oAddedParaMath = paraMath;
+					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oThis.oCurPar);
+					oThis._CommitElemToParagraph(oAddedParaMath);
+
+					if (isLatexInline) {
+						paraMath.ConvertToInlineMode();
+					}
+
+					let clonePr = oThis.oCurRun.Pr.Copy();
+					oThis.oCurRun = new ParaRun(oThis.oCurPar);
+					oThis.oCurRun.Set_Pr(clonePr);
+
 					return;
 				}
 

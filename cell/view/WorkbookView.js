@@ -861,7 +861,7 @@
 				  self.handlers.trigger("asc_onCanUndoChanged", bCanUndo);
 				  self.handlers.trigger("asc_onCanRedoChanged", bCanRedo);
 			  }, "applyCloseEvent": function () {
-				  self.controller._onWindowKeyDown.apply(self.controller, arguments);
+				  return self.controller._onWindowKeyDown.apply(self.controller, arguments);
 			  }, "canEdit": function () {
 				  return self.canEdit();
 			  }, "isProtectActiveCell": function () {
@@ -2512,7 +2512,16 @@
       // выбирать ячейки для формулы
       if (!this._checkStopCellEditorInFormulas()) {
           index = this.copyActiveSheet;
-      }
+      } else {
+		// todo at this moment information doesn't come from the interface about the SHIFT key is pressed
+		// in the future we need to add an additional argument in the current open formula, according with the bug 59698 
+		let wsByIndex = this.model.getWorksheet(index);
+		let sheetStr = wsByIndex.getName() + "!";
+		let editModeRange = ws.model.selectionRange && ws.model.selectionRange.getLast();
+		let rangeStr = editModeRange ? editModeRange.getName() : "";
+		// TODO the position of the cursor in formulaEdit changes to the end of the line
+		this._onSelectionRangeChanged(sheetStr + rangeStr);
+	  }
       // Делаем очистку селекта
       ws.cleanSelection();
       this.stopTarget(ws);
@@ -2626,16 +2635,15 @@
   };
 
   WorkbookView.prototype._canResize = function() {
-	  let showVerticalScroll = this.Api.isMobileVersion || this.getShowVerticalScroll();
-	  let showHorizontalScroll = this.Api.isMobileVersion || this.getShowHorizontalScroll();
+    let showVerticalScroll = this.getShowVerticalScroll();
+    let showHorizontalScroll = this.getShowHorizontalScroll();
 
-	  let styleWidth, styleHeight;
-	  styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion || !showVerticalScroll ? 0 : this.defaults.scroll.widthPx);
-	  styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion || !showHorizontalScroll ? 0 : this.defaults.scroll.heightPx);
-	  
-	  this.canvasOverlay.parentNode.style.right = !showVerticalScroll ? 0 : 14 + 'px';
-	  this.canvasOverlay.parentNode.style.bottom = !showHorizontalScroll ? 0 : 14 + 'px';
+    let styleWidth, styleHeight;
+    styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion || !showVerticalScroll ? 0 : this.defaults.scroll.widthPx);
+    styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion || !showHorizontalScroll ? 0 : this.defaults.scroll.heightPx);
 
+    this.canvasOverlay.parentNode.style.right = (this.Api.isMobileVersion || !showVerticalScroll) ? 0 : this.defaults.scroll.widthPx + 'px';
+    this.canvasOverlay.parentNode.style.bottom = (this.Api.isMobileVersion || !showHorizontalScroll) ? 0 : this.defaults.scroll.heightPx + 'px';
 
 
     this.isInit = true;
@@ -3008,7 +3016,7 @@
 							if (null !== sTableInner) {
 								var _str, j;
 								for (let j = 0; j < table.TableColumns.length; j++) {
-									_str = table.TableColumns[j].Name;
+									_str = table.TableColumns[j].getTableColumnName();
 									_type = c_oAscPopUpSelectorType.TableColumnName;
 
 									let newStr;
@@ -4331,6 +4339,9 @@
   WorkbookView.prototype._calcMaxDigitWidth = function () {
 	  var t = this;
 	  this.executeDefaultDpi(function () {
+		  if (t.fmgrGraphics && t.fmgrGraphics[3] && !t.fmgrGraphics[3].m_oFont) {
+			  AscCommonExcel.resetDrawingContextFonts();
+		  }
 		  // set default worksheet header font for calculations
 		  t.buffers.main.setFont(AscCommonExcel.g_oDefaultFormat.Font);
 		  // Измеряем в pt
@@ -5691,7 +5702,7 @@
 	};
 
 	//external requests
-	WorkbookView.prototype.doUpdateExternalReference = function (externalReferences, callback) {
+	WorkbookView.prototype.doUpdateExternalReference = function (externalReferences, callback, forceUpdate) {
 		var t = this;
 
 		if (externalReferences && externalReferences.length) {
@@ -5903,6 +5914,7 @@
 			this.model.handlers.trigger("asc_onStartUpdateExternalReference", true);
 
 			const oDataUpdater = new AscCommon.CExternalDataLoader(externalReferences, this.Api, doUpdateData);
+			oDataUpdater.props = {forceUpdate: forceUpdate};
 			oDataUpdater.updateExternalData();
 		}
 	};

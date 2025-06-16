@@ -553,6 +553,22 @@ function(window, undefined) {
 	CPathMemory.prototype.IncrementNumberInPos = function (nPos) {
 		this.ArrPathCommand[nPos] += 1;
 	};
+	CPathMemory.prototype.Write_ToBinary = function(writer) {
+		writer.WriteLong(this.size);
+		writer.WriteLong(this.curPos);
+		let aNewArray = new Float64Array(this.size);
+		for (let i = 0; i < this.ArrPathCommand.length; ++i) {
+			writer.WriteDouble2(this.ArrPathCommand[i]);
+		}
+	};
+	CPathMemory.prototype.Read_FromBinary = function(reader) {
+		this.size = reader.GetLong();
+		this.curPos = reader.GetLong();
+		this.ArrPathCommand = new Float64Array(this.size);
+		for (let i = 0; i < this.ArrPathCommand.length; ++i) {
+			this.ArrPathCommand[i] = reader.GetDoubleLE();
+		}
+	};
 
 	drawingsChangesMap[AscDFH.historyitem_ChartSpace_SetNvGrFrProps] = function (oClass, value) {
 		oClass.nvGraphicFramePr = value;
@@ -12202,7 +12218,8 @@ function(window, undefined) {
 		const newStep = getNewStep(nMultiplicator, nLabelCount, nLblTickSkip);
 
 		// create new labels for valAx
-		const fPrecision = 0.01;
+		// precision should be small, or relatively small compared to new step
+		const fPrecision = Math.max(0.01, newStep / 1000);
 
 		let isSingleLabel = false
 		// check if axis is not logarithmic and if newStep is different than the previous;

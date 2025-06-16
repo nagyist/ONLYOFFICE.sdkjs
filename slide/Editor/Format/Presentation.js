@@ -682,9 +682,23 @@ function CPresentation(DrawingDocument) {
 
 	this.cachedGridCanvas = null;
 	this.cachedGridSpacing = null;
+
+	this.cachedAnimationLabelText = {};
 }
 
 AscFormat.InitClass(CPresentation, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_Presentation);
+CPresentation.prototype.getFirstSlideImagesMap = function () {
+	const oRequiredSyncImagesMap = {};
+	const oFirstSlide = this.Slides[0];
+	if (oFirstSlide) {
+		const aImages = oFirstSlide.getAllRasterImagesOnSlide();
+		for (let i = 0; i < aImages.length; i++) {
+			const sImg = aImages[i];
+			oRequiredSyncImagesMap[sImg] = true;
+		}
+	}
+	return oRequiredSyncImagesMap;
+};
 CPresentation.prototype.sendEvent = function()
 {
 	if (!this.Api)
@@ -4565,7 +4579,12 @@ CPresentation.prototype.ConvertEquationToMath = function (oEquation, isAll) {
 	}
 };
 
-
+CPresentation.prototype.SetParagraphBidi = function(isRtl)
+{
+	let oController = this.GetCurrentController();
+	oController && oController.checkSelectedObjectsAndCallback(oController.setParagraphBidi, [isRtl], false, AscDFH.historydescription_Document_SetParagraphBidi);
+	this.Document_UpdateInterfaceState();
+};
 CPresentation.prototype.SetParagraphAlign = function (Align) {
 
 	var oController = this.GetCurrentController();
@@ -8992,6 +9011,9 @@ CPresentation.prototype.addNextSlideAction = function (layoutIndex) {
 				(_ph_type === AscFormat.phType_sldNum && (hf.sldNum !== false)))) {
 				sp = oSp.copy(undefined);
 				sp.setParent(new_slide);
+				if (sp.txBody) {
+					sp.txBody.setBodyPr(new AscFormat.CBodyPr());
+				}
 				!bIsSpecialPh && sp.clearContent && sp.clearContent();
 				new_slide.addToSpTreeToPos(new_slide.cSld.spTree.length, sp);
 			}
@@ -10650,6 +10672,10 @@ CPresentation.prototype.GetCurTiming = function () {
 	return oTiming;
 };
 CPresentation.prototype.CanStartAnimationPreview = function () {
+	if (window['IS_NATIVE_EDITOR']) {
+		return false;
+	}
+
 	var oTiming = this.GetCurTiming();
 	if (!oTiming) {
 		return false;
