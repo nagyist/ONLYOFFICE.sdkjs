@@ -222,6 +222,7 @@ CSdtBase.prototype.SetFormPr = function(oFormPr)
 		change.Redo();
 
 		this.private_OnAddFormPr();
+		this.OnChangePr();
 	}
 };
 CSdtBase.prototype.private_CheckKeyValueBeforeSet = function(formPr)
