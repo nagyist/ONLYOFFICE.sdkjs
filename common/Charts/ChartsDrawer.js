@@ -19159,9 +19159,9 @@ CColorObj.prototype =
 			let diff;
 			let chosenPath;
 			for (let i in charts) {
-				if (charts.hasOwnProperty(i) && charts[i] && this.upDownBars && this.storage[i] && this.storage[i].length === 2
+				const valAxis = this.cChartDrawer.getAxisFromAxId(charts[i].chart.axId, AscDFH.historyitem_type_ValAx);
+				if (valAxis && charts.hasOwnProperty(i) && charts[i] && this.upDownBars && this.storage[i] && this.storage[i].length === 2
 					&& this.storage[i][0].length === this.ptsCount && this.storage[i][1].length === this.ptsCount) {
-					const valAxis = charts[i].chart.axId[1];
 
 					const catStart = this.cChartDrawer.calcProp.chartGutter._left;
 
@@ -19179,7 +19179,7 @@ CColorObj.prototype =
 							continue;
 						}
 
-						if (valAxis && valAxis.scaling && valAxis.scaling.logBase && (this.storage[i][0][j].y === 0 || this.storage[i][1][j].y === 0)) {
+						if (valAxis.scaling && valAxis.scaling.logBase && (this.storage[i][0][j].y === 0 || this.storage[i][1][j].y === 0)) {
 							start += barWidth + (gapBetween * 2);
 							continue;
 						}
