@@ -2740,6 +2740,10 @@ CDocumentContent.prototype.IntersectClip = function(clipInfo, pageIndex)
 	
 	return clipInfo;
 };
+CDocumentContent.prototype.GetClip = function(pageIndex)
+{
+	return this.ClipInfo[pageIndex] ? this.ClipInfo[pageIndex] : null;
+};
 CDocumentContent.prototype.IsApplyToAll = function()
 {
 	return this.ApplyToAll;
