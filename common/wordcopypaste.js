@@ -93,7 +93,7 @@ function GetObjectsForImageDownload(aBuilderImages, bSameDoc)
     {
 		let oBuilderImg = aBuilderImages[i];
 		let sUrl = oBuilderImg.Url;
-        if(!g_oDocumentUrls.getImageLocal(sUrl) && !g_oDocumentUrls.isThemeUrl(sUrl))
+        if(sUrl && !g_oDocumentUrls.getImageLocal(sUrl) && !g_oDocumentUrls.isThemeUrl(sUrl))
         {
 			aUrls.push(sUrl);
 			aBuilderImagesByUrl.push([oBuilderImg]);
@@ -108,7 +108,10 @@ function GetObjectsForImageDownload(aBuilderImages, bSameDoc)
             {
                 if (oBuilderImage.AdditionalUrls) {
                     for (var j = 0; j < oBuilderImage.AdditionalUrls.length; ++j) {
-                        aUrls.push(oBuilderImage.AdditionalUrls[j]);
+						if(oBuilderImage.AdditionalUrls[j])
+						{
+							aUrls.push(oBuilderImage.AdditionalUrls[j]);
+						}
                     }
                 }
             }
