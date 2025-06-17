@@ -1502,7 +1502,6 @@
 						}, [], false);
 					}
 				},
-
 				handleMoveHit: function (object, e, x, y, group, bInSelect, pageIndex, bWord) {
 					var b_is_inline;
 					if (isRealObject(group)) {
@@ -1543,8 +1542,11 @@
 								selector.resetSelection(this);
 							}
 						}
-						if (!e.CtrlKey || !object.selected) {
+						if (object.isControl() && !object.selected && e.CtrlKey || !object.isControl() && (e.CtrlKey || !object.selected)) {
 							selector.selectObject(object, pageIndex);
+						}
+						if (object.isControl() && !e.CtrlKey && !object.selected) {
+							object.onClick(this, x, y);
 						}
 						if (!is_selected || b_check_internal)
 							this.updateOverlay();

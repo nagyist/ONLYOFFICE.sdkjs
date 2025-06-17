@@ -1846,7 +1846,8 @@
 			 Text: 53,
 			 Print: 54,
 			 ItemLst: 55,
-			 Item: 56
+			 Item: 56,
+			 Shape: 57
 		 };
 
     var g_nNumsMaxId = 164;
@@ -5062,8 +5063,20 @@
 
             this.bs.WriteItem(c_oSerWorksheetsTypes.MergeCells, function(){oThis.WriteMergeCells(ws);});
 
-            if (ws.Drawings && (ws.Drawings.length))
-                this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function(){oThis.WriteDrawings(ws.Drawings);});
+
+            if (ws.Drawings && ws.Drawings.length) {
+							const arrControls = [];
+							for (let i = 0; i < ws.Drawings.length; i += 1) {
+								const oDrawing = ws.Drawings[i];
+								if (oDrawing.isControl()) {
+									arrControls.push(oDrawing);
+								}
+							}
+							if (arrControls.length) {
+								this.bs.WriteItem(c_oSerWorksheetsTypes.Controls, function () {oThis.WriteControls(arrControls);});
+							}
+	            this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function () {oThis.WriteDrawings(ws.Drawings.length);});
+            }
 
             if (ws.aComments.length > 0) {
                 this.bs.WriteItem(c_oSerWorksheetsTypes.Comments, function () {
@@ -6006,6 +6019,12 @@
                 t.memory.WriteString2(ref);
             })
         };
+				this.WriteControls = function (aControls) {
+					for (let i = 0; i < aControls.length; i += 1) {
+						const oControl = aControls[i];
+
+					}
+				};
         this.WriteDrawings = function(aDrawings)
         {
             var oThis = this;
@@ -10400,15 +10419,16 @@
 					return oThis.ReadControl(t,l, oControl);
 				});
 				if (oControl.controlPr.anchor) {
-					const oDrawingBase = oControl.controlPr.anchor;
-					oControl.controlPr.anchor = null;
-					oDrawingBase.graphicObject = oControl;
-					var sp_pr = new AscFormat.CSpPr();
-					sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
-					oControl.setSpPr(sp_pr);
-					sp_pr.setParent(oControl);
-
-					oDrawingBase.initAfterSerialize(oWorksheet);
+					if (oControl.initController()) {
+						const oDrawingBase = oControl.controlPr.anchor;
+						oControl.controlPr.anchor = null;
+						oDrawingBase.graphicObject = oControl;
+						var sp_pr = new AscFormat.CSpPr();
+						sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
+						oControl.setSpPr(sp_pr);
+						sp_pr.setParent(oControl);
+						oDrawingBase.initAfterSerialize(oWorksheet);
+					}
 				}
 			} else {
 				res = c_oSerConstants.ReadUnknown;
@@ -10604,6 +10624,11 @@
 					res = this.bcr.Read1(length, function(t,l){
 						return oThis.ReadControlItems(t,l, oControl.formControlPr.itemLst);
 					});
+					break;
+				}
+				case c_oSerControlTypes.Shape: {
+					const oShape = this.ReadPptxDrawing();
+					oControl.shape = oShape;
 					break;
 				}
 				default: {
