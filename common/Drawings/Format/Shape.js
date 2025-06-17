@@ -4017,6 +4017,10 @@
 					}
 				}
 			}
+			
+			if (oDocContent && !this.isForm())
+				oDocContent.Set_ClipInfo(0, oRect.l - l_ins, oRect.r - l_ins, oRect.t - t_ins, oRect.b - t_ins);
+			
 			return oRet;
 		};
 

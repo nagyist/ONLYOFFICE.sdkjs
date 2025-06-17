@@ -1592,13 +1592,13 @@ CDocumentContent.prototype.Shift = function(CurPage, Dx, Dy, keepClip)
 };
 CDocumentContent.prototype.ShiftView = function(nDx, nDy)
 {
-	this.Shift(0, nDx, nDy);
+	this.Shift(0, nDx, nDy, true);
 	this.ShiftViewX += nDx;
 	this.ShiftViewY += nDy;
 };
 CDocumentContent.prototype.ResetShiftView = function()
 {
-	this.Shift(0, -this.ShiftViewX, -this.ShiftViewY);
+	this.Shift(0, -this.ShiftViewX, -this.ShiftViewY, true);
 	this.ShiftViewX = 0;
 	this.ShiftViewY = 0;
 };
@@ -2729,6 +2729,16 @@ CDocumentContent.prototype.MoveCursorToCell = function(bNext)
 CDocumentContent.prototype.Set_ClipInfo = function(CurPage, X0, X1, Y0, Y1)
 {
 	this.ClipInfo[CurPage] = new AscWord.ClipRect(X0, X1, Y0, Y1);
+};
+CDocumentContent.prototype.IntersectClip = function(clipInfo, pageIndex)
+{
+	let pageClip = this.ClipInfo[pageIndex];
+	if (!clipInfo && pageClip)
+		clipInfo = pageClip.clone();
+	else if (clipInfo)
+		clipInfo.intersect(pageClip);
+	
+	return clipInfo;
 };
 CDocumentContent.prototype.IsApplyToAll = function()
 {
@@ -6360,11 +6370,7 @@ CDocumentContent.prototype.DrawSelectionOnPage = function(PageIndex, clipInfo)
 	if (this.transform && drawingDocument)
 		drawingDocument.MultiplyTargetTransform(this.transform.CreateDublicate());
 	
-	let pageClip = this.ClipInfo[CurPage];
-	if (!clipInfo && pageClip)
-		clipInfo = pageClip.clone();
-	else if (clipInfo)
-		clipInfo.intersect(pageClip);
+	clipInfo = this.IntersectClip(clipInfo, PageIndex);
 
     if (docpostype_DrawingObjects === this.CurPos.Type)
     {
