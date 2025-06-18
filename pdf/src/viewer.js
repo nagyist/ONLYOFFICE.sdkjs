@@ -3117,8 +3117,17 @@
 				this.blitPageToCtx(ctx, oImageToDraw, i);
 				this.pagesInfo.setPainted(i);
 				
-				if (this.Api.watermarkDraw)
-					this.Api.watermarkDraw.Draw(ctx, x, y, w, h);
+				if (this.Api.watermarkDraw) {
+					let dx = x;
+
+					if (this.isLandscapePage(i)) {
+						dx += (w - h) / 2;
+						this.Api.watermarkDraw.Draw(ctx, dx, y, h, w);
+					}
+					else {
+						this.Api.watermarkDraw.Draw(ctx, dx, y, w, h);
+					}
+				}
 			}
 			
 			this.isClearPages = false;
