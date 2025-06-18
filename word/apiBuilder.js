@@ -24187,8 +24187,8 @@
 		const posMm = this.Comment.getPosition();
 
 		return {
-			x: private_MM2EMU(posMm.x),
-			y: private_MM2EMU(posMm.y)
+			"x": private_MM2EMU(posMm.x),
+			"y": private_MM2EMU(posMm.y)
 		};
 	};
 
