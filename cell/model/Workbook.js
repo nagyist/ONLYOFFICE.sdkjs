@@ -5155,6 +5155,11 @@
 			this.aWorksheets[i].checkCorrectTables();
 		}
 	};
+	Workbook.prototype.initControls = function () {
+		for(var i = 0; i < this.aWorksheets.length; ++i) {
+			this.aWorksheets[i].initControls();
+		}
+	};
 
 	Workbook.prototype.getRulesByType = function(type, id, needClone) {
 		var range, sheet;
@@ -12160,6 +12165,15 @@
 				if (table.TableColumns.length < (table.Ref.c2 - table.Ref.c1 + 1)) {
 					table.Ref.c2 = table.Ref.c1 + table.TableColumns.length - 1;
 				}
+			}
+		}
+	};
+	Worksheet.prototype.initControls = function () {
+		for (let i = 0; i < this.Drawings.length; i += 1) {
+			const oDrawingBase = this.Drawings[i];
+			const oDrawing = oDrawingBase.graphicObject;
+			if (oDrawing.isControl()) {
+				oDrawing.controller.init();
 			}
 		}
 	};

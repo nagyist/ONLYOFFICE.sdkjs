@@ -78,6 +78,7 @@
 				return false;
 			}
 		}
+		// this.controller.init();
 		return true;
 	}
 	CControl.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
@@ -103,6 +104,13 @@
 	CControlControllerBase.prototype.getFormControlPr = function() {
 		return this.control.formControlPr;
 	};
+	CControlControllerBase.prototype.getWorksheet = function() {
+		return this.control.Get_Worksheet();
+	};
+	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
+	CControlControllerBase.prototype.onClick = function(oController, nX, nY) {};
+	CControlControllerBase.prototype.init = function() {};
+
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
 	};
@@ -177,7 +185,50 @@
 			} else {
 				oFormControlPr.setChecked(CFormControlPr_checked_checked);
 			}
+			oThis.updateCellValue(oController);
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
+	};
+	CCheckBoxController.prototype.getMainCell = function () {
+		const oFormControlPr = this.getFormControlPr();
+		let oCell = null;
+		if (oFormControlPr.fmlaLink) {
+			const oWs = this.getWorksheet();
+			let aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaLink, oWs, true, true, true);
+			const oRef = aParsedRef[0];
+			if (oRef) {
+				oWs._getCell(oRef.bbox.r1, oRef.bbox.c1, function (cell) {
+					oCell = cell;
+				});
+			}
+		}
+		return oCell;
+	};
+	CCheckBoxController.prototype.init = function() {
+		const oFormControlPr = this.getFormControlPr();
+		const oCell = this.getMainCell();
+		if (oCell) {
+			oFormControlPr.setChecked(oCell.getValue2() ? CFormControlPr_checked_checked : CFormControlPr_checked_unchecked);
+		}
+	};
+	CCheckBoxController.prototype.updateCellValue = function (oController) {
+
+		const oCell = this.getMainCell();
+		if (oCell) {
+			const oCellValue = new AscCommonExcel.CCellValue();
+			oCellValue.type = AscCommon.CellValueType.String;
+			if (this.isChecked()) {
+				oCellValue.text = "TRUE";
+			} else if (this.isMixed()) {
+				oCellValue.text = "#N/A";
+			} else {
+				oCellValue.text = "FALSE";
+			}
+			oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
+			const oWs = oController.drawingObjects.getWorksheet();
+			const oRange = new Asc.Range(oCell.nCol, oCell.nRow, oCell.nCol, oCell.nRow);
+			oWs._updateRange(oRange);
+			oWs.draw();
+		}
 	};
 
 	function CControlPr() {
