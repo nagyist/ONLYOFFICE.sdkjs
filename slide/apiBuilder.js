@@ -3137,12 +3137,14 @@
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiSlide
 	 * @param {string} text - The text of the comment (required).
+	 * @param {number} posX - The X position (in EMU) of the comment (optional, defaults to 0).
+	 * @param {number} posY - The Y position (in EMU) of the comment (optional, defaults to 0).
 	 * @param {string} author - The author of the comment (optional, defaults to the current user name).
 	 * @param {string} userId - The user ID of the comment author (optional, defaults to the current user ID).
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/AddComment.js
 	 */
-	ApiSlide.prototype.AddComment = function (text, author, userId) {
+	ApiSlide.prototype.AddComment = function (text, posX, posY, author, userId) {
 		if (!text || typeof text !== 'string') return false;
 
 		const currentDate = new Date();
@@ -3157,7 +3159,15 @@
 		commentData.m_sGuid = AscCommon.CreateGUID();
 
 		const comment = this.Slide.presentation.AddComment(commentData);
-		return Boolean(comment);
+		if (!comment) return false;
+
+		if (!AscFormat.isRealNumber(posX)) posX = 0;
+		if (!AscFormat.isRealNumber(posY)) posY = 0;
+		const xMm = private_EMU2MM(posX);
+		const yMm = private_EMU2MM(posY);
+		comment.setPosition(xMm, yMm);
+
+		return true;
 	};
 
     /**
