@@ -3575,7 +3575,8 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_getWorksheetName = function(index) {
-    return this.wbModel.getWorksheet(index).getName();
+	  let name = this.wbModel.getWorksheet(index).getName();
+    return AscCommon.getLTRString(name);
   };
 
   spreadsheet_api.prototype.asc_getWorksheetTabColor = function(index) {
@@ -3870,6 +3871,7 @@ var editor;
       return false;
     }
 
+	let newName = AscCommon.stripDirectionMarks(name);
     var i = this.wbModel.getActive();
     var sheetId = this.wbModel.getWorksheet(i).getId();
     var lockInfo = this.collaborativeEditing.getLockInfo(c_oAscLockTypeElem.Sheet, /*subType*/null, sheetId, sheetId);
@@ -3877,16 +3879,16 @@ var editor;
     var t = this;
     var renameCallback = function(res) {
       if (res) {
-        AscFonts.FontPickerByCharacter.getFontsByString(name);
+        AscFonts.FontPickerByCharacter.getFontsByString(newName);
         t._loadFonts([], function() {
             var oWorkbook = t.wbModel;
             var oWorksheet = oWorkbook.getWorksheet(i);
             var sOldName = oWorksheet.getName();
-            oWorksheet.setName(name);
+            oWorksheet.setName(newName);
             t.sheetsChanged();
             if(t.wb) {
                 //change sheet name in chart references
-                t.wb.handleChartsOnChangeSheetName(oWorksheet, sOldName, name);
+                t.wb.handleChartsOnChangeSheetName(oWorksheet, sOldName, newName);
             }
         });
       } else {
