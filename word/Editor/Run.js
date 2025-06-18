@@ -12641,6 +12641,23 @@ ParaRun.prototype.GetFontSlotInRange = function(nStartPos, nEndPos)
 
 	return nFontSlot;
 };
+ParaRun.prototype.GetDirectionFlagInRange = function(startPos, endPos)
+{
+	if (startPos >= endPos
+		|| startPos >= this.Content.length
+		|| endPos <= 0
+		|| this.IsMathRun())
+		return AscBidi.DIRECTION_FLAG.None;
+	
+	let dir = AscBidi.DIRECTION_FLAG.None;
+	for (let pos = startPos; pos < endPos; ++pos)
+	{
+		let item = this.Content[pos];
+		dir |= item.GetDirectionFlag();
+	}
+	
+	return dir;
+};
 /**
  * Get first find parent typeof CMathContent or MathBase
  * @return {*}
