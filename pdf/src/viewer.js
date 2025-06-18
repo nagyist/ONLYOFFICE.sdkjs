@@ -1240,6 +1240,14 @@
 				process : false
 			};
 
+			this.SearchResults = null;
+			this.isClearPages = false;
+
+			this.isFullText = false;
+			this.isFullTextMessage = false;
+			this.fullTextMessageCallback = null;
+			this.fullTextMessageCallbackArgs = null;
+
 			this._paint();
 			this.onUpdateOverlay();
 		};
