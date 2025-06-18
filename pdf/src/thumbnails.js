@@ -255,7 +255,7 @@
             let isLandscape = oViewer.isLandscapePage(drPage.num);
 
             // Compute scale so that all pages align by their largest side
-            let localScale = maxOrig / drPage.page.height;
+            let localScale = maxOrig / Math.max(drPage.page.width, drPage.page.height);
             if (Math.abs(localScale - 1) < EPS) {
                 localScale = 1;
             }
