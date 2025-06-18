@@ -991,9 +991,6 @@
 
 		isUseNewCopy : function()
 		{
-			if (navigator.clipboard) {
-				return true;
-			}
 			if (this._isUseMobileNewCopy())
 			{
 				return true;
@@ -1059,8 +1056,10 @@
 					//don't put custom format, because FF don't write all in clipboard, if we try write custom format
 					//"web text/x-custom" : new Blob(["asc_internalData2;" + copy_data.data[c_oAscClipboardDataFormat.Internal]], {type: "web text/x-custom"})
 
-					const data = [new ClipboardItem(clipboardData)];
-					navigator.clipboard.write(data).then(function(){},function(){});
+					if (this.isCopyOutEnabled()) {
+						const data = [new ClipboardItem(clipboardData)];
+						navigator.clipboard.write(data).then(function(){},function(){});
+					}
 
 					if (isCut === true)
 						this.Api.asc_SelectionCut();
