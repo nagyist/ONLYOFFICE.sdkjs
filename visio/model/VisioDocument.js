@@ -189,6 +189,19 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		AscCommon.mockLogicDoc(CVisioDocument.prototype);
 	}
 	AscFormat.InitClass(CVisioDocument, AscFormat.CBaseFormatNoIdObject, AscDFH.historyitem_type_Unknown);
+	CVisioDocument.prototype.IsDocumentEditor = function() {
+		return false;
+	};
+	CVisioDocument.prototype.IsPresentationEditor = function() {
+		//todo add new editor func
+		return true;
+	};
+	CVisioDocument.prototype.IsSpreadSheetEditor = function() {
+		return false;
+	};
+	CVisioDocument.prototype.IsPdfEditor = function() {
+		return false;
+	};
 	/**
 	 * TODO Check thumbnail parse in fromZip and setData in toZip
 	 * @memberOf CVisioDocument
