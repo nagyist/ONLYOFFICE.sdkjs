@@ -10414,19 +10414,28 @@
 			let res = c_oSerConstants.ReadOk;
 			const oThis = this;
 			if (c_oSerControlTypes.Control == type) {
+				const oPr = {shape: null};
 				const oControl = new AscFormat.CControl();
 				res = this.bcr.Read1(length, function(t,l){
-					return oThis.ReadControl(t,l, oControl);
+					return oThis.ReadControl(t,l, oControl, oPr);
 				});
 				if (oControl.controlPr.anchor) {
 					if (oControl.initController()) {
 						const oDrawingBase = oControl.controlPr.anchor;
 						oControl.controlPr.anchor = null;
 						oDrawingBase.graphicObject = oControl;
-						var sp_pr = new AscFormat.CSpPr();
+						var sp_pr = oPr.shape && oPr.shape.spPr && oPr.shape.spPr.createDuplicate() || new AscFormat.CSpPr();
 						sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
 						oControl.setSpPr(sp_pr);
 						sp_pr.setParent(oControl);
+						if (oPr.shape && oPr.shape.txBody) {
+							const oTextBody = oPr.shape.txBody.createDuplicate();
+							// const oBodyPr = new AscFormat.CBodyPr();
+							// oBodyPr.setInsets(0, 0, 0, 0);
+							// oTextBody.setBodyPr(oBodyPr);
+
+							oControl.setTxBody(oTextBody);
+						}
 						oDrawingBase.initAfterSerialize(oWorksheet);
 					}
 				}
@@ -10435,7 +10444,7 @@
 			}
 			return res;
 		}
-		this.ReadControl = function (type, length, oControl) {
+		this.ReadControl = function (type, length, oControl, oPr) {
 			let res = c_oSerConstants.ReadOk;
 			switch (type) {
 				case c_oSerControlTypes.ControlAnchor: {
@@ -10628,7 +10637,7 @@
 				}
 				case c_oSerControlTypes.Shape: {
 					const oShape = this.ReadPptxDrawing();
-					oControl.shape = oShape;
+					oPr.shape = oShape;
 					break;
 				}
 				default: {

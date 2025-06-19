@@ -4155,7 +4155,10 @@
                 if(aRefsToChange.length > nPrevLength) {
                     aCharts.push(oDrawing);
                 }
-            }
+								//todo move tihis to another place
+            } else if (oDrawing.getObjectType() === AscDFH.historyitem_type_Control) {
+							oDrawing.updateFromRanges(aRanges);
+						}
         });
         if(aRefsToChange.length > 0) {
             for(var nRef = 0; nRef < aRefsToChange.length; ++nRef) {

@@ -1642,6 +1642,8 @@
 							if (sMediaName) {
 								sCursorType = "pointer";
 							}
+						} else if (object.isControl() && !object.selected) {
+							sCursorType = "pointer";
 						}
 						if (oAnimPlayer) {
 							oAnimPlayer.onSpMouseOver(group || object);

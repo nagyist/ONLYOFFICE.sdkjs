@@ -91,12 +91,19 @@
 		return nX > 0 && nX < this.extX && nY > 0 && nY < this.extY;
 	}
 	CControl.prototype.hitInPath = CControl.prototype.hitInInnerArea;
+	CControl.prototype.hitInTextRect = function() {
+		//todo
+		return false;
+	};
 	CControl.prototype.isControl = function () {
 		return true;
 	}
 	CControl.prototype.onClick = function(oController, nX, nY) {
 		this.controller.onClick(oController, nX, nY);
 	}
+	CControl.prototype.updateFromRanges = function(aRanges) {
+		this.controller.updateFromRanges(aRanges);
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -110,6 +117,7 @@
 	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
 	CControlControllerBase.prototype.onClick = function(oController, nX, nY) {};
 	CControlControllerBase.prototype.init = function() {};
+	CControlControllerBase.prototype.updateFromRanges = function(aRanges) {};
 
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
@@ -117,12 +125,17 @@
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
 	CCheckBoxController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
+		const nSide = 3;
+		const nXOffset = 1.5;
 		const oMainTransfrom = transform || oControl.transform;
 		const checkBoxTransform = oMainTransfrom.CreateDublicate();
-		AscFormat.CShape.prototype.draw.call(oControl, graphics, transform, transformText, pageIndex, opt);
+		const oMainTextTransform = transformText || oControl.transformText;
+		const oCheckBoxTextTransform = oMainTextTransform.CreateDublicate();
+		oCheckBoxTextTransform.tx += nSide + nXOffset * 2;
+		AscFormat.CShape.prototype.draw.call(oControl, graphics, transform, oCheckBoxTextTransform, pageIndex, opt);
 		graphics.SaveGrState();
-		const nSide = 3;
-		checkBoxTransform.tx += 1;
+
+		checkBoxTransform.tx += nXOffset;
 		checkBoxTransform.ty += (oControl.extY - nSide) / 2;
 		graphics.transform3(checkBoxTransform);
 		graphics.b_color1(255, 255, 255, 255);
@@ -185,51 +198,81 @@
 			} else {
 				oFormControlPr.setChecked(CFormControlPr_checked_checked);
 			}
-			oThis.updateCellValue(oController);
+			oThis.updateCellFromControl(oController);
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
 	};
-	CCheckBoxController.prototype.getMainCell = function () {
+	CCheckBoxController.prototype.getParsedRef = function() {
 		const oFormControlPr = this.getFormControlPr();
-		let oCell = null;
 		if (oFormControlPr.fmlaLink) {
 			const oWs = this.getWorksheet();
 			let aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaLink, oWs, true, true, true);
 			const oRef = aParsedRef[0];
 			if (oRef) {
-				oWs._getCell(oRef.bbox.r1, oRef.bbox.c1, function (cell) {
-					oCell = cell;
-				});
+				return new AscCommonExcel.Range(oRef.worksheet, oRef.bbox.r1, oRef.bbox.c1, oRef.bbox.r1, oRef.bbox.c1);
 			}
 		}
-		return oCell;
+		return null;
 	};
 	CCheckBoxController.prototype.init = function() {
 		const oFormControlPr = this.getFormControlPr();
-		const oCell = this.getMainCell();
-		if (oCell) {
-			oFormControlPr.setChecked(oCell.getValue2() ? CFormControlPr_checked_checked : CFormControlPr_checked_unchecked);
+		const oRef = this.getParsedRef();
+		if (oRef) {
+			oRef._foreachNoEmpty(function(oCell) {
+				if (oCell) {
+					const bValue = oCell.getBoolValue();
+					if (oCell.type === AscCommon.CellValueType.Bool || oCell.type === AscCommon.CellValueType.Number) {
+						oFormControlPr.setChecked(bValue ? CFormControlPr_checked_checked : CFormControlPr_checked_unchecked);
+					} else if (oCell.type === AscCommon.CellValueType.Error) {
+						oFormControlPr.setChecked(CFormControlPr_checked_mixed);
+					}
+				}
+			});
 		}
 	};
-	CCheckBoxController.prototype.updateCellValue = function (oController) {
+	CCheckBoxController.prototype.updateCellFromControl = function (oController) {
+		const oThis = this;
+		const oRef = this.getParsedRef();
+		if (oRef) {
+			oRef._foreachNoEmpty(function(oCell) {
+				if (oCell) {
+					const oCellValue = new AscCommonExcel.CCellValue();
+					if (oThis.isChecked()) {
+						oCellValue.type = AscCommon.CellValueType.Bool;
+						oCellValue.number = 1;
+					} else if (oThis.isMixed()) {
+						oCellValue.type = AscCommon.CellValueType.Error;
+						oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(cErrorType.not_available);
+					} else {
+						oCellValue.type = AscCommon.CellValueType.Bool;
+						oCellValue.number = 0;
+					}
+					oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
 
-		const oCell = this.getMainCell();
-		if (oCell) {
-			const oCellValue = new AscCommonExcel.CCellValue();
-			oCellValue.type = AscCommon.CellValueType.String;
-			if (this.isChecked()) {
-				oCellValue.text = "TRUE";
-			} else if (this.isMixed()) {
-				oCellValue.text = "#N/A";
-			} else {
-				oCellValue.text = "FALSE";
+				}
+			});
+			const oWb = Asc.editor.wb;
+			const nWorksheetIndex = oRef.worksheet.getIndex();
+			const oWs = oWb && oWb.getWorksheet(nWorksheetIndex, true);
+			if (oWs) {
+				oWs._updateRange(oRef.bbox);
+				if (oWb.wsActive === nWorksheetIndex) {
+					oWs.draw();
+				}
 			}
-			oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
-			const oWs = oController.drawingObjects.getWorksheet();
-			const oRange = new Asc.Range(oCell.nCol, oCell.nRow, oCell.nCol, oCell.nRow);
-			oWs._updateRange(oRange);
-			oWs.draw();
 		}
 	};
+	CCheckBoxController.prototype.updateFromRanges = function(aRanges) {
+		const oMainRange = this.getParsedRef();
+		if (oMainRange) {
+			for (let i = 0; i < aRanges.length; i += 1) {
+				const oRange = aRanges[i];
+				if (oRange.isIntersect(oMainRange)) {
+					this.init();
+				}
+			}
+		}
+	}
+
 
 	function CControlPr() {
 		this.altText = null;
