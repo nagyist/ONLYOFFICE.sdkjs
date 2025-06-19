@@ -2006,6 +2006,10 @@ Paragraph.prototype.getLineCount = function()
 {
 	return this.GetLinesCount();
 };
+Paragraph.prototype.getLine = function(line)
+{
+	return this.Lines[line] ? this.Lines[line] : null;
+};
 Paragraph.prototype.GetLinesCount = function()
 {
 	if (!this.IsRecalculated())

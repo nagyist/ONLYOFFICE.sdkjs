@@ -5191,19 +5191,9 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		}
 		
 		let textDescent = metrics.Descent;
-		let textAscent  = metrics.Ascent + metrics.LineGap;
 		let textAscent2 = metrics.Ascent;
+		let textAscent  = textAscent2 + metrics.LineGap;
 		
-		// Пересчитаем метрику строки относительно размера данного текста
-		if (PRS.LineTextAscent < textAscent)
-			PRS.LineTextAscent = textAscent;
-
-		if (PRS.LineTextAscent2 < textAscent2)
-			PRS.LineTextAscent2 = textAscent2;
-
-		if (PRS.LineTextDescent < textDescent)
-			PRS.LineTextDescent = textDescent;
-
 		if (Asc.linerule_Exact === LineRule)
 		{
 			// Смещение не учитывается в метриках строки, когда расстояние между строк точное
@@ -5216,12 +5206,30 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		else
 		{
 			let yOffset = this.getYOffset();
-			if (PRS.LineAscent < textAscent + yOffset)
-				PRS.LineAscent = textAscent + yOffset;
-
-			if (PRS.LineDescent < textDescent - yOffset)
-				PRS.LineDescent = textDescent - yOffset;
+			
+			if (yOffset >= 0)
+			{
+				PRS.LineAscent = Math.max(PRS.LineAscent, textAscent + yOffset);
+				textDescent    = Math.max(0, textDescent - yOffset);
+			}
+			else
+			{
+				PRS.LineDescent = Math.max(PRS.LineDescent, textDescent - yOffset);
+				textAscent2     = Math.max(0, textAscent2 + yOffset);
+			}
+			
+			textAscent = textAscent2 + metrics.LineGap;
 		}
+		
+		// Пересчитаем метрику строки относительно размера данного текста
+		if (PRS.LineTextAscent < textAscent)
+			PRS.LineTextAscent = textAscent;
+		
+		if (PRS.LineTextAscent2 < textAscent2)
+			PRS.LineTextAscent2 = textAscent2;
+		
+		if (PRS.LineTextDescent < textDescent)
+			PRS.LineTextDescent = textDescent;
 	}
 };
 

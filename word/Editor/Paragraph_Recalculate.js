@@ -1283,7 +1283,7 @@ Paragraph.prototype.private_RecalculateLineMetrics     = function(CurLine, CurPa
 
     // Строка пустая, у нее надо выставить ненулевую высоту. Делаем как Word, выставляем высоту по размеру
     // текста, на котором закончилась данная строка.
-    if ( true === PRS.EmptyLine || PRS.LineAscent < 0.001 || (true === PRS.End && true !== PRS.TextOnLine))
+    if ( true === PRS.EmptyLine || (PRS.LineAscent < 0.001 && PRS.LineDescent < 0.001) || (true === PRS.End && true !== PRS.TextOnLine))
 	{
 		var LastItem = (true === PRS.End ? this.Content[this.Content.length - 1] : this.Content[this.Lines[CurLine].Ranges[this.Lines[CurLine].Ranges.length - 1].EndPos]);
 
