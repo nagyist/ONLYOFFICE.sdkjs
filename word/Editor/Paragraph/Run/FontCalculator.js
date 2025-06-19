@@ -71,7 +71,7 @@
 		oTextPr.Italic     = this.Italic;
 		oTextPr.FontSize   = this.FontSize;
 		oTextPr.FontFamily = {Name : this.FontName, Index : -1};
-		oTextPr.Lang       = this.Lang;
+		oTextPr.Lang.Val   = this.Lang;
 	};
 	//------------------------------------------------------------------------------------------------------------------
 	CFontCalculator.prototype.Reset = function()

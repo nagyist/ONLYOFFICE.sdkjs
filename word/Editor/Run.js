@@ -8503,8 +8503,24 @@ ParaRun.prototype.Apply_Pr = function(TextPr)
 	}
 
 
-	if (undefined !== TextPr.Lang)
-		this.Set_Lang2(TextPr.Lang);
+	if (undefined !== TextPr.Lang && undefined !== TextPr.Lang.Val)
+	{
+		let lcid = TextPr.Lang.Val;
+		let dirFlag = this.GetDirectionFlagInRange(0, this.Content.length);
+		if (AscBidi.DIRECTION_FLAG.LTR & dirFlag)
+			this.Set_Lang_Val(lcid);
+		if (AscBidi.DIRECTION_FLAG.RTL & dirFlag)
+			this.Set_Lang_Bidi(lcid);
+		
+		let paragraph = this.GetParagraph();
+		if (AscBidi.DIRECTION_FLAG.Other === dirFlag && paragraph)
+		{
+			if (paragraph.isRtlDirection())
+				this.Set_Lang_Bidi(lcid);
+			else
+				this.Set_Lang_Val(lcid);
+		}
+	}
 
 	if (undefined !== TextPr.Shd)
 		this.Set_Shd(null === TextPr.Shd ? undefined : TextPr.Shd);
@@ -12364,7 +12380,7 @@ ParaRun.prototype.CheckSpelling = function(oCollector, nDepth)
 		if (true === this.IsEmpty())
 			return;
 
-		oCollector.HandleLang(oCurTextPr.Lang.Val);
+		oCollector.HandleLang(oCurTextPr.Lang);
 	}
 
 	for (let nPos = nStartPos, nContentLen = this.Content.length; nPos < nContentLen; ++nPos)
