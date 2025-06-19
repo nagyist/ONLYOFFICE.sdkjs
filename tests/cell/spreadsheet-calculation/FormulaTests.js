@@ -23454,9 +23454,10 @@ $(function () {
 		ws.getRange2("N114").setValue("0");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
+		//Strange Excel logic. If you expand the range by a cell, you will get the correct result.
 		oParser = new parserFormula('VLOOKUP(576,K100:L113,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'VLOOKUP(576,K100:L113,2)');
-		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of VLOOKUP(576,K100:L113,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 0.3477, 'Result of VLOOKUP(576,K100:L113,2)');
 
 		oParser = new parserFormula('VLOOKUP(576,N100:O114,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'VLOOKUP(576,N100:O114,2)');
@@ -23587,18 +23588,17 @@ $(function () {
 		ws.getRange2("B1123").setValue("23");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
-		// TODO fix _defaultBinarySearch
-		// oParser = new parserFormula('VLOOKUP(,A1101:B1123,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'VLOOKUP(,A1101:B1123,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of VLOOKUP(,A1101:B1123,2,TRUE)');
-		//
-		// oParser = new parserFormula('VLOOKUP(2.4,A1101:B1123,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'VLOOKUP(2.4,A1101:B1123,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of VLOOKUP(2.4,A1101:B1123,2,TRUE)');
-		//
-		// oParser = new parserFormula('VLOOKUP("VIOLET",A1101:B1123,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'VLOOKUP("VIOLET",A1101:B1123,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 21, 'Result of VLOOKUP("VIOLET",A1101:B1123,2,TRUE)');
+		oParser = new parserFormula('VLOOKUP(,A1101:B1123,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(,A1101:B1123,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of VLOOKUP(,A1101:B1123,2,TRUE)');
+
+		oParser = new parserFormula('VLOOKUP(2.4,A1101:B1123,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(2.4,A1101:B1123,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of VLOOKUP(2.4,A1101:B1123,2,TRUE)');
+
+		oParser = new parserFormula('VLOOKUP("VIOLET",A1101:B1123,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP("VIOLET",A1101:B1123,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 21, 'Result of VLOOKUP("VIOLET",A1101:B1123,2,TRUE)');
 
 		oParser = new parserFormula('VLOOKUP(2.3,A1101:B1123,2,TRUE)', "A2", ws);
 		assert.ok(oParser.parse(), 'VLOOKUP(2.3,A1101:B1123,2,TRUE)');
