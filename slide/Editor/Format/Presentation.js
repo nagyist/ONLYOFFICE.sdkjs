@@ -9298,7 +9298,7 @@ CPresentation.prototype.deleteSlides = function (arrSlides) {
 		let nMinSlideIndex = this.GetSlidesCount() - 1;
 		for (var i = checkArray.length - 1; i > -1; --i) {
 			const nSlideIndex = this.GetSlideIndex(checkArray[i]);
-			if (nSlideIndex < nMinSlideIndex) {
+			if (nSlideIndex !== -1 && nSlideIndex < nMinSlideIndex) {
 				nMinSlideIndex = nSlideIndex;
 			}
 			this.removeSlideByObject(checkArray[i]);
