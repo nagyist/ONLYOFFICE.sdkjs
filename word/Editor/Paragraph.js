@@ -1783,6 +1783,26 @@ Paragraph.prototype.Internal_Recalculate_CurPos = function(updateCurPos, updateT
 			targetY = top;
 		}
 		
+		if (this.Parent && this.Parent instanceof AscWord.CDocumentContent)
+		{
+			let relPage = this.GetRelativePage(CurPage);
+			let clip = this.Parent.GetClip(relPage);
+			if (clip)
+			{
+				let x0 = clip.correctX0(targetX);
+				let x1 = clip.correctX1(targetX);
+				
+				let y0 = clip.correctY0(targetY);
+				let y1 = clip.correctY1(targetY + targetH);
+				
+				if (x0 > x1 || y0 > y1)
+				{
+					targetH = 0;
+					ascent  = 0;
+				}
+			}
+		}
+		
 		drawingDocument.SetTargetColor(color.r, color.g, color.b);
 		drawingDocument.SetTargetSize(targetH, ascent);
 		drawingDocument.UpdateTargetTransform(transform);
@@ -1985,6 +2005,10 @@ Paragraph.prototype.IsEmptyRange = function(nCurLine, nCurRange)
 Paragraph.prototype.getLineCount = function()
 {
 	return this.GetLinesCount();
+};
+Paragraph.prototype.getLine = function(line)
+{
+	return this.Lines[line] ? this.Lines[line] : null;
 };
 Paragraph.prototype.GetLinesCount = function()
 {

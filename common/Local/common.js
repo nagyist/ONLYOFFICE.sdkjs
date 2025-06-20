@@ -253,7 +253,7 @@ if (isOverrideDocumentUrls)
 	};
 	prot.getImageLocal = function(_url)
 	{
-		let url = _url.replaceAll("%20", " ");
+		let url = _url ? _url.replaceAll("%20", " ") : "";
 		var _first = this.documentUrl + "/media/";
 		if (0 === url.indexOf(_first))
 			return url.substring(_first.length);

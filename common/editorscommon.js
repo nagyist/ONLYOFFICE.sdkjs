@@ -14975,6 +14975,68 @@
 		}
 	}
 
+
+	const LRI = '\u2066'; // LEFT-TO-RIGHT ISOLATE
+	const RLI = '\u2067'; // RIGHT-TO-LEFT ISOLATE
+	const PDI = '\u2069'; // POP DIRECTIONAL ISOLATE
+
+	function getLTRString(str) {
+		if (str.startsWith(LRI) && str.endsWith(PDI)) {
+			return str;
+		}
+
+		if (str.startsWith(RLI)) {
+			str = str.slice(1);
+		}
+		if (str.startsWith(LRI)) {
+			str = str.slice(1);
+		}
+		if (str.endsWith(PDI)) {
+			str = str.slice(0, -1);
+		}
+
+		return LRI + str + PDI;
+	}
+
+	function getRTLString(str) {
+		if (str.startsWith(RLI) && str.endsWith(PDI)) {
+			return str;
+		}
+
+		if (str.startsWith(LRI)) {
+			str = str.slice(1);
+		}
+		if (str.startsWith(RLI)) {
+			str = str.slice(1);
+		}
+		if (str.endsWith(PDI)) {
+			str = str.slice(0, -1);
+		}
+
+		return RLI + str + PDI;
+	}
+
+	function stripDirectionMarks(str) {
+		while (
+			str.startsWith('\u200E') ||
+			str.startsWith('\u200F') ||
+			str.startsWith(LRI) ||
+			str.startsWith(RLI)
+			) {
+			str = str.slice(1);
+		}
+
+		while (
+			str.endsWith('\u200E') ||
+			str.endsWith('\u200F') ||
+			str.endsWith(PDI)
+			) {
+			str = str.slice(0, -1);
+		}
+
+		return str;
+	}
+
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
 	window["AscCommon"].consoleLog = consoleLog;
@@ -15037,6 +15099,9 @@
 	window["AscCommon"].checkOOXMLSignature = checkOOXMLSignature;
 	window["AscCommon"].checkNativeViewerSignature = checkNativeViewerSignature;
 	window["AscCommon"].getEditorBySignature = getEditorBySignature;
+	window["AscCommon"].getLTRString = getLTRString;
+	window["AscCommon"].getRTLString = getRTLString;
+	window["AscCommon"].stripDirectionMarks = stripDirectionMarks;
 
 	window["AscCommon"].DocumentUrls = DocumentUrls;
 	window["AscCommon"].OpenFileResult = OpenFileResult;

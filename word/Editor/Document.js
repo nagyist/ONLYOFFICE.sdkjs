@@ -19539,24 +19539,24 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 		else
 		{
 			var ItemReviewType = Item.GetReviewType();
-			// Создаем новый параграф
-			var NewParagraph   = new AscWord.Paragraph();
 
+			var NewParagraph = new AscWord.Paragraph();
 			let firstPara, secondPara;
 			if (Item.IsCursorAtBegin())
 			{
 				// Продолжаем (в плане настроек) новый параграф
+				Item.Split(NewParagraph);
 				Item.Continue(NewParagraph);
 
 				NewParagraph.Correct_Content();
 				NewParagraph.MoveCursorToStartPos();
 
 				var nContentPos = this.CurPos.ContentPos;
-				this.AddToContent(nContentPos, NewParagraph);
+				this.AddToContent(nContentPos + 1, NewParagraph);
 				this.CurPos.ContentPos = nContentPos + 1;
 
-				firstPara  = NewParagraph;
-				secondPara = Item;
+				firstPara  = Item;
+				secondPara = NewParagraph;
 			}
 			else
 			{
@@ -19568,7 +19568,7 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 					var StyleId = Item.Style_Get();
 					var NextId  = undefined;
 
-					if (undefined != StyleId)
+					if (undefined !== StyleId)
 					{
 						NextId = this.Styles.Get_Next(StyleId);
 
@@ -19576,7 +19576,8 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 						if (!NextId || !oNextStyle || !oNextStyle.IsParagraphStyle())
 							NextId = StyleId;
 					}
-
+					
+					Item.Split(NewParagraph);
 					if (StyleId === NextId)
 					{
 						// Продолжаем (в плане настроек) новый параграф

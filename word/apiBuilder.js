@@ -24171,6 +24171,45 @@
 		
 		return logicDocument.RemoveComment(this.Comment.GetId(), true);
 	};
+	
+	/**
+	 * Sets the position of the comment in the document.
+	 * 
+	 * @memberof ApiComment
+	 * @typeofeditors ["CPE"]
+	 * @param {number} x - The X coordinate of the comment position in EMU.
+	 * @param {number} y - The Y coordinate of the comment position in EMU.
+	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/SetPosition.js
+	 */
+	ApiComment.prototype.SetPosition = function (x, y) {
+		const xMm = private_EMU2MM(x);
+		const yMm = private_EMU2MM(y);
+
+		this.Comment.setPosition(xMm, yMm);
+	};
+
+	/**
+	 * Returns the position of the comment in the document.
+	 * 
+	 * @memberof ApiComment
+	 * @typeofeditors ["CPE"]
+	 * @returns {Object} - An object with the coordinates (in EMU) of the comment position.
+	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/GetPosition.js
+	 */
+	ApiComment.prototype.GetPosition = function () {
+		const posMm = this.Comment.getPosition();
+
+		return {
+			"x": private_MM2EMU(posMm.x),
+			"y": private_MM2EMU(posMm.y)
+		};
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiCommentReply
+	//
+	//------------------------------------------------------------------------------------------------------------------
 
 	/**
 	 * Returns a type of the ApiCommentReply class.
@@ -26170,6 +26209,8 @@
 	ApiComment.prototype["AddReply"]		= ApiComment.prototype.AddReply;
 	ApiComment.prototype["RemoveReplies"]	= ApiComment.prototype.RemoveReplies;
 	ApiComment.prototype["Delete"]			= ApiComment.prototype.Delete;
+	ApiComment.prototype["SetPosition"]		= ApiComment.prototype.SetPosition;
+	ApiComment.prototype["GetPosition"]		= ApiComment.prototype.GetPosition;
 
 	ApiCommentReply.prototype["GetClassType"]	= ApiCommentReply.prototype.GetClassType;
 	ApiCommentReply.prototype["GetText"]		= ApiCommentReply.prototype.GetText;

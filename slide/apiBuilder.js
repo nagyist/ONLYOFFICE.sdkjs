@@ -3143,13 +3143,15 @@
 	 *
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiSlide
+	 * @param {number} posX - The X position (in EMU) of the comment (defaults to 0).
+	 * @param {number} posY - The Y position (in EMU) of the comment (defaults to 0).
 	 * @param {string} text - The comment text.
 	 * @param {string} [author] - The author's name (defaults to the current user name).
 	 * @param {string} [userId] - The user ID of the comment author (defaults to the current user ID).
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/AddComment.js
 	 */
-	ApiSlide.prototype.AddComment = function (text, author, userId) {
+	ApiSlide.prototype.AddComment = function (posX, posY, text, author, userId) {
 		if (!text || typeof text !== 'string') return false;
 
 		const currentDate = new Date();
@@ -3164,7 +3166,15 @@
 		commentData.m_sGuid = AscCommon.CreateGUID();
 
 		const comment = this.Slide.presentation.AddComment(commentData);
-		return Boolean(comment);
+		if (!comment) return false;
+
+		if (!AscFormat.isRealNumber(posX)) posX = 0;
+		if (!AscFormat.isRealNumber(posY)) posY = 0;
+		const xMm = private_EMU2MM(posX);
+		const yMm = private_EMU2MM(posY);
+		comment.setPosition(xMm, yMm);
+
+		return true;
 	};
 
     /**
@@ -5254,6 +5264,7 @@
     ApiPresentation.prototype["GetCustomProperties"]      = ApiPresentation.prototype.GetCustomProperties;
 
     ApiMaster.prototype["GetClassType"]                   = ApiMaster.prototype.GetClassType;
+    ApiMaster.prototype["GetAllLayouts"]                  = ApiMaster.prototype.GetAllLayouts;
     ApiMaster.prototype["GetLayout"]                      = ApiMaster.prototype.GetLayout;
     ApiMaster.prototype["AddLayout"]                      = ApiMaster.prototype.AddLayout;
     ApiMaster.prototype["RemoveLayout"]                   = ApiMaster.prototype.RemoveLayout;

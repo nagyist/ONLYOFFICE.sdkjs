@@ -783,7 +783,10 @@ CContentControlPr.prototype.OnSetKeyToForm = function(newKey, form)
 	}
 	
 	if (firstForm)
+	{
 		form.SyncFormPrWithSameKey(firstForm);
+		this.FormPr.SetRequired(firstForm.IsFormRequired());
+	}
 	
 	let role = formManager.GetRoleByKey(newKey, form.GetSpecificType());
 	if (!role)

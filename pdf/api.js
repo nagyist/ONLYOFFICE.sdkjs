@@ -4172,6 +4172,12 @@
 	// Private area
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	PDFEditorApi.prototype.initDocumentRenderer = function() {
+		if (this.DocumentRenderer) {
+			// reopen file after reconnect
+			this.DocumentRenderer.close();
+			return;
+		}
+
 		let documentRenderer = new AscCommon.CViewer(this.HtmlElementName, this);
 		
 		let _t = this;
@@ -4355,6 +4361,11 @@
 		let _t = this;
 		let thumbnailsDivId = "thumbnails-list";
 		if (document.getElementById(thumbnailsDivId)) {
+			if (this.DocumentRenderer.Thumbnails) {
+				// reconnect
+				return;
+			}
+
 			this.DocumentRenderer.Thumbnails = new AscCommon.ThumbnailsControl(thumbnailsDivId);
 			this.DocumentRenderer.setThumbnailsControl(this.DocumentRenderer.Thumbnails);
 			

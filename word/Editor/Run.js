@@ -5191,19 +5191,9 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		}
 		
 		let textDescent = metrics.Descent;
-		let textAscent  = metrics.Ascent + metrics.LineGap;
 		let textAscent2 = metrics.Ascent;
+		let textAscent  = textAscent2 + metrics.LineGap;
 		
-		// Пересчитаем метрику строки относительно размера данного текста
-		if (PRS.LineTextAscent < textAscent)
-			PRS.LineTextAscent = textAscent;
-
-		if (PRS.LineTextAscent2 < textAscent2)
-			PRS.LineTextAscent2 = textAscent2;
-
-		if (PRS.LineTextDescent < textDescent)
-			PRS.LineTextDescent = textDescent;
-
 		if (Asc.linerule_Exact === LineRule)
 		{
 			// Смещение не учитывается в метриках строки, когда расстояние между строк точное
@@ -5216,12 +5206,30 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		else
 		{
 			let yOffset = this.getYOffset();
-			if (PRS.LineAscent < textAscent + yOffset)
-				PRS.LineAscent = textAscent + yOffset;
-
-			if (PRS.LineDescent < textDescent - yOffset)
-				PRS.LineDescent = textDescent - yOffset;
+			
+			if (yOffset >= 0)
+			{
+				PRS.LineAscent = Math.max(PRS.LineAscent, textAscent + yOffset);
+				textDescent    = Math.max(0, textDescent - yOffset);
+			}
+			else
+			{
+				PRS.LineDescent = Math.max(PRS.LineDescent, textDescent - yOffset);
+				textAscent2     = Math.max(0, textAscent2 + yOffset);
+			}
+			
+			textAscent = textAscent2 + metrics.LineGap;
 		}
+		
+		// Пересчитаем метрику строки относительно размера данного текста
+		if (PRS.LineTextAscent < textAscent)
+			PRS.LineTextAscent = textAscent;
+		
+		if (PRS.LineTextAscent2 < textAscent2)
+			PRS.LineTextAscent2 = textAscent2;
+		
+		if (PRS.LineTextDescent < textDescent)
+			PRS.LineTextDescent = textDescent;
 	}
 };
 
@@ -8503,8 +8511,24 @@ ParaRun.prototype.Apply_Pr = function(TextPr)
 	}
 
 
-	if (undefined !== TextPr.Lang)
-		this.Set_Lang2(TextPr.Lang);
+	if (undefined !== TextPr.Lang && undefined !== TextPr.Lang.Val)
+	{
+		let lcid = TextPr.Lang.Val;
+		let dirFlag = this.GetDirectionFlagInRange(0, this.Content.length);
+		if (AscBidi.DIRECTION_FLAG.LTR & dirFlag)
+			this.Set_Lang_Val(lcid);
+		if (AscBidi.DIRECTION_FLAG.RTL & dirFlag)
+			this.Set_Lang_Bidi(lcid);
+		
+		let paragraph = this.GetParagraph();
+		if (AscBidi.DIRECTION_FLAG.Other === dirFlag && paragraph)
+		{
+			if (paragraph.isRtlDirection())
+				this.Set_Lang_Bidi(lcid);
+			else
+				this.Set_Lang_Val(lcid);
+		}
+	}
 
 	if (undefined !== TextPr.Shd)
 		this.Set_Shd(null === TextPr.Shd ? undefined : TextPr.Shd);
@@ -12364,7 +12388,7 @@ ParaRun.prototype.CheckSpelling = function(oCollector, nDepth)
 		if (true === this.IsEmpty())
 			return;
 
-		oCollector.HandleLang(oCurTextPr.Lang.Val);
+		oCollector.HandleLang(oCurTextPr.Lang);
 	}
 
 	for (let nPos = nStartPos, nContentLen = this.Content.length; nPos < nContentLen; ++nPos)
@@ -12640,6 +12664,23 @@ ParaRun.prototype.GetFontSlotInRange = function(nStartPos, nEndPos)
 		return AscWord.fontslot_CS;
 
 	return nFontSlot;
+};
+ParaRun.prototype.GetDirectionFlagInRange = function(startPos, endPos)
+{
+	if (startPos >= endPos
+		|| startPos >= this.Content.length
+		|| endPos <= 0
+		|| this.IsMathRun())
+		return AscBidi.DIRECTION_FLAG.None;
+	
+	let dir = AscBidi.DIRECTION_FLAG.None;
+	for (let pos = startPos; pos < endPos; ++pos)
+	{
+		let item = this.Content[pos];
+		dir |= item.GetDirectionFlag();
+	}
+	
+	return dir;
 };
 /**
  * Get first find parent typeof CMathContent or MathBase
