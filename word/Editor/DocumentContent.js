@@ -2826,24 +2826,23 @@ CDocumentContent.prototype.AddNewParagraph = function(bForceAdd)
             else
             {
                 var ItemReviewType = Item.GetReviewType();
-                // Создаем новый параграф
+
                 var NewParagraph   = new AscWord.Paragraph(this, this.bPresentation === true);
-	
 				let firstPara, secondPara;
 				if (Item.IsCursorAtBegin())
 				{
-					// Продолжаем (в плане настроек) новый параграф
+					Item.Split(NewParagraph);
 					Item.Continue(NewParagraph);
 
 					NewParagraph.Correct_Content();
 					NewParagraph.MoveCursorToStartPos();
 
 					var nContentPos = this.CurPos.ContentPos;
-					this.AddToContent(nContentPos, NewParagraph);
+					this.AddToContent(nContentPos + 1, NewParagraph);
 					this.CurPos.ContentPos = nContentPos + 1;
 					
-					firstPara  = NewParagraph;
-					secondPara = Item;
+					firstPara  = Item;
+					secondPara = NewParagraph;
 				}
 				else
 				{
@@ -2864,8 +2863,8 @@ CDocumentContent.prototype.AddNewParagraph = function(bForceAdd)
 							if (!NextId || !oNextStyle || !oNextStyle.IsParagraphStyle())
 								NextId = StyleId;
 						}
-
-
+						
+						Item.Split(NewParagraph);
 						if (StyleId === NextId)
 						{
 							// Продолжаем (в плане настроек) новый параграф
