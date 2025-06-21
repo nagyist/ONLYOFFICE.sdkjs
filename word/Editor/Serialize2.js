@@ -1753,7 +1753,7 @@ function readPermStart(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permStart = AscWord.ParagraphPermStart.fromObject(permPr);
-	oReadResult.addPermStart(paragraphContent, permStart);
+	oReadResult.addPermStart(paragraphContent, permStart, true);
 	return res;
 }
 function readPermEnd(length, bcr, oReadResult, paragraphContent) {
@@ -1763,7 +1763,7 @@ function readPermEnd(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permEnd = AscWord.ParagraphPermEnd.fromObject(permPr);
-	oReadResult.addPermEnd(paragraphContent, permEnd);
+	oReadResult.addPermEnd(paragraphContent, permEnd, true);
 	return res;
 }
 function readPermPr(length, bcr, permPr) {
@@ -17606,10 +17606,10 @@ DocReadResult.prototype = {
 						}
 						break;
 					case para_PermStart:
-						this.addPermStart(par, elem.elem, false);
+						this.addPermStart(par, elem, false);
 						break;
 					case para_PermEnd:
-						this.addPermEnd(par, elem.elem, false);
+						this.addPermEnd(par, elem, false);
 						break;
 				}
 			}
