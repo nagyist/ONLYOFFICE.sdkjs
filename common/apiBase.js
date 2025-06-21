@@ -2742,7 +2742,7 @@
 	// Version History
 	baseEditorsApi.prototype.asc_showRevision   = function(newObj)
 	{
-		if (!newObj.docId) {
+		if (!newObj.docId || !this.isDocumentLoadComplete) {
 			return;
 		}
 		if (this.isCoAuthoringEnable) {
