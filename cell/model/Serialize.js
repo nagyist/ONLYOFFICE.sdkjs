@@ -10428,14 +10428,21 @@
 						sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
 						oControl.setSpPr(sp_pr);
 						sp_pr.setParent(oControl);
-						if (oPr.shape && oPr.shape.txBody) {
-							const oTextBody = oPr.shape.txBody.createDuplicate();
-							// const oBodyPr = new AscFormat.CBodyPr();
-							// oBodyPr.setInsets(0, 0, 0, 0);
-							// oTextBody.setBodyPr(oBodyPr);
-
-							oControl.setTxBody(oTextBody);
+						if (oControl.formControlPr.text) {
+							const sText = oControl.formControlPr.text.replaceAll("\n  ", "");
+								oControl.setTxBody(AscFormat.CreateTextBodyFromString(sText, oControl.getDrawingDocument(), oControl));
+								const oBodyPr = oControl.controller.getBodyPr();
+								oControl.txBody.setBodyPr(oBodyPr);
+								oControl.txBody.content.ApplyToAll = true;
+							oControl.txBody.content.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize:8}));
+							oControl.txBody.content.ApplyToAll = false;
 						}
+						// todo not implemented in core
+						// if (oPr.shape && oPr.shape.txBody) {
+						//
+						//
+						// 	// oControl.setTxBody(oTextBody);
+						// }
 						oDrawingBase.initAfterSerialize(oWorksheet);
 					}
 				}

@@ -2137,6 +2137,9 @@
     }
 
     InitClass(CBaseChartObject, CBaseFormatObject, AscDFH.historyitem_type_Unknown);
+		CBaseChartObject.prototype.isControl = function () {
+			return false;
+		};
 		CBaseChartObject.prototype.getBrush = function() {
 			return this.brush;
 		};

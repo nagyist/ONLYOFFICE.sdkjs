@@ -91,8 +91,10 @@
 		return nX > 0 && nX < this.extX && nY > 0 && nY < this.extY;
 	}
 	CControl.prototype.hitInPath = CControl.prototype.hitInInnerArea;
-	CControl.prototype.hitInTextRect = function() {
-		//todo
+	CControl.prototype.hitInTextRect = function(x, y) {
+		if (this.selected) {
+			return AscFormat.CShape.prototype.hitInTextRect.call(this, x, y);
+		}
 		return false;
 	};
 	CControl.prototype.isControl = function () {
@@ -103,6 +105,9 @@
 	}
 	CControl.prototype.updateFromRanges = function(aRanges) {
 		this.controller.updateFromRanges(aRanges);
+	};
+	CControl.prototype.getTextRect = function () {
+		return this.controller.getTextRect();
 	};
 
 	function CControlControllerBase(oControl) {
@@ -118,34 +123,49 @@
 	CControlControllerBase.prototype.onClick = function(oController, nX, nY) {};
 	CControlControllerBase.prototype.init = function() {};
 	CControlControllerBase.prototype.updateFromRanges = function(aRanges) {};
+	CControlControllerBase.prototype.getBodyPr = function() {return null;};
+	CControlControllerBase.prototype.getTextRect = function() {
+		return AscFormat.CShape.prototype.getTextRect.call(this.control);
+	};
 
+	const CHECKBOX_SIDE_SIZE = 3;
+	const CHECKBOX_X_OFFSET = 1.5;
+	const CHECKBOX_BODYPR_INSETS_L = 27432 / 36000;
+	const CHECKBOX_BODYPR_INSETS_R = 0;
+	const CHECKBOX_BODYPR_INSETS_T = 32004 / 36000;
+	const CHECKBOX_BODYPR_INSETS_B = 32004 / 36000;
+	const CHECKBOX_OFFSET_X = CHECKBOX_SIDE_SIZE + (CHECKBOX_X_OFFSET * 2 - CHECKBOX_BODYPR_INSETS_L);
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
 	};
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
+	CCheckBoxController.prototype.getBodyPr = function () {
+		const oBodyPr = new AscFormat.CBodyPr();
+		oBodyPr.setInsets(CHECKBOX_BODYPR_INSETS_L, CHECKBOX_BODYPR_INSETS_T, CHECKBOX_BODYPR_INSETS_R, CHECKBOX_BODYPR_INSETS_B);
+		oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
+		oBodyPr.vertOverflow = AscFormat.nVOTClip;
+		oBodyPr.wrap = AscFormat.nTWTSquare;
+		oBodyPr.upright = true;
+		return oBodyPr;
+	};
 	CCheckBoxController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
-		const nSide = 3;
-		const nXOffset = 1.5;
 		const oMainTransfrom = transform || oControl.transform;
 		const checkBoxTransform = oMainTransfrom.CreateDublicate();
-		const oMainTextTransform = transformText || oControl.transformText;
-		const oCheckBoxTextTransform = oMainTextTransform.CreateDublicate();
-		oCheckBoxTextTransform.tx += nSide + nXOffset * 2;
-		AscFormat.CShape.prototype.draw.call(oControl, graphics, transform, oCheckBoxTextTransform, pageIndex, opt);
+		AscFormat.CShape.prototype.draw.call(oControl, graphics, transform, transformText, pageIndex, opt);
 		graphics.SaveGrState();
-
-		checkBoxTransform.tx += nXOffset;
-		checkBoxTransform.ty += (oControl.extY - nSide) / 2;
+		graphics.AddClipRect(oControl.x, oControl.y, oControl.extX, oControl.extY);
+		checkBoxTransform.tx += CHECKBOX_X_OFFSET;
+		checkBoxTransform.ty += (oControl.extY - CHECKBOX_SIDE_SIZE) / 2;
 		graphics.transform3(checkBoxTransform);
 		graphics.b_color1(255, 255, 255, 255);
 		graphics.p_color(0, 0, 0, 255);
 		graphics.p_width(0);
 		graphics._s();
 		graphics._m(0, 0);
-		graphics._l(0, nSide);
-		graphics._l(nSide, nSide);
-		graphics._l(nSide, 0);
+		graphics._l(0, CHECKBOX_SIDE_SIZE);
+		graphics._l(CHECKBOX_SIDE_SIZE, CHECKBOX_SIDE_SIZE);
+		graphics._l(CHECKBOX_SIDE_SIZE, 0);
 		graphics._z();
 		graphics.ds();
 		graphics.df();
@@ -162,7 +182,7 @@
 			graphics.b_color1(0, 0, 0, 255);
 			graphics._s();
 			const nRectCount = 7;
-			const nRectWidth = nSide / nRectCount;
+			const nRectWidth = CHECKBOX_SIDE_SIZE / nRectCount;
 			for (let i = 0; i < nRectCount; i += 1) {
 				const nX = i * nRectWidth;
 				for (let j = 0; j < nRectCount; j += 1) {
@@ -271,7 +291,13 @@
 				}
 			}
 		}
-	}
+	};
+	CCheckBoxController.prototype.getTextRect = function () {
+		const oTextRect = AscFormat.CShape.prototype.getTextRect.call(this);
+		oTextRect.l += CHECKBOX_OFFSET_X;
+		oTextRect.r += CHECKBOX_OFFSET_X;
+		return oTextRect;
+	};
 
 
 	function CControlPr() {
@@ -293,8 +319,135 @@
 		this.uiObject = null;
 		this.anchor = null;
 	}
-	
+
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropLines] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_ObjectType] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Checked] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropStyle] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Dx] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Inc] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Min] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Max] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Page] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Sel] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_SelType] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_TextHAlign] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_TextVAlign] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Val] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_WidthMin] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_EditVal] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_FmlaGroup] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_FmlaLink] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_FmlaRange] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_FmlaTxbx] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Colored] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_FirstButton] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_Horiz] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_JustLastX] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_LockText] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_MultiSel] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_NoThreeD] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_NoThreeD2] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_MultiLine] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_VerticalBar] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_PasswordEdit] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_AddItemToLst] = AscDFH.CChangesDrawingsContentBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_RemoveItemFromItemLst] = AscDFH.CChangesDrawingsBool;
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_DropLines] = function (oClass, value) {
+		oClass.dropLines = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_ObjectType] = function (oClass, value) {
+		oClass.objectType = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Checked] = function (oClass, value) {
+		oClass.checked = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_DropStyle] = function (oClass, value) {
+		oClass.dropStyle = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Dx] = function (oClass, value) {
+		oClass.dx = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Inc] = function (oClass, value) {
+		oClass.inc = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Min] = function (oClass, value) {
+		oClass.min = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Max] = function (oClass, value) {
+		oClass.max = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Page] = function (oClass, value) {
+		oClass.page = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Sel] = function (oClass, value) {
+		oClass.sel = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_SelType] = function (oClass, value) {
+		oClass.selType = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_TextHAlign] = function (oClass, value) {
+		oClass.textHAlign = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_TextVAlign] = function (oClass, value) {
+		oClass.textVAlign = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Val] = function (oClass, value) {
+		oClass.val = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_WidthMin] = function (oClass, value) {
+		oClass.widthMin = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_EditVal] = function (oClass, value) {
+		oClass.editVal = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_FmlaGroup] = function (oClass, value) {
+		oClass.fmlaGroup = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_FmlaLink] = function (oClass, value) {
+		oClass.fmlaLink = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_FmlaRange] = function (oClass, value) {
+		oClass.fmlaRange = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_FmlaTxbx] = function (oClass, value) {
+		oClass.fmlaTxbx = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Colored] = function (oClass, value) {
+		oClass.colored = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_FirstButton] = function (oClass, value) {
+		oClass.firstButton = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Horiz] = function (oClass, value) {
+		oClass.horiz = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_JustLastX] = function (oClass, value) {
+		oClass.justLastX = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_LockText] = function (oClass, value) {
+		oClass.lockText = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_MultiSel] = function (oClass, value) {
+		oClass.multiSel = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_NoThreeD] = function (oClass, value) {
+		oClass.noThreeD = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_NoThreeD2] = function (oClass, value) {
+		oClass.noThreeD2 = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_MultiLine] = function (oClass, value) {
+		oClass.multiLine = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_VerticalBar] = function (oClass, value) {
+		oClass.verticalBar = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_PasswordEdit] = function (oClass, value) {
+		oClass.passwordEdit = value;
+	};
 	function CFormControlPr() {
+		AscFormat.CBaseFormatObject.call(this);
 		this.dropLines = null;
 		this.objectType = null;
 		this.checked = null;
@@ -328,192 +481,230 @@
 		this.passwordEdit = null;
 		this.itemLst = [];
 	}
+	AscFormat.InitClass(CFormControlPr, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_FormControlPr);
 	CFormControlPr.prototype.setDropLines = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_DropLines, this.dropLines, pr));
 		this.dropLines = pr;
 	}
 	CFormControlPr.prototype.getDropLines = function() {
 		return this.dropLines;
 	}
 	CFormControlPr.prototype.setObjectType = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_ObjectType, this.objectType, pr));
 		this.objectType = pr;
 	}
 	CFormControlPr.prototype.getObjectType = function() {
 		return this.objectType;
 	}
 	CFormControlPr.prototype.setChecked = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Checked, this.checked, pr));
 		this.checked = pr;
 	}
 	CFormControlPr.prototype.getChecked = function() {
 		return this.checked;
 	}
 	CFormControlPr.prototype.setDropStyle = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_DropStyle, this.dropStyle, pr));
 		this.dropStyle = pr;
 	}
 	CFormControlPr.prototype.getDropStyle = function() {
 		return this.dropStyle;
 	}
 	CFormControlPr.prototype.setDx = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Dx, this.dx, pr));
 		this.dx = pr;
 	}
 	CFormControlPr.prototype.getDx = function() {
 		return this.dx;
 	}
 	CFormControlPr.prototype.setInc = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Inc, this.inc, pr));
 		this.inc = pr;
 	}
 	CFormControlPr.prototype.getInc = function() {
 		return this.inc;
 	}
 	CFormControlPr.prototype.setMin = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Min, this.min, pr));
 		this.min = pr;
 	}
 	CFormControlPr.prototype.getMin = function() {
 		return this.min;
 	}
 	CFormControlPr.prototype.setMax = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Max, this.max, pr));
 		this.max = pr;
 	}
 	CFormControlPr.prototype.getMax = function() {
 		return this.max;
 	}
 	CFormControlPr.prototype.setPage = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Page, this.page, pr));
 		this.page = pr;
 	}
 	CFormControlPr.prototype.getPage = function() {
 		return this.page;
 	}
 	CFormControlPr.prototype.setSel = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Sel, this.sel, pr));
 		this.sel = pr;
 	}
 	CFormControlPr.prototype.getSel = function() {
 		return this.sel;
 	}
 	CFormControlPr.prototype.setSelType = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_SelType, this.selType, pr));
 		this.selType = pr;
 	}
 	CFormControlPr.prototype.getSelType = function() {
 		return this.selType;
 	}
 	CFormControlPr.prototype.setTextHAlign = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_TextHAlign, this.textHAlign, pr));
 		this.textHAlign = pr;
 	}
 	CFormControlPr.prototype.getTextHAlign = function() {
 		return this.textHAlign;
 	}
 	CFormControlPr.prototype.setTextVAlign = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_TextVAlign, this.textVAlign, pr));
 		this.textVAlign = pr;
 	}
 	CFormControlPr.prototype.getTextVAlign = function() {
 		return this.textVAlign;
 	}
 	CFormControlPr.prototype.setVal = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Val, this.val, pr));
 		this.val = pr;
 	}
 	CFormControlPr.prototype.getVal = function() {
 		return this.val;
 	}
 	CFormControlPr.prototype.setWidthMin = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_WidthMin, this.widthMin, pr));
 		this.widthMin = pr;
 	}
 	CFormControlPr.prototype.getWidthMin = function() {
 		return this.widthMin;
 	}
 	CFormControlPr.prototype.setEditVal = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_EditVal, this.editVal, pr));
 		this.editVal = pr;
 	}
 	CFormControlPr.prototype.getEditVal = function() {
 		return this.editVal;
 	}
 	CFormControlPr.prototype.setFmlaGroup = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaGroup, this.fmlaGroup, pr));
 		this.fmlaGroup = pr;
 	}
 	CFormControlPr.prototype.getFmlaGroup = function() {
 		return this.fmlaGroup;
 	}
 	CFormControlPr.prototype.setFmlaLink = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaLink, this.fmlaLink, pr));
 		this.fmlaLink = pr;
 	}
 	CFormControlPr.prototype.getFmlaLink = function() {
 		return this.fmlaLink;
 	}
 	CFormControlPr.prototype.setFmlaRange = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaRange, this.fmlaRange, pr));
 		this.fmlaRange = pr;
 	}
 	CFormControlPr.prototype.getFmlaRange = function() {
 		return this.fmlaRange;
 	}
 	CFormControlPr.prototype.setFmlaTxbx = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaTxbx, this.fmlaTxbx, pr));
 		this.fmlaTxbx = pr;
 	}
 	CFormControlPr.prototype.getFmlaTxbx = function() {
 		return this.fmlaTxbx;
 	}
 	CFormControlPr.prototype.setColored = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_Colored, this.colored, pr));
 		this.colored = pr;
 	}
 	CFormControlPr.prototype.getColored = function() {
 		return this.colored;
 	}
 	CFormControlPr.prototype.setFirstButton = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_FirstButton, this.firstButton, pr));
 		this.firstButton = pr;
 	}
 	CFormControlPr.prototype.getFirstButton = function() {
 		return this.firstButton;
 	}
 	CFormControlPr.prototype.setHoriz = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_Horiz, this.horiz, pr));
 		this.horiz = pr;
 	}
 	CFormControlPr.prototype.getHoriz = function() {
 		return this.horiz;
 	}
 	CFormControlPr.prototype.setJustLastX = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_JustLastX, this.justLastX, pr));
 		this.justLastX = pr;
 	}
 	CFormControlPr.prototype.getJustLastX = function() {
 		return this.justLastX;
 	}
 	CFormControlPr.prototype.setLockText = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_LockText, this.lockText, pr));
 		this.lockText = pr;
 	}
 	CFormControlPr.prototype.getLockText = function() {
 		return this.lockText;
 	}
 	CFormControlPr.prototype.setMultiSel = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_MultiSel, this.multiSel, pr));
 		this.multiSel = pr;
 	}
 	CFormControlPr.prototype.getMultiSel = function() {
 		return this.multiSel;
 	}
 	CFormControlPr.prototype.setNoThreeD = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_NoThreeD, this.noThreeD, pr));
 		this.noThreeD = pr;
 	}
 	CFormControlPr.prototype.getNoThreeD = function() {
 		return this.noThreeD;
 	}
 	CFormControlPr.prototype.setNoThreeD2 = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_NoThreeD2, this.noThreeD2, pr));
 		this.noThreeD2 = pr;
 	}
 	CFormControlPr.prototype.getNoThreeD2 = function() {
 		return this.noThreeD2;
 	}
 	CFormControlPr.prototype.setMultiLine = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_MultiLine, this.multiLine, pr));
 		this.multiLine = pr;
 	}
 	CFormControlPr.prototype.getMultiLine = function() {
 		return this.multiLine;
 	}
 	CFormControlPr.prototype.setVerticalBar = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_VerticalBar, this.verticalBar, pr));
 		this.verticalBar = pr;
 	}
 	CFormControlPr.prototype.getVerticalBar = function() {
 		return this.verticalBar;
 	}
 	CFormControlPr.prototype.setPasswordEdit = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_PasswordEdit, this.passwordEdit, pr));
 		this.passwordEdit = pr;
 	}
 	CFormControlPr.prototype.getPasswordEdit = function() {
 		return this.passwordEdit;
 	}
+	CFormControlPr.prototype.addItemLst = function () {
+
+	};
+	CFormControlPr.prototype.removeItemLst = function () {
+
+	};
 
 
 	window["AscFormat"] = window["AscFormat"] || {};
