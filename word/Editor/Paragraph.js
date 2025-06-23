@@ -6581,6 +6581,51 @@ Paragraph.prototype.Get_StartPos = function()
 	return ContentPos;
 };
 /**
+ * Correct the specified position to a placeable position within the paragraph
+ * @param {AscWord.CParagraphContentPos} paraPos
+ * @returns {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.GetCursorPlaceablePos = function(paraPos)
+{
+	let obj = this.GetClassesByPos(paraPos);
+	if (obj.length && obj[obj.length - 1] instanceof AscWord.Run)
+		return paraPos;
+	
+	for (let i = 0; i < obj.length; ++i)
+	{
+		if (!obj[i].IsCursorPlaceable())
+		{
+			let parent = i ? obj[i - 1] : this;
+			let curPos = paraPos.Get(i);
+			
+			let contentLen = parent.Content.length;
+			let checkEndPos = true;
+			while (curPos > 0 && !parent.Content[curPos].IsCursorPlaceable())
+				--curPos;
+			
+			while (curPos < contentLen && !parent.Content[curPos].IsCursorPlaceable())
+			{
+				checkEndPos = false;
+				++curPos;
+			}
+			
+			if (parent.Content[curPos].IsCursorPlaceable())
+			{
+				let contentPos = parent === this ? new AscWord.CParagraphContentPos() : this.Get_PosByElement(parent);
+				contentPos.Update(curPos, contentPos.GetDepth() + 1);
+				// TODO: Need to check IsCursorPlaceable for inner objects (GetStartPlaceablePos/GetEndPlaceablePos)
+				if (checkEndPos)
+					parent.Content[curPos].Get_EndPos(true, contentPos, contentPos.GetDepth() + 1);
+				else
+					parent.Content[curPos].Get_StartPos(contentPos, contentPos.GetDepth() + 1);
+				return contentPos;
+			}
+		}
+	}
+	
+	return paraPos;
+};
+/**
  * Получаем начальную позицию в параграфе
  * @returns {AscWord.CParagraphContentPos}
  */
@@ -7386,6 +7431,7 @@ Paragraph.prototype.CorrectContent = function(startPos, endPos, preserveEmptyEle
 };
 Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, preserveEmptyElements)
 {
+	return;
 	if (!this.CanCorrectContent())
 		return;
 
