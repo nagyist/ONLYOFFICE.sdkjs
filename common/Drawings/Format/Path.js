@@ -507,27 +507,6 @@ function (window, undefined) {
 		c = Number(c);
 		d = Number(d);
 
-		// it is not necessary, but I try to avoid imprecise calculations
-		// with points:
-		// 		convert
-		// 				719999.9999999999 			to 720000
-		// 				719999.5555 						to 719999.5555
-		// with angles (see below):
-		// 		convert
-		// 				-90.00000000000006 			to -90
-		// 				6.176024640130164e-15 	to 0
-		// 		but lost precision on convert
-		// 				54.61614630046808 			to 54.6161
-		// can be enhanced by if add: if rounded angle is 0 so round otherwise dont
-
-		// lets save only 4 digits after point coordinates to avoid imprecise calculations to perform correct compares later
-		x0 = Math.round(x0 * 1e4) / 1e4;
-		y0 = Math.round(y0 * 1e4) / 1e4;
-		x = Math.round(x * 1e4) / 1e4;
-		y = Math.round(y * 1e4) / 1e4;
-		a = Math.round(a * 1e4) / 1e4;
-		b = Math.round(b * 1e4) / 1e4;
-
 		// translate points to ellipse angle
 		let startPoint = rotatePointAroundCordsStartClockWise(x0, y0, c);
 		let endPoint = rotatePointAroundCordsStartClockWise(x, y, c);
@@ -548,20 +527,10 @@ function (window, undefined) {
 		let rx = Math.sqrt(Math.pow(x0 - cx, 2) + Math.pow(y0 - cy, 2) * d2);
 		let ry = rx / d;
 
-		// lets NOT save only 4 digits after to avoid precision loss
-		// rx = Math.round(rx * 1e4) / 1e4;
-		// ry = Math.round(ry * 1e4) / 1e4;
-		// cy = Math.round(cy * 1e4) / 1e4;
-
 		let ctrlAngle = Math.atan2(b - cy, a - cx) * radToDeg;
 		let startAngle = Math.atan2(y0 - cy, x0 - cx) * radToDeg;
 		let endAngle = Math.atan2(y - cy, x - cx) * radToDeg;
 
-		// lets save only 4 digits after to avoid imprecise calculations result
-		ctrlAngle = Math.round(ctrlAngle * 1e4) / 1e4;
-		startAngle = Math.round(startAngle * 1e4) / 1e4;
-		endAngle = Math.round(endAngle * 1e4) / 1e4;
-		// set -0 to 0
 		ctrlAngle = ctrlAngle === -0 ? 0 : ctrlAngle;
 		startAngle = startAngle === -0 ? 0 : startAngle;
 		endAngle = endAngle === -0 ? 0 : endAngle;
@@ -569,7 +538,6 @@ function (window, undefined) {
 		let sweep = computeSweep(startAngle, endAngle, ctrlAngle);
 
 		let ellipseRotationAngle = c * radToDeg;
-		ellipseRotationAngle = Math.round(ellipseRotationAngle * 1e4) / 1e4;
 		ellipseRotationAngle = ellipseRotationAngle === -0 ? 0 : ellipseRotationAngle;
 		ellipseRotationAngle = ellipseRotationAngle === 360 ? 0 : ellipseRotationAngle;
 
@@ -813,6 +781,13 @@ function (window, undefined) {
 
 					let cRadians = c * cToRad2;
 
+					if (isNaN(lastY)) {
+						lastY = 0;
+					}
+					if (isNaN(lastX)) {
+						lastX = 0;
+					}
+
 					let newParams = transformEllipticalArcParams(lastX, lastY, x, y, a, b, cRadians, d);
 
 					// check if it not ellipse arc in fact but line (three points on one line)
@@ -820,16 +795,17 @@ function (window, undefined) {
 					// drawing will be unpredictable
 					// inaccuracy may be different
 					// (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By) ) / 2 - triangle square
-					if (isNaN(lastY)) {
-						lastY = 0;
-					}
-					if (isNaN(lastX)) {
-						lastX = 0;
-					}
-					let triangleSquare = (x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
-					let accuracy = 10e4;
-					if (Math.round(triangleSquare * accuracy) === 0 || Math.round(triangleSquare * accuracy) === -0) {
+
+					let triangleSquare = Math.abs(x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
+					// let accuracy = 1e1;
+					// if (Math.round(triangleSquare * accuracy) === 0) {
+					// 	AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
+					// 	this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
+					// 	this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
+					// }
+					if (triangleSquare === 0) {
 						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
+						this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 						this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
 					}
 					else {
