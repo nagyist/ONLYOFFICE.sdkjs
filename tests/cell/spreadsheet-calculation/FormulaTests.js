@@ -15156,6 +15156,38 @@ $(function () {
 		assert.ok(oParser.parse(), 'IMLOG2("3+4i")');
 		assert.strictEqual(oParser.calculate().getValue(), "2.321928094887362+1.3378042124509761i", 'IMLOG2("3+4i")');
 
+		oParser = new parserFormula('IMLOG2("")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("")');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMLOG2("")');
+
+		oParser = new parserFormula('IMLOG2(1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2(1)');
+		assert.strictEqual(oParser.calculate().getValue(), "0", 'Result of IMLOG2(1)');
+
+		oParser = new parserFormula('IMLOG2(-1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2(-1)');
+		assert.strictEqual(oParser.calculate().getValue(), "4.532360141827194i", 'Result of IMLOG2(-1)');
+
+		oParser = new parserFormula('IMLOG2("i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("i")');
+		assert.strictEqual(oParser.calculate().getValue(), "2.266180070913597i", 'Result of IMLOG2("i")');
+
+		oParser = new parserFormula('IMLOG2("ii")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("ii")');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMLOG2("ii")');
+
+		oParser = new parserFormula('IMLOG2("1i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("1i")');
+		assert.strictEqual(oParser.calculate().getValue(), "2.266180070913597i", 'Result of IMLOG2("1i")');
+
+		oParser = new parserFormula('IMLOG2("0.5+i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("0.5+i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.16096404744368123+1.5972779646881086i", 'Result of IMLOG2("0.5+i")');
+
+		oParser = new parserFormula('IMLOG2("1+i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG2("1+i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.5+1.1330900354567985i", 'Result of IMLOG2("1+i")');
+
 		testArrayFormula(assert, "IMLOG2", true);
 	});
 
@@ -15164,6 +15196,38 @@ $(function () {
 		oParser = new parserFormula('IMLOG10("3+4i")', "A2", ws);
 		assert.ok(oParser.parse(), 'IMLOG10("3+4i")');
 		assert.strictEqual(oParser.calculate().getValue(), "0.6989700043360186+0.40271919627337305i", 'IMLOG10("3+4i")');
+
+		oParser = new parserFormula('IMLOG10("")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("")');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMLOG10("")');
+
+		oParser = new parserFormula('IMLOG10(1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10(1)');
+		assert.strictEqual(oParser.calculate().getValue(), "0", 'Result of IMLOG10(1)');
+
+		oParser = new parserFormula('IMLOG10(-1)', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10(-1)');
+		assert.strictEqual(oParser.calculate().getValue(), "1.364376353841841i", 'Result of IMLOG10(-1)');
+
+		oParser = new parserFormula('IMLOG10("i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.6821881769209205i", 'Result of IMLOG10("i")');
+
+		oParser = new parserFormula('IMLOG10("ii")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("ii")');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Result of IMLOG10("ii")');
+
+		oParser = new parserFormula('IMLOG10("1i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("1i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.6821881769209205i", 'Result of IMLOG10("1i")');
+
+		oParser = new parserFormula('IMLOG10("0.5+i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("0.5+i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.04845500650402821+0.48082857878423396i", 'Result of IMLOG10("0.5+i")');
+
+		oParser = new parserFormula('IMLOG10("1+i")', "A2", ws);
+		assert.ok(oParser.parse(), 'IMLOG10("1+i")');
+		assert.strictEqual(oParser.calculate().getValue(), "0.1505149978319906+0.3410940884604603i", 'Result of IMLOG10("1+i")');
 
 		testArrayFormula(assert, "IMLOG10", true);
 	});
