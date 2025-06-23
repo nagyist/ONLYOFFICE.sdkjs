@@ -1177,7 +1177,8 @@
 				"lcid"          : locale,
 				"nobase64"      : true,
 				"outputformat"  : outputformat,
-				"convertToOrigin" : ""
+				"convertToOrigin" : "",
+				"oformAsPdf" : this.isPdfEditor() ? true : undefined
 			};
 
 			if (this.isUseNativeViewer)
