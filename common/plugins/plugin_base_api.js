@@ -762,6 +762,23 @@ window.startPluginApi = function() {
         _client.send();
     };
 
+	let isAsyncSupported = false;
+	try
+	{
+		new Function("async function test() {}");
+		isAsyncSupported = true;
+	}
+	catch (e)
+	{
+		isAsyncSupported = false;
+	}
+
+	if (isAsyncSupported)
+	{
+		eval("Asc.plugin.callCommandAsync = function(func) { return new Promise(function(resolve) { Asc.plugin.callCommand(func, false, true, function(retValue) { resolve(retValue); }) }); };");
+		eval("Asc.plugin.callMethodAsync = function(name, args) { return new Promise(function(resolve) { Asc.plugin.executeMethod(name, args || [], function(retValue) { resolve(retValue); }) }); };");
+	}
+
 	/**
 	 * @function attachEvent
 	 * @undocumented
