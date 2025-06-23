@@ -7431,7 +7431,6 @@ Paragraph.prototype.CorrectContent = function(startPos, endPos, preserveEmptyEle
 };
 Paragraph.prototype.Correct_Content = function(_StartPos, _EndPos, preserveEmptyElements)
 {
-	return;
 	if (!this.CanCorrectContent())
 		return;
 
