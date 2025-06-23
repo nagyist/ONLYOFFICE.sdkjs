@@ -3305,35 +3305,35 @@ function (window, undefined) {
 		const t = this;
 		const getValue = function (index) {
 			if (opt_array) {
-				return opt_array[index];
+				return opt_array[index].v;
 			}
 			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
 			return checkTypeCell(cell, true);
 		}
 		let resultIndex = -1;
 		while (i <= j) {
-			const k = Math.floor((i + j) / 2);
+			let k = Math.floor((i + j) / 2);
 			let val = getValue(k);
-			if (val.type === cElementType.empty) {
-				val = val.tocBool();
+			if (val.type !== valueForSearching.type) {
+				for (let ii = k + 1; ii <= j; ii += 1) {
+					val = getValue(ii);
+					if (val.type === valueForSearching.type) {
+						k = ii;
+					}
+				}
 			}
-			if (this._compareValues(valueForSearching, val, "=")) {
-				resultIndex = opt_array ? opt_array[k].i : k;
-				i = k + 1
-			} else if (this._compareValues(val, valueForSearching, ">")) {
+			val = getValue(k);
+			if (this._compareValues(val, valueForSearching, ">")) {
 				j = k - 1;
 			} else {
+				resultIndex = k;
 				i = k + 1;
 			}
 		}
-		if (resultIndex !== -1) {
-			return resultIndex;
-		}
-		let _res = Math.min(i, j);
 		if (opt_array) {
-			_res = -1 === _res ? _res : array[_res].i;
+			resultIndex = opt_array[resultIndex].i;
 		}
-		return _res;
+		return resultIndex;
 	};
 	/**
 	 * @private
