@@ -852,6 +852,9 @@ CGraphicObjects.prototype =
                     shape_props.title = props_by_types.shapeProps.title;
                     shape_props.fromGroup = true;
                 }
+				if (para_drawing_props.Form) {
+					shape_props.ShapeProperties.textArtProperties = null;
+				}
             }
             if(props_by_types.imageProps)
             {
