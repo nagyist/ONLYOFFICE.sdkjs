@@ -5404,7 +5404,7 @@
 				}
 				oResult = new ApiStyle(oStyle);
 				break;
-			case "tableStyle":
+			case "tableStylePr":
 				oResult = new ApiTableStylePr(oParsedObj.styleType, null, oReader.TableStylePrFromJSON(oParsedObj));
 				break;
 		}
