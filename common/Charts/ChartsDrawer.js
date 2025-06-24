@@ -5335,10 +5335,12 @@ CChartsDrawer.prototype =
 
 	getAxisFromAxId: function(axId, type) {
 		var res = null;
-		for(var i = 0; i < axId.length; i++) {
-			if(axId[i].getObjectType() === type) {
-				res = this._searchChangedAxis(axId[i]);
-				break;
+		if (axId && axId.length) {
+			for (var i = 0; i < axId.length; i++) {
+				if(axId[i].getObjectType() === type) {
+					res = this._searchChangedAxis(axId[i]);
+					break;
+				}
 			}
 		}
 		return res;
