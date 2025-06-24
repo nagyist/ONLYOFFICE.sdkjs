@@ -5971,9 +5971,8 @@ ParaRun.prototype.private_CheckInstrText = function(oItem)
 
 ParaRun.prototype.Refresh_RecalcData = function(oData)
 {
-	var oPara = this.Paragraph;
-
-	if (this.Type == para_Math_Run)
+	let oPara = this.GetParagraph();
+	if (this.IsMathRun())
 	{
 		if (this.Parent !== null && this.Parent !== undefined)
 		{
@@ -6021,6 +6020,10 @@ ParaRun.prototype.Refresh_RecalcData = function(oData)
 		}
 
 		oPara.Refresh_RecalcData2(0);
+	}
+	else if (oPara)
+	{
+		oPara.Refresh_RecalcData2();
 	}
 };
 ParaRun.prototype.Refresh_RecalcData2 = function()
