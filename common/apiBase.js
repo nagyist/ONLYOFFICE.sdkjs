@@ -98,6 +98,7 @@
 
 		// Переменная отвечает, получили ли мы ответ с сервера совместного редактирования
 		this.ServerIdWaitComplete = false;
+		this.ServerIdWaitAction = null;
 
 		// Long action
 		this.IsLongActionCurrent       = 0;
@@ -1274,6 +1275,10 @@
 		this.setOpenedAt(openedAt);
 		// С сервером соединились, возможно стоит подождать загрузку шрифтов
 		this.ServerIdWaitComplete = true;
+		if (this.ServerIdWaitAction) {
+			this.sync_EndAction.apply(this, this.ServerIdWaitAction);
+			this.ServerIdWaitAction = null;
+		}
 		this._openDocumentEndCallback();
 	};
 	baseEditorsApi.prototype.asyncFontStartLoaded                = function()
@@ -1931,7 +1936,7 @@
 			if (AscCommon.c_oCloseCode.quiet === opt_closeCode) {
 				return;
 			}
-			if (AscCommon.ConnectionState.None === t.CoAuthoringApi.get_state())
+			if (!t.ServerIdWaitComplete && AscCommon.ConnectionState.ClosedAll === t.CoAuthoringApi.get_state())
 			{
 				t.asyncServerIdEndLoaded();
 			}
@@ -2772,6 +2777,8 @@
 			newDocInfo.put_CoEditingMode('strict');
 			newDocInfo.put_Token(this.VersionHistory.token);
 
+			this.ServerIdWaitAction = [Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.Open];
+			this.sync_StartAction.apply(this, this.ServerIdWaitAction);
 			this.reopenFileWithReconnection(newDocInfo);
 		} else if (this.VersionHistory.currentChangeId < newObj.currentChangeId) {
 			var oApi = Asc.editor || editor;
@@ -2787,22 +2794,31 @@
 	{
 		return this.VersionHistory;
 	};
-	baseEditorsApi.prototype.asc_refreshFile = function(docInfo) {
-		this.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.RefreshFile, Asc.c_oAscRestrictionType.View);
-		//todo always call asc_CloseFile ?
-		let isInfinityLoop = this.documentIsWopi
-			? docInfo.get_Wopi()["Version"] === this.DocInfo.get_Wopi()["Version"]
-			&& docInfo.get_Wopi()["LastModifiedTime"] === this.DocInfo.get_Wopi()["LastModifiedTime"]
-			: docInfo.get_Id() === this.DocInfo.get_Id();
+	/**
+	 * Refresh the current document by closing and reopening it with provided docInfo
+	 * @param {Asc.asc_CDocInfo} docInfo
+	 */
+	baseEditorsApi.prototype.asc_refreshFile = function (docInfo) {
+		let isInfinityLoop;
+		if (this.documentIsWopi) {
+			const newWopi     = docInfo.get_Wopi();
+			const currentWopi = this.DocInfo.get_Wopi();
+			isInfinityLoop   = newWopi["Version"] === currentWopi["Version"] &&
+				               newWopi["LastModifiedTime"] === currentWopi["LastModifiedTime"];
+		} else {
+			isInfinityLoop = docInfo.get_Id() === this.DocInfo.get_Id();
+		}
 		if (this.isDocumentLoadComplete) {
 			this.asc_CloseFile();
 		} else if (isInfinityLoop) {
-			//loop protection (need backoff and retry?)
-			//todo unique error
-			this.sendEvent("asc_onDocumentUpdateVersion", function() {});
+			this.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.RefreshFile, Asc.c_oAscRestrictionType.View);
+			// Loop protection (need backoff and retry?)
+			// todo unique error
+			this.sendEvent("asc_onDocumentUpdateVersion", function () {});
 			// this.sendEvent('asc_onError', Asc.c_oAscError.ID.UpdateVersion, Asc.c_oAscError.Level.Critical);
 			return;
 		}
+		this.ServerIdWaitAction = [Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.RefreshFile, Asc.c_oAscRestrictionType.View];
 		this.reopenFileWithReconnection(docInfo);
 	};
 	baseEditorsApi.prototype.canRefreshFile = function () {
