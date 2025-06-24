@@ -5478,6 +5478,8 @@ CDocument.prototype.private_RecalculateHdrFtrPageCountUpdate = function()
 		}
 		else
 		{
+			this.DrawingDocument.OnEndRecalculate(false);
+			
 			for (var nCurPage = nPageAbs + 1; nCurPage < nPagesCount; ++nCurPage)
 			{
 				this.HdrFtr.UpdatePagesCount(nCurPage, nPagesCount);
@@ -5495,7 +5497,7 @@ CDocument.prototype.private_RecalculateHdrFtrPageCountUpdate = function()
 			this.FullRecalc.MainStartPos      = this.Pages[nPageAbs].Pos;
 
 			this.DrawingDocument.OnStartRecalculate(nPageAbs);
-			this.Recalculate_Page();
+			this.ContinueRecalculationLoop();
 			return;
 		}
 	}
@@ -27647,7 +27649,7 @@ CDocument.prototype.GetSpellCheckManager = function()
 //----------------------------------------------------------------------------------------------------------------------
 CDocument.prototype.Search = function(oProps, bDraw)
 {
-	//let nStartTime = performance.now();
+	// let startTime = performance.now();
 
 	if (this.SearchEngine.Compare(oProps))
 		return this.SearchEngine;
@@ -27675,12 +27677,14 @@ CDocument.prototype.Search = function(oProps, bDraw)
 	{
 		arrEndnotes[nIndex].Search(this.SearchEngine, search_Endnote);
 	}
-
+	
+	// console.log("Search string: " + oProps.GetText());
+	// console.log("Time: " + ((performance.now() - startTime) / 1000) + " s");
+	// console.log("Number of matches: " + this.SearchEngine.Count);
+	
 	if (false !== bDraw)
 		this.Redraw(-1, -1);
-
-	//console.log("Search logic: " + ((performance.now() - nStartTime) / 1000) + " s");
-
+	
 	return this.SearchEngine;
 };
 CDocument.prototype.ClearSearch = function()
