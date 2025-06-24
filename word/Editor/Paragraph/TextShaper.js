@@ -50,6 +50,7 @@
 		AscFonts.CTextShaper.call(this);
 
 		this.Parent    = null;
+		this.Paragraph = null;
 		this.TextPr    = null;
 		this.Temporary = false;
 		this.Ligatures = Asc.LigaturesType.None;
@@ -62,6 +63,7 @@
 	CParagraphTextShaper.prototype.Init = function(isTemporary)
 	{
 		this.Parent    = null;
+		this.Paragraph = null;
 		this.TextPr    = null;
 		this.Temporary = isTemporary;
 		this.Ligatures = Asc.LigaturesType.None;
@@ -99,9 +101,14 @@
 
 		return AscWord.GetFontSlotByTextPr(nUnicode, oTextPr);
 	};
-	CParagraphTextShaper.prototype.GetLigaturesType = function()
+	CParagraphTextShaper.prototype.GetLigaturesType = function(textScript)
 	{
-		return this.Ligatures;
+		// bug-73560 
+		let result = this.Ligatures;
+		if (AscFonts.HB_SCRIPT.HB_SCRIPT_ARABIC === textScript)
+			result |= Asc.LigaturesType.Standard;
+		
+		return result;
 	};
 	CParagraphTextShaper.prototype.Shape = function(oParagraph)
 	{
@@ -144,6 +151,11 @@
 			{
 				this.FlushWord();
 				this.private_HandleNBSP(oItem);
+			}
+			else if (oItem.IsDigit() && this.private_IsReplaceToHindiDigits())
+			{
+				this.FlushWord();
+				this.private_HandleHindiDigit(oItem);
 			}
 			else
 			{
@@ -213,6 +225,7 @@
 		let oForm      = oRun.GetParentForm();
 		let isCombForm = oForm && oForm.IsTextForm() && oForm.GetTextFormPr().IsComb();
 
+		this.Paragraph = oRun.GetParagraph();
 		this.Parent    = oRunParent;
 		this.TextPr    = oTextPr;
 		this.Spacing   = isCombForm ? 0 : oTextPr.Spacing;
@@ -272,7 +285,7 @@
 			&& t.RTL === oTextPr.RTL
 			&& t.Vanish === oTextPr.Vanish
 			&& t.Ligatures === oTextPr.Ligatures
-			&& t.RFonts.IsEqual(oTextPr.RFonts));
+			&& t.RFonts.IsEqualSlot(oTextPr.RFonts, this.FontSlot));
 	};
 	CParagraphTextShaper.prototype.GetTextScript = function(nUnicode)
 	{
@@ -296,6 +309,19 @@
 		item.SetMetrics(fontInfo.Size, fontSlot, textPr);
 		item.SetCodePointType(CODEPOINT_TYPE.BASE);
 		item.SetWidth(AscFonts.GetGraphemeWidth(grapheme));
+	};
+	CParagraphTextShaper.prototype.private_IsReplaceToHindiDigits = function()
+	{
+		let logicDocument = this.Paragraph ? this.Paragraph.GetLogicDocument() : undefined;
+		return (logicDocument
+			&& logicDocument.IsDocumentEditor()
+			&& Asc.c_oNumeralType.hindi === logicDocument.GetNumeralType());
+	};
+	CParagraphTextShaper.prototype.private_HandleHindiDigit = function(oItem)
+	{
+		let oFontInfo = this.TextPr.GetFontInfo(AscWord.fontslot_ASCII);
+		let nGrapheme = AscCommon.g_oTextMeasurer.GetGraphemeByUnicode(oItem.GetCodePoint() + (0x0660 - 0x0030), oFontInfo.Name, oFontInfo.Style);
+		this.private_HandleItem(oItem, nGrapheme, AscFonts.GetGraphemeWidth(nGrapheme), oFontInfo.Size, AscWord.fontslot_ASCII, false, false, false);
 	};
 	
 	//--------------------------------------------------------export----------------------------------------------------

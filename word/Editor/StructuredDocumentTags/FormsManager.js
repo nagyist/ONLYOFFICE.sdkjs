@@ -100,6 +100,25 @@
 		return arrResult;
 	};
 	/**
+	 * Get all forms for specified role
+	 * @param roleName
+	 * @return {[]}
+	 */
+	CFormsManager.prototype.GetAllFormsByRole = function(roleName)
+	{
+		this.CheckFormsList();
+		
+		let result = [];
+		for (let i = 0, count = this.Forms.length; i < count; ++i)
+		{
+			let form = this.Forms[i];
+			if (form.IsUseInDocument() && roleName === form.GetFormRole())
+				result.push(form);
+		}
+		
+		return result;
+	};
+	/**
 	 * Получаем ключи форм по заданным параметрам
 	 * @param oPr
 	 * @returns {Array.string}
@@ -113,6 +132,8 @@
 		let isPicture    = oPr && oPr.Picture;
 		let isRadioGroup = oPr && oPr.RadioGroup;
 		let isComplex    = oPr && oPr.Complex;
+		let isDateTime   = oPr && oPr.DateTime;
+		let isSignature  = oPr && oPr.Signature;
 
 		let arrKeys  = [];
 		let arrForms = this.GetAllForms();
@@ -131,7 +152,9 @@
 				|| (isComboBox && oForm.IsComboBox())
 				|| (isDropDown && oForm.IsDropDownList())
 				|| (isCheckBox && oForm.IsCheckBox() && !oForm.IsRadioButton())
-				|| (isPicture && oForm.IsPicture()))
+				|| (isPicture && oForm.IsPicture() && !oForm.IsSignatureForm())
+				|| (isDateTime && oForm.IsDatePicker()
+				|| (isSignature && oForm.IsSignatureForm())))
 			{
 				sKey = oForm.GetFormKey();
 			}
@@ -185,10 +208,18 @@
 	};
 	/**
 	 * Все ли обязательные поля заполнены
+	 * @param {boolean} [checkAll=false]
 	 * @returns {boolean}
 	 */
-	CFormsManager.prototype.IsAllRequiredFormsFilled = function()
+	CFormsManager.prototype.IsAllRequiredFormsFilled = function(checkAll)
 	{
+		let roleName = null;
+		if (true !== checkAll)
+		{
+			let oform = this.LogicDocument ? this.LogicDocument.GetOFormDocument() : null;
+			roleName = oform ? oform.getCurrentRole() : null;
+		}
+		
 		// TODO: Сейчас у нас здесь идет проверка и на правильность заполнения форм с форматом
 		// Возможно стоит разделить на 2 разные проверки и добавить одну общую проверку на правильность
 		// заполненности формы, куда будут входить обе предыдущие проверки
@@ -197,6 +228,10 @@
 		for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 		{
 			let oForm = arrForms[nIndex];
+			
+			if (roleName && roleName !== oForm.GetFormRole())
+				continue;
+			
 			if (oForm.IsFormRequired() && !oForm.IsFormFilled())
 				return false;
 

@@ -41,14 +41,68 @@
 	 */
 	function CustomXmlManager(document)
 	{
+		this.Id				= AscCommon.g_oIdCounter.Get_NewId();
 		this.document	= document;
 		this.xml		= [];
+		this.m_arrXmlById	= {};
+
+		AscCommon.g_oTableId.Add(this, this.Id);
 	}
-	CustomXmlManager.prototype.add = function(customXml)
+	CustomXmlManager.prototype.Get_Id = function()
 	{
-		// TODO: Надо будет сделать этот метод с сохранением в историю, когда
-		//       будем реализовывать возможность добавления таких xml во время работы
-		this.xml.push(customXml);
+		return this.Id;
+	};
+	CustomXmlManager.prototype.add = function(oCustomXml)
+	{
+		let sId = oCustomXml.GetId();
+		AscCommon.History.Add(new AscDFH.CChangesCustomXmlManagerAdd(this, sId, oCustomXml));
+
+		this.m_arrXmlById[sId] = oCustomXml;
+		this.xml.push(oCustomXml);
+	};
+	CustomXmlManager.prototype.isXmlExist = function(uid, prefix)
+	{
+		for (let nXmlCounter = 0; nXmlCounter < this.getCount(); nXmlCounter++)
+		{
+			let customXml = this.getCustomXml(nXmlCounter);
+			if (uid === customXml.itemId || customXml.checkUrl(prefix))
+				return true;
+		}
+		return false;
+	};
+	CustomXmlManager.prototype.getExactXml = function (uId, prefix)
+	{
+		for (let nXmlCounter = 0; nXmlCounter < this.getCount(); nXmlCounter++)
+		{
+			let customXml = this.getCustomXml(nXmlCounter);
+			if (uId === customXml.itemId || customXml.checkUrl(prefix))
+				return customXml;
+		}
+	};
+	CustomXmlManager.prototype.getXmlByNamespace = function (namespace)
+	{
+		let arrXml = [];
+		for (let nXmlCounter = 0; nXmlCounter < this.getCount(); nXmlCounter++)
+		{
+			let customXml = this.getCustomXml(nXmlCounter);
+			if (customXml.checkUrl(namespace))
+				arrXml.push(customXml);
+		}
+		return arrXml;
+	};
+	CustomXmlManager.prototype.deleteExactXml = function (uId, prefix)
+	{
+		for (let nXmlCounter = 0; nXmlCounter < this.getCount(); nXmlCounter++)
+		{
+			let oCustomXml = this.getCustomXml(nXmlCounter);
+			if (uId === oCustomXml.itemId || oCustomXml.checkUrl(prefix))
+			{
+				AscCommon.History.Add(new AscDFH.CChangesCustomXmlManagerRemove(this, oCustomXml.Id, oCustomXml));
+				this.xml.splice(nXmlCounter, 1);
+				return true;
+			}
+		}
+		return false;
 	};
 	CustomXmlManager.prototype.getCount = function()
 	{
@@ -58,76 +112,18 @@
 	{
 		return this.xml[index];
 	};
-
-	/**
-	 * Find element/attribute of CustomXMl by xpath string
-	 * @param root {AscWord.CustomXmlContent}
-	 * @param xpath {string}
-	 * @return {{attribute: string, content: AscWord.CustomXmlContent}}
-	 */
-	CustomXmlManager.prototype.findElementByXPath = function (root, xpath)
+	CustomXmlManager.prototype.createCustomXml = function(content, uri)
 	{
-		let arrParts		= xpath.split('/');
-		let currentElement	= root;
-
-		arrParts.shift(); // Убираем пустой первый элемент
-
-		for (let i = 0; i < arrParts.length; i++)
-		{
-			let namespaceAndTag,
-				index,
-				tagName,
-				part = arrParts[i];
-
-			if (part.includes("@"))
-			{
-				let strAttributeName		= part.slice(1);
-				return {
-					content: currentElement,
-					attribute: strAttributeName,
-				};
-			}
-			else if (part.includes("["))
-			{
-				namespaceAndTag				= part.split('[')[0];
-				let partBeforeCloseBracket	= part.split(']')[0];
-				index						= partBeforeCloseBracket.slice(-1) - 1;
-			}
-			else
-			{
-				namespaceAndTag				= part;
-				index						= 0;
-			}
-
-			tagName = namespaceAndTag.includes(":")
-				? namespaceAndTag.split(':')[1]
-				: namespaceAndTag;
-
-			let matchingChildren = currentElement.content.filter(function (child) {
-				let arr = child.name.split(":");
-
-				if (arr.length > 1)
-					return arr[1] === tagName;
-				else
-					return arr[0] === tagName;
-			});
-
-			if (matchingChildren.length <= index)
-				break; // Элемент не найден
-
-			currentElement = matchingChildren[index];
-		}
-
-		return {
-			content: currentElement,
-			attribute: undefined,
-		};
+		let oXML = new AscWord.CustomXml(this, false, uri ? [uri] : null, content);
+		this.add(oXML);
+		oXML.writeContent("", oXML.getText());
+		return oXML;
 	};
 	/**
 	 * Get custom xml data of content control by data binding property
 	 * @param dataBinding {window.AscWord.DataBinding}
 	 * @param oContentLink {CBlockLevelSdt | CInlineLevelSdt}
-	 * @return {string | undefined}
+	 * @return {string | null}
 	 */
 	CustomXmlManager.prototype.getContentByDataBinding = function(dataBinding, oContentLink)
 	{
@@ -136,18 +132,20 @@
 			let customXml			= this.xml[i];
 			customXml.oContentLink	= oContentLink;
 
-			if (dataBinding.storeItemID === customXml.itemId || customXml.checkUrl(dataBinding.prefixMappings))
+			if (dataBinding.storeItemID === customXml.itemId)
 			{
 				let xPath			= dataBinding.xpath;
-				let oFindEl			= this.findElementByXPath(customXml.content, xPath);
-				let content			= oFindEl.content;
-				let strAttribute	= oFindEl.attribute;
+				if (!xPath)
+					return null;
 
-				return (undefined !== strAttribute)
-					? content.attribute[strAttribute]
-					: content.textContent;
+				let arrFind			= customXml.findElementByXPath(xPath);
+
+				if (arrFind.length)
+					return arrFind[0];
 			}
 		}
+
+		return null;
 	};
 	/**
 	 * Set custom xml data of content control by data binding property
@@ -163,14 +161,10 @@
 			if (dataBinding.storeItemID === customXml.itemId)
 			{
 				let xPath			= dataBinding.xpath;
-				let oFindEl			= this.findElementByXPath(customXml.content, xPath);
-				let oContent		= oFindEl.content;
-				let strAttribute	= oFindEl.attribute;
-				
-				if (strAttribute)
-					oContent.setAttribute(strAttribute, data);
-				else
-					oContent.setTextContent(data);
+				let arrFind			= customXml.findElementByXPath(xPath);
+
+				if (arrFind.length)
+					arrFind[0].setTextContent(data);
 			}
 		}
 	};
@@ -196,11 +190,7 @@
 		else
 			this.setContentByDataBinding(dataBinding, contentControl.GetInnerText());
 	};
-	/**
-	 * Write linear xml data of content control in CustomXML
-	 * @param oCC {CBlockLevelSdt}
-	 */
-	CustomXmlManager.prototype.updateRichTextCustomXML = function (oCC)
+	CustomXmlManager.prototype.GetRichTextContentToWrite = function (oCC, fCallback)
 	{
 		function replaceSubstring(originalString, startPoint, endPoint, insertionString)
 		{
@@ -213,7 +203,7 @@
 			return prefix + insertionString + suffix;
 		}
 
-		AscCommon.ExecuteNoHistory(function() {
+		return AscCommon.ExecuteNoHistory(function() {
 			let doc 						= new AscWord.CDocument(null, false);
 			let oSdtContent					= oCC.GetContent().Copy();
 			let jsZlib						= new AscCommon.ZLib();
@@ -276,8 +266,53 @@
 			outputUString	+= "</pkg:package>";
 			outputUString	= outputUString.replaceAll("<", "&lt;");
 			outputUString	= outputUString.replaceAll(">", "&gt;");
-			this.setContentByDataBinding(oCC.Pr.DataBinding, outputUString);
+
+			if (fCallback)
+				fCallback(outputUString, this);
+
+			return outputUString;
 		}, this.document, this, []);
+	};
+	CustomXmlManager.prototype.GetDataFromContentControl = function (contentControl)
+	{
+		if (!this.isSupported())
+			return "";
+
+		if (contentControl instanceof AscWord.CBlockLevelSdt)
+		{
+			return this.GetRichTextContentToWrite(contentControl);
+		}
+		else if (contentControl.IsPicture())
+		{
+			var oImg;
+			var allDrawings = contentControl.GetAllDrawingObjects();
+			for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++)
+			{
+				if (allDrawings[nDrawing].IsPicture())
+				{
+					oImg = allDrawings[nDrawing].GraphicObj;
+					break;
+				}
+			}
+			if (oImg)
+				return oImg.getBase64Img();
+
+			return "";
+		}
+		else if (contentControl.GetInnerText)
+		{
+			return contentControl.GetInnerText();
+		}
+	};
+	/**
+	 * Write linear xml data of content control in CustomXML
+	 * @param oCC {CBlockLevelSdt}
+	 */
+	CustomXmlManager.prototype.updateRichTextCustomXML = function (oCC)
+	{
+		this.GetRichTextContentToWrite(oCC, function (resultStr, oThis) {
+			oThis.setContentByDataBinding(oCC.Pr.DataBinding, resultStr);
+		})
 	};
 	/**
 	 * Proceed linear xml from CustomXMl attribute or element for fill content control
@@ -286,122 +321,132 @@
 	 */
 	CustomXmlManager.prototype.proceedLinearXMl = function (strLinearXML)
 	{
-		strLinearXML					= strLinearXML.replaceAll("&lt;", "<");
-		strLinearXML					= strLinearXML.replaceAll("&gt;", ">");
-		strLinearXML					= strLinearXML.replaceAll("<?xml version=\"1.0\" standalone=\"yes\"?>", "");
-		strLinearXML					= strLinearXML.replaceAll("<?mso-application progid=\"Word.Document\"?>", "");
+		let drawingDocument = this.document.GetDrawingDocument();
+		let docContent = AscCommon.ExecuteNoHistory(function(){
+			strLinearXML = strLinearXML.replaceAll("&lt;", "<");
+			strLinearXML = strLinearXML.replaceAll("&gt;", ">");
+			strLinearXML = strLinearXML.replaceAll("<?xml version=\"1.0\" standalone=\"yes\"?>", "");
+			strLinearXML = strLinearXML.replaceAll("<?mso-application progid=\"Word.Document\"?>", "");
+			
+			// при записи в атрибут больше проблем, изменить подход если в будущем еще будут проблемы c html entry
+			strLinearXML = strLinearXML.replaceAll("&#xA;", "");
+			strLinearXML = strLinearXML.replaceAll("&amp;", "&");
+			strLinearXML = strLinearXML.replaceAll("&quot;", "\"");
+			strLinearXML = strLinearXML.replaceAll("&#039;", "'");
+			strLinearXML = strLinearXML.replaceAll("'", "\"");
 
-		// при записи в атрибут больше проблем, изменить подход если в будущем еще будут проблемы c html entry
-		strLinearXML					= strLinearXML.replaceAll("&#xA;", "");
-		strLinearXML					= strLinearXML.replaceAll("&amp;", "&");
-		strLinearXML					= strLinearXML.replaceAll("&quot;", "\"");
-		strLinearXML					= strLinearXML.replaceAll("&#039;", "'");
-
-		let zLib				= new AscCommon.ZLib;
-		zLib.create();
-		zLib.addFile('[Content_Types].xml', AscCommon.Utf8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
-			'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
-			'<Default Extension="wmf" ContentType="image/x-wmf"/>' +
-			'<Default Extension="png" ContentType="image/png"/>' +
-			'<Default Extension="jpeg" ContentType="image/jpeg"/>' +
-			'<Default Extension="xml" ContentType="application/xml"/>' +
-			'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
-			'<Default Extension="bin" ContentType="application/vnd.openxmlformats-officedocument.oleObject"/>' +
-			'<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' +
-			'<Override PartName="/word/fontTable.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>' +
-			'<Override PartName="/word/styles.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
-			'<Override PartName="/word/document.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
-			'<Override PartName="/word/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
-			'<Override PartName="/word/endnotes.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>' +
-			'<Override PartName="/word/webSettings.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"/>' +
-			'<Override PartName="/word/glossary/webSettings.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"/>' +
-			'<Override PartName="/word/glossary/fontTable.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>' +
-			'<Override PartName="/word/glossary/settings.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>' +
-			'<Override PartName="/docProps/app.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>' +
-			'<Override PartName="/word/footnotes.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>' +
-			'<Override PartName="/word/settings.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>' +
-			'<Override PartName="/word/glossary/styles.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
-			'<Override PartName="/word/glossary/document.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml"/>' +
-			'<Override PartName="/customXml/itemProps1.xml"' +
-			'ContentType="application/vnd.openxmlformats-officedocument.customXmlProperties+xml"/>' +
-			'</Types>'));
-
-		let nPos = 0;
-		while (true)
-		{
-			let nStartPos = nPos = strLinearXML.indexOf('<pkg:part', nPos);
-
-			if (!nStartPos || nStartPos === -1)
-				break;
-
-			let nEndPos			= nPos = strLinearXML.indexOf('</pkg:part>', nStartPos);
-			let strText			= strLinearXML.substring(nStartPos, nEndPos);
-
-			let nPosStartName	= strText.indexOf('name="', 0) + 'name="'.length;
-			let nPosEndName		= strText.indexOf('"', nPosStartName);
-			let name			= strText.substring(nPosStartName, nPosEndName);
-
-			let nDataStartPos	= strText.indexOf('<pkg:xmlData>', 0);
-			let nDataEndPos;
-
-			if (nDataStartPos !== -1)
+			let zLib = new AscCommon.ZLib;
+			zLib.create();
+			zLib.addFile('[Content_Types].xml', AscCommon.Utf8.encode('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+				'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+				'<Default Extension="wmf" ContentType="image/x-wmf"/>' +
+				'<Default Extension="png" ContentType="image/png"/>' +
+				'<Default Extension="jpeg" ContentType="image/jpeg"/>' +
+				'<Default Extension="xml" ContentType="application/xml"/>' +
+				'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+				'<Default Extension="bin" ContentType="application/vnd.openxmlformats-officedocument.oleObject"/>' +
+				'<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' +
+				'<Override PartName="/word/fontTable.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>' +
+				'<Override PartName="/word/styles.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+				'<Override PartName="/word/document.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+				'<Override PartName="/word/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+				'<Override PartName="/word/endnotes.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.endnotes+xml"/>' +
+				'<Override PartName="/word/webSettings.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"/>' +
+				'<Override PartName="/word/glossary/webSettings.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"/>' +
+				'<Override PartName="/word/glossary/fontTable.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"/>' +
+				'<Override PartName="/word/glossary/settings.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>' +
+				'<Override PartName="/docProps/app.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>' +
+				'<Override PartName="/word/footnotes.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"/>' +
+				'<Override PartName="/word/settings.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>' +
+				'<Override PartName="/word/glossary/styles.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+				'<Override PartName="/word/glossary/document.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.glossary+xml"/>' +
+				'<Override PartName="/customXml/itemProps1.xml"' +
+				'ContentType="application/vnd.openxmlformats-officedocument.customXmlProperties+xml"/>' +
+				'</Types>'));
+			
+			let nPos = 0;
+			while (true)
 			{
-				nDataStartPos	= nDataStartPos + '<pkg:xmlData>'.length;
-				nDataEndPos		= strText.indexOf('</pkg:xmlData>', nDataStartPos);
-			}
-			else
-			{
-				nDataStartPos	= strText.indexOf('<pkg:binaryData>', 0);
+				let nStartPos = nPos = strLinearXML.indexOf('<pkg:part', nPos);
+				
+				if (!nStartPos || nStartPos === -1)
+					break;
+				
+				let nEndPos = nPos = strLinearXML.indexOf('</pkg:part>', nStartPos);
+				let strText = strLinearXML.substring(nStartPos, nEndPos);
+				
+				let nPosStartName = strText.indexOf('name="', 0) + 'name="'.length;
+				let nPosEndName   = strText.indexOf('"', nPosStartName);
+				let name          = strText.substring(nPosStartName, nPosEndName);
+				
+				let nDataStartPos = strText.indexOf('<pkg:xmlData>', 0);
+				let nDataEndPos;
+				
 				if (nDataStartPos !== -1)
-					nDataStartPos += '<pkg:binaryData>'.length;
-				nDataEndPos		= strText.indexOf('</pkg:binaryData>', nDataStartPos);
+				{
+					nDataStartPos = nDataStartPos + '<pkg:xmlData>'.length;
+					nDataEndPos   = strText.indexOf('</pkg:xmlData>', nDataStartPos);
+				}
+				else
+				{
+					nDataStartPos = strText.indexOf('<pkg:binaryData>', 0);
+					if (nDataStartPos !== -1)
+						nDataStartPos += '<pkg:binaryData>'.length;
+					nDataEndPos = strText.indexOf('</pkg:binaryData>', nDataStartPos);
+				}
+				
+				if (nStartPos === -1 || nEndPos === -1)
+					continue;
+				
+				let data = strText.substring(nDataStartPos, nDataEndPos).trim();
+				
+				if (name[0] === "/")
+					name = name.substring(1, name.length);
+				
+				zLib.addFile(name, AscCommon.Utf8.encode(data));
 			}
-
-			if (nStartPos === -1 || nEndPos === -1)
-				continue;
-
-			let data = strText.substring(nDataStartPos, nDataEndPos).trim();
-
-			if (name[0] === "/")
-				name = name.substring(1, name.length);
-
-			zLib.addFile(name, AscCommon.Utf8.encode(data));
+			
+			let arr              = zLib.save();
+			let Doc              = new AscWord.CDocument(drawingDocument, false);
+			let xmlParserContext = new AscCommon.XmlParserContext();
+			let jsZlib           = new AscCommon.ZLib();
+			
+			xmlParserContext.DrawingDocument = drawingDocument;
+			
+			if (!jsZlib.open(arr))
+				return [];
+			
+			let oBinaryFileReader	= new AscCommonWord.BinaryFileReader(Doc, {});
+			oBinaryFileReader.PreLoadPrepare(undefined, false);
+			
+			Doc.fromZip(jsZlib, xmlParserContext, oBinaryFileReader.oReadResult);
+			//очищать pptx_content_loader не надо чтобы не было проблем с вызовом внутри ReadPPTXElement и т.к. открываем zip
+			//лучше уйти от глобального pptx_content_loader
+			oBinaryFileReader.PostLoadPrepare(xmlParserContext, false);
+			jsZlib.close();
+			return Doc.Content;
+		}, this.document, this, []);
+		
+		let resultContent = [];
+		for (let i = 0; i < docContent.length; ++i)
+		{
+			resultContent.push(docContent[i].Copy(null));
 		}
 
-		let arr					= zLib.save();
-		let draw				= this.document.DrawingDocument;
-		let Doc					= new CDocument(draw, false);
-		let xmlParserContext	= new AscCommon.XmlParserContext();
-		let jsZlib				= new AscCommon.ZLib();
-
-		xmlParserContext.DrawingDocument = draw;
-
-		if (!jsZlib.open(arr))
-			return [];
-
-		let oBinaryFileReader	= new AscCommonWord.BinaryFileReader(Doc, {});
-		oBinaryFileReader.PreLoadPrepare(undefined, false);
-
-		Doc.fromZip(jsZlib, xmlParserContext, oBinaryFileReader.oReadResult);
-		//очищать pptx_content_loader не надо чтобы не было проблем с вызовом внутри ReadPPTXElement и т.к. открываем zip
-		//лучше уйти от глобального pptx_content_loader
-		oBinaryFileReader.PostLoadPrepare(xmlParserContext, false);
-		jsZlib.close();
-
-		return Doc.Content;
+		return resultContent;
 	};
 	/**
 	 * Get CustomXML text
@@ -415,6 +460,10 @@
 	CustomXmlManager.prototype.isSupported = function()
 	{
 		return window['Asc'] && window['Asc']['Addons'] && true === window['Asc']['Addons']['ooxml'];
+	};
+	CustomXmlManager.prototype.Refresh_RecalcData = function(Data)
+	{
+
 	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.CustomXmlManager = CustomXmlManager;

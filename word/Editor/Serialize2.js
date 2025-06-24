@@ -2387,7 +2387,7 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
 	this.oBinaryHeaderFooterTableWriter = oBinaryHeaderFooterTableWriter;
     this.bs = new BinaryCommonWriter(this.memory);
     this.brPrs = new Binary_rPrWriter(this.memory, saveParams);
-    this.Write_pPr = function(pPr, pPr_rPr, EndRun, SectPr, oDocument)
+    this.Write_pPr = function(pPr, pPr_rPr, EndRun, paragraph, oDocument)
     {
         var oThis = this;
         //Стили надо писать первыми, потому что применение стиля при открытии уничтажаются настройки параграфа
@@ -2507,11 +2507,14 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
             this.bs.WriteItemWithLength(function(){oThis.WriteFramePr(pPr.FramePr);});
         }
         //SectPr
-        if(null != SectPr && null != oDocument)
+        if(paragraph
+			&& paragraph.Get_SectionPr()
+			&& !paragraph.IsTableCellContent()
+			&& oDocument)
         {
             this.memory.WriteByte(c_oSerProp_pPrType.SectPr);
             this.memory.WriteByte(c_oSerPropLenType.Variable);
-            this.bs.WriteItemWithLength(function(){oThis.WriteSectPr(SectPr, oDocument);});
+            this.bs.WriteItemWithLength(function(){oThis.WriteSectPr(paragraph.Get_SectionPr(), oDocument);});
         }
 
         if(null != pPr.PrChange && pPr.ReviewInfo)
@@ -2961,7 +2964,7 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
 		if (undefined !== sectPr.GetPageNumChapStyle())
 			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapStyle, function(){oThis.memory.WriteLong(sectPr.GetPageNumChapStyle());});
 		if (undefined !== sectPr.GetPageNumChapSep())
-			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapSep, function(){oThis.memory.WriteLong(sectPr.GetPageNumChapSep());});
+			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapSep, function(){oThis.memory.WriteByte(sectPr.GetPageNumChapSep());});
 	}
 	this.WriteLineNumType = function(lineNum)
 	{
@@ -5393,7 +5396,7 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
                 pPr = {};
             var EndRun = par.GetParaEndRun();
             this.memory.WriteByte(c_oSerParType.pPr);
-            this.bs.WriteItemWithLength(function(){oThis.bpPrs.Write_pPr(pPr, par.TextPr.Value, EndRun, par.Get_SectionPr(), oThis.Document);});
+            this.bs.WriteItemWithLength(function(){oThis.bpPrs.Write_pPr(pPr, par.TextPr.Value, EndRun, par, oThis.Document);});
         }
         //Content
         if(null != par.Content)
@@ -6856,9 +6859,6 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
 		}
 		if (undefined !== val.storeItemCheckSum)
 		{
-			//let strCustomXmlContent = this.Document.customXml.getContentByDataBinding(val);
-			//val.recalculateCheckSum(strCustomXmlContent);
-
 			this.memory.WriteByte(c_oSerSdt.StoreItemCheckSum);
 			this.memory.WriteString2(val.storeItemCheckSum);
 		}
@@ -7750,9 +7750,10 @@ function BinaryCustomsTableWriter(memory, doc, customXmlManager)
 	};
 	this.WriteCustomXml = function(customXml) {
 		var oThis = this;
-		for(var i = 0; i < customXml.uri.length; ++i){
+		let namespaces = customXml.getAllNamespaces();
+		for(var i = 0; i < namespaces.length; ++i){
 			this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-				oThis.memory.WriteString3(customXml.uri[i]);
+				oThis.memory.WriteString3(namespaces[i]);
 			});
 		}
 		if (null !== customXml.itemId) {
@@ -8273,6 +8274,9 @@ function BinaryFileReader(doc, openParams)
 		{
 			this.PostLoadPrepareCheckStylesRecursion(stId, aStylesGrey, styles);
 		}
+		
+		this.Document.GetGlossaryDocument().UpdateStyleLinks(oIdRenameMap);
+		
 		//DefpPr, DefrPr
 		//важно чтобы со списками разобрались выше чем этот код
 		if(null != this.oReadResult.DefpPr)
@@ -11321,16 +11325,20 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
     this.ReadAsTable = function(OpenContent)
     {
         var oThis = this;
-        return this.bcr.ReadTable(function(t, l){
+        const res = this.bcr.ReadTable(function(t, l){
                 return oThis.ReadDocumentContent(t, l, OpenContent);
             });
+	    this.oReadResult.checkDocumentContentReviewType(OpenContent);
+			return res;
     };
 	this.Read = function(length, OpenContent)
     {
         var oThis = this;
-        return this.bcr.Read1(length, function(t, l){
+        const res = this.bcr.Read1(length, function(t, l){
                 return oThis.ReadDocumentContent(t, l, OpenContent);
             });
+	    this.oReadResult.checkDocumentContentReviewType(OpenContent);
+			return res;
     };
     this.ReadDocumentContent = function(type, length, Content)
     {
@@ -11342,10 +11350,8 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
             res = this.bcr.Read1(length, function(t, l){
                 return oThis.ReadParagraph(t,l, oNewParagraph);
             });
-			if (reviewtype_Common === oNewParagraph.GetReviewType() || this.oReadResult.checkReadRevisions()) {
 				oNewParagraph.Correct_Content();
 				Content.push(oNewParagraph);
-			}
         }
         else if ( c_oSerParType.Table === type )
         {
@@ -16291,7 +16297,7 @@ function Binary_CustomsTableReader(doc, oReadResult, stream) {
 	this.ReadCustomContent = function(type, length, custom) {
 		var res = c_oSerConstants.ReadOk;
 		if (c_oSerCustoms.Uri === type) {
-			custom.uri.push(this.stream.GetString2LE(length));
+			custom.setNamespaceUri(this.stream.GetString2LE(length));
 		} else if (c_oSerCustoms.ItemId === type) {
 			custom.itemId = this.stream.GetString2LE(length);
 		} else if (c_oSerCustoms.ContentA === type) {
@@ -17677,6 +17683,28 @@ DocReadResult.prototype = {
 				elem.SetNumPrToPrChange(numId, iLvl);
 			else
 				elem.SetNumPr(numId, iLvl);
+		}
+	},
+	checkDocumentContentReviewType: function (arrContent) {
+		if (!arrContent.length) {
+			return;
+		}
+		if (this.disableRevisions) {
+			const oLastElement = arrContent[arrContent.length - 1];
+			if (oLastElement instanceof AscWord.Paragraph && oLastElement.GetReviewType() === reviewtype_Remove) {
+				oLastElement.SetReviewType(reviewtype_Common);
+			}
+			for (let i = arrContent.length - 2; i >= 0; i -= 1) {
+				const oPrevElement = arrContent[i];
+				const oNextElement = arrContent[i + 1];
+				if (oPrevElement instanceof AscWord.Paragraph && oPrevElement.GetReviewType() === reviewtype_Remove) {
+					oPrevElement.SetReviewType(reviewtype_Common);
+					if (oNextElement instanceof AscWord.Paragraph) {
+						oPrevElement.Concat(oNextElement);
+						arrContent.splice(i + 1, 1);
+					}
+				}
+			}
 		}
 	}
 };

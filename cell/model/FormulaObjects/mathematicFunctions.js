@@ -388,8 +388,13 @@ function (window, undefined) {
 	cAGGREGATE.prototype.argumentsMax = 253;
 	cAGGREGATE.prototype.isXLFN = true;
 	cAGGREGATE.prototype.argumentsType = [argType.number, argType.number, [argType.reference]];
-	//TODO начиная со 3 аргумента все оставшиеся - массивы
 	cAGGREGATE.prototype.arrayIndexes = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1};
+	cAGGREGATE.prototype.getArrayIndex = function (index) {
+		if (index === 0) {
+			return undefined;
+		}
+		return 1;
+	};
 	cAGGREGATE.prototype.Calculate = function (arg) {
 		let oArguments = this._prepareArguments([arg[0], arg[1]], arguments[1]);
 		let argClone = oArguments.args;
@@ -2569,7 +2574,7 @@ function (window, undefined) {
 	cMDETERM.prototype.Calculate = function (arg) {
 
 		function determ(A) {
-			var N = A.length, denom = 1, exchanges = 0, i, j;
+			let N = A.length, denom = 1, exchanges = 0, i, j;
 
 			for (i = 0; i < N; i++) {
 				for (j = 0; j < A[i].length; j++) {
@@ -2580,16 +2585,16 @@ function (window, undefined) {
 			}
 
 			for (i = 0; i < N - 1; i++) {
-				var maxN = i, maxValue = Math.abs(A[i][i] instanceof cEmpty ? NaN : A[i][i]);
+				let maxN = i, maxValue = Math.abs(A[i][i] instanceof cEmpty ? NaN : A[i][i]);
 				for (j = i + 1; j < N; j++) {
-					var value = Math.abs(A[j][i] instanceof cEmpty ? NaN : A[j][i]);
+					let value = Math.abs(A[j][i] instanceof cEmpty ? NaN : A[j][i]);
 					if (value > maxValue) {
 						maxN = j;
 						maxValue = value;
 					}
 				}
 				if (maxN > i) {
-					var temp = A[i];
+					let temp = A[i];
 					A[i] = A[maxN];
 					A[maxN] = temp;
 					exchanges++;
@@ -2598,11 +2603,11 @@ function (window, undefined) {
 						return maxValue;
 					}
 				}
-				var value1 = A[i][i] instanceof cEmpty ? NaN : A[i][i];
+				let value1 = A[i][i] instanceof cEmpty ? NaN : A[i][i];
 				for (j = i + 1; j < N; j++) {
-					var value2 = A[j][i] instanceof cEmpty ? NaN : A[j][i];
+					let value2 = A[j][i] instanceof cEmpty ? NaN : A[j][i];
 					A[j][i] = 0;
-					for (var k = i + 1; k < N; k++) {
+					for (let k = i + 1; k < N; k++) {
 						A[j][k] = (A[j][k] * value1 - A[i][k] * value2) / denom;
 					}
 				}
@@ -2616,9 +2621,13 @@ function (window, undefined) {
 			}
 		}
 
-		var arg0 = arg[0];
-		if (arg0 instanceof cArea || arg0 instanceof cArray) {
-			arg0 = arg0.getMatrix();
+		let arg0 = arg[0];
+		if (cElementType.array === arg0.type || cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
+			if (cElementType.array === arg0.type) {
+				arg0 = arg0.getMatrixCopy();
+			} else {
+				arg0 = cElementType.cellsRange3D === arg0.type ? arg0.getMatrix()[0] : arg0.getMatrix();
+			}
 		} else {
 			return new cError(cErrorType.not_available);
 		}
@@ -4202,7 +4211,7 @@ function (window, undefined) {
 	cROUNDDOWN.prototype.argumentsType = [argType.number, argType.number];
 	cROUNDDOWN.prototype.Calculate = function (arg) {
 		function rounddownHelper(number, num_digits) {
-			num_digits = Math.sign(num_digits) * Math.floor(Math.abs(num_digits));
+			num_digits = Math.trunc(num_digits);
 			if (num_digits > AscCommonExcel.cExcelMaxExponent) {
 				if (Math.abs(number) >= 1e-100 || num_digits <= 98303) { // The values are obtained experimentally
 					return new cNumber(number);
@@ -4215,13 +4224,13 @@ function (window, undefined) {
 				return new cNumber(0);
 			}
 
-			var significance = Math.pow(10, -(num_digits | num_digits));
+			var significance = Math.pow(10, -num_digits);
 
 			if (Number.POSITIVE_INFINITY == Math.abs(number / significance)) {
 				return new cNumber(number);
 			}
 			var x = number * Math.pow(10, num_digits);
-			x = x | x;
+			x = Math.trunc(x);
 			return new cNumber(x * significance);
 		}
 
@@ -4833,8 +4842,13 @@ function (window, undefined) {
 	cSUBTOTAL.prototype.name = 'SUBTOTAL';
 	cSUBTOTAL.prototype.argumentsMin = 2;
 	cSUBTOTAL.prototype.argumentsType = [argType.number, argType.reference, [argType.reference]];
-	//TODO все оставшиеся аргументы приходят на вход функции как массивы
 	cSUBTOTAL.prototype.arrayIndexes = {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1};
+	cSUBTOTAL.prototype.getArrayIndex = function (index) {
+		if (index === 0) {
+			return undefined;
+		}
+		return 1;
+	};
 	cSUBTOTAL.prototype.Calculate = function (arg) {
 		let f, exclude = false, arg0 = arg[0];
 
@@ -5185,6 +5199,12 @@ function (window, undefined) {
 	cSUMIFS.prototype.name = 'SUMIFS';
 	cSUMIFS.prototype.argumentsMin = 3;
 	cSUMIFS.prototype.arrayIndexes = {0: 1, 1: 1, 3: 1, 5: 1, 7: 1};
+	cSUMIFS.prototype.getArrayIndex = function (index) {
+		if (index === 0) {
+			return 1;
+		}
+		return index % 2 !== 0 ? 1 : undefined;
+	};
 	cSUMIFS.prototype.exactTypes = {0: 1, 1: 1};	// in this function every odd argument is should be checked for type reference
 	cSUMIFS.prototype.argumentsType = [argType.reference, [argType.reference, argType.any]];
 	cSUMIFS.prototype.Calculate = function (arg) {

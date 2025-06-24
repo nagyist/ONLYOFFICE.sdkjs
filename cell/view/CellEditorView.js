@@ -88,6 +88,8 @@ function (window, undefined) {
 	/** @const */
 	var codeNewLine = 0x00A;
 	var codeEqually = 0x3D;
+	var codeUnarPlus = 0x2B;
+	var codeUnarMinus = 0x2D;
 
 
 	/**
@@ -196,7 +198,7 @@ function (window, undefined) {
 		this.sAutoComplete = null;
 
 		if (null != this.element) {
-			var ceMenuEditor = this.getMenuEditorMode() ? '-menu' : '';
+			var ceMenuEditor = this.getMenuEditorMode() ? '-menu' : ''
 			var ceCanvasOuterId = "ce-canvas-outer" + ceMenuEditor;
 			var ceCanvasId = "ce-canvas" + ceMenuEditor;
 			var ceCanvasOverlay = "ce-canvas-overlay" + ceMenuEditor;
@@ -322,7 +324,7 @@ function (window, undefined) {
 	 */
 	CellEditor.prototype.open = function (options) {
 		this._setEditorState(c_oAscCellEditorState.editStart);
-
+		
 		var b = this.input.selectionStart;
 
 		this.isOpened = true;
@@ -371,6 +373,17 @@ function (window, undefined) {
 	CellEditor.prototype.close = function (saveValue, callback) {
 		var opt = this.options;
 		var t = this;
+
+		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
+		if (externalSelectionController && externalSelectionController.getExternalFormulaEditMode()) {
+			if (!externalSelectionController.supportVisibilityChangeOption) {
+				externalSelectionController.sendExternalCloseEditor(saveValue);
+				saveValue = false;
+			} else {
+				callback && callback(false);
+				return;
+			}
+		}
 
 		var api = window["Asc"]["editor"];
 		if (api && !api.canUndoRedoByRestrictions()) {
@@ -677,6 +690,9 @@ function (window, undefined) {
 		this._addChars(str, undefined, /*isRange*/true);
 		this.lastRangeLength = str.length;
 		this.skipTLUpdate = true;
+
+		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
+		externalSelectionController && externalSelectionController.sendExternalChangeSelection();
 	};
 
 	CellEditor.prototype.insertFormula = function (functionName, isDefName, sRange) {
@@ -860,8 +876,16 @@ function (window, undefined) {
 	};
 
 	CellEditor.prototype._isFormula = function () {
-		var fragments = this.options.fragments;
-		return fragments && fragments.length > 0 && fragments[0].getCharCodesLength() > 0 && fragments[0].getCharCode(0) === codeEqually;
+		let fragments = this.options.fragments;
+		if (fragments && fragments.length > 0 && fragments[0].getCharCodesLength() > 0) {
+			let firstSymbolCode = fragments[0].getCharCode(0);
+			let isEqualSign = firstSymbolCode === codeEqually;
+			let unarSign = isEqualSign ? false : (firstSymbolCode === codeUnarPlus || firstSymbolCode === codeUnarMinus);
+
+			return isEqualSign || unarSign;
+		}
+
+		return false;
 	};
 	CellEditor.prototype.isFormula = function () {
 		return c_oAscCellEditorState.editFormula === this.m_nEditorState;
@@ -1226,13 +1250,19 @@ function (window, undefined) {
 		if (!this.options || !this.options.fragments) {
 			return;
 		}
+
 		this._expand();
 		this._cleanText();
-		this._cleanSelection();
-		this._adjustCanvas();
-		this._showCanvas();
-		this._calculateCanvasSize();
-		this._renderText();
+
+		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
+		if (!externalSelectionController || !externalSelectionController.getExternalFormulaEditMode()) {
+			this._cleanSelection();
+			this._adjustCanvas();
+			this._showCanvas();
+			this._calculateCanvasSize();
+			this._renderText();
+		}
+
 		if (!this.getMenuEditorMode()) {
 			for (var i = 0; i < this.options.fragments.length; i++) {
 				this.options.fragments[i].initText();
@@ -1270,7 +1300,7 @@ function (window, undefined) {
 	CellEditor.prototype._fireUpdated = function () {
 		//TODO I save the text!
 		var s = AscCommonExcel.getFragmentsText(this.options.fragments);
-		var isFormula = -1 === this.beginCompositePos && s.charAt(0) === "=";
+		var isFormula = -1 === this.beginCompositePos && (s.charAt(0) === "=" || s.charAt(0) === "+" || s.charAt(0) === "-");
 		var api = window["Asc"]["editor"];
 		var fPos, fName, match, fCurrent;
 
@@ -1300,6 +1330,25 @@ function (window, undefined) {
 	};
 
 	CellEditor.prototype._getFunctionByString = function (cursorPos, s) {
+		let isInString = false;
+		let isEscaped = false;
+
+		if ('"' === s[cursorPos - 1]) {
+			return {fPos: undefined, fName: undefined};
+		}
+
+		for (let i = 0; i < cursorPos; i++) {
+			if (s[i] === '"') {
+				if (!isEscaped) {
+					isInString = !isInString;
+				}
+			}
+		}
+
+		if (isInString) {
+			return {fPos: undefined, fName: undefined};
+		}
+		
 		let fPos = asc_lastidx(s, this.reNotFormula, cursorPos) + 1;
 		let match;
 		if (fPos > 0) {
@@ -1517,16 +1566,28 @@ function (window, undefined) {
 			}
 		}
 
+		// Calculate canvas offset inside container
+		let ws = this.handlers.trigger("getActiveWSView");
+		let canvasTop = 0;
+		let cellsTop = ws && AscCommon.AscBrowser.convertToRetinaValue(ws.cellsTop);
+		if (ws && top < cellsTop) {
+			// If editor position is above data area
+			canvasTop = top < 0 ? -(cellsTop + Math.abs(top)) : top - cellsTop;
+			// Fix container at headers level
+			top = cellsTop;
+		}
+
 		this.canvasOuterStyle.left = left + 'px';
 		this.canvasOuterStyle.top = top + 'px';
 		this.canvasOuterStyle.width = widthStyle + 'px';
 		this.canvasOuterStyle.height = heightStyle + 'px';
 		if (!this.getMenuEditorMode()) {
-			this.canvasOuterStyle.zIndex = this.top < 0 ? -1 : z;
+			this.canvasOuterStyle.zIndex = /*this.top < 0 ? -1 :*/ z;
 		}
 
 		this.canvas.style.width = this.canvasOverlay.style.width = widthStyle + 'px';
 		this.canvas.style.height = this.canvasOverlay.style.height = heightStyle + 'px';
+		this.canvas.style.top = this.canvasOverlay.style.top = canvasTop + 'px';
 	};
 
 	CellEditor.prototype._calculateCanvasSize = function () {
@@ -1620,6 +1681,10 @@ function (window, undefined) {
 		if (!this.isSelectMode) {
 			this.handlers.trigger("onSelectionEnd");
 		}
+
+		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
+		externalSelectionController && externalSelectionController.sendExternalChangeSelection();
+
 		return selection;
 	};
 
@@ -1732,8 +1797,12 @@ function (window, undefined) {
 		this.curHeight = curHeight;
 
 		if (!window['IS_NATIVE_EDITOR']) {
+
+			// update cursor position
+			let scrollDiff = parseFloat(this.canvas.style.top);
+
 			this.cursorStyle.left = curLeft + "px";
-			this.cursorStyle.top = curTop + "px";
+			this.cursorStyle.top = curTop + scrollDiff + "px";
 
 			this.cursorStyle.width = (((2 * AscCommon.AscBrowser.retinaPixelRatio) >> 0) / AscCommon.AscBrowser.retinaPixelRatio) + "px";
 			this.cursorStyle.height = curHeight + "px";
@@ -2024,9 +2093,7 @@ function (window, undefined) {
 	CellEditor.prototype._addNewLine = function () {
 		this._wrapText();
 		let sNewLine = "\n";
-		AscFonts.FontPickerByCharacter.checkText(sNewLine, this, function () {
-			this._addChars( /*codeNewLine*/sNewLine);
-		});
+		this._addChars( /*codeNewLine*/sNewLine);
 	};
 
 	CellEditor.prototype._removeChars = function (pos, length, isRange) {
@@ -2444,15 +2511,17 @@ function (window, undefined) {
 
 	CellEditor.prototype._tryCloseEditor = function (event) {
 		var t = this;
+		let nRetValue = keydownresult_PreventNothing;
 		var callback = function (success) {
 			// for the case when the user presses ctrl+shift+enter/crtl+enter the transition to a new line is not performed
 			var applyByArray = t.textFlags && t.textFlags.ctrlKey;
 			if (!applyByArray && success) {
-				t.handlers.trigger("applyCloseEvent", event);
+				nRetValue = t.handlers.trigger("applyCloseEvent", event);
 				AscCommon.StartIntervalDrawText(false);
 			}
 		};
 		this.close(true, callback);
+		return nRetValue;
 	};
 
 	CellEditor.prototype._getAutoComplete = function (str) {
@@ -2615,7 +2684,7 @@ function (window, undefined) {
 		}
 
 		oThis._setSkipKeyPress(false);
-		oThis.skipTLUpdate = true;
+		oThis.skipTLUpdate = false;
 
 		// hieroglyph input definition
 		const bHieroglyph = oThis.isTopLineActive && AscCommonExcel.getFragmentsLength(oThis.options.fragments) !== oThis.input.value.length;
@@ -2668,7 +2737,7 @@ function (window, undefined) {
 					}
 
 					if (false === oThis.handlers.trigger("isGlobalLockEditCell")) {
-						oThis._tryCloseEditor(oEvent);
+						nRetValue = oThis._tryCloseEditor(oEvent);
 					}
 					break;
 				}
@@ -2827,8 +2896,8 @@ function (window, undefined) {
 
 		if (nRetValue & keydownresult_PreventKeyPress) {
 			oThis._setSkipKeyPress(true);
-			oThis.skipTLUpdate = false;
 		}
+		oThis.skipTLUpdate = true;
 		return nRetValue;
 	};
 
@@ -3052,7 +3121,9 @@ function (window, undefined) {
 			return true;
 		}
 		this.loadFonts = true;
-		AscFonts.FontPickerByCharacter.checkText(this.input.value, this, function () {
+
+		let checkedText = this.input.value.replace(/[\r\n]+/g, '');
+		AscFonts.FontPickerByCharacter.checkText(checkedText, this, function () {
 			t.loadFonts = false;
 			t.skipTLUpdate = true;
 			var length = t.replaceText(0, t.textRender.getEndOfText(), t.input.value);
@@ -3329,6 +3400,17 @@ function (window, undefined) {
 		}
 
 		return type !== null ? {type: type, obj: {text: text}} : null;
+	};
+
+	CellEditor.prototype.setSelectionState = function (obj) {
+		if (!obj) {
+			return;
+		}
+		this.selectionBegin = obj.selectionBegin;
+		this.selectionEnd = obj.selectionEnd;
+		this.lastRangePos = obj.lastRangePos;
+		this.lastRangeLength = obj.lastRangeLength;
+		this.cursorPos = obj.cursorPos;
 	};
 
 	CellEditor.prototype.startAction = function () {
