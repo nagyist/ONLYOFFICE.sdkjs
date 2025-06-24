@@ -52,6 +52,15 @@
 	const CFormControlPr_objectType_toggleButton = 11;
 	const CFormControlPr_objectType_tabStrip = 12;
 	const CFormControlPr_objectType_image = 13;
+
+	AscDFH.changesFactory[AscDFH.historyitem_Control_ControlPr] = AscDFH.CChangesDrawingsObject;
+	AscDFH.changesFactory[AscDFH.historyitem_Control_FormControlPr] = AscDFH.CChangesDrawingsObject;
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_ControlPr] = function(oClass, pr) {
+		oClass.controlPr = pr;
+	}
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_FormControlPr] = function(oClass, pr) {
+		oClass.formControlPr = pr;
+	}
 	function CControl() {
 		AscFormat.CShape.call(this);
 		this.name = null;
@@ -108,6 +117,17 @@
 	};
 	CControl.prototype.getTextRect = function () {
 		return this.controller.getTextRect();
+	};
+	CControl.prototype.canRotate = function () {
+		return false;
+	};
+	CControl.prototype.setControlPr = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_ControlPr, this.controlPr, pr));
+		this.controlPr = pr;
+	};
+	CControl.prototype.setFormControlPr = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_FormControlPr, this.formControlPr, pr));
+		this.formControlPr = pr;
 	};
 
 	function CControlControllerBase(oControl) {
@@ -300,6 +320,71 @@
 	};
 
 
+
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoLine] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoPict] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Dde] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_DefaultSize] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Disabled] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Cf] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_LinkedCell] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_ListFillRange] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_RId] = AscDFH.CChangesDrawingsLong;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Locked] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Macro] = AscDFH.CChangesDrawingsString;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Print] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_RecalcAlways] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_UiObject] = AscDFH.CChangesDrawingsBool;
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AltText] = function(oClass, value) {
+		this.altText = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoFill] = function(oClass, value) {
+		this.autoFill = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoLine] = function(oClass, value) {
+		this.autoLine = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoPict] = function(oClass, value) {
+		this.autoPict = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Dde] = function(oClass, value) {
+		this.dde = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_DefaultSize] = function(oClass, value) {
+		this.defaultSize = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Disabled] = function(oClass, value) {
+		this.disabled = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Cf] = function(oClass, value) {
+		this.cf = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_LinkedCell] = function(oClass, value) {
+		this.linkedCell = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_ListFillRange] = function(oClass, value) {
+		this.listFillRange = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RId] = function(oClass, value) {
+		this.rId = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Locked] = function(oClass, value) {
+		this.locked = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Macro] = function(oClass, value) {
+		this.macro = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Print] = function(oClass, value) {
+		this.print = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RecalcAlways] = function(oClass, value) {
+		this.recalcAlways = value;
+	};
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_UiObject] = function(oClass, value) {
+		this.uiObject = value;
+	};
 	function CControlPr() {
 		this.altText = null;
 		this.autoFill = null;
@@ -317,8 +402,119 @@
 		this.print = null;
 		this.recalcAlways = null;
 		this.uiObject = null;
-		this.anchor = null;
 	}
+	CControlPr.prototype.setAltText = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_AltText, this.altText, pr));
+		this.altText = pr;
+	}
+	CControlPr.prototype.getAltText = function() {
+		return this.altText;
+	};
+	CControlPr.prototype.setAutoFill = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoFill, this.autoFill, pr));
+		this.autoFill = pr;
+	}
+	CControlPr.prototype.getAutoFill = function() {
+		return this.autoFill;
+	};
+	CControlPr.prototype.setAutoLine = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoLine, this.autoLine, pr));
+		this.autoLine = pr;
+	}
+	CControlPr.prototype.getAutoLine = function() {
+		return this.autoLine;
+	};
+	CControlPr.prototype.setAutoPict = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoPict, this.autoPict, pr));
+		this.autoPict = pr;
+	}
+	CControlPr.prototype.getAutoPict = function() {
+		return this.autoPict;
+	};
+	CControlPr.prototype.setDde = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Dde, this.dde, pr));
+		this.dde = pr;
+	}
+	CControlPr.prototype.getDde = function() {
+		return this.dde;
+	};
+	CControlPr.prototype.setDefaultSize = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_DefaultSize, this.defaultSize, pr));
+		this.defaultSize = pr;
+	}
+	CControlPr.prototype.getDefaultSize = function() {
+		return this.defaultSize;
+	};
+	CControlPr.prototype.setDisabled = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Disabled, this.disabled, pr));
+		this.disabled = pr;
+	}
+	CControlPr.prototype.getDisabled = function() {
+		return this.disabled;
+	};
+	CControlPr.prototype.setCf = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_Cf, this.cf, pr));
+		this.cf = pr;
+	}
+	CControlPr.prototype.getCf = function() {
+		return this.cf;
+	};
+	CControlPr.prototype.setLinkedCell = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_LinkedCell, this.linkedCell, pr));
+		this.linkedCell = pr;
+	}
+	CControlPr.prototype.getLinkedCell = function() {
+		return this.linkedCell;
+	};
+	CControlPr.prototype.setListFillRange = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_ListFillRange, this.listFillRange, pr));
+		this.listFillRange = pr;
+	}
+	CControlPr.prototype.getListFillRange = function() {
+		return this.listFillRange;
+	};
+	CControlPr.prototype.setRId = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_ControlPr_RId, this.rId, pr));
+		this.rId = pr;
+	}
+	CControlPr.prototype.getRId = function() {
+		return this.rId;
+	};
+	CControlPr.prototype.setLocked = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Locked, this.locked, pr));
+		this.locked = pr;
+	}
+	CControlPr.prototype.getLocked = function() {
+		return this.locked;
+	};
+	CControlPr.prototype.setMacro = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_Macro, this.macro, pr));
+		this.macro = pr;
+	}
+	CControlPr.prototype.getMacro = function() {
+		return this.macro;
+	};
+	CControlPr.prototype.setPrint = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Print, this.print, pr));
+		this.print = pr;
+	}
+	CControlPr.prototype.getPrint = function() {
+		return this.print;
+	};
+	CControlPr.prototype.setRecalcAlways = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_RecalcAlways, this.recalcAlways, pr));
+		this.recalcAlways = pr;
+	}
+	CControlPr.prototype.getRecalcAlways = function() {
+		return this.recalcAlways;
+	};
+	CControlPr.prototype.setUiObject = function(pr) {
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_UiObject, this.uiObject, pr));
+		this.uiObject = pr;
+	};
+	CControlPr.prototype.getUiObject = function() {
+		return this.uiObject;
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropLines] = AscDFH.CChangesDrawingsLong;
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_ObjectType] = AscDFH.CChangesDrawingsLong;
@@ -351,8 +547,8 @@
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_MultiLine] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_VerticalBar] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_PasswordEdit] = AscDFH.CChangesDrawingsBool;
-	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_AddItemToLst] = AscDFH.CChangesDrawingsContentBool;
-	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_RemoveItemFromItemLst] = AscDFH.CChangesDrawingsBool;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_AddItemToLst] = AscDFH.CChangesDrawingsContentString;
+	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_RemoveItemFromLst] = AscDFH.CChangesDrawingsContentString;
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_DropLines] = function (oClass, value) {
 		oClass.dropLines = value;
 	};
@@ -445,6 +641,12 @@
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_PasswordEdit] = function (oClass, value) {
 		oClass.passwordEdit = value;
+	};
+	AscDFH.drawingContentChanges[AscDFH.historyitem_FormControlPr_AddItemToLst] = function (oClass) {
+		return oClass.itemLst;
+	};
+	AscDFH.drawingContentChanges[AscDFH.historyitem_FormControlPr_RemoveItemFromLst] = function (oClass) {
+		return oClass.itemLst;
 	};
 	function CFormControlPr() {
 		AscFormat.CBaseFormatObject.call(this);
@@ -699,13 +901,17 @@
 	CFormControlPr.prototype.getPasswordEdit = function() {
 		return this.passwordEdit;
 	}
-	CFormControlPr.prototype.addItemLst = function () {
-
+	CFormControlPr.prototype.addItemToLst = function (nIdx, sPr) {
+		var nInsertIdx = Math.min(this.itemLst.length, Math.max(0, nIdx));
+		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsContentString(this, AscDFH.historyitem_FormControlPr_AddItemToLst, nInsertIdx, [sPr], true));
+		this.itemLst.splice(nInsertIdx, 0, sPr);
 	};
-	CFormControlPr.prototype.removeItemLst = function () {
-
+	CFormControlPr.prototype.removeItemFromLst = function (nIdx) {
+		if (nIdx > -1 && nIdx < this.itemLst.length) {
+			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsContentString(this, AscDFH.historyitem_CCommonDataListRemove, nIdx, [this.itemLst[nIdx]], false));
+			this.itemLst.splice(nIdx, 1);
+		}
 	};
-
 
 	window["AscFormat"] = window["AscFormat"] || {};
 	window["AscFormat"].CControl = CControl;
