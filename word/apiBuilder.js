@@ -12075,6 +12075,50 @@
 		return true;
 	};
 	/**
+	 * Gets the left page margin for all pages in this section.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetPageMarginLeft.js
+	 */
+	ApiSection.prototype.GetPageMarginLeft = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginLeft());
+	};
+	/**
+	 * Gets the top page margin for all pages in this section.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetPageMarginTop.js
+	 */
+	ApiSection.prototype.GetPageMarginTop = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginTop());
+	};
+	/**
+	 * Gets the right page margin for all pages in this section.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetPageMarginRight.js
+	 */
+	ApiSection.prototype.GetPageMarginRight = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginRight());
+	};
+	/**
+	 * Gets the bottom page margin for all pages in this section.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetPageMarginBottom.js
+	 */
+	ApiSection.prototype.GetPageMarginBottom = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginBottom());
+	};
+	/**
 	 * Specifies the distance from the top edge of the page to the top edge of the header.
 	 * @memberof ApiSection
 	 * @typeofeditors ["CDE"]
@@ -12086,6 +12130,17 @@
 	{
 		this.Section.SetPageMarginHeader(private_Twips2MM(nDistance));
 		return true;
+	};
+	/**
+	 * Specifies the distance from the top edge of the page to the top edge of the header.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetHeaderDistance.js
+	 */
+	ApiSection.prototype.GetHeaderDistance = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginHeader());
 	};
 	/**
 	 * Specifies the distance from the bottom edge of the page to the bottom edge of the footer.
@@ -12100,6 +12155,17 @@
 	{
 		this.Section.SetPageMarginFooter(private_Twips2MM(nDistance));
 		return true;
+	};
+	/**
+	 * Gets the distance from the bottom edge of the page to the bottom edge of the footer.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetFooterDistance.js
+	 */
+	ApiSection.prototype.GetFooterDistance = function()
+	{
+		return private_MM2Twips(this.Section.GetPageMarginFooter());
 	};
 	/**
 	 * Returns the content for the specified header type.
@@ -25549,8 +25615,14 @@
 	ApiSection.prototype["GetPageHeight"]            = ApiSection.prototype.GetPageHeight;
 	ApiSection.prototype["GetPageWidth"]             = ApiSection.prototype.GetPageWidth;
 	ApiSection.prototype["SetPageMargins"]           = ApiSection.prototype.SetPageMargins;
+	ApiSection.prototype["GetPageMarginLeft"]        = ApiSection.prototype.GetPageMarginLeft;
+	ApiSection.prototype["GetPageMarginTop"]         = ApiSection.prototype.GetPageMarginTop;
+	ApiSection.prototype["GetPageMarginRight"]       = ApiSection.prototype.GetPageMarginRight;
+	ApiSection.prototype["GetPageMarginBottom"]      = ApiSection.prototype.GetPageMarginBottom;
 	ApiSection.prototype["SetHeaderDistance"]        = ApiSection.prototype.SetHeaderDistance;
+	ApiSection.prototype["GetHeaderDistance"]        = ApiSection.prototype.GetHeaderDistance;
 	ApiSection.prototype["SetFooterDistance"]        = ApiSection.prototype.SetFooterDistance;
+	ApiSection.prototype["GetFooterDistance"]        = ApiSection.prototype.GetFooterDistance;
 	ApiSection.prototype["GetHeader"]                = ApiSection.prototype.GetHeader;
 	ApiSection.prototype["RemoveHeader"]             = ApiSection.prototype.RemoveHeader;
 	ApiSection.prototype["GetFooter"]                = ApiSection.prototype.GetFooter;
