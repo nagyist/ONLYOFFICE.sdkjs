@@ -18367,7 +18367,10 @@ function RangeDataManagerElem(bbox, data)
 				}
 
 				let oContext = {};
+				let ws = arguments[3];
 				oContext["address"] = arguments[1] && arguments[1].getName();
+
+				oContext["address"] = ((ws && ws.getName) ? (AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!") : "") + oContext["address"];
 				oContext["argsInfo"] = [];
 
 				//prepare arguments
@@ -18379,7 +18382,9 @@ function RangeDataManagerElem(bbox, data)
 					if (arg[i] && (arg[i].type === AscCommonExcel.cElementType.cell || arg[i].type === AscCommonExcel.cElementType.cell3D
 						|| arg[i].type === AscCommonExcel.cElementType.cellsRange || arg[i].type === AscCommonExcel.cElementType.cellsRange3D)) {
 						let _range = arg[i].getRange();
-						oContext["argsInfo"][i] = {"address": _range.getName(), "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
+						let ws = _range.worksheet;
+						let _address = (ws ? AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!" : "") + _range.getName();
+						oContext["argsInfo"][i] = {"address": _address, "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
 					}
 
 
@@ -18404,8 +18409,7 @@ function RangeDataManagerElem(bbox, data)
 				}
 
 
-				window["context"] = oContext;
-				let res = func.apply(this, args);
+				let res = func.apply(oContext, args);
 
 				//prepare result
 				let returnInfo = options.returnInfo;
