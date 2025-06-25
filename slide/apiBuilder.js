@@ -2493,6 +2493,24 @@
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
 
+	/**
+	 * Returns an array with all tables from the current slide layout.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]}
+	 * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GetAllTables.js
+	 */
+	ApiLayout.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Layout) {
+			this.Layout.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
+
     /**
      * Returns the parent slide master of the current layout.
      * @typeofeditors ["CPE"]
@@ -3711,6 +3729,24 @@
 		return private_GetAllDrawingsWithType(this.Slide.cSld.spTree, AscDFH.historyitem_type_OleObject,
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
+
+	/**
+	 * Returns an array with all tables from the current slide.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]}
+	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GetAllTables.js
+	 */
+	ApiSlide.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Slide) {
+			this.Slide.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
 
     /**
 	 * Converts the ApiSlide object into the JSON object.
