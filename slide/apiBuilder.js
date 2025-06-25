@@ -1499,6 +1499,18 @@
 	};
 
 	/**
+	 * Returns an array with all tables from the current presentation (including slide masters and slide layouts).
+	 *
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllTables.js
+	 */
+	ApiPresentation.prototype.GetAllTables = function () {
+		return this._collectAllObjects('GetAllTables');
+	};
+
+	/**
 	 * Returns an array with all the chart objects from the current presentation.
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
@@ -2107,6 +2119,25 @@
 		return private_GetAllDrawingsWithType(this.Master.cSld.spTree, AscDFH.historyitem_type_OleObject,
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
+
+	/**
+	 * Returns an array with all tables from the slide master.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]}
+	 * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetAllTables.js
+	 */
+	ApiMaster.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Master) {
+			this.Master.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
+
     /**
 	 * Converts the ApiMaster object into the JSON object.
 	 * @memberof ApiMaster
@@ -5317,6 +5348,7 @@
     ApiPresentation.prototype["SlidesToJSON"]             = ApiPresentation.prototype.SlidesToJSON;
     ApiPresentation.prototype["ToJSON"]                   = ApiPresentation.prototype.ToJSON;
     ApiPresentation.prototype["GetAllOleObjects"]         = ApiPresentation.prototype.GetAllOleObjects;
+    ApiPresentation.prototype["GetAllTables"]             = ApiPresentation.prototype.GetAllTables;
     ApiPresentation.prototype["GetAllCharts"]             = ApiPresentation.prototype.GetAllCharts;
     ApiPresentation.prototype["GetAllShapes"]             = ApiPresentation.prototype.GetAllShapes;
     ApiPresentation.prototype["GetAllImages"]             = ApiPresentation.prototype.GetAllImages;
@@ -5343,6 +5375,7 @@
     ApiMaster.prototype["GetAllImages"]                   = ApiMaster.prototype.GetAllImages;
     ApiMaster.prototype["GetAllCharts"]                   = ApiMaster.prototype.GetAllCharts;
     ApiMaster.prototype["GetAllOleObjects"]               = ApiMaster.prototype.GetAllOleObjects;
+    ApiMaster.prototype["GetAllTables"]                   = ApiMaster.prototype.GetAllTables;
     ApiMaster.prototype["ToJSON"]                         = ApiMaster.prototype.ToJSON;
     ApiMaster.prototype["GetDrawingsByPlaceholderType"]   = ApiMaster.prototype.GetDrawingsByPlaceholderType;
     ApiMaster.prototype["GroupDrawings"]                  = ApiMaster.prototype.GroupDrawings;
@@ -5364,6 +5397,7 @@
     ApiLayout.prototype["GetAllImages"]                   = ApiLayout.prototype.GetAllImages;
     ApiLayout.prototype["GetAllCharts"]                   = ApiLayout.prototype.GetAllCharts;
     ApiLayout.prototype["GetAllOleObjects"]               = ApiLayout.prototype.GetAllOleObjects;
+    ApiLayout.prototype["GetAllTables"]                   = ApiLayout.prototype.GetAllTables;
     ApiLayout.prototype["GetMaster"]                      = ApiLayout.prototype.GetMaster;
     ApiLayout.prototype["ToJSON"]                         = ApiLayout.prototype.ToJSON;
     ApiLayout.prototype["GetDrawingsByPlaceholderType"]   = ApiLayout.prototype.GetDrawingsByPlaceholderType;
@@ -5431,6 +5465,7 @@
     ApiSlide.prototype["GetAllImages"]                    = ApiSlide.prototype.GetAllImages;
     ApiSlide.prototype["GetAllCharts"]                    = ApiSlide.prototype.GetAllCharts;
     ApiSlide.prototype["GetAllOleObjects"]                = ApiSlide.prototype.GetAllOleObjects;
+    ApiSlide.prototype["GetAllTables"]                    = ApiSlide.prototype.GetAllTables;
     ApiSlide.prototype["ToJSON"]                          = ApiSlide.prototype.ToJSON;
     ApiSlide.prototype["GetDrawingsByPlaceholderType"]    = ApiSlide.prototype.GetDrawingsByPlaceholderType;
     ApiSlide.prototype["Select"]                          = ApiSlide.prototype.Select;
