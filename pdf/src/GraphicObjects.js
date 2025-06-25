@@ -471,7 +471,7 @@
     CGraphicObjects.prototype.getParagraphParaPr = function () {
         let target_text_object = AscFormat.getTargetTextObject(this);
         if (target_text_object) {
-            let oGroup = target_text_object.getMainGroup();
+            let oGroup = target_text_object.getMainGroup && target_text_object.getMainGroup();
             if (oGroup && oGroup.IsAnnot())
                 return null;
             
@@ -639,9 +639,24 @@
         let content = this.getTargetDocContent();
         if (content) {
             let oShape = content.GetParent().parent;
-            return oShape.IsInTextBox();
+            return oShape.IsInTextBox ? oShape.IsInTextBox() : true;
         }
         return false;
+    };
+    CGraphicObjects.prototype.getGraphicInfoUnderCursor = function(pageIndex, x, y)
+    {
+        this.handleEventMode = HANDLE_EVENT_MODE_CURSOR;
+        var ret = this.curState.onMouseDown(global_mouseEvent, x, y, pageIndex, false);
+        this.handleEventMode = HANDLE_EVENT_MODE_HANDLE;
+        if(ret && ret.cursorType === "text")
+        {
+            if((this.selection.chartSelection && this.selection.chartSelection.selection.textSelection) ||
+                (this.selection.groupSelection && this.selection.groupSelection.selection.chartSelection && this.selection.groupSelection.selection.chartSelection.selection.textSelection))
+            {
+                ret.objectId == this.selection.groupSelection ? this.selection.groupSelection.selection.chartSelection.GetId() : this.selection.chartSelection.GetId();
+            }
+        }
+        return ret || {};
     };
 
     CGraphicObjects.prototype.alignCenter = function(bSelected) {
