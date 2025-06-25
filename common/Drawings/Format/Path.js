@@ -459,6 +459,9 @@ function (window, undefined) {
 				// negative sweep - clockwise
 				sweep = endAngle - startAngle;
 			}
+			else if (startAngle === endAngle && startAngle === ctrlAngle) {
+				sweep = 0;
+			}
 			else {
 				// positive sweep - anti-clockwise
 				sweep = 360 - (startAngle - endAngle);
