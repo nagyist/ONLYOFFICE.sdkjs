@@ -423,7 +423,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
 
@@ -622,7 +622,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 var _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
         }
@@ -758,7 +758,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
 
@@ -1333,7 +1333,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
             if (null != oThis.CacheImage1.Image)
@@ -1665,7 +1665,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
 
@@ -1816,7 +1816,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
 
@@ -1967,7 +1967,7 @@ function CTransitionAnimation(htmlpage)
             else
             {
                 _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                _ctx1.fillStyle = "#000000";
+                _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                 _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
             }
 
@@ -2439,7 +2439,7 @@ function CTransitionAnimation(htmlpage)
                 else
                 {
                     _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                    _ctx1.fillStyle = "#000000";
+                    _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                     _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
                 }
 
@@ -2498,7 +2498,7 @@ function CTransitionAnimation(htmlpage)
                 else
                 {
                     _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                    _ctx1.fillStyle = "#000000";
+                    _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                     _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
                 }
 
@@ -2559,7 +2559,7 @@ function CTransitionAnimation(htmlpage)
                     else
                     {
                         _ctx1 = oThis.DemonstrationObject.Canvas.getContext('2d');
-                        _ctx1.fillStyle = "#000000";
+                        _ctx1.fillStyle = oThis.DemonstrationObject.Canvas.style.backgroundColor;
                         _ctx1.fillRect(0, 0, oThis.DemonstrationObject.Canvas.width, oThis.DemonstrationObject.Canvas.height);
                     }
 
@@ -2776,7 +2776,10 @@ function CDemonstrationManager(htmlpage)
         // не кэшируем вотермарк никогда
         let oldWatermark = this.HtmlPage.m_oApi.watermarkDraw;
         this.HtmlPage.m_oApi.watermarkDraw = null;
+				const oOldAnnotations = this.SlideAnnotations;
+	    this.SlideAnnotations = null;
         oPlayer.drawFrame(_image.image, {x:0, y: 0, w: _w, h: _h});
+	    this.SlideAnnotations = oOldAnnotations;
         this.HtmlPage.m_oApi.watermarkDraw = oldWatermark;
         const oSlideImage = new CCacheSlideImage();
         oSlideImage.Image = _image;
@@ -2998,7 +3001,7 @@ function CDemonstrationManager(htmlpage)
 
         this.Mode = true;
         this.Canvas = document.createElement('canvas');
-        this.Canvas.setAttribute("style", "position:absolute;margin:0;padding:0;left:0px;top:0px;width:100%;height:100%;zIndex:2;background-color:#000000;");
+        this.Canvas.setAttribute("style", "touch-action:none;position:absolute;margin:0;padding:0;left:0px;top:0px;width:100%;height:100%;zIndex:2;background-color:#000000;");
         this.CheckBackgroundColor();
 
 
@@ -3009,9 +3012,10 @@ function CDemonstrationManager(htmlpage)
 
         this.HtmlPage.m_oApi.sync_DemonstrationSlideChanged(this.SlideNum);
 
-		this.Canvas.onmousedown  = this.onMouseDown;
-		this.Canvas.onmousemove  = this.onMouseMove;
-        this.Canvas.onmouseup    = this.onMouseUp;
+
+        AscCommon.addMouseEvent(this.Canvas, "down", this.onMouseDown);
+        AscCommon.addMouseEvent(this.Canvas, "move", this.onMouseMove);
+        AscCommon.addMouseEvent(this.Canvas, "up", this.onMouseUp);
 		this.Canvas.onmouseleave = this.onMouseLeave;
 
         this.wrapKeyboard();
@@ -3057,8 +3061,9 @@ function CDemonstrationManager(htmlpage)
 
                 //oThis.DemonstrationDivEndPresentation.onmousedown  = oThis.onMouseDownDemonstration;
                 //oThis.DemonstrationDivEndPresentation.onmousemove  = oThis.onMouseMoveDemonstration;
-				oThis.DivEndPresentation.onmousedown  = oThis.onMouseDown;
-                oThis.DivEndPresentation.onmouseup    = oThis.onMouseUp;
+
+                AscCommon.addMouseEvent(this.DivEndPresentation, "down", oThis.onMouseDown);
+                AscCommon.addMouseEvent(this.DivEndPresentation, "up", oThis.onMouseUp);
 
                 oThis.DivEndPresentation.onmousewheel = oThis.onMouseWhell;
                 if (oThis.DivEndPresentation.addEventListener)
@@ -3240,13 +3245,15 @@ function CDemonstrationManager(htmlpage)
         if (null == oThis.Overlay)
         {
             oThis.Overlay = document.createElement('canvas');
-            oThis.Overlay.setAttribute("style", "position:absolute;margin:0;padding:0;left:0px;top:0px;width:100%;height:100%;zIndex:3;");
+            oThis.Overlay.setAttribute("style", "touch-action:none;position:absolute;margin:0;padding:0;left:0px;top:0px;width:100%;height:100%;zIndex:3;");
             oThis.Overlay.width = oThis.Canvas.width;
             oThis.Overlay.height = oThis.Canvas.height;
 
-            oThis.Overlay.onmousedown  = oThis.onMouseDown;
-            oThis.Overlay.onmousemove  = oThis.onMouseMove;
-            oThis.Overlay.onmouseup    = oThis.onMouseUp;
+
+
+            AscCommon.addMouseEvent(oThis.Overlay, "down", oThis.onMouseDown);
+            AscCommon.addMouseEvent(oThis.Overlay, "move", oThis.onMouseMove);
+            AscCommon.addMouseEvent(oThis.Overlay, "up", oThis.onMouseUp);
 			oThis.Overlay.onmouseleave = oThis.onMouseLeave;
 
             oThis.Overlay.onmousewheel = oThis.onMouseWhell;
@@ -3319,9 +3326,19 @@ function CDemonstrationManager(htmlpage)
             this.HtmlPage.m_oApi.watermarkDraw.Draw(ctx, rect.x, rect.y, rect.w, rect.h);
         }
     };
+	this.CheckAnnotationsInternal = function(oGraphics, oSlide)
+	{
+		const oAnnotations = this.SlideAnnotations;
+		if (oAnnotations)
+		{
+			oAnnotations.draw(oGraphics, oSlide);
+		}
+	};
 
     this.Redraw = function ()
     {
+	    oThis.SlideIndexes[0] = -1;
+	    oThis.SlideIndexes[1] = -1;
         oThis.Clear();
         oThis.OnPaintSlide(true);
     };
@@ -3372,7 +3389,7 @@ function CDemonstrationManager(htmlpage)
         }
 
         oThis.WaitAnimationEnd = false;
-        if (oSlide && oSlide.isAdvanceAfterTransition())
+        if (oSlide && oSlide.isAdvanceAfterTransition() && oThis.CheckSlideDuration === -1)
         {
             oThis.CheckSlideDuration = setTimeout(function()
             {
@@ -3390,11 +3407,18 @@ function CDemonstrationManager(htmlpage)
             }, oSlide.getAdvanceDuration());
         }
     };
-
+		this.EndDrawInk = function() {
+			const oSlide = oThis.GetCurrentSlide();
+			const oController = oSlide && oSlide.graphicObjects;
+			if (oController && oController.curState instanceof AscFormat.CInkDrawState) {
+				oController.curState.onMouseUp({ClickCount : 1, X : 0, Y : 0}, 0, 0, oThis.SlideNum);
+			}
+		};
     this.AdvanceAfter = function()
     {
         if (oThis.IsPlayMode)
         {
+					oThis.EndDrawInk();
             oThis.TmpSlideVisible = oThis.SlideNum;
             oThis.GoToNextVisibleSlide();
             oThis.PauseAnimation(oThis.TmpSlideVisible);
@@ -3629,6 +3653,7 @@ function CDemonstrationManager(htmlpage)
     {
         if(this.OnNextSlideAnimPlayer())
         {
+	        this.sendNextFromReporter(isNoSendFormReporter);
             return;
         }
         this.NextSlide(isNoSendFormReporter);
@@ -3647,6 +3672,14 @@ function CDemonstrationManager(htmlpage)
         return false;
     };
 
+		this.sendNextFromReporter = function (isNoSendFormReporter) {
+			if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
+				this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"next\" }");
+		};
+	this.sendPrevFromReporter = function (isNoSendFormReporter) {
+		if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
+			this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"prev\" }");
+	};
     this.NextSlide = function(isNoSendFormReporter, isNoFromEvent)
     {
         if (!this.Mode)
@@ -3654,11 +3687,7 @@ function CDemonstrationManager(htmlpage)
 
 		this.TmpSlideVisible = this.SlideNum;
         this.PauseAnimation(this.SlideNum);
-
-        if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
-			this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"next\" }");
-
-
+		this.sendNextFromReporter(isNoSendFormReporter);
         this.CorrectSlideNum();
 
         var _is_transition = this.Transition.IsPlaying();
@@ -3699,6 +3728,7 @@ function CDemonstrationManager(htmlpage)
         {
             if(oPlayer.onPrevSlide())
             {
+	            this.sendPrevFromReporter(isNoSendFormReporter);
                 return;
             }
         }
@@ -3711,10 +3741,7 @@ function CDemonstrationManager(htmlpage)
             return;
 
 		this.TmpSlideVisible = this.SlideNum;
-
-		if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
-			this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"prev\" }");
-
+		this.sendPrevFromReporter(isNoSendFormReporter);
         if (this.GetFirstVisibleSlide() !== this.SlideNum || this.isLoop())
         {
             this.CorrectSlideNum();
@@ -4029,7 +4056,7 @@ function CDemonstrationManager(htmlpage)
             oThis.HtmlPage.m_oApi.disableReporterEvents = false;
         }
         oThis.isMouseDown = true;
-        e.preventDefault();
+        AscCommon.stopEvent(e);
         return false;
     };
 
@@ -4057,7 +4084,10 @@ function CDemonstrationManager(htmlpage)
         }
 
 		if (!oThis.HtmlPage.reporterPointer)
-			return;
+        {
+            AscCommon.stopEvent(e);
+            return;
+        }
 
         var _x = 0;
         var _y = 0;
@@ -4089,18 +4119,20 @@ function CDemonstrationManager(htmlpage)
 
 		oThis.PointerMove(_x, _y);
 
-        e.preventDefault();
+
+        AscCommon.stopEvent(e);
         return false;
     };
 
-    this.onMouseUp = function(e, isAttack, isFromMainToReporter)
+    this.onMouseUp = function(e, isAttack, isFromMainToReporter, isFromMainToReporterMouseDown)
     {
     	if (!oThis.isMouseDown && true !== isAttack)
     		return;
 
         AscCommon.global_mouseEvent.UnLockMouse();
 
-		oThis.isMouseDown = false;
+				const isMouseDown = oThis.isMouseDown || isFromMainToReporterMouseDown;
+				oThis.isMouseDown = false;
 		if (isFromMainToReporter && oThis.PointerDiv && oThis.HtmlPage.m_oApi.isReporterMode)
 		    oThis.PointerRemove();
 
@@ -4114,7 +4146,8 @@ function CDemonstrationManager(htmlpage)
 		{
 			var _msg_ = {
 				"main_command"  : true,
-				"mouseUp"       : true
+				"mouseUp"       : true,
+				"isMainMouseDown": isMouseDown
 			};
 
 			oThis.HtmlPage.m_oApi.sendToReporter(JSON.stringify(_msg_));
@@ -4133,29 +4166,30 @@ function CDemonstrationManager(htmlpage)
 
         // next slide
         oThis.CorrectSlideNum();
+			if (isMouseDown) {
+				var _is_transition = oThis.Transition.IsPlaying();
+				if (_is_transition)
+				{
+					oThis.OnNextSlide();
+				}
+				else
+				{
+					if (oThis.SlideNum < 0 || oThis.SlideNum >= oThis.GetSlidesCount())
+					{
+						oThis.OnNextSlide();
+					}
+					else
+					{
+						var _slides = oThis.HtmlPage.m_oLogicDocument.Slides;
+						var _transition = _slides[oThis.SlideNum].transition;
 
-        var _is_transition = oThis.Transition.IsPlaying();
-        if (_is_transition)
-        {
-            oThis.OnNextSlide();
-        }
-        else
-        {
-            if (oThis.SlideNum < 0 || oThis.SlideNum >= oThis.GetSlidesCount())
-            {
-                oThis.OnNextSlide();
-            }
-            else
-            {
-                var _slides = oThis.HtmlPage.m_oLogicDocument.Slides;
-                var _transition = _slides[oThis.SlideNum].transition;
-
-                if (_transition.SlideAdvanceOnMouseClick === true)
-                {
-                    oThis.OnNextSlide();
-                }
-            }
-        }
+						if (_transition.SlideAdvanceOnMouseClick === true)
+						{
+							oThis.OnNextSlide();
+						}
+					}
+				}
+			}
 
 		AscCommon.stopEvent(e);
         return false;

@@ -602,15 +602,30 @@
 						}
 					}
 				}
+			} else if (AscCommonExcel.cElementType.array === list.type) {
+				let seenValues = {};
+				aValue = [];
+				list.foreach(function (elem) {
+					let _val = elem.getValue && elem.getValue();
+					if (_val != null && !seenValues[_val]) {
+						aValue.push(_val);
+						seenValues[_val] = true;
+					}
+				});
 			} else {
-				list = list.getRange();
+				list = list.getRange && list.getRange();
 				if (list) {
 					aValue = [];
 					aData = [];
+					let duplicatedMap = [];
 					list._foreachNoEmpty(function (cell) {
 						if (!cell.isNullTextString()) {
-							aValue.push(cell.getValue());
-							aData.push(new AscCommonExcel.CCellValue(cell));
+							let val = cell.getValue();
+							if (!duplicatedMap[val]) {
+								aValue.push(val);
+								aData.push(new AscCommonExcel.CCellValue(cell));
+								duplicatedMap[val] = 1;
+							}
 						}
 					});
 				}

@@ -1215,7 +1215,15 @@ StaxParser.prototype.next = function() {
     // ---------------------------------------------
     var w = this.xml.charCodeAt(i + 1);
     if (w === 33) { // 33 == "!"
-        this.index = this.xml.indexOf('>', i);
+        if (i + 3 < this.length && 45 === this.xml.charCodeAt(i + 2) && 45 === this.xml.charCodeAt(i + 3)) { // COMMENT
+            this.index = this.xml.indexOf('-->', i) + 3;
+        } else { // CDATA
+            this.index = this.xml.indexOf(']]>', i) + 3;
+        }
+        if (-1 === this.index) {
+            this.stop = true;
+        }
+        this.eventType = EasySAXEvent.Unknown;
         return this.eventType;
     }
     // QUESTION
@@ -1324,6 +1332,14 @@ StaxParser.prototype.MoveToNextAttribute = function() {
     this.index = i;
     this.isInAttr = false;
     return false;
+};
+StaxParser.prototype.GetAttributes = function() {
+	let attributes = {};
+	while (this.MoveToNextAttribute()) {
+		attributes[this.GetName()] = this.GetValue();
+	}
+	
+	return attributes;
 };
 StaxParser.prototype.SkipAttributes = function() {
     var i = this.xml.indexOf('>', this.index);

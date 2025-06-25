@@ -73,6 +73,11 @@ function MoveShapeImageTrack(originalObject)
             this.brush = originalObject.brush;
         }
         this.pen = originalObject.pen;
+
+        if (originalObject.GetEditField && originalObject.GetEditField()) {
+            this.brush = null;
+            this.pen = null;
+        }
     }
     if(this.originalObject.cropObject && this.brush)
     {
@@ -712,7 +717,8 @@ function MoveAnnotationTrack(originalObject)
     {
         // рисуем на отдельном канвасе
         let nPage = this.pageIndex;
-        this.objectToDraw.SetPage(nPage);
+        let oPageInfo = this.viewer.doc.GetPageInfo(this.pageIndex);
+        this.objectToDraw.SetParentPage(oPageInfo);
 
         let page = this.viewer.drawingPages[nPage];
         if (!page)

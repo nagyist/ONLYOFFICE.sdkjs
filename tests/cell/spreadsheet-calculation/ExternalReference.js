@@ -615,6 +615,10 @@ $(function () {
 		let api = new Asc.spreadsheet_api({
 			'id-view': 'editor_sdk'
 		});
+		api.FontLoader = {
+			LoadDocumentFonts: function () {
+			}
+		};
 
 		let docInfo = new Asc.asc_CDocInfo();
 		docInfo.asc_putTitle("TeSt.xlsx");
@@ -754,8 +758,36 @@ $(function () {
 		ws.getRange2("A2").setValue('=importrange(\"http://localhost/editor?fileName=new%20(51).xlsx\",\"Sheet1!A2\"');
 		assert.strictEqual(wb.externalReferences.length, 1, 'IMPORTRANGE_1_external_reference_length_after_remove_value');
 
-		ws.getRange2("A2").setValue("1");
-		assert.strictEqual(wb.externalReferences.length, 0, 'IMPORTRANGE_1_external_reference_length_after_remove_value');
+		// change source of reference
+
+		let fromER = wb.externalReferences[0];
+		let fromERWorksheetName = fromER.SheetNames && fromER.SheetNames[0];
+		let fromERWorksheet = fromER.worksheets && fromER.worksheets[fromERWorksheetName];
+		let fromERId = fromER.Id;
+		let toER = fromER.clone(true);
+		let index = wb.getExternalLinkIndexByName(fromERId);
+		toER.setId("new (104).xlsx");
+
+		ws.getRange2("A2").setValue('=importrange(\"http://localhost/editor?fileName=new%20(51).xlsx\",\"Sheet1!A2\"');
+		ws.getRange2("B2").setValue('=importrange(\"http://localhost/editor?fileName=new%20(51).xlsx\",\"A3\"');
+		ws.getRange2("C2").setValue('=importrange(\"http://localhost/editor?fileName=new%20(51).xlsx\",\"A4\"');
+
+		assert.strictEqual(ws.getRange2("A2").getValueForEdit(), '=IMPORTRANGE("http://localhost/editor?fileName=new%20(51).xlsx","Sheet1!A2")', 'Import range function in A2 before source change');
+		assert.strictEqual(ws.getRange2("B2").getValueForEdit(), '=IMPORTRANGE("http://localhost/editor?fileName=new%20(51).xlsx","A3")', 'Import range function in B2 before source change');
+		assert.strictEqual(ws.getRange2("C2").getValueForEdit(), '=IMPORTRANGE("http://localhost/editor?fileName=new%20(51).xlsx","A4")', 'Import range function in C2 before source change');
+		assert.ok(Object.keys(wb.dependencyFormulas.sheetListeners[fromERWorksheet.Id].areaMap).length > 0, 'Listeners count in dep. formula before change source');
+
+
+		wb.changeExternalReference(index, toER);
+		assert.ok(Object.keys(wb.dependencyFormulas.sheetListeners[fromERWorksheet.Id].areaMap).length === 0, 'Listeners count in dep. formula after change source');
+
+		assert.strictEqual(ws.getRange2("A2").getValueForEdit(), '=IMPORTRANGE("new (104).xlsx","Sheet1!A2")', 'Import range function after source change');
+		assert.strictEqual(ws.getRange2("B2").getValueForEdit(), '=IMPORTRANGE("new (104).xlsx","A3")', 'Import range function in B2 after source change');
+		assert.strictEqual(ws.getRange2("C2").getValueForEdit(), '=IMPORTRANGE("new (104).xlsx","A4")', 'Import range function in C2 after source change');
+
+		// remove changed reference
+		wb.removeExternalReferences([wb.externalReferences[0].getAscLink()]);
+		assert.strictEqual(wb.externalReferences.length, 0, 'IMPORTRANGE_1_external_reference_length_after_remove_er');
 	});
 
 	QUnit.test("Test: \"add/remove external reference\"", function (assert) {
@@ -1038,6 +1070,8 @@ $(function () {
 		wb.dependencyFormulas.addDefName("currentDef", "Sheet2!$A$1:$B$2");
 		wb.createWorksheet(0, "Sheet2");
 
+		ws.getRange2("A1:A1000").cleanAll();
+
 		// local = false. Read/open file with formulas. Try to parse string to external ref similiar as read the file
 		oParser = new parserFormula(fullLink, cellWithFormula, ws);
 		assert.ok(oParser.parse(false/*isLocal*/, null, parseResult), "Full link. isLocal = false. " + fullLink);
@@ -1190,6 +1224,39 @@ $(function () {
 			assert.ok(elemInStack.externalLink == null);
 			assert.strictEqual(elemInStack.wsFrom && elemInStack.wsFrom.sName, "Sheet1", "Location for WS in cArea3D");
 		}
+
+		oParser = new parserFormula("'[" + fileName + "]Sheet1'!A:A", cellWithFormula, ws);
+		assert.ok(oParser.parse(true, null, parseResult), "'[" + fileName + "]Sheet1'!A:A. isLocal = true. Link to A:A range");
+		elemInStack = oParser.outStack && oParser.outStack[0];
+		assert.strictEqual(elemInStack && elemInStack.type, AscCommonExcel.cElementType.cellsRange3D, "Type of single elem in outstack");
+		if (elemInStack && (elemInStack.type === AscCommonExcel.cElementType.cellsRange3D)) {
+			assert.strictEqual(elemInStack.value, "A:A");
+			assert.ok(elemInStack.wsFrom);
+			assert.ok(elemInStack.externalLink == null);
+			assert.strictEqual(elemInStack.wsFrom && elemInStack.wsFrom.sName, "Sheet1", "Location for WS in cArea3D");
+		}
+
+		oParser = new parserFormula("'[" + fileName + "]Sheet1'!$A:$A", cellWithFormula, ws);
+		assert.ok(oParser.parse(true, null, parseResult), "'[" + fileName + "]Sheet1'!$A:$A. isLocal = true. Link to A:A range");
+		elemInStack = oParser.outStack && oParser.outStack[0];
+		assert.strictEqual(elemInStack && elemInStack.type, AscCommonExcel.cElementType.cellsRange3D, "Type of single elem in outstack");
+		if (elemInStack && (elemInStack.type === AscCommonExcel.cElementType.cellsRange3D)) {
+			assert.strictEqual(elemInStack.value, "$A:$A");
+			assert.ok(elemInStack.wsFrom);
+			assert.ok(elemInStack.externalLink == null);
+			assert.strictEqual(elemInStack.wsFrom && elemInStack.wsFrom.sName, "Sheet1", "Location for WS in cArea3D");
+		}
+		
+		oParser = new parserFormula("SUM('[" + fileName + "]Sheet1'!A:A,0)", cellWithFormula, ws);
+		assert.ok(oParser.parse(true, null, parseResult), "SUM('[" + fileName + "]Sheet1'!A:A,0). isLocal = true. Link to A:A range inside formula");
+		assert.strictEqual(oParser.calculate().getValue(), 0, "SUM('[" + fileName + "]Sheet1'!A:A,0)");
+
+		oParser = new parserFormula("SUM('[" + fileName + "]Sheet1'!$A:$A,0)", cellWithFormula, ws);
+		assert.ok(oParser.parse(true, null, parseResult), "SUM('[" + fileName + "]Sheet1'!$A:$A,0). isLocal = true. Link to $A:$A range inside formula");
+		assert.strictEqual(oParser.calculate().getValue(), 0, "SUM('[" + fileName + "]Sheet1'!$A:$A,0)");
+
+		// todo sheets with names like "S!he!et!25", ",;", ",; ,; !ds!'ds!" they will not parse with the current scheme with a link to the current file 
+		// for example: '[filename]S!he!et!25'!A1 or '[filename],; ,; !ds!'ds!'!A1. MS works correctly with such names.
 
 		oParser = new parserFormula("'[" + fileName + "]Sheet222'!currentDef", cellWithFormula, ws);
 		assert.ok(oParser.parse(true, null, parseResult) === false, "'[" + fileName + "]Sheet222'!currentDef. isLocal = true. Link to existing defname on a non-existent sheet");

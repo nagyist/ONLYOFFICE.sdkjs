@@ -138,8 +138,11 @@ function CDocumentContent(Parent, DrawingDocument, X, Y, XLimit, YLimit, Split, 
 
     this.m_oContentChanges = new AscCommon.CContentChanges(); // список изменений(добавление/удаление элементов)
     this.StartState = null;
+	this.Recalculated = false; // Flag only for the current level
 
     this.ReindexStartPos = 0;
+	
+	this.transform = null;
 
     // Добавляем данный класс в таблицу Id (обязательно в конце конструктора)
     AscCommon.g_oTableId.Add( this, this.Id );
@@ -200,7 +203,10 @@ CDocumentContent.prototype.Copy3 = function(Parent)//для заголовков
 	}
 	return DC;
 };
-
+CDocumentContent.prototype.IsRecalculated = function()
+{
+	return (this.Recalculated && this.Pages.length > 0);
+};
 CDocumentContent.prototype.isDocumentContentInSmartArtShape = function ()
 {
 	return this.Parent && this.Parent.isObjectInSmartArt && this.Parent.isObjectInSmartArt();
@@ -553,6 +559,10 @@ CDocumentContent.prototype.Get_NearestPos = function(CurPage, X, Y, bAnchor, Dra
 				return NearestPos;
 		}
 	}
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
 
 	var ContentPos = this.Internal_GetContentPosByXY(X, Y, CurPage);
 
@@ -743,6 +753,8 @@ CDocumentContent.prototype.Reset_RecalculateCache = function()
 // Пересчитываем отдельную страницу DocumentContent
 CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, bStart)
 {
+	this.Recalculated = true;
+	
 	this.ShiftViewX = 0;
 	this.ShiftViewY = 0;
 
@@ -1430,6 +1442,9 @@ CDocumentContent.prototype.OnContentReDraw = function(StartPage, EndPage)
 };
 CDocumentContent.prototype.Draw                           = function(nPageIndex, pGraphics)
 {
+	if (!this.IsRecalculated())
+		return;
+	
     var CurPage = nPageIndex - this.StartPage;
     if (CurPage < 0 || CurPage >= this.Pages.length)
         return;
@@ -1449,6 +1464,12 @@ CDocumentContent.prototype.Draw                           = function(nPageIndex,
 		let clipY0 = undefined !== clipInfo.Y0 ? clipInfo.Y0 : pageBounds.Top - nPixelError;
 		let clipY1 = undefined !== clipInfo.Y1 ? clipInfo.Y1 : pageBounds.Bottom;
 		pGraphics.AddClipRect(clipX0, clipY0, Math.abs(clipX1 - clipX0), Math.abs(clipY1 - clipY0));
+	}
+	
+	if (this.transform)
+	{
+		pGraphics.SaveGrState();
+		pGraphics.transform3(this.Get_ParentTextTransform());
 	}
 
     var oPage = this.Pages[CurPage];
@@ -1491,6 +1512,9 @@ CDocumentContent.prototype.Draw                           = function(nPageIndex,
 
 		pGraphics.RestoreGrState();
 	}
+	
+	if (this.transform)
+		pGraphics.RestoreGrState();
 	
 	if (clipInfo)
 		pGraphics.RestoreGrState();
@@ -1549,6 +1573,9 @@ CDocumentContent.prototype.GetAllFloatElements = function(FloatObjs)
 };
 CDocumentContent.prototype.Shift = function(CurPage, Dx, Dy, keepClip)
 {
+	if (!this.IsRecalculated())
+		return;
+	
 	this.Pages[CurPage].Shift(Dx, Dy);
 
 	if (this.ClipInfo[CurPage] && true !== keepClip)
@@ -1565,18 +1592,12 @@ CDocumentContent.prototype.Shift = function(CurPage, Dx, Dy, keepClip)
 };
 CDocumentContent.prototype.ShiftView = function(nDx, nDy)
 {
-	if (this.Pages.length <= 0)
-		return;
-
 	this.Shift(0, nDx, nDy);
 	this.ShiftViewX += nDx;
 	this.ShiftViewY += nDy;
 };
 CDocumentContent.prototype.ResetShiftView = function()
 {
-	if (this.Pages.length <= 0)
-		return;
-
 	this.Shift(0, -this.ShiftViewX, -this.ShiftViewY);
 	this.ShiftViewX = 0;
 	this.ShiftViewY = 0;
@@ -1678,11 +1699,19 @@ CDocumentContent.prototype.CheckFormViewWindow = function()
 
 	if (oPageBounds.Bottom - oPageBounds.Top > oFormBounds.H)
 	{
-		if (nCursorH > oFormBounds.H - nPad || nCursorT < oFormBounds.Y + nPad)
+		if (nCursorH > oFormBounds.H - nPad)
 			nDy = oFormBounds.Y + nPad - nCursorT - (nCursorH - oFormBounds.H - nPad);
+		else if (nCursorT < oFormBounds.Y + nPad)
+			nDy = oFormBounds.Y + nPad - nCursorT;
 		else if (nCursorT + nCursorH > oFormBounds.H - nPad)
 			nDy = oFormBounds.H - nPad - nCursorT - nCursorH;
 	}
+	
+	// For multiline form we don't allow horizontal shift, for not multiline - don't allow vertical shift
+	if (oForm.IsMultiLineForm())
+		nDx = 0;
+	else
+		nDy = 0;
 
 	if (Math.abs(nDx) > 0.001 || Math.abs(nDy) > 0.001)
 	{
@@ -1705,6 +1734,10 @@ CDocumentContent.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY, isUp
 
 	if (docpostype_Content === this.CurPos.Type)
 	{
+		let drawingDocument = Asc.editor.getDrawingDocument();
+		if (this.transform && drawingDocument)
+			drawingDocument.MultiplyTargetTransform(this.transform.CreateDublicate());
+		
 		if (this.CurPos.ContentPos >= 0 && undefined !== this.Content[this.CurPos.ContentPos])
 		{
 			this.private_CheckCurPage();
@@ -1738,8 +1771,8 @@ CDocumentContent.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY, isUp
 };
 CDocumentContent.prototype.Get_PageBounds = function(CurPage, Height, bForceCheckDrawings)
 {
-	if (this.Pages.length <= 0)
-		return new CDocumentBounds(0, 0, 0, 0);
+	if (!this.IsRecalculated())
+		return new AscWord.CDocumentBounds(0, 0, 0, 0);
 
 	if (CurPage < 0)
 		CurPage = 0;
@@ -1802,6 +1835,9 @@ CDocumentContent.prototype.GetPageBounds = function(nCurPage, nHeight, isForceCh
 };
 CDocumentContent.prototype.GetContentBounds = function(CurPage)
 {
+	if (!this.IsRecalculated())
+		return new AscWord.CDocumentBounds(0, 0, 0, 0);
+	
 	var oPage = this.Pages[CurPage];
 	if (!oPage || oPage.Pos > oPage.EndPos)
 		return this.Get_PageBounds(CurPage);
@@ -2139,13 +2175,40 @@ CDocumentContent.prototype.StartFromNewPage = function()
 };
 CDocumentContent.prototype.Get_ParentTextTransform = function()
 {
-	if (this.Parent)
-		return this.Parent.Get_ParentTextTransform();
-
-	return null;
+	let parentTransform = this.Parent ? this.Parent.Get_ParentTextTransform() : null;
+	let transform = this.transform ? this.transform.CreateDublicate() : null;
+	if (transform && parentTransform)
+	{
+		global_MatrixTransformer.MultiplyAppend(transform, parentTransform);
+		return transform;
+	}
+	return transform || parentTransform;
+};
+CDocumentContent.prototype.GetFullTransform = function()
+{
+	return this.Get_ParentTextTransform();
+};
+CDocumentContent.prototype.GetCurrentTransform = function()
+{
+	return this.transform;
+};
+CDocumentContent.prototype.TransformPoint = function(x, y)
+{
+	if (!this.transform)
+		return {x: x, y : y};
+	
+	let invert = global_MatrixTransformer.Invert(this.transform);
+	return {
+		x : invert.TransformPointX(x, y),
+		y : invert.TransformPointY(x, y)
+	};
 };
 CDocumentContent.prototype.IsTableBorder = function(X, Y, CurPage)
 {
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	CurPage = Math.max(0, Math.min(this.Pages.length - 1, CurPage));
 
 	var ElementPos       = this.Internal_GetContentPosByXY(X, Y, CurPage);
@@ -2157,6 +2220,10 @@ CDocumentContent.prototype.IsInText = function(X, Y, CurPage)
 {
 	if (CurPage < 0 || CurPage >= this.Pages.length)
 		CurPage = 0;
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
 
 	var ContentPos       = this.Internal_GetContentPosByXY(X, Y, CurPage);
 	var Item             = this.Content[ContentPos];
@@ -2173,7 +2240,11 @@ CDocumentContent.prototype.IsInDrawing = function(X, Y, CurPage)
 	{
 		if (CurPage < 0 || CurPage >= this.Pages.length)
 			CurPage = 0;
-
+		
+		let point = this.TransformPoint(X, Y);
+		X = point.x;
+		Y = point.y;
+		
 		var ContentPos = this.Internal_GetContentPosByXY(X, Y, CurPage);
 		var Item       = this.Content[ContentPos];
 		if (type_Table == Item.GetType())
@@ -2505,6 +2576,11 @@ CDocumentContent.prototype.MoveCursorToEndPos = function(AddToSelect, StartSelec
 CDocumentContent.prototype.MoveCursorUpToLastRow = function(X, Y, AddToSelect)
 {
 	this.SetCurPosXY(X, Y);
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	if (true === AddToSelect)
 	{
 		if (true !== this.Selection.Use)
@@ -2563,6 +2639,11 @@ CDocumentContent.prototype.MoveCursorUpToLastRow = function(X, Y, AddToSelect)
 CDocumentContent.prototype.MoveCursorDownToFirstRow = function(X, Y, AddToSelect)
 {
 	this.SetCurPosXY(X, Y);
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	if (true === AddToSelect)
 	{
 		if (true !== this.Selection.Use)
@@ -2661,14 +2742,18 @@ CDocumentContent.prototype.UpdateCursorType = function(X, Y, CurPage)
 {
 	if (CurPage < 0 || CurPage >= this.Pages.length)
 		return this.DrawingDocument.SetCursorType("text", new AscCommon.CMouseMoveData());
-
+	
 	var bInText      = (null === this.IsInText(X, Y, CurPage) ? false : true);
 	var bTableBorder = (null === this.IsTableBorder(X, Y, CurPage) ? false : true);
 
 	// Ничего не делаем
 	if (this.Parent instanceof CHeaderFooter && true === this.LogicDocument.DrawingObjects.updateCursorType(this.Get_AbsolutePage(CurPage), X, Y, {}, ( true === bInText || true === bTableBorder ? true : false )))
 		return;
-
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	var ContentPos       = this.Internal_GetContentPosByXY(X, Y, CurPage);
 	var Item             = this.Content[ContentPos];
 	var ElementPageIndex = this.private_GetElementPageIndexByXY(ContentPos, X, Y, CurPage);
@@ -2779,6 +2864,9 @@ CDocumentContent.prototype.AddNewParagraph = function(bForceAdd)
 								NewParagraph.Style_Remove();
 							else
 								NewParagraph.Style_Add(NextId, true);
+							
+							let bidi = Item.GetDirectParaPr(false).Bidi;
+							NewParagraph.SetParagraphBidi(bidi);
 						}
 
 						var LastRun = Item.Content[Item.Content.length - 1];
@@ -4399,9 +4487,13 @@ CDocumentContent.prototype.MoveCursorToStartOfLine = function(AddToSelect)
 };
 CDocumentContent.prototype.MoveCursorToXY = function(X, Y, AddToSelect, bRemoveOldSelection, CurPage)
 {
-	if (this.Pages.length <= 0)
+	if (!this.IsRecalculated())
 		return;
-
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	if (undefined !== CurPage)
 	{
 		if (CurPage < 0)
@@ -4491,6 +4583,10 @@ CDocumentContent.prototype.GetCurPosXY = function()
 };
 CDocumentContent.prototype.SetCurPosXY = function(X, Y)
 {
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	this.CurPos.RealX = X;
 	this.CurPos.RealY = Y;
 };
@@ -4722,6 +4818,49 @@ CDocumentContent.prototype.SetParagraphPr = function(oParaPr)
 		else
 		{
 			this.Content[this.CurPos.ContentPos].SetParagraphPr(oParaPr);
+		}
+	}
+};
+CDocumentContent.prototype.SetParagraphBidi = function(bidi)
+{
+	if (this.IsApplyToAll())
+	{
+		for (var nIndex = 0, nCount = this.Content.length; nIndex < nCount; ++nIndex)
+		{
+			var oItem = this.Content[nIndex];
+			oItem.SetApplyToAll(true);
+			oItem.SetParagraphBidi(bidi);
+			oItem.SetApplyToAll(false);
+		}
+		
+		return;
+	}
+	
+	if (docpostype_DrawingObjects === this.GetDocPosType())
+	{
+		//return this.LogicDocument.DrawingObjects.setParagraphBidi(bidi);
+	}
+	else
+	{
+		if (this.Selection.Use)
+		{
+			var nStartPos = this.Selection.StartPos;
+			var nEndPos   = this.Selection.EndPos;
+			if (nEndPos < nStartPos)
+			{
+				var nTemp = nStartPos;
+				nStartPos = nEndPos;
+				nEndPos   = nTemp;
+			}
+			
+			for (var nIndex = nStartPos; nIndex <= nEndPos; ++nIndex)
+			{
+				this.Content[nIndex].SetParagraphBidi(bidi);
+			}
+		}
+		else
+		{
+			this.Content[this.CurPos.ContentPos].SetParagraphBidi(bidi);
 		}
 	}
 };
@@ -6251,9 +6390,16 @@ CDocumentContent.prototype.RemoveSelection = function(bNoCheckDrawing)
 };
 CDocumentContent.prototype.DrawSelectionOnPage = function(PageIndex, clipInfo)
 {
+	if (!this.IsRecalculated())
+		return;
+	
     var CurPage = PageIndex;
     if (CurPage < 0 || CurPage >= this.Pages.length)
         return;
+	
+	let drawingDocument = Asc.editor.getDrawingDocument();
+	if (this.transform && drawingDocument)
+		drawingDocument.MultiplyTargetTransform(this.transform.CreateDublicate());
 	
 	let pageClip = this.ClipInfo[CurPage];
 	if (!clipInfo && pageClip)
@@ -6320,8 +6466,12 @@ CDocumentContent.prototype.DrawSelectionOnPage = function(PageIndex, clipInfo)
 };
 CDocumentContent.prototype.Selection_SetStart = function(X, Y, CurPage, MouseEvent)
 {
-	if (this.Pages.length <= 0)
+	if (!this.IsRecalculated())
 		return;
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
 
 	if (CurPage < 0)
 	{
@@ -6480,9 +6630,13 @@ CDocumentContent.prototype.Selection_SetStart = function(X, Y, CurPage, MouseEve
 // Если bEnd = true, тогда это конец селекта.
 CDocumentContent.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent)
 {
-	if (this.Pages.length <= 0)
+	if (!this.IsRecalculated())
 		return;
-
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
 	if (CurPage < 0)
 	{
 		CurPage = 0;
@@ -6704,6 +6858,10 @@ CDocumentContent.prototype.CheckPosInSelection = function(X, Y, CurPage, NearPos
 	}
 	else //if ( docpostype_Content === this.CurPos.Type )
 	{
+		let point = this.TransformPoint(X, Y);
+		X = point.x;
+		Y = point.y;
+		
 		if (true === this.Selection.Use || true === this.ApplyToAll)
 		{
 			switch (this.Selection.Flag)
@@ -7187,6 +7345,13 @@ CDocumentContent.prototype.DistributeTableCells = function(isHorizontally)
 //-----------------------------------------------------------------------------------
 CDocumentContent.prototype.Internal_GetContentPosByXY = function(X, Y, PageNum)
 {
+	if (!this.IsRecalculated())
+		return;
+	
+	let point = this.TransformPoint(X, Y);
+	X = point.x;
+	Y = point.y;
+	
     if (undefined === PageNum || null === PageNum)
         PageNum = this.CurPage;
 
@@ -7311,6 +7476,7 @@ CDocumentContent.prototype.Internal_Content_Add = function(Position, NewObject, 
 
 	this.private_ReindexContent(Position);
 	this.OnContentChange();
+	this.Recalculated = false;
 };
 CDocumentContent.prototype.Internal_Content_Remove = function(Position, Count, isCorrectContent)
 {
@@ -7346,6 +7512,7 @@ CDocumentContent.prototype.Internal_Content_Remove = function(Position, Count, i
 
 	this.private_ReindexContent(Position);
 	this.OnContentChange();
+	this.Recalculated = false;
 };
 CDocumentContent.prototype.Clear_ContentChanges = function()
 {
@@ -7461,6 +7628,11 @@ CDocumentContent.prototype.GetSelectionState = function()
 		Flag     : this.Selection.Flag,
 		Data     : this.Selection.Data
 	};
+	
+	DocState.ShiftView = {
+		X : this.ShiftViewX,
+		Y : this.ShiftViewY
+	};
 
 	DocState.CurPage = this.CurPage;
 
@@ -7479,14 +7651,17 @@ CDocumentContent.prototype.GetSelectionState = function()
 	{
 		// Работаем с колонтитулом
 		if (docpostype_DrawingObjects === this.CurPos.Type)
+		{
 			State = this.LogicDocument.DrawingObjects.getSelectionState();
-		else if (docpostype_Content === this.CurPos.Type)
+		}
+		else// if (docpostype_Content === this.CurPos.Type)
 		{
 			if (true === this.Selection.Use)
 			{
-				// Выделение нумерации
-				if (selectionflag_Numbering == this.Selection.Flag)
-					State = [];
+				if (selectionflag_Numbering === this.Selection.Flag)
+				{
+					State = [this.GetCurrentParagraph()];
+				}
 				else
 				{
 					var StartPos = this.Selection.StartPos;
@@ -7510,7 +7685,9 @@ CDocumentContent.prototype.GetSelectionState = function()
 				}
 			}
 			else
+			{
 				State = this.Content[this.CurPos.ContentPos].GetSelectionState();
+			}
 		}
 	}
 
@@ -7555,13 +7732,17 @@ CDocumentContent.prototype.SetSelectionState = function(State, StateIndex)
 		Flag     : DocState.Selection.Flag,
 		Data     : DocState.Selection.Data
 	};
+	
+	this.ResetShiftView();
+	if (DocState.ShiftView)
+		this.ShiftView(DocState.ShiftView.X, DocState.ShiftView.Y);
 
 	this.CurPage = DocState.CurPage;
 
 	var NewStateIndex = StateIndex - 1;
 
 	// Работаем с колонтитулом
-	if (docpostype_DrawingObjects == this.CurPos.Type)
+	if (docpostype_DrawingObjects === this.CurPos.Type)
 	{
 		this.LogicDocument.DrawingObjects.setSelectionState(State, NewStateIndex);
 	}
@@ -7569,18 +7750,25 @@ CDocumentContent.prototype.SetSelectionState = function(State, StateIndex)
 	{
 		if (true === this.Selection.Use)
 		{
-			if (selectionflag_Numbering == this.Selection.Flag)
+			if (selectionflag_Numbering === this.Selection.Flag)
 			{
-				if (type_Paragraph === this.Content[this.Selection.StartPos].Get_Type())
+				let curPara = State[NewStateIndex];
+				if (curPara && curPara.IsParagraph && curPara.IsParagraph())
 				{
-					var NumPr = this.Content[this.Selection.StartPos].GetNumPr();
-					if (undefined !== NumPr)
-						this.SelectNumbering(NumPr, this.Content[this.Selection.StartPos]);
+					let numPr     = curPara.GetNumPr();
+					let prevNumPr = curPara.GetPrChangeNumPr();
+					
+					if (numPr && numPr.IsValid())
+						this.SelectNumbering(numPr, curPara);
+					else if (prevNumPr && prevNumPr.IsValid())
+						this.SelectNumberingSingleParagraph(curPara);
 					else
 						this.LogicDocument.RemoveSelection();
 				}
 				else
+				{
 					this.LogicDocument.RemoveSelection();
+				}
 			}
 			else
 			{
@@ -8525,7 +8713,7 @@ CDocumentContent.prototype.RemoveTextSelection = function()
 };
 CDocumentContent.prototype.CanUpdateTarget = function(CurPage)
 {
-	if (this.Pages.length <= 0)
+	if (!this.IsRecalculated())
 		return false;
 
 	if (this.Pages.length <= CurPage)

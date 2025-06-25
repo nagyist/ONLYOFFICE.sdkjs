@@ -36,7 +36,7 @@
 	 * Class representing a base annotation.
 	 * @constructor
     */
-    function CAnnotationBase(sName, nType, nPage, aOrigRect, oDoc)
+    function CAnnotationBase(sName, nType, aOrigRect, oDoc)
     {
         // если аннотация не shape based
         if (this.Id == undefined) {
@@ -63,7 +63,6 @@
         this._modDate               = undefined;
         this._name                  = undefined;
         this._opacity               = 1;
-        this._page                  = undefined;
         this._origRect              = [];
         this._refType               = undefined;
         this._seqNum                = undefined;
@@ -96,12 +95,14 @@
 
         this.SetDocument(oDoc);
         this.SetName(sName);
-        this.SetPage(nPage);
         this.SetRect(aOrigRect);
     };
     CAnnotationBase.prototype = Object.create(AscFormat.CBaseNoIdObject.prototype);
 	CAnnotationBase.prototype.constructor = CAnnotationBase;
     
+    CAnnotationBase.prototype.IsEditFieldShape = function() {
+        return false;
+    };
     CAnnotationBase.prototype.SetUserId = function(sUID) {
         if (this.uid == sUID) {
             return;
@@ -282,7 +283,11 @@
         let oViewer = Asc.editor.getDocumentRenderer();
         let oDoc = Asc.editor.getPDFDoc();
         let canChange = !oViewer.IsOpenAnnotsInProgress && oDoc.History.CanAddChanges();
-        if ((this._wasChanged == isChanged && this._wasChanged !== this.IsNeedDrawFromStream()) || !canChange) {
+        if (this._wasChanged == isChanged || !canChange) {
+            if (canChange && this._prevDrawFromStreamState !== this.IsNeedDrawFromStream()) {
+                this.SetDrawFromStream(!isChanged)
+            }
+            
             return;
         }
 
@@ -569,9 +574,14 @@
     };
     CAnnotationBase.prototype.SetDrawFromStream = function(bFromStream) {
         let oDoc = Asc.editor.getPDFDoc();
+        let oViewer = Asc.editor.getDocumentRenderer();
+        
+        if (this._prevDrawFromStreamState) {
+            oDoc.History.Add(new CChangesPDFAnnotChangedView(this, this._prevDrawFromStreamState, bFromStream));
+        }
 
-        if (this.IsChanged() && this.IsNeedDrawFromStream() && false == bFromStream) {
-            oDoc.History.Add(new CChangesPDFAnnotChangedView(this, this._bDrawFromStream, bFromStream));
+        if (false == oViewer.IsOpenAnnotsInProgress) {
+            this._prevDrawFromStreamState = this._bDrawFromStream;
         }
 
         this._bDrawFromStream = bFromStream;
@@ -583,11 +593,12 @@
         this.SetWasChanged(true);
     };
     CAnnotationBase.prototype.IsUseInDocument = function() {
-        let oDoc = Asc.editor.getPDFDoc();
-        if (oDoc.annots.indexOf(this) == -1)
-            return false;
+        let oPage = this.GetParentPage();
+        if (oPage && oPage.annots.includes(this)) {
+            return true;
+        }
 
-        return true;
+        return false;
     };
     
     CAnnotationBase.prototype.GetRect = function() {
@@ -612,46 +623,41 @@
         this.parentPage = oParent;
     };
     CAnnotationBase.prototype.GetParentPage = function() {
+        let oReplyTo = this.GetReplyTo();
+        if (oReplyTo && !this.parentPage) {
+            return oReplyTo.GetParentPage();
+        }
+
         return this.parentPage;
     };
     CAnnotationBase.prototype.SetPage = function(nPage) {
-        let nCurPage = this.GetPage();
-        if (nPage == nCurPage)
+        if (this.GetPage() == nPage) {
             return;
-
-        let oViewer     = editor.getDocumentRenderer();
+        }
+        
         let oDoc        = this.GetDocument();
-        let oPageInfo   = oViewer.pagesInfo.pages[nCurPage];
+        let oNewPage    = oDoc.GetPageInfo(nPage);
 
-        let nCurIdxOnPage = oPageInfo && oPageInfo.annots ? oPageInfo.annots.indexOf(this) : -1;
-        if (oViewer.pagesInfo.pages[nPage]) {
-            if (oDoc.annots.indexOf(this) != -1) {
-                if (nCurIdxOnPage != -1) {
-                    oPageInfo.annots.splice(nCurIdxOnPage, 1);
-                }
-    
-                if (this.IsUseInDocument() && oViewer.pagesInfo.pages[nPage].annots.indexOf(this) == -1)
-                    oViewer.pagesInfo.pages[nPage].annots.push(this);
-
-                // добавляем в перерисовку исходную страницу
-                this.AddToRedraw();
-            }
-
-            oDoc.History.Add(new CChangesPDFAnnotPage(this, nCurPage, nPage));
-            this._page = nPage;
+        if (oNewPage) {
+            oDoc.RemoveAnnot(this.GetId(), true);
+            oDoc.AddAnnot(this, nPage);
             this.selectStartPage = nPage;
-            this.AddToRedraw();
         }
     };
     CAnnotationBase.prototype.GetPage = function() {
-        return this._page;
+        let oParentPage = this.GetParentPage();
+        if (!oParentPage || !(oParentPage instanceof AscPDF.CPageInfo)) {
+            return -1;
+        }
+
+        return oParentPage.GetIndex();
     };
     CAnnotationBase.prototype.SetDocument = function(oDoc) {
         if (this._doc == oDoc) {
             return;
         }
 
-        AscCommon.History.Add(new CChangesPDFDocumentSetDocument(this, this._doc, oDoc));
+        AscCommon.History.Add(new CChangesPDFObjectSetDocument(this, this._doc, oDoc));
         this._doc = oDoc;
     };
     CAnnotationBase.prototype.GetDocument = function() {
@@ -659,7 +665,7 @@
     };
     CAnnotationBase.prototype.IsHidden = function() {
         let nType = this.GetDisplay();
-        if (nType == window["AscPDF"].Api.Objects.display["hidden"] || nType == window["AscPDF"].Api.Objects.display["noView"])
+        if (nType == window["AscPDF"].Api.Types.display["hidden"] || nType == window["AscPDF"].Api.Types.display["noView"])
             return true;
 
         return false;
@@ -683,12 +689,12 @@
         }
     };
     CAnnotationBase.prototype._AddReplyOnOpen = function(oReplyInfo) {
-        let oReply = new AscPDF.CAnnotationText(oReplyInfo["UniqueName"], this.GetPage(), [], this.GetDocument());
+        let oReply = new AscPDF.CAnnotationText(oReplyInfo["UniqueName"], [], this.GetDocument());
 
         oReply.SetCreationDate(AscPDF.ParsePDFDate(oReplyInfo["CreationDate"]).getTime());
         oReply.SetModDate(AscPDF.ParsePDFDate(oReplyInfo["LastModified"]).getTime());
         oReply.SetAuthor(oReplyInfo["User"]);
-        oReply.SetDisplay(window["AscPDF"].Api.Objects.display["visible"]);
+        oReply.SetDisplay(window["AscPDF"].Api.Types.display["visible"]);
         oReply.SetPopupIdx(oReplyInfo["Popup"]);
         oReply.SetSubject(oReplyInfo["Subj"]);
         oReply.SetUserId(oReplyInfo["OUserID"]);
@@ -1036,7 +1042,7 @@
         let oDoc = this.GetDocument();
         oDoc.StartNoHistoryMode();
 
-        let oNewAnnot = new CAnnotationBase(AscCommon.CreateGUID(), this.type, this.GetPage(), this.GetOrigRect().slice(), oDoc);
+        let oNewAnnot = new CAnnotationBase(AscCommon.CreateGUID(), this.type, this.GetOrigRect().slice(), oDoc);
 
         oNewAnnot.lazyCopy = true;
         

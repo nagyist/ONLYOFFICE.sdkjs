@@ -733,11 +733,50 @@ CStyle.prototype =
 //-----------------------------------------------------------------------------------
 //
 //-----------------------------------------------------------------------------------
-    Document_Get_AllFontNames : function(AllFonts)
-    {
-        if ( undefined != this.TextPr )
-            this.TextPr.Document_Get_AllFontNames(AllFonts);
-    },
+	Document_Get_AllFontNames : function(allFonts)
+	{
+		if (this.TextPr)
+			this.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBand1Horz && this.TableBand1Horz.TextPr)
+			this.TableBand1Horz.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBand1Vert && this.TableBand1Vert.TextPr)
+			this.TableBand1Vert.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBand2Horz && this.TableBand2Horz.TextPr)
+			this.TableBand2Horz.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBand2Vert && this.TableBand2Vert.TextPr)
+			this.TableBand2Vert.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableFirstCol && this.TableFirstCol.TextPr)
+			this.TableFirstCol.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableFirstRow && this.TableFirstRow.TextPr)
+			this.TableFirstRow.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableLastCol && this.TableLastCol.TextPr)
+			this.TableLastCol.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableLastRow && this.TableLastRow.TextPr)
+			this.TableLastRow.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableTLCell && this.TableTLCell.TextPr)
+			this.TableTLCell.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableTRCell && this.TableTRCell.TextPr)
+			this.TableTRCell.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBLCell && this.TableBLCell.TextPr)
+			this.TableBLCell.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableBRCell && this.TableBRCell.TextPr)
+			this.TableBRCell.TextPr.Document_Get_AllFontNames(allFonts);
+		
+		if (this.TableWholeTable && this.TableWholeTable.TextPr)
+			this.TableWholeTable.TextPr.Document_Get_AllFontNames(allFonts);
+	},
 
 	private_CreateDefaultUnifillColor : function()
 	{
@@ -7248,7 +7287,8 @@ function CStyles(bCreateDefault)
 			Caption           : null,
 			EndnoteText       : null,
 			EndnoteTextChar   : null,
-			EndnoteReference  : null
+			EndnoteReference  : null,
+			PlaceholderText   : null
 		};
 
         // Заполняем значения по умолчанию
@@ -8148,7 +8188,10 @@ CStyles.prototype =
 		PassedStyles.push(StyleId);
 
 		var Style = this.Style[StyleId];
-		if (undefined == StyleId || undefined === Style)
+		if (Style && Style.Type !== Type)
+			Style = undefined;
+		
+		if (!StyleId || !Style)
 		{
 			if (true === bUseDefault)
 			{
@@ -9033,6 +9076,9 @@ CStyles.prototype.UpdateDefaultStyleLinks = function()
 			case "tableoffigures":
 				this.Default.TOF = styleId;
 				break;
+			case "placeholdertext":
+				this.Default.PlaceholderText = styleId;
+				break;
 		}
 	}
 };
@@ -9100,6 +9146,10 @@ CStyles.prototype.GetDefaultFollowedHyperlink = function()
 CStyles.prototype.GetDefaultHeading = function(nLvl)
 {
 	return this.Default.Headings[Math.max(Math.min(nLvl, 8), 0)];
+};
+CStyles.prototype.GetDefaultPlaceholderText = function()
+{
+	return this.Default.PlaceholderText;
 };
 CStyles.prototype.HaveHeadingsNum = function()
 {
@@ -9528,6 +9578,137 @@ CDocumentColor.prototype.ConvertToUniColor = function()
 	return AscFormat.CreateUniColorRGB(this.r, this.g, this.b);
 };
 AscWord.CDocumentColor = CDocumentColor;
+
+(function()
+{
+	/**
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @param a
+	 * @constructor
+	 */
+	function CDocumentColorA(r, g, b, a)
+	{
+		this.r = r;
+		this.g = g;
+		this.b = b;
+		this.a = a;
+	}
+	CDocumentColorA.prototype.Copy = function()
+	{
+		return new CDocumentColorA(this.r, this.g, this.b, this.a);
+	};
+	CDocumentColorA.fromBinary = function(reader)
+	{
+		let r = reader.GetByte();
+		let g = reader.GetByte();
+		let b = reader.GetByte();
+		let a = reader.GetByte();
+		return new CDocumentColorA(r, g, b, a);
+	};
+	CDocumentColorA.fromObjectRgb = function(obj)
+	{
+		return new CDocumentColorA(obj.r, obj.g, obj.b, 255);
+	};
+	CDocumentColorA.fromObjectRgba = function(obj)
+	{
+		return new CDocumentColorA(obj.r, obj.g, obj.b, obj.a);
+	};
+	CDocumentColorA.prototype.toBinary = function(writer)
+	{
+		writer.WriteByte(this.r);
+		writer.WriteByte(this.g);
+		writer.WriteByte(this.b);
+		writer.WriteByte(this.a);
+	};
+	CDocumentColorA.prototype.isEqual = function(color)
+	{
+		return (this.r === color.r
+			&& this.g === color.g
+			&& this.b === color.b
+			&& this.a === color.a);
+	};
+	CDocumentColorA.prototype.isEqualRgb = function(color)
+	{
+		return (this.r === color.r
+			&& this.g === color.g
+			&& this.b === color.b
+			&& 255 === this.a);
+	};
+	CDocumentColorA.prototype.setRgb = function(color)
+	{
+		this.r = color.r;
+		this.g = color.g;
+		this.b = color.b;
+		this.a = 255;
+	};
+	CDocumentColorA.prototype.setRgba = function(color)
+	{
+		this.r = color.r;
+		this.g = color.g;
+		this.b = color.b;
+		this.a = color.a;
+	};
+	/**
+	 * @return {Asc.asc_CColor}
+	 */
+	CDocumentColorA.prototype.getAscColor = function()
+	{
+		return new Asc.asc_CColor(this.r, this.g, this.b, this.a);
+	};
+	CDocumentColorA.prototype.SetFromHexColor = function(val)
+	{
+		if (AscFormat.mapPrstColor[val])
+		{
+			let rgb = AscFormat.mapPrstColor[val];
+			this.r = (rgb >> 16) & 0xFF;
+			this.g = (rgb >> 8) & 0xFF;
+			this.b = rgb & 0xFF;
+			this.a = 255;
+		}
+		else if (val.length >= 8)
+		{
+			let index = "#" === val[0] ? 1 : 0;
+			this.r = parseInt(val.substring(index, index + 2), 16);
+			this.g = parseInt(val.substring(index + 2, index + 4), 16);
+			this.b = parseInt(val.substring(index + 4, index + 6), 16);
+			this.a = parseInt(val.substring(index + 6, index + 8), 16);
+		}
+		else
+		{
+			this.r = 0;
+			this.g = 0;
+			this.b = 0;
+			this.a = 255;
+		}
+	};
+	CDocumentColorA.prototype.ToHexColor = function()
+	{
+		return AscCommon.ByteToHex(this.r) + AscCommon.ByteToHex(this.g) + AscCommon.ByteToHex(this.b) + AscCommon.ByteToHex(this.a);
+	};
+	CDocumentColorA.prototype.WriteToBinary = function(writer)
+	{
+		this.toBinary(writer);
+	};
+	CDocumentColorA.prototype.ReadFromBinary = function(reader)
+	{
+		this.r = reader.GetByte();
+		this.g = reader.GetByte();
+		this.b = reader.GetByte();
+		this.a = reader.GetByte();
+	};
+	CDocumentColorA.prototype.Write_ToBinary = function(writer)
+	{
+		return this.WriteToBinary(writer);
+	};
+	CDocumentColorA.prototype.Read_FromBinary = function(reader)
+	{
+		return this.ReadFromBinary(reader);
+	};
+	//------------------------------------------------------------------------------------------------------------------
+	AscWord.CDocumentColorA = CDocumentColorA;
+})();
 
 function CDocumentShd()
 {
@@ -12496,6 +12677,22 @@ CRFonts.prototype.IsEqual = function(oRFonts)
 		&& this.HAnsiTheme === oRFonts.HAnsiTheme
 		&& this.CSTheme === oRFonts.CSTheme);
 };
+CRFonts.prototype.IsEqualSlot = function(rFonts, fontSlot)
+{
+	switch (fontSlot)
+	{
+		case AscWord.fontslot_ASCII:
+			return (this.private_IsEqual(this.Ascii, rFonts.Ascii) && this.AsciiTheme === rFonts.AsciiTheme);
+		case AscWord.fontslot_EastAsia:
+			return (this.private_IsEqual(this.EastAsia, rFonts.EastAsia) && this.EastAsiaTheme === rFonts.EastAsiaTheme);
+		case AscWord.fontslot_HAnsi:
+			return (this.private_IsEqual(this.HAnsi, rFonts.HAnsi) && this.HAnsiTheme === rFonts.HAnsiTheme);
+		case AscWord.fontslot_CS:
+			return (this.private_IsEqual(this.CS, rFonts.CS) && this.CSTheme === rFonts.CSTheme);
+	}
+	
+	return this.IsEqual(rFonts);
+};
 CRFonts.prototype.private_IsEqual = function(oFont1, oFont2)
 {
 	return ((undefined === oFont1 && undefined === oFont2)
@@ -14683,12 +14880,21 @@ CTextPr.prototype.SetPosition = function(nPosition)
 {
 	this.Position = nPosition;
 };
-CTextPr.prototype.GetFontFamily = function()
+CTextPr.prototype.GetFontFamily = function(fontSlot)
 {
-    if (this.RFonts && this.RFonts.Ascii && this.RFonts.Ascii.Name)
-        return this.RFonts.Ascii.Name;
-
-    return undefined;
+	if (!this.RFonts)
+		return undefined;
+	
+	if (AscWord.fontslot_CS === fontSlot && this.RFonts.CS)
+		return this.RFonts.CS.Name;
+	else if (AscWord.fontslot_HAnsi === fontSlot && this.RFonts.HAnsi)
+		return this.RFonts.HAnsi.Name;
+	else if (AscWord.fontslot_EastAsia === fontSlot && this.RFonts.EastAsia)
+		return this.RFonts.EastAsia.Name;
+	else if (this.RFonts.Ascii)
+		return this.RFonts.Ascii.Name;
+	
+	return undefined;
 };
 CTextPr.prototype.SetFontFamily = function(sFontName)
 {
