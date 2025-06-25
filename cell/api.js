@@ -7020,6 +7020,7 @@ var editor;
 		res["spreadsheetLayout"]["formulaProps"] = {};
 		res["spreadsheetLayout"]["formulaProps"]["translate"] = AscCommonExcel.cFormulaFunctionToLocale;
 		res["spreadsheetLayout"]["formulaProps"]["docTitle"] = this.DocInfo && this.DocInfo.Title;
+		res["spreadsheetLayout"]["formulaProps"]["cellFunctionTypeTranslate"] = AscCommon.cCellFunctionLocal;
 		return res;
 	};
 
@@ -7138,7 +7139,7 @@ var editor;
     }
 
     this.wb.setPrintOptionsJson(_options);
-    this.wbModel.dependencyFormulas.calcTree();
+    this.wbModel.dependencyFormulas.calcTree(null, true);
 
     var _printPagesData = this.wb.calcPagesPrint(_adjustPrint);
 

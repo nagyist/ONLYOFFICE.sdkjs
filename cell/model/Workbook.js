@@ -1579,14 +1579,14 @@
 			this.buildArrayFormula = [];
 			this.buildPivot = [];
 		},
-		calcTree: function(callback) {
+		calcTree: function(callback, forceRecal) {
 			if (this.lockCounter > 0) {
 				callback && callback();
 				return;
 			}
 			this.buildDependency();
 			this.addToChangedHiddenRows();
-			if (!(this.changedCell || this.changedRange || this.changedDefName)) {
+			if (!(this.changedCell || this.changedRange || this.changedDefName) && !forceRecal) {
 				callback && callback();
 				return;
 			}
