@@ -6019,10 +6019,22 @@
                 t.memory.WriteString2(ref);
             })
         };
+				this.WriteControl = function (oDrawing) {
+					const oThis = this;
+					const oControl = oDrawing.graphicObject;
+					this.bs.WriteItem(c_oSerControlTypes.ControlAnchor, function () {
+						const oOldGraphicObject = oDrawing.graphicObject;
+						oDrawing.graphicObject = null;
+						oThis.WriteDrawing(oDrawing);
+						oDrawing.graphicObject = oOldGraphicObject;
+					});
+
+				}
 				this.WriteControls = function (aControls) {
+					const oThis = this;
 					for (let i = 0; i < aControls.length; i += 1) {
 						const oControl = aControls[i];
-
+						this.bs.WriteItem(c_oSerControlTypes.Control, function () {oThis.WriteControl(oControl);});
 					}
 				};
         this.WriteDrawings = function(aDrawings)
@@ -6079,7 +6091,7 @@
             var oDrawingToWrite = curDrawing || oDrawing.graphicObject;
 
             var nTypeToWrite = oDrawing.Type;
-            if(oDrawingToWrite.getObjectType() === AscDFH.historyitem_type_OleObject)
+            if(oDrawingToWrite && oDrawingToWrite.getObjectType() === AscDFH.historyitem_type_OleObject)
             {
                 nTypeToWrite = c_oAscCellAnchorType.cellanchorTwoCell;
             }
@@ -6116,7 +6128,9 @@
                     this.bs.WriteItem(c_oSer_DrawingType.ClientData, function(){oThis.WriteClientData(oDrawingForWriting.clientData);});
                 }
             }
-            this.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oDrawingToWrite, null, null, null);});
+						if (oDrawingToWrite) {
+							this.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oDrawingToWrite, null, null, null);});
+						}
         };
         this.WriteFromTo = function(oFromTo)
         {

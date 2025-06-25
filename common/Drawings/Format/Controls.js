@@ -77,6 +77,15 @@
 	}
 	AscFormat.InitClass(CControl, AscFormat.CShape, AscDFH.historyitem_type_Control);
 	CControl.prototype.superclass = AscFormat.CGraphicObjectBase;
+	CControl.prototype.fillObject = function (oCopy, oPr) {
+		AscFormat.CShape.prototype.fillObject.call(this, oCopy, oPr);
+		if (this.controlPr) {
+			oCopy.setControlPr(this.controlPr.createDuplicate());
+		}
+		if (this.formControlPr) {
+			oCopy.setFormControlPr(this.formControlPr.createDuplicate());
+		}
+	};
 	CControl.prototype.initController = function() {
 		switch (this.formControlPr.objectType) {
 			case CFormControlPr_objectType_checkBox: {
@@ -386,6 +395,7 @@
 		this.uiObject = value;
 	};
 	function CControlPr() {
+		AscFormat.CBaseFormatObject.call(this);
 		this.altText = null;
 		this.autoFill = null;
 		this.autoLine = null;
@@ -403,6 +413,7 @@
 		this.recalcAlways = null;
 		this.uiObject = null;
 	}
+	AscFormat.InitClass(CControlPr, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_ControlPr);
 	CControlPr.prototype.setAltText = function(pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_AltText, this.altText, pr));
 		this.altText = pr;
@@ -514,6 +525,24 @@
 	};
 	CControlPr.prototype.getUiObject = function() {
 		return this.uiObject;
+	};
+	CControlPr.prototype.fillObject = function (oCopy, oPr) {
+		oCopy.setAltText(this.altText);
+		oCopy.setAutoFill(this.autoFill);
+		oCopy.setAutoLine(this.autoLine);
+		oCopy.setAutoPict(this.autoPict);
+		oCopy.setDde(this.dde);
+		oCopy.setDefaultSize(this.defaultSize);
+		oCopy.setDisabled(this.disabled);
+		oCopy.setCf(this.cf);
+		oCopy.setLinkedCell(this.linkedCell);
+		oCopy.setListFillRange(this.listFillRange);
+		oCopy.setRId(this.rId);
+		oCopy.setLocked(this.locked);
+		oCopy.setMacro(this.macro);
+		oCopy.setPrint(this.print);
+		oCopy.setRecalcAlways(this.recalcAlways);
+		oCopy.setUiObject(this.uiObject);
 	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropLines] = AscDFH.CChangesDrawingsLong;
@@ -910,6 +939,42 @@
 		if (nIdx > -1 && nIdx < this.itemLst.length) {
 			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsContentString(this, AscDFH.historyitem_CCommonDataListRemove, nIdx, [this.itemLst[nIdx]], false));
 			this.itemLst.splice(nIdx, 1);
+		}
+	};
+	CFormControlPr.prototype.fillObject = function (oCopy, oPr) {
+		oCopy.setDropLines(this.dropLines);
+		oCopy.setObjectType(this.objectType);
+		oCopy.setChecked(this.checked);
+		oCopy.setDropStyle(this.dropStyle);
+		oCopy.setDx(this.dx);
+		oCopy.setInc(this.inc);
+		oCopy.setMin(this.min);
+		oCopy.setMax(this.max);
+		oCopy.setPage(this.page);
+		oCopy.setSel(this.sel);
+		oCopy.setSelType(this.selType);
+		oCopy.setTextHAlign(this.textHAlign);
+		oCopy.setTextVAlign(this.textVAlign);
+		oCopy.setVal(this.val);
+		oCopy.setWidthMin(this.widthMin);
+		oCopy.setEditVal(this.editVal);
+		oCopy.setFmlaGroup(this.fmlaGroup);
+		oCopy.setFmlaLink(this.fmlaLink);
+		oCopy.setFmlaRange(this.fmlaRange);
+		oCopy.setFmlaTxbx(this.fmlaTxbx);
+		oCopy.setColored(this.colored);
+		oCopy.setFirstButton(this.firstButton);
+		oCopy.setHoriz(this.horiz);
+		oCopy.setJustLastX(this.justLastX);
+		oCopy.setLockText(this.lockText);
+		oCopy.setMultiSel(this.multiSel);
+		oCopy.setNoThreeD(this.noThreeD);
+		oCopy.setNoThreeD2(this.noThreeD2);
+		oCopy.setMultiLine(this.multiLine);
+		oCopy.setVerticalBar(this.verticalBar);
+		oCopy.setPasswordEdit(this.passwordEdit);
+		for (let i = 0; i < this.itemLst.length; i += 1) {
+			oCopy.addItemToLst(oCopy.itemLst.length, this.itemLst[i]);
 		}
 	};
 
