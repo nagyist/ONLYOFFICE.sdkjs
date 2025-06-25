@@ -430,17 +430,29 @@
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateMaster.js
 	 */
     Api.prototype.CreateMaster = function(oTheme){
-        if (!oTheme || !oTheme.GetClassType || oTheme.GetClassType() !== "theme")
-        {
-            if (editor.GetPresentation().GetMaster(0))
-                oTheme = editor.GetPresentation().GetMaster(0).GetTheme();
+		const rawMaster = new AscCommonSlide.MasterSlide();
+
+		const isThemeValid = oTheme && oTheme.GetClassType && oTheme.GetClassType() === "theme";
+        if (!isThemeValid) {
+			
+			const zeroMaster = editor.GetPresentation().GetMaster(0);
+            if (zeroMaster) {
+				oTheme = zeroMaster.GetTheme();
+			} else {
+				const currentTheme = Asc.editor.getCurrentTheme();
+				const themeLoadInfo = new AscCommonSlide.CThemeLoadInfo();
+				themeLoadInfo.Master = rawMaster;
+				themeLoadInfo.Layouts = rawMaster.sldLayoutLst;
+				themeLoadInfo.Theme = currentTheme;
+				oTheme = new ApiTheme(themeLoadInfo);
+			}
         }
         
         if (!oTheme)
             return null;
 
         var oThemeCopy = oTheme.ThemeInfo.Theme.createDuplicate();
-        var oMaster = new ApiMaster(new AscCommonSlide.MasterSlide());
+        const oMaster = new ApiMaster(rawMaster);
         oMaster.Master.setTheme(oThemeCopy);
 				oMaster.Master.setPreserve(true);
 
