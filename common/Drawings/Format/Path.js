@@ -564,6 +564,36 @@ function (window, undefined) {
 		return {wR: wR, hR: hR, stAng: stAng, swAng: swAng, ellipseRotation: ellipseRotationInC};
 	}
 
+	/**
+	 * Determines whether three points are collinear using an adaptive tolerance proportional to the coordinate scale.
+	 * @param {number} ax
+	 * @param {number} ay
+	 * @param {number} bx
+	 * @param {number} by
+	 * @param {number} cx
+	 * @param {number} cy
+	 * @returns {boolean}
+	 */
+	const COL_EPS_K = 16;
+	function isCollinear(ax, ay, bx, by, cx, cy) {
+		// Fast path: any two points coincide – degenerate triangle considered collinear
+		if ((ax === bx && ay === by) || (ax === cx && ay === cy) || (bx === cx && by === cy)) {
+			return true;
+		}
+
+		// Twice the signed area of the triangle (cross product of edge vectors)
+		const cross = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay);
+
+		// Adaptive tolerance: scales with the largest coordinate delta
+		// Makes the check robust for very small and very large numbers.
+		const scale = Math.max(
+			Math.abs(bx - ax), Math.abs(by - ay),
+			Math.abs(cx - ax), Math.abs(cy - ay)
+		);
+		const tol = COL_EPS_K * Number.EPSILON * (scale || 1);
+		return Math.abs(cross) <= tol;
+	}
+
 	Path.prototype.recalculate = function (gdLst, bResetPathsInfo) {
 		let ch, cw;
 		let dCustomPathCoeffW, dCustomPathCoeffH;
@@ -800,6 +830,7 @@ function (window, undefined) {
 					// (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By) ) / 2 - triangle square
 
 					let triangleSquare = Math.abs(x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
+					// let isCollinear = isCollinear(lastX, lastY, a, b, x, y);
 					// let accuracy = 1e1;
 					// if (Math.round(triangleSquare * accuracy) === 0) {
 					// 	AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
