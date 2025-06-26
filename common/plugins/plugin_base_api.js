@@ -206,34 +206,6 @@ window.startPluginApi = function() {
 	 */
 
 	/**
-	 * Event: onTargetPositionChanged
-	 * @event Plugin#onTargetPositionChanged
-	 * @memberof Plugin
-	 * @alias onTargetPositionChanged
-	 * @description The function called when the target position in the editor is changed.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onTargetPositionChanged.js
-	 */
-
-	/**
-	 * Event: onDocumentContentReady
-	 * @event Plugin#onDocumentContentReady
-	 * @memberof Plugin
-	 * @alias onDocumentContentReady
-	 * @description The function called when the document is completely loaded.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onDocumentContentReady.js
-	 */
-
-	/**
-	 * Event: onClick
-	 * @event Plugin#onClick
-	 * @memberof Plugin
-	 * @alias onClick
-	 * @description The function called when the user clicks on the element.
-	 * @param {boolean} isSelectionUse - Defines if the selection is used or not.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onClick.js
-	 */
-
-	/**
 	 * Event: inputHelper_onSelectItem
 	 * @event Plugin#inputHelper_onSelectItem
 	 * @memberof Plugin
@@ -284,25 +256,6 @@ window.startPluginApi = function() {
 	 */
 
     /**
-     * Event: onEnableMouseEvent
-     * @event Plugin#onEnableMouseEvent
-     * @memberof Plugin
-     * @alias onEnableMouseEvent
-	 * @description The function called to turn the mouse or touchpad events on/off.
-	 * @param {boolean} isEnabled - Defines if the mouse or touchpad is enabled (**true**) or not (**false**).
-     * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onEnableMouseEvent.js
-	 */
-
-    /**
-     * Event: onExternalMouseUp
-     * @event Plugin#onExternalMouseUp
-     * @memberof Plugin
-     * @alias onExternalMouseUp
-	 * @description The function called when the mouse button is released outside the plugin iframe.
-     * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onExternalMouseUp.js
-	 */
-
-    /**
      * Event: onExternalPluginMessage
      * @event Plugin#onExternalPluginMessage
      * @memberof Plugin
@@ -316,39 +269,6 @@ window.startPluginApi = function() {
 	 * <b>type</b>: string,  
 	 * <b>example</b>: "text".
      * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onExternalPluginMessage.js
-	 */
-
-	/**
-	 * Event: onFocusContentControl
-	 * @event Plugin#onFocusContentControl
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onFocusContentControl
-	 * @description The function called to show which content control has been focused.
-	 * @param {ContentControl} control - Defines the content control that has been focused.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onFocusContentControl.js
-	 */
-
-	/**
-	 * Event: onBlurContentControl
-	 * @event Plugin#onBlurContentControl
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onBlurContentControl
-	 * @description The function called to show which content control has been blurred.
-	 * @param {ContentControl} control - Defines the content control that has been blurred.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onBlurContentControl.js
-	 */
-
-	/**
-	 * Event: onChangeContentControl
-	 * @event Plugin#onChangeContentControl
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onChangeContentControl
-	 * @description The function called to show which content control has been changed.
-	 * @param {ContentControl} control - Defines the content control that has been changed.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onChangeContentControl.js
 	 */
 
 	/**
@@ -431,50 +351,7 @@ window.startPluginApi = function() {
 	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onMethodReturn.js
 	 */
 
-	/**
-	 * Event: onAddComment
-	 * @event Plugin#onAddComment
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onAddComment
-	 * @description The function called when a comment is added to the document with the {@link /plugin/executeMethod/text/addcomment AddComment} method.
-	 * @param {comment} comment - Defines the comment object containing the comment data.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onAddComment.js
-	 */
-
-	/**
-	 * Event: onChangeCommentData
-	 * @event Plugin#onChangeCommentData
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onChangeCommentData
-	 * @description The function called when the specified comment is changed with the {@link /plugin/executeMethod/text/changecomment ChangeComment} method.
-	 * @param {comment} comment - Defines the comment object containing the comment data.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onChangeCommentData.js
-	 */
-
-	/**
-	 * Event: onRemoveComment
-	 * @event Plugin#onRemoveComment
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onRemoveComment
-	 * @description The function called when the specified comment is removed with the {@link /plugin/executeMethod/text/removecomments RemoveComments} method.
-	 * @param {comment} comment - Defines the comment object containing the comment data.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onRemoveComment.js
-	 */
-
-	/**
-	 * Event: onSubmitForm
-	 * @event Plugin#onSubmitForm
-	 * @memberof Plugin
-	 * @typeofeditors ["CDE"]
-	 * @alias onSubmitForm
-	 * @description The function called when the user clicks the "Complete & Submit" button.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onSubmitForm.js
-	 */
-
-    var Plugin = window["Asc"]["plugin"];
+	var Plugin = window["Asc"]["plugin"];
 
 	Plugin._checkPluginOnWindow = function(isWindowSupport)
 	{
