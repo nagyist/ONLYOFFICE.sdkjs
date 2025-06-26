@@ -6580,6 +6580,7 @@ PasteProcessor.prototype =
 							let oDocContent = oTxBody.content;
 							if(!oDocContent || oDocContent.IsEmpty()) {
 								aShapes.length = 0;
+								oThis.arrDrawingsPasteOrder.splice(oThis.arrDrawingsPasteOrder.indexOf(oFirstShape), 1);
 							}
 						}
 					}
@@ -11028,8 +11029,10 @@ PasteProcessor.prototype =
 				let first_shape = arrShapes2[0];
 				let content = first_shape.txBody.content;
 
-				//Удаляем параграф, который создается в шейпе по умолчанию
-				content.Internal_Content_Remove(0, 1);
+				if (content.Content.length > 1) {
+					//Удаляем параграф, который создается в шейпе по умолчанию
+					content.Internal_Content_Remove(0, 1);
+				}
 
 				//добавляем новый параграфы
 				for (i = 0, length = content.Content.length; i < length; ++i) {
@@ -11065,8 +11068,10 @@ PasteProcessor.prototype =
 				var first_shape = arrShapes2[0];
 				var content = first_shape.txBody.content;
 
-				//Удаляем параграф, который создается в шейпе по умолчанию
-				content.Internal_Content_Remove(0, 1);
+				if (content.Content.length > 1) {
+					//Удаляем параграф, который создается в шейпе по умолчанию
+					content.Internal_Content_Remove(0, 1);
+				}
 				
 				//добавляем новый параграфы
 				for (i = 0, length = content.Content.length; i < length; ++i) {
