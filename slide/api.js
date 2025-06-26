@@ -8481,6 +8481,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_addChartDrawingObject = function(nType, Placeholder)
 	{
+		this.asc_onCloseFrameEditor();
 		const oLogicDocument = this.private_GetLogicDocument();
 		if (!oLogicDocument)
 		return;
@@ -8490,6 +8491,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_editChartDrawingObject = function(chartBinary)
 	{
+		this.asc_onCloseFrameEditor();
 		// Находим выделенную диаграмму и накатываем бинарник
 		if (AscCommon.isRealObject(chartBinary))
 		{

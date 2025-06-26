@@ -9415,6 +9415,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_addChartDrawingObject = function(nType)
 	{
+		this.asc_onCloseFrameEditor();
 		const oLogicDocument = this.private_GetLogicDocument();
 		if (!oLogicDocument)
 			return;
@@ -9454,6 +9455,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_editChartDrawingObject = function(chartBinary)
 	{
+		this.asc_onCloseFrameEditor();
 		this.WordControl.m_oLogicDocument.FinalizeEditChart(chartBinary);
 	};
 
