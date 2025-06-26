@@ -6675,6 +6675,8 @@
 		this._lastNotEmpty = null;
 
 		this.modifiedDocument = null;
+
+		this.changingSelection = null;
 	}
 
 	CDocumentSearchExcel.prototype.Reset = function () {
@@ -6775,6 +6777,7 @@
 			}
 
 			if (ws) {
+				this.changingSelection = true;
 				let range = new Asc.Range(elem.col, elem.row, elem.col, elem.row);
 				let selection = ws.model.getSelection();
 				let ar = selection.getLast();
@@ -6785,6 +6788,7 @@
 				} else {
 					ws.setSelection(range);
 				}
+				this.changingSelection = false;
 
 				this.SetCurrent(nId);
 			}

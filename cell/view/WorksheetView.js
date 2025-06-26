@@ -12817,19 +12817,45 @@
 		var arn = ar.clone(true);
 
 		var scroll = 0;
-		if (arn.r1 < vr.r1) {
-			scroll = this._rowDiffToSmooth(arn.r1, vr.r1);
-		} else if (arn.r1 >= vr.r2) {
-			this.nRowsCount = arn.r2 + 1;
+		if (!this.workbook.getSmoothScrolling() && !(this.workbook.SearchEngine && this.workbook.SearchEngine.changingSelection)) {
+			if (arn.r1 < vr.r1) {
+				scroll = this._rowDiffToSmooth(arn.r1, vr.r1);
+			} else if (arn.r1 >= vr.r2) {
+				this.nRowsCount = arn.r2 + 1;
 
-			this._prepareCellTextMetricsCache(new asc_Range(vr.c1, vr.r2, vr.c2, arn.r2 + 1));
-			scroll = this.getVerticalScrollRange(true);
+				this._prepareCellTextMetricsCache(new asc_Range(vr.c1, vr.r2, vr.c2, arn.r2 + 1));
+				scroll = this.getVerticalScrollRange(true);
 
-			if (scroll > this._rowToSmooth(arn.r1)) {
-				scroll = this._rowToSmooth(arn.r1);
+				if (scroll > this._rowToSmooth(arn.r1)) {
+					scroll = this._rowToSmooth(arn.r1);
+				}
+				scroll -= this._rowDiffToSmooth(vr.r1, (this.topLeftFrozenCell ? this.topLeftFrozenCell.getRow0() : 0));
+				this.nRowsCount = nRowsCount;
 			}
-			scroll -= this._rowDiffToSmooth(vr.r1, (this.topLeftFrozenCell ? this.topLeftFrozenCell.getRow0() : 0));
-			this.nRowsCount = nRowsCount;
+		} else {
+			let toCenter = true;
+			let offsetFrozen = this.getFrozenPaneOffset(true, false);
+			let ctxH = this.drawingCtx.getHeight() - offsetFrozen.offsetY - this.cellsTop;
+
+			var rFrozen = this.topLeftFrozenCell && this.topLeftFrozenCell.getRow0();
+			if (!rFrozen || arn.r1 > rFrozen) {
+				if (arn.r1 < vr.r1) {
+					scroll = this._rowDiffToSmooth(arn.r1, vr.r1, true) - this.getScrollCorrect() / this.getVScrollStep();
+					if (scroll && toCenter) {
+						scroll -= ((ctxH - this._getRowHeight(arn.r1))/2)/this.getVScrollStep();
+					}
+				} else if (arn.r1 >= vr.r2) {
+					this.nRowsCount = arn.r2 + 1;
+
+					this._prepareCellTextMetricsCache(new asc_Range(vr.c1, vr.r2, vr.c2, arn.r2 + 1));
+					this.nRowsCount = nRowsCount;
+					scroll = -this._rowDiffToSmooth(vr.r1, arn.r1, true) - this.getScrollCorrect() / this.getVScrollStep();
+
+					if (scroll && toCenter) {
+						scroll -= (ctxH/2 - this._getRowHeight(arn.r1)/2)/this.getVScrollStep();
+					}
+				}
+			}
 		}
 		if (scroll) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollVertical;
@@ -12837,16 +12863,40 @@
 		}
 
 		scroll = 0;
-		if (arn.c1 < vr.c1) {
-			scroll = this._colDiffToSmooth(arn.c1, vr.c1);
-		} else if (arn.c1 >= vr.c2) {
-			this.setColsCount(arn.c2 + 1 + 1);
-			scroll = this.getHorizontalScrollRange();
-			if (scroll > this._colToSmooth(arn.c1)) {
-				scroll = this._colToSmooth(arn.c1);
+		if (!this.workbook.getSmoothScrolling() && !(this.workbook.SearchEngine && this.workbook.SearchEngine.changingSelection)) {
+			if (arn.c1 < vr.c1) {
+				scroll = this._colDiffToSmooth(arn.c1, vr.c1);
+			} else if (arn.c1 >= vr.c2) {
+				this.setColsCount(arn.c2 + 1 + 1);
+				scroll = this.getHorizontalScrollRange();
+				if (scroll > this._colToSmooth(arn.c1)) {
+					scroll = this._colToSmooth(arn.c1);
+				}
+				scroll -= this._colDiffToSmooth(vr.c1, (this.topLeftFrozenCell ? this.topLeftFrozenCell.getCol0() : 0));
+				this.setColsCount(nColsCount);
 			}
-			scroll -= this._colDiffToSmooth(vr.c1, (this.topLeftFrozenCell ? this.topLeftFrozenCell.getCol0() : 0));
-			this.setColsCount(nColsCount);
+		} else {
+			let toCenter = true;
+			let offsetFrozen = this.getFrozenPaneOffset(false, true);
+			let ctxW = this.drawingCtx.getWidth() - offsetFrozen.offsetX - this.cellsLeft;
+
+			var cFrozen = this.topLeftFrozenCell && this.topLeftFrozenCell.getCol0();
+			if (!cFrozen || arn.c1 > cFrozen) {
+				if (arn.c1 < vr.c1) {
+					scroll = this._colDiffToSmooth(arn.c1, vr.c1, true) - this.getHorizontalScrollCorrect() / this.getHScrollStep();
+					if (scroll && toCenter) {
+						scroll -= ((ctxW - this._getColumnWidth(arn.c1))/2)/this.getHScrollStep();
+					}
+				} else if (arn.c1 >= vr.c2) {
+					this.setColsCount(arn.c2 + 1 + 1);
+					this.setColsCount(nColsCount);
+					scroll = -this._colDiffToSmooth(vr.c1, arn.c1, true) - this.getHorizontalScrollCorrect() / this.getHScrollStep();
+
+					if (scroll && toCenter) {
+						scroll -= (ctxW/2 - this._getColumnWidth(arn.c1)/2)/this.getHScrollStep();
+					}
+				}
+			}
 		}
 		if (scroll) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollHorizontal;
@@ -13257,7 +13307,7 @@
 		return offset;
 	};
 
-	WorksheetView.prototype._colDiffToSmooth = function (from, to) {
+	WorksheetView.prototype._colDiffToSmooth = function (from, to, skipScrollCorrect) {
 		if (!this.workbook.getSmoothScrolling()) {
 			return from - to;
 		}
@@ -13267,22 +13317,9 @@
 		let colsWidth = x1 - x2;
 		let unitDeltaStep = this.getHScrollStep();
 		let res = colsWidth / unitDeltaStep;
-		res = res < 0 ? res - this.getHorizontalScrollCorrect() / unitDeltaStep : res + this.getHorizontalScrollCorrect() / unitDeltaStep;
-
-		return res;
-	};
-
-	WorksheetView.prototype._rowDiffToSmooth = function (from, to) {
-		if (!this.workbook.getSmoothScrolling()) {
-			return from - to;
+		if (!skipScrollCorrect) {
+			res = res < 0 ? res - this.getHorizontalScrollCorrect() / unitDeltaStep : res + this.getHorizontalScrollCorrect() / unitDeltaStep;
 		}
-
-		let y1 = this.getCellTop(from);
-		let y2 = this.getCellTop(to);
-		let rowsHeight = y1 - y2;
-		let unitDeltaStep = this.getVScrollStep();
-		let res = rowsHeight / unitDeltaStep;
-		res = res < 0 ? res - this.getScrollCorrect() / unitDeltaStep : res + this.getScrollCorrect() / unitDeltaStep;
 
 		return res;
 	};
@@ -13297,7 +13334,7 @@
 		return x1 / unitDeltaStep;
 	};
 
-	WorksheetView.prototype._rowDiffToSmooth = function (from, to) {
+	WorksheetView.prototype._rowDiffToSmooth = function (from, to, skipScrollCorrect) {
 		if (!this.workbook.getSmoothScrolling()) {
 			return from - to;
 		}
@@ -13307,7 +13344,9 @@
 		let rowsHeight = y1 - y2;
 		let unitDeltaStep = this.getVScrollStep();
 		let res = rowsHeight / unitDeltaStep;
-		res = res < 0 ? res - this.getScrollCorrect() / unitDeltaStep : res + this.getScrollCorrect() / unitDeltaStep;
+		if (!skipScrollCorrect) {
+			res = res < 0 ? res - this.getScrollCorrect() / unitDeltaStep : res + this.getScrollCorrect() / unitDeltaStep;
+		}
 
 		return res;
 	};
