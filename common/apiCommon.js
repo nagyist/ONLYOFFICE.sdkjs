@@ -1873,6 +1873,9 @@ function (window, undefined) {
 	CColor.prototype.fromAscColor = function (oAscColor) {
 		return new CColor(oAscColor.r, oAscColor.g, oAscColor.b);
 	};
+	CColor.prototype.isEqual = function (r, g, b, a) {
+		return this.r === r && this.g === g && this.b === b && this.a === a;
+	};
 
 	/** @constructor */
 	function asc_CColor() {
