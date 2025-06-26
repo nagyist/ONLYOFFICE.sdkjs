@@ -49,7 +49,7 @@
 		this.isLocalDesktop = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]();
 		this.fCallback = fCallback;
 
-		this._props = null;
+		this.props = null;
 	}
 
 	CExternalDataLoader.prototype.updateExternalData = function () {
@@ -75,7 +75,7 @@
 			//check updated file on server. compare keys. if file not updated - check only collaborative editing
 			let curEr = oThis.externalReferences[i].externalReference;
 			let curErKey = curEr.getKey();
-			oData.notChangedFile = sKey === curEr.getKey() && !(oThis.props && oThis.props.forceUpdate);
+			oData.notChangedFile = sKey === curErKey && !(oThis.props && oThis.props.forceUpdate);
 			if (curErKey == null) {
 				curEr.setKey(sKey);
 			}
@@ -100,12 +100,12 @@
 					//url - file link
 
 					if (!bTimeout && (oResult["code"] === AscCommon.c_oAscServerCommandErrors.NoError ||
-						(oThis.props && oThis.props.forceUpdate && oResult["code"] === AscCommon.c_oAscServerCommandErrors.NotModified && oResult["url"]))) {
-						arrData[i]["directUrl"] = oResult["url"];
-						arrData[i]["url"] = oResult["url"];
-						arrData[i]["fileType"] = "xlsx";
-						arrData[i]["token"] = null;
-						arrData[i].notChangedFile = false;
+						(!oData.notChangedFile && oResult["code"] === AscCommon.c_oAscServerCommandErrors.NotModified && oResult["url"]))) {
+						oData["directUrl"] = oResult["url"];
+						oData["url"] = oResult["url"];
+						oData["fileType"] = "xlsx";
+						oData["token"] = null;
+						oData.notChangedFile = false;
 					}
 					fResolve();
 				});

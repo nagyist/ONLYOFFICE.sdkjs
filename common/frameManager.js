@@ -862,6 +862,7 @@
 	CFrameDiagramBinaryLoader.prototype.loadExternal = function ()
 	{
 		const oExternalDataChartManager = new AscCommon.CExternalDataLoader([this.getAscLink()], this.api, this.resolveFromArray.bind(this));
+		oExternalDataChartManager.props = {forceUpdate: true};
 		oExternalDataChartManager.updateExternalData();
 	}
 	CFrameDiagramBinaryLoader.prototype.resolve = function ()

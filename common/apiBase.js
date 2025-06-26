@@ -5709,6 +5709,9 @@
 
 	baseEditorsApi.prototype.initBroadcastChannelListeners = function() {
 	};
+	baseEditorsApi.prototype.asc_getUpdateLinks = function() {
+		return false;
+	};
 
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
@@ -5796,6 +5799,7 @@
 	prot['asc_onMediaPlayerEvent'] = prot.asc_onMediaPlayerEvent;
 	prot['asc_hideMediaControl'] = prot.asc_hideMediaControl;
 	prot['asc_getInputLanguage'] = prot.asc_getInputLanguage;
+	prot['asc_getUpdateLinks'] = prot.asc_getUpdateLinks;
 
 	prot['setPluginsOptions'] = prot.setPluginsOptions;
 	prot['asc_pluginButtonDockChanged'] = prot.asc_pluginButtonDockChanged;
