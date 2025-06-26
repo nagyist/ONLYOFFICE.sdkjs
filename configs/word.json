@@ -15,7 +15,9 @@
 			"vendor/string.js",
 			"vendor/array.js",
 			"common/editorscommon.js",
-            "common/BulletPreviewDrawer.js",
+			"common/externalChartCollector.js",
+			"common/frameManager.js",
+			"common/BulletPreviewDrawer.js",
 			"common/HistoryCommon.js",
 			"common/TableId.js",
 			"common/TableIdChanges.js",
@@ -151,6 +153,7 @@
 			"common/wordcopypaste.js",
 			"common/intervalTree.js",
 
+			"cell/model/FormulaObjects/parserFormula.js",
 			"cell/model/SheetMemory.js",
 			"cell/model/WorkbookElems.js",
 			"cell/model/Workbook.js",

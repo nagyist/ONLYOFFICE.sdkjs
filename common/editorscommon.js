@@ -3792,6 +3792,15 @@
 		}
 		return false;
 	};
+	parserHelper.prototype.isDefName = function(formula, start_pos) {
+		var _isArea = this.isArea(formula, start_pos);
+		var _isRef = !_isArea && this.isRef(formula, start_pos);
+		var _isName = !_isRef && !_isArea && this.isName(formula, start_pos);
+		if (_isName) {
+			return {defname: this.operand_str};
+		}
+		return false;
+	};
 	parserHelper.prototype.isName3D = function (formula, start_pos)
 	{
 		if (this instanceof parserHelper)
@@ -3800,12 +3809,17 @@
 		}
 
 		var _is3DRef = this.is3DRef(formula, start_pos);
-		if(_is3DRef && _is3DRef[0] && _is3DRef[1] && _is3DRef[1].length)
+		if(_is3DRef && _is3DRef[0])
 		{
-			var _startPos = this.pCurrPos;
-			var _isArea = this.isArea(formula, _startPos);
-			var _isRef = !_isArea && this.isRef(formula, _startPos);
-			return !_isRef && !_isArea && this.isName(formula, _startPos);
+			let _isName = false;
+			if (_is3DRef[1] && _is3DRef[1].length) {
+				_isName = this.isDefName(formula, this.pCurrPos);
+			} else {
+				_isName = _is3DRef[4];
+			}
+			if (_isName) {
+				return {defName: _isName.defname, sheet: _is3DRef[1], external: _is3DRef[3]};
+			}
 		}
 
 		return false;
@@ -4018,7 +4032,7 @@
 			if (this.isArea(formula, indexStartRange) || this.isRef(formula, indexStartRange))
 			{
 				if (this.operand_str.length == formula.substring(indexStartRange).length)
-					return {sheet: sheetName, sheet2: is3DRefResult[2], range: this.operand_str};
+					return {sheet: sheetName, sheet2: is3DRefResult[2], range: this.operand_str, external: is3DRefResult[3]};
 				else
 					return null;
 			}
@@ -12257,7 +12271,7 @@
         this.isChangesHandled = false;
 
         this.cryptoMode = 0; // start crypto mode
-		this.isChartEditor = false;
+		this.isFrameEditor = false;
 
         this.isExistDecryptedChanges = false; // был ли хоть один запрос на расшифровку данных (были ли чужие изменения)
 
@@ -12291,7 +12305,7 @@
             if (!window["AscDesktopEditor"])
                 return false;
 
-            if (this.isChartEditor)
+            if (this.isFrameEditor)
             	return false;
 
             if (2 == this.cryptoMode)

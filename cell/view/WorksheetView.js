@@ -148,7 +148,33 @@
 	var nMaxPrintRows = 150000;
 
 
+function isAllowPasteLink(pastedWb) {
+	var api = window["Asc"]["editor"];
+	let _core = pastedWb && pastedWb.Core;
+	if (!api || !_core) {
+		return false;
+	}
 
+	//for portals:
+	//wb.Core.contentStatus -> DocInfo.ReferenceData.fileKey
+	//wb.Core.category -> DocInfo.ReferenceData.instanceId
+
+	//for desktops:
+	//contentStatus -> filePath
+
+	if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
+		let pasteProcessor = AscCommonExcel.g_clipboardExcel && AscCommonExcel.g_clipboardExcel.pasteProcessor;
+		let sameDoc = pasteProcessor && pasteProcessor._checkPastedInOriginalDoc(pastedWb, true);
+		return sameDoc || (_core.contentStatus && !_core.category && window["AscDesktopEditor"]["LocalFileGetSaved"]());
+	}
+	if (_core.contentStatus && _core.category) {
+		//работаем внутри одного портала
+		//если разные документу, то вставляем ссылку на другой документ, если один и тот же, то вставляем обычную ссылку
+		return api.DocInfo && api.DocInfo.ReferenceData && _core.category === api.DocInfo.ReferenceData["instanceId"];
+	}
+
+	return false;
+}
     function getMergeType(merged) {
 		var res = c_oAscMergeType.none;
 		if (null !== merged) {
@@ -827,7 +853,7 @@
 			let oDrawingsController = this.objectRender.controller;
 			oChartSpace = oDrawingsController._getChartSpace([], {type: nType}, false);
 			oChartSpace.buildSeries(aSeriesRef);
-			let oProps = Asc.editor.asc_getChartObject(true);
+			let oProps = Asc.editor.asc_getChartSettings(true);
 			oProps.chartSpace = null;
 			oProps.removeAllAxesProps();
 			oProps.putType(nType);
@@ -2268,7 +2294,7 @@
 
 			if (!breakExec){
 				arCopy = ar.clone(true);
-	
+
 				if (false === hasNumberInLastColumn && false === hasNumberInLastRow) {
 					// Значений нет ни в последней строке ни в последнем столбце (значит нужно сделать формулы в каждой последней ячейке)
 					changedRange =
@@ -2373,10 +2399,10 @@
 						};
 					}
 				}
-	
+
 				// Можно ли применять автоформулу
 				this._isLockedCells(changedRange, /*subType*/null, onAutoCompleteFormula);
-	
+
 				result.notEditCell = true;
 				return result;
 			}
@@ -2465,7 +2491,7 @@
             // We have gone a little further
             ++c;
 
-			// If we have one line or column in the selection and we found not empty cells to the left or on top, 
+			// If we have one line or column in the selection and we found not empty cells to the left or on top,
 			// then we need to add the formula with the result for the entire selection with a shift for each cell
 			// if we select only one cell, we must only get the formula for editing without writing in the cell
 			if (!isSingleCellSelection && !merged && isSingleRowColSelection) {
@@ -2554,7 +2580,7 @@
 				};
 
 				this._isLockedCells(changedRange, /*subType*/null, onAutoCompleteFormula);
-				
+
 				result.notEditCell = true;
 				return result;
 			}
@@ -3677,7 +3703,7 @@
 			if (hiddenRow || 0 === self._getColumnWidth(col)) {
 				return;
 			}
-			
+
 			if (!c.isEmptyTextString()) {
 				maxCol = Math.max(maxCol, col);
 				maxRow = Math.max(maxRow, row);
@@ -18771,8 +18797,8 @@
 			// todo add backlight when choosing Ref/Range
 			if (newFP.parse(AscCommonExcel.oFormulaLocaleInfo.Parse, AscCommonExcel.oFormulaLocaleInfo.DigitSep, parseResult)
 				|| !(parseResult.error !== c_oAscError.ID.FrmlParenthesesCorrectCount)) {
-				if ((newFP.outStack.length === 1 && newFP.outStack[0].type === AscCommonExcel.cElementType.number) 
-					|| (newFP.outStack.length === 2 && newFP.outStack[0].type === AscCommonExcel.cElementType.number && 
+				if ((newFP.outStack.length === 1 && newFP.outStack[0].type === AscCommonExcel.cElementType.number)
+					|| (newFP.outStack.length === 2 && newFP.outStack[0].type === AscCommonExcel.cElementType.number &&
 						newFP.outStack[1].type === AscCommonExcel.cElementType.operator && newFP.outStack[1].name === "un_minus")) {
 					isFormulaFromVal = false;
 					isFormula = false;
@@ -27515,7 +27541,7 @@
 			oController.removeAllInks(arrInks);
 		}
 	};
-	
+
 
 
 	function CRenderingSettings() {
@@ -28137,34 +28163,6 @@
 				}
 				return _res;
 			};
-			var isAllowPasteLink = function () {
-				var _res = false;
-				var api = window["Asc"]["editor"];
-
-				//for portals:
-				//wb.Core.contentStatus -> DocInfo.ReferenceData.fileKey
-				//wb.Core.category -> DocInfo.ReferenceData.instanceId
-
-				//for desktops:
-				//contentStatus -> filePath
-
-				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
-					let _core = pasteInfo.wb.Core;
-					let pasteProcessor = AscCommonExcel.g_clipboardExcel && AscCommonExcel.g_clipboardExcel.pasteProcessor;
-					let sameDoc = pasteProcessor && pasteProcessor._checkPastedInOriginalDoc(pasteInfo.wb, true);
-					if (sameDoc || (_core.contentStatus && !_core.category && window["AscDesktopEditor"]["LocalFileGetSaved"]())) {
-						_res = true;
-					}
-				} else if (pasteInfo.wb && pasteInfo.wb.Core && pasteInfo.wb.Core.contentStatus && pasteInfo.wb.Core.category) {
-					//работаем внутри одного портала
-					//если разные документу, то вставляем ссылку на другой документ, если один и тот же, то вставляем обычную ссылку
-					if (api.DocInfo && api.DocInfo.ReferenceData && pasteInfo.wb.Core.category === api.DocInfo.ReferenceData["instanceId"]) {
-						_res = true;
-					}
-				}
-
-				return _res;
-			};
 
 			if (!(pasteInfo && pasteInfo.originalSelectBeforePaste && pasteInfo.originalSelectBeforePaste.ranges && pasteInfo.originalSelectBeforePaste.ranges.length === 1) && ws.isMultiSelect()) {
 				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
@@ -28181,7 +28179,7 @@
 							sProps.valueNumberFormat, sProps.valueAllFormating, sProps.pasteOnlyFormating, sProps.comments,
 							sProps.columnWidth];
 
-					if (isAllowPasteLink()) {
+					if (isAllowPasteLink(pasteInfo.wb)) {
 						allowedSpecialPasteProps.push(sProps.link);
 					}
 					if (!isTablePasted) {
@@ -28837,7 +28835,7 @@
 
 		var _getPasteLinkIndex = function () {
 			var pastedWb = val.workbook;
-			var linkInfo = t.getPastedLinkInfo(pastedWb);
+			var linkInfo = t.getPastedLinkInfo(pastedWb, pastedWb && pastedWb.aWorksheets[0]);
 			pasteLinkIndex = null;
 			if (linkInfo) {
 				if (linkInfo.type === -1) {
@@ -29700,7 +29698,7 @@
 		}
 	};
 
-	CCellPasteHelper.prototype.getPastedLinkInfo = function (pastedWb) {
+	CCellPasteHelper.prototype.getPastedLinkInfo = function (pastedWb, pastedWs) {
 		//0 - вставляем в эту же книгу и в этот же лист
 		//1 - вставляем в эту же книгу и на другой лист
 		//-1 - вставляем в другую книгу и сслыка на неё уже есть
@@ -29719,10 +29717,10 @@
 
 			//TODO обработать: при вставке из одного и того же документа(открытого разными юзерами) с листа, который ещё не был добавлен другим юзером в режиме строго совместного редактирования
 			let sameDoc = AscCommonExcel.g_clipboardExcel && AscCommonExcel.g_clipboardExcel.pasteProcessor && AscCommonExcel.g_clipboardExcel.pasteProcessor._checkPastedInOriginalDoc(pastedWb, true);
-			let sameSheet = sameDoc && pastedWb.aWorksheets[0].sName === ws.model.sName;
+			let sameSheet = sameDoc && pastedWs.sName === ws.model.sName;
 			let externalSheetSameWb;
 			if (!sameSheet && sameDoc) {
-				let sName = pastedWb.aWorksheets[0].sName;
+				let sName = pastedWs.sName;
 				for (let i = 0; i < ws.model.workbook.aWorksheets.length; i++) {
 					if (ws.model.workbook.aWorksheets[i].sName === sName) {
 						externalSheetSameWb = sName;
@@ -29772,7 +29770,7 @@
 				} else {
 					type = -1;
 					index = externalReferenceIndex;
-					sheet = pastedWb.aWorksheets[0].sName;
+					sheet = pastedWs.sName;
 				}
 			}
 		}
@@ -29799,7 +29797,8 @@
 
 		//отдельный лок для этого не делаю, а лочу всё перед вставкой новой ссылки
 		if (specialPasteProps && specialPasteProps.property === Asc.c_oSpecialPasteProps.link) {
-			var linkInfo = this.getPastedLinkInfo(pasteContent.workbook);
+			const workbook = pasteContent.workbook;
+			var linkInfo = this.getPastedLinkInfo(workbook, workbook && workbook.aWorksheets[0]);
 			if (linkInfo && linkInfo.type === -2) {
 				return true;
 			}
@@ -30070,5 +30069,6 @@
 
 	window['AscCommonExcel'].getPivotButtonsForLoad = getPivotButtonsForLoad;
 	window['AscCommonExcel'].buildRelativePath = buildRelativePath;
+	window['AscCommonExcel'].isAllowPasteLink = isAllowPasteLink;
 
 })(window);
