@@ -534,17 +534,9 @@ function (window, undefined) {
 		let startAngle = Math.atan2(y0 - cy, x0 - cx) * radToDeg;
 		let endAngle = Math.atan2(y - cy, x - cx) * radToDeg;
 
-		ctrlAngle = ctrlAngle === -0 ? 0 : ctrlAngle;
-		startAngle = startAngle === -0 ? 0 : startAngle;
-		endAngle = endAngle === -0 ? 0 : endAngle;
-
 		let sweep = computeSweep(startAngle, endAngle, ctrlAngle);
 
 		let ellipseRotationAngle = c * radToDeg;
-		ellipseRotationAngle = ellipseRotationAngle === -0 ? 0 : ellipseRotationAngle;
-		ellipseRotationAngle = ellipseRotationAngle === 360 ? 0 : ellipseRotationAngle;
-
-		// TODO check results consider sweep sign is important: clockwise or anti-clockwise
 
 		// let mirrorVertically = false;
 		// if (mirrorVertically) {
@@ -780,6 +772,14 @@ function (window, undefined) {
 					// d is fraction
 					d = Number(cmd.d, 10);
 
+					// normalize angle (The values are given in degrees)
+					// 360 * n —-> ~0
+					// 270 --> 	-90
+					// -290 -> 	70
+					// -570 ->	150
+					// -286.47888333333333 —-> 73.52111666666667
+					// -572.9577833333333 —-> 147.04221666666672
+					// so c in degrees is from -180 to 180
 					c = Math.atan2(ch * Math.sin(c * cToRad), cw * Math.cos(c * cToRad)) / cToRad;
 
 					let cRadians = c * cToRad2;
