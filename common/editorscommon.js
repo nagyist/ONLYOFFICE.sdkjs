@@ -15041,6 +15041,18 @@
 		return str;
 	}
 
+	function getCharStrongDir(char) {
+		let type = AscBidi.getType(char);
+		if (type & AscBidi.FLAG.STRONG) {
+			if (type & AscBidi.FLAG.RTL) {
+				return AscBidi.TYPE.R;
+			} else {
+				return AscBidi.TYPE.L;
+			}
+		}
+		return null;
+	}
+
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
 	window["AscCommon"].consoleLog = consoleLog;
@@ -15106,6 +15118,7 @@
 	window["AscCommon"].getLTRString = getLTRString;
 	window["AscCommon"].getRTLString = getRTLString;
 	window["AscCommon"].stripDirectionMarks = stripDirectionMarks;
+	window["AscCommon"].getCharStrongDir = getCharStrongDir;
 
 	window["AscCommon"].DocumentUrls = DocumentUrls;
 	window["AscCommon"].OpenFileResult = OpenFileResult;
