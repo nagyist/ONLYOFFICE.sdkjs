@@ -806,7 +806,7 @@ function (window, undefined) {
 					// 	this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 					// 	this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
 					// }
-					if (triangleSquare === 0) {
+					if (triangleSquare === 0 || newParams.swAng === 0) {
 						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
 						this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 						this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
