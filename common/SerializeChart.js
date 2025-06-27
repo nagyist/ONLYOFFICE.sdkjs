@@ -4849,7 +4849,7 @@ BinaryChartWriter.prototype.WriteCT_ScatterSer = function (oVal) {
         });
     }
 	for (let nIdx = 0; nIdx < oVal.errBars.length; ++nIdx) {
-		this.bs.WriteItem(c_oserct_bubbleserERRBARS, function () {
+		this.bs.WriteItem(c_oserct_scatterserERRBARS, function () {
 			oThis.WriteCT_ErrBars(oVal.errBars[nIdx]);
 		});
 	}
@@ -5165,7 +5165,7 @@ BinaryChartWriter.prototype.WriteCT_LineSer = function (oVal) {
         });
     }
 	for (let nIdx = 0; nIdx < oVal.errBars.length; ++nIdx) {
-		this.bs.WriteItem(c_oserct_bubbleserERRBARS, function () {
+		this.bs.WriteItem(c_oserct_lineserERRBARS, function () {
 			oThis.WriteCT_ErrBars(oVal.errBars[nIdx]);
 		});
 	}
@@ -5472,7 +5472,7 @@ BinaryChartWriter.prototype.WriteCT_AreaSer = function (oVal) {
     }
 
 	for (let nIdx = 0; nIdx < oVal.errBars.length; ++nIdx) {
-		this.bs.WriteItem(c_oserct_bubbleserERRBARS, function () {
+		this.bs.WriteItem(c_oserct_areaserERRBARS, function () {
 			oThis.WriteCT_ErrBars(oVal.errBars[nIdx]);
 		});
 	}
@@ -11545,7 +11545,11 @@ BinaryChartReader.prototype.ReadCT_BarSer = function (type, length, val) {
         res = this.bcr.Read1(length, function (t, l) {
             return oThis.ReadCT_Trendline(t, l, oNewVal);
         });
-        val.setTrendline(oNewVal);
+		let tlType = oNewVal.trendlineType;
+		let isAllowedType = (tlType !== TRENDLINE_TYPE_EXP && tlType !== TRENDLINE_TYPE_POLY)
+		if (isAllowedType) {
+			val.setTrendline(oNewVal);
+		}
     }
     else if (c_oserct_barserERRBARS === type) {
         var oNewVal = new AscFormat.CErrBars();

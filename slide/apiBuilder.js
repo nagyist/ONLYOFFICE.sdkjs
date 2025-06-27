@@ -1153,7 +1153,8 @@
 	 * Returns the current visible slide.
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiPresentation
-	 * @returns {ApiSlide | null} - returns null if the current slide is not found or not visible.
+	 * @returns {ApiSlide | null} - Returns null if the current slide is not found or not visible.
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCurrentVisibleSlide.js
 	 */
 	ApiPresentation.prototype.GetCurrentVisibleSlide = function () {
@@ -1504,6 +1505,7 @@
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiOleObject[]}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllOleObjects.js
 	 */
 	ApiPresentation.prototype.GetAllOleObjects = function () {
@@ -1527,6 +1529,7 @@
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiChart[]}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllCharts.js
 	 */
 	ApiPresentation.prototype.GetAllCharts = function () {
@@ -1538,6 +1541,7 @@
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiShape[]}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllShapes.js
 	 */
 	ApiPresentation.prototype.GetAllShapes = function () {
@@ -1549,6 +1553,7 @@
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
 	 * @returns {ApiImage[]}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllImages.js
 	 */
 	ApiPresentation.prototype.GetAllImages = function () {
@@ -1560,6 +1565,7 @@
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
 	 * @returns {Drawing[]}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllDrawings.js
 	 */
 	ApiPresentation.prototype.GetAllDrawings = function () {
@@ -1652,11 +1658,11 @@
 
 	/**
 	 * Returns the core properties interface for the current presentation.
-	 * Use this to view or modify standard metadata such as title, author, and keywords.
-	 *
+	 * This method is used to view or modify standard metadata such as title, author, and keywords.
 	 * @memberof ApiPresentation
 	 * @returns {ApiCore}
 	 * @typeofeditors ["CPE"]
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCore.js
 	 */
 	ApiPresentation.prototype.GetCore = function () {
@@ -1664,11 +1670,11 @@
 	};
 
 	/**
-	 * Returns the custom properties of the presentation.
-	 *
+	 * Returns the custom properties from the current presentation.
 	 * @memberof ApiPresentation
 	 * @returns {ApiCustomProperties}
 	 * @typeofeditors ["CPE"]
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCustomProperties.js
 	 */
 	ApiPresentation.prototype.GetCustomProperties = function () {
@@ -1676,7 +1682,7 @@
 	};
 
 	/**
-	* Adds a math equation to the current document.
+	* Adds a math equation to the current presentation.
 	* @memberof ApiPresentation
 	* @typeofeditors ["CPE"]
 	* @param {string} sText - The math equation text.
@@ -1791,9 +1797,10 @@
     };
 
 	/**
-	 * Returns all layouts from the slide master
+	 * Returns all layouts from the slide master.
 	 * @typeofeditors ["CPE"]
-	 * @returns {ApiLayout[]} - returns an empty array if the slide master doesn't have layouts.
+	 * @returns {ApiLayout[]} - Returns an empty array if the slide master doesn't have layouts.
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetAllLayouts.js
 	 */
 	ApiMaster.prototype.GetAllLayouts = function () {
@@ -3246,9 +3253,9 @@
 	 *
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiSlide
-	 * @param {string} text - The text of the comment (required).
-	 * @param {string} author - The author of the comment (optional, defaults to the current user name).
-	 * @param {string} userId - The user ID of the comment author (optional, defaults to the current user ID).
+	 * @param {string} text - The comment text.
+	 * @param {string} [author] - The author's name (defaults to the current user name).
+	 * @param {string} [userId] - The user ID of the comment author (defaults to the current user ID).
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/AddComment.js
 	 */
@@ -3891,10 +3898,11 @@
     };
 
 	/**
-	 * Returns the notes page of the slide.
+	 * Returns the notes page from the current slide.
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiSlide
 	 * @returns {ApiNotesPage | null}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GetNotesPage.js
 	  */
 	ApiSlide.prototype.GetNotesPage = function () {
@@ -3905,11 +3913,12 @@
 	};
 
 	/**
-	 * Adds text to the notes page of the slide.
+	 * Adds a text to the notes page of the current slide.
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiSlide
 	 * @param {string} sText - The text to be added to the notes page.
 	 * @returns {boolean} - Returns true if text was added successfully, otherwise false.
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/AddNotesText.js
 	 */
 	ApiSlide.prototype.AddNotesText = function (sText) {
@@ -3953,6 +3962,7 @@
 	 *
 	 * @typeofeditors ["CPE"]
 	 * @returns {"notesPage"}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiNotesPage/Methods/GetClassType.js
 	 */
 	ApiNotesPage.prototype.GetClassType = function () {
@@ -3960,10 +3970,11 @@
 	};
 
 	/**
-	 * Returns the shape with attribute type="body" from the current notes page
+	 * Returns a shape with the type="body" attribute from the current notes page.
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiNotesPage
 	 * @returns {ApiShape | null}
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiNotesPage/Methods/GetBodyShape.js
 	 */
 	ApiNotesPage.prototype.GetBodyShape = function () {
@@ -3980,11 +3991,12 @@
 	};
 
 	/**
-	 * Adds text to the body shape of the current notes page.
+	 * Adds a text to the body shape of the current notes page.
 	 * @typeofeditors ["CPE"]
 	 * @memberof ApiNotesPage
 	 * @param {string} sText - The text to be added to the body shape.
 	 * @returns {boolean} - Returns true if text was added successfully, otherwise false.
+     * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiNotesPage/Methods/AddBodyShapeText.js
 	 */
 	ApiNotesPage.prototype.AddBodyShapeText = function (sText) {
@@ -4366,9 +4378,10 @@
     /**
      * Sets the rotation angle to the current drawing object.
      * @memberof ApiDrawing
-     * @param {number} nRotAngle - new drawing rot angle
+     * @param {number} nRotAngle - New drawing rotation angle.
      * @typeofeditors ["CPE"]
      * @returns {boolean}
+     * @since 9.0.0
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetRotation.js
 	 */
 	ApiDrawing.prototype.SetRotation = function(nRotAngle)
@@ -4383,10 +4396,11 @@
 		return true;
 	};
 	/**
-     * Gets the rotation angle of the current drawing object.
+     * Returns the rotation angle of the current drawing object.
      * @memberof ApiDrawing
      * @typeofeditors ["CPE"]
      * @returns {number}
+     * @since 9.0.0
      * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetRotation.js
 	 */
 	ApiDrawing.prototype.GetRotation = function()

@@ -7361,6 +7361,10 @@
 	CExternalSelectionController.prototype.init = function() {
 		let oThis = this;
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		if (this.supportVisibilityChangeOption) {
 			document.addEventListener && document.addEventListener("visibilitychange", function() {
 				if (document.hidden === false) {
@@ -7428,6 +7432,10 @@
 			return;
 		}
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		let oThis = this;
 		let editorEnterOptions = new AscCommonExcel.CEditorEnterOptions();
 		editorEnterOptions.newText = "=" + (oThis.activeTabFormula ? oThis.activeTabFormula.range : "");
@@ -7459,6 +7467,10 @@
 			return;
 		}
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		this.setActiveTabFormula(data);
 
 		if (!this.wb.isCellEditMode || this.wb.isWizardMode) {
@@ -7486,6 +7498,9 @@
 	 * @param {Object} data - Formula mode parameters including isClose flag and document ID
 	 */
 	CExternalSelectionController.prototype.onExternalSetFormulaMode = function(data) {
+		if (!this._checkDesktop()) {
+			return;
+		}
 		const isExternalFormulaEditMode = this.getExternalFormulaEditMode();
 		this.setExternalFormulaEditMode(!data.isClose ? {id: data.id} : null);
 
@@ -7504,12 +7519,16 @@
 		if (this.lockSendChangeSelection) {
 			return;
 		}
+		if (!this._checkDesktop()) {
+			return;
+		}
 
 		const ws = this.wb.model.getActiveWs();
 		if (!this.wb.isFormulaEditMode || !this.wb.isCellEditMode || !this.wb.cellEditor) {
 			return;
 		}
 
+		let isDesktopSavedFile = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]() &&  window["AscDesktopEditor"]["LocalFileGetSaved"]();
 		let data = {
 			type: "ExternalChangeSelection",
 			id: this.wb.Api.DocInfo.Id,
@@ -7520,7 +7539,8 @@
 			selectionEnd: this.wb.cellEditor.selectionEnd,
 			lastRangePos: this.wb.cellEditor.lastRangePos,
 			lastRangeLength: this.wb.cellEditor.lastRangeLength,
-			cursorPos: this.wb.cellEditor.cursorPos
+			cursorPos: this.wb.cellEditor.cursorPos,
+			path: isDesktopSavedFile ? window["AscDesktopEditor"]["LocalFileGetSourcePath"]() : null
 		};
 
 		this.setSelfActiveTabFormula(data);
@@ -7533,6 +7553,9 @@
 	 */
 	CExternalSelectionController.prototype.sendExternalCloseEditor = function(saveValue) {
 		if (this.dontSendChangeEditMode) {
+			return;
+		}
+		if (!this._checkDesktop()) {
 			return;
 		}
 
@@ -7562,6 +7585,9 @@
 		if (this.dontSendChangeEditMode) {
 			return;
 		}
+		if (!this._checkDesktop()) {
+			return;
+		}
 
 		if (!this.getExternalFormulaEditMode()) {
 			this.sendExternalEvent({
@@ -7576,6 +7602,9 @@
 	 * @param {Object} data - Event data to send
 	 */
 	CExternalSelectionController.prototype.sendExternalEvent = function(data) {
+		if (!this._checkDesktop()) {
+			return;
+		}
 		if (this.wb.Api && this.wb.Api.broadcastChannel) {
 			this.wb.Api.broadcastChannel.postMessage(data);
 		}
@@ -7611,6 +7640,10 @@
 	 */
 	CExternalSelectionController.prototype.getExternalFormulaEditMode = function() {
 		return this.externalFormulaEditMode;
+	};
+
+	CExternalSelectionController.prototype._checkDesktop = function() {
+		return !window["AscDesktopEditor"] || (window["AscDesktopEditor"]["IsLocalFile"]() && window["AscDesktopEditor"]["LocalFileGetSaved"]());
 	};
 
 	/**
