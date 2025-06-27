@@ -837,7 +837,9 @@ function (window, undefined) {
 					// 	this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 					// 	this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
 					// }
-					if (triangleSquare === 0 || newParams.swAng === 0) {
+
+					// for swAng approxEqual bug see file 2 Different view Ellipse
+					if (triangleSquare === 0 || AscFormat.fApproxEqual(newParams.swAng, 0, 1e-7)) {
 						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
 						this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 						this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
