@@ -574,7 +574,7 @@ function (window, undefined) {
 	 * @param {number} cy
 	 * @returns {boolean}
 	 */
-	const COL_EPS_K = 16;
+	const COL_EPS_K = 16 * 1e10;
 	function isCollinear(ax, ay, bx, by, cx, cy) {
 		// Fast path: any two points coincide – degenerate triangle considered collinear
 		if ((ax === bx && ay === by) || (ax === cx && ay === cy) || (bx === cx && by === cy)) {
@@ -821,31 +821,43 @@ function (window, undefined) {
 						lastX = 0;
 					}
 
+					// change ellipticalArcTo params to draw arc using old params
 					let newParams = transformEllipticalArcParams(lastX, lastY, x, y, a, b, cRadians, d);
 
-					// check if it not ellipse arc in fact but line (three points on one line)
-					// if this case will not be caught there will be NaN in params and
-					// drawing will be unpredictable
-					// inaccuracy may be different
-					// (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By) ) / 2 - triangle square
+					// check if command arguments are wrong. Wrong arguments may refer to huge ellipse. It editor it can
+					// break scroll bars. So as visio does let's transform elliptical arc to line.
+					// see bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=75317
+					// files from 4 to 6 should not be caught
 
-					let triangleSquare = Math.abs(x * (b - lastY) + a * (lastY - y) + lastX * (y - b)) / 2;
-					// let isCollinear = isCollinear(lastX, lastY, a, b, x, y);
-					// let accuracy = 1e1;
-					// if (Math.round(triangleSquare * accuracy) === 0) {
-					// 	AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
-					// 	this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
-					// 	this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
-					// }
+					// ~0 swing angle refers to bad arguments. check it
+					// see files:
+					// 1 simple lines and ellipses.vsdx
+					// 2 swAng === 0 check  testFlatCurve Huge D.vsdx
+					// 3 swAng ~=0 testFlatCurve.vsdx
+					let swAngCheck = AscFormat.fApproxEqual(newParams.swAng, 0, 1e-7);
 
-					// for swAng approxEqual bug see file 2 Different view Ellipse
-					if (triangleSquare === 0 || AscFormat.fApproxEqual(newParams.swAng, 0, 1e-7)) {
-						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch. Triangle square:", triangleSquare);
+					// NaN in newParams refers to bad arguments.
+					// see files:
+					// 1 simple lines and ellipses.vsdx
+					// 7 triangleSquare === 0 cehck test Diagonal.vsdx
+					// 8 small square + NaN params in result, isCollinear cathces.vsdx
+					let isNaNInParams = isNaN(newParams.swAng) || isNaN(newParams.stAng) ||
+							isNaN(newParams.wR) || isNaN(newParams.hR) || isNaN(newParams.ellipseRotation);
+
+					// three points on one line refers to bad arguments
+					// see files:
+					// 1 simple lines and ellipses.vsdx
+					// 3 swAng ~=0 testFlatCurve.vsdx
+					// 7 triangleSquare === 0 cehck test Diagonal.vsdx
+					// 8 small square + NaN params in result, isCollinear cathces.vsdx
+					let isCollinearCheck = isCollinear(lastX, lastY, a, b, x, y);
+
+					if (swAngCheck || isNaNInParams || isCollinearCheck) {
+						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch.");
 						this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
 						this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
 					}
 					else {
-						// change ellipticalArcTo params to draw arc easy
 						this.ArrPathCommand.push({
 							id: ellipticalArcTo,
 							stX: lastX,
