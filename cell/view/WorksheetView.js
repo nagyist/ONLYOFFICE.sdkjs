@@ -553,6 +553,8 @@ function isAllowPasteLink(pastedWb) {
 		this.vScrollPxStep = null;
 		this.hScrollPxStep = null;
 
+		this._replaceCellTextManager = null;
+		
 		this._init();
 
 		return this;
@@ -18425,13 +18427,31 @@ function isAllowPasteLink(pastedWb) {
 		}
 
 		options.countReplace = 0;
-		if (options.isReplaceAll && false === this.collaborativeEditing.getCollaborativeEditing()) {
-			this._isLockedCells(aReplaceCells, /*subType*/null, function () {
-				t._replaceCellText(aReplaceCells, options, lockDraw, callback, true);
+
+		//lock all if large replaced range
+		let bCollaborativeEditing = this.collaborativeEditing.getCollaborativeEditing();
+		if (options.isReplaceAll && (false === bCollaborativeEditing || (this.workbook.SearchEngine && this.workbook.SearchEngine.checkMaxReplacedCells()))) {
+			let aReplaceCellsUnion = false === bCollaborativeEditing ? aReplaceCells : new AscCommonExcel.MultiplyRange(aReplaceCells).getUnionRanges();
+			this._isLockedCells(aReplaceCellsUnion, /*subType*/null, function (success) {
+				if (!success) {
+					callback && callback();
+					return;
+				}
+				t._replaceCellTextFast(aReplaceCells, options, lockDraw, callback, true);
 			});
 		} else {
 			this._replaceCellText(aReplaceCells, options, lockDraw, callback, false);
 		}
+	};
+
+	WorksheetView.prototype._replaceCellTextFast = function (aReplaceCells, options, lockDraw, callback, oneUser) {
+		// Use CReplaceCellTextManager for asynchronous text replacement processing
+		if (!this._replaceCellTextManager) {
+			this._replaceCellTextManager = new CReplaceCellTextManager();
+		}
+
+		// Start asynchronous processing using timer
+		this._replaceCellTextManager.Begin(this, aReplaceCells, options, lockDraw, callback, oneUser);
 	};
 
 	WorksheetView.prototype._replaceCellText = function (aReplaceCells, options, lockDraw, callback, oneUser) {
@@ -30061,6 +30081,114 @@ function isAllowPasteLink(pastedWb) {
 	};
 
 
+	/**
+	 * Class for asynchronous cell text replacement using timer
+	 * @constructor
+	 */
+	function CReplaceCellTextManager() {
+		AscCommon.CActionOnTimerBase.call(this);
+
+		this.ws = null;
+		this.replaceCells = [];
+		this.options = null;
+		this.lockDraw = false;
+		this.callback = null;
+		this.oneUser = false;
+		this.needLockCell = false;
+		this.isSC = false;
+
+		this.FirstActionOnTimer = true;
+		this.Index = 0;
+	}
+
+	CReplaceCellTextManager.prototype = Object.create(AscCommon.CActionOnTimerBase.prototype);
+	CReplaceCellTextManager.prototype.constructor = CReplaceCellTextManager;
+
+	CReplaceCellTextManager.prototype.OnBegin = function(ws, aReplaceCells, options, lockDraw, callback, oneUser) {
+		this.ws = ws;
+		this.replaceCells = aReplaceCells;
+		this.options = options;
+		this.lockDraw = lockDraw;
+		this.callback = callback;
+		this.oneUser = oneUser;
+		this.needLockCell = !oneUser;
+		this.isSC = options.isSpellCheck;
+
+		this.Index = options.indexInArray || 0;
+	};
+
+	CReplaceCellTextManager.prototype.OnEnd = function() {
+		// After processing all cells, unlock calculation and draw
+		this.ws.model.workbook.dependencyFormulas.unlockRecal();
+		this.ws.draw(this.lockDraw);
+
+		if (this.callback) {
+			this.callback(this.options);
+		}
+	};
+
+	CReplaceCellTextManager.prototype.IsContinue = function() {
+		return (this.Index < this.replaceCells.length);
+	};
+
+	CReplaceCellTextManager.prototype.DoAction = function() {
+		const cell = this.replaceCells[this.Index];
+		const t = this.ws;
+
+		this.Index++;
+		this.options.indexInArray = this.Index;
+
+		// Check for protected ranges
+		if (cell && t.model.isUserProtectedRangesIntersection(cell)) {
+			t.model.workbook.handlers.trigger("asc_onError", c_oAscError.ID.ProtectedRangeByOtherUser, c_oAscError.Level.NoCritical);
+			this.options.error = true;
+			this.End();
+			return;
+		}
+
+		// Check cell locking or perform replacement
+		const isSuccess = !this.needLockCell || t._isLockedCells(cell, /*subType*/null, function(){});
+		if (isSuccess) {
+			const c = t._getVisibleCell(cell.c1, cell.r1);
+			let cellValue = c.getValueForEdit();
+			let v, newValue;
+			const oldCellValue = cellValue;
+
+			// Replace text depending on the mode
+			if (!this.isSC) {
+				cellValue = cellValue.replace(this.options.findRegExp, () => {
+					++this.options.countReplace;
+					return this.options.replaceWith;
+				});
+			} else {
+				cellValue = AscCommonExcel.replaceSpellCheckWords(cellValue, this.options);
+			}
+
+			const isNeedToSave = oldCellValue !== cellValue;
+			if (isNeedToSave) {
+				// Create new fragments with replaced text
+				v = c.getValueForEdit2().slice(0, 1);
+				newValue = [];
+				newValue[0] = new AscCommonExcel.Fragment({text: cellValue, format: v[0].format.clone()});
+
+				// Save new value
+				if (!t._saveCellValueAfterEdit(c, newValue, /*flags*/undefined, /*isNotHistory*/true, /*lockDraw*/true)) {
+					this.options.error = true;
+					this.End();
+					return;
+				}
+
+				// Update search elements
+				if (t.workbook.SearchEngine) {
+					t.workbook.SearchEngine.removeFromSearchElems(cell.c1, cell.r1, t.model);
+				}
+			}
+		} else {
+			// If cell locking failed, stop processing
+			this.options.error = true;
+			this.End();
+		}
+	};
 
 	//------------------------------------------------------------export---------------------------------------------------
     window['AscCommonExcel'] = window['AscCommonExcel'] || {};

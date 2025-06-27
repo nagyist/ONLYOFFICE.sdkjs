@@ -7320,6 +7320,9 @@
 		return this.props && this.props.specificRange;
 	};
 
+	CDocumentSearchExcel.prototype.checkMaxReplacedCells = function () {
+		return this.Count > 1000;
+	};
 
 
 	/**

@@ -1865,6 +1865,114 @@
 			});
 		};
 
+		MultiplyRange.prototype.getUnionRanges = function() {
+			let ranges = this.ranges;
+			if (!ranges || ranges.length === 0) {
+				return [];
+			}
+
+			if (ranges.length === 1) {
+				return [ranges[0].clone()];
+			}
+
+			const rangesByRow = new Array(ranges.length);
+
+			for (let i = 0; i < ranges.length; i++) {
+				rangesByRow[i] = ranges[i].clone(true);
+			}
+
+			// First sorting - by row starting position
+			rangesByRow.sort(function(a, b) { return a.r1 - b.r1; });
+
+			// First merging pass - combine vertically aligned ranges
+			const result = [rangesByRow[0]];
+			let currentRange = result[0];
+
+			for (let i = 1; i < rangesByRow.length; i++) {
+				const range = rangesByRow[i];
+
+				// Check if ranges have same columns and are adjacent or overlapping rows
+				if (range.c1 === currentRange.c1 && range.c2 === currentRange.c2 &&
+					range.r1 <= currentRange.r2 + 1) {
+					// Extend current range down
+					currentRange.r2 = Math.max(currentRange.r2, range.r2);
+				} else {
+					// Start new range if can't merge
+					result.push(range);
+					currentRange = range;
+				}
+			}
+
+			// Second sorting - by column starting position
+			result.sort(function(a, b) { return a.c1 - b.c1; });
+
+			// Second merging pass - combine horizontally aligned ranges
+			const finalResult = [result[0]];
+			let currentHorRange = finalResult[0];
+
+			for (let i = 1; i < result.length; i++) {
+				const range = result[i];
+
+				// Check if ranges have same rows and are adjacent or overlapping columns
+				if (range.r1 === currentHorRange.r1 && range.r2 === currentHorRange.r2 &&
+					range.c1 <= currentHorRange.c2 + 1) {
+					// Extend current range horizontally
+					currentHorRange.c2 = Math.max(currentHorRange.c2, range.c2);
+				} else {
+					// Start new range if can't merge
+					finalResult.push(range);
+					currentHorRange = range;
+				}
+			}
+
+			// Final merging pass - handle more complex overlapping cases
+			let changed = true;
+			let iterationRanges = finalResult.slice();
+
+			// Limit iterations to avoid excessive processing
+			for (let iteration = 0; iteration < 3 && changed && iterationRanges.length > 1; iteration++) {
+				changed = false;
+				const tempRanges = [];
+
+				for (let i = 0; i < iterationRanges.length; i++) {
+					const currentRange = iterationRanges[i];
+					let merged = false;
+
+					// Try to merge with ranges already in result
+					for (let j = 0; j < tempRanges.length; j++) {
+						const tempRange = tempRanges[j];
+
+						// Check for possible merging cases (same columns or same rows with adjacency)
+						if ((tempRange.c1 === currentRange.c1 && tempRange.c2 === currentRange.c2 &&
+								(tempRange.r2 + 1 === currentRange.r1 || currentRange.r2 + 1 === tempRange.r1)) ||
+							(tempRange.r1 === currentRange.r1 && tempRange.r2 === currentRange.r2 &&
+								(tempRange.c2 + 1 === currentRange.c1 || currentRange.c2 + 1 === tempRange.c1))) {
+
+							// Merge ranges by taking the outer boundaries
+							tempRange.c1 = Math.min(tempRange.c1, currentRange.c1);
+							tempRange.r1 = Math.min(tempRange.r1, currentRange.r1);
+							tempRange.c2 = Math.max(tempRange.c2, currentRange.c2);
+							tempRange.r2 = Math.max(tempRange.r2, currentRange.r2);
+
+							merged = true;
+							changed = true;
+							break; // Exit inner loop once merged
+						}
+					}
+
+					// Add to result if couldn't merge
+					if (!merged) {
+						tempRanges.push(currentRange);
+					}
+				}
+
+				// Update working set for next iteration
+				iterationRanges = tempRanges;
+			}
+
+			return iterationRanges;
+		};
+
 		MultiplyRange.prototype.isNull = function () {
 			if (!this.ranges || 0 === this.ranges.length || (1 === this.ranges.length && this.ranges[0] == null)) {
 				return true;
