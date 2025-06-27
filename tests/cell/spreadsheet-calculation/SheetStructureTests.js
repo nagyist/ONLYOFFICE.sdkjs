@@ -7711,6 +7711,169 @@ $(function () {
 		
 	});
 
+	QUnit.test("Test: \"Workbook dependencies tests\"", function (assert) {
+		let cellWithFormula, fillRange, array, wsID = ws.getId();
+			
+		// wb.dependencyFormulas.unlockRecal();
+
+		ws.getRange2("A1:F10").cleanAll();
+		// set flags for CSE formula call
+		let flags = wsView._getCellFlags(0, 2);
+		flags.ctrlKey = false;
+		flags.shiftKey = false;
+
+		// set selection A1
+		fillRange = ws.getRange2("A1");
+		wsView.setSelection(fillRange.bbox);
+		wsView._initRowsCount();
+		wsView._initColsCount();
+		
+		// A1:D5 - Full Table
+		// A2:D4 - Table without headers
+		// A1:A4 - First Column and so on...
+		let dependencyFormulas = wb.dependencyFormulas;
+		let sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		let defNameListeners = dependencyFormulas.defNameListeners;
+
+		let tableProp = AscCommonExcel.AddFormatTableOptions();
+		tableProp.asc_setRange("A1:D3");
+		tableProp.asc_setIsTitle(false);
+		
+		ws.autoFilters.addAutoFilter("TableStyleLight1", ws.selectionRange.getLast().clone(), tableProp);
+
+		let tables = wsView.model.autoFilters.getTablesIntersectionRange(ws.getRange2("A1").bbox);
+		assert.strictEqual(tables.length, 1, "Table was created without selection of formula. Compare tables length");
+
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after create the table");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after create the table");
+
+		let table = tables[0];
+		let tableName = table.DisplayName;
+
+		let fragment = ws.getRange2("C10").getValueForEdit2();
+		let resCell = ws.getRange2("C10");
+		
+		// Table
+		// Table link without headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+")");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 2, "AreaMap listeners after set value =SUM(tableName)");
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap["A2:D4"].listeners).length, 1, "A2:D4(Table) listeners after set value =SUM(tableName)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after set value =SUM(tableName)");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value =SUM(tableName)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value =SUM(tableName)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value =SUM(tableName)");
+
+
+		// Table[#All]
+		// Table link with headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+"[#All])");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after set value =SUM(tableName#All)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after set value =SUM(tableName#All)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 1, "DefNameListeners after set value =SUM(tableName#All)");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value =SUM(tableName#All)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value =SUM(tableName#All)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value =SUM(tableName#All)");
+
+
+		// Table[Column1]
+		// Table columns link without headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+"[Column1])");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 2, "AreaMap listeners after set value =SUM(Column1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after set value =SUM(Column1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"] !== undefined, true, "A2:A4(Column) listeners after set value =SUM(Column1)");
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap["A2:A4"].listeners).length, 1, "A2:A4(Column) listeners after set value =SUM(Column1)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after set value =SUM(Column1)");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value =SUM(Column1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value =SUM(Column1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after delete value =SUM(Column1)");	
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value =SUM(Column1)");
+
+
+		// Table[[Column1]:[Column2]]
+		// Table columns link without headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+"[[Column1]:[Column2]])");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 2, "AreaMap listeners after set value SUM(Table[Col1]:[Col2])");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after set value SUM(Table[Col1]:[Col2]");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after set value SUM(Table[Col1]:[Col2]");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:B4"] !== undefined, true, "A2:B4(Columns) listeners after set value SUM(Table[Col1]:[Col2]");
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap["A2:B4"].listeners).length, 1, "A2:B4(Columns) listeners after set value SUM(Table[Col1]:[Col2]");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after set value SUM(Table[Col1]:[Col2]");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value SUM(Table[Col1]:[Col2])");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value SUM(Table[Col1]:[Col2])");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after delete value SUM(Table[Col1]:[Col2])");	
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:B4"], undefined, "A2:B4(Columns) listeners after delete value SUM(Table[Col1]:[Col2]");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value SUM(Table[Col1]:[Col2]");
+
+
+		// Table[[#All],[Column1]]
+		// Table columns link with headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+"[[#All],[Column1]])");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 2, "AreaMap listeners after set value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after set value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after set value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:A4"] !== undefined, true, "A1:A4(Column) listeners after set value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap["A1:A4"].listeners).length, 1, "A1:A4(Column) listeners after set value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after set value SUM(tableName#All,Col1)");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:A4"], undefined, "A1:A4(Column) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value SUM(tableName#All,Col1)");
+
+
+		// Table[[#All],[Column1]:[Column2]]
+		// Table columns link with headers
+		ws.getRange2("C10").setValue("=SUM("+tableName+"[[#All],[Column1]:[Column2]])");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 2, "AreaMap listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:A4"], undefined, "A1:A4(Column) listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:B4"] !== undefined, true, "A1:B4(Columns) listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap["A1:B4"].listeners).length, 1, "A1:B4(Columns) listeners after set value SUM(tableName#All,Col1:Col2)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after set value SUM(tableName#All,Col1:Col2)");
+
+		// delete formula
+		ws.getRange2("C10").setValue("22");
+		sheetListeners = dependencyFormulas.sheetListeners[wsID];
+		assert.strictEqual(sheetListeners.areaMap && Object.keys(sheetListeners.areaMap).length, 1, "AreaMap listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:D4"], undefined, "A2:D4(Table) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A2:A4"], undefined, "A2:A4(Column) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:A4"], undefined, "A1:A4(Column) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners.areaMap && sheetListeners.areaMap["A1:B4"], undefined, "A1:B4(Columns) listeners after delete value SUM(tableName#All,Col1)");
+		assert.strictEqual(sheetListeners && sheetListeners.areaMap && Object.keys(defNameListeners).length, 0, "DefNameListeners after delete value SUM(tableName#All,Col1)");
+
+		// remove tables
+		tables.length = 0;
+		
+	});
+
 		QUnit.module("Sheet structure");
 });
 

@@ -9928,7 +9928,15 @@ function parserFormula( formula, parent, _ws ) {
 			ref = this.outStack[i];
 
 			if (ref.type === cElementType.table) {
-				this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this);
+				// analyze table structure - if its full link, write defnamelistener
+				const isFullTableLink = ref.reservedColumnIndex === AscCommon.FormulaTablePartInfo.all;
+				const refAreaRange = ref.area && ref.area.getRange && ref.area.getRange();
+				
+				if (isFullTableLink || !refAreaRange) {
+					this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this, null, ref);
+				} else {
+					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
+				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.startListeningDefName(ref.value, this);
 			} else if (ref.type === cElementType.name3D) {
@@ -10004,7 +10012,14 @@ function parserFormula( formula, parent, _ws ) {
 			ref = this.outStack[i];
 
 			if (ref.type === cElementType.table) {
-				this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
+				const isFullTableLink = ref.reservedColumnIndex === AscCommon.FormulaTablePartInfo.all;
+				const refAreaRange = ref.area && ref.area.getRange && ref.area.getRange();
+				
+				if (isFullTableLink || !refAreaRange) {
+					this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
+				} else {
+					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
+				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.endListeningDefName(ref.value, this);
 			} else if (ref.type === cElementType.name3D) {

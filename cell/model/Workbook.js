@@ -925,7 +925,7 @@
 		//defined name
 		getDefNameByName: function(name, sheetId, opt_exact) {
 			var res = null;
-			var nameIndex = getDefNameIndex(name);
+			let nameIndex = getDefNameIndex(name);
 			if (sheetId) {
 				var sheetContainer = this.defNames.sheet[sheetId];
 				if (sheetContainer) {
