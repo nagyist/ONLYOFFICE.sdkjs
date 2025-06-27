@@ -20126,7 +20126,7 @@ CColorObj.prototype =
 						parent,
 						[],
 						strRealIndexes[col],
-						realIndex,
+						realIndex
 					)
 				}
 

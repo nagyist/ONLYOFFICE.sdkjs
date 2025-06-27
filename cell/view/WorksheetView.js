@@ -30134,6 +30134,7 @@ function isAllowPasteLink(pastedWb) {
 	CReplaceCellTextManager.prototype.DoAction = function() {
 		const cell = this.replaceCells[this.Index];
 		const t = this.ws;
+		const oThis = this;
 
 		this.Index++;
 		this.options.indexInArray = this.Index;
@@ -30156,9 +30157,9 @@ function isAllowPasteLink(pastedWb) {
 
 			// Replace text depending on the mode
 			if (!this.isSC) {
-				cellValue = cellValue.replace(this.options.findRegExp, () => {
-					++this.options.countReplace;
-					return this.options.replaceWith;
+				cellValue = cellValue.replace(this.options.findRegExp, function() {
+					++oThis.options.countReplace;
+					return oThis.options.replaceWith;
 				});
 			} else {
 				cellValue = AscCommonExcel.replaceSpellCheckWords(cellValue, this.options);
