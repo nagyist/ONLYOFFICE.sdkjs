@@ -19251,24 +19251,27 @@
 	
 	/**
 	 * Sets the lock to the current inline text content control:
+	 * <b>"unlocked"</b> - content can be edited and the container can be deleted.
 	 * <b>"contentLocked"</b> - content cannot be edited.
 	 * <b>"sdtContentLocked"</b> - content cannot be edited and the container cannot be deleted.
 	 * <b>"sdtLocked"</b> - the container cannot be deleted.
 	 * @memberof ApiInlineLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @param {"contentLocked" | "sdtContentLocked" | "sdtLocked"} sLockType - The lock type applied to the inline text content control.
+	 * @param {"unlocked" | "contentLocked" | "sdtContentLocked" | "sdtLocked"} lockType - The lock type applied to the inline text content control.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiInlineLvlSdt/Methods/SetLock.js
 	 */
-	ApiInlineLvlSdt.prototype.SetLock = function(sLockType)
+	ApiInlineLvlSdt.prototype.SetLock = function(lockType)
 	{
 		var nLock = c_oAscSdtLockType.Unlocked;
-		if ("contentLocked" === sLockType)
+		if ("contentLocked" === lockType)
 			nLock = c_oAscSdtLockType.ContentLocked;
-		else if ("sdtContentLocked" === sLockType)
+		else if ("sdtContentLocked" === lockType)
 			nLock = c_oAscSdtLockType.SdtContentLocked;
-		else if ("sdtLocked" === sLockType)
+		else if ("sdtLocked" === lockType)
 			nLock = c_oAscSdtLockType.SdtLocked;
+		else if ("unlocked" === lockType)
+			nLock = c_oAscSdtLockType.Unlocked;
 		else
 			return false;
 
@@ -20793,30 +20796,18 @@
 	};
 	/**
 	 * Sets the lock to the current block text content control:
+	 * <b>"unlocked"</b> - content can be edited and the container can be deleted.
 	 * <b>"contentLocked"</b> - content cannot be edited.
 	 * <b>"sdtContentLocked"</b> - content cannot be edited and the container cannot be deleted.
 	 * <b>"sdtLocked"</b> - the container cannot be deleted.
+	 * @method
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @param {"contentLocked" | "sdtContentLocked" | "sdtLocked"} lockType - The type of the lock applied to the block text content control.
+	 * @param {"unlocked" | "contentLocked" | "sdtContentLocked" | "sdtLocked"} lockType - The type of the lock applied to the block text content control.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetLock.js
 	 */
-	ApiBlockLvlSdt.prototype.SetLock = function(lockType)
-	{
-		var nLock = c_oAscSdtLockType.Unlocked;
-		if ("contentLocked" === lockType)
-			nLock = c_oAscSdtLockType.ContentLocked;
-		else if ("sdtContentLocked" === lockType)
-			nLock = c_oAscSdtLockType.SdtContentLocked;
-		else if ("sdtLocked" === lockType)
-			nLock = c_oAscSdtLockType.SdtLocked;
-		else
-			return false;
-
-		this.Sdt.SetContentControlLock(nLock);
-		return true;
-	};
+	ApiBlockLvlSdt.prototype.SetLock = ApiInlineLvlSdt.prototype.SetLock;
 
 	/**
 	 * Returns the lock type of the current container.
