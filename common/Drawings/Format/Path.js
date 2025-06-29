@@ -430,20 +430,19 @@ function (window, undefined) {
 
 	/**
 	 * accepts angles in anti-clockwise system
-	 * @param {number} startAngle
-	 * @param {number} endAngle
-	 * @param {number} ctrlAngle
+	 * @param {number} startAngle from -180 to 180
+	 * @param {number} endAngle from -180 to 180
+	 * @param {number} ctrlAngle from -180 to 180
 	 * @returns {number} sweep - positive sweep means anti-clockwise
 	 */
 	function computeSweep(startAngle, endAngle, ctrlAngle) {
-		let sweep;
-
-		startAngle = (360.0 + startAngle) % 360.0;
-		endAngle = (360.0 + endAngle) % 360.0;
-		ctrlAngle = (360.0 + ctrlAngle) % 360.0;
+		// Normalize angles from −180…180 to [0, 360) interval
+		startAngle = (360 + startAngle) % 360;
+		endAngle   = (360 + endAngle)   % 360;
+		ctrlAngle  = (360 + ctrlAngle)  % 360;
 
 		// different sweeps depending on where the control point is
-
+		let sweep;
 		if (startAngle < endAngle) {
 			if (startAngle < ctrlAngle && ctrlAngle < endAngle) {
 				// positive sweep - anti-clockwise
@@ -574,7 +573,7 @@ function (window, undefined) {
 	 * @param {number} cy
 	 * @returns {boolean}
 	 */
-	const COL_EPS_K = 16 * 1e10;
+	const COL_EPS_K = 3.6e-5;
 	function isCollinear(ax, ay, bx, by, cx, cy) {
 		// Fast path: any two points coincide – degenerate triangle considered collinear
 		if ((ax === bx && ay === by) || (ax === cx && ay === cy) || (bx === cx && by === cy)) {
@@ -590,7 +589,7 @@ function (window, undefined) {
 			Math.abs(bx - ax), Math.abs(by - ay),
 			Math.abs(cx - ax), Math.abs(cy - ay)
 		);
-		const tol = COL_EPS_K * Number.EPSILON * (scale || 1);
+		const tol = COL_EPS_K * (scale || 1);
 		return Math.abs(cross) <= tol;
 	}
 
@@ -800,7 +799,7 @@ function (window, undefined) {
 					}
 
 					// d is fraction
-					d = Number(cmd.d, 10);
+					d = Number(cmd.d);
 
 					// normalize angle (The values are given in degrees)
 					// 360 * n —-> ~0
