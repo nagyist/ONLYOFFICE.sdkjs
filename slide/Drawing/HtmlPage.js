@@ -5039,6 +5039,9 @@
 				}
 		}
 	};
+	CEditorPage.prototype.getZoomValue = function() {
+		return this.m_nZoomValue / 100;
+	};
 
 	// EXPORTS
 
