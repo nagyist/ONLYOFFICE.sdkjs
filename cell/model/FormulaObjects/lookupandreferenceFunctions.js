@@ -3139,16 +3139,16 @@ function (window, undefined) {
 		var cacheElem = this.cacheId[sRangeName];
 		if (!cacheElem) {
 			cacheElem = {elements: {}, results: {}};
-			if (Math.abs(opt_arg5) === 2 || arg3Value || opt_arg4) {
-				this.generateElements(range, cacheElem);
-				this.cacheId[sRangeName] = cacheElem;
-				var cacheRange = this.cacheRanges[wsId];
-				if (!cacheRange) {
-					cacheRange = new AscCommonExcel.RangeDataManager(null);
-					this.cacheRanges[wsId] = cacheRange;
-				}
-				cacheRange.add(range.getBBox0(), cacheElem);
-			}
+			// if (Math.abs(opt_arg5) === 2 || arg3Value || opt_arg4) {
+			// 	this.generateElements(range, cacheElem);
+			// 	this.cacheId[sRangeName] = cacheElem;
+			// 	var cacheRange = this.cacheRanges[wsId];
+			// 	if (!cacheRange) {
+			// 		cacheRange = new AscCommonExcel.RangeDataManager(null);
+			// 		this.cacheRanges[wsId] = cacheRange;
+			// 	}
+			// 	cacheRange.add(range.getBBox0(), cacheElem);
+			// }
 		}
 		if (!this.sortedCache[wsId]) {
 			this.sortedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
@@ -3303,6 +3303,7 @@ function (window, undefined) {
 		let i = startIndex;
 		let j = endIndex;
 		const t = this;
+		const lastNotEmptyIndex = this.bHor ? ws.getColDataLength() - 1 : Math.max(ws.cellsByColRowsCount - 1, ws.rowsData.getMaxIndex());
 		const getValue = function (index) {
 			if (opt_array) {
 				return opt_array[index].v;
@@ -3313,20 +3314,36 @@ function (window, undefined) {
 		let resultIndex = -1;
 		while (i <= j) {
 			let k = Math.floor((i + j) / 2);
+			if (k > lastNotEmptyIndex) {
+				j = k - 1;
+				continue;
+			}
 			let val = getValue(k);
 			if (val.type !== valueForSearching.type) {
 				for (let ii = k + 1; ii <= j; ii += 1) {
 					val = getValue(ii);
 					if (val.type === valueForSearching.type) {
 						k = ii;
+						break;
 					}
 				}
 			}
 			val = getValue(k);
-			if (this._compareValues(val, valueForSearching, ">")) {
+			if (val.type !== valueForSearching.type || this._compareValues(val, valueForSearching, ">")) {
 				j = k - 1;
 			} else {
 				resultIndex = k;
+				if (this._compareValues(val, valueForSearching, "=")) {
+					for (let ii = k + 1; ii <= j; ii += 1) {
+						val = getValue(ii);
+						if (val.type === valueForSearching.type && this._compareValues(val, valueForSearching, "=")) {
+							resultIndex = ii;
+						} else {
+							break;
+						}
+					}
+					break;
+				}
 				i = k + 1;
 			}
 		}
@@ -3475,9 +3492,6 @@ function (window, undefined) {
 			}
 		} else if (lookup) {
 			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol);
-			if (res === -1 && cElementType.string === valueForSearching.type) {
-				res = this._simpleSearch(cacheArray, valueForSearching, false, opt_arg4);
-			}
 		} else {
 			if (sorted) {
 				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
