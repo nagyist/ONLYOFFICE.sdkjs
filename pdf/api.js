@@ -3563,6 +3563,9 @@
 					if (lang == 'pt') {
 						lang = lang + '-BR';
 					}
+					else if (lang == 'zh') {
+						lang = lang + '-CN'
+					}
 					else {
 						lang = lang + '-' + lang.toUpperCase();
 					}
