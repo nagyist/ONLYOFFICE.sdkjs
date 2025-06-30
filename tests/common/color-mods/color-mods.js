@@ -407,6 +407,12 @@ function mod(name, value) {
 			[mod("satMod", 0)],
 			rgb(85, 85, 85)
 		),
+		test(rgb(157, 54, 14), [mod("tint", 96000), mod("shade", 100000), mod("hueMod", 270000), mod("satMod", 200000), mod("lumMod", 128000)], rgb(247, 137, 37)),
+		test(rgb(68, 114, 196), [mod("tint", 96000), mod("shade", 100000), mod("hueMod", 270000), mod("satMod", 200000), mod("lumMod", 128000)], rgb(111, 124, 255)),
+		test(rgb(157, 54, 14), [mod("shade", 100000), mod("hueMod", 100000), mod("satMod", 110000), mod("lumMod", 130000)], rgb(213, 66, 9)),
+		test(rgb(157, 54, 14), [mod("shade", 78000), mod("hueMod", 44000), mod("satMod", 200000), mod("lumMod", 69000)], rgb(141, 0, 0)),
+		test(rgb(157, 54, 14), [mod("shade", 78000), mod("hueMod", 44000), mod("satMod", 200000), mod("lumMod", 69000)], rgb(141, 0, 0)),
+		test(rgb(68, 114, 196), [mod("red", 10000), mod("green", 50000),mod("blue", 96000), mod("redMod", 50000),  mod("greenMod", 50000), mod("blueMod", 50000), mod("redOff", 10000),  mod("greenOff", 10000), mod("blueOff", 10000), mod("hueOff", 270000), mod("satOff", 100000), mod("lumOff", 10000),  mod("tint", 96000), mod("shade", 100000), mod("hueMod", 270000), mod("satMod", 200000), mod("lumMod", 128000), mod("comp", 0), mod("gamma", 0)], rgb(255, 161, 144)),
 	];
 
 	QUnit.test('Check colors with mods', (assert) => {
