@@ -4928,8 +4928,31 @@ background-repeat: no-repeat;\
     		return [];
     	return this.WordControl.m_oLogicDocument.GetAllSignatures();
 	};
-
-
+	asc_docs_api.prototype.asc_RemoveSignature = function(guid)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (logicDocument)
+		{
+			for (let i = 0; i < this.signatures.length; ++i)
+			{
+				let sign = this.signatures[i];
+				if (sign.guid === guid && sign.isForm)
+				{
+					if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+					{
+						logicDocument.StartAction(AscDFH.historydescription_OForm_CancelFilling);
+						logicDocument.GetOFormDocument().setAllRolesNotFilled();
+						logicDocument.FinalizeAction();
+						this.signatures.splice(i, 1);
+						this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+						return true;
+					}
+				}
+			}
+		}
+		
+		return AscCommon.baseEditorsApi.prototype.asc_RemoveSignature.apply(this, arguments);
+	};
     asc_docs_api.prototype.asc_CallSignatureDblClickEvent = function(sGuid){
         return this.WordControl.m_oLogicDocument.CallSignatureDblClickEvent(sGuid);
     };
@@ -8099,7 +8122,20 @@ background-repeat: no-repeat;\
 			}
 		}
 	};
-
+	asc_docs_api.prototype.onDocumentContentReady = function()
+	{
+		AscCommon.baseEditorsApi.prototype.onDocumentContentReady.call(this);
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+		{
+			let sign = new AscCommon.asc_CSignatureLine();
+			sign.guid = AscCommon.CreateGUID();
+			sign.isForm = true;
+			this.signatures.push(sign);
+			this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+		}
+	};
 	asc_docs_api.prototype._openDocumentEndCallback = function()
 	{
 		if (this.isDocumentLoadComplete || !this.ServerImagesWaitComplete || !this.ServerIdWaitComplete || !this.WordControl || !this.WordControl.m_oLogicDocument)
