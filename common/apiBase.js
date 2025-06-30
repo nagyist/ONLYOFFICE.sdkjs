@@ -4928,6 +4928,23 @@
 				obj[prop].apply(this || window, Array.prototype.slice.call(arguments, 1));
 			}
         }
+
+		if (this.documentOpenOptions && this.documentOpenOptions["logEvents"])
+		{
+			let message = "[logEvent] " + name + " [";
+			for (let i = 1, len = arguments.length; i < len; i++)
+			{
+				if (Asc.checkReturnCommand(arguments[i]))
+					message += JSON.stringify(arguments[i]);
+				else
+					message += "{}";
+
+				if (i !== (len - 1))
+					message += ",";
+			}
+			message += "]";
+			console.log(message);
+		}
         return false;
 	};
 
