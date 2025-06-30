@@ -991,6 +991,9 @@
 
 		isUseNewCopy : function()
 		{
+			if (navigator.clipboard) {
+				return true;
+			}
 			if (this._isUseMobileNewCopy())
 			{
 				return true;
