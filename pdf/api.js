@@ -402,6 +402,16 @@
 		if (!this.DocumentRenderer)
 			return;
 		
+		if (!this.DocumentRenderer.canInteract()) {
+			let _t = this;
+			let args = arguments;
+			
+			this.DocumentRenderer.paint(null, function() {
+				_t.asc_PasteData.apply(_t, args);
+			});
+			return;
+		}
+
 		let oDoc			= this.DocumentRenderer.getPDFDoc();
 		let data			= typeof(text_data) == "string" ? text_data : data1;
 		let oActiveDrawing	= oDoc.activeDrawing;
