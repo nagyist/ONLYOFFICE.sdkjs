@@ -2078,7 +2078,7 @@
 						break;
 					}
 					case "alphaOff": {
-						if (val < 0 || val > 1) {
+						if (val > 1) {
 							RGBA.A = 0;
 						} else {
 							RGBA.A = RGBA.A + 255 * val;

@@ -17324,6 +17324,12 @@ function mod(name, value) {
 		fTestFunction(testResult);
 		testResult = test(rgb(68, 114, 196, 255),[mod("alpha", -100000)],rgb(68, 114, 196, 0));
 		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 255),[mod("alpha", -1)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 255),[mod("alpha", 100000)],rgb(68, 114, 196, 255));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 255),[mod("alpha", 100001)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
 	});
 	QUnit.test("Test alphaMod mod", (assert) => {
 		const fTestFunction = assertTest(assert);
@@ -17340,6 +17346,12 @@ function mod(name, value) {
 		fTestFunction(testResult);
 		testResult = test(rgb(68, 114, 196, 128),[mod("alphaMod", 200000)],rgb(68, 114, 196, 255));
 		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaMod", -1)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaMod", 100001)],rgb(68, 114, 196, 128));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaMod", 300001)],rgb(68, 114, 196, 255));
+		fTestFunction(testResult);
 	});
 	QUnit.test("Test alphaOff mod", (assert) => {
 		const fTestFunction = assertTest(assert);
@@ -17355,6 +17367,14 @@ function mod(name, value) {
 		testResult = test(rgb(68, 114, 196, 128),[mod("alphaOff", -50000)],rgb(68, 114, 196, 0));
 		fTestFunction(testResult);
 		testResult = test(rgb(68, 114, 196, 128),[mod("alphaOff", 200000)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaOff", 100001)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaOff", -25000)],rgb(68, 114, 196, 64));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 128),[mod("alphaOff", -100000)],rgb(68, 114, 196, 0));
+		fTestFunction(testResult);
+		testResult = test(rgb(68, 114, 196, 0),[mod("alphaOff", 100001)],rgb(68, 114, 196, 0));
 		fTestFunction(testResult);
 	});
 	QUnit.test("Test hue mod", (assert) => {
