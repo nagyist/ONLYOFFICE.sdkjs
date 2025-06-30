@@ -8129,9 +8129,17 @@ background-repeat: no-repeat;\
 		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
 		if (oform && oform.isAllRolesFilled())
 		{
+			let allRoles = oform.getAllRoles();
 			let sign = new AscCommon.asc_CSignatureLine();
 			sign.guid = AscCommon.CreateGUID();
 			sign.isForm = true;
+			let userMaster = allRoles.length ? allRoles[allRoles.length - 1].getUserMaster() : null;
+			if (userMaster)
+				sign.signer1 = userMaster.getUserId();
+			
+			if (logicDocument.Core && logicDocument.Core.modified)
+				sign.date = new Date(logicDocument.Core.modified).toString();
+			
 			this.signatures.push(sign);
 			this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
 		}
