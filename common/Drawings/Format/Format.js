@@ -10189,6 +10189,18 @@
 			}
 			return true;
 		};
+		CEffectStyle.prototype.fromPPTY = function (pReader) {
+			CBaseFormatNoIdObject.prototype.fromPPTY.call(this, pReader);
+			this.checkEffectPr();
+		};
+		CEffectStyle.prototype.checkEffectPr = function () {
+			if (!this.effectProperties) {
+				this.setEffectPr(new AscFormat.CEffectProperties());
+			}
+			if (!this.effectProperties.EffectLst && !this.effectProperties.EffectDag) {
+				this.effectProperties.EffectLst = new AscFormat.CEffectLst();
+			}
+		};
 		CEffectStyle.prototype.writeChildren = function(pWriter) {
 			var oEffectPr = this.effectProperties;
 			if(oEffectPr)
