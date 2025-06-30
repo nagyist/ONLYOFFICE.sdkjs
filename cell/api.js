@@ -3575,8 +3575,7 @@ var editor;
   };
 
   spreadsheet_api.prototype.asc_getWorksheetName = function(index) {
-	  let name = this.wbModel.getWorksheet(index).getName();
-    return AscCommon.getLTRString(name);
+	  return this.wbModel.getWorksheet(index).getName();
   };
 
   spreadsheet_api.prototype.asc_getWorksheetTabColor = function(index) {
