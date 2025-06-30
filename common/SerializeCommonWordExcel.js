@@ -816,15 +816,32 @@ FT_Stream2.prototype.GetString2 = function() {
 	return this.GetString2LE(Len);
 };
 //String
-FT_Stream2.prototype.GetString2LE = function(len) {
-	if (this.cur + len > this.size)
-		return "";
-	var a = [];
-	for (var i = 0; i + 1 < len; i+=2)
-		a.push(String.fromCharCode(this.data[this.cur + i] | this.data[this.cur + i + 1] << 8));
-	this.cur += len;
-	return a.join("");
-};
+if (typeof TextDecoder !== "undefined")
+{
+	const global_string_decoder_le = new TextDecoder('utf-16le');
+	FT_Stream2.prototype.GetString2LE = function(len)
+	{
+		if (this.cur + len > this.size)
+			return "";
+
+		const subdata = new Uint8Array(this.data.buffer, this.data.byteOffset + this.cur, len);
+		this.cur += len;
+		return global_string_decoder_le.decode(subdata);
+	};
+}
+else
+{
+	FT_Stream2.prototype.GetString2LE = function(len)
+	{
+		if (this.cur + len > this.size)
+			return "";
+		var a = [];
+		for (var i = 0; i + 1 < len; i += 2)
+			a.push(String.fromCharCode(this.data[this.cur + i] | this.data[this.cur + i + 1] << 8));
+		this.cur += len;
+		return a.join("");
+	};
+}
 FT_Stream2.prototype.GetString = function() {
 	var Len = this.GetLong();
 	if (this.cur + 2 * Len > this.size)
