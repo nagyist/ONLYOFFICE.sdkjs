@@ -2906,6 +2906,7 @@ function (window, undefined) {
 		this.cacheRanges = {};
 		this.bHor = bHor;
 		this.sortedCache = {};
+		this.typedCache = {};
 
 		this.nextVal = undefined;
 		this.nextValIndex = undefined;
@@ -3048,7 +3049,7 @@ function (window, undefined) {
 				}
 				_cacheElem.elements.push({v: elem, i: (t.bHor ? c : r)});
 			});
-			return this._calculate(_cacheElem.elements, arg0Val, null, opt_arg4, opt_arg5);
+			return this._calculate(arg0Val, null, opt_arg4, opt_arg5, _cacheElem.elements);
 		}
 
 		if (!range) {
@@ -3126,6 +3127,78 @@ function (window, undefined) {
 	SortedCache.prototype.getSortedRange = function (rowColIndex) {
 		return this.data[rowColIndex];
 	};
+	VHLOOKUPCache.prototype._getSortedCache = function (ws, rowCol) {
+		const wsId = ws.getId();
+		if (!this.sortedCache[wsId]) {
+			return this._createSortedCache(ws, rowCol);
+		}
+		const sortedAxis = this.bHor ? this.sortedCache[wsId].horizontal : this.sortedCache[wsId].vertical;
+		const sorted = sortedAxis.getSortedRange(rowCol);
+		if (!sorted) {
+			return this._createSortedCache(ws, rowCol);
+		}
+		return sorted;
+	};
+	VHLOOKUPCache.prototype._createSortedCache = function (ws, rowCol) {
+		const wsId = ws.getId();
+		if (!this.sortedCache[wsId]) {
+			this.sortedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
+		}
+		const sortedAxis = this.bHor ? this.sortedCache[wsId].horizontal : this.sortedCache[wsId].vertical;
+		let tmpArrays = {};
+		let c1 = this.bHor ? 0 : rowCol;
+		let r1 = this.bHor ? rowCol : 0;
+		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
+		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
+		const fullRange = ws.getRange3(r1, c1, r2, c2);
+		const bHor = this.bHor;
+		fullRange._foreachNoEmpty(function (cell, r, c) {
+			const value = checkTypeCell(cell, true);
+			if (!tmpArrays[value.type]) {
+				tmpArrays[value.type] = [];
+			}
+			tmpArrays[value.type].push({v: value, i: bHor ? c : r});
+		});
+		sortedAxis.sortRange(tmpArrays);
+		sortedAxis.saveRange(rowCol,  tmpArrays);
+		return sortedAxis.getSortedRange(rowCol);
+	};
+	VHLOOKUPCache.prototype._getTypedCache = function (ws, rowCol) {
+		const wsId = ws.getId();
+		if (!this.typedCache[wsId]) {
+			return this._createTypedCache(ws, rowCol);
+		}
+		const sortedAxis = this.bHor ? this.typedCache[wsId].horizontal : this.typedCache[wsId].vertical;
+		const sorted = sortedAxis.getSortedRange(rowCol);
+		if (!sorted) {
+			return this._createTypedCache(ws, rowCol);
+		}
+		return sorted;
+	};
+	VHLOOKUPCache.prototype._createTypedCache = function (ws, rowCol) {
+		const wsId = ws.getId();
+		// todo delete tmpArrays
+		if (!this.typedCache[wsId]) {
+			this.typedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
+		}
+		const sortedAxis = this.bHor ? this.typedCache[wsId].horizontal : this.typedCache[wsId].vertical;
+		let tmpArrays = {};
+		let c1 = this.bHor ? 0 : rowCol;
+		let r1 = this.bHor ? rowCol : 0;
+		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
+		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
+		const fullRange = ws.getRange3(r1, c1, r2, c2);
+		const bHor = this.bHor;
+		fullRange._foreachNoEmpty(function (cell, r, c) {
+			const value = checkTypeCell(cell, true);
+			if (!tmpArrays[value.type]) {
+				tmpArrays[value.type] = [];
+			}
+			tmpArrays[value.type].push({v: value, i: bHor ? c : r});
+		});
+		sortedAxis.saveRange(rowCol,  tmpArrays);
+		return sortedAxis.getSortedRange(rowCol);
+	};
 
 	VHLOOKUPCache.prototype._get = function (range, valueForSearching, arg3Value, opt_arg4, opt_arg5) {
 		var res, _this = this, wsId = range.getWorksheet().getId();
@@ -3150,31 +3223,6 @@ function (window, undefined) {
 			// 	cacheRange.add(range.getBBox0(), cacheElem);
 			// }
 		}
-		if (!this.sortedCache[wsId]) {
-			this.sortedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
-		}
-		const sortedAxis = this.bHor ? this.sortedCache[wsId].horizontal : this.sortedCache[wsId].vertical;
-		const sortedIndex = this.bHor ? range.bbox.r1 : range.bbox.c1;
-		let sorted = sortedAxis.getSortedRange(sortedIndex);
-		if (!sorted) {
-			let tmpArrays = {};
-			let c2 = this.bHor ? AscCommon.gc_nMaxCol : range.bbox.c2;
-			let r2 = this.bHor ? range.bbox.r2 : AscCommon.gc_nMaxRow;
-			let c1 = this.bHor ? 0 : range.bbox.c1;
-			let r1 = this.bHor ? range.bbox.r1 : 0;
-			const fullRange = ws.getRange3(r1, c1, r2, c2);
-			const bHor = this.bHor;
-			fullRange._foreachNoEmpty(function (cell, r, c) {
-				const value = checkTypeCell(cell, true);
-				if (!tmpArrays[value.type]) {
-					tmpArrays[value.type] = [];
-				}
-				tmpArrays[value.type].push({v: value, i: bHor ? c : r});
-			});
-			sortedAxis.sortRange(tmpArrays);
-			sortedAxis.saveRange(sortedIndex,  tmpArrays);
-			sorted = sortedAxis.getSortedRange(sortedIndex);
-		}
 		var sInputKey;
 		if (!opt_xlookup) {
 			sInputKey =
@@ -3184,18 +3232,18 @@ function (window, undefined) {
 				g_cCharDelimiter + valueForSearching.type;
 		}
 		res = cacheElem.results[sInputKey];
+		const rowCol = this.bHor ? range.bbox.r1 : range.bbox.c1
 		if (!res) {
 			const startIndex = this.bHor ? range.bbox.c1 : range.bbox.r1;
 			const endIndex = this.bHor ? range.bbox.c2 : range.bbox.r2;
 			cacheElem.results[sInputKey] =
-				res = this._calculate(cacheElem.elements,
-					valueForSearching,
+				res = this._calculate(valueForSearching,
 					arg3Value,
 					opt_arg4,
 					opt_arg5,
-					sorted,
+					null,
 					ws,
-					sortedIndex,
+					rowCol,
 					startIndex,
 					endIndex);
 		}
@@ -3272,7 +3320,7 @@ function (window, undefined) {
 		while (i <= j) {
 			const k = Math.floor((i + j) / 2);
 			let val = getValue(array[k]);
-			if (this._compareValues(valueForSearching, val, "=", opt_arg4)) {
+			if (this._compareValues(valueForSearching, val, "=")) {
 				if (array[k] >= startIndex && array[k] <= endIndex) {
 					resultIndex = array[k];
 					revert ? (i = k + 1) : (j = k - 1);
@@ -3281,7 +3329,7 @@ function (window, undefined) {
 				} else {
 					j = k - 1;
 				}
-			} else if (this._compareValues(val, valueForSearching, ">", opt_arg4)) {
+			} else if (this._compareValues(val, valueForSearching, ">")) {
 				j = k - 1;
 			} else {
 				i = k + 1;
@@ -3296,14 +3344,14 @@ function (window, undefined) {
 	 * @param {number} endIndex
 	 * @param {Worksheet} ws
 	 * @param {number} rowCol
+	 * @param {Uint32Array} typed
 	 * @param {{i: number, v: LookUpElement}[]} [opt_array]
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._defaultBinarySearch = function (valueForSearching, startIndex, endIndex, ws, rowCol, opt_array) {
+	VHLOOKUPCache.prototype._defaultBinarySearch = function (valueForSearching, startIndex, endIndex, ws, rowCol, typed, opt_array) {
 		let i = startIndex;
 		let j = endIndex;
 		const t = this;
-		const lastNotEmptyIndex = this.bHor ? ws.getColDataLength() - 1 : Math.max(ws.cellsByColRowsCount - 1, ws.rowsData.getMaxIndex());
 		const getValue = function (index) {
 			if (opt_array) {
 				return opt_array[index].v;
@@ -3314,18 +3362,25 @@ function (window, undefined) {
 		let resultIndex = -1;
 		while (i <= j) {
 			let k = Math.floor((i + j) / 2);
-			if (k > lastNotEmptyIndex) {
+			if (k > typed[typed.length - 1]) {
 				j = k - 1;
 				continue;
 			}
 			let val = getValue(k);
 			if (val.type !== valueForSearching.type) {
-				for (let ii = k + 1; ii <= j; ii += 1) {
-					val = getValue(ii);
-					if (val.type === valueForSearching.type) {
-						k = ii;
-						break;
+				let ii = 0;
+				let jj = typed.length - 1
+				while (ii <= jj) {
+					let kk = Math.floor((ii + jj) / 2);
+					if (typed[kk] < k || typed[kk] < startIndex) {
+						ii = kk + 1;
+					} else {
+						jj = kk - 1;
 					}
+				}
+				const found = typed[Math.max(ii, jj)];
+				if (found <= endIndex) {
+					k = typed[Math.max(ii, jj)];
 				}
 			}
 			val = getValue(k);
@@ -3449,26 +3504,14 @@ function (window, undefined) {
 			}
 		}
 	};
-	VHLOOKUPCache.prototype._calculate = function (cacheArray, valueForSearching, lookup, opt_arg4, opt_arg5, sortedRange, ws, rowCol, startIndex, endIndex) {
+	VHLOOKUPCache.prototype._calculate = function (valueForSearching, lookup, opt_arg4, opt_arg5, opt_array, ws, rowCol, startIndex, endIndex) {
 		const t = this;
+		const wsId = ws.getId()
 		let res = -1;
 		this.nextVal = undefined;
 		this.nextValIndex = undefined;
 		let xlookup = opt_arg4 !== undefined && opt_arg5 !== undefined;
-		const sorted = sortedRange && sortedRange[valueForSearching.type];
-		const data = cacheArray && cacheArray[valueForSearching.type];
 		const revert = opt_arg5 < 0;
-		//TODO неверно работает функция, допустим для случая: VLOOKUP("12",A1:A5,1) 12.00 ; "qwe" ; "3" ; 3.00 ; 4.00
-		//ascending order: ..., -2, -1, 0, 1, 2, ..., A-Z, FALSE
-
-		//бинарный поиск для xlookup(так работает ms) бинарный поиск происходит до определенной длины массива
-		//как только длина становится меньше n(около 10), начинается линейный поиск
-		//так же в случае бинарного поиска когда требуется возвратить меньший или больший элемент(opt_arg4)
-		//- возвращается последний обработанный элемент меньший(больший) искомого, между собой элементы не сравниваются
-
-		//мы делаем иначе: бинарный поиск происходит всегда и не зависит от длины массива, при поиске наибольшего(наименьшего)
-		//из обработанных элементов выбираем те, которые больше(меньше) -> из них уже ищем наименьший(наибольший)
-		//т.е. в итоге получаем следующий наименьший/наибольший элемент
 
 		if (valueForSearching.type === cElementType.string) {
 			valueForSearching = new cString(valueForSearching.getValue().toLowerCase());
@@ -3477,13 +3520,21 @@ function (window, undefined) {
 		//TODO opt_arg5 - пока не обрабатываю результат == 2( A wildcard match where *, ?, and ~ have)
 		if (xlookup) {
 			if (Math.abs(opt_arg5) === 1) {
-				if (sorted && opt_arg4 === 0) {
+				if (opt_array) {
+					res = this._simpleSearch(opt_array, valueForSearching,  revert, opt_arg4);
+				} else if (opt_arg4 === 0) {
+					const sortedCache = this._getSortedCache(ws, rowCol);
+					const sorted = sortedCache[valueForSearching.type];
+					if (!sorted) {
+						return -1;
+					}
 					res = this._indexedBinarySearch(sorted, valueForSearching, revert, ws, rowCol, startIndex, endIndex, opt_arg4);
-				} else if (cacheArray) {
-					res = this._simpleSearch(cacheArray, valueForSearching,  revert, opt_arg4);
+				} else {
+					// TODO without opt_array (removing generate elems)
+					this._simpleSearch(opt_array, valueForSearching,  revert, opt_arg4);
 				}
 			} else if (Math.abs(opt_arg5) === 2) {
-				res = this._xlookupBinarySearch(cacheArray,valueForSearching,  revert, xlookup, opt_arg4);
+				res = this._xlookupBinarySearch(opt_array,valueForSearching,  revert, xlookup, opt_arg4);
 			}
 			if (res === -1) {
 				if ((opt_arg4 === -1 || opt_arg4 === 1) && this.nextVal) {
@@ -3491,12 +3542,17 @@ function (window, undefined) {
 				}
 			}
 		} else if (lookup) {
-			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol);
+			const typedCache = this._getTypedCache(ws, rowCol);
+			const sorted = typedCache[valueForSearching.type];
+			if (!sorted) {
+				return -1;
+			}
+			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, sorted);
 		} else {
 			if (sorted) {
 				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
-			} else if (cacheArray) {
-				res = this._simpleSearch(cacheArray, valueForSearching, false, opt_arg4);
+			} else if (opt_array) {
+				res = this._simpleSearch(opt_array, valueForSearching, false, opt_arg4);
 			}
 		}
 		return res;
@@ -3516,6 +3572,7 @@ function (window, undefined) {
 		this.cacheId = {};
 		this.cacheRanges = {};
 		this.sortedCache = {};
+		this.typedCache = {};
 	};
 	VHLOOKUPCache.prototype.generateElements = function (range, cacheElem) {
 		var _this = this;
