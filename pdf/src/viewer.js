@@ -3602,7 +3602,8 @@
 			let oDoc		= this.getPDFDoc();
 			let oController	= oDoc.GetController();
 			let oDrDoc		= oDoc.GetDrawingDocument();
-
+			let oThumbnails	= this.thumbnails;
+			
 			let shortcutType = this.Api.getShortcut(e);
 			if (oDoc.executeShortcut(shortcutType))
 			{
@@ -3819,9 +3820,14 @@
 			}
 			else if (e.KeyCode === 46) // Delete
 			{
-				oDoc.DoAction(function() {
-					oDoc.Remove(1, e.CtrlKey == true);
-				}, AscDFH.historydescription_Document_DeleteButton);
+				if (oThumbnails && oThumbnails.isInFocus) {
+					Asc.editor.asc_RemovePage();
+				}
+				else {
+					oDoc.DoAction(function() {
+						oDoc.Remove(1, e.CtrlKey == true);
+					}, AscDFH.historydescription_Document_DeleteButton);
+				}
 
 				bRetValue = true;
 			}
