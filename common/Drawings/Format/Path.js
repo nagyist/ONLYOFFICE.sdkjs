@@ -564,6 +564,7 @@ function (window, undefined) {
 		return {wR: wR, hR: hR, stAng: stAng, swAng: swAng, ellipseRotation: ellipseRotationInC};
 	}
 
+	const COL_EPS_K = 2e-8;
 	/**
 	 * Determines whether three points are collinear using an adaptive tolerance proportional to the coordinate scale.
 	 * @param {number} ax
@@ -574,7 +575,6 @@ function (window, undefined) {
 	 * @param {number} cy
 	 * @returns {boolean}
 	 */
-	const COL_EPS_K = 3.6e-5;
 	function isCollinear(ax, ay, bx, by, cx, cy) {
 		// Fast path: any two points coincide – degenerate triangle considered collinear
 		if ((ax === bx && ay === by) || (ax === cx && ay === cy) || (bx === cx && by === cy)) {
@@ -590,7 +590,9 @@ function (window, undefined) {
 			Math.abs(bx - ax), Math.abs(by - ay),
 			Math.abs(cx - ax), Math.abs(cy - ay)
 		);
-		const tol = COL_EPS_K * (scale || 1);
+		const scaleSquared = Math.pow(scale || 1, 2);
+
+		const tol = COL_EPS_K * scaleSquared;
 		return Math.abs(cross) <= tol;
 	}
 
