@@ -3598,6 +3598,7 @@
 		{
 			var bRetValue	= false;
 			let oDoc		= this.getPDFDoc();
+			let oController	= oDoc.GetController();
 			let oDrDoc		= oDoc.GetDrawingDocument();
 
 			let shortcutType = this.Api.getShortcut(e);
@@ -3723,21 +3724,45 @@
 			}
 			else if ( e.KeyCode == 35 ) // End
 			{
-				if ( true === e.CtrlKey ) // Ctrl + End
-				{
-					this.m_oScrollVerApi.scrollToY(this.m_oScrollVerApi.maxScrollY, false);
+				if (oController.getTargetDocContent()) {
+					if (e.CtrlKey) {
+						oController.cursorMoveToEndPos(e.ShiftKey);
+					}
+					else {
+						oController.cursorMoveEndOfLine(e.ShiftKey);
+					}
+
+					bRetValue = true;
+					this.timerSync();
 				}
-				this.timerSync();
-				bRetValue = true;
+				else {
+					if ( true === e.CtrlKey ) {
+						this.m_oScrollVerApi.scrollToY(this.m_oScrollVerApi.maxScrollY, false);
+					}
+					this.timerSync();
+					bRetValue = true;
+				}
 			}
 			else if ( e.KeyCode == 36 ) // клавиша Home
 			{
-				if ( true === e.CtrlKey ) // Ctrl + Home
-				{
-					this.m_oScrollVerApi.scrollToY(0, false);
+				if (oController.getTargetDocContent()) {
+					if (e.CtrlKey) {
+						oController.cursorMoveToStartPos(e.ShiftKey);
+					}
+					else {
+						oController.cursorMoveStartOfLine(e.ShiftKey);
+					}
+
+					bRetValue = true;
+					this.timerSync();
 				}
-				this.timerSync();
-				bRetValue = true;
+				else {
+					if ( true === e.CtrlKey ) {
+						this.m_oScrollVerApi.scrollToY(0, false);
+					}
+					this.timerSync();
+					bRetValue = true;
+				}
 			}
 			else if ( e.KeyCode == 37 ) // Left Arrow
 			{

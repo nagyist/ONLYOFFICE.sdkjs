@@ -5168,7 +5168,7 @@
 					}
 				},
 
-				cursorMoveToStartPos: function () {
+				cursorMoveToStartPos: function (AddToSelect) {
 					var content = this.getTargetDocContent(undefined, true);
 
 					var oStartContent, oStartPara;
@@ -5177,13 +5177,13 @@
 						if (oStartContent) {
 							oStartPara = oStartContent.GetCurrentParagraph();
 						}
-						content.MoveCursorToStartPos();
+						content.MoveCursorToStartPos(AddToSelect);
 						this.updateSelectionState();
 					}
 					this.checkRedrawOnChangeCursorPosition(oStartContent, oStartPara);
 				},
 
-				cursorMoveToEndPos: function () {
+				cursorMoveToEndPos: function (AddToSelect) {
 					var content = this.getTargetDocContent(undefined, true);
 					var oStartContent, oStartPara;
 					if (content) {
@@ -5191,7 +5191,7 @@
 						if (oStartContent) {
 							oStartPara = oStartContent.GetCurrentParagraph();
 						}
-						content.MoveCursorToEndPos();
+						content.MoveCursorToEndPos(AddToSelect);
 						this.updateSelectionState();
 					}
 					this.checkRedrawOnChangeCursorPosition(oStartContent, oStartPara);

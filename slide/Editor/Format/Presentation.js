@@ -4458,18 +4458,18 @@ CPresentation.prototype.Remove = function (Count, bOnlyText, bRemoveOnlySelectio
 };
 
 
-CPresentation.prototype.MoveCursorToStartPos = function () {
+CPresentation.prototype.MoveCursorToStartPos = function (AddToSelect) {
 	var oController = this.GetCurrentController();
-	oController && oController.cursorMoveToStartPos();
+	oController && oController.cursorMoveToStartPos(AddToSelect);
 	this.private_UpdateCursorXY(true, true);
 	this.Document_UpdateSelectionState();
 	this.Document_UpdateInterfaceState();
 	return true;
 };
 
-CPresentation.prototype.MoveCursorToEndPos = function () {
+CPresentation.prototype.MoveCursorToEndPos = function (AddToSelect) {
 	var oController = this.GetCurrentController();
-	oController && oController.cursorMoveToEndPos();
+	oController && oController.cursorMoveToEndPos(AddToSelect);
 	this.private_UpdateCursorXY(true, true);
 	this.Document_UpdateSelectionState();
 	this.Document_UpdateInterfaceState();
@@ -5671,7 +5671,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			if (oController.getTargetDocContent()) {
 				if (e.CtrlKey) // Ctrl + End - переход в конец документа
 				{
-					this.MoveCursorToEndPos();
+					this.MoveCursorToEndPos(e.ShiftKey);
 				} else // Переходим в конец строки
 				{
 					this.MoveCursorToEndOfLine(e.ShiftKey);
@@ -5694,7 +5694,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			if (oController.getTargetDocContent()) {
 				if (e.CtrlKey) // Ctrl + Home - переход в начало документа
 				{
-					this.MoveCursorToStartPos();
+					this.MoveCursorToStartPos(e.ShiftKey);
 				} else // Переходим в начало строки
 				{
 					this.MoveCursorToStartOfLine(e.ShiftKey);

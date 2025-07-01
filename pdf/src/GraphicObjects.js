@@ -349,6 +349,57 @@
         }
     };
 
+    CGraphicObjects.prototype.cursorMoveEndOfLine = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToEndOfLine(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveStartOfLine = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToStartOfLine(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveToEndPos = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToEndPos(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveToStartPos = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToStartPos(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
     CGraphicObjects.prototype.getDrawingProps = function () {
         return this.getDrawingPropsFromArray(this.getSelectedArray());
     };
