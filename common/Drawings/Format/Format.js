@@ -16145,6 +16145,34 @@
 				pen.Fill.fill.color.color.setId(phClr);
 				theme.themeElements.fmtScheme.lnStyleLst.push(pen);
 				theme.extraClrSchemeLst = [];
+
+
+				let oEffectStyle;
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
+
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
+
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				const oOuterShdw = new AscFormat.COuterShdw();
+				oOuterShdw.algn = AscFormat.RECT_ALIGN_CTR;
+				oOuterShdw.blurRad = 57150;
+				oOuterShdw.dir = 5400000;
+				oOuterShdw.dist = 19050;
+				oOuterShdw.rotWithShape = false;
+				const oEffectColor = AscFormat.CreateUniColorRGB(0, 0, 0);
+				const oColorMod = new AscFormat.CColorMod();
+				oColorMod.name = "alpha";
+				oColorMod.val = 63000;
+				oEffectColor.addColorMod(oColorMod);
+				oOuterShdw.color = oEffectColor;
+
+				oEffectStyle.effectProperties.EffectLst.outerShdw = oOuterShdw;
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
 				return theme;
 			}, this, []);
 		}
