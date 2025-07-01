@@ -3872,6 +3872,24 @@
 		};
 
 
+		CShape.prototype._isTextRotated = function(bodyPr) {
+			if (!bodyPr) {
+				return false;
+			}
+			
+			let isRotated = (bodyPr.vert === AscFormat.nVertTTvert
+				|| bodyPr.vert === AscFormat.nVertTTvert270
+				|| bodyPr.vert === AscFormat.nVertTTeaVert
+			);
+			
+			if (bodyPr.wrap !== AscFormat.nTWTNone
+				&& bodyPr.upright
+				&& !checkNormalRotate(this.getFullRotate())) {
+				isRotated = !isRotated;
+			}
+			
+			return isRotated;
+		};
 		CShape.prototype.recalculateDocContent = function (oDocContent, oBodyPr) {
 			let nStartPage = this.Get_AbsolutePage ? this.Get_AbsolutePage() : 0;
 			let oRet = {w: 0, h: 0, contentH: 0};
@@ -4017,6 +4035,22 @@
 					}
 				}
 			}
+			
+			if (oDocContent
+				&& !this.isForm()
+				&& oDocContent.GetLogicDocument()
+				&& !oDocContent.GetLogicDocument().IsPresentationEditor()) {
+				
+				let x = oRect.l - l_ins;
+				let y = oRect.t - t_ins;
+				
+				if (this._isTextRotated(oBodyPr)) {
+					oDocContent.Set_ClipInfo(0, y, y + h, x, x + w);
+				} else {
+					oDocContent.Set_ClipInfo(0, x, x + w, y, y + h);
+				}
+			}
+			
 			return oRet;
 		};
 

@@ -9714,7 +9714,7 @@ function isAllowPasteLink(pastedWb) {
 		}
 
 		rowInfo.height = this.workbook.printPreviewState.isStart() ? th * this.getZoom() : Asc.round(th * this.getZoom());
-		rowInfo._heightForPrint = this.updateRowHeightValuePx ? this.updateRowHeightValuePx : this._getRowHeightReal(cell.nRow);
+		rowInfo._heightForPrint = this.updateRowHeightValuePx ? AscCommonExcel.convertPxToPt(this.updateRowHeightValuePx) : this._getRowHeightReal(cell.nRow);
 		rowInfo.descender = d;
 		return th;
 	};
@@ -18210,6 +18210,8 @@ function isAllowPasteLink(pastedWb) {
 				}
 			}
             if (r2 < r) {
+                t._updateRange(new Asc.Range(0, r1, gc_nMaxCol0, r2));
+                t.draw();
             	return;
 			}
 

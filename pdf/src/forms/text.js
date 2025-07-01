@@ -1129,13 +1129,18 @@
         let oMargins = this.GetMarginsFromBorders();
 		
 		let contentW = nWidth;
+		let contentH = nHeight;
 		let rot = this.GetRotate();
 		if (90 === rot || 270 === rot)
+		{
 			contentW = nHeight;
+			contentH = nWidth;
+		}
 		
 		let contentX = (this.IsComb() ? (X + oMargins.left) : (X + 2 * oMargins.left)) * g_dKoef_pt_to_mm;
         let contentY = (Y + (this.IsMultiline() ? (2.5 * oMargins.top) : (2 * oMargins.top))) * g_dKoef_pt_to_mm;
         let contentXLimit = (this.IsComb() ? (X + contentW - oMargins.left) : (X + contentW - 2 * oMargins.left)) * g_dKoef_pt_to_mm;
+		let contentYLimit = (Y + contentH - (this.IsMultiline() ? (2.5 * oMargins.bottom) : (2 * oMargins.bottom))) * g_dKoef_pt_to_mm;
         
         if ((this.borderStyle == "solid" || this.borderStyle == "dashed") && 
         this.IsComb() == true && this.GetCharLimit() > 1) {
@@ -1165,6 +1170,7 @@
             this.contentFormat.Y= contentYFormat;
             this.content.XLimit = this.contentFormat.XLimit = contentXLimit;
             this.content.YLimit = this.contentFormat.YLimit = 20000;
+			this.content.Set_ClipInfo(0, contentX, contentXLimit, contentY, contentYLimit);
             
             this.CalculateContentClipRect();
             this.content.Recalculate_Page(0, true);

@@ -6057,7 +6057,7 @@ background-repeat: no-repeat;\
 				this.EndActionLoadImages = 2;
 				this.sync_StartAction(c_oAscAsyncActionType.Information, c_oAscAsyncAction.LoadImage);
 			}
-			const oRequiredSyncImagesMap = this.isApplyChangesOnOpen ? this.getFirstSlideImagesMap() : null;
+			const oRequiredSyncImagesMap = this.isSyncLoadFirstSlideImages() && this.isApplyChangesOnOpen ? this.getFirstSlideImagesMap() : null;
 			this.ImageLoader.LoadDocumentImages(this.saveImageMap, false, oRequiredSyncImagesMap);
 			return;
 		}
@@ -6085,9 +6085,12 @@ background-repeat: no-repeat;\
 			this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.LoadDocumentImages);
 		}
 
-		const oRequiredSyncImagesMap = AscCommon.CollaborativeEditing.m_aChanges.length ? null : this.getFirstSlideImagesMap();
+		const oRequiredSyncImagesMap = this.isSyncLoadFirstSlideImages() && !AscCommon.CollaborativeEditing.m_aChanges.length ? this.getFirstSlideImagesMap() : null;
 		this.ImageLoader.bIsLoadDocumentFirst = true;
 		this.ImageLoader.LoadDocumentImages(_loader_object.ImageMap, false, oRequiredSyncImagesMap);
+	};
+	asc_docs_api.prototype.isSyncLoadFirstSlideImages = function () {
+		return this.isEmbedVersion || this.asc_IsStartDemonstrationOnOpen();
 	};
 	asc_docs_api.prototype.getFirstSlideImagesMap = function () {
 		const oLogicDocument = this.getLogicDocument();

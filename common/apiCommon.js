@@ -1906,6 +1906,9 @@ function (window, undefined) {
 	CColor.prototype.fromAscColor = function (oAscColor) {
 		return new CColor(oAscColor.r, oAscColor.g, oAscColor.b);
 	};
+	CColor.prototype.isEqual = function (r, g, b, a) {
+		return this.r === r && this.g === g && this.b === b && this.a === a;
+	};
 
 	/** @constructor */
 	function asc_CColor() {
@@ -8302,6 +8305,66 @@ function (window, undefined) {
 	{
 		return mm * AscCommon.g_dKoef_mm_to_pix;
 	};
+
+	window["Asc"].checkReturnCommand = function(obj, recursionDepth)
+	{
+		let depth = (recursionDepth === undefined) ? 0 : recursionDepth;
+		if (depth > 10)
+			return false;
+
+		switch (typeof obj)
+		{
+			case "undefined":
+			case "boolean":
+			case "number":
+			case "string":
+			case "symbol":
+			case "bigint":
+				return true;
+			case "object":
+			{
+				if (!obj)
+					return true;
+
+				if (Array.isArray(obj))
+				{
+					for (let i = 0, len = obj.length; i < len; i++)
+					{
+						if (!Asc.checkReturnCommand(obj[i], depth + 1))
+							return false;
+					}
+
+					return true;
+				}
+
+				if (Object.getPrototypeOf)
+				{
+					let prot = Object.getPrototypeOf(obj);
+					if (prot && prot.__proto__ && prot.__proto__.constructor && prot.__proto__.constructor.name)
+					{
+						if (prot.__proto__.constructor.name === "TypedArray")
+							return true;
+					}
+				}
+
+				for (let prop in obj)
+				{
+					if (obj.hasOwnProperty(prop))
+					{
+						if (!Asc.checkReturnCommand(obj[prop], depth + 1))
+							return false;
+					}
+				}
+
+				return true;
+			}
+			default:
+				break;
+		}
+
+		return false;
+	};
+	
 
 	window["Asc"]["asc_CFormatCellsInfo"] = window["Asc"].asc_CFormatCellsInfo = asc_CFormatCellsInfo;
 	prot = asc_CFormatCellsInfo.prototype;

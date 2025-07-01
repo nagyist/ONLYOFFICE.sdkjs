@@ -410,6 +410,9 @@ function (window, undefined) {
 					window.removeEventListener(AscCommon.getPtrEvtName("up"), t.fKeyMouseUp, false);
 					window.removeEventListener(AscCommon.getPtrEvtName("move"), t.fKeyMouseMove, false);
 				}
+				if (api && api.isMobileVersion) {
+					t.input.blur();
+				}
 				t._blur();
 				t._updateTopLineActive(false);
 				t.input.isFocused = false;

@@ -541,7 +541,7 @@ var CPresentation = CPresentation || function(){};
         this.UpdateCopyCutState();
     };
     CPDFDoc.prototype.IsEditFieldsMode = function() {
-        return false == Asc.editor.isRestrictionView();
+        return Asc.editor.canEdit();
     };
     CPDFDoc.prototype.CreateNewFieldName = function(nFieldType) {
         let sFormType = "";

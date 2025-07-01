@@ -126,13 +126,14 @@
         let oMargins = this.GetMarginsFromBorders();
 
         let contentX        = (X + 2 * oMargins.left) * g_dKoef_pt_to_mm;
-        let contentY        = (Y + oMargins.top) * g_dKoef_pt_to_mm;
+        let _contentY       = (Y + oMargins.top) * g_dKoef_pt_to_mm;
         let contentXLimit   = (X + nWidth - 2 * oMargins.left) * g_dKoef_pt_to_mm;
+		let contentYLimit   = (Y + nHeight - 2 * oMargins.left) * g_dKoef_pt_to_mm;
 
         let nContentH       = this.GetTextHeight(this.content);
         let nContentHFormat = this.GetTextHeight(this.contentFormat);
 
-        contentY            = Y * g_dKoef_pt_to_mm + (nHeight * g_dKoef_pt_to_mm - nContentH) / 2;
+        let contentY        = Y * g_dKoef_pt_to_mm + (nHeight * g_dKoef_pt_to_mm - nContentH) / 2;
         let contentYFormat  = Y * g_dKoef_pt_to_mm + (nHeight * g_dKoef_pt_to_mm - nContentHFormat) / 2;
 
         if (contentX != this.content.X || contentY != this.content.Y ||
@@ -142,8 +143,9 @@
             this.contentFormat.Y= contentYFormat;
             this.content.XLimit = this.contentFormat.XLimit = contentXLimit;
             this.content.YLimit = this.contentFormat.YLimit = 20000;
-            
-            this.CalculateContentClipRect();
+	
+			this.content.Set_ClipInfo(0, contentX, contentXLimit, _contentY, contentYLimit);
+			this.CalculateContentClipRect();
             this.content.Recalculate_Page(0, true);
             this.contentFormat.Recalculate_Page(0, true);
 

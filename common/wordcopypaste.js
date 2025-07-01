@@ -93,7 +93,7 @@ function GetObjectsForImageDownload(aBuilderImages, bSameDoc)
     {
 		let oBuilderImg = aBuilderImages[i];
 		let sUrl = oBuilderImg.Url;
-        if(!g_oDocumentUrls.getImageLocal(sUrl) && !g_oDocumentUrls.isThemeUrl(sUrl))
+        if(sUrl && !g_oDocumentUrls.getImageLocal(sUrl) && !g_oDocumentUrls.isThemeUrl(sUrl))
         {
 			aUrls.push(sUrl);
 			aBuilderImagesByUrl.push([oBuilderImg]);
@@ -108,7 +108,10 @@ function GetObjectsForImageDownload(aBuilderImages, bSameDoc)
             {
                 if (oBuilderImage.AdditionalUrls) {
                     for (var j = 0; j < oBuilderImage.AdditionalUrls.length; ++j) {
-                        aUrls.push(oBuilderImage.AdditionalUrls[j]);
+						if(oBuilderImage.AdditionalUrls[j])
+						{
+							aUrls.push(oBuilderImage.AdditionalUrls[j]);
+						}
                     }
                 }
             }
@@ -6627,6 +6630,7 @@ PasteProcessor.prototype =
 							let oDocContent = oTxBody.content;
 							if(!oDocContent || oDocContent.IsEmpty()) {
 								aShapes.length = 0;
+								oThis.arrDrawingsPasteOrder.splice(oThis.arrDrawingsPasteOrder.indexOf(oFirstShape), 1);
 							}
 						}
 					}
@@ -11075,8 +11079,10 @@ PasteProcessor.prototype =
 				let first_shape = arrShapes2[0];
 				let content = first_shape.txBody.content;
 
-				//Удаляем параграф, который создается в шейпе по умолчанию
-				content.Internal_Content_Remove(0, 1);
+				if (content.Content.length > 1) {
+					//Удаляем параграф, который создается в шейпе по умолчанию
+					content.Internal_Content_Remove(0, 1);
+				}
 
 				//добавляем новый параграфы
 				for (i = 0, length = content.Content.length; i < length; ++i) {
@@ -11112,8 +11118,10 @@ PasteProcessor.prototype =
 				var first_shape = arrShapes2[0];
 				var content = first_shape.txBody.content;
 
-				//Удаляем параграф, который создается в шейпе по умолчанию
-				content.Internal_Content_Remove(0, 1);
+				if (content.Content.length > 1) {
+					//Удаляем параграф, который создается в шейпе по умолчанию
+					content.Internal_Content_Remove(0, 1);
+				}
 				
 				//добавляем новый параграфы
 				for (i = 0, length = content.Content.length; i < length; ++i) {

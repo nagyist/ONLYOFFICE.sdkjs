@@ -1240,6 +1240,14 @@
 				process : false
 			};
 
+			this.SearchResults = null;
+			this.isClearPages = false;
+
+			this.isFullText = false;
+			this.isFullTextMessage = false;
+			this.fullTextMessageCallback = null;
+			this.fullTextMessageCallbackArgs = null;
+
 			this._paint();
 			this.onUpdateOverlay();
 		};
@@ -3117,8 +3125,17 @@
 				this.blitPageToCtx(ctx, oImageToDraw, i);
 				this.pagesInfo.setPainted(i);
 				
-				if (this.Api.watermarkDraw)
-					this.Api.watermarkDraw.Draw(ctx, x, y, w, h);
+				if (this.Api.watermarkDraw) {
+					let dx = x;
+
+					if (this.isLandscapePage(i)) {
+						dx += (w - h) / 2;
+						this.Api.watermarkDraw.Draw(ctx, dx, y, h, w);
+					}
+					else {
+						this.Api.watermarkDraw.Draw(ctx, dx, y, w, h);
+					}
+				}
 			}
 			
 			this.isClearPages = false;
@@ -4970,6 +4987,25 @@
 			writePageInfo.call(this, aOrder[i], undefined);
 		}
 
+		if (!oMemory) {
+			let isParentsChanged = false;
+			oDoc.widgets.forEach(function(widget) {
+				let oParent = widget.GetParent();
+				while (oParent) {
+					if (oParent.IsChanged()) {
+						isParentsChanged = true;
+						break;
+					}
+
+					oParent = oParent.GetParent();
+				}
+			});
+
+			if (isParentsChanged) {
+				checkMemory();
+			}
+		}
+
 		if (oMemory) {
 			let nStartPos = oMemory.GetCurPosition();
 			oMemory.Skip(4);
@@ -5271,6 +5307,25 @@
 		// пишем по порядку
 		for (let i = 0; i < aOrder.length; i++) {
 			writePageInfo.call(this, aOrder[i], undefined);
+		}
+
+		if (!oMemory) {
+			let isParentsChanged = false;
+			oDoc.widgets.forEach(function(widget) {
+				let oParent = widget.GetParent();
+				while (oParent) {
+					if (oParent.IsChanged()) {
+						isParentsChanged = true;
+						break;
+					}
+
+					oParent = oParent.GetParent();
+				}
+			});
+
+			if (isParentsChanged) {
+				checkMemory();
+			}
 		}
 
 		if (oMemory) {

@@ -1783,6 +1783,26 @@ Paragraph.prototype.Internal_Recalculate_CurPos = function(updateCurPos, updateT
 			targetY = top;
 		}
 		
+		if (this.Parent && this.Parent instanceof AscWord.CDocumentContent)
+		{
+			let relPage = this.GetRelativePage(CurPage);
+			let clip = this.Parent.GetClip(relPage);
+			if (clip)
+			{
+				let x0 = clip.correctX0(targetX);
+				let x1 = clip.correctX1(targetX);
+				
+				let y0 = clip.correctY0(targetY);
+				let y1 = clip.correctY1(targetY + targetH);
+				
+				if (x0 > x1 || y0 > y1)
+				{
+					targetH = 0;
+					ascent  = 0;
+				}
+			}
+		}
+		
 		drawingDocument.SetTargetColor(color.r, color.g, color.b);
 		drawingDocument.SetTargetSize(targetH, ascent);
 		drawingDocument.UpdateTargetTransform(transform);
@@ -1985,6 +2005,10 @@ Paragraph.prototype.IsEmptyRange = function(nCurLine, nCurRange)
 Paragraph.prototype.getLineCount = function()
 {
 	return this.GetLinesCount();
+};
+Paragraph.prototype.getLine = function(line)
+{
+	return this.Lines[line] ? this.Lines[line] : null;
 };
 Paragraph.prototype.GetLinesCount = function()
 {
@@ -6555,6 +6579,51 @@ Paragraph.prototype.Get_StartPos = function()
 
 	this.Content[0].Get_StartPos(ContentPos, Depth + 1);
 	return ContentPos;
+};
+/**
+ * Correct the specified position to a placeable position within the paragraph
+ * @param {AscWord.CParagraphContentPos} paraPos
+ * @returns {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.GetCursorPlaceablePos = function(paraPos)
+{
+	let obj = this.GetClassesByPos(paraPos);
+	if (obj.length && obj[obj.length - 1] instanceof AscWord.Run)
+		return paraPos;
+	
+	for (let i = 0; i < obj.length; ++i)
+	{
+		if (!obj[i].IsCursorPlaceable())
+		{
+			let parent = i ? obj[i - 1] : this;
+			let curPos = paraPos.Get(i);
+			
+			let contentLen = parent.Content.length;
+			let checkEndPos = true;
+			while (curPos > 0 && !parent.Content[curPos].IsCursorPlaceable())
+				--curPos;
+			
+			while (curPos < contentLen && !parent.Content[curPos].IsCursorPlaceable())
+			{
+				checkEndPos = false;
+				++curPos;
+			}
+			
+			if (parent.Content[curPos].IsCursorPlaceable())
+			{
+				let contentPos = parent === this ? new AscWord.CParagraphContentPos() : this.Get_PosByElement(parent);
+				contentPos.Update(curPos, contentPos.GetDepth() + 1);
+				// TODO: Need to check IsCursorPlaceable for inner objects (GetStartPlaceablePos/GetEndPlaceablePos)
+				if (checkEndPos)
+					parent.Content[curPos].Get_EndPos(true, contentPos, contentPos.GetDepth() + 1);
+				else
+					parent.Content[curPos].Get_StartPos(contentPos, contentPos.GetDepth() + 1);
+				return contentPos;
+			}
+		}
+	}
+	
+	return paraPos;
 };
 /**
  * Получаем начальную позицию в параграфе
