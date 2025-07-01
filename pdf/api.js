@@ -444,6 +444,7 @@
 				aChars.push(data[i].charCodeAt(0));
 
 			this.asc_enterText(aChars, true);
+			oDoc.FinalizeAction(true);
 		}
 	};
 	PDFEditorApi.prototype.asc_setAdvancedOptions = function(idOption, option) {
