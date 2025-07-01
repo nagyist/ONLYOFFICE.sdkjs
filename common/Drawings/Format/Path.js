@@ -441,6 +441,10 @@ function (window, undefined) {
 		endAngle   = (360 + endAngle)   % 360;
 		ctrlAngle  = (360 + ctrlAngle)  % 360;
 
+		if (startAngle === endAngle) {
+			return 0;
+		}
+
 		// different sweeps depending on where the control point is
 		let sweep;
 		if (startAngle < endAngle) {
@@ -457,9 +461,6 @@ function (window, undefined) {
 			if (endAngle < ctrlAngle && ctrlAngle < startAngle) {
 				// negative sweep - clockwise
 				sweep = endAngle - startAngle;
-			}
-			else if (startAngle === endAngle && startAngle === ctrlAngle) {
-				sweep = 0;
 			}
 			else {
 				// positive sweep - anti-clockwise
@@ -809,9 +810,7 @@ function (window, undefined) {
 					// -286.47888333333333 —-> 73.52111666666667
 					// -572.9577833333333 —-> 147.04221666666672
 					// so c in degrees is from -180 to 180
-					c = Math.atan2(ch * Math.sin(c * cToRad), cw * Math.cos(c * cToRad)) / cToRad;
-
-					let cRadians = c * cToRad2;
+					let cRadians = Math.atan2(ch * Math.sin(c * cToRad), cw * Math.cos(c * cToRad));
 
 					if (isNaN(lastY)) {
 						lastY = 0;
