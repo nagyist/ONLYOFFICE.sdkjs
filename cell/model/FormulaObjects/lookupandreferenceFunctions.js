@@ -2907,6 +2907,7 @@ function (window, undefined) {
 		this.bHor = bHor;
 		this.sortedCache = {};
 		this.typedCache = {};
+		this.typedCacheValuesMap = {};
 
 		this.nextVal = undefined;
 		this.nextValIndex = undefined;
@@ -3163,6 +3164,7 @@ function (window, undefined) {
 		sortedAxis.saveRange(rowCol,  tmpArrays);
 		return sortedAxis.getSortedRange(rowCol);
 	};
+
 	VHLOOKUPCache.prototype._getTypedCache = function (ws, rowCol) {
 		const wsId = ws.getId();
 		if (!this.typedCache[wsId]) {
@@ -3172,6 +3174,50 @@ function (window, undefined) {
 		const sorted = sortedAxis.getSortedRange(rowCol);
 		if (!sorted) {
 			return this._createTypedCache(ws, rowCol);
+		}
+		return sorted;
+	};
+	VHLOOKUPCache.prototype._createTypedCacheValuesMap = function (ws, rowCol) {
+		const wsId = ws.getId();
+		const t = this;
+		// todo delete tmpArrays
+		if (!this.typedCacheValuesMap[wsId]) {
+			this.typedCacheValuesMap[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
+		}
+		const sortedAxis = this.bHor ? this.typedCacheValuesMap[wsId].horizontal : this.typedCacheValuesMap[wsId].vertical;
+		let tmpArrays = {};
+		let c1 = this.bHor ? 0 : rowCol;
+		let r1 = this.bHor ? rowCol : 0;
+		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
+		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
+		const fullRange = ws.getRange3(r1, c1, r2, c2);
+		const bHor = this.bHor;
+		let idx = 0;
+		let lastCellValue = null;
+		fullRange._foreachNoEmpty(function (cell, r, c) {
+			const value = checkTypeCell(cell, true);
+			if (lastCellValue && t._compareValues(lastCellValue, value, '<>')) {
+				idx += 1;
+			}
+			if (!tmpArrays[value.type]) {
+				tmpArrays[value.type] = [];
+			}
+			tmpArrays[value.type].push({v: value, i: idx});
+			lastCellValue = value;
+		});
+		sortedAxis.saveRange(rowCol,  tmpArrays);
+		return sortedAxis.getSortedRange(rowCol);
+	};
+
+	VHLOOKUPCache.prototype._getTypedCacheValuesMap = function (ws, rowCol) {
+		const wsId = ws.getId();
+		if (!this.typedCacheValuesMap[wsId]) {
+			return this._createTypedCacheValuesMap(ws, rowCol);
+		}
+		const sortedAxis = this.bHor ? this.typedCacheValuesMap[wsId].horizontal : this.typedCacheValuesMap[wsId].vertical;
+		const sorted = sortedAxis.getSortedRange(rowCol);
+		if (!sorted) {
+			return this._createTypedCacheValuesMap(ws, rowCol);
 		}
 		return sorted;
 	};
@@ -3345,10 +3391,11 @@ function (window, undefined) {
 	 * @param {Worksheet} ws
 	 * @param {number} rowCol
 	 * @param {Uint32Array} typed
+	 * @param {Uint32Array} typedMap
 	 * @param {{i: number, v: LookUpElement}[]} [opt_array]
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._defaultBinarySearch = function (valueForSearching, startIndex, endIndex, ws, rowCol, typed, opt_array) {
+	VHLOOKUPCache.prototype._defaultBinarySearch = function (valueForSearching, startIndex, endIndex, ws, rowCol, typed, typedMap, opt_array) {
 		let i = startIndex;
 		let j = endIndex;
 		const t = this;
@@ -3372,14 +3419,14 @@ function (window, undefined) {
 				let jj = typed.length - 1
 				while (ii <= jj) {
 					let kk = Math.floor((ii + jj) / 2);
-					if (typed[kk] < k || typed[kk] < startIndex) {
+					if (typed[kk] < k) {
 						ii = kk + 1;
 					} else {
 						jj = kk - 1;
 					}
 				}
 				const found = typed[Math.max(ii, jj)];
-				if (found <= endIndex) {
+				if (found <= endIndex && found <= j) {
 					k = typed[Math.max(ii, jj)];
 				}
 			}
@@ -3389,13 +3436,35 @@ function (window, undefined) {
 			} else {
 				resultIndex = k;
 				if (this._compareValues(val, valueForSearching, "=")) {
-					for (let ii = k + 1; ii <= j; ii += 1) {
-						val = getValue(ii);
-						if (val.type === valueForSearching.type && this._compareValues(val, valueForSearching, "=")) {
-							resultIndex = ii;
-						} else {
+					let ii = 0;
+					let jj = typed.length - 1
+					let foundCurrent = -1;
+					while (ii <= jj) {
+						let kk = Math.floor((ii + jj) / 2);
+						if (typed[kk] === k) {
+							foundCurrent = kk;
 							break;
+						} else if (typed[kk] < k) {
+							ii = kk + 1;
+						} else {
+							jj = kk - 1;
 						}
+					}
+					const currentValue = typedMap[foundCurrent];
+					ii = foundCurrent + 1;
+					jj = typedMap.length - 1
+					let res = foundCurrent;
+					while (ii <= jj) {
+						let kk = Math.floor((ii + jj) / 2);
+						if (typedMap[kk] > currentValue || typed[kk] > endIndex) {
+							jj = kk - 1;
+						} else {
+							ii = kk + 1;
+							res = kk;
+						}
+					}
+					if (typedMap[res] === currentValue) {
+						resultIndex = typed[res];
 					}
 					break;
 				}
@@ -3543,16 +3612,23 @@ function (window, undefined) {
 			}
 		} else if (lookup) {
 			const typedCache = this._getTypedCache(ws, rowCol);
+			const typedCacheValuesMap = this._getTypedCacheValuesMap(ws, rowCol);
 			const sorted = typedCache[valueForSearching.type];
+			const typedMap = typedCacheValuesMap[valueForSearching.type];
 			if (!sorted) {
 				return -1;
 			}
-			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, sorted);
+			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, sorted, typedMap);
 		} else {
-			if (sorted) {
-				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
-			} else if (opt_array) {
+			if (opt_array) {
 				res = this._simpleSearch(opt_array, valueForSearching, false, opt_arg4);
+			} else {
+				const sortedCache = this._getSortedCache(ws, rowCol);
+				const sorted = sortedCache[valueForSearching.type];
+				if (!sorted) {
+					return -1;
+				}
+				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
 			}
 		}
 		return res;
@@ -3573,6 +3649,7 @@ function (window, undefined) {
 		this.cacheRanges = {};
 		this.sortedCache = {};
 		this.typedCache = {};
+		this.typedCacheValuesMap = {};
 	};
 	VHLOOKUPCache.prototype.generateElements = function (range, cacheElem) {
 		var _this = this;
