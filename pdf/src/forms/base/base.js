@@ -1694,6 +1694,28 @@
 
         return this._required;
     };
+    CBaseField.prototype.SetTooltip = function(sTooltip) {
+        let oParent = this.GetParent();
+        if (oParent && oParent.IsAllKidsWidgets())
+            return oParent.SetTooltip(sTooltip);
+
+        if (this._tooltip === sTooltip) {
+            return true;
+        }
+
+        AscCommon.History.Add(new CChangesPDFFormTooltip(this, this._tooltip, sTooltip));
+
+        this._tooltip = sTooltip;
+        this.SetWasChanged(true);
+        return true;
+    };
+    CBaseField.prototype.GetTooltip = function(bInherit) {
+        let oParent = this.GetParent();
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+            return oParent.GetTooltip();
+
+        return this._tooltip;
+    };
     CBaseField.prototype.SetLocked = function(bLocked) {
         if (this._locked === bLocked) {
             return true;
@@ -2901,9 +2923,12 @@
         memory.posForFieldDataFlags  = memory.GetCurPosition();
         memory.Skip(4);
         
-        //
-        // username
-        //
+        // tooltip
+        let sTooltip = this.GetTooltip(false);
+        if (sTooltip) {
+            memory.fieldDataFlags |= (1 << 0);
+            memory.WriteString(sTooltip);
+        }
 
         //
         // default style
@@ -3134,6 +3159,13 @@
         if (this.GetType() == AscPDF.FIELD_TYPES.text) {
             nFlags |= (1 << 9);
             memory.WriteLong(this.GetCharLimit());
+        }
+
+        // tooltip
+        let sTooltip = this.GetTooltip();
+        if (sTooltip) {
+            nFlags |= (1 << 10);
+            memory.WriteString(sTooltip);
         }
 
         // write flags

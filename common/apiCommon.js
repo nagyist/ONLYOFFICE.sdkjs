@@ -3543,6 +3543,7 @@ function (window, undefined) {
 		this.stroke				= null;
 		this.strokeWidth		= undefined;
 		this.strokeStyle		= undefined;
+		this.tooltip			= undefined;
 		this.locked				= false;
 
 		this.fieldProps	= null;
@@ -3612,6 +3613,12 @@ function (window, undefined) {
 	};
 	asc_CBaseFieldProperty.prototype.asc_putPropLocked = function (v) {
 		this.locked = v;
+	};
+	asc_CBaseFieldProperty.prototype.asc_getTooltip = function () {
+		return this.tooltip;
+	};
+	asc_CBaseFieldProperty.prototype.asc_putTooltip = function (v) {
+		this.tooltip = v;
 	};
 	asc_CBaseFieldProperty.prototype.get_Locked = function () {
 		return this.coEditLocked;
@@ -7723,6 +7730,8 @@ function (window, undefined) {
 	prot["asc_putStrokeStyle"]	= prot.asc_putStrokeStyle;
 	prot["asc_getPropLocked"]	= prot.asc_getPropLocked;
 	prot["asc_putPropLocked"]	= prot.asc_putPropLocked;
+	prot["asc_getTooltip"]		= prot.asc_getTooltip;
+	prot["asc_putTooltip"]		= prot.asc_putTooltip;
 	prot["get_Locked"]			= prot.get_Locked;
 	prot["put_Locked"]			= prot.put_Locked;
 	prot["asc_getFieldProps"]	= prot.asc_getFieldProps;

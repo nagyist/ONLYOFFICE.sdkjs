@@ -1452,6 +1452,8 @@
 				}
 				if (oFormInfo["locked"])
 					oForm.SetLocked(Boolean(oFormInfo["locked"]));
+				if (oFormInfo["tooltip"])
+					oForm.SetTooltip(oFormInfo["tooltip"]);
 				
 				if (Array.isArray(oFormInfo["curIdxs"]) && oFormInfo["curIdxs"].length != 0)
 				{
