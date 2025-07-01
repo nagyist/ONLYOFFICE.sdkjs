@@ -258,6 +258,9 @@
 		let oActiveDrawing	= oDoc.activeDrawing;
 
 		if (oThumbnails && oThumbnails.isInFocus) {
+			if (!oDoc.Viewer.file || oDoc.Viewer.file.type !== 0)
+				return;
+
 			let _data, sBase64;
 			
 			// HTML
