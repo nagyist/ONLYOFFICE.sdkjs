@@ -351,6 +351,8 @@ function (window, undefined) {
 		this.date = "";
 		this.isvisible = false;
 		this.isrequested = false;
+		
+		this.isForm = false;
 	}
 
 	asc_CSignatureLine.prototype.correct = function () {
@@ -365,6 +367,7 @@ function (window, undefined) {
 		if (this.image == null) this.image = "";
 		if (this.date == null) this.date = "";
 		if (this.isvisible == null) this.isvisible = false;
+		if (this.isForm === null) this.isForm = false;
 	};
 	asc_CSignatureLine.prototype.asc_getId = function () {
 		return this.id;
@@ -431,6 +434,12 @@ function (window, undefined) {
 	};
 	asc_CSignatureLine.prototype.asc_setRequested = function (v) {
 		this.isrequested = v;
+	};
+	asc_CSignatureLine.prototype.asc_getIsForm = function() {
+		return this.isForm;
+	};
+	asc_CSignatureLine.prototype.asc_setIsForm = function(v) {
+		this.isForm = v;
 	};
 
 	/**
@@ -7046,6 +7055,8 @@ function (window, undefined) {
 	prot["asc_setVisible"] = prot.asc_setVisible;
 	prot["asc_getRequested"] = prot.asc_getRequested;
 	prot["asc_setRequested"] = prot.asc_setRequested;
+	prot["asc_getIsForm"] = prot.asc_getIsForm;
+	prot["asc_setIsForm"] = prot.asc_setIsForm;
 
 	window["AscCommon"].asc_CAscEditorPermissions = asc_CAscEditorPermissions;
 	prot = asc_CAscEditorPermissions.prototype;
