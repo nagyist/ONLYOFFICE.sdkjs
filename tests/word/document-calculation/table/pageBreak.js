@@ -129,9 +129,9 @@ $(function ()
 		
 		let cellContent = table.GetRow(0).GetCell(1).GetContent();
 		paragraph = cellContent.GetElement(0);
-		paragraph.SetParagraphSpacing({After : 0, Before : 0, LineRule : linerule_Auto, Line : 1});
+		paragraph.SetParagraphSpacing({After : 80, Before : 0, LineRule : linerule_Auto, Line : 1});
 		paragraph = AscTest.CreateParagraph();
-		paragraph.SetParagraphSpacing({After : 780, Before : 0, LineRule : linerule_Auto, Line : 1});
+		paragraph.SetParagraphSpacing({After : 700, Before : 0, LineRule : linerule_Auto, Line : 1});
 		cellContent.AddToContent(1, paragraph);
 		
 		AscTest.Recalculate();
