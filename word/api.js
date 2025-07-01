@@ -8133,12 +8133,15 @@ background-repeat: no-repeat;\
 			let sign = new AscCommon.asc_CSignatureLine();
 			sign.guid = AscCommon.CreateGUID();
 			sign.isForm = true;
-			let userMaster = allRoles.length ? allRoles[allRoles.length - 1].getUserMaster() : null;
-			if (userMaster)
-				sign.signer1 = userMaster.getUserId();
-			
-			if (logicDocument.Core && logicDocument.Core.modified)
-				sign.date = new Date(logicDocument.Core.modified).toString();
+			let lastRole = allRoles.length ? allRoles[allRoles.length - 1] : null;
+			if (lastRole)
+			{
+				try {
+					sign.date = new Date(lastRole.getFieldGroup().getDate()).toString();
+				} catch (e) {}
+				
+				sign.signer1 = lastRole.getUserMaster().getUserName();
+			}
 			
 			this.signatures.push(sign);
 			this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
@@ -8807,6 +8810,14 @@ background-repeat: no-repeat;\
 		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_RoleFilled);
 		oform.setRoleFilled(oform.getCurrentRole(), true);
+		let role = oform.getRole(oform.getCurrentRole());
+		let user = role ? role.getUserMaster() : null;
+		if (user && this.DocInfo)
+		{
+			user.setUserId(this.DocInfo.get_UserId());
+			user.setUserName(AscCommon.UserInfoParser.getParsedName(this.DocInfo.get_UserName()));
+		}
+		
 		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype._sendForm = function()
