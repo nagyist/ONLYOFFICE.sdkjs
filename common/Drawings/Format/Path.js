@@ -522,10 +522,24 @@ function (window, undefined) {
 		b = controlPoint.y;
 
 		// http://visguy.com/vgforum/index.php?topic=2464.0
-		let d2 = d * d;
-		let cx = ((x0 - x) * (x0 + x) * (y - b) - (x - a) * (x + a) * (y0 - y) + d2 * (y0 - y) * (y - b) * (y0 - b)) / (2.0 * ((x0 - x) * (y - b) - (x - a) * (y0 - y)));
-		let cy = ((x0 - x) * (x - a) * (x0 - a) / d2 + (x - a) * (y0 - y) * (y0 + y) - (x0 - x) * (y - b) * (y + b)) / (2.0 * ((x - a) * (y0 - y) - (x0 - x) * (y - b)));
 		// can also be helpful https://stackoverflow.com/questions/6729056/mapping-svg-arcto-to-html-canvas-arcto
+		let onErrorResult = {wR: NaN, hR: NaN, stAng: NaN, swAng: NaN, ellipseRotation: NaN}
+		if (d === 0) {
+			return onErrorResult;
+		}
+		let d2 = d * d;
+
+		let cxDenominator = 2.0 * ((x0 - x) * (y - b) - (x - a) * (y0 - y));
+		if (cxDenominator === 0) {
+			return onErrorResult;
+		}
+		let cx = ((x0 - x) * (x0 + x) * (y - b) - (x - a) * (x + a) * (y0 - y) + d2 * (y0 - y) * (y - b) * (y0 - b)) / cxDenominator;
+
+		let cyDenominator = 2.0 * ((x - a) * (y0 - y) - (x0 - x) * (y - b));
+		if (cyDenominator === 0) {
+			return onErrorResult;
+		}
+		let cy = ((x0 - x) * (x - a) * (x0 - a) / d2 + (x - a) * (y0 - y) * (y0 + y) - (x0 - x) * (y - b) * (y + b)) / cyDenominator;
 
 		let rx = Math.sqrt(Math.pow(x0 - cx, 2) + Math.pow(y0 - cy, 2) * d2);
 		let ry = rx / d;
@@ -788,6 +802,21 @@ function (window, undefined) {
 					break;
 				}
 				case ellipticalArcTo: {
+					function onBadParams(path, x, y, a, b) {
+						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch.");
+						path.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
+						path.ArrPathCommand.push({id: lineTo, X: x, Y: y});
+						lastX = x;
+						lastY = y;
+					}
+
+					if (isNaN(lastY)) {
+						lastY = 0;
+					}
+					if (isNaN(lastX)) {
+						lastX = 0;
+					}
+
 					// https://learn.microsoft.com/en-us/office/client-developer/visio/ellipticalarcto-row-geometry-section
 					// but with a length in EMUs units and an angle in C-units, which will be expected clockwise as in other functions.
 					let x, y, a, b, c, d;
@@ -795,6 +824,23 @@ function (window, undefined) {
 					y = this.calculateCommandCoord(gdLst, cmd.y, ch, dCustomPathCoeffH);
 					a = this.calculateCommandCoord(gdLst, cmd.a, cw, dCustomPathCoeffW);
 					b = this.calculateCommandCoord(gdLst, cmd.b, ch, dCustomPathCoeffH);
+
+					// check if command arguments are wrong. Wrong arguments may refer to huge ellipse. It editor it can
+					// break scroll bars. So as visio does let's transform elliptical arc to line.
+					// see bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=75317
+					// files from 4 to 6 should not be caught
+
+					// three points on one line refers to bad arguments
+					// see files:
+					// 1 simple lines and ellipses.vsdx
+					// 3 swAng ~=0 testFlatCurve.vsdx
+					// 7 triangleSquare === 0 cehck test Diagonal.vsdx
+					// 8 small square + NaN params in result, isCollinear cathces.vsdx
+					let isCollinearCheck = isCollinear(lastX, lastY, a, b, x, y);
+					if (isCollinearCheck) {
+						onBadParams(this, x, y, a, b);
+						break;
+					}
 
 					c = gdLst[cmd.c];
 					if (c === undefined) {
@@ -814,27 +860,8 @@ function (window, undefined) {
 					// so c in degrees is from -180 to 180
 					let cRadians = Math.atan2(ch * Math.sin(c * cToRad), cw * Math.cos(c * cToRad));
 
-					if (isNaN(lastY)) {
-						lastY = 0;
-					}
-					if (isNaN(lastX)) {
-						lastX = 0;
-					}
-
 					// change ellipticalArcTo params to draw arc using old params
 					let newParams = transformEllipticalArcParams(lastX, lastY, x, y, a, b, cRadians, d);
-
-					// check if command arguments are wrong. Wrong arguments may refer to huge ellipse. It editor it can
-					// break scroll bars. So as visio does let's transform elliptical arc to line.
-					// see bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=75317
-					// files from 4 to 6 should not be caught
-
-					// ~0 swing angle refers to bad arguments. check it
-					// see files:
-					// 1 simple lines and ellipses.vsdx
-					// 2 swAng === 0 check  testFlatCurve Huge D.vsdx
-					// 3 swAng ~=0 testFlatCurve.vsdx
-					let swAngCheck = AscFormat.fApproxEqual(newParams.swAng, 0, 1e-7);
 
 					// NaN in newParams refers to bad arguments.
 					// see files:
@@ -843,32 +870,33 @@ function (window, undefined) {
 					// 8 small square + NaN params in result, isCollinear cathces.vsdx
 					let isNaNInParams = isNaN(newParams.swAng) || isNaN(newParams.stAng) ||
 							isNaN(newParams.wR) || isNaN(newParams.hR) || isNaN(newParams.ellipseRotation);
+					if (isNaNInParams) {
+						onBadParams(this, x, y, a, b);
+						break;
+					}
 
-					// three points on one line refers to bad arguments
+					// ~0 swing angle refers to bad arguments. check it
 					// see files:
 					// 1 simple lines and ellipses.vsdx
+					// 2 swAng === 0 check  testFlatCurve Huge D.vsdx
 					// 3 swAng ~=0 testFlatCurve.vsdx
-					// 7 triangleSquare === 0 cehck test Diagonal.vsdx
-					// 8 small square + NaN params in result, isCollinear cathces.vsdx
-					let isCollinearCheck = isCollinear(lastX, lastY, a, b, x, y);
+					let swAngCheck = AscFormat.fApproxEqual(newParams.swAng, 0, 1e-7);
+					if (swAngCheck) {
+						onBadParams(this, x, y, a, b);
+						break;
+					}
 
-					if (swAngCheck || isNaNInParams || isCollinearCheck) {
-						AscCommon.consoleLog("tranform ellipticalArcTo to line. 2 catch.");
-						this.ArrPathCommand.push({id: lineTo, X: a, Y: b}); // go to control point first
-						this.ArrPathCommand.push({id: lineTo, X: x, Y: y});
-					}
-					else {
-						this.ArrPathCommand.push({
-							id: ellipticalArcTo,
-							stX: lastX,
-							stY: lastY,
-							wR: newParams.wR,
-							hR: newParams.hR,
-							stAng: newParams.stAng * cToRad,
-							swAng: newParams.swAng * cToRad,
-							ellipseRotation: newParams.ellipseRotation * cToRad
-						});
-					}
+
+					this.ArrPathCommand.push({
+						id: ellipticalArcTo,
+						stX: lastX,
+						stY: lastY,
+						wR: newParams.wR,
+						hR: newParams.hR,
+						stAng: newParams.stAng * cToRad,
+						swAng: newParams.swAng * cToRad,
+						ellipseRotation: newParams.ellipseRotation * cToRad
+					});
 
 					lastX = x;
 					lastY = y;
