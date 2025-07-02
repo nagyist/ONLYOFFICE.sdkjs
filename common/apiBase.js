@@ -3794,6 +3794,11 @@
 		return this.signatures;
 	};
 
+	baseEditorsApi.prototype.asc_isFinalizedVersion = function()
+	{
+		return false;
+	};
+
 	baseEditorsApi.prototype.asc_RemoveSignature = function(guid)
 	{
 		if (window["AscDesktopEditor"])

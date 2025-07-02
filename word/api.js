@@ -9259,7 +9259,8 @@ background-repeat: no-repeat;\
 			if (isSelection)
 				dd.GenerateSelectionPrint();
 
-			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], options.isPdfPrint);
+			let isPrintedVersion = options.isPdfPrint || this.asc_isFinalizedVersion();
+			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], isPrintedVersion);
 			//console.log(oAdditionalData["data"]);
 		}
 		else if (c_oAscFileType.JSON === fileType)
@@ -13511,6 +13512,9 @@ background-repeat: no-repeat;\
 		if (options && ((options["saveFormat"] === "image") || (options["isPrint"] === true)))
 			_renderer.isPrintMode = true;
 
+		if (!_renderer.isPrintMode)
+			_renderer.isPrintMode = this.asc_isFinalizedVersion();
+
         _renderer.InitPicker(AscCommon.g_oTextMeasurer.m_oManager);
 		_renderer.VectorMemoryForPrint = new AscCommon.CMemory();
 		_renderer.DocInfo(this.asc_getCoreProps());
@@ -14554,6 +14558,15 @@ background-repeat: no-repeat;\
 	{
 		let logicDocument = this.private_GetLogicDocument();
 		return logicDocument ? logicDocument.GetNumeralType() : Asc.c_oNumeralType.arabic;
+	};
+
+	asc_docs_api.prototype.asc_isFinalizedVersion = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+			return true;
+		return false;
 	};
 	
 	//-------------------------------------------------------------export---------------------------------------------------
