@@ -604,6 +604,7 @@
 				canvas: canvas, units: 0/*px*/, fmgrGraphics: ws.workbook.fmgrGraphics, font: ws.workbook.m_oFont
 			});
 
+			oCtx.DocumentRenderer = AscCommonExcel.getGraphics(oCtx);
 			oCtx.isNotDrawBackground = true;
 
 			// Draw worksheet elements
