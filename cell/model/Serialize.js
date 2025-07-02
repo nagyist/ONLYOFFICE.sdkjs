@@ -3720,7 +3720,7 @@
                     });
                 }
 				var macros = this.wb.oApi.macros.GetData();
-                let customFunctions = this.wb.oApi.pluginMethod_GetCustomFunctions();
+                let customFunctions = this.wb.oApi["pluginMethod_GetCustomFunctions"] && this.wb.oApi["pluginMethod_GetCustomFunctions"]();
                 if (customFunctions) {
                     customFunctions = AscCommonExcel.mergeCustomFunctions(customFunctions, true);
                 }
