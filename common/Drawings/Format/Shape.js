@@ -4038,13 +4038,16 @@
 			
 			if ((oDocContent && !oDocContent.bPresentation) && !this.isForm()) {
 				
-				let x = oRect.l - l_ins;
-				let y = oRect.t - t_ins;
+				let x = -l_ins;
+				let y = -t_ins;
+				
+				let _w = oRect.r - oRect.l;
+				let _h = oRect.b - oRect.t;
 				
 				if (this._isTextRotated(oBodyPr)) {
-					oDocContent.Set_ClipInfo(0, y, y + h, x, x + w);
+					oDocContent.Set_ClipInfo(0, y, y + _h, x, x + _w);
 				} else {
-					oDocContent.Set_ClipInfo(0, x, x + w, y, y + h);
+					oDocContent.Set_ClipInfo(0, x, x + _w, y, y + _h);
 				}
 			}
 			
