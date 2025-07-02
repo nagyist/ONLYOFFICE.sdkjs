@@ -8792,10 +8792,7 @@ background-repeat: no-repeat;\
 		if (!logicDocument || !oform)
 			return false;
 		
-		if (!oform.getCurrentRole())
-			return this._sendForm();
-		
-		if (!oform.canFillRole(oform.getCurrentRole()))
+		if (oform.getCurrentRole() && !oform.canFillRole(oform.getCurrentRole()))
 			return false;
 		
 		this.forceSaveSendFormRequest = true;
@@ -8808,16 +8805,30 @@ background-repeat: no-repeat;\
 		let logicDocument = this.private_GetLogicDocument();
 		let oform = logicDocument.GetOFormDocument();
 		
-		logicDocument.StartAction(AscDFH.historydescription_OForm_RoleFilled);
-		oform.setRoleFilled(oform.getCurrentRole(), true);
-		let role = oform.getRole(oform.getCurrentRole());
-		let user = role ? role.getUserMaster() : null;
-		if (user && this.DocInfo)
-		{
-			user.setUserId(this.DocInfo.get_UserId());
-			user.setUserName(AscCommon.UserInfoParser.getParsedName(this.DocInfo.get_UserName()));
-		}
+		let currentRoleName = oform.getCurrentRole();
 		
+		let userName = this.DocInfo ? AscCommon.UserInfoParser.getParsedName(this.DocInfo.get_UserName()) : undefined;
+		let userId   = this.DocInfo ? this.DocInfo.get_UserId() : undefined;
+		
+		logicDocument.StartAction(AscDFH.historydescription_OForm_RoleFilled);
+		if (!currentRoleName)
+		{
+			oform.setAllRolesFilled({
+				name : userName,
+				id   : userId
+			});
+		}
+		else
+		{
+			oform.setRoleFilled(oform.getCurrentRole(), true);
+			let role = oform.getRole(currentRoleName);
+			let user = role ? role.getUserMaster() : null;
+			if (user && this.DocInfo)
+			{
+				user.setUserId(userId);
+				user.setUserName(userName);
+			}
+		}
 		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype._sendForm = function()
