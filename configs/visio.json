@@ -16,6 +16,7 @@
 			"vendor/array.js",
 			"common/editorscommon.js",
             "common/BulletPreviewDrawer.js",
+			"common/frameManager.js",
 			"common/HistoryCommon.js",
 			"common/TableId.js",
 			"common/TableIdChanges.js",
