@@ -735,6 +735,10 @@
 			//для некоторых действий не хочется показывать модальный loader, который закрывает всю страницу
 			//если для них делать incrementCounterLongAction, то будут проблемы, что не заблокированы линейки, resize окна не работает
 			//И скорее всего другие проблемы, поэтому делается через asc_setRestriction
+			//Пока это используется только при disconnect/reconnect, при disconnect мы хотим, чтобы было отключено любое редактирование.
+			//Поэтому, включаем глобальный лок в совместке. Если поведение будет меняться, то параметр actionRestriction надо делать настройкой,
+			//в которой будет указан новый рестрикшен и нужно ли включать лок на редактирование (и, возможно, лок на селект/курсор)
+			AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 			this.incrementCounterActionRestriction(actionRestriction);
 		}
 	};
@@ -755,6 +759,7 @@
 		}
 		if (undefined !== actionRestriction)
 		{
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 			this.decrementCounterActionRestriction();
 		}
 	};
