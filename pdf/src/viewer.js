@@ -1249,6 +1249,10 @@
 			this.fullTextMessageCallbackArgs = null;
 
 			this.isDocumentReady = false;
+			
+			let oDoc = this.getPDFDoc();
+			oDoc && oDoc.BlurActiveObject();
+
 			this._paint();
 			this.onUpdateOverlay();
 		};
