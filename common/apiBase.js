@@ -852,11 +852,13 @@
 	};
 	baseEditorsApi.prototype.asc_addTableOleObject = function(oleBinary)
 	{
+		this.asc_onCloseFrameEditor();
 		this.addTableOleObject(oleBinary);
 	};
 
 	baseEditorsApi.prototype.asc_editTableOleObject = function(oleBinary)
 	{
+		this.asc_onCloseFrameEditor();
 		this.editTableOleObject(oleBinary);
 	};
 
