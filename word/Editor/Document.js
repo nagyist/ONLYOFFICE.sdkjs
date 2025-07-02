@@ -13625,6 +13625,9 @@ CDocument.prototype.IsCursorInHyperlink = function(bCheckEnd)
  */
 CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, additionalData, sendEvent, actionDescription)
 {
+	if (this.CollaborativeEditing.Get_GlobalLock())
+		return false;
+	
 	let isPermRange = this.IsPermRangeEditing(checkType, additionalData, actionDescription);
 	if (sendEvent)
 	{
@@ -13635,7 +13638,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
 		}
 	}
 	
-	return (isPermRange || !((!this.CanEdit() && true !== isIgnoreCanEditFlag) || (true === this.CollaborativeEditing.Get_GlobalLock())));
+	return (isPermRange || this.CanEdit() || isIgnoreCanEditFlag);
 };
 /**
  * Проверяем, что действие с заданным типом произойдет в разрешенной области
