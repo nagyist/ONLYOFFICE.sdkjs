@@ -1839,9 +1839,9 @@
         }
       });
       socket.io.on("reconnect_failed", function () {
-        //cases: connection restore, wrong socketio_url
+        //Fired when couldn't reconnect within reconnectionAttempts.
         t._onServerClose(true);
-        t.onDisconnect("reconnect_failed", c_oCloseCode.restore);
+        t.onDisconnect("reconnect_failed", c_oCloseCode.reconnectFailed);
       });
       socket.on("message", function (data) {
         t._onServerMessage(data);
