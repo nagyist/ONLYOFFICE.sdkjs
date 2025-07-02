@@ -4036,10 +4036,7 @@
 				}
 			}
 			
-			if (oDocContent
-				&& !this.isForm()
-				&& oDocContent.GetLogicDocument()
-				&& !oDocContent.GetLogicDocument().IsPresentationEditor()) {
+			if ((oDocContent && !oDocContent.bPresentation) && !this.isForm()) {
 				
 				let x = oRect.l - l_ins;
 				let y = oRect.t - t_ins;
