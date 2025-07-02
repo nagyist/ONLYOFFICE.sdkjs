@@ -530,91 +530,16 @@
 
 		Clipboard.prototype.drawSelectedArea = function (ws, opt_get_bytes) {
 			let activeRange = ws.model.selectionRange.getLast();
-			let range = ws.getCellMetrics(activeRange.c1, activeRange.r1, true, true);
-			let rangeEnd = ws.getCellMetrics(activeRange.c2, activeRange.r2, true, true);
 
-			if (!range || !rangeEnd) {
-				return;
-			}
-
-			// Calculate dimensions
-			let width = rangeEnd.left + rangeEnd.width - range.left;
-			let height = rangeEnd.top + rangeEnd.height - range.top;
-
-			//TODO while add 1000px limit
-			let maxSize = 1000;
-			if (width > maxSize || height > maxSize) {
-				return;
-			}
-
-			let borderPadding = 1;
-			let zoom = ws.getZoom();
-		
-			let actualWidth = width;
-			let actualHeight = height;
-			let canvasWidth = actualWidth + borderPadding;
-			let canvasHeight = actualHeight + borderPadding;
-
-			// Create canvas and context
-			let canvas = document.createElement('canvas');
-			canvas.width = canvasWidth;
-			canvas.height = canvasHeight;
-			let ctx = canvas.getContext('2d');
-
-			ctx.save();
-
-			ctx.beginPath();
-			ctx.rect(0, 0, canvasWidth, canvasHeight);
-			ctx.clip();
-
-			// Determine frozen pane behavior for all four areas
-			let needScrollOffsetX = true;
-			let needScrollOffsetY = true;
-
-			let frozenCol, frozenRow;
-			if (ws.topLeftFrozenCell) {
-				frozenCol = ws.topLeftFrozenCell.getCol0();
-				frozenRow = ws.topLeftFrozenCell.getRow0();
-				
-				// Check if selection is in frozen columns (left areas)
-				if (activeRange.c2 < frozenCol) {
-					needScrollOffsetX = false;
+			let base64;
+			//ws.workbook._executeWithoutZoom(function () {
+				let ctx = ws.workbook.printForCopyPaste(ws, activeRange);
+				if (ctx && ctx.canvas) {
+					base64 = ctx.canvas.toDataURL("image/png");
 				}
-				
-				// Check if selection is in frozen rows (top areas)
-				if (activeRange.r2 < frozenRow) {
-					needScrollOffsetY = false;
-				}
-			}
+			//})
 
-			// Apply scroll offsets based on frozen pane location
-			let offsetX = range.left - borderPadding;
-			let offsetY = range.top - borderPadding;
-			if (needScrollOffsetX) {
-				offsetX += ws._getOffsetX() - (frozenCol ? (ws._getColLeft(frozenCol) - ws.cellsLeft) : 0);
-			}
-			if (needScrollOffsetY) {
-				offsetY += ws._getOffsetY() - (frozenRow ? (ws._getRowTop(frozenRow) - ws.cellsTop) : 0);
-			}
-
-			// Translate context to draw from selected range start
-			//ctx.translate(-offsetX, -offsetY);
-
-			let oCtx = new Asc.DrawingContext({
-				canvas: canvas, units: 0/*px*/, fmgrGraphics: ws.workbook.fmgrGraphics, font: ws.workbook.m_oFont
-			});
-
-			oCtx.DocumentRenderer = AscCommonExcel.getGraphics(oCtx);
-			oCtx.isNotDrawBackground = true;
-
-			// Draw worksheet elements
-			ws._drawGrid(oCtx, activeRange, offsetX, offsetY, undefined, undefined, undefined, true, true);
-			ws._drawCellsAndBorders(oCtx, activeRange, offsetX, offsetY);
-
-			ctx.restore();
-
-			let base64 = canvas.toDataURL();
-			if (opt_get_bytes) {
+			if (opt_get_bytes && base64) {
 				// Get base64 data without header
 				let base64Data = base64.split(',')[1];
 
