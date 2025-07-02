@@ -547,24 +547,55 @@
 				return;
 			}
 
+			let borderPadding = 1;
+			let zoom = ws.getZoom();
+		
+			let actualWidth = width;
+			let actualHeight = height;
+			let canvasWidth = actualWidth + borderPadding;
+			let canvasHeight = actualHeight + borderPadding;
+
 			// Create canvas and context
 			let canvas = document.createElement('canvas');
-			canvas.width = width * ws.getZoom();
-			canvas.height = height * ws.getZoom();
+			canvas.width = canvasWidth;
+			canvas.height = canvasHeight;
 			let ctx = canvas.getContext('2d');
-
-			//let zoom = ws.getZoom();
-			//ctx.scale(zoom, zoom);
 
 			ctx.save();
 
 			ctx.beginPath();
-			ctx.rect(0, 0, width, height);
+			ctx.rect(0, 0, canvasWidth, canvasHeight);
 			ctx.clip();
 
-			// Calculate scroll offsets
-			let offsetX = range.left;
-			let offsetY = range.top;
+			// Determine frozen pane behavior for all four areas
+			let needScrollOffsetX = true;
+			let needScrollOffsetY = true;
+
+			let frozenCol, frozenRow;
+			if (ws.topLeftFrozenCell) {
+				frozenCol = ws.topLeftFrozenCell.getCol0();
+				frozenRow = ws.topLeftFrozenCell.getRow0();
+				
+				// Check if selection is in frozen columns (left areas)
+				if (activeRange.c2 < frozenCol) {
+					needScrollOffsetX = false;
+				}
+				
+				// Check if selection is in frozen rows (top areas)
+				if (activeRange.r2 < frozenRow) {
+					needScrollOffsetY = false;
+				}
+			}
+
+			// Apply scroll offsets based on frozen pane location
+			let offsetX = range.left - borderPadding;
+			let offsetY = range.top - borderPadding;
+			if (needScrollOffsetX) {
+				offsetX += ws._getOffsetX() - (frozenCol ? (ws._getColLeft(frozenCol) - ws.cellsLeft) : 0);
+			}
+			if (needScrollOffsetY) {
+				offsetY += ws._getOffsetY() - (frozenRow ? (ws._getRowTop(frozenRow) - ws.cellsTop) : 0);
+			}
 
 			// Translate context to draw from selected range start
 			//ctx.translate(-offsetX, -offsetY);
