@@ -5213,7 +5213,7 @@ var CPresentation = CPresentation || function(){};
             }
 
             const imageMap = oParserContext.imageMap;
-            for (const sImg in imageMap) {
+            for (let sImg in imageMap) {
                 if (imageMap.hasOwnProperty(sImg) && "data:" === sImg.substring(0, 5)) {
                     allImages.push(sImg);
                     const aImg = imageMap[sImg];
