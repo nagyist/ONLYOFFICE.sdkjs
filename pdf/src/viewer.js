@@ -1099,9 +1099,6 @@
 
 			this.resize(true);
 			
-			this.openForms();
-			this.openAnnots();
-			
 			if (this.thumbnails)
 				this.thumbnails.init(this);
 
@@ -1215,6 +1212,9 @@
 				this.Api.sendEvent("asc_onError", Asc.c_oAscError.ID.ConvertationOpenError, Asc.c_oAscError.Level.Critical);
 
 			this.Api.WordControl.m_oOverlayApi = this.overlay;
+
+			this.openForms();
+			this.openAnnots();
 		};
 
 		this.close = function()
@@ -1247,6 +1247,11 @@
 			this.isFullTextMessage = false;
 			this.fullTextMessageCallback = null;
 			this.fullTextMessageCallbackArgs = null;
+
+			this.isDocumentReady = false;
+			
+			let oDoc = this.getPDFDoc();
+			oDoc && oDoc.BlurActiveObject();
 
 			this._paint();
 			this.onUpdateOverlay();
