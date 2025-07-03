@@ -2230,13 +2230,19 @@
 			// shadow.putTransparency(60);
 			shadow.color = shadowColor;
 
-			let shadowOffsetX_inch = this.getCellNumberValue("ShapeShdwOffsetX");
-			let shadowOffsetY_inch = this.getCellNumberValue("ShapeShdwOffsetY");
+			let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
+			let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
+			let shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
 			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
-			shadow.dist = Math.hypot(shadowOffsetX, shadowOffsetY) * 36000;
-			shadow.dir =  -atan * AscFormat.radToDeg * AscFormat.degToC;
+			shadow.dist = Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
+			// if true move to cord system where y goes down
+			if (isInvertCoords) {
+				atan = -atan;
+			}
+			shadow.dir = atan * AscFormat.radToDeg * AscFormat.degToC;
 
 			shadow.rotWithShape = true;
 			// cShape.spPr.changeShadow(shadow);

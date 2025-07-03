@@ -958,7 +958,8 @@
 		let fillResultCells = ["LineColor", "FillForegnd", "FillBkgnd"];
 		let fillColorResultCells = ["Color", "GradientStopColor", "ShdwForegnd"];
 		let numberResultCells = ["LinePattern", "LineWeight", "GradientStopColorTrans", "GradientStopPosition",
-		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap", "ShdwPattern"];
+		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap", "ShdwPattern",
+		"ShapeShdwOffsetX", "ShapeShdwOffsetY"];
 		let stringResultCells = ["EndArrow", "BeginArrow", "Font"];
 		let booleanResultCells = ["FillGradientEnabled"];
 
