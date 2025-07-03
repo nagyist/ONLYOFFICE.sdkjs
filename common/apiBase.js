@@ -366,6 +366,19 @@
 		}
 
 		this.initBroadcastChannel();
+		
+		this.asc_registerCallback("asc_onAddSignature", function(guid) {
+			t.sendEvent("asc_onUpdateSignatures", t.asc_getSignatures(), t.asc_getRequestSignatures());
+		});
+		this.asc_registerCallback("asc_onRemoveSignature", function(guid) {
+			t.sendEvent("asc_onUpdateSignatures", t.asc_getSignatures(), t.asc_getRequestSignatures());
+		});
+		this.asc_registerCallback("asc_onUpdateSignatures", function(signatures, requested) {
+			if (0 === signatures.length)
+				t.asc_removeRestriction(Asc.c_oAscRestrictionType.OnlySignatures);
+			else
+				t.asc_addRestriction(Asc.c_oAscRestrictionType.OnlySignatures);
+		});
 	};
 	baseEditorsApi.prototype._correctEmbeddedWork = function()
 	{
