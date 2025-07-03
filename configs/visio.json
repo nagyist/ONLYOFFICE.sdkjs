@@ -15,7 +15,6 @@
 			"vendor/string.js",
 			"vendor/array.js",
 			"common/editorscommon.js",
-		  "common/frameManager.js",
             "common/BulletPreviewDrawer.js",
 			"common/frameManager.js",
 			"common/HistoryCommon.js",
