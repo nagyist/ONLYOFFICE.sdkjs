@@ -982,9 +982,24 @@
 			}
 		},
 
+		isSupportExecCommand : function(type)
+		{
+			if (AscCommon.AscBrowser.isSafariMacOs && !AscCommon.AscBrowser.isAppleDevices)
+				return false;
+			return true;
+		},
+
 		isUseNewCopy : function()
 		{
 			if (navigator.clipboard) {
+
+				if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["getEngineVersion"])
+				{
+					let nVersion = window["AscDesktopEditor"]["getEngineVersion"]();
+					if (nVersion < 109)
+						return false;
+				}
+
 				return true;
 			}
 			if (this._isUseMobileNewCopy())
@@ -1052,8 +1067,10 @@
 					//don't put custom format, because FF don't write all in clipboard, if we try write custom format
 					//"web text/x-custom" : new Blob(["asc_internalData2;" + copy_data.data[c_oAscClipboardDataFormat.Internal]], {type: "web text/x-custom"})
 
-					const data = [new ClipboardItem(clipboardData)];
-					navigator.clipboard.write(data).then(function(){},function(){});
+					if (this.isCopyOutEnabled()) {
+						const data = [new ClipboardItem(clipboardData)];
+						navigator.clipboard.write(data).then(function(){},function(){});
+					}
 
 					if (isCut === true)
 						this.Api.asc_SelectionCut();
@@ -1174,7 +1191,8 @@
 			var _ret = false;
 			try
 			{
-				_ret = document.execCommand("copy");
+				if (this.isSupportExecCommand("copy"))
+					_ret = document.execCommand("copy");
 			}
 			catch (err)
 			{
@@ -1219,7 +1237,8 @@
 			var _ret = false;
 			try
 			{
-				_ret = document.execCommand("cut");
+				if (this.isSupportExecCommand("cut"))
+					_ret = document.execCommand("cut");
 			}
 			catch (err)
 			{
@@ -1267,7 +1286,8 @@
 			var _ret = false;
 			try
 			{
-				_ret = document.execCommand("paste");
+				if (this.isSupportExecCommand("paste"))
+					_ret = document.execCommand("paste");
 			}
 			catch (err)
 			{

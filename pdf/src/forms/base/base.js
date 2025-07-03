@@ -401,6 +401,7 @@
     };
     CBaseField.prototype.SetNeedUpdateEditShape = function(bUpdate) {
         this._needUpdateEditShape = bUpdate;
+        this.AddToRedraw();
     };
     CBaseField.prototype.IsNeedUpdateEditShape = function() {
         let oDoc = this.GetDocument();
@@ -791,6 +792,10 @@
 	 * @typeofeditors ["PDF"]
 	 */
     CBaseField.prototype.SetParentValue = function(value) {
+        if (value && typeof(value) !== "string" && value.toString) {
+            value = value.toString();
+        }
+
         let oParent = this.GetParent();
         if (oParent && this.IsWidget() && oParent.IsAllKidsWidgets())
             oParent.SetParentValue(value);
@@ -1513,6 +1518,9 @@
 
         if (!isChanged)
             this.SetWasChanged(false);
+        
+        if (this.IsChanged() == false)
+            this.SetDrawFromStream(true);
     };
 
     CBaseField.prototype.ClearCache = function() {
@@ -1610,16 +1618,9 @@
 
         AscCommon.History.Add(new CChangesPDFFormReadOnly(this, this._readOnly, bReadOnly));
 
-        function update(widget) {
-            widget.SetWasChanged(true);
+        this.GetAllWidgets().forEach(function(widget) {
             widget.AddToRedraw();
-        };
-    
-        if (this.IsWidget()) {
-            update(this);
-        } else {
-            this.GetAllWidgets().forEach(update);
-        }
+        });
 
         this._readOnly = bReadOnly;
         this.SetWasChanged(true);
@@ -1676,16 +1677,9 @@
 
         AscCommon.History.Add(new CChangesPDFFormRequired(this, this._required, bRequired));
 
-        function update(widget) {
-            widget.SetWasChanged(true);
+        this.GetAllWidgets().forEach(function(widget) {
             widget.AddToRedraw();
-        };
-    
-        if (this.IsWidget()) {
-            update(this);
-        } else {
-            this.GetAllWidgets().forEach(update);
-        }
+        });
 
         this._required = bRequired;
         this.SetWasChanged(true);
@@ -1793,15 +1787,9 @@
         this._defaultValue = value;
         this.SetWasChanged(true);
 
+        const shouldUpdate = !value && this.GetParentValue() === sOldDefValue || value && !this.GetParentValue();
+
         let oWidget = this.IsWidget() ? this : this.GetKid(0);
-        
-        const shouldUpdate = (
-            (!value && this.GetParentValue() === sOldDefValue) ||
-            (value && (
-                !this.GetParentValue() ||
-                (this.GetType() === AscPDF.FIELD_TYPES.checkbox && this.GetParentValue() === "Off")
-            ))
-        );
 
         if (shouldUpdate) {
             if (oWidget && oWidget.IsWidget()) {

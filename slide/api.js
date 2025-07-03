@@ -6057,7 +6057,7 @@ background-repeat: no-repeat;\
 				this.EndActionLoadImages = 2;
 				this.sync_StartAction(c_oAscAsyncActionType.Information, c_oAscAsyncAction.LoadImage);
 			}
-			const oRequiredSyncImagesMap = this.isApplyChangesOnOpen ? this.getFirstSlideImagesMap() : null;
+			const oRequiredSyncImagesMap = this.isSyncLoadFirstSlideImages() && this.isApplyChangesOnOpen ? this.getFirstSlideImagesMap() : null;
 			this.ImageLoader.LoadDocumentImages(this.saveImageMap, false, oRequiredSyncImagesMap);
 			return;
 		}
@@ -6085,9 +6085,12 @@ background-repeat: no-repeat;\
 			this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.LoadDocumentImages);
 		}
 
-		const oRequiredSyncImagesMap = AscCommon.CollaborativeEditing.m_aChanges.length ? null : this.getFirstSlideImagesMap();
+		const oRequiredSyncImagesMap = this.isSyncLoadFirstSlideImages() && !AscCommon.CollaborativeEditing.m_aChanges.length ? this.getFirstSlideImagesMap() : null;
 		this.ImageLoader.bIsLoadDocumentFirst = true;
 		this.ImageLoader.LoadDocumentImages(_loader_object.ImageMap, false, oRequiredSyncImagesMap);
+	};
+	asc_docs_api.prototype.isSyncLoadFirstSlideImages = function () {
+		return this.isEmbedVersion || this.asc_IsStartDemonstrationOnOpen();
 	};
 	asc_docs_api.prototype.getFirstSlideImagesMap = function () {
 		const oLogicDocument = this.getLogicDocument();
@@ -6139,7 +6142,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.IsAsyncOpenDocumentImages     = function()
 	{
-		return !this.isReporterMode && !this.asc_IsStartDemonstrationOnOpen();
+		return !this.isReporterMode;
 	};
 	asc_docs_api.prototype.asyncImagesDocumentStartLoaded      = function(aImages)
 	{
@@ -7877,7 +7880,6 @@ background-repeat: no-repeat;\
 		this.reporterStartObject = startObject;
 		this.reporterStartObject["translate"] = AscCommon.translateManager.mapTranslate;
 		this.reporterStartObject["skin"] = AscCommon.GlobalSkin;
-		this.reporterStartObject["canEditMain"] = this.canEdit();
 
 		if (window["AscDesktopEditor"])
 		{
@@ -8116,20 +8118,11 @@ background-repeat: no-repeat;\
 		var _button1 = document.getElementById("dem_id_reset");
 		var _button2 = document.getElementById("dem_id_end");
 
-		let canEditMain = data["canEditMain"];
-		if(!canEditMain)
-		{
-			let drawButton = document.getElementById("dem_id_draw_menu_trigger");
-			drawButton.style.display = "none";
-		}
-		else
-		{
-			var _miPen = document.querySelector("#dem_id_draw_menu a[data-tool=\"pen\"]");
-			var _miHighlighter = document.querySelector("#dem_id_draw_menu a[data-tool=\"highlighter\"]");
-			var _miInkColor = document.querySelector("#dem_id_draw_color_menu_trigger > a");
-			var _miEraser = document.querySelector("#dem_id_draw_menu a[data-tool=\"eraser\"]");
-			var _miEraseAll = document.querySelector("#dem_id_draw_menu a[data-tool=\"erase-all\"]");
-		}
+		var _miPen = document.querySelector("#dem_id_draw_menu a[data-tool=\"pen\"]");
+		var _miHighlighter = document.querySelector("#dem_id_draw_menu a[data-tool=\"highlighter\"]");
+		var _miInkColor = document.querySelector("#dem_id_draw_color_menu_trigger > a");
+		var _miEraser = document.querySelector("#dem_id_draw_menu a[data-tool=\"eraser\"]");
+		var _miEraseAll = document.querySelector("#dem_id_draw_menu a[data-tool=\"erase-all\"]");
 
 
 		if (_button1)

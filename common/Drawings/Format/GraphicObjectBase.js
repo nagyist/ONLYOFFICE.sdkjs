@@ -3987,6 +3987,9 @@
 		oGraphicBounds.reset(oBounds.min_x, oBounds.min_y, oBounds.max_x, oBounds.max_y);
 		return oGraphicBounds;
 	};
+	CGraphicObjectBase.prototype.getDocContent = function () {
+		return null;
+	};
 	CGraphicObjectBase.prototype.isControl = function() {
 		return false;
 	}

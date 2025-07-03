@@ -769,14 +769,23 @@ CContentControlPr.prototype.OnSetKeyToForm = function(newKey, form)
 	
 	let formManager = logicDocument.GetFormsManager();
 	let allForms = formManager.GetAllFormsByKey(newKey, form.GetSpecificType());
+	let firstForm = null;
 	for (let iForm = 0, nForms = allForms.length; iForm < nForms; ++iForm)
 	{
 		if (allForms[iForm] === form)
 			continue;
 		
+		firstForm = allForms[iForm];
+		
 		// Напрямую у formManager не вызываем, т.к. еще может быть не выставлен ключ у текущей формы
 		logicDocument.OnChangeForm(allForms[iForm]);
 		break;
+	}
+	
+	if (firstForm)
+	{
+		form.SyncFormPrWithSameKey(firstForm);
+		this.FormPr.SetRequired(firstForm.IsFormRequired());
 	}
 	
 	let role = formManager.GetRoleByKey(newKey, form.GetSpecificType());

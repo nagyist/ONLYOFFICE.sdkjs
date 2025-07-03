@@ -79,6 +79,14 @@
 	{
 		marks.push(this);
 	};
+	ParagraphPermBase.prototype.IsCursorPlaceable = function()
+	{
+		return false;
+	};
+	ParagraphPermBase.prototype.CanPlaceCursorInside = function()
+	{
+		return false;
+	};
 	/**
 	 * Очень важно, что в режимах комментирования и просмотра, мы проход через данный элемент считаем как перемещение курсора,
 	 * т.к. на этом завязано выделение текущего слова и применение настроек к текущему слову (оно должно применяться

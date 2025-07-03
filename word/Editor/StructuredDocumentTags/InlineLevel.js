@@ -2389,6 +2389,7 @@ CInlineLevelSdt.prototype.SetComboBoxPr = function(oPr)
 		var _oPr = oPr ? oPr.Copy() : undefined;
 		History.Add(new CChangesSdtPrComboBox(this, this.Pr.ComboBox, _oPr));
 		this.Pr.ComboBox = _oPr;
+		this.OnChangePr();
 	}
 };
 /**
@@ -2408,6 +2409,7 @@ CInlineLevelSdt.prototype.SetDropDownListPr = function(oPr)
 		var _oPr = oPr ? oPr.Copy() : undefined;
 		History.Add(new CChangesSdtPrDropDownList(this, this.Pr.DropDown, _oPr));
 		this.Pr.DropDown = _oPr;
+		this.OnChangePr();
 	}
 };
 /**
@@ -2809,6 +2811,25 @@ CInlineLevelSdt.prototype.GetSpecificType = function()
 		return Asc.c_oAscContentControlSpecificType.DateTime;
 
 	return Asc.c_oAscContentControlSpecificType.None;
+};
+/**
+ * Sync form properties for current form and specified form
+ */
+CInlineLevelSdt.prototype.SyncFormPrWithSameKey = function(form)
+{
+	if (form.GetSpecificType() !== this.GetSpecificType())
+		return;
+	
+	this.SetFormRequired(form.IsFormRequired());
+	
+	if (Asc.c_oAscContentControlSpecificType.DropDownList === this.GetSpecificType())
+	{
+		this.SetDropDownListPr(form.GetDropDownListPr());
+	}
+	else if (Asc.c_oAscContentControlSpecificType.ComboBox === this.GetSpecificType())
+	{
+		this.SetComboBoxPr(form.GetComboBoxPr());
+	}
 };
 CInlineLevelSdt.prototype.Get_ParentTextTransform = function()
 {
@@ -3230,6 +3251,10 @@ CInlineLevelSdt.prototype.ConvertFormToFixed = function(nW, nH)
 		nH = Math.max(nH, 22 * g_dKoef_pt_to_mm);
 	}
 	
+	// TODO: Разобраться, почему мы посылаем useWrap=true, хотя по факту не true
+	// Обязательно вызываем до любого изменения параграфа
+	let layout = oParagraph ? oParagraph.GetLayout(this.GetStartPosInParagraph(), true) : null;
+	
 	// Удаляем переносы строк и все лишнее, т.к. изначально конвертим в однострочную форму
 	this.CorrectSingleLineFormContent();
 	
@@ -3248,8 +3273,6 @@ CInlineLevelSdt.prototype.ConvertFormToFixed = function(nW, nH)
 	let x = 0;
 	let y = 0;
 	
-	// TODO: Разобраться, почему мы посылаем useWrap=true, хотя по факту не true
-	let layout = oParagraph.GetLayout(this.GetStartPosInParagraph(), true);
 	if (layout)
 	{
 		let anchorPosition = new CAnchorPosition();
@@ -3917,7 +3940,8 @@ CInlineLevelSdt.prototype.SetInnerText = function(sText)
 CInlineLevelSdt.prototype.GetInnerText = function()
 {
 	var oText = {
-		Text: ""
+		Text: "",
+		NewLineSeparator : "\r\n"
 	};
 
 	this.Get_Text(oText);

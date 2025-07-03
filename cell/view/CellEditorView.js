@@ -410,6 +410,9 @@ function (window, undefined) {
 					window.removeEventListener(AscCommon.getPtrEvtName("up"), t.fKeyMouseUp, false);
 					window.removeEventListener(AscCommon.getPtrEvtName("move"), t.fKeyMouseMove, false);
 				}
+				if (api && api.isMobileVersion) {
+					t.input.blur();
+				}
 				t._blur();
 				t._updateTopLineActive(false);
 				t.input.isFocused = false;
@@ -1255,7 +1258,7 @@ function (window, undefined) {
 		this._cleanText();
 
 		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
-		if (externalSelectionController && !externalSelectionController.getExternalFormulaEditMode()) {
+		if (!externalSelectionController || !externalSelectionController.getExternalFormulaEditMode()) {
 			this._cleanSelection();
 			this._adjustCanvas();
 			this._showCanvas();

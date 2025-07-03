@@ -141,7 +141,8 @@
                 para.Pr.Ind.FirstLine = oMargins.left * g_dKoef_pt_to_mm;
                 para.RecalcCompiledPr(true);
             });
-
+	
+			this.content.Set_ClipInfo(0, contentX, contentXLimit, contentY, contentYLimit);
             this.CalculateContentClipRect();
             this.content.Recalculate_Page(0, true);
 
@@ -744,6 +745,10 @@
     };
     CListBoxField.prototype.UpdateScroll = function(bShow) {
         if (bShow && this.IsEditMode()) {
+            return;
+        }
+        
+        if (this.IsNeedDrawFromStream()) {
             return;
         }
         

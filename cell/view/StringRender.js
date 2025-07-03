@@ -155,6 +155,13 @@
 		{
 			return oItem.char;
 		};
+		FragmentShaper.prototype.GetTextScript = function(nUnicode)
+		{
+			if (0x060C <= nUnicode && nUnicode <= 0x074A)
+				return AscFonts.HB_SCRIPT.HB_SCRIPT_ARABIC;
+
+			return AscFonts.hb_get_script_by_unicode(nUnicode);
+		};
 		FragmentShaper.prototype.shapeFragment = function(chars, font, stringRenderer, beginIndex) {
 			this.font           = font;
 			this.stringRenderer = stringRenderer;
@@ -1445,14 +1452,22 @@
 				}
 				let char = this.stringRender.chars[i];
 				let bidiType = this.getBidiType(char, charProp);
-
 				this.stringRender._setFont(this.drawingCtx, prop.font);
-				this.drawingCtx.setFillStyle(prop.c || this.stringRender.textColor);
-				// this.handleBidiFlow({
-				// 	charIndex: i,
-				// 	charProp: charProp,
-				// 	fragmentProp: prop
-				// }, bidiType);
+
+				//todo: implement the stack of states in DrawingContext and remove this check
+				let textColor = prop.c || this.stringRender.textColor;
+				let _r = textColor.getR();
+				let _g = textColor.getG();
+				let _b = textColor.getB();
+				let _a = textColor.getA();
+				let setColor = true;
+				if (this.drawingCtx.fillColor && this.drawingCtx.fillColor.isEqual(_r, _g, _b, _a)) {
+					setColor = false;
+				}
+				if (setColor) {
+					this.drawingCtx.setFillStyle(textColor);
+				}
+				/////
 				this.bidiFlow.add({
 					charIndex: i,
 					charProp: charProp,

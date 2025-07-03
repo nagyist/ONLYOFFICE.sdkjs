@@ -1592,13 +1592,13 @@ CDocumentContent.prototype.Shift = function(CurPage, Dx, Dy, keepClip)
 };
 CDocumentContent.prototype.ShiftView = function(nDx, nDy)
 {
-	this.Shift(0, nDx, nDy);
+	this.Shift(0, nDx, nDy, true);
 	this.ShiftViewX += nDx;
 	this.ShiftViewY += nDy;
 };
 CDocumentContent.prototype.ResetShiftView = function()
 {
-	this.Shift(0, -this.ShiftViewX, -this.ShiftViewY);
+	this.Shift(0, -this.ShiftViewX, -this.ShiftViewY, true);
 	this.ShiftViewX = 0;
 	this.ShiftViewY = 0;
 };
@@ -2730,6 +2730,20 @@ CDocumentContent.prototype.Set_ClipInfo = function(CurPage, X0, X1, Y0, Y1)
 {
 	this.ClipInfo[CurPage] = new AscWord.ClipRect(X0, X1, Y0, Y1);
 };
+CDocumentContent.prototype.IntersectClip = function(clipInfo, pageIndex)
+{
+	let pageClip = this.ClipInfo[pageIndex];
+	if (!clipInfo && pageClip)
+		clipInfo = pageClip.clone();
+	else if (clipInfo)
+		clipInfo.intersect(pageClip);
+	
+	return clipInfo;
+};
+CDocumentContent.prototype.GetClip = function(pageIndex)
+{
+	return this.ClipInfo[pageIndex] ? this.ClipInfo[pageIndex] : null;
+};
 CDocumentContent.prototype.IsApplyToAll = function()
 {
 	return this.ApplyToAll;
@@ -2812,24 +2826,23 @@ CDocumentContent.prototype.AddNewParagraph = function(bForceAdd)
             else
             {
                 var ItemReviewType = Item.GetReviewType();
-                // Создаем новый параграф
+
                 var NewParagraph   = new AscWord.Paragraph(this, this.bPresentation === true);
-	
 				let firstPara, secondPara;
 				if (Item.IsCursorAtBegin())
 				{
-					// Продолжаем (в плане настроек) новый параграф
+					Item.Split(NewParagraph);
 					Item.Continue(NewParagraph);
 
 					NewParagraph.Correct_Content();
 					NewParagraph.MoveCursorToStartPos();
 
 					var nContentPos = this.CurPos.ContentPos;
-					this.AddToContent(nContentPos, NewParagraph);
+					this.AddToContent(nContentPos + 1, NewParagraph);
 					this.CurPos.ContentPos = nContentPos + 1;
 					
-					firstPara  = NewParagraph;
-					secondPara = Item;
+					firstPara  = Item;
+					secondPara = NewParagraph;
 				}
 				else
 				{
@@ -2850,8 +2863,8 @@ CDocumentContent.prototype.AddNewParagraph = function(bForceAdd)
 							if (!NextId || !oNextStyle || !oNextStyle.IsParagraphStyle())
 								NextId = StyleId;
 						}
-
-
+						
+						Item.Split(NewParagraph);
 						if (StyleId === NextId)
 						{
 							// Продолжаем (в плане настроек) новый параграф
@@ -4780,6 +4793,49 @@ CDocumentContent.prototype.SetParagraphPr = function(oParaPr)
 		}
 	}
 };
+CDocumentContent.prototype.SetParagraphBidi = function(bidi)
+{
+	if (this.IsApplyToAll())
+	{
+		for (var nIndex = 0, nCount = this.Content.length; nIndex < nCount; ++nIndex)
+		{
+			var oItem = this.Content[nIndex];
+			oItem.SetApplyToAll(true);
+			oItem.SetParagraphBidi(bidi);
+			oItem.SetApplyToAll(false);
+		}
+		
+		return;
+	}
+	
+	if (docpostype_DrawingObjects === this.GetDocPosType())
+	{
+		//return this.LogicDocument.DrawingObjects.setParagraphBidi(bidi);
+	}
+	else
+	{
+		if (this.Selection.Use)
+		{
+			var nStartPos = this.Selection.StartPos;
+			var nEndPos   = this.Selection.EndPos;
+			if (nEndPos < nStartPos)
+			{
+				var nTemp = nStartPos;
+				nStartPos = nEndPos;
+				nEndPos   = nTemp;
+			}
+			
+			for (var nIndex = nStartPos; nIndex <= nEndPos; ++nIndex)
+			{
+				this.Content[nIndex].SetParagraphBidi(bidi);
+			}
+		}
+		else
+		{
+			this.Content[this.CurPos.ContentPos].SetParagraphBidi(bidi);
+		}
+	}
+};
 CDocumentContent.prototype.SetParagraphAlign = function(Align)
 {
 	if (true === this.ApplyToAll)
@@ -6317,11 +6373,7 @@ CDocumentContent.prototype.DrawSelectionOnPage = function(PageIndex, clipInfo)
 	if (this.transform && drawingDocument)
 		drawingDocument.MultiplyTargetTransform(this.transform.CreateDublicate());
 	
-	let pageClip = this.ClipInfo[CurPage];
-	if (!clipInfo && pageClip)
-		clipInfo = pageClip.clone();
-	else if (clipInfo)
-		clipInfo.intersect(pageClip);
+	clipInfo = this.IntersectClip(clipInfo, PageIndex);
 
     if (docpostype_DrawingObjects === this.CurPos.Type)
     {

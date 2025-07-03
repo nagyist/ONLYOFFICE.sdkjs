@@ -8110,6 +8110,27 @@ CTable.prototype.SetParagraphPr = function(oParaPr)
 		this.CurCell.GetContent().SetParagraphPr(oParaPr);
 	}
 };
+CTable.prototype.SetParagraphBidi = function(bidi)
+{
+	if (this.IsCellSelection())
+	{
+		let selectionArray = this.GetSelectionArray();
+		for (let i = 0; i < selectionArray.length; ++i)
+		{
+			let row = this.GetRow([selectionArray[i].Row]);
+			let cell = row.GetCell(selectionArray[i].Cell);
+			
+			let docContent = cell.GetContent();
+			docContent.SetApplyToAll(true);
+			docContent.SetParagraphBidi(bidi);
+			docContent.SetApplyToAll(false);
+		}
+	}
+	else
+	{
+		return this.CurCell.Content.SetParagraphBidi(bidi);
+	}
+};
 CTable.prototype.IncreaseDecreaseFontSize = function(bIncrease)
 {
 	if (this.IsCellSelection())
@@ -16533,6 +16554,37 @@ CTable.prototype.StartSelectionFromCurPos = function()
 
 
 	this.CurCell.Content.StartSelectionFromCurPos();
+};
+CTable.prototype.SelectRange = function(startCell, startRow, endCell, endRow)
+{
+	let rowsCount = this.GetRowsCount();
+	if (rowsCount <= 0)
+		return;
+	
+	startRow = Math.max(0, Math.min(startRow, rowsCount - 1));
+	endRow = Math.max(0, Math.min(endRow, rowsCount - 1));
+	
+	startCell = Math.max(0, Math.min(startCell, this.GetRow(startRow).GetCellsCount() - 1));
+	endCell = Math.max(0, Math.min(endCell, this.GetRow(endRow).GetCellsCount() - 1));
+	
+	this.Selection.Use = true;
+	this.Selection.Start = false;
+
+	this.Selection.StartPos.Pos = {
+		Cell : startCell,
+		Row  : startRow
+	};
+	
+	this.Selection.EndPos.Pos = {
+		Cell : endCell,
+		Row  : endRow
+	};
+	
+	this.Selection.Type   = table_Selection_Cell;
+	this.Selection.CurRow = endRow;
+	this.CurCell = this.GetRow(endRow).GetCell(endCell);
+	
+	this.private_UpdateSelectedCellsArray();
 };
 CTable.prototype.GetStyleFromFormatting = function()
 {

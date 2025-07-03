@@ -1753,7 +1753,7 @@ function readPermStart(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permStart = AscWord.ParagraphPermStart.fromObject(permPr);
-	oReadResult.addPermStart(paragraphContent, permStart);
+	oReadResult.addPermStart(paragraphContent, permStart, true);
 	return res;
 }
 function readPermEnd(length, bcr, oReadResult, paragraphContent) {
@@ -1763,7 +1763,7 @@ function readPermEnd(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permEnd = AscWord.ParagraphPermEnd.fromObject(permPr);
-	oReadResult.addPermEnd(paragraphContent, permEnd);
+	oReadResult.addPermEnd(paragraphContent, permEnd, true);
 	return res;
 }
 function readPermPr(length, bcr, permPr) {
@@ -12011,39 +12011,23 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
         return res;
     };
 	this.ReadText = function(text, run, isInstrText){
-		for (var i = 0; i < text.length; ++i)
+		for (var it = text.getUnicodeIterator(); it.check(); it.next())
 		{
-			var nUnicode = null;
-			var nCharCode = text.charCodeAt(i);
-			if (AscCommon.isLeadingSurrogateChar(nCharCode))
+			let nUnicode = it.value();
+			if (isInstrText)
 			{
-				if(i + 1 < text.length)
-				{
-					i++;
-					var nTrailingChar = text.charCodeAt(i);
-					nUnicode = AscCommon.decodeSurrogateChar(nCharCode, nTrailingChar);
-				}
+				run.AddToContentToEnd(new AscWord.ParaInstrText(nUnicode));
 			}
 			else
-				nUnicode = nCharCode;
-
-			if (null !== nUnicode) {
-				if(isInstrText){
-					run.AddToContentToEnd(new ParaInstrText(nUnicode));
-				} else {
-					if (AscCommon.IsSpace(nUnicode)) {
-						run.AddToContentToEnd(new AscWord.CRunSpace(nUnicode));
-					} else if (0x0D === nUnicode) {
-						if (i + 1 < text.length && 0x0A === text.charCodeAt(i + 1)) {
-							i++;
-						}
-						run.AddToContentToEnd(new AscWord.CRunSpace());
-					} else if (0x09 === nUnicode) {
-						run.AddToContentToEnd(new AscWord.CRunTab());
-					} else {
-						run.AddToContentToEnd(new AscWord.CRunText(nUnicode));
-					}
-				}
+			{
+				if (AscCommon.IsSpace(nUnicode))
+					run.AddToContentToEnd(new AscWord.CRunSpace(nUnicode));
+				else if (0x0D === nUnicode)
+					run.AddToContentToEnd(new AscWord.CRunSpace());
+				else if (0x09 === nUnicode)
+					run.AddToContentToEnd(new AscWord.CRunTab());
+				else
+					run.AddToContentToEnd(new AscWord.CRunText(nUnicode));
 			}
 		}
 	};
@@ -13523,39 +13507,20 @@ function Binary_oMathReader(stream, oReadResult, curNote, openParams)
         if (c_oSerRunType.run === type)
         {
             var text = this.stream.GetString2LE(length);
-
-			for (var i = 0; i < text.length; ++i)
+			for (var it = text.getUnicodeIterator(); it.check(); it.next())
 			{
-			    var nUnicode = null;
-			    var nCharCode = text.charCodeAt(i);
-			    if (AscCommon.isLeadingSurrogateChar(nCharCode))
-			    {
-			        if(i + 1 < text.length)
-			        {
-			            i++;
-			            var nTrailingChar = text.charCodeAt(i);
-			            nUnicode = AscCommon.decodeSurrogateChar(nCharCode, nTrailingChar);
-			        }
-			    }
-			    else
-			        nUnicode = nCharCode;
-
-			    if (null != nUnicode) {
-					if (AscCommon.IsSpace(nUnicode)) {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(nUnicode), false);
-					} else if (0x0D === nUnicode) {
-						if (i + 1 < text.length && 0x0A === text.charCodeAt(i + 1)) {
-							i++;
-						}
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(), false);
-					} else if (0x09 === nUnicode) {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunTab(), false);
-					} else {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunText(nUnicode), false);
-					}
-					oPos.pos++;
-			    }
-            }
+				let nUnicode = it.value();
+				if (AscCommon.IsSpace(nUnicode)) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(nUnicode), false);
+				} else if (0x0D === nUnicode) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(), false);
+				} else if (0x09 === nUnicode) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunTab(), false);
+				} else {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunText(nUnicode), false);
+				}
+				oPos.pos++;
+			}
         }
         else if (c_oSerRunType.tab === type)
         {
@@ -17606,10 +17571,10 @@ DocReadResult.prototype = {
 						}
 						break;
 					case para_PermStart:
-						this.addPermStart(par, elem.elem, false);
+						this.addPermStart(par, elem, false);
 						break;
 					case para_PermEnd:
-						this.addPermEnd(par, elem.elem, false);
+						this.addPermEnd(par, elem, false);
 						break;
 				}
 			}

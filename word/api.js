@@ -4928,8 +4928,31 @@ background-repeat: no-repeat;\
     		return [];
     	return this.WordControl.m_oLogicDocument.GetAllSignatures();
 	};
-
-
+	asc_docs_api.prototype.asc_RemoveSignature = function(guid)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (logicDocument)
+		{
+			for (let i = 0; i < this.signatures.length; ++i)
+			{
+				let sign = this.signatures[i];
+				if (sign.guid === guid && sign.isForm)
+				{
+					if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+					{
+						logicDocument.StartAction(AscDFH.historydescription_OForm_CancelFilling);
+						logicDocument.GetOFormDocument().setAllRolesNotFilled();
+						logicDocument.FinalizeAction();
+						this.signatures.splice(i, 1);
+						this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+						return true;
+					}
+				}
+			}
+		}
+		
+		return AscCommon.baseEditorsApi.prototype.asc_RemoveSignature.apply(this, arguments);
+	};
     asc_docs_api.prototype.asc_CallSignatureDblClickEvent = function(sGuid){
         return this.WordControl.m_oLogicDocument.CallSignatureDblClickEvent(sGuid);
     };
@@ -5020,12 +5043,7 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.sync_TextLangCallBack  = function(Lang)
 	{
-		// TODO: По-хорошему, надо сюда уже присылать lcid, а решать какой выше
-		let lcid = Lang.Val;
-		if (this.asc_isRtlTextDirection() && undefined !== Lang.Bidi)
-			lcid = Lang.Bidi;
-		
-		this.sendEvent("asc_onTextLanguage", lcid);
+		this.sendEvent("asc_onTextLanguage", Lang.Val);
 	};
 	asc_docs_api.prototype.sync_ParaStyleName     = function(Name)
 	{
@@ -8104,7 +8122,31 @@ background-repeat: no-repeat;\
 			}
 		}
 	};
-
+	asc_docs_api.prototype.onDocumentContentReady = function()
+	{
+		AscCommon.baseEditorsApi.prototype.onDocumentContentReady.call(this);
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+		{
+			let allRoles = oform.getAllRoles();
+			let sign = new AscCommon.asc_CSignatureLine();
+			sign.guid = AscCommon.CreateGUID();
+			sign.isForm = true;
+			let lastRole = allRoles.length ? allRoles[allRoles.length - 1] : null;
+			if (lastRole)
+			{
+				try {
+					sign.date = new Date(lastRole.getFieldGroup().getDate()).toString();
+				} catch (e) {}
+				
+				sign.signer1 = lastRole.getUserMaster().getUserName();
+			}
+			
+			this.signatures.push(sign);
+			this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+		}
+	};
 	asc_docs_api.prototype._openDocumentEndCallback = function()
 	{
 		if (this.isDocumentLoadComplete || !this.ServerImagesWaitComplete || !this.ServerIdWaitComplete || !this.WordControl || !this.WordControl.m_oLogicDocument)
@@ -8750,10 +8792,7 @@ background-repeat: no-repeat;\
 		if (!logicDocument || !oform)
 			return false;
 		
-		if (!oform.getCurrentRole())
-			return this._sendForm();
-		
-		if (!oform.canFillRole(oform.getCurrentRole()))
+		if (oform.getCurrentRole() && !oform.canFillRole(oform.getCurrentRole()))
 			return false;
 		
 		this.forceSaveSendFormRequest = true;
@@ -8766,8 +8805,30 @@ background-repeat: no-repeat;\
 		let logicDocument = this.private_GetLogicDocument();
 		let oform = logicDocument.GetOFormDocument();
 		
+		let currentRoleName = oform.getCurrentRole();
+		
+		let userName = this.DocInfo ? AscCommon.UserInfoParser.getParsedName(this.DocInfo.get_UserName()) : undefined;
+		let userId   = this.DocInfo ? this.DocInfo.get_UserId() : undefined;
+		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_RoleFilled);
-		oform.setRoleFilled(oform.getCurrentRole(), true);
+		if (!currentRoleName)
+		{
+			oform.setAllRolesFilled({
+				name : userName,
+				id   : userId
+			});
+		}
+		else
+		{
+			oform.setRoleFilled(oform.getCurrentRole(), true);
+			let role = oform.getRole(currentRoleName);
+			let user = role ? role.getUserMaster() : null;
+			if (user && this.DocInfo)
+			{
+				user.setUserId(userId);
+				user.setUserName(userName);
+			}
+		}
 		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype._sendForm = function()
@@ -9209,7 +9270,8 @@ background-repeat: no-repeat;\
 			if (isSelection)
 				dd.GenerateSelectionPrint();
 
-			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], options.isPdfPrint);
+			let isPrintedVersion = options.isPdfPrint || this.asc_isFinalizedVersion();
+			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], isPrintedVersion);
 			//console.log(oAdditionalData["data"]);
 		}
 		else if (c_oAscFileType.JSON === fileType)
@@ -13461,6 +13523,9 @@ background-repeat: no-repeat;\
 		if (options && ((options["saveFormat"] === "image") || (options["isPrint"] === true)))
 			_renderer.isPrintMode = true;
 
+		if (!_renderer.isPrintMode)
+			_renderer.isPrintMode = this.asc_isFinalizedVersion();
+
         _renderer.InitPicker(AscCommon.g_oTextMeasurer.m_oManager);
 		_renderer.VectorMemoryForPrint = new AscCommon.CMemory();
 		_renderer.DocInfo(this.asc_getCoreProps());
@@ -14486,7 +14551,7 @@ background-repeat: no-repeat;\
 		
 		let symbols = "";
 		if (Asc.c_oNumeralType.hindi === type)
-			symbols = String.fromCodePoint(0x06f0, 0x06f1, 0x06f2, 0x06f3, 0x06f4, 0x06f5, 0x06f6, 0x06f7, 0x06f8, 0x06f9);
+			symbols = String.fromCodePoint(0x0660, 0x0661, 0x0662, 0x0663, 0x0664, 0x0665, 0x0666, 0x0667, 0x0668, 0x0669);
 		else if (Asc.c_oNumeralType.arabic === type)
 			symbols = String.fromCodePoint(0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, 0x0038, 0x0039);
 		else
@@ -14504,6 +14569,15 @@ background-repeat: no-repeat;\
 	{
 		let logicDocument = this.private_GetLogicDocument();
 		return logicDocument ? logicDocument.GetNumeralType() : Asc.c_oNumeralType.arabic;
+	};
+
+	asc_docs_api.prototype.asc_isFinalizedVersion = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+			return true;
+		return false;
 	};
 	
 	//-------------------------------------------------------------export---------------------------------------------------

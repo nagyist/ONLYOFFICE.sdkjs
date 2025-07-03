@@ -3177,6 +3177,8 @@
 		this.defaultDirection = null;
 
 		this.externalReferenceHelper = new CExternalReferenceHelper(this);
+		
+		this.fileCustomFunctions = null;
 	}
 	Workbook.prototype.init=function(oReadResult, bNoBuildDep, bSnapshot){
 		let tableCustomFunc = oReadResult.tableCustomFunc || {};
@@ -5866,6 +5868,10 @@
 		}
 
 		return res;
+	};
+
+	Workbook.prototype.clearFileCustomFunctions = function (name) {
+		this.fileCustomFunctions = null;
 	};
 
 	/******GOAL SEEK******
@@ -9960,6 +9966,9 @@
 		const pivotRange = pivotTable.getRange();
 		const location = pivotTable.location;
 		const items = isRowItem ? pivotTable.getRowItems() : pivotTable.getColItems();
+		if (!items) {
+			return;
+		}
 		const itemR = items[itemIndex].getR();
 		const r1 = isRowItem ? pivotRange.r1 + location.firstDataRow : pivotRange.r1 + location.firstHeaderRow;
 		const c1 = isRowItem ? pivotRange.c1 : pivotRange.c1 + location.firstDataCol;
@@ -9998,6 +10007,9 @@
 		const pivotRange = pivotTable.getRange();
 		const location = pivotTable.location;
 		const items = isRowItem ? pivotTable.getRowItems() : pivotTable.getColItems();
+		if (!items) {
+			return;
+		}
 		const itemR = items[itemIndex].getR();
 		const itemSummaryR = itemR + itemXIndex;
 
@@ -10038,6 +10050,9 @@
 	 */
 	Worksheet.prototype._updatePivotTableCellsRowColLablesOffsets = function(pivotTable, rowFieldsOffset, isRowItem, itemIndex, itemXIndex, query) {
 		const items = isRowItem ? pivotTable.getRowItems() : pivotTable.getColItems();
+		if (!items) {
+			return;
+		}
 		query.axis = isRowItem ? Asc.c_oAscAxis.AxisRow : Asc.c_oAscAxis.AxisCol;
 		const item = items[itemIndex];
 		if (item.t === Asc.c_oAscItemType.Data) {
@@ -15929,12 +15944,22 @@
 			return false;
 		}
 		const oFormulaParsed = this.getFormulaParsed();
+		if (!oFormulaParsed) {
+			g_cCalcRecursion.resetRecursionCounter();
+			return false;
+		}
 		const aRefElements = _getRefElements(oFormulaParsed);
 		const oThis = this;
 		let bRecursiveFormula = false;
 		aPassedCell = aPassedCell || [];
 		foreachRefElements(function (oRange) {
+			if (!oRange) {
+				return;
+			}
 			oRange._foreachNoEmpty(function (oCell) {
+				if (!oCell) {
+					return;
+				}
 				let bCellIsPassed = aPassedCell.some(function (oElem) {
 					return oCell.compareCellIndex(oElem);
 				});
@@ -15953,11 +15978,15 @@
 			if (bRecursiveFormula) {
 				if (g_cCalcRecursion.getRecursionCounter() === 0 && aPassedCell.length) {
 					const oWs = oThis.ws;
-					let oSourceCell = null;
-					oWs._getCell(oCellWithFormula.nRow, oCellWithFormula.nCol, function (oCell) {
-						oSourceCell = oCell;
-					});
-					_changeCellsFromListener(oSourceCell);
+					if (oWs) {
+						let oSourceCell = null;
+						oWs._getCell(oCellWithFormula.nRow, oCellWithFormula.nCol, function (oCell) {
+							oSourceCell = oCell;
+						});
+						if (oSourceCell) {
+							_changeCellsFromListener(oSourceCell);
+						}
+					}
 				}
 				oFormulaParsed.ca = true;
 				return true;
@@ -24174,6 +24203,66 @@
 		};
 	};
 
+	function safeJsonParse(jsonString) {
+		if (!jsonString || typeof jsonString !== "string") {
+			return jsonString;
+		}
+		try {
+			return JSON.parse(jsonString);
+		} catch (e) {
+			console.warn("merge custom functions: Invalid JSON format", e);
+			return null;
+		}
+	}
+	
+	function mergeCustomFunctions(lsFunctions, opt_get_obj) {
+		const api = window["Asc"]["editor"];
+		const oLsFunctions = safeJsonParse(lsFunctions) || (typeof lsFunctions === "object" ? lsFunctions : null);
+
+		let oFileFunctions = null;
+		if (api && api.wb && api.wb.model && api.wb.model.fileCustomFunctions) {
+			const fileFunctions = api.wb.model.fileCustomFunctions;
+			oFileFunctions = safeJsonParse(fileFunctions) || (typeof fileFunctions === "object" ? fileFunctions : null);
+		}
+
+		if (!oLsFunctions || !oFileFunctions) {
+			const fallback = oLsFunctions || oFileFunctions;
+			return opt_get_obj ? fallback : (fallback ? JSON.stringify(fallback) : null);
+		}
+
+		if (!oLsFunctions) {
+			return opt_get_obj ? oFileFunctions : JSON.stringify(oFileFunctions);
+		}
+		if (!oFileFunctions) {
+			return opt_get_obj ? oLsFunctions : JSON.stringify(oLsFunctions);
+		}
+
+		const oUnionFunctions = {
+			macrosArray: []
+		};
+		const fileFunctionsMap = {};
+		let i, macro;
+		const fileArrayLength = oFileFunctions.macrosArray.length;
+		const lsArrayLength = oLsFunctions.macrosArray.length;
+
+		for (i = 0; i < fileArrayLength; i++) {
+			macro = oFileFunctions.macrosArray[i];
+			if (macro && macro.name) {
+				fileFunctionsMap[macro.name] = true;
+				oUnionFunctions.macrosArray.push(macro);
+			}
+		}
+
+		for (i = 0; i < lsArrayLength; i++) {
+			macro = oLsFunctions.macrosArray[i];
+			if (macro && macro.name && !fileFunctionsMap[macro.name]) {
+				oUnionFunctions.macrosArray.push(macro);
+			}
+		}
+
+		return opt_get_obj ? oUnionFunctions : JSON.stringify(oUnionFunctions);
+	}
+
 	// Export
 	window['AscCommonExcel'] = window['AscCommonExcel'] || {};
 	window['AscCommonExcel'].g_nVerticalTextAngle = g_nVerticalTextAngle;
@@ -24212,5 +24301,8 @@
 	window['AscCommonExcel'].SweepLineRowIterator = SweepLineRowIterator;
 	window['AscCommonExcel'].BroadcastHelper = BroadcastHelper;
 	window['AscCommonExcel'].foreachRefElements = foreachRefElements;
+
+	window['AscCommonExcel'].mergeCustomFunctions = mergeCustomFunctions;
+	window['AscCommonExcel'].safeJsonParse = safeJsonParse;
 
 })(window);

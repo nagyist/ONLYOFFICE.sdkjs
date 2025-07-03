@@ -2635,16 +2635,15 @@
   };
 
   WorkbookView.prototype._canResize = function() {
-	  let showVerticalScroll = this.Api.isMobileVersion || this.getShowVerticalScroll();
-	  let showHorizontalScroll = this.Api.isMobileVersion || this.getShowHorizontalScroll();
+    let showVerticalScroll = this.getShowVerticalScroll();
+    let showHorizontalScroll = this.getShowHorizontalScroll();
 
-	  let styleWidth, styleHeight;
-	  styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion || !showVerticalScroll ? 0 : this.defaults.scroll.widthPx);
-	  styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion || !showHorizontalScroll ? 0 : this.defaults.scroll.heightPx);
-	  
-	  this.canvasOverlay.parentNode.style.right = !showVerticalScroll ? 0 : 14 + 'px';
-	  this.canvasOverlay.parentNode.style.bottom = !showHorizontalScroll ? 0 : 14 + 'px';
+    let styleWidth, styleHeight;
+    styleWidth = this.element.offsetWidth - (this.Api.isMobileVersion || !showVerticalScroll ? 0 : this.defaults.scroll.widthPx);
+    styleHeight = this.element.offsetHeight - (this.Api.isMobileVersion || !showHorizontalScroll ? 0 : this.defaults.scroll.heightPx);
 
+    this.canvasOverlay.parentNode.style.right = (this.Api.isMobileVersion || !showVerticalScroll) ? 0 : this.defaults.scroll.widthPx + 'px';
+    this.canvasOverlay.parentNode.style.bottom = (this.Api.isMobileVersion || !showHorizontalScroll) ? 0 : this.defaults.scroll.heightPx + 'px';
 
 
     this.isInit = true;
@@ -3999,6 +3998,42 @@
     ws.drawForPrint(previewOleObjectContext, page, 0, 1);
     return previewOleObjectContext;
   };
+
+	WorkbookView.prototype.getSimulatePageForCopyPaste = function (rangeSizes, range) {
+		var page = new AscCommonExcel.CPagePrint();
+		page.indexWorksheet = 0;
+		page.pageClipRectHeight = rangeSizes.height;
+		page.pageClipRectWidth = rangeSizes.width;
+		page.topFieldInPx = 1;
+		page.leftFieldInPx = 1;
+
+		page.pageGridLines = true;
+		page.pageHeight = rangeSizes.height;
+		page.pageWidth = rangeSizes.width;
+
+		page.pageRange =  range.clone();
+		page.scale = 1;
+		return page;
+	};
+
+	WorkbookView.prototype.printForCopyPaste = function (ws, oRange) {
+		var sizes = ws.getRangePosition(oRange);
+		if (sizes) {
+			sizes.width += 1;
+			sizes.height += 1;
+		}
+		var page = this.getSimulatePageForCopyPaste(sizes, oRange);
+		var previewOleObjectContext = AscCommonExcel.getContext(sizes.width, sizes.height, this);
+		previewOleObjectContext.DocumentRenderer = AscCommonExcel.getGraphics(previewOleObjectContext);
+		previewOleObjectContext.isNotDrawBackground = !this.Api.isFromSheetEditor;
+		let renderingSettings = ws.getRenderingSettings();
+		if (!renderingSettings) {
+			renderingSettings = ws.initRenderingSettings();
+		}
+		renderingSettings && renderingSettings.setCtxWidth(page.pageWidth);
+		ws.drawForPrint(previewOleObjectContext, page, 0, 1);
+		return previewOleObjectContext;
+	};
 
 	WorkbookView.prototype.printSheetPrintPreview = function(index) {
 		var printPreviewState = this.printPreviewState;
@@ -7350,6 +7385,10 @@
 	CExternalSelectionController.prototype.init = function() {
 		let oThis = this;
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		if (this.supportVisibilityChangeOption) {
 			document.addEventListener && document.addEventListener("visibilitychange", function() {
 				if (document.hidden === false) {
@@ -7417,6 +7456,10 @@
 			return;
 		}
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		let oThis = this;
 		let editorEnterOptions = new AscCommonExcel.CEditorEnterOptions();
 		editorEnterOptions.newText = "=" + (oThis.activeTabFormula ? oThis.activeTabFormula.range : "");
@@ -7448,6 +7491,10 @@
 			return;
 		}
 
+		if (!this._checkDesktop()) {
+			return;
+		}
+
 		this.setActiveTabFormula(data);
 
 		if (!this.wb.isCellEditMode || this.wb.isWizardMode) {
@@ -7475,6 +7522,9 @@
 	 * @param {Object} data - Formula mode parameters including isClose flag and document ID
 	 */
 	CExternalSelectionController.prototype.onExternalSetFormulaMode = function(data) {
+		if (!this._checkDesktop()) {
+			return;
+		}
 		const isExternalFormulaEditMode = this.getExternalFormulaEditMode();
 		this.setExternalFormulaEditMode(!data.isClose ? {id: data.id} : null);
 
@@ -7493,12 +7543,16 @@
 		if (this.lockSendChangeSelection) {
 			return;
 		}
+		if (!this._checkDesktop()) {
+			return;
+		}
 
 		const ws = this.wb.model.getActiveWs();
 		if (!this.wb.isFormulaEditMode || !this.wb.isCellEditMode || !this.wb.cellEditor) {
 			return;
 		}
 
+		let isDesktopSavedFile = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]() &&  window["AscDesktopEditor"]["LocalFileGetSaved"]();
 		let data = {
 			type: "ExternalChangeSelection",
 			id: this.wb.Api.DocInfo.Id,
@@ -7509,7 +7563,8 @@
 			selectionEnd: this.wb.cellEditor.selectionEnd,
 			lastRangePos: this.wb.cellEditor.lastRangePos,
 			lastRangeLength: this.wb.cellEditor.lastRangeLength,
-			cursorPos: this.wb.cellEditor.cursorPos
+			cursorPos: this.wb.cellEditor.cursorPos,
+			path: isDesktopSavedFile ? window["AscDesktopEditor"]["LocalFileGetSourcePath"]() : null
 		};
 
 		this.setSelfActiveTabFormula(data);
@@ -7522,6 +7577,9 @@
 	 */
 	CExternalSelectionController.prototype.sendExternalCloseEditor = function(saveValue) {
 		if (this.dontSendChangeEditMode) {
+			return;
+		}
+		if (!this._checkDesktop()) {
 			return;
 		}
 
@@ -7551,6 +7609,9 @@
 		if (this.dontSendChangeEditMode) {
 			return;
 		}
+		if (!this._checkDesktop()) {
+			return;
+		}
 
 		if (!this.getExternalFormulaEditMode()) {
 			this.sendExternalEvent({
@@ -7565,6 +7626,9 @@
 	 * @param {Object} data - Event data to send
 	 */
 	CExternalSelectionController.prototype.sendExternalEvent = function(data) {
+		if (!this._checkDesktop()) {
+			return;
+		}
 		if (this.wb.Api && this.wb.Api.broadcastChannel) {
 			this.wb.Api.broadcastChannel.postMessage(data);
 		}
@@ -7600,6 +7664,10 @@
 	 */
 	CExternalSelectionController.prototype.getExternalFormulaEditMode = function() {
 		return this.externalFormulaEditMode;
+	};
+
+	CExternalSelectionController.prototype._checkDesktop = function() {
+		return !window["AscDesktopEditor"] || (window["AscDesktopEditor"]["IsLocalFile"]() && window["AscDesktopEditor"]["LocalFileGetSaved"]());
 	};
 
 	/**
