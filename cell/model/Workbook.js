@@ -24225,7 +24225,7 @@
 
 		const oUnionFunctions = {
 			"macrosArray": []
-		}
+		};
 		const fileFunctionsMap = {};
 		let i, macro;
 		const fileArrayLength = oFileFunctions["macrosArray"] ? oFileFunctions["macrosArray"].length : 0;
