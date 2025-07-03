@@ -169,12 +169,13 @@
 		if (undefined === obj)
 			obj = AscCommon.getLocalStorageItem(customFunctionsStorageId);
 
+		obj = AscCommonExcel.mergeCustomFunctions(obj, true);
+
 		if (!obj)
 			return;
 
 		this.clearCustomFunctions();
 
-		obj = AscCommonExcel.mergeCustomFunctions(obj, true);
 		let arr = obj["macrosArray"];
 		if (arr)
 		{
