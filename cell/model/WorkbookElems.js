@@ -18371,7 +18371,7 @@ function RangeDataManagerElem(bbox, data)
 				oContext["address"] = arguments[1] && arguments[1].getName();
 
 				oContext["address"] = ((ws && ws.getName) ? (AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!") : "") + oContext["address"];
-				oContext["argsInfo"] = [];
+				oContext["args"] = [];
 
 				//prepare arguments
 				let args = [];
@@ -18384,7 +18384,7 @@ function RangeDataManagerElem(bbox, data)
 						let _range = arg[i].getRange();
 						let ws = _range.worksheet;
 						let _address = (ws ? AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!" : "") + _range.getName();
-						oContext["argsInfo"][i] = {"address": _address, "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
+						oContext["args"][i] = {"address": _address, "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
 					}
 
 
