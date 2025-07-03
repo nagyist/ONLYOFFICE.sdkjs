@@ -8614,6 +8614,8 @@ background-repeat: no-repeat;\
 
 		var bForceRedraw  = false;
 		var LogicDocument = this.WordControl.m_oLogicDocument;
+		LogicDocument.RemoveSelection();
+		
 		if (AscCommonWord.docpostype_HdrFtr !== LogicDocument.GetDocPosType())
 		{
 			LogicDocument.SetDocPosType(AscCommonWord.docpostype_HdrFtr);
@@ -8623,7 +8625,7 @@ background-repeat: no-repeat;\
 		var oldClickCount            = global_mouseEvent.ClickCount;
 		global_mouseEvent.Button     = 0;
 		global_mouseEvent.ClickCount = 1;
-
+		
 		LogicDocument.OnMouseDown(global_mouseEvent, 0, 0, pageNumber);
 		LogicDocument.OnMouseUp(global_mouseEvent, 0, 0, pageNumber);
 		LogicDocument.OnMouseMove(global_mouseEvent, 0, 0, pageNumber);
@@ -8647,6 +8649,8 @@ background-repeat: no-repeat;\
 
 		var bForceRedraw  = false;
 		var LogicDocument = this.WordControl.m_oLogicDocument;
+		LogicDocument.RemoveSelection();
+		
 		if (AscCommonWord.docpostype_HdrFtr !== LogicDocument.GetDocPosType())
 		{
 			LogicDocument.SetDocPosType(AscCommonWord.docpostype_HdrFtr);
@@ -8656,7 +8660,7 @@ background-repeat: no-repeat;\
 		var oldClickCount            = global_mouseEvent.ClickCount;
 		global_mouseEvent.Button     = 0;
 		global_mouseEvent.ClickCount = 1;
-
+		
 		LogicDocument.OnMouseDown(global_mouseEvent, 0, AscCommon.Page_Height, pageNumber);
 		LogicDocument.OnMouseUp(global_mouseEvent, 0, AscCommon.Page_Height, pageNumber);
 		LogicDocument.OnMouseMove(global_mouseEvent, 0, 0, pageNumber);
