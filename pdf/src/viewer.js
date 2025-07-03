@@ -1213,8 +1213,12 @@
 
 			this.Api.WordControl.m_oOverlayApi = this.overlay;
 
+			// TODO: Надо перенести в нормальное место
+			let isLoad = AscCommon.g_oIdCounter.IsLoad();
+			AscCommon.g_oIdCounter.Set_Load(true);
 			this.openForms();
 			this.openAnnots();
+			AscCommon.g_oIdCounter.Set_Load(isLoad);
 		};
 
 		this.close = function()
