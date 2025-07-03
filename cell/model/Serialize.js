@@ -6039,13 +6039,150 @@
 					const oThis = this;
 					const oControl = oDrawing.graphicObject;
 					this.bs.WriteItem(c_oSerControlTypes.ControlAnchor, function () {
-						const oOldGraphicObject = oDrawing.graphicObject;
 						oDrawing.graphicObject = null;
 						oThis.WriteDrawing(oDrawing);
-						oDrawing.graphicObject = oOldGraphicObject;
+						oDrawing.graphicObject = oControl;
 					});
-
+					this.bs.WriteByte(c_oSerControlTypes.Name);
+					this.bs.WriteString2(oControl.name);
+					this.WriteControlPr(oControl.controlPr, oControl.formControlPr);
 				}
+				this.WriteControlPr = function(oControlPr, oFormControlPr) {
+					const oThis = this;
+					this.bs.WriteItem(c_oSerControlTypes.ObjectType, function() {
+						oThis.memory.WriteByte(oFormControlPr.objectType);
+					});
+					oThis.memory.WriteByte(c_oSerControlTypes.AltText);
+					oThis.memory.WriteString2(oControlPr.altText);
+
+					this.bs.WriteItem(c_oSerControlTypes.AutoFill, function() {
+						oThis.memory.WriteBool(oControlPr.autoFill);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.AutoLine, function() {
+						oThis.memory.WriteBool(oControlPr.autoLine);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.AutoPict, function() {
+						oThis.memory.WriteBool(oControlPr.autoPict);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.DefaultSize, function() {
+						oThis.memory.WriteBool(oControlPr.defaultSize);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Disabled, function() {
+						oThis.memory.WriteBool(oControlPr.disabled);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Locked, function() {
+						oThis.memory.WriteBool(oControlPr.locked);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Print, function() {
+						oThis.memory.WriteBool(oControlPr.print);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.RecalcAlways, function() {
+						oThis.memory.WriteBool(oControlPr.recalcAlways);
+					});
+					oThis.memory.WriteByte(c_oSerControlTypes.Macro);
+					oThis.memory.WriteString2(oControlPr.macro);
+
+					oThis.memory.WriteByte(c_oSerControlTypes.FmlaGroup);
+					oThis.memory.WriteString2(oFormControlPr.fmlaGroup);
+
+					oThis.memory.WriteByte(c_oSerControlTypes.FmlaLink);
+					oThis.memory.WriteString2(oFormControlPr.fmlaLink);
+
+					oThis.memory.WriteByte(c_oSerControlTypes.FmlaRange);
+					oThis.memory.WriteString2(oFormControlPr.fmlaRange);
+
+					oThis.memory.WriteByte(c_oSerControlTypes.FmlaTxbx);
+					oThis.memory.WriteString2(oFormControlPr.fmlaTxbx);
+
+					this.bs.WriteItem(c_oSerControlTypes.DropLines, function() {
+						oThis.memory.WriteLong(oFormControlPr.dropLines);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Checked, function() {
+						oThis.memory.WriteByte(oFormControlPr.checked);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.DropStyle, function() {
+						oThis.memory.WriteByte(oFormControlPr.dropStyle);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Dx, function() {
+						oThis.memory.WriteLong(oFormControlPr.dx);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Inc, function() {
+						oThis.memory.WriteLong(oFormControlPr.inc);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Min, function() {
+						oThis.memory.WriteLong(oFormControlPr.min);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Max, function() {
+						oThis.memory.WriteLong(oFormControlPr.max);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Page, function() {
+						oThis.memory.WriteLong(oFormControlPr.page);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Sel, function() {
+						oThis.memory.WriteLong(oFormControlPr.sel);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.SelType, function() {
+						oThis.memory.WriteByte(oFormControlPr.selType);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.TextHAlign, function() {
+						oThis.memory.WriteByte(oFormControlPr.textHAlign);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.TextVAlign, function() {
+						oThis.memory.WriteByte(oFormControlPr.textVAlign);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Val, function() {
+						oThis.memory.WriteLong(oFormControlPr.val);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.WidthMin, function() {
+						oThis.memory.WriteLong(oFormControlPr.widthMin);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.EditVal, function() {
+						oThis.memory.WriteByte(oFormControlPr.editVal);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Colored, function() {
+						oThis.memory.WriteBool(oFormControlPr.colored);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.FirstButton, function() {
+						oThis.memory.WriteBool(oFormControlPr.firstButton);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.Horiz, function() {
+						oThis.memory.WriteBool(oFormControlPr.horiz);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.JustLastX, function() {
+						oThis.memory.WriteBool(oFormControlPr.justLastX);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.LockText, function() {
+						oThis.memory.WriteBool(oFormControlPr.lockText);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.NoThreeD, function() {
+						oThis.memory.WriteBool(oFormControlPr.noThreeD);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.NoThreeD2, function() {
+						oThis.memory.WriteBool(oFormControlPr.noThreeD2);
+					});
+					oThis.memory.WriteByte(c_oSerControlTypes.MultiSel);
+					oThis.memory.WriteString2(oFormControlPr.multiSel);
+
+					this.bs.WriteItem(c_oSerControlTypes.MultiLine, function() {
+						oThis.memory.WriteBool(oFormControlPr.multiLine);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.VerticalBar, function() {
+						oThis.memory.WriteBool(oFormControlPr.verticalBar);
+					});
+					this.bs.WriteItem(c_oSerControlTypes.PasswordEdit, function() {
+						oThis.memory.WriteBool(oFormControlPr.passwordEdit);
+					});
+					oThis.memory.WriteByte(c_oSerControlTypes.Text);
+					oThis.memory.WriteString2(oFormControlPr.text);
+					if (oFormControlPr.itemLst.length) {
+						this.bs.WriteItem(c_oSerControlTypes.ItemLst, function() {
+							for (let i = 0; i < oFormControlPr.itemLst.length; i += 1) {
+								oThis.memory.WriteByte(c_oSerControlTypes.Item);
+								oThis.memory.WriteString2(oFormControlPr.itemLst[i]);
+							}
+						});
+					}
+				};
 				this.WriteControls = function (aControls) {
 					const oThis = this;
 					for (let i = 0; i < aControls.length; i += 1) {
@@ -10458,21 +10595,13 @@
 						sp_pr.setGeometry(AscFormat.CreateGeometry('rect'));
 						oControl.setSpPr(sp_pr);
 						sp_pr.setParent(oControl);
-						if (oControl.formControlPr.text) {
-							const sText = oControl.formControlPr.text.replaceAll("\n  ", "");
-								oControl.setTxBody(AscFormat.CreateTextBodyFromString(sText, oControl.getDrawingDocument(), oControl));
-								const oBodyPr = oControl.controller.getBodyPr();
-								oControl.txBody.setBodyPr(oBodyPr);
-								oControl.txBody.content.ApplyToAll = true;
-							oControl.txBody.content.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize:8}));
-							oControl.txBody.content.ApplyToAll = false;
+						if (oPr.shape && oPr.shape.txBody) {
+							const oTxBody = oPr.shape.txBody.createDuplicate();
+							const oBodyPr = oControl.controller.getBodyPr();
+							oTxBody.setBodyPr(oBodyPr);
+							oControl.setTxBody(oTxBody);
+							oControl.clearVmlTxBody();
 						}
-						// todo not implemented in core
-						// if (oPr.shape && oPr.shape.txBody) {
-						//
-						//
-						// 	// oControl.setTxBody(oTextBody);
-						// }
 						oDrawingBase.initAfterSerialize(oWorksheet);
 					}
 				}

@@ -138,6 +138,13 @@
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_FormControlPr, this.formControlPr, pr));
 		this.formControlPr = pr;
 	};
+	CControl.prototype.clearVmlTxBody = function() {
+		const oDocContent = this.getDocContent();
+		for (let i = 0; i < oDocContent.Content.length; i++) {
+			const oParagraph = oDocContent.Content[i];
+
+		}
+	}
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -322,7 +329,7 @@
 		}
 	};
 	CCheckBoxController.prototype.getTextRect = function () {
-		const oTextRect = AscFormat.CShape.prototype.getTextRect.call(this);
+		const oTextRect = AscFormat.CShape.prototype.getTextRect.call(this.control);
 		oTextRect.l += CHECKBOX_OFFSET_X;
 		oTextRect.r += CHECKBOX_OFFSET_X;
 		return oTextRect;
