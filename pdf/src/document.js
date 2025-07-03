@@ -4151,6 +4151,9 @@ var CPresentation = CPresentation || function(){};
         let oCurObject  = this.GetActiveObject();
         let nCurPage    = this.GetCurPage();
         let oCurPage    = this.GetPageInfo(nCurPage);
+
+        if (!oCurPage)
+            return;
         
         if (oCurObject) {
             if (oCurObject.IsDrawing()) {
