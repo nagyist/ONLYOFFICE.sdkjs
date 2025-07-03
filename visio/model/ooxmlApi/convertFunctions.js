@@ -2230,13 +2230,19 @@
 			// shadow.putTransparency(60);
 			shadow.color = shadowColor;
 
-			let shadowOffsetX_inch = this.getCellNumberValue("ShapeShdwOffsetX");
-			let shadowOffsetY_inch = this.getCellNumberValue("ShapeShdwOffsetY");
+			let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
+			let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
+			let shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
 			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
-			shadow.dist = Math.hypot(shadowOffsetX, shadowOffsetY) * 36000;
-			shadow.dir =  -atan * AscFormat.radToDeg * AscFormat.degToC;
+			shadow.dist = Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
+			// if true move to cord system where y goes down
+			if (isInvertCoords) {
+				atan = -atan;
+			}
+			shadow.dir = atan * AscFormat.radToDeg * AscFormat.degToC;
 
 			shadow.rotWithShape = true;
 			// cShape.spPr.changeShadow(shadow);
@@ -2422,13 +2428,16 @@
 				cShapeOrCGroupShape.spPr.xfrm.rot = 0;
 				cShapeOrCGroupShape.spPr.xfrm.flipH = false;
 				cShapeOrCGroupShape.spPr.xfrm.flipV = false;
-
+				cShapeOrCGroupShape.spPr.xfrm.setOffX(0);
+				cShapeOrCGroupShape.spPr.xfrm.setOffY(0);
+				// cShapeOrCGroupShape.setLocks(1)?;
 
 				groupShape.brush = cShapeOrCGroupShape.brush;
 				groupShape.bounds = cShapeOrCGroupShape.bounds;
 				groupShape.localTransform = cShapeOrCGroupShape.localTransform;
 				groupShape.pen = cShapeOrCGroupShape.pen;
 				groupShape.Id = cShapeOrCGroupShape.Id + "_Group";
+				groupShape.setParent2(visioDocument);
 
 
 				// if DisplayMode is 1 add group geometry to bottom layer
@@ -2441,14 +2450,6 @@
 					}
 					groupShape.spTree[groupShape.spTree.length - 1].setGroup(groupShape);
 				}
-
-
-				cShapeOrCGroupShape.spPr.xfrm.setOffX(0);
-				cShapeOrCGroupShape.spPr.xfrm.setOffY(0);
-
-				// cShape.setLocks(1)?;
-
-				groupShape.setParent2(visioDocument);
 
 				if (currentGroupHandling) {
 					// insert group to currentGroupHandling
@@ -2464,7 +2465,7 @@
 					subShape.convertGroup(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
 				}
 
-				// it group geometry should be on the top layer
+				// if group geometry should be on the top layer
 				if (this.getCellNumberValue("DisplayMode") === 2) {
 					if (cShapeOrCGroupShape instanceof CGroupShape) {
 						// if it is group so there is geometry and text in it. We take geometry

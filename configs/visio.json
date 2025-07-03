@@ -17,6 +17,7 @@
 			"common/editorscommon.js",
 		  "common/frameManager.js",
             "common/BulletPreviewDrawer.js",
+			"common/frameManager.js",
 			"common/HistoryCommon.js",
 			"common/TableId.js",
 			"common/TableIdChanges.js",
