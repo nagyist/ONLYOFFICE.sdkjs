@@ -10557,7 +10557,7 @@ CDocument.prototype.canEnterText = function()
 	if (this.IsSelectionUse() && !this.IsTextSelectionUse())
 		return false;
 	
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
@@ -13625,7 +13625,7 @@ CDocument.prototype.IsCursorInHyperlink = function(bCheckEnd)
  */
 CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, additionalData, sendEvent, actionDescription)
 {
-	if (this.CollaborativeEditing.Get_GlobalLock())
+	if (this.CollaborativeEditing.Get_GlobalLock() || this.Api.isRestrictionSignatures())
 		return false;
 	
 	let isPermRange = this.IsPermRangeEditing(checkType, additionalData, actionDescription);
@@ -13649,7 +13649,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
  */
 CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, actionDescription)
 {
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (!this.Api.isRestrictionComments() && !this.Api.isRestrictionView())
@@ -22889,7 +22889,7 @@ CDocument.prototype.GetAllFormTextFields = function()
 };
 CDocument.prototype.IsFillingFormMode = function()
 {
-	return this.Api && this.Api.isRestrictionForms();
+	return this.Api && this.Api.isRestrictionForms() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsFillingOFormMode = function()
 {
@@ -23320,7 +23320,7 @@ CDocument.prototype.IsCheckContentControlsLock = function()
 };
 CDocument.prototype.IsEditCommentsMode = function()
 {
-	return this.Api.isRestrictionComments();
+	return this.Api.isRestrictionComments() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsViewMode = function()
 {
