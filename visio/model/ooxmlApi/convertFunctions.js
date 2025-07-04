@@ -2216,7 +2216,8 @@
 				}
 
 			} else {
-				AscCommon.consoleLog("shadow foreground cell not found for", this);
+				// AscCommon.consoleLog("shadow foreground cell not found for", this);
+				shadowColor = AscFormat.CreateUniColorRGB(0,0,0);
 			}
 			// shadow.color = AscFormat.CreateUniColorRGB(100,100,100);
 			// shadow.color.color = new AscFormat.CPrstColor();
@@ -2225,11 +2226,21 @@
 			shadow.color = shadowColor;
 
 			let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
+			let shadowOffsetX_inch;
+			if (shadowOffsetXcell) {
+				shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+			} else {
+				shadowOffsetX_inch = 0.125;
+			}
+
 			let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
-			let shadowOffsetX_inch = shadowOffsetXcell &&
-					shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
-			let shadowOffsetY_inch = shadowOffsetYcell &&
-					shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetY_inch;
+			if (shadowOffsetYcell) {
+				shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
+			} else {
+				shadowOffsetY_inch = -0.125;
+			}
+
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
 			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
