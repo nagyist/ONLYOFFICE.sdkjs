@@ -8285,7 +8285,10 @@ function (window, undefined) {
 
 				for (let prop in obj)
 				{
-					if (obj.hasOwnProperty(prop))
+					let isNaturalProp = true;
+					if (obj.hasOwnProperty)
+						isNaturalProp = obj.hasOwnProperty(prop);
+					if (isNaturalProp)
 					{
 						if (!Asc.checkReturnCommand(obj[prop], depth + 1))
 							return false;

@@ -4953,7 +4953,7 @@
 			}
         }
 
-		if (this.documentOpenOptions && this.documentOpenOptions["logEvents"])
+		if (window["AscUserTest"] && window["AscUserTest"]["logEvents"])
 		{
 			let message = "[logEvent] " + name + " [";
 			for (let i = 1, len = arguments.length; i < len; i++)
