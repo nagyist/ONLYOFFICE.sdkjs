@@ -6486,7 +6486,7 @@ var CPresentation = CPresentation || function(){};
 
         this.RemoveSelection();
         this.SetMouseDownObject(State.activeObject)
-        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm()) {
+        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm() && State.activeObject.IsUseInDocument && State.activeObject.IsUseInDocument()) {
             this.activeForm = State.activeObject;
         }
 
@@ -6884,7 +6884,7 @@ var CPresentation = CPresentation || function(){};
         let oController = this.GetController();
 
         this.SetMouseDownObject(oState.activeObject);
-        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm()) {
+        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
             this.activeForm = oState.activeObject;
         }
         
