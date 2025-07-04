@@ -64,12 +64,7 @@
 	function CControl() {
 		AscFormat.CShape.call(this);
 		this.name = null;
-		this.progId = null;
-		this.dvAspect = null;
 		this.link = null;
-		this.oleUpdate = null;
-		this.autoLoad = null;
-		this.shapeId = null;
 		this.rId = null;
 		this.controlPr = new CControlPr();
 		this.formControlPr = new CFormControlPr();
@@ -121,6 +116,12 @@
 	CControl.prototype.onClick = function(oController, nX, nY) {
 		this.controller.onClick(oController, nX, nY);
 	}
+	CControl.prototype.onMouseDown = function(oController, nX, nY) {
+		this.controller.onMouseDown(oController, nX, nY);
+	}
+	CControl.prototype.onMouseUp = function(oController, nX, nY) {
+		this.controller.onMouseUp(oController, nX, nY);
+	}
 	CControl.prototype.updateFromRanges = function(aRanges) {
 		this.controller.updateFromRanges(aRanges);
 	};
@@ -157,6 +158,8 @@
 	};
 	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
 	CControlControllerBase.prototype.onClick = function(oController, nX, nY) {};
+	CControlControllerBase.prototype.onMouseDown = function(oController, nX, nY) {};
+	CControlControllerBase.prototype.onMouseUp = function(oController, nX, nY) {};
 	CControlControllerBase.prototype.init = function() {};
 	CControlControllerBase.prototype.updateFromRanges = function(aRanges) {};
 	CControlControllerBase.prototype.getBodyPr = function() {return null;};
@@ -173,6 +176,7 @@
 	const CHECKBOX_OFFSET_X = CHECKBOX_SIDE_SIZE + (CHECKBOX_X_OFFSET * 2 - CHECKBOX_BODYPR_INSETS_L);
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
+		this.isHold = false;
 	};
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
 	CCheckBoxController.prototype.getBodyPr = function () {
@@ -196,7 +200,11 @@
 		graphics.transform3(checkBoxTransform);
 		graphics.b_color1(255, 255, 255, 255);
 		graphics.p_color(0, 0, 0, 255);
-		graphics.p_width(0);
+		if (this.isHold) {
+			graphics.p_width(400);
+		} else {
+			graphics.p_width(0);
+		}
 		graphics._s();
 		graphics._m(0, 0);
 		graphics._l(0, CHECKBOX_SIDE_SIZE);
@@ -334,7 +342,15 @@
 		oTextRect.r += CHECKBOX_OFFSET_X;
 		return oTextRect;
 	};
-
+	CCheckBoxController.prototype.onMouseDown = function(oController, nX, nY) {
+		this.setIsHold(true);
+	}
+	CCheckBoxController.prototype.onMouseUp = function(oController, nX, nY) {
+		this.setIsHold(false);
+	}
+	CCheckBoxController.prototype.setIsHold = function(pr) {
+		this.isHold = pr;
+	}
 
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
@@ -987,4 +1003,7 @@
 
 	window["AscFormat"] = window["AscFormat"] || {};
 	window["AscFormat"].CControl = CControl;
+	window["AscFormat"].CFormControlPr_checked_unchecked = CFormControlPr_checked_unchecked;
+	window["AscFormat"].CFormControlPr_checked_checked = CFormControlPr_checked_checked;
+	window["AscFormat"].CFormControlPr_checked_mixed = CFormControlPr_checked_mixed;
 })();

@@ -5084,7 +5084,8 @@
 							const arrControls = [];
 							for (let i = 0; i < ws.Drawings.length; i += 1) {
 								const oDrawing = ws.Drawings[i];
-								if (oDrawing.isControl()) {
+								const oGrObject = oDrawing.graphicObject;
+								if (oGrObject && oGrObject.isControl()) {
 									arrControls.push(oDrawing);
 								}
 							}
@@ -6043,137 +6044,224 @@
 						oThis.WriteDrawing(oDrawing);
 						oDrawing.graphicObject = oControl;
 					});
-					this.bs.WriteByte(c_oSerControlTypes.Name);
-					this.bs.WriteString2(oControl.name);
+					if (oControl.name !== null) {
+					oThis.memory.WriteByte(c_oSerControlTypes.Name);
+					oThis.memory.WriteString2(oControl.name);
+					}
 					this.WriteControlPr(oControl.controlPr, oControl.formControlPr);
-				}
+					this.bs.WriteItem(c_oSerControlTypes.Shape, function() {
+						oThis.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oControl, null, null, null);});
+					});
+				};
 				this.WriteControlPr = function(oControlPr, oFormControlPr) {
 					const oThis = this;
-					this.bs.WriteItem(c_oSerControlTypes.ObjectType, function() {
-						oThis.memory.WriteByte(oFormControlPr.objectType);
-					});
-					oThis.memory.WriteByte(c_oSerControlTypes.AltText);
-					oThis.memory.WriteString2(oControlPr.altText);
+					if (oFormControlPr.objectType !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.ObjectType, function() {
+							oThis.memory.WriteByte(oFormControlPr.objectType);
+						});
+					}
+					if (oControlPr.altText !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.AltText);
+						oThis.memory.WriteString2(oControlPr.altText);
+					}
+					if (oControlPr.autoFill !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.AutoFill, function() {
+							oThis.memory.WriteBool(oControlPr.autoFill);
+						});
+					}
+					if (oControlPr.autoLine !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.AutoLine, function() {
+							oThis.memory.WriteBool(oControlPr.autoLine);
+						});
+					}
+					if (oControlPr.autoPict !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.AutoPict, function() {
+							oThis.memory.WriteBool(oControlPr.autoPict);
+						});
+					}
+					if (oControlPr.defaultSize !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.DefaultSize, function() {
+							oThis.memory.WriteBool(oControlPr.defaultSize);
+						});
+					}
+					if (oControlPr.disabled !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Disabled, function() {
+							oThis.memory.WriteBool(oControlPr.disabled);
+						});
+					}
+					if (oControlPr.locked !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Locked, function() {
+							oThis.memory.WriteBool(oControlPr.locked);
+						});
+					}
+					if (oControlPr.print !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Print, function() {
+							oThis.memory.WriteBool(oControlPr.print);
+						});
+					}
+					if (oControlPr.recalcAlways !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.RecalcAlways, function() {
+							oThis.memory.WriteBool(oControlPr.recalcAlways);
+						});
+					}
+					if (oControlPr.macro !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.Macro);
+						oThis.memory.WriteString2(oControlPr.macro);
+					}
 
-					this.bs.WriteItem(c_oSerControlTypes.AutoFill, function() {
-						oThis.memory.WriteBool(oControlPr.autoFill);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.AutoLine, function() {
-						oThis.memory.WriteBool(oControlPr.autoLine);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.AutoPict, function() {
-						oThis.memory.WriteBool(oControlPr.autoPict);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.DefaultSize, function() {
-						oThis.memory.WriteBool(oControlPr.defaultSize);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Disabled, function() {
-						oThis.memory.WriteBool(oControlPr.disabled);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Locked, function() {
-						oThis.memory.WriteBool(oControlPr.locked);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Print, function() {
-						oThis.memory.WriteBool(oControlPr.print);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.RecalcAlways, function() {
-						oThis.memory.WriteBool(oControlPr.recalcAlways);
-					});
-					oThis.memory.WriteByte(c_oSerControlTypes.Macro);
-					oThis.memory.WriteString2(oControlPr.macro);
+					if (oFormControlPr.fmlaGroup !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.FmlaGroup);
+						oThis.memory.WriteString2(oFormControlPr.fmlaGroup);
+					}
 
-					oThis.memory.WriteByte(c_oSerControlTypes.FmlaGroup);
-					oThis.memory.WriteString2(oFormControlPr.fmlaGroup);
+					if (oFormControlPr.fmlaLink !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.FmlaLink);
+						oThis.memory.WriteString2(oFormControlPr.fmlaLink);
+					}
 
-					oThis.memory.WriteByte(c_oSerControlTypes.FmlaLink);
-					oThis.memory.WriteString2(oFormControlPr.fmlaLink);
+					if (oFormControlPr.fmlaRange !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.FmlaRange);
+						oThis.memory.WriteString2(oFormControlPr.fmlaRange);
+					}
 
-					oThis.memory.WriteByte(c_oSerControlTypes.FmlaRange);
-					oThis.memory.WriteString2(oFormControlPr.fmlaRange);
+					if (oFormControlPr.fmlaTxbx !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.FmlaTxbx);
+						oThis.memory.WriteString2(oFormControlPr.fmlaTxbx);
+					}
 
-					oThis.memory.WriteByte(c_oSerControlTypes.FmlaTxbx);
-					oThis.memory.WriteString2(oFormControlPr.fmlaTxbx);
-
-					this.bs.WriteItem(c_oSerControlTypes.DropLines, function() {
-						oThis.memory.WriteLong(oFormControlPr.dropLines);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Checked, function() {
-						oThis.memory.WriteByte(oFormControlPr.checked);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.DropStyle, function() {
-						oThis.memory.WriteByte(oFormControlPr.dropStyle);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Dx, function() {
-						oThis.memory.WriteLong(oFormControlPr.dx);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Inc, function() {
-						oThis.memory.WriteLong(oFormControlPr.inc);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Min, function() {
-						oThis.memory.WriteLong(oFormControlPr.min);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Max, function() {
-						oThis.memory.WriteLong(oFormControlPr.max);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Page, function() {
-						oThis.memory.WriteLong(oFormControlPr.page);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Sel, function() {
-						oThis.memory.WriteLong(oFormControlPr.sel);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.SelType, function() {
-						oThis.memory.WriteByte(oFormControlPr.selType);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.TextHAlign, function() {
-						oThis.memory.WriteByte(oFormControlPr.textHAlign);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.TextVAlign, function() {
-						oThis.memory.WriteByte(oFormControlPr.textVAlign);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Val, function() {
-						oThis.memory.WriteLong(oFormControlPr.val);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.WidthMin, function() {
-						oThis.memory.WriteLong(oFormControlPr.widthMin);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.EditVal, function() {
-						oThis.memory.WriteByte(oFormControlPr.editVal);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Colored, function() {
-						oThis.memory.WriteBool(oFormControlPr.colored);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.FirstButton, function() {
-						oThis.memory.WriteBool(oFormControlPr.firstButton);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.Horiz, function() {
-						oThis.memory.WriteBool(oFormControlPr.horiz);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.JustLastX, function() {
-						oThis.memory.WriteBool(oFormControlPr.justLastX);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.LockText, function() {
-						oThis.memory.WriteBool(oFormControlPr.lockText);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.NoThreeD, function() {
-						oThis.memory.WriteBool(oFormControlPr.noThreeD);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.NoThreeD2, function() {
-						oThis.memory.WriteBool(oFormControlPr.noThreeD2);
-					});
-					oThis.memory.WriteByte(c_oSerControlTypes.MultiSel);
-					oThis.memory.WriteString2(oFormControlPr.multiSel);
-
-					this.bs.WriteItem(c_oSerControlTypes.MultiLine, function() {
-						oThis.memory.WriteBool(oFormControlPr.multiLine);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.VerticalBar, function() {
-						oThis.memory.WriteBool(oFormControlPr.verticalBar);
-					});
-					this.bs.WriteItem(c_oSerControlTypes.PasswordEdit, function() {
-						oThis.memory.WriteBool(oFormControlPr.passwordEdit);
-					});
-					oThis.memory.WriteByte(c_oSerControlTypes.Text);
-					oThis.memory.WriteString2(oFormControlPr.text);
+					if (oFormControlPr.dropLines !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.DropLines, function() {
+							oThis.memory.WriteLong(oFormControlPr.dropLines);
+						});
+					}
+					if (oFormControlPr.checked !== null && oFormControlPr.checked !== AscFormat.CFormControlPr_checked_unchecked) {
+						this.bs.WriteItem(c_oSerControlTypes.Checked, function() {
+							oThis.memory.WriteByte(oFormControlPr.checked);
+						});
+					}
+					if (oFormControlPr.dropStyle !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.DropStyle, function() {
+							oThis.memory.WriteByte(oFormControlPr.dropStyle);
+						});
+					}
+					if (oFormControlPr.dx !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Dx, function() {
+							oThis.memory.WriteLong(oFormControlPr.dx);
+						});
+					}
+					if (oFormControlPr.inc !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Inc, function() {
+							oThis.memory.WriteLong(oFormControlPr.inc);
+						});
+					}
+					if (oFormControlPr.min !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Min, function() {
+							oThis.memory.WriteLong(oFormControlPr.min);
+						});
+					}
+					if (oFormControlPr.max !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Max, function() {
+							oThis.memory.WriteLong(oFormControlPr.max);
+						});
+					}
+					if (oFormControlPr.page !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Page, function() {
+							oThis.memory.WriteLong(oFormControlPr.page);
+						});
+					}
+					if (oFormControlPr.sel !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Sel, function() {
+							oThis.memory.WriteLong(oFormControlPr.sel);
+						});
+					}
+					if (oFormControlPr.selType !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.SelType, function() {
+							oThis.memory.WriteByte(oFormControlPr.selType);
+						});
+					}
+					if (oFormControlPr.textHAlign !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.TextHAlign, function() {
+							oThis.memory.WriteByte(oFormControlPr.textHAlign);
+						});
+					}
+					if (oFormControlPr.textVAlign !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.TextVAlign, function() {
+							oThis.memory.WriteByte(oFormControlPr.textVAlign);
+						});
+					}
+					if (oFormControlPr.val !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Val, function() {
+							oThis.memory.WriteLong(oFormControlPr.val);
+						});
+					}
+					if (oFormControlPr.widthMin !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.WidthMin, function() {
+							oThis.memory.WriteLong(oFormControlPr.widthMin);
+						});
+					}
+					if (oFormControlPr.editVal !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.EditVal, function() {
+							oThis.memory.WriteByte(oFormControlPr.editVal);
+						});
+					}
+					if (oFormControlPr.colored !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Colored, function() {
+							oThis.memory.WriteBool(oFormControlPr.colored);
+						});
+					}
+					if (oFormControlPr.firstButton !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.FirstButton, function() {
+							oThis.memory.WriteBool(oFormControlPr.firstButton);
+						});
+					}
+					if (oFormControlPr.horiz !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.Horiz, function() {
+							oThis.memory.WriteBool(oFormControlPr.horiz);
+						});
+					}
+					if (oFormControlPr.justLastX !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.JustLastX, function() {
+							oThis.memory.WriteBool(oFormControlPr.justLastX);
+						});
+					}
+					if (oFormControlPr.lockText !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.LockText, function() {
+							oThis.memory.WriteBool(oFormControlPr.lockText);
+						});
+					}
+					if (oFormControlPr.noThreeD !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.NoThreeD, function() {
+							oThis.memory.WriteBool(oFormControlPr.noThreeD);
+						});
+					}
+					if (oFormControlPr.noThreeD2 !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.NoThreeD2, function() {
+							oThis.memory.WriteBool(oFormControlPr.noThreeD2);
+						});
+					}
+					if (oFormControlPr.multiSel !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.MultiSel);
+						oThis.memory.WriteString2(oFormControlPr.multiSel);
+					}
+					if (oFormControlPr.multiLine !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.MultiLine, function() {
+							oThis.memory.WriteBool(oFormControlPr.multiLine);
+						});
+					}
+					if (oFormControlPr.verticalBar !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.VerticalBar, function() {
+							oThis.memory.WriteBool(oFormControlPr.verticalBar);
+						});
+					}
+					if (oFormControlPr.passwordEdit !== null) {
+						this.bs.WriteItem(c_oSerControlTypes.PasswordEdit, function() {
+							oThis.memory.WriteBool(oFormControlPr.passwordEdit);
+						});
+					}
+					if (oFormControlPr.text !== null) {
+						oThis.memory.WriteByte(c_oSerControlTypes.Text);
+						oThis.memory.WriteString2(oFormControlPr.text);
+					}
 					if (oFormControlPr.itemLst.length) {
 						this.bs.WriteItem(c_oSerControlTypes.ItemLst, function() {
 							for (let i = 0; i < oFormControlPr.itemLst.length; i += 1) {
