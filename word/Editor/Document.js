@@ -19550,18 +19550,19 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 			if (Item.IsCursorAtBegin())
 			{
 				// Продолжаем (в плане настроек) новый параграф
-				Item.Split(NewParagraph);
+				Item.SplitContent(NewParagraph, false);
 				Item.Continue(NewParagraph);
-
+				
 				NewParagraph.Correct_Content();
-				NewParagraph.MoveCursorToStartPos();
-
+				NewParagraph.MoveCursorToEndPos();
+				Item.MoveCursorToStartPos();
+				
 				var nContentPos = this.CurPos.ContentPos;
-				this.AddToContent(nContentPos + 1, NewParagraph);
+				this.AddToContent(nContentPos, NewParagraph);
 				this.CurPos.ContentPos = nContentPos + 1;
-
-				firstPara  = Item;
-				secondPara = NewParagraph;
+				
+				firstPara  = NewParagraph;
+				secondPara = Item;
 			}
 			else
 			{
@@ -19582,7 +19583,7 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 							NextId = StyleId;
 					}
 					
-					Item.Split(NewParagraph);
+					Item.SplitContent(NewParagraph, true);
 					if (StyleId === NextId)
 					{
 						// Продолжаем (в плане настроек) новый параграф
