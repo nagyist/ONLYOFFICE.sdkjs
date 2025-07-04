@@ -566,7 +566,7 @@
 	 * Finds shape section by formula. Compares N with string argument. For Geometry use find sections.
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Section_Type | null}
+	 * @returns {Section_Type | undefined}
 	 */
 	SheetStorage.prototype.getSection = function getSection(formula) {
 		let section = this.inheritedElements[formula];
@@ -581,7 +581,7 @@
 	 * Returns link to object not copy.
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Row_Type | null}
+	 * @returns {Row_Type | undefined}
 	 */
 	SheetStorage.prototype.getRow = function getRow(formula) {
 		let row = this.inheritedElements[formula];
@@ -613,7 +613,7 @@
 	 * Let's search cells only directly in Section for now (if called on Section).
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Cell_Type|null}
+	 * @returns {Cell_Type | undefined}
 	 */
 	SheetStorage.prototype.getCell = function getCell(formula) {
 		// Cells can have N only no IX
@@ -682,7 +682,7 @@
 	 * low performance function! use if can't use get section
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Section_Type[] | null}
+	 * @returns {Section_Type[]}
 	 */
 	SheetStorage.prototype.getSections = function(formula) {
 		// TODO check may be optimized. maybe use getGeometrySections
@@ -1354,7 +1354,7 @@
 	 * Returns object of shape not copy!
 	 *
 	 * @memberof Shape_Type
-	 * @returns {Text_Type | null}
+	 * @returns {Text_Type | undefined}
 	 */
 	Shape_Type.prototype.getTextElement = function getTextElement() {
 		let text = this.inheritedElements["Text"];

@@ -2232,8 +2232,10 @@
 
 			let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
 			let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
-			let shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
-			let shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetX_inch = shadowOffsetXcell &&
+					shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetY_inch = shadowOffsetYcell &&
+					shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
 			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
