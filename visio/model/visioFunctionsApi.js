@@ -208,14 +208,18 @@
 			getModifiersMethod = themes[0].getOuterShdw;
 			isEffectIdx = true;
 
-			initialDefaultValue = AscFormat.CreateUniColorRGB(255,255,255);
+			initialDefaultValue = AscFormat.CreateUniColorRGB(0,0,0);
 		} else if (cellName === "ShapeShdwOffsetX" || cellName === "ShapeShdwOffsetY") {
 			quickStyleCellName = "QuickStyleShadowColor";
 			quickStyleModifiersCellName = "QuickStyleEffectsMatrix";
 			getModifiersMethod = themes[0].getOuterShdw;
 			isEffectIdx = true;
 
-			initialDefaultValue = 0;
+			if (cellName === "ShapeShdwOffsetX") {
+				initialDefaultValue = 0.125;
+			} else {
+				initialDefaultValue = -0.125;
+			}
 		} else {
 			AscCommon.consoleLog("themeval argument error. cell name: " + cellName + " is unknown. return undefined.");
 			return undefined;

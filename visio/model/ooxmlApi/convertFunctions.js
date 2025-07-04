@@ -2169,18 +2169,12 @@
 
 
 		// set shadow
-		// ShdwPattern = 1 means shadow is visible
 		let shadowPatternCell = this.getCell("ShdwPattern");
 		let shadowPattern = shadowPatternCell ? shadowPatternCell.calculateValue(this, pageInfo,
-				visioDocument.themes, undefined, false) : 0;
+				visioDocument.themes) : 0;
 		let isShadowVisible = shadowPattern === 1;
 
-		let shapeShadowTypeCell = this.getCell("ShapeShdwType");
-		let isShadowTypeSupported = shapeShadowTypeCell ? (
-				shapeShadowTypeCell.getNumberValue("ShapeShdwType") === 1 ||
-				shapeShadowTypeCell.getNumberValue("ShapeShdwType") === 2 ||
-				shapeShadowTypeCell.getStringValue() === "Themed") : false;
-		if (isShadowVisible && isShadowTypeSupported) {
+		if (isShadowVisible) {
 			let shadow = new AscFormat.COuterShdw();
 
 			// get color for shadow
@@ -2189,7 +2183,7 @@
 			if (shadowForegndCell) {
 				// AscCommon.consoleLog("FillForegnd was found:", fillForegndCell);
 				shadowColor = shadowForegndCell.calculateValue(this, pageInfo,
-						visioDocument.themes, undefined, false);;
+						visioDocument.themes);
 
 				let mainFillAlphaCoef = 1;
 				let fillForegndTransValue = this.getCellNumberValue("FillForegndTrans");
