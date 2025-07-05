@@ -13640,16 +13640,6 @@ Paragraph.prototype.SplitContent = function(newParagraph, after, contentPos, isN
 	}
 	else
 	{
-		// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
-		// ее на пустой ран с заданными настройками).
-		var NewElement = this.Content[nCurPos].Split(contentPos, 1);
-		
-		if (null === NewElement)
-		{
-			NewElement = new ParaRun(newParagraph);
-			NewElement.Set_Pr(TextPr.Copy());
-		}
-		
 		// Теперь делим наш параграф на три части:
 		// 1. До элемента с номером nCurPos включительно (оставляем эту часть в исходном параграфе)
 		// 2. После элемента с номером nCurPos (добавляем эту часть в новый параграф)
@@ -13659,15 +13649,57 @@ Paragraph.prototype.SplitContent = function(newParagraph, after, contentPos, isN
 		let newContent = [];
 		if (after)
 		{
+			// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
+			// ее на пустой ран с заданными настройками).
+			var NewElement = this.Content[nCurPos].Split(contentPos, 1);
+			
+			if (null === NewElement)
+			{
+				NewElement = new AscWord.Run();
+				NewElement.Set_Pr(TextPr.Copy());
+			}
+			
 			newContent = this.Content.slice(nCurPos + 1);
 			this.Internal_Content_Remove2(nCurPos + 1, this.Content.length - nCurPos - 1);
 			newContent.splice(0, 0, NewElement);
 		}
 		else
 		{
-			newContent = this.Content.slice(0, nCurPos + 1);
-			this.Internal_Content_Remove2(0, nCurPos + 1);
-			this.Internal_Content_Add(0, NewElement);
+			
+			this.Content[nCurPos].RemoveSelection();
+			this.Content[nCurPos].Set_ParaContentPos(contentPos, 1);
+			
+			// Специальная заглушка для строгого редактирования. Т.е. мы даем добавлять параграф, когда курсор находится
+			// в начале параграфа, то не нужно делить текущий раз из-за текщих колизий в совместке. (Если проблема
+			// с обновлением изменений при разделении рана будет решена, то можно будет назад объединить этот код)
+			if (this.Content[nCurPos].IsCursorAtBegin())
+			{
+				if (nCurPos > 0)
+				{
+					newContent = this.Content.slice(0, nCurPos);
+					this.Internal_Content_Remove2(0, nCurPos);
+				}
+				
+				let newElement = new AscWord.Run();
+				newElement.Set_Pr(TextPr.Copy());
+				newContent.push(newElement);
+			}
+			else
+			{
+				// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
+				// ее на пустой ран с заданными настройками).
+				var NewElement = this.Content[nCurPos].Split(contentPos, 1);
+				
+				if (null === NewElement)
+				{
+					NewElement = new AscWord.Run();
+					NewElement.Set_Pr(TextPr.Copy());
+				}
+				
+				newContent = this.Content.slice(0, nCurPos + 1);
+				this.Internal_Content_Remove2(0, nCurPos + 1);
+				this.Internal_Content_Add(0, NewElement);
+			}
 		}
 		
 		this.CheckParaEnd();
