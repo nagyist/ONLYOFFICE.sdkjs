@@ -4559,6 +4559,10 @@
 	{
 		this.m_bLoad = bValue;
 	};
+	CIdCounter.prototype.IsLoad = function()
+	{
+		return this.m_bLoad;
+	};
 	CIdCounter.prototype.Clear = function ()
 	{
 		this.m_sUserId = null;

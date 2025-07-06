@@ -4634,6 +4634,7 @@
 	window['AscDFH'].historydescription_OForm_CompletePreparation                   = 0x01c7;
 	window['AscDFH'].historydescription_Presentation_SetPreserveSlideMaster         = 0x01c8;
 	window['AscDFH'].historydescription_Document_AddMathML                          = 0x01c9;
+	window['AscDFH'].historydescription_OForm_CancelFilling                         = 0x01ca;
 
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;

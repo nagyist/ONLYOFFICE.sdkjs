@@ -15930,12 +15930,22 @@
 			return false;
 		}
 		const oFormulaParsed = this.getFormulaParsed();
+		if (!oFormulaParsed) {
+			g_cCalcRecursion.resetRecursionCounter();
+			return false;
+		}
 		const aRefElements = _getRefElements(oFormulaParsed);
 		const oThis = this;
 		let bRecursiveFormula = false;
 		aPassedCell = aPassedCell || [];
 		foreachRefElements(function (oRange) {
+			if (!oRange) {
+				return;
+			}
 			oRange._foreachNoEmpty(function (oCell) {
+				if (!oCell) {
+					return;
+				}
 				let bCellIsPassed = aPassedCell.some(function (oElem) {
 					return oCell.compareCellIndex(oElem);
 				});
@@ -15954,11 +15964,15 @@
 			if (bRecursiveFormula) {
 				if (g_cCalcRecursion.getRecursionCounter() === 0 && aPassedCell.length) {
 					const oWs = oThis.ws;
-					let oSourceCell = null;
-					oWs._getCell(oCellWithFormula.nRow, oCellWithFormula.nCol, function (oCell) {
-						oSourceCell = oCell;
-					});
-					_changeCellsFromListener(oSourceCell);
+					if (oWs) {
+						let oSourceCell = null;
+						oWs._getCell(oCellWithFormula.nRow, oCellWithFormula.nCol, function (oCell) {
+							oSourceCell = oCell;
+						});
+						if (oSourceCell) {
+							_changeCellsFromListener(oSourceCell);
+						}
+					}
 				}
 				oFormulaParsed.ca = true;
 				return true;
@@ -24210,25 +24224,25 @@
 		}
 
 		const oUnionFunctions = {
-			macrosArray: []
+			"macrosArray": []
 		};
 		const fileFunctionsMap = {};
 		let i, macro;
-		const fileArrayLength = oFileFunctions.macrosArray.length;
-		const lsArrayLength = oLsFunctions.macrosArray.length;
+		const fileArrayLength = oFileFunctions["macrosArray"] ? oFileFunctions["macrosArray"].length : 0;
+		const lsArrayLength = oLsFunctions["macrosArray"] ? oLsFunctions["macrosArray"].length : 0;
 
 		for (i = 0; i < fileArrayLength; i++) {
-			macro = oFileFunctions.macrosArray[i];
+			macro = oFileFunctions["macrosArray"][i];
 			if (macro && macro.name) {
 				fileFunctionsMap[macro.name] = true;
-				oUnionFunctions.macrosArray.push(macro);
+				oUnionFunctions["macrosArray"].push(macro);
 			}
 		}
 
 		for (i = 0; i < lsArrayLength; i++) {
-			macro = oLsFunctions.macrosArray[i];
+			macro = oLsFunctions["macrosArray"][i];
 			if (macro && macro.name && !fileFunctionsMap[macro.name]) {
-				oUnionFunctions.macrosArray.push(macro);
+				oUnionFunctions["macrosArray"].push(macro);
 			}
 		}
 
