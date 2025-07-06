@@ -10039,6 +10039,7 @@
             fl.shrinkToFit = fl.wrapText ? false : align.getShrinkToFit();
             fl.merged = c.hasMerged();
             fl.textAlign = c.getAlignHorizontalByValue(align.getAlignHorizontal());
+			fl.readingOrder = align.getReadingOrder();
         }
         return fl;
     };
