@@ -4113,7 +4113,7 @@
 					t.model.PagePrintOptions.pageSetup.scale = _modelScale;
 				}
 
-				drawingCtx.RemoveClipRect && drawingCtx.RemoveClipRect();
+				t._RemoveClipRect(drawingCtx);
 
 				if (transformMatrix) {
 					drawingCtx.setTransform(transformMatrix.sx, transformMatrix.shy, transformMatrix.shx,
@@ -4191,7 +4191,7 @@
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oOldBaseTransform);
 					}
-					drawingCtx.RemoveClipRect && drawingCtx.RemoveClipRect();
+					t._RemoveClipRect(drawingCtx);
 				}
 				t.visibleRange = tmpVisibleRange;
 			};
@@ -4964,7 +4964,7 @@
           }
 
         if (isUseMainClip)
-            ctx.RemoveClipRect();
+            this._RemoveClipRect(ctx);
       };
 
     /** Рисует заголовки видимых строк */
@@ -5014,7 +5014,7 @@
 			t += h;
         }
         if (isUseMainClip)
-            ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
     };
 
     /**
@@ -5221,7 +5221,7 @@
 
 		this._fillText(ctx, text, textX, textY + Asc.round(tm.baseline * this.getZoom()), undefined, sr.charWidths);
 
-		ctx.RemoveClipRect();
+		this._RemoveClipRect(ctx);
     };
 
 	WorksheetView.prototype.drawHeaderFooter = function (drawingCtx, printPagesData, indexPrintPage, countPrintPages) {
@@ -5676,7 +5676,7 @@
 		}
 
 		if (!drawingCtx && !window['IS_NATIVE_EDITOR'] && isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		//this._drawPageBreakPreviewLines(drawingCtx, range, leftFieldInPx, topFieldInPx, width, height);
@@ -6600,7 +6600,7 @@
 			}
 
 			if (clipUse) {
-				ctx.RemoveClipRect();
+				this._RemoveClipRect(ctx);
 			}
 		} else {
 			this._AddClipRect(ctx, x1, y1, w, h);
@@ -6641,8 +6641,8 @@
 				}
 			}
 
-			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color)
-			ctx.RemoveClipRect();
+			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color);
+			this._RemoveClipRect(ctx);
 		}
 
 
@@ -7135,8 +7135,7 @@
 		// draw area
 		drawAreaStroke(traceManager._getPrecedentsAreas());
 		// remove clip range
-		ctx.RemoveClipRect();
-
+		this._RemoveClipRect(ctx);
 		return true;
 	};
 
@@ -7265,7 +7264,7 @@
 				if (_x1 < _x2 && _y1 < _y2) {
 					this._AddClipRect(ctx, x1, y1, x2 - x1, y2 - y1);
 					this._drawText(this.stringRender, undefined, tX1, tY1, 100, this.settings.activeCellBorderColor);
-					ctx.RemoveClipRect();
+					this._RemoveClipRect(ctx);
 				}
 			}
 		}
@@ -10889,7 +10888,8 @@
         }
 
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.RemoveClipRect();
+
+			this._RemoveClipRect(ctx);
 			this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
 		}
 
@@ -11244,7 +11244,7 @@
         }
 
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 			this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
 		}
 
@@ -20642,7 +20642,7 @@
 		if (props.idPivotCollapse) {
 			this._drawPivotCollapseButton(offsetX, offsetY, props);
 			if (isClip) {
-				ctx.RemoveClipRect();
+				this._RemoveClipRect(ctx);
 			}
 			return;
 		}
@@ -20866,7 +20866,7 @@
 		_drawButton(x1 + diffX, y1 + diffY);
 
 		if (isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 	};
 
@@ -23770,7 +23770,7 @@
 		}
 
 		if (isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		this._drawGroupDataButtons(drawingCtx, buttons, leftFieldInPx, topFieldInPx, bCol);
@@ -23845,7 +23845,7 @@
 			this._lineVerPrevPx(ctx, x, y + h, y - borderSize);
 
 			ctx.stroke();
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 		ctx.closePath();
 
@@ -23886,7 +23886,7 @@
 			}
 
 			ctx.stroke();
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		ctx.closePath();
@@ -27441,7 +27441,18 @@
 
 
 	WorksheetView.prototype._AddClipRect = function (ctx, x, y, w, h, skipRtl) {
-		ctx.AddClipRect(this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h)
+		let _x = this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - x - w) : x;
+		ctx.AddClipRect && ctx.AddClipRect(_x, y, w, h);
+		if (this.stringRender) {
+			this.stringRender.addClipRect(_x, y, w, h);
+		}
+		return ctx;
+	};
+	WorksheetView.prototype._RemoveClipRect = function (ctx) {
+		ctx.RemoveClipRect && ctx.RemoveClipRect();
+		if (this.stringRender) {
+			this.stringRender.removeClipRect();
+		}
 		return ctx;
 	};
 	WorksheetView.prototype._moveTo = function (ctx, x, y) {

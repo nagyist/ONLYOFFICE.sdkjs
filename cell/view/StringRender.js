@@ -340,6 +340,13 @@
 				0x002D: 1, 0x00AD: 1, 0x2010: 1, 0x2012: 1, 0x2013: 1, 0x2014: 1
 			};
 
+			this.clipRect = {
+				x: 0,
+				y: 0,
+				w: 0,
+				h: 0,
+				use: false
+			};
 
 			// For replacing invisible chars while rendering
 			/** @type RegExp */
@@ -411,7 +418,7 @@
 
 				drawingCtx.setTransform(mbt.sx, mbt.shy, mbt.shx, mbt.sy, mbt.tx, mbt.ty);
 			}
-
+			this.removeClipRect();
 			return this;
 		};
 
@@ -1395,6 +1402,19 @@
 			let isRtl = this.drawState.getMainDirection() === AscBidi.DIRECTION_FLAG.RTL;
 			return isRtl ? AscCommon.align_Right : AscCommon.align_Left;
 		};
+
+
+		StringRender.prototype.addClipRect = function(x, y, w, h) {
+			this.clipRect.x = x;
+			this.clipRect.y = y;
+			this.clipRect.w = w;
+			this.clipRect.h = h;
+			this.clipRect.use = true;
+		};
+
+		StringRender.prototype.removeClipRect = function() {
+			this.clipRect.use = false;
+		};
 		//------------------------------------------------------------export---------------------------------------------------
 		window['AscCommonExcel'] = window['AscCommonExcel'] || {};
 		window["AscCommonExcel"].StringRender = StringRender;
@@ -1467,9 +1487,16 @@
 
 		TableCellDrawState.prototype.handleBidiFlow = function(data, direction) {
 			let charIndex = data.charIndex;
+			let width = this.stringRender.charWidths[charIndex];
+			let cr = this.stringRender.clipRect;
+			if (cr.use) {
+				if (cr.x > this.x + width || cr.x + cr.w < this.x) {
+					this.x += width;
+					return;
+				}
+			}
 			let charProp = data.charProp;
 			let char = this.stringRender.chars[charIndex];
-			let width = this.stringRender.charWidths[charIndex];
 			let grapheme = charProp ? charProp.grapheme : AscFonts.NO_GRAPHEME;
 
 			if (direction === AscBidi.DIRECTION.R && AscBidi.isPairedBracket(char)) {
