@@ -39,7 +39,7 @@
  * @alias onClick
  * @description The function called when the user clicks on the element.
  * @param {boolean} isSelectionUse - Defines if the selection is used or not.
- * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onClick.js
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onClick.js
  */
 
 /**
@@ -48,7 +48,7 @@
  * @memberof Plugin
  * @alias onTargetPositionChanged
  * @description The function called when the target position in the editor is changed.
- * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onTargetPositionChanged.js
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onTargetPositionChanged.js
  */
 
 /**
@@ -57,7 +57,7 @@
  * @memberof Plugin
  * @alias onDocumentContentReady
  * @description The function called when the document is completely loaded.
- * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onDocumentContentReady.js
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onDocumentContentReady.js
  */
 
 /**
@@ -67,7 +67,7 @@
  * @alias onEnableMouseEvent
  * @description The function called to turn the mouse or touchpad events on/off.
  * @param {boolean} isEnabled - Defines if the mouse or touchpad is enabled (**true**) or not (**false**).
- * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onEnableMouseEvent.js
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onEnableMouseEvent.js
  */
 
 /**
@@ -76,5 +76,16 @@
  * @memberof Plugin
  * @alias onExternalMouseUp
  * @description The function called when the mouse button is released outside the plugin iframe.
- * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Methods/onExternalMouseUp.js
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onExternalMouseUp.js
  */
+
+/**
+ * Event: onChangeRestrictions
+ * @event Plugin#onChangeRestrictions
+ * @memberof Plugin
+ * @alias onChangeRestrictions
+ * @description The function called when the restrictions in the editor is changed.
+ * @param {number} value - restrictions value.
+ * @see office-js-api/Examples/Plugins/{Editor}/Plugin/Events/onChangeRestrictions.js
+ */
+

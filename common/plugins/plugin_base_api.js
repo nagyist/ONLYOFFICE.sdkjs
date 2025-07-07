@@ -79,46 +79,6 @@ window.startPluginApi = function() {
 	 */
 
 	/**
-	 * @typedef {Object} ContentControl
-	 * Content control object.
-	 * @property {string} Tag - A tag assigned to the content control. The same tag can be assigned to several content controls so that you can make reference to them in your code.
-	 * @property {string} Id - A unique content control identifier. It can be used to search for a certain content control and make reference to it in your code.
-	 * @property {ContentControlLock} Lock - A value that defines if it is possible to delete and/or edit the content control or not.
-	 * @property {string} InternalId - A unique internal identifier of the content control. It is used for all operations with content controls.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/ContentControl.js
-	 */
-
-	/**
-     * @typedef {(0 | 1 | 2 | 3)} ContentControlLock
-     * A value that defines if it is possible to delete and/or edit the content control or not:
-	 * <b>0</b> - only deleting,
-	 * <b>1</b> - disable deleting or editing,
-	 * <b>2</b> - only editing,
-	 * <b>3</b> - full access.
-     * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/ContentControlLock.js
-	 */
-
-	/**
-	 * @typedef {Object} comment
-	 * Comment object.
-	 * @property {string} Id - The comment ID.
-	 * @property {CommentData} Data - An object which contains the comment data.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/comment.js
-	 */
-
-	/**
-	 * @typedef {Object} CommentData
-	 * The comment data.
-	 * @property {string} UserName - The comment author.
-	 * @property {string} Text - The comment text.
-	 * @property {string} Time - The time when the comment was posted (in milliseconds).
-	 * @property {boolean} Solved - Specifies if the comment is resolved (**true**) or not (**false**).
-	 * @property {CommentData[]} Replies - An array containing the comment replies represented as the *CommentData* object.
-	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/CommentData.js
-	 */
-
-
-	/**
 	 * Plugin variations, or subplugins, that are created inside the origin plugin.
 	 * @typed { Object } variation
 	 * @descr Plugin variations can be created for the following purposes:
