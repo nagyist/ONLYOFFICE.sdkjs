@@ -7072,6 +7072,7 @@ var editor;
 		   _adjustPrint.asc_setIgnorePrintArea(true);
        }
 
+	   _adjustPrint.asc_setPrintType(Asc.c_oAscPrintType.EntireWorkbook);
 	   if (_options["adjustOptions"])
 	   {
 		   if (_options["adjustOptions"]["startPageIndex"])
@@ -7080,9 +7081,10 @@ var editor;
 			   _adjustPrint.asc_setEndPageIndex(_options["adjustOptions"]["endPageIndex"]);
 		   if (_options["adjustOptions"]["activeSheetsArray"])
 			   _adjustPrint.asc_setActiveSheetsArray(_options["adjustOptions"]["activeSheetsArray"]);
+		   if (_options["adjustOptions"]["printType"])
+			   _adjustPrint.asc_setPrintType(_options["adjustOptions"]["printType"]);
 	   }
 
-	   _adjustPrint.asc_setPrintType(Asc.c_oAscPrintType.EntireWorkbook);
 
        var ws, newPrintOptions;
 	   var _orientation = spreadsheetLayout ? spreadsheetLayout["orientation"] : null;

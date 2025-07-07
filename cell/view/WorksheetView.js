@@ -3812,14 +3812,27 @@
 		};
 
 		if (printOnlySelection) {
+			let selection;
+			if (pageOptions && pageOptions.pageSetup && pageOptions.pageSetup.selection) {
+				selection = pageOptions.pageSetup.selection;
+				let _arrRanges = [];
+				for (let i = 0; i < selection.length; i++) {
+					let _selectionRange = new asc_Range(selection[i].c1, selection[i].r1, selection[i].c2, selection[i].r2);
+					_arrRanges.push(_selectionRange);
+				}
+				selection = _arrRanges;
+			}
 			var tempPrintScale;
 			//подменяем scale на временный для печати выделенной области
 			if(fitToWidth || fitToHeight) {
-				tempPrintScale = this.calcPrintScale(fitToWidth, fitToHeight, true);
+				tempPrintScale = this.calcPrintScale(fitToWidth, fitToHeight, selection ? selection : true);
 			}
 
-			for (var i = 0; i < this.model.selectionRange.ranges.length; ++i) {
-				range = this.model.selectionRange.ranges[i];
+			if (!selection) {
+				selection = this.model.selectionRange.ranges;
+			}
+			for (var i = 0; i < selection.length; ++i) {
+				range = selection[i];
 				if (c_oAscSelectionType.RangeCells === range.getType()) {
 					if(!doNotRecalc) {
 						this._prepareCellTextMetricsCache(range);
@@ -4483,7 +4496,7 @@
 		this.model.setFitToPage(!fitToHeightAuto || !fitToWidthAuto);
 	};
 
-	WorksheetView.prototype.calcPrintScale = function(width, height, bSelection, ignorePrintArea) {
+	WorksheetView.prototype.calcPrintScale = function(width, height, _selection, ignorePrintArea) {
 		//TODO для печати не нужно учитывать размер группы
 		if(this.groupWidth || this.groupHeight) {
 			this.ignoreGroupSize = true;
@@ -4621,8 +4634,8 @@
 			}
 		};
 
-		if(bSelection) {
-			calcScaleByRanges(this._getSelection().ranges);
+		if(_selection) {
+			calcScaleByRanges(asc_typeof(_selection) === "object" ? _selection : this._getSelection().ranges);
 		} else {
 			//TODO ignorePrintArea - необходимо протащить флаг!
 			var printArea = !ignorePrintArea && this.model.workbook.getDefinesNames("Print_Area", this.model.getId());

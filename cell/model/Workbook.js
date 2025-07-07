@@ -13334,6 +13334,7 @@
 		printProps.pageSetup.headerFooter = this && this.headerFooter && this.headerFooter.getForInterface();
 		var printArea = this.workbook.getDefinesNames("Print_Area", this.getId());
 		printProps.pageSetup.printArea = printArea ? printArea.clone() : false;
+		printProps.pageSetup.selection = this.selectionRange.ranges;
 
 		printProps.printTitlesHeight = this.PagePrintOptions.printTitlesHeight;
 		printProps.printTitlesWidth = this.PagePrintOptions.printTitlesWidth;

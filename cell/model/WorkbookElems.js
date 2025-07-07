@@ -13253,6 +13253,7 @@ function RangeDataManagerElem(bbox, data)
 		//для превью передаём из интерфейса
 		this.headerFooter = null;
 		this.printArea = null;
+		this.selection = null;
 
 		this.ws = ws;
 
@@ -13503,6 +13504,7 @@ function RangeDataManagerElem(bbox, data)
 		res["pageSetup"]["pageOrder"] = this.pageSetup.pageOrder;
 		res["pageSetup"]["paperUnits"] = this.pageSetup.paperUnits;
 		res["pageSetup"]["printArea"] = this.pageSetup.printArea;
+		res["pageSetup"]["selection"] = this.pageSetup.selection;
 		res["pageSetup"]["scale"] = this.pageSetup.scale;
 		res["pageSetup"]["useFirstPageNumber"] = this.pageSetup.useFirstPageNumber;
 		res["pageSetup"]["usePrinterDefaults"] = this.pageSetup.usePrinterDefaults;
@@ -13561,6 +13563,7 @@ function RangeDataManagerElem(bbox, data)
 		this.pageSetup.pageOrder = checkOnNull(props["pageSetup"]["pageOrder"], this.pageSetup.pageOrder);
 		this.pageSetup.paperUnits = checkOnNull(props["pageSetup"]["paperUnits"], this.pageSetup.paperUnits);
 		this.pageSetup.printArea = checkOnNull(props["pageSetup"]["printArea"], this.pageSetup.printArea);
+		this.pageSetup.selection = checkOnNull(props["pageSetup"]["selection"], this.pageSetup.selection);
 		this.pageSetup.scale = checkOnNull(props["pageSetup"]["scale"], this.pageSetup.scale);
 		this.pageSetup.useFirstPageNumber = checkOnNull(props["pageSetup"]["useFirstPageNumber"], this.pageSetup.useFirstPageNumber);
 		this.pageSetup.usePrinterDefaults = checkOnNull(props["pageSetup"]["usePrinterDefaults"], this.pageSetup.usePrinterDefaults);
