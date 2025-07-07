@@ -2254,11 +2254,24 @@
 			shadow.rotWithShape = true;
 			// cShape.spPr.changeShadow(shadow);
 			cShape.spPr.effectProps = new AscFormat.CEffectProperties();
+
+			// EffectDag (effect container) doesn't work for now
+			// cShape.spPr.effectProps.EffectDag = new AscFormat.CEffectContainer();
+			// cShape.spPr.effectProps.EffectDag.name = "1container";
+			// // cShape.spPr.effectProps.EffectDag.type = AscFormat.effectcontainertypeTree;
+			// // cShape.spPr.effectProps.EffectDag.type = AscFormat.effectcontainertypeSib;
+			// cShape.spPr.effectProps.EffectDag.effectList.push(shadow);
+
 			cShape.spPr.effectProps.EffectLst = new AscFormat.CEffectLst();
 			cShape.spPr.effectProps.EffectLst.outerShdw = shadow;
 
+			// Preset shadow doesn't work for now
 			// cShape.spPr.effectProps.EffectLst.prstShdw = new AscFormat.CPrstShdw();
-			// cShape.spPr.effectProps.EffectLst.prstShdw.dir = 300 * 3600;
+			// cShape.spPr.effectProps.EffectLst.prstShdw.dir = shadow.dir;
+			// cShape.spPr.effectProps.EffectLst.prstShdw.dist = shadow.dist;
+			// cShape.spPr.effectProps.EffectLst.prstShdw.prst = 0;
+			// cShape.spPr.effectProps.EffectLst.prstShdw.prst = "shdw1";
+			// cShape.spPr.effectProps.EffectLst.prstShdw.color = shadowColor;
 		}
 
 
@@ -2411,6 +2424,25 @@
 		// if we need to create CGroupShape create CShape first then copy its properties to CGroupShape object
 		// so anyway create CShapes
 		let cShapeOrCGroupShape = this.convertShape(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
+
+		// handle ShapeShdwShow to hide shadow if shape has ShapeShdwShow 1 and shape is in group
+		let shapeShdwShowCell = this.getCell("ShapeShdwShow");
+		let shapeShdwShow = shapeShdwShowCell && shapeShdwShowCell.calculateValue(this, pageInfo, visioDocument.themes);
+		if (shapeShdwShow === 1 && currentGroupHandling) {
+			let shape;
+			if (cShapeOrCGroupShape instanceof AscFormat.CGroupShape) {
+				shape = cShapeOrCGroupShape.spTree[0];
+			} else {
+				shape = cShapeOrCGroupShape;
+			}
+			if (shape.spPr.effectProps && shape.spPr.effectProps.EffectLst &&
+					shape.spPr.effectProps.EffectLst.outerShdw) {
+				// hide shadow
+				// TODO dont delete shadow object but create ShapeShdwShow property for CShape to handle it on draw
+				shape.spPr.effectProps.EffectLst.outerShdw = null;
+			}
+
+		}
 
 		// if it is group in vsdx
 		if (this.type === AscVisio.SHAPE_TYPES_GROUP) {

@@ -8901,6 +8901,9 @@
 			this.setChExtY(this.extY);
 		};
 
+		/**
+		 * @constructor
+		 */
 		function CEffectProperties() {
 			CBaseNoIdObject.call(this);
 			this.EffectDag = null;
