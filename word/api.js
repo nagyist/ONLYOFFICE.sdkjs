@@ -2708,11 +2708,35 @@ background-repeat: no-repeat;\
 			
 			onSaveEnd.forEach(function(f){f();});
 		};
+		const oldForceSaveOformRequest = this.forceSaveOformRequest;
+		const handleDisconnect = function()
+		{
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+			t.setViewModeDisconnect(true);
+			t.asc_coAuthoringDisconnect();
+			t.sendEvent("asc_onDisconnectEveryone");
+			if (oldForceSaveOformRequest)
+			{
+				//wait end of conversion
+				t.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Save);
+
+				//dont use rpc call because convetion can be interrupt and start again
+				t.attachEventWithRpcTimeout("updateVersion", function (isTimeout, success) {
+					t.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Save);
+					if (isTimeout || !success) {
+						t.sendEvent("asc_onError", c_oAscError.ID.ConvertationSaveError, c_oAscError.Level.NoCritical);
+					} else {
+						t.sendEvent("asc_onCompletePreparingOForm");
+					}
+				}, null, Asc.c_nMaxConversionTime);
+			}
+		};
 
 		let cursorInfo = null;
 		if (true === AscCommon.CollaborativeEditing.Is_Fast())
 			cursorInfo = AscCommon.History.Get_DocumentPositionBinary();
 		
+		let isSendChanges = false;
 		function sendChanges()
 		{
 			// Пересылаем свои изменения
@@ -2721,6 +2745,7 @@ background-repeat: no-repeat;\
 				"UserShortId" : t.DocInfo.get_UserId(),
 				"CursorInfo"  : cursorInfo
 			}, HaveOtherChanges, true);
+			isSendChanges = true;
 		}
 
 		if (this.forceSaveUndoRequest)
@@ -2741,9 +2766,12 @@ background-repeat: no-repeat;\
 			this.forceSaveOformRequest = false;
 			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 			sendChanges();
-			onSaveEnd.push(function(){
-				t.sendEvent("asc_onCompletePreparingOForm");
-			});
+			if (!this.forceSaveDisconnectRequest)
+			{
+				onSaveEnd.push(function(){
+					t.sendEvent("asc_onCompletePreparingOForm");
+				});
+			}
 		}
 		else
 		{
@@ -2754,12 +2782,18 @@ background-repeat: no-repeat;\
 		if (this.forceSaveDisconnectRequest)
 		{
 			this.forceSaveDisconnectRequest = false;
-			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
-			this.setViewModeDisconnect(true);
-			this.asc_coAuthoringDisconnect();
-			onSaveEnd.push(function(){
-				t.sendEvent("asc_onDisconnectEveryone");
-			});
+
+			if (isSendChanges)
+			{
+				//wait save end because of long save process and retries
+				onSaveEnd.push(function() {
+					handleDisconnect();
+				});
+			}
+			else
+			{
+				handleDisconnect();
+			}
 		}
 	};
 	asc_docs_api.prototype._autoSaveInner = function () {
