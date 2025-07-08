@@ -58,7 +58,7 @@
 
         // internal
         AscCommon.History.StartNoHistoryMode();
-		this.content = new AscPDF.CTextBoxContent(this);
+		this.content = new AscPDF.CTextBoxContent(this, Asc.editor.getPDFDoc());
         // content for formatting value
         // Note: draw this content instead of main if form has a "format" action
 		this.contentFormat = new AscPDF.CTextBoxContent(this, Asc.editor.getPDFDoc(), true);
