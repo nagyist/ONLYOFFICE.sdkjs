@@ -258,6 +258,9 @@
 		let oActiveDrawing	= oDoc.activeDrawing;
 
 		if (oThumbnails && oThumbnails.isInFocus) {
+			if (!oDoc.Viewer.file || oDoc.Viewer.file.type !== 0)
+				return;
+
 			let _data, sBase64;
 			
 			// HTML
@@ -402,6 +405,16 @@
 		if (!this.DocumentRenderer)
 			return;
 		
+		if (!this.DocumentRenderer.canInteract()) {
+			let _t = this;
+			let args = arguments;
+			
+			this.DocumentRenderer.paint(null, function() {
+				_t.asc_PasteData.apply(_t, args);
+			});
+			return;
+		}
+
 		let oDoc			= this.DocumentRenderer.getPDFDoc();
 		let data			= typeof(text_data) == "string" ? text_data : data1;
 		let oActiveDrawing	= oDoc.activeDrawing;
@@ -434,6 +447,7 @@
 				aChars.push(data[i].charCodeAt(0));
 
 			this.asc_enterText(aChars, true);
+			oDoc.FinalizeAction(true);
 		}
 	};
 	PDFEditorApi.prototype.asc_setAdvancedOptions = function(idOption, option) {
@@ -3553,6 +3567,9 @@
 					if (lang == 'pt') {
 						lang = lang + '-BR';
 					}
+					else if (lang == 'zh') {
+						lang = lang + '-CN'
+					}
 					else {
 						lang = lang + '-' + lang.toUpperCase();
 					}
@@ -4172,6 +4189,12 @@
 	// Private area
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	PDFEditorApi.prototype.initDocumentRenderer = function() {
+		if (this.DocumentRenderer) {
+			// reopen file after reconnect
+			this.DocumentRenderer.close();
+			return;
+		}
+
 		let documentRenderer = new AscCommon.CViewer(this.HtmlElementName, this);
 		
 		let _t = this;
@@ -4355,6 +4378,11 @@
 		let _t = this;
 		let thumbnailsDivId = "thumbnails-list";
 		if (document.getElementById(thumbnailsDivId)) {
+			if (this.DocumentRenderer.Thumbnails) {
+				// reconnect
+				return;
+			}
+
 			this.DocumentRenderer.Thumbnails = new AscCommon.ThumbnailsControl(thumbnailsDivId);
 			this.DocumentRenderer.setThumbnailsControl(this.DocumentRenderer.Thumbnails);
 			

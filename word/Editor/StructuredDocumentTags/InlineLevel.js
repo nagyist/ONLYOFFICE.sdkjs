@@ -2820,6 +2820,8 @@ CInlineLevelSdt.prototype.SyncFormPrWithSameKey = function(form)
 	if (form.GetSpecificType() !== this.GetSpecificType())
 		return;
 	
+	this.SetFormRequired(form.IsFormRequired());
+	
 	if (Asc.c_oAscContentControlSpecificType.DropDownList === this.GetSpecificType())
 	{
 		this.SetDropDownListPr(form.GetDropDownListPr());

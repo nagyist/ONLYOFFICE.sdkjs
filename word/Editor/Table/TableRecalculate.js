@@ -90,6 +90,17 @@ CTable.prototype.Recalculate_SkipPage = function(PageIndex)
 		NewPage.LastRow  = LastRow - 1;
 
 		this.Pages[PageIndex] = NewPage;
+		
+		this.HeaderInfo.Pages[PageIndex] = {};
+		this.HeaderInfo.Pages[PageIndex].Draw = false;
+		
+		for (let rowIndex = -1; rowIndex < this.Content.length; ++rowIndex)
+		{
+			if (!this.TableRowsBottom[rowIndex])
+				this.TableRowsBottom[rowIndex] = [];
+			
+			this.TableRowsBottom[rowIndex][PageIndex] = 0;
+		}
 	}
 };
 CTable.prototype.Recalculate_Grid = function()
@@ -225,7 +236,7 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
     if ((true === isPageBreakOnPrevLine && (0 !== this.private_GetColumnIndex(CurPage) || (0 === CurPage && null !== PrevElement)))
         || (true === isColumnBreakOnPrevLine && 0 === CurPage))
     {
-        this.private_RecalculateSkipPage(CurPage);
+        this.Recalculate_SkipPage(CurPage);
         return false;
     }
 
@@ -3509,39 +3520,6 @@ CTable.prototype.private_RecalculatePositionY = function(CurPage)
 		this.Shift( CurPage, NewX - this.Pages[CurPage].X, NewY - this.Pages[CurPage].Y );
     }
 };
-CTable.prototype.private_RecalculateSkipPage = function(CurPage)
-{
-    this.HeaderInfo.Pages[CurPage] = {};
-    this.HeaderInfo.Pages[CurPage].Draw = false;
-
-    for ( var Index = -1; Index < this.Content.length; Index++ )
-    {
-        if (!this.TableRowsBottom[Index])
-            this.TableRowsBottom[Index] = [];
-
-        this.TableRowsBottom[Index][CurPage] = 0;
-    }
-
-    this.Pages[CurPage].MaxBotBorder = 0;
-    this.Pages[CurPage].BotBorders   = [];
-
-    if (0 === CurPage)
-    {
-        this.Pages[CurPage].FirstRow = 0;
-        this.Pages[CurPage].LastRow  = -1;
-    }
-    else
-    {
-        var FirstRow;
-        if (true === this.IsEmptyPage(CurPage - 1))
-            FirstRow = this.Pages[CurPage - 1].FirstRow;
-        else
-            FirstRow = this.Pages[CurPage - 1].LastRow;
-
-        this.Pages[CurPage].FirstRow = FirstRow;
-        this.Pages[CurPage].LastRow  = FirstRow -1;
-    }
-};
 CTable.prototype.private_RecalculatePercentWidth = function()
 {
     return this.TableWidthRange - this.GetTableOffsetCorrection() + this.GetRightTableOffsetCorrection();
@@ -3618,6 +3596,8 @@ function CTablePage(X, Y, XLimit, YLimit, FirstRow, MaxTopBorder)
     this.Height       = 0;
     this.LastRowSplit = false;
 	this.FootnotesH   = 0;
+	this.MaxBotBorder = 0;
+	this.BotBorders   = [];
 }
 CTablePage.prototype.Shift = function(Dx, Dy)
 {

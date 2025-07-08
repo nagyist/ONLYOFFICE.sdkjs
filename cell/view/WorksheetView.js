@@ -4017,7 +4017,17 @@
 			let clipLeftShape, clipTopShape, clipWidthShape, clipHeightShape;
 
 			let doDraw = function(range, titleWidth, titleHeight) {
+				let renderingSettings = t.getRenderingSettings();
+				let _printScale;
+				if (renderingSettings && printScale !== 1 && drawingCtx.Transform) {
+					_printScale = renderingSettings.printScale;
+					renderingSettings.printScale = 1;
+				}
 				drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipLeft, clipTop, clipWidth, clipHeight);
+
+				if (_printScale) {
+					renderingSettings.printScale = _printScale;
+				}
 
 				let transformMatrix;
 				let _transform = drawingCtx.Transform;
@@ -4028,7 +4038,7 @@
 					transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
 
 					drawingCtx.setTransform(printScale, _transform.shy, _transform.shx, printScale,
-						leftDiff / mmToPx, topDiff / mmToPx);
+						(t.getRightToLeft() ? -leftDiff : leftDiff) / mmToPx, topDiff / mmToPx);
 				}
 
 				if (t.getRightToLeft()) {
@@ -6120,27 +6130,10 @@
 				drawCells[i] = 1;
 			}
 		}
-
-		let _originalMatrix;
-		let _ctx = drawingCtx || this.drawingCtx;
-		if (this.getRightToLeft()) {
-			_originalMatrix = _ctx.Transform ? _ctx.Transform.CreateDublicate() : _ctx._mbt.clone();
-			let _transform = new AscCommon.CMatrix();
-			let transformMatrix = _transform.CreateDublicate ? _transform.CreateDublicate() : _transform.clone();
-
-			_ctx.setTransform(1, transformMatrix.shy, transformMatrix.shx, transformMatrix.sy, transformMatrix.tx, transformMatrix.ty);
-			_ctx.updateTransforms && _ctx.updateTransforms();
-		}
 		
 		// draw text
 		for (i in drawCells) {
 			this._drawCellText(drawingCtx, cfIterator, i >> 0, row, colStart, colEnd, offsetX, offsetY);
-		}
-
-		if (_originalMatrix) {
-			_ctx.setTransform(_originalMatrix.sx, _originalMatrix.shy, _originalMatrix.shx,
-				_originalMatrix.sy, _originalMatrix.tx, _originalMatrix.ty);
-			_ctx.updateTransforms && _ctx.updateTransforms();
 		}
     };
 
@@ -9686,7 +9679,7 @@
 		}
 
 		rowInfo.height = this.workbook.printPreviewState.isStart() ? th * this.getZoom() : Asc.round(th * this.getZoom());
-		rowInfo._heightForPrint = this.updateRowHeightValuePx ? this.updateRowHeightValuePx : this._getRowHeightReal(cell.nRow);
+		rowInfo._heightForPrint = this.updateRowHeightValuePx ? AscCommonExcel.convertPxToPt(this.updateRowHeightValuePx) : this._getRowHeightReal(cell.nRow);
 		rowInfo.descender = d;
 		return th;
 	};
@@ -18143,6 +18136,8 @@
 				}
 			}
             if (r2 < r) {
+                t._updateRange(new Asc.Range(0, r1, gc_nMaxCol0, r2));
+                t.draw();
             	return;
 			}
 

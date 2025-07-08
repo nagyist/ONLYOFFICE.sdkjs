@@ -541,7 +541,7 @@ var CPresentation = CPresentation || function(){};
         this.UpdateCopyCutState();
     };
     CPDFDoc.prototype.IsEditFieldsMode = function() {
-        return false == Asc.editor.isRestrictionView();
+        return Asc.editor.canEdit();
     };
     CPDFDoc.prototype.CreateNewFieldName = function(nFieldType) {
         let sFormType = "";
@@ -842,10 +842,10 @@ var CPresentation = CPresentation || function(){};
                     if (oPageIconsInfo["MK"][nField]["I"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["I"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
-                    else if (oPageIconsInfo["MK"][nField]["RI"] == oPageIconsInfo["View"][nIcon]["j"]) {
+                    if (oPageIconsInfo["MK"][nField]["RI"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["RI"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
-                    else if (oPageIconsInfo["MK"][nField]["IX"] == oPageIconsInfo["View"][nIcon]["j"]) {
+                    if (oPageIconsInfo["MK"][nField]["IX"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["IX"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
                 }
@@ -4151,6 +4151,9 @@ var CPresentation = CPresentation || function(){};
         let oCurObject  = this.GetActiveObject();
         let nCurPage    = this.GetCurPage();
         let oCurPage    = this.GetPageInfo(nCurPage);
+
+        if (!oCurPage)
+            return;
         
         if (oCurObject) {
             if (oCurObject.IsDrawing()) {
@@ -5213,7 +5216,7 @@ var CPresentation = CPresentation || function(){};
             }
 
             const imageMap = oParserContext.imageMap;
-            for (const sImg in imageMap) {
+            for (let sImg in imageMap) {
                 if (imageMap.hasOwnProperty(sImg) && "data:" === sImg.substring(0, 5)) {
                     allImages.push(sImg);
                     const aImg = imageMap[sImg];
@@ -6483,7 +6486,7 @@ var CPresentation = CPresentation || function(){};
 
         this.RemoveSelection();
         this.SetMouseDownObject(State.activeObject)
-        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm()) {
+        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm() && State.activeObject.IsUseInDocument && State.activeObject.IsUseInDocument()) {
             this.activeForm = State.activeObject;
         }
 
@@ -6881,7 +6884,7 @@ var CPresentation = CPresentation || function(){};
         let oController = this.GetController();
 
         this.SetMouseDownObject(oState.activeObject);
-        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm()) {
+        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
             this.activeForm = oState.activeObject;
         }
         

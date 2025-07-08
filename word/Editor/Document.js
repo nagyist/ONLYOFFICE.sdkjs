@@ -10557,7 +10557,7 @@ CDocument.prototype.canEnterText = function()
 	if (this.IsSelectionUse() && !this.IsTextSelectionUse())
 		return false;
 	
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
@@ -13625,6 +13625,9 @@ CDocument.prototype.IsCursorInHyperlink = function(bCheckEnd)
  */
 CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, additionalData, sendEvent, actionDescription)
 {
+	if (this.CollaborativeEditing.Get_GlobalLock() || this.Api.isRestrictionSignatures())
+		return false;
+	
 	let isPermRange = this.IsPermRangeEditing(checkType, additionalData, actionDescription);
 	if (sendEvent)
 	{
@@ -13635,7 +13638,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
 		}
 	}
 	
-	return (isPermRange || !((!this.CanEdit() && true !== isIgnoreCanEditFlag) || (true === this.CollaborativeEditing.Get_GlobalLock())));
+	return (isPermRange || this.CanEdit() || isIgnoreCanEditFlag);
 };
 /**
  * Проверяем, что действие с заданным типом произойдет в разрешенной области
@@ -13646,7 +13649,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
  */
 CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, actionDescription)
 {
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (!this.Api.isRestrictionComments() && !this.Api.isRestrictionView())
@@ -19541,22 +19544,23 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 		else
 		{
 			var ItemReviewType = Item.GetReviewType();
-			// Создаем новый параграф
-			var NewParagraph   = new AscWord.Paragraph();
 
+			var NewParagraph = new AscWord.Paragraph();
 			let firstPara, secondPara;
 			if (Item.IsCursorAtBegin())
 			{
 				// Продолжаем (в плане настроек) новый параграф
+				Item.SplitContent(NewParagraph, false);
 				Item.Continue(NewParagraph);
-
+				
 				NewParagraph.Correct_Content();
-				NewParagraph.MoveCursorToStartPos();
-
+				NewParagraph.MoveCursorToEndPos();
+				Item.MoveCursorToStartPos();
+				
 				var nContentPos = this.CurPos.ContentPos;
 				this.AddToContent(nContentPos, NewParagraph);
 				this.CurPos.ContentPos = nContentPos + 1;
-
+				
 				firstPara  = NewParagraph;
 				secondPara = Item;
 			}
@@ -19570,7 +19574,7 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 					var StyleId = Item.Style_Get();
 					var NextId  = undefined;
 
-					if (undefined != StyleId)
+					if (undefined !== StyleId)
 					{
 						NextId = this.Styles.Get_Next(StyleId);
 
@@ -19578,7 +19582,8 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 						if (!NextId || !oNextStyle || !oNextStyle.IsParagraphStyle())
 							NextId = StyleId;
 					}
-
+					
+					Item.SplitContent(NewParagraph, true);
 					if (StyleId === NextId)
 					{
 						// Продолжаем (в плане настроек) новый параграф
@@ -22885,7 +22890,7 @@ CDocument.prototype.GetAllFormTextFields = function()
 };
 CDocument.prototype.IsFillingFormMode = function()
 {
-	return this.Api && this.Api.isRestrictionForms();
+	return this.Api && this.Api.isRestrictionForms() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsFillingOFormMode = function()
 {
@@ -23316,7 +23321,7 @@ CDocument.prototype.IsCheckContentControlsLock = function()
 };
 CDocument.prototype.IsEditCommentsMode = function()
 {
-	return this.Api.isRestrictionComments();
+	return this.Api.isRestrictionComments() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsViewMode = function()
 {

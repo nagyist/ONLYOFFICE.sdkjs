@@ -18328,8 +18328,8 @@ function RangeDataManagerElem(bbox, data)
 			argumentsMin = argsInfo.length - optionalCount;
 		}
 
-		let returnInfo = options.returnInfo;
-		if (options.returnInfo && !supportedTypes[returnInfo.type]) {
+		let returnInfo = options && options.returnInfo;
+		if (options && options.returnInfo && !supportedTypes[returnInfo.type]) {
 			console.log("Registration custom function \"" +  funcName + "\" warning. Invalid return type. The following types must be used: number, string, boolean, any, number[][], string[][], boolean[][], any[][].");
 		}
 
@@ -18367,8 +18367,11 @@ function RangeDataManagerElem(bbox, data)
 				}
 
 				let oContext = {};
+				let ws = arguments[3];
 				oContext["address"] = arguments[1] && arguments[1].getName();
-				oContext["argsInfo"] = [];
+
+				oContext["address"] = ((ws && ws.getName) ? (AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!") : "") + oContext["address"];
+				oContext["args"] = [];
 
 				//prepare arguments
 				let args = [];
@@ -18379,7 +18382,9 @@ function RangeDataManagerElem(bbox, data)
 					if (arg[i] && (arg[i].type === AscCommonExcel.cElementType.cell || arg[i].type === AscCommonExcel.cElementType.cell3D
 						|| arg[i].type === AscCommonExcel.cElementType.cellsRange || arg[i].type === AscCommonExcel.cElementType.cellsRange3D)) {
 						let _range = arg[i].getRange();
-						oContext["argsInfo"][i] = {"address": _range.getName(), "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
+						let ws = _range.worksheet;
+						let _address = (ws ? AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!" : "") + _range.getName();
+						oContext["args"][i] = {"address": _address, "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
 					}
 
 
@@ -18404,11 +18409,10 @@ function RangeDataManagerElem(bbox, data)
 				}
 
 
-				window["context"] = oContext;
-				let res = func.apply(this, args);
+				let res = func.apply(oContext, args);
 
 				//prepare result
-				let returnInfo = options.returnInfo;
+				let returnInfo = options && options.returnInfo;
 				return oThis.prepareResult(res, returnInfo ? returnInfo.type : null);
 			} catch (e) {
 				console.log("ERROR CUSTOM FUNCTION CALCULATE");
@@ -18519,10 +18523,10 @@ function RangeDataManagerElem(bbox, data)
 	CCustomFunctionEngine.prototype.addToFunctionsList = function (newFunc, params) {
 		AscCommonExcel.cFormulaFunctionGroup['Custom'] = AscCommonExcel.cFormulaFunctionGroup['Custom'] || [];
 
-		let translations = params.nameLocale;
-		let description = params.description;
-		let args = params.params;
-		let tags = params.tags;
+		let translations = params && params.nameLocale;
+		let description = params && params.description;
+		let args = params && params.params;
+		let tags = params && params.tags;
 
 		let funcName = newFunc.prototype.name;
 
@@ -18578,7 +18582,7 @@ function RangeDataManagerElem(bbox, data)
 			this.funcsMapInfo[funcName].description = description;
 		}
 
-		this.funcsMapInfo[funcName].replaceFormulaToVal = tags["replaceFormulaToVal"];
+		this.funcsMapInfo[funcName].replaceFormulaToVal = tags && tags["replaceFormulaToVal"];
 
 		AscCommonExcel.cFormulaFunctionGroup["Custom"].push(newFunc);
 		AscCommonExcel.addNewFunction(newFunc);

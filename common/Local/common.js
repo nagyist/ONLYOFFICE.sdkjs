@@ -253,7 +253,7 @@ if (isOverrideDocumentUrls)
 	};
 	prot.getImageLocal = function(_url)
 	{
-		let url = _url.replaceAll("%20", " ");
+		let url = _url ? _url.replaceAll("%20", " ") : "";
 		var _first = this.documentUrl + "/media/";
 		if (0 === url.indexOf(_first))
 			return url.substring(_first.length);
@@ -590,34 +590,6 @@ window["DesktopOfflineAppDocumentSignatures"] = function(_json)
 
 		_images_loading.push(_add_sign.image);
 	}
-
-	if (!window.FirstSignaturesCall)
-	{
-		_editor.asc_registerCallback("asc_onAddSignature", function (guid)
-		{
-
-			var _api = window["Asc"]["editor"] ? window["Asc"]["editor"] : window.editor;
-			_api.sendEvent("asc_onUpdateSignatures", _api.asc_getSignatures(), _api.asc_getRequestSignatures());
-
-		});
-		_editor.asc_registerCallback("asc_onRemoveSignature", function (guid)
-		{
-
-			var _api = window["Asc"]["editor"] ? window["Asc"]["editor"] : window.editor;
-			_api.sendEvent("asc_onUpdateSignatures", _api.asc_getSignatures(), _api.asc_getRequestSignatures());
-
-		});
-		_editor.asc_registerCallback("asc_onUpdateSignatures", function (signatures, requested)
-		{
-			var _api = window["Asc"]["editor"] ? window["Asc"]["editor"] : window.editor;
-
-			if (0 === signatures.length)
-				_api.asc_removeRestriction(Asc.c_oAscRestrictionType.OnlySignatures);
-			else
-				_api.asc_addRestriction(Asc.c_oAscRestrictionType.OnlySignatures);
-		});
-	}
-	window.FirstSignaturesCall = true;
 
 	_editor.ImageLoader.LoadImagesWithCallback(_images_loading, function() {
 		if (this.WordControl)

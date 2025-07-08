@@ -3047,6 +3047,8 @@ function BinaryPPTYLoader()
 
         s.Skip2(1);
 
+        let builderImage = null;
+
         while (true)
         {
             var _at = s.GetUChar();
@@ -3076,7 +3078,12 @@ function BinaryPPTYLoader()
                     // id. embed / link
                     uni_fill.fill.embed = s.GetString2();
                     if (this.IsUseFullUrl)
-                        this.RebuildImages.push(new CBuilderImages(uni_fill.fill, null, oImageShape, oSpPr, oLn, undefined, undefined, undefined, oParagraph, oBullet));
+                    {
+                        if(!builderImage)
+                        {
+                            builderImage = new CBuilderImages(uni_fill.fill, null, oImageShape, oSpPr, oLn, undefined, undefined, undefined, oParagraph, oBullet);
+                        }
+                    }
                     break;
                 }
                 case 2:
@@ -3160,8 +3167,17 @@ function BinaryPPTYLoader()
                     }
 
                     if (this.IsUseFullUrl)
-                        this.RebuildImages.push(new CBuilderImages(uni_fill.fill, sReadPath, oImageShape, oSpPr, oLn, undefined, undefined, undefined, oParagraph, oBullet));
+                    {
 
+                        if(!builderImage)
+                        {
+                            builderImage = new CBuilderImages(uni_fill.fill, sReadPath, oImageShape, oSpPr, oLn, undefined, undefined, undefined, oParagraph, oBullet);
+                        }
+                        else
+                        {
+                            builderImage.Url = sReadPath;
+                        }
+                    }
                     s.Skip2(1); // end attribute
                     break;
                 }
@@ -3173,6 +3189,10 @@ function BinaryPPTYLoader()
             }
         }
 
+        if (this.IsUseFullUrl && builderImage)
+        {
+            this.RebuildImages.push(builderImage);
+        }
         s.Seek2(_e2);
     }
 
