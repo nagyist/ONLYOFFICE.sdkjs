@@ -6909,6 +6909,8 @@ PasteProcessor.prototype =
 			var executePasteWord = function () {
 				if (false === oThis.bNested) {
 					oThis.InsertInDocument(!window['AscCommon'].g_specialPasteHelper.specialPasteStart);
+					if (oThis.pasteCallback)
+						oThis.pasteCallback();
 				}
 			};
 
