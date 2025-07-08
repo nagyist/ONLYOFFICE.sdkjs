@@ -2905,9 +2905,9 @@ function (window, undefined) {
 		this.cacheId = {};
 		this.cacheRanges = {};
 		this.bHor = bHor;
-		this.sortedCache = {};
-		this.typedCache = {};
-		this.typedCacheValuesMap = {};
+		this.sortedCache = new TypedCache();
+		this.typedCache = new TypedCache();
+		this.typedCacheValuesMap = new TypedCache();
 
 		this.nextVal = undefined;
 		this.nextValIndex = undefined;
@@ -3089,162 +3089,117 @@ function (window, undefined) {
 
 		return resVal;
 	};
-	function SortedCache() {
-		/**
-		 * @type {{number: {offset: number, data: {number: Uint32Array}}}}
-		 */
+
+	/**
+	 * @typedef {{number: {cElementType: Uint32Array}}} TypedCacheAxis
+	 */
+
+	/**
+	 * @constructor
+	 * @property {{string: {horizontal: TypedCacheAxis, vertical: TypedCacheAxis}}} data
+	 */
+	function TypedCache() {
 		this.data = {};
 	}
+
 	/**
-	 * @param {number} rowColIndex
-	 * @param {{number: LookUpElement[]}} data
+	 * @static
+	 * @param tmpArrays
+	 * @return {any}
 	 */
-	SortedCache.prototype.saveRange = function (rowColIndex, data) {
-		const res = {};
-		for (let elementType in data) {
-			const elements = data[elementType];
-			const typed = new Uint32Array(elements.length);
-			for (let i = 0; i < elements.length; i += 1) {
-				typed[i] = elements[i].i;
-			}
-			res[elementType] = typed;
-		}
-		this.data[rowColIndex] = res;
-	};
-	SortedCache.prototype.sortRange = function (dataToSort) {
-		for(let i in dataToSort) {
+	TypedCache.prototype.sortValues = function(tmpArrays) {
+		for(let i in tmpArrays) {
 			if (i === String(cElementType.number)) {
-				dataToSort[i].sort(function (a, b) {
+				tmpArrays[i].sort(function (a, b) {
 					return a.v.value - b.v.value;
 				});
-			} else if (i !== String(cElementType.empty)) {
-				dataToSort[i].sort(function (a, b) {
+			} else {
+				tmpArrays[i].sort(function (a, b) {
 					return String(a.v.value).toLowerCase().localeCompare(String(b.v.value).toLowerCase());
 				});
 			}
 		}
-		return dataToSort;
-	};
-	SortedCache.prototype.getSortedRange = function (rowColIndex) {
-		return this.data[rowColIndex];
-	};
-	VHLOOKUPCache.prototype._getSortedCache = function (ws, rowCol) {
-		const wsId = ws.getId();
-		if (!this.sortedCache[wsId]) {
-			return this._createSortedCache(ws, rowCol);
+		return tmpArrays;
+	}
+
+	/**
+	 * @param {Worksheet} ws
+	 * @param {boolean} bHor
+	 * @param {number} rowCol
+	 * @param {cElementType} elementType
+	 * @param {(value: LookUpElement, i: number) => any} savingValueCallback
+	 * @param {(value: any) => number} tmpToTypedCallback
+	 * @param {(value: {cElementType: any[]}) => void} [tmpArrayCallback]
+	 * @return {Uint32Array}
+	 */
+	TypedCache.prototype.getCache = function(ws, bHor, rowCol, elementType, savingValueCallback, tmpToTypedCallback, tmpArrayCallback) {
+		const wsId = ws.Get_Id();
+		if (!this.data[wsId]) {
+			this.data[wsId] = {horizontal: {}, vertical: {}};
 		}
-		const sortedAxis = this.bHor ? this.sortedCache[wsId].horizontal : this.sortedCache[wsId].vertical;
-		const sorted = sortedAxis.getSortedRange(rowCol);
-		if (!sorted) {
-			return this._createSortedCache(ws, rowCol);
+		/** @type {TypedCacheAxis} */
+		const axisData = bHor? this.data[wsId].horizontal : this.data[wsId].vertical;
+		if (!axisData[rowCol]) {
+			axisData[rowCol] = {};
+			this.generateCache(ws, bHor, rowCol, savingValueCallback, tmpToTypedCallback, tmpArrayCallback)
 		}
-		return sorted;
-	};
-	VHLOOKUPCache.prototype._createSortedCache = function (ws, rowCol) {
-		const wsId = ws.getId();
-		if (!this.sortedCache[wsId]) {
-			this.sortedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
-		}
-		const sortedAxis = this.bHor ? this.sortedCache[wsId].horizontal : this.sortedCache[wsId].vertical;
-		let tmpArrays = {};
-		let c1 = this.bHor ? 0 : rowCol;
-		let r1 = this.bHor ? rowCol : 0;
-		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
-		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
-		const fullRange = ws.getRange3(r1, c1, r2, c2);
-		const bHor = this.bHor;
-		fullRange._foreachNoEmpty(function (cell, r, c) {
-			const value = checkTypeCell(cell, true);
-			if (!tmpArrays[value.type]) {
-				tmpArrays[value.type] = [];
-			}
-			tmpArrays[value.type].push({v: value, i: bHor ? c : r});
-		});
-		sortedAxis.sortRange(tmpArrays);
-		sortedAxis.saveRange(rowCol,  tmpArrays);
-		return sortedAxis.getSortedRange(rowCol);
+		return axisData[rowCol][elementType];
 	};
 
-	VHLOOKUPCache.prototype._getTypedCache = function (ws, rowCol) {
-		const wsId = ws.getId();
-		if (!this.typedCache[wsId]) {
-			return this._createTypedCache(ws, rowCol);
-		}
-		const sortedAxis = this.bHor ? this.typedCache[wsId].horizontal : this.typedCache[wsId].vertical;
-		const sorted = sortedAxis.getSortedRange(rowCol);
-		if (!sorted) {
-			return this._createTypedCache(ws, rowCol);
-		}
-		return sorted;
-	};
-	VHLOOKUPCache.prototype._createTypedCacheValuesMap = function (ws, rowCol) {
-		const wsId = ws.getId();
-		const t = this;
-		// todo delete tmpArrays
-		if (!this.typedCacheValuesMap[wsId]) {
-			this.typedCacheValuesMap[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
-		}
-		const sortedAxis = this.bHor ? this.typedCacheValuesMap[wsId].horizontal : this.typedCacheValuesMap[wsId].vertical;
-		let tmpArrays = {};
-		let c1 = this.bHor ? 0 : rowCol;
-		let r1 = this.bHor ? rowCol : 0;
-		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
-		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
+	/**
+	 * @param {Worksheet} ws
+	 * @param {boolean} bHor
+	 * @param {number} rowCol
+	 * @param {(value: LookUpElement, i: number) => any} savingValueCallback
+	 * @param {(value: any) => number} tmpToTypedCallback
+	 * @param {(value: {cElementType: any[]}) => void} [tmpArrayCallback]
+	 * @return {Uint32Array}
+	 */
+	TypedCache.prototype.generateCache = function(ws, bHor, rowCol, savingValueCallback, tmpToTypedCallback, tmpArrayCallback) {
+		const wsId = ws.Get_Id();
+		const axisData = bHor ? this.data[wsId].horizontal : this.data[wsId].vertical;
+		const tmpArrays = {};
+		const c1 = bHor ? 0 : rowCol;
+		const r1 = bHor ? rowCol : 0;
+		const c2 = bHor ? AscCommon.gc_nMaxCol : rowCol;
+		const r2 = bHor ? rowCol : AscCommon.gc_nMaxRow;
 		const fullRange = ws.getRange3(r1, c1, r2, c2);
-		const bHor = this.bHor;
-		let idx = 0;
-		let lastCellValue = null;
 		fullRange._foreachNoEmpty(function (cell, r, c) {
 			const value = checkTypeCell(cell, true);
-			if (lastCellValue && t._compareValues(lastCellValue, value, '<>')) {
-				idx += 1;
-			}
 			if (!tmpArrays[value.type]) {
 				tmpArrays[value.type] = [];
 			}
-			tmpArrays[value.type].push({v: value, i: idx});
-			lastCellValue = value;
+			const valueToSave = savingValueCallback(value, bHor ? c : r)
+			tmpArrays[value.type].push(valueToSave);
 		});
-		sortedAxis.saveRange(rowCol,  tmpArrays);
-		return sortedAxis.getSortedRange(rowCol);
+		if (tmpArrayCallback) {
+			tmpArrayCallback(tmpArrays);
+		}
+		return this.saveRange(axisData, rowCol, tmpArrays, tmpToTypedCallback);
+	};
+	/**
+	 * @param {TypedCacheAxis} axisData
+	 * @param {number} rowColIndex
+	 * @param {{number: any[]}} tmpArrays
+	 * @param {(value: any) => number} tmpToTypedCallback
+	 * @return {{cElementType: Uint32Array}}
+	 */
+	TypedCache.prototype.saveRange = function(axisData, rowColIndex, tmpArrays, tmpToTypedCallback) {
+		const res = axisData[rowColIndex];
+		for (let elementType in tmpArrays) {
+			const elements = tmpArrays[elementType];
+			const typed = new Uint32Array(elements.length);
+			for (let i = 0; i < elements.length; i += 1) {
+				typed[i] = tmpToTypedCallback(elements[i]);
+			}
+			res[elementType] = typed;
+		}
+		return axisData[rowColIndex];
 	};
 
-	VHLOOKUPCache.prototype._getTypedCacheValuesMap = function (ws, rowCol) {
-		const wsId = ws.getId();
-		if (!this.typedCacheValuesMap[wsId]) {
-			return this._createTypedCacheValuesMap(ws, rowCol);
-		}
-		const sortedAxis = this.bHor ? this.typedCacheValuesMap[wsId].horizontal : this.typedCacheValuesMap[wsId].vertical;
-		const sorted = sortedAxis.getSortedRange(rowCol);
-		if (!sorted) {
-			return this._createTypedCacheValuesMap(ws, rowCol);
-		}
-		return sorted;
-	};
-	VHLOOKUPCache.prototype._createTypedCache = function (ws, rowCol) {
-		const wsId = ws.getId();
-		// todo delete tmpArrays
-		if (!this.typedCache[wsId]) {
-			this.typedCache[wsId] = {horizontal: new SortedCache(), vertical: new SortedCache()};
-		}
-		const sortedAxis = this.bHor ? this.typedCache[wsId].horizontal : this.typedCache[wsId].vertical;
-		let tmpArrays = {};
-		let c1 = this.bHor ? 0 : rowCol;
-		let r1 = this.bHor ? rowCol : 0;
-		let c2 = this.bHor ? AscCommon.gc_nMaxCol : rowCol;
-		let r2 = this.bHor ? rowCol : AscCommon.gc_nMaxRow;
-		const fullRange = ws.getRange3(r1, c1, r2, c2);
-		const bHor = this.bHor;
-		fullRange._foreachNoEmpty(function (cell, r, c) {
-			const value = checkTypeCell(cell, true);
-			if (!tmpArrays[value.type]) {
-				tmpArrays[value.type] = [];
-			}
-			tmpArrays[value.type].push({v: value, i: bHor ? c : r});
-		});
-		sortedAxis.saveRange(rowCol,  tmpArrays);
-		return sortedAxis.getSortedRange(rowCol);
-	};
+	TypedCache.prototype.clean = function() {
+		this.data = {};
+	}
 
 	VHLOOKUPCache.prototype._get = function (range, valueForSearching, arg3Value, opt_arg4, opt_arg5) {
 		var res, _this = this, wsId = range.getWorksheet().getId();
@@ -3383,6 +3338,61 @@ function (window, undefined) {
 		}
 		return resultIndex;
 	};
+	VHLOOKUPCache.prototype._findNextCorrectType = function(currentIndex, typed, currentEnd) {
+		let i = 0;
+		let j = typed.length - 1
+		let result = currentIndex;
+		while (i <= j) {
+			let k = Math.floor((i + j) / 2);
+			if (typed[k] < currentIndex) {
+				i = k + 1;
+			} else {
+				j = k - 1;
+			}
+		}
+		const found = typed[Math.max(i, j)];
+		if (found <= currentEnd) {
+			result = found;
+		}
+		return result;
+	};
+	VHLOOKUPCache.prototype._findIndexInTyped = function(currentIndex, typed) {
+		let i = 0;
+		let j = typed.length - 1
+		let foundCurrent = -1;
+		while (i <= j) {
+			let k = Math.floor((i + j) / 2);
+			if (typed[k] === currentIndex) {
+				foundCurrent = k;
+				break;
+			} else if (typed[k] < currentIndex) {
+				i = k + 1;
+			} else {
+				j = k - 1;
+			}
+		}
+		return foundCurrent;
+	};
+	VHLOOKUPCache.prototype._findLastSame = function(currentIndexInTyped, typed, typedMap, endIndex) {
+		const currentValue = typedMap[currentIndexInTyped];
+		let i = currentIndexInTyped + 1;
+		let j = typedMap.length - 1
+		let res = currentIndexInTyped;
+		let resultIndex = typed[currentIndexInTyped];
+		while (i <= j) {
+			let k = Math.floor((i + j) / 2);
+			if (typedMap[k] > currentValue || typed[k] > endIndex) {
+				j = k - 1;
+			} else {
+				i = k + 1;
+				res = k;
+			}
+		}
+		if (typedMap[res] === currentValue) {
+			resultIndex = typed[res];
+		}
+		return resultIndex;
+	};
 	/**
 	 * @private
 	 * @param {LookUpElement} valueForSearching
@@ -3415,20 +3425,7 @@ function (window, undefined) {
 			}
 			let val = getValue(k);
 			if (val.type !== valueForSearching.type) {
-				let ii = 0;
-				let jj = typed.length - 1
-				while (ii <= jj) {
-					let kk = Math.floor((ii + jj) / 2);
-					if (typed[kk] < k) {
-						ii = kk + 1;
-					} else {
-						jj = kk - 1;
-					}
-				}
-				const found = typed[Math.max(ii, jj)];
-				if (found <= endIndex && found <= j) {
-					k = typed[Math.max(ii, jj)];
-				}
+				k = this._findNextCorrectType(k, typed, j);
 			}
 			val = getValue(k);
 			if (val.type !== valueForSearching.type || this._compareValues(val, valueForSearching, ">")) {
@@ -3436,36 +3433,8 @@ function (window, undefined) {
 			} else {
 				resultIndex = k;
 				if (this._compareValues(val, valueForSearching, "=")) {
-					let ii = 0;
-					let jj = typed.length - 1
-					let foundCurrent = -1;
-					while (ii <= jj) {
-						let kk = Math.floor((ii + jj) / 2);
-						if (typed[kk] === k) {
-							foundCurrent = kk;
-							break;
-						} else if (typed[kk] < k) {
-							ii = kk + 1;
-						} else {
-							jj = kk - 1;
-						}
-					}
-					const currentValue = typedMap[foundCurrent];
-					ii = foundCurrent + 1;
-					jj = typedMap.length - 1
-					let res = foundCurrent;
-					while (ii <= jj) {
-						let kk = Math.floor((ii + jj) / 2);
-						if (typedMap[kk] > currentValue || typed[kk] > endIndex) {
-							jj = kk - 1;
-						} else {
-							ii = kk + 1;
-							res = kk;
-						}
-					}
-					if (typedMap[res] === currentValue) {
-						resultIndex = typed[res];
-					}
+					let currentIndexInTyped = this._findIndexInTyped(k, typed);
+					resultIndex = this._findLastSame(currentIndexInTyped, typed, typedMap, endIndex);
 					break;
 				}
 				i = k + 1;
@@ -3573,6 +3542,34 @@ function (window, undefined) {
 			}
 		}
 	};
+	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type) {
+		return this.sortedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
+			return {v: value, i: index}
+		}, function (value) {
+			return value.i
+		}, this.sortedCache.prototype.sortValues);
+	};
+	VHLOOKUPCache.prototype._getTypedCache = function(ws, rowCol, type) {
+		return this.typedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
+			return index;
+		}, function (value) {
+			return value;
+		});
+	};
+	VHLOOKUPCache.prototype._getTypedCacheValuesMap = function(ws, rowCol, type) {
+		const t = this;
+		let idx = 0;
+		let lastCellValue = null;
+		return this.typedCacheValuesMap.getCache(ws, this.bHor, rowCol, type, function(value, index) {
+			if (lastCellValue !== null && t._compareValues(lastCellValue, value, '<>')) {
+				idx += 1;
+			}
+			lastCellValue = value;
+			return idx;
+		}, function (value) {
+			return value;
+		});
+	};
 	VHLOOKUPCache.prototype._calculate = function (valueForSearching, lookup, opt_arg4, opt_arg5, opt_array, ws, rowCol, startIndex, endIndex) {
 		const t = this;
 		const wsId = ws.getId()
@@ -3592,11 +3589,7 @@ function (window, undefined) {
 				if (opt_array) {
 					res = this._simpleSearch(opt_array, valueForSearching,  revert, opt_arg4);
 				} else if (opt_arg4 === 0) {
-					const sortedCache = this._getSortedCache(ws, rowCol);
-					const sorted = sortedCache[valueForSearching.type];
-					if (!sorted) {
-						return -1;
-					}
+					const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
 					res = this._indexedBinarySearch(sorted, valueForSearching, revert, ws, rowCol, startIndex, endIndex, opt_arg4);
 				} else {
 					// TODO without opt_array (removing generate elems)
@@ -3611,23 +3604,14 @@ function (window, undefined) {
 				}
 			}
 		} else if (lookup) {
-			const typedCache = this._getTypedCache(ws, rowCol);
-			const typedCacheValuesMap = this._getTypedCacheValuesMap(ws, rowCol);
-			const sorted = typedCache[valueForSearching.type];
-			const typedMap = typedCacheValuesMap[valueForSearching.type];
-			if (!sorted) {
-				return -1;
-			}
-			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, sorted, typedMap);
+			const typedCache = this._getTypedCache(ws, rowCol, valueForSearching.type);
+			const typedCacheValuesMap = this._getTypedCacheValuesMap(ws, rowCol, valueForSearching.type);
+			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, typedCache, typedCacheValuesMap);
 		} else {
 			if (opt_array) {
 				res = this._simpleSearch(opt_array, valueForSearching, false, opt_arg4);
 			} else {
-				const sortedCache = this._getSortedCache(ws, rowCol);
-				const sorted = sortedCache[valueForSearching.type];
-				if (!sorted) {
-					return -1;
-				}
+				const sorted = this._getSortedCache(ws, rowCol);
 				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
 			}
 		}
@@ -3647,9 +3631,9 @@ function (window, undefined) {
 	VHLOOKUPCache.prototype.clean = function () {
 		this.cacheId = {};
 		this.cacheRanges = {};
-		this.sortedCache = {};
-		this.typedCache = {};
-		this.typedCacheValuesMap = {};
+		this.sortedCache.clean();
+		this.typedCache.clean();
+		this.typedCacheValuesMap.clean();
 	};
 	VHLOOKUPCache.prototype.generateElements = function (range, cacheElem) {
 		var _this = this;
@@ -3831,8 +3815,7 @@ function (window, undefined) {
 
 
 	function MatchCache() {
-		this.cacheId = {};
-		this.cacheRanges = {};
+		VHLOOKUPCache.call(this);
 	}
 
 	MatchCache.prototype = Object.create(VHLOOKUPCache.prototype);
