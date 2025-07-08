@@ -1425,6 +1425,11 @@ var CPresentation = CPresentation || function(){};
                 oDrDoc.TargetEnd();
             }
         }
+        // check redraw if focus is lost
+        if (oCurObject && oCurObject.IsDrawing() && oCurObject != oMouseDownObject) {
+            let oStartContent = AscFormat.checkEmptyPlaceholderContent(oCurObject.GetDocContent());
+            oController.checkRedrawOnChangeCursorPosition(oStartContent, null);
+        }
 
         if (oViewer.canSelectPageText()) {
             oViewer.isMouseMoveBetweenDownUp = true;

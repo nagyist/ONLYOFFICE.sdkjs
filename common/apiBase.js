@@ -1820,6 +1820,13 @@
 				t.aiPluginSettings = JSON.stringify(data);
 			}
 		};
+		this.CoAuthoringApi.onMiscEvent = function(data)
+		{
+			if (data['type'] === 'updateVersion')
+			{
+				t.sendEvent("updateVersion", data['success']);
+			}
+		};
 		this.CoAuthoringApi.onWarning                 = function(code)
 		{
 			t.sendEvent('asc_onError', code || c_oAscError.ID.Warning, c_oAscError.Level.NoCritical);
@@ -4927,6 +4934,24 @@
         this.internalEvents[name]["" + ((undefined === listenerId) ? 0 : listenerId)] = callback;
 
 		return true;
+    };
+
+    baseEditorsApi.prototype.attachEventWithRpcTimeout = function(name, callback, listenerId, timeout) {
+        const timeoutId = setTimeout(() => {
+            //callback with isTimeout=true as first parameter
+            callback.apply(this, [true]);
+            this.detachEvent(name, listenerId);
+        }, timeout);
+        
+        const wrappedCallback = function() {
+            clearTimeout(timeoutId);
+            //callback with isTimeout=false as first parameter followed by any original arguments
+            const args = Array.prototype.slice.call(arguments);
+            args.unshift(false);
+            callback.apply(this, args);
+            this.detachEvent(name, listenerId);
+        };
+        return this.attachEvent(name, wrappedCallback, listenerId);
     };
     baseEditorsApi.prototype.detachEvent = function(name, listenerId)
     {
