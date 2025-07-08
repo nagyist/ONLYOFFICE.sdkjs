@@ -2710,7 +2710,7 @@ CChartsDrawer.prototype =
 
 
 	//****functions for UP Functions****
-	preCalculateData: function (chartSpace, notCalcExtremum) {
+	preCalculateData: function (chartSpace, notCalcExtremum, predefinedRect) {
 		this._calculateChangeAxisMap(chartSpace);
 		this.cChartSpace = chartSpace;
 		this.calcProp.pxToMM = 1 / AscCommon.g_dKoef_pix_to_mm;
@@ -2733,7 +2733,7 @@ CChartsDrawer.prototype =
 				//calculate calcProp -> /min/max/ymax/ymin/
 				this._calculateExtremumAllCharts(chartSpace);
 			} else {
-				this._prepChartExData(chartSpace)
+				this._prepChartExData(chartSpace, predefinedRect);
 			}
 		}
 
@@ -2782,7 +2782,7 @@ CChartsDrawer.prototype =
 		}
 	},
 
-	_prepChartExData: function (chartSpace) {
+	_prepChartExData: function (chartSpace, oRect) {
 		// plotArea: CPlotArea
 		// data: CNumericPoint
 		if (!chartSpace || !chartSpace.chart || !chartSpace.chart.plotArea || !chartSpace.chart.plotArea.plotAreaRegion || !chartSpace.chart.plotArea.plotAreaRegion.series) {
@@ -2798,8 +2798,8 @@ CChartsDrawer.prototype =
 		const secondType = 1 < plotArea.plotAreaRegion.series.length ? plotArea.plotAreaRegion.series[1].layoutId : null;
 		const strLit = seria.getCatLit(type);
 		const numLit = seria.getValLit();
-		const width = plotArea.extX;
-		const height = plotArea.extY;
+		const width = oRect ? oRect.w : 0;
+		const height = oRect ? oRect.h : 0;
 
 		if (numLit && numLit.pts && numLit.ptCount > 0) {
 
@@ -8494,49 +8494,36 @@ drawTreemapChart.prototype = {
 		if (!cachedData) {
 			return;
 		}
-		if (cachedData.data.length > 0 && this.chartProp && this.chartProp.chartGutter) {
-
-			// getYPoints will not work?
-			// I should find the end of cat and val Axis
-			// get each row inside cahcedData
-			// for each row calculate the x and y component of the resulting block
-
-			// if Row is true then I should add the width to totalX, and for each element add its height
-			// if Row is false then I should add the height to totalY, and for each element add its width
-
-			// for (let i = 0; i < cachedData.data.length; i++) {
-			// 	let x = cachedData.data[i].start.x;
-			// 	let y = cachedData.data[i].start.y;
-			// 	for (let j = 0; j < cachedData.data[i].coords.length; j++) {
-			// 		this.paths[i] = this.cChartDrawer._calculateRect(x, y, cachedData.data[i].coords[j].w, cachedData.data[i].coords[j].h);
-			// 		if (cachedData.data[i].isVert) {
-			// 			y += cachedData.data[i].coords[j].h;
-			// 		} else {
-			// 			x += cachedData.data[i].coords[j].w;
-			// 		}
-			// 	}
-			// }
-			// const plotArea = this.cChartSpace.chart.plotArea;
-			// const x = plotArea.x;
-			// const y = plotArea.y;
-			// // this.paths[0] = this.cChartDrawer._calculateRect(x, y + 54, 100, 54, true);
-			// let pos = 0;
-			// for (let i = 0; i < cachedData.data.length; i++) {
-			// 	let direction = cachedData.data[i].position;
-			// 	// let startX = cachedData.data[i].position ? x + cachedData.data[i].array[0] : x;
-			// 	// let startY = cachedData.data[i].position ? y + cachedData.data[i].array[0] : y;
-			// 	let startX = x;
-			// 	let startY = y;
-			// 	for( let j = 0; j < cachedData.data[i].array.length; j++) {
-			// 		this.paths[pos] = this.cChartDrawer._calculateRect(startX, startY + cachedData.data[i].coords[j].h, cachedData.data[i].coords[j].w, cachedData.data[i].coords[j].h, true);
-			// 		if (direction) {
-			// 			startY += cachedData.data[i].array[j];
-			// 		} else {
-			// 			startX += cachedData.data[i].array[j];
-			// 		}
-			// 		pos += 1;
-			// 	}
-			// }
+		const plotArea = this.cChartSpace && this.cChartSpace.chart && this.cChartSpace.chart.plotArea;
+		if (cachedData.data.length > 0 && this.chartProp && this.chartProp.chartGutter && plotArea) {
+			let x = plotArea.x;
+			let y = plotArea.y;
+			let pos = 0;
+			for (let i = 0; i < cachedData.data.length; i++) {
+				let direction = cachedData.data[i].position;
+				let startX = x;
+				let startY = y;
+				const rect = cachedData.data[i]
+				// predefinedSize tells about the height of the whole array, however if array contains multiple elements, then to find the width of one element, we can divide totalArea by height
+				const weekSide = rect.totalSum/ rect.predefinedSize;
+				for( let j = 0; j < rect.array.length; j++) {
+					// vertical arrays weekSide is width and horizontal arrays weekSide is height;
+					const w = direction? weekSide : rect.array[j] / weekSide;
+					const h = direction ? rect.array[j] / weekSide : weekSide;
+					this.paths[pos] = this.cChartDrawer._calculateRect(startX, startY + h, w, h , true);
+					if (direction) {
+						startY += h;
+					} else {
+						startX += w;
+					}
+					pos += 1;
+				}
+				if (direction) {
+					x += weekSide;
+				} else {
+					y += weekSide;
+				}
+			}
 		}
 	},
 
@@ -8566,22 +8553,81 @@ drawTreemapChart.prototype = {
 				if (this.paths.hasOwnProperty(i) && this.paths[i]) {
 					let nPtIdx = parseInt(i);
 					let pen = oSeries.getPtPen(nPtIdx);
-					if (pen) {
-						pen.Fill.fill.color.RGBA.R = 255;
-						pen.Fill.fill.color.RGBA.G = 0;
-						pen.Fill.fill.color.RGBA.B = 0;
-					}
 					let brush = oSeries.getPtBrush(nPtIdx);
+					
+					if (!brush || !brush.Fill) {
+						brush = this._getDefaultTreemapBrush(nPtIdx);
+					}
+					
+					if (!pen) {
+						pen = this._getDefaultTreemapPen();
+					}
+					
 					this.cChartDrawer.drawPath(this.paths[i], pen, brush);
 				}
 			}
 		}
-
-		// this.cChartDrawer.cShapeDrawer.Graphics.RestoreGrState();
 	},
 
 	_calculateDLbl: function (compiledDlb) {
 		return {x: null, y: null}
+	},
+
+	_getDefaultTreemapBrush: function(index) {
+		const excelTreemapColors = [
+			{r: 68, g: 114, b: 196},
+			{r: 237, g: 125, b: 49},
+			{r: 165, g: 165, b: 165},
+			{r: 255, g: 192, b: 0},
+			{r: 91, g: 155, b: 213},
+			{r: 112, g: 173, b: 71},
+			{r: 158, g: 72, b: 14},
+			{r: 99, g: 99, b: 99},
+			{r: 153, g: 115, b: 0},
+			{r: 67, g: 104, b: 43}
+		];
+		
+		const colorIndex = index % excelTreemapColors.length;
+		const color = excelTreemapColors[colorIndex];
+
+		const brush = new AscFormat.CUniFill();
+		const solidFill = new AscFormat.CSolidFill();
+		const uniColor = new AscFormat.CUniColor();
+		const rgbColor = new AscFormat.CRGBColor();
+		
+		rgbColor.setR(color.r);
+		rgbColor.setG(color.g);
+		rgbColor.setB(color.b);
+		
+		uniColor.setColor(rgbColor);
+		solidFill.setColor(uniColor);
+		brush.setFill(solidFill);
+
+		let props = this.cChartSpace.getParentObjects();
+		brush.calculate(props.theme, props.slide, props.layout, props.master, new AscFormat.CUniColor().RGBA, this.cChartSpace.clrMapOvr);
+		
+		return brush;
+	},
+
+	_getDefaultTreemapPen: function() {
+		const pen = new AscFormat.CLn();
+		pen.setW(AscFormat.g_dKoef_pt_to_emu * 0.75);
+		
+		const penFill = new AscFormat.CUniFill();
+		const solidFill = new AscFormat.CSolidFill();
+		const uniColor = new AscFormat.CUniColor();
+		const rgbColor = new AscFormat.CRGBColor();
+		
+		rgbColor.setR(255);
+		rgbColor.setG(255);
+		rgbColor.setB(255);
+		
+		uniColor.setColor(rgbColor);
+		solidFill.setColor(uniColor);
+		penFill.setFill(solidFill);
+		pen.setFill(penFill);
+		
+		return pen;
 	}
 }
 
@@ -19637,12 +19683,20 @@ CColorObj.prototype =
 			for (let k = 0; k < arr.length; k++) {
 				arr[k].val = (arr[k].val / sum) * area;
 			}
+
+			arr.sort(function(a, b) {
+				return b.val - a.val;
+			});
+
 			return arr;
 		}
 
 		const createTreemap = function (numArr, strLit, lastLayer, width, height) {
 
 			const getAspectRatio = function(currentAreasSum, lastElementArea, predefinedSide, isVert){
+				if (predefinedSide === 0) {
+					return null;
+				}
 				const totalArea = currentAreasSum + lastElementArea;
 				let newWidth = null;
 				let newHeight = null;
@@ -19658,25 +19712,28 @@ CColorObj.prototype =
 
 			const squarify = function(areas, newWidth, newHeight){
 				const resArr = [];
-				let oldHeight, oldWidth
+				let oldHeight, oldWidth;
 				for (let i = 0; i < areas.length; i++){
 					const area = areas[i].val;
 					const lastElem = resArr.length !== 0 ? resArr[resArr.length - 1] : null;
-					const newPredefinedSize = lastElem && lastElem.position ? newWidth : newHeight;
-					if (lastElem && newPredefinedSize !== 0 && getAspectRatio(lastElem.totalSum, area, lastElem.predefinedSize, lastElem.position) < getAspectRatio(0, area, newPredefinedSize, !lastElem.position)){
+					const oldAspectRatio = lastElem && getAspectRatio(lastElem.totalSum, area, lastElem.predefinedSize, lastElem.position);
+					const newVerticalAspectRatio = getAspectRatio(0, area, newHeight, true);
+					const newHorizontalAspectRatio = getAspectRatio(0, area, newWidth, false);
+					if (oldAspectRatio && oldAspectRatio < newHorizontalAspectRatio && oldAspectRatio < newVerticalAspectRatio){
 						lastElem.array.push(area);
 						lastElem.totalSum += area;
 						if (lastElem.position) {
-							newWidth = (lastElem.totalSum / oldHeight);
+							newWidth = newWidth - (area / oldHeight);
 						} else {
-							newHeight = (lastElem.totalSum / oldWidth);
+							newHeight = newHeight - (area / oldWidth);
 						}
 					}else {
 						oldHeight = newHeight;
 						oldWidth = newWidth;
-						if (getAspectRatio(0, area, oldHeight, true) < getAspectRatio(0, area, oldWidth, false)){
+						if (newVerticalAspectRatio < newHorizontalAspectRatio){
 							resArr.push({position: true, array: [area], totalSum: area, predefinedSize: oldHeight});
 							newWidth = oldWidth - (area / oldHeight);
+							console.log("width changed", newWidth, area)
 						} else {
 							resArr.push({position: false, array: [area], totalSum: area, predefinedSize: oldWidth});
 							newHeight = oldHeight - (area / oldWidth);
@@ -19688,7 +19745,7 @@ CColorObj.prototype =
 
 
 			if (lastLayer != null) {
-				return null;
+				return [];
 			} else {
 				// const isStrLit = strLit;
 				// let labelCounter = 0;
