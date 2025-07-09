@@ -1241,7 +1241,8 @@
         Custom: 0,
         ItemId: 1,
         Uri: 2,
-        Content: 3
+        Content: 3,
+        ContentA: 4
     };
     var c_oSerUserProtectedRange = {
         UserProtectedRange: 0,
@@ -2029,39 +2030,45 @@
     }
 
     //TODO копия кода из serialize2
-    function BinaryCustomsTableWriter(memory, CustomXmls)
+    function BinaryCustomsTableWriter(wb, memory)
     {
         this.memory = memory;
-        //this.Document = doc;
+        this.wb = wb;
         this.bs = new BinaryCommonWriter(this.memory);
-        this.CustomXmls = CustomXmls;
+        this.customXmlManager = wb.getCustomXmlManager();
+
         this.Write = function()
         {
             var oThis = this;
-            this.bs.WriteItemWithLength(function(){oThis.WriteCustomXmls();});
+            this.bs.WriteItemWithLength(function(){oThis.WriteCustomXmls()});
         };
         this.WriteCustomXmls = function()
         {
-            var oThis = this;
-            for (var i = 0; i < this.CustomXmls.length; ++i) {
-                this.bs.WriteItem(c_oSerCustoms.Custom, function() {oThis.WriteCustomXml(oThis.CustomXmls[i]);});
+           	var oThis = this;
+            for (var i = 0, count = this.customXmlManager.getCount(); i < count; ++i) {
+                this.bs.WriteItem(c_oSerCustoms.Custom, function() {oThis.WriteCustomXml(oThis.customXmlManager.getCustomXml(i));});
             }
         };
         this.WriteCustomXml = function(customXml) {
             var oThis = this;
-            for(var i = 0; i < customXml.Uri.length; ++i){
+            let namespaces = customXml.getAllNamespaces();
+            for(var i = 0; i < namespaces.length; ++i){
                 this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-                    oThis.memory.WriteString3(customXml.Uri[i]);
+                    oThis.memory.WriteString3(namespaces[i]);
                 });
             }
-            if (null !== customXml.ItemId) {
+            if (null !== customXml.itemId) {
                 this.bs.WriteItem(c_oSerCustoms.ItemId, function() {
-                    oThis.memory.WriteString3(customXml.ItemId);
+                    oThis.memory.WriteString3(customXml.itemId);
                 });
             }
-            if (null !== customXml.Content) {
+            if (null !== customXml.content) {
+                let customXmlManager = this.wb.getCustomXmlManager();
                 this.bs.WriteItem(c_oSerCustoms.Content, function() {
-                    oThis.memory.WriteBuffer(customXml.Content, 0, customXml.Content.length)
+                    let str  = customXmlManager.getCustomXMLString(customXml);
+                    let data = AscCommon.Utf8.encode(str);
+                    oThis.memory.WriteULong(data.length);
+                    oThis.memory.WriteBuffer(data, 0, data.length);
                 });
             }
         };
@@ -7173,9 +7180,10 @@
                     pptx_content_writer.BinaryFileWriter.ImportFromMemory(old);
                 }});
             }
-            if (t.wb.customXmls && t.wb.customXmls.length > 0) {
-                this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.Memory, t.wb.customXmls));
-            }
+
+			if (t.wb.customXmlManager.getCount() > 0) {
+				this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.wb, this.Memory));
+			}
 
             //var oSharedStrings = {index: 0, strings: {}};
             //Write SharedStrings
@@ -12420,11 +12428,9 @@
     }
 
     //TODO копия кода из serialize2
-    function Binary_CustomsTableReader(stream, CustomXmls) {
-        //this.Document = doc;
-        //this.oReadResult = oReadResult;
+    function Binary_CustomsTableReader(wb, stream) {
         this.stream = stream;
-        this.CustomXmls = CustomXmls;
+        this.customXmlManager = wb.getCustomXmlManager();
         this.bcr = new Binary_CommonReader(this.stream);
         this.Read = function() {
             var oThis = this;
@@ -12435,26 +12441,31 @@
         this.ReadCustom = function(type, length) {
             var res = c_oSerConstants.ReadOk;
             var oThis = this;
-            if (c_oSerCustoms.Custom === type) {
-                var custom = {Uri: [], ItemId: null, Content: null};
+
+            if (c_oSerCustoms.Custom === type)
+            {
+                var custom = new AscWord.CustomXml();
+
                 res = this.bcr.Read1(length, function(t, l) {
                     return oThis.ReadCustomContent(t, l, custom);
                 });
-                this.CustomXmls.push(custom);
+
+                this.customXmlManager.add(custom);
             }
             else
+            {
                 res = c_oSerConstants.ReadUnknown;
+            }
             return res;
         };
         this.ReadCustomContent = function(type, length, custom) {
             var res = c_oSerConstants.ReadOk;
             if (c_oSerCustoms.Uri === type) {
-                custom.Uri.push(this.stream.GetString2LE(length));
+                custom.setNamespaceUri(this.stream.GetString2LE(length));
             } else if (c_oSerCustoms.ItemId === type) {
-                custom.ItemId = this.stream.GetString2LE(length);
+                custom.itemId = this.stream.GetString2LE(length);
             } else if (c_oSerCustoms.Content === type) {
-                //поскольку данную строку не использую, храню в виде массива. если нужно будет строка, то не забыть про BOM
-                custom.Content = this.stream.GetBuffer(length);
+                custom.addContent(this.stream.GetBuffer(length))
             } else
                 res = c_oSerConstants.ReadUnknown;
             return res;
@@ -12799,8 +12810,7 @@
                             break;
                         case c_oSerTableTypes.Customs:
                             this.stream.Seek2(mtiOffBits);
-                            wb.customXmls = [];
-                            res = (new Binary_CustomsTableReader(this.stream, wb.customXmls)).Read();
+                            res = (new Binary_CustomsTableReader(wb, this.stream)).Read();
                             break;
                     }
                     if(c_oSerConstants.ReadOk != res)
