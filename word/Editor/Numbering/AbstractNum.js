@@ -54,7 +54,7 @@ function CAbstractNum()
 
 	this.NumStyleLink = undefined;
 	this.StyleLink    = undefined;
-
+	
 	this.Lvl = [];
 	for (var nLvl = 0; nLvl < 9; ++nLvl)
 	{
@@ -85,7 +85,7 @@ CAbstractNum.prototype.Copy = function(oAbstractNum)
 		var oLvlNew = oAbstractNum.Lvl[nLvl].Copy();
 		var oLvlOld = this.Lvl[nLvl];
 
-		History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, oLvlNew, nLvl));
+		History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, oLvlNew, nLvl));
 		this.Lvl[nLvl] = oLvlNew;
 	}
 };
@@ -93,7 +93,7 @@ CAbstractNum.prototype.SetStyleLink = function(sValue)
 {
 	if (sValue !== this.StyleLink)
 	{
-		History.Add(new CChangesAbstractNumStyleLink(this, this.StyleLink, sValue));
+		History.Add(new AscDFH.CChangesAbstractNumStyleLink(this, this.StyleLink, sValue));
 		this.StyleLink = sValue;
 	}
 };
@@ -105,7 +105,7 @@ CAbstractNum.prototype.SetNumStyleLink = function(sValue)
 {
 	if (sValue !== this.NumStyleLink)
 	{
-		History.Add(new CChangesAbstractNumNumStyleLink(this, this.NumStyleLink, sValue));
+		History.Add(new AscDFH.CChangesAbstractNumNumStyleLink(this, this.NumStyleLink, sValue));
 		this.NumStyleLink = sValue;
 	}
 };
@@ -161,7 +161,7 @@ CAbstractNum.prototype.SetLvl = function(nLvl, oLvlNew)
 
 	var oLvlOld    = this.Lvl[nLvl];
 	this.Lvl[nLvl] = oLvlNew;
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, oLvlNew, nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, oLvlNew, nLvl));
 	this.RecalculateRelatedParagraphs(nLvl);
 };
 /**
@@ -174,7 +174,7 @@ CAbstractNum.prototype.CreateDefault = function(nType)
 	{
 		let lvlOld = this.Lvl[nLvl].Copy();
 		this.Lvl[nLvl].InitDefault(nLvl, nType);
-		History.Add(new CChangesAbstractNumLvlChange(this, lvlOld, this.Lvl[nLvl].Copy(), nLvl));
+		History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, lvlOld, this.Lvl[nLvl].Copy(), nLvl));
 		this.RecalculateRelatedParagraphs(nLvl);
 	}
 };
@@ -192,7 +192,7 @@ CAbstractNum.prototype.SetLvlByType = function(nLvl, nType, sText, oTextPr)
 
 	var oLvlOld = this.Lvl[nLvl].Copy();
 	this.Lvl[nLvl].SetByType(nType, nLvl, sText, oTextPr);
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
 	this.RecalculateRelatedParagraphs(nLvl);
 };
 /**
@@ -210,7 +210,7 @@ CAbstractNum.prototype.SetLvlByFormat = function(nLvl, nType, sFormatText, nAlig
 	var oLvlOld = this.Lvl[nLvl].Copy();
 	this.Lvl[nLvl].SetByFormat(nLvl, nType, sFormatText, nAlign);
 
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
 	this.RecalculateRelatedParagraphs(nLvl);
 };
 /**
@@ -226,7 +226,7 @@ CAbstractNum.prototype.SetLvlPStyle = function(iLvl, styleId)
 	var oLvlOld = this.Lvl[iLvl].Copy();
 
 	this.Lvl[iLvl].SetPStyle(styleId);
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[iLvl].Copy(), iLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[iLvl].Copy(), iLvl));
 };
 /**
  * Выставляем является ли данный уровень сквозным или каждый раз перестартовывать нумерацию
@@ -241,7 +241,7 @@ CAbstractNum.prototype.SetLvlRestart = function(nLvl, isRestart)
 	var oLvlOld = this.Lvl[nLvl].Copy();
 
 	this.Lvl[nLvl].Restart = (isRestart ? -1 : 0);
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
 };
 /**
  * Задаем начальное значения для данного уровня
@@ -256,7 +256,7 @@ CAbstractNum.prototype.SetLvlStart = function(nLvl, nStart)
 	var oLvlOld = this.Lvl[nLvl].Copy();
 
 	this.Lvl[nLvl].Start = nStart;
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
 };
 /**
  * Получаем начальное значение для заданного уровня
@@ -283,7 +283,7 @@ CAbstractNum.prototype.SetLvlSuff = function(nLvl, nSuff)
 	var oLvlOld = this.Lvl[nLvl].Copy();
 
 	this.Lvl[nLvl].Suff = nSuff;
-	History.Add(new CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumLvlChange(this, oLvlOld, this.Lvl[nLvl].Copy(), nLvl));
 };
 /**
  * Применяем новые тектовые настройки к данной нумерации на заданном уровне
@@ -294,7 +294,7 @@ CAbstractNum.prototype.ApplyTextPr = function(nLvl, oTextPr)
 {
 	var oTextPrOld = this.Lvl[nLvl].TextPr.Copy();
 	this.Lvl[nLvl].TextPr.Merge(oTextPr);
-	History.Add(new CChangesAbstractNumTextPrChange(this, oTextPrOld, this.Lvl[nLvl].TextPr.Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumTextPrChange(this, oTextPrOld, this.Lvl[nLvl].TextPr.Copy(), nLvl));
 };
 /**
  * Выставляем текстовые настройки для заданного уровня
@@ -303,7 +303,7 @@ CAbstractNum.prototype.ApplyTextPr = function(nLvl, oTextPr)
  */
 CAbstractNum.prototype.SetTextPr = function(nLvl, oTextPr)
 {
-	History.Add(new CChangesAbstractNumTextPrChange(this, this.Lvl[nLvl].TextPr, oTextPr.Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumTextPrChange(this, this.Lvl[nLvl].TextPr, oTextPr.Copy(), nLvl));
 	this.Lvl[nLvl].TextPr = oTextPr;
 };
 /**
@@ -313,7 +313,7 @@ CAbstractNum.prototype.SetTextPr = function(nLvl, oTextPr)
  */
 CAbstractNum.prototype.SetParaPr = function(nLvl, oParaPr)
 {
-	History.Add(new CChangesAbstractNumParaPrChange(this, this.Lvl[nLvl].ParaPr, oParaPr.Copy(), nLvl));
+	History.Add(new AscDFH.CChangesAbstractNumParaPrChange(this, this.Lvl[nLvl].ParaPr, oParaPr.Copy(), nLvl));
 	this.Lvl[nLvl].ParaPr = oParaPr;
 };
 //----------------------------------------------------------------------------------------------------------------------
