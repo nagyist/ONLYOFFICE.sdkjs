@@ -16015,6 +16015,10 @@
     WorksheetView.prototype.setSelectionInfo = function (prop, val, onlyActive, isMineComments) {
         // Проверка глобального лока
         if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
+            if (prop === "paste" && AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+                AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+                AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+            }
             return;
         }
 
@@ -16032,6 +16036,9 @@
 
         const onSelectionCallback = function (isSuccess) {
             if (false === isSuccess) {
+				if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+				}
 				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
                 return;
             }
@@ -16517,7 +16524,7 @@
             });
 
 			if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
-				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack();
+				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(true);
 				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
 			}
 			t.model.workbook.handlers.trigger("cleanCutData", true, true);
@@ -16556,6 +16563,10 @@
 				return;
 			} else if (!val.fromBinary && this.isMultiSelect()) {
 				t.handlers.trigger("onErrorEvent", c_oAscError.ID.PasteMultiSelectError, c_oAscError.Level.NoCritical);
+				if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+				}
 				return false;
 			} else {
 

@@ -423,10 +423,16 @@
 			var wb = window["Asc"]["editor"].wb;
 			//if open range dialog - return
 			if (ws.getSelectionDialogMode() && (!wb.getCellEditMode() || wb.isWizardMode)) {
+				if (callback) {
+					callback(false);
+				}
 				return;
 			}
 			var cellEditor = wb.cellEditor;
 			t.pasteProcessor.clean();
+
+			// Set the paste callback
+			AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = callback;
 
 			if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart) {
 				window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide();
@@ -1990,6 +1996,10 @@
 							t._insertBinaryIntoShapeContent(worksheet, pasteData.content, true);
 						}
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2057,6 +2067,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2066,6 +2080,10 @@
 					if (isCellEditMode) {
 						var text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						var callback = function (isSuccess) {
@@ -2073,6 +2091,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2321,6 +2343,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2330,6 +2356,10 @@
 					if (isCellEditMode) {
 						let text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						let callback = function (isSuccess) {
@@ -2337,6 +2367,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -3054,6 +3088,10 @@
 						} else {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 						}
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -3072,7 +3110,7 @@
 					}
 				}
 
-				this.pasteCallBack = cb;
+				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = cb;
 
 				this.activeRange = worksheet.model.selectionRange.getLast().clone();
 				worksheet.workbook.handlers.trigger("cleanCopyData", true);
@@ -3699,6 +3737,10 @@
 				var t = this;
 				if (!text || (text && !text.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -3719,6 +3761,12 @@
 				if (isIntoShape) {
 					var callback = function (isSuccess) {
 						if (isSuccess === false) {
+							window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
+							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return false;
 						}
 
@@ -3755,6 +3803,11 @@
 
 						t._insertSelectedContentIntoShapeContent(worksheet, selectedElements, isIntoShape);
 
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(true);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
+
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 
@@ -3790,6 +3843,10 @@
 						if (resmove === -2) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 							worksheet.handlers.trigger("onErrorEvent", c_oAscError.ID.CannotMoveRange, c_oAscError.Level.NoCritical);
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						} else if (resmove === -1) {
 							worksheet.model.workbook.handlers.trigger("asc_onConfirmAction", Asc.c_oAscConfirm.ConfirmReplaceRange,
 								function (can) {
@@ -3797,6 +3854,10 @@
 										worksheet.setSelectionInfo('paste', {data: aResult, bText: true});
 									} else {
 										window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+										if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+										}
 									}
 								});
 						} else {
@@ -4191,6 +4252,10 @@
 
 				if (!documentContent || (documentContent && !documentContent.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -4204,6 +4269,10 @@
 					if (this.aResult.props && this.aResult.props.addImagesFromWord && this.aResult.props.addImagesFromWord.length === 1 && this.aResult.content) {
 						if (1 === this.aResult.content.length && 1 === this.aResult.content[0].length && this.aResult.content[0][0].content && this.aResult.content[0][0].content.length === 0) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return;
 						} else {
 							this.aResult.props.addImagesFromWord = [];

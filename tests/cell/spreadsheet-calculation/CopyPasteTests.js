@@ -112,6 +112,7 @@ $(function () {
 	var wsView = api.wb.getWorksheet(0);
 	wsView.handlers = api.handlers;
 	wsView.objectRender = new AscFormat.DrawingObjects();
+	wsView.objectRender.controller = new AscFormat.DrawingObjectsController(wsView.objectRender);
 	var ws = api.wbModel.aWorksheets[0];
 
 	var getRange = function (c1, r1, c2, r2) {
@@ -320,6 +321,33 @@ $(function () {
 
 		// wsView.cellPasteHelper.loadDataBeforePaste(false, val, true, 0, ws.selectionRange.ranges);
 
+	});
+
+	QUnit.test("Test: \"callback tests paste text\"", function (assert) {
+		let done = assert.async();
+		api.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Text, "test", undefined, undefined, undefined, function (success) {
+			assert.ok(success);
+			done();
+		});
+	});
+
+	QUnit.test("Test: \"callback tests paste HTML\"", function (assert) {
+		let done = assert.async();
+		let htmlElement = document.createElement("div");
+		htmlElement.innerHTML = "test HTML content";
+		api.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, htmlElement, undefined, undefined, undefined, function (success) {
+			assert.ok(success);
+			done();
+		});
+	});
+
+	QUnit.test("Test: \"callback tests paste Binary\"", function (assert) {
+		let done = assert.async();
+		let binaryData = AscCommonExcel.g_clipboardExcel.copyProcessor.getBinaryForCopy(ws, wsView.objectRender);
+		api.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Internal, binaryData, undefined, undefined, undefined, function (success) {
+			assert.ok(success);
+			done();
+		});
 	});
 
 	QUnit.module("CopyPaste");
