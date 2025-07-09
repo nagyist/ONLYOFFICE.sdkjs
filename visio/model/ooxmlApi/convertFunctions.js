@@ -2169,6 +2169,7 @@
 
 
 		// set shadow
+		// check shadow pattern
 		let shadowPatternCell = this.getCell("ShdwPattern");
 		let shadowPattern = shadowPatternCell ? shadowPatternCell.calculateValue(this, pageInfo,
 				visioDocument.themes) : 0;
@@ -2225,21 +2226,45 @@
 			// shadow.putTransparency(60);
 			shadow.color = shadowColor;
 
-			let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
+
+			let shadowTypeCell = this.getCell("ShapeShdwType");
+			// TODO check themed type
+			let shadowType = shadowTypeCell && shadowTypeCell.calculateValue(this, pageInfo,visioDocument.themes);
+
 			let shadowOffsetX_inch;
-			if (shadowOffsetXcell) {
-				shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+			let shadowOffsetY_inch;
+			let shadowScaleX;
+			let shadowScaleY;
+			if (shadowType !== undefined && shadowType === 0) {
+				shadowOffsetX_inch = 0.0625;
+				shadowOffsetY_inch = -0.0625;
+				shadowScaleX = 1;
+				shadowScaleY = 1;
 			} else {
-				shadowOffsetX_inch = 0.125;
+				let shapeShdwScaleFactorCell = this.getCell("ShapeShdwScaleFactor");
+				let shapeShdwScaleFactor = shapeShdwScaleFactorCell && shapeShdwScaleFactorCell.calculateValue(this, pageInfo,
+						visioDocument.themes);
+				shadowScaleX = shapeShdwScaleFactor;
+				shadowScaleY = shapeShdwScaleFactor;
+
+				// set offsets for shadow
+				let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
+				if (shadowOffsetXcell) {
+					shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
+				} else {
+					shadowOffsetX_inch = 0.125;
+				}
+
+				let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
+				if (shadowOffsetYcell) {
+					shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
+				} else {
+					shadowOffsetY_inch = -0.125;
+				}
 			}
 
-			let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
-			let shadowOffsetY_inch;
-			if (shadowOffsetYcell) {
-				shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
-			} else {
-				shadowOffsetY_inch = -0.125;
-			}
+			shadow.sx = shadowScaleX * 100000;
+			shadow.sy = shadowScaleY * 100000;
 
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
