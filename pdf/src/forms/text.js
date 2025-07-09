@@ -1174,7 +1174,7 @@
 		
 		let contentX = (this.IsComb() ? (X + oMargins.left) : (X + 2 * oMargins.left)) * g_dKoef_pt_to_mm;
         let contentY = (Y + (this.IsMultiline() ? (2.5 * oMargins.top) : (2 * oMargins.top))) * g_dKoef_pt_to_mm;
-        let contentXLimit = (this.IsComb() ? (X + contentW - oMargins.left) : (X + contentW - 2 * oMargins.left)) * g_dKoef_pt_to_mm;
+        let contentXLimit = (this.IsComb() ? (X + contentW - oMargins.right) : (X + contentW - 2 * oMargins.right)) * g_dKoef_pt_to_mm;
 		let contentYLimit = (Y + contentH - (this.IsMultiline() ? (2.5 * oMargins.bottom) : (2 * oMargins.bottom))) * g_dKoef_pt_to_mm;
         
         if ((this.borderStyle == "solid" || this.borderStyle == "dashed") && 
@@ -1205,7 +1205,7 @@
             this.contentFormat.Y= contentYFormat;
             this.content.XLimit = this.contentFormat.XLimit = contentXLimit;
             this.content.YLimit = this.contentFormat.YLimit = 20000;
-			this.content.Set_ClipInfo(0, contentX, contentXLimit, contentY, contentYLimit);
+			this.content.Set_ClipInfo(0, X * g_dKoef_pt_to_mm, (X + contentW) * g_dKoef_pt_to_mm, contentY, contentY + contentH * g_dKoef_pt_to_mm);
             
             this.CalculateContentClipRect();
             this.content.Recalculate_Page(0, true);
