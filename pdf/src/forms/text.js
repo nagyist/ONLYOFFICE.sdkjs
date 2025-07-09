@@ -255,7 +255,10 @@
             return;
         }
 
-        if (this.IsMultiline() == bMultiline) {
+        let nFormatType = this.GetFormatType();
+        if (this.IsMultiline() == bMultiline ||
+            (bMultiline && (this.IsPassword() || this.IsComb())) ||
+            (nFormatType !== AscPDF.FormatType.NONE && nFormatType !== AscPDF.FormatType.CUSTOM)) {
             return;
         }
     

@@ -1447,6 +1447,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1487,6 +1490,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1527,6 +1533,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1567,6 +1576,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1607,6 +1619,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 				
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1647,6 +1662,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetArbitaryMask(sMask);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1676,6 +1695,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetRegularExp(sReg);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1704,6 +1727,11 @@
 					return false;
 				}
 				
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					oField.ClearFormat();
+					return false;
+				}
+
 				let bGreaterThan	= nGreaterThan != undefined;
 				let bLessThan		= nLessThan != undefined;
 
