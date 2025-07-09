@@ -2089,15 +2089,16 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {string} frameId - The frame ID.
+	 * @param {boolean} isFocus - The focus will be made on the window.
 	 * @alias ActivateWindow
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/ActivateWindow.js
 	 */
-	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId)
+	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId, isFocus)
 	{
 		this.sendEvent("asc_onPluginWindowActivate", frameId);
 
-		if (true)
+		if (isFocus)
 		{
 			let frame = document.getElementById(frameId);
 			if (frame)
@@ -2275,7 +2276,7 @@
 	};
 
 	/**
-	 * Focus the editor.
+	 * Returns focus to the editor.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @alias FocusEditor
