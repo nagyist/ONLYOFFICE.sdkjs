@@ -8032,9 +8032,11 @@
         {
             var oThis = this;
             var tempValue = {text: null, multiText: null};
-            return this.bcr.ReadTable(function(t, l){
+            const res = this.bcr.ReadTable(function(t, l){
                 return oThis.ReadSharedStringContent(t,l, tempValue);
             });
+            this.wb.sharedStrings.initWithSharedStrings(this.aSharedStrings);
+            return res;
         };
         this.ReadSharedStringContent = function(type, length, tempValue)
         {

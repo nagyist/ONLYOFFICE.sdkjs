@@ -17114,8 +17114,8 @@
 			this.setValueNumberInternal(stream.GetDoubleLE());
 		} else if (AscCommonExcel.XLSB.rt_CELL_ISST === type) {
 			this.setTypeInternal(CellValueType.String);
-			//todo textIndex
-			var ss = aSharedStrings[stream.GetULongLE()];
+			const ssIndex = stream.GetULongLE();
+			var ss = aSharedStrings[ssIndex];
 			if (undefined !== ss) {
 				if (typeof ss === 'string') {
 					this.setValueTextInternal(ss);
@@ -17123,6 +17123,7 @@
 					this.setValueMultiTextInternal(ss);
 				}
 			}
+			this.textIndex = ssIndex + 1;// 1-based indexing
 		} else if (AscCommonExcel.XLSB.rt_CELL_ST === type || AscCommonExcel.XLSB.rt_FMLA_STRING === type) {
 			this.setTypeInternal(CellValueType.String);
 			this.setValueTextInternal(stream.GetString());
