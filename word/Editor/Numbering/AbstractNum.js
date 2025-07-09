@@ -54,13 +54,14 @@ function CAbstractNum()
 
 	this.NumStyleLink = undefined;
 	this.StyleLink    = undefined;
+	this.nsid         = undefined;
 	
 	this.Lvl = [];
 	for (var nLvl = 0; nLvl < 9; ++nLvl)
 	{
 		this.Lvl[nLvl] = new CNumberingLvl();
 	}
-
+	
 	this.MultiLvlType = Asc.c_oAbstractNumMultiLvlTypes.MultiLevel;
 
 	// Добавляем данный класс в таблицу Id (обязательно в конце конструктора)
@@ -112,6 +113,18 @@ CAbstractNum.prototype.SetNumStyleLink = function(sValue)
 CAbstractNum.prototype.GetNumStyleLink = function()
 {
 	return this.NumStyleLink;
+};
+CAbstractNum.prototype.SetNsid = function(nsid)
+{
+	if (this.nsid === nsid)
+		return false;
+	
+	AscCommon.History.Add(new AscDFH.CChangesAbstractNumNsid(this, this.nsid, nsid));
+	this.nsid = nsid;
+};
+CAbstractNum.prototype.GetNsid = function()
+{
+	return this.nsid;
 };
 CAbstractNum.prototype.RecalculateRelatedParagraphs = function(nLvl)
 {

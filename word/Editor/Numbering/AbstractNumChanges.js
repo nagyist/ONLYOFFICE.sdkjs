@@ -32,19 +32,21 @@
 
 "use strict";
 
-(function()
+(function(AscDFH)
 {
 	AscDFH.historyitem_AbstractNum_LvlChange    = AscDFH.historyitem_type_AbstractNum | 1;
 	AscDFH.historyitem_AbstractNum_TextPrChange = AscDFH.historyitem_type_AbstractNum | 2;
 	AscDFH.historyitem_AbstractNum_ParaPrChange = AscDFH.historyitem_type_AbstractNum | 3;
 	AscDFH.historyitem_AbstractNum_StyleLink    = AscDFH.historyitem_type_AbstractNum | 4;
 	AscDFH.historyitem_AbstractNum_NumStyleLink = AscDFH.historyitem_type_AbstractNum | 5;
+	AscDFH.historyitem_AbstractNum_Nsid         = AscDFH.historyitem_type_AbstractNum | 6;
 	
 	AscDFH.changesFactory[AscDFH.historyitem_AbstractNum_LvlChange]    = CChangesAbstractNumLvlChange;
 	AscDFH.changesFactory[AscDFH.historyitem_AbstractNum_TextPrChange] = CChangesAbstractNumTextPrChange;
 	AscDFH.changesFactory[AscDFH.historyitem_AbstractNum_ParaPrChange] = CChangesAbstractNumParaPrChange;
 	AscDFH.changesFactory[AscDFH.historyitem_AbstractNum_StyleLink]    = CChangesAbstractNumStyleLink;
 	AscDFH.changesFactory[AscDFH.historyitem_AbstractNum_NumStyleLink] = CChangesAbstractNumNumStyleLink;
+	
 	
 	//------------------------------------------------------------------------------------------------------------------
 	// Карта зависимости изменений
@@ -68,7 +70,6 @@
 	AscDFH.changesRelationMap[AscDFH.historyitem_AbstractNum_NumStyleLink] = [
 		AscDFH.historyitem_AbstractNum_NumStyleLink
 	];
-
 	//------------------------------------------------------------------------------------------------------------------
 	
 	
@@ -317,4 +318,24 @@
 		this.Class.NumStyleLink = Value;
 	};
 	AscDFH.CChangesAbstractNumNumStyleLink = CChangesAbstractNumNumStyleLink;
-})();
+	
+	/**
+	 * @constructor
+	 * @extends {AscDFH.CChangesBaseLongProperty}
+	 */
+	function CChangesAbstractNumNsid(Class, Old, New)
+	{
+		AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New);
+	}
+	AscDFH.InheritPropertyChange(
+		CChangesAbstractNumNsid,
+		AscDFH.CChangesBaseLongProperty,
+		AscDFH.historyitem_AbstractNum_Nsid,
+		function(value)
+		{
+			this.Class.nsid = value;
+		},
+		false
+	);
+	AscDFH.CChangesAbstractNumNsid = CChangesAbstractNumNsid;
+})(window['AscDFH']);
