@@ -108,17 +108,20 @@
 		let pathWithFill = new AscFormat.Path();
 		let pathWithoutFill = new AscFormat.Path();
 
+		let pathW = undefined;
+		let pathH = undefined;
+
 		pathWithFill.setExtrusionOk(false);
 		pathWithFill.setFill("norm");
 		pathWithFill.setStroke(true);
-		pathWithFill.setPathW(undefined);
-		pathWithFill.setPathH(undefined);
+		pathWithFill.setPathW(pathW);
+		pathWithFill.setPathH(pathH);
 
 		pathWithoutFill.setExtrusionOk(false);
 		pathWithoutFill.setFill("none");
 		pathWithoutFill.setStroke(true);
-		pathWithoutFill.setPathW(undefined);
-		pathWithoutFill.setPathH(undefined);
+		pathWithoutFill.setPathW(pathW);
+		pathWithoutFill.setPathH(pathH);
 
 		// for path overlap fix: If there is only equal geometry section NoLine values
 		// we can set true NoLine value for path
@@ -875,7 +878,28 @@
 		}
 
 		geometry.setPreset("Any");
+		if (false) {
+			let maxCoordinates = pathWithFill.getMaxCoordinates();
+			pathW = Math.round(maxCoordinates.maxX);
+			pathH = Math.round(maxCoordinates.maxY);
+			if (pathW > 0 && pathH > 0) {
+				pathWithFill.setPathW(pathW);
+				pathWithFill.setPathH(pathH);
+			}
+			pathWithFill.normalizeCoordinates(maxCoordinates.maxX, maxCoordinates.maxY, pathW, pathH);
+		}
 		geometry.AddPath(pathWithFill);
+
+		if (false) {
+			maxCoordinates = pathWithoutFill.getMaxCoordinates();
+			pathW = Math.round(maxCoordinates.maxX);
+			pathH = Math.round(maxCoordinates.maxY);
+			if (pathW > 0 && pathH > 0) {
+				pathWithoutFill.setPathW(pathW);
+				pathWithoutFill.setPathH(pathH);
+			}
+			pathWithoutFill.normalizeCoordinates(maxCoordinates.maxX, maxCoordinates.maxY, pathW, pathH);
+		}
 		geometry.AddPath(pathWithoutFill);
 
 		// TODO add connections

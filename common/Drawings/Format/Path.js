@@ -419,6 +419,140 @@ function (window, undefined) {
 			degree: degree
 		});
 	};
+	
+	/**
+	 * Gets the maximum X and Y coordinates from all path commands
+	 * @returns {{maxX: number, maxY: number}} Object containing maximum X and Y coordinates
+	 */
+	Path.prototype.getMaxCoordinates = function () {
+		let maxX = 0;
+		let maxY = 0;
+		let command;
+		let controlPoint;
+		
+		for (let i = 0; i < this.ArrPathCommandInfo.length; i++) {
+			command = this.ArrPathCommandInfo[i];
+			
+			switch (command.id) {
+				case moveTo:
+				case lineTo:
+					maxX = Math.max(maxX, command.X);
+					maxY = Math.max(maxY, command.Y);
+					break;
+					
+				case arcTo:
+					maxX = Math.max(maxX, command.wR);
+					maxY = Math.max(maxY, command.hR);
+					break;
+					
+				case bezier3:
+					maxX = Math.max(maxX, command.X0);
+					maxY = Math.max(maxY, command.Y0);
+					maxX = Math.max(maxX, command.X1);
+					maxY = Math.max(maxY, command.Y1);
+					break;
+					
+				case bezier4:
+					maxX = Math.max(maxX, command.X0);
+					maxY = Math.max(maxY, command.Y0);
+					maxX = Math.max(maxX, command.X1);
+					maxY = Math.max(maxY, command.Y1);
+					maxX = Math.max(maxX, command.X2);
+					maxY = Math.max(maxY, command.Y2);
+					break;
+					
+				case ellipticalArcTo:
+					maxX = Math.max(maxX, command.x);
+					maxY = Math.max(maxY, command.y);
+					maxX = Math.max(maxX, command.a);
+					maxY = Math.max(maxY, command.b);
+					break;
+					
+				case nurbsTo:
+					for (let j = 0; j < command.controlPoints.length; j++) {
+						controlPoint = command.controlPoints[j];
+						maxX = Math.max(maxX, controlPoint.x);
+						maxY = Math.max(maxY, controlPoint.y);
+					}
+					break;
+					
+				case close:
+					// Close command has no coordinates
+					break;
+			}
+		}
+		
+		return {maxX: maxX, maxY: maxY};
+	};
+	
+	/**
+	 * Normalizes coordinates in ArrPathCommandInfo by scaling them relative to max values
+	 * @param {number} maxX - The maximum X coordinate to normalize by
+	 * @param {number} maxY - The maximum Y coordinate to normalize by
+	 * @param {number} width - The destination width to scale to
+	 * @param {number} height - The destination height to scale to
+	 */
+	Path.prototype.normalizeCoordinates = function (maxX, maxY, width, height) {
+		if (maxX === 0 || maxY === 0) {
+			return;
+		}
+		
+		let command;
+		let controlPoint;
+		
+		for (let i = 0; i < this.ArrPathCommandInfo.length; i++) {
+			command = this.ArrPathCommandInfo[i];
+			
+			switch (command.id) {
+				case moveTo:
+				case lineTo:
+					command.X = Math.round((command.X / maxX) * width);
+					command.Y = Math.round((command.Y / maxY) * height);
+					break;
+					
+				case arcTo:
+					command.wR = Math.round((command.wR / maxX) * width);
+					command.hR = Math.round((command.hR / maxY) * height);
+					break;
+					
+				case bezier3:
+					command.X0 = Math.round((command.X0 / maxX) * width);
+					command.Y0 = Math.round((command.Y0 / maxY) * height);
+					command.X1 = Math.round((command.X1 / maxX) * width);
+					command.Y1 = Math.round((command.Y1 / maxY) * height);
+					break;
+					
+				case bezier4:
+					command.X0 = Math.round((command.X0 / maxX) * width);
+					command.Y0 = Math.round((command.Y0 / maxY) * height);
+					command.X1 = Math.round((command.X1 / maxX) * width);
+					command.Y1 = Math.round((command.Y1 / maxY) * height);
+					command.X2 = Math.round((command.X2 / maxX) * width);
+					command.Y2 = Math.round((command.Y2 / maxY) * height);
+					break;
+					
+				case ellipticalArcTo:
+					command.x = Math.round((command.x / maxX) * width);
+					command.y = Math.round((command.y / maxY) * height);
+					command.a = Math.round((command.a / maxX) * width);
+					command.b = Math.round((command.b / maxY) * height);
+					break;
+					
+				case nurbsTo:
+					for (let j = 0; j < command.controlPoints.length; j++) {
+						controlPoint = command.controlPoints[j];
+						controlPoint.x = Math.round((controlPoint.x / maxX) * width);
+						controlPoint.y = Math.round((controlPoint.y / maxY) * height);
+					}
+					break;
+					
+				case close:
+					//no coordinates to normalize
+					break;
+			}
+		}
+	};
+	
 	Path.prototype.calculateCommandCoord = function (oGdLst, sFormula, dFormulaCoeff, dNumberCoeff) {
 		let dVal;
 		dVal = oGdLst[sFormula];
