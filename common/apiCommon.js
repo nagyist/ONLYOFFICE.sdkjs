@@ -3617,6 +3617,7 @@ function (window, undefined) {
 		this.comb				= undefined;
 		this.placeholder		= undefined;
 		this.autoFit			= undefined;
+		this.password			= undefined;
 	}
 	asc_CTextFieldProperty.prototype.asc_getDefaultValue = function () {
 		return this.defaultValue;
@@ -3659,6 +3660,12 @@ function (window, undefined) {
 	};
 	asc_CTextFieldProperty.prototype.asc_putAutoFit = function (v) {
 		this.autoFit = v;
+	};
+	asc_CTextFieldProperty.prototype.asc_getPassword = function () {
+		return this.password;
+	};
+	asc_CTextFieldProperty.prototype.asc_putPassword = function (v) {
+		this.password = v;
 	};
 	asc_CTextFieldProperty.prototype.asc_getFormat = function () {
 		return this.format;
@@ -7680,6 +7687,8 @@ function (window, undefined) {
 	prot["asc_putPlaceholder"]			= prot.asc_putPlaceholder;
 	prot["asc_getAutoFit"]				= prot.asc_getAutoFit;
 	prot["asc_putAutoFit"]				= prot.asc_putAutoFit;
+	prot["asc_getPassword"]				= prot.asc_getPassword;
+	prot["asc_putPassword"]				= prot.asc_putPassword;
 	prot["asc_getFormat"]				= prot.asc_getFormat;
 	prot["asc_putFormat"]				= prot.asc_putFormat;
 	prot["asc_getValidate"]				= prot.asc_getValidate;
