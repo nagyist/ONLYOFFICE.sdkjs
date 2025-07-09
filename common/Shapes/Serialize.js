@@ -377,16 +377,47 @@ function BinaryPPTYLoader()
                 let nCustomPos = _main_tables["8"];
                 s.Seek2(nCustomPos);
 
-                //let nCustomType = s.GetUChar();
+                let customXmlManager = this.presentation.getCustomXmlManager();
+				// todo fix after correctly write
                 let nCustomCount = s.GetULong();
                 if(nCustomCount > 0) {
                     for(let nRecord = 0; nRecord < nCustomCount; ++nRecord) {
+                        var custom = new AscWord.CustomXml();
+                        let type = s.GetUChar();
 
-                        let nCustomType = s.GetUChar();
-                        s.SkipRecord();
+                        var _rec_start = s.cur;
+                        var _end_rec = _rec_start + s.GetULong() + 4;
+
+                        s.Skip2(4); // start attributes
+
+                        while (s.cur < _end_rec)
+                        {
+                            var _at = s.GetUChar();
+                            switch(_at)
+                            {
+                                case 0: {
+                                    custom.itemId = s.GetString2();
+                                    // [1, 73, 0, 0, 0, 1, 0, 0, 0, 0, 64, 0, 0, 0, 0, 59, 0, 0, 0]
+                                    break;
+                                }
+                                case 1: {
+                                    s.Skip2(20)
+                                    custom.setNamespaceUri(s.GetString2())
+                                    s.Skip2(1);
+                                    break;
+                                }
+                                case 2: {
+                                    let len = s.GetULong();
+                                    let content = s.GetBufferUint8(len);
+                                    s.Skip2(len)
+                                    custom.addContent(content)
+                                    
+                                }
+                            }
+                        }
+                        customXmlManager.add(custom);
                     }
                 }
-                this.presentation.CustomXmlData = s.data.slice(nCustomPos, s.cur);
                 s.Seek2(nCustomPos);
             }
 

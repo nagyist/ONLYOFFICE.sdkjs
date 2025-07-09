@@ -1171,15 +1171,50 @@ function CBinaryFileWriter()
         this.EndRecord();
     };
 
-    this.WriteCustomXml = function(presentation)
-    {
-        if(!presentation.CustomXmlData)
-        {
-            return;
-        }
-        this.StartMainRecord(c_oMainTables.Customs);
-        this.WriteBuffer(presentation.CustomXmlData, 0, presentation.CustomXmlData.length);
-    };
+	this.WriteCustomXml = function(presentation)
+	{
+		let nXmlCount = presentation.customXmlManager.getCount();
+		if(nXmlCount < 1) return;
+
+        this.StartRecord(8);
+        this.WriteULong(nXmlCount);
+
+		for (let i = 0; i < nXmlCount; ++i)
+		{
+			///this.StartMainRecord(AscCommon.c_oMainTables.Customs);
+			this.StartRecord(8);
+
+				let oCurXml = presentation.customXmlManager.xml[i];
+
+				this.StartRecord(0);
+				this.WriteString2(oCurXml.itemId);
+				this.EndRecord();
+
+				let ns = Object.keys(oCurXml.nsManager.urls);
+
+				this.StartRecord(1); // массив schemaRefs
+				//if (ns && ns.length > 0) {
+
+					//this.WriteULong(ns.length);
+					for (let i = 0; i < ns.length; ++i) {
+						this.StartRecord(0);
+						this.WriteUChar(g_nodeAttributeStart);
+						this.WriteUChar(0);
+						this.WriteString2(ns[i]);
+						this.WriteUChar(g_nodeAttributeEnd);
+						this.EndRecord();
+					}
+				this.EndRecord();
+			   // }
+
+				this.StartRecord(2);
+				this.WriteString2Utf8(oCurXml.getText());
+				this.EndRecord();
+
+			this.EndRecord();
+		}
+		this.EndRecord();
+	};
 
     this.WritePresentation = function(presentation)
     {
