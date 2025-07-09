@@ -168,13 +168,6 @@
 		}
 		
 		// Не меняем здесь WidthVisible, это значение для пробела высчитывается отдельно, и не должно меняться при пересчете
-		
-		if (this.Flags & FLAGS_GAPS)
-		{
-			this.Flags &= FLAGS_NON_GAPS;
-			this.LGap = 0;
-			this.RGap = 0;
-		}
 	};
 	CRunSpace.prototype.Measure = function(Context, TextPr)
 	{
