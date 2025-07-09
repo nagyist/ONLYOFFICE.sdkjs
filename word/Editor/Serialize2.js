@@ -1961,7 +1961,7 @@ function BinaryFileWriter(doc, bMailMergeDocx, bMailMergeHtml, isCompatible, opt
 		
 		let customXmlManager = this.Document.getCustomXmlManager();
 		if (customXmlManager.getCount() > 0) {
-			this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.memory, this.Document, customXmlManager));
+			this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.Document, this.memory));
 		}
 		//Write Settings
 		this.WriteTable(c_oSerTableTypes.Settings, new BinarySettingsTableWriter(this.memory, this.Document, this.saveParams));
@@ -7729,12 +7729,12 @@ function BinaryNotesTableWriter(memory, doc, oNumIdMap, oMapCommentId, copyParam
 	};
 };
 
-function BinaryCustomsTableWriter(memory, doc, customXmlManager)
+function BinaryCustomsTableWriter(doc, memory)
 {
 	this.memory = memory;
 	this.Document = doc;
 	this.bs = new BinaryCommonWriter(this.memory);
-	this.customXmlManager = customXmlManager;
+	this.customXmlManager = doc.getCustomXmlManager();
 	
 	this.Write = function()
 	{
@@ -16231,6 +16231,7 @@ function Binary_OtherTableReader(doc, oReadResult, stream)
 };
 
 function Binary_CustomsTableReader(doc, oReadResult, stream) {
+	debugger
 	this.Document = doc;
 	this.oReadResult = oReadResult;
 	this.stream = stream;
