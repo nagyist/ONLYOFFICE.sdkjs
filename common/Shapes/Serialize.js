@@ -378,32 +378,61 @@ function BinaryPPTYLoader()
                 s.Seek2(nCustomPos);
 
                 let customXmlManager = this.presentation.getCustomXmlManager();
-				// todo fix after correctly write
                 let nCustomCount = s.GetULong();
-                if(nCustomCount > 0) {
-                    for(let nRecord = 0; nRecord < nCustomCount; ++nRecord) {
-                        var custom = new AscWord.CustomXml();
-                        let type = s.GetUChar();
 
-                        var _rec_start = s.cur;
-                        var _end_rec = _rec_start + s.GetULong() + 4;
+                if(nCustomCount > 0)
+                {
+                    for(let nRecord = 0; nRecord < nCustomCount; ++nRecord)
+                    {
+                        let custom = new AscWord.CustomXml();
+                        s.GetUChar(); // script custom type - 8
 
-                        s.Skip2(4); // start attributes
+                        let _rec_start = s.cur;
+                        let _end_rec = _rec_start + s.GetULong() + 4;
 
                         while (s.cur < _end_rec)
                         {
                             var _at = s.GetUChar();
+                            s.GetULong();
+
                             switch(_at)
                             {
                                 case 0: {
                                     custom.itemId = s.GetString2();
-                                    // [1, 73, 0, 0, 0, 1, 0, 0, 0, 0, 64, 0, 0, 0, 0, 59, 0, 0, 0]
                                     break;
                                 }
                                 case 1: {
-                                    s.Skip2(20)
-                                    custom.setNamespaceUri(s.GetString2())
-                                    s.Skip2(1);
+                                    let nsCount = s.GetUChar();
+                                    s.Skip2(4); // empty long
+                                    s.GetULong();
+                                    s.GetUChar();
+
+                                    for (let i = 0; i < nsCount; i++)
+                                    {
+                                        s.GetULong(); // skip len
+                                        s.Skip2(1); // skip g_nodeAttributeStart
+                                        s.Skip2(1); // skip 0
+
+                                        let ns = s.GetString2();
+
+                                        if (i === 0)
+                                        {
+                                            custom.setNamespaceUri(ns);
+                                            custom.nsManager.urls[ns] = ns;
+                                        }
+                                        else
+                                        {
+                                            custom.nsManager.urls[ns] = ns;
+                                        }
+
+                                        s.Skip2(1); // skip g_nodeAttributeEnd
+
+                                        if (i + 1 < nsCount)
+                                        {
+                                            s.Skip2(2);
+                                            s.GetULong();
+                                        }
+                                    }
                                     break;
                                 }
                                 case 2: {
@@ -411,7 +440,6 @@ function BinaryPPTYLoader()
                                     let content = s.GetBufferUint8(len);
                                     s.Skip2(len)
                                     custom.addContent(content)
-                                    
                                 }
                             }
                         }

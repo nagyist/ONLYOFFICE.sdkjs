@@ -1174,46 +1174,59 @@ function CBinaryFileWriter()
 	this.WriteCustomXml = function(presentation)
 	{
 		let nXmlCount = presentation.customXmlManager.getCount();
-		if(nXmlCount < 1) return;
+		if(nXmlCount < 1)
+            return;
 
-        this.StartRecord(8);
+        this.StartMainRecord(c_oMainTables.Customs);
         this.WriteULong(nXmlCount);
-
+	
 		for (let i = 0; i < nXmlCount; ++i)
 		{
-			///this.StartMainRecord(AscCommon.c_oMainTables.Customs);
-			this.StartRecord(8);
+            let oCurXml = presentation.customXmlManager.xml[i];
+            this.StartRecord(c_oMainTables.Customs);
 
-				let oCurXml = presentation.customXmlManager.xml[i];
+            // uid
+			this.StartRecord(0);
+			this.WriteString2(oCurXml.itemId);
+            this.EndRecord();
 
-				this.StartRecord(0);
-				this.WriteString2(oCurXml.itemId);
-				this.EndRecord();
+            // namespaces
+			let ns = Object.keys(oCurXml.nsManager.urls);
 
-				let ns = Object.keys(oCurXml.nsManager.urls);
+            this.StartRecord(1);
+            this.WriteUChar(ns.length);
+            this.WriteULong(0);
 
-				this.StartRecord(1); // массив schemaRefs
-				//if (ns && ns.length > 0) {
+            for (let i = 0; i < ns.length; ++i) {
+                this.m_arStack[this.m_lStackPosition] = this.pos + 4;
+                this.m_lStackPosition++;
+                this.WriteULong(0);
 
-					//this.WriteULong(ns.length);
-					for (let i = 0; i < ns.length; ++i) {
-						this.StartRecord(0);
-						this.WriteUChar(g_nodeAttributeStart);
-						this.WriteUChar(0);
-						this.WriteString2(ns[i]);
-						this.WriteUChar(g_nodeAttributeEnd);
-						this.EndRecord();
-					}
-				this.EndRecord();
-			   // }
+                this.StartRecord(0);
+                this.WriteUChar(g_nodeAttributeStart);
+                this.WriteUChar(0);
+                this.WriteString2(ns[i]);
+                this.WriteUChar(g_nodeAttributeEnd);
+                this.EndRecord();
 
-				this.StartRecord(2);
-				this.WriteString2Utf8(oCurXml.getText());
-				this.EndRecord();
+                this.m_lStackPosition--;
+                var _seek = this.pos;
+                this.pos = this.m_arStack[this.m_lStackPosition] - 4;
+                this.WriteULong(_seek - this.m_arStack[this.m_lStackPosition]);
+                this.pos = _seek;
 
-			this.EndRecord();
+                if (i + 1 < ns.length)
+                    this.WriteUChar(0);
+            }
+            this.EndRecord();
+
+            // content
+            this.StartRecord(2);
+			this.WriteString2Utf8(oCurXml.getText());
+            this.EndRecord();
+
+            this.EndRecord();
 		}
-		this.EndRecord();
 	};
 
     this.WritePresentation = function(presentation)
