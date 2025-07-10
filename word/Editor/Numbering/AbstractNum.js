@@ -407,6 +407,7 @@ CAbstractNum.prototype.Write_ToBinary2 = function(Writer)
 	// String          : StyleLink
 	// String          : NumStyleLink
 	// Variable[9 Lvl] : 9 уровней
+	// Long            : nsid
 
 	Writer.WriteString2(this.Id);
 
@@ -415,6 +416,8 @@ CAbstractNum.prototype.Write_ToBinary2 = function(Writer)
 
 	for (var nLvl = 0; nLvl < 9; ++nLvl)
 		this.Lvl[nLvl].WriteToBinary(Writer);
+	
+	Writer.WriteLong(this.nsid ? this.nsid : 0);
 };
 CAbstractNum.prototype.Read_FromBinary2 = function(Reader)
 {
@@ -439,10 +442,18 @@ CAbstractNum.prototype.Read_FromBinary2 = function(Reader)
 		this.Lvl[nLvl] = new CNumberingLvl();
 		this.Lvl[nLvl].ReadFromBinary(Reader);
 	}
+	
+	this.nsid = Reader.GetLong();
+	if (0 === this.nsid)
+		this.nsid = undefined;
+	
+	// Если мы создали нумерацию с nsid, который уже был занят, то далее мы его меняем на не занятый
+	// Тут при добавлении уже тоже должен быть занят этот nsid
 
+	// TODO: Нужно перенести в сам класс нумерации
 	// Добавим данный список в нумерацию
-	var Numbering                  = editor.WordControl.m_oLogicDocument.Get_Numbering();
-	Numbering.AbstractNum[this.Id] = this;
+	let numbering = editor.WordControl.m_oLogicDocument.Get_Numbering();
+	numbering._AddAbstractNum(this, this.GetId());
 };
 CAbstractNum.prototype.Process_EndLoad = function(Data)
 {

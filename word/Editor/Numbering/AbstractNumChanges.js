@@ -338,4 +338,17 @@
 		false
 	);
 	AscDFH.CChangesAbstractNumNsid = CChangesAbstractNumNsid;
+	CChangesAbstractNumNsid.prototype.Load = function()
+	{
+		this.Redo();
+		
+		// TODO: Нужно перенести в сам класс нумерации
+		if (editor && editor.WordControl && editor.WordControl.m_oLogicDocument && editor.WordControl.m_oLogicDocument.Get_Numbering)
+		{
+			let nsid = this.Class.GetNsid();
+			let numbering = editor.WordControl.m_oLogicDocument.Get_Numbering();
+			if (!numbering.AbstractNumByNsid[nsid])
+				numbering.AbstractNumByNsid[nsid] = this.Class;
+		}
+	};
 })(window['AscDFH']);
