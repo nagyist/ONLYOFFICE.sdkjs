@@ -8022,54 +8022,86 @@
 		};
     }
     /** @constructor */
-    function Binary_SharedStringTableReader(stream, wb, aSharedStrings)
+    function Binary_SharedStringTableReader(stream, wb)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.bcr = new Binary_CommonReader(this.stream);
+        this.offsets = null;
+        this.tempValue = {text: null, multiText: null};
         this.Read = function()
         {
             var oThis = this;
-            var tempValue = {text: null, multiText: null};
-            const res = this.bcr.ReadTable(function(t, l){
-                return oThis.ReadSharedStringContent(t,l, tempValue);
-            });
-            this.wb.sharedStrings.initWithSharedStrings(this.aSharedStrings);
+            let res;
+            if (false) {
+                const offsets = [];
+                const oldPos = this.stream.pos;
+                this.stream.Seek2(oldPos);
+                const stLen = this.stream.GetULongLE();
+                const data = this.stream.data.slice(oldPos, oldPos + stLen + 4);
+                res = this.bcr.ReadTable(function(t, l){
+                    offsets.push(oThis.stream.GetCurPos() - oldPos, l);
+                    return c_oSerConstants.ReadUnknown;
+                });
+                const subStream = new AscCommon.FT_Stream2(data, data.length);
+                let bssr = new Binary_SharedStringTableReader(subStream, this.wb);
+                bssr.offsets = offsets;
+                this.wb.sharedStrings.initWithBinaryReader(bssr);
+            } else {
+                const sharedStrings = [];
+                res = this.bcr.ReadTable(function(t, l){
+                    const res = oThis.ReadSharedStringContent(t,l);
+                    sharedStrings.push(oThis._getSharedStringFormTemp());
+                    return res;
+                });
+                this.wb.sharedStrings.initWithSharedStrings(sharedStrings);
+            }
             return res;
         };
-        this.ReadSharedStringContent = function(type, length, tempValue)
+        this.ReadSharedStringByOffset = function(index)
+        {
+            this.tempValue.text = null;
+            this.tempValue.multiText = null;
+            const indexOffset = index * 2;
+            if (indexOffset < this.offsets.length) {
+                this.stream.Seek2(this.offsets[indexOffset]);
+                this.ReadSharedStringContent(c_oSerSharedStringTypes.Si, this.offsets[indexOffset + 1]);
+                return this._getSharedStringFormTemp();
+            }
+            return "";
+        }
+        this._getSharedStringFormTemp = function() {
+            let res = "";
+			if (null != this.tempValue.multiText) {
+                let aMultiText = this.tempValue.multiText;
+                if (null != this.tempValue.text) {
+                    let oElem = new AscCommonExcel.CMultiTextElem();
+                    oElem.text = this.tempValue.text;
+                    aMultiText.unshift(oElem);
+                }
+                res = aMultiText;
+            } else if (null != this.tempValue.text) {
+                res = this.tempValue.text;
+            }
+            return res;  
+        }
+        this.ReadSharedStringContent = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Si === type )
             {
                 var oThis = this;
-                tempValue.text = null;
-                tempValue.multiText = null;
+                this.tempValue.text = null;
+                this.tempValue.multiText = null;
                 res = this.bcr.Read1(length, function(t,l){
-                    return oThis.ReadSharedString(t,l, tempValue);
+                    return oThis.ReadSharedString(t,l);
                 });
-                if(null != this.aSharedStrings) {
-                    if (null != tempValue.multiText) {
-                        let aMultiText = tempValue.multiText;
-                        if (null != tempValue.text) {
-                            let oElem = new AscCommonExcel.CMultiTextElem();
-                            oElem.text = tempValue.text;
-                            aMultiText.unshift(oElem);
-                        }
-                        this.aSharedStrings.push(aMultiText);
-                    } else if (null != tempValue.text) {
-                        this.aSharedStrings.push(tempValue.text);
-                    } else {
-                        this.aSharedStrings.push("");
-                    }
-                }
             }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
         };
-        this.ReadSharedString = function(type, length, tempValue)
+        this.ReadSharedString = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Run == type )
@@ -8079,15 +8111,15 @@
                 res = this.bcr.Read1(length, function(t,l){
                     return oThis.ReadRun(t,l,oRun);
                 });
-                if(null == tempValue.multiText)
-                    tempValue.multiText = [];
-                tempValue.multiText.push(oRun);
+                if(null == this.tempValue.multiText)
+                    this.tempValue.multiText = [];
+                this.tempValue.multiText.push(oRun);
             }
             else if ( c_oSerSharedStringTypes.Text == type )
             {
-                if(null == tempValue.text)
-                    tempValue.text = "";
-                tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
+                if(null == this.tempValue.text)
+                    this.tempValue.text = "";
+                this.tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
             }
             else
                 res = c_oSerConstants.ReadUnknown;
@@ -10001,11 +10033,10 @@
 		};
     }
     /** @constructor */
-    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList)
+    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aCellXfs, oMediaArray, personList)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.oMediaArray = oMediaArray;
         this.aCellXfs = aCellXfs;
         this.bcr = new Binary_CommonReader(this.stream);
@@ -10994,7 +11025,7 @@
 				var oldPos = this.stream.GetCurPos();
 				this.stream.Seek2(this.stream.GetULongLE());
 
-				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs, this.aSharedStrings,
+				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs,
 					function(tmp) {
 						oThis.InitOpenManager.initCellAfterRead(tmp);
 					});
@@ -12472,7 +12503,6 @@
 
 
 
-            var aSharedStrings = [];
             var aCellXfs = [];
             var oMediaArray = {};
 
@@ -12496,7 +12526,7 @@
             {
                 res = this.stream.Seek(nSharedStringTableOffset);
                 if(c_oSerConstants.ReadOk == res)
-                    res = (new Binary_SharedStringTableReader(this.stream, wb, aSharedStrings)).Read();
+                    res = (new Binary_SharedStringTableReader(this.stream, wb)).Read();
             }
 
             //aCellXfs - внутри уже не нужна, поскольку вынес функцию InitStyleManager в InitOpenManager
@@ -12528,7 +12558,7 @@
 
 
 
-			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList);
+			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aCellXfs, oMediaArray, personList);
 			if(null != nWorkbookTableOffset)
 			{
 				res = this.stream.Seek(nWorkbookTableOffset);

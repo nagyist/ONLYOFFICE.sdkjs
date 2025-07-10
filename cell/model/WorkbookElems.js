@@ -12981,6 +12981,8 @@ function RangeDataManagerElem(bbox, data)
 		this.all = [];
 		this.text = Object.create(null);
 		this.multiTextMap = Object.create(null);
+
+		this.bssr = null;
 	}
 
 	CSharedStrings.prototype.addText = function(text) {
@@ -13032,29 +13034,48 @@ function RangeDataManagerElem(bbox, data)
 		
 		for (let i = 0; i < sharedStrings.length; i++) {
 			const text = sharedStrings[i];
-			if (typeof text === 'string') {
-				this.text[text] = i + 1;// 1-based indexing
-				if (AscFonts.IsCheckSymbols) {
-					AscFonts.FontPickerByCharacter.getFontsByString(text);
-				}
-			} else {
-				let key = "";
-				for (let j = 0; j < text.length; ++j) {
-					key += text[j].text;
-				}
-				if (AscFonts.IsCheckSymbols) {
-					AscFonts.FontPickerByCharacter.getFontsByString(key);
-				}
-				var mapElem = this.multiTextMap[key];
-				if (!mapElem) {
-					mapElem = [];
-					this.multiTextMap[key] = mapElem;
-				}
-				mapElem.push(i + 1);// 1-based indexing
-			}
+			this._addSharedStringCacheByIndex(text, i + 1);// 1-based indexing
 		}
 	};
-
+	CSharedStrings.prototype._addSharedStringCacheByIndex = function(text, index) {
+		if (typeof text === 'string') {
+			this.text[text] = index;
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(text);
+			}
+		} else {
+			let key = "";
+			for (let j = 0; j < text.length; ++j) {
+				key += text[j].text;
+			}
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(key);
+			}
+			var mapElem = this.multiTextMap[key];
+			if (!mapElem) {
+				mapElem = [];
+				this.multiTextMap[key] = mapElem;
+			}
+			mapElem.push(index);
+		}
+	};
+	CSharedStrings.prototype.initWithBinaryReader = function(bssr) {
+		this.all = new Array(bssr.offsets.length / 2);
+		this.bssr = bssr;
+		this.get = this._getFromBinaryReader;
+	}
+	CSharedStrings.prototype._getFromBinaryReader = function(index) {
+		let res = null;
+		if (1 <= index && index <= this.all.length) {
+			res = this.all[index - 1];
+			if (undefined === res) {
+				res = this.bssr.ReadSharedStringByOffset(index - 1);
+				this.all[index - 1] = res
+				this._addSharedStringCacheByIndex(res, index);
+			}
+		}
+		return res;
+	};
 	CSharedStrings.prototype.get = function(index) {
 		return 1 <= index && index <= this.all.length ? this.all[index - 1] : null;
 	};

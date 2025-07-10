@@ -11407,7 +11407,7 @@
 		//по this.rowsData.indexB ориентироваться не могу, поскольку при undo в большинстве случаев он остаётся неизменным
 		this.nRowsCount = Math.max(maxTableRow, this.cellsByColRowsCount/*, this.rowsData && this.rowsData.indexB ? this.rowsData.indexB : 0*/);
 	};
-	Worksheet.prototype.fromXLSB = function(stream, type, tmp, aCellXfs, aSharedStrings, fInitCellAfterRead) {
+	Worksheet.prototype.fromXLSB = function(stream, type, tmp, aCellXfs, fInitCellAfterRead) {
 		stream.XlsbSkipRecord();//XLSB::rt_BEGIN_SHEET_DATA
 
 		var oldPos = -1;
@@ -11417,7 +11417,7 @@
 			if (AscCommonExcel.XLSB.rt_CELL_BLANK <= type && type <= AscCommonExcel.XLSB.rt_FMLA_ERROR) {
 				tmp.cell.clear();
 				tmp.formula.clean();
-				tmp.cell.fromXLSB(stream, type, tmp.row.index, aCellXfs, aSharedStrings, tmp);
+				tmp.cell.fromXLSB(stream, type, tmp.row.index, aCellXfs, tmp);
 				fInitCellAfterRead(tmp);
 			}
 			else if (AscCommonExcel.XLSB.rt_ROW_HDR === type) {
@@ -14391,15 +14391,8 @@
 				sheetMemory.setInt32(this.nRow, 0, xfSave | (flags << 24));
 				sheetMemory.setInt32(this.nRow, 4, formulaSave);
 				sheetMemory.setFloat64(this.nRow, 8, this.number);
-			} else if (null != this.text) {
+			} else if (null != this.text || null != this.multiText) {
 				flagValue = 2;
-				const flags = this._toFlags(flagValue);
-				sheetMemory.setInt32(this.nRow, 0, xfSave | (flags << 24));
-				sheetMemory.setInt32(this.nRow, 4, formulaSave);
-				numberSave = this.getTextIndex();
-				sheetMemory.setInt32(this.nRow, 8, numberSave);
-			} else if (null != this.multiText) {
-				flagValue = 3;
 				const flags = this._toFlags(flagValue);
 				sheetMemory.setInt32(this.nRow, 0, xfSave | (flags << 24));
 				sheetMemory.setInt32(this.nRow, 4, formulaSave);
@@ -14442,10 +14435,8 @@
 					this.number = sheetMemory.getFloat64(this.nRow, 8);
 				} else if (2 === flagValue) {
 					this.textIndex = sheetMemory.getInt32(this.nRow, 8);
-					this.text = wb.sharedStrings.get(this.textIndex);
-				} else if (3 === flagValue) {
-					this.textIndex = sheetMemory.getInt32(this.nRow, 8);
-					this.multiText = wb.sharedStrings.get(this.textIndex);
+					const text = wb.sharedStrings.get(this.textIndex);
+					typeof text === 'string' ? this.text = text : this.multiText = text;
 				}
 				res = true;
 			}
@@ -17097,7 +17088,7 @@
 		this.isCalc = val;
 		this._hasChanged = true;
 	};
-	Cell.prototype.fromXLSB = function(stream, type, row, aCellXfs, aSharedStrings, tmp, formula) {
+	Cell.prototype.fromXLSB = function(stream, type, row, aCellXfs, tmp, formula) {
 		var end = stream.XlsbReadRecordLength() + stream.GetCurPos();
 
 		this.setRowCol(row, stream.GetULongLE() & 0x3FFF);
@@ -17114,16 +17105,8 @@
 			this.setValueNumberInternal(stream.GetDoubleLE());
 		} else if (AscCommonExcel.XLSB.rt_CELL_ISST === type) {
 			this.setTypeInternal(CellValueType.String);
-			const ssIndex = stream.GetULongLE();
-			var ss = aSharedStrings[ssIndex];
-			if (undefined !== ss) {
-				if (typeof ss === 'string') {
-					this.setValueTextInternal(ss);
-				} else {
-					this.setValueMultiTextInternal(ss);
-				}
-			}
-			this.textIndex = ssIndex + 1;// 1-based indexing
+			this.setValueTextInternal("");//without text textIndex is ignored
+			this.textIndex = stream.GetULongLE() + 1;// 1-based indexing
 		} else if (AscCommonExcel.XLSB.rt_CELL_ST === type || AscCommonExcel.XLSB.rt_FMLA_STRING === type) {
 			this.setTypeInternal(CellValueType.String);
 			this.setValueTextInternal(stream.GetString());
