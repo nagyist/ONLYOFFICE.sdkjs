@@ -2267,18 +2267,22 @@
 				}
 			}
 
-			shadow.sx = shadowScaleX * 100000;
-			shadow.sy = shadowScaleY * 100000;
+			let shadowSx = shadowScaleX * 100000;
+			let shadowSy = shadowScaleY * 100000;
+			shadow.sx = shadowSx;
+			shadow.sy = shadowSy;
 
 			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
 			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
 			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
-			shadow.dist = Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
+			let emuDist =  Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
+			shadow.dist = emuDist;
 			// if true move to cord system where y goes down
 			if (isInvertCoords) {
 				atan = -atan;
 			}
-			shadow.dir = atan * AscFormat.radToDeg * AscFormat.degToC;
+			let dirC = atan * AscFormat.radToDeg * AscFormat.degToC;
+			shadow.dir = dirC;
 
 			shadow.rotWithShape = true;
 			// cShape.spPr.changeShadow(shadow);
@@ -2294,7 +2298,20 @@
 			cShape.spPr.effectProps.EffectLst = new AscFormat.CEffectLst();
 			cShape.spPr.effectProps.EffectLst.outerShdw = shadow;
 
-			// Preset shadow doesn't work for now
+			// inner shadow
+			if (shadowType && shadowType === 3) {
+				let shadowInner = new AscFormat.CInnerShdw();
+				shadowInner.color = shadowColor;
+				shadowInner.sx = shadowSx;
+				shadowInner.sy = shadowSy;
+				shadowInner.dist = emuDist;
+				shadowInner.dir = dirC;
+				shadowInner.rotWithShape = true;
+
+				cShape.spPr.effectProps.EffectLst.innerShdw = shadowInner;
+			}
+
+			// Preset shadow doesn't work now and not used in visio
 			// cShape.spPr.effectProps.EffectLst.prstShdw = new AscFormat.CPrstShdw();
 			// cShape.spPr.effectProps.EffectLst.prstShdw.dir = shadow.dir;
 			// cShape.spPr.effectProps.EffectLst.prstShdw.dist = shadow.dist;
