@@ -16231,7 +16231,6 @@ function Binary_OtherTableReader(doc, oReadResult, stream)
 };
 
 function Binary_CustomsTableReader(doc, oReadResult, stream) {
-	debugger
 	this.Document = doc;
 	this.oReadResult = oReadResult;
 	this.stream = stream;
