@@ -12979,16 +12979,18 @@ function RangeDataManagerElem(bbox, data)
 	 */
 	function CSharedStrings () {
 		this.all = [];
-		this.text = new Map();
-		this.multiTextMap = new Map();
+		this.text = Object.create(null);
+		this.multiTextMap = Object.create(null);
+
+		this.bssr = null;
 	}
 
 	CSharedStrings.prototype.addText = function(text) {
-		var index = this.text.get(text);
+		var index = this.text[text];
 		if (undefined === index) {
 			this.all.push(text);
 			index = this.all.length;
-			this.text.set(text, index);
+			this.text[text] = index;
 			if (AscFonts.IsCheckSymbols) {
 				AscFonts.FontPickerByCharacter.getFontsByString(text);
 			}
@@ -13000,10 +13002,10 @@ function RangeDataManagerElem(bbox, data)
 		var text = multiText.reduce(function(accumulator, currentValue) {
 			return accumulator + currentValue.text;
 		}, '');
-		var mapElem = this.multiTextMap.get(text);
+		var mapElem = this.multiTextMap[text];
 		if (!mapElem) {
 			mapElem = [];
-			this.multiTextMap.set(text, mapElem);
+			this.multiTextMap[text] = mapElem;
 		}
 		for (i = 0; i < mapElem.length; ++i) {
 			if (AscCommonExcel.isEqualMultiText(multiText, this.all[mapElem[i] - 1])) {
@@ -13016,12 +13018,63 @@ function RangeDataManagerElem(bbox, data)
 			index = this.all.length;
 			mapElem.push(index);
 			if (AscFonts.IsCheckSymbols) {
-				for (i = 0; i < multiText.length; ++i) {
-					AscFonts.FontPickerByCharacter.getFontsByString(multiText[i].text);
-				}
+				AscFonts.FontPickerByCharacter.getFontsByString(text);
 			}
 		}
 		return index;
+	};
+	/**
+	 * Initialize with sharedStrings from file. rely on uniqines
+	 * @param {Array<string | Array<{text: string, format: CellXfs}>>} sharedStrings
+	 */
+	CSharedStrings.prototype.initWithSharedStrings = function(sharedStrings) {
+		this.all = sharedStrings.slice(); //copy
+		this.text = Object.create(null);
+		this.multiTextMap = Object.create(null);
+		
+		for (let i = 0; i < sharedStrings.length; i++) {
+			const text = sharedStrings[i];
+			this._addSharedStringCacheByIndex(text, i + 1);// 1-based indexing
+		}
+	};
+	CSharedStrings.prototype._addSharedStringCacheByIndex = function(text, index) {
+		if (typeof text === 'string') {
+			this.text[text] = index;
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(text);
+			}
+		} else {
+			let key = "";
+			for (let j = 0; j < text.length; ++j) {
+				key += text[j].text;
+			}
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(key);
+			}
+			var mapElem = this.multiTextMap[key];
+			if (!mapElem) {
+				mapElem = [];
+				this.multiTextMap[key] = mapElem;
+			}
+			mapElem.push(index);
+		}
+	};
+	CSharedStrings.prototype.initWithBinaryReader = function(bssr) {
+		this.all = new Array(bssr.offsets.length / 2);
+		this.bssr = bssr;
+		this.get = this._getFromBinaryReader;
+	}
+	CSharedStrings.prototype._getFromBinaryReader = function(index) {
+		let res = null;
+		if (1 <= index && index <= this.all.length) {
+			res = this.all[index - 1];
+			if (undefined === res) {
+				res = this.bssr.ReadSharedStringByOffset(index - 1);
+				this.all[index - 1] = res
+				this._addSharedStringCacheByIndex(res, index);
+			}
+		}
+		return res;
 	};
 	CSharedStrings.prototype.get = function(index) {
 		return 1 <= index && index <= this.all.length ? this.all[index - 1] : null;
@@ -13030,7 +13083,9 @@ function RangeDataManagerElem(bbox, data)
 		return this.all.length;
 	};
 	CSharedStrings.prototype.generateFontMap = function(oFontMap) {
-		this.multiTextMap.forEach(function(mapElem) {
+		var keys = Object.keys(this.multiTextMap);
+		for (var k = 0; k < keys.length; ++k) {
+			var mapElem = this.multiTextMap[keys[k]];
 			for (var i = 0; i < mapElem.length; ++i) {
 				var multiText = this.all[mapElem[i] - 1];
 				for (var j = 0; j < multiText.length; ++j) {
@@ -13040,7 +13095,7 @@ function RangeDataManagerElem(bbox, data)
 					}
 				}
 			}
-		}, this);
+		}
 	};
 
 	/**

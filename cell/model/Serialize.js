@@ -8022,52 +8022,86 @@
 		};
     }
     /** @constructor */
-    function Binary_SharedStringTableReader(stream, wb, aSharedStrings)
+    function Binary_SharedStringTableReader(stream, wb)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.bcr = new Binary_CommonReader(this.stream);
+        this.offsets = null;
+        this.tempValue = {text: null, multiText: null};
         this.Read = function()
         {
             var oThis = this;
-            var tempValue = {text: null, multiText: null};
-            return this.bcr.ReadTable(function(t, l){
-                return oThis.ReadSharedStringContent(t,l, tempValue);
-            });
+            let res;
+            if (false) {
+                const offsets = [];
+                const oldPos = this.stream.pos;
+                this.stream.Seek2(oldPos);
+                const stLen = this.stream.GetULongLE();
+                const data = this.stream.data.slice(oldPos, oldPos + stLen + 4);
+                res = this.bcr.ReadTable(function(t, l){
+                    offsets.push(oThis.stream.GetCurPos() - oldPos, l);
+                    return c_oSerConstants.ReadUnknown;
+                });
+                const subStream = new AscCommon.FT_Stream2(data, data.length);
+                let bssr = new Binary_SharedStringTableReader(subStream, this.wb);
+                bssr.offsets = offsets;
+                this.wb.sharedStrings.initWithBinaryReader(bssr);
+            } else {
+                const sharedStrings = [];
+                res = this.bcr.ReadTable(function(t, l){
+                    const res = oThis.ReadSharedStringContent(t,l);
+                    sharedStrings.push(oThis._getSharedStringFormTemp());
+                    return res;
+                });
+                this.wb.sharedStrings.initWithSharedStrings(sharedStrings);
+            }
+            return res;
         };
-        this.ReadSharedStringContent = function(type, length, tempValue)
+        this.ReadSharedStringByOffset = function(index)
+        {
+            this.tempValue.text = null;
+            this.tempValue.multiText = null;
+            const indexOffset = index * 2;
+            if (indexOffset < this.offsets.length) {
+                this.stream.Seek2(this.offsets[indexOffset]);
+                this.ReadSharedStringContent(c_oSerSharedStringTypes.Si, this.offsets[indexOffset + 1]);
+                return this._getSharedStringFormTemp();
+            }
+            return "";
+        }
+        this._getSharedStringFormTemp = function() {
+            let res = "";
+			if (null != this.tempValue.multiText) {
+                let aMultiText = this.tempValue.multiText;
+                if (null != this.tempValue.text) {
+                    let oElem = new AscCommonExcel.CMultiTextElem();
+                    oElem.text = this.tempValue.text;
+                    aMultiText.unshift(oElem);
+                }
+                res = aMultiText;
+            } else if (null != this.tempValue.text) {
+                res = this.tempValue.text;
+            }
+            return res;  
+        }
+        this.ReadSharedStringContent = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Si === type )
             {
                 var oThis = this;
-                tempValue.text = null;
-                tempValue.multiText = null;
+                this.tempValue.text = null;
+                this.tempValue.multiText = null;
                 res = this.bcr.Read1(length, function(t,l){
-                    return oThis.ReadSharedString(t,l, tempValue);
+                    return oThis.ReadSharedString(t,l);
                 });
-                if(null != this.aSharedStrings) {
-                    if (null != tempValue.multiText) {
-                        let aMultiText = tempValue.multiText;
-                        if (null != tempValue.text) {
-                            let oElem = new AscCommonExcel.CMultiTextElem();
-                            oElem.text = tempValue.text;
-                            aMultiText.unshift(oElem);
-                        }
-                        this.aSharedStrings.push(aMultiText);
-                    } else if (null != tempValue.text) {
-                        this.aSharedStrings.push(tempValue.text);
-                    } else {
-                        this.aSharedStrings.push("");
-                    }
-                }
             }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
         };
-        this.ReadSharedString = function(type, length, tempValue)
+        this.ReadSharedString = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Run == type )
@@ -8077,15 +8111,15 @@
                 res = this.bcr.Read1(length, function(t,l){
                     return oThis.ReadRun(t,l,oRun);
                 });
-                if(null == tempValue.multiText)
-                    tempValue.multiText = [];
-                tempValue.multiText.push(oRun);
+                if(null == this.tempValue.multiText)
+                    this.tempValue.multiText = [];
+                this.tempValue.multiText.push(oRun);
             }
             else if ( c_oSerSharedStringTypes.Text == type )
             {
-                if(null == tempValue.text)
-                    tempValue.text = "";
-                tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
+                if(null == this.tempValue.text)
+                    this.tempValue.text = "";
+                this.tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
             }
             else
                 res = c_oSerConstants.ReadUnknown;
@@ -9999,11 +10033,10 @@
 		};
     }
     /** @constructor */
-    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList)
+    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aCellXfs, oMediaArray, personList)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.oMediaArray = oMediaArray;
         this.aCellXfs = aCellXfs;
         this.bcr = new Binary_CommonReader(this.stream);
@@ -10992,7 +11025,7 @@
 				var oldPos = this.stream.GetCurPos();
 				this.stream.Seek2(this.stream.GetULongLE());
 
-				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs, this.aSharedStrings,
+				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs,
 					function(tmp) {
 						oThis.InitOpenManager.initCellAfterRead(tmp);
 					});
@@ -11000,210 +11033,6 @@
 				this.stream.Seek2(oldPos);
 				res = c_oSerConstants.ReadUnknown;
 			}
-			else if ( c_oSerWorksheetsTypes.Row === type )
-			{
-				tmp.pos =  null;
-				tmp.len = null;
-				tmp.row.clear();
-                res = this.bcr.Read2Spreadsheet(length, function(t,l){
-                    return oThis.ReadRow(t,l, tmp);
-                });
-				if(null === tmp.row.index) {
-					tmp.row.index = tmp.prevRow + 1;
-				}
-				tmp.row.saveContent();
-				tmp.ws.cellsByColRowsCount = Math.max(tmp.ws.cellsByColRowsCount, tmp.row.index + 1);
-				tmp.ws.nRowsCount = Math.max(tmp.ws.nRowsCount, tmp.ws.cellsByColRowsCount);
-				tmp.prevRow = tmp.row.index;
-				tmp.prevCol = -1;
-				//читаем ячейки
-				if (null !== tmp.pos && null !== tmp.len) {
-					var nOldPos = this.stream.GetCurPos();
-					this.stream.Seek2(tmp.pos);
-					res = this.bcr.Read1(tmp.len, function(t,l){
-						return oThis.ReadCells(t,l, tmp);
-					});
-					this.stream.Seek2(nOldPos);
-				}
-			}
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-        this.ReadRow = function(type, length, tmp)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerRowTypes.Row == type )
-            {
-            	var index = this.stream.GetULongLE() - 1;
-				tmp.row.setIndex(index);
-            }
-            else if ( c_oSerRowTypes.Style == type )
-            {
-                var xfs = this.aCellXfs[this.stream.GetULongLE()];
-                if(xfs)
-					tmp.row.setStyle(xfs);
-            }
-            else if ( c_oSerRowTypes.Height == type )
-            {
-            	var h = this.stream.GetDoubleLE();
-				tmp.row.setHeight(h);
-                if(AscCommon.CurFileVersion < 2)
-					tmp.row.setCustomHeight(true);
-            }
-            else if ( c_oSerRowTypes.CustomHeight == type )
-			{
-				var CustomHeight = this.stream.GetBool();
-				if(CustomHeight)
-					tmp.row.setCustomHeight(true);
-			}
-            else if ( c_oSerRowTypes.Hidden == type )
-			{
-				var hd = this.stream.GetBool();
-				if(hd)
-					tmp.row.setHidden(true);
-			}
-            else if ( c_oSerRowTypes.OutLevel == type )
-            {
-                tmp.row.setOutlineLevel(this.stream.GetULongLE());
-            }
-            else if ( c_oSerRowTypes.Collapsed == type )
-            {
-                tmp.row.setCollapsed(this.stream.GetBool());
-            }
-            else if ( c_oSerRowTypes.Cells == type )
-            {
-				//запоминам место чтобы читать Cells в конце, когда уже зачитан oRow.index
-				tmp.pos = this.stream.GetCurPos();
-				tmp.len = length;
-				res = c_oSerConstants.ReadUnknown;
-            }
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-		this.ReadCells = function(type, length, tmp)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerRowTypes.Cell === type )
-            {
-				tmp.cell.clear();
-                tmp.formula.clean();
-                res = this.bcr.Read1(length, function(t,l){
-                    return oThis.ReadCell(t,l, tmp, tmp.cell, tmp.prevRow);
-                });
-                if (tmp.cell.isNullTextString()) {
-                    //set default value in case of empty cell value
-                    tmp.cell.setTypeInternal(CellValueType.Number);
-                }
-                if (tmp.cell.hasRowCol()) {
-                    tmp.prevCol = tmp.cell.nCol;
-                } else {
-                    tmp.prevCol++;
-                    tmp.cell.setRowCol(tmp.prevRow, tmp.prevCol);
-                }
-				this.InitOpenManager.initCellAfterRead(tmp);
-			}
-			else
-				res = c_oSerConstants.ReadUnknown;
-			return res;
-		};
-        this.ReadCell = function(type, length, tmp, oCell, nRowIndex)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerCellTypes.Ref === type ){
-				var oCellAddress = AscCommon.g_oCellAddressUtils.getCellAddress(this.stream.GetString2LE(length));
-				oCell.setRowCol(nRowIndex, oCellAddress.getCol0());
-			}
-            else if ( c_oSerCellTypes.RefRowCol === type ){
-				var nRow = this.stream.GetULongLE();//todo не используем можно убрать
-				oCell.setRowCol(nRowIndex, this.stream.GetULongLE());
-			}
-            else if( c_oSerCellTypes.Style === type )
-            {
-                var nStyleIndex = this.stream.GetULongLE();
-                if(0 != nStyleIndex)
-                {
-                    var xfs = this.aCellXfs[nStyleIndex];
-                    if(null != xfs)
-                        oCell.setStyle(xfs);
-                }
-            }
-            else if( c_oSerCellTypes.Type === type )
-            {
-                switch(this.stream.GetUChar())
-                {
-                    case ECellTypeType.celltypeBool: oCell.setTypeInternal(CellValueType.Bool);break;
-                    case ECellTypeType.celltypeError: oCell.setTypeInternal(CellValueType.Error);break;
-                    case ECellTypeType.celltypeNumber: oCell.setTypeInternal(CellValueType.Number);break;
-                    case ECellTypeType.celltypeSharedString: oCell.setTypeInternal(CellValueType.String);break;
-                }
-            }
-            else if( c_oSerCellTypes.Formula === type )
-            {
-                res = this.bcr.Read2Spreadsheet(length, function(t,l){
-                    return oThis.ReadFormula(t,l, tmp.formula);
-                });
-            }
-			else if (c_oSerCellTypes.Value === type) {
-				var val = this.stream.GetDoubleLE();
-				if (CellValueType.String === oCell.getType() || CellValueType.Error === oCell.getType()) {
-					var ss = this.aSharedStrings[val];
-                    if (undefined !== ss) {
-                        if (typeof ss === 'string') {
-                            oCell.setValueTextInternal(ss);
-                        } else {
-                            oCell.setValueMultiTextInternal(ss);
-                        }
-                    }
-				} else {
-                    oCell.setValueNumberInternal(val);
-				}
-            }   /*else if (c_oSerCellTypes.CellMetadata === type)
-            {
-                oCell.cm = this.stream.GetULong();
-            }
-            else if (c_oSerCellTypes.ValueMetadata === type)
-            {
-                oCell.vm = this.stream.GetULong();
-            }*/
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-        this.ReadFormula = function(type, length, oFormula)
-        {
-            var res = c_oSerConstants.ReadOk;
-            if ( c_oSerFormulaTypes.Aca === type )
-                oFormula.aca = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Bx === type )
-                oFormula.bx = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Ca === type )
-                oFormula.ca = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Del1 === type )
-                oFormula.del1 = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Del2 === type )
-                oFormula.del2 = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Dt2D === type )
-                oFormula.dt2d = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Dtr === type )
-                oFormula.dtr = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.R1 === type )
-                oFormula.r1 = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.R2 === type )
-                oFormula.r2 = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.Ref === type )
-                oFormula.ref = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.Si === type )
-                oFormula.si = this.stream.GetULongLE();
-            else if ( c_oSerFormulaTypes.T === type )
-                oFormula.t = this.stream.GetUChar();
-            else if ( c_oSerFormulaTypes.Text === type ) {
-                oFormula.v = this.stream.GetString2LE(length);
-            }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
@@ -12674,7 +12503,6 @@
 
 
 
-            var aSharedStrings = [];
             var aCellXfs = [];
             var oMediaArray = {};
 
@@ -12698,7 +12526,7 @@
             {
                 res = this.stream.Seek(nSharedStringTableOffset);
                 if(c_oSerConstants.ReadOk == res)
-                    res = (new Binary_SharedStringTableReader(this.stream, wb, aSharedStrings)).Read();
+                    res = (new Binary_SharedStringTableReader(this.stream, wb)).Read();
             }
 
             //aCellXfs - внутри уже не нужна, поскольку вынес функцию InitStyleManager в InitOpenManager
@@ -12730,7 +12558,7 @@
 
 
 
-			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList);
+			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aCellXfs, oMediaArray, personList);
 			if(null != nWorkbookTableOffset)
 			{
 				res = this.stream.Seek(nWorkbookTableOffset);
