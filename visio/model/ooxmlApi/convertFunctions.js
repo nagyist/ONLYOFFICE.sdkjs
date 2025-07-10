@@ -2228,7 +2228,11 @@
 
 
 			let shadowTypeCell = this.getCell("ShapeShdwType");
-			// TODO check themed type
+			// TODO check themed type. shadowTypeCell.calculateValue return undefined on THEMEVAL
+			// because there is an issue with THEMEVAL it sometimes return 0 sometimes 1 on empty effectStyleLst
+			// where shadow data should be
+			// see files offsets shadow properties themeval type 1.vsdx and offsets shadow properties themeval type 0.vsdx
+			// in https://bugzilla.onlyoffice.com/show_bug.cgi?id=75884
 			let shadowType = shadowTypeCell && shadowTypeCell.calculateValue(this, pageInfo,visioDocument.themes);
 
 			let shadowOffsetX_inch;
