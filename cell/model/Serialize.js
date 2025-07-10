@@ -3371,11 +3371,11 @@
                 this.memory.WriteByte(c_oSerPropLenType.Long);
                 this.memory.WriteLong(align.indent);
             }
-            if(null != align.ReadingOrder)
+            if(null != align.readingOrder)
             {
                 this.memory.WriteByte(Asc.c_oSerAligmentTypes.ReadingOrder);
                 this.memory.WriteByte(c_oSerPropLenType.Long);
-                this.memory.WriteLong(align.ReadingOrder);
+                this.memory.WriteLong(align.readingOrder);
             }
             if(null != align.RelativeIndent)
             {
@@ -3723,6 +3723,22 @@
                     });
                 }
 				var macros = this.wb.oApi.macros.GetData();
+                let customFunctions = this.wb.oApi["pluginMethod_GetCustomFunctions"] && this.wb.oApi["pluginMethod_GetCustomFunctions"]();
+                if (customFunctions) {
+                    customFunctions = AscCommonExcel.mergeCustomFunctions(customFunctions, true);
+                }
+                if (customFunctions) {
+                    if (macros) {
+                        let _macros = AscCommonExcel.safeJsonParse(macros);
+                        if (_macros) {
+                            _macros["customFunctions"] = customFunctions;
+                            macros = JSON.stringify(_macros);
+                        }
+                    } else {
+                        macros = {"customFunctions": customFunctions}
+                        macros = JSON.stringify(macros);
+                    }
+                }
 				if (macros) {
 					this.bs.WriteItem(c_oSerWorkbookTypes.JsaProject, function() {oThis.memory.WriteXmlString(macros);});
 				}
@@ -8493,7 +8509,7 @@
                 }
             }
             else if ( Asc.c_oSerAligmentTypes.ReadingOrder == type )
-                oAligment.ReadingOrder = this.stream.GetULongLE();
+                oAligment.readingOrder = this.stream.GetULongLE();
             else if ( Asc.c_oSerAligmentTypes.RelativeIndent == type )
                 oAligment.RelativeIndent = this.stream.GetULongLE();
             else if ( Asc.c_oSerAligmentTypes.ShrinkToFit == type )
@@ -12653,7 +12669,16 @@
 				AscCommonExcel.c_DateCorrectConst = AscCommon.bDate1904?AscCommonExcel.c_Date1904Const:AscCommonExcel.c_Date1900Const;
 			}
 			if (this.InitOpenManager.oReadResult.macros) {
-                wb.oApi.macros.SetData(this.InitOpenManager.oReadResult.macros);
+                let parsedMacros = AscCommonExcel.safeJsonParse(this.InitOpenManager.oReadResult.macro);
+                if (parsedMacros) {
+                    if (parsedMacros["customFunctions"]) {
+                        wb.fileCustomFunctions = parsedMacros["customFunctions"];
+                    }
+                    delete parsedMacros["customFunctions"];
+                    wb.oApi.macros.SetData(JSON.stringify(parsedMacros));
+                } else {
+                    wb.oApi.macros.SetData(this.InitOpenManager.oReadResult.macros);
+                }
             }
 			if (this.InitOpenManager.oReadResult.vbaMacros) {
 				wb.oApi.vbaMacros = this.InitOpenManager.oReadResult.vbaMacros;
@@ -13473,7 +13498,8 @@
             slicerCaches: {},
             tableIds: {},
             defNames: [],
-            sheetIds: {}
+            sheetIds: {},
+            customFunctions: null
         };
         this.wb = wb;
         this.Dxfs = [];
@@ -13499,7 +13525,16 @@
             AscCommonExcel.c_DateCorrectConst = AscCommon.bDate1904?AscCommonExcel.c_Date1904Const:AscCommonExcel.c_Date1900Const;
         }
         if (this.oReadResult.macros) {
-            wb.oApi.macros.SetData(this.oReadResult.macros);
+            let parsedMacros = AscCommonExcel.safeJsonParse(this.oReadResult.macros);
+            if (parsedMacros) {
+                if (parsedMacros["customFunctions"]) {
+                    wb.fileCustomFunctions = parsedMacros["customFunctions"];
+                }
+                delete parsedMacros["customFunctions"];
+                wb.oApi.macros.SetData(JSON.stringify(parsedMacros));
+            } else {
+                wb.oApi.macros.SetData(this.oReadResult.macros);
+            }
         }
         if (this.oReadResult.vbaMacros) {
             wb.oApi.vbaMacros = this.oReadResult.vbaMacros;
@@ -13507,6 +13542,7 @@
         if (this.oReadResult.vbaProject) {
             wb.oApi.vbaProject = this.oReadResult.vbaProject;
         }
+
         wb.checkCorrectTables();
     };
     InitOpenManager.prototype.PostLoadPrepareDefNames = function(wb)

@@ -844,10 +844,10 @@ var CPresentation = CPresentation || function(){};
                     if (oPageIconsInfo["MK"][nField]["I"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["I"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
-                    else if (oPageIconsInfo["MK"][nField]["RI"] == oPageIconsInfo["View"][nIcon]["j"]) {
+                    if (oPageIconsInfo["MK"][nField]["RI"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["RI"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
-                    else if (oPageIconsInfo["MK"][nField]["IX"] == oPageIconsInfo["View"][nIcon]["j"]) {
+                    if (oPageIconsInfo["MK"][nField]["IX"] == oPageIconsInfo["View"][nIcon]["j"]) {
                         oPageIconsInfo["MK"][nField]["IX"] = aIconsToLoad[aIconsToLoad.length - 1];
                     }
                 }
@@ -1426,6 +1426,11 @@ var CPresentation = CPresentation || function(){};
             if ((oMouseDownObject.IsDrawing() || (oMouseDownObject.IsAnnot() && oMouseDownObject.IsFreeText())) && false == oMouseDownObject.IsInTextBox()) {
                 oDrDoc.TargetEnd();
             }
+        }
+        // check redraw if focus is lost
+        if (oCurObject && oCurObject.IsDrawing() && oCurObject != oMouseDownObject) {
+            let oStartContent = AscFormat.checkEmptyPlaceholderContent(oCurObject.GetDocContent());
+            oController.checkRedrawOnChangeCursorPosition(oStartContent, null);
         }
 
         if (oViewer.canSelectPageText()) {
@@ -4166,6 +4171,9 @@ var CPresentation = CPresentation || function(){};
         let oCurObject  = this.GetActiveObject();
         let nCurPage    = this.GetCurPage();
         let oCurPage    = this.GetPageInfo(nCurPage);
+
+        if (!oCurPage)
+            return;
         
         if (oCurObject) {
             if (oCurObject.IsDrawing()) {
@@ -5228,7 +5236,7 @@ var CPresentation = CPresentation || function(){};
             }
 
             const imageMap = oParserContext.imageMap;
-            for (const sImg in imageMap) {
+            for (let sImg in imageMap) {
                 if (imageMap.hasOwnProperty(sImg) && "data:" === sImg.substring(0, 5)) {
                     allImages.push(sImg);
                     const aImg = imageMap[sImg];
@@ -6498,7 +6506,7 @@ var CPresentation = CPresentation || function(){};
 
         this.RemoveSelection();
         this.SetMouseDownObject(State.activeObject)
-        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm()) {
+        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm() && State.activeObject.IsUseInDocument && State.activeObject.IsUseInDocument()) {
             this.activeForm = State.activeObject;
         }
 
@@ -6896,7 +6904,7 @@ var CPresentation = CPresentation || function(){};
         let oController = this.GetController();
 
         this.SetMouseDownObject(oState.activeObject);
-        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm()) {
+        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
             this.activeForm = oState.activeObject;
         }
         
@@ -7963,6 +7971,7 @@ var CPresentation = CPresentation || function(){};
                     oFieldProps.asc_putPlaceholder(oMeta['placeholder']);
                 }
                 oFieldProps.asc_putAutoFit(field.GetTextSize() == 0);
+                oFieldProps.asc_putPassword(field.IsPassword());
                 oFieldProps.asc_putFormat(oFormatProps);
                 oFieldProps.asc_putValidate(oValidateProps);
                 break;

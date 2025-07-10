@@ -258,6 +258,9 @@
 		let oActiveDrawing	= oDoc.activeDrawing;
 
 		if (oThumbnails && oThumbnails.isInFocus) {
+			if (!oDoc.Viewer.file || oDoc.Viewer.file.type !== 0)
+				return;
+
 			let _data, sBase64;
 			
 			// HTML
@@ -444,6 +447,7 @@
 				aChars.push(data[i].charCodeAt(0));
 
 			this.asc_enterText(aChars, true);
+			oDoc.FinalizeAction(true);
 		}
 	};
 	PDFEditorApi.prototype.asc_setAdvancedOptions = function(idOption, option) {
@@ -1443,6 +1447,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1483,6 +1490,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1523,6 +1533,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1563,6 +1576,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1603,6 +1619,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 				
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1643,6 +1662,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetArbitaryMask(sMask);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1672,6 +1695,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetRegularExp(sReg);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1700,6 +1727,11 @@
 					return false;
 				}
 				
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					oField.ClearFormat();
+					return false;
+				}
+
 				let bGreaterThan	= nGreaterThan != undefined;
 				let bLessThan		= nLessThan != undefined;
 
@@ -2152,6 +2184,26 @@
 				let field = shape.GetEditField();
 				if (AscPDF.FIELD_TYPES.text == field.GetType()) {
 					field.SetDoNotScroll(!bValue);
+				}
+			});
+
+			return true;
+        }, AscDFH.historydescription_Pdf_ChangeField);
+	};
+	PDFEditorApi.prototype.SetTextFieldPassword = function(bPassword) {
+		let oDoc = this.getPDFDoc();
+		let oController = oDoc.GetController();
+		let oForm = oDoc.activeForm;
+
+		if (!oForm) {
+			return false;
+		}
+
+		return oDoc.DoAction(function() {
+			oController.selectedObjects.forEach(function(shape) {
+				let field = shape.GetEditField();
+				if (AscPDF.FIELD_TYPES.text == field.GetType()) {
+					field.SetPassword(bPassword);
 				}
 			});
 
@@ -4757,7 +4809,8 @@
 	PDFEditorApi.prototype['SetTextFieldMultiline']		= PDFEditorApi.prototype.SetTextFieldMultiline;
 	PDFEditorApi.prototype['SetTextFieldCharLimit']		= PDFEditorApi.prototype.SetTextFieldCharLimit;
 	PDFEditorApi.prototype['SetTextFieldComb']			= PDFEditorApi.prototype.SetTextFieldComb;
-	PDFEditorApi.prototype['SetTextFieldScrollLongText']= PDFEditorApi.prototype.SetTextFieldScrollLongText;
+	PDFEditorApi.prototype['SetTextFieldScrollLongText']= PDFEditorApi.prototype.SetTextFieldScrollLongText
+	PDFEditorApi.prototype['SetTextFieldPassword']		= PDFEditorApi.prototype.SetTextFieldPassword;
 	PDFEditorApi.prototype['SetFieldPlaceholder']		= PDFEditorApi.prototype.SetFieldPlaceholder;
 	PDFEditorApi.prototype['SetFieldAutoFit']			= PDFEditorApi.prototype.SetFieldAutoFit;
 	// baselist field

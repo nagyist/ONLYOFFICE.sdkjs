@@ -2724,11 +2724,35 @@ background-repeat: no-repeat;\
 			
 			onSaveEnd.forEach(function(f){f();});
 		};
+		const oldForceSaveOformRequest = this.forceSaveOformRequest;
+		const handleDisconnect = function()
+		{
+			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+			t.setViewModeDisconnect(true);
+			t.asc_coAuthoringDisconnect();
+			t.sendEvent("asc_onDisconnectEveryone");
+			if (oldForceSaveOformRequest)
+			{
+				//wait end of conversion
+				t.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Save);
+
+				//dont use rpc call because convetion can be interrupt and start again
+				t.attachEventWithRpcTimeout("updateVersion", function (isTimeout, success) {
+					t.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, c_oAscAsyncAction.Save);
+					if (isTimeout || !success) {
+						t.sendEvent("asc_onError", c_oAscError.ID.ConvertationSaveError, c_oAscError.Level.NoCritical);
+					} else {
+						t.sendEvent("asc_onCompletePreparingOForm");
+					}
+				}, null, Asc.c_nMaxConversionTime);
+			}
+		};
 
 		let cursorInfo = null;
 		if (true === AscCommon.CollaborativeEditing.Is_Fast())
 			cursorInfo = AscCommon.History.Get_DocumentPositionBinary();
 		
+		let isSendChanges = false;
 		function sendChanges()
 		{
 			// Пересылаем свои изменения
@@ -2737,6 +2761,7 @@ background-repeat: no-repeat;\
 				"UserShortId" : t.DocInfo.get_UserId(),
 				"CursorInfo"  : cursorInfo
 			}, HaveOtherChanges, true);
+			isSendChanges = true;
 		}
 
 		if (this.forceSaveUndoRequest)
@@ -2757,9 +2782,12 @@ background-repeat: no-repeat;\
 			this.forceSaveOformRequest = false;
 			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 			sendChanges();
-			onSaveEnd.push(function(){
-				t.sendEvent("asc_onCompletePreparingOForm");
-			});
+			if (!this.forceSaveDisconnectRequest)
+			{
+				onSaveEnd.push(function(){
+					t.sendEvent("asc_onCompletePreparingOForm");
+				});
+			}
 		}
 		else
 		{
@@ -2770,12 +2798,18 @@ background-repeat: no-repeat;\
 		if (this.forceSaveDisconnectRequest)
 		{
 			this.forceSaveDisconnectRequest = false;
-			AscCommon.CollaborativeEditing.Set_GlobalLock(false);
-			this.setViewModeDisconnect(true);
-			this.asc_coAuthoringDisconnect();
-			onSaveEnd.push(function(){
-				t.sendEvent("asc_onDisconnectEveryone");
-			});
+
+			if (isSendChanges)
+			{
+				//wait save end because of long save process and retries
+				onSaveEnd.push(function() {
+					handleDisconnect();
+				});
+			}
+			else
+			{
+				handleDisconnect();
+			}
 		}
 	};
 	asc_docs_api.prototype._autoSaveInner = function () {
@@ -4954,8 +4988,31 @@ background-repeat: no-repeat;\
     		return [];
     	return this.WordControl.m_oLogicDocument.GetAllSignatures();
 	};
-
-
+	asc_docs_api.prototype.asc_RemoveSignature = function(guid)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (logicDocument)
+		{
+			for (let i = 0; i < this.signatures.length; ++i)
+			{
+				let sign = this.signatures[i];
+				if (sign.guid === guid && sign.isForm)
+				{
+					if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+					{
+						logicDocument.StartAction(AscDFH.historydescription_OForm_CancelFilling);
+						logicDocument.GetOFormDocument().setAllRolesNotFilled();
+						logicDocument.FinalizeAction();
+						this.signatures.splice(i, 1);
+						this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+						return true;
+					}
+				}
+			}
+		}
+		
+		return AscCommon.baseEditorsApi.prototype.asc_RemoveSignature.apply(this, arguments);
+	};
     asc_docs_api.prototype.asc_CallSignatureDblClickEvent = function(sGuid){
         return this.WordControl.m_oLogicDocument.CallSignatureDblClickEvent(sGuid);
     };
@@ -8125,7 +8182,31 @@ background-repeat: no-repeat;\
 			}
 		}
 	};
-
+	asc_docs_api.prototype.onDocumentContentReady = function()
+	{
+		AscCommon.baseEditorsApi.prototype.onDocumentContentReady.call(this);
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+		{
+			let allRoles = oform.getAllRoles();
+			let sign = new AscCommon.asc_CSignatureLine();
+			sign.guid = AscCommon.CreateGUID();
+			sign.isForm = true;
+			let lastRole = allRoles.length ? allRoles[allRoles.length - 1] : null;
+			if (lastRole)
+			{
+				try {
+					sign.date = new Date(lastRole.getFieldGroup().getDate()).toString();
+				} catch (e) {}
+				
+				sign.signer1 = lastRole.getUserMaster().getUserName();
+			}
+			
+			this.signatures.push(sign);
+			this.sendEvent("asc_onUpdateSignatures", this.asc_getSignatures(), this.asc_getRequestSignatures());
+		}
+	};
 	asc_docs_api.prototype._openDocumentEndCallback = function()
 	{
 		if (this.isDocumentLoadComplete || !this.ServerImagesWaitComplete || !this.ServerIdWaitComplete || !this.WordControl || !this.WordControl.m_oLogicDocument)
@@ -8596,6 +8677,8 @@ background-repeat: no-repeat;\
 
 		var bForceRedraw  = false;
 		var LogicDocument = this.WordControl.m_oLogicDocument;
+		LogicDocument.RemoveSelection();
+		
 		if (AscCommonWord.docpostype_HdrFtr !== LogicDocument.GetDocPosType())
 		{
 			LogicDocument.SetDocPosType(AscCommonWord.docpostype_HdrFtr);
@@ -8605,7 +8688,7 @@ background-repeat: no-repeat;\
 		var oldClickCount            = global_mouseEvent.ClickCount;
 		global_mouseEvent.Button     = 0;
 		global_mouseEvent.ClickCount = 1;
-
+		
 		LogicDocument.OnMouseDown(global_mouseEvent, 0, 0, pageNumber);
 		LogicDocument.OnMouseUp(global_mouseEvent, 0, 0, pageNumber);
 		LogicDocument.OnMouseMove(global_mouseEvent, 0, 0, pageNumber);
@@ -8629,6 +8712,8 @@ background-repeat: no-repeat;\
 
 		var bForceRedraw  = false;
 		var LogicDocument = this.WordControl.m_oLogicDocument;
+		LogicDocument.RemoveSelection();
+		
 		if (AscCommonWord.docpostype_HdrFtr !== LogicDocument.GetDocPosType())
 		{
 			LogicDocument.SetDocPosType(AscCommonWord.docpostype_HdrFtr);
@@ -8638,7 +8723,7 @@ background-repeat: no-repeat;\
 		var oldClickCount            = global_mouseEvent.ClickCount;
 		global_mouseEvent.Button     = 0;
 		global_mouseEvent.ClickCount = 1;
-
+		
 		LogicDocument.OnMouseDown(global_mouseEvent, 0, AscCommon.Page_Height, pageNumber);
 		LogicDocument.OnMouseUp(global_mouseEvent, 0, AscCommon.Page_Height, pageNumber);
 		LogicDocument.OnMouseMove(global_mouseEvent, 0, 0, pageNumber);
@@ -8774,10 +8859,7 @@ background-repeat: no-repeat;\
 		if (!logicDocument || !oform)
 			return false;
 		
-		if (!oform.getCurrentRole())
-			return this._sendForm();
-		
-		if (!oform.canFillRole(oform.getCurrentRole()))
+		if (oform.getCurrentRole() && !oform.canFillRole(oform.getCurrentRole()))
 			return false;
 		
 		this.forceSaveSendFormRequest = true;
@@ -8790,8 +8872,30 @@ background-repeat: no-repeat;\
 		let logicDocument = this.private_GetLogicDocument();
 		let oform = logicDocument.GetOFormDocument();
 		
+		let currentRoleName = oform.getCurrentRole();
+		
+		let userName = this.DocInfo ? AscCommon.UserInfoParser.getParsedName(this.DocInfo.get_UserName()) : undefined;
+		let userId   = this.DocInfo ? this.DocInfo.get_UserId() : undefined;
+		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_RoleFilled);
-		oform.setRoleFilled(oform.getCurrentRole(), true);
+		if (!currentRoleName)
+		{
+			oform.setAllRolesFilled({
+				name : userName,
+				id   : userId
+			});
+		}
+		else
+		{
+			oform.setRoleFilled(oform.getCurrentRole(), true);
+			let role = oform.getRole(currentRoleName);
+			let user = role ? role.getUserMaster() : null;
+			if (user && this.DocInfo)
+			{
+				user.setUserId(userId);
+				user.setUserName(userName);
+			}
+		}
 		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype._sendForm = function()
@@ -9233,7 +9337,8 @@ background-repeat: no-repeat;\
 			if (isSelection)
 				dd.GenerateSelectionPrint();
 
-			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], options.isPdfPrint);
+			let isPrintedVersion = options.isPdfPrint || this.asc_isFinalizedVersion();
+			dataContainer.data = dd.ToRendererPart(oAdditionalData["nobase64"], isPrintedVersion);
 			//console.log(oAdditionalData["data"]);
 		}
 		else if (c_oAscFileType.JSON === fileType)
@@ -13487,6 +13592,9 @@ background-repeat: no-repeat;\
 		if (options && ((options["saveFormat"] === "image") || (options["isPrint"] === true)))
 			_renderer.isPrintMode = true;
 
+		if (!_renderer.isPrintMode)
+			_renderer.isPrintMode = this.asc_isFinalizedVersion();
+
         _renderer.InitPicker(AscCommon.g_oTextMeasurer.m_oManager);
 		_renderer.VectorMemoryForPrint = new AscCommon.CMemory();
 		_renderer.DocInfo(this.asc_getCoreProps());
@@ -14546,6 +14654,15 @@ background-repeat: no-repeat;\
 	{
 		let logicDocument = this.private_GetLogicDocument();
 		return logicDocument ? logicDocument.GetNumeralType() : Asc.c_oNumeralType.arabic;
+	};
+
+	asc_docs_api.prototype.asc_isFinalizedVersion = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (oform && oform.isAllRolesFilled())
+			return true;
+		return false;
 	};
 	
 	//-------------------------------------------------------------export---------------------------------------------------

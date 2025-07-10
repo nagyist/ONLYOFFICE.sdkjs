@@ -2039,14 +2039,6 @@
 	window['AscDFH'].historyitem_DocumentContent_AddItem    = window['AscDFH'].historyitem_type_DocumentContent | 1;
 	window['AscDFH'].historyitem_DocumentContent_RemoveItem = window['AscDFH'].historyitem_type_DocumentContent | 2;
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в классе CAbstractNum
-	//------------------------------------------------------------------------------------------------------------------
-	window['AscDFH'].historyitem_AbstractNum_LvlChange    = window['AscDFH'].historyitem_type_AbstractNum | 1;
-	window['AscDFH'].historyitem_AbstractNum_TextPrChange = window['AscDFH'].historyitem_type_AbstractNum | 2;
-	window['AscDFH'].historyitem_AbstractNum_ParaPrChange = window['AscDFH'].historyitem_type_AbstractNum | 3;
-	window['AscDFH'].historyitem_AbstractNum_StyleLink    = window['AscDFH'].historyitem_type_AbstractNum | 4;
-	window['AscDFH'].historyitem_AbstractNum_NumStyleLink = window['AscDFH'].historyitem_type_AbstractNum | 5;
-	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в классе CNum
 	//------------------------------------------------------------------------------------------------------------------
 	window['AscDFH'].historyitem_Num_LvlOverrideChange = window['AscDFH'].historyitem_type_Num | 1;
@@ -4640,8 +4632,11 @@
 	window['AscDFH'].historydescription_OForm_CompletePreparation                   = 0x01c7;
 	window['AscDFH'].historydescription_Presentation_SetPreserveSlideMaster         = 0x01c8;
 	window['AscDFH'].historydescription_Document_AddMathML                          = 0x01c9;
-	window['AscDFH'].historydescription_Presentation_ShowChartPreview               = 0x01ca;
-	window['AscDFH'].historydescription_Document_UpdateCharts                       = 0x01cb;
+	window['AscDFH'].historydescription_OForm_CancelFilling                         = 0x01ca;
+
+	window['AscDFH'].historydescription_Presentation_ShowChartPreview               = 0x01cb;
+
+	window['AscDFH'].historydescription_Document_UpdateCharts                       = 0x01cc;
 	window['AscDFH'].historydescription_Document_ChangeExternalChartReference       = 0x01cd;
 	window['AscDFH'].historydescription_Document_RemoveExternalChartReferences      = 0x01ce;
 
@@ -4994,6 +4989,9 @@
 	};
 	CChangesBaseContentChange.prototype.ConvertToSimpleChanges = function()
 	{
+		if (this.UseArray && 1 === this.Items.length)
+			return [this];
+		
 		let arrSimpleActions = this.ConvertToSimpleActions();
 		let arrChanges       = [];
 
@@ -5001,22 +4999,34 @@
 		{
 			let oAction = arrSimpleActions[nIndex];
 			let oChange = new this.constructor(this.Class, oAction.Pos, [oAction.Item], oAction.Add);
+			oChange.Reverted = this.Reverted;
 			arrChanges.push(oChange);
 		}
 
 		return arrChanges;
 	};
-	CChangesBaseContentChange.prototype.ConvertFromSimpleActions = function(arrActions)
+	CChangesBaseContentChange.prototype.ConvertFromSimpleActions = function(arrActions, isReverted)
 	{
 		this.UseArray = true;
 		this.Pos      = 0;
 		this.Items    = [];
 		this.PosArray = [];
 
-		for (var nIndex = 0, nCount = arrActions.length; nIndex < nCount; ++nIndex)
+		if (isReverted)
 		{
-			this.PosArray[nIndex] = arrActions[nIndex].Pos;
-			this.Items[nIndex]    = arrActions[nIndex].Item;
+			for (let i = 0, count = arrActions.length; i < count; ++i)
+			{
+				this.PosArray[i] = arrActions[count - 1 - i].Pos;
+				this.Items[i]    = arrActions[count - 1 - i].Item;
+			}
+		}
+		else
+		{
+			for (var nIndex = 0, nCount = arrActions.length; nIndex < nCount; ++nIndex)
+			{
+				this.PosArray[nIndex] = arrActions[nIndex].Pos;
+				this.Items[nIndex]    = arrActions[nIndex].Item;
+			}
 		}
 	};
 	CChangesBaseContentChange.prototype.IsRelated = function(oChanges)
@@ -5032,13 +5042,23 @@
 
 		oChange.Class    = this.Class;
 		oChange.Pos      = this.Pos;
-		oChange.Items    = this.Items;
+		oChange.Items    = [];
 		oChange.Add      = !this.Add;
 		oChange.UseArray = this.UseArray;
 		oChange.PosArray = [];
 
-		for (var nIndex = 0, nCount = this.PosArray.length; nIndex < nCount; ++nIndex)
-			oChange.PosArray[nIndex] = this.PosArray[nIndex];
+		if (this.UseArray)
+		{
+			for (var nIndex = 0, nCount = this.PosArray.length; nIndex < nCount; ++nIndex)
+			{
+				oChange.PosArray[nCount - 1 - nIndex] = this.PosArray[nIndex];
+				oChange.Items[nCount - 1 - nIndex]    = this.Items[nIndex];
+			}
+		}
+		else
+		{
+			oChange.Items = this.Items.slice();
+		}
 
 		return oChange;
 	};

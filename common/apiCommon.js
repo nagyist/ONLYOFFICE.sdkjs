@@ -351,6 +351,8 @@ function (window, undefined) {
 		this.date = "";
 		this.isvisible = false;
 		this.isrequested = false;
+		
+		this.isForm = false;
 	}
 
 	asc_CSignatureLine.prototype.correct = function () {
@@ -365,6 +367,7 @@ function (window, undefined) {
 		if (this.image == null) this.image = "";
 		if (this.date == null) this.date = "";
 		if (this.isvisible == null) this.isvisible = false;
+		if (this.isForm === null) this.isForm = false;
 	};
 	asc_CSignatureLine.prototype.asc_getId = function () {
 		return this.id;
@@ -431,6 +434,12 @@ function (window, undefined) {
 	};
 	asc_CSignatureLine.prototype.asc_setRequested = function (v) {
 		this.isrequested = v;
+	};
+	asc_CSignatureLine.prototype.asc_getIsForm = function() {
+		return this.isForm;
+	};
+	asc_CSignatureLine.prototype.asc_setIsForm = function(v) {
+		this.isForm = v;
 	};
 
 	/**
@@ -3648,6 +3657,7 @@ function (window, undefined) {
 		this.comb				= undefined;
 		this.placeholder		= undefined;
 		this.autoFit			= undefined;
+		this.password			= undefined;
 	}
 	asc_CTextFieldProperty.prototype.asc_getDefaultValue = function () {
 		return this.defaultValue;
@@ -3690,6 +3700,12 @@ function (window, undefined) {
 	};
 	asc_CTextFieldProperty.prototype.asc_putAutoFit = function (v) {
 		this.autoFit = v;
+	};
+	asc_CTextFieldProperty.prototype.asc_getPassword = function () {
+		return this.password;
+	};
+	asc_CTextFieldProperty.prototype.asc_putPassword = function (v) {
+		this.password = v;
 	};
 	asc_CTextFieldProperty.prototype.asc_getFormat = function () {
 		return this.format;
@@ -7125,6 +7141,8 @@ function (window, undefined) {
 	prot["asc_setVisible"] = prot.asc_setVisible;
 	prot["asc_getRequested"] = prot.asc_getRequested;
 	prot["asc_setRequested"] = prot.asc_setRequested;
+	prot["asc_getIsForm"] = prot.asc_getIsForm;
+	prot["asc_setIsForm"] = prot.asc_setIsForm;
 
 	window["AscCommon"].asc_CAscEditorPermissions = asc_CAscEditorPermissions;
 	prot = asc_CAscEditorPermissions.prototype;
@@ -7753,6 +7771,8 @@ function (window, undefined) {
 	prot["asc_putPlaceholder"]			= prot.asc_putPlaceholder;
 	prot["asc_getAutoFit"]				= prot.asc_getAutoFit;
 	prot["asc_putAutoFit"]				= prot.asc_putAutoFit;
+	prot["asc_getPassword"]				= prot.asc_getPassword;
+	prot["asc_putPassword"]				= prot.asc_putPassword;
 	prot["asc_getFormat"]				= prot.asc_getFormat;
 	prot["asc_putFormat"]				= prot.asc_putFormat;
 	prot["asc_getValidate"]				= prot.asc_getValidate;
@@ -8358,7 +8378,10 @@ function (window, undefined) {
 
 				for (let prop in obj)
 				{
-					if (obj.hasOwnProperty(prop))
+					let isNaturalProp = true;
+					if (obj.hasOwnProperty)
+						isNaturalProp = obj.hasOwnProperty(prop);
+					if (isNaturalProp)
 					{
 						if (!Asc.checkReturnCommand(obj[prop], depth + 1))
 							return false;

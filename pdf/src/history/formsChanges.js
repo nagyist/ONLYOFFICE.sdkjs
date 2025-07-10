@@ -922,7 +922,11 @@ CChangesPDFTextFormPassword.prototype.Type = AscDFH.historyitem_Pdf_Text_Form_Pa
 CChangesPDFTextFormPassword.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetPassword(Value);
+	oForm._password = Value;
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.private_NeedShapeText();
+		widget.SetNeedRecalc(true);
+	});
 };
 
 /**
