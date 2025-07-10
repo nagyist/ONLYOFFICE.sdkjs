@@ -51,6 +51,8 @@ function CAbstractNum()
 		if (typeof AscCommon.CollaborativeEditing !== "undefined")
 			AscCommon.CollaborativeEditing.Add_Unlock2(this);
 	}
+	
+	this.Numbering = null; // Link to the main class
 
 	this.NumStyleLink = undefined;
 	this.StyleLink    = undefined;
@@ -75,6 +77,10 @@ CAbstractNum.prototype.Get_Id = function()
 CAbstractNum.prototype.GetId = function()
 {
 	return this.Id;
+};
+CAbstractNum.prototype.SetParent = function(parent)
+{
+	this.Numbering = parent;
 };
 CAbstractNum.prototype.Copy = function(oAbstractNum)
 {
@@ -488,8 +494,5 @@ CAbstractNum.prototype._isEqualLvlText = function(LvlTextOld, LvlTextNew)
 };
 
 //--------------------------------------------------------export--------------------------------------------------------
-window['AscCommonWord'] = window['AscCommonWord'] || {};
-window['AscCommonWord'].CAbstractNum = CAbstractNum;
-
 window['AscWord'] = window['AscWord'] || {};
 window['AscWord'].CAbstractNum = CAbstractNum;

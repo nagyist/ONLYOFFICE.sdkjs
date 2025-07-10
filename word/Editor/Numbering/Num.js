@@ -783,7 +783,8 @@ CNum.prototype.GetAbstractNum = function()
  */
 CNum.prototype.GetAbstractNumId = function()
 {
-	return this.AbstractNumId;
+	let abstractNum = this.GetAbstractNum();
+	return abstractNum ? abstractNum.GetId() : this.AbstractNumId;
 };
 /**
  * Получаем параметр StartOverride для заданного уровня
