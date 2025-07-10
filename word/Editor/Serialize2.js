@@ -135,7 +135,8 @@ var c_oSerNumTypes = {
 	Legacy: 34,
 	LegacyIndent: 35,
 	LegacySpace: 36,
-	lvl_Jc: 37
+	lvl_Jc: 37,
+	Nsid: 38
 };
 var c_oSerOtherTableTypes = {
     ImageMap:0,
@@ -5058,6 +5059,11 @@ function BinaryNumberingTableWriter(memory, doc, oNumIdMap, oUsedNumIdMap, saveP
 		{
             this.memory.WriteByte(c_oSerNumTypes.StyleLink);
             this.memory.WriteString2(num.StyleLink);
+		}
+		let nsid = num.GetNsid();
+		if (undefined !== nsid && null !== nsid)
+		{
+			this.bs.WriteItem(c_oSerNumTypes.Nsid, function (){oThis.memory.WriteLong(nsid);});
 		}
         //Lvl
         if(null != num.Lvl)
@@ -11061,9 +11067,11 @@ function Binary_NumberingTableReader(doc, oReadResult, stream)
         {
 			this.m_oANums[this.stream.GetULongLE()] = oNewNum;
             //oNewNum.Id = this.stream.GetULongLE();
-        }
-        else
-            res = c_oSerConstants.ReadUnknown;
+        } else if (c_oSerNumTypes.Nsid === type) {
+			oNewNum.SetNsid(this.stream.GetLongLE());
+		} else {
+			res = c_oSerConstants.ReadUnknown;
+		}
         return res;
     }
     this.ReadLevels = function(type, length, nLevelNum, oNewNum)
