@@ -429,7 +429,8 @@
      * @returns {?ApiMaster} - returns null if presentation theme doesn't exist.
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateMaster.js
 	 */
-    Api.prototype.CreateMaster = function(oTheme){
+    Api.prototype.CreateMaster = function(oTheme)
+	{
 		const rawMaster = new AscCommonSlide.MasterSlide();
 
 		const isThemeValid = oTheme && oTheme.GetClassType && oTheme.GetClassType() === "theme";
@@ -454,7 +455,7 @@
         var oThemeCopy = oTheme.ThemeInfo.Theme.createDuplicate();
         const oMaster = new ApiMaster(rawMaster);
         oMaster.Master.setTheme(oThemeCopy);
-				oMaster.Master.setPreserve(true);
+		oMaster.Master.setPreserve(true);
 
         return oMaster;
     };
@@ -515,7 +516,7 @@
         oFormatScheme.GetClassType() !== "themeFormatScheme" || oFontScheme.GetClassType() !== "themeFontScheme")
             return null;
 
-        var oPresentation      = editor.GetPresentation().Presentation;
+        var oPresentation      = private_GetPresentation();
         var oThemeLoadInfo     = new AscCommonSlide.CThemeLoadInfo();
         oThemeLoadInfo.Master  = oMaster.Master;
         oThemeLoadInfo.Layouts = oMaster.Master.sldLayoutLst;
@@ -1326,11 +1327,12 @@
     {
         if (oApiMaster && oApiMaster.GetClassType && oApiMaster.GetClassType() === "master")
         {
-            if (!nPos || nPos < 0 || nPos > this.Presentation.slideMasters.length)
-                nPos = this.Presentation.slideMasters.length;
+			let master = oApiMaster.Master;
+			let position = getArrayAddIndex(nPos, master, this.Presentation.slideMasters);
+			if (position === null)
+				return false;
 
-            this.Presentation.addSlideMaster(nPos, oApiMaster.Master)
-
+            this.Presentation.addSlideMaster(position, master)
             return true;
         }
 
@@ -2001,15 +2003,11 @@
         if (!this.Master)
             return null;
         
-        var oPresentation       = editor.GetPresentation().Presentation;
-        var oMasterCopy         = this.Master.createDuplicate();
-        
-        if (!nPos || nPos < 0 || nPos > oPresentation.Slides.length)
-            nPos = oPresentation.slideMasters.length;
-
-        oPresentation.addSlideMaster(nPos, oMasterCopy);
-
-        return new ApiMaster(oMasterCopy);
+        let presentation = private_GetPresentation();
+        let masterCopy = this.Master.createDuplicate();
+        let position = getAddIndex(nPos, presentation.slideMasters.length);
+		presentation.addSlideMaster(position, masterCopy);
+        return new ApiMaster(masterCopy);
     };
 
     /**
@@ -2435,18 +2433,15 @@
      * Returns null if slide layout doesn't exist or is not in the slide master.
      * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/Duplicate.js
 	 */
-    ApiLayout.prototype.Duplicate = function(nPos){
+    ApiLayout.prototype.Duplicate = function(nPos)
+	{
         if (this.Layout && this.Layout.Master)
         {
-            var oMaster     = this.Layout.Master;
-            var oLayoutCopy = this.Layout.createDuplicate();
-            
-            if (nPos < 0 || nPos > this.Layout.Master.sldLayoutLst.length || !nPos)
-                nPos = oMaster.sldLayoutLst.length;
-    
-            oMaster.addToSldLayoutLstToPos(nPos, oLayoutCopy);
-    
-            return new ApiLayout(oLayoutCopy);
+            let master     = this.Layout.Master;
+            let layoutCopy = this.Layout.createDuplicate();
+            let position = getAddIndex(nPos, master.sldLayoutLst.length);
+			position.addToSldLayoutLstToPos(position, layoutCopy);
+            return new ApiLayout(layoutCopy);
         }
         return null;
     };
@@ -3416,8 +3411,8 @@
         if (!this.Slide)
             return false;
         
-        var oPresentation = editor.GetPresentation().Presentation;
-        var nPosToDelete  = this.GetSlideIndex();
+        let oPresentation = private_GetPresentation();
+        let nPosToDelete  = this.GetSlideIndex();
 
         if (nPosToDelete > -1)
         {
@@ -3451,19 +3446,16 @@
      * Returns null if slide doesn't exist or is not in the presentation.
      * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/Duplicate.js
 	 */
-    ApiSlide.prototype.Duplicate = function(nPos){
+    ApiSlide.prototype.Duplicate = function(nPos)
+	{
         if (!this.Slide)
             return null;
         
-        var oPresentation = editor.GetPresentation().Presentation;
-        var oSlideCopy    = this.Slide.createDuplicate();
-        
-        if (nPos < 0 || nPos > oPresentation.Slides.length || !nPos)
-            nPos = oPresentation.Slides.length;
-
-        oPresentation.insertSlide(nPos, oSlideCopy);
-
-        return new ApiSlide(oSlideCopy);
+        let presentation = private_GetPresentation();
+        let slideCopy = this.Slide.createDuplicate();
+        let position = getAddIndex(nPos, presentation.Slides.length);
+		presentation.insertSlide(position, slideCopy);
+        return new ApiSlide(slideCopy);
     };
 
     /**
@@ -3474,7 +3466,7 @@
      * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/MoveTo.js
 	 */
     ApiSlide.prototype.MoveTo = function(nPos){
-        var oPresentation = editor.GetPresentation().Presentation;
+        var oPresentation = private_GetPresentation();
 
         if (!this.Slide || nPos < 0 || nPos > oPresentation.Slides.length)
             return false;
@@ -3501,7 +3493,7 @@
         if (!this.Slide)
             return -1;
         
-        var oPresentation = editor.GetPresentation().Presentation;
+        var oPresentation = private_GetPresentation();
 
         for (var Index = 0; Index < oPresentation.Slides.length; Index++)
         {
@@ -5732,7 +5724,7 @@
     }
 
     function private_GetPresentation(){
-        return editor.WordControl.m_oLogicDocument;
+        return Asc.editor.WordControl.m_oLogicDocument;
     }
 
     function private_EMU2MM(EMU)
@@ -5741,7 +5733,7 @@
     }
 
     function private_GetApi(){
-        return editor;
+        return Asc.editor;
     }
 
 
@@ -5986,6 +5978,24 @@
 		}
 		return aWrappers;
 	}
+	function getArrayAddIndex(position, element, aArray) {
+		if(!element) return null;
+		let arrayLength = aArray.length;
+		for(let idx = 0; idx < arrayLength; ++idx) {
+			if(aArray[idx] === element) {
+				return null;
+			}
+		}
+		return getAddIndex(position, arrayLength);
+	}
+
+	function getAddIndex(position, arrayLength) {
+		if(!AscFormat.isRealNumber(position) || position < 0 || position > arrayLength) {
+			return arrayLength;
+		}
+		return position;
+	}
+
 	window['AscBuilder'] = window['AscBuilder'] || {};
 	window['AscBuilder'].ApiShape = ApiShape;
 	window['AscBuilder'].ApiImage = ApiImage;
