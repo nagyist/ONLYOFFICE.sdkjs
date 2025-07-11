@@ -130,6 +130,22 @@
 		let allFilledPathNoLineValuesEqual = true;
 		let allUnfilledPathNoLineValuesEqual = true;
 
+		// imply that units were in mm until units parse realized
+		// TODO parse formula and units
+		// TODO parse line style fill style text style
+
+		const additionalUnitCoefficient = g_dKoef_in_to_mm / pageScale;
+
+
+		/* extrusionOk, fill, stroke, w, h*/
+		// path.AddPathCommand(0, undefined, fillValue, undefined, undefined, undefined);
+
+		//TODO maybe get shapeWidth and Height from outside
+		//TODO shape with RelMoveTo and RelLineTo takes wrong position
+
+		let shapeWidth = Number(shape.getCell("Width").v);
+		let shapeHeight = Number(shape.getCell("Height").v);
+
 		// set path objects - parts of geometry objects
 		for (let i = 0; i < geometrySections.length; i++) {
 			const geometrySection = geometrySections[i];
@@ -233,23 +249,6 @@
 					unfilledPathNoLine = noLineValue;
 				}
 			}
-
-
-			// imply that units were in mm until units parse realized
-			// TODO parse formula and units
-			// TODO parse line style fill style text style
-
-			const additionalUnitCoefficient = g_dKoef_in_to_mm / pageScale;
-
-
-			/* extrusionOk, fill, stroke, w, h*/
-			// path.AddPathCommand(0, undefined, fillValue, undefined, undefined, undefined);
-
-			//TODO maybe get shapeWidth and Height from outside
-			//TODO shape with RelMoveTo and RelLineTo takes wrong position
-
-			let shapeWidth = Number(shape.getCell("Width").v);
-			let shapeHeight = Number(shape.getCell("Height").v);
 
 			/**
 			 *
@@ -878,27 +877,27 @@
 		}
 
 		geometry.setPreset("Any");
-		if (false) {
-			let maxCoordinates = pathWithFill.getMaxCoordinates();
-			pathW = Math.round(maxCoordinates.maxX);
-			pathH = Math.round(maxCoordinates.maxY);
-			if (pathW > 0 && pathH > 0) {
-				pathWithFill.setPathW(pathW);
-				pathWithFill.setPathH(pathH);
+		const needNormalize = false;
+		let maxPathSize = 43000;
+		if (needNormalize) {
+			if (shapeWidth > 0 && shapeHeight > 0) {
+				const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
+				const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
+				pathWithFill.setPathW(maxPathSize);
+				pathWithFill.setPathH(maxPathSize);
+				pathWithFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
 			}
-			pathWithFill.normalizeCoordinates(maxCoordinates.maxX, maxCoordinates.maxY, pathW, pathH);
 		}
 		geometry.AddPath(pathWithFill);
 
-		if (false) {
-			maxCoordinates = pathWithoutFill.getMaxCoordinates();
-			pathW = Math.round(maxCoordinates.maxX);
-			pathH = Math.round(maxCoordinates.maxY);
+		if (needNormalize) {
 			if (pathW > 0 && pathH > 0) {
-				pathWithoutFill.setPathW(pathW);
-				pathWithoutFill.setPathH(pathH);
+				const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
+				const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
+				pathWithoutFill.setPathW(shapeWidthEmu);
+				pathWithoutFill.setPathH(shapeHeightEmu);
+				pathWithoutFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
 			}
-			pathWithoutFill.normalizeCoordinates(maxCoordinates.maxX, maxCoordinates.maxY, pathW, pathH);
 		}
 		geometry.AddPath(pathWithoutFill);
 
