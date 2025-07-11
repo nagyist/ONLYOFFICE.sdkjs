@@ -4977,9 +4977,6 @@
 	};
 	CChangesBaseContentChange.prototype.ConvertToSimpleChanges = function()
 	{
-		if (this.UseArray && 1 === this.Items.length)
-			return [this];
-		
 		let arrSimpleActions = this.ConvertToSimpleActions();
 		let arrChanges       = [];
 
