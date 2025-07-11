@@ -1268,7 +1268,11 @@
 				}
 			}
 			let isOpenOoxml = !!(this.DocInfo && this.DocInfo.get_DirectUrl()) && this["asc_isSupportFeature"]("ooxml");
-			let outputformat = this._getOpenFormatByEditorId(this.editorId, isOpenOoxml);
+			let outputformat = this._getOpenFormatByEditorId(this.editorId, false);//false to avoid ooxml->ooxml conversion
+			let convertToOrigin = '';
+			if (isOpenOoxml) {
+				convertToOrigin = '.docx.xlsx.pptx.vsdx';
+			}
 			rData = {
 				"c"             : 'open',
 				"id"            : this.documentId,
@@ -1279,7 +1283,7 @@
 				"lcid"          : locale,
 				"nobase64"      : true,
 				"outputformat"  : outputformat,
-				"convertToOrigin" : "",
+				"convertToOrigin" : convertToOrigin,
 				"oformAsPdf" : this.isPdfEditor() ? true : undefined
 			};
 
