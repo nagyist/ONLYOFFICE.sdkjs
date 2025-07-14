@@ -2608,8 +2608,8 @@
 		let shapeGeom = AscVisio.getGeometryFromShape(this, drawingPageScale, isInvertCoords);
 
 		let sType   = "rect";
-		let nWidth_mm  = Math.round(w_mm);
-		let nHeight_mm = Math.round(h_mm);
+		let nWidth_mm  = w_mm;
+		let nHeight_mm = h_mm;
 		//let oDrawingDocument = new AscCommon.CDrawingDocument();
 		let shape = AscFormat.builder_CreateShape(sType, nWidth_mm, nHeight_mm,
 			oFill, oStroke, cVisioDocument, cVisioDocument.themes[0], null, false);
