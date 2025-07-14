@@ -30171,6 +30171,17 @@ function isAllowPasteLink(pastedWb) {
 			}
 		}
 
+		if (cellCoord && ws.getRightToLeft()) {
+			if (cellCoord[0]) {
+				cellCoord[0]._width = Math.abs(cellCoord[0]._width);
+				cellCoord[0]._x = cellCoord[0]._x - cellCoord[0]._width;
+			}
+			if (cellCoord[1]) {
+				cellCoord[1]._width = Math.abs(cellCoord[1]._width);
+				cellCoord[1]._x = cellCoord[1]._x - cellCoord[1]._width;
+			}
+		}
+
 		return cellCoord;
 	};
 
