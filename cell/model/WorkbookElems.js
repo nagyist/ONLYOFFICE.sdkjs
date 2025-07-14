@@ -13018,11 +13018,13 @@ function RangeDataManagerElem(bbox, data)
 	}
 
 	CSharedStrings.prototype.addText = function(text) {
-		var index = this.text[text];
+		var textMap = this.text;
+		var index = textMap[text];
 		if (undefined === index) {
-			this.all.push(text);
-			index = this.all.length;
-			this.text[text] = index;
+			var allArray = this.all;
+			allArray.push(text);
+			index = allArray.length;
+			textMap[text] = index;
 			if (AscFonts.IsCheckSymbols) {
 				AscFonts.FontPickerByCharacter.getFontsByString(text);
 			}
