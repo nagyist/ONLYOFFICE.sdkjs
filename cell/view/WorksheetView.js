@@ -10769,7 +10769,7 @@ function isAllowPasteLink(pastedWb) {
         var lastRowHeight = (scrollDown && oldVRE_isPartial) ?
         ctxH - (this._getRowTop(oldEnd) - topOldStart + this.cellsTop + diffHeight) : 0;
 
-        //TODO рассмотреть все случаи, когда необходимо вычитать groupWidth
+        //TODO consider all cases when groupWidth needs to be subtracted
         if (x !== this.cellsLeft) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollHorizontal;
             this._drawCorner();
@@ -10777,12 +10777,50 @@ function isAllowPasteLink(pastedWb) {
             this._drawColumnHeaders(null);
 
             dx = this.cellsLeft - x;
-            oldW = ctxW - x - Math.abs(dx);
+            oldW = ctxW - x - (dx > 0 ? Math.abs(dx) : 0);
 
-            if (rFrozen) {
-                ctx.drawImage(ctx.getCanvas(), x, this.cellsTop, oldW, diffHeight, x + dx, this.cellsTop, oldW,
-                  diffHeight);
-                // ToDo Посмотреть с объектами!!!
+            if (rFrozen > 0 || cFrozen > 0) {
+                // Move frozen area only if there are frozen rows
+                if (rFrozen > 0) {
+                    ctx.drawImage(ctx.getCanvas(), x, this.cellsTop, oldW, diffHeight, x + dx, this.cellsTop, oldW,
+                      diffHeight);
+                    // Move graphic objects in frozen area
+                    if (AscBrowser.isSafari) {
+                        this.drawingGraphicCtx.moveImageDataSafari(x, this.cellsTop, oldW, diffHeight, x + dx, this.cellsTop);
+                    } else {
+                        this.drawingGraphicCtx.moveImageData(x, this.cellsTop, oldW, diffHeight, x + dx, this.cellsTop);
+                    }
+                }
+                
+                // Redraw freed area after frozen area shift
+                if (dx < 0 && rFrozen > 0) {
+                    let clearFrozenX, clearFrozenWidth;
+                    if (dx < 0) {
+                        // Right shift - frees right part of original area
+                        clearFrozenX = x + oldW;
+                        clearFrozenWidth = dx;
+                    }
+                    
+                    // Clear freed area
+                    ctx.setFillStyle(this.settings.cells.defaultState.background);
+                    this._fillRect(ctx, clearFrozenX, this.cellsTop, clearFrozenWidth, diffHeight);
+                    this._clearRect(this.drawingGraphicCtx, clearFrozenX, this.cellsTop, clearFrozenWidth, diffHeight);
+                    
+                    // Redraw freed area
+                    this._AddClipRect(ctx, clearFrozenX, this.cellsTop, clearFrozenWidth, diffHeight);
+                    this.drawingGraphicCtx.AddClipRect && this._AddClipRect(this.drawingGraphicCtx, clearFrozenX, this.cellsTop, clearFrozenWidth, diffHeight);
+                    
+                    const frozenRange = new asc_Range(vr.c1, 0, vr.c2, rFrozen - 1);
+                    offsetX = this._getOffsetX(0, true);
+                    offsetY = this._getOffsetY(0, true);
+                    this._drawGrid(null, frozenRange, offsetX, offsetY);
+                    this._drawCellsAndBorders(null, frozenRange, offsetX, offsetY);
+                    this.af_drawButtons(frozenRange, offsetX, offsetY);
+                    this.objectRender.updateRange(frozenRange);
+                    
+                    this._RemoveClipRect(ctx);
+                    this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
+                }
             }
             this._drawFrozenPane(true);
         } else {
@@ -10904,14 +10942,15 @@ function isAllowPasteLink(pastedWb) {
             this.af_drawButtons(range, offsetX, offsetY);
 			this.objectRender.updateRange(range);
             if (0 < cFrozen) {
-                range.c1 = 0;
-                range.c2 = cFrozen - 1;
+                var frozenRange = dx !== 0 ? new asc_Range(0, vr.r1, cFrozen - 1, vr.r2) : new asc_Range(0, r1, cFrozen - 1, r2);
+                frozenRange.c1 = 0;
+                frozenRange.c2 = cFrozen - 1;
                 offsetX = this._getOffsetX(0, true);
-                this._drawGrid(null, range, offsetX);
-				this._drawGroupData(null, range, offsetX);
-                this._drawCellsAndBorders(null, range, offsetX);
-                this.af_drawButtons(range, offsetX, offsetY);
-                this.objectRender.updateRange(range);
+                this._drawGrid(null, frozenRange, offsetX);
+                this._drawGroupData(null, frozenRange, offsetX);
+                this._drawCellsAndBorders(null, frozenRange, offsetX);
+                this.af_drawButtons(frozenRange, offsetX, offsetY);
+                this.objectRender.updateRange(frozenRange);
             }
         }
 
