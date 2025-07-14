@@ -2029,51 +2029,6 @@
         return text;
     }
 
-    //TODO копия кода из serialize2
-    function BinaryCustomsTableWriter(wb, memory)
-    {
-        this.memory = memory;
-        this.wb = wb;
-        this.bs = new BinaryCommonWriter(this.memory);
-        this.customXmlManager = wb.getCustomXmlManager();
-
-        this.Write = function()
-        {
-            var oThis = this;
-            this.bs.WriteItemWithLength(function(){oThis.WriteCustomXmls()});
-        };
-        this.WriteCustomXmls = function()
-        {
-           	var oThis = this;
-            for (var i = 0, count = this.customXmlManager.getCount(); i < count; ++i) {
-                this.bs.WriteItem(c_oSerCustoms.Custom, function() {oThis.WriteCustomXml(oThis.customXmlManager.getCustomXml(i));});
-            }
-        };
-        this.WriteCustomXml = function(customXml) {
-            var oThis = this;
-            let namespaces = customXml.getAllNamespaces();
-            for(var i = 0; i < namespaces.length; ++i){
-                this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-                    oThis.memory.WriteString3(namespaces[i]);
-                });
-            }
-            if (null !== customXml.itemId) {
-                this.bs.WriteItem(c_oSerCustoms.ItemId, function() {
-                    oThis.memory.WriteString3(customXml.itemId);
-                });
-            }
-            if (null !== customXml.content) {
-                let customXmlManager = this.wb.getCustomXmlManager();
-                this.bs.WriteItem(c_oSerCustoms.Content, function() {
-                    let str  = customXmlManager.getCustomXMLString(customXml);
-                    let data = AscCommon.Utf8.encode(str);
-                    oThis.memory.WriteULong(data.length);
-                    oThis.memory.WriteBuffer(data, 0, data.length);
-                });
-            }
-        };
-    }
-
     /** @constructor */
     function BinaryTableWriter(memory, InitSaveManager, isCopyPaste, tableIds)
     {
@@ -7181,8 +7136,9 @@
                 }});
             }
 
-			if (t.wb.customXmlManager.getCount() > 0) {
-				this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.wb, this.Memory));
+			let xmlManager = t.wb.getCustomXmlManager();
+			if (xmlManager.getCount() > 0) {
+				this.WriteTable(c_oSerTableTypes.Customs, new AscCommon.BinaryCustomsTableWriter(xmlManager, this.Memory, false));
 			}
 
             //var oSharedStrings = {index: 0, strings: {}};
@@ -12427,51 +12383,6 @@
         };
     }
 
-    //TODO копия кода из serialize2
-    function Binary_CustomsTableReader(wb, stream) {
-        this.stream = stream;
-        this.customXmlManager = wb.getCustomXmlManager();
-        this.bcr = new Binary_CommonReader(this.stream);
-        this.Read = function() {
-            var oThis = this;
-            return this.bcr.ReadTable(function(t, l) {
-                return oThis.ReadCustom(t, l);
-            });
-        };
-        this.ReadCustom = function(type, length) {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-
-            if (c_oSerCustoms.Custom === type)
-            {
-                var custom = new AscWord.CustomXml();
-
-                res = this.bcr.Read1(length, function(t, l) {
-                    return oThis.ReadCustomContent(t, l, custom);
-                });
-
-                this.customXmlManager.add(custom);
-            }
-            else
-            {
-                res = c_oSerConstants.ReadUnknown;
-            }
-            return res;
-        };
-        this.ReadCustomContent = function(type, length, custom) {
-            var res = c_oSerConstants.ReadOk;
-            if (c_oSerCustoms.Uri === type) {
-                custom.setNamespaceUri(this.stream.GetString2LE(length));
-            } else if (c_oSerCustoms.ItemId === type) {
-                custom.itemId = this.stream.GetString2LE(length);
-            } else if (c_oSerCustoms.Content === type) {
-                custom.addContent(this.stream.GetBuffer(length))
-            } else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-    }
-
     function getBinaryOtherTableGVar(wb)
     {
         AscCommonExcel.g_oColorManager.setTheme(wb.theme);
@@ -12810,7 +12721,7 @@
                             break;
                         case c_oSerTableTypes.Customs:
                             this.stream.Seek2(mtiOffBits);
-                            res = (new Binary_CustomsTableReader(wb, this.stream)).Read();
+                            res = (new AscCommon.BinaryCustomsTableReader(wb.getCustomXmlManager(), this.stream)).Read();
                             break;
                     }
                     if(c_oSerConstants.ReadOk != res)
