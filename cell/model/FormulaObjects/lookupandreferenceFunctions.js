@@ -2908,9 +2908,6 @@ function (window, undefined) {
 		this.sortedCache = new TypedCache();
 		this.typedCache = new TypedCache();
 		this.typedCacheValuesMap = new TypedCache();
-
-		this.nextVal = undefined;
-		this.nextValIndex = undefined;
 	}
 
 	VHLOOKUPCache.prototype.calculate = function (arg, argument1) {
@@ -3050,7 +3047,8 @@ function (window, undefined) {
 				}
 				_cacheElem.elements.push({v: elem, i: (t.bHor ? c : r)});
 			});
-			return this._calculate(arg0Val, null, opt_arg4, opt_arg5, _cacheElem.elements);
+			const elems = _cacheElem.elements;
+			return this._calculate(arg0Val, null, opt_arg4, opt_arg5, elems, null, null, 0, elems.length - 1);
 		}
 
 		if (!range) {
@@ -3212,17 +3210,7 @@ function (window, undefined) {
 		const ws = range.getWorksheet();
 		var cacheElem = this.cacheId[sRangeName];
 		if (!cacheElem) {
-			cacheElem = {elements: {}, results: {}};
-			// if (Math.abs(opt_arg5) === 2 || arg3Value || opt_arg4) {
-			// 	this.generateElements(range, cacheElem);
-			// 	this.cacheId[sRangeName] = cacheElem;
-			// 	var cacheRange = this.cacheRanges[wsId];
-			// 	if (!cacheRange) {
-			// 		cacheRange = new AscCommonExcel.RangeDataManager(null);
-			// 		this.cacheRanges[wsId] = cacheRange;
-			// 	}
-			// 	cacheRange.add(range.getBBox0(), cacheElem);
-			// }
+			cacheElem = {results: {}};
 		}
 		var sInputKey;
 		if (!opt_xlookup) {
@@ -3259,43 +3247,82 @@ function (window, undefined) {
 			return res;
 		}
 	};
+	VHLOOKUPCache.prototype._compareTypes = function (val1, val2) {
+		return val1.type - val2.type;
+	};
 	/**
 	 * @private
-	 * @param {LookUpElement[]} array
 	 * @param {LookUpElement} valueForSearching
 	 * @param {boolean} revert
+	 * @param {Worksheet} ws
+	 * @param {number} startIndex
+	 * @param {number} endIndex
+	 * @param {number} rowCol
+	 * @param {LookUpElement[]} [opt_array]
 	 * @param {number} [opt_arg4]
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._simpleSearch = function (array, valueForSearching, revert, opt_arg4) {
-		if (revert) {
-			for (let i = array.length - 1; i >= 0; i--) {
-				const elem = array[i];
-				const val = elem.v;
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4)) {
-					if (!(valueForSearching.type !== cElementType.error && val.type === cElementType.error)) {
-						return elem.i;
-					}
+	VHLOOKUPCache.prototype._simpleSearch = function (valueForSearching, revert, ws, startIndex, endIndex, rowCol, opt_arg4, opt_array) {
+		const t = this;
+		let resultIndex = -1;
+		let nearestIndex = -1;
+		let nearestValue = null;
+		const getValue = function (index) {
+			if (opt_array) {
+				return opt_array[index].v;
+			}
+			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
+			return checkTypeCell(cell, true);
+		}
+		const updateNearest = function(value, valueIndex) {
+			if (opt_arg4 === 1 && t._compareValues(value, valueForSearching, ">") && t._compareTypes(value, valueForSearching) >= 0) {
+				if (nearestValue === null) {
+					nearestValue = value;
+					nearestIndex = valueIndex;
 				}
-				if (opt_arg4 !== undefined) {
-					this._updateNextOptVal(elem.v, elem.i,valueForSearching, opt_arg4)
+				if (t._compareValues(value, nearestValue, "<") && t._compareTypes(value, nearestValue) <= 0) {
+					nearestIndex = valueIndex;
+					nearestValue = value;
 				}
 			}
-		} else {
-			for (let i = 0; i < array.length; i++) {
-				const elem = array[i];
-				const val = elem.v;
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4)) {
-					if (!(valueForSearching.type !== cElementType.error && val.type === cElementType.error)) {
-						return elem.i;
-					}
+			if (opt_arg4 === -1 && t._compareValues(value, valueForSearching,"<") && t._compareTypes(value, valueForSearching) <= 0) {
+				if (nearestValue === null) {
+					nearestValue = value;
+					nearestIndex = valueIndex;
 				}
-				if (opt_arg4 === 1 || opt_arg4 === -1) {
-					this._updateNextOptVal(elem.v, elem.i, valueForSearching, opt_arg4)
+				if (t._compareValues(value, nearestValue, ">") && t._compareTypes(value, nearestValue) >= 0) {
+					nearestIndex = valueIndex;
+					nearestValue = value;
 				}
 			}
 		}
-		return -1;
+		if (revert) {
+			for (let i = endIndex; i >= startIndex; i -= 1) {
+				const val = getValue(i);
+				if (this._compareValues(valueForSearching, val, "=", opt_arg4) && val.type === valueForSearching.type) {
+					resultIndex = opt_array ? opt_array[i].i : i;
+					break;
+				}
+				if (opt_arg4 !== undefined) {
+					updateNearest(val, i);
+				}
+			}
+		} else {
+			for (let i = startIndex; i <= endIndex; i += 1) {
+				const val = getValue(i);
+				if (this._compareValues(valueForSearching, val, "=", opt_arg4) && val.type === valueForSearching.type) {
+					resultIndex = opt_array ? opt_array[i].i : i;
+					break;
+				}
+				if (opt_arg4 !== undefined) {
+					updateNearest(val, i);
+				}
+			}
+		}
+		if (resultIndex === -1) {
+			resultIndex = nearestIndex;
+		}
+		return resultIndex;
 	};
 	/**
 	 * @private
@@ -3306,10 +3333,9 @@ function (window, undefined) {
 	 * @param {number} rowCol
 	 * @param {number} startIndex
 	 * @param {number} endIndex
-	 * @param {number} [opt_arg4]
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._indexedBinarySearch = function (array, valueForSearching, revert, ws, rowCol, startIndex, endIndex, opt_arg4) {
+	VHLOOKUPCache.prototype._indexedBinarySearch = function (array, valueForSearching, revert, ws, rowCol, startIndex, endIndex) {
 		const t = this;
 		const getValue = function (index) {
 			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
@@ -3447,76 +3473,51 @@ function (window, undefined) {
 	};
 	/**
 	 * @private
-	 * @param {LookUpElement[]} array
 	 * @param {LookUpElement} valueForSearching
 	 * @param {boolean} revert
-	 * @param {boolean} xlookup
-	 * @param {number} [opt_arg4]
+	 * @param {number} opt_arg4
+	 * @param {number} startIndex
+	 * @param {number} endIndex
+	 * @param {Worksheet} ws
+	 * @param {number} rowCol
+	 * @param {LookUpElement[]} opt_array
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._xlookupBinarySearch = function (array, valueForSearching, revert, xlookup, opt_arg4) {
-		let canCompare;
-		let i = 0;
-		let j = array.length - 1;
-		if (revert) {
-			while (i <= j) {
-				const k = Math.ceil((i + j) / 2);
-				const elem = array[k];
-				let val = elem.v;
-				if (val.type === cElementType.empty) {
-					val = val.tocBool();
-				}
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4)) {
-					return elem.i
-				} else if (this._compareValues(valueForSearching, val, "<", opt_arg4)) {
-					i = k + 1;
-					if (opt_arg4 !== undefined) {
-						this._updateNextOptVal(elem.v, elem.i, valueForSearching, opt_arg4, true);
-					}
-				} else {
-					j = k - 1;
-					if (opt_arg4 !== undefined) {
-						this._updateNextOptVal(elem.v, elem.i, valueForSearching, opt_arg4, false);
-					}
-				}
+	VHLOOKUPCache.prototype._xlookupBinarySearch = function (valueForSearching, revert, opt_arg4, startIndex, endIndex, ws, rowCol, opt_array) {
+		let i = startIndex;
+		let j = endIndex;
+		const t = this;
+		const getValue = function (index) {
+			if (opt_array) {
+				return opt_array[index].v;
 			}
-		} else {
-			while (i <= j) {
-				const k = Math.floor((i + j) / 2);
-				const elem = array[k];
-				let val = elem.v;
-				canCompare = true;
-				if (val.type === cElementType.empty) {
-					val = val.tocBool();
+			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
+			return checkTypeCell(cell, true);
+		}
+		let resultNearest = -1;
+		let resultIndex = -1;
+		while (i <= j) {
+			const k = Math.floor((i + j) / 2);
+			const val = getValue(k);
+			if (this._compareTypes(val, valueForSearching) <= 0 && this._compareValues(val, valueForSearching, "<", opt_arg4)) {
+				revert ? j = k - 1: i = k + 1;
+				if (opt_arg4 === -1) {
+					resultNearest = k;
 				}
-
-				if (valueForSearching.type !== val.type) {
-					canCompare = valueForSearching.type !== cElementType.string && val.type !== cElementType.string;
+			} else {
+				if (this._compareTypes(val, valueForSearching) === 0 && this._compareValues(valueForSearching, val, "=")) {
+					resultIndex = k;
 				}
-
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4)) {
-					return elem.i;
-				} else if (canCompare && this._compareValues(valueForSearching, val, "<", opt_arg4)) {
-					j = k - 1;
-					if (opt_arg4 !== undefined) {
-						this._updateNextOptVal(elem.v, elem.i, valueForSearching, opt_arg4, true);
-					}
-				} else {
-					i = k + 1;
-					if (opt_arg4 !== undefined) {
-						this._updateNextOptVal(elem.v, elem.i, valueForSearching, opt_arg4, false);
-					}
+				if (opt_arg4 === 1) {
+					resultNearest = k;
 				}
+				revert ? i = k + 1 : j = k - 1;
 			}
 		}
-
-		if (xlookup) {
-			return -1;
+		if (opt_arg4 && resultIndex === -1) {
+			resultIndex = resultNearest;
 		}
-
-		let _res = Math.min(i, j);
-		_res = -1 === _res ? _res : array[_res].i;
-		return _res;
+		return resultIndex;
 	};
 	/**
 	 * @private
@@ -3547,7 +3548,7 @@ function (window, undefined) {
 			return {v: value, i: index}
 		}, function (value) {
 			return value.i
-		}, this.sortedCache.prototype.sortValues);
+		}, TypedCache.prototype.sortValues);
 	};
 	VHLOOKUPCache.prototype._getTypedCache = function(ws, rowCol, type) {
 		return this.typedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
@@ -3572,10 +3573,7 @@ function (window, undefined) {
 	};
 	VHLOOKUPCache.prototype._calculate = function (valueForSearching, lookup, opt_arg4, opt_arg5, opt_array, ws, rowCol, startIndex, endIndex) {
 		const t = this;
-		const wsId = ws.getId()
 		let res = -1;
-		this.nextVal = undefined;
-		this.nextValIndex = undefined;
 		let xlookup = opt_arg4 !== undefined && opt_arg5 !== undefined;
 		const revert = opt_arg5 < 0;
 
@@ -3587,32 +3585,32 @@ function (window, undefined) {
 		if (xlookup) {
 			if (Math.abs(opt_arg5) === 1) {
 				if (opt_array) {
-					res = this._simpleSearch(opt_array, valueForSearching,  revert, opt_arg4);
+					res = this._simpleSearch(valueForSearching,  revert, ws, startIndex, endIndex, rowCol,opt_arg4, opt_array);
 				} else if (opt_arg4 === 0) {
 					const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
-					res = this._indexedBinarySearch(sorted, valueForSearching, revert, ws, rowCol, startIndex, endIndex, opt_arg4);
+					if (sorted) {
+						res = this._indexedBinarySearch(sorted, valueForSearching, revert, ws, rowCol, startIndex, endIndex);
+					}
 				} else {
-					// TODO without opt_array (removing generate elems)
-					this._simpleSearch(opt_array, valueForSearching,  revert, opt_arg4);
+					res = this._simpleSearch(valueForSearching, revert, ws,startIndex, endIndex, rowCol, opt_arg4);
 				}
 			} else if (Math.abs(opt_arg5) === 2) {
-				res = this._xlookupBinarySearch(opt_array,valueForSearching,  revert, xlookup, opt_arg4);
-			}
-			if (res === -1) {
-				if ((opt_arg4 === -1 || opt_arg4 === 1) && this.nextVal) {
-					res = this.nextValIndex;
-				}
+				res = this._xlookupBinarySearch(valueForSearching,  revert, opt_arg4, startIndex, endIndex, ws, rowCol);
 			}
 		} else if (lookup) {
 			const typedCache = this._getTypedCache(ws, rowCol, valueForSearching.type);
 			const typedCacheValuesMap = this._getTypedCacheValuesMap(ws, rowCol, valueForSearching.type);
-			res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, typedCache, typedCacheValuesMap);
+			if (typedCache) {
+				res = this._defaultBinarySearch(valueForSearching, startIndex, endIndex, ws, rowCol, typedCache, typedCacheValuesMap);
+			}
 		} else {
 			if (opt_array) {
-				res = this._simpleSearch(opt_array, valueForSearching, false, opt_arg4);
+				res = this._simpleSearch(valueForSearching, false, startIndex, endIndex, null);
 			} else {
-				const sorted = this._getSortedCache(ws, rowCol);
-				res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex, opt_arg4);
+				const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
+				if (sorted) {
+					res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex);
+				}
 			}
 		}
 		return res;
@@ -3635,185 +3633,6 @@ function (window, undefined) {
 		this.typedCache.clean();
 		this.typedCacheValuesMap.clean();
 	};
-	VHLOOKUPCache.prototype.generateElements = function (range, cacheElem) {
-		var _this = this;
-		const bHor = this.bHor;
-
-		//сильного прироста не получил, пока оставляю прежнюю обработку, подумать на счёт разбития диапазонов
-		range._foreachNoEmpty(function (cell, r, c) {
-			const value = checkTypeCell(cell, true);
-			if (!cacheElem.elements[value.type]) {
-				cacheElem.elements[value.type] = [];
-			}
-			cacheElem.elements[value.type].push({v: value, i: bHor ? c : r});
-		});
-		return;
-
-		//попытка оптимизации фукнции. если находим диапазон, который полностью перекрывает текущий или пересекаемся с текущим - тогда данные из кэша берём и не обращаемся к модели
-		//флаг - получаем из кэша только первый элемент
-		var bFast = true;
-		if (range && cacheElem) {
-			//ищем пересечения с уже имеющимися диапазонами
-			var elementsIntervals = [];
-			var addByIntervals = function (_elem, isIntersection) {
-				if (elementsIntervals && elementsIntervals.length) {
-					for (var k = 0; k < elementsIntervals.length; k++) {
-						if (elementsIntervals[k].bbox.containsRange(_elem)) {
-							return;
-						} else if (_elem.bbox.containsRange(elementsIntervals[k].bbox)) {
-							elementsIntervals.splice(k, 1);
-							elementsIntervals.push(_elem);
-							return;
-						}
-					}
-				}
-
-				elementsIntervals.push(_elem);
-			};
-
-			var ws = range.getWorksheet();
-			if (ws) {
-				var rangeData = this.getRangeDataBySheetId(ws.Id);
-				if (rangeData) {
-					var interval, elem, intersection;
-					if (bFast) {
-						interval = rangeData.getFirst(range.bbox);
-						if (interval) {
-							elem = interval;
-							if (elem.bbox.containsRange(range.bbox)) {
-								//диапазон в кэшэ полностью перекрывает новый
-								//формируем новый массив из того, которые в кэше
-								if (elem.data && elem.data.elements) {
-									cacheElem.elements = elem.data.slice(_this.bHor ? range.bbox.c1 - elem.bbox.c1 : range.bbox.r1 - elem.bbox.r1, _this.bHor ? elem.bbox.c2 - range.bbox.c2 : elem.bbox.r2 - range.bbox.r2);
-									return;
-								}
-							} else /*if (range.bbox.containsRange(elem.bbox))*/{
-								//ищем пересечение
-								intersection = elem.bbox.intersection(range.bbox);
-								addByIntervals({bbox: intersection, elements: elem.data.elements.slice(_this.bHor ? intersection.c1 - elem.bbox.c1 : intersection.r1 - elem.bbox.r1, _this.bHor ? elem.bbox.c2 - intersection.c1 : elem.bbox.r2 - intersection.r1)});
-							}
-						}
-					} else {
-						var intervals = rangeData.tree && rangeData.tree.searchNodes(range.bbox);
-						if (intervals && intervals.length) {
-							for (var i = 0; i < intervals.length; i++) {
-								interval = intervals[i];
-								elem = interval.data;
-								if (elem.bbox.isIntersect(range.bbox)) {
-									if (elem.bbox.containsRange(range.bbox)) {
-										//диапазон в кэшэ полностью перекрывает новый
-										//формируем новый массив из того, которые в кэше
-										if (elem.data && elem.data.elements) {
-											cacheElem.elements = elem.data.slice(_this.bHor ? range.bbox.c1 - elem.bbox.c1 : range.bbox.r1 - elem.bbox.r1,
-												_this.bHor ? elem.bbox.c2 - range.bbox.c2 : elem.bbox.r2 - range.bbox.r2);
-											return;
-										}
-									} else /*if (range.bbox.containsRange(elem.bbox))*/{
-										//ищем пересечение
-										intersection = elem.bbox.intersection(range.bbox);
-										addByIntervals({
-											bbox: intersection,
-											elements: elem.data.elements.slice(_this.bHor ? intersection.c1 - elem.bbox.c1 : intersection.r1 - elem.bbox.r1,
-												_this.bHor ? elem.bbox.c2 - intersection.c1 : elem.bbox.r2 - intersection.r1)
-										});
-									}
-								}
-							}
-						}
-
-					}
-				}
-			}
-
-			var addElemsFromWs = function (_range) {
-				_range._foreachNoEmpty(function (cell, r, c) {
-					cacheElem.elements.push({v: checkTypeCell(cell, true), i: (_this.bHor ? c : r)});
-				});
-			};
-
-			if (elementsIntervals && elementsIntervals.length) {
-				//сортируем по порядку
-				elementsIntervals.sort(function (a, b) {
-					return _this.bHor ? b.c1 - a.c1 : b.r1 - a.r1;
-				});
-
-				//проходимся по всем диапазонам, заполняем "окна"
-				for (var j = 0; j < elementsIntervals.length; j++) {
-					var lastCacheElem = cacheElem.elements[cacheElem.elements.length - 1];
-					var elemIndex = elementsIntervals[j].elements[0].i;
-
-					//если в cacheElem ещё ничего не добавлено или индекс следующего элемента из интервала не соответвует индексу + 1 элемента из кэша
-					var cacheIndex = lastCacheElem && lastCacheElem.i;
-					if (!lastCacheElem || elemIndex !== lastCacheElem.i + 1) {
-						var r1, c1, r2, c2;
-						if (!lastCacheElem) {
-							if (!_this.bHor && range.bbox.r1 === elemIndex || _this.bHor && range.bbox.c1 === elemIndex) {
-								//начало диапазонов совпадает
-								cacheElem.elements = cacheElem.elements.concat(elementsIntervals[j].elements);
-								if (j === elementsIntervals.length - 1) {
-									lastCacheElem = cacheElem.elements[cacheElem.elements.length - 1];
-									cacheIndex = lastCacheElem && lastCacheElem.i;
-
-									if (!(!_this.bHor && range.bbox.r1 === cacheIndex || _this.bHor && range.bbox.c1 === cacheIndex)) {
-										//берём последние элементы
-										r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-										c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-										r2 = range.bbox.r2;
-										c2 =  range.bbox.c2;
-
-										addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-									}
-								}
-							} else {
-								//берём от начала range до начала первого интервала
-								r1 = range.bbox.r1;
-								c1 = range.bbox.c1;
-
-								r2 = !_this.bHor ? elemIndex - 1: range.bbox.r2;
-								c2 = _this.bHor ? elemIndex - 1 : range.bbox.c2;
-
-								addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-								j--;
-							}
-
-						} else {
-							//берём от конца последнего элемента из кэша до начала интервала
-							r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-							c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-							r2 = !_this.bHor ? elemIndex - 1: range.bbox.r2;
-							c2 = _this.bHor ? elemIndex - 1 : range.bbox.c2;
-
-							addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-							j--;
-						}
-					} else {
-						cacheElem.elements = cacheElem.elements.concat(elementsIntervals[j].elements);
-						if (j === elementsIntervals.length - 1) {
-							//берём последние элементы
-							r1 = !_this.bHor ? cacheIndex + 1 : range.bbox.r1;
-							c1 = _this.bHor ? cacheIndex + 1 : range.bbox.c1;
-
-							r2 = range.bbox.r2;
-							c2 =  range.bbox.c2;
-
-							addElemsFromWs(ws.getRange3(r1, c1, r2, c2));
-						}
-					}
-				}
-			} else {
-				addElemsFromWs(range);
-			}
-		}
-	};
-	VHLOOKUPCache.prototype.getRangeDataBySheetId = function (id) {
-		return this.cacheRanges[id];
-	};
-
-
-
-
 	function MatchCache() {
 		VHLOOKUPCache.call(this);
 	}
@@ -4574,9 +4393,6 @@ function (window, undefined) {
 			});
 			return res;
 		}
-	};
-	LOOKUPCache.prototype._calculate = function (cacheArray, valueForSearching, lookup) {
-		return _func.lookupBinarySearch(valueForSearching, cacheArray, true);
 	};
 
 	/**
