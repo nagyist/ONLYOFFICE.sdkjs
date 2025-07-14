@@ -2942,7 +2942,7 @@
 					AscFormat.CheckSpPrXfrm2(graphicObject);
 					xfrm = graphicObject.spPr.xfrm;
 
-					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1) - ws._getColLeft(0), 0, 3);
+					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1, true) - (ws.getRightToLeft() ? - ws._getColLeft(0) : ws._getColLeft(0)), 0, 3);
 					curRow = xfrm.offY - startRow + ws.objectRender.convertMetric(ws._getRowTop(addImagesFromWord[i].row + activeRange.r1) - ws._getRowTop(0), 0, 3);
 
 					xfrm.setOffX(curCol);

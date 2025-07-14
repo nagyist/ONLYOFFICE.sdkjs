@@ -2039,14 +2039,6 @@
 	window['AscDFH'].historyitem_DocumentContent_AddItem    = window['AscDFH'].historyitem_type_DocumentContent | 1;
 	window['AscDFH'].historyitem_DocumentContent_RemoveItem = window['AscDFH'].historyitem_type_DocumentContent | 2;
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в классе CAbstractNum
-	//------------------------------------------------------------------------------------------------------------------
-	window['AscDFH'].historyitem_AbstractNum_LvlChange    = window['AscDFH'].historyitem_type_AbstractNum | 1;
-	window['AscDFH'].historyitem_AbstractNum_TextPrChange = window['AscDFH'].historyitem_type_AbstractNum | 2;
-	window['AscDFH'].historyitem_AbstractNum_ParaPrChange = window['AscDFH'].historyitem_type_AbstractNum | 3;
-	window['AscDFH'].historyitem_AbstractNum_StyleLink    = window['AscDFH'].historyitem_type_AbstractNum | 4;
-	window['AscDFH'].historyitem_AbstractNum_NumStyleLink = window['AscDFH'].historyitem_type_AbstractNum | 5;
-	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в классе CNum
 	//------------------------------------------------------------------------------------------------------------------
 	window['AscDFH'].historyitem_Num_LvlOverrideChange = window['AscDFH'].historyitem_type_Num | 1;
@@ -4985,9 +4977,6 @@
 	};
 	CChangesBaseContentChange.prototype.ConvertToSimpleChanges = function()
 	{
-		if (this.UseArray && 1 === this.Items.length)
-			return [this];
-		
 		let arrSimpleActions = this.ConvertToSimpleActions();
 		let arrChanges       = [];
 

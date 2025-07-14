@@ -28196,7 +28196,7 @@
 					}
 				}
 
-				if (specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length) {
+				if (specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length && !(window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
 					allowedSpecialPasteProps.push(sProps.picture);
 				}
 
