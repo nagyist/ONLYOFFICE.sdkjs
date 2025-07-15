@@ -23100,18 +23100,17 @@ $(function () {
 		});
 		AscCommonExcel.g_oHLOOKUPCache.clean();
 
-		// TODO fix _defaultBinarySearch
-		// oParser = new parserFormula('HLOOKUP(,A1201:W1202,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'HLOOKUP(,A1201:W1202,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of HLOOKUP(,A1201:W1202,2,TRUE)');
-		//
-		// oParser = new parserFormula('HLOOKUP(2.4,A1201:W1202,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'HLOOKUP(2.4,A1201:W1202,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of HLOOKUP(2.4,A1201:W1202,2,TRUE)');
-		//
-		// oParser = new parserFormula('HLOOKUP("VIOLET",A1201:W1202,2,TRUE)', "A2", ws);
-		// assert.ok(oParser.parse(), 'HLOOKUP("VIOLET",A1201:W1202,2,TRUE)');
-		// assert.strictEqual(oParser.calculate().getValue(), 21, 'Result of HLOOKUP("VIOLET",A1201:W1202,2,TRUE)');
+		oParser = new parserFormula('HLOOKUP(,A1201:W1202,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(,A1201:W1202,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of HLOOKUP(,A1201:W1202,2,TRUE)');
+
+		oParser = new parserFormula('HLOOKUP(2.4,A1201:W1202,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(2.4,A1201:W1202,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of HLOOKUP(2.4,A1201:W1202,2,TRUE)');
+
+		oParser = new parserFormula('HLOOKUP("VIOLET",A1201:W1202,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP("VIOLET",A1201:W1202,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 21, 'Result of HLOOKUP("VIOLET",A1201:W1202,2,TRUE)');
 
 		oParser = new parserFormula('HLOOKUP(2.3,A1201:W1202,2,TRUE)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(2.3,A1201:W1202,2,TRUE)');
@@ -23790,7 +23789,7 @@ $(function () {
 
 		oParser = new parserFormula("LOOKUP(4.19, A102:A106, B102:B106)", "A2", ws);
 		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "orange");
+		assert.strictEqual(_getValue(oParser.calculate()), "orange");
 
 		oParser = new parserFormula("LOOKUP(5.75, A102:A106, B102:B106)", "A2", ws);
 		assert.ok(oParser.parse());
@@ -24844,23 +24843,21 @@ $(function () {
 		assert.ok(oParser.parse(), 'XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)');
 
-		// TODO FIX search with Empty Cells
-		// oParser = new parserFormula('XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
-		// assert.ok(oParser.parse(), 'XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
-		// assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
+		oParser = new parserFormula('XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
 
 		oParser = new parserFormula('XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
 
-		// TODO FIX _defaultBinarySearch
-		// oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
-		// assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
-		// assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
 
-		// oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
-		// assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
-		// assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
 
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,1)');
@@ -24870,15 +24867,13 @@ $(function () {
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,1)');
 
-		// TODO FIX simpleSearch
-		// oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)', "A2", ws);
-		// assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
-		// assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
 
-		// TODO FIX simpleSearch
-		// oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)', "A2", ws);
-		// assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
-		// assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
 
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)');
