@@ -378,75 +378,7 @@ function BinaryPPTYLoader()
                 s.Seek2(nCustomPos);
 
                 let customXmlManager = this.presentation.getCustomXmlManager();
-                let nCustomCount = s.GetULong();
-
-                if(nCustomCount > 0)
-                {
-                    for(let nRecord = 0; nRecord < nCustomCount; ++nRecord)
-                    {
-                        let custom = new AscWord.CustomXml();
-                        s.GetUChar(); // script custom type - 8
-
-                        let _rec_start = s.cur;
-                        let _end_rec = _rec_start + s.GetULong() + 4;
-
-                        while (s.cur < _end_rec)
-                        {
-                            var _at = s.GetUChar();
-                            s.GetULong();
-
-                            switch(_at)
-                            {
-                                case 0: {
-                                    custom.itemId = s.GetString2();
-                                    break;
-                                }
-                                case 1: {
-                                    let nsCount = s.GetUChar();
-                                    s.Skip2(4); // empty long
-                                    s.GetULong();
-                                    s.GetUChar();
-
-                                    for (let i = 0; i < nsCount; i++)
-                                    {
-                                        s.GetULong(); // skip len
-                                        s.Skip2(1); // skip g_nodeAttributeStart
-                                        s.Skip2(1); // skip 0
-
-                                        let ns = s.GetString2();
-
-                                        if (i === 0)
-                                        {
-                                            custom.setNamespaceUri(ns);
-                                            custom.nsManager.urls[ns] = ns;
-                                        }
-                                        else
-                                        {
-                                            custom.nsManager.urls[ns] = ns;
-                                        }
-
-                                        s.Skip2(1); // skip g_nodeAttributeEnd
-
-                                        if (i + 1 < nsCount)
-                                        {
-                                            s.Skip2(2);
-                                            s.GetULong();
-                                        }
-                                    }
-                                    break;
-                                }
-                                case 2: {
-                                    let len = s.GetULong();
-                                    let content = s.GetBufferUint8(len);
-                                    s.Skip2(len)
-                                    custom.addContent(content)
-                                }
-                            }
-                        }
-                        customXmlManager.add(custom);
-                    }
-                }
-                s.Seek2(nCustomPos);
+				(new AscCommon.BinaryCustomsTableReader(customXmlManager, s)).ReadPPTY();
             }
 
             if (undefined != _main_tables["48"])

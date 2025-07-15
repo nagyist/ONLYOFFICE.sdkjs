@@ -34,6 +34,17 @@
 
 (function (AscCommon)
 {
+	
+	let c_oSerCustomsPPTY = {
+		Custom: 8,
+		
+		ItemId: 0,
+		Uri: 1,
+		Content : 2,
+		
+		Uri2 : 0
+	};
+	
 	/**
 	 * @param xmlManager
 	 * @param stream
@@ -123,6 +134,61 @@
 			} else {
 				return c_oSerConstants.ReadUnknown;
 			}
+			return c_oSerConstants.ReadOk;
+		};
+		this.ReadPPTY = function() {
+			let s = this.stream;
+			let count = s.GetULong();
+			for (let i = 0; i < count; ++i) {
+				let t = this.stream.GetUChar();
+				let l = this.stream.GetULongLE();
+				this.ReadCustomPPTY(t, l);
+			}
+		};
+		this.ReadCustomPPTY = function(type, length) {
+			let res;
+			if (c_oSerCustomsPPTY.Custom === type) {
+				let customXml = new AscWord.CustomXml();
+				res = this.bcr.Read1(length, function(t, l) {
+					return _t.ReadCustomContentPPTY(t, l, customXml);
+				});
+				this.customXmlManager.add(customXml);
+			} else {
+				res = c_oSerConstants.ReadUnknown;
+			}
+			return res;
+		};
+		this.ReadCustomContentPPTY = function(type, length, customXml) {
+			if (c_oSerCustomsPPTY.Uri === type) {
+				let count = this.stream.GetULong();
+				for (let i = 0; i < count; ++i) {
+					let t = this.stream.GetUChar(); // must be 0
+					let l = this.stream.GetULongLE();
+					
+					this.bcr.Read1(l, function(t, l) {
+						return _t.ReadCustomUriPPTY(t, l, customXml);
+					});
+				}
+			} else if (c_oSerCustomsPPTY.ItemId === type) {
+				customXml.itemId = this.stream.GetString2(length);
+			} else if (c_oSerCustomsPPTY.Content === type) {
+				let len = this.stream.GetULong();
+				customXml.addContent(this.stream.GetBufferUint8(len));
+			} else {
+				return c_oSerConstants.ReadUnknown;
+			}
+			return c_oSerConstants.ReadOk;
+		};
+		this.ReadCustomUriPPTY = function(type, length, customXml) {
+			if (type !== c_oSerCustomsPPTY.Uri2) {
+				return c_oSerConstants.ReadUnknown;
+			}
+			this.stream.GetUChar(); // AscCommon.g_nodeAttributeStart
+			if (0 === this.stream.GetUChar()) {
+				let ns = this.stream.GetString2();
+				customXml.setNamespaceUri(ns);
+			}
+			this.stream.GetUChar(); // AscCommon.g_nodeAttributeEnd
 			return c_oSerConstants.ReadOk;
 		};
 	}
