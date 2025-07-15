@@ -15055,7 +15055,7 @@
 
 	function applyElementDirection(element) {
 		if (AscCommon.AscBrowser.isIE) {
-			this.topLineEditorElement.addEventListener('input', function () {
+			element.addEventListener('input', function () {
 				const text = element.textContent || element.innerText || '';
 				let dir = 'ltr';
 				for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {
