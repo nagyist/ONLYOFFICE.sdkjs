@@ -3509,7 +3509,7 @@ function (window, undefined) {
 					resultNearest = k;
 				}
 			} else {
-				if (typeComparison === 0 && this._compareValues(valueForSearching, val, "=")) {
+				if (typeComparison === 0 && this._compareValues(valueForSearching, val, "=", opt_arg4)) {
 					resultIndex = k;
 				}
 				if (opt_arg4 === 1) {
@@ -3522,30 +3522,6 @@ function (window, undefined) {
 			resultIndex = resultNearest;
 		}
 		return resultIndex;
-	};
-	/**
-	 * @private
-	 * @param {LookUpElement} nextVal
-	 * @param {number} nextIndex
-	 * @param {LookUpElement} arrayVal
-	 * @param {LookUpElement} searchVal
-	 * @param {number} [opt_arg4]
-	 * @param {boolean} [isGreater]
-	 * @returns {LookUpElement}
-	 */
-	VHLOOKUPCache.prototype._updateNextOptVal = function (arrayVal, nextIndex, searchVal, opt_arg4, isGreater) {
-		let _needPush;
-		if (opt_arg4 === -1 && (isGreater === false || (isGreater === undefined && this._compareValues(arrayVal, searchVal, "<", opt_arg4)))) {
-			_needPush = true;
-		} else if (opt_arg4 === 1 && (isGreater || (isGreater === undefined && this._compareValues(arrayVal, searchVal, ">", opt_arg4)))) {
-			_needPush = true;
-		}
-		if (_needPush) {
-			if (this.nextVal === undefined || this._compareValues(arrayVal, this.nextVal, opt_arg4 === 1 ? "<" : ">", opt_arg4)) {
-				this.nextVal = arrayVal;
-				this.nextValIndex = nextIndex;
-			}
-		}
 	};
 	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type) {
 		return this.sortedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
