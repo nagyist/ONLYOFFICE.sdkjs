@@ -3109,11 +3109,11 @@ function (window, undefined) {
 		for(let i in tmpArrays) {
 			if (i === String(cElementType.number)) {
 				tmpArrays[i].sort(function (a, b) {
-					return a.v.value - b.v.value;
+					return a.v - b.v;
 				});
 			} else {
 				tmpArrays[i].sort(function (a, b) {
-					return String(a.v.value).toLowerCase().localeCompare(String(b.v.value).toLowerCase());
+					return a.v.localeCompare(b.v);
 				});
 			}
 		}
@@ -3275,22 +3275,22 @@ function (window, undefined) {
 			return checkTypeCell(cell, true);
 		}
 		const updateNearest = function(value, valueIndex) {
-			if (opt_arg4 === 1 && t._compareValues(value, valueForSearching, ">") && t._compareTypes(value, valueForSearching) >= 0) {
+			if (opt_arg4 === 1 && t._compareTypes(value, valueForSearching) >= 0 && t._compareValues(value, valueForSearching, ">")) {
 				if (nearestValue === null) {
 					nearestValue = value;
 					nearestIndex = valueIndex;
 				}
-				if (t._compareValues(value, nearestValue, "<") && t._compareTypes(value, nearestValue) <= 0) {
+				if (t._compareTypes(value, nearestValue) <= 0 && t._compareValues(value, nearestValue, "<")) {
 					nearestIndex = valueIndex;
 					nearestValue = value;
 				}
 			}
-			if (opt_arg4 === -1 && t._compareValues(value, valueForSearching,"<") && t._compareTypes(value, valueForSearching) <= 0) {
+			if (opt_arg4 === -1 && t._compareTypes(value, valueForSearching) <= 0 && t._compareValues(value, valueForSearching,"<")) {
 				if (nearestValue === null) {
 					nearestValue = value;
 					nearestIndex = valueIndex;
 				}
-				if (t._compareValues(value, nearestValue, ">") && t._compareTypes(value, nearestValue) >= 0) {
+				if (t._compareTypes(value, nearestValue) >= 0 && t._compareValues(value, nearestValue, ">")) {
 					nearestIndex = valueIndex;
 					nearestValue = value;
 				}
@@ -3299,7 +3299,7 @@ function (window, undefined) {
 		if (revert) {
 			for (let i = endIndex; i >= startIndex; i -= 1) {
 				const val = getValue(i);
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4) && val.type === valueForSearching.type) {
+				if (val.type === valueForSearching.type && this._compareValues(valueForSearching, val, "=", opt_arg4)) {
 					resultIndex = opt_array ? opt_array[i].i : i;
 					break;
 				}
@@ -3310,7 +3310,7 @@ function (window, undefined) {
 		} else {
 			for (let i = startIndex; i <= endIndex; i += 1) {
 				const val = getValue(i);
-				if (this._compareValues(valueForSearching, val, "=", opt_arg4) && val.type === valueForSearching.type) {
+				if (val.type === valueForSearching.type && this._compareValues(valueForSearching, val, "=", opt_arg4)) {
 					resultIndex = opt_array ? opt_array[i].i : i;
 					break;
 				}
@@ -3549,7 +3549,11 @@ function (window, undefined) {
 	};
 	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type) {
 		return this.sortedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
-			return {v: value, i: index}
+			if (value.type === cElementType.number) {
+				return {v: value.value, i: index};
+			} else {
+				return {v: String(value.value).toLowerCase(), i: index};
+			}
 		}, function (value) {
 			return value.i
 		}, TypedCache.prototype.sortValues);
@@ -3609,7 +3613,7 @@ function (window, undefined) {
 			}
 		} else {
 			if (opt_array) {
-				res = this._simpleSearch(valueForSearching, false, startIndex, endIndex, null);
+				res = this._simpleSearch(valueForSearching, false, ws, startIndex, endIndex, rowCol,opt_arg4, opt_array);
 			} else {
 				const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
 				if (sorted) {
