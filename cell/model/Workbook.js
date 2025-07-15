@@ -3165,7 +3165,7 @@
 		this.workbookProtection = null;
 		this.fileSharing = null;
 
-		this.customXmlManager = new AscWord.CustomXmlManager(this);
+		this.customXmlManager = isMainLogicDocument ? new AscWord.CustomXmlManager(this) : null;
 		this.oGoalSeek = null;
 		this.oSolver = null;
 
