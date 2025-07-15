@@ -3366,8 +3366,9 @@ function (window, undefined) {
 	};
 	VHLOOKUPCache.prototype._findNextCorrectType = function(currentIndex, typed, currentEnd) {
 		let i = 0;
-		let j = typed.length - 1
+		let j = typed.length - 1;
 		let result = currentIndex;
+		// Binary search for first element >= currentIndex
 		while (i <= j) {
 			let k = Math.floor((i + j) / 2);
 			if (typed[k] < currentIndex) {
@@ -3376,9 +3377,9 @@ function (window, undefined) {
 				j = k - 1;
 			}
 		}
-		const found = typed[Math.max(i, j)];
-		if (found <= currentEnd) {
-			result = found;
+		// i > j and points to first element >= currentIndex
+		if (i < typed.length && typed[i] <= currentEnd) {
+			result = typed[i];
 		}
 		return result;
 	};
@@ -3452,21 +3453,23 @@ function (window, undefined) {
 			let val = getValue(k);
 			if (val.type !== valueForSearching.type) {
 				k = this._findNextCorrectType(k, typed, j);
+				val = getValue(k);
 			}
-			val = getValue(k);
 			if (val.type !== valueForSearching.type || this._compareValues(val, valueForSearching, ">")) {
 				j = k - 1;
 			} else {
 				resultIndex = k;
 				if (this._compareValues(val, valueForSearching, "=")) {
 					let currentIndexInTyped = this._findIndexInTyped(k, typed);
-					resultIndex = this._findLastSame(currentIndexInTyped, typed, typedMap, endIndex);
+					if (currentIndexInTyped !== -1) {
+						resultIndex = this._findLastSame(currentIndexInTyped, typed, typedMap, endIndex);
+					}
 					break;
 				}
 				i = k + 1;
 			}
 		}
-		if (opt_array) {
+		if (opt_array && resultIndex >= 0 && resultIndex < opt_array.length) {
 			resultIndex = opt_array[resultIndex].i;
 		}
 		return resultIndex;
@@ -3499,13 +3502,14 @@ function (window, undefined) {
 		while (i <= j) {
 			const k = Math.floor((i + j) / 2);
 			const val = getValue(k);
-			if (this._compareTypes(val, valueForSearching) <= 0 && this._compareValues(val, valueForSearching, "<", opt_arg4)) {
+			const typeComparison = this._compareTypes(val, valueForSearching);
+			if (typeComparison <= 0 && this._compareValues(val, valueForSearching, "<", opt_arg4)) {
 				revert ? j = k - 1: i = k + 1;
 				if (opt_arg4 === -1) {
 					resultNearest = k;
 				}
 			} else {
-				if (this._compareTypes(val, valueForSearching) === 0 && this._compareValues(valueForSearching, val, "=")) {
+				if (typeComparison === 0 && this._compareValues(valueForSearching, val, "=")) {
 					resultIndex = k;
 				}
 				if (opt_arg4 === 1) {
