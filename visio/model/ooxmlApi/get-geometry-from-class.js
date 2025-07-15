@@ -108,20 +108,13 @@
 		let pathWithFill = new AscFormat.Path();
 		let pathWithoutFill = new AscFormat.Path();
 
-		let pathW = undefined;
-		let pathH = undefined;
-
 		pathWithFill.setExtrusionOk(false);
 		pathWithFill.setFill("norm");
 		pathWithFill.setStroke(true);
-		pathWithFill.setPathW(pathW);
-		pathWithFill.setPathH(pathH);
 
 		pathWithoutFill.setExtrusionOk(false);
 		pathWithoutFill.setFill("none");
 		pathWithoutFill.setStroke(true);
-		pathWithoutFill.setPathW(pathW);
-		pathWithoutFill.setPathH(pathH);
 
 		// for path overlap fix: If there is only equal geometry section NoLine values
 		// we can set true NoLine value for path
@@ -877,28 +870,34 @@
 		}
 
 		geometry.setPreset("Any");
-		const needNormalize = false;
-		let maxPathSize = 43000;
-		if (needNormalize) {
-			if (shapeWidth > 0 && shapeHeight > 0) {
-				const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
-				const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
+
+		// setting path width below
+		// zero shape width or height can't be used in normalizeCoordinates because there is division by the width or height
+		// also zero path w or h refers to empty shape
+		if (shapeWidth > 0 && shapeHeight > 0) {
+			const needNormalize = true;
+			const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
+			const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
+			let maxPathSize = 100000;
+			
+			if (needNormalize) {
 				pathWithFill.setPathW(maxPathSize);
 				pathWithFill.setPathH(maxPathSize);
 				pathWithFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
-			}
-		}
-		geometry.AddPath(pathWithFill);
 
-		if (needNormalize) {
-			if (pathW > 0 && pathH > 0) {
-				const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
-				const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
+				pathWithoutFill.setPathW(maxPathSize);
+				pathWithoutFill.setPathH(maxPathSize);
+				pathWithoutFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
+			} else {
+				pathWithFill.setPathW(shapeWidthEmu);
+				pathWithFill.setPathH(shapeHeightEmu);
+
 				pathWithoutFill.setPathW(shapeWidthEmu);
 				pathWithoutFill.setPathH(shapeHeightEmu);
-				pathWithoutFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
 			}
 		}
+
+		geometry.AddPath(pathWithFill);
 		geometry.AddPath(pathWithoutFill);
 
 		// TODO add connections

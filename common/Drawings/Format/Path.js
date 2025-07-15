@@ -487,16 +487,16 @@ function (window, undefined) {
 	
 	/**
 	 * Normalizes coordinates in ArrPathCommandInfo by scaling them relative to max values
-	 * @param {number} maxX - The maximum X coordinate to normalize by
-	 * @param {number} maxY - The maximum Y coordinate to normalize by
-	 * @param {number} width - The destination width to scale to
-	 * @param {number} height - The destination height to scale to
+	 * @param {number} shapeWidth - The maximum X coordinate to normalize by
+	 * @param {number} shapeHeight - The maximum Y coordinate to normalize by
+	 * @param {number} pathWidth - The destination width to scale to
+	 * @param {number} pathHeight - The destination height to scale to
 	 */
-	Path.prototype.normalizeCoordinates = function (maxX, maxY, width, height) {
-		if (maxX === 0 || maxY === 0) {
+	Path.prototype.normalizeCoordinates = function (shapeWidth, shapeHeight, pathWidth, pathHeight) {
+		if (shapeWidth === 0 || shapeHeight === 0) {
 			return;
 		}
-		
+
 		let command;
 		let controlPoint;
 		
@@ -506,43 +506,43 @@ function (window, undefined) {
 			switch (command.id) {
 				case moveTo:
 				case lineTo:
-					command.X = Math.round((command.X / maxX) * width);
-					command.Y = Math.round((command.Y / maxY) * height);
+					command.X = Math.round((command.X / shapeWidth) * pathWidth);
+					command.Y = Math.round((command.Y / shapeHeight) * pathHeight);
 					break;
 					
 				case arcTo:
-					command.wR = Math.round((command.wR / maxX) * width);
-					command.hR = Math.round((command.hR / maxY) * height);
+					command.wR = Math.round((command.wR / shapeWidth) * pathWidth);
+					command.hR = Math.round((command.hR / shapeHeight) * pathHeight);
 					break;
 					
 				case bezier3:
-					command.X0 = Math.round((command.X0 / maxX) * width);
-					command.Y0 = Math.round((command.Y0 / maxY) * height);
-					command.X1 = Math.round((command.X1 / maxX) * width);
-					command.Y1 = Math.round((command.Y1 / maxY) * height);
+					command.X0 = Math.round((command.X0 / shapeWidth) * pathWidth);
+					command.Y0 = Math.round((command.Y0 / shapeHeight) * pathHeight);
+					command.X1 = Math.round((command.X1 / shapeWidth) * pathWidth);
+					command.Y1 = Math.round((command.Y1 / shapeHeight) * pathHeight);
 					break;
 					
 				case bezier4:
-					command.X0 = Math.round((command.X0 / maxX) * width);
-					command.Y0 = Math.round((command.Y0 / maxY) * height);
-					command.X1 = Math.round((command.X1 / maxX) * width);
-					command.Y1 = Math.round((command.Y1 / maxY) * height);
-					command.X2 = Math.round((command.X2 / maxX) * width);
-					command.Y2 = Math.round((command.Y2 / maxY) * height);
+					command.X0 = Math.round((command.X0 / shapeWidth) * pathWidth);
+					command.Y0 = Math.round((command.Y0 / shapeHeight) * pathHeight);
+					command.X1 = Math.round((command.X1 / shapeWidth) * pathWidth);
+					command.Y1 = Math.round((command.Y1 / shapeHeight) * pathHeight);
+					command.X2 = Math.round((command.X2 / shapeWidth) * pathWidth);
+					command.Y2 = Math.round((command.Y2 / shapeHeight) * pathHeight);
 					break;
 					
 				case ellipticalArcTo:
-					command.x = Math.round((command.x / maxX) * width);
-					command.y = Math.round((command.y / maxY) * height);
-					command.a = Math.round((command.a / maxX) * width);
-					command.b = Math.round((command.b / maxY) * height);
+					command.x = Math.round((command.x / shapeWidth) * pathWidth);
+					command.y = Math.round((command.y / shapeHeight) * pathHeight);
+					command.a = Math.round((command.a / shapeWidth) * pathWidth);
+					command.b = Math.round((command.b / shapeHeight) * pathHeight);
 					break;
 					
 				case nurbsTo:
 					for (let j = 0; j < command.controlPoints.length; j++) {
 						controlPoint = command.controlPoints[j];
-						controlPoint.x = Math.round((controlPoint.x / maxX) * width);
-						controlPoint.y = Math.round((controlPoint.y / maxY) * height);
+						controlPoint.x = Math.round((controlPoint.x / shapeWidth) * pathWidth);
+						controlPoint.y = Math.round((controlPoint.y / shapeHeight) * pathHeight);
 					}
 					break;
 					
