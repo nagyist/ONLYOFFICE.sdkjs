@@ -3247,10 +3247,25 @@ function (window, undefined) {
 			return res;
 		}
 	};
+	/**
+	 * Compares the data types of two values according to Excel's type hierarchy.
+	 * Returns a numeric comparison result where negative means val1 type is "less than" val2 type,
+	 * positive means val1 type is "greater than" val2 type, and zero means same type.
+	 * 
+	 * @private
+	 * @param {LookUpElement} val1 - First value to compare
+	 * @param {LookUpElement} val2 - Second value to compare
+	 * @return {number} Negative if val1.type < val2.type, positive if val1.type > val2.type, zero if equal
+	 */
 	VHLOOKUPCache.prototype._compareTypes = function (val1, val2) {
 		return val1.type - val2.type;
 	};
 	/**
+	 * A simple linear traversal of a column or row.
+	 * When the specified XLOOKUP parameter (opt_arg4) is set,
+	 * it also retains the nearest larger or smaller element
+	 * than the specified value.
+	 * 
 	 * @private
 	 * @param {LookUpElement} valueForSearching
 	 * @param {boolean} revert
@@ -3325,6 +3340,8 @@ function (window, undefined) {
 		return resultIndex;
 	};
 	/**
+	 * Traversal of a pre-saved and sorted typed array using binary search.
+	 * Used only for exact match lookups in VLOOKUP, HLOOKUP, or XLOOKUP when opt_arg4 is set to 0.
 	 * @private
 	 * @param {Uint32Array} array
 	 * @param {LookUpElement} valueForSearching
@@ -3364,6 +3381,14 @@ function (window, undefined) {
 		}
 		return resultIndex;
 	};
+	/**
+	 * Binary search down a typed array that returns the position of the nearest element with the same type as the target element.
+	 * @private
+	 * @param {number} currentIndex
+	 * @param {Uint32Array} typed
+	 * @param {number} currentEnd
+	 * @return {number}
+	 */
 	VHLOOKUPCache.prototype._findNextCorrectType = function(currentIndex, typed, currentEnd) {
 		let i = 0;
 		let j = typed.length - 1;
@@ -3383,6 +3408,13 @@ function (window, undefined) {
 		}
 		return result;
 	};
+	/**
+	 * A method that retrieves an element in a typed array by row or column index.
+	 * @private
+	 * @param {number} currentIndex
+	 * @param {Uint32Array} typed
+	 * @return {number}
+	 */
 	VHLOOKUPCache.prototype._findIndexInTyped = function(currentIndex, typed) {
 		let i = 0;
 		let j = typed.length - 1
@@ -3400,6 +3432,21 @@ function (window, undefined) {
 		}
 		return foundCurrent;
 	};
+	/**
+	 * Finds the last occurrence of the same value in a sorted typed array.
+	 * This function is crucial for Excel's VLOOKUP/HLOOKUP approximate match behavior,
+	 * which requires returning the position of the LAST duplicate value when exact matches exist.
+	 * 
+	 * Uses binary search to efficiently locate the rightmost occurrence of a value
+	 * within the specified range boundaries.
+	 * 
+	 * @private
+	 * @param {number} currentIndexInTyped - The index in the typed array where the first match was found
+	 * @param {Uint32Array} typed - Sorted array containing worksheet row/column indices of cells with matching data types
+	 * @param {Uint32Array} typedMap - Mapping array where each element represents a unique value group identifier, used for efficient duplicate detection
+	 * @param {number} endIndex - The maximum allowed index boundary for the search range
+	 * @return {number} The worksheet row/column index of the last occurrence of the same value within the specified range
+	 */
 	VHLOOKUPCache.prototype._findLastSame = function(currentIndexInTyped, typed, typedMap, endIndex) {
 		const currentValue = typedMap[currentIndexInTyped];
 		let i = currentIndexInTyped + 1;
@@ -3421,16 +3468,24 @@ function (window, undefined) {
 		return resultIndex;
 	};
 	/**
+	 * Performs a binary search to find the position of a value in a sorted range or array.
+	 * This is the default binary search implementation used for approximate match lookups
+	 * in VLOOKUP and HLOOKUP functions when the range_lookup parameter is TRUE.
+	 * 
+	 * The function searches for the largest value that is less than or equal to the lookup value.
+	 * If an exact match is found, it returns the position of the last occurrence of that value.
+	 * The search is optimized using typed arrays for better performance with large datasets.
+	 * 
 	 * @private
-	 * @param {LookUpElement} valueForSearching
-	 * @param {number} startIndex
-	 * @param {number} endIndex
-	 * @param {Worksheet} ws
-	 * @param {number} rowCol
-	 * @param {Uint32Array} typed
-	 * @param {Uint32Array} typedMap
-	 * @param {{i: number, v: LookUpElement}[]} [opt_array]
-	 * @return {number}
+	 * @param {LookUpElement} valueForSearching - The value to search for in the range/array
+	 * @param {number} startIndex - The starting index of the search range (inclusive)
+	 * @param {number} endIndex - The ending index of the search range (inclusive)
+	 * @param {Worksheet} ws - The worksheet containing the data to search
+	 * @param {number} rowCol - The row (for VLOOKUP) or column (for HLOOKUP) index to search in
+	 * @param {Uint32Array} typed - Pre-sorted typed array containing indices of cells with matching data types
+	 * @param {Uint32Array} typedMap - Mapping array for efficient value comparison during binary search
+	 * @param {{i: number, v: LookUpElement}[]} [opt_array] - Optional array of objects with index and value properties, used when searching in arrays instead of worksheet ranges
+	 * @return {number} The index of the found element (0-based), or -1 if no suitable match is found. For approximate matches, returns the index of the largest value that is less than or equal to the search value.
 	 */
 	VHLOOKUPCache.prototype._defaultBinarySearch = function (valueForSearching, startIndex, endIndex, ws, rowCol, typed, typedMap, opt_array) {
 		let i = startIndex;
@@ -3446,45 +3501,71 @@ function (window, undefined) {
 		let resultIndex = -1;
 		while (i <= j) {
 			let k = Math.floor((i + j) / 2);
+			// Check if we've gone beyond the bounds of the typed array
 			if (k > typed[typed.length - 1]) {
 				j = k - 1;
 				continue;
 			}
+			
 			let val = getValue(k);
+			// IMPORTANT FEATURE: Check data type matching
+			// In Excel, only values of the same type are compared (number with number, string with string)
 			if (val.type !== valueForSearching.type) {
+				// If types don't match, find nearest element with correct type
 				k = this._findNextCorrectType(k, typed, j);
 				val = getValue(k);
 			}
+			
+			// Main comparison logic:
+			// If current value is greater than searched value OR types don't match,
+			// narrow search to left half
 			if (val.type !== valueForSearching.type || this._compareValues(val, valueForSearching, ">")) {
 				j = k - 1;
 			} else {
+				// If current value is less than or equal to searched value,
+				// remember it as potential result
 				resultIndex = k;
+				
+				// KEY FEATURE: if exact match is found,
+				// search for the LAST occurrence of this value in the range
 				if (this._compareValues(val, valueForSearching, "=")) {
+					// Find position in typed array
 					let currentIndexInTyped = this._findIndexInTyped(k, typed);
 					if (currentIndexInTyped !== -1) {
+						// Search for last occurrence of the same value
 						resultIndex = this._findLastSame(currentIndexInTyped, typed, typedMap, endIndex);
 					}
 					break;
 				}
+				
+				// If no exact match, continue searching in right half
+				// to find largest value that is <= searched value
 				i = k + 1;
 			}
 		}
+		
+		// Final result processing:
+		// If working with array, return original element index
 		if (opt_array && resultIndex >= 0 && resultIndex < opt_array.length) {
 			resultIndex = opt_array[resultIndex].i;
 		}
+		
 		return resultIndex;
 	};
 	/**
+	 * Performs a specialized binary search for XLOOKUP function with support for different match modes.
+	 * This function implements Excel's XLOOKUP binary search behavior, which differs from standard
+	 * VLOOKUP/HLOOKUP by supporting exact matches, next larger/smaller value searches, and reverse search direction.
 	 * @private
-	 * @param {LookUpElement} valueForSearching
-	 * @param {boolean} revert
-	 * @param {number} opt_arg4
-	 * @param {number} startIndex
-	 * @param {number} endIndex
-	 * @param {Worksheet} ws
-	 * @param {number} rowCol
-	 * @param {LookUpElement[]} opt_array
-	 * @return {number}
+	 * @param {LookUpElement} valueForSearching - The value to search for in the range/array
+	 * @param {boolean} revert - Whether to search in reverse direction (from end to start)
+	 * @param {number} opt_arg4 - Match mode: 0 = exact, 1 = exact or next larger, -1 = exact or next smaller
+	 * @param {number} startIndex - The starting index of the search range (inclusive)
+	 * @param {number} endIndex - The ending index of the search range (inclusive)
+	 * @param {Worksheet} ws - The worksheet containing the data to search (null if using opt_array)
+	 * @param {number} rowCol - The row (for VLOOKUP) or column (for HLOOKUP) index to search in
+	 * @param {LookUpElement[]} opt_array - Optional array of objects with index and value properties for array-based search
+	 * @return {number} The index of the found element, or -1 if no suitable match is found according to the specified match mode
 	 */
 	VHLOOKUPCache.prototype._xlookupBinarySearch = function (valueForSearching, revert, opt_arg4, startIndex, endIndex, ws, rowCol, opt_array) {
 		let i = startIndex;
@@ -3497,11 +3578,15 @@ function (window, undefined) {
 			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
 			return checkTypeCell(cell, true);
 		}
-		let resultNearest = -1;
-		let resultIndex = -1;
+		
+		let resultNearest = -1;  // Stores index of nearest value (for approximate matches)
+		let resultIndex = -1;    // Stores index of exact match
+		
 		while (i <= j) {
 			const k = Math.floor((i + j) / 2);
 			const val = getValue(k);
+			
+			// Compare data types first (numbers < strings < booleans < errors in Excel)
 			const typeComparison = this._compareTypes(val, valueForSearching);
 			if (typeComparison <= 0 && this._compareValues(val, valueForSearching, "<", opt_arg4)) {
 				revert ? j = k - 1: i = k + 1;
@@ -3510,7 +3595,7 @@ function (window, undefined) {
 				}
 			} else {
 				if (typeComparison === 0 && this._compareValues(valueForSearching, val, "=", opt_arg4)) {
-					resultIndex = k;
+					resultIndex = k;  // Found exact match
 				}
 				if (opt_arg4 === 1) {
 					resultNearest = k;
@@ -3521,8 +3606,20 @@ function (window, undefined) {
 		if (opt_arg4 && resultIndex === -1) {
 			resultIndex = resultNearest;
 		}
+		
 		return resultIndex;
 	};
+	/**
+	 * Retrieves or generates a sorted cache for exact match lookups in XLOOKUP.
+	 * Creates a typed array containing worksheet indices sorted by cell values,
+	 * used for efficient binary search operations when opt_arg4 is 0.
+	 * 
+	 * @private
+	 * @param {Worksheet} ws - The worksheet containing the data
+	 * @param {number} rowCol - Row (VLOOKUP) or column (HLOOKUP) index
+	 * @param {cElementType} type - Data type to filter and cache
+	 * @return {Uint32Array} Sorted array of worksheet indices for the specified data type
+	 */
 	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type) {
 		return this.sortedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
 			if (value.type === cElementType.number) {
@@ -3534,6 +3631,17 @@ function (window, undefined) {
 			return value.i
 		}, TypedCache.prototype.sortValues);
 	};
+	/**
+	 * Retrieves or generates a typed cache containing worksheet indices for approximate match lookups.
+	 * Creates a typed array of row/column indices for cells of the specified data type,
+	 * used in VLOOKUP/HLOOKUP binary search operations.
+	 * 
+	 * @private
+	 * @param {Worksheet} ws - The worksheet containing the data
+	 * @param {number} rowCol - Row (VLOOKUP) or column (HLOOKUP) index
+	 * @param {cElementType} type - Data type to filter and cache
+	 * @return {Uint32Array} Array of worksheet indices for cells of the specified type
+	 */
 	VHLOOKUPCache.prototype._getTypedCache = function(ws, rowCol, type) {
 		return this.typedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
 			return index;
@@ -3541,11 +3649,22 @@ function (window, undefined) {
 			return value;
 		});
 	};
+	/**
+	 * Retrieves or generates a values mapping cache for efficient duplicate detection in binary search.
+	 * Creates a typed array where each element represents a unique value group identifier,
+	 * used to quickly find the last occurrence of duplicate values in VLOOKUP/HLOOKUP operations.
+	 * 
+	 * @private
+	 * @param {Worksheet} ws - The worksheet containing the data
+	 * @param {number} rowCol - Row (VLOOKUP) or column (HLOOKUP) index
+	 * @param {cElementType} type - Data type to filter and cache
+	 * @return {Uint32Array} Array mapping each cell position to its value group identifier
+	 */
 	VHLOOKUPCache.prototype._getTypedCacheValuesMap = function(ws, rowCol, type) {
 		const t = this;
 		let idx = 0;
 		let lastCellValue = null;
-		return this.typedCacheValuesMap.getCache(ws, this.bHor, rowCol, type, function(value, index) {
+		return this.typedCacheValuesMap.getCache(ws, this.bHor, rowCol, type, function(value) {
 			if (lastCellValue !== null && t._compareValues(lastCellValue, value, '<>')) {
 				idx += 1;
 			}
@@ -3555,6 +3674,23 @@ function (window, undefined) {
 			return value;
 		});
 	};
+	/**
+	 * Main calculation method that routes to appropriate search algorithm based on function type and parameters.
+	 * Handles LOOKUP, VLOOKUP, HLOOKUP, and XLOOKUP search operations by selecting the optimal search strategy
+	 * (simple linear search, binary search, or specialized V/HLOOKUP binary search) based on the input parameters.
+	 * 
+	 * @private
+	 * @param {LookUpElement} valueForSearching - The value to search for
+	 * @param {boolean} lookup - True for VLOOKUP/HLOOKUP approximate match, false for exact match
+	 * @param {number} [opt_arg4] - XLOOKUP match mode (0=exact, 1=exact or larger, -1=exact or smaller)
+	 * @param {number} [opt_arg5] - XLOOKUP search mode (1=first to last, -1=last to first, 2=binary ascending, -2=binary descending)
+	 * @param {LookUpElement[]} [opt_array] - Optional array for array-based search instead of worksheet
+	 * @param {Worksheet} ws - Worksheet containing the data (null if using opt_array)
+	 * @param {number} rowCol - Row (VLOOKUP) or column (HLOOKUP) index to search in
+	 * @param {number} startIndex - Starting index of search range
+	 * @param {number} endIndex - Ending index of search range
+	 * @return {number} Index of found element or -1 if not found
+	 */
 	VHLOOKUPCache.prototype._calculate = function (valueForSearching, lookup, opt_arg4, opt_arg5, opt_array, ws, rowCol, startIndex, endIndex) {
 		const t = this;
 		let res = -1;
