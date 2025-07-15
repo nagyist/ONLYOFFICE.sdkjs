@@ -93,6 +93,52 @@
 				});
 			}
 		};
+		
+		this.WritePPTY = function() {
+			let s = this.memory;
+			let count = this.customXmlManager.getCount();
+			
+			s.WriteULong(count);
+			for (let i = 0; i < count; ++i) {
+				let customXml = this.customXmlManager.getCustomXml(i);
+				s.StartRecord(c_oSerCustomsPPTY.Custom);
+				
+				if (undefined !== customXml.itemId) {
+					s.StartRecord(c_oSerCustomsPPTY.ItemId);
+					s.WriteString2(customXml.itemId);
+					s.EndRecord();
+				}
+				
+				// namespaces
+				s.StartRecord(c_oSerCustomsPPTY.Uri);
+				
+				let ns = Object.keys(customXml.nsManager.urls);
+				s.WriteULong(ns.length);
+				
+				for (let i = 0; i < ns.length; ++i) {
+					s.StartRecord(0);
+					s.StartRecord(c_oSerCustomsPPTY.Uri2);
+
+					s.WriteUChar(AscCommon.g_nodeAttributeStart);
+					s.WriteUChar(0);
+					s.WriteString2(ns[i]);
+					s.WriteUChar(AscCommon.g_nodeAttributeEnd);
+					
+					s.EndRecord();
+					s.EndRecord();
+				}
+				s.EndRecord();
+				
+				let text = customXml.getText();
+				if (text) {
+					s.StartRecord(c_oSerCustomsPPTY.Content);
+					s.WriteString2Utf8(text);
+					s.EndRecord();
+				}
+				
+				s.EndRecord(); // c_oSerCustomsPPTY.Custom
+			}
+		};
 	}
 	
 	/**

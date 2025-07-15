@@ -1173,60 +1173,12 @@ function CBinaryFileWriter()
 
 	this.WriteCustomXml = function(presentation)
 	{
-		let nXmlCount = presentation.customXmlManager.getCount();
-		if(nXmlCount < 1)
-            return;
-
-        this.StartMainRecord(c_oMainTables.Customs);
-        this.WriteULong(nXmlCount);
-	
-		for (let i = 0; i < nXmlCount; ++i)
-		{
-            let oCurXml = presentation.customXmlManager.xml[i];
-            this.StartRecord(c_oMainTables.Customs);
-
-            // uid
-			this.StartRecord(0);
-			this.WriteString2(oCurXml.itemId);
-            this.EndRecord();
-
-            // namespaces
-			let ns = Object.keys(oCurXml.nsManager.urls);
-
-            this.StartRecord(1);
-            this.WriteUChar(ns.length);
-            this.WriteULong(0);
-
-            for (let i = 0; i < ns.length; ++i) {
-                this.m_arStack[this.m_lStackPosition] = this.pos + 4;
-                this.m_lStackPosition++;
-                this.WriteULong(0);
-
-                this.StartRecord(0);
-                this.WriteUChar(g_nodeAttributeStart);
-                this.WriteUChar(0);
-                this.WriteString2(ns[i]);
-                this.WriteUChar(g_nodeAttributeEnd);
-                this.EndRecord();
-
-                this.m_lStackPosition--;
-                var _seek = this.pos;
-                this.pos = this.m_arStack[this.m_lStackPosition] - 4;
-                this.WriteULong(_seek - this.m_arStack[this.m_lStackPosition]);
-                this.pos = _seek;
-
-                if (i + 1 < ns.length)
-                    this.WriteUChar(0);
-            }
-            this.EndRecord();
-
-            // content
-            this.StartRecord(2);
-			this.WriteString2Utf8(oCurXml.getText());
-            this.EndRecord();
-
-            this.EndRecord();
-		}
+		let xmlManager = presentation.getCustomXmlManager();
+		if (xmlManager.getCount() <= 0)
+			return;
+		
+		this.StartMainRecord(c_oMainTables.Customs);
+		(new AscCommon.BinaryCustomsTableWriter(xmlManager, this)).WritePPTY();
 	};
 
     this.WritePresentation = function(presentation)
