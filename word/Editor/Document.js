@@ -1864,7 +1864,7 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 	this.App = null;
 	this.Core = null;
     this.CustomProperties = new AscCommon.CCustomProperties();
-    this.CustomXmls = [];
+    this.customXmlManager = new AscWord.CustomXmlManager(this);
 
     // Сначала настраиваем размеры страницы и поля
     this.SectPr = new CSectionPr(this);
@@ -2243,8 +2243,6 @@ function CDocument(DrawingDocument, isMainLogicDocument)
     this.GlossaryDocument = new CGlossaryDocument(this);
 
 	this.AutoCorrectSettings = new AscCommon.CAutoCorrectSettings();
-
-	this.customXml = new AscWord.CustomXmlManager(this);
 
     // Контролируем изменения интерфейса
     this.ChangedStyles      = []; // Объект с Id стилями, которые были изменены/удалены/добавлены
@@ -28265,7 +28263,7 @@ CDocument.prototype.isPreventedPreDelete = function()
  */
 CDocument.prototype.getCustomXmlManager = function()
 {
-	return this.customXml;
+	return this.customXmlManager;
 };
 
 CDocument.prototype.AddCustomProperty = function(name, type, value)

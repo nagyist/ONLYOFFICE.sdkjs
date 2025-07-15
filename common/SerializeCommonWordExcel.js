@@ -898,6 +898,7 @@ FT_Stream2.prototype.GetBuffer = function(length) {
 };
 FT_Stream2.prototype.GetBufferUint8 = function(length) {
 	let pos = this.GetCurPos();
+	this.cur += length;
 	return this.data.slice(pos, pos + length);
 };
 FT_Stream2.prototype.ToFileStream = function() {
@@ -1476,6 +1477,7 @@ function isRealObject(obj)
     };
     this.GetBufferUint8 = function (length) {
       let pos = this.GetCurPos();
+      this.cur += length;
       return this.data.slice(pos, pos + length);
     };
 
@@ -1520,6 +1522,23 @@ function isRealObject(obj)
       }
 
       return _ret;
+    }
+  
+    this.GetString2LE = function(len)
+    {
+      return this.GetString(len);
+    }
+  
+    this.GetULongLE = function()
+    {
+      if (this.cur + 3 >= this.size)
+        return 0;
+      return (this.data[this.cur++] | this.data[this.cur++] << 8 | this.data[this.cur++] << 16 | this.data[this.cur++] << 24);
+    }
+  
+    this.GetSize = function()
+    {
+      return this.size;
     }
   }
 	function GetUTF16_fromUnicodeChar(code) {

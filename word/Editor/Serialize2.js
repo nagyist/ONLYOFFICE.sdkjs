@@ -1960,9 +1960,9 @@ function BinaryFileWriter(doc, bMailMergeDocx, bMailMergeHtml, isCompatible, opt
 			}});
 		}
 		
-		let customXmlManager = this.Document.getCustomXmlManager();
-		if (customXmlManager.getCount() > 0) {
-			this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.memory, this.Document, customXmlManager));
+		let xmlManager = this.Document.getCustomXmlManager();
+		if (xmlManager.getCount() > 0) {
+			this.WriteTable(c_oSerTableTypes.Customs, new AscCommon.BinaryCustomsTableWriter(xmlManager, this.memory, true));
 		}
 		//Write Settings
 		this.WriteTable(c_oSerTableTypes.Settings, new BinarySettingsTableWriter(this.memory, this.Document, this.saveParams));
@@ -7735,48 +7735,6 @@ function BinaryNotesTableWriter(memory, doc, oNumIdMap, oMapCommentId, copyParam
 	};
 };
 
-function BinaryCustomsTableWriter(memory, doc, customXmlManager)
-{
-	this.memory = memory;
-	this.Document = doc;
-	this.bs = new BinaryCommonWriter(this.memory);
-	this.customXmlManager = customXmlManager;
-	
-	this.Write = function()
-	{
-		var oThis = this;
-		this.bs.WriteItemWithLength(function(){oThis.WriteCustomXmls();});
-	};
-	this.WriteCustomXmls = function()
-	{
-		var oThis = this;
-		for (var i = 0, count = this.customXmlManager.getCount(); i < count; ++i) {
-			this.bs.WriteItem(c_oSerCustoms.Custom, function() {oThis.WriteCustomXml(oThis.customXmlManager.getCustomXml(i));});
-		}
-	};
-	this.WriteCustomXml = function(customXml) {
-		var oThis = this;
-		let namespaces = customXml.getAllNamespaces();
-		for(var i = 0; i < namespaces.length; ++i){
-			this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-				oThis.memory.WriteString3(namespaces[i]);
-			});
-		}
-		if (null !== customXml.itemId) {
-			this.bs.WriteItem(c_oSerCustoms.ItemId, function() {
-				oThis.memory.WriteString3(customXml.itemId);
-			});
-		}
-		if (null !== customXml.content) {
-			this.bs.WriteItem(c_oSerCustoms.ContentA, function() {
-				let str  = customXmlManager.getCustomXMLString(customXml);
-				let data = AscCommon.Utf8.encode(str);
-				oThis.memory.WriteULong(data.length);
-				oThis.memory.WriteBuffer(data, 0, data.length);
-			});
-		}
-	};
-};
 function BinaryFileReader(doc, openParams)
 {
     this.Document = doc;
@@ -8067,7 +8025,7 @@ function BinaryFileReader(doc, openParams)
 					break;
 				case c_oSerTableTypes.Customs:
 					this.stream.Seek2(mtiOffBits);
-					res = (new Binary_CustomsTableReader(this.Document, this.oReadResult, this.stream)).Read();
+					res = (new AscCommon.BinaryCustomsTableReader(this.Document.getCustomXmlManager(), this.stream)).Read();
 					break;
 				case c_oSerTableTypes.Glossary:
 					if(!this.oReadResult.bCopyPaste || this.oReadResult.isDocumentPasting()) {
@@ -16237,49 +16195,6 @@ function Binary_OtherTableReader(doc, oReadResult, stream)
         return res;
     };
 };
-
-function Binary_CustomsTableReader(doc, oReadResult, stream) {
-	this.Document = doc;
-	this.oReadResult = oReadResult;
-	this.stream = stream;
-	this.customXmlManager = doc.getCustomXmlManager();
-	this.bcr = new Binary_CommonReader(this.stream);
-	this.Read = function() {
-		var oThis = this;
-		return this.bcr.ReadTable(function(t, l) {
-			return oThis.ReadCustom(t, l);
-		});
-	};
-	this.ReadCustom = function(type, length) {
-		var res = c_oSerConstants.ReadOk;
-		var oThis = this;
-		if (c_oSerCustoms.Custom === type) {
-
-			var custom = new AscWord.CustomXml();
-
-			res = this.bcr.Read1(length, function(t, l) {
-				return oThis.ReadCustomContent(t, l, custom);
-			});
-
-			this.customXmlManager.add(custom);
-		}
-		else
-			res = c_oSerConstants.ReadUnknown;
-		return res;
-	};
-	this.ReadCustomContent = function(type, length, custom) {
-		var res = c_oSerConstants.ReadOk;
-		if (c_oSerCustoms.Uri === type) {
-			custom.setNamespaceUri(this.stream.GetString2LE(length));
-		} else if (c_oSerCustoms.ItemId === type) {
-			custom.itemId = this.stream.GetString2LE(length);
-		} else if (c_oSerCustoms.ContentA === type) {
-			custom.addContent(this.stream.GetBuffer(length))
-		} else
-			res = c_oSerConstants.ReadUnknown;
-		return res;
-	};
-}
 function Binary_CommentsTableReader(doc, oReadResult, stream, oComments)
 {
     this.Document = doc;

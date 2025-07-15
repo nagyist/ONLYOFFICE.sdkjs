@@ -3165,7 +3165,7 @@
 		this.workbookProtection = null;
 		this.fileSharing = null;
 
-		this.customXmls = null;//[]
+		this.customXmlManager = new AscWord.CustomXmlManager(this);
 		this.oGoalSeek = null;
 		this.oSolver = null;
 
@@ -6001,6 +6001,14 @@
 			oWorksheet.getAllInks(arrInks);
 		}
 		return arrInks;
+	};
+
+	/**
+	 * @returns {AscWord.CustomXmlManager}
+	 */
+	Workbook.prototype.getCustomXmlManager = function()
+	{
+		return this.customXmlManager;
 	};
 
 	/**
