@@ -88,6 +88,8 @@ function (window, undefined) {
 	/** @const */
 	var codeNewLine = 0x00A;
 	var codeEqually = 0x3D;
+	var codeUnarPlus = 0x2B;
+	var codeUnarMinus = 0x2D;
 
 
 	/**
@@ -373,7 +375,7 @@ function (window, undefined) {
 		var t = this;
 
 		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
-		if (externalSelectionController.getExternalFormulaEditMode()) {
+		if (externalSelectionController && externalSelectionController.getExternalFormulaEditMode()) {
 			if (!externalSelectionController.supportVisibilityChangeOption) {
 				externalSelectionController.sendExternalCloseEditor(saveValue);
 				saveValue = false;
@@ -407,6 +409,9 @@ function (window, undefined) {
 				if (window.removeEventListener) {
 					window.removeEventListener(AscCommon.getPtrEvtName("up"), t.fKeyMouseUp, false);
 					window.removeEventListener(AscCommon.getPtrEvtName("move"), t.fKeyMouseMove, false);
+				}
+				if (api && api.isMobileVersion) {
+					t.input.blur();
 				}
 				t._blur();
 				t._updateTopLineActive(false);
@@ -874,8 +879,16 @@ function (window, undefined) {
 	};
 
 	CellEditor.prototype._isFormula = function () {
-		var fragments = this.options.fragments;
-		return fragments && fragments.length > 0 && fragments[0].getCharCodesLength() > 0 && fragments[0].getCharCode(0) === codeEqually;
+		let fragments = this.options.fragments;
+		if (fragments && fragments.length > 0 && fragments[0].getCharCodesLength() > 0) {
+			let firstSymbolCode = fragments[0].getCharCode(0);
+			let isEqualSign = firstSymbolCode === codeEqually;
+			let unarSign = isEqualSign ? false : (firstSymbolCode === codeUnarPlus || firstSymbolCode === codeUnarMinus);
+
+			return isEqualSign || unarSign;
+		}
+
+		return false;
 	};
 	CellEditor.prototype.isFormula = function () {
 		return c_oAscCellEditorState.editFormula === this.m_nEditorState;
@@ -1245,7 +1258,7 @@ function (window, undefined) {
 		this._cleanText();
 
 		let externalSelectionController = this.handlers.trigger("getExternalSelectionController");
-		if (!externalSelectionController.getExternalFormulaEditMode()) {
+		if (!externalSelectionController || !externalSelectionController.getExternalFormulaEditMode()) {
 			this._cleanSelection();
 			this._adjustCanvas();
 			this._showCanvas();
@@ -1290,7 +1303,7 @@ function (window, undefined) {
 	CellEditor.prototype._fireUpdated = function () {
 		//TODO I save the text!
 		var s = AscCommonExcel.getFragmentsText(this.options.fragments);
-		var isFormula = -1 === this.beginCompositePos && s.charAt(0) === "=";
+		var isFormula = -1 === this.beginCompositePos && (s.charAt(0) === "=" || s.charAt(0) === "+" || s.charAt(0) === "-");
 		var api = window["Asc"]["editor"];
 		var fPos, fName, match, fCurrent;
 
@@ -2083,9 +2096,7 @@ function (window, undefined) {
 	CellEditor.prototype._addNewLine = function () {
 		this._wrapText();
 		let sNewLine = "\n";
-		AscFonts.FontPickerByCharacter.checkText(sNewLine, this, function () {
-			this._addChars( /*codeNewLine*/sNewLine);
-		});
+		this._addChars( /*codeNewLine*/sNewLine);
 	};
 
 	CellEditor.prototype._removeChars = function (pos, length, isRange) {
@@ -2503,15 +2514,17 @@ function (window, undefined) {
 
 	CellEditor.prototype._tryCloseEditor = function (event) {
 		var t = this;
+		let nRetValue = keydownresult_PreventNothing;
 		var callback = function (success) {
 			// for the case when the user presses ctrl+shift+enter/crtl+enter the transition to a new line is not performed
 			var applyByArray = t.textFlags && t.textFlags.ctrlKey;
 			if (!applyByArray && success) {
-				t.handlers.trigger("applyCloseEvent", event);
+				nRetValue = t.handlers.trigger("applyCloseEvent", event);
 				AscCommon.StartIntervalDrawText(false);
 			}
 		};
 		this.close(true, callback);
+		return nRetValue;
 	};
 
 	CellEditor.prototype._getAutoComplete = function (str) {
@@ -2674,7 +2687,7 @@ function (window, undefined) {
 		}
 
 		oThis._setSkipKeyPress(false);
-		oThis.skipTLUpdate = true;
+		oThis.skipTLUpdate = false;
 
 		// hieroglyph input definition
 		const bHieroglyph = oThis.isTopLineActive && AscCommonExcel.getFragmentsLength(oThis.options.fragments) !== oThis.input.value.length;
@@ -2727,7 +2740,7 @@ function (window, undefined) {
 					}
 
 					if (false === oThis.handlers.trigger("isGlobalLockEditCell")) {
-						oThis._tryCloseEditor(oEvent);
+						nRetValue = oThis._tryCloseEditor(oEvent);
 					}
 					break;
 				}
@@ -2886,8 +2899,8 @@ function (window, undefined) {
 
 		if (nRetValue & keydownresult_PreventKeyPress) {
 			oThis._setSkipKeyPress(true);
-			oThis.skipTLUpdate = false;
 		}
+		oThis.skipTLUpdate = true;
 		return nRetValue;
 	};
 
@@ -3111,7 +3124,9 @@ function (window, undefined) {
 			return true;
 		}
 		this.loadFonts = true;
-		AscFonts.FontPickerByCharacter.checkText(this.input.value, this, function () {
+
+		let checkedText = this.input.value.replace(/[\r\n]+/g, '');
+		AscFonts.FontPickerByCharacter.checkText(checkedText, this, function () {
 			t.loadFonts = false;
 			t.skipTLUpdate = true;
 			var length = t.replaceText(0, t.textRender.getEndOfText(), t.input.value);

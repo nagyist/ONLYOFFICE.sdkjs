@@ -54,6 +54,9 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Meta]				= CChangesPDFFormMeta
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Read_Only]		= CChangesPDFFormReadOnly;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_No_Export]		= CChangesPDFFormNoExport;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Border_Width]		= CChangesPDFFormBorderWidth;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Locked]			= CChangesPDFFormLocked;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Rotate]			= CChangesPDFFormRotate;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Tooltip]			= CChangesPDFFormTooltip;
 
 // text
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Multiline]			= CChangesPDFTextFormMultiline;
@@ -73,6 +76,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Cur_Idxs]			= CChangesPDF
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Parent_Cur_Idxs]		= CChangesPDFListFormParentCurIdxs;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Top_Idx]				= CChangesPDFListTopIndex;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Option]				= CChangesPDFListOption;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Content_Option]		= CChangesPDFListContentOption;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Commit_On_Sel_Change]= CChangesPDFListCommitOnSelChange;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Multiple_Selection]	= CChangesPDFListMultipleSelection;
 
@@ -436,7 +440,10 @@ CChangesPDFFormRequired.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
 	oForm._required = Value;
-	oForm.AddToRedraw();
+
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.AddToRedraw();
+	});
 };
 
 /**
@@ -623,6 +630,7 @@ CChangesPDFFormPartialName.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
 	oField._partialName = Value;
+	oField.SetNeedUpdateEditShape(true);
 };
 
 /**
@@ -714,7 +722,10 @@ CChangesPDFFormReadOnly.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
 	oForm._readOnly = Value;
-	oForm.AddToRedraw();
+
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.AddToRedraw();
+	});
 };
 
 /**
@@ -751,6 +762,60 @@ CChangesPDFFormBorderWidth.prototype.private_SetValue = function(Value)
 	let oField = this.Class;
 	oField.SetBorderWidth(Value);
 };
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseBoolProperty}
+ */
+function CChangesPDFFormLocked(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseBoolProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormLocked.prototype = Object.create(AscDFH.CChangesBaseBoolProperty.prototype);
+CChangesPDFFormLocked.prototype.constructor = CChangesPDFFormLocked;
+CChangesPDFFormLocked.prototype.Type = AscDFH.historyitem_Pdf_Form_Locked;
+CChangesPDFFormLocked.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._locked = Value;
+	oForm.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormRotate(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormRotate.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormRotate.prototype.constructor = CChangesPDFFormRotate;
+CChangesPDFFormRotate.prototype.Type = AscDFH.historyitem_Pdf_Form_Rotate;
+CChangesPDFFormRotate.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm.SetRotate(Value);
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseStringProperty}
+ */
+function CChangesPDFFormTooltip(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormTooltip.prototype = Object.create(AscDFH.CChangesBaseStringProperty.prototype);
+CChangesPDFFormTooltip.prototype.constructor = CChangesPDFFormTooltip;
+CChangesPDFFormTooltip.prototype.Type = AscDFH.historyitem_Pdf_Form_Tooltip;
+CChangesPDFFormTooltip.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._tooltip = Value;
+	oForm.AddToRedraw();
+};
+
 
 //------------------------------------------------------------------------------------------------------------------
 //
@@ -857,7 +922,11 @@ CChangesPDFTextFormPassword.prototype.Type = AscDFH.historyitem_Pdf_Text_Form_Pa
 CChangesPDFTextFormPassword.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetPassword(Value);
+	oForm._password = Value;
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.private_NeedShapeText();
+		widget.SetNeedRecalc(true);
+	});
 };
 
 /**
@@ -1219,6 +1288,125 @@ CChangesPDFListOption.prototype.CreateReverseChange = function(){
 
 /**
  * @constructor
+ * @extends {AscDFH.CChangesBaseContentChange}
+ */
+function CChangesPDFListContentOption(Class, Pos, Items, isAdd) {
+	AscDFH.CChangesBaseContentChange.call(this, Class, Pos, Items, isAdd);
+}
+
+CChangesPDFListContentOption.prototype = Object.create(AscDFH.CChangesBaseContentChange.prototype);
+CChangesPDFListContentOption.prototype.constructor = CChangesPDFListContentOption;
+CChangesPDFListContentOption.prototype.Type = AscDFH.historyitem_Pdf_List_Form_Content_Option;
+
+CChangesPDFListContentOption.prototype.WriteToBinary = function (writer) {
+	writer.WriteBool(this.IsAdd());
+	writer.WriteLong(this.Pos);
+	writer.WriteString2(JSON.stringify(this.Items));
+};
+CChangesPDFListContentOption.prototype.ReadFromBinary = function (reader) {
+	reader.Seek2(reader.GetCurPos() - 4);
+	this.Type = reader.GetLong();
+	this.Add = reader.GetBool();
+	this.Pos = reader.GetLong();
+	
+	this.Items = JSON.parse(reader.GetString2());
+};
+CChangesPDFListContentOption.prototype.private_GetChangedArray = function () {
+	return this.Class._options;
+};
+CChangesPDFListContentOption.prototype.private_InsertInArrayLoad = function () {
+	if (this.Items.length <= 0)
+		return;
+
+	let aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		for (let i = this.Items.length - 1; i >= 0; i--) {
+			this.Class.private_AddOptionToContent(this.Items[i], this.Pos);
+		}
+	}
+};
+CChangesPDFListContentOption.prototype.private_RemoveInArrayLoad = function () {
+
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		this.Class.private_RemoveOptionFromContent(this.Pos);
+	}
+};
+CChangesPDFListContentOption.prototype.private_InsertInArrayUndoRedo = function () {
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		for (let i = this.Items.length - 1; i >= 0; i--) {
+			this.Class.private_AddOptionToContent(this.Items[i], this.Pos);
+		}
+	}
+};
+CChangesPDFListContentOption.prototype.private_RemoveInArrayUndoRedo = function () {
+
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		this.Class.private_RemoveOptionFromContent(this.Pos);
+	}
+};
+CChangesPDFListContentOption.prototype.Load = function () {
+	if (this.IsAdd()) {
+		this.private_InsertInArrayLoad();
+	}
+	else {
+		this.private_RemoveInArrayLoad();
+	}
+	this.RefreshRecalcData();
+};
+CChangesPDFListContentOption.prototype.Undo = function () {
+	if (this.IsAdd()) {
+		this.private_RemoveInArrayUndoRedo();
+	}
+	else {
+		this.private_InsertInArrayUndoRedo();
+	}
+};
+CChangesPDFListContentOption.prototype.Redo = function () {
+	if (this.IsAdd()) {
+		this.private_InsertInArrayUndoRedo();
+	}
+	else {
+		this.private_RemoveInArrayUndoRedo();
+	}
+};
+CChangesPDFListContentOption.prototype.IsContentChange = function () {
+	return false;
+};
+CChangesPDFListContentOption.prototype.Copy = function()
+{
+	var oChanges = new this.constructor(this.Class, this.Type, this.Pos, this.Items, this.Add);
+
+	oChanges.UseArray = this.UseArray;
+
+	for (var nIndex = 0, nCount = this.PosArray.length; nIndex < nCount; ++nIndex)
+		oChanges.PosArray[nIndex] = this.PosArray[nIndex];
+
+	return oChanges;
+};
+CChangesPDFListContentOption.prototype.ConvertToSimpleChanges = function()
+{
+	let arrSimpleActions = this.ConvertToSimpleActions();
+	let arrChanges       = [];
+	for (let nIndex = 0, nCount = arrSimpleActions.length; nIndex < nCount; ++nIndex)
+	{
+		let oAction = arrSimpleActions[nIndex];
+		let oChange = new this.constructor(this.Class, this.Type, oAction.Pos, [oAction.Item], oAction.Add);
+		arrChanges.push(oChange);
+	}
+	return arrChanges;
+};
+CChangesPDFListContentOption.prototype.CreateReverseChange = function(){
+	var oRet = this.private_CreateReverseChange(this.constructor);
+	oRet.Type = this.Type;
+	oRet.Pos = this.Pos;
+	return oRet;
+};
+
+/**
+ * @constructor
  * @extends {AscDFH.CChangesBaseBoolProperty}
  */
 function CChangesPDFListCommitOnSelChange(Class, Old, New, Color)
@@ -1269,19 +1457,27 @@ CChangesPDFPushbuttonImage.prototype.CreateReverseChange = function() {
 CChangesPDFPushbuttonImage.prototype.private_SetValue = function(Value)
 {
 	let oButtonField = this.Class;
+	oButtonField.lastValue = Value;
+
+	oButtonField.SetImageRasterId(Value, this.APType);
+
 	if (this.FromLoad && typeof Value === "string" && Value.length > 0) {
 		let sImageId = AscCommon.getFullImageSrc2(Value);
 		let _img = Asc.editor.ImageLoader.map_image_index[sImageId];
 		if (_img && _img.Status === AscFonts.ImageLoadStatus.Complete) {
-			oButtonField.AddImage2(Value, this.APType);
+			oButtonField.SetImage(Value);
 			return;
 		}
 
 		AscCommon.CollaborativeEditing.Add_NewImage(Value);
-		AscCommon.CollaborativeEditing.m_aEndLoadCallbacks.push(oButtonField.AddImage2.bind(oButtonField, Value, this.APType));
+		AscCommon.CollaborativeEditing.m_aEndLoadCallbacks.push(function() {
+			if (oButtonField.lastValue === Value) {
+				oButtonField.SetImage(Value);
+			}
+		}.bind(oButtonField));
 	}
 	else {
-		oButtonField.AddImage2(Value, this.APType);
+		oButtonField.SetImage(Value);
 	}
 };
 
@@ -1582,7 +1778,7 @@ CChangesPDFCheckboxExpValue.prototype.Type = AscDFH.historyitem_Pdf_Checkbox_Exp
 CChangesPDFCheckboxExpValue.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
-	oField.SetExportValue(Value);
+	oField._exportValue = Value;
 };
 
 

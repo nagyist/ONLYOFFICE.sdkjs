@@ -126,10 +126,11 @@
 	 */
 
 	/**
-	 * Content control list element
+	 * The content control list element.
 	 * @typedef {Object} ContentControlListElement
-	 * @property {string} Display - element display text
-	 * @property {string} Value - element value
+	 * @property {string} Display - The element display text.
+	 * @property {string} Value - The element value.
+	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/ContentControlListElement.js
 	 */
 
     var Api = window["asc_docs_api"];
@@ -897,8 +898,7 @@
 		oPluginData["data"] = NewObject["Data"];
 		oPluginData["guid"] = NewObject["ApplicationId"];
 		oPluginData["select"] = bSelect;
-		oPluginData["plugin"] = true;
-		this.asc_addOleObject(oPluginData);
+		this.asc_addOleObject(oPluginData, true);
 	};
 
 
@@ -1297,6 +1297,27 @@
 	Api.prototype["pluginMethod_CanRedo"] = function()
 	{
 		return this.asc_getCanRedo();
+	};
+	/**
+	 * Returns the current bookmark.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias GetCurrentBookmark
+	 * @returns {string | null} - The current bookmarks name or null.
+	 * @since 9.0.3
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/GetCurrentBookmark.js
+	 */
+	Api.prototype["pluginMethod_GetCurrentBookmark"] = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return null;
+		
+		let bookmarks = logicDocument.GetBookmarksManager();
+		let para = logicDocument.GetCurrentParagraph();
+		let topDocument = para ? para.GetTopDocumentContent() : null;
+		let docPos = topDocument && topDocument.GetContentPosition ? topDocument.GetContentPosition(false) : null;
+		return bookmarks.GetBookmarkByDocPos(docPos);
 	};
 
 	function private_ReadContentControlCommonPr(commonPr)

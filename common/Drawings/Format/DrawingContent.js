@@ -577,12 +577,14 @@
         return false;
     };
 
-    CDrawingDocContent.prototype.DrawSelectionOnPage = function(PageIndex){
+    CDrawingDocContent.prototype.DrawSelectionOnPage = function(PageIndex, clipInfo){
         var CurPage = PageIndex;
         if (CurPage < 0 || CurPage >= this.Pages.length)
             return;
         var Pos_start = this.Pages[CurPage].Pos;
         var Pos_end   = this.Pages[CurPage].EndPos;
+		
+		clipInfo = this.IntersectClip(clipInfo, PageIndex);
 
         if (true === this.Selection.Use)
         {
@@ -605,7 +607,7 @@
                     for (var Index = Start; Index <= End; Index++)
                     {
                         var ElementPageIndex = this.private_GetElementPageIndex(Index, CurPage, 0, 1);
-                        this.Content[Index].DrawSelectionOnPage(ElementPageIndex);
+                        this.Content[Index].DrawSelectionOnPage(ElementPageIndex, clipInfo);
                     }
                 }
                 else{
@@ -630,7 +632,7 @@
                         for (var Index = Start; Index <= End; ++Index)
                         {
                             var ElementPage = this.private_GetElementPageIndex(Index, 0, ColumnIndex, ColumnsCount);
-                            this.Content[Index].DrawSelectionOnPage(ElementPage);
+                            this.Content[Index].DrawSelectionOnPage(ElementPage, clipInfo);
                         }
 
                     }
@@ -871,6 +873,21 @@
             return Asc.editor.private_GetLogicDocument();
         return null;
     };
+		CDrawingDocContent.prototype.Remove = function (Count, bOnlyText, bRemoveOnlySelection, bOnTextAdd, isWord) {
+			const res = CDocumentContent.prototype.Remove.call(this, Count, bOnlyText, bRemoveOnlySelection, bOnTextAdd, isWord);
+			const oShape = this.Is_DrawingShape(true);
+			if (oShape) {
+				oShape.onRemoveContent();
+			}
+			return res;
+		}
+		CDrawingDocContent.prototype.getCharContentLength = function () {
+			let nContentLength = 0;
+			this.CheckRunContent(function (oRun) {
+				nContentLength += oRun.Content.length;
+			});
+			return nContentLength;
+		};
     // TODO: сделать по-нормальному!!!
     function CDocument_prototype_private_GetElementPageIndexByXY(ElementPos, X, Y, PageIndex)
     {

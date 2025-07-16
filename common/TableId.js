@@ -156,7 +156,7 @@
 		this.m_oFactoryClass[AscDFH.historyitem_type_TableCell]              = AscCommonWord.CTableCell;
 		this.m_oFactoryClass[AscDFH.historyitem_type_DocumentContent]        = AscCommonWord.CDocumentContent;
 		this.m_oFactoryClass[AscDFH.historyitem_type_HdrFtr]                 = AscCommonWord.CHeaderFooter;
-		this.m_oFactoryClass[AscDFH.historyitem_type_AbstractNum]            = AscCommonWord.CAbstractNum;
+		this.m_oFactoryClass[AscDFH.historyitem_type_AbstractNum]            = AscWord.CAbstractNum;
 		this.m_oFactoryClass[AscDFH.historyitem_type_Comment]                = AscCommon.CComment;
 		this.m_oFactoryClass[AscDFH.historyitem_type_Style]                  = AscCommonWord.CStyle;
 		this.m_oFactoryClass[AscDFH.historyitem_type_CommentMark]            = AscCommon.ParaComment;
@@ -353,6 +353,7 @@
 		this.m_oFactoryClass[AscDFH.historyitem_type_CEffectProperties ]     = AscFormat.CEffectProperties;
 		this.m_oFactoryClass[AscDFH.historyitem_type_ParagraphPermStart]     = AscWord.ParagraphPermStart;
 		this.m_oFactoryClass[AscDFH.historyitem_type_ParagraphPermEnd  ]     = AscWord.ParagraphPermEnd;
+		this.m_oFactoryClass[AscDFH.historyitem_type_CustomXml         ]     = AscWord.CustomXml;
 
 		if (window['AscCommonSlide'])
 		{

@@ -213,14 +213,18 @@
 		pWriter.WriteRecordPPTY(12, this.validation);
 		
 		// Write commentsPart
-		pWriter.StartRecord(13);
-		pWriter.WriteRecordPPTY(0, this.commentsPart);
-		pWriter.EndRecord();
+		if (this.commentsPart) {
+			pWriter.StartRecord(13);
+			pWriter.WriteRecordPPTY(0, this.commentsPart);
+			pWriter.EndRecord();
+		}
 		
 		// Write windows
-		pWriter.StartRecord(14);
-		pWriter.WriteRecordPPTY(0, this.windows);
-		pWriter.EndRecord();
+		if (this.windows) {
+			pWriter.StartRecord(14);
+			pWriter.WriteRecordPPTY(0, this.windows);
+			pWriter.EndRecord();
+		}
 
 		if (this.themes) {
 			for (let i = 0; i < this.themes.length; i++) {
@@ -1020,10 +1024,10 @@
 	 */
 	AscVisio.Connect_Type.prototype.privateWriteAttributes = function (pWriter) {
 		pWriter._WriteUInt2(0, this.fromSheet);
-		pWriter._WriteString2(1, this.fromCell);
+		pWriter._WriteString2Utf8(1, this.fromCell);
 		pWriter._WriteInt2(2, this.fromPart);
 		pWriter._WriteUInt2(3, this.toSheet);
-		pWriter._WriteString2(4, this.toCell);
+		pWriter._WriteString2Utf8(4, this.toCell);
 		pWriter._WriteInt2(5, this.toPart);
 	};
 
@@ -1253,7 +1257,7 @@
 	 */
 	AscVisio.Section_Type.prototype.privateWriteAttributes = function (pWriter) {
 		pWriter._WriteUInt2(0, this.ix);
-		pWriter._WriteString2(1, this.n);
+		pWriter._WriteString2Utf8(1, this.n);
 		pWriter._WriteBool2(2, this.del);
 	};
 
@@ -1286,7 +1290,7 @@
 	 * @param {CBinaryFileWriter} pWriter - The binary writer
 	 */
 	AscVisio.Trigger_Type.prototype.privateWriteAttributes = function (pWriter) {
-		pWriter._WriteString2(0, this.n);
+		pWriter._WriteString2Utf8(0, this.n);
 	};
 
 	/**
@@ -1308,9 +1312,9 @@
 	 */
 	AscVisio.Row_Type.prototype.privateWriteAttributes = function (pWriter) {
 		pWriter._WriteUInt2(0, this.ix);
-		pWriter._WriteString2(1, this.n);
+		pWriter._WriteString2Utf8(1, this.n);
 		pWriter._WriteString2(2, this.localName);
-		pWriter._WriteString2(3, this.t);
+		pWriter._WriteString2Utf8(3, this.t);
 		pWriter._WriteBool2(4, this.del);
 	};
 
@@ -1340,11 +1344,11 @@
 	 * @param {CBinaryFileWriter} pWriter - The binary writer
 	 */
 	AscVisio.Cell_Type.prototype.privateWriteAttributes = function (pWriter) {
-		pWriter._WriteString2(0, this.n);
-		pWriter._WriteString2(1, this.u);
-		pWriter._WriteString2(2, this.e);
-		pWriter._WriteString2(3, this.f);
-		pWriter._WriteString2(4, this.v);
+		pWriter._WriteString2Utf8(0, this.n);
+		pWriter._WriteString2Utf8(1, this.u);
+		pWriter._WriteString2Utf8(2, this.e);
+		pWriter._WriteString2Utf8(3, this.f);
+		pWriter._WriteString2Utf8(4, this.v);
 	};
 
 	/**

@@ -363,7 +363,9 @@
 				// IMAGE
 				if (_formats & AscCommon.c_oAscClipboardDataFormat.Image) {
 					let imageData = this.drawSelectedArea(ws, true);
-					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Image, imageData);
+					if (imageData) {
+						_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Image, imageData);
+					}
 				}
 
 				//TEXT
@@ -408,10 +410,10 @@
 					//в данном случае не вырезаем, а записываем
 					if (!ws.isNeedSelectionCut() && false === ws.isMultiSelect()) {
 						ws.workbook.cutIdSheet = ws.model.Id;
-						ws.copyCutRange = [ws.model.selectionRange.getLast()];
+						ws.setCutRange([ws.model.selectionRange.getLast()]);
 					}
 				} else if (!ws.objectRender.selectedGraphicObjectsExists()) {
-					ws.copyCutRange = ws.model.selectionRange.ranges;
+					ws.setCutRange(ws.model.selectionRange.ranges);
 				}
 			}
 		};
@@ -421,10 +423,16 @@
 			var wb = window["Asc"]["editor"].wb;
 			//if open range dialog - return
 			if (ws.getSelectionDialogMode() && (!wb.getCellEditMode() || wb.isWizardMode)) {
+				if (callback) {
+					callback(false);
+				}
 				return;
 			}
 			var cellEditor = wb.cellEditor;
 			t.pasteProcessor.clean();
+
+			// Set the paste callback
+			AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = callback;
 
 			if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart) {
 				window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide();
@@ -528,53 +536,16 @@
 
 		Clipboard.prototype.drawSelectedArea = function (ws, opt_get_bytes) {
 			let activeRange = ws.model.selectionRange.getLast();
-			let range = ws.getCellMetrics(activeRange.c1, activeRange.r1, true);
-			let rangeEnd = ws.getCellMetrics(activeRange.c2, activeRange.r2, true);
 
-			if (!range || !rangeEnd) {
-				return;
-			}
+			let base64;
+			//ws.workbook._executeWithoutZoom(function () {
+				let ctx = ws.workbook.printForCopyPaste(ws, activeRange);
+				if (ctx && ctx.canvas) {
+					base64 = ctx.canvas.toDataURL("image/png");
+				}
+			//})
 
-			// Calculate dimensions
-			let width = rangeEnd.left + rangeEnd.width - range.left;
-			let height = rangeEnd.top + rangeEnd.height - range.top;
-
-			// Create canvas and context
-			let canvas = document.createElement('canvas');
-			canvas.width = width * ws.getZoom();
-			canvas.height = height * ws.getZoom();
-			let ctx = canvas.getContext('2d');
-
-			//let zoom = ws.getZoom();
-			//ctx.scale(zoom, zoom);
-
-			ctx.save();
-
-			ctx.beginPath();
-			ctx.rect(0, 0, width, height);
-			ctx.clip();
-
-			// Calculate scroll offsets
-			let offsetX = range.left;
-			let offsetY = range.top;
-
-			// Translate context to draw from selected range start
-			//ctx.translate(-offsetX, -offsetY);
-
-			let oCtx = new Asc.DrawingContext({
-				canvas: canvas, units: 0/*px*/, fmgrGraphics: ws.workbook.fmgrGraphics, font: ws.workbook.m_oFont
-			});
-
-			oCtx.isNotDrawBackground = true;
-
-			// Draw worksheet elements
-			ws._drawGrid(oCtx, activeRange, offsetX, offsetY);
-			ws._drawCellsAndBorders(oCtx, activeRange, offsetX, offsetY);
-
-			ctx.restore();
-
-			let base64 = canvas.toDataURL();
-			if (opt_get_bytes) {
+			if (opt_get_bytes && base64) {
 				// Get base64 data without header
 				let base64Data = base64.split(',')[1];
 
@@ -601,6 +572,70 @@
 			return base64;
 		};
 
+
+		function CCopyPasteExcelOptions()
+		{
+			this.isExcel = true;
+			this.wb = null;
+			this.cachedWbBinaryData = null;
+			this.oldWorkbookCoreParameters = {};
+		}
+		CCopyPasteExcelOptions.prototype.setOldWorkbookCoreParameters = function (oldCreator, oldIdentifier, oldLanguage, oldTitle, oldCategory, oldContentStatus)
+		{
+			this.oldWorkbookCoreParameters.oldCreator = oldCreator;
+			this.oldWorkbookCoreParameters.oldIdentifier = oldIdentifier;
+			this.oldWorkbookCoreParameters.oldLanguage = oldLanguage;
+			this.oldWorkbookCoreParameters.oldTitle = oldTitle;
+			this.oldWorkbookCoreParameters.oldCategory = oldCategory;
+			this.oldWorkbookCoreParameters.oldContentStatus = oldContentStatus;
+		};
+		CCopyPasteExcelOptions.prototype.getCachedWorkbookBinaryData = function ()
+		{
+			if (!this.cachedWbBinaryData)
+			{
+				if (this.wb)
+				{
+					const oOldPPTXWriter = AscCommon.pptx_content_writer;
+					AscCommon.pptx_content_writer = new AscCommon.CPPTXContentWriter();
+
+					const newCreator = this.wb.Core.creator;
+					const newIdentifier = this.wb.Core.identifier;
+					const newLanguage = this.wb.Core.language;
+					const newTitle = this.wb.Core.title;
+					const newCategory = this.wb.Core.category;
+					const newContentStatus = this.wb.Core.contentStatus;
+				 this.wb.Core.creator = this.oldWorkbookCoreParameters.oldCreator;
+				 this.wb.Core.identifier = this.oldWorkbookCoreParameters.oldIdentifier;
+				 this.wb.Core.language = this.oldWorkbookCoreParameters.oldLanguage;
+				 this.wb.Core.title = this.oldWorkbookCoreParameters.oldTitle;
+				 this.wb.Core.category = this.oldWorkbookCoreParameters.oldCategory;
+				 this.wb.Core.contentStatus = this.oldWorkbookCoreParameters.oldContentStatus;
+
+
+					var oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(this.wb, false);
+					oBinaryFileWriter.Write();
+					this.cachedWbBinaryData = oBinaryFileWriter.Memory.data.slice();
+
+					this.wb.Core.creator = newCreator;
+					this.wb.Core.identifier = newIdentifier;
+					this.wb.Core.language = newLanguage;
+					this.wb.Core.title = newTitle;
+					this.wb.Core.category = newCategory;
+					this.wb.Core.contentStatus = newContentStatus;
+
+					AscCommon.pptx_content_writer = oOldPPTXWriter;
+				}
+			}
+			return this.cachedWbBinaryData;
+		};
+		CCopyPasteExcelOptions.prototype.getChartRangeWithReplaceDefinedName = function(sRange) {
+			const wb = this.wb;
+			if (wb && sRange && sRange.includes("_xlchart")) {
+				const definedName = wb.getDefinesNames(sRange);
+				return definedName ? definedName.ref : sRange;
+			}
+			return sRange;
+		};
 
 
 		function CopyProcessorExcel() {
@@ -729,11 +764,21 @@
 
 
 						//WRITE
-						let oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(wb, !ignoreCopyPaste ? selectionRange : false);
+						const oCopyPaste = !ignoreCopyPaste ? selectionRange : false;
+						const oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(wb, !ignoreCopyPaste ? selectionRange : false);
+						if (oCopyPaste)
+						{
+							const oCopyPasteOptions = new CCopyPasteExcelOptions();
+							oCopyPasteOptions.wb = wb;
+							oCopyPasteOptions.setOldWorkbookCoreParameters(oldCreator, oldIdentifier, oldLanguage, oldTitle, oldCategory, oldContentStatus);
+							pptx_content_writer.Start_CopyPaste(oCopyPasteOptions);
+						}
 						sBase64 = "xslData;" + oBinaryFileWriter.Write();
 						pptx_content_writer.End_UseFullUrl();
-
-
+						if (oCopyPaste)
+						{
+							pptx_content_writer.End_CopyPaste();
+						}
 						if (selectAll) {
 							for (let i in unselectedIndexes) {
 								wsModel.Drawings[i].graphicObject.selected = false;
@@ -978,9 +1023,6 @@
 			},
 
 			_generateHtmlImg: function (isSelectedImages, worksheet) {
-				if (window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor) {
-					return false;
-				}
 				let objectRender = worksheet.objectRender;
 
 				objectRender.preCopy();
@@ -1842,7 +1884,7 @@
 									doPasteData();
 								}
 							});
-						} else if (!(window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
+						} else {
 
 							newFonts = getFontsFromDrawings(pasteData.Drawings);
 
@@ -1902,10 +1944,10 @@
 						}
 
 						_ranges.sort(function sortArr(a, b) {
-							if (byCol) {
-								return a.c1 > b.c1 ? -1 : 1;
+							if (!byCol) {
+								return a.c1 > b.c1 ? 1 : -1;
 							} else {
-								return a.r1 > b.r1 ? -1 : 1;
+								return a.r1 > b.r1 ? 1 : -1;
 							}
 						});
 
@@ -1960,7 +2002,7 @@
 				var pasteInOriginalDoc = this._checkPastedInOriginalDoc(pastedWb);
 				if (pasteInOriginalDoc && null !== window["Asc"]["editor"].wb.cutIdSheet) {
 					var wsFrom = window["Asc"]["editor"].wb.getWorksheetById(window["Asc"]["editor"].wb.cutIdSheet);
-					var fromRange = wsFrom ? wsFrom.copyCutRange : null;
+					var fromRange = wsFrom ? wsFrom.getCutRange() : null;
 					if (fromRange) {
 						fromRange = fromRange[0];
 						var aRange = ws.model.selectionRange.getLast();
@@ -2025,6 +2067,10 @@
 							t._insertBinaryIntoShapeContent(worksheet, pasteData.content, true);
 						}
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2092,6 +2138,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2101,6 +2151,10 @@
 					if (isCellEditMode) {
 						var text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						var callback = function (isSuccess) {
@@ -2108,6 +2162,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2154,7 +2212,7 @@
 					}
 
 					var arr_shapes = content.Drawings;
-					if (arr_shapes && arr_shapes.length && !(window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
+					if (arr_shapes && arr_shapes.length) {
 						if (!bSlideObjects && content.Drawings.length === selectedContent2[1].content.Drawings.length) {
 							var oEndContent = {
 								Drawings: []
@@ -2356,6 +2414,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2365,6 +2427,10 @@
 					if (isCellEditMode) {
 						let text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						let callback = function (isSuccess) {
@@ -2372,6 +2438,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2702,7 +2772,6 @@
 					for (i = 0; i < data.Drawings.length; i++) {
 						drawingObject = data.Drawings[i];
 						graphicObject = drawingObject.graphicObject;
-
 						xfrm = graphicObject.spPr.xfrm;
 						if (xfrm) {
 							offX = 0;
@@ -2767,6 +2836,7 @@
 						}
 
 						var _copy = data.Drawings[i].graphicObject.copy(oCopyPr);
+						_copy.applySpecialPasteProps(pastedWb);
 						if (_copy.convertFromSmartArt) {
 							_copy.convertFromSmartArt(true);
 						}
@@ -2977,7 +3047,7 @@
 					AscFormat.CheckSpPrXfrm2(graphicObject);
 					xfrm = graphicObject.spPr.xfrm;
 
-					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1) - ws._getColLeft(0), 0, 3);
+					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1, true) - (ws.getRightToLeft() ? - ws._getColLeft(0) : ws._getColLeft(0)), 0, 3);
 					curRow = xfrm.offY - startRow + ws.objectRender.convertMetric(ws._getRowTop(addImagesFromWord[i].row + activeRange.r1) - ws._getRowTop(0), 0, 3);
 
 					xfrm.setOffX(curCol);
@@ -3089,6 +3159,10 @@
 						} else {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 						}
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -3107,7 +3181,7 @@
 					}
 				}
 
-				this.pasteCallBack = cb;
+				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = cb;
 
 				this.activeRange = worksheet.model.selectionRange.getLast().clone();
 				worksheet.workbook.handlers.trigger("cleanCopyData", true);
@@ -3138,11 +3212,17 @@
 
 					//при специальной вставке в firefox _getComputedStyle возвращает null
 					//TODO пересмотреть функцию _getComputedStyle
-					if (window['AscCommon'].g_specialPasteHelper.specialPasteStart && window['AscCommon'].g_specialPasteHelper.specialPasteData.aContent) {
+					let specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
+					let specialPasteProps = specialPasteHelper.specialPasteProps;
+					let props = specialPasteProps ? specialPasteProps.property : null;
+
+					if (window['AscCommon'].g_specialPasteHelper.specialPasteStart && window['AscCommon'].g_specialPasteHelper.specialPasteData.aContent && props !== Asc.c_oSpecialPasteProps.picture) {
 						oPasteProcessor.aContent = window['AscCommon'].g_specialPasteHelper.specialPasteData.aContent;
 					} else {
 						oPasteProcessor._Execute(node, {}, true, true, false);
-						window['AscCommon'].g_specialPasteHelper.specialPasteData.aContent = oPasteProcessor.aContent;
+						if (props !== Asc.c_oSpecialPasteProps.picture) {
+							window['AscCommon'].g_specialPasteHelper.specialPasteData.aContent = oPasteProcessor.aContent;
+						}
 					}
 
 					editor = oOldEditor;
@@ -3156,7 +3236,7 @@
 				var aImagesToDownload = this._getImageFromHtml(node, true);
 				var specialPasteProps = window['AscCommon'].g_specialPasteHelper.specialPasteProps;
 				var api = Asc["editor"];
-				if (!api.isChartEditor && aImagesToDownload !== null &&
+				if (aImagesToDownload !== null &&
 					(!specialPasteProps || (specialPasteProps && specialPasteProps.images)))//load to server
 				{
 					AscCommon.sendImgUrls(api, aImagesToDownload, function (data) {
@@ -3728,6 +3808,10 @@
 				var t = this;
 				if (!text || (text && !text.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -3748,6 +3832,12 @@
 				if (isIntoShape) {
 					var callback = function (isSuccess) {
 						if (isSuccess === false) {
+							window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
+							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return false;
 						}
 
@@ -3784,6 +3874,11 @@
 
 						t._insertSelectedContentIntoShapeContent(worksheet, selectedElements, isIntoShape);
 
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(true);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
+
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 
@@ -3808,7 +3903,7 @@
 					}
 				}
 				var aResult = this._getTableFromText(text, textImport);
-				if (aResult && !(aResult.onlyImages && window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
+				if (aResult) {
 					if (textImport) {
 						var arn = worksheet.model.selectionRange.getLast().clone();
 						var width = aResult.content && aResult.content[0] ? aResult.content[0].length - 1 : 0;
@@ -3819,6 +3914,10 @@
 						if (resmove === -2) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 							worksheet.handlers.trigger("onErrorEvent", c_oAscError.ID.CannotMoveRange, c_oAscError.Level.NoCritical);
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						} else if (resmove === -1) {
 							worksheet.model.workbook.handlers.trigger("asc_onConfirmAction", Asc.c_oAscConfirm.ConfirmReplaceRange,
 								function (can) {
@@ -3826,6 +3925,10 @@
 										worksheet.setSelectionInfo('paste', {data: aResult, bText: true});
 									} else {
 										window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+										if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+										}
 									}
 								});
 						} else {
@@ -4220,6 +4323,10 @@
 
 				if (!documentContent || (documentContent && !documentContent.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -4233,6 +4340,10 @@
 					if (this.aResult.props && this.aResult.props.addImagesFromWord && this.aResult.props.addImagesFromWord.length === 1 && this.aResult.content) {
 						if (1 === this.aResult.content.length && 1 === this.aResult.content[0].length && this.aResult.content[0][0].content && this.aResult.content[0][0].content.length === 0) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return;
 						} else {
 							this.aResult.props.addImagesFromWord = [];

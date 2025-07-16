@@ -135,7 +135,8 @@ var c_oSerNumTypes = {
 	Legacy: 34,
 	LegacyIndent: 35,
 	LegacySpace: 36,
-	lvl_Jc: 37
+	lvl_Jc: 37,
+	Nsid: 38
 };
 var c_oSerOtherTableTypes = {
     ImageMap:0,
@@ -1753,7 +1754,7 @@ function readPermStart(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permStart = AscWord.ParagraphPermStart.fromObject(permPr);
-	oReadResult.addPermStart(paragraphContent, permStart);
+	oReadResult.addPermStart(paragraphContent, permStart, true);
 	return res;
 }
 function readPermEnd(length, bcr, oReadResult, paragraphContent) {
@@ -1763,7 +1764,7 @@ function readPermEnd(length, bcr, oReadResult, paragraphContent) {
 	let permPr = {};
 	let res = readPermPr(length, bcr, permPr);
 	let permEnd = AscWord.ParagraphPermEnd.fromObject(permPr);
-	oReadResult.addPermEnd(paragraphContent, permEnd);
+	oReadResult.addPermEnd(paragraphContent, permEnd, true);
 	return res;
 }
 function readPermPr(length, bcr, permPr) {
@@ -2387,7 +2388,7 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
 	this.oBinaryHeaderFooterTableWriter = oBinaryHeaderFooterTableWriter;
     this.bs = new BinaryCommonWriter(this.memory);
     this.brPrs = new Binary_rPrWriter(this.memory, saveParams);
-    this.Write_pPr = function(pPr, pPr_rPr, EndRun, SectPr, oDocument)
+    this.Write_pPr = function(pPr, pPr_rPr, EndRun, paragraph, oDocument)
     {
         var oThis = this;
         //Стили надо писать первыми, потому что применение стиля при открытии уничтажаются настройки параграфа
@@ -2507,11 +2508,14 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
             this.bs.WriteItemWithLength(function(){oThis.WriteFramePr(pPr.FramePr);});
         }
         //SectPr
-        if(null != SectPr && null != oDocument)
+        if(paragraph
+			&& paragraph.Get_SectionPr()
+			&& !paragraph.IsTableCellContent()
+			&& oDocument)
         {
             this.memory.WriteByte(c_oSerProp_pPrType.SectPr);
             this.memory.WriteByte(c_oSerPropLenType.Variable);
-            this.bs.WriteItemWithLength(function(){oThis.WriteSectPr(SectPr, oDocument);});
+            this.bs.WriteItemWithLength(function(){oThis.WriteSectPr(paragraph.Get_SectionPr(), oDocument);});
         }
 
         if(null != pPr.PrChange && pPr.ReviewInfo)
@@ -2961,7 +2965,7 @@ function Binary_pPrWriter(memory, oNumIdMap, oBinaryHeaderFooterTableWriter, sav
 		if (undefined !== sectPr.GetPageNumChapStyle())
 			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapStyle, function(){oThis.memory.WriteLong(sectPr.GetPageNumChapStyle());});
 		if (undefined !== sectPr.GetPageNumChapSep())
-			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapSep, function(){oThis.memory.WriteLong(sectPr.GetPageNumChapSep());});
+			this.bs.WriteItem(c_oSerProp_secPrPageNumType.chapSep, function(){oThis.memory.WriteByte(sectPr.GetPageNumChapSep());});
 	}
 	this.WriteLineNumType = function(lineNum)
 	{
@@ -5056,6 +5060,11 @@ function BinaryNumberingTableWriter(memory, doc, oNumIdMap, oUsedNumIdMap, saveP
             this.memory.WriteByte(c_oSerNumTypes.StyleLink);
             this.memory.WriteString2(num.StyleLink);
 		}
+		let nsid = num.GetNsid();
+		if (undefined !== nsid && null !== nsid)
+		{
+			this.bs.WriteItem(c_oSerNumTypes.Nsid, function (){oThis.memory.WriteLong(nsid);});
+		}
         //Lvl
         if(null != num.Lvl)
             this.bs.WriteItem(c_oSerNumTypes.AbstractNum_Lvls, function(){oThis.WriteLevels(num.Lvl);});
@@ -5393,7 +5402,7 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
                 pPr = {};
             var EndRun = par.GetParaEndRun();
             this.memory.WriteByte(c_oSerParType.pPr);
-            this.bs.WriteItemWithLength(function(){oThis.bpPrs.Write_pPr(pPr, par.TextPr.Value, EndRun, par.Get_SectionPr(), oThis.Document);});
+            this.bs.WriteItemWithLength(function(){oThis.bpPrs.Write_pPr(pPr, par.TextPr.Value, EndRun, par, oThis.Document);});
         }
         //Content
         if(null != par.Content)
@@ -6856,9 +6865,6 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
 		}
 		if (undefined !== val.storeItemCheckSum)
 		{
-			//let strCustomXmlContent = this.Document.customXml.getContentByDataBinding(val);
-			//val.recalculateCheckSum(strCustomXmlContent);
-
 			this.memory.WriteByte(c_oSerSdt.StoreItemCheckSum);
 			this.memory.WriteString2(val.storeItemCheckSum);
 		}
@@ -7750,9 +7756,10 @@ function BinaryCustomsTableWriter(memory, doc, customXmlManager)
 	};
 	this.WriteCustomXml = function(customXml) {
 		var oThis = this;
-		for(var i = 0; i < customXml.uri.length; ++i){
+		let namespaces = customXml.getAllNamespaces();
+		for(var i = 0; i < namespaces.length; ++i){
 			this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-				oThis.memory.WriteString3(customXml.uri[i]);
+				oThis.memory.WriteString3(namespaces[i]);
 			});
 		}
 		if (null !== customXml.itemId) {
@@ -8273,6 +8280,9 @@ function BinaryFileReader(doc, openParams)
 		{
 			this.PostLoadPrepareCheckStylesRecursion(stId, aStylesGrey, styles);
 		}
+		
+		this.Document.GetGlossaryDocument().UpdateStyleLinks(oIdRenameMap);
+		
 		//DefpPr, DefrPr
 		//важно чтобы со списками разобрались выше чем этот код
 		if(null != this.oReadResult.DefpPr)
@@ -11057,9 +11067,11 @@ function Binary_NumberingTableReader(doc, oReadResult, stream)
         {
 			this.m_oANums[this.stream.GetULongLE()] = oNewNum;
             //oNewNum.Id = this.stream.GetULongLE();
-        }
-        else
-            res = c_oSerConstants.ReadUnknown;
+        } else if (c_oSerNumTypes.Nsid === type) {
+			oNewNum.SetNsid(this.stream.GetLongLE());
+		} else {
+			res = c_oSerConstants.ReadUnknown;
+		}
         return res;
     }
     this.ReadLevels = function(type, length, nLevelNum, oNewNum)
@@ -12007,39 +12019,23 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
         return res;
     };
 	this.ReadText = function(text, run, isInstrText){
-		for (var i = 0; i < text.length; ++i)
+		for (var it = text.getUnicodeIterator(); it.check(); it.next())
 		{
-			var nUnicode = null;
-			var nCharCode = text.charCodeAt(i);
-			if (AscCommon.isLeadingSurrogateChar(nCharCode))
+			let nUnicode = it.value();
+			if (isInstrText)
 			{
-				if(i + 1 < text.length)
-				{
-					i++;
-					var nTrailingChar = text.charCodeAt(i);
-					nUnicode = AscCommon.decodeSurrogateChar(nCharCode, nTrailingChar);
-				}
+				run.AddToContentToEnd(new AscWord.ParaInstrText(nUnicode));
 			}
 			else
-				nUnicode = nCharCode;
-
-			if (null !== nUnicode) {
-				if(isInstrText){
-					run.AddToContentToEnd(new ParaInstrText(nUnicode));
-				} else {
-					if (AscCommon.IsSpace(nUnicode)) {
-						run.AddToContentToEnd(new AscWord.CRunSpace(nUnicode));
-					} else if (0x0D === nUnicode) {
-						if (i + 1 < text.length && 0x0A === text.charCodeAt(i + 1)) {
-							i++;
-						}
-						run.AddToContentToEnd(new AscWord.CRunSpace());
-					} else if (0x09 === nUnicode) {
-						run.AddToContentToEnd(new AscWord.CRunTab());
-					} else {
-						run.AddToContentToEnd(new AscWord.CRunText(nUnicode));
-					}
-				}
+			{
+				if (AscCommon.IsSpace(nUnicode))
+					run.AddToContentToEnd(new AscWord.CRunSpace(nUnicode));
+				else if (0x0D === nUnicode)
+					run.AddToContentToEnd(new AscWord.CRunSpace());
+				else if (0x09 === nUnicode)
+					run.AddToContentToEnd(new AscWord.CRunTab());
+				else
+					run.AddToContentToEnd(new AscWord.CRunText(nUnicode));
 			}
 		}
 	};
@@ -13519,39 +13515,20 @@ function Binary_oMathReader(stream, oReadResult, curNote, openParams)
         if (c_oSerRunType.run === type)
         {
             var text = this.stream.GetString2LE(length);
-
-			for (var i = 0; i < text.length; ++i)
+			for (var it = text.getUnicodeIterator(); it.check(); it.next())
 			{
-			    var nUnicode = null;
-			    var nCharCode = text.charCodeAt(i);
-			    if (AscCommon.isLeadingSurrogateChar(nCharCode))
-			    {
-			        if(i + 1 < text.length)
-			        {
-			            i++;
-			            var nTrailingChar = text.charCodeAt(i);
-			            nUnicode = AscCommon.decodeSurrogateChar(nCharCode, nTrailingChar);
-			        }
-			    }
-			    else
-			        nUnicode = nCharCode;
-
-			    if (null != nUnicode) {
-					if (AscCommon.IsSpace(nUnicode)) {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(nUnicode), false);
-					} else if (0x0D === nUnicode) {
-						if (i + 1 < text.length && 0x0A === text.charCodeAt(i + 1)) {
-							i++;
-						}
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(), false);
-					} else if (0x09 === nUnicode) {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunTab(), false);
-					} else {
-						oPos.run.AddToContent(oPos.pos, new AscWord.CRunText(nUnicode), false);
-					}
-					oPos.pos++;
-			    }
-            }
+				let nUnicode = it.value();
+				if (AscCommon.IsSpace(nUnicode)) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(nUnicode), false);
+				} else if (0x0D === nUnicode) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunSpace(), false);
+				} else if (0x09 === nUnicode) {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunTab(), false);
+				} else {
+					oPos.run.AddToContent(oPos.pos, new AscWord.CRunText(nUnicode), false);
+				}
+				oPos.pos++;
+			}
         }
         else if (c_oSerRunType.tab === type)
         {
@@ -16293,7 +16270,7 @@ function Binary_CustomsTableReader(doc, oReadResult, stream) {
 	this.ReadCustomContent = function(type, length, custom) {
 		var res = c_oSerConstants.ReadOk;
 		if (c_oSerCustoms.Uri === type) {
-			custom.uri.push(this.stream.GetString2LE(length));
+			custom.setNamespaceUri(this.stream.GetString2LE(length));
 		} else if (c_oSerCustoms.ItemId === type) {
 			custom.itemId = this.stream.GetString2LE(length);
 		} else if (c_oSerCustoms.ContentA === type) {
@@ -17602,10 +17579,10 @@ DocReadResult.prototype = {
 						}
 						break;
 					case para_PermStart:
-						this.addPermStart(par, elem.elem, false);
+						this.addPermStart(par, elem, false);
 						break;
 					case para_PermEnd:
-						this.addPermEnd(par, elem.elem, false);
+						this.addPermEnd(par, elem, false);
 						break;
 				}
 			}

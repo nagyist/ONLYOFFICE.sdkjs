@@ -195,7 +195,7 @@
      * @param {OLEProperties} data - The OLE object properties.
     * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/AddOleObject.js
 	 */
-    Api.prototype["pluginMethod_AddOleObject"] = function(data) { return this.asc_addOleObject(data); };
+    Api.prototype["pluginMethod_AddOleObject"] = function(data) { return this.asc_addOleObject(data, true); };
 
     /**
      * Edits an OLE object in the document.
@@ -307,7 +307,7 @@
 		if (!AscCommon.g_clipboardBase)
 			return null;
 
-		if (!this.canEdit() || this.isPdfEditor())
+		if (!this.canEdit())
 			return null;
 
 		let _elem = document.getElementById("pmpastehtml");
@@ -321,7 +321,7 @@
 
 		if (this.editorId === AscCommon.c_oEditorId.Word || this.editorId === AscCommon.c_oEditorId.Presentation) {
 			let textPr = this.get_TextProps();
-			if (textPr) {
+			if (textPr && textPr.TextPr) {
 				if (undefined !== textPr.TextPr.FontSize)
 					_elem.style.fontSize = textPr.TextPr.FontSize + "pt";
 
@@ -352,6 +352,7 @@
 		let b_old_save_format = AscCommon.g_clipboardBase.bSaveFormat;
 		AscCommon.g_clipboardBase.bSaveFormat = false;
 		let _t = this;
+
 		this.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, _elem, undefined, undefined, undefined,
 			function () {
 				_t.decrementCounterLongAction();
@@ -379,11 +380,19 @@
 	 */
     Api.prototype["pluginMethod_PasteText"] = function(text)
     {
-        if (!AscCommon.g_clipboardBase)
+        if (!AscCommon.g_clipboardBase || !window.g_asc_plugins || !text)
             return null;
 
-        this.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Text, text);
-    };
+		var _t = this;
+		function onPasteAsync() {
+			_t.decrementCounterLongAction();
+			window.g_asc_plugins.onPluginMethodReturn(true);
+		}
+
+		window.g_asc_plugins.setPluginMethodReturnAsync();
+		this.incrementCounterLongAction();
+        this.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Text, text, undefined, undefined, undefined, onPasteAsync);
+	};
 
     /**
      * An object containing the data about all the macros from the document.
@@ -1240,6 +1249,10 @@
 	Api.prototype["pluginMethod_GetFileToDownload"] = function(format)
 	{
 		window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
+		
+		if (format && typeof(format) === "string")
+			format = format.toUpperCase();
+		
 		let dwnldF = Asc.c_oAscFileType[format] || Asc.c_oAscFileType[this.DocInfo.Format.toUpperCase()];
 		let opts = new Asc.asc_CDownloadOptions(dwnldF);
 		let _t = this;
@@ -1660,7 +1673,7 @@
     * Installs a plugin using the specified plugin config.
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
-     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/manifest/ config}.
+     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/configuration/ config}.
      * @alias InstallPlugin
      * @returns {object} - An object with the result information.
      * @since 7.2.0
@@ -1674,7 +1687,7 @@
     * Updates a plugin using the specified plugin config.
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
-     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/manifest/ config}.
+     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/configuration/ config}.
      * @alias UpdatePlugin
      * @returns {object} - An object with the result information.
      * @since 7.3.0
@@ -1886,7 +1899,6 @@
 		if (items["items"]) correctItemsWithData(items["items"], baseUrl);
 		this.onPluginAddContextMenuItem(items);
 	};
-
 	/**
 	 * Updates an item in the context menu with the specified items.
 	 * @undocumented
@@ -1903,7 +1915,25 @@
 		if (items["items"]) correctItemsWithData(items["items"], baseUrl);
 		this.onPluginUpdateContextMenuItem([items]);
 	};
-
+	
+	/**
+	 * Adds a button to the specified content controls track.
+	 * @undocumented
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias AddContentControlButtons
+	 * @param buttons
+	 * @since 9.0.0
+	 */
+	Api.prototype["pluginMethod_AddContentControlButtons"] = function(buttons)
+	{
+		if (AscCommon.c_oEditorId.Word !== this.getEditorId() || !buttons)
+			return;
+		
+		buttons["baseUrl"] = this.pluginsManager.pluginsMap[buttons["guid"]].baseUrl;
+		this.WordControl.m_oLogicDocument.DrawingDocument.contentControls.addPluginButtons(buttons);
+	};
+	
 	/**
 	 * The possible values of the base which the relative vertical position of the toolbar menu item will be calculated from.
 	 * @typedef {("button" | "...")} ToolbarMenuItemType
@@ -1944,6 +1974,16 @@
 	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/ToolbarMenuMainItem.js
 	 */
 
+	function correctToolbarItems(api, items)
+	{
+		let baseUrl = api.pluginsManager.pluginsMap[items["guid"]].baseUrl;
+		for (let i = 0, len = items["tabs"].length; i < len; i++)
+		{
+			if (items["tabs"][i]["items"])
+				correctItemsWithData(items["tabs"][i]["items"], baseUrl);
+		}
+	}
+
 	/**
 	 * Adds an item to the toolbar menu.
 	 * @undocumented
@@ -1956,14 +1996,24 @@
 	 */
 	Api.prototype["pluginMethod_AddToolbarMenuItem"] = function(items)
 	{
-		let baseUrl = this.pluginsManager.pluginsMap[items["guid"]].baseUrl;
-		for (let i = 0, len = items["tabs"].length; i < len; i++)
-		{
-			if (items["tabs"][i]["items"])
-				correctItemsWithData(items["tabs"][i]["items"], baseUrl);
-		}
-
+		correctToolbarItems(this, items);
 		this.sendEvent("onPluginToolbarMenu", [items]);
+	};
+
+	/**
+	 * Updates the toolbar menu item.
+	 * @undocumented
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @alias UpdateToolbarMenuItem
+	 * @param {ToolbarMenuMainItem[]} items - An array containing the main toolbar menu items.
+	 * @since 8.1.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/UpdateToolbarMenuItem.js
+	 */
+	Api.prototype["pluginMethod_UpdateToolbarMenuItem"] = function(items)
+	{
+		correctToolbarItems(this, items);
+		this.sendEvent("onPluginUpdateToolbarMenu", [items]);
 	};
 
 	/**
@@ -1985,6 +2035,51 @@
 		let baseUrl = this.pluginsManager.pluginsMap[guid].baseUrl;
 		correctItemIcons(variation["icons"], baseUrl);
 
+		if (variation["isTargeted"])
+		{
+			let w = 300;
+			let h = 100;
+			if (variation["size"])
+			{
+				w = variation["size"][0];
+				h = variation["size"][1];
+			}
+
+			let offsets = this.getTargetOnBodyCoords();
+			if (w > offsets.W)
+				w = offsets.W;
+			if (h > offsets.H)
+				h = offsets.H;
+
+			let offsetToFrame = 10;
+			let r = offsets.X + offsetToFrame + w;
+			let t = offsets.Y - offsetToFrame - h;
+			let b = offsets.Y + offsets.TargetH + offsetToFrame + h;
+
+			let x = offsets.X + offsetToFrame;
+			if (r > offsets.W)
+				x += (offsets.W - r);
+
+			let y = 0;
+			if (b < offsets.H)
+			{
+				y = offsets.Y + offsets.TargetH + offsetToFrame;
+			}
+			else if (t > 0)
+			{
+				y = t;
+			}
+			else
+			{
+				y = offsets.Y + offsets.TargetH + offsetToFrame;
+				h += (offsets.H - b);
+			}
+
+			variation["size"] = [w, h];
+			variation["positionX"] = x;
+			variation["positionY"] = y;
+		}
+
 		this.sendEvent("asc_onPluginWindowShow", frameId, variation);
 	};
 
@@ -1994,13 +2089,21 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {string} frameId - The frame ID.
+	 * @param {boolean} isFocus - The focus will be made on the window.
 	 * @alias ActivateWindow
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/ActivateWindow.js
 	 */
-	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId)
+	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId, isFocus)
 	{
 		this.sendEvent("asc_onPluginWindowActivate", frameId);
+
+		if (isFocus)
+		{
+			let frame = document.getElementById(frameId);
+			if (frame)
+				frame.focus();
+		}
 	};
 
 	/**
@@ -2120,6 +2223,68 @@
 			window.g_asc_plugins.dockCallbacks[key]();
 			delete window.g_asc_plugins.dockCallbacks[key];
 		}
+	};
+
+	/**
+	 * Catch AI event from plugin.
+	 * @memberof Api
+	 * @undocumented
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDF"]
+	 * @alias onAIRequest
+	 * @param {object} data - Data.
+	 * @since 9.0.0
+	 */
+	Api.prototype["pluginMethod_onAIRequest"] = function(data)
+	{
+		let curItem = this.aiResolvers[0];
+		this.aiResolvers.shift();
+
+		if (this.aiResolvers.length > 0)
+			this._AI();
+
+		curItem.resolve(data);
+	};
+
+	/**
+	 * Returns the local path to the image.
+	 * @memberof Api
+	 * @undocumented
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDF"]
+	 * @alias getLocalImagePath
+	 * @param {object} data - Data.
+	 * @since 9.0.0
+	 */
+	Api.prototype["pluginMethod_getLocalImagePath"] = function(url)
+	{
+		window.g_asc_plugins.setPluginMethodReturnAsync();
+		AscCommon.sendImgUrls(this, [url], function(data) {
+			let ret = {
+				"error" : true,
+				"url" : "",
+				"path" : ""
+			};
+
+			if (data[0] && data[0].path != null && data[0].url !== "error")
+			{
+				ret["error"] = false;
+				ret["url"] = AscCommon.g_oDocumentUrls.imagePath2Local(data[0].path);
+				ret["path"] = data[0].path;
+			}
+
+			window.g_asc_plugins.onPluginMethodReturn(ret);
+		});
+	};
+
+	/**
+	 * Returns focus to the editor.
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @alias FocusEditor
+	 */
+	Api.prototype["pluginMethod_FocusEditor"] = function()
+	{
+		if (AscCommon.g_inputContext && AscCommon.g_inputContext.HtmlArea)
+			AscCommon.g_inputContext.HtmlArea.focus();
 	};
 
 })(window);

@@ -76,6 +76,7 @@
 		let isFillIdx = false;
 		let isLineIdx = false;
 		let isFontIdx = false;
+		let isEffectIdx = false;
 
 		if (themeValue === "LineColor") {
 			cellName = "LineColor";
@@ -193,6 +194,28 @@
 			// isFillIdx = true;
 
 			initialDefaultValue = "Calibri";
+		} else if (cellName === "ShdwPattern") {
+			// calculate color. what if there will be placeholder color in effects
+			quickStyleCellName = "QuickStyleShadowColor";
+			quickStyleModifiersCellName = "QuickStyleEffectsMatrix";
+			getModifiersMethod = themes[0].getOuterShdw;
+			isEffectIdx = true;
+
+			initialDefaultValue = 0;
+		} else if (cellName === "ShdwForegnd") {
+			quickStyleCellName = "QuickStyleShadowColor";
+			quickStyleModifiersCellName = "QuickStyleEffectsMatrix";
+			getModifiersMethod = themes[0].getOuterShdw;
+			isEffectIdx = true;
+
+			initialDefaultValue = AscFormat.CreateUniColorRGB(255,255,255);
+		} else if (cellName === "ShapeShdwOffsetX" || cellName === "ShapeShdwOffsetY") {
+			quickStyleCellName = "QuickStyleShadowColor";
+			quickStyleModifiersCellName = "QuickStyleEffectsMatrix";
+			getModifiersMethod = themes[0].getOuterShdw;
+			isEffectIdx = true;
+
+			initialDefaultValue = 0;
 		} else {
 			AscCommon.consoleLog("themeval argument error. cell name: " + cellName + " is unknown. return undefined.");
 			return undefined;
@@ -235,7 +258,6 @@
 		// if THEMEVAL was called with themeValue (argument like "FillColor") even if themeIndex is 0 we should
 		// use any theme otherwise if no themeValue argument was passed and 0 themeIndex is used we should return
 		// default value
-		// see colored rectangle in that file https://disk.yandex.ru/d/IzxVtx0a7GqbQA
 		let theme = themes[0];
 		if (themeIndex === 0) {
 			return initialDefaultValue;
@@ -383,6 +405,8 @@
 							styleId = varStyle.lineIdx;
 						} else if (isFontIdx) {
 							styleId = varStyle.fontIdx;
+						} else if (isEffectIdx) {
+							styleId = varStyle.effectIdx;
 						}
 					}
 					if (null !== styleId) {
@@ -479,6 +503,28 @@
 			} else if (cellName === "FillPattern") {
 				let fillPattern = getMedifiersResult && getMedifiersResult.pattern;
 				result = Number(fillPattern);
+			} else if (cellName === "ShdwPattern") {
+				let shdwPattern = Boolean(getMedifiersResult);
+				result = Number(shdwPattern);
+			} else if (cellName === "ShdwForegnd") {
+				let shadowColor = getMedifiersResult && getMedifiersResult.color;
+				result = shadowColor;
+			} else if (cellName === "ShapeShdwOffsetX" || cellName === "ShapeShdwOffsetY") {
+				let dir = getMedifiersResult && getMedifiersResult.dir;
+				let dist = getMedifiersResult && getMedifiersResult.dist;
+
+				let dist_inches = dist * g_dKoef_emu_to_mm / g_dKoef_in_to_mm;
+				let dir_radians = dir * AscFormat.cToRad;
+
+				// We are now in ooxml cord type system where y goes down.
+				// Let's convert to MS Euclidean cord system where y goes up.
+				dir_radians = -1 * dir_radians;
+
+				if (cellName === "ShapeShdwOffsetX") {
+					result = dist_inches * Math.cos(dir_radians);
+				} else {
+					result = dist_inches * Math.sin(dir_radians);
+				}
 			} else {
 				AscCommon.consoleLog("Error in themeval. result is not changed to appropriate type or quickStyleCellName is not set.");
 			}
@@ -522,29 +568,6 @@
 			AscCommon.consoleLog("Unknown themeval error. Return initialDefaultValue");
 			return initialDefaultValue;
 		}
-		// code below never calls. result is always calculated. Default values are set above are returned if
-		// default theme is used
-		// if (calculatedColor !== null) {
-		// 	let fromColorResult = null;
-		// 	if (cellName === "LineColor" || cellName === "FillForegnd" || cellName === "FillBkgnd") {
-		// 		fromColorResult = AscFormat.CreateUniFillByUniColor(calculatedColor);
-		// 	} else if (cellName === "Color") {
-		// 		fromColorResult = calculatedColor;
-		// 	}
-		//
-		// 	return calculateOnTheme(result, theme);
-		// } else {
-		// 	if (cellName === "LineColor" || cellName === "FillForegnd" || cellName === "FillBkgnd") {
-		// 		AscCommon.consoleLog("no color found. so painting lt1.");
-		// 		calculatedColor = AscFormat.CreateUniFillByUniColor(AscFormat.builder_CreateSchemeColor("lt1"));
-		// 	} else if (cellName === "Color") {
-		// 		// for text color
-		// 		AscCommon.consoleLog("no text color found. so painting dk1.");
-		// 		calculatedColor = AscFormat.builder_CreateSchemeColor("dk1");
-		// 	}
-		//
-		// 	return calculateOnTheme(result, theme);
-		// }
 	}
 
 	//-------------------------------------------------------------export---------------------------------------------------

@@ -192,7 +192,13 @@
 				case 36: 	// home
 				case 27:	// escape
 				{
-					window.g_asc_plugins.onPluginEvent2("onKeyDown", { "keyCode" : e.keyCode }, this.isInputHelpers);
+					window.g_asc_plugins.onPluginEvent2("onKeyDown", {
+						"keyCode" : e.keyCode,
+						"altKey" : e.altKey,
+						"ctrlKey" : e.ctrlKey,
+						"metaKey" : e.metaKey,
+						"shiftKey" : e.shiftKey
+					}, this.isInputHelpers);
 
 					AscCommon.stopEvent(e);
 					return false;
@@ -200,6 +206,16 @@
 				default:
 					break;
 			}
+		}
+		else
+		{
+			window.g_asc_plugins.onPluginEvent("onKeyDown", {
+				"keyCode" : e.keyCode,
+				"altKey" : e.altKey,
+				"ctrlKey" : e.ctrlKey,
+				"metaKey" : e.metaKey,
+				"shiftKey" : e.shiftKey
+			});
 		}
 
 		if (null != this.nativeFocusElement)
@@ -1495,4 +1511,28 @@
 			clearInterval(window.renderIntervalId);
 		}
 	};
+
+	/*
+	UNCOMMENT FOR DETECT FOCUS INITIALIZER
+	{
+		focusHtmlElement = function(element)
+		{
+			window.disableFocusDebugger = true;
+			element.focus();
+			delete window.disableFocusDebugger;
+		}
+
+		const originalFocus = HTMLElement.prototype.focus;
+
+		HTMLElement.prototype.focus = function(...args)
+		{
+			if (!window.disableFocusDebugger)
+				debugger;
+
+			console.log("FOCUS:", this);
+			originalFocus.apply(this, args);
+		};
+	}
+	*/
+
 })(window);

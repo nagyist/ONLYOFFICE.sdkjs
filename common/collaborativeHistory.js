@@ -354,11 +354,8 @@
 
 		for (let index = 0, count = reverseChanges.length; index < count; ++index)
 		{
-			let oClass = reverseChanges[index].GetClass();
 			reverseChanges[index].Load();
-
-			if (oClass && oClass.SetIsRecalculated && (!reverseChanges[index] || reverseChanges[index].IsNeedRecalculate()))
-				oClass.SetIsRecalculated(false);
+			reverseChanges[index].CheckNeedRecalculate();
 		}
 
 		// Создаем точку в истории. Делаем действия через обычные функции (с отключенным пересчетом), которые пишут в
@@ -460,17 +457,20 @@
 			if (oChange.IsContentChange())
 			{
 				let _oChange = oChange.Copy();
-
-				if (this.CommuteContentChange(_oChange, nPosition + nCount))
+				let simpleChanges = _oChange.ConvertToSimpleChanges();
+				for (let simpleIndex = simpleChanges.length - 1; simpleIndex >= 0; --simpleIndex)
 				{
-					let oReverseChange = _oChange.CreateReverseChange();
-					if (oReverseChange)
+					let simpleChange = simpleChanges[simpleIndex];
+					if (this.CommuteContentChange(simpleChange, nPosition + nCount))
 					{
-						arrReverseChanges.push(oReverseChange);
-						oReverseChange.SetReverted(true);
+						let oReverseChange = simpleChange.CreateReverseChange();
+						if (oReverseChange)
+						{
+							arrReverseChanges.push(oReverseChange);
+							oReverseChange.SetReverted(true);
+						}
 					}
 				}
-
 				oChange.SetReverted(true);
 			}
 			else if (oChange.IsSpreadsheetChange())
@@ -575,12 +575,11 @@
 			if (null !== oResult)
 				arrCommutateActions.push(oResult);
 		}
-
-		if (arrCommutateActions.length > 0)
-			oChange.ConvertFromSimpleActions(arrCommutateActions);
-		else
+		
+		if (arrCommutateActions.length <= 0)
 			return false;
 
+		oChange.ConvertFromSimpleActions(arrCommutateActions, true);
 		return true;
 	};
 	CCollaborativeHistory.prototype.CommuteContentChangeActions = function(oActionL, oActionR)

@@ -44,21 +44,57 @@ var HANDLE_EVENT_MODE_CURSOR = AscFormat.HANDLE_EVENT_MODE_CURSOR;
 var MOVE_DELTA = 1/100000;
 var SNAP_DISTANCE = 1.27;
 
-function checkEmptyPlaceholderContent(content)
-{
-    if(!content || content.Parent && content.Parent.txWarpStruct && content.Parent.recalcInfo.warpGeometry && content.Parent.recalcInfo.warpGeometry.preset !== "textNoShape" )
+function checkEmptyPlaceholderContent(content) {
+    if (!content) {
         return content;
-    var oShape = content.Parent;
-    if (oShape) {
-        if(content && content.Is_Empty()){
-            if(oShape.isPlaceholder && oShape.isPlaceholder()) {
-                return content;
-            }
-            if(content.isDocumentContentInSmartArtShape && content.isDocumentContentInSmartArtShape()) {
+    }
+
+    let isPdf = Asc.editor.isPdfEditor();
+    let shape = isPdf
+        ? (content.Parent && content.Parent.parent)
+        : content.Parent;
+
+    if (!shape) {
+        return null;
+    }
+
+    if (content.Is_Empty && content.Is_Empty()) {
+        if ((shape.isPlaceholder && shape.isPlaceholder()) ||
+            (content.isDocumentContentInSmartArtShape && content.isDocumentContentInSmartArtShape())) {
+            return content;
+        }
+    }
+
+    if (isPdf) {
+        if (shape.txWarpStruct ||
+            (shape.recalcInfo && shape.recalcInfo.warpGeometry)) {
+            return content;
+        }
+
+        if (shape.getBodyPr) {
+            let bodyPr = shape.getBodyPr();
+            if (bodyPr.vertOverflow !== AscFormat.nVOTOverflow) {
                 return content;
             }
         }
+
+        if (content.GetCurrentParagraph) {
+            let para = content.GetCurrentParagraph();
+            if (para && para.IsEmptyWithBullet && para.IsEmptyWithBullet()) {
+                return content;
+            }
+        }
+
+        return null;
     }
+
+    if (shape.txWarpStruct &&
+        shape.recalcInfo &&
+        shape.recalcInfo.warpGeometry &&
+        shape.recalcInfo.warpGeometry.preset !== "textNoShape") {
+        return content;
+    }
+
     return null;
 }
 
@@ -281,6 +317,11 @@ NullState.prototype =
         }
         const oThis = this;
         const fRecalculatePages = function() {
+            if (Asc.editor.isPdfEditor()) {
+                oThis.drawingObjects.checkRedrawOnChangeCursorPosition(start_target_doc_content, null);
+                return;
+            }
+            
             oThis.drawingObjects.checkChartTextSelection(true);
             oThis.drawingObjects.drawingDocument.OnRecalculatePage( pageIndex, oThis.drawingObjects.document.Pages[pageIndex] );
             if (AscFormat.isRealNumber(nStartPage) && pageIndex !== nStartPage) {
@@ -475,8 +516,7 @@ NullState.prototype =
                 {
                     end_target_doc_content = this.drawingObjects.getTargetDocContent();
                     if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content)) {
-
-                        this.drawingObjects.checkChartTextSelection();
+                        this.drawingObjects.checkRedrawOnChangeCursorPosition(start_target_doc_content, null);
                     }
                 }
                 return ret;
@@ -960,23 +1000,51 @@ RotateState.prototype =
                                     (bounds.posX + bounds.extX) * g_dKoef_mm_to_pt,
                                     (bounds.posY + bounds.extY) * g_dKoef_mm_to_pt
                                 ];
-                            
+
                                 if (isMoveShapeImageTrack && oTrack.pageIndex !== oTrack.originalObject.GetPage()) {
-                                    if (isEditFieldShape) {
-                                        let oField = oTrack.originalObject.GetEditField();
-                                        oField.SetRect(aRect);
-                                        oField.SetPage(oTrack.pageIndex);
-                                    }
-                                    else {
+                                    if (!isEditFieldShape) {
                                         oTrack.originalObject.SetPage(oTrack.pageIndex);
                                     }
                                 }
-                                else if (isEditFieldShape) {
+
+                                if (isEditFieldShape) {
+                                    function rotateRect(rect, angle) {
+                                        let x1 = rect[0];
+                                        let y1 = rect[1];
+                                        let x2 = rect[2];
+                                        let y2 = rect[3];
+
+                                        const cx = (x1 + x2) / 2;
+                                        const cy = (y1 + y2) / 2;
+                                        let w = Math.abs(x2 - x1);
+                                        let h = Math.abs(y2 - y1);
+
+                                        if (angle === 90 || angle === 270) {
+                                            let tmp = w;
+                                            w = h;
+                                            h = tmp;
+                                        } else if (angle !== 180) {
+                                            return rect;
+                                        }
+
+                                        return [
+                                            cx - w / 2, cy - h / 2,
+                                            cx + w / 2, cy + h / 2
+                                        ];
+                                    }
+                                    
                                     let oField = oTrack.originalObject.GetEditField();
-                                    oField.SetRect(aRect);
+                                    let oDoc = oField.GetDocument();
+                                    let nPage = oField.GetPage();
+                                    let nPageRotate = oDoc.Viewer.getPageRotate(nPage);
+
+                                    oField.SetRect(rotateRect(aRect, nPageRotate));
+                                    if (isMoveShapeImageTrack && oTrack.pageIndex !== oField.GetPage()) {
+                                        oField.SetPage(oTrack.pageIndex);
+                                    }
                                 }
                             }
-                            
+
                             oTrack.originalObject.SetNeedRecalc(true);
                         }
                 }, AscDFH.historydescription_CommonDrawings_EndTrack, this, pageIndex);
@@ -1102,9 +1170,12 @@ RotateState.prototype =
                         if(false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props, {Type : changestype_2_ElementsArray_and_Type , Elements : aCheckParagraphs, CheckType : AscCommon.changestype_Paragraph_Content}, bNoNeedCheck))
                         {
                             this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_RotateFlowDrawingNoCtrl);
-                            if(bMoveState && !this.drawingObjects.selection.cropSelection){
+                            if(bMoveState && !this.drawingObjects.selection.cropSelection)
+                            {
                                 this.drawingObjects.resetSelection();
                             }
+
+                            let aDrawingsToSelect = [];
                             for(i = 0; i < aDrawings.length; ++i)
                             {
                                 bounds = aBounds[i];
@@ -1152,7 +1223,7 @@ RotateState.prototype =
                                         this.drawingObjects.resetSelection();
                                         this.drawingObjects.selection.cropSelection = originalCopy.GraphicObj;
                                     }
-                                    this.drawingObjects.selectObject(originalCopy.GraphicObj, pageIndex);
+                                    aDrawingsToSelect.push({drawing: originalCopy.GraphicObj, pageIndex: pageIndex});
                                 }
                                 else
                                 {
@@ -1162,10 +1233,15 @@ RotateState.prototype =
                                     }
                                     if(bMoveState)
                                     {
-                                        this.drawingObjects.selectObject(original.GraphicObj, pageIndex);
+                                        aDrawingsToSelect.push({drawing: original.GraphicObj, pageIndex: pageIndex});
                                     }
                                 }
                                 this.drawingObjects.document.Recalculate();
+                            }
+                            for(let drawingIdx = 0; drawingIdx < aDrawingsToSelect.length; ++drawingIdx)
+                            {
+                                let oSelectInfo = aDrawingsToSelect[drawingIdx];
+                                this.drawingObjects.selectObject(oSelectInfo.drawing, oSelectInfo.pageIndex);
                             }
                             this.drawingObjects.document.FinalizeAction();
                         }
