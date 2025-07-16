@@ -3694,7 +3694,7 @@
                             macros = JSON.stringify(_macros);
                         }
                     } else {
-                        macros = {"customFunctions": customFunctions}
+                        macros = {"macrosArray": [], "customFunctions": customFunctions}
                         macros = JSON.stringify(macros);
                     }
                 }
