@@ -73,10 +73,10 @@
 			}
 		};
 		this.WriteCustomXml = function(customXml) {
-			let namespaces = customXml.getAllNamespaces();
-			for (let i = 0; i < namespaces.length; ++i) {
+			let refs = customXml.getSchemaRefs();
+			for (let i = 0; i < refs.length; ++i) {
 				this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-					_t.memory.WriteString3(namespaces[i]);
+					_t.memory.WriteString3(refs[i]);
 				});
 			}
 			if (null !== customXml.itemId) {
@@ -112,7 +112,7 @@
 				// namespaces
 				s.StartRecord(c_oSerCustomsPPTY.Uri);
 				
-				let ns = Object.keys(customXml.nsManager.urls);
+				let ns = customXml.getSchemaRefs();
 				s.WriteULong(ns.length);
 				
 				for (let i = 0; i < ns.length; ++i) {
@@ -172,7 +172,7 @@
 		};
 		this.ReadCustomContent = function(type, length, custom) {
 			if (c_oSerCustoms.Uri === type) {
-				custom.setNamespaceUri(this.stream.GetString2LE(length));
+				custom.addSchemaRef(this.stream.GetString2LE(length));
 			} else if (c_oSerCustoms.ItemId === type) {
 				custom.itemId = this.stream.GetString2LE(length);
 			} else if (c_oSerCustoms.ContentA === type || c_oSerCustoms.Content === type) {
@@ -232,7 +232,7 @@
 			this.stream.GetUChar(); // AscCommon.g_nodeAttributeStart
 			if (0 === this.stream.GetUChar()) {
 				let ns = this.stream.GetString2();
-				customXml.setNamespaceUri(ns);
+				customXml.addSchemaRef(ns);
 			}
 			this.stream.GetUChar(); // AscCommon.g_nodeAttributeEnd
 			return c_oSerConstants.ReadOk;
