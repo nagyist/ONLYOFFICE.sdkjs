@@ -3248,9 +3248,7 @@ function (window, undefined) {
 		}
 	};
 	/**
-	 * Compares the data types of two values according to Excel's type hierarchy.
-	 * Returns a numeric comparison result where negative means val1 type is "less than" val2 type,
-	 * positive means val1 type is "greater than" val2 type, and zero means same type.
+	 * Compare data types (numbers < strings < booleans < errors)
 	 * 
 	 * @private
 	 * @param {LookUpElement} val1 - First value to compare
