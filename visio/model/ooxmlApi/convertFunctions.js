@@ -1685,7 +1685,7 @@
 
 			// FillGradientDir and FillPattern can tell about gradient type
 			// if FillGradient Enabled
-			// FillGradientDir defines gradient type (shape) and clolors define colors. If gradient is linear gradient type is complemented with angle.
+			// FillGradientDir defines gradient type. If gradient is linear gradient type is complemented with angle.
 			// 13 FillGradientDir is path. path cant be set in interface. also like some radial gradient types witch cant be set in interface.
 			// FillGradientDir > 13 is linear like FillGradientDir = 0
 			//
@@ -1783,7 +1783,9 @@
 					}
 				}
 
-				if (fillGradientDir && fillGradientDir !== 0) {
+				// fillGradientDir 0 is linear. FillGradientDir from 1 to 13 including are
+				// unhandled so paint them as radial. FillGradientDir from 14 including as same as FillGradientDir 0
+				if (fillGradientDir && fillGradientDir !== 0 && fillGradientDir < 14) {
 					// radial
 					uniFillForegnd = AscFormat.builder_CreateRadialGradient(fillGradientStops);
 				} else {
@@ -2310,14 +2312,6 @@
 
 				cShape.spPr.effectProps.EffectLst.innerShdw = shadowInner;
 			}
-
-			// Preset shadow doesn't work now and not used in visio
-			// cShape.spPr.effectProps.EffectLst.prstShdw = new AscFormat.CPrstShdw();
-			// cShape.spPr.effectProps.EffectLst.prstShdw.dir = shadow.dir;
-			// cShape.spPr.effectProps.EffectLst.prstShdw.dist = shadow.dist;
-			// cShape.spPr.effectProps.EffectLst.prstShdw.prst = 0;
-			// cShape.spPr.effectProps.EffectLst.prstShdw.prst = "shdw1";
-			// cShape.spPr.effectProps.EffectLst.prstShdw.color = shadowColor;
 		}
 
 
