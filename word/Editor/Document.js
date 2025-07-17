@@ -7450,8 +7450,10 @@ CDocument.prototype.GetCalculatedTextPr = function()
 {
 	let textPr = this.Controller.GetCalculatedTextPr();
 	
-	if (textPr)
-		AscWord.FontCalculator.Calculate(this, textPr);
+	// TODO: Footnotes/endnotes can be selected across multiple doc-contents
+	let docContent = this.Controller.GetCurrentTopDocContent();
+	if (textPr && docContent)
+		AscWord.FontCalculator.Calculate(docContent, textPr);
 	
 	let theme = this.GetTheme();
 	if (textPr && theme)
