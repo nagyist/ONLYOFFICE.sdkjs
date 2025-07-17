@@ -875,26 +875,17 @@
 		// zero shape width or height can't be used in normalizeCoordinates because there is division by the width or height
 		// also zero path w or h refers to empty shape
 		if (shapeWidth > 0 && shapeHeight > 0) {
-			const needNormalize = true;
 			const shapeWidthEmu = mmToEmu(shapeWidth * additionalUnitCoefficient);
 			const shapeHeightEmu = mmToEmu(shapeHeight * additionalUnitCoefficient);
-			let maxPathSize = 100000;
+			let maxPathSize = 100000; //this precision is enough
 			
-			if (needNormalize) {
-				pathWithFill.setPathW(maxPathSize);
-				pathWithFill.setPathH(maxPathSize);
-				pathWithFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
+			pathWithFill.setPathW(maxPathSize);
+			pathWithFill.setPathH(maxPathSize);
+			pathWithFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
 
-				pathWithoutFill.setPathW(maxPathSize);
-				pathWithoutFill.setPathH(maxPathSize);
-				pathWithoutFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
-			} else {
-				pathWithFill.setPathW(shapeWidthEmu);
-				pathWithFill.setPathH(shapeHeightEmu);
-
-				pathWithoutFill.setPathW(shapeWidthEmu);
-				pathWithoutFill.setPathH(shapeHeightEmu);
-			}
+			pathWithoutFill.setPathW(maxPathSize);
+			pathWithoutFill.setPathH(maxPathSize);
+			pathWithoutFill.normalizeCoordinates(shapeWidthEmu, shapeHeightEmu, maxPathSize, maxPathSize);
 		}
 
 		geometry.AddPath(pathWithFill);

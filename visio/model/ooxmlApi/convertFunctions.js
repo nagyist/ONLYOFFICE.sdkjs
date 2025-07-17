@@ -2476,16 +2476,18 @@
 		let shapeShdwShow = shapeShdwShowCell && shapeShdwShowCell.calculateValue(this, pageInfo, visioDocument.themes);
 		if (shapeShdwShow === 1 && currentGroupHandling) {
 			let shape;
-			if (cShapeOrCGroupShape instanceof AscFormat.CGroupShape) {
+			if (cShapeOrCGroupShape.getObjectType() === AscDFH.historyitem_type_GroupShape) {
 				shape = cShapeOrCGroupShape.spTree[0];
 			} else {
 				shape = cShapeOrCGroupShape;
 			}
-			if (shape.spPr.effectProps && shape.spPr.effectProps.EffectLst &&
+			if (shape && shape.spPr.effectProps && shape.spPr.effectProps.EffectLst &&
 					shape.spPr.effectProps.EffectLst.outerShdw) {
 				// hide shadow
 				// TODO dont delete shadow object but create ShapeShdwShow property for CShape to handle it on draw
 				shape.spPr.effectProps.EffectLst.outerShdw = null;
+				shape.spPr.effectProps.EffectLst.innerShdw = null;
+				shape.spPr.effectProps.EffectLst.prstShdw = null;
 			}
 
 		}

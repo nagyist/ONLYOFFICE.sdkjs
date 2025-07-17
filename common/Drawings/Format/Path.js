@@ -419,78 +419,12 @@ function (window, undefined) {
 			degree: degree
 		});
 	};
-	
 	/**
-	 * Gets the maximum X and Y coordinates from all path commands
-	 * @returns {{maxX: number, maxY: number}} Object containing maximum X and Y coordinates
-	 */
-	Path.prototype.getMaxCoordinates = function () {
-		let maxX = 0;
-		let maxY = 0;
-		let command;
-		let controlPoint;
-		
-		for (let i = 0; i < this.ArrPathCommandInfo.length; i++) {
-			command = this.ArrPathCommandInfo[i];
-			
-			switch (command.id) {
-				case moveTo:
-				case lineTo:
-					maxX = Math.max(maxX, command.X);
-					maxY = Math.max(maxY, command.Y);
-					break;
-					
-				case arcTo:
-					maxX = Math.max(maxX, command.wR);
-					maxY = Math.max(maxY, command.hR);
-					break;
-					
-				case bezier3:
-					maxX = Math.max(maxX, command.X0);
-					maxY = Math.max(maxY, command.Y0);
-					maxX = Math.max(maxX, command.X1);
-					maxY = Math.max(maxY, command.Y1);
-					break;
-					
-				case bezier4:
-					maxX = Math.max(maxX, command.X0);
-					maxY = Math.max(maxY, command.Y0);
-					maxX = Math.max(maxX, command.X1);
-					maxY = Math.max(maxY, command.Y1);
-					maxX = Math.max(maxX, command.X2);
-					maxY = Math.max(maxY, command.Y2);
-					break;
-					
-				case ellipticalArcTo:
-					maxX = Math.max(maxX, command.x);
-					maxY = Math.max(maxY, command.y);
-					maxX = Math.max(maxX, command.a);
-					maxY = Math.max(maxY, command.b);
-					break;
-					
-				case nurbsTo:
-					for (let j = 0; j < command.controlPoints.length; j++) {
-						controlPoint = command.controlPoints[j];
-						maxX = Math.max(maxX, controlPoint.x);
-						maxY = Math.max(maxY, controlPoint.y);
-					}
-					break;
-					
-				case close:
-					// Close command has no coordinates
-					break;
-			}
-		}
-		
-		return {maxX: maxX, maxY: maxY};
-	};
-	
-	/**
-	 * Normalizes coordinates in ArrPathCommandInfo by scaling them relative to max values
-	 * @param {number} shapeWidth - The maximum X coordinate to normalize by
-	 * @param {number} shapeHeight - The maximum Y coordinate to normalize by
-	 * @param {number} pathWidth - The destination width to scale to
-	 * @param {number} pathHeight - The destination height to scale to
+	 * Normalizes coordinates in ArrPathCommandInfo by scaling them relative to shape size
+	 * @param {number} shapeWidth - shape width to normalize by
+	 * @param {number} shapeHeight - shape height to normalize by
+	 * @param {number} pathWidth - destination path width to scale to
+	 * @param {number} pathHeight - destination path height to scale to
 	 */
 	Path.prototype.normalizeCoordinates = function (shapeWidth, shapeHeight, pathWidth, pathHeight) {
 		if (shapeWidth === 0 || shapeHeight === 0) {
