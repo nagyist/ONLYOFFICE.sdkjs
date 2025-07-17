@@ -6959,6 +6959,7 @@ var editor;
 	  AscCommonExcel.checkStylesNames(t.wbModel.CellStyles);
 	  t._coAuthoringInit();
 	  t.wb = new AscCommonExcel.WorkbookView(t.wbModel, t.controller, t.handlers, window["_null_object"], window["_null_object"], t, t.collaborativeEditing, t.fontRenderingMode);
+	  this.registerCustomFunctionsLibrary(undefined, true);
   };
 
   spreadsheet_api.prototype.asc_nativeCalculateFile = function() {
