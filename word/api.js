@@ -8343,7 +8343,8 @@ background-repeat: no-repeat;\
 		this.initBroadcastChannelListeners();
 
 		// Toggle chart elements (bug #67197)
-		Asc.editor.asc_registerCallback('asc_onFocusObject', Asc.editor.getGraphicController().checkSingleChartSelection);
+		const graphicController = Asc.editor.getGraphicController();
+		if (graphicController) Asc.editor.asc_registerCallback('asc_onFocusObject', graphicController.checkSingleChartSelection);
 	};
 
 	asc_docs_api.prototype.UpdateInterfaceState = function()

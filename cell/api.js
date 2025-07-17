@@ -3228,7 +3228,8 @@ var editor;
 		this.initBroadcastChannelListeners();
 
 		// Toggle chart elements (bug #67197)
-		Asc.editor.asc_registerCallback('asc_onSelectionChanged', Asc.editor.getGraphicController().checkSingleChartSelection);
+		const graphicController = Asc.editor.getGraphicController();
+		if (graphicController) Asc.editor.asc_registerCallback('asc_onSelectionChanged', graphicController.checkSingleChartSelection);
 	};
 
 	// Переход на диапазон в листе

@@ -4541,6 +4541,7 @@
 									height = convertedPosRightBottom.Y - convertedPosTopLeft.Y;
 									break;
 								}
+								default: return;
 							}
 
 							const chartSpaceRect = new AscCommon.asc_CRect(left, top, width, height);
