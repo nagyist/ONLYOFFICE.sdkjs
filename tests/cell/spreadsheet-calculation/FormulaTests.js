@@ -24827,8 +24827,8 @@ $(function () {
 		assert.ok(oParser.parse(), 'XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 4, 'Result of XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 
-		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,0)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,0)');
+		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,0)');
 
 		oParser = new parserFormula('XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
@@ -24875,9 +24875,231 @@ $(function () {
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
 
-		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)');
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)');
+
+
+		ws.getRange2("A1101:B1123").cleanAll();
+		ws.getRange2("A1101").setValue("a");
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("A1103").setValue("a");
+		ws.getRange2("A1104").setValue("a");
+		ws.getRange2("A1105").setValue("1");
+		ws.getRange2("A1106").setValue("a");
+		ws.getRange2("A1107").setValue("a");
+		ws.getRange2("A1108").setValue("a");
+		ws.getRange2("A1109").setValue("a");
+		ws.getRange2("A1110").setValue("a");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 2)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 6, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
+
+		oParser = new parserFormula('XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)');
+
+		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)');
+
+		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)');
+
+		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("a");
+		ws.getRange2("A1102").setValue("a");
+		ws.getRange2("A1103").setValue("a");
+		ws.getRange2("A1104").setValue("a");
+		ws.getRange2("A1105").setValue("#N/A");
+		ws.getRange2("A1106").setValue("a");
+		ws.getRange2("A1107").setValue("a");
+		ws.getRange2("A1108").setValue("a");
+		ws.getRange2("A1109").setValue("a");
+		ws.getRange2("A1110").setValue("a");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("a");
+		ws.getRange2("A1102").setValue("b");
+		ws.getRange2("A1103").setValue("a");
+		ws.getRange2("A1104").setValue("a");
+		ws.getRange2("A1105").setValue("#N/A");
+		ws.getRange2("A1106").setValue("a");
+		ws.getRange2("A1107").setValue("a");
+		ws.getRange2("A1108").setValue("a");
+		ws.getRange2("A1109").setValue("a");
+		ws.getRange2("A1110").setValue("a");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
+
+		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2');
+		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2');
+
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("A1103").setValue("1");
+		ws.getRange2("A1104").setValue("1");
+		ws.getRange2("A1105").setValue("#N/A");
+		ws.getRange2("A1106").setValue("1");
+		ws.getRange2("A1107").setValue("1");
+		ws.getRange2("A1108").setValue("1");
+		ws.getRange2("A1109").setValue("1");
+		ws.getRange2("A1110").setValue("1");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 6, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)');
+
 	});
 
 
