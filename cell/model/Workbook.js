@@ -3165,7 +3165,14 @@
 		this.workbookProtection = null;
 		this.fileSharing = null;
 
-		this.customXmlManager = isMainLogicDocument ? new AscWord.CustomXmlManager(this) : null;
+		if (isMainLogicDocument) {
+			this.customXmlManager = new AscWord.CustomXmlManager(this);
+		} else {
+			AscFormat.ExecuteNoHistory(function () {
+				this.customXmlManager = new AscWord.CustomXmlManager(this);
+			}, this, [], true);
+		}
+
 		this.oGoalSeek = null;
 		this.oSolver = null;
 
