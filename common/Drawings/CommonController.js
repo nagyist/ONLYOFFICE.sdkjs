@@ -4480,6 +4480,75 @@
 					return finish_dlbl_pos;
 				},
 
+				checkSingleChartSelection: function () {
+
+					const controller = Asc.editor.getGraphicController();
+					if (!controller) return;
+
+					const selectedArray = controller.getSelectedArray();
+					if (selectedArray.length === 1) {
+
+						const selectedObject = selectedArray[0];
+						if (selectedObject.isChart && selectedObject.isChart()) {
+
+							let left, top, width, height;
+
+							const editorId = Asc.editor.getEditorId();
+							switch (editorId) {
+								case AscCommon.c_oEditorId.Word: {
+									const logicDocument = Asc.editor.getLogicDocument();
+									if (!logicDocument) return;
+
+									const bounds = selectedObject.getRectBounds();
+									const pageIndex = logicDocument.GetCurPage();
+									const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, pageIndex);
+									const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, pageIndex);
+
+									left = convertedPosTopLeft.X;
+									top = convertedPosTopLeft.Y;
+									width = convertedPosRightBottom.X - convertedPosTopLeft.X;
+									height = convertedPosRightBottom.Y - convertedPosTopLeft.Y;
+									break;
+								}
+								case AscCommon.c_oEditorId.Spreadsheet: {
+									const ws = Asc.editor.wb.getWorksheet();
+									if (!ws) return;
+
+									const ppi = ws._getPPIX();
+									const mmToPx = Asc.getCvtRatio(3, 0, ppi);
+
+									const bounds = selectedObject.getRectBounds();
+									const right = AscCommon.AscBrowser.convertToRetinaValue(bounds.r * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+									const bottom = AscCommon.AscBrowser.convertToRetinaValue(bounds.b * mmToPx - ws._getOffsetY() + ws.cellsTop);
+									left = AscCommon.AscBrowser.convertToRetinaValue(bounds.l * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+									top = AscCommon.AscBrowser.convertToRetinaValue(bounds.t * mmToPx - ws._getOffsetY() + ws.cellsTop);
+									width = right - left;
+									height = bottom - top;
+									break;
+								}
+								case AscCommon.c_oEditorId.Presentation: {
+									const logicDocument = Asc.editor.getLogicDocument();
+									if (!logicDocument) return;
+
+									const bounds = selectedObject.getRectBounds();
+									const slideIndex = logicDocument.GetCurrentSlide().getSlideIndex();
+									const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, slideIndex);
+									const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, slideIndex);
+
+									left = convertedPosTopLeft.X;
+									top = convertedPosTopLeft.Y;
+									width = convertedPosRightBottom.X - convertedPosTopLeft.X;
+									height = convertedPosRightBottom.Y - convertedPosTopLeft.Y;
+									break;
+								}
+							}
+
+							const chartSpaceRect = new AscCommon.asc_CRect(left, top, width, height);
+							return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', chartSpaceRect);
+						}
+					}
+					return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', null);
+				},
 
 				getChartForRangesDrawing: function () {
 					var chart;
