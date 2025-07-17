@@ -23132,6 +23132,118 @@ $(function () {
 		assert.ok(oParser.parse(), 'HLOOKUP(#N/A,A1201:W1202,2,TRUE)');
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of HLOOKUP(#N/A,A1201:W1202,2,TRUE)');
 
+		ws.getRange2("A1101:J1102").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("C1101").setValue("1");
+		ws.getRange2("D1101").setValue("1");
+		ws.getRange2("E1101").setValue("#N/A");
+		ws.getRange2("F1101").setValue("1");
+		ws.getRange2("G1101").setValue("1");
+		ws.getRange2("H1101").setValue("1");
+		ws.getRange2("I1101").setValue("1");
+		ws.getRange2("J1101").setValue("1");
+
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("C1102").setValue("3");
+		ws.getRange2("D1102").setValue("4");
+		ws.getRange2("E1102").setValue("5");
+		ws.getRange2("F1102").setValue("6");
+		ws.getRange2("G1102").setValue("7");
+		ws.getRange2("H1102").setValue("8");
+		ws.getRange2("I1102").setValue("9");
+		ws.getRange2("J1102").setValue("10");
+		AscCommonExcel.g_oHLOOKUPCache.clean();
+
+		oParser = new parserFormula('HLOOKUP(1,A1101:J1102,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(1,A1101:J1102,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of HLOOKUP(1,A1101:J1102,2)');
+
+		ws.getRange2("A1101:J1102").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("C1101").setValue("1");
+		ws.getRange2("D1101").setValue("1");
+		ws.getRange2("E1101").setValue("");
+		ws.getRange2("F1101").setValue("a");
+		ws.getRange2("G1101").setValue("2");
+		ws.getRange2("H1101").setValue("1");
+		ws.getRange2("I1101").setValue("1");
+		ws.getRange2("J1101").setValue("1");
+
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("C1102").setValue("3");
+		ws.getRange2("D1102").setValue("4");
+		ws.getRange2("E1102").setValue("5");
+		ws.getRange2("F1102").setValue("6");
+		ws.getRange2("G1102").setValue("7");
+		ws.getRange2("H1102").setValue("8");
+		ws.getRange2("I1102").setValue("9");
+		ws.getRange2("J1102").setValue("10");
+		AscCommonExcel.g_oHLOOKUPCache.clean();
+
+		oParser = new parserFormula('HLOOKUP(1,A1101:J1102,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(1,A1101:J1102,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP(1,A1101:J1102,2)');
+
+		ws.getRange2("A1101:J1102").cleanAll();
+		ws.getRange2("A1101").setValue("2");
+		ws.getRange2("B1101").setValue("a");
+		ws.getRange2("C1101").setValue("#N/A");
+		ws.getRange2("D1101").setValue("7");
+		ws.getRange2("E1101").setValue("");
+		ws.getRange2("F1101").setValue("0");
+		ws.getRange2("G1101").setValue("0");
+		ws.getRange2("H1101").setValue("1");
+		ws.getRange2("I1101").setValue("1");
+		ws.getRange2("J1101").setValue("1");
+
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("C1102").setValue("3");
+		ws.getRange2("D1102").setValue("4");
+		ws.getRange2("E1102").setValue("5");
+		ws.getRange2("F1102").setValue("6");
+		ws.getRange2("G1102").setValue("7");
+		ws.getRange2("H1102").setValue("8");
+		ws.getRange2("I1102").setValue("9");
+		ws.getRange2("J1102").setValue("10");
+		AscCommonExcel.g_oHLOOKUPCache.clean();
+
+		oParser = new parserFormula('HLOOKUP(1,A1101:J1102,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(1,A1101:J1102,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of HLOOKUP(1,A1101:J1102,2)');
+
+		ws.getRange2("A1101:J1102").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("B1101").setValue("0");
+		ws.getRange2("C1101").setValue("0");
+		ws.getRange2("D1101").setValue("0");
+		ws.getRange2("E1101").setValue("");
+		ws.getRange2("F1101").setValue(" ");
+		ws.getRange2("G1101").setValue("a");
+		ws.getRange2("H1101").setValue("b");
+		ws.getRange2("I1101").setValue("c");
+		ws.getRange2("J1101").setValue("d");
+
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("C1102").setValue("3");
+		ws.getRange2("D1102").setValue("4");
+		ws.getRange2("E1102").setValue("5");
+		ws.getRange2("F1102").setValue("6");
+		ws.getRange2("G1102").setValue("7");
+		ws.getRange2("H1102").setValue("8");
+		ws.getRange2("I1102").setValue("9");
+		ws.getRange2("J1102").setValue("10");
+		AscCommonExcel.g_oHLOOKUPCache.clean();
+
+		oParser = new parserFormula('HLOOKUP(1,A1101:J1102,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(1,A1101:J1102,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP(1,A1101:J1102,2)');
+
 	});
 
 	QUnit.test("Test: \"VLOOKUP\"", function (assert) {
@@ -23768,6 +23880,118 @@ $(function () {
 		oParser = new parserFormula('VLOOKUP(M129,M101:N134,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'VLOOKUP(M129,M101:N134,2)');
 		assert.strictEqual(oParser.calculate().getValue(), "Looked result(3)", 'Result of VLOOKUP(M129,M101:N134,2)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("A1103").setValue("1");
+		ws.getRange2("A1104").setValue("1");
+		ws.getRange2("A1105").setValue("#N/A");
+		ws.getRange2("A1106").setValue("1");
+		ws.getRange2("A1107").setValue("1");
+		ws.getRange2("A1108").setValue("1");
+		ws.getRange2("A1109").setValue("1");
+		ws.getRange2("A1110").setValue("1");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('VLOOKUP(1,A1101:B1110,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(1,A1101:B1110,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of VLOOKUP(1,A1101:B1110,2)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("A1102").setValue("1");
+		ws.getRange2("A1103").setValue("1");
+		ws.getRange2("A1104").setValue("1");
+		ws.getRange2("A1105").setValue("");
+		ws.getRange2("A1106").setValue("a");
+		ws.getRange2("A1107").setValue("2");
+		ws.getRange2("A1108").setValue("1");
+		ws.getRange2("A1109").setValue("1");
+		ws.getRange2("A1110").setValue("1");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('VLOOKUP(1,A1101:B1110,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(1,A1101:B1110,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of VLOOKUP(1,A1101:B1110,2)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("2");
+		ws.getRange2("A1102").setValue("a");
+		ws.getRange2("A1103").setValue("#N/A");
+		ws.getRange2("A1104").setValue("7");
+		ws.getRange2("A1105").setValue("");
+		ws.getRange2("A1106").setValue("0");
+		ws.getRange2("A1107").setValue("0");
+		ws.getRange2("A1108").setValue("1");
+		ws.getRange2("A1109").setValue("1");
+		ws.getRange2("A1110").setValue("1");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('VLOOKUP(1,A1101:B1110,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(1,A1101:B1110,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of VLOOKUP(1,A1101:B1110,2)');
+
+		ws.getRange2("A1101:B1110").cleanAll();
+		ws.getRange2("A1101").setValue("1");
+		ws.getRange2("A1102").setValue("0");
+		ws.getRange2("A1103").setValue("0");
+		ws.getRange2("A1104").setValue("0");
+		ws.getRange2("A1105").setValue("");
+		ws.getRange2("A1106").setValue(" ");
+		ws.getRange2("A1107").setValue("a");
+		ws.getRange2("A1108").setValue("b");
+		ws.getRange2("A1109").setValue("c");
+		ws.getRange2("A1110").setValue("d");
+
+		ws.getRange2("B1101").setValue("1");
+		ws.getRange2("B1102").setValue("2");
+		ws.getRange2("B1103").setValue("3");
+		ws.getRange2("B1104").setValue("4");
+		ws.getRange2("B1105").setValue("5");
+		ws.getRange2("B1106").setValue("6");
+		ws.getRange2("B1107").setValue("7");
+		ws.getRange2("B1108").setValue("8");
+		ws.getRange2("B1109").setValue("9");
+		ws.getRange2("B1110").setValue("10");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+
+		oParser = new parserFormula('VLOOKUP(1,A1101:B1110,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP(1,A1101:B1110,2)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of VLOOKUP(1,A1101:B1110,2)');
 
 	});
 
