@@ -9006,7 +9006,7 @@ function(window, undefined) {
 		}
 
 		const controller = this.getDrawingObjectsController();
-		const chartType = this.getChartType();
+		const chartType = plotArea.charts.length > 1 ? plotArea.charts[0].getChartType() : this.getChartType();
 		nDataLabelPos = controller.getAllowedDataLabelsPosition(chartType, nDataLabelPos);
 
 		if (chart.dLbls) {

@@ -684,9 +684,6 @@ function CPresentation(DrawingDocument) {
 	this.cachedGridSpacing = null;
 
 	this.cachedAnimationLabelText = {};
-
-	// Toggle chart elements (bug #67197)
-	Asc.editor.asc_registerCallback('asc_onFocusObject', this.checkChartSelection);
 }
 
 AscFormat.InitClass(CPresentation, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_Presentation);
@@ -934,35 +931,6 @@ CPresentation.prototype.checkEmptyGuides = function () {
 			this.UpdateInterface();
 		}
 	}
-};
-CPresentation.prototype.checkChartSelection = function () {
-	const presentation = Asc.editor.getLogicDocument();
-	if (!presentation) return;
-
-	const controller = Asc.editor.getGraphicController();
-	if (!controller) return;
-
-	const selectedArray = controller.getSelectedArray();
-	if (selectedArray.length === 1) {
-
-		const selectedObject = selectedArray[0];
-		if (selectedObject.isChart && selectedObject.isChart()) {
-
-			const bounds = selectedObject.getRectBounds();
-			const slideIndex = presentation.GetCurrentSlide().getSlideIndex();
-			const convertedPosTopLeft = presentation.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, slideIndex);
-			const convertedPosRightBottom = presentation.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, slideIndex);
-
-			const chartSpaceRect = new AscCommon.asc_CRect(
-				convertedPosTopLeft.X,
-				convertedPosTopLeft.Y,
-				convertedPosRightBottom.X - convertedPosTopLeft.X,
-				convertedPosRightBottom.Y - convertedPosTopLeft.Y
-			);
-			return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', chartSpaceRect);
-		}
-	}
-	return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', null);
 };
 
 

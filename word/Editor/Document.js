@@ -2299,9 +2299,6 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 		this.StartCollaborationEditing();
 	}
 	//__________________________________________________________________________________________________________________
-
-	// Toggle chart elements (bug #67197)
-	Asc.editor.asc_registerCallback('asc_onFocusObject', this.checkChartSelection);
 }
 CDocument.prototype = Object.create(CDocumentContentBase.prototype);
 CDocument.prototype.constructor = CDocument;
@@ -28343,36 +28340,6 @@ CDocument.prototype.SetNumeralType = function(type)
 CDocument.prototype.GetNumeralType = function()
 {
 	return this.NumeralType;
-};
-
-CDocument.prototype.checkChartSelection = function () {
-	const logicDocument = Asc.editor.getLogicDocument();
-	if (!logicDocument) return;
-
-	const controller = Asc.editor.getGraphicController();
-	if (!controller) return;
-
-	const selectedArray = controller.getSelectedArray();
-	if (selectedArray.length === 1) {
-
-		const selectedObject = selectedArray[0];
-		if (selectedObject.isChart && selectedObject.isChart()) {
-
-			const bounds = selectedObject.getRectBounds();
-			const pageIndex = logicDocument.GetCurPage();
-			const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, pageIndex);
-			const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, pageIndex);
-
-			const chartSpaceRect = new AscCommon.asc_CRect(
-				convertedPosTopLeft.X,
-				convertedPosTopLeft.Y,
-				convertedPosRightBottom.X - convertedPosTopLeft.X,
-				convertedPosRightBottom.Y - convertedPosTopLeft.Y
-			);
-			return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', chartSpaceRect);
-		}
-	}
-	return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', null);
 };
 
 function CDocumentSelectionState()

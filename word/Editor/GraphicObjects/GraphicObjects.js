@@ -2283,6 +2283,7 @@ CGraphicObjects.prototype =
     getSelectionState: DrawingObjectsController.prototype.getSelectionState,
     resetTrackState: DrawingObjectsController.prototype.resetTrackState,
     applyPropsToChartSpace: DrawingObjectsController.prototype.applyPropsToChartSpace,
+	getAllowedDataLabelsPosition: DrawingObjectsController.prototype.getAllowedDataLabelsPosition,
 
     documentUpdateSelectionState: function()
     {
