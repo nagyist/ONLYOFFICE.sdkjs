@@ -20336,13 +20336,16 @@
 	 * @memberof ApiInlineLvlSdt
 	 * @typeofeditors ["CDE"]
 	 * @since 9.0.0
-	 * @returns {Date} Date object representing the selected date in the date picker control.
+	 * @returns {undefined | Date} Date object representing the selected date in the date picker control, or undefined if the form is a placeholder.
 	 * @see office-js-api/Examples/{Editor}/ApiInlineLvlSdt/Methods/GetDate.js
 	 */
 	ApiInlineLvlSdt.prototype.GetDate = function()
 	{
 		if (!this.Sdt || !this.Sdt.IsDatePicker())
 			throwException(new Error("Content control must be a date picker"));
+		
+		if (this.Sdt.IsPlaceHolder())
+			return undefined;
 		
 		let fullDate = this.Sdt.GetDatePickerPr().GetFullDate();
 		return new Date(fullDate);
@@ -23132,16 +23135,17 @@
 	 * Returns the timestamp of the current form.
 	 * @memberof ApiDateForm
 	 * @typeofeditors ["CDE", "CFE"]
-	 * @returns {number}
+	 * @returns {undefined | number} The Unix timestamp in milliseconds, or undefined if the form is a placeholder.
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/{Editor}/ApiDateForm/Methods/GetTime.js
 	 */
 	ApiDateForm.prototype.GetTime = function()
 	{
-		let oDatePr	= this.Sdt.GetDatePickerPr();
-		let oDate	= new Date(oDatePr.GetFullDate());
-
-		return oDate.getTime();
+		if (this.Sdt.IsPlaceHolder())
+			return undefined;
+		
+		let fullDate = this.Sdt.GetDatePickerPr().GetFullDate();
+		return (new Date(fullDate)).getTime();
 	};
 
 	/**
@@ -23207,12 +23211,15 @@
 	 * Returns the date of the current form.
 	 * @memberof ApiDateForm
 	 * @typeofeditors ["CDE", "CFE"]
-	 * @returns {Date} - The date object.
+	 * @returns {undefined | Date} - The date object, or undefined if the form is a placeholder.
 	 * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/ApiDateForm/Methods/GetDate.js
 	 */
 	ApiDateForm.prototype.GetDate = function()
 	{
+		if (this.Sdt.IsPlaceHolder())
+			return undefined;
+
 		let fullDate = this.Sdt.GetDatePickerPr().GetFullDate();
 		return new Date(fullDate);
 	};
