@@ -2738,9 +2738,15 @@ var editor;
     };
 	this.CoAuthoringApi.onChangesIndex = function(changesIndex)
 	{
-		if (t.isLiveViewer() && changesIndex >= 0 && changesIndex < AscCommon.CollaborativeEditing.GetAllChangesCount()) {
-			//перестаем быть LiveViewer из-за бага, что мы не может делать undo действиям которые пришли в изменениях (нет oldValue)
-			t.asc_SetFastCollaborative(false);
+		if (t.isDocumentLoadComplete && t.isLiveViewer() && changesIndex >= 0 && changesIndex < AscCommon.CollaborativeEditing.GetAllChangesCount()) {
+			//undo changes by reopen file, as in version history
+			t.asc_CloseFile();
+			t.ServerIdWaitAction = [Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.Open];
+			t.sync_StartAction.apply(t, t.ServerIdWaitAction);
+			t.reopenFileWithReconnection(t.DocInfo);
+
+			// Stop being a LiveViewer due to a bug where we can't undo actions that came in changes (no oldValue)
+			// t.asc_SetFastCollaborative(false);
 			// let count = AscCommon.CollaborativeEditing.GetAllChangesCount() - changesIndex;
 			// AscCommon.CollaborativeEditing.UndoGlobal(count);
 		}
@@ -6518,7 +6524,7 @@ var editor;
 		if (this.CollaborativeEditing.Is_Fast() && !this.CollaborativeEditing.Is_SingleUser()) {
 			this.wb.Continue_FastCollaborativeEditing();
 		} else if (this.isLiveViewer()) {
-			if (this.collaborativeEditing.haveOtherChanges()) {
+			if (this.isDocumentLoadComplete && this.collaborativeEditing.haveOtherChanges()) {
 				this.collaborativeEditing.applyChanges();
 			}
 			return;
