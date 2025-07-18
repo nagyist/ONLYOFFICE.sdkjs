@@ -1541,82 +1541,18 @@ function isRealObject(obj)
       return this.size;
     }
   }
-	function GetUTF16_fromUnicodeChar(code) {
-		if (code < 0x10000) {
-			return String.fromCharCode(code);
-		} else {
-			code -= 0x10000;
-			return String.fromCharCode(0xD800 | ((code >> 10) & 0x03FF)) +
-				String.fromCharCode(0xDC00 | (code & 0x03FF));
-		}
-	};
+	/**
+	 * @param {Object} reader - stream reader
+	 * @param {number} len - bytes to read
+	 * @returns {string}
+	 */
 	function GetStringUtf8(reader, len) {
 		if (reader.cur + len > reader.size) {
 			return "";
 		}
-		var _res = "";
-
-		var end = reader.cur + len;
-		var val = 0;
-		while (reader.cur < end) {
-			var byteMain = reader.data[reader.cur];
-			if (0x00 == (byteMain & 0x80)) {
-				// 1 byte
-				_res += GetUTF16_fromUnicodeChar(byteMain);
-				++reader.cur;
-			}
-			else if (0x00 == (byteMain & 0x20)) {
-				// 2 byte
-				val = (((byteMain & 0x1F) << 6) |
-				(reader.data[reader.cur + 1] & 0x3F));
-				_res += GetUTF16_fromUnicodeChar(val);
-				reader.cur += 2;
-			}
-			else if (0x00 == (byteMain & 0x10)) {
-				// 3 byte
-				val = (((byteMain & 0x0F) << 12) |
-				((reader.data[reader.cur + 1] & 0x3F) << 6) |
-				(reader.data[reader.cur + 2] & 0x3F));
-
-				_res += GetUTF16_fromUnicodeChar(val);
-				reader.cur += 3;
-			}
-			else if (0x00 == (byteMain & 0x08)) {
-				// 4 byte
-				val = (((byteMain & 0x07) << 18) |
-				((reader.data[reader.cur + 1] & 0x3F) << 12) |
-				((reader.data[reader.cur + 2] & 0x3F) << 6) |
-				(reader.data[reader.cur + 3] & 0x3F));
-
-				_res += GetUTF16_fromUnicodeChar(val);
-				reader.cur += 4;
-			}
-			else if (0x00 == (byteMain & 0x04)) {
-				// 5 byte
-				val = (((byteMain & 0x03) << 24) |
-				((reader.data[reader.cur + 1] & 0x3F) << 18) |
-				((reader.data[reader.cur + 2] & 0x3F) << 12) |
-				((reader.data[reader.cur + 3] & 0x3F) << 6) |
-				(reader.data[reader.cur + 4] & 0x3F));
-
-				_res += GetUTF16_fromUnicodeChar(val);
-				reader.cur += 5;
-			}
-			else {
-				// 6 byte
-				val = (((byteMain & 0x01) << 30) |
-				((reader.data[reader.cur + 1] & 0x3F) << 24) |
-				((reader.data[reader.cur + 2] & 0x3F) << 18) |
-				((reader.data[reader.cur + 3] & 0x3F) << 12) |
-				((reader.data[reader.cur + 4] & 0x3F) << 6) |
-				(reader.data[reader.cur + 5] & 0x3F));
-
-				_res += GetUTF16_fromUnicodeChar(val);
-				reader.cur += 6;
-			}
-		}
-
-		return _res;
+		let content = AscCommon.UTF8ArrayToString(reader.data, reader.cur, len);
+		reader.cur += len;
+		return content;
 	};
 
   //----------------------------------------------------------export----------------------------------------------------
