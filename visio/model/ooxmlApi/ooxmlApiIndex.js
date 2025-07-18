@@ -961,7 +961,7 @@
 		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap", "ShdwPattern",
 		"ShapeShdwOffsetX", "ShapeShdwOffsetY", "ShapeShdwShow", "ShapeShdwType", "ShapeShdwScaleFactor"];
 		let stringResultCells = ["EndArrow", "BeginArrow", "Font"];
-		let booleanResultCells = ["FillGradientEnabled"];
+		let booleanResultCells = ["FillGradientEnabled", "LineGradientEnabled"];
 
 		// TODO handle 2.2.7.5	Fixed Theme
 

@@ -126,6 +126,10 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		 * @type {CPages}
 		 */
 		this.pages = null;
+		/**
+		 *
+		 * @type {CTheme[]}
+		 */
 		this.themes = [];
 		this.app = null;
 		this.core = null;
