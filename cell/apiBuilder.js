@@ -59,6 +59,15 @@
 	var Api = window["Asc"]["spreadsheet_api"];
 
 	/**
+	 * Class representing the currently active workbook
+	 *
+	 * @constructor
+	 */
+	function ApiWorkbook(workbook) {
+		this.Workbook = workbook;
+	}
+
+	/**
 	 * The callback function which is called when the specified range of the current sheet changes.
 	 * <note>Please note that the event is not called for the undo/redo operations.</note>
 	 * @event Api#onWorksheetChange
@@ -550,6 +559,14 @@
 	}
 
 	/**
+	 * Class representing a theme.
+	 * @constructor
+	 */
+	function ApiTheme(theme) {
+		this.Theme = theme;
+	}
+
+	/**
 	 * Class that contains the font attributes (font name, font size, color, and so on).
 	 * @constructor
 	 * @property {ApiCharacters} Parent - The parent object of the specified font object.
@@ -806,6 +823,22 @@
 	Object.defineProperty(Api.prototype, "ActiveSheet", {
 		get: function () {
 			return this.GetActiveSheet();
+		}
+	});
+
+	/**
+	 * Returns an object that represents the active workbook.
+	 * @memberof Api
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiWorkbook}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetActiveWorkbook.js
+	 */
+	Api.prototype.GetActiveWorkbook = function () {
+		return new ApiWorkbook(this.wbModel);
+	};
+	Object.defineProperty(Api.prototype, "ActiveWorkbook", {
+		get: function () {
+			return this.GetActiveWorkbook();
 		}
 	});
 
@@ -8060,6 +8093,136 @@
 		return new AscBuilder.ApiCustomProperties(this.wbModel.CustomProperties);
 	};
 
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiWorkbook
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Saves changes to the specified document.
+	 *
+	 * @memberof ApiWorkbook
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/Save.js
+	 */
+	ApiWorkbook.prototype.Save = function () {
+		return Asc.editor.Save();
+	};
+
+	/**
+	 * Returns a sheet collection that represents all the sheets in the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiWorksheet[]}
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetSheets.js
+	 */
+	ApiWorkbook.prototype.GetSheets = function () {
+		return Asc.editor.GetSheets();
+	};
+
+	/**
+	 * Returns all pivot tables in the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiPivotTable[]}
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiWorkbook/Methods/GetAllPivotTables.js
+	 */
+	ApiWorkbook.prototype.GetAllPivotTables = function () {
+		return Asc.editor.GetAllPivotTables();
+	};
+
+	/**
+	 * Returns the custom properties of the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @returns {ApiCustomProperties}
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetCustomProperties.js
+	 */
+	ApiWorkbook.prototype.GetCustomProperties = function () {
+		return Asc.editor.GetCustomProperties();
+	};
+
+	/**
+	 * Returns the theme of the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @returns {ApiTheme}
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetTheme.js
+	 */
+	ApiWorkbook.prototype.GetTheme = function () {
+		return new ApiTheme(Asc.editor.getCurrentTheme());
+	};
+
+	/**
+	 * Returns the name of the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @returns {string}
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetName.js
+	 */
+	ApiWorkbook.prototype.GetName = function () {
+		return Asc.editor.GetFullName();
+	};
+
+	/**
+	 * Returns the active sheet of the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @returns {ApiWorksheet}
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetActiveSheet.js
+	 */
+	ApiWorkbook.prototype.GetActiveSheet = function () {
+		return Asc.editor.GetActiveSheet();
+	};
+
+	/**
+	 * Returns the active chart of the workbook.
+	 *
+	 * @memberof ApiWorkbook
+	 * @returns {ApiChart | null}
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetActiveChart.js
+	 */
+	ApiWorkbook.prototype.GetActiveChart = function () {
+		const sheet = this.GetActiveSheet();
+		if (sheet) {
+			const allDrawings = sheet.worksheet.Drawings;
+			const selectedDrawings = allDrawings.filter(function (drawing) {
+				return drawing.graphicObject.selected;
+			});
+
+			if (selectedDrawings.length === 1) {
+				const selectedOne = selectedDrawings[0];
+
+				if (selectedOne.graphicObject && selectedOne.isChart()) {
+					return Asc.editor.private_CreateApiChart(selectedOne.graphicObject);
+				}
+			}
+		}
+		return null;
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiWorksheet
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
 	/**
 	 * Returns the state of sheet visibility.
 	 * @memberof ApiWorksheet
@@ -13475,6 +13638,38 @@
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
+	// ApiTheme
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Returns a type of the ApiTheme class.
+	 *
+	 * @memberof ApiTheme
+	 * @typeofeditors ["CSE"]
+	 * @returns {"theme"}
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiTheme/Methods/GetClassType.js
+	 */
+	ApiTheme.prototype.GetClassType = function () {
+		return 'theme';
+	};
+
+	/**
+	 * Returns the name of the theme.
+	 *
+	 * @memberof ApiTheme
+	 * @typeofeditors ["CSE"]
+	 * @returns {string} - The name of the theme.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiTheme/Methods/GetName.js
+	 */
+	ApiTheme.prototype.GetName = function () {
+		return this.Theme.name || '';
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
 	// ApiFont
 	//
 	//------------------------------------------------------------------------------------------------------------------
@@ -17994,6 +18189,7 @@
 	Api.prototype["AddSheet"]              = Api.prototype.AddSheet;
 	Api.prototype["GetSheets"]             = Api.prototype.GetSheets;
 	Api.prototype["GetActiveSheet"]        = Api.prototype.GetActiveSheet;
+	Api.prototype["GetActiveWorkbook"]     = Api.prototype.GetActiveWorkbook;
 	Api.prototype["GetLocale"]             = Api.prototype.GetLocale;
 	Api.prototype["SetLocale"]             = Api.prototype.SetLocale;
 	Api.prototype["GetSheet"]              = Api.prototype.GetSheet;
@@ -18036,6 +18232,15 @@
 	Api.prototype["GetPivotByName"] = Api.prototype.GetPivotByName;
 	Api.prototype["RefreshAllPivots"] = Api.prototype.RefreshAllPivots;
 	Api.prototype["GetAllPivotTables"] = Api.prototype.GetAllPivotTables;
+
+	ApiWorkbook.prototype["Save"] = Api.prototype.Save;
+	ApiWorkbook.prototype["GetSheets"] = ApiWorkbook.prototype.GetSheets;
+	ApiWorkbook.prototype["GetAllPivotTables"] = ApiWorkbook.prototype.GetAllPivotTables;
+	ApiWorkbook.prototype["GetCustomProperties"] = ApiWorkbook.prototype.GetCustomProperties;
+	ApiWorkbook.prototype["GetTheme"] = ApiWorkbook.prototype.GetTheme;
+	ApiWorkbook.prototype["GetName"] = ApiWorkbook.prototype.GetName;
+	ApiWorkbook.prototype["GetActiveSheet"] = ApiWorkbook.prototype.GetActiveSheet;
+	ApiWorkbook.prototype["GetActiveChart"] = ApiWorkbook.prototype.GetActiveChart;
 
 	ApiWorksheet.prototype["GetVisible"] = ApiWorksheet.prototype.GetVisible;
 	ApiWorksheet.prototype["SetVisible"] = ApiWorksheet.prototype.SetVisible;
@@ -18266,7 +18471,9 @@
 	ApiCharacters.prototype["GetText"]           = ApiCharacters.prototype.GetText;
 	ApiCharacters.prototype["GetFont"]           = ApiCharacters.prototype.GetFont;
 
-	
+	ApiTheme.prototype["GetClassType"]           = ApiTheme.prototype.GetClassType;
+	ApiTheme.prototype["GetName"]                = ApiTheme.prototype.GetName;
+
 	ApiFont.prototype["GetParent"]               = ApiFont.prototype.GetParent;
 	ApiFont.prototype["GetBold"]                 = ApiFont.prototype.GetBold;
 	ApiFont.prototype["SetBold"]                 = ApiFont.prototype.SetBold;
