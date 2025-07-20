@@ -8825,7 +8825,8 @@ background-repeat: no-repeat;\
 		let logicDocument = this.getLogicDocument();
 		if (!logicDocument)
 			return false;
-
+		
+		this.executeGroupActionsStart();
 		logicDocument.StartAction(AscDFH.historydescription_BuilderScript);
 		return true;
 	};
@@ -8838,6 +8839,7 @@ background-repeat: no-repeat;\
 		if (callback)
 			callback(true)
 		
+		this.executeGroupActionsEnd();
 		return true;
 	};
 

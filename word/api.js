@@ -10156,6 +10156,8 @@ background-repeat: no-repeat;\
 		if (!logicDocument)
 			return false;
 		
+		this.executeGroupActionsStart();
+		
 		// Разрешаем всегда выполнять скрипт билдера, даже если это вьювер, а скрипт меняет содержимое
 		// В конце действия по выполненным изменениям проверяем можно ли оставлять данные изменения
 		logicDocument.StartAction(AscDFH.historydescription_BuilderScript);
@@ -10173,6 +10175,7 @@ background-repeat: no-repeat;\
 		if (callback)
 			callback(result);
 		
+		this.executeGroupActionsEnd();
 		return result;
 	};
 	//----------------------------------------------------------------------------------------------------------------------
