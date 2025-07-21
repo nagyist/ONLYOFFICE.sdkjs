@@ -19605,6 +19605,13 @@
 				t.traceDependentsManager && t.traceDependentsManager.clearAll();
 			}
 
+			let _prepareTextMetrics = function () {
+				t._cleanCellsTextMetricsCache();
+				t.objectRender.bUpdateMetrics = false;
+				t._prepareCellTextMetricsCache();
+				t.objectRender.bUpdateMetrics = true;
+			};
+
 			var addFilterCallBack;
 			if (bIsChangeFilterToTable)//CHANGE FILTER TO TABLEPART
 			{
@@ -19618,6 +19625,7 @@
 
 					t.model.autoFilters.changeAutoFilterToTablePart(styleName, ar, addFormatTableOptionsObj);
 
+					_prepareTextMetrics();
 					t._updateRange(filterRange);
 					t._autoFitColumnsWidth([new Asc.Range(filterRange.c1, filterRange.r1, filterRange.c2, filterRange.r1)], true);
 					t.draw();
@@ -19667,6 +19675,7 @@
 						t.model.workbook.dependencyFormulas.unlockRecal();
 
 						if (styleName) {
+							_prepareTextMetrics();
 							t._updateRange(filterRange);
 							t._autoFitColumnsWidth([new Asc.Range(filterRange.c1, filterRange.r1, filterRange.c2, filterRange.r1)], true);
 						}
