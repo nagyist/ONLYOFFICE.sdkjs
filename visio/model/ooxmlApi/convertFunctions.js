@@ -312,7 +312,11 @@
 			}
 
 			// calculate variation before pattern bcs pattern can make NoFillUniFill object without color
-			handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
+			// use quickStyleVariation only if themes exist in file.
+			// Default theme which come to visioDocument.themes[0] should not be considered.
+			if (!visioDocument.isNoThemes) {
+				handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
+			}
 
 			let lineGradientEnabled;
 			let lineGradientEnabledCell = this.getCell("LineGradientEnabled");
@@ -1045,7 +1049,7 @@
 		 * @param {CUniFill} oStrokeUniFill
 		 * @param {CUniFill} uniFill
 		 * @param {Shape_Type} shape
-		 * @param {{lineUniFillNoGradient: boolean, uniFillForegnd: boolean}} themeValWasUsedFor
+		 * @param {{lineUniFill: boolean, uniFillForegnd: boolean}} themeValWasUsedFor
 		 */
 		function handleQuickStyleVariation(oStrokeUniFill, uniFill, shape, themeValWasUsedFor) {
 			// https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/68bb0221-d8a1-476e-a132-8c60a49cea63?redirectedfrom=MSDN

@@ -153,6 +153,12 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		 */
 		this.ImageMap = null;
 
+		/**
+		 * true if there were no themes in file
+		 * @type {boolean}
+		 */
+		this.isNoThemes = false;
+
 		// unfinished
 		// this.EmbeddedData = null;
 
@@ -358,6 +364,7 @@ AscDFH.historyitem_type_VisioWindow = 328;
 	CVisioDocument.prototype.AfterOpenDocument = function(zip, context) {
 		if (!this.themes.length) {
 			AscCommon.consoleLog("No themes found by filenames. Creating default theme");
+			this.isNoThemes = true;
 			this.themes.push(AscFormat.GenerateDefaultTheme(null, null));
 		}
 	};
