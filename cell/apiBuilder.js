@@ -18233,7 +18233,7 @@
 	Api.prototype["RefreshAllPivots"] = Api.prototype.RefreshAllPivots;
 	Api.prototype["GetAllPivotTables"] = Api.prototype.GetAllPivotTables;
 
-	ApiWorkbook.prototype["Save"] = Api.prototype.Save;
+	ApiWorkbook.prototype["Save"] = ApiWorkbook.prototype.Save;
 	ApiWorkbook.prototype["GetSheets"] = ApiWorkbook.prototype.GetSheets;
 	ApiWorkbook.prototype["GetAllPivotTables"] = ApiWorkbook.prototype.GetAllPivotTables;
 	ApiWorkbook.prototype["GetCustomProperties"] = ApiWorkbook.prototype.GetCustomProperties;
