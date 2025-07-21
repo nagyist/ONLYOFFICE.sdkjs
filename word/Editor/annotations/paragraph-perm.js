@@ -54,6 +54,14 @@
 	{
 		return this.Id;
 	};
+	ParagraphPermBase.prototype.isStart = function()
+	{
+		return false;
+	};
+	ParagraphPermBase.prototype.isEnd = function()
+	{
+		return false;
+	};
 	ParagraphPermBase.prototype.GetId = function()
 	{
 		return this.Id;
@@ -79,6 +87,14 @@
 	{
 		marks.push(this);
 	};
+	ParagraphPermBase.prototype.IsAnnotationMark = function()
+	{
+		return true;
+	};
+	ParagraphPermBase.prototype.GetAllAnnotationMarks = function(marks)
+	{
+		marks.push(this);
+	};
 	ParagraphPermBase.prototype.IsCursorPlaceable = function()
 	{
 		return false;
@@ -86,6 +102,15 @@
 	ParagraphPermBase.prototype.CanPlaceCursorInside = function()
 	{
 		return false;
+	};
+	ParagraphPermBase.prototype.Draw_Lines = function(lineDrawState)
+	{
+		lineDrawState.handleAnnotationMark(this);
+	};
+	ParagraphPermBase.prototype.drawMark = function(x, y, h, graphics, isRTL, lineDrawState)
+	{
+		if (graphics && graphics.drawPermissionMark)
+			graphics.drawPermissionMark(x, y, h, isRTL ? !this.isStart() : this.isStart(), lineDrawState.isActivePermRanges());
 	};
 	/**
 	 * Очень важно, что в режимах комментирования и просмотра, мы проход через данный элемент считаем как перемещение курсора,

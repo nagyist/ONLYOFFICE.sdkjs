@@ -23386,7 +23386,7 @@ CDocument.prototype.IsEditSignaturesMode = function()
 };
 CDocument.prototype.IsViewModeInEditor = function()
 {
-	return this.Api.isRestrictionView();
+	return this.Api.isRestrictionView() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.CanEdit = function()
 {

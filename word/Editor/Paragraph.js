@@ -3140,13 +3140,16 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 
 	for (var CurLine = StartLine; CurLine <= EndLine; CurLine++)
 	{
-		var Line  = this.Lines[CurLine];
-		var LineM = Line.Metrics;
+		var Line        = this.Lines[CurLine];
+		var lineMetrics = Line.Metrics;
+		
+		let lineY0 = (Page.Y + Line.Y - lineMetrics.TextAscent);
+		let lineY1 = (Page.Y + Line.Y + lineMetrics.TextDescent);
 
 		var Baseline        = Page.Y + Line.Y;
-		var UnderlineOffset = LineM.TextDescent * 0.4;
+		var UnderlineOffset = lineMetrics.TextDescent * 0.4;
 
-		PDSL.resetLine(CurLine, Baseline, UnderlineOffset);
+		PDSL.resetLine(CurLine, Baseline, UnderlineOffset, lineY0, lineY1);
 
 		// Сначала проанализируем данную строку: в массивы aStrikeout, aDStrikeout, aUnderline
 		// aSpelling сохраним позиции начала и конца продолжительных одинаковых настроек зачеркивания,
