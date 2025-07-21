@@ -7531,74 +7531,74 @@ function BinarySettingsTableWriter(memory, doc, saveParams)
 				oThis.memory.WriteBool(oDocProtect.formatting);
 			});
 		}
-		if (oDocProtect.hashValue)
+		if (null != oDocProtect.hashValue)
 		{
 			this.bs.WriteItem(c_oDocProtect.HashValue, function () {
 				oThis.memory.WriteString3(oDocProtect.hashValue);
 			});
 		}
-		if (oDocProtect.saltValue)
+		if (null != oDocProtect.saltValue)
 		{
 			this.bs.WriteItem(c_oDocProtect.SaltValue, function () {
 				oThis.memory.WriteString3(oDocProtect.saltValue);
 			});
 		}
-		if (oDocProtect.spinCount)
+		if (null != oDocProtect.spinCount)
 		{
 			this.bs.WriteItem(c_oDocProtect.SpinCount, function () {
 				oThis.memory.WriteLong(oDocProtect.spinCount);
 			});
 		}
 //ext
-		if (oDocProtect.algIdExt)
+		if (null != oDocProtect.algIdExt)
 		{
 			this.bs.WriteItem(c_oDocProtect.AlgIdExt, function () {
 				oThis.memory.WriteString2(oDocProtect.algIdExt);
 			});
 		}
-		if (oDocProtect.algIdExtSource)
+		if (null != oDocProtect.algIdExtSource)
 		{
 			this.bs.WriteItem(c_oDocProtect.AlgIdExtSource, function () {
 				oThis.memory.WriteString2(oDocProtect.algIdExtSource);
 			});
 		}
-		if (oDocProtect.cryptAlgorithmClass)
+		if (null != oDocProtect.cryptAlgorithmClass)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptAlgorithmClass, function () {
 				oThis.memory.WriteByte(oDocProtect.cryptAlgorithmClass);
 			});
 		}
-		if (oDocProtect.cryptAlgorithmSid)
+		if (null != oDocProtect.cryptAlgorithmSid)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptAlgorithmSid, function () {
 				oThis.memory.WriteLong(oDocProtect.cryptAlgorithmSid);
 			});
 		}
-		if (oDocProtect.cryptAlgorithmType)
+		if (null != oDocProtect.cryptAlgorithmType)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptAlgorithmType, function () {
 				oThis.memory.WriteByte(oDocProtect.cryptAlgorithmType);
 			});
 		}
-		if (oDocProtect.cryptProvider)
+		if (null != oDocProtect.cryptProvider)
 		{
 			this.bs.WriteItem(c_oDocProtect.cryptProvider, function () {
 				oThis.memory.WriteString2(oDocProtect.cryptProvider);
 			});
 		}
-		if (oDocProtect.cryptProviderType)
+		if (null != oDocProtect.cryptProviderType)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptProviderType, function () {
 				oThis.memory.WriteByte(oDocProtect.cryptProviderType);
 			});
 		}
-		if (oDocProtect.cryptProviderTypeExt)
+		if (null != oDocProtect.cryptProviderTypeExt)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptProviderTypeExt, function () {
 				oThis.memory.WriteString2(oDocProtect.cryptProviderTypeExt);
 			});
 		}
-		if (oDocProtect.cryptProviderTypeExtSource)
+		if (null != oDocProtect.cryptProviderTypeExtSource)
 		{
 			this.bs.WriteItem(c_oDocProtect.CryptProviderTypeExtSource, function () {
 				oThis.memory.WriteString2(oDocProtect.cryptProviderTypeExtSource);
