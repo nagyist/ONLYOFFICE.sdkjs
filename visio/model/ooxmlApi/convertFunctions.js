@@ -315,6 +315,28 @@
 			// use quickStyleVariation only if themes exist in file.
 			// Default theme which come to visioDocument.themes[0] should not be considered.
 			if (!visioDocument.isNoThemes) {
+				// don't use color id because in handleQuickStyleVariation we change colors rgb.
+				// Color id makes rgb not considered
+				// lineUniFillNoGradient.calculate(visioDocument.themes[0]);
+				// uniFillForegndNoGradient.calculate(visioDocument.themes[0]);
+				if (lineUniFillNoGradient.fill && lineUniFillNoGradient.fill.color
+						&& (lineUniFillNoGradient.fill.color.color.id !== null
+								&& lineUniFillNoGradient.fill.color.color.id !== undefined)) {
+					let newLineColor = new AscFormat.CRGBColor();
+					let oldLineColor = lineUniFillNoGradient.fill.color.color;
+					newLineColor.setColor(oldLineColor.RGBA.R, oldLineColor.RGBA.G, oldLineColor.RGBA.B);
+					newLineColor.RGBA.A = oldLineColor.RGBA.A;
+					lineUniFillNoGradient.fill.color.color = newLineColor;
+				}
+				if (uniFillForegndNoGradient.fill && uniFillForegndNoGradient.fill.color
+						&& (uniFillForegndNoGradient.fill.color.color.id !== null
+								&& uniFillForegndNoGradient.fill.color.color.id !== undefined)) {
+					let newFillColor = new AscFormat.CRGBColor();
+					let oldFillColorLink = uniFillForegndNoGradient.fill.color.color;
+					newFillColor.setColor(oldFillColorLink.RGBA.R, oldFillColorLink.RGBA.G, oldFillColorLink.RGBA.B);
+					newFillColor.RGBA.A = oldFillColorLink.RGBA.A;
+					uniFillForegndNoGradient.fill.color.color = newFillColor;
+				}
 				handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
 			}
 
