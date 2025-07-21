@@ -1189,8 +1189,8 @@
 	 * Class representing a continuous region in a document. 
 	 * Each Range object is determined by the position of the start and end characters.
 	 * @param oElement - The document element that may be Document, Table, Paragraph, Run or Hyperlink.
-	 * @param {Number} Start - The start element of Range in the current Element.
-	 * @param {Number} End - The end element of Range in the current Element.
+	 * @param {Number?} [Start = undefined] - The start element of Range in the current Element.
+	 * @param {Number?} [End = undefined] - The end element of Range in the current Element.
 	 * @constructor
 	 */
 	function ApiRange(oElement, Start, End)
