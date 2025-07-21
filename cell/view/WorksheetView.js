@@ -4132,10 +4132,22 @@
 				oBaseTransform.sx = printScale;
 				oBaseTransform.sy = printScale;
 
-				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getRightToLeft() ? -1 : 1) * (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
-				oBaseTransform.ty = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * (printPagesData.pageClipRectTop + (printPagesData.topFieldInPx - printPagesData.pageClipRectTop + titleHeight) * printScale) - (t.getCellTop(range.r1, 3) - t.getCellTop(0, 3)) * printScale;
 
-				//oDocRenderer.transform(oDocRenderer.m_oFullTransform.sx, oDocRenderer.m_oFullTransform.shy, oDocRenderer.m_oFullTransform.shx, oDocRenderer.m_oFullTransform.sy, 100,200)
+				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getRightToLeft() ? -1 : 1) * (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
+
+				const pxToMm = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX());
+				const pageClipRectLeft = printPagesData.pageClipRectLeft;
+				const leftFieldInPx = printPagesData.leftFieldInPx;
+				const rightToLeft = t.getRightToLeft() ? -1 : 1;
+				const rangeLeft = t.getCellLeft(range.c1);
+				const col0Left = t.getCellLeft(0);
+				const rangeWidth = rangeLeft - col0Left;
+
+				const _txPx = printScale * (-offsetCols + leftFieldInPx - rightToLeft*pageClipRectLeft + titleWidth - rightToLeft * rangeWidth) + rightToLeft*pageClipRectLeft;
+				oBaseTransform.tx = _txPx * pxToMm;
+
+				oBaseTransform.ty = pxToMm * (printPagesData.pageClipRectTop + (printPagesData.topFieldInPx - printPagesData.pageClipRectTop + titleHeight) * printScale) - (t.getCellTop(range.r1, 3) - t.getCellTop(0, 3)) * printScale;
+
 
 				let bGraphics = !!(oDocRenderer instanceof AscCommon.CGraphics);
 				let clipL, clipT, clipR, clipB;
@@ -4183,10 +4195,26 @@
 					clipT = clipTopShape >> 0;
 					clipR = (clipLeftShape + clipWidthShape + 0.5) >> 0;
 					clipB = (clipTopShape + clipHeightShape + 0.5) >> 0;
+
+					let _printScale;
+					if (t.getRightToLeft()) {
+						let renderingSettings = t.getRenderingSettings();
+						if (renderingSettings) {
+							_printScale = renderingSettings.printScale;
+							renderingSettings.printScale = null;
+						}
+					}
+					
 					drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipL, clipT, clipR - clipL, clipB - clipT);
+
+					if (_printScale) {
+						renderingSettings.printScale = printScale;
+					}
+
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oBaseTransform);
 					}
+					
 					t.objectRender.print(drawingPrintOptions);
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oOldBaseTransform);
