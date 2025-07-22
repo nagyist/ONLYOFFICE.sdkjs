@@ -1298,7 +1298,13 @@
 			}
 		}
 		return rData;
-	}
+	};
+	baseEditorsApi.prototype.toggleChartElementsCallback = function () {
+		const graphicController = Asc.editor.getGraphicController();
+		if (graphicController && typeof graphicController.checkSingleChartSelection === 'function') {
+			graphicController.checkSingleChartSelection();
+		}
+	};
 	// Open
 	baseEditorsApi.prototype.asc_LoadDocument                    = function(isRepeat)
 	{
