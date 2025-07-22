@@ -239,24 +239,7 @@
 		// and pick ColorSchemeIndex instead of ThemeIndex cell
 		// upd: if connector styles are used lets use ConnectorSchemeIndex cell and
 		// ext uri="{D75FF423-9257-4291-A4FE-1B2448832E17} - themeSchemeSchemeEnum to find theme
-		let themeIndex = 0; // zero index means no theme - use default values
-		let themeScopeCellName = isConnectorShape ? "ConnectorSchemeIndex" : "ColorSchemeIndex";
-		let shapeColorSchemeThemeIndex = shape.getCellNumberValue(themeScopeCellName);
-		if (isNaN(shapeColorSchemeThemeIndex)) {
-			shapeColorSchemeThemeIndex = 0; // zero index means no theme
-		}
-		if (shapeColorSchemeThemeIndex === 65534) {
-			let pageThemeIndex = pageInfo.pageSheet.getCellNumberValue(themeScopeCellName);
-			if (!isNaN(pageThemeIndex)) {
-				themeIndex = pageThemeIndex;
-			} else {
-				// it's ok sometimes
-				// AscCommon.consoleLog("pageThemeIndexCell not found");
-				themeIndex = 0;
-			}
-		} else {
-			themeIndex = shapeColorSchemeThemeIndex;
-		}
+		let themeIndex = shape.calculateColorThemeIndex(pageInfo);
 
 
 		// if THEMEVAL was called with themeValue (argument like "FillColor") even if themeIndex is 0 we should

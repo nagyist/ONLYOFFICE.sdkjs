@@ -1820,6 +1820,33 @@
 	}
 
 	/**
+	 * @memberof Shape_Type
+	 * returns index of color shape theme
+	 */
+	Shape_Type.prototype.calculateColorThemeIndex = function calculateColorThemeIndex(pageInfo) {
+		let themeIndex = 0; // zero index means no theme - use default values
+		let themeScopeCellName = this.isConnectorStyleIherited ? "ConnectorSchemeIndex" : "ColorSchemeIndex";
+		let shapeColorSchemeThemeIndex = this.getCellNumberValue(themeScopeCellName);
+		if (isNaN(shapeColorSchemeThemeIndex)) {
+			// if not found or smth
+			// shapeColorSchemeThemeIndex = 0; // zero index means no theme
+			themeIndex = 0; // zero index means no theme
+		} else if (shapeColorSchemeThemeIndex === 65534) {
+			let pageThemeIndex = pageInfo.pageSheet.getCellNumberValue(themeScopeCellName);
+			if (!isNaN(pageThemeIndex)) {
+				themeIndex = pageThemeIndex;
+			} else {
+				// it's ok sometimes
+				// AscCommon.consoleLog("pageThemeIndexCell not found");
+				themeIndex = 0;
+			}
+		} else {
+			themeIndex = shapeColorSchemeThemeIndex;
+		}
+		return themeIndex;
+	}
+
+	/**
 	 * get deep copy of object with prototypes
 	 * @param object
 	 * @return {any}
