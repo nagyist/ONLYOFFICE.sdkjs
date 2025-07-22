@@ -103,6 +103,10 @@
 	{
 		return false;
 	};
+	ParagraphPermBase.prototype.CorrectPosToPermRanges = function(state, paraPos, depth, isCurrent)
+	{
+		state.checkPermRange(this);
+	};
 	ParagraphPermBase.prototype.Draw_Lines = function(lineDrawState)
 	{
 		lineDrawState.handleAnnotationMark(this);
@@ -361,8 +365,70 @@
 		this.rangeId = reader.GetString2();
 	};
 	
+	/**
+	 * @constructor
+	 */
+	function ParagraphPosToPermRangeState()
+	{
+		this.forward    = true;
+		this.curPos     = new AscWord.CParagraphContentPos();
+		this.stopped    = false;
+		this.found      = false;
+		this.permRanges = [];
+	}
+	ParagraphPosToPermRangeState.prototype.isFound = function()
+	{
+		return this.found;
+	};
+	ParagraphPosToPermRangeState.prototype.setDirection = function(isForward)
+	{
+		this.forward    = isForward;
+		this.stopped    = false;
+		this.found      = false;
+		this.permRanges = [];
+	};
+	ParagraphPosToPermRangeState.prototype.isForward = function()
+	{
+		return this.forward;
+	};
+	ParagraphPosToPermRangeState.prototype.isStopped = function()
+	{
+		return this.stopped;
+	};
+	ParagraphPosToPermRangeState.prototype.inPermRange = function()
+	{
+		return (!!this.permRanges.length);
+	};
+	ParagraphPosToPermRangeState.prototype.stop = function(isFound)
+	{
+		this.stopped = true;
+		this.found   = isFound;
+	};
+	ParagraphPosToPermRangeState.prototype.checkPermRange = function(mark)
+	{
+		if ((mark.isEnd() && this.forward) || (mark.isStart() && !this.forward))
+		{
+			let rangeId = mark.getRangeId();
+			let pos = this.permRanges.indexOf(rangeId);
+			if (-1 !== pos)
+				this.permRanges.splice(pos, 1);
+		}
+		else
+		{
+			this.permRanges.push(mark.getRangeId());
+		}
+	};
+	ParagraphPosToPermRangeState.prototype.setPos = function(pos, depth)
+	{
+		this.curPos.Update(pos, depth);
+	};
+	ParagraphPosToPermRangeState.prototype.getCorrectedPos = function()
+	{
+		return this.curPos;
+	};
 	//--------------------------------------------------------export----------------------------------------------------
-	AscWord.ParagraphPermStart = ParagraphPermStart;
-	AscWord.ParagraphPermEnd   = ParagraphPermEnd;
+	AscWord.ParagraphPermStart           = ParagraphPermStart;
+	AscWord.ParagraphPermEnd             = ParagraphPermEnd;
+	AscWord.ParagraphPosToPermRangeState = ParagraphPosToPermRangeState;
 })();
 

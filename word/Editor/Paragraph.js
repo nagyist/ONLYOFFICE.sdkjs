@@ -16881,6 +16881,47 @@ Paragraph.prototype.GetPermRangesByPos = function(paraPos)
 	this.LoadSelectionState(state);
 	return permRanges;
 };
+/**
+ * Корректируем заданную позицию, чтобы она попала в каку-либо разрешенную область, но приэтом так, чтобы физически
+ * позиция не изменилась.
+ * @param {AscWord.CParagraphContentPos} paraPos
+ */
+Paragraph.prototype.CorrectPosToPermRanges = function(paraPos)
+{
+	if (this.GetPermRangesByPos(paraPos).length)
+		return paraPos;
+	
+	let state = new AscWord.ParagraphPosToPermRangeState();
+	state.setDirection(true);
+	let curPos = paraPos.Get(0);
+	for (let pos = curPos; pos < this.Content.length; ++pos)
+	{
+		state.setPos(pos, 0);
+		
+		if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+			break;
+		
+		if (state.isStopped())
+			break;
+	}
+	
+	if (!state.isFound())
+	{
+		state.setDirection(false);
+		for (let pos = curPos; pos >= 0; --pos)
+		{
+			state.setPos(pos, 0);
+			
+			if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+				break;
+			
+			if (state.isStopped())
+				break;
+		}
+	}
+	
+	return state.isFound() ? state.getCorrectedPos() : paraPos;
+};
 Paragraph.prototype.IsCurrentPosInComplexFieldCode = function()
 {
 	let cfStatePos = this.GetCurrentComplexFields(true);

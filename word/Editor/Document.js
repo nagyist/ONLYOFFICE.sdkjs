@@ -2920,6 +2920,8 @@ CDocument.prototype.FinalizeAction = function(checkEmptyAction)
 	var oCurrentParagraph = this.GetCurrentParagraph(false, false)
 	if (oCurrentParagraph && oCurrentParagraph.IsInFixedForm())
 		oCurrentParagraph.GetParent().CheckFormViewWindow();
+	
+	this.private_CheckCursorPosInFillingFormMode();
 
 	this.Action.Start              = false;
 	this.Action.Depth              = 0;
@@ -23401,6 +23403,12 @@ CDocument.prototype.private_CheckCursorPosInFillingFormMode = function()
 		this.UpdateSelection();
 		this.UpdateInterface();
 	}
+	else if (this.IsEditCommentsMode() || this.IsViewModeInEditor())
+	{
+		this.CorrectCursorToPermRanges();
+		this.UpdateSelection();
+		this.UpdateInterface();
+	}
 };
 CDocument.prototype.OnEndLoadScript = function()
 {
@@ -24305,6 +24313,24 @@ CDocument.prototype.GetPermRangesByContentPos = function(docPos, docContent)
 	
 	this.LoadDocumentState(state, false);
 	return result;
+};
+CDocument.prototype.CorrectCursorToPermRanges = function()
+{
+	if (this.IsSelectionUse())
+	{
+		if (!this.IsTextSelectionUse())
+			return;
+	}
+	else
+	{
+		let paragraph = this.GetCurrentParagraph();
+		if (!paragraph)
+			return;
+		
+		let paraPos = paragraph.Get_ParaContentPos(false, false, false);
+		paraPos = paragraph.CorrectPosToPermRanges(paraPos);
+		paragraph.Set_ParaContentPos(paraPos, false, -1, -1, false);
+	}
 };
 /**
  * Получаем ссылку на класс, управляющий закладками
