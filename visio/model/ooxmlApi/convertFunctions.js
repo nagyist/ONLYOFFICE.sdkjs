@@ -314,7 +314,8 @@
 			// calculate variation before pattern bcs pattern can make NoFillUniFill object without color
 			// use quickStyleVariation only if themes exist in file.
 			// Default theme which come to visioDocument.themes[0] should not be considered.
-			if (!visioDocument.isNoThemes) {
+			// See bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=76044
+			if (this.calculateColorThemeIndex(pageInfo) !== 0) {
 				// don't use color id because in handleQuickStyleVariation we change colors rgb.
 				// Color id makes rgb not considered
 				// lineUniFillNoGradient.calculate(visioDocument.themes[0]);
