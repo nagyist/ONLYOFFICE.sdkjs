@@ -2513,10 +2513,10 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 			}
 
 			// Offsets for case of multiple images added
-			const OFFSET_MM = 10;
+			const OFFSET_PIX = mmToPx(5);
 			if (!AscFormat.isRealNumber(imageIndex)) imageIndex = 0;
-			let offsetX = isRtl ? imageIndex * OFFSET_MM * (-1) : imageIndex * OFFSET_MM;
-			let offsetY = imageIndex * OFFSET_MM;
+			let offsetX = isRtl ? imageIndex * OFFSET_PIX * (-1) : imageIndex * OFFSET_PIX;
+			let offsetY = imageIndex * OFFSET_PIX;
 			coordsFrom.x += offsetX;
 			coordsTo.x += offsetX;
 			coordsFrom.y += offsetY;
