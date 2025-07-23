@@ -5726,6 +5726,24 @@ Paragraph.prototype.SetSelectionContentPos = function(oStartPos, oEndPos, isCorr
 {
 	return this.Set_SelectionContentPos(oStartPos, oEndPos, isCorrectAnchor);
 };
+/**
+ * Устанавливаем стартовую позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его стартовую границу
+ * @param startPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionStartContentPos = function(startPos)
+{
+	return this.SetSelectionContentPos(startPos, this.Get_ParaContentPos(true, false, false), false);
+};
+/**
+ * Устанавливаем конечную позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его конечную границу
+ * @param endPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionEndContentPos = function(endPos)
+{
+	return this.Set_SelectionContentPos(this.Get_ParaContentPos(true, true, false), endPos, true);
+};
 Paragraph.prototype.private_GetClosestPosInCombiningMark = function(oContentPos, nDiff)
 {
 	if (undefined === nDiff)

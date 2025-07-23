@@ -12216,6 +12216,22 @@ CDocument.prototype.GetSelectedParagraphs = function()
 	return this.GetCurrentParagraph(false, true);
 };
 /**
+ * возвращаем первый параграф в выделении (а не тот, с которого начали выделение)
+ * @returns {?AscWord.Paragraph}
+ */
+CDocument.prototype.GetFirstParagraphInSelection = function()
+{
+	return this.GetCurrentParagraph(false, false, {FirstInSelection : true});
+};
+/**
+ * возвращаем последний параграф в выделении (а не тот, на котором закончили выделение)
+ * @returns {?AscWord.Paragraph}
+ */
+CDocument.prototype.GetLastParagraphInSelection = function()
+{
+	return this.GetCurrentParagraph(false, false, {LastInSelection : true});
+};
+/**
  * Получаем текущую таблицу
  * @returns {?CTable}
  */
@@ -24320,6 +24336,32 @@ CDocument.prototype.CorrectCursorToPermRanges = function()
 	{
 		if (!this.IsTextSelectionUse())
 			return;
+		
+		let firstPara = this.GetFirstParagraphInSelection();
+		let lastPara  = this.GetLastParagraphInSelection();
+		if (!firstPara || !lastPara)
+			return;
+		
+		if (this.GetSelectDirection() >= 0)
+		{
+			let startPos = firstPara.Get_ParaContentPos(true, true, false);
+			startPos = firstPara.CorrectPosToPermRanges(startPos);
+			firstPara.SetSelectionStartContentPos(startPos);
+			
+			let endPos = lastPara.Get_ParaContentPos(true, false, false);
+			endPos = lastPara.CorrectPosToPermRanges(endPos);
+			lastPara.SetSelectionEndContentPos(endPos);
+		}
+		else
+		{
+			let endPos = firstPara.Get_ParaContentPos(true, false, false);
+			endPos = firstPara.CorrectPosToPermRanges(endPos);
+			firstPara.SetSelectionEndContentPos(endPos);
+			
+			let startPos = lastPara.Get_ParaContentPos(true, true, false);
+			startPos = lastPara.CorrectPosToPermRanges(startPos);
+			lastPara.SetSelectionStartContentPos(startPos);
+		}
 	}
 	else
 	{
