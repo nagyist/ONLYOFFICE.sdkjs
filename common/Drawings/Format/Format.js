@@ -82,19 +82,34 @@
 		CBaseNoIdObject.prototype.notAllowedWithoutId = function () {
 			return false;
 		};
+		/**
+		 * @memberof CBaseNoIdObject
+		 */
 		CBaseNoIdObject.prototype.getObjectType = function () {
 			return this.classType;
 		};
+		/**
+		 * @memberof CBaseNoIdObject
+		 */
 		CBaseNoIdObject.prototype.Get_Id = function () {
 			return this.Id;
 		};
+		/**
+		 * @memberof CBaseNoIdObject
+		 */
 		CBaseNoIdObject.prototype.GetId = function () {
 			return this.Id;
 		};
+		/**
+		 * @memberof CBaseNoIdObject
+		 */
 		CBaseNoIdObject.prototype.Write_ToBinary2 = function (oWriter) {
 			oWriter.WriteLong(this.getObjectType());
 			oWriter.WriteString2(this.Get_Id());
 		};
+		/**
+		 * @memberof CBaseNoIdObject
+		 */
 		CBaseNoIdObject.prototype.Read_FromBinary2 = function (oReader) {
 			this.Id = oReader.GetString2();
 		};

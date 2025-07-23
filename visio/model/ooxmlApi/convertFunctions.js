@@ -379,7 +379,26 @@
 				} else if (fillPatternType === 0) {
 					uniFillForegndWithPattern = AscFormat.CreateNoFillUniFill();
 				} else if (fillPatternType === 1) {
-					uniFillForegndWithPattern = uniFillForegnd;
+					// convert fill to solid
+					//
+					// FILL_TYPE_NONE never comes
+					// FILL_TYPE_BLIP - images are handled separate from fill
+					// FILL_TYPE_NOFILL never comes
+					// FILL_TYPE_SOLID is handled
+					// FILL_TYPE_GRAD if gradient is not enabled uniFillNoGradient is in uniFillForegnd
+					// which is solid otherwise fillGradientEnabled is true and above code run
+					// FILL_TYPE_PATT is handled
+					// FILL_TYPE_GRP empty fill
+					if (uniFillForegnd.fill.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
+						uniFillForegndWithPattern = new AscFormat.CUniFill();
+						uniFillForegndWithPattern.fill = new AscFormat.CSolidFill();
+						uniFillForegndWithPattern.fill.color = uniFillForegnd.fill.fgClr;
+					} else if (uniFillForegnd.fill.type === Asc.c_oAscFill.FILL_TYPE_SOLID) {
+						uniFillForegndWithPattern = uniFillForegnd;
+					} else {
+						uniFillForegndWithPattern = uniFillForegnd;
+						AscCommon.consoleLog("Unknown fill type. Need to convert to solid");
+					}
 				} else if (isfillPatternTypeGradient) {
 					if (fillPatternType === 25) {
 						let fillGradientStops = [];
