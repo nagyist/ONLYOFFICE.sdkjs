@@ -631,7 +631,6 @@ function BinaryPPTYLoader()
 
                     var indexL = s.GetULong();
                     this.presentation.Slides[_slideNum].setLayout(this.aSlideLayouts[indexL]);
-                    this.presentation.Slides[_slideNum].Master = this.aSlideLayouts[indexL].Master;
                     _slideNum++;
                 }
             }
