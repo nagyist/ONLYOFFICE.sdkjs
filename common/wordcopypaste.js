@@ -3801,7 +3801,7 @@ PasteProcessor.prototype =
 		}
 
 		window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-		this.pasteCallback && this.pasteCallback(bInsert);
+		this.pasteCallback && this.pasteCallback(oPaste.insert);
 	},
 
 	_setSpecialPasteShowOptionsPresentation: function(props){
@@ -4419,7 +4419,7 @@ PasteProcessor.prototype =
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					}
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					this.pasteCallback && this.pasteCallback(bInsert);
+					this.pasteCallback && this.pasteCallback(oInsertResult.insert);
 				}
 			};
 
@@ -4517,7 +4517,7 @@ PasteProcessor.prototype =
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					}
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					oThis.pasteCallback && oThis.pasteCallback(bInsert);
+					oThis.pasteCallback && oThis.pasteCallback(oPaste.insert);
 				}
 			};
 
@@ -4926,7 +4926,7 @@ PasteProcessor.prototype =
 				}
 
 				window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-				oThis.pasteCallback && oThis.pasteCallback(bInsert);
+				oThis.pasteCallback && oThis.pasteCallback(oPaste.insert);
 			}
 		};
 
@@ -6021,7 +6021,7 @@ PasteProcessor.prototype =
 					}
 
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					oThis.pasteCallback && oThis.pasteCallback(bPaste);
+					oThis.pasteCallback && oThis.pasteCallback(oPaste.insert);
 				}
 			};
 
