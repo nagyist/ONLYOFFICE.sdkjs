@@ -2920,6 +2920,8 @@ CDocument.prototype.FinalizeAction = function(checkEmptyAction)
 	var oCurrentParagraph = this.GetCurrentParagraph(false, false)
 	if (oCurrentParagraph && oCurrentParagraph.IsInFixedForm())
 		oCurrentParagraph.GetParent().CheckFormViewWindow();
+	
+	this.private_CheckCursorPosInFillingFormMode();
 
 	this.Action.Start              = false;
 	this.Action.Depth              = 0;
@@ -10600,7 +10602,7 @@ CDocument.prototype.canEnterText = function()
 		return false;
 	
 	if (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
-		return this._checkPermRangeForCurrentSelection();
+		return this._checkPermRangeForCurrentSelection(AscCommon.changestype_Paragraph_AddText);
 	else if (this.IsFillingFormMode())
 		return this.IsInFormField(false, true);
 	
@@ -12214,6 +12216,22 @@ CDocument.prototype.GetSelectedParagraphs = function()
 	return this.GetCurrentParagraph(false, true);
 };
 /**
+ * возвращаем первый параграф в выделении (а не тот, с которого начали выделение)
+ * @returns {?AscWord.Paragraph}
+ */
+CDocument.prototype.GetFirstParagraphInSelection = function()
+{
+	return this.GetCurrentParagraph(false, false, {FirstInSelection : true});
+};
+/**
+ * возвращаем последний параграф в выделении (а не тот, на котором закончили выделение)
+ * @returns {?AscWord.Paragraph}
+ */
+CDocument.prototype.GetLastParagraphInSelection = function()
+{
+	return this.GetCurrentParagraph(false, false, {LastInSelection : true});
+};
+/**
  * Получаем текущую таблицу
  * @returns {?CTable}
  */
@@ -13741,7 +13759,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 		else if (AscCommon.changestype_Paragraph_Properties === changesType)
 		{
 			let selectedParagraphs = this.GetSelectedParagraphs();
-			if (!this._checkPermRangeForCurrentSelection())
+			if (!this._checkPermRangeForCurrentSelection(changesType))
 				return false;
 			
 			if (0 !== selectedParagraphs.length && !this._checkPermRangeForElement(selectedParagraphs[0]))
@@ -13755,7 +13773,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 			if (!this._checkChangesTypeForPermRangeForSelection(changesType))
 				return false;
 			
-			if (!this._checkPermRangeForCurrentSelection())
+			if (!this._checkPermRangeForCurrentSelection(changesType))
 				return false;
 		}
 	}
@@ -13805,7 +13823,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 		}
 		else if (AscCommon.changestype_2_AdditionalTypes === additionalData.Type)
 		{
-			if (!t._checkPermRangeForCurrentSelection())
+			if (!t._checkPermRangeForCurrentSelection(AscCommon.changestype_None))
 				return false;
 			
 			for (let i = 0, count = additionalData.Types.length; i < count; ++i)
@@ -13887,7 +13905,7 @@ CDocument.prototype._checkChangesTypeForPermRangeForSelection = function(changes
 		|| AscCommon.changestype_Delete === changesType
 		|| AscCommon.changestype_Text_Props === changesType);
 };
-CDocument.prototype._checkPermRangeForCurrentSelection = function()
+CDocument.prototype._checkPermRangeForCurrentSelection = function(changesType)
 {
 	let docPosType = this.GetDocPosType();
 	
@@ -13910,9 +13928,15 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function()
 	{
 		let hdrftr = this.HdrFtr.CurHdrFtr;
 		if (!hdrftr)
-			return null;
+			return false;
 		
 		docContent = hdrftr.GetContent();
+	}
+	else if (docPosType === docpostype_DrawingObjects)
+	{
+		docContent = this.DrawingObjects.getTargetDocContent();
+		if (!docContent)
+			docContent = this;
 	}
 	
 	// TODO: Пока запрещаем любые действия, связанные с выделением автофигур
@@ -13929,7 +13953,30 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function()
 	else if (!this.IsSelectionUse())
 	{
 		let currentPos = docContent.GetContentPosition();
-		return this.GetPermRangesByContentPos(currentPos, docContent).length > 0;
+		if (this.GetPermRangesByContentPos(currentPos, docContent).length <= 0)
+			return false;
+		
+		// TODO: Надо проверить, если мы находимся в начале параграфа, то проверяем можно ли менять прилегание и отступ первой строки
+		if (changesType === AscCommon.changestype_Remove)
+		{
+			let state = this.SaveDocumentState(false);
+			this.MoveCursorLeft(false, false);
+			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
+			this.LoadDocumentState(state);
+			this.UpdateInterface();
+			return result;
+		}
+		else if (changesType === AscCommon.changestype_Delete)
+		{
+			let state = this.SaveDocumentState(false);
+			this.MoveCursorRight(false, false);
+			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
+			this.LoadDocumentState(state);
+			this.UpdateInterface();
+			return result;
+		}
+		
+		return true;
 	}
 	
 	return false;
@@ -23386,7 +23433,7 @@ CDocument.prototype.IsEditSignaturesMode = function()
 };
 CDocument.prototype.IsViewModeInEditor = function()
 {
-	return this.Api.isRestrictionView();
+	return this.Api.isRestrictionView() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.CanEdit = function()
 {
@@ -23398,6 +23445,12 @@ CDocument.prototype.private_CheckCursorPosInFillingFormMode = function()
 	if (this.IsFillingFormMode() && !this.IsInFormField(true) && !this.IsFillingOFormMode())
 	{
 		this.MoveToFillingForm(true);
+		this.UpdateSelection();
+		this.UpdateInterface();
+	}
+	else if (this.IsEditCommentsMode() || this.IsViewModeInEditor())
+	{
+		this.CorrectCursorToPermRanges();
 		this.UpdateSelection();
 		this.UpdateInterface();
 	}
@@ -24299,12 +24352,56 @@ CDocument.prototype.GetPermRangesByContentPos = function(docPos, docContent)
 	docContent.SetContentPosition(docPos, 0, 0);
 	
 	let result = [];
-	let currentParagraph = this.GetCurrentParagraph(true, null);
+	let currentParagraph = docContent.GetCurrentParagraph(true, null);
 	if (currentParagraph)
 		result = currentParagraph.GetCurrentPermRanges();
 	
 	this.LoadDocumentState(state, false);
 	return result;
+};
+CDocument.prototype.CorrectCursorToPermRanges = function()
+{
+	if (this.IsSelectionUse())
+	{
+		if (!this.IsTextSelectionUse())
+			return;
+		
+		let firstPara = this.GetFirstParagraphInSelection();
+		let lastPara  = this.GetLastParagraphInSelection();
+		if (!firstPara || !lastPara)
+			return;
+		
+		if (this.GetSelectDirection() >= 0)
+		{
+			let startPos = firstPara.Get_ParaContentPos(true, true, false);
+			startPos = firstPara.CorrectPosToPermRanges(startPos);
+			firstPara.SetSelectionStartContentPos(startPos);
+			
+			let endPos = lastPara.Get_ParaContentPos(true, false, false);
+			endPos = lastPara.CorrectPosToPermRanges(endPos);
+			lastPara.SetSelectionEndContentPos(endPos);
+		}
+		else
+		{
+			let endPos = firstPara.Get_ParaContentPos(true, false, false);
+			endPos = firstPara.CorrectPosToPermRanges(endPos);
+			firstPara.SetSelectionEndContentPos(endPos);
+			
+			let startPos = lastPara.Get_ParaContentPos(true, true, false);
+			startPos = lastPara.CorrectPosToPermRanges(startPos);
+			lastPara.SetSelectionStartContentPos(startPos);
+		}
+	}
+	else
+	{
+		let paragraph = this.GetCurrentParagraph();
+		if (!paragraph)
+			return;
+		
+		let paraPos = paragraph.Get_ParaContentPos(false, false, false);
+		paraPos = paragraph.CorrectPosToPermRanges(paraPos);
+		paragraph.Set_ParaContentPos(paraPos, false, -1, -1, false);
+	}
 };
 /**
  * Получаем ссылку на класс, управляющий закладками

@@ -78,6 +78,9 @@ CParagraphContentBase.prototype.PreDelete = function()
 CParagraphContentBase.prototype.GetCurrentPermRanges = function(permRanges, isCurrent)
 {
 };
+CParagraphContentBase.prototype.CorrectPosToPermRanges = function(state, paraPos, depth, isCurrent)
+{
+};
 /**
  * Выствялем параграф, в котром лежит данный элемент
  * @param {Paragraph} oParagraph
@@ -4614,6 +4617,33 @@ CParagraphContentWithParagraphLikeContent.prototype.GetCurrentPermRanges = funct
 	for (let pos = 0; pos <= endPos; ++pos)
 	{
 		this.Content[pos].GetCurrentPermRanges(permRanges, isCurrent && pos === endPos);
+	}
+};
+CParagraphContentWithParagraphLikeContent.prototype.CorrectPosToPermRanges = function(state, paraPos, depth, isCurrent)
+{
+	if (state.isForward())
+	{
+		let startPos = isCurrent ? paraPos.Get(depth) : 0;
+		for (let pos = startPos; pos < this.Content.length; ++pos)
+		{
+			state.setPos(pos, depth);
+			this.Content[pos].CorrectPosToPermRanges(state, paraPos, depth + 1, isCurrent && pos === startPos);
+			
+			if (state.isStopped())
+				break;
+		}
+	}
+	else
+	{
+		let startPos = isCurrent ? paraPos.Get(depth) : this.Content.length - 1;
+		for (let pos = startPos; pos >= 0; --pos)
+		{
+			state.setPos(pos, depth);
+			this.Content[pos].CorrectPosToPermRanges(state, paraPos, depth + 1, isCurrent && pos === startPos);
+			
+			if (state.isStopped())
+				break;
+		}
 	}
 };
 CParagraphContentWithParagraphLikeContent.prototype.GetCurrentComplexFields = function(arrComplexFields, isCurrent, isFieldPos)
