@@ -15054,6 +15054,8 @@
 	}
 
 	function applyElementDirection(element) {
+		if (!element)
+			return;
 		if (AscCommon.AscBrowser.isIE) {
 			element.addEventListener('input', function () {
 				const text = element.textContent || element.innerText || '';
