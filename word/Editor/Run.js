@@ -11533,6 +11533,37 @@ ParaRun.prototype.PreDelete = function(isDeep)
 
 	this.RemoveSelection();
 };
+ParaRun.prototype.CorrectPosToPermRanges = function(state, paraPos, depth, isCurrent)
+{
+	if (!isCurrent && state.inPermRange())
+	{
+		state.setPos(state.isForward() ? 0 : this.Content.length, depth);
+		state.stop(true);
+		return;
+	}
+	
+	let start, end;
+	if (state.isForward())
+	{
+		start = isCurrent ? paraPos.Get(depth) : 0;
+		end   = this.Content.length;
+	}
+	else
+	{
+		start = 0;
+		end   = isCurrent ? Math.min(this.Content.length, paraPos.Get(depth)) : this.Content.length;
+	}
+	
+	
+	for (let i = start; i < end; ++i)
+	{
+		if (!this.Content[i].IsDrawing() || this.Content[i].IsInline())
+		{
+			state.stop(false);
+			return;
+		}
+	}
+};
 ParaRun.prototype.GetCurrentComplexFields = function(arrComplexFields, isCurrent, isFieldPos)
 {
 	var nEndPos = isCurrent ? this.State.ContentPos : this.Content.length;
