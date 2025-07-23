@@ -3932,14 +3932,21 @@
         ret.W = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
         ret.H = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
+		ret.editorX = 0;
+		ret.editorY = 0;
+
         switch (this.editorId)
         {
             case c_oEditorId.Word:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
-                ret.X += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
-                ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorY += this.WordControl.Y;
+				ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+
+				ret.X += ret.editorX;
+				ret.Y += ret.editorY;
+
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
 
@@ -3951,19 +3958,22 @@
             }
             case c_oEditorId.Presentation:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
 
-                ret.X += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.X += ret.editorX;
 
+				ret.editorY += this.WordControl.Y;
                 if (!this.WordControl.m_oLogicDocument.IsFocusOnNotes())
                 {
-                    ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
                 else
                 {
-                    ret.Y += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
+
+				ret.Y += ret.editorY;
 
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
