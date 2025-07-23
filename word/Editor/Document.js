@@ -10602,7 +10602,7 @@ CDocument.prototype.canEnterText = function()
 		return false;
 	
 	if (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
-		return this._checkPermRangeForCurrentSelection();
+		return this._checkPermRangeForCurrentSelection(AscCommon.changestype_Paragraph_AddText);
 	else if (this.IsFillingFormMode())
 		return this.IsInFormField(false, true);
 	
@@ -13759,7 +13759,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 		else if (AscCommon.changestype_Paragraph_Properties === changesType)
 		{
 			let selectedParagraphs = this.GetSelectedParagraphs();
-			if (!this._checkPermRangeForCurrentSelection())
+			if (!this._checkPermRangeForCurrentSelection(changesType))
 				return false;
 			
 			if (0 !== selectedParagraphs.length && !this._checkPermRangeForElement(selectedParagraphs[0]))
@@ -13773,7 +13773,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 			if (!this._checkChangesTypeForPermRangeForSelection(changesType))
 				return false;
 			
-			if (!this._checkPermRangeForCurrentSelection())
+			if (!this._checkPermRangeForCurrentSelection(changesType))
 				return false;
 		}
 	}
@@ -13823,7 +13823,7 @@ CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, a
 		}
 		else if (AscCommon.changestype_2_AdditionalTypes === additionalData.Type)
 		{
-			if (!t._checkPermRangeForCurrentSelection())
+			if (!t._checkPermRangeForCurrentSelection(AscCommon.changestype_None))
 				return false;
 			
 			for (let i = 0, count = additionalData.Types.length; i < count; ++i)
@@ -13905,7 +13905,7 @@ CDocument.prototype._checkChangesTypeForPermRangeForSelection = function(changes
 		|| AscCommon.changestype_Delete === changesType
 		|| AscCommon.changestype_Text_Props === changesType);
 };
-CDocument.prototype._checkPermRangeForCurrentSelection = function()
+CDocument.prototype._checkPermRangeForCurrentSelection = function(changesType)
 {
 	let docPosType = this.GetDocPosType();
 	
@@ -13947,7 +13947,30 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function()
 	else if (!this.IsSelectionUse())
 	{
 		let currentPos = docContent.GetContentPosition();
-		return this.GetPermRangesByContentPos(currentPos, docContent).length > 0;
+		if (this.GetPermRangesByContentPos(currentPos, docContent).length <= 0)
+			return false;
+		
+		// TODO: Надо проверить, если мы находимся в начале параграфа, то проверяем можно ли менять прилегание и отступ первой строки
+		if (changesType === AscCommon.changestype_Remove)
+		{
+			let state = this.SaveDocumentState();
+			this.MoveCursorLeft(false, false);
+			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
+			this.LoadDocumentState(state);
+			this.UpdateInterface();
+			return result;
+		}
+		else if (changesType === AscCommon.changestype_Delete)
+		{
+			let state = this.SaveDocumentState();
+			this.MoveCursorRight(false, false);
+			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
+			this.LoadDocumentState(state);
+			this.UpdateInterface();
+			return result;
+		}
+		
+		return true;
 	}
 	
 	return false;
