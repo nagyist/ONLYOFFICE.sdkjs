@@ -3001,7 +3001,7 @@ function (window, undefined) {
 			if (arrayToSearch) {
 				if (arg3) {
 					// approximate(binary) search
-					res = _func.binarySearch(arg0Val, arrayToSearch, false);
+					res = _func.lookupBinarySearch(arg0Val, arrayToSearch, false);
 				} else {
 					// exact (simple) search
 					for (let i = 0; i < arrayToSearch.length; i++) {
