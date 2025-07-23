@@ -4005,6 +4005,16 @@
                     ret.Y = drDoc.TargetHtmlElementTop;
                     ret.TargetH = drDoc.m_dTargetSize * this.asc_getZoom() * AscCommon.g_dKoef_mm_to_pix;
                     off = this.HtmlElement;
+                } else if (Asc.c_oAscSelectionType.RangeCells === selectionType ||
+                    Asc.c_oAscSelectionType.RangeRow === selectionType ||
+                    Asc.c_oAscSelectionType.RangeCol === selectionType)
+                {
+                    let ws = this.wb.getWorksheet();
+                    let activeCellCoord = ws.getSelectionCoords();
+                    if (activeCellCoord) {
+                        ret.X = activeCellCoord[0]._x /*+ activeCellCoord[0]._width*/;
+                        ret.Y = activeCellCoord[0]._y /*+ activeCellCoord[0]._height*/;
+                    }
                 }
 
                 if (off) {
