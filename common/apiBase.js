@@ -5572,6 +5572,33 @@
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
 
+	baseEditorsApi.prototype["native_callCommand"] = function(funcText, params)
+	{
+		if (!this.canRunBuilderScript())
+			return;
+
+		let jsonParam = (typeof params === "string") ? params : JSON.stringify(params);
+		this._beforeEvalCommand();
+		let script = "(function(){let Asc={};Asc.scope=" + jsonParam + ";return (" + funcText + ")(Asc.scope);})();";
+		let commandReturnValue = AscCommon.safePluginEval(script);
+		this._afterEvalCommand(undefined);
+		this.onEndBuilderScript();
+
+		if (!Asc.checkReturnCommand(commandReturnValue))
+			commandReturnValue = undefined;
+		return commandReturnValue;
+	};
+
+	baseEditorsApi.prototype["native_callMethod"] = function(name, params)
+	{
+		let returnValue = undefined;
+
+		this.callMethod(name, params, function(retValue) {
+			returnValue = retValue;
+		});
+
+		return returnValue;
+	};
 
 	baseEditorsApi.prototype.asc_mergeSelectedShapes = function(operation) {
 		if(AscCommon['PathBoolean']) {
