@@ -11443,7 +11443,7 @@
 		if (ws.AutoFilter) {
 			_range = ws.AutoFilter.Ref;
 		} else {
-			let filterProps = ws.autoFilters.getAddFormatTableOptions(selectionRange);
+			let filterProps = ws.autoFilters.getAddFormatTableOptions(this.range.bbox);
 			_range = filterProps && filterProps.range && AscCommonExcel.g_oRangeCache.getAscRange(filterProps.range);
 		}
 
