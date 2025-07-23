@@ -13928,9 +13928,15 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function(changesType)
 	{
 		let hdrftr = this.HdrFtr.CurHdrFtr;
 		if (!hdrftr)
-			return null;
+			return false;
 		
 		docContent = hdrftr.GetContent();
+	}
+	else if (docPosType === docpostype_DrawingObjects)
+	{
+		docContent = this.DrawingObjects.getTargetDocContent();
+		if (!docContent)
+			docContent = this;
 	}
 	
 	// TODO: Пока запрещаем любые действия, связанные с выделением автофигур
@@ -13953,7 +13959,7 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function(changesType)
 		// TODO: Надо проверить, если мы находимся в начале параграфа, то проверяем можно ли менять прилегание и отступ первой строки
 		if (changesType === AscCommon.changestype_Remove)
 		{
-			let state = this.SaveDocumentState();
+			let state = this.SaveDocumentState(false);
 			this.MoveCursorLeft(false, false);
 			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
 			this.LoadDocumentState(state);
@@ -13962,7 +13968,7 @@ CDocument.prototype._checkPermRangeForCurrentSelection = function(changesType)
 		}
 		else if (changesType === AscCommon.changestype_Delete)
 		{
-			let state = this.SaveDocumentState();
+			let state = this.SaveDocumentState(false);
 			this.MoveCursorRight(false, false);
 			let result = (this.GetPermRangesByContentPos(docContent.GetContentPosition(), docContent).length > 0);
 			this.LoadDocumentState(state);
@@ -24346,7 +24352,7 @@ CDocument.prototype.GetPermRangesByContentPos = function(docPos, docContent)
 	docContent.SetContentPosition(docPos, 0, 0);
 	
 	let result = [];
-	let currentParagraph = this.GetCurrentParagraph(true, null);
+	let currentParagraph = docContent.GetCurrentParagraph(true, null);
 	if (currentParagraph)
 		result = currentParagraph.GetCurrentPermRanges();
 	

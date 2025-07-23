@@ -4157,10 +4157,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 		if (true !== this.Content[this.CurPos.ContentPos].IsSelectionUse())
 		{
 			this.RemoveSelection();
-
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 		}
 		else
 		{
@@ -4169,10 +4165,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			this.Selection.Flag     = selectionflag_Common;
 			this.Selection.StartPos = this.CurPos.ContentPos;
 			this.Selection.EndPos   = this.CurPos.ContentPos;
-			
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 
 			this.Document_SetThisElementCurrent(false);
 
