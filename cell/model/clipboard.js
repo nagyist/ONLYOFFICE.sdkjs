@@ -539,7 +539,7 @@
 
 			let base64;
 			//ws.workbook._executeWithoutZoom(function () {
-				let ctx = ws.workbook.printForCopyPaste(ws, activeRange);
+				let ctx = ws.workbook.printForCopyPaste(ws, activeRange, true);
 				if (ctx && ctx.canvas) {
 					base64 = ctx.canvas.toDataURL("image/png");
 				}

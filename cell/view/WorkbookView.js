@@ -4016,16 +4016,26 @@
 		return page;
 	};
 
-	WorkbookView.prototype.printForCopyPaste = function (ws, oRange) {
+	WorkbookView.prototype.printForCopyPaste = function (ws, oRange, ignoreScaling) {
 		var sizes = ws.getRangePosition(oRange);
+		let scaleFactor = ignoreScaling ? AscBrowser.retinaPixelRatio /** ws.getZoom()*/ : 1;
 		if (sizes) {
-			sizes.width += 1;
-			sizes.height += 1;
+			sizes.width += 1*scaleFactor;
+			sizes.height += 1*scaleFactor;
 		}
+
 		var page = this.getSimulatePageForCopyPaste(sizes, oRange);
-		var previewOleObjectContext = AscCommonExcel.getContext(sizes.width, sizes.height, this);
+		var previewOleObjectContext = AscCommonExcel.getContext(sizes.width/scaleFactor, sizes.height/scaleFactor, this);
 		previewOleObjectContext.DocumentRenderer = AscCommonExcel.getGraphics(previewOleObjectContext);
 		previewOleObjectContext.isNotDrawBackground = !this.Api.isFromSheetEditor;
+
+		if (scaleFactor !== 1) {
+			previewOleObjectContext.ppiX = previewOleObjectContext.ppiX/scaleFactor;
+			previewOleObjectContext.ppiY = previewOleObjectContext.ppiY/scaleFactor;
+			previewOleObjectContext.setTransform(1/scaleFactor, 0, 0, 1/scaleFactor, 0, 0);
+			previewOleObjectContext.updateTransforms && previewOleObjectContext.updateTransforms();
+		}
+
 		let renderingSettings = ws.getRenderingSettings();
 		if (!renderingSettings) {
 			renderingSettings = ws.initRenderingSettings();
