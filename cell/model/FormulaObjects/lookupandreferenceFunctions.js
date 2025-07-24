@@ -2970,15 +2970,11 @@ function (window, undefined) {
 			return arg0Val;
 		}
 		if (cElementType.empty === arg0Val.type) {
-			if (opt_xlookup) {
-				// TODO Empty for XLOOKUP
-				return new cError(cErrorType.not_available);
-			} else {
+			if (!opt_xlookup) {
 				arg0Val = arg0Val.tocNumber();
 			}
 		}
 
-		let found = false;
 		let arg0ValType = arg0Val.type
 		if (cElementType.array === arg1.type && !opt_xlookup) {
 			// ToDo
@@ -2986,12 +2982,7 @@ function (window, undefined) {
 				regexp = searchRegExp(valueForSearching);
 			}
 
-			let arrayToSearch, row, col, res = -1;
-			let dimension = arg1.getDimensions();
-
-			row = this.bHor ? 0 : dimension.row;
-			col = this.bHor ? dimension.col : 0;
-
+			let arrayToSearch, res = -1;
 			if (this.bHor) {
 				arrayToSearch = arg1.getRow(0);
 			} else {
@@ -3586,7 +3577,7 @@ function (window, undefined) {
 			
 			// Compare data types first (numbers < strings < booleans < errors in Excel)
 			const typeComparison = this._compareTypes(val, valueForSearching);
-			if (typeComparison <= 0 && this._compareValues(val, valueForSearching, "<", opt_arg4)) {
+			if (typeComparison < 0 || (typeComparison === 0 && this._compareValues(val, valueForSearching, "<", opt_arg4))) {
 				revert ? j = k - 1: i = k + 1;
 				if (opt_arg4 === -1) {
 					resultNearest = k;
