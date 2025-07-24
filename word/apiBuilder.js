@@ -8081,6 +8081,34 @@
 
 		return comment ? new ApiComment(comment) : null;
 	};
+	
+	/**
+	 * Show a comment by its ID.
+	 * @memberof ApiDocument
+	 * @typeofeditors ["CDE"]
+	 * @param {string | Array.string} commentId - The comment ID.
+	 * @returns {boolean}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/ShowComment.js
+	 */
+	ApiDocument.prototype.ShowComment = function(commentId)
+	{
+		let durableIds  = Array.isArray(commentId) ? commentId : [commentId];
+		let internalIds = [];
+		
+		let comments = this.Document.GetCommentsManager();
+		for (let i = 0; i < durableIds.length; ++i)
+		{
+			let comment = comments.GetByDurableId(durableIds[i]);
+			if (comment)
+				internalIds.push(comment.GetId());
+		}
+		
+		// Force recalculation to display the comment in the correct place
+		this.ForceRecalculate();
+		this.Document.ShowComment(internalIds);
+		return true;
+	};
 
 	/**
 	 * Returns all numbered paragraphs from the current document.
@@ -25443,6 +25471,7 @@
 	ApiDocument.prototype["SetControlsHighlight"]          = ApiDocument.prototype.SetControlsHighlight;
 	ApiDocument.prototype["GetAllComments"]                = ApiDocument.prototype.GetAllComments;
 	ApiDocument.prototype["GetCommentById"]                = ApiDocument.prototype.GetCommentById;
+	ApiDocument.prototype["ShowComment"]                   = ApiDocument.prototype.ShowComment;
 	ApiDocument.prototype["GetStatistics"]                 = ApiDocument.prototype.GetStatistics;
 	ApiDocument.prototype["GetPageCount"]                  = ApiDocument.prototype.GetPageCount;
 	ApiDocument.prototype["GetCurrentPage"]                = ApiDocument.prototype.GetCurrentPage;
