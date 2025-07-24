@@ -11865,8 +11865,22 @@
 				if (VisibleDropDown === false) {
 					autoFilterOptions.asc_setVisibleDropDown(VisibleDropDown);
 				}
-				ws.autoFilters.applyAutoFilter(autoFilterOptions, ws.selectionRange.getLast().clone());
-				//api.asc_applyAutoFilter(autoFilterOptions);
+				let applyFilterProps = ws.autoFilters.applyAutoFilter(autoFilterOptions, ws.selectionRange.getLast().clone());
+				let minChangeRow = applyFilterProps && applyFilterProps.minChangeRow;
+				if (null !== minChangeRow) {
+					let oWorksheet = Asc['editor'] && Asc['editor'].wb && Asc['editor'].wb.getWorksheet();
+					if (oWorksheet && oWorksheet.objectRender) {
+						let rangeOldFilter = applyFilterProps && applyFilterProps.rangeOldFilter;
+						if (rangeOldFilter) {
+							oWorksheet.objectRender.bUpdateMetrics = false;
+							oWorksheet._onUpdateFormatTable(rangeOldFilter, true);
+							oWorksheet.objectRender.bUpdateMetrics = true;
+						}
+						if (oWorksheet.objectRender.controller) {
+							oWorksheet.objectRender.updateSizeDrawingObjects({target: AscCommonExcel.c_oTargetType.RowResize, row: minChangeRow});
+						}
+					}
+				}
 			}
 		}
 	};
