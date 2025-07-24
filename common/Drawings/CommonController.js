@@ -9050,6 +9050,7 @@
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
+				/*
 				sendToBack: function () {
 
 					AscCommon.IsChangingDrawingZIndex = true;
@@ -9070,6 +9071,38 @@
 					}
 					this.drawingObjects.showDrawingObjects();
 
+					AscCommon.IsChangingDrawingZIndex = false;
+				},
+				*/
+
+				sendToBack: function () {
+					AscCommon.IsChangingDrawingZIndex = true;
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
+						this.selection.groupSelection.sendToBack();
+					} else {
+						const graphicController = Asc.editor.getGraphicController();
+						const drawingObjects = graphicController.drawingObjects;
+
+						let j = 0;
+						for (let i = 0; i < sp_tree.length; ++i) {
+							if (sp_tree[i].selected) {
+								const object = sp_tree[i];
+								const copy = object.copy();
+								object.deleteDrawingBase();
+
+								copy.setDrawingObjects(drawingObjects);
+								copy.setWorksheet(drawingObjects.getWorksheetModel());
+
+								copy.addToDrawingObjects(j);
+								copy.checkDrawingBaseCoords();
+								++j;
+							}
+						}
+					}
+
+					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
