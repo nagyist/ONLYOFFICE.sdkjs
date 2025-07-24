@@ -245,13 +245,9 @@
 
 				let fillForegndTransValue = this.getCellNumberValue("FillForegndTrans");
 				if (!isNaN(fillForegndTransValue)) {
+					/** @type {CSolidFill} */
 					let fillObj = uniFillForegndNoGradient.fill;
-					if (fillObj.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
-						// pattern fill
-						fillObj.fgClr.color.RGBA.A = fillObj.fgClr.color.RGBA.A * (1 - fillForegndTransValue);
-					} else {
-						fillObj.color.color.RGBA.A = fillObj.color.color.RGBA.A * (1 - fillForegndTransValue);
-					}
+					fillObj.color.color.RGBA.A = fillObj.color.color.RGBA.A * (1 - fillForegndTransValue);
 				} else {
 					AscCommon.consoleLog("fillForegndTrans value is themed or something. Not calculated for", this);
 				}
@@ -281,13 +277,9 @@
 				if (!(uniFillBkgnd.fill.type === Asc.c_oAscFill.FILL_TYPE_GRAD)) {
 					let fillBkgndTransValue = this.getCellNumberValue("FillBkgndTrans");
 					if (!isNaN(fillBkgndTransValue)) {
+						/** @type {CSolidFill} */
 						let fillObj = uniFillBkgnd.fill;
-						if (fillObj.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
-							// pattern fill
-							fillObj.bgClr.color.RGBA.A = fillObj.fgClr.color.RGBA.A * (1 - fillBkgndTransValue);
-						} else {
-							fillObj.color.color.RGBA.A = fillObj.color.color.RGBA.A * (1 - fillBkgndTransValue);
-						}
+						fillObj.color.color.RGBA.A = fillObj.color.color.RGBA.A * (1 - fillBkgndTransValue);
 					} else {
 						// AscCommon.consoleLog("fillBkgndTrans value is themed or something. Not calculated for", this);
 					}
@@ -569,14 +561,10 @@
 						uniFillForegndWithPattern = AscFormat.builder_CreateRadialGradient(fillGradientStops);
 					}
 				} else if (fillPatternType > 1) {
+					// create patt fill using foregnd and bkgnd colors
 					let ooxmlFillPatternType = mapVisioFillPatternToOOXML(fillPatternType);
-					if (uniFillForegnd.fill instanceof AscFormat.CPattFill) {
-						uniFillForegndWithPattern = AscFormat.CreatePatternFillUniFill(ooxmlFillPatternType,
-								uniFillForegnd.fill.bgClr, uniFillForegnd.fill.fgClr);
-					} else {
-						uniFillForegndWithPattern = AscFormat.CreatePatternFillUniFill(ooxmlFillPatternType,
+					uniFillForegndWithPattern = AscFormat.CreatePatternFillUniFill(ooxmlFillPatternType,
 								uniFillBkgnd.fill.color, uniFillForegnd.fill.color);
-					}
 				}
 			} else if (uniFillForegnd) {
 				uniFillForegndWithPattern = uniFillForegnd;

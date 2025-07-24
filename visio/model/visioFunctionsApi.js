@@ -446,7 +446,21 @@
 				result = getMedifiersResult && getMedifiersResult.fontPropsObject.color;
 			} else if (cellName === "FillForegnd" || cellName === "FillBkgnd") {
 				//leave result because it is fill
-				result = getMedifiersResult;
+				if (getMedifiersResult.fill.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
+					let uniColor;
+					if (cellName === "FillForegnd") {
+						uniColor = getMedifiersResult.fill.fgClr;
+					} else {
+						uniColor = getMedifiersResult.fill.bgClr;
+					}
+					let fill = new AscFormat.CUniFill();
+					fill.fill = new AscFormat.CSolidFill();
+					fill.fill.color = uniColor;
+
+					result = fill;
+				} else {
+					result = getMedifiersResult;
+				}
 			} else if (cellName === "LineWeight") {
 				// let's map standart ooxml result in emus to visio result - inches
 				result = getMedifiersResult && getMedifiersResult.w /

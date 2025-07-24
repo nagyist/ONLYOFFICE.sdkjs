@@ -5534,6 +5534,9 @@
 //-----------------
 
 
+		/**
+		 * @constructor
+		 */
 		function CSolidFill() {
 			CBaseNoIdObject.call(this);
 			this.type = c_oAscFill.FILL_TYPE_SOLID;
