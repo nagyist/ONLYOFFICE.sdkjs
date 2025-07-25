@@ -9006,89 +9006,98 @@
 					}
 				},
 
-
 				bringToFront: function () {
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						var selected = [];
-						for (var i = 0; i < sp_tree.length; ++i) {
-							if (sp_tree[i].selected) {
-								selected.push(sp_tree[i]);
-							}
-						}
-						for (var i = sp_tree.length - 1; i > -1; --i) {
-							if (sp_tree[i].selected) {
-								sp_tree[i].deleteDrawingBase();
-							}
-						}
-						for (i = 0; i < selected.length; ++i) {
-							selected[i].addToDrawingObjects(sp_tree.length);
-						}
-					} else {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.bringToFront();
+
+					} else {
+						const selected = sp_tree.filter(function (drawingObject) {
+							return drawingObject.selected;
+						});
+
+						sp_tree.forEach(function (drawingObject) {
+							if (drawingObject.selected) {
+								drawingObject.deleteDrawingBase();
+							}
+						});
+
+						selected.forEach(function (drawingObject) {
+							drawingObject.addToDrawingObjects(sp_tree.length);
+						});
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
 				bringForward: function () {
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						for (var i = sp_tree.length - 1; i > -1; --i) {
-							var sp = sp_tree[i];
-							if (sp.selected && i < sp_tree.length - 1 && !sp_tree[i + 1].selected) {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
+						this.selection.groupSelection.bringForward();
+
+					} else {
+						for (let i = sp_tree.length - 1; i > -1; --i) {
+							const sp = sp_tree[i];
+							const canMoveForward = i < sp_tree.length - 1 && !sp_tree[i + 1].selected;
+							if (sp.selected && canMoveForward) {
 								sp.deleteDrawingBase();
 								sp.addToDrawingObjects(i + 1);
 							}
 						}
-					} else {
-						this.selection.groupSelection.bringForward();
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
 				sendToBack: function () {
-
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
+					const sp_tree = this.getDrawingObjects();
 
-					if (!(this.selection.groupSelection)) {
-						var j = 0;
-						for (var i = 0; i < sp_tree.length; ++i) {
-							if (sp_tree[i].selected) {
-								var object = sp_tree[i];
-								object.deleteDrawingBase();
-								object.addToDrawingObjects(j);
-								++j;
-							}
-						}
-					} else {
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.sendToBack();
-					}
-					this.drawingObjects.recalculate();
-					this.drawingObjects.showDrawingObjects();
 
+					} else {
+						let insertionIndex = 0;
+						sp_tree.forEach(function (drawingObject) {
+							if (drawingObject.selected) {
+								drawingObject.deleteDrawingBase();
+								drawingObject.addToDrawingObjects(insertionIndex);
+								insertionIndex++;
+							}
+						});
+					}
+
+					this.startRecalculate();
+					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
 				bringBackward: function () {
-
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						for (var i = 0; i < sp_tree.length; ++i) {
-							var sp = sp_tree[i];
-							if (sp.selected && i > 0 && !sp_tree[i - 1].selected) {
-								sp.deleteDrawingBase();
-								sp.addToDrawingObjects(i - 1);
-							}
-						}
-					} else {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.bringBackward();
+
+					} else {
+						sp_tree.forEach(function (drawingObject, index) {
+							const canMoveBackward = index > 0 && !sp_tree[index - 1].selected;
+							if (drawingObject.selected && canMoveBackward) {
+								drawingObject.deleteDrawingBase();
+								drawingObject.addToDrawingObjects(index - 1);
+							}
+						});
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},

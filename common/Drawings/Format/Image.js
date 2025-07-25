@@ -523,6 +523,10 @@
 					this.addToRecalculate();
 					break;
 				}
+				case AscDFH.historyitem_AutoShapes_AddToDrawingObjects: {
+					this.addToRecalculate();
+					break;
+				}
 				case AscDFH.historyitem_ShapeSetBDeleted: {
 					if (!this.bDeleted) {
 						this.addToRecalculate();

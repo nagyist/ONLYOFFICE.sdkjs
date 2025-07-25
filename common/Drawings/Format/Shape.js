@@ -6539,7 +6539,6 @@
 				case AscDFH.historyitem_AutoShapes_RemoveFromDrawingObjects: {
 					break;
 				}
-
 				case AscDFH.historyitem_AutoShapes_AddToDrawingObjects: {
 					break;
 				}
