@@ -647,7 +647,7 @@ CChangesPDFFormMeta.prototype.Type = AscDFH.historyitem_Pdf_Form_Meta;
 CChangesPDFFormMeta.prototype.private_SetValue = function(Value)
 {
 	var oField = this.Class;
-	oField.SetMeta(Value);
+	oField._meta = Value;
 };
 
 CChangesPDFFormMeta.prototype.WriteToBinary = function(Writer)

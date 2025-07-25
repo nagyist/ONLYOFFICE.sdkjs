@@ -116,7 +116,7 @@
         this.SetNeedRecalc(false);
     };
     CComboBoxField.prototype.RecalculateContentRect = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
 
         let X       = aOrigRect[0];
         let Y       = aOrigRect[1];
@@ -158,7 +158,7 @@
         if (!this.content)
             return;
 
-        let aRect = this.GetOrigRect();
+        let aRect = this.GetRect();
         if (!aRect) {
             return;
         }
@@ -299,8 +299,7 @@
     };
     CComboBoxField.prototype.SetCurIdxs = function(aIdxs) {
         if (this.IsWidget()) {
-            let oDoc = this.GetDocument();
-            oDoc.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetCurIdxs(), aIdxs));
+            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetCurIdxs(), aIdxs));
 
             let aOptions = this.GetOptions();
             if (undefined !== aIdxs[0]) {
@@ -322,8 +321,7 @@
     CComboBoxField.prototype.SetValue = function(sValue) {
         let aIdxs = [];
         if (this.IsWidget()) {
-            let oDoc        = this.GetDocument();
-            let isOnOpen    = oDoc.Viewer.IsOpenFormsInProgress;
+            let isOnOpen = Asc.editor.getDocumentRenderer().IsOpenFormsInProgress;
 
             let sTextToAdd = "";
             let aOptions = this.GetOptions();
@@ -347,7 +345,7 @@
             if (sTextToAdd == "")
                 sTextToAdd = sValue;
 
-            oDoc.History.Add(new CChangesPDFFormValue(this, this.GetParentValue(), sValue));
+            AscCommon.History.Add(new CChangesPDFFormValue(this, this.GetParentValue(), sValue));
 
             this.UpdateDisplayValue(sTextToAdd);
             this.SetNeedRecalc(true);
@@ -733,14 +731,14 @@
         this.WriteToBinaryBase(memory);
         this.WriteToBinaryBase2(memory);
 
-        let value = this.GetParentValue(false);
+        let value = this.GetParentValue(memory.isCopyPaste);
         if (value != null && Array.isArray(value) == false) {
             memory.fieldDataFlags |= (1 << 9);
             memory.WriteString(value);
         }
 
         // элементы списка выбора
-        let aOptions = this.GetOptions(false);
+        let aOptions = this.GetOptions(memory.isCopyPaste);
         if (aOptions && aOptions.length !== 0) {
             memory.fieldDataFlags |= (1 << 10);
             memory.WriteLong(aOptions.length);
@@ -762,7 +760,7 @@
         // массив I (выделенные значения списка)
         let curIdxs;
         if ([AscPDF.FIELD_TYPES.combobox, AscPDF.FIELD_TYPES.listbox].includes(this.GetType())) {
-            curIdxs = this.GetParentCurIdxs(false);
+            curIdxs = this.GetParentCurIdxs(memory.isCopyPaste);
         }
         if (curIdxs) {
             memory.fieldDataFlags |= (1 << 14);
@@ -772,18 +770,21 @@
             }
         }
 
-        memory.fieldDataFlags |= (1 << 15);
+        // render
+        let nCurPos = memory.GetCurPosition();
         this.WriteRenderToBinary(memory);
+        if (nCurPos != memory.GetCurPosition())
+            memory.fieldDataFlags |= (1 << 15);
         
         // top index
         
-        if (this.IsEditable(false)) {
+        if (this.IsEditable(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 18);
         }
-        if (this.IsDoNotSpellCheck(false)) {
+        if (this.IsDoNotSpellCheck(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 22);
         }
-        if (this.IsCommitOnSelChange(false)) {
+        if (this.IsCommitOnSelChange(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 26);
         }
         

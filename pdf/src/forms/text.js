@@ -343,10 +343,9 @@
     };
 	CTextField.prototype.SetValue = function(sValue) {
 		if (this.IsWidget()) {
-            let oDoc        = this.GetDocument();
-            let isOnOpen    = oDoc.Viewer.IsOpenFormsInProgress;
+            let isOnOpen = Asc.editor.getDocumentRenderer().IsOpenFormsInProgress;
 
-            oDoc.History.Add(new CChangesPDFFormValue(this, this.GetValue(), sValue));
+            AscCommon.History.Add(new CChangesPDFFormValue(this, this.GetValue(), sValue));
 
 			if (isOnOpen != true)
 				this.SetWasChanged(true);
@@ -395,8 +394,8 @@
         return this.contentFormat.getAllText();
     };
 	CTextField.prototype.UpdateDisplayValue = function(displayValue) {
-        let oDoc        = this.GetDocument();
-        let isOnOpen    = oDoc.Viewer.IsOpenFormsInProgress;
+        let oDoc        = Asc.editor.getPDFDoc();
+        let isOnOpen    = Asc.editor.getDocumentRenderer().IsOpenFormsInProgress;
         let _t          = this;
 
         AscCommon.History.StartNoHistoryMode();
@@ -533,7 +532,7 @@
         let scale     = AscCommon.AscBrowser.retinaPixelRatio
                         * oViewer.zoom
                         * oViewer.getDrawingPageScale(nPage);  // overall scale factor
-        let rect      = this.GetOrigRect();           // [x1, y1, x2, y2] in document coords
+        let rect      = this.GetRect();           // [x1, y1, x2, y2] in document coords
         let borders   = this.GetBordersWidth();       // border widths
         let angleDeg  = this.GetRotate() || 0;        // rotation angle in degrees
         let angleRad  = angleDeg * Math.PI / 180;     // convert to radians
@@ -1154,7 +1153,7 @@
 		return false == this.IsMultiline();
 	};
     CTextField.prototype.RecalculateContentRect = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
 
         let X       = aOrigRect[0];
         let Y       = aOrigRect[1];
@@ -1220,7 +1219,7 @@
         if (!this.content)
             return null;
 
-        let aRect = this.GetOrigRect();
+        let aRect = this.GetRect();
         if (!aRect) {
             return null;
         }
@@ -1359,7 +1358,7 @@
         
         let oContentBounds  = this.content.GetContentBounds(0);
         let oContentRect    = this.getFormRelRect();
-        let aOrigRect       = this.GetOrigRect();
+        let aOrigRect       = this.GetRect();
 
         let nFormRotAngle = this.GetRotate();
         let dFrmW = oContentRect.W;
@@ -2254,41 +2253,44 @@
         this.WriteToBinaryBase(memory);
         this.WriteToBinaryBase2(memory);
 
-        let sValue = this.GetParentValue(false);
+        let sValue = this.GetParentValue(memory.isCopyPaste);
         if (sValue != null) {
             memory.fieldDataFlags |= (1 << 9);
             memory.WriteString(sValue);
         }
 
-        let nCharLimit = this.GetCharLimit(false);
+        let nCharLimit = this.GetCharLimit(memory.isCopyPaste);
         if (nCharLimit != 0) {
             memory.fieldDataFlags |= (1 << 10);
             memory.WriteLong(nCharLimit);
         }
 
-        memory.fieldDataFlags |= (1 << 13);
+        // render
+        let nCurPos = memory.GetCurPosition();
         this.WriteRenderToBinary(memory);
-
+        if (nCurPos != memory.GetCurPosition())
+            memory.fieldDataFlags |= (1 << 13);
+        
         // if (this.IsRichText()) {
         //     memory.widgetFlags |= (1 << 11);
         // }
 
-        if (this.IsMultiline(false)) {
+        if (this.IsMultiline(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 12);
         }
-        if (this.IsPassword(false)) {
+        if (this.IsPassword(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 13);
         }
-        if (this.IsFileSelect(false)) {
+        if (this.IsFileSelect(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 20);
         }
-        if (this.IsDoNotSpellCheck(false)) {
+        if (this.IsDoNotSpellCheck(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 22);
         }
-        if (this.IsDoNotScroll(false)) {
+        if (this.IsDoNotScroll(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 23);
         }
-        if (this.IsComb(false)) {
+        if (this.IsComb(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 24);
         }
 
