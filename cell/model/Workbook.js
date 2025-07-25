@@ -18033,7 +18033,7 @@
 		}
 
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
 		AscCommon.History.Create_NewPoint();
@@ -18056,7 +18056,7 @@
 			// cell.Remove();
 		});
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValueData = function(val){
 		AscCommon.History.Create_NewPoint();
