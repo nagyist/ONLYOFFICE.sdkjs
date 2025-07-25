@@ -16746,11 +16746,13 @@
 			if(bChange)
 			{
 				var backupObj = this.getValueData();
-				for (var i = 0, length = this.multiText.length; i < length; ++i) {
-					var elem = this.multiText[i];
+				let newMultiText = this._cloneMultiText();
+				for (var i = 0, length = newMultiText.length; i < length; ++i) {
+					var elem = newMultiText[i];
 					if (null != elem.format)
 						fAction(elem.format)
 				}
+				this.setValueMultiTextInternal(newMultiText);
 				//пробуем преобразовать в простую строку
 				if(this._minimizeMultiText(false))
 				{
