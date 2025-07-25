@@ -25461,6 +25461,16 @@ CDocument.prototype.AddBlankPage = function()
 
 					this.CurPos.ContentPos = this.CurPos.ContentPos + 2;
 				}
+				else if (0 === this.CurPos.ContentPos && oElement.IsCursorAtBegin())
+				{
+					let breakParagraph = oElement.Split();
+					this.AddToContent(1, breakParagraph);
+					let splitParagraph = breakParagraph.Split();
+					this.AddToContent(2, splitParagraph);
+					breakParagraph.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Page));
+					
+					this.CurPos.ContentPos = 0;
+				}
 				else
 				{
 					var oNext   = oElement.Split();

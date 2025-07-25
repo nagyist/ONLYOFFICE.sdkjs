@@ -4358,6 +4358,32 @@
 		return new ApiDocument(this.WordControl.m_oLogicDocument);
 	};
 	/**
+	 * Returns the object by it's internal ID.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @param id {string} ID of the object.
+	 * @returns {?object}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetByInternalId.js
+	 */
+	Api.prototype.GetByInternalId = function(id)
+	{
+		let obj = AscCommon.g_oTableId.Get_ById(id);
+		if (!obj)
+			return null;
+		
+		if (obj instanceof AscWord.CDocument)
+			return new ApiDocument(obj);
+		else if (obj instanceof AscWord.CDocumentContent)
+			return new ApiDocumentContent(obj);
+		else if (obj instanceof AscWord.CInlineLevelSdt)
+			return new ApiInlineLvlSdt(obj);
+		else if (obj instanceof AscWord.CBlockLevelSdt)
+			return new ApiBlockLvlSdt(obj);
+			
+		return null;
+	};
+	/**
 	 * Creates a new paragraph.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE"]
@@ -5570,6 +5596,18 @@
 	ApiDocumentContent.prototype.GetClassType = function()
 	{
 		return "documentContent";
+	};
+	/**
+	 * Returns an internal ID of the current document content.
+	 * @memberof ApiDocumentContent
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {string}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetInternalId.js
+	 */
+	ApiDocumentContent.prototype.GetInternalId = function()
+	{
+		return this.Sdt.GetId();
 	};
 	/**
 	 * Returns a number of elements in the current document.
@@ -9176,7 +9214,47 @@
 	ApiDocument.prototype.GetCustomProperties = function () {
 		return new ApiCustomProperties(this.Document.CustomProperties);
 	};
-
+	
+	/**
+	 * Insert blank page to the current location.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertBlankPage.js
+	 */
+	ApiDocument.prototype.InsertBlankPage = function()
+	{
+		this.Document.AddBlankPage();
+		return true;
+	};
+	/**
+	 * Moves cursor to the start of the document.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorToStart.js
+	 */
+	ApiDocument.prototype.MoveCursorToStart = function()
+	{
+		this.Document.MoveCursorToStartOfDocument();
+		return true;
+	};
+	/**
+	 * Moves cursor to the end of the document.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorToEnd.js
+	 */
+	ApiDocument.prototype.MoveCursorToEnd = function()
+	{
+		this.Document.MoveCursorToStartOfDocument();
+		this.Document.MoveCursorToEndPos();
+		return true;
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiParagraph
@@ -25299,6 +25377,7 @@
 	// Export
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	Api.prototype["GetDocument"]                      = Api.prototype.GetDocument;
+	Api.prototype["GetByInternalId"]                  = Api.prototype.GetByInternalId;
 	Api.prototype["CreateParagraph"]                  = Api.prototype.CreateParagraph;
 	Api.prototype["CreateTable"]                      = Api.prototype.CreateTable;
 	Api.prototype["AddComment"]                       = Api.prototype.AddComment;
@@ -25507,9 +25586,13 @@
 	ApiDocument.prototype["AddDropDownListContentControl"] = ApiDocument.prototype.AddDropDownListContentControl;
 	ApiDocument.prototype["AddPictureContentControl"]      = ApiDocument.prototype.AddPictureContentControl;
 	ApiDocument.prototype["GetCustomXmlParts"]             = ApiDocument.prototype.GetCustomXmlParts;
-	ApiDocument.prototype["GetCore"]                     = ApiDocument.prototype.GetCore;
-	ApiDocument.prototype["GetCustomProperties"]         = ApiDocument.prototype.GetCustomProperties;
-
+	ApiDocument.prototype["GetCore"]                       = ApiDocument.prototype.GetCore;
+	ApiDocument.prototype["GetCustomProperties"]           = ApiDocument.prototype.GetCustomProperties;
+	ApiDocument.prototype["InsertBlankPage"]               = ApiDocument.prototype.InsertBlankPage;
+	ApiDocument.prototype["MoveCursorToStart"]             = ApiDocument.prototype.MoveCursorToStart;
+	ApiDocument.prototype["MoveCursorToEnd"]               = ApiDocument.prototype.MoveCursorToEnd;
+	
+	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
 	ApiParagraph.prototype["AddText"]                = ApiParagraph.prototype.AddText;
 	ApiParagraph.prototype["AddPageBreak"]           = ApiParagraph.prototype.AddPageBreak;
