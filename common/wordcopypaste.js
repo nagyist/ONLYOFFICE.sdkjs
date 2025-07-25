@@ -1314,7 +1314,11 @@ CopyProcessor.prototype =
 		//DocContent/ Drawings
 
 		if (elementsContent && elementsContent.length) {
-			if (elementsContent[0].DocContent || (elementsContent[0].Drawings && elementsContent[0].Drawings.length) || elementsContent[0].Pages.length) {
+			if (elementsContent[0].DocContent
+				|| (elementsContent[0].Drawings && elementsContent[0].Drawings.length)
+				|| (elementsContent[0].Annots && elementsContent[0].Annots.length)
+				|| (elementsContent[0].Fields && elementsContent[0].Fields.length)
+				|| elementsContent[0].Pages.length) {
 				this.oPDFWriter.WriteString2(this.api.documentId);
 				//флаг о том, что множественный контент в буфере
 				this.oPDFWriter.WriteBool(true);
@@ -1479,6 +1483,36 @@ CopyProcessor.prototype =
 			oThis.oPDFWriter.End_UseFullUrl();
 
 		};
+		let copyAnnots = function(){
+			let elements = elementsContent.Annots;
+
+			//пишем метку и длину
+			oThis.oPDFWriter.WriteString2("Annots");
+			oThis.oPDFWriter.WriteULong(elements.length);
+
+			oThis.oPDFWriter.Start_UseFullUrl();
+			for (let i = 0; i < elements.length; ++i) {
+				oThis.CopyPDFAnnotObject(elements[i]);
+			}
+			oThis.oPDFWriter.End_UseFullUrl();
+
+		};
+
+		let copyFields = function(){
+			let elements = elementsContent.Fields;
+
+			//пишем метку и длину
+			oThis.oPDFWriter.WriteString2("Fields");
+			oThis.oPDFWriter.WriteULong(elements.length);
+
+			oThis.oPDFWriter.Start_UseFullUrl();
+			for (let i = 0; i < elements.length; ++i) {
+				oThis.CopyPDFFieldObject(elements[i]);
+			}
+			oThis.oPDFWriter.WriteFieldsAdditionalInfo();
+
+			oThis.oPDFWriter.End_UseFullUrl();
+		};
 
 		let copyPages = function() {
 			if (oDomTarget) {
@@ -1520,7 +1554,6 @@ CopyProcessor.prototype =
 		oThis.oPDFWriter.WriteString2("SelectedContent");
 		oThis.oPDFWriter.WriteULong(contentCount);
 
-
 		//Pages
 		if (elementsContent.Pages.length > 0) {
 			copyPages();
@@ -1530,8 +1563,16 @@ CopyProcessor.prototype =
 			copyDocContent();
 		}
 		//Drawings
-		if (elementsContent.Drawings) {
+		if (elementsContent.Drawings.length > 0) {
 			copyDrawings(elementsContent.Drawings);
+		}
+		//Annots
+		if (elementsContent.Annots.length) {
+			copyAnnots();
+		}
+		//Fields
+		if (elementsContent.Fields.length) {
+			copyFields();
 		}
 	},
 
@@ -1940,6 +1981,8 @@ CopyProcessor.prototype =
 			selectedContent = oDocument.GetSelectedContent2();
 			if (!selectedContent[0].DocContent && (!selectedContent[0].Drawings ||
 				(selectedContent[0].Drawings && !selectedContent[0].Drawings.length))
+				&& (!selectedContent[0].Annots || (selectedContent[0].Annots && !selectedContent[0].Annots.length))
+				&& (!selectedContent[0].Fields || (selectedContent[0].Fields && !selectedContent[0].Fields.length))
 				&& selectedContent[0].Pages.length == 0) {
 				return false;
 			}
@@ -2316,6 +2359,12 @@ CopyProcessor.prototype =
 			oDomTarget.addChild(oImg);
 		}
 		this.oPDFWriter.WriteSpTreeElem(oGraphicObj);
+	},
+	CopyPDFAnnotObject: function (oAnnotCopyObject) {
+		this.oPDFWriter.WriteAnnotTreeElem(oAnnotCopyObject.Annot);
+	},
+	CopyPDFFieldObject: function (oFieldCopyObject) {
+		this.oPDFWriter.WriteFieldTreeElem(oFieldCopyObject.Field);
 	},
 
 	CopyFootnotes: function (oDomTarget, aFootnotes) {
@@ -5824,6 +5873,36 @@ PasteProcessor.prototype =
 			arr_Images = arr_Images.concat(objects.arrImages);
 		};
 
+		let readAnnots = function () {
+			if (PasteElementsId.g_bIsDocumentCopyPaste) {
+				History.TurnOff();
+			}
+			let objects = oThis.ReadPDFAnnots(stream);
+			if (PasteElementsId.g_bIsDocumentCopyPaste) {
+				History.TurnOn();
+			}
+
+			oPDFSelContent.Annots = objects.arrAnnots;
+
+			for (let i = 0; i < objects.arrAnnots.length; ++i) {
+				if (objects.arrAnnots[i].Annot.getAllFonts) {
+					objects.arrAnnots[i].Annot.getAllFonts(oFontMap);
+				}
+			}
+		};
+
+		let readFields = function () {
+			if (PasteElementsId.g_bIsDocumentCopyPaste) {
+				History.TurnOff();
+			}
+			let objects = oThis.ReadPDFFields(stream);
+			if (PasteElementsId.g_bIsDocumentCopyPaste) {
+				History.TurnOn();
+			}
+
+			oPDFSelContent.Fields = objects.arrFields;
+		};
+
 		let readPageDrawings = function () {
 			stream.GetString2(); // drawings
 
@@ -5893,6 +5972,14 @@ PasteProcessor.prototype =
 						readDrawings();
 						break;
 					}
+					case "Annots": {
+						readAnnots();
+						break;
+					}
+					case "Fields": {
+						readFields();
+						break;
+					}
 				}
 			}
 		}
@@ -5906,6 +5993,73 @@ PasteProcessor.prototype =
 		}
 
 		return {content: oPDFSelContent, fonts: fonts, images: arr_Images};
+	},
+
+	ReadPDFAnnots: function (stream) {
+		let nCountAnnots = stream.GetULong();
+
+		let oDoc = Asc.editor.getPDFDoc();
+		let oNativeFile = Asc.editor.getDocumentRenderer().file.nativeFile;
+		let oAnnotsInfo = oNativeFile.readAnnotationsInfoFromBinary(stream.data.slice(stream.cur));
+
+		let oAnnotsMap = {};
+		let aAnnots = [];
+		for (let i = 0; i < oAnnotsInfo["annots"].length; i++) {
+			let oAnnotInfo = oAnnotsInfo["annots"][i];
+
+			if (oAnnotInfo["RefTo"] == null || oAnnotInfo["type"] != AscPDF.ANNOTATIONS_TYPES.Text) {
+				let oAnnot = AscPDF.ReadAnnotFromJSON(oAnnotInfo, oDoc);
+				if (oAnnot.IsStamp()) {
+					let oMeta = oAnnot.GetMeta();
+					if (oMeta && oMeta["isOO"]) {
+						let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
+						oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
+					}
+				}
+				
+				if (oAnnotInfo["RefTo"] == null)
+					oAnnotsMap[oAnnotInfo["AP"]["i"]] = oAnnot;
+
+				aAnnots.push(new AscPDF.AnnotCopyObject(oAnnot));
+			}
+			else {
+				if (oAnnotInfo["StateModel"] != AscPDF.TEXT_ANNOT_STATE_MODEL.Review && oAnnotsMap[oAnnotInfo["RefTo"]])
+					AscPDF.ReadAnnotReplyJSON(oAnnotsMap[oAnnotInfo["RefTo"]], oAnnotInfo);
+			}
+		}
+
+		return {arrAnnots: aAnnots};
+	},
+
+	ReadPDFFields: function (stream) {
+		let nCountFields = stream.GetULong();
+
+		let oDoc = Asc.editor.getPDFDoc();
+		let oViewer = Asc.editor.getDocumentRenderer();
+		let oNativeFile = oViewer.file.nativeFile;
+		let oFieldsInfo = oNativeFile.readAnnotationsInfoFromBinary(stream.data.slice(stream.cur));
+
+		oViewer.IsOpenFormsInProgress = true;
+
+		let aFields = [];
+		for (let i = 0; i < oFieldsInfo["annots"].length; i++) {
+			let oFieldInfo = oFieldsInfo["annots"][i];
+
+			let oField = AscPDF.ReadFieldFromJSON(oFieldInfo, oDoc, true);
+			if (AscPDF.FIELD_TYPES.button == oField.GetType()) {
+				oField.SetImageRasterId(oFieldsInfo['imgs'][oFieldInfo['I']], AscPDF.APPEARANCE_TYPES.normal);
+				oField.SetImageRasterId(oFieldsInfo['imgs'][oFieldInfo['RI']], AscPDF.APPEARANCE_TYPES.rollover);
+				oField.SetImageRasterId(oFieldsInfo['imgs'][oFieldInfo['IX']], AscPDF.APPEARANCE_TYPES.mouseDown);
+			}
+
+			aFields.push(new AscPDF.FieldCopyObject(oField));
+		}
+
+		Asc.editor.ImageLoader._LoadImages(oFieldsInfo['imgs']);
+
+		oViewer.IsOpenFormsInProgress = false;
+
+		return {arrFields: aFields};
 	},
 
 	//from PRESENTATION to PRESENTATION

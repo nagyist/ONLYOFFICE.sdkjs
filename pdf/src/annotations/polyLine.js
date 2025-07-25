@@ -67,11 +67,8 @@
     Object.assign(CAnnotationPolyLine.prototype, AscPDF.CAnnotationBase.prototype);
 
     CAnnotationPolyLine.prototype.SetVertices = function(aVertices) {
-        let oViewer = editor.getDocumentRenderer();
-        let oDoc    = oViewer.getPDFDoc();
-        
         this.recalcGeometry();
-        oDoc.History.Add(new CChangesPDFAnnotVertices(this, this.GetVertices(), aVertices));
+        AscCommon.History.Add(new CChangesPDFAnnotVertices(this, this.GetVertices(), aVertices));
 
         this._vertices = aVertices;
     };
@@ -79,23 +76,7 @@
         return this._vertices;
     };
 
-    CAnnotationPolyLine.prototype.Recalculate = function(bForce) {
-        if (true !== bForce && false == this.IsNeedRecalc()) {
-            return;
-        }
-
-        if (this.recalcInfo.recalculateGeometry)
-            this.RefillGeometry();
-
-        this.recalculateTransform();
-        this.updateTransformMatrix();
-        this.recalculate();
-        this.SetNeedRecalc(false);
-    };
     CAnnotationPolyLine.prototype.RefillGeometry = function() {
-        let oViewer = editor.getDocumentRenderer();
-        let oDoc    = oViewer.getPDFDoc();
-        
         let aPoints = this.GetVertices();
         let aPolygonPoints = [];
 
@@ -106,68 +87,24 @@
             });
         }
         
-        let aShapeRectInMM = this.GetOrigRect().map(function(measure) {
+        let aShapeRectInMM = this.GetRect().map(function(measure) {
             return measure * g_dKoef_pt_to_mm;
         });
 
-        oDoc.StartNoHistoryMode();
+        AscCommon.History.StartNoHistoryMode();
         fillShapeByPoints([aPolygonPoints], aShapeRectInMM, this);
-        oDoc.EndNoHistoryMode();
+        AscCommon.History.EndNoHistoryMode();
     };
-    CAnnotationPolyLine.prototype.SetRect = function(aOrigRect) {
-        let oViewer     = editor.getDocumentRenderer();
-        let oDoc        = oViewer.getPDFDoc();
+    CAnnotationPolyLine.prototype.Copy = function(isForMove) {
+        let oCopy = AscPDF.CAnnotationBase.prototype.Copy.call(this, isForMove);
 
-        oDoc.History.Add(new CChangesPDFAnnotRect(this, this.GetOrigRect(), aOrigRect));
+        let aVertices = this.GetVertices();
 
-        this._origRect = aOrigRect;
+        oCopy.SetVertices(aVertices.slice());
+        oCopy.SetLineEnd(this.GetLineEnd());
+        oCopy.SetLineStart(this.GetLineStart());
 
-        let oXfrm = this.getXfrm();
-        if (oXfrm) {
-            AscCommon.History.StartNoHistoryMode();
-            oXfrm.setOffX(aOrigRect[0] * g_dKoef_pt_to_mm);
-            oXfrm.setOffY(aOrigRect[1] * g_dKoef_pt_to_mm);
-            oXfrm.setExtX((aOrigRect[2] - aOrigRect[0]) * g_dKoef_pt_to_mm);
-            oXfrm.setExtY((aOrigRect[3] - aOrigRect[1]) * g_dKoef_pt_to_mm);
-            AscCommon.History.EndNoHistoryMode();
-        }
-        
-        this.AddToRedraw();
-        this.SetWasChanged(true);
-    };
-    CAnnotationPolyLine.prototype.LazyCopy = function() {
-        let oDoc = this.GetDocument();
-        oDoc.StartNoHistoryMode();
-
-        let oPolyline = new CAnnotationPolyLine(AscCommon.CreateGUID(), this.GetOrigRect().slice(), oDoc);
-        oPolyline.lazyCopy = true;
-
-        this.fillObject(oPolyline);
-
-        let aStrokeColor    = this.GetStrokeColor();
-        let aFillColor      = this.GetFillColor();
-        let aVertices       = this.GetVertices();
-
-        oPolyline._apIdx = this._apIdx;
-        oPolyline._originView = this._originView;
-        oPolyline.SetOriginPage(this.GetOriginPage());
-        oPolyline.SetAuthor(this.GetAuthor());
-        oPolyline.SetModDate(this.GetModDate());
-        oPolyline.SetCreationDate(this.GetCreationDate());
-        oPolyline.SetContents(this.GetContents());
-        aStrokeColor && oPolyline.SetStrokeColor(aStrokeColor.slice());
-        aFillColor && oPolyline.SetFillColor(aFillColor.slice());
-        oPolyline.SetWidth(this.GetWidth());
-        oPolyline.SetLineStart(this.GetLineStart());
-        oPolyline.SetLineEnd(this.GetLineEnd());
-        oPolyline.SetOpacity(this.GetOpacity());
-        aVertices && oPolyline.SetVertices(aVertices.slice());
-        oPolyline.SetWasChanged(oPolyline.IsChanged());
-        oPolyline.recalcInfo.recalculateGeometry = true;
-        
-        oDoc.EndNoHistoryMode();
-
-        return oPolyline;
+        return oCopy;
     };
     CAnnotationPolyLine.prototype.onMouseDown = function(x, y, e) {
         let oViewer         = Asc.editor.getDocumentRenderer();
@@ -443,6 +380,10 @@
         memory.Seek(nStartPos);
         memory.WriteLong(nEndPos - nStartPos);
         memory.Seek(nEndPos);
+
+        this.GetReplies().forEach(function(reply) {
+            (reply.IsChanged() || !memory.docRenderer) && reply.WriteToBinary(memory);
+        });
     };
     
     function fillShapeByPoints(arrOfArrPoints, aShapeRect, oParentAnnot) {

@@ -108,9 +108,6 @@
         return this._captionPos;
     };
     CAnnotationLine.prototype.RefillGeometry = function() {
-        let oViewer = editor.getDocumentRenderer();
-        let oDoc    = oViewer.getPDFDoc();
-        
         let aPoints = this.GetLinePoints();
         let aLinePoints = [];
         for (let i = 0; i < aPoints.length - 1; i += 2) {
@@ -120,13 +117,13 @@
             });
         }
         
-        let aShapeRectInMM = this.GetOrigRect().map(function(measure) {
+        let aShapeRectInMM = this.GetRect().map(function(measure) {
             return measure * g_dKoef_pt_to_mm;
         });
 
-        oDoc.StartNoHistoryMode();
+        AscCommon.History.StartNoHistoryMode();
         AscPDF.fillShapeByPoints([aLinePoints], aShapeRectInMM, this);
-        oDoc.EndNoHistoryMode();
+        AscCommon.History.EndNoHistoryMode();
     };
     CAnnotationLine.prototype.SetLeaderLineOffset = function(nValue) {
         this._leaderLineOffset = nValue;
@@ -146,28 +143,12 @@
     CAnnotationLine.prototype.GetLeaderExtend = function() {
         return this._leaderExtend;
     };
-    CAnnotationLine.prototype.Recalculate = function(bForce) {
-        if (true !== bForce && false == this.IsNeedRecalc()) {
-            return;
-        }
-
-        if (this.recalcInfo.recalculateGeometry)
-            this.RefillGeometry();
-
-        this.recalculateTransform();
-        this.updateTransformMatrix();
-        this.recalculate();
-        this.SetNeedRecalc(false);
-    };
     CAnnotationLine.prototype.IsNeedRecalc = function() {
         return this._needRecalc;
     };
     CAnnotationLine.prototype.SetLinePoints = function(aPoints) {
-        let oViewer = editor.getDocumentRenderer();
-        let oDoc    = oViewer.getPDFDoc();
-        
         this.recalcGeometry();
-        oDoc.History.Add(new CChangesPDFLinePoints(this, this.GetLinePoints(), aPoints));
+        AscCommon.History.Add(new CChangesPDFLinePoints(this, this.GetLinePoints(), aPoints));
 
         this._points = aPoints;
     };
@@ -190,39 +171,18 @@
         oDrawingObjects.OnMouseDown(e, X, Y, pageObject.index);
         oDrawingObjects.startEditGeometry();
     };
-    CAnnotationLine.prototype.LazyCopy = function() {
-        let oDoc = this.GetDocument();
-        oDoc.StartNoHistoryMode();
+    CAnnotationLine.prototype.Copy = function(isForMove) {
+        let oCopy = AscPDF.CAnnotationBase.prototype.Copy.call(this, isForMove);
 
-        let oLine = new CAnnotationLine(AscCommon.CreateGUID(), this.GetOrigRect().slice(), oDoc);
+        let aRC = this.GetRichContents();
+        let aPoints = this.GetLinePoints();
+        
+        oCopy.SetLinePoints(aPoints.slice());
+        oCopy.SetLineEnd(this.GetLineEnd());
+        oCopy.SetLineStart(this.GetLineStart());
+        aRC && oCopy.SetRichContents(aRC.slice());
 
-        oLine.lazyCopy = true;
-
-        this.fillObject(oLine);
-
-        let aStrokeColor    = this.GetStrokeColor();
-        let aFillColor      = this.GetFillColor();
-        let aLinePoints     = this.GetLinePoints();
-
-        oLine._apIdx = this._apIdx;
-        oLine._originView = this._originView;
-        oLine.SetOriginPage(this.GetOriginPage());
-        oLine.SetAuthor(this.GetAuthor());
-        oLine.SetModDate(this.GetModDate());
-        oLine.SetCreationDate(this.GetCreationDate());
-        aStrokeColor && oLine.SetStrokeColor(aStrokeColor.slice());
-        oLine.SetWidth(this.GetWidth());
-        oLine.SetLineStart(this.GetLineStart());
-        oLine.SetLineEnd(this.GetLineEnd());
-        oLine.SetContents(this.GetContents());
-        aFillColor && oLine.SetFillColor(aFillColor.slice());
-        oLine.SetOpacity(this.GetOpacity());
-        aLinePoints && oLine.SetLinePoints(aLinePoints.slice());
-        oLine.recalcInfo.recalculateGeometry = true;
-        oLine.recalculate();
-
-        oDoc.EndNoHistoryMode();
-        return oLine;
+        return oCopy;
     };
     CAnnotationLine.prototype.IsLine = function() {
         return true;
@@ -289,25 +249,6 @@
 
         return calculateBoundingRectangle({x1: aPoints[0], y1: aPoints[1], x2: aPoints[2], y2: aPoints[3]}, shapeSizeAtStart, shapeSizeAtEnd);
     };
-    CAnnotationLine.prototype.SetRect = function(aOrigRect) {
-        let oViewer     = editor.getDocumentRenderer();
-        let oDoc        = oViewer.getPDFDoc();
-
-        oDoc.History.Add(new CChangesPDFAnnotRect(this, this.GetOrigRect(), aOrigRect));
-
-        this._origRect = aOrigRect;
-
-        let oXfrm = this.getXfrm();
-        if (oXfrm) {
-            oDoc.StartNoHistoryMode();
-            this.spPr.xfrm.setExtX([aOrigRect[2] - aOrigRect[0]] * g_dKoef_pt_to_mm);
-            this.spPr.xfrm.setExtY((aOrigRect[3] - aOrigRect[1]) * g_dKoef_pt_to_mm);
-            oDoc.EndNoHistoryMode();
-        }
-
-        this.SetNeedRecalc(true);
-        this.SetWasChanged(true);
-    };
     CAnnotationLine.prototype.SetStrokeColor = function(aColor) {
         AscCommon.History.Add(new CChangesPDFAnnotStroke(this, this.GetStrokeColor(), aColor));
 
@@ -317,14 +258,6 @@
         let oFill   = AscFormat.CreateSolidFillRGBA(oRGB.r, oRGB.g, oRGB.b, 255);
         let oLine   = this.spPr.ln;
         oLine.setFill(oFill);
-        this.handleUpdateLn();
-    };
-    CAnnotationLine.prototype.SetOpacity = function(value) {
-        this._opacity = value;
-        this.SetWasChanged(true);
-
-        let oLine = this.spPr.ln;
-        oLine.Fill.transparent = value * 100 * 2.55;
         this.handleUpdateLn();
     };
     CAnnotationLine.prototype.GetDrawing = function() {
@@ -558,6 +491,10 @@
         memory.Seek(nStartPos);
         memory.WriteLong(nEndPos - nStartPos);
         memory.Seek(nEndPos);
+
+        this.GetReplies().forEach(function(reply) {
+            (reply.IsChanged() || !memory.docRenderer) && reply.WriteToBinary(memory);
+        });
     };
 
     function getMinRect(aPoints) {

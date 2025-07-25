@@ -110,7 +110,7 @@
         this.SetNeedRecalc(false);
     };
     CListBoxField.prototype.RecalculateContentRect = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
 
         let X       = aOrigRect[0];
         let Y       = aOrigRect[1];
@@ -155,7 +155,7 @@
         if (!this.content)
             return;
 
-        let aRect = this.GetOrigRect();
+        let aRect = this.GetRect();
         if (!aRect) {
             return;
         }
@@ -285,8 +285,7 @@
             return;
         }
 
-        let oDoc = this.GetDocument();
-        oDoc.History.Add(new CChangesPDFListMultipleSelection(this, this._multipleSelection, bValue));
+        AscCommon.History.Add(new CChangesPDFListMultipleSelection(this, this._multipleSelection, bValue));
 
         this._multipleSelection = bValue;
         this.SetWasChanged(true);
@@ -754,7 +753,7 @@
         
         let oContentBounds  = this.content.GetContentBounds(0);
         let oContentRect    = this.getFormRelRect();
-        let aOrigRect       = this.GetOrigRect();
+        let aOrigRect       = this.GetRect();
 
         let nFormRotAngle = this.GetRotate();
         let dFrmW = oContentRect.W;
@@ -1130,10 +1129,9 @@
     };
     CListBoxField.prototype.SetCurIdxs = function(aIdxs) {
         if (this.IsWidget()) {
-            let oDoc = this.GetDocument();
-            oDoc.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetParentCurIdxs(), aIdxs));
+            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetParentCurIdxs(), aIdxs));
 
-            oDoc.History.StartNoHistoryMode();
+            AscCommon.History.StartNoHistoryMode();
             // сначала снимаем выделение с текущих
             let aCurIdxs = this.GetCurIdxs();
             for (let i = 0; i < aCurIdxs.length; i++) {
@@ -1147,8 +1145,8 @@
                 }
             }
             
-            oDoc.History.EndNoHistoryMode();
-            if (editor.getDocumentRenderer().IsOpenFormsInProgress)
+            AscCommon.History.EndNoHistoryMode();
+            if (Asc.editor.getDocumentRenderer().IsOpenFormsInProgress)
                 this.SetParentCurIdxs(aIdxs);
         }
         else {
@@ -1218,7 +1216,7 @@
         this.WriteToBinaryBase(memory);
         this.WriteToBinaryBase2(memory);
 
-        let value = this.GetParentValue(false);
+        let value = this.GetParentValue(memory.isCopyPaste);
         if (value != null && Array.isArray(value) == false) {
             memory.fieldDataFlags |= (1 << 9);
             memory.WriteString(value);
@@ -1247,7 +1245,7 @@
         // массив I (выделенные значения списка)
         let curIdxs;
         if ([AscPDF.FIELD_TYPES.combobox, AscPDF.FIELD_TYPES.listbox].includes(this.GetType())) {
-            curIdxs = this.GetParentCurIdxs(false);
+            curIdxs = this.GetParentCurIdxs(memory.isCopyPaste);
         }
         if (curIdxs) {
             memory.fieldDataFlags |= (1 << 14);
@@ -1257,18 +1255,21 @@
             }
         }
         
-        memory.fieldDataFlags |= (1 << 15);
+        // render
+        let nCurPos = memory.GetCurPosition();
         this.WriteRenderToBinary(memory);
+        if (nCurPos != memory.GetCurPosition())
+            memory.fieldDataFlags |= (1 << 15);
         
         //
         // top index
         //
 
-        if (this.IsMultipleSelection(false)) {
+        if (this.IsMultipleSelection(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 21);
         }
 
-        if (this.IsCommitOnSelChange(false)) {
+        if (this.IsCommitOnSelChange(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 26);
         }
 
@@ -1315,6 +1316,6 @@
     if (!window["AscPDF"])
 	    window["AscPDF"] = {};
         
-    window["AscPDF"].CListBoxField      = CListBoxField;
+    window["AscPDF"].CListBoxField = CListBoxField;
 })();
 

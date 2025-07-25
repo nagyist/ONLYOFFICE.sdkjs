@@ -158,7 +158,7 @@
 		this.compositeInput = null;
 		this.compositeReplaceCount = 0;
         this.Lock = new AscCommon.CLock();
-        this.meta = {};
+        this._meta = {};
         this.SetPartialName(sName);
         this.SetRect(aRect);
 
@@ -201,15 +201,12 @@
     };
 
     CBaseField.prototype.SetMeta = function(oMeta) {
-        AscCommon.History.Add(new CChangesPDFFormMeta(this, this.meta, oMeta))
+        AscCommon.History.Add(new CChangesPDFFormMeta(this, this._meta, oMeta))
 
-        this.meta = oMeta;
+        this._meta = oMeta;
     };
     CBaseField.prototype.GetMeta = function() {
-        return this.meta;
-    };
-    CBaseField.prototype.AddToChildsMap = function(nIdx) {
-        this.GetDocument().AddFieldToChildsMap(this, nIdx);
+        return this._meta;
     };
     /**
 	 * Can or not enter text into form.
@@ -370,7 +367,7 @@
         return this.contentClipRect;
     };
     CBaseField.prototype.getFormRect = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
 
         return {
             X : aOrigRect[0] * g_dKoef_pt_to_mm,
@@ -754,6 +751,76 @@
         
         return aActions;
     };
+    CBaseField.prototype.Copy = function() {
+        let oCopy;
+
+        switch (this.GetType()) {
+            case AscPDF.FIELD_TYPES.text: {
+                oCopy = new AscPDF.CTextField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            case AscPDF.FIELD_TYPES.combobox: {
+                oCopy = new AscPDF.CComboBoxField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            case AscPDF.FIELD_TYPES.listbox: {
+                oCopy = new AscPDF.CListboxField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            case AscPDF.FIELD_TYPES.button: {
+                oCopy = new AscPDF.CPushButtonField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            case AscPDF.FIELD_TYPES.checkbox: {
+                oCopy = new AscPDF.CCheckBoxField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            case AscPDF.FIELD_TYPES.radiobutton: {
+                oCopy = new AscPDF.CRadioButtonField(this.GetPartialName(), this.GetRect().slice());
+                break;
+            }
+            default: {
+                return null;
+            }
+        }
+
+        let oParent = this.GetParent();
+        if (oParent && oParent.IsAllKidsWidgets()) {
+            oCopy.DrainLogicFrom(oParent, false);
+            oCopy.SetPartialName(oParent.GetPartialName());
+        }
+        else {
+            oCopy.DrainLogicFrom(this, false);
+        }
+
+        let _t = this;
+
+        let aActions = [
+            AscPDF.FORMS_TRIGGERS_TYPES.MouseUp,
+            AscPDF.FORMS_TRIGGERS_TYPES.MouseDown,
+            AscPDF.FORMS_TRIGGERS_TYPES.MouseEnter,
+            AscPDF.FORMS_TRIGGERS_TYPES.MouseExit,
+            AscPDF.FORMS_TRIGGERS_TYPES.OnFocus,
+            AscPDF.FORMS_TRIGGERS_TYPES.OnBlur,
+        ]
+
+        Object.values(aActions).forEach(function(type) {
+            oCopy.SetActions(type, _t.GetActions(type));
+        });
+
+        oCopy.private_SetValue(this.GetParentValue());
+        oCopy.DrainViewPropsFrom(this);
+        return oCopy;
+    };
+    CBaseField.prototype.DrainViewPropsFrom = function(oField) {
+        this.SetTextColor(oField.GetTextColor());
+        this.SetTextFontActual(oField.GetTextFontActual());
+        this.SetTextSize(oField.GetTextSize());
+        this.SetBorderColor(oField.GetBorderColor());
+        this.SetBackgroundColor(oField.GetBackgroundColor());
+        this.SetBorderStyle(oField.GetBorderStyle());
+        this.SetBorderWidth(oField.GetBorderWidth());
+    };
     CBaseField.prototype.SetDocument = function(oDoc) {
         if (this._doc == oDoc) {
             return;
@@ -805,8 +872,7 @@
             }
             
             this.SetWasChanged(true);
-            let oDoc = this.GetDocument();
-            oDoc.History.Add(new CChangesPDFFormParentValue(this, this._value, value));
+            AscCommon.History.Add(new CChangesPDFFormParentValue(this, this._value, value));
             this._value = value;
         }
 
@@ -892,7 +958,7 @@
             indLeft = indLeft + (w - h) / 2;
         }
 
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
         let X = aOrigRect[0] * nScale + indLeft;
         let Y = aOrigRect[1] * nScale + indTop;
         let W = (aOrigRect[2] - aOrigRect[0]) * nScale;
@@ -933,7 +999,7 @@
         AscPDF.endMultiplyMode(oCtx);
     };
     CBaseField.prototype.DrawBorders = function(oGraphicsPDF) {
-        let aOringRect  = this.GetOrigRect();
+        let aOringRect  = this.GetRect();
         let aBgColor;
         if (this.GetType() == AscPDF.FIELD_TYPES.button)
             aBgColor = this.GetBackgroundColor() || [1];
@@ -1498,13 +1564,12 @@
     CBaseField.prototype.Refresh_RecalcData = function(){};
     CBaseField.prototype.SetWasChanged = function(isChanged) {
         let oViewer = Asc.editor.getDocumentRenderer();
-        let oDoc = Asc.editor.getPDFDoc();
-        let canChange = !oViewer.IsOpenFormsInProgress && !oDoc.History.UndoRedoInProgress;
+        let canChange = !oViewer.IsOpenFormsInProgress && !AscCommon.History.UndoRedoInProgress;
         if (this._wasChanged == isChanged || !canChange) {
             return;
         }
         
-        oDoc.History.Add(new CChangesPDFFormChanged(this, this._wasChanged, isChanged));
+        AscCommon.History.Add(new CChangesPDFFormChanged(this, this._wasChanged, isChanged));
 
         this._wasChanged = isChanged;
         this.IsWidget() && this.SetDrawFromStream(!isChanged);
@@ -1848,7 +1913,7 @@
     };
 
     CBaseField.prototype.DrawBackground = function(oGraphicsPDF) {
-        let aOrigRect       = this.GetOrigRect();
+        let aOrigRect       = this.GetRect();
         let aBgColor        = this.GetBackgroundColor();
         let oBgRGBColor;
 
@@ -2235,7 +2300,7 @@
 
         let originView = this.GetOriginView(nAPType, oGraphicsPDF.GetDrawingPageW(), oGraphicsPDF.GetDrawingPageH());
 
-        let aOringRect = this.GetOrigRect();
+        let aOringRect = this.GetRect();
 
         let X = aOringRect[0];
         let Y = aOringRect[1];
@@ -2409,7 +2474,7 @@
     CBaseField.prototype.SetRect = function(aOrigRect) {
         AscCommon.History.Add(new CChangesPDFFormRect(this, this.GetRect(), aOrigRect));
 
-        this._origRect = aOrigRect;
+        this._rect = aOrigRect;
         this.SetWasChanged(true);
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();
@@ -2452,11 +2517,8 @@
 
         this.SetRect(aNewRect);
     };
-    CBaseField.prototype.GetOrigRect = function() {
-        return this._origRect;
-    };
     CBaseField.prototype.GetRect = function() {
-        return this.GetOrigRect();
+        return this._rect;
     };
     CBaseField.prototype.GetWidth = function() {
         let aRect = this.GetRect();
@@ -2511,7 +2573,7 @@
         return this.GetPage();
     };
     CBaseField.prototype["getPagePos"] = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
         return {
             "x" : aOrigRect[0],
             "y" : aOrigRect[1],
@@ -2561,7 +2623,7 @@
         memory.WriteLong(this.GetOriginPage());
 
         // rect
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
         memory.WriteDouble(aOrigRect[0]); // x1
         memory.WriteDouble(aOrigRect[1]); // y1
         memory.WriteDouble(aOrigRect[2]); // x2
@@ -2581,6 +2643,31 @@
             if (nBorder == 2) {
                 memory.WriteLong(1); memory.WriteDouble(3);
             }
+        }
+
+        // meta data
+        let oMeta = this.GetMeta();
+        if (oMeta != null) {
+            annotFlags |= (1 << 9);
+            if (memory.isForSplit || memory.isCopyPaste) {
+                let oStyle = this.GetFontStyle();
+                let nStyle = 0;
+
+                if (oStyle.bold) {
+                    nStyle |= (1 << 0);
+                }
+                if (oStyle.italic) {
+                    nStyle |= (1 << 1);
+                }
+
+                oMeta["font"] = {
+                    "actual": this.GetTextFontActual(),
+                    "size": this.GetTextSize(),
+                    "style": nStyle,
+                    "color": this.GetTextColor()
+                }
+            }
+            memory.WriteString(JSON.stringify(oMeta));
         }
         
         // write flags
@@ -2991,13 +3078,6 @@
             memory.WriteString(sName);
         }
 
-        // meta data
-        let oMeta = this.GetMeta();
-        if (oMeta != null) {
-            memory.fieldDataFlags |= (1 << 20);
-            memory.WriteString(JSON.stringify(oMeta));
-        }
-
         // actions
         let aActions = this.GetListActions(false);
         memory.WriteLong(aActions.length);
@@ -3176,7 +3256,7 @@
     };
     CBaseField.prototype.WriteRenderToBinary = function(memory) {
         // пока только для text, combobox
-        if (false == [AscPDF.FIELD_TYPES.text, AscPDF.FIELD_TYPES.combobox, AscPDF.FIELD_TYPES.listbox].includes(this.GetType())) {
+        if (true == memory.isForSplit || memory.isCopyPaste || null == this.content) {
             return;
         }
 
