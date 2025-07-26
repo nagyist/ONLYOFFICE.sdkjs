@@ -1840,7 +1840,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	};
 	CHistory.prototype.startGroupPoints = function()
 	{
-		this.Create_NewPoint(AscDFH.historydescription_LongAction);
+		this.Create_NewPoint(AscDFH.historydescription_GroupPointsOpen);
 	};
 	CHistory.prototype.cancelGroupPoints = function()
 	{
@@ -1880,6 +1880,8 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 			return;
 		
 		let point = this.Points[startIndex];
+		point.Description = AscDFH.historydescription_GroupPoints;
+		
 		for (let i = startIndex + 1; i < this.Points.length; ++i)
 		{
 			point.Items = point.Items.concat(this.Points[i].Items);
@@ -1928,7 +1930,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	{
 		for (let i = this.Index; i >= 0; --i)
 		{
-			if (AscDFH.historydescription_LongAction === this.Points[i].Description)
+			if (AscDFH.historydescription_GroupPointsOpen === this.Points[i].Description)
 				return i;
 		}
 		

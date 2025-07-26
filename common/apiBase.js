@@ -5726,10 +5726,11 @@
 	{
 		++this.groupActionsCounter;
 		
+		AscCommon.History.startGroupPoints();
+		
 		if (this.groupActionsCounter > 1)
 			return;
 		
-		AscCommon.History.startGroupPoints();
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5766,12 +5767,13 @@
 			return;
 		
 		--this.groupActionsCounter;
+		AscCommon.History.cancelGroupPoints();
+		
 		if (this.groupActionsCounter > 0)
 			return;
 		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
-		AscCommon.History.cancelGroupPoints();
 	};
 	baseEditorsApi.prototype.endGroupActions = function()
 	{
@@ -5779,12 +5781,13 @@
 			return;
 		
 		--this.groupActionsCounter;
+		AscCommon.History.endGroupPoints();
+		
 		if (this.groupActionsCounter > 0)
 			return;
 		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
-		AscCommon.History.endGroupPoints();
 	};
 	baseEditorsApi.prototype.isGroupActions = function()
 	{
