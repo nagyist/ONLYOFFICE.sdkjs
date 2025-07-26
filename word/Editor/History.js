@@ -1853,7 +1853,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		this.UndoRedoInProgress = true;
 		
 		let point;
-		for (let i = this.Points.length - 1; i >= startIndex; --i)
+		for (let i = this.Index; i >= startIndex; --i)
 		{
 			point = this.Points[i];
 			this.private_UndoPoint(point, changes);
@@ -1864,6 +1864,9 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		
 		if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart)
 			window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide(true);
+		
+		this.Index = startIndex - 1;
+		this.ClearRedo()
 		
 		this.UndoRedoInProgress = false;
 		return changes;

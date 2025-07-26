@@ -5765,6 +5765,10 @@
 		if (!this.isGroupActions())
 			return;
 		
+		--this.groupActionsCounter;
+		if (this.groupActionsCounter > 0)
+			return;
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 		AscCommon.History.cancelGroupPoints();
