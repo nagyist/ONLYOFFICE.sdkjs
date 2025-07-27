@@ -23784,12 +23784,24 @@
 						nPosToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Pos : nPosToAdd;
 
 						// creting review add run
-						if (oDeleteReviewRun) {
+						if (oDeleteReviewRun)
+						{
 							let oPara = oDeleteReviewRun.Paragraph;
 							oRunToAdd = new ParaRun(oPara, false);
 							oRunToAdd.Set_Pr(oDeleteReviewRun.Pr.Copy(true));
 							oRunToAdd.SetReviewType(reviewtype_Add);
 							oPara.AddToContent(oPara.Content.indexOf(oDeleteReviewRun) + 1, oRunToAdd);
+							nPosToAdd = 0;
+						}
+						else if (isTrackRevisions && reviewtype_Add !== oRunToAdd.GetReviewType())
+						{
+							let runParent = oRunToAdd.GetParent();
+							let posInParent = oRunToAdd.GetPosInParent();
+							if (0 !== nPosToAdd)
+								oRunToAdd = oRunToAdd.Split2(nPosToAdd, runParent, posInParent++);
+
+							oRunToAdd.Split2(0, runParent, posInParent);
+							oRunToAdd.SetReviewType(reviewtype_Add);
 							nPosToAdd = 0;
 						}
 
