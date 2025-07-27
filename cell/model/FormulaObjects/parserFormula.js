@@ -5949,7 +5949,7 @@ _func.lookupBinarySearch = function ( sElem, arrayNoEmpty, isByRangeCall, regExp
 	} else if (cacheIndex !== undefined && typedArr[cacheIndex].v.value <= sElem.value) {
 		return typedArr[cacheIndex].i;
 	} else {
-		return -2;
+		return -1;
 	}
 };
 
