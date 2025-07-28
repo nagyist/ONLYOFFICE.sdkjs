@@ -180,6 +180,7 @@
 			"word/Editor/GraphicObjects/Format/GroupPrototype.js",
 			"word/Editor/GraphicObjects/Format/ChartSpacePrototype.js",
 			"common/Drawings/Format/GraphicFrame.js",
+			"common/Drawings/Format/Controls.js",
 			"common/Drawings/Format/LockedCanvas.js",
 			"word/Editor/GraphicObjects/GraphicObjects.js",
 			"word/Editor/GraphicObjects/GraphicPage.js",

@@ -14343,6 +14343,15 @@
 		}
 		return arrInks;
 	};
+	Worksheet.prototype.getDrawingControls = function () {
+		const arrControls = [];
+		this.handleDrawings(function (oDrawing) {
+			if (oDrawing.isControl()) {
+				arrControls.push(oDrawing);
+			}
+		});
+		return arrControls;
+	};
 
 
 //-------------------------------------------------------------------------------------------------

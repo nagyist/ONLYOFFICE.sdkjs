@@ -122,9 +122,6 @@
 	CControl.prototype.onMouseUp = function(oController, nX, nY) {
 		this.controller.onMouseUp(oController, nX, nY);
 	}
-	CControl.prototype.updateFromRanges = function(aRanges) {
-		this.controller.updateFromRanges(aRanges);
-	};
 	CControl.prototype.getTextRect = function () {
 		return this.controller.getTextRect();
 	};
@@ -146,6 +143,24 @@
 
 		}
 	}
+	CControl.prototype.getControlPr = function () {
+		return this.controlPr;
+	};
+	CControl.prototype.getFormControlPr = function () {
+		return this.formControlPr;
+	};
+	CControl.prototype.getChecked = function () {
+		return this.controller.getChecked();
+	}
+	CControl.prototype.copy = function (oPr) {
+		var copy = new CControl();
+		this.fillObject(copy, oPr);
+		copy.initController();
+		return copy;
+	};
+	CControl.prototype.applySpecialPasteProps = function (oPastedWb) {
+		this.controller.applySpecialPasteProps(oPastedWb);
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -161,8 +176,8 @@
 	CControlControllerBase.prototype.onMouseDown = function(oController, nX, nY) {};
 	CControlControllerBase.prototype.onMouseUp = function(oController, nX, nY) {};
 	CControlControllerBase.prototype.init = function() {};
-	CControlControllerBase.prototype.updateFromRanges = function(aRanges) {};
 	CControlControllerBase.prototype.getBodyPr = function() {return null;};
+	CControlControllerBase.prototype.applySpecialPasteProps = function(oPastedWb) {};
 	CControlControllerBase.prototype.getTextRect = function() {
 		return AscFormat.CShape.prototype.getTextRect.call(this.control);
 	};
@@ -243,12 +258,12 @@
 		graphics.RestoreGrState();
 	};
 	CCheckBoxController.prototype.isChecked = function() {
-		const oFormControlPr = this.getFormControlPr();
-		return oFormControlPr.checked === CFormControlPr_checked_checked;
+		const nCheckValue = this.getChecked();
+		return nCheckValue === CFormControlPr_checked_checked;
 	};
 	CCheckBoxController.prototype.isMixed = function() {
-		const oFormControlPr = this.getFormControlPr();
-		return oFormControlPr.checked === CFormControlPr_checked_mixed;
+		const nCheckValue = this.getChecked();
+		return nCheckValue === CFormControlPr_checked_mixed;
 	};
 	CCheckBoxController.prototype.isEmpty = function() {
 		return !(this.isChecked() || this.isMixed());
@@ -257,7 +272,7 @@
 		const oThis = this;
 		oController.checkObjectsAndCallback(function() {
 			const oFormControlPr = oThis.getFormControlPr();
-			if (oThis.isMixed() || oThis.isChecked()) {
+			if (!oThis.isEmpty()) {
 				oFormControlPr.setChecked(CFormControlPr_checked_unchecked);
 			} else {
 				oFormControlPr.setChecked(CFormControlPr_checked_checked);
@@ -277,21 +292,22 @@
 		}
 		return null;
 	};
-	CCheckBoxController.prototype.init = function() {
-		const oFormControlPr = this.getFormControlPr();
+	CCheckBoxController.prototype.getCheckedFromRange = function () {
 		const oRef = this.getParsedRef();
+		let nRetValue = null;
 		if (oRef) {
 			oRef._foreachNoEmpty(function(oCell) {
 				if (oCell) {
 					const bValue = oCell.getBoolValue();
 					if (oCell.type === AscCommon.CellValueType.Bool || oCell.type === AscCommon.CellValueType.Number) {
-						oFormControlPr.setChecked(bValue ? CFormControlPr_checked_checked : CFormControlPr_checked_unchecked);
+						nRetValue = bValue ? CFormControlPr_checked_checked : CFormControlPr_checked_unchecked;
 					} else if (oCell.type === AscCommon.CellValueType.Error) {
-						oFormControlPr.setChecked(CFormControlPr_checked_mixed);
+						nRetValue = CFormControlPr_checked_mixed;
 					}
 				}
 			});
 		}
+		return nRetValue;
 	};
 	CCheckBoxController.prototype.updateCellFromControl = function (oController) {
 		const oThis = this;
@@ -299,11 +315,12 @@
 		if (oRef) {
 			oRef._foreachNoEmpty(function(oCell) {
 				if (oCell) {
+					const oFormControlPr = oThis.getFormControlPr();
 					const oCellValue = new AscCommonExcel.CCellValue();
-					if (oThis.isChecked()) {
+					if (oFormControlPr.checked === CFormControlPr_checked_checked) {
 						oCellValue.type = AscCommon.CellValueType.Bool;
 						oCellValue.number = 1;
-					} else if (oThis.isMixed()) {
+					} else if (oFormControlPr.checked === CFormControlPr_checked_mixed) {
 						oCellValue.type = AscCommon.CellValueType.Error;
 						oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(cErrorType.not_available);
 					} else {
@@ -325,17 +342,6 @@
 			}
 		}
 	};
-	CCheckBoxController.prototype.updateFromRanges = function(aRanges) {
-		const oMainRange = this.getParsedRef();
-		if (oMainRange) {
-			for (let i = 0; i < aRanges.length; i += 1) {
-				const oRange = aRanges[i];
-				if (oRange.isIntersect(oMainRange)) {
-					this.init();
-				}
-			}
-		}
-	};
 	CCheckBoxController.prototype.getTextRect = function () {
 		const oTextRect = AscFormat.CShape.prototype.getTextRect.call(this.control);
 		oTextRect.l += CHECKBOX_OFFSET_X;
@@ -351,6 +357,17 @@
 	CCheckBoxController.prototype.setIsHold = function(pr) {
 		this.isHold = pr;
 	}
+	CCheckBoxController.prototype.getChecked = function () {
+		const nRangeValue = this.getCheckedFromRange();
+		if (nRangeValue !== null) {
+			return nRangeValue;
+		}
+		const oFormControlPr = this.getFormControlPr();
+		return oFormControlPr.getChecked();
+	};
+	CCheckBoxController.prototype.applySpecialPasteProps = function (oPastedWb) {
+		this.addExternalReferenceToEditor(oPastedWb);
+	};
 
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;

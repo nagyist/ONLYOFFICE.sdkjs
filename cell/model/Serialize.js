@@ -5058,7 +5058,7 @@
 							if (arrControls.length) {
 								this.bs.WriteItem(c_oSerWorksheetsTypes.Controls, function () {oThis.WriteControls(arrControls);});
 							}
-	            this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function () {oThis.WriteDrawings(ws.Drawings.length);});
+	            this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function () {oThis.WriteDrawings(ws.Drawings);});
             }
 
             if (ws.aComments.length > 0) {
@@ -6017,12 +6017,14 @@
 					oThis.memory.WriteByte(c_oSerControlTypes.Name);
 					oThis.memory.WriteString2(oControl.name);
 					}
-					this.WriteControlPr(oControl.controlPr, oControl.formControlPr);
+					this.WriteControlPr(oControl);
 					this.bs.WriteItem(c_oSerControlTypes.Shape, function() {
 						oThis.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oControl, null, null, null);});
 					});
 				};
-				this.WriteControlPr = function(oControlPr, oFormControlPr) {
+				this.WriteControlPr = function(oControl) {
+					const oControlPr = oControl.getControlPr();
+					const oFormControlPr = oControl.getFormControlPr();
 					const oThis = this;
 					if (oFormControlPr.objectType !== null) {
 						this.bs.WriteItem(c_oSerControlTypes.ObjectType, function() {
@@ -6103,7 +6105,8 @@
 							oThis.memory.WriteLong(oFormControlPr.dropLines);
 						});
 					}
-					if (oFormControlPr.checked !== null && oFormControlPr.checked !== AscFormat.CFormControlPr_checked_unchecked) {
+					const nChecked = oControl.getChecked();
+					if (nChecked !== null && nChecked !== AscFormat.CFormControlPr_checked_unchecked) {
 						this.bs.WriteItem(c_oSerControlTypes.Checked, function() {
 							oThis.memory.WriteByte(oFormControlPr.checked);
 						});

@@ -2501,7 +2501,6 @@
 							var g = new AscCommon.CGraphics();
 							g.init(_ctx, w_px, h_px, w_mm, h_mm);
 							g.m_oFontManager = AscCommon.g_fontManager;
-
 							g.m_oCoordTransform.tx = -_bounds_cheker.Bounds.min_x;
 							g.m_oCoordTransform.ty = -_bounds_cheker.Bounds.min_y;
 							g.transform(1, 0, 0, 1, 0, 0);
