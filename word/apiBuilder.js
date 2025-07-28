@@ -21918,19 +21918,6 @@
 	 */
 	ApiFormBase.prototype.GetClassType = function()
 	{
-		if (this instanceof ApiTextForm)
-			return "textForm";
-		else if (this instanceof ApiComboBoxForm)
-			return "comboBoxForm";
-		else if (this instanceof ApiDateForm)
-			return "dateForm";
-		else if (this instanceof ApiCheckBoxForm)
-			return "checkBoxForm";
-		else if (this instanceof ApiPictureForm)
-			return "pictureForm";
-		else if (this instanceof ApiComplexForm)
-			return "complexForm";
-		
 		return "form";
 	};
 	/**
@@ -22418,6 +22405,18 @@
 	//------------------------------------------------------------------------------------------------------------------
 
 	/**
+	 * Returns a type of the ApiTextForm class.
+	 * @memberof ApiTextForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.0.4
+	 * @returns {"textForm"}
+	 * @see office-js-api/Examples/{Editor}/ApiTextForm/Methods/GetClassType.js
+	 */
+	ApiTextForm.prototype.GetClassType = function()
+	{
+		return "textForm";
+	};
+	/**
 	 * Checks if the text field content is autofit, i.e. whether the font size adjusts to the size of the fixed size form.
 	 * @memberof ApiTextForm
 	 * @typeofeditors ["CDE", "CFE"]
@@ -22631,7 +22630,19 @@
 	// ApiPictureForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiPictureForm class.
+	 * @memberof ApiPictureForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"pictureForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiPictureForm/Methods/GetClassType.js
+	 */
+	ApiPictureForm.prototype.GetClassType = function()
+	{
+		return "pictureForm";
+	};
 	/**
 	 * Returns the current scaling condition of the picture form.
 	 * @memberof ApiPictureForm
@@ -22895,7 +22906,19 @@
 	// ApiComboBoxForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiComboBoxForm class.
+	 * @memberof ApiComboBoxForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"comboBoxForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiComboBoxForm/Methods/GetClassType.js
+	 */
+	ApiComboBoxForm.prototype.GetClassType = function()
+	{
+		return "comboBoxForm";
+	};
 	/**
 	 * Returns the list values from the current combo box.
 	 * @memberof ApiComboBoxForm
@@ -23023,7 +23046,19 @@
 	// ApiCheckBoxForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiCheckBoxForm class.
+	 * @memberof ApiCheckBoxForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"checkBoxForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiCheckBoxForm/Methods/GetClassType.js
+	 */
+	ApiCheckBoxForm.prototype.GetClassType = function()
+	{
+		return "checkBoxForm";
+	};
 	/**
 	 * Checks the current checkbox.
 	 * @memberof ApiCheckBoxForm
@@ -23141,6 +23176,18 @@
 	//
 	//------------------------------------------------------------------------------------------------------------------
 	
+	/**
+	 * Returns a type of the ApiDateForm class.
+	 * @memberof ApiDateForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"dateForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDateForm/Methods/GetClassType.js
+	 */
+	ApiDateForm.prototype.GetClassType = function()
+	{
+		return "dateForm";
+	};
 	/**
 	 * Gets the date format of the current form.
 	 * @memberof ApiDateForm
@@ -23318,7 +23365,19 @@
 	// ApiComplexForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiComplexForm class.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"form"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiComplexForm/Methods/GetClassType.js
+	 */
+	ApiComplexForm.prototype.GetClassType = function()
+	{
+		return "complexForm";
+	};
 	/**
 	 * Appends the text content of the given form to the end of the current complex form.
 	 * @memberof ApiComplexForm
@@ -26276,7 +26335,8 @@
 	ApiFormBase.prototype["SetTag"]             = ApiFormBase.prototype.SetTag;
 	ApiFormBase.prototype["GetRole"]            = ApiFormBase.prototype.GetRole;
 	ApiFormBase.prototype["SetRole"]            = ApiFormBase.prototype.SetRole;
-
+	
+	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;
 	ApiTextForm.prototype["IsMultiline"]         = ApiTextForm.prototype.IsMultiline;
@@ -26289,6 +26349,7 @@
 	ApiTextForm.prototype["SetText"]             = ApiTextForm.prototype.SetText;
 	ApiTextForm.prototype["Copy"]                = ApiTextForm.prototype.Copy;
 	
+	ApiPictureForm.prototype["GetClassType"]       = ApiPictureForm.prototype.GetClassType;
 	ApiPictureForm.prototype["GetScaleFlag"]       = ApiPictureForm.prototype.GetScaleFlag;
 	ApiPictureForm.prototype["SetScaleFlag"]       = ApiPictureForm.prototype.SetScaleFlag;
 	ApiPictureForm.prototype["SetLockAspectRatio"] = ApiPictureForm.prototype.SetLockAspectRatio;
@@ -26301,28 +26362,32 @@
 	ApiPictureForm.prototype["SetImage"]           = ApiPictureForm.prototype.SetImage;
 	ApiPictureForm.prototype["Copy"]               = ApiPictureForm.prototype.Copy;
 	
-	ApiDateForm.prototype["GetFormat"]   = ApiDateForm.prototype.GetFormat;
-	ApiDateForm.prototype["SetFormat"]   = ApiDateForm.prototype.SetFormat;
-	ApiDateForm.prototype["GetLanguage"] = ApiDateForm.prototype.GetLanguage;
-	ApiDateForm.prototype["SetLanguage"] = ApiDateForm.prototype.SetLanguage;
-	ApiDateForm.prototype["GetTime"]     = ApiDateForm.prototype.GetTime;
-	ApiDateForm.prototype["SetTime"]     = ApiDateForm.prototype.SetTime;
-	ApiDateForm.prototype["SetDate"]     = ApiDateForm.prototype.SetDate;
-	ApiDateForm.prototype["GetDate"]     = ApiDateForm.prototype.GetDate;
-	ApiDateForm.prototype["Copy"]        = ApiDateForm.prototype.Copy;
+	ApiDateForm.prototype["GetClassType"] = ApiDateForm.prototype.GetClassType;
+	ApiDateForm.prototype["GetFormat"]    = ApiDateForm.prototype.GetFormat;
+	ApiDateForm.prototype["SetFormat"]    = ApiDateForm.prototype.SetFormat;
+	ApiDateForm.prototype["GetLanguage"]  = ApiDateForm.prototype.GetLanguage;
+	ApiDateForm.prototype["SetLanguage"]  = ApiDateForm.prototype.SetLanguage;
+	ApiDateForm.prototype["GetTime"]      = ApiDateForm.prototype.GetTime;
+	ApiDateForm.prototype["SetTime"]      = ApiDateForm.prototype.SetTime;
+	ApiDateForm.prototype["SetDate"]      = ApiDateForm.prototype.SetDate;
+	ApiDateForm.prototype["GetDate"]      = ApiDateForm.prototype.GetDate;
+	ApiDateForm.prototype["Copy"]         = ApiDateForm.prototype.Copy;
 	
+	ApiComplexForm.prototype["GetClassType"] = ApiComplexForm.prototype.GetClassType;
 	ApiComplexForm.prototype["Add"]          = ApiComplexForm.prototype.Add;
 	ApiComplexForm.prototype["GetSubForms"]  = ApiComplexForm.prototype.GetSubForms;
 	ApiComplexForm.prototype["ClearContent"] = ApiComplexForm.prototype.ClearContent;
 	ApiComplexForm.prototype["Copy"]         = ApiComplexForm.prototype.Copy;
-
-	ApiComboBoxForm.prototype["GetListValues"]       = ApiComboBoxForm.prototype.GetListValues;
-	ApiComboBoxForm.prototype["SetListValues"]       = ApiComboBoxForm.prototype.SetListValues;
-	ApiComboBoxForm.prototype["SelectListValue"]     = ApiComboBoxForm.prototype.SelectListValue;
-	ApiComboBoxForm.prototype["SetText"]             = ApiComboBoxForm.prototype.SetText;
-	ApiComboBoxForm.prototype["IsEditable"]          = ApiComboBoxForm.prototype.IsEditable;
-	ApiComboBoxForm.prototype["Copy"]                = ApiComboBoxForm.prototype.Copy;
-
+	
+	ApiComboBoxForm.prototype["GetClassType"]    = ApiComboBoxForm.prototype.GetClassType;
+	ApiComboBoxForm.prototype["GetListValues"]   = ApiComboBoxForm.prototype.GetListValues;
+	ApiComboBoxForm.prototype["SetListValues"]   = ApiComboBoxForm.prototype.SetListValues;
+	ApiComboBoxForm.prototype["SelectListValue"] = ApiComboBoxForm.prototype.SelectListValue;
+	ApiComboBoxForm.prototype["SetText"]         = ApiComboBoxForm.prototype.SetText;
+	ApiComboBoxForm.prototype["IsEditable"]      = ApiComboBoxForm.prototype.IsEditable;
+	ApiComboBoxForm.prototype["Copy"]            = ApiComboBoxForm.prototype.Copy;
+	
+	ApiCheckBoxForm.prototype["GetClassType"]  = ApiCheckBoxForm.prototype.GetClassType;
 	ApiCheckBoxForm.prototype["SetChecked"]    = ApiCheckBoxForm.prototype.SetChecked;
 	ApiCheckBoxForm.prototype["IsChecked"]     = ApiCheckBoxForm.prototype.IsChecked;
 	ApiCheckBoxForm.prototype["IsRadioButton"] = ApiCheckBoxForm.prototype.IsRadioButton;
