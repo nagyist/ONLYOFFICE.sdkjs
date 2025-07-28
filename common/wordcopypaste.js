@@ -3779,7 +3779,7 @@ PasteProcessor.prototype =
 		}
 
 		window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-		this.pasteCallback && this.pasteCallback(bInsert);
+		return bInsert;
 	},
 
 	_setSpecialPasteShowOptionsPresentation: function(props){
@@ -7018,6 +7018,9 @@ PasteProcessor.prototype =
 		var fPasteTextPresentationCallback = function () {
 			var executePastePresentation = function () {
 				oThis.InsertInPlacePresentation(oThis.aContent, true);
+				if (oThis.pasteCallback) {
+					oThis.pasteCallback(true);
+				}
 			};
 
 			var presentation = editor.WordControl.m_oLogicDocument;
