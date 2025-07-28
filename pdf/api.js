@@ -257,6 +257,34 @@
 		let oActiveAnnot	= oDoc.mouseDownAnnot;
 		let oActiveDrawing	= oDoc.activeDrawing;
 
+		function processClipboardData(oContent, _formats, _clipboard) {
+			let sText = oContent ? oContent.GetSelectedText(false) : "";
+			let _data, sBase64;
+		
+			// Text
+			if (AscCommon.c_oAscClipboardDataFormat.Text & _formats) {
+				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
+			}
+			// HTML
+			if (AscCommon.c_oAscClipboardDataFormat.Html & _formats) {
+				let oCopyProcessor = new AscCommon.CopyProcessor(this);
+				sBase64 = oCopyProcessor.Start();
+				_data = oCopyProcessor.getInnerHtml();
+		
+				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, _data);
+			}
+			// INTERNAL
+			if (AscCommon.c_oAscClipboardDataFormat.Internal & _formats) {
+				if (!sBase64) {
+					let oCopyProcessor = new AscCommon.CopyProcessor(this);
+					sBase64 = oCopyProcessor.Start();
+				}
+		
+				_data = sBase64;
+				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Internal, _data);
+			}
+		}
+
 		if (oThumbnails && oThumbnails.isInFocus) {
 			if (!oDoc.Viewer.file || oDoc.Viewer.file.type !== 0)
 				return;
@@ -286,56 +314,39 @@
 			return;
 		}
 		
-		if (oActiveForm && oActiveForm.content && oActiveForm.content.IsSelectionUse()) {
-			let sText = oActiveForm.content.GetSelectedText(false, {ParaSeparator: ""});
-			if (!sText)
-				return;
+		if (oActiveForm) {
+			if (oActiveForm.content && oActiveForm.content.IsSelectionUse()) {
+				let sText = oActiveForm.content.GetSelectedText(false, {ParaSeparator: ""});
+				if (!sText)
+					return;
 
-			if (AscCommon.c_oAscClipboardDataFormat.Text & _formats)
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
+				if (AscCommon.c_oAscClipboardDataFormat.Text & _formats)
+					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
 
-			if (AscCommon.c_oAscClipboardDataFormat.Html & _formats)
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, "<div><p><span>" + sText + "</span></p></div>");
+				if (AscCommon.c_oAscClipboardDataFormat.Html & _formats)
+					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, "<div><p><span>" + sText + "</span></p></div>");
+			}
+			else {
+				processClipboardData.call(this, null, _formats, _clipboard);
+			}
 		}
-		else if (oActiveAnnot && oActiveAnnot.IsFreeText() && oActiveAnnot.IsInTextBox()) {
-			let sText = oActiveAnnot.GetDocContent().GetSelectedText(false, {ParaSeparator: ""});
-			if (!sText)
-				return;
-
-			if (AscCommon.c_oAscClipboardDataFormat.Text & _formats)
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
-
-			if (AscCommon.c_oAscClipboardDataFormat.Html & _formats)
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, "<div><p><span>" + sText + "</span></p></div>");
-		}
-		else if (oActiveDrawing) {
+		if (oActiveAnnot) {
+			if (oActiveAnnot.IsFreeText() && oActiveAnnot.IsInTextBox()) {
+				let sText = oActiveAnnot.GetDocContent().GetSelectedText(false, { NewLine: true });
+				if (!sText) return;
+		
+				if (AscCommon.c_oAscClipboardDataFormat.Text & _formats)
+					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
+		
+				if (AscCommon.c_oAscClipboardDataFormat.Html & _formats)
+					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, `<div><p><span>${sText}</span></p></div>`);
+			} else if (!oActiveAnnot.IsTextMarkup()) {
+				let oContent = oActiveAnnot.GetDocContent();
+				processClipboardData.call(this, oContent, _formats, _clipboard);
+			}
+		} else if (oActiveDrawing) {
 			let oContent = oActiveDrawing.GetDocContent();
-			let sText = oContent ? oContent.GetSelectedText(false) : "";
-			let _data, sBase64;
-
-			// text
-			if (AscCommon.c_oAscClipboardDataFormat.Text & _formats) {
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
-			}
-			//HTML
-			if (AscCommon.c_oAscClipboardDataFormat.Html & _formats) {
-				var oCopyProcessor = new AscCommon.CopyProcessor(this);
-				sBase64            = oCopyProcessor.Start();
-				_data              = oCopyProcessor.getInnerHtml();
-	
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, _data)
-			}
-			//INTERNAL
-			if (AscCommon.c_oAscClipboardDataFormat.Internal & _formats) {
-				if (sBase64 === null)
-				{
-					var oCopyProcessor = new AscCommon.CopyProcessor(this);
-					sBase64            = oCopyProcessor.Start();
-				}
-	
-				_data = sBase64;
-				_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Internal, _data)
-			}
+			processClipboardData.call(this, oContent, _formats, _clipboard);
 		}
 		else {
 			let _text_object = {Text: ""};
@@ -414,21 +425,15 @@
 			});
 			return;
 		}
-
-		let oDoc			= this.DocumentRenderer.getPDFDoc();
-		let data			= typeof(text_data) == "string" ? text_data : data1;
-		let oActiveDrawing	= oDoc.activeDrawing;
+		
+		let oDoc = this.DocumentRenderer.getPDFDoc();
+		let data = typeof(text_data) == "string" ? text_data : data1;
 
 		oDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
 		
 		this.needPasteText = false; // если не вставили бинарник, то вставляем текст
 		// пока что копирование бинарником только внутри drawings или самих drawings
-		if ([AscCommon.c_oAscClipboardDataFormat.Internal, AscCommon.c_oAscClipboardDataFormat.HtmlElement, AscCommon.c_oAscClipboardDataFormat.Text].includes(_format) && ((oDoc.GetActiveObject() == null) || oActiveDrawing)) {
-			if (this.isRestrictionView()) {
-				oDoc.FinalizeAction(true)
-				return;
-			}
-
+		if ([AscCommon.c_oAscClipboardDataFormat.Internal, AscCommon.c_oAscClipboardDataFormat.HtmlElement, AscCommon.c_oAscClipboardDataFormat.Text].includes(_format)) {
 			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start(arguments[5]);
 			AscCommon.Editor_Paste_Exec(this, _format, data1, data2, text_data, undefined, callback);
 		}
@@ -905,18 +910,24 @@
 
 		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new AscCommon.asc_CSelectedObject(Asc.c_oAscTypeSelectElement.Annot, obj);
 	};
-	PDFEditorApi.prototype.sync_fieldPropCallback = function(field) {
-		var obj = AscPDF.CreateAscFieldPropFromObj(field);
+	PDFEditorApi.prototype.sync_fieldPropCallback = function(aFields) {
+		let aFieldsProps = aFields.map(function(field) {
+			return AscPDF.CreateAscFieldPropFromObj(field);
+		});
 
-		var _len = this.SelectedObjectsStack.length;
+		for (let i = 1; i < aFieldsProps.length; i++) {
+			aFieldsProps[0].compare(aFieldsProps[i]);
+		}
+
+		let _len = this.SelectedObjectsStack.length;
 		if (_len > 0) {
 			if (this.SelectedObjectsStack[_len - 1].Type == Asc.c_oAscTypeSelectElement.Field) {
-				this.SelectedObjectsStack[_len - 1].Value = obj;
+				this.SelectedObjectsStack[_len - 1].Value = aFieldsProps[0];
 				return;
 			}
 		}
 
-		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new AscCommon.asc_CSelectedObject(Asc.c_oAscTypeSelectElement.Field, obj);
+		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new AscCommon.asc_CSelectedObject(Asc.c_oAscTypeSelectElement.Field, aFieldsProps[0]);
 	};
 	PDFEditorApi.prototype.sync_pagePropCallback = function(pageInfo) {
 		let obj = AscPDF.CreateAscPagePropFromObj(pageInfo);
@@ -1447,6 +1458,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1487,6 +1501,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1527,6 +1544,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1567,6 +1587,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1607,6 +1630,9 @@
 				}
 
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
 				
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -1647,6 +1673,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetArbitaryMask(sMask);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1676,6 +1706,10 @@
 				}
 				
 				oField.ClearFormat();
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					return false;
+				}
+
 				oField.SetRegularExp(sReg);
 				if (oField.IsCanCommit()) {
 					oField.Commit();
@@ -1704,6 +1738,11 @@
 					return false;
 				}
 				
+				if (oField.IsMultiline && oField.IsMultiline()) {
+					oField.ClearFormat();
+					return false;
+				}
+
 				let bGreaterThan	= nGreaterThan != undefined;
 				let bLessThan		= nLessThan != undefined;
 
@@ -2038,6 +2077,24 @@
 			return true;
         }, AscDFH.historydescription_Pdf_ChangeField);
 	};
+	PDFEditorApi.prototype.SetFieldTooltip = function(sTooltip) {
+		let oDoc = this.getPDFDoc();
+		let oController = oDoc.GetController();
+		let oForm = oDoc.activeForm;
+
+		if (!oForm) {
+			return false;
+		}
+
+		return oDoc.DoAction(function() {
+			oController.selectedObjects.forEach(function(shape) {
+				let field = shape.GetEditField();
+				field.SetTooltip(sTooltip);
+			});
+
+			return true;
+        }, AscDFH.historydescription_Pdf_ChangeField);
+	};
 	PDFEditorApi.prototype.SetFieldRotate = function(nAngle) {
 		let oDoc = this.getPDFDoc();
 		let oController = oDoc.GetController();
@@ -2138,6 +2195,26 @@
 				let field = shape.GetEditField();
 				if (AscPDF.FIELD_TYPES.text == field.GetType()) {
 					field.SetDoNotScroll(!bValue);
+				}
+			});
+
+			return true;
+        }, AscDFH.historydescription_Pdf_ChangeField);
+	};
+	PDFEditorApi.prototype.SetTextFieldPassword = function(bPassword) {
+		let oDoc = this.getPDFDoc();
+		let oController = oDoc.GetController();
+		let oForm = oDoc.activeForm;
+
+		if (!oForm) {
+			return false;
+		}
+
+		return oDoc.DoAction(function() {
+			oController.selectedObjects.forEach(function(shape) {
+				let field = shape.GetEditField();
+				if (AscPDF.FIELD_TYPES.text == field.GetType()) {
+					field.SetPassword(bPassword);
 				}
 			});
 
@@ -3335,7 +3412,12 @@
 						return;
 					}
 
-					if (oOptionObject.GetType && oOptionObject.GetType() === AscPDF.FIELD_TYPES.button) {
+					if (Array.isArray(oOptionObject)) {
+						oOptionObject.forEach(function(buttonField) {
+							buttonField.AddImage(oImage, buttonField.asc_curImageState);
+						});
+					}
+					else if (oOptionObject.GetType && oOptionObject.GetType() === AscPDF.FIELD_TYPES.button) {
 						oOptionObject.AddImage(oImage, oOptionObject.asc_curImageState);
 					}
 					else if (oOptionObject.isStamp) {
@@ -4081,7 +4163,7 @@
 		
 
 		if (oDoc.mouseDownAnnot) {
-			let aRect = oDoc.mouseDownAnnot.GetOrigRect();
+			let aRect = oDoc.mouseDownAnnot.GetRect();
 			let oPos = AscPDF.GetGlobalCoordsByPageCoords(aRect[2], aRect[1] + (aRect[3] - aRect[1]) / 2, nPage);
 			return new AscCommon.asc_CRect(oPos["X"], oPos["Y"], 0, 0);
 		}
@@ -4737,12 +4819,14 @@
 	PDFEditorApi.prototype['SetFieldReadOnly']			= PDFEditorApi.prototype.SetFieldReadOnly;
 	PDFEditorApi.prototype['SetFieldDefaultValue']		= PDFEditorApi.prototype.SetFieldDefaultValue;
 	PDFEditorApi.prototype['SetFieldLocked']			= PDFEditorApi.prototype.SetFieldLocked;
+	PDFEditorApi.prototype['SetFieldTooltip']			= PDFEditorApi.prototype.SetFieldTooltip;
 	PDFEditorApi.prototype['SetFieldRotate']			= PDFEditorApi.prototype.SetFieldRotate;
 	// text field
 	PDFEditorApi.prototype['SetTextFieldMultiline']		= PDFEditorApi.prototype.SetTextFieldMultiline;
 	PDFEditorApi.prototype['SetTextFieldCharLimit']		= PDFEditorApi.prototype.SetTextFieldCharLimit;
 	PDFEditorApi.prototype['SetTextFieldComb']			= PDFEditorApi.prototype.SetTextFieldComb;
-	PDFEditorApi.prototype['SetTextFieldScrollLongText']= PDFEditorApi.prototype.SetTextFieldScrollLongText;
+	PDFEditorApi.prototype['SetTextFieldScrollLongText']= PDFEditorApi.prototype.SetTextFieldScrollLongText
+	PDFEditorApi.prototype['SetTextFieldPassword']		= PDFEditorApi.prototype.SetTextFieldPassword;
 	PDFEditorApi.prototype['SetFieldPlaceholder']		= PDFEditorApi.prototype.SetFieldPlaceholder;
 	PDFEditorApi.prototype['SetFieldAutoFit']			= PDFEditorApi.prototype.SetFieldAutoFit;
 	// baselist field

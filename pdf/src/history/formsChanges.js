@@ -56,6 +56,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_No_Export]		= CChangesPDFFormN
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Border_Width]		= CChangesPDFFormBorderWidth;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Locked]			= CChangesPDFFormLocked;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Rotate]			= CChangesPDFFormRotate;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Tooltip]			= CChangesPDFFormTooltip;
 
 // text
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Multiline]			= CChangesPDFTextFormMultiline;
@@ -646,7 +647,7 @@ CChangesPDFFormMeta.prototype.Type = AscDFH.historyitem_Pdf_Form_Meta;
 CChangesPDFFormMeta.prototype.private_SetValue = function(Value)
 {
 	var oField = this.Class;
-	oField.SetMeta(Value);
+	oField._meta = Value;
 };
 
 CChangesPDFFormMeta.prototype.WriteToBinary = function(Writer)
@@ -797,6 +798,24 @@ CChangesPDFFormRotate.prototype.private_SetValue = function(Value)
 	oForm.SetRotate(Value);
 };
 
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseStringProperty}
+ */
+function CChangesPDFFormTooltip(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormTooltip.prototype = Object.create(AscDFH.CChangesBaseStringProperty.prototype);
+CChangesPDFFormTooltip.prototype.constructor = CChangesPDFFormTooltip;
+CChangesPDFFormTooltip.prototype.Type = AscDFH.historyitem_Pdf_Form_Tooltip;
+CChangesPDFFormTooltip.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._tooltip = Value;
+	oForm.AddToRedraw();
+};
+
 
 //------------------------------------------------------------------------------------------------------------------
 //
@@ -903,7 +922,11 @@ CChangesPDFTextFormPassword.prototype.Type = AscDFH.historyitem_Pdf_Text_Form_Pa
 CChangesPDFTextFormPassword.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetPassword(Value);
+	oForm._password = Value;
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.private_NeedShapeText();
+		widget.SetNeedRecalc(true);
+	});
 };
 
 /**

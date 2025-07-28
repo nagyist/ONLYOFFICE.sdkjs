@@ -52,6 +52,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Fill]			= CChangesPDFAnnotFil
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_StrokeWidth]		= CChangesPDFAnnotStrokeWidth;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Opacity]			= CChangesPDFAnnotOpacity;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Comment_Data]			= CChangesPDFCommentData;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Comment_Icon]			= CChangesPDFCommentIcon;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Ink_Points]			= CChangesPDFInkPoints;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Quads]			= CChangesPDFAnnotQuads;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Ink_FlipV]				= CChangesPDFInkFlipV;
@@ -59,12 +60,17 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Ink_FlipH]				= CChangesPDFInkFlipH
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Line_Points]			= CChangesPDFLinePoints;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Changed]			= CChangesPDFAnnotChanged;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Changed_View]	= CChangesPDFAnnotChangedView;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Border_Effect]	= CChangesPDFAnnotBorderEffect;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Border_Intensity]= CChangesPDFAnnotBorderIntensity;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Border_Dash]		= CChangesPDFAnnotBorderDash;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Border_Type]		= CChangesPDFAnnotBorderDash;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Meta]			= CChangesPDFAnnotMeta;
+
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_CL]			= CChangesFreeTextCallout;
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_RC]			= CChangesPDFFreeTextRC;
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_Align]			= CChangesPDFFreeTextAlign;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_Type]						= CChangesPDFAnnotStampType;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_InRect]						= CChangesPDFAnnotStampInRect;
-AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_Rect]						= CChangesPDFAnnotStampRect;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_RenderStructure]				= AscDFH.CChangesDrawingsObjectNoId;
 
 AscDFH.drawingsChangesMap[AscDFH.historyitem_Pdf_Stamp_RenderStructure] = function(oClass, value) {
@@ -94,7 +100,24 @@ CChangesPDFCommentData.prototype.private_CreateObject = function()
 
 /**
  * @constructor
- * @extends {AscDFH.CChangesPDFArrayOfDoubleProperty}
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFCommentIcon(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFCommentIcon.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFCommentIcon.prototype.constructor = CChangesPDFCommentIcon;
+CChangesPDFCommentIcon.prototype.Type = AscDFH.historyitem_Pdf_Comment_Icon;
+CChangesPDFCommentIcon.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot.SetIconType(Value);
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesAnnotArrayOfDoubleProperty}
  */
 function CChangesPDFInkPoints(Class, Pos, Items, isAdd) {
 	AscDFH.CChangesBaseContentChange.call(this, Class, Pos, Items, isAdd);
@@ -404,7 +427,10 @@ CChangesPDFAnnotRect.prototype.Type = AscDFH.historyitem_Pdf_Annot_Rect;
 CChangesPDFAnnotRect.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetRect(Value);
+	oAnnot._rect = Value;
+
+	oAnnot.SetNeedRecalcSizes(true);
+	oAnnot.SetNeedRecalc(true);
 };
 
 /**
@@ -489,12 +515,14 @@ CChangesPDFAnnotRD.prototype.Type = AscDFH.historyitem_Pdf_Annot_RD;
 CChangesPDFAnnotRD.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetRectangleDiff(Value);
+	oAnnot._rectDiff = Value;
+	oAnnot.SetNeedRecalcSizes && oAnnot.SetNeedRecalcSizes(true);
+	oAnnot.recalcGeometry();
 };
 
 /**
  * @constructor
- * @extends {AscDFH.CChangesPDFArrayOfDoubleProperty}
+ * @extends {AscDFH.CChangesAnnotArrayOfDoubleProperty}
  */
 function CChangesFreeTextCallout(Class, Old, New, Color)
 {
@@ -876,40 +904,6 @@ CChangesPDFAnnotStampInRect.prototype.private_SetValue = function(Value)
 
 /**
  * @constructor
- * @extends {AscDFH.CChangesPDFArrayOfDoubleProperty}
- */
-function CChangesPDFAnnotStampRect(Class, Old, New, isOnRotate, Color)
-{
-	AscDFH.CChangesPDFArrayOfDoubleProperty.call(this, Class, Old, New, isOnRotate, Color);
-	this.isOnRotate = !!isOnRotate;
-}
-CChangesPDFAnnotStampRect.prototype = Object.create(AscDFH.CChangesPDFArrayOfDoubleProperty.prototype);
-CChangesPDFAnnotStampRect.prototype.constructor = CChangesPDFAnnotStampRect;
-CChangesPDFAnnotStampRect.prototype.Type = AscDFH.historyitem_Pdf_Stamp_Rect;
-CChangesPDFAnnotStampRect.prototype.private_SetValue = function(Value)
-{
-	let oAnnot = this.Class;
-	oAnnot._origRect = Value;
-};
-
-CChangesPDFAnnotStampRect.prototype.WriteToBinary = function(Writer)
-{
-	AscDFH.CChangesPDFArrayOfDoubleProperty.prototype.WriteToBinary.call(this, Writer);
-	Writer.WriteBool(this.isOnRotate);
-};
-CChangesPDFAnnotStampRect.prototype.ReadFromBinary = function(Reader)
-{
-	AscDFH.CChangesPDFArrayOfDoubleProperty.prototype.ReadFromBinary.call(this, Reader);
-	this.isOnRotate = Reader.GetBool();
-};
-
-CChangesPDFAnnotStampRect.prototype.Load = function(){
-	this.Redo();
-	this.RefreshRecalcData();
-};
-
-/**
- * @constructor
  * @extends {AscDFH.CChangesBaseLongProperty}
  */
 function CChangesPDFAnnotApIdx(Class, Old, New, Color)
@@ -961,23 +955,19 @@ CChangesPDFLinePoints.prototype.private_SetValue = function(Value)
 
 /**
  * @constructor
- * @extends {AscDFH.CChangesPDFArrayOfDoubleProperty}
+ * @extends {AscDFH.CChangesBaseBoolProperty}
  */
 function CChangesPDFAnnotChanged(Class, Old, New, Color)
 {
-	AscDFH.CChangesPDFArrayOfDoubleProperty.call(this, Class, Old, New, Color);
+	AscDFH.CChangesBaseBoolProperty.call(this, Class, Old, New, Color);
 }
-CChangesPDFAnnotChanged.prototype = Object.create(AscDFH.CChangesPDFArrayOfDoubleProperty.prototype);
+CChangesPDFAnnotChanged.prototype = Object.create(AscDFH.CChangesBaseBoolProperty.prototype);
 CChangesPDFAnnotChanged.prototype.constructor = CChangesPDFAnnotChanged;
 CChangesPDFAnnotChanged.prototype.Type = AscDFH.historyitem_Pdf_Annot_Changed;
 CChangesPDFAnnotChanged.prototype.private_SetValue = function(Value)
 {
 	let Annot = this.Class;
-	Annot._wasChanged = !!Value[0];
-	if (false != Value[1]) {
-		Annot.SetDrawFromStream(!Value[0]);
-	}
-	
+	Annot._wasChanged = Value;
 	Annot.AddToRedraw();
 };
 
@@ -998,3 +988,149 @@ CChangesPDFAnnotChangedView.prototype.private_SetValue = function(Value)
 	Annot._bDrawFromStream = Value;
 	Annot.AddToRedraw();
 };
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFAnnotBorderEffect(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotBorderEffect.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFAnnotBorderEffect.prototype.constructor = CChangesPDFAnnotBorderEffect;
+CChangesPDFAnnotBorderEffect.prototype.Type = AscDFH.historyitem_Pdf_Annot_Border_Effect;
+CChangesPDFAnnotBorderEffect.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._borderEffectStyle = Value;
+	oAnnot.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseDoubleProperty}
+ */
+function CChangesPDFAnnotBorderIntensity(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseDoubleProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotBorderIntensity.prototype = Object.create(AscDFH.CChangesBaseDoubleProperty.prototype);
+CChangesPDFAnnotBorderIntensity.prototype.constructor = CChangesPDFAnnotBorderIntensity;
+CChangesPDFAnnotBorderIntensity.prototype.Type = AscDFH.historyitem_Pdf_Annot_Border_Intensity;
+CChangesPDFAnnotBorderIntensity.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._borderEffectIntensity = Value;
+	oAnnot.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesPDFArrayOfDoubleProperty}
+ */
+function CChangesPDFAnnotBorderDash(Class, Old, New, Color)
+{
+	AscDFH.CChangesPDFArrayOfDoubleProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotBorderDash.prototype = Object.create(AscDFH.CChangesPDFArrayOfDoubleProperty.prototype);
+CChangesPDFAnnotBorderDash.prototype.constructor = CChangesPDFAnnotBorderDash;
+CChangesPDFAnnotBorderDash.prototype.Type = AscDFH.historyitem_Pdf_Annot_Border_Dash;
+CChangesPDFAnnotBorderDash.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._dash = Value;
+	oAnnot.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFAnnotBorderType(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotBorderType.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFAnnotBorderType.prototype.constructor = CChangesPDFAnnotBorderType;
+CChangesPDFAnnotBorderType.prototype.Type = AscDFH.historyitem_Pdf_Annot_Border_Type;
+CChangesPDFAnnotBorderType.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._border = Value;
+	oAnnot.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseProperty}
+ */
+function CChangesPDFAnnotMeta(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotMeta.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
+CChangesPDFAnnotMeta.prototype.constructor = CChangesPDFAnnotMeta;
+CChangesPDFAnnotMeta.prototype.Type = AscDFH.historyitem_Pdf_Annot_Meta;
+CChangesPDFAnnotMeta.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._meta = Value;
+};
+CChangesPDFAnnotMeta.prototype.WriteToBinary = function(Writer)
+{
+	// Long  : Flag
+	// 1-bit : Подсвечивать ли данные изменения
+	// 2-bit : IsUndefined New
+	// 3-bit : IsUndefined Old
+	// string : New
+	// string : Old
+
+	let nFlags = 0;
+
+	if (false !== this.Color)
+		nFlags |= 1;
+
+	if (undefined === this.New)
+		nFlags |= 2;
+
+	if (undefined === this.Old)
+		nFlags |= 4;
+
+	Writer.WriteLong(nFlags);
+
+	if (undefined !== this.New) {
+		Writer.WriteString2(JSON.stringify(this.New));
+	}
+		
+	if (undefined !== this.Old) {
+		Writer.WriteString2(JSON.stringify(this.Old));
+	}
+};
+CChangesPDFAnnotMeta.prototype.ReadFromBinary = function(Reader)
+{
+	// Long  : Flag
+	// 1-bit : Подсвечивать ли данные изменения
+	// 2-bit : IsUndefined New
+	// 3-bit : IsUndefined Old
+	// string : New
+	// string : Old
+
+	let nFlags = Reader.GetLong();
+
+	if (nFlags & 1)
+		this.Color = true;
+	else
+		this.Color = false;
+
+	if (nFlags & 2)
+		this.New = undefined;
+	else
+		this.New = JSON.parse(Reader.GetString2());
+
+	if (nFlags & 4)
+		this.Old = undefined;
+	else
+		this.Old = JSON.parse(Reader.GetString2());
+};
+

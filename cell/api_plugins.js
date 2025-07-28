@@ -43,6 +43,14 @@
 	var Api = window["Asc"]["spreadsheet_api"];
 
 	/**
+	 * @typedef {Object} comment
+	 * Comment object.
+	 * @property {string} Id - The comment ID.
+	 * @property {CommentData} Data - An object which contains the comment data.
+	 * @see office-js-api/Examples/Plugins/{Editor}/Enumeration/comment.js
+	 */
+	
+	/**
 	 * @typedef {Object} CommentData
 	 * The comment data.
 	 * @property {string} UserName - The comment author.
@@ -169,12 +177,13 @@
 		if (undefined === obj)
 			obj = AscCommon.getLocalStorageItem(customFunctionsStorageId);
 
+		obj = AscCommonExcel.mergeCustomFunctions(obj, true);
+
 		if (!obj)
 			return;
 
 		this.clearCustomFunctions();
 
-		obj = AscCommonExcel.mergeCustomFunctions(obj, true);
 		let arr = obj["macrosArray"];
 		if (arr)
 		{

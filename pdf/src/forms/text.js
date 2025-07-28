@@ -58,7 +58,7 @@
 
         // internal
         AscCommon.History.StartNoHistoryMode();
-		this.content = new AscPDF.CTextBoxContent(this);
+		this.content = new AscPDF.CTextBoxContent(this, Asc.editor.getPDFDoc());
         // content for formatting value
         // Note: draw this content instead of main if form has a "format" action
 		this.contentFormat = new AscPDF.CTextBoxContent(this, Asc.editor.getPDFDoc(), true);
@@ -255,7 +255,10 @@
             return;
         }
 
-        if (this.IsMultiline() == bMultiline) {
+        let nFormatType = this.GetFormatType();
+        if (this.IsMultiline() == bMultiline ||
+            (bMultiline && (this.IsPassword() || this.IsComb())) ||
+            (nFormatType !== AscPDF.FormatType.NONE && nFormatType !== AscPDF.FormatType.CUSTOM)) {
             return;
         }
     
@@ -306,7 +309,7 @@
         if (oParent && oParent.IsAllKidsWidgets())
             return oParent.SetPassword(bPassword);
         
-        if (this.IsPassword() == bPassword) {
+        if (this.IsPassword() == bPassword || (bPassword && (this.IsMultiline() || this.IsComb()))) {
             return;
         }
 
@@ -318,8 +321,12 @@
             this._password = false;
         }
 
+        this.GetAllWidgets().forEach(function(widget) {
+            widget.private_NeedShapeText();
+            widget.SetNeedRecalc(true);
+        });
+
         this.SetWasChanged(true);
-        this.SetNeedRecalc(true);
     };
     CTextField.prototype.IsPassword = function(bInherit) {
         let oParent = this.GetParent();
@@ -336,10 +343,9 @@
     };
 	CTextField.prototype.SetValue = function(sValue) {
 		if (this.IsWidget()) {
-            let oDoc        = this.GetDocument();
-            let isOnOpen    = oDoc.Viewer.IsOpenFormsInProgress;
+            let isOnOpen = Asc.editor.getDocumentRenderer().IsOpenFormsInProgress;
 
-            oDoc.History.Add(new CChangesPDFFormValue(this, this.GetValue(), sValue));
+            AscCommon.History.Add(new CChangesPDFFormValue(this, this.GetValue(), sValue));
 
 			if (isOnOpen != true)
 				this.SetWasChanged(true);
@@ -388,8 +394,8 @@
         return this.contentFormat.getAllText();
     };
 	CTextField.prototype.UpdateDisplayValue = function(displayValue) {
-        let oDoc        = this.GetDocument();
-        let isOnOpen    = oDoc.Viewer.IsOpenFormsInProgress;
+        let oDoc        = Asc.editor.getPDFDoc();
+        let isOnOpen    = Asc.editor.getDocumentRenderer().IsOpenFormsInProgress;
         let _t          = this;
 
         AscCommon.History.StartNoHistoryMode();
@@ -526,7 +532,7 @@
         let scale     = AscCommon.AscBrowser.retinaPixelRatio
                         * oViewer.zoom
                         * oViewer.getDrawingPageScale(nPage);  // overall scale factor
-        let rect      = this.GetOrigRect();           // [x1, y1, x2, y2] in document coords
+        let rect      = this.GetRect();           // [x1, y1, x2, y2] in document coords
         let borders   = this.GetBordersWidth();       // border widths
         let angleDeg  = this.GetRotate() || 0;        // rotation angle in degrees
         let angleRad  = angleDeg * Math.PI / 180;     // convert to radians
@@ -1007,6 +1013,13 @@
         g_oTextMeasurer.SetTextPr(oTextPr, null);
         g_oTextMeasurer.SetFontSlot(AscWord.fontslot_ASCII);
 
+        if (this.IsPassword()) {
+            AscWord.ParagraphTextShaper.SetMaskSymbol("*");
+            oPara.RecalcInfo.NeedShapeText();
+        }
+
+        oPara.Recalculate_Page(0);
+
         var nTextHeight = g_oTextMeasurer.GetHeight();
         var nMaxWidth   = oPara.RecalculateMinMaxContentWidth(false).Max;
         var nFontSize   = oTextPr.FontSize;
@@ -1067,6 +1080,10 @@
             oPara.Recalculate_Page(0);
         }
 
+        if (this.IsPassword()) {
+            AscWord.ParagraphTextShaper.SetMaskSymbol();
+        }
+
         oTextPr.FontSize    = nNewFontSize;
         oTextPr.FontSizeCS  = nNewFontSize;
 
@@ -1085,6 +1102,11 @@
     CTextField.prototype.Recalculate = function() {
         if (this.IsNeedRecalc() == false)
             return;
+
+        if (this.IsPassword()) {
+            AscWord.ParagraphTextShaper.SetMaskSymbol("*");
+            this.private_NeedShapeText();
+        }
 
         if (this.IsNeedCheckAlign()) {
             this.CheckAlignInternal();
@@ -1113,13 +1135,25 @@
             this.RecalculateTextTransform();
         }
 
+        if (this.IsPassword()) {
+            AscWord.ParagraphTextShaper.SetMaskSymbol();
+        }
+
         this.SetNeedRecalc(false);
+    };
+    CTextField.prototype.private_NeedShapeText = function() {
+        this.content.GetAllParagraphs().forEach(function(paragraph) {
+            paragraph.RecalcInfo.NeedShapeText();
+        });
+        this.contentFormat.GetAllParagraphs().forEach(function(paragraph) {
+            paragraph.RecalcInfo.NeedShapeText();
+        });
     };
     CTextField.prototype._isCenterAlign = function() {
 		return false == this.IsMultiline();
 	};
     CTextField.prototype.RecalculateContentRect = function() {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
 
         let X       = aOrigRect[0];
         let Y       = aOrigRect[1];
@@ -1139,7 +1173,7 @@
 		
 		let contentX = (this.IsComb() ? (X + oMargins.left) : (X + 2 * oMargins.left)) * g_dKoef_pt_to_mm;
         let contentY = (Y + (this.IsMultiline() ? (2.5 * oMargins.top) : (2 * oMargins.top))) * g_dKoef_pt_to_mm;
-        let contentXLimit = (this.IsComb() ? (X + contentW - oMargins.left) : (X + contentW - 2 * oMargins.left)) * g_dKoef_pt_to_mm;
+        let contentXLimit = (this.IsComb() ? (X + contentW - oMargins.right) : (X + contentW - 2 * oMargins.right)) * g_dKoef_pt_to_mm;
 		let contentYLimit = (Y + contentH - (this.IsMultiline() ? (2.5 * oMargins.bottom) : (2 * oMargins.bottom))) * g_dKoef_pt_to_mm;
         
         if ((this.borderStyle == "solid" || this.borderStyle == "dashed") && 
@@ -1170,7 +1204,7 @@
             this.contentFormat.Y= contentYFormat;
             this.content.XLimit = this.contentFormat.XLimit = contentXLimit;
             this.content.YLimit = this.contentFormat.YLimit = 20000;
-			this.content.Set_ClipInfo(0, contentX, contentXLimit, contentY, contentYLimit);
+			this.content.Set_ClipInfo(0, X * g_dKoef_pt_to_mm, (X + contentW) * g_dKoef_pt_to_mm, contentY, contentY + contentH * g_dKoef_pt_to_mm);
             
             this.CalculateContentClipRect();
             this.content.Recalculate_Page(0, true);
@@ -1185,7 +1219,7 @@
         if (!this.content)
             return null;
 
-        let aRect = this.GetOrigRect();
+        let aRect = this.GetRect();
         if (!aRect) {
             return null;
         }
@@ -1324,7 +1358,7 @@
         
         let oContentBounds  = this.content.GetContentBounds(0);
         let oContentRect    = this.getFormRelRect();
-        let aOrigRect       = this.GetOrigRect();
+        let aOrigRect       = this.GetRect();
 
         let nFormRotAngle = this.GetRotate();
         let dFrmW = oContentRect.W;
@@ -1614,8 +1648,6 @@
         }
     };
 	CTextField.prototype.EnterText = function(aChars, isOnCorrect) {
-        let doc = this.GetDocument();
-
         let nEnteredCharsCount = aChars.length;
 
         AscCommon.History.ForbidUnionPoint();
@@ -1723,10 +1755,7 @@
      * @returns {object} - {hor: {boolean}, ver: {boolean}}
 	 */
     CTextField.prototype.IsTextOutOfForm = function(oContent) {
-        if (null == this.getFormRelRect())
-            this.Recalculate();
-        else
-            oContent.GetElement(0).Recalculate_Page(0);
+        this.Recalculate();
         
         let oPageBounds = oContent.GetContentBounds(0);
         let oFormBounds = this.getFormRelRect();
@@ -1737,7 +1766,7 @@
             ver: false
         }
 
-        if (nContentW > oFormBounds.W) {
+        if (nContentW / oFormBounds.W > 1.005 && oFormBounds.W != 0) {
             oResult.hor = true;
         }
 
@@ -2224,41 +2253,44 @@
         this.WriteToBinaryBase(memory);
         this.WriteToBinaryBase2(memory);
 
-        let sValue = this.GetParentValue(false);
-        if (sValue != null && this.IsPassword() == false) {
+        let sValue = this.GetParentValue(memory.isCopyPaste);
+        if (sValue != null) {
             memory.fieldDataFlags |= (1 << 9);
             memory.WriteString(sValue);
         }
 
-        let nCharLimit = this.GetCharLimit(false);
+        let nCharLimit = this.GetCharLimit(memory.isCopyPaste);
         if (nCharLimit != 0) {
             memory.fieldDataFlags |= (1 << 10);
             memory.WriteLong(nCharLimit);
         }
 
-        memory.fieldDataFlags |= (1 << 13);
+        // render
+        let nCurPos = memory.GetCurPosition();
         this.WriteRenderToBinary(memory);
-
+        if (nCurPos != memory.GetCurPosition())
+            memory.fieldDataFlags |= (1 << 13);
+        
         // if (this.IsRichText()) {
         //     memory.widgetFlags |= (1 << 11);
         // }
 
-        if (this.IsMultiline(false)) {
+        if (this.IsMultiline(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 12);
         }
-        if (this.IsPassword(false)) {
+        if (this.IsPassword(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 13);
         }
-        if (this.IsFileSelect(false)) {
+        if (this.IsFileSelect(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 20);
         }
-        if (this.IsDoNotSpellCheck(false)) {
+        if (this.IsDoNotSpellCheck(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 22);
         }
-        if (this.IsDoNotScroll(false)) {
+        if (this.IsDoNotScroll(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 23);
         }
-        if (this.IsComb(false)) {
+        if (this.IsComb(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 24);
         }
 

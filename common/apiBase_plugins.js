@@ -380,11 +380,21 @@
 	 */
     Api.prototype["pluginMethod_PasteText"] = function(text)
     {
-        if (!AscCommon.g_clipboardBase)
+        if (!AscCommon.g_clipboardBase || !window.g_asc_plugins || !text)
             return null;
 
-        this.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Text, text);
-    };
+		var _t = this;
+		function onPasteAsync() {
+			_t.decrementCounterLongAction();
+			window.g_asc_plugins.onPluginMethodReturn(true);
+		}
+
+		window.g_asc_plugins.setPluginMethodReturnAsync();
+		this.incrementCounterLongAction();
+		this.executeGroupActions(function(){
+			_t.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.Text, text, undefined, undefined, undefined, onPasteAsync);
+		});
+	};
 
     /**
      * An object containing the data about all the macros from the document.
@@ -445,7 +455,10 @@
 	 */
     Api.prototype["pluginMethod_StartAction"] = function(type, description)
     {
-        this.sync_StartAction((type == "Block") ? Asc.c_oAscAsyncActionType.BlockInteraction : Asc.c_oAscAsyncActionType.Information, description);
+		if ("GroupActions" === type)
+			this.startGroupActions();
+		else
+			this.sync_StartAction((type === "Block") ? Asc.c_oAscAsyncActionType.BlockInteraction : Asc.c_oAscAsyncActionType.Information, description);
     };
 
     /**
@@ -460,7 +473,17 @@
 	 */
     Api.prototype["pluginMethod_EndAction"] = function(type, description, status)
     {
-        this.sync_EndAction((type == "Block") ? Asc.c_oAscAsyncActionType.BlockInteraction : Asc.c_oAscAsyncActionType.Information, description);
+		if ("GroupActions" === type)
+		{
+			if (status)
+				this.cancelGroupActions();
+			else
+				this.endGroupActions();
+			
+			return;
+		}
+		
+        this.sync_EndAction((type === "Block") ? Asc.c_oAscAsyncActionType.BlockInteraction : Asc.c_oAscAsyncActionType.Information, description);
 
         if (window["AscDesktopEditor"] && status != null && status != "")
         {
@@ -1665,7 +1688,7 @@
     * Installs a plugin using the specified plugin config.
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
-     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/manifest/ config}.
+     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/configuration/ config}.
      * @alias InstallPlugin
      * @returns {object} - An object with the result information.
      * @since 7.2.0
@@ -1679,7 +1702,7 @@
     * Updates a plugin using the specified plugin config.
      * @memberof Api
      * @typeofeditors ["CDE", "CSE", "CPE"]
-     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/manifest/ config}.
+     * @param {object} [config] - The plugin {@link https://api.onlyoffice.com/docs/plugin-and-macros/structure/configuration/ config}.
      * @alias UpdatePlugin
      * @returns {object} - An object with the result information.
      * @since 7.3.0
@@ -2027,6 +2050,51 @@
 		let baseUrl = this.pluginsManager.pluginsMap[guid].baseUrl;
 		correctItemIcons(variation["icons"], baseUrl);
 
+		if (variation["isTargeted"])
+		{
+			let w = 300;
+			let h = 100;
+			if (variation["size"])
+			{
+				w = variation["size"][0];
+				h = variation["size"][1];
+			}
+
+			let offsets = this.getTargetOnBodyCoords();
+			if (w > offsets.W)
+				w = offsets.W;
+			if (h > offsets.H)
+				h = offsets.H;
+
+			let offsetToFrame = 10;
+			let r = offsets.X + offsetToFrame + w;
+			let t = offsets.Y - offsetToFrame - h;
+			let b = offsets.Y + offsets.TargetH + offsetToFrame + h;
+
+			let x = offsets.X + offsetToFrame;
+			if (r > offsets.W)
+				x += (offsets.W - r);
+
+			let y = 0;
+			if (b < offsets.H)
+			{
+				y = offsets.Y + offsets.TargetH + offsetToFrame;
+			}
+			else if (t > 0)
+			{
+				y = t;
+			}
+			else
+			{
+				y = offsets.Y + offsets.TargetH + offsetToFrame;
+				h += (offsets.H - b);
+			}
+
+			variation["size"] = [w, h];
+			variation["positionX"] = x;
+			variation["positionY"] = y;
+		}
+
 		this.sendEvent("asc_onPluginWindowShow", frameId, variation);
 	};
 
@@ -2036,13 +2104,21 @@
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {string} frameId - The frame ID.
+	 * @param {boolean} isFocus - The focus will be made on the window.
 	 * @alias ActivateWindow
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/ActivateWindow.js
 	 */
-	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId)
+	Api.prototype["pluginMethod_ActivateWindow"] = function(frameId, isFocus)
 	{
 		this.sendEvent("asc_onPluginWindowActivate", frameId);
+
+		if (isFocus)
+		{
+			let frame = document.getElementById(frameId);
+			if (frame)
+				frame.focus();
+		}
 	};
 
 	/**
@@ -2212,6 +2288,18 @@
 
 			window.g_asc_plugins.onPluginMethodReturn(ret);
 		});
+	};
+
+	/**
+	 * Returns focus to the editor.
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @alias FocusEditor
+	 */
+	Api.prototype["pluginMethod_FocusEditor"] = function()
+	{
+		if (AscCommon.g_inputContext && AscCommon.g_inputContext.HtmlArea)
+			AscCommon.g_inputContext.HtmlArea.focus();
 	};
 
 })(window);

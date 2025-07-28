@@ -3233,7 +3233,12 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		return {col: realSize ? realSize.col : col, row: realSize ? realSize.row : row};
 	};
 	cArray.prototype.fillMatrix = function (replace_empty) {
-		let maxColCount = Math.max.apply(null, this.countElementInRow);
+		let maxColCount = 0;
+		for (let i = 0; i < this.countElementInRow.length; i++) {
+			if (this.countElementInRow[i] > maxColCount) {
+				maxColCount = this.countElementInRow[i];
+			}
+		}
 		this.countElementInRow = [];
 		this.countElement = 0;
 		for (let i = 0; i < this.rowCount; i++) {
@@ -5108,6 +5113,11 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			}
 		};
 
+		forEachElementInRef(pushRanges, ref, ws, checkFormula);
+		return ranges;
+	}
+
+	function forEachElementInRef(callback, ref, ws, checkFormula) {
 		//TODO вызываю проверку на то, что это может быть формула только для печати. необходимо проверить везде - для этого необходимо просмотреть весь смежный функционал
 		var isFormula;
 		if(checkFormula && ref) {
@@ -5118,7 +5128,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		}
 
 		if (isFormula && isFormula.type !== cElementType.error) {
-			pushRanges({oper: isFormula});
+			callback({oper: isFormula});
 		} else {
 			// ToDo in parser formula
 			if (ref[0] === '(') {
@@ -5139,12 +5149,14 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 				var _f = new AscCommonExcel.parserFormula(refItem, null, ws);
 				var parseResult = new AscCommonExcel.ParseResult([]);
 				if (_f.parse(null, null, parseResult)) {
-					parseResult.refPos.forEach(pushRanges);
+					for (let i = 0; i < parseResult.refPos.length; i++) {
+						if (callback(parseResult.refPos[i])) {
+							break;
+						}
+					}
 				}
 			});
 		}
-
-		return ranges;
 	}
 
 
@@ -9921,7 +9933,15 @@ function parserFormula( formula, parent, _ws ) {
 			ref = this.outStack[i];
 
 			if (ref.type === cElementType.table) {
-				this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this);
+				// analyze table structure - if its full link, write defnamelistener
+				const isFullTableLink = ref.reservedColumnIndex === AscCommon.FormulaTablePartInfo.all;
+				const refAreaRange = ref.area && ref.area.getRange && ref.area.getRange();
+				
+				if (isFullTableLink || !refAreaRange) {
+					this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this, null, ref);
+				} else {
+					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
+				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.startListeningDefName(ref.value, this);
 			} else if (ref.type === cElementType.name3D) {
@@ -9997,7 +10017,14 @@ function parserFormula( formula, parent, _ws ) {
 			ref = this.outStack[i];
 
 			if (ref.type === cElementType.table) {
-				this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
+				const isFullTableLink = ref.reservedColumnIndex === AscCommon.FormulaTablePartInfo.all;
+				const refAreaRange = ref.area && ref.area.getRange && ref.area.getRange();
+				
+				if (isFullTableLink || !refAreaRange) {
+					this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
+				} else {
+					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
+				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.endListeningDefName(ref.value, this);
 			} else if (ref.type === cElementType.name3D) {
@@ -12028,6 +12055,7 @@ function parserFormula( formula, parent, _ws ) {
 
 	window['AscCommonExcel'].getFormulasInfo = getFormulasInfo;
 	window['AscCommonExcel'].getRangeByRef = getRangeByRef;
+	window['AscCommonExcel'].forEachElementInRef = forEachElementInRef;
 	window['AscCommonExcel'].addNewFunction = addNewFunction;
 	window['AscCommonExcel'].removeCustomFunction = removeCustomFunction;
 	window['AscCommonExcel'].getRangeByName = getRangeByName;

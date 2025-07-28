@@ -362,7 +362,7 @@ ThemeColor.prototype =
 					HSL.L = HSL.L * (1 - this.tint) + (g_nHSLMaxValue - g_nHSLMaxValue * (1 - this.tint));
 				HSL.L >>= 0;
 				var RGB = {R: 0, G: 0, B: 0};
-				oCColorModifiers.HSL2RGB(HSL, RGB);
+				oCColorModifiers.HSL2RGB(HSL, RGB, true);
 				r = RGB.R;
 				g = RGB.G;
 				b = RGB.B;
@@ -4924,6 +4924,9 @@ var g_oFontProperties = {
 	CellXfs.prototype.asc_getShrinkToFit = function () {
 		return this.getAlign2().getShrinkToFit();
 	};
+	CellXfs.prototype.asc_getReadingOrder = function () {
+		return this.getAlign2().getReadingOrder();
+	};
 	CellXfs.prototype.asc_getPreview = function (api, text, width, height) {
 		return AscCommonExcel.generateXfsStyle(width, height, api.wb, this, text);
 	};
@@ -5089,6 +5092,17 @@ var g_oFontProperties = {
 			WrapText: 8
 	};
 
+	const c_oReadingOrderTypes = {
+		Context: 0,
+		LTR: 1,
+		RTL: 2
+	};
+
+	window['Asc']['c_oReadingOrderTypes'] = window['Asc'].c_oReadingOrderTypes = c_oReadingOrderTypes;
+	prot = c_oReadingOrderTypes;
+	prot['Context'] = prot.Context;
+	prot['LTR'] = prot.LTR;
+	prot['RTL'] = prot.RTL;
 
 	window['Asc']['c_oSerAligmentTypes'] = window['Asc'].c_oSerAligmentTypes = c_oSerAligmentTypes;
 	prot = c_oSerAligmentTypes;
@@ -5110,7 +5124,7 @@ var g_oFontProperties = {
 		this.hor = val.hor;
 		this.indent = val.indent;
 		this.RelativeIndent = val.RelativeIndent;
-		this.ReadingOrder = val.ReadingOrder;
+		this.readingOrder = val.readingOrder;
 		this.shrink = val.shrink;
 		this.angle = val.angle;
 		this.ver = val.ver;
@@ -5123,7 +5137,7 @@ var g_oFontProperties = {
 	Align.prototype.Properties = Asc.c_oSerAligmentTypes;
 	Align.prototype.getHash = function () {
 		if (!this._hash) {
-			this._hash = this.hor + '|' + this.indent + '|' + this.ReadingOrder + '|' + this.RelativeIndent + '|' + this.shrink + '|' +
+			this._hash = this.hor + '|' + this.indent + '|' + this.readingOrder + '|' + this.RelativeIndent + '|' + this.shrink + '|' +
 				this.angle + '|' + this.ver + '|' + this.wrap;
 		}
 		return this._hash;
@@ -5146,7 +5160,7 @@ var g_oFontProperties = {
 		var oRes = new Align();
 		oRes.hor = this._mergeProperty(this.hor, align.hor, defaultAlign.hor);
 		oRes.indent = this._mergeProperty(this.indent, align.indent, defaultAlign.indent);
-		oRes.ReadingOrder = this._mergeProperty(this.ReadingOrder, align.ReadingOrder, defaultAlign.ReadingOrder);
+		oRes.readingOrder = this._mergeProperty(this.readingOrder, align.readingOrder, defaultAlign.readingOrder);
 		oRes.RelativeIndent = this._mergeProperty(this.RelativeIndent, align.RelativeIndent, defaultAlign.RelativeIndent);
 		oRes.shrink = this._mergeProperty(this.shrink, align.shrink, defaultAlign.shrink);
 		oRes.angle = this._mergeProperty(this.angle, align.angle, defaultAlign.angle);
@@ -5172,8 +5186,8 @@ var g_oFontProperties = {
 		} else {
 			bEmpty = false;
 		}
-		if (this.ReadingOrder == val.ReadingOrder) {
-			oRes.ReadingOrder = null;
+		if (this.readingOrder == val.readingOrder) {
+			oRes.readingOrder = null;
 		} else {
 			bEmpty = false;
 		}
@@ -5203,7 +5217,7 @@ var g_oFontProperties = {
 		return oRes;
 	};
 	Align.prototype.isEqual = function (val) {
-		return this.hor == val.hor && this.indent == val.indent && this.ReadingOrder == val.ReadingOrder && this.RelativeIndent == val.RelativeIndent && this.shrink == val.shrink &&
+		return this.hor == val.hor && this.indent == val.indent && this.readingOrder == val.readingOrder && this.RelativeIndent == val.RelativeIndent && this.shrink == val.shrink &&
 			this.angle == val.angle && this.ver == val.ver && this.wrap == val.wrap;
 	};
 	Align.prototype.clone = function () {
@@ -5291,10 +5305,10 @@ var g_oFontProperties = {
 		this.shrink = val;
 	};
 	Align.prototype.getReadingOrder = function () {
-		return this.ReadingOrder;
+		return this.readingOrder;
 	};
 	Align.prototype.setReadingOrder = function (val) {
-		this.ReadingOrder = val;
+		this.readingOrder = val;
 	};
 	Align.prototype.getAlignHorizontal = function () {
 		return this.hor;
@@ -5350,7 +5364,7 @@ var g_oFontProperties = {
 			}
 			val = vals["readingOrder"];
 			if (undefined !== val) {
-				this.ReadingOrder = val - 0;
+				this.readingOrder = val - 0;
 			}
 			val = vals["shrinkToFit"];
 			if (undefined !== val) {
@@ -5665,6 +5679,10 @@ StyleManager.prototype =
 	setAlignHorizontal : function(oItemWithXfs, val)
 	{
 		return this._setAlignProperty(oItemWithXfs, val, "alignHorizontal", Align.prototype.getAlignHorizontal, Align.prototype.setAlignHorizontal);
+	},
+	setReadingOrder : function(oItemWithXfs, val)
+	{
+		return this._setAlignProperty(oItemWithXfs, val, "readingOrder", Align.prototype.getReadingOrder, Align.prototype.setReadingOrder);
 	},
 	setShrinkToFit : function(oItemWithXfs, val)
 	{
@@ -6561,6 +6579,13 @@ StyleManager.prototype =
 				this._getUpdateRange(), new UndoRedoData_IndexSimpleProp(this.index, false, oRes.oldVal, oRes.newVal));
 		}
 	};
+	Col.prototype.setReadingOrder = function (val) {
+		var oRes = this.ws.workbook.oStyleManager.setReadingOrder(this, val);
+		if (AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal) {
+			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCol, AscCH.historyitem_RowCol_ReadingOrder, this.ws.getId(),
+				this._getUpdateRange(), new UndoRedoData_IndexSimpleProp(this.index, false, oRes.oldVal, oRes.newVal));
+		}
+	};
 	Col.prototype.setFill = function (val) {
 		var oRes = this.ws.workbook.oStyleManager.setFill(this, val);
 		if (AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal) {
@@ -6960,6 +6985,13 @@ StyleManager.prototype =
 		var oRes = this.ws.workbook.oStyleManager.setAlignHorizontal(this, val);
 		if (AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal) {
 			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoRow, AscCH.historyitem_RowCol_AlignHorizontal, this.ws.getId(),
+				this._getUpdateRange(), new UndoRedoData_IndexSimpleProp(this.index, true, oRes.oldVal, oRes.newVal));
+		}
+	};
+	Row.prototype.setReadingOrder = function (val) {
+		var oRes = this.ws.workbook.oStyleManager.setReadingOrder(this, val);
+		if (AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal) {
+			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoRow, AscCH.historyitem_RowCol_ReadingOrder, this.ws.getId(),
 				this._getUpdateRange(), new UndoRedoData_IndexSimpleProp(this.index, true, oRes.oldVal, oRes.newVal));
 		}
 	};
@@ -12979,16 +13011,20 @@ function RangeDataManagerElem(bbox, data)
 	 */
 	function CSharedStrings () {
 		this.all = [];
-		this.text = new Map();
-		this.multiTextMap = new Map();
+		this.text = Object.create(null);
+		this.multiTextMap = Object.create(null);
+
+		this.bssr = null;
 	}
 
 	CSharedStrings.prototype.addText = function(text) {
-		var index = this.text.get(text);
+		var textMap = this.text;
+		var index = textMap[text];
 		if (undefined === index) {
-			this.all.push(text);
-			index = this.all.length;
-			this.text.set(text, index);
+			var allArray = this.all;
+			allArray.push(text);
+			index = allArray.length;
+			textMap[text] = index;
 			if (AscFonts.IsCheckSymbols) {
 				AscFonts.FontPickerByCharacter.getFontsByString(text);
 			}
@@ -13000,10 +13036,10 @@ function RangeDataManagerElem(bbox, data)
 		var text = multiText.reduce(function(accumulator, currentValue) {
 			return accumulator + currentValue.text;
 		}, '');
-		var mapElem = this.multiTextMap.get(text);
+		var mapElem = this.multiTextMap[text];
 		if (!mapElem) {
 			mapElem = [];
-			this.multiTextMap.set(text, mapElem);
+			this.multiTextMap[text] = mapElem;
 		}
 		for (i = 0; i < mapElem.length; ++i) {
 			if (AscCommonExcel.isEqualMultiText(multiText, this.all[mapElem[i] - 1])) {
@@ -13016,12 +13052,63 @@ function RangeDataManagerElem(bbox, data)
 			index = this.all.length;
 			mapElem.push(index);
 			if (AscFonts.IsCheckSymbols) {
-				for (i = 0; i < multiText.length; ++i) {
-					AscFonts.FontPickerByCharacter.getFontsByString(multiText[i].text);
-				}
+				AscFonts.FontPickerByCharacter.getFontsByString(text);
 			}
 		}
 		return index;
+	};
+	/**
+	 * Initialize with sharedStrings from file. rely on uniqines
+	 * @param {Array<string | Array<{text: string, format: CellXfs}>>} sharedStrings
+	 */
+	CSharedStrings.prototype.initWithSharedStrings = function(sharedStrings) {
+		this.all = sharedStrings.slice(); //copy
+		this.text = Object.create(null);
+		this.multiTextMap = Object.create(null);
+		
+		for (let i = 0; i < sharedStrings.length; i++) {
+			const text = sharedStrings[i];
+			this._addSharedStringCacheByIndex(text, i + 1);// 1-based indexing
+		}
+	};
+	CSharedStrings.prototype._addSharedStringCacheByIndex = function(text, index) {
+		if (typeof text === 'string') {
+			this.text[text] = index;
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(text);
+			}
+		} else {
+			let key = "";
+			for (let j = 0; j < text.length; ++j) {
+				key += text[j].text;
+			}
+			if (AscFonts.IsCheckSymbols) {
+				AscFonts.FontPickerByCharacter.getFontsByString(key);
+			}
+			var mapElem = this.multiTextMap[key];
+			if (!mapElem) {
+				mapElem = [];
+				this.multiTextMap[key] = mapElem;
+			}
+			mapElem.push(index);
+		}
+	};
+	CSharedStrings.prototype.initWithBinaryReader = function(bssr) {
+		this.all = new Array(bssr.offsets.length / 2);
+		this.bssr = bssr;
+		this.get = this._getFromBinaryReader;
+	}
+	CSharedStrings.prototype._getFromBinaryReader = function(index) {
+		let res = null;
+		if (1 <= index && index <= this.all.length) {
+			res = this.all[index - 1];
+			if (undefined === res) {
+				res = this.bssr.ReadSharedStringByOffset(index - 1);
+				this.all[index - 1] = res
+				this._addSharedStringCacheByIndex(res, index);
+			}
+		}
+		return res;
 	};
 	CSharedStrings.prototype.get = function(index) {
 		return 1 <= index && index <= this.all.length ? this.all[index - 1] : null;
@@ -13030,7 +13117,9 @@ function RangeDataManagerElem(bbox, data)
 		return this.all.length;
 	};
 	CSharedStrings.prototype.generateFontMap = function(oFontMap) {
-		this.multiTextMap.forEach(function(mapElem) {
+		var keys = Object.keys(this.multiTextMap);
+		for (var k = 0; k < keys.length; ++k) {
+			var mapElem = this.multiTextMap[keys[k]];
 			for (var i = 0; i < mapElem.length; ++i) {
 				var multiText = this.all[mapElem[i] - 1];
 				for (var j = 0; j < multiText.length; ++j) {
@@ -13040,7 +13129,7 @@ function RangeDataManagerElem(bbox, data)
 					}
 				}
 			}
-		}, this);
+		}
 	};
 
 	/**
@@ -13221,6 +13310,7 @@ function RangeDataManagerElem(bbox, data)
 		//для превью передаём из интерфейса
 		this.headerFooter = null;
 		this.printArea = null;
+		this.selection = null;
 
 		this.ws = ws;
 
@@ -13471,6 +13561,7 @@ function RangeDataManagerElem(bbox, data)
 		res["pageSetup"]["pageOrder"] = this.pageSetup.pageOrder;
 		res["pageSetup"]["paperUnits"] = this.pageSetup.paperUnits;
 		res["pageSetup"]["printArea"] = this.pageSetup.printArea;
+		res["pageSetup"]["selection"] = this.pageSetup.selection;
 		res["pageSetup"]["scale"] = this.pageSetup.scale;
 		res["pageSetup"]["useFirstPageNumber"] = this.pageSetup.useFirstPageNumber;
 		res["pageSetup"]["usePrinterDefaults"] = this.pageSetup.usePrinterDefaults;
@@ -13529,6 +13620,7 @@ function RangeDataManagerElem(bbox, data)
 		this.pageSetup.pageOrder = checkOnNull(props["pageSetup"]["pageOrder"], this.pageSetup.pageOrder);
 		this.pageSetup.paperUnits = checkOnNull(props["pageSetup"]["paperUnits"], this.pageSetup.paperUnits);
 		this.pageSetup.printArea = checkOnNull(props["pageSetup"]["printArea"], this.pageSetup.printArea);
+		this.pageSetup.selection = checkOnNull(props["pageSetup"]["selection"], this.pageSetup.selection);
 		this.pageSetup.scale = checkOnNull(props["pageSetup"]["scale"], this.pageSetup.scale);
 		this.pageSetup.useFirstPageNumber = checkOnNull(props["pageSetup"]["useFirstPageNumber"], this.pageSetup.useFirstPageNumber);
 		this.pageSetup.usePrinterDefaults = checkOnNull(props["pageSetup"]["usePrinterDefaults"], this.pageSetup.usePrinterDefaults);
@@ -14923,13 +15015,10 @@ function RangeDataManagerElem(bbox, data)
 	};
 
 	//external reference
-	function ExternalReference() {
-		this.DefinedNames = [];
+	function ExternalReferenceBase()
+	{
 		this.Id = null;
-		this.SheetDataSet = [];
-		this.SheetNames = [];
 		this.Type = 0;
-
 		//дополнительная информация, которая приходит при copy/paste
 		//необходимо её добавлять в ooxml
 		//fileId
@@ -14939,8 +15028,218 @@ function RangeDataManagerElem(bbox, data)
 		//temp for update
 		this.sKey = null;
 
+	}
+	ExternalReferenceBase.prototype.getKey = function() {
+		return this.sKey;
+	};
+	ExternalReferenceBase.prototype.setKey = function(val) {
+		this.sKey = val;
+	};
+	ExternalReferenceBase.prototype.createDuplicate = function ()
+	{
+		const oCopy = new this.constructor();
+		oCopy.Id = this.Id;
+		oCopy.Type = this.Type;
+		if (null != this.referenceData)
+		{
+			oCopy.referenceData = {};
+			oCopy.referenceData["fileKey"] = this.referenceData["fileKey"];
+			oCopy.referenceData["instanceId"] = this.referenceData["instanceId"];
+		}
+		return oCopy;
+	}
+	ExternalReferenceBase.prototype.convertToExternalReference = function ()
+	{
+		const oExternalReference = new ExternalReference();
+		if (this.referenceData)
+		{
+			oExternalReference.setReferenceData(this.referenceData["fileKey"], this.referenceData["instanceId"]);
+		}
+		oExternalReference.Id = this.Id;
+		oExternalReference.Type = this.Type;
+		return oExternalReference;
+	}
+	ExternalReferenceBase.prototype.isExternalLink = function() {
+		if (!this.Id)
+			return false;
+		var p = /^(?:http:\/\/|https:\/\/)/;
+		return this.Id.match(p);
+	};
+
+	ExternalReferenceBase.prototype.isXlsx = function() {
+		if (!this.Id)
+			return false;
+		var p = /^.*\.(xlsx)$/i;
+		return this.Id.match(p);
+	};
+
+	//TODO внешние источники данных, как в файле из бага https://bugzilla.onlyoffice.com/show_bug.cgi?id=38646
+
+	ExternalReferenceBase.prototype.getAscLink = function () {
+
+		// вот так, если это из файла прилетело, в т.ч. из буфера
+		// onRequestReferenceData({data:{referenceData:config.document.referenceData}})
+		//
+		//
+		// вот так, если это будет ссылка на редактор файла в тестовом как в onedrive
+		// onRequestReferenceData({data:{link:"http://192.168.1.1/editor?fileName=new.docx"}})
+		//
+		// вот так, если б это было просто путь к файлу как в MS:
+		// 	onRequestReferenceData({data:{path: "new.docx"}})
+
+
+		var res = new asc_CExternalReference();
+
+		if (this.referenceData) {
+			res.type = Asc.c_oAscExternalReferenceType.referenceData;
+			res.data = this.referenceData;
+		} else if (this.isExternalLink()) {
+			res.type = Asc.c_oAscExternalReferenceType.link;
+			res.data = this.Id;
+		} else {
+			res.type = Asc.c_oAscExternalReferenceType.path;
+			res.data = this.Id;
+		}
+
+		res.externalReference = this;
+
+		return res;
+	};
+
+
+	ExternalReferenceBase.prototype.setReferenceData = function (fileId, portalName) {
+		if (!fileId || !portalName) {
+			return;
+		}
+		if (!this.referenceData) {
+			this.referenceData = {};
+		}
+		this.referenceData["instanceId"] = portalName;
+		this.referenceData["fileKey"] = fileId + "";
+	};
+
+	ExternalReferenceBase.prototype.setId = function (id) {
+		if (!id) {
+			return;
+		}
+
+		this.Id = id;
+	};
+
+	ExternalReferenceBase.prototype.initFromObj = function (obj) {
+		//directUrl:
+		//fileType:
+		//token:
+		//url
+		//path
+		//referenceData
+		if (obj["path"] !== this.Id) {
+			this.setId(this._checkAndCorrectPath(obj["path"], obj["filePath"]));
+		}
+
+		if (obj["referenceData"] && (!this.referenceData || this.referenceData["instanceId"] !== obj["referenceData"]["instanceId"] ||
+			this.referenceData["instanceId"] !== obj["referenceData"]["fileKey"])) {
+			this.setReferenceData(obj["referenceData"]["fileKey"], obj["referenceData"]["instanceId"]);
+		}
+	};
+
+	ExternalReferenceBase.prototype._checkAndCorrectPath = function (sPath, sAbsolutePath) {
+		if (!sPath || 1 === sPath.indexOf("../")) {
+			// sPath -> ../../from.xlsx
+			//sAbsolutePath - > C:\root\from.xlsx
+			// need -> /root/from.xlsx
+			if (sAbsolutePath) {
+				sPath = sAbsolutePath.substring(sAbsolutePath.indexOf("\\"))
+				sPath = sPath.replace(/\\/g,"/")
+			}
+		} else if (sPath && -1 !== sPath.indexOf(":/")) {
+			// sPath -> C:/root/from1.xlsx
+			//need -> file:///C:\root\from1.xlsx
+			sPath = sPath.replace(/\//g,"\\");
+			sPath = "file:///" + sPath;
+		} else if (sPath && -1 === sPath.indexOf("file:///")) {
+			sPath = "file:///" + sPath;
+		}
+
+		return sPath;
+	};
+
+	function CChartExternalReference(chart)
+	{
+		ExternalReferenceBase.call(this);
+		this.chart = chart;
+	}
+	AscFormat.InitClassWithoutType(CChartExternalReference, ExternalReferenceBase);
+
+	CChartExternalReference.prototype.Write_ToBinary = function(writer) {
+		this.WriteToBinary(writer);
+	};
+	CChartExternalReference.prototype.Read_FromBinary = function(writer) {
+		this.ReadFromBinary(writer);
+	};
+	CChartExternalReference.prototype.WriteToBinary = function(writer) {
+		AscFormat.writeString(writer, this.Id);
+		AscFormat.writeLong(writer, this.Type);
+		writer.WriteBool(isRealObject(this.referenceData));
+		if (this.referenceData)
+		{
+			AscFormat.writeString(writer, this.referenceData["instanceId"]);
+			AscFormat.writeString(writer, this.referenceData["fileKey"]);
+		}
+	};
+	CChartExternalReference.prototype.ReadFromBinary = function(reader) {
+		this.Id = AscFormat.readString(reader);
+		this.Type = AscFormat.readLong(reader);
+		if (reader.GetBool())
+		{
+			this.referenceData = {};
+			this.referenceData["instanceId"] = AscFormat.readString(reader);
+			this.referenceData["fileKey"] = AscFormat.readString(reader);
+		}
+	};
+	CChartExternalReference.prototype.setReferenceData = function (fileId, portalName) {
+		ExternalReferenceBase.prototype.setReferenceData.call(this, fileId, portalName);
+		try {
+			this.Id = JSON.parse(fileId)["fileName"];
+		} catch (e) {
+		}
+	};
+	CChartExternalReference.prototype.updateData = function (wb, oPortalData) {
+		Asc.editor.wbModel = wb;
+		this.chart.worksheet = wb.getWorksheet(0);
+		this.chart.recalculateReferences(true);
+
+		const oReferenceData = oPortalData && oPortalData["referenceData"];
+		let oCopy;
+		if (oReferenceData && (!this.referenceData || (this.referenceData["instanceId"] !== oReferenceData["instanceId"] || this.referenceData["fileKey"] !== oReferenceData["fileKey"]))) {
+			oCopy = this.createDuplicate();
+			oCopy.setReferenceData(oReferenceData["fileKey"], oReferenceData["instanceId"]);
+		}
+
+		var path = oPortalData && oPortalData["path"];
+		if (path && this.Id !== path) {
+			oCopy = oCopy ? oCopy : this.createDuplicate();
+			oCopy.setId(path);
+		}
+
+		if (oCopy) {
+			this.chart.setExternalReference(oCopy);
+		}
+
+		this.chart.worksheet = undefined;
+		delete Asc.editor.wbModel;
+	};
+	AscDFH.drawingsConstructorsMap[AscDFH.historyitem_ChartSpace_SetExternalReference] = CChartExternalReference;
+
+	function ExternalReference() {
+		ExternalReferenceBase.call(this);
+		this.DefinedNames = [];
+		this.SheetDataSet = [];
+		this.SheetNames = [];
+
 		this.worksheets = {};
 	}
+	AscFormat.InitClassWithoutType(ExternalReference, ExternalReferenceBase);
 
 	ExternalReference.prototype.getType = function() {
 		return AscCommonExcel.UndoRedoDataTypes.externalReference;
@@ -15098,7 +15397,12 @@ function RangeDataManagerElem(bbox, data)
 				this.DefinedNames[i].parent = this;
 			}
 		}
+		this.initExternalReference();
 
+		return res;
+	};
+
+	ExternalReference.prototype.initExternalReference = function () {
 		let api = Asc.editor || editor;
 		let originalWb = api.wbModel;
 		originalWb && originalWb.dependencyFormulas.lockRecal();
@@ -15108,8 +15412,6 @@ function RangeDataManagerElem(bbox, data)
 		this.prepareDefNames();
 
 		originalWb && originalWb.dependencyFormulas.unlockRecal();
-
-		return res;
 	};
 
 	ExternalReference.prototype.getDefinedNamesBySheetIndex = function (index, wb) {
@@ -15202,7 +15504,7 @@ function RangeDataManagerElem(bbox, data)
 				this.SheetDataSet.splice(index, 1);
 				delete this.worksheets[sheetName];
 
-				// shift all dataset indexes 
+				// shift all dataset indexes
 				this.shiftData();
 			}
 		}
@@ -15212,7 +15514,7 @@ function RangeDataManagerElem(bbox, data)
 		var t = this;
 		var isChanged = false;
 		var cloneER = this.clone();
-		
+
 		let existedWsArray = [];
 		for (var i = 0; i < arr.length; i++) {
 			//если есть this.worksheets, если нет - проверить и обработать
@@ -15323,49 +15625,6 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	//TODO внешние источники данных, как в файле из бага https://bugzilla.onlyoffice.com/show_bug.cgi?id=38646
-
-	ExternalReference.prototype.getAscLink = function () {
-
-		// вот так, если это из файла прилетело, в т.ч. из буфера
-		// onRequestReferenceData({data:{referenceData:config.document.referenceData}})
-		//
-		//
-		// вот так, если это будет ссылка на редактор файла в тестовом как в onedrive
-		// onRequestReferenceData({data:{link:"http://192.168.1.1/editor?fileName=new.docx"}})
-		//
-		// вот так, если б это было просто путь к файлу как в MS:
-		// 	onRequestReferenceData({data:{path: "new.docx"}})
-
-
-		var res = new asc_CExternalReference();
-
-		if (this.referenceData) {
-			res.type = Asc.c_oAscExternalReferenceType.referenceData;
-			res.data = this.referenceData;
-		} else if (this.isExternalLink()) {
-			res.type = Asc.c_oAscExternalReferenceType.link;
-			res.data = this.Id;
-		} else {
-			res.type = Asc.c_oAscExternalReferenceType.path;
-			res.data = this.Id;
-		}
-
-		res.externalReference = this;
-
-		return res;
-	};
-
-	ExternalReference.prototype.isExternalLink = function() {
-		var p = /^(?:http:\/\/|https:\/\/)/;
-		return this.Id.match(p);
-	};
-
-	ExternalReference.prototype.isXlsx = function() {
-		var p = /^.*\.(xlsx)$/i;
-		return this.Id.match(p);
-	};
-
 	ExternalReference.prototype.addSheetName = function (name, generateDefaultStructure, addSheetObj) {
 		this.SheetNames.push(name);
 		if (generateDefaultStructure) {
@@ -15449,7 +15708,7 @@ function RangeDataManagerElem(bbox, data)
 			}
 		}
 	};
-	
+
 	ExternalReference.prototype.initWorksheet = function (sheetName) {
 		var ws = this.worksheets[sheetName];
 		if (!this.worksheets[sheetName]) {
@@ -15474,12 +15733,14 @@ function RangeDataManagerElem(bbox, data)
 				var wb = this.getWb();
 				if (!wb) {
 					wb = new AscCommonExcel.Workbook(null, window["Asc"]["editor"], false);
+					wb.dependencyFormulas.lockRecal();
 				}
-				ws = new AscCommonExcel.Worksheet(wb, wb.aWorksheets.length);
+				ws = new AscCommonExcel.Worksheet(wb);
 				ws.sName = sheetName;
+				wb.aWorksheets.push(ws);
+				ws._setIndex(wb.aWorksheets.length - 1);
 
 				this.worksheets[sheetName] = ws;
-				wb.aWorksheets.push(ws);
 			}
 
 
@@ -15519,46 +15780,54 @@ function RangeDataManagerElem(bbox, data)
 		}
 	};
 
-	ExternalReference.prototype.initWorkbook = function () {
-		if (this.DefinedNames) {
-			let wb = this.getWb();
-			for (let i = 0; i < this.DefinedNames.length; i++) {
-				let defName = this.DefinedNames[i];
-				let ws = this.getSheetByIndex(defName.SheetId);
-				if (!ws && defName.RefersTo) {
-					// try to find sheetname by RefersTo string
-					let exclamationMarkIndex = defName.RefersTo.lastIndexOf("!");
-					if (exclamationMarkIndex !== -1) {
-						let sheetNamePart = defName.RefersTo.slice(0, exclamationMarkIndex);
-						// remove equal sign
-						if (sheetNamePart[0] === "=") {
-							sheetNamePart = sheetNamePart.substring(1);
-						}
-
-						// regex to find string enclosed in single qoutes
-						let regex = /^'(.*)'$/;
-						let match = regex.exec(sheetNamePart);
-						if (match && match[1]) {
-							sheetNamePart = match[1];
-						}
-
-						ws = this.worksheets[sheetNamePart];
+	ExternalReference.prototype.initDefinedNamesInWorkbook = function (definedNames) {
+		let wb = this.getWb();
+		const workbookDefinedNames = [];
+		for (let i = 0; i < definedNames.length; i++) {
+			let defName = definedNames[i];
+			let ws = this.getSheetByIndex(defName.SheetId);
+			if (!ws && defName.RefersTo) {
+				// try to find sheetname by RefersTo string
+				let exclamationMarkIndex = defName.RefersTo.lastIndexOf("!");
+				if (exclamationMarkIndex !== -1) {
+					let sheetNamePart = defName.RefersTo.slice(0, exclamationMarkIndex);
+					// remove equal sign
+					if (sheetNamePart[0] === "=") {
+						sheetNamePart = sheetNamePart.substring(1);
 					}
-				}
 
-				if (ws != null) {
-					//on parse name3d use g_DefNameWorksheet
-					let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
-					AscCommonExcel.g_DefNameWorksheet = ws;
-					let stringToParse;
-					if (defName && defName.RefersTo && defName.RefersTo[0] === "=") {
-						stringToParse = defName.RefersTo.substring(1);
+					// regex to find string enclosed in single qoutes
+					let regex = /^'(.*)'$/;
+					let match = regex.exec(sheetNamePart);
+					if (match && match[1]) {
+						sheetNamePart = match[1];
 					}
-					let oDefName = new Asc.asc_CDefName(defName.Name, stringToParse ? stringToParse : defName.RefersTo);
-					wb && wb.editDefinesNames(null, oDefName);
-					AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;	
+
+					ws = this.worksheets[sheetNamePart];
 				}
 			}
+
+			if (ws != null) {
+				//on parse name3d use g_DefNameWorksheet
+				let RealDefNameWorksheet = AscCommonExcel.g_DefNameWorksheet;
+				AscCommonExcel.g_DefNameWorksheet = ws;
+				let stringToParse;
+				if (defName && defName.RefersTo && defName.RefersTo[0] === "=") {
+					stringToParse = defName.RefersTo.substring(1);
+				}
+				let oDefName = new Asc.asc_CDefName(defName.Name, stringToParse ? stringToParse : defName.RefersTo);
+				const workbookDefName = wb && wb.editDefinesNames(null, oDefName);
+				if  (workbookDefName) {
+					workbookDefinedNames.push(workbookDefName);
+				}
+				AscCommonExcel.g_DefNameWorksheet = RealDefNameWorksheet;
+			}
+		}
+		return workbookDefinedNames;
+	};
+	ExternalReference.prototype.initWorkbook = function () {
+		if (this.DefinedNames) {
+			this.initDefinedNamesInWorkbook(this.DefinedNames);
 		}
 	};
 
@@ -15633,9 +15902,16 @@ function RangeDataManagerElem(bbox, data)
 		if (!val) {
 			return;
 		}
+		this.initDefinedNameFromObj({worksheetName: val.ws.sName, defName: val.value, shortLink: val.shortLink, ref: null});
+	};
 
-		const index = this.getSheetByName(val.ws.sName);
-		const name = val.value;
+	ExternalReference.prototype.initDefinedNameFromObj = function (val) {
+		if (!val) {
+			return;
+		}
+
+		const index = this.getSheetByName(val.worksheetName);
+		const name = val.defName;
 
 		//check on exist
 		// if (this.getDefName(name, index)) {
@@ -15648,7 +15924,24 @@ function RangeDataManagerElem(bbox, data)
 		let defName = new ExternalDefinedName(this);
 		defName.Name = name;
 		defName.SheetId = val.shortLink ? null : index;
+		defName.RefersTo = val.ref || null;
 		this.addDefName(defName);
+		return defName;
+	};
+	ExternalReference.prototype.initDefinedNamesOnCopyPaste = function (definedNameInfos) {
+		const externalDefinedNames = [];
+		for (let i = 0; i < definedNameInfos.length; i++) {
+			const defNameInfo = definedNameInfos[i];
+			const oExternalDefName = this.initDefinedNameFromObj(defNameInfo);
+			if (oExternalDefName) {
+				externalDefinedNames.push(oExternalDefName);
+			}
+		}
+		const workbookDefNames = this.initDefinedNamesInWorkbook(externalDefinedNames);
+		for (let i = 0; i < workbookDefNames.length; i += 1) {
+			const workbookDefName = workbookDefNames[i];
+			workbookDefName.parsedRef.parse();
+		}
 	};
 
 	ExternalReference.prototype.addDefName = function (defName) {
@@ -15684,62 +15977,6 @@ function RangeDataManagerElem(bbox, data)
 			}
 		}
 	};
-
-	ExternalReference.prototype.setReferenceData = function (fileId, portalName) {
-		if (!fileId || !portalName) {
-			return;
-		}
-		if (!this.referenceData) {
-			this.referenceData = {};
-		}
-		this.referenceData["instanceId"] = portalName;
-		this.referenceData["fileKey"] = fileId + "";
-	};
-
-	ExternalReference.prototype.setId = function (id) {
-		if (!id) {
-			return;
-		}
-
-		this.Id = id;
-	};
-
-	ExternalReference.prototype.initFromObj = function (obj) {
-		//directUrl:
-		//fileType:
-		//token:
-		//url
-		//path
-		//referenceData
-		if (obj["path"] !== this.Id) {
-			this.setId(this._checkAndCorrectPath(obj["path"], obj["filePath"]));
-		}
-
-		if (obj["referenceData"] && (!this.referenceData || this.referenceData["instanceId"] !== obj["referenceData"]["instanceId"] ||
-			this.referenceData["instanceId"] !== obj["referenceData"]["fileKey"])) {
-			this.setReferenceData(obj["referenceData"]["fileKey"], obj["referenceData"]["instanceId"]);
-		}
-	};
-
-	ExternalReference.prototype._checkAndCorrectPath = function (sPath, sAbsolutePath) {
-		if (!sPath || 1 === sPath.indexOf("../")) {
-			// sPath -> ../../from.xlsx
-			//sAbsolutePath - > C:\root\from.xlsx
-			// need -> /root/from.xlsx
-			if (sAbsolutePath) {
-				sPath = sAbsolutePath.substring(sAbsolutePath.indexOf("\\"))
-				sPath = sPath.replace(/\\/g,"/")
-			}
-		} else if (sPath && -1 !== sPath.indexOf(":/")) {
-			// sPath -> C:/root/from1.xlsx
-			//need -> file:///C:\root\from1.xlsx
-			sPath = sPath.replace(/\//g,"\\");
-			sPath = "file:///" + sPath;
-		}
-
-		return sPath;
-	};
-
 	ExternalReference.prototype.addDataSetFrom = function (eR) {
 		if (!eR.SheetDataSet) {
 			return;
@@ -15759,9 +15996,8 @@ function RangeDataManagerElem(bbox, data)
 			}
 		}
 	};
+	ExternalReference.prototype.addDefNameFromInfo = function (defNameInfo) {
 
-	ExternalReference.prototype.getKey = function() {
-		return this.sKey;
 	};
 	ExternalReference.prototype.shiftData = function () {
 		/* shift data to 1 position left */
@@ -15771,10 +16007,6 @@ function RangeDataManagerElem(bbox, data)
 				dataSet.SheetId--;
 			}
 		}
-	};
-
-	ExternalReference.prototype.setKey = function(val) {
-		this.sKey = val;
 	};
 
 	function asc_CExternalReference() {
@@ -15918,6 +16150,10 @@ function RangeDataManagerElem(bbox, data)
 		if (sheet) {
 			var t = this;
 
+			var api_sheet = Asc['editor'];
+			var wb = api_sheet.wbModel;
+			var wbView = api_sheet.wb;
+			const aRanges = [];
 			//TODO пока обновлю ячейки по одной, в дальнейшем нужно объединить ячейки в диапазоны
 			for (var i = 0; i < this.Row.length; i++) {
 				var row = this.Row[i];
@@ -15930,16 +16166,13 @@ function RangeDataManagerElem(bbox, data)
 						continue;
 					}
 					var range = sheet.getRange2(externalCell.Ref);
+					aRanges.push(range);
 					range._foreach(function (cell) {
 
 						let changedCell = externalCell.initFromCell(cell, true, noData);
 						if (!isChanged) {
 							isChanged = changedCell;
 						}
-
-						var api_sheet = Asc['editor'];
-						var wb = api_sheet.wbModel;
-						
 						/* if we haven't received data from an external source, put #REF error for all cells */
 						if (noData) {
 							cell._setValue("#REF!");
@@ -15949,6 +16182,7 @@ function RangeDataManagerElem(bbox, data)
 					});
 				}
 			}
+			wbView && wbView.handleChartsOnWorkbookChange(aRanges);
 		}
 		return isChanged;
 	};
@@ -18384,7 +18618,7 @@ function RangeDataManagerElem(bbox, data)
 						let _range = arg[i].getRange();
 						let ws = _range.worksheet;
 						let _address = (ws ? AscCommon.parserHelp.getEscapeSheetName(ws.getName()) + "!" : "") + _range.getName();
-						oContext["args"][i] = {"address": _address, "startCol": _range.bbox.c1, "endCol": _range.bbox.c2, "startRow": _range.bbox.r1, "endRow": _range.bbox.r2};
+						oContext["args"][i] = {"address": _address};
 					}
 
 
@@ -18752,7 +18986,7 @@ function RangeDataManagerElem(bbox, data)
 
 		return this.funcsMapInfo[name];
 	};
-	
+
 	CCustomFunctionEngine.prototype.getDescription = function (name, ignoreLocale) {
 		let res = null;
 
@@ -20103,6 +20337,7 @@ function RangeDataManagerElem(bbox, data)
 	prot["asc_getIndent"] = prot.asc_getIndent;
 	prot["asc_getWrapText"] = prot.asc_getWrapText;
 	prot["asc_getShrinkToFit"] = prot.asc_getShrinkToFit;
+	prot["asc_getReadingOrder"] = prot.asc_getReadingOrder;
 	prot["asc_getPreview"] = prot.asc_getPreview;
 	prot["asc_getLocked"] = prot.asc_getLocked;
 	prot["asc_getHidden"] = prot.asc_getHidden;
@@ -20395,6 +20630,7 @@ function RangeDataManagerElem(bbox, data)
 	window["AscCommonExcel"].CT_Connection = CT_Connection;
 	window["AscCommonExcel"].CT_Filter = CT_Filter;
 
+	window["AscCommonExcel"].CChartExternalReference = CChartExternalReference;
 	window["AscCommonExcel"].ExternalReference = ExternalReference;
 	window["AscCommonExcel"].ExternalSheetDataSet = ExternalSheetDataSet;
 	window["AscCommonExcel"].ExternalRow = ExternalRow;

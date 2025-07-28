@@ -208,7 +208,18 @@
 			getModifiersMethod = themes[0].getOuterShdw;
 			isEffectIdx = true;
 
-			initialDefaultValue = AscFormat.CreateUniColorRGB(255,255,255);
+			initialDefaultValue = AscFormat.CreateUniColorRGB(0,0,0);
+		} else if (cellName === "ShapeShdwOffsetX" || cellName === "ShapeShdwOffsetY") {
+			quickStyleCellName = "QuickStyleShadowColor";
+			quickStyleModifiersCellName = "QuickStyleEffectsMatrix";
+			getModifiersMethod = themes[0].getOuterShdw;
+			isEffectIdx = true;
+
+			if (cellName === "ShapeShdwOffsetX") {
+				initialDefaultValue = 0.125;
+			} else {
+				initialDefaultValue = -0.125;
+			}
 		} else {
 			AscCommon.consoleLog("themeval argument error. cell name: " + cellName + " is unknown. return undefined.");
 			return undefined;
@@ -502,6 +513,22 @@
 			} else if (cellName === "ShdwForegnd") {
 				let shadowColor = getMedifiersResult && getMedifiersResult.color;
 				result = shadowColor;
+			} else if (cellName === "ShapeShdwOffsetX" || cellName === "ShapeShdwOffsetY") {
+				let dir = getMedifiersResult && getMedifiersResult.dir;
+				let dist = getMedifiersResult && getMedifiersResult.dist;
+
+				let dist_inches = dist * g_dKoef_emu_to_mm / g_dKoef_in_to_mm;
+				let dir_radians = dir * AscFormat.cToRad;
+
+				// We are now in ooxml cord type system where y goes down.
+				// Let's convert to MS Euclidean cord system where y goes up.
+				dir_radians = -1 * dir_radians;
+
+				if (cellName === "ShapeShdwOffsetX") {
+					result = dist_inches * Math.cos(dir_radians);
+				} else {
+					result = dist_inches * Math.sin(dir_radians);
+				}
 			} else {
 				AscCommon.consoleLog("Error in themeval. result is not changed to appropriate type or quickStyleCellName is not set.");
 			}

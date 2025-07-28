@@ -77,7 +77,7 @@
 		function CBaseNoIdObject() {
 		}
 
-
+		InitClass(CBaseNoIdObject, AscCommon.CTree, AscDFH.historyitem_type_Unknown);
 		CBaseNoIdObject.prototype.classType = AscDFH.historyitem_type_Unknown;
 		CBaseNoIdObject.prototype.notAllowedWithoutId = function () {
 			return false;
@@ -292,69 +292,7 @@
 				this.writeRecord1(pWriter, nType, oChild);
 			}
 		};
-		CBaseFormatNoIdObject.prototype.getChildren = function () {
-			return [];
-		};
-		CBaseFormatNoIdObject.prototype.traverse = function (fCallback, bReverseOrder) {
-			if (fCallback(this)) {
-				return true;
-			}
-			let aChildren = this.getChildren();
-			if(bReverseOrder === undefined || bReverseOrder === true) {
-				for (let nChild = aChildren.length - 1; nChild > -1; --nChild) {
-					let oChild = aChildren[nChild];
-					if (oChild && oChild.traverse) {
-						if (oChild.traverse(fCallback, bReverseOrder)) {
-							return true;
-						}
-					}
-				}
-			}
-			else {
-				for (let nChild = 0; nChild < aChildren.length; ++nChild) {
-					let oChild = aChildren[nChild];
-					if (oChild && oChild.traverse) {
-						if (oChild.traverse(fCallback, bReverseOrder)) {
-							return true;
-						}
-					}
-				}
-			}
-			return false;
-		};
-		CBaseFormatNoIdObject.prototype.isEqual = function (oOther) {
-			if (!oOther) {
-				return false;
-			}
-			if (this.getObjectType() !== oOther.getObjectType()) {
-				return false;
-			}
-			var aThisChildren = this.getChildren();
-			var aOtherChildren = oOther.getChildren();
-			if (aThisChildren.length !== aOtherChildren.length) {
-				return false;
-			}
-			for (var nChild = 0; nChild < aThisChildren.length; ++nChild) {
-				var oThisChild = aThisChildren[nChild];
-				var oOtherChild = aOtherChildren[nChild];
-				if (oThisChild !== this.checkEqualChild(oThisChild, oOtherChild)) {
-					return false;
-				}
-			}
-			return true;
-		};
-		CBaseFormatNoIdObject.prototype.checkEqualChild = function (oThisChild, oOtherChild) {
-			if (AscCommon.isRealObject(oThisChild) && oThisChild.isEqual) {
-				if (!oThisChild.isEqual(oOtherChild)) {
-					return undefined;
-				}
-			} else {
-				if (oThisChild !== oOtherChild) {
-					return undefined;
-				}
-			}
-			return oThisChild;
-		};
+
 		function CBaseFormatObject() {
 			CBaseFormatNoIdObject.call(this);
 			this.Id = null;
@@ -1894,10 +1832,6 @@
 		var cd23 = 2.0 / 3.0;
 		var max_hls = 255.0;
 
-		var DEC_GAMMA = 2.3;
-		var INC_GAMMA = 1.0 / DEC_GAMMA;
-		var MAX_PERCENT = 100000;
-
 		function CColorModifiers() {
 			this.Mods = [];
 		}
@@ -2031,9 +1965,9 @@
 			HLS.S = S;
 			HLS.L = L;
 		};
-		CColorModifiers.prototype.HSL2RGB = function (HSL, RGB) {
+		CColorModifiers.prototype.HSL2RGB = function (HSL, RGB, bRoundValues) {
 			if (HSL.S == 0) {
-				const clampL = AscFormat.ClampColor(HSL.L);
+				const clampL = bRoundValues ? AscFormat.ClampColor(HSL.L) : HSL.L;
 				RGB.R = clampL;
 				RGB.G = clampL;
 				RGB.B = clampL;
@@ -2053,9 +1987,15 @@
 				var G = (255 * this.Hue_2_RGB(v1, v2, H));
 				var B = (255 * this.Hue_2_RGB(v1, v2, H - cd13));
 
-				RGB.R = AscFormat.ClampColor(R);
-				RGB.G = AscFormat.ClampColor(G);
-				RGB.B = AscFormat.ClampColor(B);
+				if (bRoundValues) {
+					RGB.R = AscFormat.ClampColor(R);
+					RGB.G = AscFormat.ClampColor(G);
+					RGB.B = AscFormat.ClampColor(B);
+				} else {
+					RGB.R = R;
+					RGB.G = G;
+					RGB.B = B;
+				}
 			}
 		};
 		CColorModifiers.prototype.Hue_2_RGB = function (v1, v2, vH) {
@@ -2071,39 +2011,51 @@
 				return v1 + (v2 - v1) * (cd23 - vH) * 6.0;
 			return v1;
 		};
-		CColorModifiers.prototype.lclRgbCompToCrgbComp = function (value) {
-			return (value * MAX_PERCENT / 255);
-		};
-		CColorModifiers.prototype.lclCrgbCompToRgbComp = function (value) {
-			return (value * 255 / MAX_PERCENT);
-		};
-		CColorModifiers.prototype.lclGamma = function (nComp, fGamma) {
-			return (Math.pow(nComp / MAX_PERCENT, fGamma) * MAX_PERCENT + 0.5) >> 0;
+		CColorModifiers.prototype.standardToLinear = function(nColorValue) {
+			if (nColorValue <= 0.04045) {
+				return nColorValue / 12.92;
+			}
+			return Math.pow((nColorValue + 0.055) / 1.055, 2.4);
+		}
+		CColorModifiers.prototype.linearToStandard = function(nColorValue) {
+			if (nColorValue <= 0.0031308) {
+				return  12.92 * nColorValue;
+			}
+			return 1.055 * Math.pow(nColorValue, 1 / 2.4) - 0.055;
+		}
+		CColorModifiers.prototype.RgbtoCrgbColor = function (c) {
+			if (this.isUsePow) {
+				return this.standardToLinear(c / 255);
+			}
+			return c / 255;
 		};
 		CColorModifiers.prototype.RgbtoCrgb = function (RGBA) {
-			//RGBA.R = this.lclGamma(this.lclRgbCompToCrgbComp(RGBA.R), DEC_GAMMA);
-			//RGBA.G = this.lclGamma(this.lclRgbCompToCrgbComp(RGBA.G), DEC_//GAMMA);
-			//RGBA.B = this.lclGamma(this.lclRgbCompToCrgbComp(RGBA.B), DEC_GAMMA);
-
+				RGBA.R = this.RgbtoCrgbColor(RGBA.R);
+				RGBA.G = this.RgbtoCrgbColor(RGBA.G);
+				RGBA.B = this.RgbtoCrgbColor(RGBA.B);
+		};
+		CColorModifiers.prototype.CrgbtoRgbColor = function (c) {
 			if (this.isUsePow) {
-				RGBA.R = (Math.pow(RGBA.R / 255, DEC_GAMMA) * MAX_PERCENT + 0.5) >> 0;
-				RGBA.G = (Math.pow(RGBA.G / 255, DEC_GAMMA) * MAX_PERCENT + 0.5) >> 0;
-				RGBA.B = (Math.pow(RGBA.B / 255, DEC_GAMMA) * MAX_PERCENT + 0.5) >> 0;
+			return this.linearToStandard(c) * 255;
 			}
+			return c * 255;
 		};
 		CColorModifiers.prototype.CrgbtoRgb = function (RGBA) {
-			//RGBA.R = (this.lclCrgbCompToRgbComp(this.lclGamma(RGBA.R, INC_GAMMA)) + 0.5) >> 0;
-			//RGBA.G = (this.lclCrgbCompToRgbComp(this.lclGamma(RGBA.G, INC_GAMMA)) + 0.5) >> 0;
-			//RGBA.B = (this.lclCrgbCompToRgbComp(this.lclGamma(RGBA.B, INC_GAMMA)) + 0.5) >> 0;
-
-			if (this.isUsePow) {
-				RGBA.R = Math.pow(RGBA.R / 100000, INC_GAMMA) * 255;
-				RGBA.G = Math.pow(RGBA.G / 100000, INC_GAMMA) * 255;
-				RGBA.B = Math.pow(RGBA.B / 100000, INC_GAMMA) * 255;
+				RGBA.R = this.CrgbtoRgbColor(RGBA.R);
+				RGBA.G = this.CrgbtoRgbColor(RGBA.G);
+				RGBA.B = this.CrgbtoRgbColor(RGBA.B);
+		};
+		CColorModifiers.prototype.graySaturation = function(RGBA, nSat) {
+			const L = RGBA.R;
+			if (L < 128) {
+				RGBA.R = L * (1 + nSat);
+				RGBA.G = L * (1 - nSat);
+				RGBA.B = L * (1 - 5 * nSat);
+			} else {
+				RGBA.R = (L + (255 - L) * nSat);
+				RGBA.G = (L - (255 - L) * nSat);
+				RGBA.B = (L - 5 * (255 - L) * nSat);
 			}
-			RGBA.R = AscFormat.ClampColor(RGBA.R);
-			RGBA.G = AscFormat.ClampColor(RGBA.G);
-			RGBA.B = AscFormat.ClampColor(RGBA.B);
 		};
 		CColorModifiers.prototype.Apply = function (RGBA) {
 			if (null == this.Mods)
@@ -2112,153 +2064,270 @@
 			const _len = this.Mods.length;
 			for (let i = 0; i < _len; i++) {
 				const colorMod = this.Mods[i];
-				let val = colorMod.val / 100000.0;
-
-				if (colorMod.name === "alpha") {
-					RGBA.A = AscFormat.ClampColor(255 * val);
-				} else if (colorMod.name === "blue") {
-					RGBA.B = AscFormat.ClampColor(255 * val);
-				} else if (colorMod.name === "blueMod") {
-					RGBA.B = AscFormat.ClampColor(RGBA.B * val);
-				} else if (colorMod.name === "blueOff") {
-					RGBA.B = AscFormat.ClampColor(RGBA.B + val * 255);
-				} else if (colorMod.name === "green") {
-					RGBA.G = AscFormat.ClampColor(255 * val);
-				} else if (colorMod.name === "greenMod") {
-					RGBA.G = AscFormat.ClampColor(RGBA.G * val);
-				} else if (colorMod.name === "greenOff") {
-					RGBA.G = AscFormat.ClampColor(RGBA.G + val * 255);
-				} else if (colorMod.name === "red") {
-					RGBA.R = AscFormat.ClampColor(255 * val);
-				} else if (colorMod.name === "redMod") {
-					RGBA.R = AscFormat.ClampColor(RGBA.R * val);
-				} else if (colorMod.name === "redOff") {
-					RGBA.R = AscFormat.ClampColor(RGBA.R + val * 255);
-				} else if (colorMod.name === "hueMod") {
-					if (val === 1) {
-						continue;
+				let val = colorMod.val / 100000;
+				switch (colorMod.name) {
+					case "alpha": {
+						if (val < 0 || val > 1) {
+							val = 0;
+						}
+						RGBA.A = 255 * val;
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-					HSL.H = AscCommon.trimMinMaxValue(HSL.H * val, 0, max_hls);
-
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "hueOff") {
-					if (val === 0) {
-						continue;
+					case "alphaMod": {
+						RGBA.A = RGBA.A * val;
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-					val = (colorMod.val / 60000) * (max_hls / 360);
-					const res = HSL.H + val;
-					HSL.H = AscCommon.trimMinMaxValue(res, 0, max_hls);
-
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "inv") {
-					RGBA.R ^= 0xFF;
-					RGBA.G ^= 0xFF;
-					RGBA.B ^= 0xFF;
-				} else if (colorMod.name === "lumMod") {
-					if (val === 1) {
-						continue;
+					case "alphaOff": {
+						if (val > 1) {
+							RGBA.A = 0;
+						} else {
+							RGBA.A = RGBA.A + 255 * val;
+						}
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-
-					HSL.L = AscCommon.trimMinMaxValue(HSL.L * val, 0, max_hls);
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "lumOff") {
-					if (val === 0) {
-						continue;
+					case"blue": {
+						RGBA.B = this.CrgbtoRgbColor(val);
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-
-					const res = HSL.L + val * max_hls;
-					HSL.L = AscCommon.trimMinMaxValue(res, 0, max_hls);
-
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "satMod") {
-					if (val === 1) {
-						continue;
+					case"blueMod": {
+						RGBA.B = this.RgbtoCrgbColor(RGBA.B);
+						RGBA.B = RGBA.B * val;
+						RGBA.B = this.CrgbtoRgbColor(RGBA.B);
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-
-					HSL.S = AscCommon.trimMinMaxValue(HSL.S * val, 0, max_hls);
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "satOff") {
-					if (val === 0) {
-						continue;
+					case"blueOff": {
+						RGBA.B = this.RgbtoCrgbColor(RGBA.B);
+						RGBA.B = RGBA.B + val;
+						RGBA.B = this.CrgbtoRgbColor(RGBA.B);
+						break;
 					}
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-					const res = HSL.S + val * max_hls;
-					HSL.S = AscCommon.trimMinMaxValue(res, 0, max_hls);
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "wordShade") {
-					if (colorMod.val === 255) {
-						continue;
+					case"green": {
+						RGBA.G = this.CrgbtoRgbColor(val);
+						break;
 					}
-					const val_ = colorMod.val / 255;
-					//GBA.R = Math.max(0, (RGBA.R * (1 - val_)) >> 0);
-					//GBA.G = Math.max(0, (RGBA.G * (1 - val_)) >> 0);
-					//GBA.B = Math.max(0, (RGBA.B * (1 - val_)) >> 0);
-
-
-					//RGBA.R = Math.max(0,  ((1 - val_)*(- RGBA.R) + RGBA.R) >> 0);
-					//RGBA.G = Math.max(0,  ((1 - val_)*(- RGBA.G) + RGBA.G) >> 0);
-					//RGBA.B = Math.max(0,  ((1 - val_)*(- RGBA.B) + RGBA.B) >> 0);
-
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
-
-					HSL.L = AscCommon.trimMinMaxValue(HSL.L * val_, 0, max_hls);
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "wordTint") {
-					if (colorMod.val === 255) {
-						continue;
+					case"greenMod": {
+						RGBA.G = this.RgbtoCrgbColor(RGBA.G);
+						RGBA.G = RGBA.G * val;
+						RGBA.G = this.CrgbtoRgbColor(RGBA.G);
+						break;
 					}
-					const _val = colorMod.val / 255;
-					//RGBA.R = Math.max(0,  ((1 - _val)*(255 - RGBA.R) + RGBA.R) >> 0);
-					//RGBA.G = Math.max(0,  ((1 - _val)*(255 - RGBA.G) + RGBA.G) >> 0);
-					//RGBA.B = Math.max(0,  ((1 - _val)*(255 - RGBA.B) + RGBA.B) >> 0);
+					case"greenOff": {
+						RGBA.G = this.RgbtoCrgbColor(RGBA.G);
+						RGBA.G = RGBA.G + val;
+						RGBA.G = this.CrgbtoRgbColor(RGBA.G);
+						break;
+					}
+					case"red": {
+						RGBA.R = this.CrgbtoRgbColor(val);
+						break;
+					}
+					case"redMod": {
+						RGBA.R = this.RgbtoCrgbColor(RGBA.R);
+						RGBA.R = RGBA.R * val;
+						RGBA.R = this.CrgbtoRgbColor(RGBA.R);
+						break;
+					}
+					case"redOff": {
+						RGBA.R = this.RgbtoCrgbColor(RGBA.R);
+						RGBA.R = RGBA.R + val;
+						RGBA.R = this.CrgbtoRgbColor(RGBA.R);
+						break;
+					}
+					case"hueMod": {
+						val = Math.max(0, val);
+						if (val === 1) {
+							continue;
+						}
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						const _H = HSL.H * val;
+						HSL.H = _H - Math.floor(_H / 255) * 255;
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"hueOff": {
+						if (val === 0) {
+							continue;
+						}
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						val = (colorMod.val / 60000) * (max_hls / 360);
+						let res = HSL.H + val;
+						if (res > max_hls || res < 0) {
+							res -= Math.floor(res / max_hls) * max_hls;
+						}
+						HSL.H = res;
 
-					const HSL = {H: 0, S: 0, L: 0};
-					this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"hue": {
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						val = (colorMod.val / 60000) * (max_hls / 360);
+						const res = AscCommon.trimMinMaxValue(val, 0, max_hls);
+						HSL.H = res;
 
-					const L_ = HSL.L * _val + (255 - colorMod.val);
-					HSL.L = AscCommon.trimMinMaxValue(L_, 0, max_hls);
-					this.HSL2RGB(HSL, RGBA);
-				} else if (colorMod.name === "shade") {
-					this.RgbtoCrgb(RGBA);
-					if (val < 0) val = 0;
-					if (val > 1) val = 1;
-					RGBA.R = (RGBA.R * val);
-					RGBA.G = (RGBA.G * val);
-					RGBA.B = (RGBA.B * val);
-					this.CrgbtoRgb(RGBA);
-				} else if (colorMod.name === "tint") {
-					this.RgbtoCrgb(RGBA);
-					if (val < 0) val = 0;
-					if (val > 1) val = 1;
-					RGBA.R = (MAX_PERCENT - (MAX_PERCENT - RGBA.R) * val);
-					RGBA.G = (MAX_PERCENT - (MAX_PERCENT - RGBA.G) * val);
-					RGBA.B = (MAX_PERCENT - (MAX_PERCENT - RGBA.B) * val);
-					this.CrgbtoRgb(RGBA);
-				} else if (colorMod.name === "gamma") {
-					this.RgbtoCrgb(RGBA);
-					RGBA.R = this.lclGamma(RGBA.R, INC_GAMMA);
-					RGBA.G = this.lclGamma(RGBA.G, INC_GAMMA);
-					RGBA.B = this.lclGamma(RGBA.B, INC_GAMMA);
-					this.CrgbtoRgb(RGBA);
-				} else if (colorMod.name === "invGamma") {
-					this.RgbtoCrgb(RGBA);
-					RGBA.R = this.lclGamma(RGBA.R, DEC_GAMMA);
-					RGBA.G = this.lclGamma(RGBA.G, DEC_GAMMA);
-					RGBA.B = this.lclGamma(RGBA.B, DEC_GAMMA);
-					this.CrgbtoRgb(RGBA);
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"inv": {
+						this.RgbtoCrgb(RGBA);
+						RGBA.R = 1 - RGBA.R;
+						RGBA.G = 1 - RGBA.G;
+						RGBA.B = 1 - RGBA.B;
+						this.CrgbtoRgb(RGBA);
+						break;
+					}
+					case"lumMod": {
+						if (val === 1) {
+							continue;
+						}
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+
+						HSL.L = HSL.L * val;
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"lumOff": {
+						if (val === 0) {
+							continue;
+						}
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						const res = HSL.L + val * max_hls;
+						HSL.L = res;
+
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"satMod": {
+						if (val === 1) {
+							continue;
+						}
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						HSL.S = HSL.S * val;
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"satOff": {
+						if (val === 0) {
+							continue;
+						}
+						if (RGBA.R === RGBA.G && RGBA.R === RGBA.B) {
+							this.graySaturation(RGBA, val);
+						} else {
+							const HSL = {H: 0, S: 0, L: 0};
+							this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+							const res = HSL.S + val * max_hls;
+							HSL.S = res;
+							this.HSL2RGB(HSL, RGBA);
+						}
+						break;
+					}
+					case"wordShade": {
+						if (colorMod.val === 255) {
+							continue;
+						}
+						const val_ = colorMod.val / 255;
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+
+						HSL.L = AscCommon.trimMinMaxValue(HSL.L * val_, 0, max_hls);
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"wordTint": {
+						if (colorMod.val === 255) {
+							continue;
+						}
+						const _val = colorMod.val / 255;
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+
+						const L_ = HSL.L * _val + (255 - colorMod.val);
+						HSL.L = AscCommon.trimMinMaxValue(L_, 0, max_hls);
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case"shade": {
+						this.RgbtoCrgb(RGBA);
+						if (val < 0 || val > 1) val = 0;
+						RGBA.R = (RGBA.R * val);
+						RGBA.G = (RGBA.G * val);
+						RGBA.B = (RGBA.B * val);
+						this.CrgbtoRgb(RGBA);
+						break;
+					}
+					case"tint": {
+						this.RgbtoCrgb(RGBA);
+						if (val < 0 || val > 1) val = 0;
+						RGBA.R = (1 - (1 - RGBA.R) * val);
+						RGBA.G = (1 - (1 - RGBA.G) * val);
+						RGBA.B = (1 - (1 - RGBA.B) * val);
+						this.CrgbtoRgb(RGBA);
+						break;
+					}
+					case"gamma": {
+						RGBA.R = this.linearToStandard(RGBA.R / 255) * 255;
+						RGBA.G = this.linearToStandard(RGBA.G / 255) * 255;
+						RGBA.B = this.linearToStandard(RGBA.B / 255) * 255;
+						break;
+					}
+					case"invGamma": {
+						RGBA.R = this.standardToLinear(RGBA.R / 255) * 255;
+						RGBA.G = this.standardToLinear(RGBA.G / 255) * 255;
+						RGBA.B = this.standardToLinear(RGBA.B / 255) * 255;
+						break;
+					}
+					case "comp": {
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						const _H = (HSL.H + 0.5 * max_hls) % max_hls;
+						HSL.H = _H;
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
+					case "gray": {
+						const gray = 0.2126 * RGBA.R + 0.7152 * RGBA.G + 0.0722 * RGBA.B;
+						RGBA.R = gray;
+						RGBA.G = gray;
+						RGBA.B = gray;
+						break;
+					}
+					case "sat": {
+						if (RGBA.R === RGBA.G && RGBA.R === RGBA.B) {
+							this.graySaturation(RGBA, val);
+						} else {
+							const HSL = {H: 0, S: 0, L: 0};
+							this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+							const res = val * max_hls;
+							HSL.S = res;
+							this.HSL2RGB(HSL, RGBA);
+						}
+						break;
+					}
+					case "lum": {
+						const HSL = {H: 0, S: 0, L: 0};
+						this.RGB2HSL(RGBA.R, RGBA.G, RGBA.B, HSL);
+						const res = val * max_hls;
+						HSL.L = res;
+						this.HSL2RGB(HSL, RGBA);
+						break;
+					}
 				}
+				RGBA.R = AscCommon.trimMinMaxValue(RGBA.R, 0, 255);
+				RGBA.G = AscCommon.trimMinMaxValue(RGBA.G, 0, 255);
+				RGBA.B = AscCommon.trimMinMaxValue(RGBA.B, 0, 255);
+				RGBA.A = AscCommon.trimMinMaxValue(RGBA.A, 0, 255);
+			}
+			if (_len) {
+				RGBA.R = AscFormat.ClampColor(RGBA.R);
+				RGBA.G = AscFormat.ClampColor(RGBA.G);
+				RGBA.B = AscFormat.ClampColor(RGBA.B);
+				RGBA.A = AscFormat.ClampColor(RGBA.A);
 			}
 		};
 		CColorModifiers.prototype.Merge = function (oOther) {
@@ -2841,7 +2910,7 @@
 		};
 		CRGBColor.prototype.checkHSL = function () {
 			if (this.h !== null && this.s !== null && this.l !== null) {
-				CColorModifiers.prototype.HSL2RGB.call(this, {H: this.h, S: this.s, L: this.l}, this.RGBA);
+				CColorModifiers.prototype.HSL2RGB.call(this, {H: this.h, S: this.s, L: this.l}, this.RGBA, true);
 				this.h = null;
 				this.s = null;
 				this.l = null;
@@ -8832,6 +8901,9 @@
 			this.setChExtY(this.extY);
 		};
 
+		/**
+		 * @constructor
+		 */
 		function CEffectProperties() {
 			CBaseNoIdObject.call(this);
 			this.EffectDag = null;
@@ -10119,6 +10191,18 @@
 					return false;
 			}
 			return true;
+		};
+		CEffectStyle.prototype.fromPPTY = function (pReader) {
+			CBaseFormatNoIdObject.prototype.fromPPTY.call(this, pReader);
+			this.checkEffectPr();
+		};
+		CEffectStyle.prototype.checkEffectPr = function () {
+			if (!this.effectProperties) {
+				this.setEffectPr(new AscFormat.CEffectProperties());
+			}
+			if (!this.effectProperties.EffectLst && !this.effectProperties.EffectDag) {
+				this.effectProperties.EffectLst = new AscFormat.CEffectLst();
+			}
 		};
 		CEffectStyle.prototype.writeChildren = function(pWriter) {
 			var oEffectPr = this.effectProperties;
@@ -16064,6 +16148,34 @@
 				pen.Fill.fill.color.color.setId(phClr);
 				theme.themeElements.fmtScheme.lnStyleLst.push(pen);
 				theme.extraClrSchemeLst = [];
+
+
+				let oEffectStyle;
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
+
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
+
+				oEffectStyle = new AscFormat.CEffectStyle();
+				oEffectStyle.checkEffectPr();
+				const oOuterShdw = new AscFormat.COuterShdw();
+				oOuterShdw.algn = AscFormat.RECT_ALIGN_CTR;
+				oOuterShdw.blurRad = 57150;
+				oOuterShdw.dir = 5400000;
+				oOuterShdw.dist = 19050;
+				oOuterShdw.rotWithShape = false;
+				const oEffectColor = AscFormat.CreateUniColorRGB(0, 0, 0);
+				const oColorMod = new AscFormat.CColorMod();
+				oColorMod.name = "alpha";
+				oColorMod.val = 63000;
+				oEffectColor.addColorMod(oColorMod);
+				oOuterShdw.color = oEffectColor;
+
+				oEffectStyle.effectProperties.EffectLst.outerShdw = oOuterShdw;
+				theme.themeElements.fmtScheme.effectStyleLst.push(oEffectStyle);
 				return theme;
 			}, this, []);
 		}
@@ -16889,7 +17001,7 @@
 
 		function ChartBuilderTypeToInternal(sType) {
 			switch (sType) {
-				case "bar" : {
+				case "bar": {
 					return Asc.c_oAscChartTypeSettings.barNormal;
 				}
 				case "barStacked": {
@@ -16937,6 +17049,15 @@
 				case "lineStackedPercent": {
 					return Asc.c_oAscChartTypeSettings.lineStackedPer;
 				}
+				case "lineNormalMarker": {
+					return Asc.c_oAscChartTypeSettings.lineNormalMarker;
+				}
+				case "lineStackedMarker": {
+					return Asc.c_oAscChartTypeSettings.lineStackedMarker;
+				}
+				case "lineStackedPerMarker": {
+					return Asc.c_oAscChartTypeSettings.lineStackedPerMarker;
+				}
 				case "line3D": {
 					return Asc.c_oAscChartTypeSettings.line3d;
 				}
@@ -16952,6 +17073,18 @@
 				case "scatter": {
 					return Asc.c_oAscChartTypeSettings.scatter;
 				}
+				case "scatterLine": {
+					return Asc.c_oAscChartTypeSettings.scatterLine;
+				}
+				case "scatterLineMarker": {
+					return Asc.c_oAscChartTypeSettings.scatterLineMarker;
+				}
+				case "scatterSmooth": {
+					return Asc.c_oAscChartTypeSettings.scatterSmooth;
+				}
+				case "scatterSmoothMarker": {
+					return Asc.c_oAscChartTypeSettings.scatterSmoothMarker;
+				}
 				case "stock": {
 					return Asc.c_oAscChartTypeSettings.stock;
 				}
@@ -16964,20 +17097,51 @@
 				case "areaStackedPercent": {
 					return Asc.c_oAscChartTypeSettings.areaStackedPer;
 				}
+				case "comboCustom": {
+					return Asc.c_oAscChartTypeSettings.comboCustom;
+				}
 				case "comboBarLine": {
 					return Asc.c_oAscChartTypeSettings.comboBarLine;
 				}
 				case "comboBarLineSecondary": {
 					return Asc.c_oAscChartTypeSettings.comboBarLineSecondary;
 				}
-				case "comboCustom": {
-					return Asc.c_oAscChartTypeSettings.comboCustom;
+				case "radar": {
+					return Asc.c_oAscChartTypeSettings.radar;
 				}
+				case "radarMarker": {
+					return Asc.c_oAscChartTypeSettings.radarMarker;
+				}
+				case "radarFilled": {
+					return Asc.c_oAscChartTypeSettings.radarFilled;
+				}
+
+				// Unhandled cases from Asc.c_oAscChartTypeSettings (v9.0.0)
+				// case "scatterMarker": {
+				// 	return Asc.c_oAscChartTypeSettings.scatterMarker;
+				// }
+				// case "scatterNone": {
+				// 	return Asc.c_oAscChartTypeSettings.scatterNone;
+				// }
+				// case "comboAreaBar": {
+				// 	return Asc.c_oAscChartTypeSettings.comboAreaBar;
+				// }
+				// case "contour": {
+				// 	return Asc.c_oAscChartTypeSettings.contourNormal;
+				// }
+				// case "contourWireframe": {
+				// 	return Asc.c_oAscChartTypeSettings.contourWireframe;
+				// }
+				// case "surfaceNormal": {
+				// 	return Asc.c_oAscChartTypeSettings.surfaceNormal;
+				// }
+				// case "surfaceWireframe": {
+				// 	return Asc.c_oAscChartTypeSettings.surfaceWireframe;
+				// }
+
+				default: return null;
 			}
-			return null;
 		}
-
-
 
 		function builder_CreateChart(nW, nH, sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats) {
 			let settings = new Asc.asc_ChartSettings();

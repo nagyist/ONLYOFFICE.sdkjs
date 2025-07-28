@@ -4038,11 +4038,17 @@
 			
 			if ((oDocContent && !oDocContent.bPresentation) && !this.isForm()) {
 				
-				let x = -l_ins;
-				let y = -t_ins;
+				let shift = 0;
+				let drDoc = this.getDrawingDocument();
+				if (drDoc) {
+					shift = drDoc.GetMMPerDot(1);
+				}
 				
-				let _w = oRect.r - oRect.l;
-				let _h = oRect.b - oRect.t;
+				let x = -l_ins - shift;
+				let y = -t_ins - shift;
+				
+				let _w = oRect.r - oRect.l + 2 * shift;
+				let _h = oRect.b - oRect.t + 2 * shift;
 				
 				if (this._isTextRotated(oBodyPr)) {
 					oDocContent.Set_ClipInfo(0, y, y + _h, x, x + _w);

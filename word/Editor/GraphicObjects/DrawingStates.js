@@ -44,21 +44,57 @@ var HANDLE_EVENT_MODE_CURSOR = AscFormat.HANDLE_EVENT_MODE_CURSOR;
 var MOVE_DELTA = 1/100000;
 var SNAP_DISTANCE = 1.27;
 
-function checkEmptyPlaceholderContent(content)
-{
-    if(!content || content.Parent && content.Parent.txWarpStruct && content.Parent.recalcInfo.warpGeometry && content.Parent.recalcInfo.warpGeometry.preset !== "textNoShape" )
+function checkEmptyPlaceholderContent(content) {
+    if (!content) {
         return content;
-    var oShape = content.Parent;
-    if (oShape) {
-        if(content && content.Is_Empty()){
-            if(oShape.isPlaceholder && oShape.isPlaceholder()) {
-                return content;
-            }
-            if(content.isDocumentContentInSmartArtShape && content.isDocumentContentInSmartArtShape()) {
+    }
+
+    let isPdf = Asc.editor.isPdfEditor();
+    let shape = isPdf
+        ? (content.Parent && content.Parent.parent)
+        : content.Parent;
+
+    if (!shape) {
+        return null;
+    }
+
+    if (content.Is_Empty && content.Is_Empty()) {
+        if ((shape.isPlaceholder && shape.isPlaceholder()) ||
+            (content.isDocumentContentInSmartArtShape && content.isDocumentContentInSmartArtShape())) {
+            return content;
+        }
+    }
+
+    if (isPdf) {
+        if (shape.txWarpStruct ||
+            (shape.recalcInfo && shape.recalcInfo.warpGeometry)) {
+            return content;
+        }
+
+        if (shape.getBodyPr) {
+            let bodyPr = shape.getBodyPr();
+            if (bodyPr.vertOverflow !== AscFormat.nVOTOverflow) {
                 return content;
             }
         }
+
+        if (content.GetCurrentParagraph) {
+            let para = content.GetCurrentParagraph();
+            if (para && para.IsEmptyWithBullet && para.IsEmptyWithBullet()) {
+                return content;
+            }
+        }
+
+        return null;
     }
+
+    if (shape.txWarpStruct &&
+        shape.recalcInfo &&
+        shape.recalcInfo.warpGeometry &&
+        shape.recalcInfo.warpGeometry.preset !== "textNoShape") {
+        return content;
+    }
+
     return null;
 }
 
@@ -281,6 +317,11 @@ NullState.prototype =
         }
         const oThis = this;
         const fRecalculatePages = function() {
+            if (Asc.editor.isPdfEditor()) {
+                oThis.drawingObjects.checkRedrawOnChangeCursorPosition(start_target_doc_content, null);
+                return;
+            }
+            
             oThis.drawingObjects.checkChartTextSelection(true);
             oThis.drawingObjects.drawingDocument.OnRecalculatePage( pageIndex, oThis.drawingObjects.document.Pages[pageIndex] );
             if (AscFormat.isRealNumber(nStartPage) && pageIndex !== nStartPage) {
@@ -475,8 +516,7 @@ NullState.prototype =
                 {
                     end_target_doc_content = this.drawingObjects.getTargetDocContent();
                     if ((start_target_doc_content || end_target_doc_content) && (start_target_doc_content !== end_target_doc_content)) {
-
-                        this.drawingObjects.checkChartTextSelection();
+                        this.drawingObjects.checkRedrawOnChangeCursorPosition(start_target_doc_content, null);
                     }
                 }
                 return ret;
@@ -833,7 +873,9 @@ RotateState.prototype =
                             oTrack.trackEnd(false);
     
                             // для аннотаций свой расчет ректа и точек, потому что меняем саму геометрию при редактировании
-                            if (oTrack.originalObject.IsAnnot() && (oTrack instanceof AscFormat.ResizeTrackShapeImage || oTrack instanceof AscFormat.EditShapeGeometryTrack)) {
+                            if (oTrack.originalObject.IsAnnot() && (oTrack instanceof AscFormat.ResizeTrackShapeImage
+                                || oTrack instanceof AscFormat.EditShapeGeometryTrack
+                                || oTrack instanceof AscFormat.RotateTrackShapeImage)) {
                                 let oAnnot  = oTrack.originalObject;
                                 let aRect   = [bounds.posX * g_dKoef_mm_to_pt, bounds.posY * g_dKoef_mm_to_pt, (bounds.posX + bounds.extX) * g_dKoef_mm_to_pt, (bounds.posY + bounds.extY) * g_dKoef_mm_to_pt];
                                 
@@ -917,7 +959,7 @@ RotateState.prototype =
                                 else if (oAnnot.IsCircle() || oAnnot.IsSquare()) {
                                     // aRect in this case is an annot OrigRect - Rectangle Diff
                                     AscCommon.History.StartNoHistoryMode();
-                                    let aCurRect = oAnnot.GetOrigRect().slice();
+                                    let aCurRect = oAnnot.GetRect().slice();
                                     let aCurRD = oAnnot.GetRectangleDiff().slice();
                                     let nLineW = oAnnot.GetWidth() * g_dKoef_pt_to_mm;
                                     oAnnot.SetRect(aRect);
@@ -936,7 +978,7 @@ RotateState.prototype =
                                     aRect[2] = Math.round(oGrBounds.r + nLineW) * g_dKoef_mm_to_pt;
                                     aRect[3] = Math.round(oGrBounds.b + nLineW) * g_dKoef_mm_to_pt;
 
-                                    oAnnot._origRect = aCurRect;
+                                    oAnnot._rect = aCurRect;
                                     oAnnot._rectDiff = aCurRD;
 
                                     oAnnot.SetRect(aRect);
@@ -946,6 +988,53 @@ RotateState.prototype =
                                         Math.round(oGrBounds.r - oShapeBounds.r + nLineW) * g_dKoef_mm_to_pt,
                                         Math.round(oGrBounds.b - oShapeBounds.b + nLineW) * g_dKoef_mm_to_pt
                                     ]);
+                                }
+                                else if (oAnnot.IsInk()) {
+                                    oAnnot.UpdateGestures(aRect);
+                                    oAnnot.SetRect(aRect);
+                                }
+                                else if (oAnnot.IsStamp()) {
+                                    let isRotateAction = oTrack instanceof AscFormat.RotateTrackShapeImage;
+                                    if (isRotateAction) {
+                                        oAnnot.SetRotate(-oTrack.angle * (180 / Math.PI));
+                                    }
+
+                                    AscCommon.History.StartNoHistoryMode();
+                                    let aCurRect = oAnnot.GetRect().slice();
+                                    let oCurXfrm = oAnnot.getXfrm();
+
+                                    let nCurExtX = oAnnot.getXfrmExtX();
+                                    let nCurExtY = oAnnot.getXfrmExtY();
+                                    let nCurOffX = oAnnot.getXfrmOffX();
+                                    let nCurOffY = oAnnot.getXfrmOffY();
+
+                                    oAnnot.recalcBounds();
+                                    oAnnot.recalcGeometry();
+                                    
+                                    if (!isRotateAction) {
+                                        oAnnot.SetRect(aRect);
+                                        AscPDF.CAnnotationBase.prototype.RecalcSizes.call(oAnnot);
+                                        oAnnot.recalculate();
+                                    }
+                                    else {
+                                        oAnnot.Recalculate(true);
+                                    }
+                                    
+                                    AscCommon.History.EndNoHistoryMode();
+                                    
+                                    let oGrBounds = oAnnot.bounds;
+                                    aRect[0] = oGrBounds.l * g_dKoef_mm_to_pt;
+                                    aRect[1] = oGrBounds.t * g_dKoef_mm_to_pt;
+                                    aRect[2] = oGrBounds.r * g_dKoef_mm_to_pt;
+                                    aRect[3] = oGrBounds.b * g_dKoef_mm_to_pt;
+
+                                    oAnnot._rect = aCurRect;
+                                    oCurXfrm.extX = nCurExtX;
+                                    oCurXfrm.extY = nCurExtY;
+                                    oCurXfrm.offX = nCurOffX;
+                                    oCurXfrm.offY = nCurOffY;
+
+                                    oAnnot.SetRect(aRect);
                                 }
                                 else {
                                     oAnnot.SetRect(aRect);

@@ -1841,7 +1841,7 @@ function CDocument(DrawingDocument, isMainLogicDocument)
     this.IdCounter            = AscCommon.g_oIdCounter;
     this.TableId              = AscCommon.g_oTableId;
     this.CollaborativeEditing = (("undefined" !== typeof(AscCommon.CWordCollaborativeEditing) && AscCommon.CollaborativeEditing instanceof AscCommon.CWordCollaborativeEditing) ? AscCommon.CollaborativeEditing : null);
-    this.Api                  = editor;
+    this.Api                  = Asc.editor;
     //------------------------------------------------------------------------------------------------------------------
     //  Выставляем ссылки на главный класс
     //------------------------------------------------------------------------------------------------------------------
@@ -1864,7 +1864,7 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 	this.App = null;
 	this.Core = null;
     this.CustomProperties = new AscCommon.CCustomProperties();
-    this.CustomXmls = [];
+    this.customXmlManager = new AscWord.CustomXmlManager(this);
 
     // Сначала настраиваем размеры страницы и поля
     this.SectPr = new CSectionPr(this);
@@ -2244,8 +2244,6 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 
 	this.AutoCorrectSettings = new AscCommon.CAutoCorrectSettings();
 
-	this.customXml = new AscWord.CustomXmlManager(this);
-
     // Контролируем изменения интерфейса
     this.ChangedStyles      = []; // Объект с Id стилями, которые были изменены/удалены/добавлены
 	this.TurnOffPanelStyles = 0;  // == 0 - можно обновлять панельку со стилями, != 0 - нельзя обновлять
@@ -2306,6 +2304,10 @@ CDocument.prototype.constructor = CDocument;
 CDocument.prototype.IsDocumentEditor = function()
 {
 	return true;
+};
+CDocument.prototype.OpenOleEditor = function ()
+{
+	this.Controller.OpenOleEditor();
 };
 CDocument.prototype.IsPresentationEditor = function()
 {
@@ -6344,12 +6346,44 @@ CDocument.prototype.AddTextArt = function(textArtStyle)
 CDocument.prototype.AddSignatureLine = function(oSignatureDrawing){
     this.Controller.AddSignatureLine(oSignatureDrawing);
 };
-
+CDocument.prototype.FinalizeEditChart = function(chartBinary)
+{
+	this.LoadChartData(chartBinary['noHistory']);
+	if (AscFormat.isObject(chartBinary) && !chartBinary['noHistory'])
+	{
+		if (false === this.Document_Is_SelectionLocked(changestype_Paragraph_Content))
+		{
+			this.StartAction(AscDFH.historydescription_Document_EditChart);
+			this.EditChart(chartBinary);
+			this.FinalizeAction();
+		}
+	}
+};
+CDocument.prototype.LoadChartData = function(bNeedRecalculate)
+{
+	this.Controller.LoadChartData(bNeedRecalculate);
+};
 CDocument.prototype.EditChart = function(Chart)
 {
 	this.Controller.EditChart(Chart);
 };
-CDocument.prototype.GetChartObject = function(type)
+CDocument.prototype.UpdateChart = function(Chart)
+{
+	this.Controller.UpdateChart(Chart);
+};
+CDocument.prototype.OpenChartEditor = function()
+{
+	this.Controller.OpenChartEditor();
+};
+CDocument.prototype.ApplyChartSettings = function(oChartSettings)
+{
+	return this.Controller.ApplyChartSettings(oChartSettings);
+};
+CDocument.prototype.GetChartSettings = function()
+{
+	return this.Controller.GetChartSettings();
+};
+CDocument.prototype.GetChartObject = function(type, bAddToHistory)
 {
     var W = null, H = null;
     if(type != null)
@@ -6370,7 +6404,7 @@ CDocument.prototype.GetChartObject = function(type)
             }
         }
     }
-    return this.DrawingObjects.getChartObject(type, W, H);
+    return this.DrawingObjects.getChartObject(type, W, H, bAddToHistory);
 
 };
 CDocument.prototype.GetImageDataFromSelection = function()
@@ -6917,6 +6951,9 @@ CDocument.prototype.CorrectCursorPosition = function(isForward)
 };
 CDocument.prototype.MoveCursorToStartOfDocument = function()
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	var nDocPosType = this.GetDocPosType();
 
 	if (nDocPosType === docpostype_DrawingObjects)
@@ -6936,6 +6973,9 @@ CDocument.prototype.MoveCursorToStartOfDocument = function()
 };
 CDocument.prototype.MoveCursorToStartPos = function(AddToSelect)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -6945,6 +6985,9 @@ CDocument.prototype.MoveCursorToStartPos = function(AddToSelect)
 };
 CDocument.prototype.MoveCursorToEndPos = function(AddToSelect)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -6954,6 +6997,9 @@ CDocument.prototype.MoveCursorToEndPos = function(AddToSelect)
 };
 CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -6979,6 +7025,9 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 };
 CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -7004,18 +7053,27 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 };
 CDocument.prototype.MoveCursorUp = function(AddToSelect, CtrlKey)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorUp(AddToSelect, CtrlKey);
 };
 CDocument.prototype.MoveCursorDown = function(AddToSelect, CtrlKey)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorDown(AddToSelect, CtrlKey);
 };
 CDocument.prototype.MoveCursorToEndOfLine = function(AddToSelect)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -7026,6 +7084,9 @@ CDocument.prototype.MoveCursorToEndOfLine = function(AddToSelect)
 };
 CDocument.prototype.MoveCursorToStartOfLine = function(AddToSelect)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 
@@ -7036,12 +7097,18 @@ CDocument.prototype.MoveCursorToStartOfLine = function(AddToSelect)
 };
 CDocument.prototype.MoveCursorToXY = function(X, Y, AddToSelect)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorToXY(X, Y, this.CurPage, AddToSelect);
 };
 CDocument.prototype.MoveCursorToCell = function(bNext)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorToCell(bNext);
@@ -7052,6 +7119,9 @@ CDocument.prototype.GoToSignature = function(sGuid)
 };
 CDocument.prototype.MoveCursorToPageStart = function()
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	if (docpostype_Content !== this.GetDocPosType())
 	{
 		this.RemoveSelection();
@@ -7064,6 +7134,9 @@ CDocument.prototype.MoveCursorToPageStart = function()
 };
 CDocument.prototype.MoveCursorToPageEnd = function()
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	if (docpostype_Content !== this.GetDocPosType())
 	{
 		this.RemoveSelection();
@@ -7452,8 +7525,10 @@ CDocument.prototype.GetCalculatedTextPr = function()
 {
 	let textPr = this.Controller.GetCalculatedTextPr();
 	
-	if (textPr)
-		AscWord.FontCalculator.Calculate(this, textPr);
+	// TODO: Footnotes/endnotes can be selected across multiple doc-contents
+	let docContent = this.Controller.GetCurrentTopDocContent();
+	if (textPr && docContent)
+		AscWord.FontCalculator.Calculate(docContent, textPr);
 	
 	let theme = this.GetTheme();
 	if (textPr && theme)
@@ -10557,7 +10632,7 @@ CDocument.prototype.canEnterText = function()
 	if (this.IsSelectionUse() && !this.IsTextSelectionUse())
 		return false;
 	
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
@@ -10570,6 +10645,9 @@ CDocument.prototype.canEnterText = function()
 CDocument.prototype.OnMouseDown = function(e, X, Y, PageIndex)
 {
 	if (PageIndex < 0)
+		return;
+	
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
 		return;
 
 	this.private_UpdateTargetForCollaboration();
@@ -10792,7 +10870,11 @@ CDocument.prototype.OnMouseUp = function(e, X, Y, PageIndex)
 {
 	if (PageIndex < 0)
 		return;
-
+	
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
+	
 	if (this.IsFillingFormMode() && this.CurPos.IsInCC() && !this.CurPos.CheckHitInCC(X, Y, PageIndex))
 	{
 		var oCorrectedPos = this.CurPos.CorrectXYToHitInCC(X, Y, PageIndex);
@@ -10952,7 +11034,11 @@ CDocument.prototype.OnMouseMove = function(e, X, Y, PageIndex)
 {
 	if (PageIndex < 0)
 		return;
-
+	
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
+	
 	if (this.DrawTableMode.Start
 		&& (PageIndex === this.DrawTableMode.Page)
 		&& (this.DrawTableMode.Draw || this.DrawTableMode.Erase))
@@ -12467,6 +12553,8 @@ CDocument.prototype.private_UpdateInterface = function(isSaveCurrentReviewChange
 
 	this.UpdateSelectedReviewChanges(isSaveCurrentReviewChange);
 
+	oApi.externalChartCollector.onUpdateExternalList();
+
 	this.Document_UpdateUndoRedoState();
 	this.Document_UpdateCanAddHyperlinkState();
 	this.Document_UpdateSectionPr();
@@ -13625,6 +13713,9 @@ CDocument.prototype.IsCursorInHyperlink = function(bCheckEnd)
  */
 CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, additionalData, sendEvent, actionDescription)
 {
+	if (this.CollaborativeEditing.Get_GlobalLock() || this.Api.isRestrictionSignatures())
+		return false;
+	
 	let isPermRange = this.IsPermRangeEditing(checkType, additionalData, actionDescription);
 	if (sendEvent)
 	{
@@ -13635,7 +13726,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
 		}
 	}
 	
-	return (isPermRange || !((!this.CanEdit() && true !== isIgnoreCanEditFlag) || (true === this.CollaborativeEditing.Get_GlobalLock())));
+	return (isPermRange || this.CanEdit() || isIgnoreCanEditFlag);
 };
 /**
  * Проверяем, что действие с заданным типом произойдет в разрешенной области
@@ -13646,7 +13737,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
  */
 CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, actionDescription)
 {
-	if (this.Api.isViewMode)
+	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
 	if (!this.Api.isRestrictionComments() && !this.Api.isRestrictionView())
@@ -15926,7 +16017,7 @@ CDocument.prototype.Continue_FastCollaborativeEditing = function()
 	if (true !== this.CollaborativeEditing.Is_Fast() || true === this.CollaborativeEditing.Is_SingleUser())
 		return;
 
-	if (true === this.IsMovingTableBorder() || true === this.Api.isStartAddShape || this.DrawingObjects.isTrackingDrawings() || this.Api.isOpenedChartFrame)
+	if (true === this.IsMovingTableBorder() || true === this.Api.isStartAddShape || this.DrawingObjects.isTrackingDrawings() || this.Api.isOpenedFrameEditor)
 		return;
 
 	var HaveChanges = this.History.Have_Changes(true);
@@ -19547,18 +19638,19 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 			if (Item.IsCursorAtBegin())
 			{
 				// Продолжаем (в плане настроек) новый параграф
-				Item.Split(NewParagraph);
+				Item.SplitContent(NewParagraph, false);
 				Item.Continue(NewParagraph);
-
+				
 				NewParagraph.Correct_Content();
-				NewParagraph.MoveCursorToStartPos();
-
+				NewParagraph.MoveCursorToEndPos();
+				Item.MoveCursorToStartPos();
+				
 				var nContentPos = this.CurPos.ContentPos;
-				this.AddToContent(nContentPos + 1, NewParagraph);
+				this.AddToContent(nContentPos, NewParagraph);
 				this.CurPos.ContentPos = nContentPos + 1;
-
-				firstPara  = Item;
-				secondPara = NewParagraph;
+				
+				firstPara  = NewParagraph;
+				secondPara = Item;
 			}
 			else
 			{
@@ -19579,7 +19671,7 @@ CDocument.prototype.controller_AddNewParagraph = function(bRecalculate, bForceAd
 							NextId = StyleId;
 					}
 					
-					Item.Split(NewParagraph);
+					Item.SplitContent(NewParagraph, true);
 					if (StyleId === NextId)
 					{
 						// Продолжаем (в плане настроек) новый параграф
@@ -19708,10 +19800,9 @@ CDocument.prototype.controller_AddInlineImage = function(W, H, Img, GraphicObjec
 		else
 		{
 			Drawing   = new ParaDrawing(W, H, null, this.DrawingDocument, this, null);
-			var Image = this.DrawingObjects.getChartSpace2(GraphicObject, null);
-			Image.setParent(Drawing);
-			Drawing.Set_GraphicObject(Image);
-			Drawing.setExtent(Image.spPr.xfrm.extX, Image.spPr.xfrm.extY);
+			GraphicObject.setParent(Drawing);
+			Drawing.Set_GraphicObject(GraphicObject);
+			Drawing.setExtent(GraphicObject.spPr.xfrm.extX, GraphicObject.spPr.xfrm.extY);
 		}
 		if (true === bFlow)
 		{
@@ -22886,7 +22977,7 @@ CDocument.prototype.GetAllFormTextFields = function()
 };
 CDocument.prototype.IsFillingFormMode = function()
 {
-	return this.Api && this.Api.isRestrictionForms();
+	return this.Api && this.Api.isRestrictionForms() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsFillingOFormMode = function()
 {
@@ -23248,6 +23339,9 @@ CDocument.prototype.SelectContentControl = function(sId)
  */
 CDocument.prototype.MoveCursorToContentControl = function(sId, isBegin)
 {
+	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
+		return;
+	
 	var oContentControl = this.TableId.Get_ById(sId);
 	if (!oContentControl)
 		return;
@@ -23317,7 +23411,7 @@ CDocument.prototype.IsCheckContentControlsLock = function()
 };
 CDocument.prototype.IsEditCommentsMode = function()
 {
-	return this.Api.isRestrictionComments();
+	return this.Api.isRestrictionComments() && !this.Api.isRestrictionSignatures();
 };
 CDocument.prototype.IsViewMode = function()
 {
@@ -28261,7 +28355,7 @@ CDocument.prototype.isPreventedPreDelete = function()
  */
 CDocument.prototype.getCustomXmlManager = function()
 {
-	return this.customXml;
+	return this.customXmlManager;
 };
 
 CDocument.prototype.AddCustomProperty = function(name, type, value)
