@@ -23710,8 +23710,6 @@
 					let oRunInfo = Object.assign({}, allRunsInfo[nInfo]);
 					
 					let oDeleteReviewRun = null;
-					let oInsertReviewRun = null;
-
 					if (oChange.pos >= oRunInfo.GlobStartPos || oChange.pos + DelCount > oRunInfo.GlobStartPos)
 					{
 						let nPosToDel   = Math.max(0, oChange.pos - oRunInfo.GlobStartPos + oRunInfo.StartPos);
@@ -23783,7 +23781,6 @@
 						let oRunToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Run : oRunInfo.Run;
 						nPosToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Pos : nPosToAdd;
 
-						// creting review add run
 						if (oDeleteReviewRun)
 						{
 							let oPara = oDeleteReviewRun.Paragraph;
