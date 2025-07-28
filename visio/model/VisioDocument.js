@@ -268,7 +268,6 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		let thumbNailPart = filePart.addPart(AscCommon.openXml.Types.thumbnail);
 		let windowsPart = docPart.part.addPart(AscCommon.openXml.Types.visioDocumentWindows);
 		let mastersPart = docPart.part.addPart(AscCommon.openXml.Types.masters);
-		let themesPart = docPart.part.addPart(AscCommon.openXml.Types.theme);
 		let commentsPart = docPart.part.addPart(AscCommon.openXml.Types.visioComments);
 		let extensionsPart = docPart.part.addPart(AscCommon.openXml.Types.visioExtensions);
 		let dataConnectionsPart = docPart.part.addPart(AscCommon.openXml.Types.visioDataConnections);
@@ -306,6 +305,11 @@ AscDFH.historyitem_type_VisioWindow = 328;
 			}
 		}
 
+		for (let i = 0; i < this.themes.length; i++) {
+			let themeContent = docPart.part.addPart(AscCommon.openXml.Types.theme);
+			themeContent.part.setDataXml(this.themes[i], memory);
+		}
+
 		// Not realized, file defines schema and data of that schema
 		for (let i = 0; i < this.solutionXMLs.length; i++) {
 			let solutionContent = solutionsPart.part.addPart(AscCommon.openXml.Types.solution);
@@ -330,10 +334,6 @@ AscDFH.historyitem_type_VisioWindow = 328;
 			mastersPart.part.setDataXml(this.masters, memory);
 		}
 		pagesPart.part.setDataXml(this.pages, memory);
-		for (let i = 0; i < this.themes.length; i++) {
-			let themeContent = themesPart.part.addPart(AscCommon.openXml.Types.theme);
-			themeContent.part.setDataXml(this.themes[i], memory);
-		}
 		if (this.commentsPart) {
 			commentsPart.part.setDataXml(this.commentsPart, memory);
 		}
