@@ -156,20 +156,22 @@ AscFormat.CTheme.prototype.getFillStyle = function (idx, unicolor, isConnectorSh
 	let fmtScheme = (isConnectorShape && this.themeElements.themeExt) ?
 		this.themeElements.themeExt.fmtConnectorScheme :
 		this.themeElements.fmtScheme;
-	if (idx >= 1 && idx <= 999) {
-		if (fmtScheme.fillStyleLst[idx - 1]) {
-			ret = fmtScheme.fillStyleLst[idx - 1].createDuplicate();
-			if (ret) {
-				ret.checkPhColor(unicolor, false);
-				return ret;
+	if (fmtScheme) {
+		if (idx >= 1 && idx <= 999) {
+			if (fmtScheme.fillStyleLst[idx - 1]) {
+				ret = fmtScheme.fillStyleLst[idx - 1].createDuplicate();
+				if (ret) {
+					ret.checkPhColor(unicolor, false);
+					return ret;
+				}
 			}
-		}
-	} else if (idx >= 1001) {
-		if (fmtScheme.bgFillStyleLst[idx - 1001]) {
-			ret = fmtScheme.bgFillStyleLst[idx - 1001].createDuplicate();
-			if (ret) {
-				ret.checkPhColor(unicolor, false);
-				return ret;
+		} else if (idx >= 1001) {
+			if (fmtScheme.bgFillStyleLst[idx - 1001]) {
+				ret = fmtScheme.bgFillStyleLst[idx - 1001].createDuplicate();
+				if (ret) {
+					ret.checkPhColor(unicolor, false);
+					return ret;
+				}
 			}
 		}
 	}
