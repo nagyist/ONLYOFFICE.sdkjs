@@ -2154,50 +2154,6 @@ function(window, undefined) {
 			}
 		}
 
-		const depFormulas = oParentWb.dependencyFormulas;
-		function fGetParsedRef(sFormula, arrParsedRefs) {
-			if (sFormula.startsWith("[0]!")) {
-				sFormula = sFormula.slice(4);
-			}
-
-			const isName = AscCommon.parserHelp.isName3D(sFormula, 0) || AscCommon.parserHelp.isDefName(sFormula, 0);
-			if (isName) {
-				if (!isName.external) {
-					const sheetName = isName.sheet;
-					const worksheet = depFormulas.wb.getWorksheetByName(sheetName);
-					const defName = depFormulas.getDefNameByName(isName.defname, worksheet && worksheet.Id);
-					if (defName) {
-						const nOldLength = arrParsedRefs.length;
-						fGetArrF(defName.ref, arrParsedRefs);
-						if (nOldLength < arrParsedRefs.length) {
-							const oLastParsedRef = arrParsedRefs[arrParsedRefs.length - 1];
-							Object.assign(oLastParsedRef, {defName: {defName: isName.defname, ref: defName.ref, worksheetName: oLastParsedRef.sheet, shortLink: true}});
-						}
-					}
-				}
-				return null;
-			}
-			const parsed3DRef = AscCommon.parserHelp.parse3DRef(sFormula, 0);
-			return (!parsed3DRef || parsed3DRef.external) ? null : parsed3DRef;
-		}
-		function fGetArrF(sFormula, arrParsedRefs) {
-			const result = arrParsedRefs || [];
-			if (sFormula[0] === '(')
-				sFormula = sFormula.slice(1);
-			if (sFormula[sFormula.length - 1] === ')')
-				sFormula = sFormula.slice(0, -1);
-
-			const f1 = sFormula;
-			const arrF = f1.split(",");
-			for (let i = 0; i < arrF.length; i++) {
-				let parsedRef = fGetParsedRef(arrF[i], result);
-				if (parsedRef) {
-					result.push(parsedRef);
-				}
-			}
-			return result;
-		}
-
 		function fillTableFromRef(ref)
 		{
 			let oCache;
@@ -2230,12 +2186,7 @@ function(window, undefined) {
 					sFormula = ref.f.content;
 				}
 
-				if (sFormula[0] === '(')
-					sFormula = sFormula.slice(1);
-				if (sFormula[sFormula.length - 1] === ')')
-					sFormula = sFormula.slice(0, -1);
-
-				const arrF = fGetArrF(sFormula);
+				const arrF = getParsedCopyRefs(sFormula, oParentWb);
 
 				let nPtIndex = 0, nPtCount;
 				for (let i = 0; i < arrF.length; ++i)
@@ -13593,6 +13544,50 @@ function(window, undefined) {
 	};
 	var oChartStyleCache = new CChartStyleCache();
 
+	function getParsedCopyRefs(sFormula, oParentWb, arrInnerResultRefs) {
+		const depFormulas = oParentWb.dependencyFormulas;
+		function fGetParsedRef(sFormula, arrParsedRefs) {
+			if (sFormula.startsWith("[0]!")) {
+				sFormula = sFormula.slice(4);
+			}
+
+			const isName = AscCommon.parserHelp.isName3D(sFormula, 0) || AscCommon.parserHelp.isDefName(sFormula, 0);
+			if (isName) {
+				if (!isName.external) {
+					const sheetName = isName.sheet;
+					const worksheet = depFormulas.wb.getWorksheetByName(sheetName);
+					const defName = depFormulas.getDefNameByName(isName.defname, worksheet && worksheet.Id);
+					if (defName) {
+						const nOldLength = arrParsedRefs.length;
+						getParsedCopyRefs(defName.ref, oParentWb, arrParsedRefs);
+						if (nOldLength < arrParsedRefs.length) {
+							const oLastParsedRef = arrParsedRefs[arrParsedRefs.length - 1];
+							Object.assign(oLastParsedRef, {defName: {defName: isName.defname, ref: defName.ref, worksheetName: oLastParsedRef.sheet, shortLink: true}});
+						}
+					}
+				}
+				return null;
+			}
+			const parsed3DRef = AscCommon.parserHelp.parse3DRef(sFormula, 0);
+			return (!parsed3DRef || parsed3DRef.external) ? null : parsed3DRef;
+		}
+
+		const result = arrInnerResultRefs || [];
+		if (sFormula[0] === '(')
+			sFormula = sFormula.slice(1);
+		if (sFormula[sFormula.length - 1] === ')')
+			sFormula = sFormula.slice(0, -1);
+
+		const f1 = sFormula;
+		const arrF = f1.split(",");
+		for (let i = 0; i < arrF.length; i++) {
+			let parsedRef = fGetParsedRef(arrF[i], result);
+			if (parsedRef) {
+				result.push(parsedRef);
+			}
+		}
+		return result;
+	}
 
 	//--------------------------------------------------------export----------------------------------------------------
 	window['AscFormat'] = window['AscFormat'] || {};
@@ -13656,4 +13651,6 @@ function(window, undefined) {
 	window['AscFormat'].CreateTypedLineChart = CreateTypedLineChart;
 	window['AscFormat'].CreateSurfaceAxes = CreateSurfaceAxes;
 	window['AscFormat'].GetTypeMarkerByIndex = GetTypeMarkerByIndex;
+
+	window['AscFormat'].getParsedCopyRefs = getParsedCopyRefs;
 })(window);

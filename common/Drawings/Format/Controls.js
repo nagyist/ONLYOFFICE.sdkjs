@@ -268,7 +268,18 @@
 	CCheckBoxController.prototype.isEmpty = function() {
 		return !(this.isChecked() || this.isMixed());
 	};
+	CCheckBoxController.prototype.isExternalCheckBox = function() {
+		const oRef = this.getParsedRef();
+		const oWbModel = Asc.editor && Asc.editor.wbModel;
+		if (oRef && oWbModel) {
+			return oRef.worksheet.workbook !== oWbModel;
+		}
+		return false;
+	};
 	CCheckBoxController.prototype.onClick = function(oController, nX, nY) {
+		if (this.isExternalCheckBox()) {
+			return;
+		}
 		const oThis = this;
 		oController.checkObjectsAndCallback(function() {
 			const oFormControlPr = oThis.getFormControlPr();
@@ -309,24 +320,28 @@
 		}
 		return nRetValue;
 	};
+	CCheckBoxController.prototype.getCellValueFromControl = function () {
+		const oFormControlPr = this.getFormControlPr();
+		const oCellValue = new AscCommonExcel.CCellValue();
+		if (oFormControlPr.checked === CFormControlPr_checked_checked) {
+			oCellValue.type = AscCommon.CellValueType.Bool;
+			oCellValue.number = 1;
+		} else if (oFormControlPr.checked === CFormControlPr_checked_mixed) {
+			oCellValue.type = AscCommon.CellValueType.Error;
+			oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(cErrorType.not_available);
+		} else {
+			oCellValue.type = AscCommon.CellValueType.Bool;
+			oCellValue.number = 0;
+		}
+		return oCellValue;
+	}
 	CCheckBoxController.prototype.updateCellFromControl = function (oController) {
 		const oThis = this;
 		const oRef = this.getParsedRef();
 		if (oRef) {
 			oRef._foreachNoEmpty(function(oCell) {
 				if (oCell) {
-					const oFormControlPr = oThis.getFormControlPr();
-					const oCellValue = new AscCommonExcel.CCellValue();
-					if (oFormControlPr.checked === CFormControlPr_checked_checked) {
-						oCellValue.type = AscCommon.CellValueType.Bool;
-						oCellValue.number = 1;
-					} else if (oFormControlPr.checked === CFormControlPr_checked_mixed) {
-						oCellValue.type = AscCommon.CellValueType.Error;
-						oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(cErrorType.not_available);
-					} else {
-						oCellValue.type = AscCommon.CellValueType.Bool;
-						oCellValue.number = 0;
-					}
+					const oCellValue = oThis.getCellValueFromControl();
 					oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
 
 				}
@@ -367,6 +382,66 @@
 	};
 	CCheckBoxController.prototype.applySpecialPasteProps = function (oPastedWb) {
 		this.addExternalReferenceToEditor(oPastedWb);
+	};
+	CCheckBoxController.prototype.addExternalReferenceToEditor = function (oPastedWb) {
+		const oApi = Asc.editor;
+		const oWbModel = oApi && oApi.wbModel;
+		if (!oWbModel) {
+			return;
+		}
+		const oFormControlPr = this.getFormControlPr();
+		const sRef = oFormControlPr.fmlaLink;
+		if (!sRef) {
+			return;
+		}
+		const oMockWb = new AscCommonExcel.Workbook(undefined, undefined, false);
+		oMockWb.externalReferences = oPastedWb.externalReferences;
+		oMockWb.dependencyFormulas = oPastedWb.dependencyFormulas;
+		const oWorksheets = this.getWorksheetsFromControlValue(oMockWb);
+		const oMainExternalReference = oWbModel.addExternalReferenceFromWorksheets(oWorksheets, oPastedWb, oMockWb);
+		if (oMainExternalReference) {
+			const sNewRef = AscFormat.updateRefToExternal(sRef, oMainExternalReference, oPastedWb.externalReferences, oMockWb);
+			oFormControlPr.setFmlaLink(sNewRef);
+		} else if (oPastedWb.externalReferences.length) {
+			const sNewRef = AscFormat.updateRefToExternal(sRef, oMainExternalReference, oPastedWb.externalReferences, oPastedWb);
+			oFormControlPr.setFmlaLink(sNewRef);
+		}
+	};
+	CCheckBoxController.prototype.getWorksheetsFromControlValue = function (oParentWb) {
+
+		const oFormControlPr = this.getFormControlPr();
+		const sRef = oFormControlPr.fmlaLink;
+		const oRes = {};
+		if (sRef) {
+			const arrF = AscFormat.getParsedCopyRefs(sRef, oParentWb);
+			if (arrF.length) {
+				const oFirstRef = arrF[0];
+				const sSheetName  = oFirstRef.sheet;
+				const oWorksheet = new AscCommonExcel.Worksheet(oParentWb);
+				oWorksheet.sName = sSheetName;
+				const oRange = oWorksheet.getRange2(oFirstRef.range);
+				if (oRange) {
+					const oBBox = oRange.bbox;
+					const oWorksheetInfo = {};
+					oRes[sSheetName] = oWorksheetInfo;
+					oRes[sSheetName].defNames = [];
+					oRes[sSheetName].ws = oWorksheet;
+					oRes[sSheetName].maxR = oBBox.r1;
+					oRes[sSheetName].maxC = oBBox.c1;
+					oRes[sSheetName].minC = oBBox.c1;
+					oRes[sSheetName].minR = oBBox.r1;
+
+					const oCellValue = this.getCellValueFromControl();
+					oWorksheet._getCell(oBBox.c1, oBBox.r1, function(oCell) {
+						oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
+					});
+					if (oFirstRef.defName) {
+						oWorksheetInfo.defNames.push(oFirstRef.defName);
+					}
+				}
+			}
+		}
+		return oRes;
 	};
 
 
@@ -751,6 +826,8 @@
 		this.verticalBar = null;
 		this.passwordEdit = null;
 		this.itemLst = [];
+
+		this.isExternalFmlaLink = false;
 	}
 	AscFormat.InitClass(CFormControlPr, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_FormControlPr);
 	CFormControlPr.prototype.setDropLines = function(pr) {

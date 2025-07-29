@@ -19579,6 +19579,8 @@
     window['AscFormat'].isDoughnutChartType = isDoughnutChartType;
     window['AscFormat'].isPieChartType = isPieChartType;
 
+    window['AscFormat'].updateRefToExternal = updateRefToExternal;
+
     window['AscFormat'].AX_POS_L = AX_POS_L;
     window['AscFormat'].AX_POS_T = AX_POS_T;
     window['AscFormat'].AX_POS_R = AX_POS_R;
