@@ -12882,8 +12882,8 @@
 	{
 		let logicDocument = private_GetLogicDocument();
 		logicDocument.RemoveSelection();
-		this.Paragraph.SelectAll();
-		this.Paragraph.Document_SetThisElementCurrent();
+		this.Table.SelectAll();
+		this.Table.Document_SetThisElementCurrent();
 		return true;
 	};
 	/**
