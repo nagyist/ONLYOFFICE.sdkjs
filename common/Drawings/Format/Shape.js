@@ -1318,6 +1318,13 @@
 				oBodyPr.vertOverflow = AscFormat.nVOTClip;
 				oBodyPr.horzOverflow = AscFormat.nHOTClip;
 			}
+
+			if (Asc.editor.isPresentationEditor) {
+				const firstParagraph = tx_body.content.Content[0];
+				firstParagraph.SetParagraphAlign(AscCommon.align_Center);
+				oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
+			}
+
 			tx_body.setBodyPr(oBodyPr);
 			tx_body.content.Content[0].Set_DocumentIndex(0);
 			tx_body.content.MoveCursorToStartPos(false);
