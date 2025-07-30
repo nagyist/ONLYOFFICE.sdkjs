@@ -54,7 +54,7 @@
 		AscCommon.ExecuteNoHistory(function()
 		{
 			oThis.SectPr   = new CSectionPr(oLogicDocument);
-			oThis.SectInfo = new CDocumentSectionsInfoElement(oThis.SectPr, 0);
+			oThis.SectInfo = new AscWord.DocumentSection(oThis.SectPr, 0);
 		}, oLogicDocument);
 		
 		this.OriginalSectPr = false;

@@ -197,7 +197,9 @@
 			"word/Editor/Common.js",
 			"word/Editor/Sections.js",
 			"word/Editor/SectionsChanges.js",
-
+			
+			"word/Editor/sections/document-sections.js",
+			
 			"word/Drawing/Graphics.js",
 			"word/Drawing/ShapeDrawer.js",
 			"word/Drawing/buttons.js",
