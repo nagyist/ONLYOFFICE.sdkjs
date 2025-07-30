@@ -333,8 +333,10 @@
 					newFillColor.RGBA.A = oldFillColorLink.RGBA.A;
 					uniFillForegndNoGradient.fill.color.color = newFillColor;
 				}
-				
-				handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
+
+				let newFills = handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
+				uniFillForegndNoGradient = newFills[0];
+				lineUniFillNoGradient = newFills[1];
 			}
 
 			let lineGradientEnabled;
@@ -1080,25 +1082,55 @@
 		/**
 		 * handle QuickStyleVariation cell which can change color (but only if color is a result of ThemeVal)
 		 * cant be separated for unifill and stroke
-		 * @param {CUniFill} oStrokeUniFill
-		 * @param {CUniFill} uniFill
+		 * @param {CUniFill} lineUniFill stroke
+		 * @param {CUniFill} fillUniFill
 		 * @param {Shape_Type} shape
 		 * @param {{lineUniFill: boolean, uniFillForegnd: boolean}} themeValWasUsedFor
+		 * @return {[]} [newFillUnifill, newLineUniFill]
 		 */
-		function handleQuickStyleVariation(oStrokeUniFill, uniFill, shape, themeValWasUsedFor) {
+		function handleQuickStyleVariation(lineUniFill, fillUniFill, shape, themeValWasUsedFor) {
 			// https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/68bb0221-d8a1-476e-a132-8c60a49cea63?redirectedfrom=MSDN
 			// consider "QuickStyleVariation" cell
 			// https://visualsignals.typepad.co.uk/vislog/2013/05/visio-2013-themes-in-the-shapesheet-part-2.html
 			let backgroundColorHSL = {H: undefined, S: undefined, L: undefined};
 			let lineColorHSL = {H: undefined, S: undefined, L: undefined};
 			let fillColorHSL = {H: undefined, S: undefined, L: undefined};
-			let lineColor = oStrokeUniFill.fill && oStrokeUniFill.fill.color && oStrokeUniFill.fill.color.color.RGBA;
-			let fillColor = uniFill.fill && uniFill.fill.color && uniFill.fill.color.color.RGBA;
+			// in quick style variation we need to consider fill.color not fill.color.color because
+			// fill.color consider mods applied. And we need to store new color to fill.color.color because
+			// fill.color is calculated in recalculate function from fill.color.color
+			let lineColorRGBA = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.RGBA;
+			let fillColorRGBA = fillUniFill.fill && fillUniFill.fill.color && fillUniFill.fill.color.RGBA;
+			// let lineColorNoMods = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.color
+			// 		&& lineUniFill.fill.color.color.RGBA;
+			// let fillColorNoMods = fillUniFill.fill && fillUniFill.fill.color && fillUniFill.fill.color.color
+			// 		&& fillUniFill.fill.color.color.RGBA;
 
-			if (lineColor !== undefined && fillColor !== undefined) {
+			let newLineUniFill = new AscFormat.CUniFill();
+			newLineUniFill.fill = new AscFormat.CSolidFill();
+			newLineUniFill.fill.color = new AscFormat.CUniColor();
+			newLineUniFill.fill.color.color = new AscFormat.CRGBColor();
+			let newLineColorNoMods = newLineUniFill.fill.color.color;
+			// set defaults for new color
+			newLineColorNoMods.setColor(lineColorRGBA.R, lineColorRGBA.G, lineColorRGBA.B);
+			newLineColorNoMods.RGBA.A = lineColorRGBA.A;
+			newLineUniFill.transparent = lineUniFill.transparent;
+
+
+			let newFillUniFill = new AscFormat.CUniFill();
+			newFillUniFill.fill = new AscFormat.CSolidFill();
+			newFillUniFill.fill.color = new AscFormat.CUniColor();
+			newFillUniFill.fill.color.color = new AscFormat.CRGBColor();
+			let newFillColorNoMods = newFillUniFill.fill.color.color;
+			// set defaults for new color
+			newFillColorNoMods.setColor(fillColorRGBA.R, fillColorRGBA.G, fillColorRGBA.B);
+			newFillColorNoMods.RGBA.A = fillColorRGBA.A;
+			newFillUniFill.transparent = fillUniFill.transparent;
+
+
+			if (lineColorRGBA !== undefined && fillColorRGBA !== undefined) {
 				AscFormat.CColorModifiers.prototype.RGB2HSL(255, 255, 255, backgroundColorHSL);
-				AscFormat.CColorModifiers.prototype.RGB2HSL(lineColor.R, lineColor.G, lineColor.B, lineColorHSL);
-				AscFormat.CColorModifiers.prototype.RGB2HSL(fillColor.R, fillColor.G, fillColor.B, fillColorHSL);
+				AscFormat.CColorModifiers.prototype.RGB2HSL(lineColorRGBA.R, lineColorRGBA.G, lineColorRGBA.B, lineColorHSL);
+				AscFormat.CColorModifiers.prototype.RGB2HSL(fillColorRGBA.R, fillColorRGBA.G, fillColorRGBA.B, fillColorHSL);
 
 				// covert L to percents
 				backgroundColorHSL.L = backgroundColorHSL.L / 255 * 100;
@@ -1113,19 +1145,17 @@
 						if (Math.abs(backgroundColorHSL.L - lineColorHSL.L) < 16.66) {
 							if (backgroundColorHSL.L <= 72.92) {
 								// if background is dark set stroke to white
-								lineColor.R = 255;
-								lineColor.G = 255;
-								lineColor.B = 255;
+								newLineColorNoMods.setColor(255, 255, 255);
+								newLineColorNoMods.RGBA.A = 255;
+								newLineUniFill.transparent = 255; // transparent is opacity in fact
 							} else {
 								if (Math.abs(backgroundColorHSL.L - fillColorHSL.L) >
 										Math.abs(backgroundColorHSL.L - lineColorHSL.L)) {
 									// evaluation = THEMEVAL("FillColor")
-									// get theme shape fill color despite cell
-									// line below will give unifill with pattern maybe or gradient
-									// lineUniFillNoGradient = AscVisio.themeval(this.theme, shape, null, "FillColor");
-									lineColor.R = fillColor.R;
-									lineColor.G = fillColor.G;
-									lineColor.B = fillColor.B;
+									newLineColorNoMods.setColor(fillColorRGBA.R, fillColorRGBA.G, fillColorRGBA.B);
+									newLineColorNoMods.RGBA.A = fillColorRGBA.A;
+									// transparency should not be considered
+									// newLineUniFill.transparent = fillUniFill.transparent;
 								} else {
 									// evaluation = THEMEVAL("LineColor") or not affected I guess
 									// get theme line color despite cell
@@ -1140,19 +1170,17 @@
 						if (Math.abs(backgroundColorHSL.L - fillColorHSL.L) < 16.66) {
 							if (backgroundColorHSL.L <= 72.92) {
 								// if background is dark set stroke to white
-								fillColor.R = 255;
-								fillColor.G = 255;
-								fillColor.B = 255;
+								newFillColorNoMods.setColor(255, 255, 255);
+								newFillColorNoMods.RGBA.A = 255;
+								newFillUniFill.transparent = 255; // transparent is opacity in fact
 							} else {
 								if (Math.abs(backgroundColorHSL.L - lineColorHSL.L) >
 										Math.abs(backgroundColorHSL.L - fillColorHSL.L)) {
-									// evaluation = THEMEVAL("FillColor")
-									// get theme shape fill color despite cell
-									// line below will give unifill with pattern maybe or gradient
-									// lineUniFillNoGradient = AscVisio.themeval(this.theme, shape, null, "FillColor");
-									fillColor.R = lineColor.R;
-									fillColor.G = lineColor.G;
-									fillColor.B = lineColor.B;
+									// evaluation = THEMEVAL("LineColor")
+									newFillColorNoMods.setColor(lineColorRGBA.R, lineColorRGBA.G, lineColorRGBA.B);
+									newFillColorNoMods.RGBA.A = lineColorRGBA.A;
+									// transparency should not be considered
+									// newFillUniFill.transparent = lineUniFill.transparent;
 								}
 							}
 						}
@@ -1164,6 +1192,7 @@
 					// }
 				}
 			}
+			return [newFillUniFill, newLineUniFill];
 		}
 
 		//TODO import
