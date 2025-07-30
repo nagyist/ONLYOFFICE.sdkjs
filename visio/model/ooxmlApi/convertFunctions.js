@@ -260,7 +260,7 @@
 			if (lineColorCell) {
 				// AscCommon.consoleLog("LineColor was found for shape", lineColorCell);
 				lineUniFillNoGradient = lineColorCell.calculateValue(this, pageInfo,
-					visioDocument.themes, themeValWasUsedFor);
+					visioDocument.themes, themeValWasUsedFor, false);
 
 				let lineTransValue = this.getCellNumberValue("LineColorTrans");
 				if (!isNaN(lineTransValue)) {

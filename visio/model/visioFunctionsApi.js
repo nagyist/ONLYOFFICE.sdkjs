@@ -410,9 +410,15 @@
 				}
 			}
 
-			if (!gradientEnabled && getMedifiersResult && getMedifiersResult.fill instanceof AscFormat.CGradFill) {
-				// disable gradient
+			// disable gradient
+			let isFillGradient = getMedifiersResult && getMedifiersResult.fill instanceof AscFormat.CGradFill;
+			let isCLnContainsGradient = getMedifiersResult && getMedifiersResult.Fill &&
+					getMedifiersResult.Fill.fill && getMedifiersResult.Fill.fill.type === Asc.c_oAscFill.FILL_TYPE_GRAD;
+			if (!gradientEnabled && isFillGradient) {
 				getMedifiersResult = AscFormat.CreateUniFillByUniColor(calculatedColor);
+			}
+			if (!gradientEnabled && getMedifiersResult && isCLnContainsGradient) {
+				getMedifiersResult.Fill = AscFormat.CreateUniFillByUniColor(calculatedColor);
 			}
 
 			// getModifiersMethod return not only
