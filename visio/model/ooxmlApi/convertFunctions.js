@@ -213,28 +213,6 @@
 				uniFillForegnd: false
 			}
 
-			let fillGradientEnabledCell = this.getCell("FillGradientEnabled");
-			if (fillGradientEnabledCell !== undefined) {
-				fillGradientEnabled = fillGradientEnabledCell.calculateValue(this, pageInfo,
-						visioDocument.themes, undefined, true);
-			} else {
-				fillGradientEnabled = false;
-			}
-
-
-			// FillGradientDir and FillPattern can tell about gradient type
-			// if FillGradient Enabled
-			// FillGradientDir defines gradient type. If gradient is linear gradient type is complemented with angle.
-			// 13 FillGradientDir is path. path cant be set in interface. also like some radial gradient types witch cant be set in interface.
-			// FillGradientDir > 13 is linear like FillGradientDir = 0
-			//
-			// if FillGradientEnabled Disabled
-			// FillPattern defines gradient type and colors define. There linear types with different predefined angles, rectandulat and radial gradient types.
-			// Rectangular and radial gradient types differs. There are two colors when i set three colors for gradient. Also FillPattern gradients are not listed in
-			// interface. Only true patterns.
-			//
-			// Its better to convert linear FillPattern gradients there. But FillPattern radial gradients seems to be
-			// not like FillGradientDir radial gradients but with different colors
 
 			// Calculate fillForegnd without gradient anyway for handleQuickStyleVariation
 			let fillForegndCell = this.getCell("FillForegnd");
@@ -259,14 +237,6 @@
 				// just use white
 				uniFillForegndNoGradient = AscFormat.CreateUnfilFromRGB(255, 255, 255);
 			}
-
-			if (fillGradientEnabled) {
-				uniFillForegnd = calculateGradient(this, pageInfo,
-						visioDocument.themes, themeValWasUsedFor, true);
-			} else {
-				uniFillForegnd = uniFillForegndNoGradient;
-			}
-
 
 			let fillBkgndCell = this.getCell("FillBkgnd");
 			if (fillBkgndCell) {
@@ -339,10 +309,38 @@
 				lineUniFillNoGradient = newFills[1];
 			}
 
+			// FillGradientDir and FillPattern can tell about gradient type
+			// if FillGradient Enabled
+			// FillGradientDir defines gradient type. If gradient is linear gradient type is complemented with angle.
+			// 13 FillGradientDir is path. path cant be set in interface. also like some radial gradient types witch cant be set in interface.
+			// FillGradientDir > 13 is linear like FillGradientDir = 0
+			//
+			// if FillGradientEnabled Disabled
+			// FillPattern defines gradient type and colors define. There linear types with different predefined angles, rectandulat and radial gradient types.
+			// Rectangular and radial gradient types differs. There are two colors when i set three colors for gradient. Also FillPattern gradients are not listed in
+			// interface. Only true patterns.
+			//
+			// Its better to convert linear FillPattern gradients there. But FillPattern radial gradients seems to be
+			// not like FillGradientDir radial gradients but with different colors
+
+			let fillGradientEnabledCell = this.getCell("FillGradientEnabled");
+			if (fillGradientEnabledCell !== undefined) {
+				fillGradientEnabled = fillGradientEnabledCell.calculateValue(this, pageInfo,
+						visioDocument.themes, undefined, true);
+			} else {
+				fillGradientEnabled = false;
+			}
+
+			if (fillGradientEnabled) {
+				uniFillForegnd = calculateGradient(this, pageInfo,
+						visioDocument.themes, themeValWasUsedFor, true);
+			} else {
+				uniFillForegnd = uniFillForegndNoGradient;
+			}
+
 			let lineGradientEnabled;
 			let lineGradientEnabledCell = this.getCell("LineGradientEnabled");
 			if (lineGradientEnabledCell !== undefined) {
-				// Line gradient uniFill is not supported for now so let's take middle color from gradient
 				lineGradientEnabled = lineGradientEnabledCell.calculateValue(this, pageInfo,
 						visioDocument.themes);
 			} else {
@@ -350,7 +348,7 @@
 			}
 
 			if (lineGradientEnabled) {
-				// line gradient is not supported so let's take one color from gradient and apply it
+				// Line gradient uniFill is not supported for now so let's take middle color from gradient
 				let lineGradientFill = calculateGradient(this, pageInfo,
 						visioDocument.themes, themeValWasUsedFor, false);
 				let colorIndex = Math.floor(lineGradientFill.fill.colors.length / 2);
