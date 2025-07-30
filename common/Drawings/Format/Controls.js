@@ -113,14 +113,14 @@
 	CControl.prototype.isControl = function () {
 		return true;
 	}
-	CControl.prototype.onClick = function(oController, nX, nY) {
-		this.controller.onClick(oController, nX, nY);
+	CControl.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+		return this.controller.onMouseDown(e, nX, nY, nPageIndex);
 	}
-	CControl.prototype.onMouseDown = function(oController, nX, nY) {
-		this.controller.onMouseDown(oController, nX, nY);
+	CControl.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+		return this.controller.onMouseUp(e, nX, nY, nPageIndex, oController);
 	}
-	CControl.prototype.onMouseUp = function(oController, nX, nY) {
-		this.controller.onMouseUp(oController, nX, nY);
+	CControl.prototype.getCursorInfo = function (e, nX, nY) {
+		return this.controller.getCursorInfo(e, nX, nY);
 	}
 	CControl.prototype.getTextRect = function () {
 		return this.controller.getTextRect();
@@ -140,7 +140,27 @@
 		const oDocContent = this.getDocContent();
 		for (let i = 0; i < oDocContent.Content.length; i++) {
 			const oParagraph = oDocContent.Content[i];
-
+			oParagraph.CheckRunContent(function (oRun) {
+				let nCount = 0;
+				for (let i = oRun.Content.length - 1; i >= 0; i -= 1) {
+					const oElement = oRun.Content[i];
+					switch (oElement.Type) {
+						case para_Space: {
+							nCount += 1;
+							break;
+						}
+						case para_NewLine: {
+							oRun.Content.splice(i, nCount);
+							nCount = 0;
+							break;
+						}
+						default: {
+							nCount = 0;
+							break;
+						}
+					}
+				}
+			});
 		}
 	}
 	CControl.prototype.getControlPr = function () {
@@ -172,9 +192,9 @@
 		return this.control.Get_Worksheet();
 	};
 	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
-	CControlControllerBase.prototype.onClick = function(oController, nX, nY) {};
-	CControlControllerBase.prototype.onMouseDown = function(oController, nX, nY) {};
-	CControlControllerBase.prototype.onMouseUp = function(oController, nX, nY) {};
+	CControlControllerBase.prototype.getCursorInfo = function(e, nX, nY) {};
+	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {};
+	CControlControllerBase.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
 	CControlControllerBase.prototype.init = function() {};
 	CControlControllerBase.prototype.getBodyPr = function() {return null;};
 	CControlControllerBase.prototype.applySpecialPasteProps = function(oPastedWb) {};
@@ -216,7 +236,7 @@
 		graphics.b_color1(255, 255, 255, 255);
 		graphics.p_color(0, 0, 0, 255);
 		if (this.isHold) {
-			graphics.p_width(400);
+			graphics.p_width(1000);
 		} else {
 			graphics.p_width(0);
 		}
@@ -276,9 +296,37 @@
 		}
 		return false;
 	};
-	CCheckBoxController.prototype.onClick = function(oController, nX, nY) {
+	CCheckBoxController.prototype.getCursorInfo = function (e, nX, nY) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if(!oControl.hit(nX, nY)) {
+			return null;
+		}
+		return {cursorType: "pointer", objectId: oControl.GetId()};
+	};
+	CCheckBoxController.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		if (e.CtrlKey) {
+			return false;
+		}
+		this.setIsHold(true);
+		oControl.onUpdate();
+		return true;
+	}
+	CCheckBoxController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+		const oControl = this.control;
+		this.setIsHold(false);
 		if (this.isExternalCheckBox()) {
-			return;
+			oControl.onUpdate();
+			return false;
 		}
 		const oThis = this;
 		oController.checkObjectsAndCallback(function() {
@@ -290,7 +338,8 @@
 			}
 			oThis.updateCellFromControl(oController);
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
-	};
+		return true;
+	}
 	CCheckBoxController.prototype.getParsedRef = function() {
 		const oFormControlPr = this.getFormControlPr();
 		if (oFormControlPr.fmlaLink) {
@@ -363,12 +412,6 @@
 		oTextRect.r += CHECKBOX_OFFSET_X;
 		return oTextRect;
 	};
-	CCheckBoxController.prototype.onMouseDown = function(oController, nX, nY) {
-		this.setIsHold(true);
-	}
-	CCheckBoxController.prototype.onMouseUp = function(oController, nX, nY) {
-		this.setIsHold(false);
-	}
 	CCheckBoxController.prototype.setIsHold = function(pr) {
 		this.isHold = pr;
 	}

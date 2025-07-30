@@ -5048,17 +5048,22 @@
 
             if (ws.Drawings && ws.Drawings.length) {
 							const arrControls = [];
+							const arrDrawings = [];
 							for (let i = 0; i < ws.Drawings.length; i += 1) {
 								const oDrawing = ws.Drawings[i];
 								const oGrObject = oDrawing.graphicObject;
 								if (oGrObject && oGrObject.isControl()) {
 									arrControls.push(oDrawing);
+								} else {
+									arrDrawings.push(oDrawing);
 								}
 							}
 							if (arrControls.length) {
 								this.bs.WriteItem(c_oSerWorksheetsTypes.Controls, function () {oThis.WriteControls(arrControls);});
 							}
-	            this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function () {oThis.WriteDrawings(ws.Drawings);});
+							if (arrDrawings.length) {
+								this.bs.WriteItem(c_oSerWorksheetsTypes.Drawings, function () {oThis.WriteDrawings(arrDrawings);});
+							}
             }
 
             if (ws.aComments.length > 0) {

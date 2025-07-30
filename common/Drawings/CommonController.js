@@ -1542,11 +1542,8 @@
 								selector.resetSelection(this);
 							}
 						}
-						if (object.isControl() && !object.selected && e.CtrlKey || !object.isControl() && (e.CtrlKey || !object.selected)) {
+						if (!e.CtrlKey || !object.selected) {
 							selector.selectObject(object, pageIndex);
-						}
-						if (object.isControl() && !e.CtrlKey && !object.selected) {
-							object.onClick(this, x, y);
 						}
 						if (!is_selected || b_check_internal)
 							this.updateOverlay();
@@ -1642,8 +1639,6 @@
 							if (sMediaName) {
 								sCursorType = "pointer";
 							}
-						} else if (object.isControl() && !object.selected) {
-							sCursorType = "pointer";
 						}
 						if (oAnimPlayer) {
 							oAnimPlayer.onSpMouseOver(group || object);
