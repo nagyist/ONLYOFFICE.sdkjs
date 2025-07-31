@@ -16872,7 +16872,7 @@
         if(_sFormula.charAt(0) === '=') {
             _sFormula = _sFormula.slice(1);
         }
-        const oWS = options.forcedWorksheet || oWB.getWorksheet(0);
+        const oWS = options && options.forcedWorksheet || oWB.getWorksheet(0);
         if(!oWS) {
             return [];
         }
