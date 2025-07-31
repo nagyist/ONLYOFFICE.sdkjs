@@ -10081,7 +10081,7 @@
 	};
 	ReaderFromJSON.prototype.SectPrFromJSON = function(oParsedSectPr)
 	{
-		var oSectPr = new AscCommonWord.CSectionPr(private_GetLogicDocument());
+		var oSectPr = new AscWord.SectPr(private_GetLogicDocument());
 
 		var nSectionType = undefined;
 		switch(oParsedSectPr["type"])

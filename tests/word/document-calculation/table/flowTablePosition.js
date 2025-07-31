@@ -126,7 +126,7 @@ $(function ()
 		assert.strictEqual(logicDocument.GetPagesCount(), 1, "Check pages count of the document");
 		assert.strictEqual(table.GetPageBounds(0).Left, 20, "Check the left position of the inline table");
 
-		sectPr = new AscWord.CSectionPr();
+		sectPr = new AscWord.SectPr();
 		sectPr.SetPageMargins(40, 40, 40, 40);
 		sectPr.SetType(Asc.c_oAscSectionBreakType.Continuous);
 		p1.SetSectionPr(sectPr);

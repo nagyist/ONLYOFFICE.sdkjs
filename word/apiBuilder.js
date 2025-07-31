@@ -5113,7 +5113,7 @@
 				var ParaSectPr = oDocument.Content[ContentIndex].Get_SectionPr();
 				if (ParaSectPr)
 				{
-					var NewParaSectPr = new CSectionPr();
+					var NewParaSectPr = new AscWord.SectPr();
 					NewParaSectPr.Copy(ParaSectPr, true);
 					LogicDocument.Content[OverallIndex - 1].Set_SectionPr(NewParaSectPr, false);
 				}
@@ -6771,7 +6771,7 @@
 			return null;
 		}
 
-		var oSectPr = new CSectionPr(this.Document);
+		var oSectPr = new AscWord.SectPr(this.Document);
 
 		var nContentPos = oParagraph.Paragraph.GetIndex();
 		var oCurSectPr = this.Document.SectionsInfo.Get_SectPr(nContentPos).SectPr;
@@ -12129,7 +12129,7 @@
 		var aCols = [];
 		for (var nPos = 0, nCount = aWidths.length; nPos < nCount; ++nPos)
 		{
-			var SectionColumn   = new CSectionColumn();
+			var SectionColumn   = new AscWord.SectionColumn();
 			SectionColumn.W     = private_Twips2MM(aWidths[nPos]);
 			SectionColumn.Space = private_Twips2MM(nPos !== nCount - 1 ? aSpaces[nPos] : 0);
 			aCols.push(SectionColumn);

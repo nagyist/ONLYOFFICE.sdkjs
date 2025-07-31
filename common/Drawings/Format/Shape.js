@@ -3424,7 +3424,7 @@
 											}
 											this.extY *= oParaDrawing.SizeRelV.Percent;
 										}
-										this.m_oSectPr = new CSectionPr();
+										this.m_oSectPr = new AscWord.SectPr();
 										this.m_oSectPr.Copy(oSectPr);
 									}
 								}
@@ -3816,7 +3816,7 @@
 					if (oParentParagraph) {
 						var oSectPr = oParentParagraph.Get_SectPr();
 						if (oSectPr) {
-							this.m_oSectPr = new CSectionPr();
+							this.m_oSectPr = new AscWord.SectPr();
 							this.m_oSectPr.Copy(oSectPr);
 						}
 					}
@@ -3918,7 +3918,7 @@
 								} else {
 									dMaxWidth = oSectPr.GetContentFrameHeight();
 								}
-								this.m_oSectPr = new CSectionPr();
+								this.m_oSectPr = new AscWord.SectPr();
 								this.m_oSectPr.Copy(oSectPr);
 							}
 						}
@@ -4028,7 +4028,7 @@
 						if (oParentParagraph) {
 							var oSectPr = oParentParagraph.Get_SectPr();
 							if (oSectPr) {
-								this.m_oSectPr = new CSectionPr();
+								this.m_oSectPr = new AscWord.SectPr();
 								this.m_oSectPr.Copy(oSectPr);
 							}
 						}

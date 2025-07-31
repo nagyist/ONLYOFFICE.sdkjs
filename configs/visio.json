@@ -179,10 +179,14 @@
 			"word/Editor/Table/TableCell.js",
 			"word/Editor/Table/TableCellChanges.js",
 			"word/Editor/Common.js",
-			"word/Editor/Sections.js",
-			"word/Editor/SectionsChanges.js",
-			
 			"word/Editor/sections/document-sections.js",
+			"word/Editor/sections/footnote-pr.js",
+			"word/Editor/sections/line-numbering.js",
+			"word/Editor/sections/sect-pr.js",
+			"word/Editor/sections/sect-pr-changes.js",
+			"word/Editor/sections/section-columns.js",
+			"word/Editor/sections/section-page.js",
+
 			
 			"word/Drawing/Graphics.js",
 			"word/Drawing/ShapeDrawer.js",

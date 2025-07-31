@@ -77,7 +77,7 @@
 	 * @param nPageAbs
 	 * @param isFirst
 	 * @param isEven
-	 * @returns {{Header : null, SectPr : AscWord.CSectionPr, Footer : null}}
+	 * @returns {{Header : null, SectPr : AscWord.SectPr, Footer : null}}
 	 */
 	CDocumentLayoutBase.prototype.GetSectionHdrFtr = function(nPageAbs, isFirst, isEven)
 	{
@@ -115,7 +115,7 @@
 	/**
 	 * Получаем границы, внутри короторых должно быть расчитано содержимое основной части документа
 	 * @param nPageAbs {number}
-	 * @param oSectPr {AscWord.CSectionPr}
+	 * @param oSectPr {AscWord.SectPr}
 	 * @returns {{X : number, Y : number, XLimit : number, YLimit : number}}
 	 */
 	CDocumentLayoutBase.prototype.GetPageContentFrame = function(nPageAbs, oSectPr)
@@ -131,7 +131,7 @@
 	 * Получаем границы содержимого по заданной колонке и заданной странице
 	 * @param nPageAbs {number}
 	 * @param nColumnAbs {number}
-	 * @param oSectPr {AscWord.CSectionPr}
+	 * @param oSectPr {AscWord.SectPr}
 	 * @returns {{ColumnSpaceBefore : number, X : number, ColumnSpaceAfter : number, Y : number, XLimit : number, YLimit : number}}
 	 */
 	CDocumentLayoutBase.prototype.GetColumnContentFrame = function(nPageAbs, nColumnAbs, oSectPr)
@@ -149,7 +149,7 @@
 	 * Получаем настройки секции на заданной странице, или заданного элемента
 	 * @param nPageAbs {number} Если номер элемента не задан, тогда получаем по заданному номеру страницы
 	 * @param nContentIndex {?number} Если задан номер элемента, то ориентируемся на него
-	 * @returns {AscWord.CSectionPr}
+	 * @returns {AscWord.SectPr}
 	 */
 	CDocumentLayoutBase.prototype.GetSection = function(nPageAbs, nContentIndex)
 	{
@@ -170,7 +170,7 @@
 	};
 	/**
 	 * Получаем номер секции в общем списке секций
-	 * @param oSectPr {AscWord.CSectionPr}
+	 * @param oSectPr {AscWord.SectPr}
 	 * @returns {number}
 	 */
 	CDocumentLayoutBase.prototype.GetSectionIndex = function(oSectPr)

@@ -44,7 +44,7 @@ function CFootnotesController(LogicDocument)
 
 	this.Id = LogicDocument.Get_IdCounter().Get_NewId();
 
-	this.FootnotePr = new CFootnotePr(); // Глобальные настройки для сносок
+	this.FootnotePr = new AscWord.FootnotePr(); // Глобальные настройки для сносок
 	this.FootnotePr.InitDefault();
 
 	this.Footnote = {}; // Список всех сносок с ключом - Id.
@@ -223,7 +223,7 @@ CFootnotesController.prototype.SetFootnotePrNumRestart = function(nRestartType)
 /**
  * Сбрасываем рассчетные данный для заданной страницы.
  * @param {number} nPageIndex
- * @param {CSectionPr} oSectPr
+ * @param {AscWord.SectPr} oSectPr
  */
 CFootnotesController.prototype.Reset = function(nPageIndex, oSectPr)
 {

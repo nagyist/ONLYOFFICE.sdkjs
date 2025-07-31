@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2024
+ * (c) Copyright Ascensio System SIA 2010-2025
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -669,8 +669,8 @@ CChangesSectionColumnsCol.prototype.WriteToBinary = function(Writer)
 	// Long : flags
 	// 1bit : is new undefined?
 	// 2bit : is old undefined?
-	// 1bit == 0 : CSectionColumn : New
-	// 2bit == 0 : CSectionColumn : Old
+	// 1bit == 0 : AscWord.SectionColumn : New
+	// 2bit == 0 : AscWord.SectionColumn : Old
 
 	Writer.WriteLong(this.Index);
 
@@ -695,8 +695,8 @@ CChangesSectionColumnsCol.prototype.ReadFromBinary = function(Reader)
 	// Long : flags
 	// 1bit : is new undefined?
 	// 2bit : is old undefined?
-	// 1bit == 0 : CSectionColumn : New
-	// 2bit == 0 : CSectionColumn : Old
+	// 1bit == 0 : AscWord.SectionColumn : New
+	// 2bit == 0 : AscWord.SectionColumn : Old
 
 	this.Index = Reader.GetLong();
 
@@ -707,7 +707,7 @@ CChangesSectionColumnsCol.prototype.ReadFromBinary = function(Reader)
 	}
 	else
 	{
-		this.New = new CSectionColumn();
+		this.New = new AscWord.SectionColumn();
 		this.New.Read_FromBinary(Reader);
 	}
 
@@ -717,7 +717,7 @@ CChangesSectionColumnsCol.prototype.ReadFromBinary = function(Reader)
 	}
 	else
 	{
-		this.Old = new CSectionColumn();
+		this.Old = new AscWord.SectionColumn();
 		this.Old.Read_FromBinary(Reader);
 	}
 };
@@ -762,9 +762,9 @@ CChangesSectionColumnsSetCols.prototype.private_SetValue = function(Value)
 CChangesSectionColumnsSetCols.prototype.WriteToBinary = function(Writer)
 {
 	// Long : Count of new column
-	// Array of CSectionColumn: new columns
+	// Array of AscWord.SectionColumn: new columns
 	// Long : Count of old column
-	// Array of CSectionColumn: old columns
+	// Array of AscWord.SectionColumn: old columns
 
 
 	var nCount = this.New.length;
@@ -784,15 +784,15 @@ CChangesSectionColumnsSetCols.prototype.WriteToBinary = function(Writer)
 CChangesSectionColumnsSetCols.prototype.ReadFromBinary = function(Reader)
 {
 	// Long : Count of new column
-	// Array of CSectionColumn: new columns
+	// Array of AscWord.SectionColumn: new columns
 	// Long : Count of old column
-	// Array of CSectionColumn: old columns
+	// Array of AscWord.SectionColumn: old columns
 
 	var nCount = Reader.GetLong();
 	this.New = [];
 	for (var nIndex = 0; nIndex < nCount; ++nIndex)
 	{
-		this.New[nIndex] = new CSectionColumn();
+		this.New[nIndex] = new AscWord.SectionColumn();
 		this.New[nIndex].Read_FromBinary(Reader);
 	}
 
@@ -800,7 +800,7 @@ CChangesSectionColumnsSetCols.prototype.ReadFromBinary = function(Reader)
 	this.Old = [];
 	for (var nIndex = 0; nIndex < nCount; ++nIndex)
 	{
-		this.Old[nIndex] = new CSectionColumn();
+		this.Old[nIndex] = new AscWord.SectionColumn();
 		this.Old[nIndex].Read_FromBinary(Reader);
 	}
 };
@@ -986,7 +986,7 @@ CChangesSectionLnNumType.prototype.constructor = CChangesSectionLnNumType;
 CChangesSectionLnNumType.prototype.Type = AscDFH.historyitem_Section_LnNumType;
 CChangesSectionLnNumType.prototype.private_CreateObject = function()
 {
-	return new CSectionLnNumType();
+	return new AscWord.SectionLnNumType();
 };
 CChangesSectionLnNumType.prototype.private_SetValue = function(Value)
 {

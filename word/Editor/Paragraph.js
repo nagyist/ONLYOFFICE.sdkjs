@@ -80,7 +80,7 @@ function Paragraph(Parent, bFromPresentation)
     this.TextPr.Parent = this;
 
     // Настройки секции
-    this.SectPr = undefined; // undefined или CSectionPr
+    this.SectPr = undefined; // undefined или AscWord.SectPr
 
     this.Bounds = new CDocumentBounds(0, 0, 0, 0);
 
@@ -357,7 +357,7 @@ Paragraph.prototype.Copy = function(Parent, DrawingDocument, oPr)
 			oLogicDocument = oPr.Comparison.originalDocument;
 			bCopyHdrFtr = true;
 		}
-		var SectPr = new CSectionPr(oLogicDocument);
+		var SectPr = new AscWord.SectPr(oLogicDocument);
 		SectPr.Copy(this.SectPr, bCopyHdrFtr, oPr);
 		Para.Set_SectionPr(SectPr);
 	}
@@ -9533,7 +9533,7 @@ Paragraph.prototype.GetSelectedContent = function(oSelectedContent)
 			// Добавляем секцию в конце
 			if (undefined !== this.SectPr)
 			{
-				var SectPr = new CSectionPr(this.SectPr.LogicDocument);
+				var SectPr = new AscWord.SectPr(this.SectPr.LogicDocument);
 				SectPr.Copy(this.SectPr);
 				oPara.Set_SectionPr(SectPr);
 			}
@@ -15654,7 +15654,7 @@ Paragraph.prototype.Get_SectPr = function()
 };
 /**
  * Получаем секцию, в которой лежит заданный параграф
- * @returns  {?CSectionPr}
+ * @returns  {?AscWord.SectPr}
  */
 Paragraph.prototype.GetDocumentSectPr = function()
 {

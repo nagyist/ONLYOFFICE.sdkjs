@@ -2230,7 +2230,7 @@
 	window['AscDFH'].historyitem_ParaRun_MathMetaData          = window['AscDFH'].historyitem_type_ParaRun | 55;
 
 	//------------------------------------------------------------------------------------------------------------------
-	// Типы изменений в классе CSectionPr
+	// Типы изменений в классе AscWord.SectPr
 	//------------------------------------------------------------------------------------------------------------------
 	window['AscDFH'].historyitem_Section_PageSize_Orient       = window['AscDFH'].historyitem_type_Section | 1;
 	window['AscDFH'].historyitem_Section_PageSize_Size         = window['AscDFH'].historyitem_type_Section | 2;

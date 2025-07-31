@@ -1,5 +1,5 @@
 /*
- * (c) Copyright Ascensio System SIA 2010-2024
+ * (c) Copyright Ascensio System SIA 2010-2025
  *
  * This program is a free software product. You can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License (AGPL)
@@ -465,8 +465,8 @@
 	};
 	/**
 	 * Обновляем заданную секцию
-	 * @param oSectPr {CSectionPr} - Секция, которую нужно обновить
-	 * @param oNewSectPr {?CSectionPr} - Либо новое значение секции, либо undefined для удалении секции
+	 * @param oSectPr {AscWord.SectPr} - Секция, которую нужно обновить
+	 * @param oNewSectPr {?AscWord.SectPr} - Либо новое значение секции, либо undefined для удалении секции
 	 * @param isCheckHdrFtr {boolean} - Нужно ли проверять колонтитулы при удалении секции
 	 * @returns {boolean} Если не смогли обновить, возвращаем false
 	 */

@@ -251,8 +251,6 @@
 			"word/Editor/Paragraph/draw/highlight-draw-state.js",
 			"word/Editor/Paragraph/draw/line-draw-state.js",
 			"word/Editor/Paragraph/draw/paragraph-draw-state.js",
-			"word/Editor/Sections.js",
-			"word/Editor/SectionsChanges.js",
 			"word/Editor/Numbering/NumberingApplicator.js",
 			"word/Editor/Numbering/NumberingCollection.js",
 			"word/Editor/Numbering/NumberingCommon.js",
@@ -335,8 +333,13 @@
 			"word/Editor/custom-xml/custom-xml-manager.js",
 			"word/Editor/custom-xml/data-binding.js",
 			"word/Editor/Merge.js",
-			
 			"word/Editor/sections/document-sections.js",
+			"word/Editor/sections/footnote-pr.js",
+			"word/Editor/sections/line-numbering.js",
+			"word/Editor/sections/sect-pr.js",
+			"word/Editor/sections/sect-pr-changes.js",
+			"word/Editor/sections/section-columns.js",
+			"word/Editor/sections/section-page.js",
 			
 			"word/Drawing/Graphics.js",
 			"word/Drawing/ShapeDrawer.js",

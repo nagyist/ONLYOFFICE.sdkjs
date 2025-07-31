@@ -461,7 +461,7 @@ function CDocumentPageSection()
 /**
  * Инициализируем параметры данной секции
  * @param {number} nPageAbs
- * @param {CSectionPr} oSectPr
+ * @param {AscWord.SectPr} oSectPr
  * @param {Number} nSectionIndex
  */
 CDocumentPageSection.prototype.Init = function(nPageAbs, oSectPr, nSectionIndex)
@@ -1867,7 +1867,7 @@ function CDocument(DrawingDocument, isMainLogicDocument)
     this.customXmlManager = new AscWord.CustomXmlManager(this);
 
     // Сначала настраиваем размеры страницы и поля
-    this.SectPr = new CSectionPr(this);
+    this.SectPr = new AscWord.SectPr(this);
     this.SectionsInfo = new AscWord.DocumentSections(this);
 
 	// Режим рецензирования
@@ -14736,8 +14736,8 @@ CDocument.prototype.UpdateAllSectionsInfo = function()
 };
 /**
  * Обновляем информацию о заданной секции
- * @param oSectPr {CSectionPr} - Если не задано, значит добавляется новая секция
- * @param oNewSectPr {CSectionPr} - Если не задано, тогда секция удаляется
+ * @param oSectPr {AscWord.SectPr} - Если не задано, значит добавляется новая секция
+ * @param oNewSectPr {AscWord.SectPr} - Если не задано, тогда секция удаляется
  * @param isCheckHdrFtr {boolean} - Проверять ли колонтитулы при удалении секции
  */
 CDocument.prototype.UpdateSectionInfo = function(oSectPr, oNewSectPr, isCheckHdrFtr)
@@ -14814,7 +14814,7 @@ CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
 		return false;
 	}
 
-	var oSectPr = new CSectionPr(this);
+	var oSectPr = new AscWord.SectPr(this);
 
 	// В данном месте мы ставим разрыв секции. Чтобы до текущего места ничего не изменилось, мы у новой
 	// для новой секции копируем все настройки из старой, а в старую секцию выставляем приходящий тип
@@ -14884,7 +14884,7 @@ CDocument.prototype.Get_SectionPageNumInfo = function(Page_abs)
 	var bFirst = ( FP === CP && true === bCheckFP ? true : false );
 	var bEven  = ( 0 === CP % 2 ? true : false ); // Четность/нечетность проверяется по текущему номеру страницы в секции, с учетом нумерации в секциях
 
-	return new CSectionPageNumInfo(FP, CP, bFirst, bEven, Page_abs);
+	return new AscWord.SectionPageNumInfo(FP, CP, bFirst, bEven, Page_abs);
 };
 CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 {
@@ -17091,7 +17091,7 @@ CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
 			&& (type_Paragraph !== this.Content[nStartPos - 1].GetType()
 			|| !this.Content[nStartPos - 1].Get_SectionPr()))
 		{
-			var oSectPr = new CSectionPr(this);
+			var oSectPr = new AscWord.SectPr(this);
 			oSectPr.Copy(oStartSectPr, false);
 
 			var oStartParagraph = new AscWord.Paragraph();
@@ -17105,7 +17105,7 @@ CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
 		if (nEndPos !== this.Content.length - 1)
 		{
 			oEndSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
-			var oSectPr = new CSectionPr(this);
+			var oSectPr = new AscWord.SectPr(this);
 			oSectPr.Copy(oEndSectPr, false);
 			oEndParagraph.Set_SectionPr(oSectPr, true);
 			oSectPr.SetColumnProps(ColumnsProps);
@@ -18180,7 +18180,7 @@ CDocument.prototype.Get_MailMergedDocument = function(_nStartIndex, _nEndIndex)
 				var ParaSectPr = this.Content[ContentIndex].Get_SectionPr();
 				if (ParaSectPr)
 				{
-					var NewParaSectPr = new CSectionPr();
+					var NewParaSectPr = new AscWord.SectPr();
 					NewParaSectPr.Copy(ParaSectPr, true);
 					LogicDocument.Content[OverallIndex - 1].Set_SectionPr(NewParaSectPr, false);
 				}
@@ -18189,7 +18189,7 @@ CDocument.prototype.Get_MailMergedDocument = function(_nStartIndex, _nEndIndex)
 
 		// Добавляем дополнительный параграф с окончанием секции
 		var SectionPara = new AscWord.Paragraph();
-		var SectPr = new CSectionPr(LogicDocument);
+		var SectPr = new AscWord.SectPr(LogicDocument);
 		SectPr.Copy(this.SectPr, true);
 		SectPr.Set_Type(c_oAscSectionBreakType.NextPage);
 		SectionPara.Set_SectionPr(SectPr, false);
@@ -27001,7 +27001,7 @@ CDocument.prototype.GetLineNumbersInfo = function()
 /**
  * Устанавливаем настройки для нумерации строк
  * @param {Asc.c_oAscSectionApplyType} nApplyType
- * @param {?CSectionLnNumType} oProps  (если null или undefined, то из заданных разделов удаляем нумерацию строк)
+ * @param {?AscWord.SectionLnNumType} oProps  (если null или undefined, то из заданных разделов удаляем нумерацию строк)
  */
 CDocument.prototype.SetLineNumbersProps = function(nApplyType, oProps)
 {
@@ -27049,7 +27049,7 @@ CDocument.prototype.SetLineNumbersProps = function(nApplyType, oProps)
 };
 /**
  * Получаем настройки нумерации строк текущего раздела
- * @returns {?CSectionLnNumType|null}
+ * @returns {?AscWord.SectionLnNumType | null}
  */
 CDocument.prototype.GetLineNumbersProps = function()
 {
@@ -27059,7 +27059,7 @@ CDocument.prototype.GetLineNumbersProps = function()
 /**
  * Получаем список секции на основе по заданному типу
  * @param {Asc.c_oAscSectionApplyType} nType
- * @returns {Array.CSectionPr}
+ * @returns {Array.AscWord.SectPr}
  */
 CDocument.prototype.GetSectionsByApplyType = function(nType)
 {

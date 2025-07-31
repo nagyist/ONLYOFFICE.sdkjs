@@ -44,7 +44,7 @@ function CEndnotesController(oLogicDocument)
 
 	this.Id = oLogicDocument.GetIdCounter().Get_NewId();
 
-	this.EndnotePr = new CFootnotePr(); // Глобальные настройки для сносок
+	this.EndnotePr = new AscWord.FootnotePr(); // Глобальные настройки для сносок
 	this.EndnotePr.InitDefaultEndnotePr();
 
 	this.Endnote = {};
@@ -405,7 +405,7 @@ CEndnotesController.prototype.RegisterEndnotes = function(nPageAbs, arrEndnotes)
 };
 /**
  * Проверяем, есть ли сноски, которые нужно пересчитать в конце заданной секции
- * @param oSectPr {CSectionPr} секция, в конце которой мы расчитываем сноски
+ * @param oSectPr {AscWord.SectPr} секция, в конце которой мы расчитываем сноски
  * @param isFinal {boolean} последняя ли это секция документа
  * @returns {boolean}
  */

@@ -771,7 +771,7 @@ CDocumentControllerBase.prototype.RestoreDocumentStateAfterLoadChanges = functio
 CDocumentControllerBase.prototype.GetColumnSize = function(){return {W : 0, H : 0};};
 /**
  * Получаем настройки текущей секции
- * @returns {?CSectionPr}
+ * @returns {?AscWord.SectPr}
  */
 CDocumentControllerBase.prototype.GetCurrentSectionPr = function(){return null;};
 /**
