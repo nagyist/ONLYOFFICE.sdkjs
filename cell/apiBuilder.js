@@ -17944,6 +17944,7 @@
 	ApiRange.prototype["SetAutoFilter"] = ApiRange.prototype.SetAutoFilter;
 	ApiRange.prototype["SetFormulaArray"] = ApiRange.prototype.SetFormulaArray;
 	ApiRange.prototype["GetFormulaArray"] = ApiRange.prototype.GetFormulaArray;
+	ApiRange.prototype["Expand"] = ApiRange.prototype.Expand;
 
 
 
