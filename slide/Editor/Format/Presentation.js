@@ -8686,7 +8686,8 @@ CPresentation.prototype.SendThemesThumbnails = function () {
 		aThemeInfo[aDocumentThemes.length - 1] = theme_load_info;
 	}
 	this.Api.sync_InitEditorThemes(this.Api.ThemeLoader.Themes.EditorThemes, aDocumentThemes);
-	const currentThemeIndex = this.GetCurrentMaster().getThemeIndex();
+	const currentMaster = this.GetCurrentMaster();
+	const currentThemeIndex = currentMaster && currentMaster.getThemeIndex && currentMaster.getThemeIndex() || 0;
 	this.Api.sendEvent("asc_onUpdateThemeIndex", currentThemeIndex);
 };
 
