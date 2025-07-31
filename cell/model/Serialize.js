@@ -10700,7 +10700,7 @@
 						sp_pr.setParent(oControl);
 						if (oPr.shape && oPr.shape.txBody) {
 							const oTxBody = oPr.shape.txBody.createDuplicate();
-							const oBodyPr = oControl.controller.getBodyPr();
+							const oBodyPr = oControl.controller.getBodyPr(oPr.shape);
 							oTxBody.setBodyPr(oBodyPr);
 							oControl.setTxBody(oTxBody);
 							oControl.clearVmlTxBody();

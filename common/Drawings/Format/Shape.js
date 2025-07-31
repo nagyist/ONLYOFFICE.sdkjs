@@ -5397,7 +5397,33 @@
 				}
 			}
 		};
+		CShape.prototype.drawTxBody = function (graphics, transform, transformText, pageIndex) {
+			if (this.txBody) {
+				var oController = this.getDrawingObjectsController && this.getDrawingObjectsController();
+				graphics.SaveGrState();
+				graphics.SetIntegerGrid(false);
+				var _transformText;
+				if ((!this.txBody.content || this.txBody.content.Is_Empty()) && !AscCommon.IsShapeToImageConverter && this.txBody.content2 != null && !this.txBody.checkCurrentPlaceholder() && (this.isEmptyPlaceholder ? this.isEmptyPlaceholder() : false) && this.transformText2) {
+					_transformText = this.transformText2;
+				} else if (this.txBody.content) {
+					_transformText = transformText;
+				}
 
+				if (this instanceof CShape) {
+					if (!(oController && (AscFormat.getTargetTextObject(oController) === this)))
+						this.clipTextRect(graphics, transform, transformText, pageIndex);
+				}
+				graphics.transform3(_transformText, true);
+				if (graphics.CheckUseFonts2 !== undefined)
+					graphics.CheckUseFonts2(_transformText);
+
+				graphics.SetIntegerGrid(true);
+				this.txBody.draw(graphics);
+				if (graphics.UncheckUseFonts2 !== undefined)
+					graphics.UncheckUseFonts2(_transformText);
+				graphics.RestoreGrState();
+			}
+		};
 		/**
 		 * note: sometimes call to recalculate bounds
 		 * @memberOf CShape
@@ -5502,30 +5528,7 @@
 
 			if (!this.cropObject) {
 				if (!this.txWarpStruct && !this.txWarpStructParamarksNoTransform || (!this.txWarpStructParamarksNoTransform && oController && (AscFormat.getTargetTextObject(oController) === this) || (!this.txBody && !this.textBoxContent)) /*|| this.haveSelectedDrawingInContent()*/) {
-					if (this.txBody) {
-						graphics.SaveGrState();
-						graphics.SetIntegerGrid(false);
-						var transform_text;
-						if ((!this.txBody.content || this.txBody.content.Is_Empty()) && !AscCommon.IsShapeToImageConverter && this.txBody.content2 != null && !this.txBody.checkCurrentPlaceholder() && (this.isEmptyPlaceholder ? this.isEmptyPlaceholder() : false) && this.transformText2) {
-							transform_text = this.transformText2;
-						} else if (this.txBody.content) {
-							transform_text = _transform_text;
-						}
-
-						if (this instanceof CShape) {
-							if (!(oController && (AscFormat.getTargetTextObject(oController) === this)))
-								this.clipTextRect(graphics, transform, transformText, pageIndex);
-						}
-						graphics.transform3(transform_text, true);
-						if (graphics.CheckUseFonts2 !== undefined)
-							graphics.CheckUseFonts2(transform_text);
-
-						graphics.SetIntegerGrid(true);
-						this.txBody.draw(graphics);
-						if (graphics.UncheckUseFonts2 !== undefined)
-							graphics.UncheckUseFonts2(transform_text);
-						graphics.RestoreGrState();
-					}
+					this.drawTxBody(graphics, transform, transformText, pageIndex);
 
 					if (this.textBoxContent && graphics.isSupportTextDraw() && this.transformText) {
 						var old_start_page = this.textBoxContent.Get_StartPage_Relative();

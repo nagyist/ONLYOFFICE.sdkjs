@@ -53,6 +53,63 @@
 	const CFormControlPr_objectType_tabStrip = 12;
 	const CFormControlPr_objectType_image = 13;
 
+	const CFormControlPr_verticalAlignment_bottom = 0;
+	const CFormControlPr_verticalAlignment_center = 1;
+	const CFormControlPr_verticalAlignment_distributed = 2;
+	const CFormControlPr_verticalAlignment_justify = 3;
+	const CFormControlPr_verticalAlignment_top = 4;
+
+	const CFormControlPr_horizontalAlignment_center = 0;
+	const CFormControlPr_horizontalAlignment_continuous = 1;
+	const CFormControlPr_horizontalAlignment_distributed = 2;
+	const CFormControlPr_horizontalAlignment_fill = 3;
+	const CFormControlPr_horizontalAlignment_general = 4;
+	const CFormControlPr_horizontalAlignment_justify = 5;
+	const CFormControlPr_horizontalAlignment_left = 6;
+	const CFormControlPr_horizontalAlignment_right = 7;
+	const CFormControlPr_horizontalAlignment_centerContinuous = 8;
+
+	function getVerticalAlignFromControlPr(nPr) {
+		switch (nPr) {
+			case CFormControlPr_verticalAlignment_bottom:
+				return;
+			case CFormControlPr_verticalAlignment_center:
+				return;
+			case CFormControlPr_verticalAlignment_distributed:
+				return;
+			case CFormControlPr_verticalAlignment_justify:
+				return;
+			case CFormControlPr_verticalAlignment_top:
+				return;
+			default:
+				return;
+		}
+	}
+	function getHorizontalAlignFromControl(nPr) {
+		switch (nPr) {
+			case CFormControlPr_horizontalAlignment_center:
+				return;
+			case CFormControlPr_horizontalAlignment_continuous:
+				return;
+			case CFormControlPr_horizontalAlignment_distributed:
+				return;
+			case CFormControlPr_horizontalAlignment_fill:
+				return;
+			case CFormControlPr_horizontalAlignment_general:
+				return;
+			case CFormControlPr_horizontalAlignment_justify:
+				return;
+			case CFormControlPr_horizontalAlignment_left:
+				return;
+			case CFormControlPr_horizontalAlignment_right:
+				return;
+			case CFormControlPr_horizontalAlignment_centerContinuous:
+				return;
+			default:
+				return;
+		}
+	}
+
 	AscDFH.changesFactory[AscDFH.historyitem_Control_ControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_Control_FormControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_ControlPr] = function(oClass, pr) {
@@ -85,6 +142,10 @@
 		switch (this.formControlPr.objectType) {
 			case CFormControlPr_objectType_checkBox: {
 				this.controller = new CCheckBoxController(this);
+				break;
+			}
+			case CFormControlPr_objectType_button: {
+				this.controller = new CButtonController(this);
 				break;
 			}
 			default: {
@@ -196,7 +257,7 @@
 	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {};
 	CControlControllerBase.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
 	CControlControllerBase.prototype.init = function() {};
-	CControlControllerBase.prototype.getBodyPr = function() {return null;};
+	CControlControllerBase.prototype.getBodyPr = function(oControlShape) {return null;};
 	CControlControllerBase.prototype.applySpecialPasteProps = function(oPastedWb) {};
 	CControlControllerBase.prototype.getTextRect = function() {
 		return AscFormat.CShape.prototype.getTextRect.call(this.control);
@@ -214,7 +275,7 @@
 		this.isHold = false;
 	};
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
-	CCheckBoxController.prototype.getBodyPr = function () {
+	CCheckBoxController.prototype.getBodyPr = function (oControlShape) {
 		const oBodyPr = new AscFormat.CBodyPr();
 		oBodyPr.setInsets(CHECKBOX_BODYPR_INSETS_L, CHECKBOX_BODYPR_INSETS_T, CHECKBOX_BODYPR_INSETS_R, CHECKBOX_BODYPR_INSETS_B);
 		oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
@@ -487,6 +548,93 @@
 		return oRes;
 	};
 
+	const BUTTON_OFFSET = 0.5;
+	const BUTTON_BODYPR_INSETS = 27432 / 36000;
+	function CButtonController(oControl) {
+		CControlControllerBase.call(this, oControl);
+		this.isHold = false;
+	};
+	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
+	CButtonController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
+		const oControl = this.control;
+		graphics.SaveGrState();
+		transform = transform || oControl.transform;
+		let arrLeftShadowColor;
+		let arrRightShadowColor;
+		let _transformText = transformText || oControl.transformText;
+		if (this.isHold) {
+			arrLeftShadowColor = [100, 100, 100, 255];
+			arrRightShadowColor = [255, 255, 255, 255];
+			_transformText = _transformText.CreateDublicate();
+			_transformText.Translate(BUTTON_OFFSET, BUTTON_OFFSET);
+		} else {
+			arrLeftShadowColor = [255, 255, 255, 255];
+			arrRightShadowColor = [100, 100, 100, 255];
+		}
+		graphics.transform3(transform);
+		graphics.b_color1.apply(graphics, arrLeftShadowColor);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(oControl.extX, 0);
+		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
+		graphics._l(BUTTON_OFFSET, BUTTON_OFFSET);
+		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
+		graphics._l(0, oControl.extY);
+		graphics._z();
+		graphics.df();
+
+		graphics._e();
+		graphics.b_color1.apply(graphics, arrRightShadowColor);
+		graphics._m(oControl.extX, 0);
+		graphics._l(oControl.extX, oControl.extY);
+		graphics._l(0, oControl.extY);
+		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
+		graphics._l(oControl.extX - BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
+		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
+		graphics._z();
+		graphics.df();
+
+		graphics._e();
+		graphics.b_color1(240, 240, 240, 255);
+		graphics._m(BUTTON_OFFSET, BUTTON_OFFSET);
+		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
+		graphics._l(oControl.extX - BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
+		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
+		graphics._z();
+		graphics.df();
+
+		graphics._e();
+		graphics.RestoreGrState();
+		oControl.drawTxBody(graphics, transform, _transformText, pageIndex);
+	};
+	CButtonController.prototype.setIsHold = function(bPr) {
+		this.isHold = bPr;
+	};
+	CButtonController.prototype.getCursorInfo = function(e, nX, nY) {
+
+	};
+	CButtonController.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+		this.setIsHold(true);
+		this.control.onUpdate();
+		return true;
+	};
+	CButtonController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+		this.setIsHold(false);
+		this.control.onUpdate();
+		return true;
+	};
+	CButtonController.prototype.getBodyPr = function(oControlShape) {
+		const oBodyPr = new AscFormat.CBodyPr();
+		oBodyPr.setInsets(BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS);
+		oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
+		oBodyPr.vertOverflow = AscFormat.nVOTClip;
+		oBodyPr.wrap = AscFormat.nTWTSquare;
+		oBodyPr.upright = true;
+		return oBodyPr;
+	};
+	CButtonController.prototype.applySpecialPasteProps = function(oPastedWb) {
+
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
