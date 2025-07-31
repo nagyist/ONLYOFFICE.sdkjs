@@ -159,7 +159,7 @@ CEndnotesController.prototype.SetEndnotePrNumFormat = function(nFormatType)
 {
 	if (undefined !== nFormatType && this.EndnotePr.NumFormat !== nFormatType)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionEndnoteNumFormat(this, this.EndnotePr.NumFormat, nFormatType));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionEndnoteNumFormat(this, this.EndnotePr.NumFormat, nFormatType));
 		this.EndnotePr.NumFormat = nFormatType;
 	}
 };
@@ -167,7 +167,7 @@ CEndnotesController.prototype.SetEndnotePrPos = function(nPos)
 {
 	if (undefined !== nPos && this.EndnotePr.Pos !== nPos)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionEndnotePos(this, this.EndnotePr.Pos, nPos));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionEndnotePos(this, this.EndnotePr.Pos, nPos));
 		this.EndnotePr.Pos = nPos;
 	}
 };
@@ -175,7 +175,7 @@ CEndnotesController.prototype.SetEndnotePrNumStart = function(nStart)
 {
 	if (undefined !== nStart && this.EndnotePr.NumStart !== nStart)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionEndnoteNumStart(this, this.EndnotePr.NumStart, nStart));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionEndnoteNumStart(this, this.EndnotePr.NumStart, nStart));
 		this.EndnotePr.NumStart = nStart;
 	}
 };
@@ -183,7 +183,7 @@ CEndnotesController.prototype.SetEndnotePrNumRestart = function(nRestartType)
 {
 	if (undefined !== nRestartType && this.EndnotePr.NumRestart !== nRestartType)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionEndnoteNumRestart(this, this.EndnotePr.NumRestart, nRestartType));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionEndnoteNumRestart(this, this.EndnotePr.NumRestart, nRestartType));
 		this.EndnotePr.NumRestart = nRestartType;
 	}
 };

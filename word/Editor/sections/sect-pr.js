@@ -32,7 +32,6 @@
 
 "use strict";
 
-// Import
 var section_borders_DisplayAllPages     = 0x00;
 var section_borders_DisplayFirstPage    = 0x01;
 var section_borders_DisplayNotFirstPage = 0x02;
@@ -49,8 +48,6 @@ var section_footnote_RestartEachPage   = 0x02;
 
 (function()
 {
-	var History = AscCommon.History;
-	
 	/**
 	 * @param {AscWord.Document} logicDocument
 	 * @constructor
@@ -249,7 +246,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.Type !== Type)
 		{
-			History.Add(new CChangesSectionType(this, this.Type, Type));
+			AscCommon.History.Add(new AscDFH.CChangesSectionType(this, this.Type, Type));
 			this.Type = Type;
 		}
 	};
@@ -261,7 +258,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (true !== this.Borders.Left.Compare(Border))
 		{
-			History.Add(new CChangesSectionBordersLeft(this, this.Borders.Left, Border));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersLeft(this, this.Borders.Left, Border));
 			this.Borders.Left = Border;
 		}
 	};
@@ -273,7 +270,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (true !== this.Borders.Top.Compare(Border))
 		{
-			History.Add(new CChangesSectionBordersTop(this, this.Borders.Top, Border));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersTop(this, this.Borders.Top, Border));
 			this.Borders.Top = Border;
 		}
 	};
@@ -285,7 +282,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (true !== this.Borders.Right.Compare(Border))
 		{
-			History.Add(new CChangesSectionBordersRight(this, this.Borders.Right, Border));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersRight(this, this.Borders.Right, Border));
 			this.Borders.Right = Border;
 		}
 	};
@@ -297,7 +294,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (true !== this.Borders.Bottom.Compare(Border))
 		{
-			History.Add(new CChangesSectionBordersBottom(this, this.Borders.Bottom, Border));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersBottom(this, this.Borders.Bottom, Border));
 			this.Borders.Bottom = Border;
 		}
 	};
@@ -309,7 +306,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Display !== this.Borders.Display)
 		{
-			History.Add(new CChangesSectionBordersDisplay(this, this.Borders.Display, Display));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersDisplay(this, this.Borders.Display, Display));
 			this.Borders.Display = Display;
 		}
 	};
@@ -321,7 +318,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (ZOrder !== this.Borders.ZOrder)
 		{
-			History.Add(new CChangesSectionBordersZOrder(this, this.Borders.ZOrder, ZOrder));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersZOrder(this, this.Borders.ZOrder, ZOrder));
 			this.Borders.ZOrder = ZOrder;
 		}
 	};
@@ -333,7 +330,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Footer !== this.FooterFirst)
 		{
-			History.Add(new CChangesSectionFooterFirst(this, this.FooterFirst, Footer));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFooterFirst(this, this.FooterFirst, Footer));
 			this.FooterFirst = Footer;
 		}
 	};
@@ -345,7 +342,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Footer !== this.FooterEven)
 		{
-			History.Add(new CChangesSectionFooterEven(this, this.FooterEven, Footer));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFooterEven(this, this.FooterEven, Footer));
 			this.FooterEven = Footer;
 		}
 	};
@@ -357,7 +354,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Footer !== this.FooterDefault)
 		{
-			History.Add(new CChangesSectionFooterDefault(this, this.FooterDefault, Footer));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFooterDefault(this, this.FooterDefault, Footer));
 			this.FooterDefault = Footer;
 		}
 	};
@@ -369,7 +366,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Header !== this.HeaderFirst)
 		{
-			History.Add(new CChangesSectionHeaderFirst(this, this.HeaderFirst, Header));
+			AscCommon.History.Add(new AscDFH.CChangesSectionHeaderFirst(this, this.HeaderFirst, Header));
 			this.HeaderFirst = Header;
 		}
 	};
@@ -381,7 +378,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Header !== this.HeaderEven)
 		{
-			History.Add(new CChangesSectionHeaderEven(this, this.HeaderEven, Header));
+			AscCommon.History.Add(new AscDFH.CChangesSectionHeaderEven(this, this.HeaderEven, Header));
 			this.HeaderEven = Header;
 		}
 	};
@@ -393,7 +390,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Header !== this.HeaderDefault)
 		{
-			History.Add(new CChangesSectionHeaderDefault(this, this.HeaderDefault, Header));
+			AscCommon.History.Add(new AscDFH.CChangesSectionHeaderDefault(this, this.HeaderDefault, Header));
 			this.HeaderDefault = Header;
 		}
 	};
@@ -405,7 +402,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Value !== this.TitlePage)
 		{
-			History.Add(new CChangesSectionTitlePage(this, this.TitlePage, Value));
+			AscCommon.History.Add(new AscDFH.CChangesSectionTitlePage(this, this.TitlePage, Value));
 			this.TitlePage = Value;
 		}
 	};
@@ -491,7 +488,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Start !== this.PageNumType.Start)
 		{
-			History.Add(new CChangesSectionPageNumTypeStart(this, this.PageNumType.Start, Start));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageNumTypeStart(this, this.PageNumType.Start, Start));
 			this.PageNumType.Start = Start;
 		}
 	};
@@ -504,7 +501,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		if (format === this.PageNumType.Format)
 			return;
 		
-		AscCommon.History.Add(new CChangesSectionPageNumTypeFormat(this, this.PageNumType.Format, format));
+		AscCommon.History.Add(new AscDFH.CChangesSectionPageNumTypeFormat(this, this.PageNumType.Format, format));
 		this.PageNumType.Format = format;
 	};
 	SectPr.prototype.GetPageNumFormat = function()
@@ -516,7 +513,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		if (chapStyle === this.PageNumType.ChapStyle)
 			return;
 		
-		AscCommon.History.Add(new CChangesSectionPageNumTypeChapStyle(this, this.PageNumType.ChapStyle, chapStyle));
+		AscCommon.History.Add(new AscDFH.CChangesSectionPageNumTypeChapStyle(this, this.PageNumType.ChapStyle, chapStyle));
 		this.PageNumType.ChapStyle = chapStyle;
 	};
 	SectPr.prototype.GetPageNumChapStyle = function()
@@ -528,7 +525,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		if (chapSep === this.PageNumType.ChapSep)
 			return;
 		
-		AscCommon.History.Add(new CChangesSectionPageNumTypeChapSep(this, this.PageNumType.ChapSep, chapSep));
+		AscCommon.History.Add(new AscDFH.CChangesSectionPageNumTypeChapSep(this, this.PageNumType.ChapSep, chapSep));
 		this.PageNumType.ChapSep = chapSep;
 	};
 	SectPr.prototype.GetPageNumChapSep = function()
@@ -555,7 +552,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Equal !== this.Columns.Equal)
 		{
-			History.Add(new CChangesSectionColumnsEqualWidth(this, this.Columns.EqualWidth, Equal));
+			AscCommon.History.Add(new AscDFH.CChangesSectionColumnsEqualWidth(this, this.Columns.EqualWidth, Equal));
 			this.Columns.EqualWidth = Equal;
 		}
 	};
@@ -563,7 +560,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Space !== this.Columns.Space)
 		{
-			History.Add(new CChangesSectionColumnsSpace(this, this.Columns.Space, Space));
+			AscCommon.History.Add(new AscDFH.CChangesSectionColumnsSpace(this, this.Columns.Space, Space));
 			this.Columns.Space = Space;
 		}
 	};
@@ -573,7 +570,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		
 		if (Num !== this.Columns.Num)
 		{
-			History.Add(new CChangesSectionColumnsNum(this, this.Columns.Num, Num));
+			AscCommon.History.Add(new AscDFH.CChangesSectionColumnsNum(this, this.Columns.Num, Num));
 			this.Columns.Num = Num;
 		}
 	};
@@ -585,13 +582,13 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Sep !== this.Columns.Sep)
 		{
-			History.Add(new CChangesSectionColumnsSep(this, this.Columns.Sep, Sep));
+			AscCommon.History.Add(new AscDFH.CChangesSectionColumnsSep(this, this.Columns.Sep, Sep));
 			this.Columns.Sep = Sep;
 		}
 	};
 	SectPr.prototype.Set_Columns_Cols = function(Cols)
 	{
-		History.Add(new CChangesSectionColumnsSetCols(this, this.Columns.Cols, Cols));
+		AscCommon.History.Add(new AscDFH.CChangesSectionColumnsSetCols(this, this.Columns.Cols, Cols));
 		this.Columns.Cols = Cols;
 	};
 	SectPr.prototype.Set_Columns_Col = function(Index, W, Space)
@@ -604,7 +601,7 @@ var section_footnote_RestartEachPage   = 0x02;
 			NewCol.W     = W;
 			NewCol.Space = Space;
 			
-			History.Add(new CChangesSectionColumnsCol(this, OldCol, NewCol, Index));
+			AscCommon.History.Add(new AscDFH.CChangesSectionColumnsCol(this, OldCol, NewCol, Index));
 			this.Columns.Cols[Index] = NewCol;
 		}
 	};
@@ -701,7 +698,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		
 		if (AscDFH.historyitem_Section_LnNumType === Data.Type)
 		{
-			History.AddLineNumbersToRecalculateData();
+			AscCommon.History.AddLineNumbersToRecalculateData();
 			return;
 		}
 		
@@ -852,7 +849,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.FootnotePr.Pos !== nPos)
 		{
-			History.Add(new CChangesSectionFootnotePos(this, this.FootnotePr.Pos, nPos));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFootnotePos(this, this.FootnotePr.Pos, nPos));
 			this.FootnotePr.Pos = nPos;
 		}
 	};
@@ -867,7 +864,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.FootnotePr.NumStart !== nStart)
 		{
-			History.Add(new CChangesSectionFootnoteNumStart(this, this.FootnotePr.NumStart, nStart));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFootnoteNumStart(this, this.FootnotePr.NumStart, nStart));
 			this.FootnotePr.NumStart = nStart;
 		}
 	};
@@ -882,7 +879,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.FootnotePr.NumRestart !== nRestartType)
 		{
-			History.Add(new CChangesSectionFootnoteNumRestart(this, this.FootnotePr.NumRestart, nRestartType));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFootnoteNumRestart(this, this.FootnotePr.NumRestart, nRestartType));
 			this.FootnotePr.NumRestart = nRestartType;
 		}
 	};
@@ -897,7 +894,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.FootnotePr.NumFormat !== nFormatType)
 		{
-			History.Add(new CChangesSectionFootnoteNumFormat(this, this.FootnotePr.NumFormat, nFormatType));
+			AscCommon.History.Add(new AscDFH.CChangesSectionFootnoteNumFormat(this, this.FootnotePr.NumFormat, nFormatType));
 			this.FootnotePr.NumFormat = nFormatType;
 		}
 	};
@@ -925,7 +922,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		// Pos, заданная в секции не должна использоваться
 		if (nPos !== this.EndnotePr.Pos)
 		{
-			History.Add(new CChangesSectionEndnotePos(this, this.EndnotePr.Pos, nPos));
+			AscCommon.History.Add(new AscDFH.CChangesSectionEndnotePos(this, this.EndnotePr.Pos, nPos));
 			this.EndnotePr.Pos = nPos;
 		}
 	};
@@ -938,7 +935,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.EndnotePr.NumStart !== nStart)
 		{
-			History.Add(new CChangesSectionEndnoteNumStart(this, this.EndnotePr.NumStart, nStart));
+			AscCommon.History.Add(new AscDFH.CChangesSectionEndnoteNumStart(this, this.EndnotePr.NumStart, nStart));
 			this.EndnotePr.NumStart = nStart;
 		}
 	};
@@ -953,7 +950,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.EndnotePr.NumRestart !== nRestartType)
 		{
-			History.Add(new CChangesSectionEndnoteNumRestart(this, this.EndnotePr.NumRestart, nRestartType));
+			AscCommon.History.Add(new AscDFH.CChangesSectionEndnoteNumRestart(this, this.EndnotePr.NumRestart, nRestartType));
 			this.EndnotePr.NumRestart = nRestartType;
 		}
 	};
@@ -968,7 +965,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.EndnotePr.NumFormat !== nFormatType)
 		{
-			History.Add(new CChangesSectionEndnoteNumFormat(this, this.EndnotePr.NumFormat, nFormatType));
+			AscCommon.History.Add(new AscDFH.CChangesSectionEndnoteNumFormat(this, this.EndnotePr.NumFormat, nFormatType));
 			this.EndnotePr.NumFormat = nFormatType;
 		}
 	};
@@ -1065,7 +1062,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (Math.abs(nGutter - this.PageMargins.Gutter) > 0.001)
 		{
-			History.Add(new CChangesSectionPageMarginsGutter(this, this.PageMargins.Gutter, nGutter));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageMarginsGutter(this, this.PageMargins.Gutter, nGutter));
 			this.PageMargins.Gutter = nGutter;
 		}
 	};
@@ -1077,7 +1074,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (isRTL !== this.GutterRTL)
 		{
-			History.Add(new CChangesSectionGutterRTL(this, this.GutterRTL, isRTL));
+			AscCommon.History.Add(new AscDFH.CChangesSectionGutterRTL(this, this.GutterRTL, isRTL));
 			this.GutterRTL = isRTL;
 		}
 	};
@@ -1095,7 +1092,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		
 		if (Math.abs(L - this.PageMargins.Left) > 0.001 || Math.abs(T - this.PageMargins.Top) > 0.001 || Math.abs(R - this.PageMargins.Right) > 0.001 || Math.abs(B - this.PageMargins.Bottom) > 0.001)
 		{
-			History.Add(new CChangesSectionPageMargins(this, {
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageMargins(this, {
 				L : this.PageMargins.Left,
 				T : this.PageMargins.Top,
 				R : this.PageMargins.Right,
@@ -1131,7 +1128,7 @@ var section_footnote_RestartEachPage   = 0x02;
 			H = Math.max(2.6, H);
 			W = Math.max(12.7, W);
 			
-			History.Add(new CChangesSectionPageSize(this, {W : this.PageSize.W, H : this.PageSize.H}, {W : W, H : H}));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageSize(this, {W : this.PageSize.W, H : this.PageSize.H}, {W : W, H : H}));
 			
 			this.PageSize.W = W;
 			this.PageSize.H = H;
@@ -1150,7 +1147,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		var _Orient = this.GetOrientation();
 		if (_Orient !== Orient)
 		{
-			History.Add(new CChangesSectionPageOrient(this, this.PageSize.Orient, Orient));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageOrient(this, this.PageSize.Orient, Orient));
 			this.PageSize.Orient = Orient;
 			
 			if (true === ApplySize)
@@ -1209,7 +1206,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (nOffsetFrom !== this.Borders.OffsetFrom)
 		{
-			History.Add(new CChangesSectionBordersOffsetFrom(this, this.Borders.OffsetFrom, nOffsetFrom));
+			AscCommon.History.Add(new AscDFH.CChangesSectionBordersOffsetFrom(this, this.Borders.OffsetFrom, nOffsetFrom));
 			this.Borders.OffsetFrom = nOffsetFrom;
 		}
 	};
@@ -1221,7 +1218,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (nHeader !== this.PageMargins.Header)
 		{
-			History.Add(new CChangesSectionPageMarginsHeader(this, this.PageMargins.Header, nHeader));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageMarginsHeader(this, this.PageMargins.Header, nHeader));
 			this.PageMargins.Header = nHeader;
 		}
 	};
@@ -1233,7 +1230,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (nFooter !== this.PageMargins.Footer)
 		{
-			History.Add(new CChangesSectionPageMarginsFooter(this, this.PageMargins.Footer, nFooter));
+			AscCommon.History.Add(new AscDFH.CChangesSectionPageMarginsFooter(this, this.PageMargins.Footer, nFooter));
 			this.PageMargins.Footer = nFooter;
 		}
 	};
@@ -1348,7 +1345,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		)
 		{
 			var oLnNumType = new AscWord.SectionLnNumType(nCountBy, nDistance, nStart, nRestartType);
-			History.Add(new CChangesSectionLnNumType(this, this.LnNumType, oLnNumType));
+			AscCommon.History.Add(new AscDFH.CChangesSectionLnNumType(this, this.LnNumType, oLnNumType));
 			this.LnNumType = oLnNumType;
 		}
 	};
@@ -1370,7 +1367,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		if (this.LnNumType)
 		{
-			History.Add(new CChangesSectionLnNumType(this, this.LnNumType, undefined));
+			AscCommon.History.Add(new AscDFH.CChangesSectionLnNumType(this, this.LnNumType, undefined));
 			this.LnNumType = undefined;
 		}
 	};

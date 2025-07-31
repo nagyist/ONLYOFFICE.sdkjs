@@ -192,7 +192,7 @@ CFootnotesController.prototype.SetFootnotePrNumFormat = function(nFormatType)
 {
 	if (undefined !== nFormatType && this.FootnotePr.NumFormat !== nFormatType)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionFootnoteNumFormat(this, this.FootnotePr.NumFormat, nFormatType));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionFootnoteNumFormat(this, this.FootnotePr.NumFormat, nFormatType));
 		this.FootnotePr.NumFormat = nFormatType;
 	}
 };
@@ -200,7 +200,7 @@ CFootnotesController.prototype.SetFootnotePrPos = function(nPos)
 {
 	if (undefined !== nPos && this.FootnotePr.Pos !== nPos)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionFootnotePos(this, this.FootnotePr.Pos, nPos));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionFootnotePos(this, this.FootnotePr.Pos, nPos));
 		this.FootnotePr.Pos = nPos;
 	}
 };
@@ -208,7 +208,7 @@ CFootnotesController.prototype.SetFootnotePrNumStart = function(nStart)
 {
 	if (undefined !== nStart && this.FootnotePr.NumStart !== nStart)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionFootnoteNumStart(this, this.FootnotePr.NumStart, nStart));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionFootnoteNumStart(this, this.FootnotePr.NumStart, nStart));
 		this.FootnotePr.NumStart = nStart;
 	}
 };
@@ -216,7 +216,7 @@ CFootnotesController.prototype.SetFootnotePrNumRestart = function(nRestartType)
 {
 	if (undefined !== nRestartType && this.FootnotePr.NumRestart !== nRestartType)
 	{
-		this.LogicDocument.GetHistory().Add(new CChangesSectionFootnoteNumRestart(this, this.FootnotePr.NumRestart, nRestartType));
+		this.LogicDocument.GetHistory().Add(new AscDFH.CChangesSectionFootnoteNumRestart(this, this.FootnotePr.NumRestart, nRestartType));
 		this.FootnotePr.NumRestart = nRestartType;
 	}
 };
