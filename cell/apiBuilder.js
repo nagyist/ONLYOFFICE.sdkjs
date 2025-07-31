@@ -8853,7 +8853,7 @@
 			settings.style = nStyleIndex;
 			settings.inColumns = !bInRows;
 			settings.putRange(sDataRange);
-			settings.bUseActiveWorksheet = true;
+			settings.forcedWorksheet = this.worksheet;
 			const oChart = AscFormat.DrawingObjectsController.prototype.getChartSpace(settings);
 			if (arguments.length === 8) {//support old variant
 				oChart.setBDeleted(false);

@@ -1130,7 +1130,7 @@ function (window, undefined) {
 
 		this.view3D = null;
 
-		this.bUseActiveWorksheet = false;
+		this.forcedWorksheet = null;
 
 		this.displayTrendlinesEquation = false;
 	}

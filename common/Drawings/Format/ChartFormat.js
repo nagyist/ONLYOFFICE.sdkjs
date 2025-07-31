@@ -16848,19 +16848,19 @@
         });
         return res;
     }
-    function fParseChartFormulaExternal(sFormula, bUseActiveWorksheet) {
+    function fParseChartFormulaExternal(sFormula, options) {
         var res;
         AscCommonExcel.executeInR1C1Mode(false, function() {
-            res = fParseChartFormulaInternal(sFormula, bUseActiveWorksheet);
+            res = fParseChartFormulaInternal(sFormula, options);
         });
         if(!Array.isArray(res) || res.length === 0) {
             AscCommonExcel.executeInR1C1Mode(true, function() {
-                res = fParseChartFormulaInternal(sFormula, bUseActiveWorksheet);
+                res = fParseChartFormulaInternal(sFormula, options);
             });
         }
         return res;
     }
-    function fParseChartFormulaInternal(sFormula, bUseActiveWorksheet) {
+    function fParseChartFormulaInternal(sFormula, options) {
         if(!(typeof sFormula === "string" && sFormula.length > 0)) {
             return [];
         }
@@ -16872,7 +16872,7 @@
         if(_sFormula.charAt(0) === '=') {
             _sFormula = _sFormula.slice(1);
         }
-        const oWS = bUseActiveWorksheet ? oWB.getActiveWs() : oWB.getWorksheet(0);
+        const oWS = options.forcedWorksheet || oWB.getWorksheet(0);
         if(!oWS) {
             return [];
         }

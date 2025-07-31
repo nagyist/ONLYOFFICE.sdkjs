@@ -13091,7 +13091,7 @@ function(window, undefined) {
 		let bScatter = AscFormat.isScatterChartType(nChartType);
 		let oDataRange = new AscFormat.CChartDataRefs(null);
 		let aSeriesRefs = oDataRange.getSeriesRefsFromUnionRefs(
-			AscFormat.fParseChartFormulaExternal(sRange, options.bUseActiveWorksheet),
+			AscFormat.fParseChartFormulaExternal(sRange, options),
 			bHorValues, bScatter, nChartType
 		);
 		if (!Array.isArray(aSeriesRefs)) {
