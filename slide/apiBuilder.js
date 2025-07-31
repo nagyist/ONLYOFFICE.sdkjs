@@ -4005,7 +4005,7 @@
 		const oBodyShape = this.GetBodyShape();
 		if (oBodyShape) {
 
-			const oDocContent = oBodyShape.GetDocContent();
+			const oDocContent = oBodyShape.GetContent();
 			if (oDocContent) {
 
 				const oParagraph = oDocContent.GetElement(0);
@@ -4018,6 +4018,26 @@
 		}
 
 		return false;
+	};
+
+	/**
+	 * Gets the text from the body shape of the current notes page.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @memberof ApiNotesPage
+	 * @returns {string}
+     * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiNotesPage/Methods/GetBodyShapeText.js
+	 */
+	ApiNotesPage.prototype.GetBodyShapeText = function (sText) {
+		const oBodyShape = this.GetBodyShape();
+		if (oBodyShape) {
+			const oDocContent = oBodyShape.GetContent();
+			if (oDocContent) {
+				return oDocContent.GetText();
+			}
+		}
+		return '';
 	};
 
     //------------------------------------------------------------------------------------------------------------------

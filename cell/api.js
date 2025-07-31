@@ -387,9 +387,14 @@ var editor;
     this.downloadAs(c_oAscAsyncAction.DownloadAs, options);
   };
 	spreadsheet_api.prototype._saveCheck = function() {
-		return !this.isFrameEditor() && c_oAscAdvancedOptionsAction.None === this.advancedOptionsAction &&
-			!this.isLongAction() && !this.asc_getIsTrackShape() && !this.isOpenedFrameEditor &&
-			History.IsEndTransaction();
+		return (!this.isFrameEditor()
+			&& c_oAscAdvancedOptionsAction.None === this.advancedOptionsAction
+			&& !this.isLongAction()
+			&& !this.isGroupActions()
+			&& !this.asc_getIsTrackShape()
+			&& !this.isOpenedChartFrame
+			&& History.IsEndTransaction()
+		);
 	};
 	spreadsheet_api.prototype._haveOtherChanges = function () {
 	  return this.collaborativeEditing.haveOtherChanges();
@@ -2738,9 +2743,15 @@ var editor;
     };
 	this.CoAuthoringApi.onChangesIndex = function(changesIndex)
 	{
-		if (t.isLiveViewer() && changesIndex >= 0 && changesIndex < AscCommon.CollaborativeEditing.GetAllChangesCount()) {
-			//перестаем быть LiveViewer из-за бага, что мы не может делать undo действиям которые пришли в изменениях (нет oldValue)
-			t.asc_SetFastCollaborative(false);
+		if (t.isDocumentLoadComplete && t.isLiveViewer() && changesIndex >= 0 && changesIndex < AscCommon.CollaborativeEditing.GetAllChangesCount()) {
+			//undo changes by reopen file, as in version history
+			t.asc_CloseFile();
+			t.ServerIdWaitAction = [Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.Open];
+			t.sync_StartAction.apply(t, t.ServerIdWaitAction);
+			t.reopenFileWithReconnection(t.DocInfo);
+
+			// Stop being a LiveViewer due to a bug where we can't undo actions that came in changes (no oldValue)
+			// t.asc_SetFastCollaborative(false);
 			// let count = AscCommon.CollaborativeEditing.GetAllChangesCount() - changesIndex;
 			// AscCommon.CollaborativeEditing.UndoGlobal(count);
 		}
@@ -6521,7 +6532,7 @@ var editor;
 		if (this.CollaborativeEditing.Is_Fast() && !this.CollaborativeEditing.Is_SingleUser()) {
 			this.wb.Continue_FastCollaborativeEditing();
 		} else if (this.isLiveViewer()) {
-			if (this.collaborativeEditing.haveOtherChanges()) {
+			if (this.isDocumentLoadComplete && this.collaborativeEditing.haveOtherChanges()) {
 				this.collaborativeEditing.applyChanges();
 			}
 			return;
@@ -6705,6 +6716,7 @@ var editor;
 	  AscCommonExcel.checkStylesNames(t.wbModel.CellStyles);
 	  t._coAuthoringInit();
 	  t.wb = new AscCommonExcel.WorkbookView(t.wbModel, t.controller, t.handlers, window["_null_object"], window["_null_object"], t, t.collaborativeEditing, t.fontRenderingMode);
+	  this.registerCustomFunctionsLibrary(undefined, true);
   };
 
   spreadsheet_api.prototype.asc_nativeCalculateFile = function() {
@@ -7021,7 +7033,12 @@ var editor;
       this._onUpdateAfterApplyChanges();
   };
 	spreadsheet_api.prototype.canRunBuilderScript = function() {
-		return this.asc_canPaste();
+		this.executeGroupActionsStart();
+		let res = this.asc_canPaste();
+		if (!res)
+			this.executeGroupActionsEnd();
+		
+		return res;
 	};
 	spreadsheet_api.prototype._onEndBuilderScript = function(callback) {
 		let needDraw = null;
@@ -7040,6 +7057,7 @@ var editor;
 		if (callback)
 			callback(true);
 		
+		this.executeGroupActionsEnd();
 		return true;
 	};
 

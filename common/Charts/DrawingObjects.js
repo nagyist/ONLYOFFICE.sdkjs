@@ -2479,7 +2479,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 
 
 
-    _this.addImageObjectCallback = function (_image, options) {
+    _this.addImageObjectCallback = function (_image, options, imageIndex) {
         var isOption = options && options.cell;
         if (!_image.Image) {
             worksheet.model.workbook.handlers.trigger("asc_onError", c_oAscError.ID.UplImageUrl, c_oAscError.Level.NoCritical);
@@ -2502,14 +2502,26 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                     Math.max((options.height * AscCommon.g_dKoef_pix_to_mm), 1), true);
             }
             var bCorrect = _this.calculateObjectMetrics(drawingObject, mmToPx(oSize.asc_getImageWidth()), mmToPx(oSize.asc_getImageHeight()), true);
+			const isRtl = worksheet.getRightToLeft();
 
-            var coordsFrom = _this.calculateCoords(drawingObject.from);
-            var coordsTo = _this.calculateCoords(drawingObject.to);
-            if (worksheet.getRightToLeft()) {
-                let temp = coordsTo.x;
-                coordsTo.x = coordsFrom.x;
-                coordsFrom.x = temp;
-            }
+			const coordsFrom = _this.calculateCoords(drawingObject.from);
+			const coordsTo = _this.calculateCoords(drawingObject.to);
+			if (isRtl) {
+				let temp = coordsTo.x;
+				coordsTo.x = coordsFrom.x;
+				coordsFrom.x = temp;
+			}
+
+			// Offsets for case of multiple images added
+			const OFFSET_PIX = mmToPx(5);
+			if (!AscFormat.isRealNumber(imageIndex)) imageIndex = 0;
+			let offsetX = isRtl ? imageIndex * OFFSET_PIX * (-1) : imageIndex * OFFSET_PIX;
+			let offsetY = imageIndex * OFFSET_PIX;
+			coordsFrom.x += offsetX;
+			coordsTo.x += offsetX;
+			coordsFrom.y += offsetY;
+			coordsTo.y += offsetY;
+
             if(bCorrect) {
                 _this.controller.addImageFromParams(_image.src, pxToMm(coordsFrom.x) + MOVE_DELTA, pxToMm(coordsFrom.y) + MOVE_DELTA, pxToMm(coordsTo.x - coordsFrom.x), pxToMm(coordsTo.y - coordsFrom.y));
             }
@@ -2531,7 +2543,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                     var sImageUrl = imageUrls[i];
                     var _image = api.ImageLoader.LoadImage(sImageUrl, 1);
                     if (null != _image) {
-                        _this.addImageObjectCallback(_image, options);
+                        _this.addImageObjectCallback(_image, options, i);
                     } else {
                         worksheet.model.workbook.handlers.trigger("asc_onError", c_oAscError.ID.UplImageUrl, c_oAscError.Level.NoCritical);
                         break;

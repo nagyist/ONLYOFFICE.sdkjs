@@ -1182,15 +1182,15 @@ function CBinaryFileWriter()
         this.EndRecord();
     };
 
-    this.WriteCustomXml = function(presentation)
-    {
-        if(!presentation.CustomXmlData)
-        {
-            return;
-        }
-        this.StartMainRecord(c_oMainTables.Customs);
-        this.WriteBuffer(presentation.CustomXmlData, 0, presentation.CustomXmlData.length);
-    };
+	this.WriteCustomXml = function(presentation)
+	{
+		let xmlManager = presentation.getCustomXmlManager();
+		if (xmlManager.getCount() <= 0)
+			return;
+		
+		this.StartMainRecord(c_oMainTables.Customs);
+		(new AscCommon.BinaryCustomsTableWriter(xmlManager, this)).WritePPTY();
+	};
 
     this.WritePresentation = function(presentation)
     {
@@ -1751,6 +1751,49 @@ function CBinaryFileWriter()
             }
         }
     };
+    this.WriteAnnotTreeElem = function(oAnnot) {
+        oThis.WriteByMemory(function(memory) {
+            memory.isCopyPaste = true;
+            oAnnot.WriteToBinary(memory)
+        });
+    };
+    this.WriteFieldTreeElem = function(oField) {
+        oThis.buttonImages = [];
+
+        oThis.WriteByMemory(function(memory) {
+            memory.isCopyPaste = true;
+            memory.images = oThis.buttonImages;
+            
+            oField.WriteToBinary(memory)
+        });
+    };
+    this.WriteFieldsAdditionalInfo = function() {
+        oThis.WriteByMemory(function(memory) {
+			// parents and CO (calculaction order)
+			memory.WriteByte(AscCommon.CommandType.ctWidgetsInfo);
+			let nPosForLenght = memory.GetCurPosition();
+			memory.Skip(4);
+
+            // CO (calc-order)
+			memory.WriteLong(0);
+
+            // field parents
+			memory.WriteLong(0);
+
+			// write images
+			memory.WriteLong(oThis.buttonImages.length);
+			for (let i = 0; i < oThis.buttonImages.length; i++) {
+				memory.WriteStringA(oThis.buttonImages[i]);
+			}
+
+			let nEndPos = memory.GetCurPosition();
+
+			// length of commands with information about parents, CO and pictures
+			memory.Seek(nPosForLenght);
+			memory.WriteLong(nEndPos - nPosForLenght);
+			memory.Seek(nEndPos);
+        });
+    }
     this.WriteClrMap = function(clrmap)
     {
         oThis.WriteUChar(g_nodeAttributeStart);

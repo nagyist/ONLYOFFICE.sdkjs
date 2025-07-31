@@ -4116,9 +4116,15 @@
 	AscDFH.historyitem_Pdf_Annot_User_Id			= AscDFH.historyitem_type_Pdf_Annot | 20;
 	AscDFH.historyitem_Pdf_Annot_Changed			= AscDFH.historyitem_type_Pdf_Annot | 21;
 	AscDFH.historyitem_Pdf_Annot_Changed_View		= AscDFH.historyitem_type_Pdf_Annot | 22;
+	AscDFH.historyitem_Pdf_Annot_Border_Effect		= AscDFH.historyitem_type_Pdf_Annot | 23;
+	AscDFH.historyitem_Pdf_Annot_Border_Intensity	= AscDFH.historyitem_type_Pdf_Annot | 24;
+	AscDFH.historyitem_Pdf_Annot_Border_Dash		= AscDFH.historyitem_type_Pdf_Annot | 25;
+	AscDFH.historyitem_Pdf_Annot_Border_Type		= AscDFH.historyitem_type_Pdf_Annot | 26;
+	AscDFH.historyitem_Pdf_Annot_Meta				= AscDFH.historyitem_type_Pdf_Annot | 27;
 
 	// Comment
 	AscDFH.historyitem_Pdf_Comment_Data			= AscDFH.historyitem_type_Pdf_Comment | 1;
+	AscDFH.historyitem_Pdf_Comment_Icon			= AscDFH.historyitem_type_Pdf_Comment | 2;
 
 	// Ink
 	AscDFH.historyitem_Pdf_Ink_Points			= AscDFH.historyitem_type_Pdf_Annot_Ink | 1;
@@ -4137,8 +4143,7 @@
 	// annot stamp
 	AscDFH.historyitem_Pdf_Stamp_Type			 = AscDFH.historyitem_type_Pdf_Annot_Stamp | 1;
 	AscDFH.historyitem_Pdf_Stamp_InRect			 = AscDFH.historyitem_type_Pdf_Annot_Stamp | 2;
-	AscDFH.historyitem_Pdf_Stamp_Rect			 = AscDFH.historyitem_type_Pdf_Annot_Stamp | 3;
-	AscDFH.historyitem_Pdf_Stamp_RenderStructure = AscDFH.historyitem_type_Pdf_Annot_Stamp | 4;
+	AscDFH.historyitem_Pdf_Stamp_RenderStructure = AscDFH.historyitem_type_Pdf_Annot_Stamp | 3;
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в PDF drawing prototype
@@ -4633,7 +4638,7 @@
 	window['AscDFH'].historydescription_Presentation_SetPreserveSlideMaster         = 0x01c8;
 	window['AscDFH'].historydescription_Document_AddMathML                          = 0x01c9;
 	window['AscDFH'].historydescription_OForm_CancelFilling                         = 0x01ca;
-
+	
 	window['AscDFH'].historydescription_Presentation_ShowChartPreview               = 0x01cb;
 
 	window['AscDFH'].historydescription_Document_UpdateCharts                       = 0x01cc;
@@ -4665,7 +4670,10 @@
 	window['AscDFH'].historydescription_Pdf_MovePage			= 0x2b4;
 	window['AscDFH'].historydescription_Pdf_AddField			= 0x2b5;
 	window['AscDFH'].historydescription_Pdf_ChangeField			= 0x2b6;
-
+	
+	// reserved
+	window['AscDFH'].historydescription_GroupPoints = 0xFF01;
+	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -4989,9 +4997,6 @@
 	};
 	CChangesBaseContentChange.prototype.ConvertToSimpleChanges = function()
 	{
-		if (this.UseArray && 1 === this.Items.length)
-			return [this];
-		
 		let arrSimpleActions = this.ConvertToSimpleActions();
 		let arrChanges       = [];
 

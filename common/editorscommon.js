@@ -14031,95 +14031,96 @@
 		}
 	}
 	
+	/**
+	 * @param {string} text
+	 * @param {Asc.asc_CTextOptions} options
+	 * @param {boolean} bTrimSpaces - Whether to trim spaces when using space delimiter
+	 * @returns {Array<Array<string>>} Matrix of parsed CSV values
+	 */
 	function parseText(text, options, bTrimSpaces) {
-		var delimiterChar;
-		if (options.asc_getDelimiterChar()) {
-			delimiterChar = options.asc_getDelimiterChar();
-		} else {
-			switch (options.asc_getDelimiter()) {
-				case AscCommon.c_oAscCsvDelimiter.None:
-					delimiterChar = undefined;
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Tab:
-					delimiterChar = "\t";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Semicolon:
-					delimiterChar = ";";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Colon:
-					delimiterChar = ":";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Comma:
-					delimiterChar = ",";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Space:
-					delimiterChar = " ";
-					break;
-			}
-		}
-
-		var textQualifier = options.asc_getTextQualifier();
-		var matrix = [];
-		//var rows = text.match(/[^\r\n]+/g);
-		var rows;
-		if (delimiterChar === '\n') {
-			rows = [text];
-		} else {
-			rows = text.split(/\r?\n/);
-		}
-		for (var i = 0; i < rows.length; ++i) {
-			var row = rows[i];
-			if(" " === delimiterChar && bTrimSpaces) {
-				var addSpace = false;
-				if(row[0] === delimiterChar) {
-					addSpace = true;
-				}
-				row = addSpace ? delimiterChar + row.trim() : row.trim();
-			}
-			//todo quotes
-			if (textQualifier) {
-				if (!row.length) {
-					matrix.push(row.split(delimiterChar));
-					continue;
-				}
-
-				var _text = "";
-				var startQualifier = false;
-				for (var j = 0; j < row.length; j++) {
-					if (!startQualifier && row[j] === textQualifier && (!row[j - 1] || (row[j - 1] && row[j - 1] === delimiterChar))) {
-						startQualifier = !startQualifier;
+		const delimiterChar = options.asc_getDelimiterChar() || {
+			[AscCommon.c_oAscCsvDelimiter.None]: undefined,
+			[AscCommon.c_oAscCsvDelimiter.Tab]: "\t",
+			[AscCommon.c_oAscCsvDelimiter.Semicolon]: ";",
+			[AscCommon.c_oAscCsvDelimiter.Colon]: ":",
+			[AscCommon.c_oAscCsvDelimiter.Comma]: ",",
+			[AscCommon.c_oAscCsvDelimiter.Space]: " "
+		}[options.asc_getDelimiter()];
+		
+		const textQualifier = options.asc_getTextQualifier();
+		const hasQualifier = !!textQualifier;
+		
+		if (!text.length) return [[]];
+		
+		let rows = delimiterChar === '\n' ? [text] : text.split(/\r\n|\r|\n/);
+		if (rows.length > 1 && rows[rows.length - 1] === '') rows.pop();
+		
+		const isSpace = delimiterChar === " ";
+		// Note: Using charCodeAt instead of codePointAt for performance.
+		// CSV delimiters are always basic ASCII chars (comma=44, semicolon=59, tab=9, etc.)
+		const delimiterCode = delimiterChar ? delimiterChar.charCodeAt(0) : 0;
+		const qualifierCode = hasQualifier ? textQualifier.charCodeAt(0) : 0;
+		
+		const processSpaceRow = (row) => {
+			if (!isSpace || !bTrimSpaces) return row;
+			const hasLeadingSpace = row.length > 0 && row.charCodeAt(0) === delimiterCode;
+			row = row.trim();
+			return hasLeadingSpace ? delimiterChar + row : row;
+		};
+		
+		const parseRowWithQualifiers = (row) => {
+			const fields = [];
+			const rowLength = row.length;
+			let textParts = [];
+			let insideQualifier = false;
+			let j = 0;
+			
+			while (j < rowLength) {
+				const charCode = row.charCodeAt(j);
+				if (charCode === qualifierCode) {
+					if (!insideQualifier && (j === 0 || row.charCodeAt(j - 1) === delimiterCode)) {
+						insideQualifier = true;
+						j++;
 						continue;
-					} else if (startQualifier && row[j] === textQualifier) {
-						startQualifier = !startQualifier;
-
-						if (j === row.length - 1) {
-							if (!matrix[i]) {
-								matrix[i] = [];
-							}
-							matrix[i].push(_text);
-						}
-
-						continue;
-					}
-					
-					if (!startQualifier && row[j] === delimiterChar) {
-						if (!matrix[i]) {
-							matrix[i] = [];
-						}
-						matrix[i].push(_text);
-						_text = "";
-					} else {
-						_text += row[j];
-						if (j === row.length - 1) {
-							if (!matrix[i]) {
-								matrix[i] = [];
-							}
-							matrix[i].push(_text);
+					} else if (insideQualifier) {
+						if (j + 1 < rowLength && row.charCodeAt(j + 1) === qualifierCode) {
+							textParts.push(textQualifier);
+							j += 2;
+							continue;
+						} else {
+							insideQualifier = false;
+							j++;
+							continue;
 						}
 					}
 				}
+				
+				if (!insideQualifier && charCode === delimiterCode) {
+					fields.push(textParts.join(''));
+					textParts = [];
+				} else {
+					textParts.push(row[j]);
+				}
+				j++;
+			}
+			
+			fields.push(textParts.join(''));
+			return fields;
+		};
+		
+		const matrix = [];
+		for (let i = 0; i < rows.length; i++) {
+			let row = processSpaceRow(rows[i]);
+			
+			if (!row.length) {
+				matrix.push([""]);
+				continue;
+			}
+			
+			if (hasQualifier) {
+				matrix.push(parseRowWithQualifiers(row));
 			} else {
-				matrix.push(row.split(delimiterChar));	
+				matrix.push(delimiterChar === undefined ? [row] : row.split(delimiterChar));
 			}
 		}
 		return matrix;
@@ -15064,8 +15065,10 @@
 	}
 
 	function applyElementDirection(element) {
+		if (!element)
+			return;
 		if (AscCommon.AscBrowser.isIE) {
-			this.topLineEditorElement.addEventListener('input', function () {
+			element.addEventListener('input', function () {
 				const text = element.textContent || element.innerText || '';
 				let dir = 'ltr';
 				for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {

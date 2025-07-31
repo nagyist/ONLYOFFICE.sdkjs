@@ -8901,6 +8901,9 @@
 			this.setChExtY(this.extY);
 		};
 
+		/**
+		 * @constructor
+		 */
 		function CEffectProperties() {
 			CBaseNoIdObject.call(this);
 			this.EffectDag = null;
@@ -16998,7 +17001,7 @@
 
 		function ChartBuilderTypeToInternal(sType) {
 			switch (sType) {
-				case "bar" : {
+				case "bar": {
 					return Asc.c_oAscChartTypeSettings.barNormal;
 				}
 				case "barStacked": {
@@ -17046,6 +17049,15 @@
 				case "lineStackedPercent": {
 					return Asc.c_oAscChartTypeSettings.lineStackedPer;
 				}
+				case "lineNormalMarker": {
+					return Asc.c_oAscChartTypeSettings.lineNormalMarker;
+				}
+				case "lineStackedMarker": {
+					return Asc.c_oAscChartTypeSettings.lineStackedMarker;
+				}
+				case "lineStackedPerMarker": {
+					return Asc.c_oAscChartTypeSettings.lineStackedPerMarker;
+				}
 				case "line3D": {
 					return Asc.c_oAscChartTypeSettings.line3d;
 				}
@@ -17061,6 +17073,18 @@
 				case "scatter": {
 					return Asc.c_oAscChartTypeSettings.scatter;
 				}
+				case "scatterLine": {
+					return Asc.c_oAscChartTypeSettings.scatterLine;
+				}
+				case "scatterLineMarker": {
+					return Asc.c_oAscChartTypeSettings.scatterLineMarker;
+				}
+				case "scatterSmooth": {
+					return Asc.c_oAscChartTypeSettings.scatterSmooth;
+				}
+				case "scatterSmoothMarker": {
+					return Asc.c_oAscChartTypeSettings.scatterSmoothMarker;
+				}
 				case "stock": {
 					return Asc.c_oAscChartTypeSettings.stock;
 				}
@@ -17073,20 +17097,51 @@
 				case "areaStackedPercent": {
 					return Asc.c_oAscChartTypeSettings.areaStackedPer;
 				}
+				case "comboCustom": {
+					return Asc.c_oAscChartTypeSettings.comboCustom;
+				}
 				case "comboBarLine": {
 					return Asc.c_oAscChartTypeSettings.comboBarLine;
 				}
 				case "comboBarLineSecondary": {
 					return Asc.c_oAscChartTypeSettings.comboBarLineSecondary;
 				}
-				case "comboCustom": {
-					return Asc.c_oAscChartTypeSettings.comboCustom;
+				case "radar": {
+					return Asc.c_oAscChartTypeSettings.radar;
 				}
+				case "radarMarker": {
+					return Asc.c_oAscChartTypeSettings.radarMarker;
+				}
+				case "radarFilled": {
+					return Asc.c_oAscChartTypeSettings.radarFilled;
+				}
+
+				// Unhandled cases from Asc.c_oAscChartTypeSettings (v9.0.0)
+				// case "scatterMarker": {
+				// 	return Asc.c_oAscChartTypeSettings.scatterMarker;
+				// }
+				// case "scatterNone": {
+				// 	return Asc.c_oAscChartTypeSettings.scatterNone;
+				// }
+				// case "comboAreaBar": {
+				// 	return Asc.c_oAscChartTypeSettings.comboAreaBar;
+				// }
+				// case "contour": {
+				// 	return Asc.c_oAscChartTypeSettings.contourNormal;
+				// }
+				// case "contourWireframe": {
+				// 	return Asc.c_oAscChartTypeSettings.contourWireframe;
+				// }
+				// case "surfaceNormal": {
+				// 	return Asc.c_oAscChartTypeSettings.surfaceNormal;
+				// }
+				// case "surfaceWireframe": {
+				// 	return Asc.c_oAscChartTypeSettings.surfaceWireframe;
+				// }
+
+				default: return null;
 			}
-			return null;
 		}
-
-
 
 		function builder_CreateChart(nW, nH, sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats) {
 			let settings = new Asc.asc_ChartSettings();

@@ -130,7 +130,7 @@
 	 * @property {ApiWorksheet} Worksheet - Returns the ApiWorksheet object that represents the worksheet containing the specified range.
 	 * @property {ApiName} DefName - Returns the ApiName object.
 	 * @property {ApiComment | null} Comments - Returns the ApiComment collection that represents all the comments from the specified worksheet.
-	 * @property {'xlDownward' | 'xlHorizontal' | 'xlUpward' | 'xlVertical'} Orientation - Sets an angle to the current cell range.
+	 * @property {Angle} Orientation - Returns an angle to the current cell range.
 	 * @property {ApiAreas} Areas - Returns a collection of the areas.
 	 * @property {ApiCharacters} Characters - Returns the ApiCharacters object that represents a range of characters within the object text. Use the ApiCharacters object to format characters within a text string.
 	 * @property {ApiPivotTable | null} PivotTable - Returns the ApiPivotTable object that represents the pivot table report containing the upper-left corner of the specified range.
@@ -593,12 +593,16 @@
 
 	/**
 	 * Creates a new custom function.
-	 * The description of the function parameters and result is specified using JSDoc. The <em>@customfunction</em> tag is required in JSDoc.
-	 * Parameters and results can be specified as the <em>number / string / boolean / any / number[][] / string[][] / boolean[][] / any[][]</em> types.
+	 * The description of the function parameters and result is specified using JSDoc. The *@customfunction* tag is required in JSDoc.
+	 * Parameters and results can be specified as the *number / string / boolean / any / number[][] / string[][] / boolean[][] / any[][]* types.
 	 * Parameters can be required or optional. A user can also set a default value.
+	 * The passed function can be asynchronous (async function or function returning a Promise).
+	 * Inside the passed function, you can access the current cell address where the calculation is performed using *this.address*.
+	 * You can also access the addresses of function arguments using *this.args[0].address*, *this.args[1].address*, etc.
 	 * @memberof Api
 	 * @typeofeditors ["CSE"]
-	 * @param {Function} fCustom - A new function for calculating.
+	 * @param {Function} fCustom - A new function for calculating. Can be synchronous or asynchronous.
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddCustomFunction.js
 	 */
 	// Example with description:
 	// Calculates the sum of the specified numbers.
@@ -696,15 +700,15 @@
 
 	/**
 	 * Registers a new custom functions library (see the <b>SetCustomFunctions</b> plugin method).
-	 * The description of the function parameters and result is specified using JSDoc. The <em>@customfunction</em> tag is required in JSDoc.
-	 * Parameters and results can be specified as the <em>number / string / boolean / any / number[][] / string[][] / boolean[][] / any[][]</em> types.
+	 * The description of the function parameters and result is specified using JSDoc. The *@customfunction* tag is required in JSDoc.
+	 * Parameters and results can be specified as the *number / string / boolean / any / number[][] / string[][] / boolean[][] / any[][]* types.
 	 * Parameters can be required or optional. A user can also set a default value.
 	 * @memberof Api
 	 * @typeofeditors ["CSE"]
 	 * @param {string} sName - The library name.
 	 * @param {Function} Func - The custom functions library code.
 	 * @since 8.2.0
-	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddCustomFunction.js
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddCustomFunctionLibrary.js
 	 */
 	Api.prototype.AddCustomFunctionLibrary = function(sName, Func) {
 		this.addCustomFunctionsLibrary(sName, Func);
@@ -3022,11 +3026,11 @@
 	 * Calculates predicted exponential growth by using existing data.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number[]} arg1 - The set of y-values from the <em>y = b*m^x</em> equation, an array or range of positive numbers.
-	 * @param {ApiRange | ApiName | number[]} [arg2] - An optional set of x-values from the <em>y = b*m^x</em> equation, an array or range of positive numbers that has the same size as the set of y-values.
+	 * @param {ApiRange | ApiName | number[]} arg1 - The set of y-values from the *y = b*m^x* equation, an array or range of positive numbers.
+	 * @param {ApiRange | ApiName | number[]} [arg2] - An optional set of x-values from the *y = b*m^x* equation, an array or range of positive numbers that has the same size as the set of y-values.
 	 * @param {ApiRange | ApiName | number[]} [arg3] - New x-values for which the function will return the corresponding y-values.
-	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b>,
-	 * and <em>b</em> is set equal to 1 if the parameter is <b>false</b> or omitted.
+	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: the constant *b* is calculated normally if this parameter is set to <b>true</b>,
+	 * and *b* is set equal to 1 if the parameter is <b>false</b> or omitted.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/GROWTH.js
 	 */
@@ -3115,12 +3119,12 @@
 	 * Returns statistics that describe a linear trend matching known data points, by fitting a straight line using the least squares method.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName} arg1 - The set of y-values from the <em>y = mx + b</em> equation.
-	 * @param {ApiRange | ApiName} [arg2] - An optional set of x-values from the <em>y = mx + b</em> equation.
-	 * @param {ApiRange | ApiName | boolean} [arg3] - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b> or omitted,
-	 * and <em>b</em> is set equal to 0 if the parameter is <b>false</b>.
+	 * @param {ApiRange | ApiName} arg1 - The set of y-values from the *y = mx + b* equation.
+	 * @param {ApiRange | ApiName} [arg2] - An optional set of x-values from the *y = mx + b* equation.
+	 * @param {ApiRange | ApiName | boolean} [arg3] - A logical value: the constant *b* is calculated normally if this parameter is set to <b>true</b> or omitted,
+	 * and *b* is set equal to 0 if the parameter is <b>false</b>.
 	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: return additional regression statistics if this parameter is set to <b>true</b>,
-	 * and return m-coefficients and the constant <em>b</em> if the parameter is <b>false</b> or omitted.
+	 * and return m-coefficients and the constant *b* if the parameter is <b>false</b> or omitted.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/LINEST.js
 	 */
@@ -3131,12 +3135,12 @@
 	 * Returns statistics that describe an exponential curve matching known data points.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | ApiRange} arg1 - The set of y-values from the <em>y = b*m^x</em> equation.
-	 * @param {ApiRange | ApiName | ApiRange} [arg2] - An optional set of x-values from the <em>y = b*m^x</em> equation.
-	 * @param {ApiRange | ApiName | boolean} [arg3] - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b> or omitted,
-	 * and <em>b</em> is set equal to 1 if the parameter is <b>false</b>.
+	 * @param {ApiRange | ApiName | ApiRange} arg1 - The set of y-values from the *y = b*m^x* equation.
+	 * @param {ApiRange | ApiName | ApiRange} [arg2] - An optional set of x-values from the *y = b*m^x* equation.
+	 * @param {ApiRange | ApiName | boolean} [arg3] - A logical value: the constant *b* is calculated normally if this parameter is set to <b>true</b> or omitted,
+	 * and *b* is set equal to 1 if the parameter is <b>false</b>.
 	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: return additional regression statistics if this parameter is set to <b>true</b>,
-	 * and return m-coefficients and the constant <em>b</em> if the parameter is <b>false</b> or omitted.
+	 * and return m-coefficients and the constant *b* if the parameter is <b>false</b> or omitted.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/LOGEST.js
 	 */
@@ -3918,11 +3922,11 @@
 	 * Returns numbers in a linear trend matching known data points, using the least squares method.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number[]} arg1 - A range or array of y-values from the <em>y = mx + b</em> equation.
-	 * @param {ApiRange | ApiName | number[]} [arg2] - An optional range or array of x-values from the <em>y = mx + b</em> equation, an array of the same size as an array of y-values.
+	 * @param {ApiRange | ApiName | number[]} arg1 - A range or array of y-values from the *y = mx + b* equation.
+	 * @param {ApiRange | ApiName | number[]} [arg2] - An optional range or array of x-values from the *y = mx + b* equation, an array of the same size as an array of y-values.
 	 * @param {ApiRange | ApiName | number[]} [arg3] - A range or array of new x-values for which this function will return corresponding y-values.
-	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: the constant <em>b</em> is calculated normally if this parameter is set to <b>true</b> or omitted,
-	 * and <em>b</em> is set equal to 0 if the parameter is <b>false</b>.
+	 * @param {ApiRange | ApiName | boolean} [arg4] - A logical value: the constant *b* is calculated normally if this parameter is set to <b>true</b> or omitted,
+	 * and *b* is set equal to 0 if the parameter is <b>false</b>.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/TREND.js
 	 */
@@ -4259,7 +4263,7 @@
 		return this.private_calculateFunction("NETWORKDAYS.INTL", arguments);
 	};
 	/**
-	 * Returns the current date and time in the <em>MM/dd/yy hh:mm</em> format.
+	 * Returns the current date and time in the *MM/dd/yy hh:mm* format.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @returns {number}
@@ -4304,7 +4308,7 @@
 		return this.private_calculateFunction("TIMEVALUE", arguments);
 	};
 	/**
-	 * Returns the current date in the <em>MM/dd/yy</em> format.
+	 * Returns the current date in the *MM/dd/yy* format.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @returns {number}
@@ -4703,7 +4707,7 @@
 	 * Returns the absolute value (modulus) of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMABS.js
 	 */
@@ -4714,7 +4718,7 @@
 	 * Returns the imaginary coefficient of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMAGINARY.js
 	 */
@@ -4725,7 +4729,7 @@
 	 * Returns the argument Theta, an angle expressed in radians.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMARGUMENT.js
 	 */
@@ -4736,7 +4740,7 @@
 	 * Returns the complex conjugate of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCONJUGATE.js
 	 */
@@ -4747,7 +4751,7 @@
 	 * Returns the cosine of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCOS.js
 	 */
@@ -4758,7 +4762,7 @@
 	 * Returns the hyperbolic cosine of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCOSH.js
 	 */
@@ -4769,7 +4773,7 @@
 	 * Returns the cotangent of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCOT.js
 	 */
@@ -4780,7 +4784,7 @@
 	 * Returns the cosecant of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCSC.js
 	 */
@@ -4791,7 +4795,7 @@
 	 * Returns the hyperbolic cosecant of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMCSCH.js
 	 */
@@ -4802,8 +4806,8 @@
 	 * Returns the quotient of two complex numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - The complex numerator or dividend in the <em>x + yi</em> or <em>x + yj</em> form.
-	 * @param {ApiRange | ApiName | number} arg2 - The complex denominator or divisor in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - The complex numerator or dividend in the *x + yi* or *x + yj* form.
+	 * @param {ApiRange | ApiName | number} arg2 - The complex denominator or divisor in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMDIV.js
 	 */
@@ -4814,7 +4818,7 @@
 	 * Returns the exponential of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMEXP.js
 	 */
@@ -4825,7 +4829,7 @@
 	 * Returns the natural logarithm of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMLN.js
 	 */
@@ -4836,7 +4840,7 @@
 	 * Returns the base-10 logarithm of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMLOG10.js
 	 */
@@ -4847,7 +4851,7 @@
 	 * Returns the base-2 logarithm of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMLOG2.js
 	 */
@@ -4858,7 +4862,7 @@
 	 * Returns a complex number raised to an integer power.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @param {ApiRange | ApiName | number} arg2 - The power to which the complex number will be raised.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMPOWER.js
@@ -4870,7 +4874,7 @@
 	 * Returns the product of the specified complex numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | string} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | string} args - Up to 255 complex numbers expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMPRODUCT.js
 	 */
@@ -4881,7 +4885,7 @@
 	 * Returns the real coefficient of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMREAL.js
 	 */
@@ -4892,7 +4896,7 @@
 	 * Returns the secant of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSEC.js
 	 */
@@ -4903,7 +4907,7 @@
 	 * Returns the hyperbolic secant of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSECH.js
 	 */
@@ -4914,7 +4918,7 @@
 	 * Returns the sine of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSIN.js
 	 */
@@ -4925,7 +4929,7 @@
 	 * Returns the hyperbolic sine of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSINH.js
 	 */
@@ -4936,7 +4940,7 @@
 	 * Returns the square root of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSQRT.js
 	 */
@@ -4944,7 +4948,7 @@
 		return this.private_calculateFunction("IMSQRT", arguments);
 	};
 	/**
-	 * Returns the difference of two complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * Returns the difference of two complex numbers expressed in the *x + yi* or *x + yj* form.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | ApiName | number} arg1 - The complex number from which to subtract the second number.
@@ -4959,7 +4963,7 @@
 	 * Returns the sum of the specified complex numbers.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | string} args - Up to 255 complex numbers expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | string} args - Up to 255 complex numbers expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMSUM.js
 	 */
@@ -4970,7 +4974,7 @@
 	 * Returns the tangent of a complex number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the <em>x + yi</em> or <em>x + yj</em> form.
+	 * @param {ApiRange | ApiName | number} arg1 - A complex number expressed in the *x + yi* or *x + yj* form.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IMTAN.js
 	 */
@@ -6071,7 +6075,7 @@
 		return this.private_calculateFunction("ARABIC", arguments);
 	};
 	/**
-	 * Returns the arcsine of a number in radians, in the range from <em>-Pi/2</em> to <em>Pi/2</em>.
+	 * Returns the arcsine of a number in radians, in the range from *-Pi/2* to *Pi/2*.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | ApiName | number} arg1 - The angle sine. It must be from -1 to 1.
@@ -6093,7 +6097,7 @@
 		return this.private_calculateFunction("ASINH", arguments);
 	};
 	/**
-	 * Returns the arctangent of a number in radians, in the range from <em>-Pi/2</em> to <em>Pi/2</em>.
+	 * Returns the arctangent of a number in radians, in the range from *-Pi/2* to *Pi/2*.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | ApiName | number} arg1 - The angle tangent.
@@ -6238,7 +6242,7 @@
 	 * Returns the hyperbolic cotangent of a number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the hyperbolic cotangent will be calculated. Its absolute value must be less than <em>2^27</em>.
+	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the hyperbolic cotangent will be calculated. Its absolute value must be less than *2^27*.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/COTH.js
 	 */
@@ -6260,7 +6264,7 @@
 	 * Returns the hyperbolic cosecant of an angle.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the hyperbolic cosecant will be calculated. Its absolute value must be less than <em>2^27</em>.
+	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the hyperbolic cosecant will be calculated. Its absolute value must be less than *2^27*.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/CSCH.js
 	 */
@@ -6325,7 +6329,7 @@
 		return this.private_calculateFunction("EXP", arguments);
 	};
 	/**
-	 * Returns the factorial of a number, which is equal to <em>1*2*3*...*</em> number.
+	 * Returns the factorial of a number, which is equal to *1*2*3*...** number.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | ApiName | number} arg1 - The nonnegative number for which the factorial will be calculated.
@@ -6736,7 +6740,7 @@
 	 * Returns the sine of an angle.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the sine will be returned. If your argument is in degrees, multiply it by <em>PI()/180</em>.
+	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the sine will be returned. If your argument is in degrees, multiply it by *PI()/180*.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/SIN.js
 	 */
@@ -6897,7 +6901,7 @@
 	 * Returns the tangent of an angle.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
-	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the tangent will be returned. If the argument is in degrees, multiply it by <em>PI()/180</em>.
+	 * @param {ApiRange | ApiName | number} arg1 - The angle in radians for which the tangent will be returned. If the argument is in degrees, multiply it by *PI()/180*.
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/TAN.js
 	 */
@@ -7010,7 +7014,7 @@
 	/**
 	 * The match type.
 	 * * <b>-1</b> - The values must be sorted in descending order. If the exact match is not found, the function will return the smallest value that is greater than the searched value.
-	 * * <b>0</b> - The values can be sorted in any order. If the exact match is not found, the function will return the <em>#N/A</em> error.
+	 * * <b>0</b> - The values can be sorted in any order. If the exact match is not found, the function will return the *#N/A* error.
 	 * * <b>1</b> (or omitted) - The values must be sorted in ascending order. If the exact match is not found, the function will return the largest value that is less than the searched value.
 	 * @typedef {("-1" | "0" | "1")} MatchType
 	 * */
@@ -7092,7 +7096,7 @@
 		return this.private_calculateFunction("ERROR.TYPE", arguments);
 	};
 	/**
-	 * Checks whether a value is an error other than <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
+	 * Checks whether a value is an error other than *#N/A*, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {number | string | boolean | ApiRange | ApiName} arg1 - The value to test.
@@ -7150,7 +7154,7 @@
 		return this.private_calculateFunction("ISLOGICAL", arguments);
 	};
 	/**
-	 * Checks whether a value is <em>#N/A</em>, and returns <b>true</b> or <b>false</b>.
+	 * Checks whether a value is *#N/A*, and returns <b>true</b> or <b>false</b>.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | string | number | boolean | ApiName} arg1 - The value to test.
@@ -7232,7 +7236,7 @@
 		return this.private_calculateFunction("N", arguments);
 	};
 	/**
-	 * Returns the <em>#N/A</em> error value which means "no value is available".
+	 * Returns the *#N/A* error value which means "no value is available".
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @returns {string}
@@ -7321,11 +7325,11 @@
 		return this.private_calculateFunction("IFERROR", arguments);
 	};
 	/**
-	 * Checks if there is an error in the formula in the first argument. The function returns the specified value if the formula returns the <em>#N/A</em> error value, otherwise returns the result of the formula.
+	 * Checks if there is an error in the formula in the first argument. The function returns the specified value if the formula returns the *#N/A* error value, otherwise returns the result of the formula.
 	 * @memberof ApiWorksheetFunction
 	 * @typeofeditors ["CSE"]
 	 * @param {ApiRange | ApiName | number | string | boolean} arg1 - The value, expression, or reference that is checked for an error.
-	 * @param {ApiRange | ApiName | number | string | boolean} arg2 - The value to return if the formula evaluates to the <em>#N/A</em> error value.
+	 * @param {ApiRange | ApiName | number | string | boolean} arg2 - The value to return if the formula evaluates to the *#N/A* error value.
 	 * @returns {number | string | boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheetFunction/Methods/IFNA.js
 	 */
@@ -11330,6 +11334,247 @@
 		}
 	});
 
+	let getOperator = function (val) {
+		let res = Asc.c_oAscCustomAutoFilter.equals;
+		switch (val) {
+			case "=": {
+				res = Asc.c_oAscCustomAutoFilter.equals;
+				break
+			}
+			case ">": {
+				res = Asc.c_oAscCustomAutoFilter.isGreaterThan;
+				break
+			}
+			case ">=": {
+				res = Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo;
+				break
+			}
+			case "<": {
+				res = Asc.c_oAscCustomAutoFilter.isLessThan;
+				break
+			}
+			case "<=": {
+				res = Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo;
+				break
+			}
+			case "<>": {
+				res = Asc.c_oAscCustomAutoFilter.doesNotEqual;
+				break
+			}
+		}
+		return res;
+	};
+	let createCustomFilter = function (autoFilterOptions, Criteria1, Criteria2, Operator, cellId, opt_operator1, opt_operator2) {
+		if (Criteria1 || Criteria1) {
+			let filterObj = new Asc.AutoFilterObj();
+			filterObj.asc_setFilter(new Asc.CustomFilters());
+			filterObj.asc_setType(Asc.c_oAscAutoFilterTypes.CustomFilters);
+			let newCustomFilter = filterObj.asc_getFilter();
+
+			let oCriteria1 = Criteria1 && AscCommonExcel.matchingValue(new AscCommonExcel.cString(Criteria1));
+			let oCriteria2 = Criteria2 && AscCommonExcel.matchingValue(new AscCommonExcel.cString(Criteria2));
+			let operator1 = opt_operator1 || (oCriteria1 && getOperator(oCriteria1.op));
+			let operator2 = opt_operator2 || (oCriteria2 && getOperator(oCriteria2.op));
+
+
+			let customFiltersArr = [];
+			if (oCriteria1) {
+				customFiltersArr[0] = new Asc.CustomFilter();
+				customFiltersArr[0].asc_setVal(oCriteria1.val.getValue() + "");
+				customFiltersArr[0].asc_setOperator(operator1);
+			}
+			if (oCriteria2) {
+				customFiltersArr[1] = new Asc.CustomFilter();
+				customFiltersArr[1].asc_setVal(oCriteria2.val.getValue() + "");
+				customFiltersArr[1].asc_setOperator(operator2);
+			}
+
+			newCustomFilter.asc_setCustomFilters(customFiltersArr);
+			newCustomFilter.asc_setAnd(Operator === "xlAnd");
+
+			autoFilterOptions.asc_setFilterObj(filterObj);
+			if (cellId) {
+				autoFilterOptions.asc_setCellId(cellId);
+			}
+		}
+	};
+
+	let createTop10Filter = function (autoFilterOptions, val, isPercent, isBottom, cellId) {
+		let _topFilter = new Asc.Top10();
+		_topFilter.asc_setVal(val);
+		if (isPercent) {
+			_topFilter.asc_setPercent(isPercent);
+		}
+		if (isBottom) {
+			_topFilter.asc_setTop(!isBottom);
+		}
+
+		let oFilter = new window["Asc"].AutoFilterObj();
+		oFilter.asc_setFilter(_topFilter);
+		oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.Top10);
+		autoFilterOptions.asc_setFilterObj(oFilter);
+		if (cellId){
+			autoFilterOptions.asc_setCellId(cellId);
+		}
+	};
+
+	let toDynamicConst = function (val) {
+		let res = null;
+		switch (val) {
+			case "xlFilterAboveAverage": {
+				res = Asc.c_oAscDynamicAutoFilter.aboveAverage;
+				break
+			}
+			case "xlFilterAllDatesInPeriodApril": {
+				res = Asc.c_oAscDynamicAutoFilter.m4;
+				break
+			}
+			case "xlFilterAllDatesInPeriodSeptember": {
+				res = Asc.c_oAscDynamicAutoFilter.m9;
+				break
+			}
+			case "xlFilterAllDatesInPeriodMay": {
+				res = Asc.c_oAscDynamicAutoFilter.m5;
+				break
+			}
+			case "xlFilterAllDatesInPeriodAugust": {
+				res = Asc.c_oAscDynamicAutoFilter.m8;
+				break
+			}
+			case "xlFilterAllDatesInPeriodDecember": {
+				res = Asc.c_oAscDynamicAutoFilter.m12;
+				break
+			}
+			case "xlFilterAllDatesInPeriodFebruary": {
+				res = Asc.c_oAscDynamicAutoFilter.m2;
+				break
+			}
+			case "xlFilterAllDatesInPeriodMarch": {
+				res = Asc.c_oAscDynamicAutoFilter.m3;
+				break
+			}
+			case "xlFilterAllDatesInPeriodJanuary": {
+				res = Asc.c_oAscDynamicAutoFilter.m1;
+				break
+			}
+			case "xlFilterAllDatesInPeriodJuly": {
+				res = Asc.c_oAscDynamicAutoFilter.m7;
+				break
+			}
+			case "xlFilterAllDatesInPeriodJune": {
+				res = Asc.c_oAscDynamicAutoFilter.m6;
+				break
+			}
+			case "xlFilterAllDatesInPeriodNovember": {
+				res = Asc.c_oAscDynamicAutoFilter.m11;
+				break
+			}
+			case "xlFilterAllDatesInPeriodOctober": {
+				res = Asc.c_oAscDynamicAutoFilter.m10;
+				break
+			}
+			case "xlFilterAllDatesInPeriodQuarter1": {
+				res = Asc.c_oAscDynamicAutoFilter.q1;
+				break
+			}
+			case "xlFilterAllDatesInPeriodQuarter2": {
+				res = Asc.c_oAscDynamicAutoFilter.q2;
+				break
+			}
+			case "xlFilterAllDatesInPeriodQuarter3": {
+				res = Asc.c_oAscDynamicAutoFilter.q3;
+				break
+			}
+			case "xlFilterAllDatesInPeriodQuarter4": {
+				res = Asc.c_oAscDynamicAutoFilter.q4;
+				break
+			}
+			case "xlFilterBelowAverage": {
+				res = Asc.c_oAscDynamicAutoFilter.belowAverage;
+				break
+			}
+			case "xlFilterLastMonth": {
+				res = Asc.c_oAscDynamicAutoFilter.lastMonth;
+				break
+			}
+			case "xlFilterLastQuarter": {
+				res = Asc.c_oAscDynamicAutoFilter.lastQuarter;
+				break
+			}
+			case "xlFilterLastWeek": {
+				res = Asc.c_oAscDynamicAutoFilter.lastWeek;
+				break
+			}
+			case "xlFilterLastYear": {
+				res = Asc.c_oAscDynamicAutoFilter.lastYear;
+				break
+			}
+			case "xlFilterNextMonth": {
+				res = Asc.c_oAscDynamicAutoFilter.nextMonth;
+				break
+			}
+			case "xlFilterNextQuarter": {
+				res = Asc.c_oAscDynamicAutoFilter.nextQuarter;
+				break
+			}
+			case "xlFilterNextWeek": {
+				res = Asc.c_oAscDynamicAutoFilter.nextWeek;
+				break
+			}
+			case "xlFilterNextYear": {
+				res = Asc.c_oAscDynamicAutoFilter.nextYear;
+				break
+			}
+			case "xlFilterThisMonth": {
+				res = Asc.c_oAscDynamicAutoFilter.thisMonth;
+				break
+			}
+			case "xlFilterThisQuarter": {
+				res = Asc.c_oAscDynamicAutoFilter.thisQuarter;
+				break
+			}
+			case "xlFilterThisWeek": {
+				res = Asc.c_oAscDynamicAutoFilter.thisWeek;
+				break
+			}
+			case "xlFilterThisYear": {
+				res = Asc.c_oAscDynamicAutoFilter.thisYear;
+				break
+			}
+			case "xlFilterToday": {
+				res = Asc.c_oAscDynamicAutoFilter.today;
+				break
+			}
+			case "xlFilterTomorrow": {
+				res = Asc.c_oAscDynamicAutoFilter.tomorrow;
+				break
+			}
+			case "xlFilterYearToDate": {
+				res = Asc.c_oAscDynamicAutoFilter.yearToDate;
+				break
+			}
+			case "xlFilterYesterday": {
+				res = Asc.c_oAscDynamicAutoFilter.yesterday;
+				break
+			}
+
+		}
+		return res;
+	};
+
+	let createDynamicFilter = function (autoFilterOptions, val, cellId) {
+		let _dynamicFilter = new Asc.DynamicFilter();
+		_dynamicFilter.asc_setType(val);
+
+		let oFilter = new Asc.AutoFilterObj();
+		oFilter.asc_setFilter(_dynamicFilter);
+		oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.DynamicFilter);
+		autoFilterOptions.asc_setFilterObj(oFilter);
+		if (cellId){
+			autoFilterOptions.asc_setCellId(cellId);
+		}
+	};
+
 	/**
 	 * Filter type.
 	 * @typedef {("xlAnd" | "xlBottom10Items" | "xlBottom10Percent" | "xlFilterCellColor" | "xlFilterDynamic" | "xlFilterFontColor" | "xlFilterValues" | "xlOr" | "xlTop10Items" | "xlTop10Percent")} XlAutoFilterOperator
@@ -11488,71 +11733,6 @@
 
 		let cellId = Asc.Range(_range.c1 + Field - 1, _range.r1, _range.c1 + Field - 1, _range.r1).getName();
 
-		let getOperator = function (val) {
-			let res = Asc.c_oAscCustomAutoFilter.equals;
-			switch (val) {
-				case "=": {
-					res = Asc.c_oAscCustomAutoFilter.equals;
-					break
-				}
-				case ">": {
-					res = Asc.c_oAscCustomAutoFilter.isGreaterThan;
-					break
-				}
-				case ">=": {
-					res = Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo;
-					break
-				}
-				case "<": {
-					res = Asc.c_oAscCustomAutoFilter.isLessThan;
-					break
-				}
-				case "<=": {
-					res = Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo;
-					break
-				}
-				case "<>": {
-					res = Asc.c_oAscCustomAutoFilter.doesNotEqual;
-					break
-				}
-			}
-			return res;
-		};
-
-		let createCustomFilter = function () {
-			if (Criteria1 || Criteria1) {
-				let filterObj = new Asc.AutoFilterObj();
-				filterObj.asc_setFilter(new Asc.CustomFilters());
-				filterObj.asc_setType(Asc.c_oAscAutoFilterTypes.CustomFilters);
-				let newCustomFilter = filterObj.asc_getFilter();
-
-				let oCriteria1 = Criteria1 && AscCommonExcel.matchingValue(new AscCommonExcel.cString(Criteria1));
-				let oCriteria2 = Criteria2 && AscCommonExcel.matchingValue(new AscCommonExcel.cString(Criteria2));
-				let operator1 = oCriteria1 && getOperator(oCriteria1.op);
-				let operator2 = oCriteria2 && getOperator(oCriteria2.op);
-
-
-				let customFiltersArr = [];
-				if (oCriteria1) {
-					customFiltersArr[0] = new Asc.CustomFilter();
-					customFiltersArr[0].asc_setVal(oCriteria1.val.getValue() + "");
-					customFiltersArr[0].asc_setOperator(operator1);
-				}
-				if (oCriteria2) {
-					customFiltersArr[1] = new Asc.CustomFilter();
-					customFiltersArr[1].asc_setVal(oCriteria2.val.getValue() + "");
-					customFiltersArr[1].asc_setOperator(operator2);
-				}
-
-				newCustomFilter.asc_setCustomFilters(customFiltersArr);
-				newCustomFilter.asc_setAnd(Operator === "xlAnd");
-
-				autoFilterOptions = new window["Asc"].AutoFiltersOptions();
-				autoFilterOptions.asc_setFilterObj(filterObj);
-				autoFilterOptions.asc_setCellId(cellId);
-			}
-		};
-
 		let createSimpleFilter = function () {
 			if (Criteria1 && Array.isArray(Criteria1)) {
 				let autoFiltersOptionsElements = ws.autoFilters.getOpenAndClosedValues(ws.AutoFilter, Field - 1);
@@ -11598,24 +11778,6 @@
 			}
 		};
 
-		let createTop10Filter = function (val, isPercent, isBottom) {
-			let _topFilter = new Asc.Top10();
-			_topFilter.asc_setVal(val);
-			if (isPercent) {
-				_topFilter.asc_setPercent(isPercent);
-			}
-			if (isBottom) {
-				_topFilter.asc_setTop(!isBottom);
-			}
-
-			autoFilterOptions = new window["Asc"].AutoFiltersOptions();
-			let oFilter = new window["Asc"].AutoFilterObj();
-			oFilter.asc_setFilter(_topFilter);
-			oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.Top10);
-			autoFilterOptions.asc_setFilterObj(oFilter);
-			autoFilterOptions.asc_setCellId(cellId);
-		};
-
 		let toAscColor = function (_color) {
 			let res;
 			if (_color instanceof AscCommonExcel.RgbColor) {
@@ -11649,162 +11811,6 @@
 			autoFilterOptions.asc_setCellId(cellId);
 		};
 
-		let toDynamicConst = function (val) {
-			let res = null;
-			switch (val) {
-				case "xlFilterAboveAverage": {
-					res = Asc.c_oAscDynamicAutoFilter.aboveAverage;
-					break
-				}
-				case "xlFilterAllDatesInPeriodApril": {
-					res = Asc.c_oAscDynamicAutoFilter.m4;
-					break
-				}
-				case "xlFilterAllDatesInPeriodSeptember": {
-					res = Asc.c_oAscDynamicAutoFilter.m9;
-					break
-				}
-				case "xlFilterAllDatesInPeriodMay": {
-					res = Asc.c_oAscDynamicAutoFilter.m5;
-					break
-				}
-				case "xlFilterAllDatesInPeriodAugust": {
-					res = Asc.c_oAscDynamicAutoFilter.m8;
-					break
-				}
-				case "xlFilterAllDatesInPeriodDecember": {
-					res = Asc.c_oAscDynamicAutoFilter.m12;
-					break
-				}
-				case "xlFilterAllDatesInPeriodFebruary": {
-					res = Asc.c_oAscDynamicAutoFilter.m2;
-					break
-				}
-				case "xlFilterAllDatesInPeriodMarch": {
-					res = Asc.c_oAscDynamicAutoFilter.m3;
-					break
-				}
-				case "xlFilterAllDatesInPeriodJanuary": {
-					res = Asc.c_oAscDynamicAutoFilter.m1;
-					break
-				}
-				case "xlFilterAllDatesInPeriodJuly": {
-					res = Asc.c_oAscDynamicAutoFilter.m7;
-					break
-				}
-				case "xlFilterAllDatesInPeriodJune": {
-					res = Asc.c_oAscDynamicAutoFilter.m6;
-					break
-				}
-				case "xlFilterAllDatesInPeriodNovember": {
-					res = Asc.c_oAscDynamicAutoFilter.m11;
-					break
-				}
-				case "xlFilterAllDatesInPeriodOctober": {
-					res = Asc.c_oAscDynamicAutoFilter.m10;
-					break
-				}
-				case "xlFilterAllDatesInPeriodQuarter1": {
-					res = Asc.c_oAscDynamicAutoFilter.q1;
-					break
-				}
-				case "xlFilterAllDatesInPeriodQuarter2": {
-					res = Asc.c_oAscDynamicAutoFilter.q2;
-					break
-				}
-				case "xlFilterAllDatesInPeriodQuarter3": {
-					res = Asc.c_oAscDynamicAutoFilter.q3;
-					break
-				}
-				case "xlFilterAllDatesInPeriodQuarter4": {
-					res = Asc.c_oAscDynamicAutoFilter.q4;
-					break
-				}
-				case "xlFilterBelowAverage": {
-					res = Asc.c_oAscDynamicAutoFilter.belowAverage;
-					break
-				}
-				case "xlFilterLastMonth": {
-					res = Asc.c_oAscDynamicAutoFilter.lastMonth;
-					break
-				}
-				case "xlFilterLastQuarter": {
-					res = Asc.c_oAscDynamicAutoFilter.lastQuarter;
-					break
-				}
-				case "xlFilterLastWeek": {
-					res = Asc.c_oAscDynamicAutoFilter.lastWeek;
-					break
-				}
-				case "xlFilterLastYear": {
-					res = Asc.c_oAscDynamicAutoFilter.lastYear;
-					break
-				}
-				case "xlFilterNextMonth": {
-					res = Asc.c_oAscDynamicAutoFilter.nextMonth;
-					break
-				}
-				case "xlFilterNextQuarter": {
-					res = Asc.c_oAscDynamicAutoFilter.nextQuarter;
-					break
-				}
-				case "xlFilterNextWeek": {
-					res = Asc.c_oAscDynamicAutoFilter.nextWeek;
-					break
-				}
-				case "xlFilterNextYear": {
-					res = Asc.c_oAscDynamicAutoFilter.nextYear;
-					break
-				}
-				case "xlFilterThisMonth": {
-					res = Asc.c_oAscDynamicAutoFilter.thisMonth;
-					break
-				}
-				case "xlFilterThisQuarter": {
-					res = Asc.c_oAscDynamicAutoFilter.thisQuarter;
-					break
-				}
-				case "xlFilterThisWeek": {
-					res = Asc.c_oAscDynamicAutoFilter.thisWeek;
-					break
-				}
-				case "xlFilterThisYear": {
-					res = Asc.c_oAscDynamicAutoFilter.thisYear;
-					break
-				}
-				case "xlFilterToday": {
-					res = Asc.c_oAscDynamicAutoFilter.today;
-					break
-				}
-				case "xlFilterTomorrow": {
-					res = Asc.c_oAscDynamicAutoFilter.tomorrow;
-					break
-				}
-				case "xlFilterYearToDate": {
-					res = Asc.c_oAscDynamicAutoFilter.yearToDate;
-					break
-				}
-				case "xlFilterYesterday": {
-					res = Asc.c_oAscDynamicAutoFilter.yesterday;
-					break
-				}
-
-			}
-			return res;
-		};
-
-		let createDynamicFilter = function (val) {
-			let _dynamicFilter = new Asc.DynamicFilter();
-			_dynamicFilter.asc_setType(val);
-
-			autoFilterOptions = new Asc.AutoFiltersOptions();
-			let oFilter = new Asc.AutoFilterObj();
-			oFilter.asc_setFilter(_dynamicFilter);
-			oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.DynamicFilter);
-			autoFilterOptions.asc_setFilterObj(oFilter);
-			autoFilterOptions.asc_setCellId(cellId);
-		};
-
 		//apply filtering
 		let isAutoFilter = this.range.worksheet && this.range.worksheet.AutoFilter && this.range.worksheet.AutoFilter.Ref.intersection(this.range.bbox);
 		let autoFilterOptions;
@@ -11812,7 +11818,8 @@
 			switch (Operator) {
 				case "xlOr":
 				case "xlAnd": {
-					createCustomFilter();
+					autoFilterOptions = new window["Asc"].AutoFiltersOptions();
+					createCustomFilter(autoFilterOptions, Criteria1, Criteria2, Operator, cellId);
 					break;
 				}
 				case "xlFilterFontColor":
@@ -11827,7 +11834,8 @@
 				}
 				case "xlFilterDynamic": {
 					let _type = toDynamicConst(Criteria1);
-					createDynamicFilter(_type);
+					autoFilterOptions = new Asc.AutoFiltersOptions();
+					createDynamicFilter(autoFilterOptions, _type, null);
 					break;
 				}
 				/*case "xlFilterIcon": {
@@ -11840,8 +11848,9 @@
 					//only criteria1, 1 to 500 number value
 					let top10Num = Criteria1 ? Criteria1 - 0 : 10;
 					if (top10Num > 0 && top10Num <= 500) {
-						createTop10Filter(top10Num, "xlTop10Percent" === Operator || "xlBottom10Percent" === Operator,
-							"xlBottom10Items" === Operator || "xlBottom10Percent" === Operator);
+						autoFilterOptions = new Asc.AutoFiltersOptions();
+						createTop10Filter(autoFilterOptions, top10Num, "xlTop10Percent" === Operator || "xlBottom10Percent" === Operator,
+							"xlBottom10Items" === Operator || "xlBottom10Percent" === Operator, null);
 					} else {
 						private_MakeError('Error! Criteria1 must be between 1 and 500!');
 						return false;
@@ -11853,7 +11862,8 @@
 					if (Criteria1 && Array.isArray(Criteria1)) {
 						createSimpleFilter();
 					} else {
-						createCustomFilter();
+						autoFilterOptions = new window["Asc"].AutoFiltersOptions();
+						createCustomFilter(autoFilterOptions, Criteria1, Criteria2, Operator, cellId);
 					}
 					break;
 			}
@@ -17640,6 +17650,256 @@
 			this.SetNumberFormat()
 		}
 	});
+
+	/**
+	 * Returns the collection of pivot filters applied to the specified pivot field.
+	 * @memberof ApiPivotField
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiPivotFilters}
+	 * @since 9.1.0
+	 */
+	ApiPivotField.prototype.GetPivotFilters = function () {
+		return new ApiPivotFilters(this);
+	};
+
+	Object.defineProperty(ApiPivotField.prototype, "PivotFilters", {
+		get: function () {
+			return this.GetPivotFilters();
+		}
+	});
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiPivotFilters
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a collection of pivot filters applied to a pivot field.
+	 * @constructor
+	 * @param {ApiPivotField} field - The pivot field that owns this filter collection.
+	 */
+	function ApiPivotFilters(field) {
+		/** @type {ApiPivotField} */
+		this.field = field;
+	}
+
+	/**
+	 * Pivot filter type.
+	 * @typedef {("xlAfter" | "xlAfterOrEqualTo" | "xlAllDatesInPeriodApril" | "xlAllDatesInPeriodAugust" | "xlAllDatesInPeriodDecember" | "xlAllDatesInPeriodFebruary" | "xlAllDatesInPeriodJanuary" | "xlAllDatesInPeriodJuly" | "xlAllDatesInPeriodJune" | "xlAllDatesInPeriodMarch" | "xlAllDatesInPeriodMay" | "xlAllDatesInPeriodNovember" | "xlAllDatesInPeriodOctober" | "xlAllDatesInPeriodQuarter1" | "xlAllDatesInPeriodQuarter2" | "xlAllDatesInPeriodQuarter3" | "xlAllDatesInPeriodQuarter4" | "xlAllDatesInPeriodSeptember" | "xlBefore" | "xlBeforeOrEqualTo" | "xlBottomCount" | "xlBottomPercent" | "xlBottomSum" | "xlCaptionBeginsWith" | "xlCaptionContains" | "xlCaptionDoesNotBeginWith" | "xlCaptionDoesNotContain" | "xlCaptionDoesNotEndWith" | "xlCaptionDoesNotEqual" | "xlCaptionEndsWith" | "xlCaptionEquals" | "xlCaptionIsBetween" | "xlCaptionIsGreaterThan" | "xlCaptionIsGreaterThanOrEqualTo" | "xlCaptionIsLessThan" | "xlCaptionIsLessThanOrEqualTo" | "xlCaptionIsNotBetween" | "xlDateBetween" | "xlDateLastMonth" | "xlDateLastQuarter" | "xlDateLastWeek" | "xlDateLastYear" | "xlDateNextMonth" | "xlDateNextQuarter" | "xlDateNextWeek" | "xlDateNextYear" | "xlDateThisMonth" | "xlDateThisQuarter" | "xlDateThisWeek" | "xlDateThisYear" | "xlDateToday" | "xlDateTomorrow" | "xlDateYesterday" | "xlNotSpecificDate" | "xlSpecificDate" | "xlTopCount" | "xlTopPercent" | "xlTopSum" | "xlValueDoesNotEqual" | "xlValueEquals" | "xlValueIsBetween" | "xlValueIsGreaterThan" | "xlValueIsGreaterThanOrEqualTo" | "xlValueIsLessThan" | "xlValueIsLessThanOrEqualTo" | "xlValueIsNotBetween" | "xlYearToDate") } XlPivotFilterType
+	 * @see office-js-api/Examples/Enumerations/XlPivotFilterType.js
+	 */
+
+	/**
+	 * Adds a new filter to the pivot field. This method is VBA-compatible and follows the PivotFilters.Add signature from Excel VBA.
+	 * Supports all major filter types including label filters, value filters, top/bottom filters, and date filters.
+	 * @memberof ApiPivotFilters
+	 * @typeofeditors ["CSE"]
+	 * @param {XlPivotFilterType} filterType - The type of filter to add. Must match VBA XlPivotFilterType enum values.
+	 * @param {ApiPivotDataField} [dataField] - The data field object to filter by. Required for value filters (xlValue* types) and top/bottom filters.
+	 * @param {string | number} [value1] - The first value for the filter condition. Required for comparison filters, between filters, and top/bottom count.
+	 * @param {string | number} [value2] - The second value for "Between" conditions (xlCaptionIsBetween, xlCaptionIsNotBetween, xlValueIsBetween).
+	 * @param {boolean} [wholeDayFilter] - Whether to filter by whole day for date filters. Reserved for future use, currently not implemented.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotFilters/Methods/Add.js
+	 */
+	ApiPivotFilters.prototype.Add = function (filterType, dataField, value1, value2, wholeDayFilter) {
+		// Validate required filterType parameter
+		if (!filterType || typeof filterType !== 'string') {
+			private_MakeError('Add filter requires a valid FilterType parameter.');
+			return;
+		}
+
+		const autoFilterOptions = new Asc.AutoFiltersOptions();
+		this.field.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.field.index);
+
+		// Convert values to strings for filter processing (preserve original validation above)
+		if (value1 !== undefined && value1 !== null) {
+			value1 = value1 + '';
+		}
+		if (value2 !== undefined && value2 !== null) {
+			value2 = value2 + '';
+		}
+		if (applyCaptionFilter(autoFilterOptions, filterType, value1, value2) ||
+			applyValueFilter(autoFilterOptions, filterType, value1, value2, dataField) ||
+			applyTopBottomFilter(autoFilterOptions, filterType, value1, dataField) ||
+			applyDateFilter(autoFilterOptions, filterType, value1, value2, wholeDayFilter)) {
+			// Apply filter
+			this.field.table.pivot.filterByFieldIndex(this.field.table.api, autoFilterOptions, this.field.index, false);
+		} else {
+			private_MakeError('Unsupported or unknown filter type: ' + filterType);
+		}
+	};
+
+	function addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2) {
+		if (captionFilters.hasOwnProperty(filterType)) {
+			if (value1 === undefined || value1 === null) {
+				private_MakeError('Label filter requires value1 parameter.');
+				return false;
+			}
+			createCustomFilter(autoFilterOptions, value1, value2, "xlAnd", null, captionFilters[filterType]);
+			return true;
+		}
+		if (betweenFilters.hasOwnProperty(filterType)) {
+			// Validate value1 and value2 requirements for between filters
+			if (value1 === undefined || value1 === null) {
+				private_MakeError('Filter type "' + filterType + '" requires a value1 parameter.');
+				return false;
+			}
+			if (value2 === undefined || value2 === null) {
+				private_MakeError('Filter type "' + filterType + '" requires both value1 and value2 parameters.');
+				return false;
+			}
+			const isBetween = betweenFilters[filterType];
+			if (isBetween) {//xlOr
+				// Between: value1 <= field <= value2
+				createCustomFilter(autoFilterOptions, value1, value2, "xlAnd", null, Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo, Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo);
+			} else {
+				// Not Between: field < value1 OR field > value2
+				createCustomFilter(autoFilterOptions, value1, value2, "xlOr", null, Asc.c_oAscCustomAutoFilter.isLessThan, Asc.c_oAscCustomAutoFilter.isGreaterThan);
+			}
+			return true;
+		}
+		return false;
+	}
+	function applyCaptionFilter(autoFilterOptions, filterType, value1, value2) {
+		const captionFilters = {
+			'xlCaptionEquals': Asc.c_oAscCustomAutoFilter.equals,
+			'xlCaptionDoesNotEqual': Asc.c_oAscCustomAutoFilter.doesNotEqual,
+			'xlCaptionBeginsWith': Asc.c_oAscCustomAutoFilter.beginsWith,
+			'xlCaptionDoesNotBeginWith': Asc.c_oAscCustomAutoFilter.doesNotBeginWith,
+			'xlCaptionEndsWith': Asc.c_oAscCustomAutoFilter.endsWith,
+			'xlCaptionDoesNotEndWith': Asc.c_oAscCustomAutoFilter.doesNotEndWith,
+			'xlCaptionContains': Asc.c_oAscCustomAutoFilter.contains,
+			'xlCaptionDoesNotContain': Asc.c_oAscCustomAutoFilter.doesNotContain,
+			'xlCaptionIsGreaterThan': Asc.c_oAscCustomAutoFilter.isGreaterThan,
+			'xlCaptionIsGreaterThanOrEqualTo': Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo,
+			'xlCaptionIsLessThan': Asc.c_oAscCustomAutoFilter.isLessThan,
+			'xlCaptionIsLessThanOrEqualTo': Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo
+		};
+		const betweenFilters = {
+			'xlCaptionIsBetween': true,
+			'xlCaptionIsNotBetween': false
+		};
+		return addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2);
+	}
+	function applyValueFilter(autoFilterOptions, filterType, value1, value2, dataField) {
+		const valueFilters = {
+			'xlValueEquals': Asc.c_oAscCustomAutoFilter.equals,
+			'xlValueDoesNotEqual': Asc.c_oAscCustomAutoFilter.doesNotEqual,
+			'xlValueIsGreaterThan': Asc.c_oAscCustomAutoFilter.isGreaterThan,
+			'xlValueIsLessThan': Asc.c_oAscCustomAutoFilter.isLessThan,
+			'xlValueIsGreaterThanOrEqualTo': Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo,
+			'xlValueIsLessThanOrEqualTo': Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo
+		};
+		const betweenFilters = {
+			'xlValueIsBetween': true,
+			'xlValueIsNotBetween': false
+		};
+		const res = addCaptionFilter(autoFilterOptions, valueFilters, betweenFilters, filterType, value1, value2);
+		if (res) {
+			// Validate dataField requirement for value filters
+			if (!dataField) {
+				private_MakeError('Filter type "' + filterType + '" requires a dataField parameter.');
+				return false;
+			}
+			// Configure pivot object for value filtering (dataFieldIndex > 0 for value filters)
+			const pivotObj = autoFilterOptions.asc_getPivotObj();
+			if (pivotObj && dataField) {
+				pivotObj.asc_setDataFieldIndexFilter(dataField.GetPosition());
+			}
+		}
+		return res;
+	}
+	function applyTopBottomFilter(autoFilterOptions, filterType, value1, dataField) {
+		if (filterType.startsWith('xlTop') || filterType.startsWith('xlBottom')) {
+			if (!dataField) {
+				private_MakeError('Filter type "' + filterType + '" requires a dataField parameter.');
+				return false;
+			}
+			
+			const isPercent = "xlTopPercent" === filterType || "xlBottomPercent" === filterType;
+			const isBottom = filterType.startsWith('xlBottom');
+			const isSum = "xlTopSum" === filterType || "xlBottomSum" === filterType;
+
+			let top10Num = value1 ? value1 - 0 : 10;
+			if(top10Num < 0 || isPercent && top10Num > 100) {
+				private_MakeError('Top/bottom filters value1 is out of range: ' + top10Num);
+				return false;
+			}
+
+			createTop10Filter(autoFilterOptions, top10Num, isPercent, isBottom, null);
+			const pivotObj = autoFilterOptions.asc_getPivotObj();
+			if (pivotObj) {
+				// Set dataField and top10 sum configuration for value-based top/bottom
+				if (dataField) {
+					pivotObj.asc_setDataFieldIndexFilter(dataField.GetPosition());
+				}
+				pivotObj.asc_setIsTop10Sum(isSum);
+			}
+			return true;
+		}
+		return false;
+	}
+	function applyDateFilter(autoFilterOptions, filterType, value1, value2, wholeDayFilter) {
+		const pivotToExcelFilterMap = {
+			// Simple date filters - map to Excel filter constants
+			'xlDateToday': 'xlFilterToday',
+			'xlDateYesterday': 'xlFilterYesterday', 
+			'xlDateTomorrow': 'xlFilterTomorrow',
+			'xlDateThisWeek': 'xlFilterThisWeek',
+			'xlDateLastWeek': 'xlFilterLastWeek',
+			'xlDateNextWeek': 'xlFilterNextWeek',
+			'xlDateThisMonth': 'xlFilterThisMonth',
+			'xlDateLastMonth': 'xlFilterLastMonth',
+			'xlDateNextMonth': 'xlFilterNextMonth',
+			'xlDateThisQuarter': 'xlFilterThisQuarter',
+			'xlDateLastQuarter': 'xlFilterLastQuarter',
+			'xlDateNextQuarter': 'xlFilterNextQuarter',
+			'xlDateThisYear': 'xlFilterThisYear',
+			'xlDateLastYear': 'xlFilterLastYear',
+			'xlDateNextYear': 'xlFilterNextYear',
+			'xlYearToDate': 'xlFilterYearToDate',
+			// Month period filters
+			'xlAllDatesInPeriodJanuary': 'xlFilterAllDatesInPeriodJanuary',
+			'xlAllDatesInPeriodFebruary': 'xlFilterAllDatesInPeriodFebruary',
+			'xlAllDatesInPeriodMarch': 'xlFilterAllDatesInPeriodMarch',
+			'xlAllDatesInPeriodApril': 'xlFilterAllDatesInPeriodApril',
+			'xlAllDatesInPeriodMay': 'xlFilterAllDatesInPeriodMay',
+			'xlAllDatesInPeriodJune': 'xlFilterAllDatesInPeriodJune',
+			'xlAllDatesInPeriodJuly': 'xlFilterAllDatesInPeriodJuly',
+			'xlAllDatesInPeriodAugust': 'xlFilterAllDatesInPeriodAugust',
+			'xlAllDatesInPeriodSeptember': 'xlFilterAllDatesInPeriodSeptember',
+			'xlAllDatesInPeriodOctober': 'xlFilterAllDatesInPeriodOctober',
+			'xlAllDatesInPeriodNovember': 'xlFilterAllDatesInPeriodNovember',
+			'xlAllDatesInPeriodDecember': 'xlFilterAllDatesInPeriodDecember',
+			// Quarter period filters
+			'xlAllDatesInPeriodQuarter1': 'xlFilterAllDatesInPeriodQuarter1',
+			'xlAllDatesInPeriodQuarter2': 'xlFilterAllDatesInPeriodQuarter2',
+			'xlAllDatesInPeriodQuarter3': 'xlFilterAllDatesInPeriodQuarter3',
+			'xlAllDatesInPeriodQuarter4': 'xlFilterAllDatesInPeriodQuarter4'
+		};
+
+		// Check if this filter type can be handled by dynamic filters
+		const excelFilterType = pivotToExcelFilterMap[filterType];
+		if (excelFilterType) {
+			const dynamicFilterConst = toDynamicConst(excelFilterType);
+			createDynamicFilter(autoFilterOptions, dynamicFilterConst, null);
+			return true;
+		}
+
+		// Handle comparison date filters that need custom filter logic
+		const captionFilters = {
+			'xlSpecificDate': Asc.c_oAscCustomAutoFilter.equals,
+			'xlNotSpecificDate': Asc.c_oAscCustomAutoFilter.doesNotEqual
+		};
+		const betweenFilters = {
+			'xlDateBetween': true,
+			'xlDateNotBetween': false
+		};
+
+		return addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2);
+	}
 
 	//------------------------------------------------------------------------------------------------------------------
 	//

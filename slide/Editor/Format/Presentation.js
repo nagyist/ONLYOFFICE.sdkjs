@@ -557,7 +557,8 @@ function CPresentation(DrawingDocument) {
 	//Props
 	this.App = null;
 	this.Core = null;
-	this.CustomProperties = new AscCommon.CCustomProperties();;
+	this.CustomProperties = new AscCommon.CCustomProperties();
+	this.customXmlManager = new AscWord.CustomXmlManager(this);
 
 	this.StartPage = 0; // Для совместимости с CDocumentContent
 	this.CurPage = 0;
@@ -6111,11 +6112,30 @@ CPresentation.prototype.OnMouseDown = function (e, X, Y, PageIndex) {
 	let oContent1, oContent2;
 	var ret = null;
 	if (oController) {
+		const selectedBefore = getSelectedMoveAnimIdMap();
 		oContent1 = oController.getTargetDocContent();
 		var aStartAnims = oController.getAnimSelectionState();
 		ret = oController.onMouseDown(e, X, Y);
 		oController.checkRedrawAnimLabels(aStartAnims);
 		oContent2 = oController.getTargetDocContent();
+
+		const selectedAfter = getSelectedMoveAnimIdMap();
+		let moveAnimSelectionChanged = selectedBefore.length !== selectedAfter.length ||
+			selectedBefore.some((id, index) => id !== selectedAfter[index]);
+
+		if (moveAnimSelectionChanged) {
+			oSlide.showDrawingObjects();
+		}
+
+		function getSelectedMoveAnimIdMap() {
+			const selected = oController.getSelectedArray().filter(function (object) {
+				return object instanceof AscFormat.MoveAnimationDrawObject;
+			});
+			const ids = selected.map(function (object) {
+				return object.GetId();
+			})
+			return ids.sort();
+		}
 	}
 	let bUpdate = true;
 	if(oContent1 && oContent1 === oContent2) {
@@ -8666,7 +8686,8 @@ CPresentation.prototype.SendThemesThumbnails = function () {
 		aThemeInfo[aDocumentThemes.length - 1] = theme_load_info;
 	}
 	this.Api.sync_InitEditorThemes(this.Api.ThemeLoader.Themes.EditorThemes, aDocumentThemes);
-	this.Api.sendEvent("asc_onUpdateThemeIndex", 0);
+	const currentThemeIndex = this.GetCurrentMaster().getThemeIndex();
+	this.Api.sendEvent("asc_onUpdateThemeIndex", currentThemeIndex);
 };
 
 CPresentation.prototype.Check_CursorMoveRight = function () {
@@ -11605,6 +11626,15 @@ CPresentation.prototype.isPreserveSelectionSlides = function() {
 
 	return true;
 };
+
+/**
+ * @returns {AscWord.CustomXmlManager}
+ */
+CPresentation.prototype.getCustomXmlManager = function()
+{
+	return this.customXmlManager;
+};
+
 function collectSelectedObjects(aSpTree, aCollectArray, bRecursive, oIdMap, bSourceFormatting) {
 	var oSp;
 	var oPr = new AscFormat.CCopyObjectProperties();

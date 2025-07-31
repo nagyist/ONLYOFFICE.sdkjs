@@ -1815,7 +1815,7 @@ function (window, undefined) {
 	UndoRedoData_BinaryWrapper.prototype.Read_FromBinary2 = function (reader) {
 		this.Id = reader.GetString2();
 		this.len = reader.GetLong();
-		this.binary = reader.GetBuffer(this.len);
+		this.binary = reader.GetBufferUint8(this.len);
 	};
 	UndoRedoData_BinaryWrapper.prototype.getData = function () {
 		var reader = new AscCommon.FT_Stream2(this.binary, this.len);
@@ -1850,7 +1850,7 @@ function (window, undefined) {
 	};
 	UndoRedoData_BinaryWrapper2.prototype.Read_FromBinary2 = function (reader) {
 		this.len = reader.GetLong();
-		this.binary = reader.GetBuffer(this.len);
+		this.binary = reader.GetBufferUint8(this.len);
 	};
 	UndoRedoData_BinaryWrapper2.prototype.initObject = function (data) {
 		var reader = new AscCommon.FT_Stream2(this.binary, this.len);

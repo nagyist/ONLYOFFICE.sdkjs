@@ -5113,6 +5113,7 @@ function(window, undefined) {
 	};
 	CChartSpace.prototype.Refresh_RecalcData = function (data) {
 		switch (data.Type) {
+			case AscDFH.historyitem_AutoShapes_AddToDrawingObjects:
 			case AscDFH.historyitem_AutoShapes_SetDrawingBaseCoors: {
 				this.addToRecalculate();
 				break;
