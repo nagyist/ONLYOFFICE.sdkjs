@@ -45,7 +45,6 @@
       var c_oSerConstants = AscCommon.c_oSerConstants;
     var History = AscCommon.History;
     var pptx_content_loader = AscCommon.pptx_content_loader;
-    var pptx_content_writer = AscCommon.pptx_content_writer;
 
       var c_oAscPageOrientation = Asc.c_oAscPageOrientation;
 
@@ -231,19 +230,6 @@
         Locked: 1
     };
     /** @enum */
-    var c_oSerAligmentTypes =
-    {
-        Horizontal: 0,
-        Indent: 1,
-        JustifyLastLine: 2,
-        ReadingOrder: 3,
-        RelativeIndent: 4,
-        ShrinkToFit: 5,
-        TextRotation: 6,
-        Vertical: 7,
-        WrapText: 8
-    };
-    /** @enum */
     var c_oSerFillTypes =
     {
         Pattern: 0,
@@ -290,8 +276,7 @@
         Text: 3
     };
     /** @enum */
-    var c_oSerWorkbookTypes =
-    {
+    var c_oSerWorkbookTypes = {
         WorkbookPr: 0,
         BookViews: 1,
         WorkbookView: 2,
@@ -302,13 +287,14 @@
         PivotCaches: 7,
         PivotCache: 8,
         ExternalBook: 9,
-        OleLink:10,
+        OleLink: 10,
         DdeLink: 11,
         VbaProject: 12,
         JsaProject: 13,
         Comments: 14,
         CalcPr: 15,
         Connections: 16,
+        AppName: 17,
         SlicerCaches: 18,
         SlicerCachesExt: 19,
         SlicerCache: 20,
@@ -320,7 +306,8 @@
         ExternalLinksAutoRefresh: 26,
         TimelineCaches: 27,
         TimelineCache: 28,
-        Metadata: 29
+        Metadata: 29,
+        XmlMap: 30
     };
     /** @enum */
     var c_oSerWorkbookPrTypes =
@@ -425,7 +412,8 @@
         UserProtectedRanges: 47,
         TimelinesList: 48,
         Timelines: 49,
-        Timeline: 50
+        Timeline: 50,
+        TableSingleCells: 51
     };
     /** @enum */
     var c_oSerWorksheetPropTypes =
@@ -646,14 +634,19 @@
         TotalsRowFunction:4,
         TotalsRowFormula:5,
         CalculatedColumnFormula:6,
-		DataCellStyle: 7,
-		HeaderRowCellStyle: 8,
-		HeaderRowDxfId: 9,
-		Id: 10,
-		QueryTableFieldId: 11,
-		TotalsRowCellStyle: 12,
-		TotalsRowDxfId: 13,
-		UniqueName: 14
+        DataCellStyle: 7,
+        HeaderRowCellStyle: 8,
+        HeaderRowDxfId: 9,
+        Id: 10,
+        QueryTableFieldId: 11,
+        TotalsRowCellStyle: 12,
+        TotalsRowDxfId: 13,
+        UniqueName: 14,
+        XmlColumnPr: 15,
+        MapId: 16,
+        Xpath: 17,
+        Denormalized: 18,
+        XmlDataType: 19
     };
     /** @enum */
     var c_oSer_SortState =
@@ -1247,7 +1240,8 @@
         Custom: 0,
         ItemId: 1,
         Uri: 2,
-        Content: 3
+        Content: 3,
+        ContentA: 4
     };
     var c_oSerUserProtectedRange = {
         UserProtectedRange: 0,
@@ -1438,7 +1432,6 @@
 		NameIndex: 0,
 		Index: 1
 	};
-	
 
     /** @enum */
     var EBorderStyle =
@@ -2035,45 +2028,6 @@
         return text;
     }
 
-    //TODO копия кода из serialize2
-    function BinaryCustomsTableWriter(memory, CustomXmls)
-    {
-        this.memory = memory;
-        //this.Document = doc;
-        this.bs = new BinaryCommonWriter(this.memory);
-        this.CustomXmls = CustomXmls;
-        this.Write = function()
-        {
-            var oThis = this;
-            this.bs.WriteItemWithLength(function(){oThis.WriteCustomXmls();});
-        };
-        this.WriteCustomXmls = function()
-        {
-            var oThis = this;
-            for (var i = 0; i < this.CustomXmls.length; ++i) {
-                this.bs.WriteItem(c_oSerCustoms.Custom, function() {oThis.WriteCustomXml(oThis.CustomXmls[i]);});
-            }
-        };
-        this.WriteCustomXml = function(customXml) {
-            var oThis = this;
-            for(var i = 0; i < customXml.Uri.length; ++i){
-                this.bs.WriteItem(c_oSerCustoms.Uri, function () {
-                    oThis.memory.WriteString3(customXml.Uri[i]);
-                });
-            }
-            if (null !== customXml.ItemId) {
-                this.bs.WriteItem(c_oSerCustoms.ItemId, function() {
-                    oThis.memory.WriteString3(customXml.ItemId);
-                });
-            }
-            if (null !== customXml.Content) {
-                this.bs.WriteItem(c_oSerCustoms.Content, function() {
-                    oThis.memory.WriteBuffer(customXml.Content, 0, customXml.Content.length)
-                });
-            }
-        };
-    }
-
     /** @constructor */
     function BinaryTableWriter(memory, InitSaveManager, isCopyPaste, tableIds)
     {
@@ -2436,6 +2390,28 @@
             for(var i = 0, length = tableColumns.length; i < length; ++i)
                 this.bs.WriteItem(c_oSer_TableColumns.TableColumn, function(){oThis.WriteTableColumn(tableColumns[i]);});
         };
+        this.WriteTableXmlColumnPr = function (xmlColumnPr) {
+            if (xmlColumnPr.mapId != null) {
+                this.memory.WriteByte(c_oSer_TableColumns.MapId);
+                this.memory.WriteByte(c_oSerPropLenType.Long);
+                this.memory.WriteLong(xmlColumnPr.mapId);
+            }
+            if (xmlColumnPr.xpath != null) {
+                this.memory.WriteByte(c_oSer_TableColumns.Xpath);
+                this.memory.WriteByte(c_oSerPropLenType.Variable);
+                this.memory.WriteString2(xmlColumnPr.xpath);
+            }
+            if (xmlColumnPr.denormalized != null) {
+                this.memory.WriteByte(c_oSer_TableColumns.Denormalized);
+                this.memory.WriteByte(c_oSerPropLenType.Byte);
+                this.memory.WriteBool(xmlColumnPr.denormalized);
+            }
+            if (xmlColumnPr.xmlDataType != null) {
+                this.memory.WriteByte(c_oSer_TableColumns.XmlDataType);
+                this.memory.WriteByte(c_oSerPropLenType.Byte);
+                this.memory.WriteByte(xmlColumnPr.xmlDataType);
+            }
+        };
         this.WriteTableColumn = function(tableColumn)
         {
             var oThis = this;
@@ -2479,6 +2455,12 @@
 					oThis.memory.WriteLong(tableColumn.queryTableFieldId);
 				});
 			}
+            if(null != tableColumn.xmlColumnPr)
+            {
+                this.bs.WriteItem(c_oSer_TableColumns.XmlColumnPr, function () {
+                    oThis.WriteTableXmlColumnPr(tableColumn.xmlColumnPr);
+                });
+            }
         };
         this.WriteTableStyleInfo = function(tableStyleInfo)
         {
@@ -2910,6 +2892,7 @@
     /** @constructor */
 	function BinaryStylesTableWriter(memory, wb, initSaveManager)
     {
+	    const pptx_content_writer = AscCommon.pptx_content_writer;
         this.memory = memory;
         this.bs = new BinaryCommonWriter(this.memory);
         this.wb = wb;
@@ -2953,8 +2936,10 @@
                 if(aExtDxfs.length > 0) {
                     this.bs.WriteItem(c_oSerStylesTypes.ExtDxfs, function(){oThis.WriteDxfs(aExtDxfs);});
                 }
-                this.bs.WriteItem(c_oSerStylesTypes.SlicerStyles, function(){oThis.WriteSlicerStyles(slicerStyles);});
-            }
+	            if (slicerStyles) {
+		            this.bs.WriteItem(c_oSerStylesTypes.SlicerStyles, function () {oThis.WriteSlicerStyles(slicerStyles);});
+	            }
+						}
             //numfmts пишется в конце потому что они могут пополниться при записи Dxfs
             this.bs.WriteItem(c_oSerStylesTypes.NumFmts, function(){oThis.WriteNumFmts();});
 
@@ -3338,43 +3323,49 @@
                     case AscCommon.align_Right :ha = 7;break;
                     case AscCommon.align_CenterContinuous :ha = 8;break;
                 }
-                this.memory.WriteByte(c_oSerAligmentTypes.Horizontal);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.Horizontal);
                 this.memory.WriteByte(c_oSerPropLenType.Byte);
                 this.memory.WriteByte(ha);
             }
             if(null != align.indent)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.Indent);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.Indent);
                 this.memory.WriteByte(c_oSerPropLenType.Long);
                 this.memory.WriteLong(align.indent);
             }
+            if(null != align.readingOrder)
+            {
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.ReadingOrder);
+                this.memory.WriteByte(c_oSerPropLenType.Long);
+                this.memory.WriteLong(align.readingOrder);
+            }
             if(null != align.RelativeIndent)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.RelativeIndent);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.RelativeIndent);
                 this.memory.WriteByte(c_oSerPropLenType.Long);
                 this.memory.WriteLong(align.RelativeIndent);
             }
             if(null != align.shrink)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.ShrinkToFit);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.ShrinkToFit);
                 this.memory.WriteByte(c_oSerPropLenType.Byte);
                 this.memory.WriteBool(align.shrink);
             }
             if(null != align.angle)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.TextRotation);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.TextRotation);
                 this.memory.WriteByte(c_oSerPropLenType.Long);
                 this.memory.WriteLong(align.angle);
             }
             if(null != align.ver)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.Vertical);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.Vertical);
                 this.memory.WriteByte(c_oSerPropLenType.Byte);
                 this.memory.WriteByte(align.ver);
             }
             if(null != align.wrap)
             {
-                this.memory.WriteByte(c_oSerAligmentTypes.WrapText);
+                this.memory.WriteByte(Asc.c_oSerAligmentTypes.WrapText);
                 this.memory.WriteByte(c_oSerPropLenType.Byte);
                 this.memory.WriteBool(align.wrap);
             }
@@ -3583,6 +3574,7 @@
         this.InitSaveManager = initSaveManager;
         //this.tableIds = tableIds;
         //this.sheetIds = sheetIds;
+	    const pptx_content_writer = AscCommon.pptx_content_writer;
         this.Write = function()
         {
             var oThis = this;
@@ -3693,6 +3685,22 @@
                     });
                 }
 				var macros = this.wb.oApi.macros.GetData();
+                let customFunctions = this.wb.oApi["pluginMethod_GetCustomFunctions"] && this.wb.oApi["pluginMethod_GetCustomFunctions"]();
+                if (customFunctions) {
+                    customFunctions = AscCommonExcel.mergeCustomFunctions(customFunctions, true);
+                }
+                if (customFunctions) {
+                    if (macros) {
+                        let _macros = AscCommonExcel.safeJsonParse(macros);
+                        if (_macros) {
+                            _macros["customFunctions"] = customFunctions;
+                            macros = JSON.stringify(_macros);
+                        }
+                    } else {
+                        macros = {"macrosArray": [], "customFunctions": customFunctions}
+                        macros = JSON.stringify(macros);
+                    }
+                }
 				if (macros) {
 					this.bs.WriteItem(c_oSerWorkbookTypes.JsaProject, function() {oThis.memory.WriteXmlString(macros);});
 				}
@@ -3723,6 +3731,26 @@
 			if (this.wb.metadata) {
 				this.bs.WriteItem(c_oSerWorkbookTypes.Metadata, function () {oThis.WriteMetadata(oThis.wb.metadata);});
 			}
+            var xmlMaps =  this.wb.xmlMaps;
+            if (xmlMaps) {
+                let stream = pptx_content_writer.BinaryFileWriter;
+                for (let i = 0; i < xmlMaps.length; i++) {
+                    this.bs.WriteItem(c_oSerWorkbookTypes.XmlMap, function() {
+                        var old = new AscCommon.CMemory(true);
+                        stream.ExportToMemory(old);
+                        stream.ImportFromMemory(oThis.memory);
+
+                        stream.StartRecord(0);
+                        stream.WriteRecord2(0, stream, function(){
+                            xmlMaps[i].toPPTY(stream);
+                        });
+                        stream.EndRecord();
+
+                        stream.ExportToMemory(oThis.memory);
+                        stream.ImportFromMemory(old);
+                    });
+                }
+            }
 
         };
         this.WriteWorkbookPr = function()
@@ -4882,6 +4910,7 @@
         this.InitSaveManager = initSaveManager;
         /*this.tableIds = tableIds;
         this.sheetIds = sheetIds;*/
+	    const pptx_content_writer = AscCommon.pptx_content_writer;
         this._getCrc32FromObjWithProperty = function(val)
         {
             return Asc.crc32(this._getStringFromObjWithProperty(val));
@@ -4994,34 +5023,37 @@
                 this.bs.WriteItem(c_oSerWorksheetsTypes.SparklineGroups, function(){oThis.WriteSparklineGroups(ws.aSparklineGroups);});
             }
             // ToDo combine rules for matching ranges
-			for (i = 0; i < ws.aConditionalFormattingRules.length; ++i) {
-				this.bs.WriteItem(c_oSerWorksheetsTypes.ConditionalFormatting, function(){oThis.WriteConditionalFormatting(ws.aConditionalFormattingRules[i]);});
-			}
+            ws.forEachConditionalFormattingRules(function (elem) {
+                oThis.bs.WriteItem(c_oSerWorksheetsTypes.ConditionalFormatting, function(){oThis.WriteConditionalFormatting(elem);});
+            });
 			for (i = 0; i < ws.pivotTables.length; ++i) {
 				this.bs.WriteItem(c_oSerWorksheetsTypes.PivotTable, function(){oThis.WritePivotTable(ws.pivotTables[i], oThis.isCopyPaste)});
 			}
-            var slicers = new Asc.CT_slicers();
-            var slicerExt = new Asc.CT_slicers();
-            for (var i = 0; i < ws.aSlicers.length; ++i) {
-                if (this.isCopyPaste) {
-                    var _graphicObject = ws.workbook.getSlicerViewByName(ws.aSlicers[i].name);
-                    if (!_graphicObject || !_graphicObject.selected) {
-                        continue;
-                    }
-                }
+			if (Asc.CT_slicers) {
+				var slicers = new Asc.CT_slicers();
+				var slicerExt = new Asc.CT_slicers();
+				for (var i = 0; i < ws.aSlicers.length; ++i) {
+					if (this.isCopyPaste) {
+						var _graphicObject = ws.workbook.getSlicerViewByName(ws.aSlicers[i].name);
+						if (!_graphicObject || !_graphicObject.selected) {
+							continue;
+						}
+					}
 
-                if (ws.aSlicers[i].isExt()) {
-                    slicerExt.slicer.push(ws.aSlicers[i]);
-                } else {
-                    slicers.slicer.push(ws.aSlicers[i]);
-                }
-            }
-            if (slicers.slicer.length > 0) {
-                this.bs.WriteItem(c_oSerWorksheetsTypes.Slicers, function () {oThis.WriteSlicers(slicers);});
-            }
-            if (slicerExt.slicer.length > 0) {
-                this.bs.WriteItem(c_oSerWorksheetsTypes.SlicersExt, function () {oThis.WriteSlicers(slicerExt);});
-            }
+					if (ws.aSlicers[i].isExt()) {
+						slicerExt.slicer.push(ws.aSlicers[i]);
+					} else {
+						slicers.slicer.push(ws.aSlicers[i]);
+					}
+				}
+				if (slicers.slicer.length > 0) {
+					this.bs.WriteItem(c_oSerWorksheetsTypes.Slicers, function () {oThis.WriteSlicers(slicers);});
+				}
+				if (slicerExt.slicer.length > 0) {
+					this.bs.WriteItem(c_oSerWorksheetsTypes.SlicersExt, function () {oThis.WriteSlicers(slicerExt);});
+				}
+			}
+
             if (null !== ws.headerFooter) {
                 this.bs.WriteItem(c_oSerWorksheetsTypes.HeaderFooter, function () {oThis.WriteHeaderFooter(ws.headerFooter);});
             }
@@ -5041,7 +5073,7 @@
 			if (null !== ws.dataValidations) {
 				this.bs.WriteItem(c_oSerWorksheetsTypes.DataValidations, function () {oThis.WriteDataValidations(ws.dataValidations);});
 			}
-			if (ws.aNamedSheetViews.length > 0) {
+			if (ws.aNamedSheetViews.length > 0 && Asc.CT_NamedSheetViews) {
 				this.bs.WriteItem(c_oSerWorksheetsTypes.NamedSheetView, function () {
 					var namedSheetViews = new Asc.CT_NamedSheetViews();
 					namedSheetViews.namedSheetView = ws.aNamedSheetViews;
@@ -5074,6 +5106,27 @@
 
             if (ws.timelines && ws.timelines.length > 0) {
                 this.bs.WriteItem(c_oSerWorksheetsTypes.TimelinesList, function(){oThis.WriteTimelines(ws.timelines);});
+            }
+
+            let pTableSingleCells = ws.oTableSingleCells;
+            if (pTableSingleCells) {
+                let stream = pptx_content_writer.BinaryFileWriter;
+                for (let i = 0; i < pTableSingleCells.length; i++) {
+                    this.bs.WriteItem(c_oSerWorksheetsTypes.TableSingleCells, function () {
+                        var old = new AscCommon.CMemory(true);
+                        stream.ExportToMemory(old);
+                        stream.ImportFromMemory(oThis.memory);
+
+                        stream.StartRecord(0);
+                        stream.WriteRecord2(0, stream, function () {
+                            pTableSingleCells[i].toPPTY(stream);
+                        });
+                        stream.EndRecord();
+
+                        stream.ExportToMemory(oThis.memory);
+                        stream.ImportFromMemory(old);
+                    });
+                }
             }
         };
 		this.WriteDataValidations = function(dataValidations)
@@ -6970,6 +7023,7 @@
 		this.memory = memory;
 		this.wb = wb;
 		this.bs = new BinaryCommonWriter(this.memory);
+		const pptx_content_writer = AscCommon.pptx_content_writer;
 		this.Write = function()
 		{
 			var oThis = this;
@@ -6986,6 +7040,7 @@
         this.memory = memory;
         this.personList = personList;
         this.bs = new BinaryCommonWriter(this.memory);
+	    const pptx_content_writer = AscCommon.pptx_content_writer;
         this.Write = function()
         {
             var oThis = this;
@@ -7024,6 +7079,7 @@
         this.nRealTableCount = 0;
         this.InitSaveManager = new InitSaveManager(wb, isCopyPaste);
         this.bs = new BinaryCommonWriter(this.Memory);
+	    const pptx_content_writer = AscCommon.pptx_content_writer;
         this.Write = function(noBase64, onlySaveBase64)
         {
             var t = this;
@@ -7089,9 +7145,11 @@
                     pptx_content_writer.BinaryFileWriter.ImportFromMemory(old);
                 }});
             }
-            if (t.wb.customXmls && t.wb.customXmls.length > 0) {
-                this.WriteTable(c_oSerTableTypes.Customs, new BinaryCustomsTableWriter(this.Memory, t.wb.customXmls));
-            }
+
+			let xmlManager = t.wb.getCustomXmlManager();
+			if (xmlManager.getCount() > 0) {
+				this.WriteTable(c_oSerTableTypes.Customs, new AscCommon.BinaryCustomsTableWriter(xmlManager, this.Memory, false));
+			}
 
             //var oSharedStrings = {index: 0, strings: {}};
             //Write SharedStrings
@@ -7605,10 +7663,11 @@
         };
         this.ReadTableColumn = function (type, length, oTableColumn) {
             var res = c_oSerConstants.ReadOk;
+            const oThis = this;
             if (c_oSer_TableColumns.Name === type) {
                 //replace only _x000a_ for fix bug(other spec. symbols didn't see in table columns)
                 var columnName = this.stream.GetString2LE(length);
-                oTableColumn.Name = columnName.replaceAll("_x000a_", "\n");
+                oTableColumn.setTableColumnName(columnName.replaceAll("_x000a_", "\n"));
             } else if (c_oSer_TableColumns.TotalsRowLabel === type) {
                 oTableColumn.TotalsRowLabel = this.stream.GetString2LE(length);
             } else if (c_oSer_TableColumns.TotalsRowFunction === type) {
@@ -7629,9 +7688,40 @@
                 oTableColumn.uniqueName = this.stream.GetString2LE(length);
             } else if (c_oSer_TableColumns.Id === type) {
                 oTableColumn.id = this.stream.GetULongLE();
+            } else if (c_oSer_TableColumns.XmlColumnPr === type) {
+                if (!oTableColumn.xmlColumnPr) {
+                    oTableColumn.xmlColumnPr = new AscCommonExcel.CXmlColumnPr();
+                }
+                this.bcr.Read2Spreadsheet(length, function(t, l) {
+                    return oThis.ReadTableXmlColumnPr(t, l, oTableColumn.xmlColumnPr);
+                }, this);
             } else {
                 res = c_oSerConstants.ReadUnknown;
             }
+            return res;
+        };
+        this.ReadTableXmlColumnPr = function(type, length, oXmlColumnPr) {
+            var res = c_oSerConstants.ReadOk;
+
+            if (c_oSer_TableColumns.MapId === type) {
+                oXmlColumnPr.mapId = this.stream.GetLong();
+            }
+            else if (c_oSer_TableColumns.Xpath === type) {
+                oXmlColumnPr.xpath = this.stream.GetString2LE(length);
+            }
+            else if (c_oSer_TableColumns.Denormalized === type) {
+                oXmlColumnPr.denormalized = this.stream.GetBool();
+            }
+            else if (c_oSer_TableColumns.XmlDataType === type) {
+                if (!oXmlColumnPr.xmlDataType) {
+                    oXmlColumnPr.xmlDataType = {};
+                }
+                oXmlColumnPr.xmlDataType.val = this.stream.GetUChar();
+            }
+            else {
+                res = c_oSerConstants.ReadUnknown;
+            }
+
             return res;
         };
         this.ReadTableColumns = function(type, length, aTableColumns)
@@ -7912,52 +8002,86 @@
 		};
     }
     /** @constructor */
-    function Binary_SharedStringTableReader(stream, wb, aSharedStrings)
+    function Binary_SharedStringTableReader(stream, wb)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.bcr = new Binary_CommonReader(this.stream);
+        this.offsets = null;
+        this.tempValue = {text: null, multiText: null};
         this.Read = function()
         {
             var oThis = this;
-            var tempValue = {text: null, multiText: null};
-            return this.bcr.ReadTable(function(t, l){
-                return oThis.ReadSharedStringContent(t,l, tempValue);
-            });
+            let res;
+            if (false) {
+                const offsets = [];
+                const oldPos = this.stream.pos;
+                this.stream.Seek2(oldPos);
+                const stLen = this.stream.GetULongLE();
+                const data = this.stream.data.slice(oldPos, oldPos + stLen + 4);
+                res = this.bcr.ReadTable(function(t, l){
+                    offsets.push(oThis.stream.GetCurPos() - oldPos, l);
+                    return c_oSerConstants.ReadUnknown;
+                });
+                const subStream = new AscCommon.FT_Stream2(data, data.length);
+                let bssr = new Binary_SharedStringTableReader(subStream, this.wb);
+                bssr.offsets = offsets;
+                this.wb.sharedStrings.initWithBinaryReader(bssr);
+            } else {
+                const sharedStrings = [];
+                res = this.bcr.ReadTable(function(t, l){
+                    const res = oThis.ReadSharedStringContent(t,l);
+                    sharedStrings.push(oThis._getSharedStringFormTemp());
+                    return res;
+                });
+                this.wb.sharedStrings.initWithSharedStrings(sharedStrings);
+            }
+            return res;
         };
-        this.ReadSharedStringContent = function(type, length, tempValue)
+        this.ReadSharedStringByOffset = function(index)
+        {
+            this.tempValue.text = null;
+            this.tempValue.multiText = null;
+            const indexOffset = index * 2;
+            if (indexOffset < this.offsets.length) {
+                this.stream.Seek2(this.offsets[indexOffset]);
+                this.ReadSharedStringContent(c_oSerSharedStringTypes.Si, this.offsets[indexOffset + 1]);
+                return this._getSharedStringFormTemp();
+            }
+            return "";
+        }
+        this._getSharedStringFormTemp = function() {
+            let res = "";
+			if (null != this.tempValue.multiText) {
+                let aMultiText = this.tempValue.multiText;
+                if (null != this.tempValue.text) {
+                    let oElem = new AscCommonExcel.CMultiTextElem();
+                    oElem.text = this.tempValue.text;
+                    aMultiText.unshift(oElem);
+                }
+                res = aMultiText;
+            } else if (null != this.tempValue.text) {
+                res = this.tempValue.text;
+            }
+            return res;  
+        }
+        this.ReadSharedStringContent = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Si === type )
             {
                 var oThis = this;
-                tempValue.text = null;
-                tempValue.multiText = null;
+                this.tempValue.text = null;
+                this.tempValue.multiText = null;
                 res = this.bcr.Read1(length, function(t,l){
-                    return oThis.ReadSharedString(t,l, tempValue);
+                    return oThis.ReadSharedString(t,l);
                 });
-                if(null != this.aSharedStrings) {
-                    if (null != tempValue.multiText) {
-                        let aMultiText = tempValue.multiText;
-                        if (null != tempValue.text) {
-                            let oElem = new AscCommonExcel.CMultiTextElem();
-                            oElem.text = tempValue.text;
-                            aMultiText.unshift(oElem);
-                        }
-                        this.aSharedStrings.push(aMultiText);
-                    } else if (null != tempValue.text) {
-                        this.aSharedStrings.push(tempValue.text);
-                    } else {
-                        this.aSharedStrings.push("");
-                    }
-                }
             }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
         };
-        this.ReadSharedString = function(type, length, tempValue)
+        this.ReadSharedString = function(type, length)
         {
             var res = c_oSerConstants.ReadOk;
             if ( c_oSerSharedStringTypes.Run == type )
@@ -7967,15 +8091,15 @@
                 res = this.bcr.Read1(length, function(t,l){
                     return oThis.ReadRun(t,l,oRun);
                 });
-                if(null == tempValue.multiText)
-                    tempValue.multiText = [];
-                tempValue.multiText.push(oRun);
+                if(null == this.tempValue.multiText)
+                    this.tempValue.multiText = [];
+                this.tempValue.multiText.push(oRun);
             }
             else if ( c_oSerSharedStringTypes.Text == type )
             {
-                if(null == tempValue.text)
-                    tempValue.text = "";
-                tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
+                if(null == this.tempValue.text)
+                    this.tempValue.text = "";
+                this.tempValue.text = checkMaxCellLength(this.stream.GetString2LE(length));
             }
             else
                 res = c_oSerConstants.ReadUnknown;
@@ -8327,7 +8451,7 @@
         this.ReadAligment = function(type, length, oAligment)
         {
             var res = c_oSerConstants.ReadOk;
-            if ( c_oSerAligmentTypes.Horizontal == type )
+            if ( Asc.c_oSerAligmentTypes.Horizontal == type )
             {
                 switch(this.stream.GetUChar())
                 {
@@ -8342,21 +8466,23 @@
                     case 8 : oAligment.hor = AscCommon.align_CenterContinuous;break;
                 }
             }
-            else if ( c_oSerAligmentTypes.Indent == type ) {
+            else if ( Asc.c_oSerAligmentTypes.Indent == type ) {
                 oAligment.indent = this.stream.GetULongLE();
                 if (oAligment.indent < 0) {
                     oAligment.indent = 0;
                 }
             }
-            else if ( c_oSerAligmentTypes.RelativeIndent == type )
+            else if ( Asc.c_oSerAligmentTypes.ReadingOrder == type )
+                oAligment.readingOrder = this.stream.GetULongLE();
+            else if ( Asc.c_oSerAligmentTypes.RelativeIndent == type )
                 oAligment.RelativeIndent = this.stream.GetULongLE();
-            else if ( c_oSerAligmentTypes.ShrinkToFit == type )
+            else if ( Asc.c_oSerAligmentTypes.ShrinkToFit == type )
                 oAligment.shrink = this.stream.GetBool();
-            else if ( c_oSerAligmentTypes.TextRotation == type )
+            else if ( Asc.c_oSerAligmentTypes.TextRotation == type )
                 oAligment.angle = this.stream.GetULongLE();
-            else if ( c_oSerAligmentTypes.Vertical == type )
+            else if ( Asc.c_oSerAligmentTypes.Vertical == type )
                 oAligment.ver = this.stream.GetUChar();
-            else if ( c_oSerAligmentTypes.WrapText == type )
+            else if ( Asc.c_oSerAligmentTypes.WrapText == type )
                 oAligment.wrap= this.stream.GetBool();
             else
                 res = c_oSerConstants.ReadUnknown;
@@ -8897,6 +9023,64 @@
                     return oThis.ReadMetadata(t, l, oThis.oWorkbook.metadata);
                 });
             }*/
+            else if (c_oSerWorkbookTypes.XmlMap === type) {
+                //this.stream.Skip(1); //skip type
+
+
+
+
+
+                /*LONG end = pReader->GetPos() + pReader->GetRecordSize() + 4;
+
+                while (pReader->GetPos() < end)
+                {
+                    BYTE _rec = pReader->GetUChar();
+
+                    switch (_rec)
+                    {
+                        case 0:
+                        {
+                            m_MapInfo.Init();
+                            m_MapInfo->fromPPTY(pReader);
+                        }break;
+                        default:
+                        {
+                            pReader->SkipRecord();
+                        }break;
+                    }
+                }
+                pReader->Seek(end);*/
+
+                this.stream.GetUChar()
+                var _len = this.stream.GetULong();
+                var _start_pos = this.stream.cur;
+                var end = _len + _start_pos;
+
+                let oXmlMap;
+                while (this.stream.cur < end) {
+                    let _rec = this.stream.GetUChar();
+
+                    switch (_rec) {
+                        case 0: {
+                            oXmlMap = new AscCommonExcel.CMapInfo();
+                            oXmlMap.fromPPTY(this.stream);
+                            break;
+                        }
+                        default: {
+                            this.stream.SkipRecord();
+                            break;
+                        }
+                    }
+                }
+
+                this.stream.Seek(end);
+
+                // Add to workbook
+                if (this.oWorkbook.xmlMaps == null) {
+                    this.oWorkbook.xmlMaps = [];
+                }
+                this.oWorkbook.xmlMaps.push(oXmlMap);
+            }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
@@ -9829,11 +10013,10 @@
 		};
     }
     /** @constructor */
-    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList)
+    function Binary_WorksheetTableReader(stream, InitOpenManager, wb, aCellXfs, oMediaArray, personList)
     {
         this.stream = stream;
         this.wb = wb;
-        this.aSharedStrings = aSharedStrings;
         this.oMediaArray = oMediaArray;
         this.aCellXfs = aCellXfs;
         this.bcr = new Binary_CommonReader(this.stream);
@@ -10068,7 +10251,7 @@
 				res = this.bcr.Read1(length, function (t, l) {
 					return oThis.ReadRowColBreaks(t, l, oWorksheet.colBreaks);
 				});
-            } else if (c_oSerWorksheetsTypes.LegacyDrawingHF === type) {
+            } else if (c_oSerWorksheetsTypes.LegacyDrawingHF === type && AscCommonExcel.CLegacyDrawingHF) {
 				oWorksheet.legacyDrawingHF = new AscCommonExcel.CLegacyDrawingHF();
 				res = this.bcr.Read1(length, function (t, l) {
 					return oThis.ReadLegacyDrawingHF(t, l, oWorksheet.legacyDrawingHF);
@@ -10137,6 +10320,40 @@
                 res = this.bcr.Read1(length, function(t, l) {
                     return oThis.ReadTimelinesList(t, l, oWorksheet.timelines);
                 });
+            } else if (c_oSerWorksheetsTypes.TableSingleCells === type) {
+                //this.stream.Skip(1); //skip type
+
+                this.stream.GetUChar();
+
+                var _len = this.stream.GetULong();
+                var _start_pos = this.stream.cur;
+                var end = _len + _start_pos;
+
+                let oTableSingleCells;
+                while (this.stream.cur < end) {
+                    let _rec = this.stream.GetUChar();
+
+                    switch (_rec) {
+                        case 0: {
+                            oTableSingleCells = new AscCommonExcel.CSingleXmlCells();
+                            oTableSingleCells.fromPPTY(this.stream);
+                            break;
+                        }
+                        default: {
+                            this.stream.SkipRecord();
+                            break;
+                        }
+                    }
+                }
+
+                this.stream.Seek(end);
+
+                if (oTableSingleCells) {
+                    if (oWorksheet.oTableSingleCells == null) {
+                        oWorksheet.oTableSingleCells = [];
+                    }
+                    oWorksheet.oTableSingleCells.push(oTableSingleCells);
+                }
             } else
 				res = c_oSerConstants.ReadUnknown;
 			return res;
@@ -10788,7 +11005,7 @@
 				var oldPos = this.stream.GetCurPos();
 				this.stream.Seek2(this.stream.GetULongLE());
 
-				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs, this.aSharedStrings,
+				tmp.ws.fromXLSB(this.stream, this.stream.XlsbReadRecordType(), tmp, this.aCellXfs,
 					function(tmp) {
 						oThis.InitOpenManager.initCellAfterRead(tmp);
 					});
@@ -10796,210 +11013,6 @@
 				this.stream.Seek2(oldPos);
 				res = c_oSerConstants.ReadUnknown;
 			}
-			else if ( c_oSerWorksheetsTypes.Row === type )
-			{
-				tmp.pos =  null;
-				tmp.len = null;
-				tmp.row.clear();
-                res = this.bcr.Read2Spreadsheet(length, function(t,l){
-                    return oThis.ReadRow(t,l, tmp);
-                });
-				if(null === tmp.row.index) {
-					tmp.row.index = tmp.prevRow + 1;
-				}
-				tmp.row.saveContent();
-				tmp.ws.cellsByColRowsCount = Math.max(tmp.ws.cellsByColRowsCount, tmp.row.index + 1);
-				tmp.ws.nRowsCount = Math.max(tmp.ws.nRowsCount, tmp.ws.cellsByColRowsCount);
-				tmp.prevRow = tmp.row.index;
-				tmp.prevCol = -1;
-				//читаем ячейки
-				if (null !== tmp.pos && null !== tmp.len) {
-					var nOldPos = this.stream.GetCurPos();
-					this.stream.Seek2(tmp.pos);
-					res = this.bcr.Read1(tmp.len, function(t,l){
-						return oThis.ReadCells(t,l, tmp);
-					});
-					this.stream.Seek2(nOldPos);
-				}
-			}
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-        this.ReadRow = function(type, length, tmp)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerRowTypes.Row == type )
-            {
-            	var index = this.stream.GetULongLE() - 1;
-				tmp.row.setIndex(index);
-            }
-            else if ( c_oSerRowTypes.Style == type )
-            {
-                var xfs = this.aCellXfs[this.stream.GetULongLE()];
-                if(xfs)
-					tmp.row.setStyle(xfs);
-            }
-            else if ( c_oSerRowTypes.Height == type )
-            {
-            	var h = this.stream.GetDoubleLE();
-				tmp.row.setHeight(h);
-                if(AscCommon.CurFileVersion < 2)
-					tmp.row.setCustomHeight(true);
-            }
-            else if ( c_oSerRowTypes.CustomHeight == type )
-			{
-				var CustomHeight = this.stream.GetBool();
-				if(CustomHeight)
-					tmp.row.setCustomHeight(true);
-			}
-            else if ( c_oSerRowTypes.Hidden == type )
-			{
-				var hd = this.stream.GetBool();
-				if(hd)
-					tmp.row.setHidden(true);
-			}
-            else if ( c_oSerRowTypes.OutLevel == type )
-            {
-                tmp.row.setOutlineLevel(this.stream.GetULongLE());
-            }
-            else if ( c_oSerRowTypes.Collapsed == type )
-            {
-                tmp.row.setCollapsed(this.stream.GetBool());
-            }
-            else if ( c_oSerRowTypes.Cells == type )
-            {
-				//запоминам место чтобы читать Cells в конце, когда уже зачитан oRow.index
-				tmp.pos = this.stream.GetCurPos();
-				tmp.len = length;
-				res = c_oSerConstants.ReadUnknown;
-            }
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-		this.ReadCells = function(type, length, tmp)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerRowTypes.Cell === type )
-            {
-				tmp.cell.clear();
-                tmp.formula.clean();
-                res = this.bcr.Read1(length, function(t,l){
-                    return oThis.ReadCell(t,l, tmp, tmp.cell, tmp.prevRow);
-                });
-                if (tmp.cell.isNullTextString()) {
-                    //set default value in case of empty cell value
-                    tmp.cell.setTypeInternal(CellValueType.Number);
-                }
-                if (tmp.cell.hasRowCol()) {
-                    tmp.prevCol = tmp.cell.nCol;
-                } else {
-                    tmp.prevCol++;
-                    tmp.cell.setRowCol(tmp.prevRow, tmp.prevCol);
-                }
-				this.InitOpenManager.initCellAfterRead(tmp);
-			}
-			else
-				res = c_oSerConstants.ReadUnknown;
-			return res;
-		};
-        this.ReadCell = function(type, length, tmp, oCell, nRowIndex)
-        {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if ( c_oSerCellTypes.Ref === type ){
-				var oCellAddress = AscCommon.g_oCellAddressUtils.getCellAddress(this.stream.GetString2LE(length));
-				oCell.setRowCol(nRowIndex, oCellAddress.getCol0());
-			}
-            else if ( c_oSerCellTypes.RefRowCol === type ){
-				var nRow = this.stream.GetULongLE();//todo не используем можно убрать
-				oCell.setRowCol(nRowIndex, this.stream.GetULongLE());
-			}
-            else if( c_oSerCellTypes.Style === type )
-            {
-                var nStyleIndex = this.stream.GetULongLE();
-                if(0 != nStyleIndex)
-                {
-                    var xfs = this.aCellXfs[nStyleIndex];
-                    if(null != xfs)
-                        oCell.setStyle(xfs);
-                }
-            }
-            else if( c_oSerCellTypes.Type === type )
-            {
-                switch(this.stream.GetUChar())
-                {
-                    case ECellTypeType.celltypeBool: oCell.setTypeInternal(CellValueType.Bool);break;
-                    case ECellTypeType.celltypeError: oCell.setTypeInternal(CellValueType.Error);break;
-                    case ECellTypeType.celltypeNumber: oCell.setTypeInternal(CellValueType.Number);break;
-                    case ECellTypeType.celltypeSharedString: oCell.setTypeInternal(CellValueType.String);break;
-                }
-            }
-            else if( c_oSerCellTypes.Formula === type )
-            {
-                res = this.bcr.Read2Spreadsheet(length, function(t,l){
-                    return oThis.ReadFormula(t,l, tmp.formula);
-                });
-            }
-			else if (c_oSerCellTypes.Value === type) {
-				var val = this.stream.GetDoubleLE();
-				if (CellValueType.String === oCell.getType() || CellValueType.Error === oCell.getType()) {
-					var ss = this.aSharedStrings[val];
-                    if (undefined !== ss) {
-                        if (typeof ss === 'string') {
-                            oCell.setValueTextInternal(ss);
-                        } else {
-                            oCell.setValueMultiTextInternal(ss);
-                        }
-                    }
-				} else {
-                    oCell.setValueNumberInternal(val);
-				}
-            }   /*else if (c_oSerCellTypes.CellMetadata === type)
-            {
-                oCell.cm = this.stream.GetULong();
-            }
-            else if (c_oSerCellTypes.ValueMetadata === type)
-            {
-                oCell.vm = this.stream.GetULong();
-            }*/
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-        this.ReadFormula = function(type, length, oFormula)
-        {
-            var res = c_oSerConstants.ReadOk;
-            if ( c_oSerFormulaTypes.Aca === type )
-                oFormula.aca = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Bx === type )
-                oFormula.bx = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Ca === type )
-                oFormula.ca = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Del1 === type )
-                oFormula.del1 = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Del2 === type )
-                oFormula.del2 = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Dt2D === type )
-                oFormula.dt2d = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.Dtr === type )
-                oFormula.dtr = this.stream.GetBool();
-            else if ( c_oSerFormulaTypes.R1 === type )
-                oFormula.r1 = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.R2 === type )
-                oFormula.r2 = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.Ref === type )
-                oFormula.ref = this.stream.GetString2LE(length);
-            else if ( c_oSerFormulaTypes.Si === type )
-                oFormula.si = this.stream.GetULongLE();
-            else if ( c_oSerFormulaTypes.T === type )
-                oFormula.t = this.stream.GetUChar();
-            else if ( c_oSerFormulaTypes.Text === type ) {
-                oFormula.v = this.stream.GetString2LE(length);
-            }
             else
                 res = c_oSerConstants.ReadUnknown;
             return res;
@@ -12209,48 +12222,6 @@
         };
     }
 
-    //TODO копия кода из serialize2
-    function Binary_CustomsTableReader(stream, CustomXmls) {
-        //this.Document = doc;
-        //this.oReadResult = oReadResult;
-        this.stream = stream;
-        this.CustomXmls = CustomXmls;
-        this.bcr = new Binary_CommonReader(this.stream);
-        this.Read = function() {
-            var oThis = this;
-            return this.bcr.ReadTable(function(t, l) {
-                return oThis.ReadCustom(t, l);
-            });
-        };
-        this.ReadCustom = function(type, length) {
-            var res = c_oSerConstants.ReadOk;
-            var oThis = this;
-            if (c_oSerCustoms.Custom === type) {
-                var custom = {Uri: [], ItemId: null, Content: null};
-                res = this.bcr.Read1(length, function(t, l) {
-                    return oThis.ReadCustomContent(t, l, custom);
-                });
-                this.CustomXmls.push(custom);
-            }
-            else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-        this.ReadCustomContent = function(type, length, custom) {
-            var res = c_oSerConstants.ReadOk;
-            if (c_oSerCustoms.Uri === type) {
-                custom.Uri.push(this.stream.GetString2LE(length));
-            } else if (c_oSerCustoms.ItemId === type) {
-                custom.ItemId = this.stream.GetString2LE(length);
-            } else if (c_oSerCustoms.Content === type) {
-                //поскольку данную строку не использую, храню в виде массива. если нужно будет строка, то не забыть про BOM
-                custom.Content = this.stream.GetBuffer(length);
-            } else
-                res = c_oSerConstants.ReadUnknown;
-            return res;
-        };
-    }
-
     function getBinaryOtherTableGVar(wb)
     {
         AscCommonExcel.g_oColorManager.setTheme(wb.theme);
@@ -12470,7 +12441,6 @@
 
 
 
-            var aSharedStrings = [];
             var aCellXfs = [];
             var oMediaArray = {};
 
@@ -12494,7 +12464,7 @@
             {
                 res = this.stream.Seek(nSharedStringTableOffset);
                 if(c_oSerConstants.ReadOk == res)
-                    res = (new Binary_SharedStringTableReader(this.stream, wb, aSharedStrings)).Read();
+                    res = (new Binary_SharedStringTableReader(this.stream, wb)).Read();
             }
 
             //aCellXfs - внутри уже не нужна, поскольку вынес функцию InitStyleManager в InitOpenManager
@@ -12526,7 +12496,7 @@
 
 
 
-			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aSharedStrings, aCellXfs, oMediaArray, personList);
+			var bwtr = new Binary_WorksheetTableReader(this.stream, this.InitOpenManager, wb, aCellXfs, oMediaArray, personList);
 			if(null != nWorkbookTableOffset)
 			{
 				res = this.stream.Seek(nWorkbookTableOffset);
@@ -12589,8 +12559,7 @@
                             break;
                         case c_oSerTableTypes.Customs:
                             this.stream.Seek2(mtiOffBits);
-                            wb.customXmls = [];
-                            res = (new Binary_CustomsTableReader(this.stream, wb.customXmls)).Read();
+                            res = (new AscCommon.BinaryCustomsTableReader(wb.getCustomXmlManager(), this.stream)).Read();
                             break;
                     }
                     if(c_oSerConstants.ReadOk != res)
@@ -12621,7 +12590,16 @@
 				AscCommonExcel.c_DateCorrectConst = AscCommon.bDate1904?AscCommonExcel.c_Date1904Const:AscCommonExcel.c_Date1900Const;
 			}
 			if (this.InitOpenManager.oReadResult.macros) {
-                wb.oApi.macros.SetData(this.InitOpenManager.oReadResult.macros);
+                let parsedMacros = AscCommonExcel.safeJsonParse(this.InitOpenManager.oReadResult.macro);
+                if (parsedMacros) {
+                    if (parsedMacros["customFunctions"]) {
+                        wb.fileCustomFunctions = parsedMacros["customFunctions"];
+                    }
+                    delete parsedMacros["customFunctions"];
+                    wb.oApi.macros.SetData(JSON.stringify(parsedMacros));
+                } else {
+                    wb.oApi.macros.SetData(this.InitOpenManager.oReadResult.macros);
+                }
             }
 			if (this.InitOpenManager.oReadResult.vbaMacros) {
 				wb.oApi.vbaMacros = this.InitOpenManager.oReadResult.vbaMacros;
@@ -13441,7 +13419,8 @@
             slicerCaches: {},
             tableIds: {},
             defNames: [],
-            sheetIds: {}
+            sheetIds: {},
+            customFunctions: null
         };
         this.wb = wb;
         this.Dxfs = [];
@@ -13467,7 +13446,16 @@
             AscCommonExcel.c_DateCorrectConst = AscCommon.bDate1904?AscCommonExcel.c_Date1904Const:AscCommonExcel.c_Date1900Const;
         }
         if (this.oReadResult.macros) {
-            wb.oApi.macros.SetData(this.oReadResult.macros);
+            let parsedMacros = AscCommonExcel.safeJsonParse(this.oReadResult.macros);
+            if (parsedMacros) {
+                if (parsedMacros["customFunctions"]) {
+                    wb.fileCustomFunctions = parsedMacros["customFunctions"];
+                }
+                delete parsedMacros["customFunctions"];
+                wb.oApi.macros.SetData(JSON.stringify(parsedMacros));
+            } else {
+                wb.oApi.macros.SetData(this.oReadResult.macros);
+            }
         }
         if (this.oReadResult.vbaMacros) {
             wb.oApi.vbaMacros = this.oReadResult.vbaMacros;
@@ -13475,6 +13463,7 @@
         if (this.oReadResult.vbaProject) {
             wb.oApi.vbaProject = this.oReadResult.vbaProject;
         }
+
         wb.checkCorrectTables();
     };
     InitOpenManager.prototype.PostLoadPrepareDefNames = function(wb)
@@ -13886,7 +13875,9 @@
         this.InitDxfs(oStyleObject.aDxfs);
         this.InitDxfs(oStyleObject.aExtDxfs);
         this.InitTableStyles(wb.TableStyles.DefaultStyles, oStyleObject.oCustomTableStyles, oStyleObject.aDxfs);
-        wb.SlicerStyles.addDefaultStylesAtOpening(oStyleObject.oCustomSlicerStyles, oStyleObject.aExtDxfs);
+				if (oStyleObject.oCustomSlicerStyles) {
+					wb.SlicerStyles.addDefaultStylesAtOpening(oStyleObject.oCustomSlicerStyles, oStyleObject.aExtDxfs);
+				}
     };
     InitOpenManager.prototype.InitDxfs = function (Dxfs)
     {
@@ -14032,7 +14023,9 @@
     InitOpenManager.prototype.prepareConditionalFormatting = function (oWorksheet, oConditionalFormatting) {
         if (oConditionalFormatting && oConditionalFormatting.isValid()) {
             oConditionalFormatting.initRules();
-            oWorksheet.aConditionalFormattingRules = oWorksheet.aConditionalFormattingRules.concat(oConditionalFormatting.aRules);
+            for (let i = 0; i < oConditionalFormatting.aRules.length; i++) {
+                oWorksheet.addConditionalFormattingRule(oConditionalFormatting.aRules[i]);
+            }
         }
     };
     InitOpenManager.prototype.putSheetAfterRead = function (wb, oNewWorksheet) {
@@ -14226,26 +14219,28 @@
     };
 
     InitSaveManager.prototype.PrepareSlicerStyles = function (slicerStyles, aDxfs) {
-        var styles = new Asc.CT_slicerStyles();
-        styles.defaultSlicerStyle = slicerStyles.DefaultStyle;
-        for (var name in slicerStyles.CustomStyles) {
-            if (slicerStyles.CustomStyles.hasOwnProperty(name)) {
-                var slicerStyle = new Asc.CT_slicerStyle();
-                slicerStyle.name = name;
-                var elems = slicerStyles.CustomStyles[name];
-                for (var type in elems) {
-                    if (elems.hasOwnProperty(type)) {
-                        var styleElement = new Asc.CT_slicerStyleElement();
-                        styleElement.type = parseInt(type);
-                        styleElement.dxfId = aDxfs.length;
-                        aDxfs.push(elems[type]);
-                        slicerStyle.slicerStyleElements.push(styleElement);
-                    }
-                }
-                styles.slicerStyle.push(slicerStyle);
-            }
-        }
-        return styles;
+			if (Asc.CT_slicerStyles) {
+				var styles = new Asc.CT_slicerStyles();
+				styles.defaultSlicerStyle = slicerStyles.DefaultStyle;
+				for (var name in slicerStyles.CustomStyles) {
+					if (slicerStyles.CustomStyles.hasOwnProperty(name)) {
+						var slicerStyle = new Asc.CT_slicerStyle();
+						slicerStyle.name = name;
+						var elems = slicerStyles.CustomStyles[name];
+						for (var type in elems) {
+							if (elems.hasOwnProperty(type)) {
+								var styleElement = new Asc.CT_slicerStyleElement();
+								styleElement.type = parseInt(type);
+								styleElement.dxfId = aDxfs.length;
+								aDxfs.push(elems[type]);
+								slicerStyle.slicerStyleElements.push(styleElement);
+							}
+						}
+						styles.slicerStyle.push(slicerStyle);
+					}
+				}
+				return styles;
+			}
     };
 
     InitSaveManager.prototype.writeCols = function (ws, stylesForWrite, func) {
@@ -14817,6 +14812,7 @@
     prot['notView'] = prot.notView;
     prot['view'] = prot.view;
     prot['edit'] = prot.edit;
+
 
     window['Asc']['EUpdateLinksType'] = window['Asc'].EUpdateLinksType = EUpdateLinksType;
     prot = EUpdateLinksType;

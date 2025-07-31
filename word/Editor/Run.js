@@ -549,6 +549,25 @@ ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 	let nEndPos		= (isSelectedText == true ? Math.max(this.Selection.StartPos, this.Selection.EndPos) : this.Content.length);
 	let isStrFont	= false;
 
+	if (oMathText.IsLaTeX() && this.math_autocorrection)
+	{
+		if (this.math_autocorrection.getIsMathRm() || this.math_autocorrection.getIsText())
+		{
+			let str = '';
+			for (let i = nStartPos; i < nEndPos; i++)
+			{
+				let oCurrentElement = this.Content[i];
+				str += oCurrentElement.GetTextOfElement().GetText();
+			}
+
+			if (this.math_autocorrection.getIsMathRm())
+				oMathText.AddText(new AscMath.MathText('\\mathrm{' + str + '}', this));
+			else if (this.math_autocorrection.getIsText())
+				oMathText.AddText(new AscMath.MathText('\\text{' + str + '}', this));
+
+			return oMathText;
+		}
+	}
 	// [Unicode] Investigate the mechanism for converting an escaped backslash. Information about separating it
 	// into a separate Run is not enough.
 
@@ -605,8 +624,8 @@ ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 			{
 				if (strCurrentElement === " " && strLast !== "\\") //normal space
 					oMathText.AddText(new AscMath.MathText('\\ ', this))
-				// else if (strCurrentElement === " ")
-				// 	oMathText.AddText(new AscMath.MathText("\\quad", this));
+				else if (strCurrentElement === " ")
+					oMathText.AddText(new AscMath.MathText("\\quad", this));
 				// else if (strCurrentElement === " ")
 				// 	oMathText.AddText(new AscMath.MathText("\\:", this));
 				// else if (strCurrentElement === " ")
@@ -629,7 +648,13 @@ ParaRun.prototype.GetTextOfElement = function(oMathText, isSelectedText)
 				// }
 				// else
 				// {
-					oMathText.AddText(new AscMath.MathText(strCurrentElement, this));
+					let mathText = new AscMath.MathText(strCurrentElement, this);
+					let additionalData = mathText.GetAdditionalData();
+
+					if (this.math_autocorrection)
+						additionalData.metaData = this.math_autocorrection.Copy();
+
+					oMathText.AddText(mathText);
 				//}
 			}
 		}
@@ -2061,6 +2086,7 @@ ParaRun.prototype.ConcatToContent = function(arrNewItems)
  * Добавляем в конец рана заданную строку
  * @param {string} sString
  * @param {number} [nPos=-1] если позиция не задана (или значение -1), то добавляем в конец
+ * @returns {number} Позиция после добавленных элементов
  */
 ParaRun.prototype.AddText = function(sString, nPos)
 {
@@ -2131,19 +2157,26 @@ ParaRun.prototype.AddText = function(sString, nPos)
 				this.AddToContent(nCharPos++, new AscWord.CRunText(nCharCode), true);
 		}
 	}
+	return nCharPos;
 };
 /**
  * Добавляем в конец рана заданную инструкцию для сложного поля
  * @param {string} sString
  * @param {number} [nPos=-1] если позиция не задана (или значение -1), то добавляем в конец
+ * @returns {AscWord.ParaInstrText[]}
  */
 ParaRun.prototype.AddInstrText = function(sString, nPos)
 {
+	let items = [];
 	var nCharPos = undefined !== nPos && null !== nPos && -1 !== nPos ? nPos : this.Content.length;
 	for (var oIterator = sString.getUnicodeIterator(); oIterator.check(); oIterator.next())
 	{
-		this.AddToContent(nCharPos++, new ParaInstrText(oIterator.value()));
+		let instrText = new AscWord.ParaInstrText(oIterator.value());
+		this.AddToContent(nCharPos++, instrText);
+		items.push(instrText);
 	}
+	
+	return items;
 };
 
 // Определим строку и отрезок текущей позиции
@@ -3826,8 +3859,24 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 						}
 					}
 
+					let isBreakBefore = Item.IsSpaceBefore();
+					if (isBreakBefore
+						&& Word
+						&& PRS.LastItem.CanBeAtEndOfLine()
+						&& Item.CanBeAtBeginOfLine())
+					{
+						PRS.Set_LineBreakPos(Pos, FirstItemOnLine);
+						
+						X += SpaceLen + WordLen;
+						Word = false;
+						EmptyLine = false;
+						TextOnLine = true;
+						FirstItemOnLine = false;
+						SpaceLen = 0;
+						WordLen = 0;
+					}
+					
                     // При проверке, убирается ли слово, мы должны учитывать ширину предшествующих пробелов
-
 					let LetterLen   = Item.GetWidth();
 					let isLigature  = Item.IsLigature();
 					let GraphemeLen = isLigature ? Item.GetLigatureWidth() : LetterLen;
@@ -5142,19 +5191,9 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		}
 		
 		let textDescent = metrics.Descent;
-		let textAscent  = metrics.Ascent + metrics.LineGap;
 		let textAscent2 = metrics.Ascent;
+		let textAscent  = textAscent2 + metrics.LineGap;
 		
-		// Пересчитаем метрику строки относительно размера данного текста
-		if (PRS.LineTextAscent < textAscent)
-			PRS.LineTextAscent = textAscent;
-
-		if (PRS.LineTextAscent2 < textAscent2)
-			PRS.LineTextAscent2 = textAscent2;
-
-		if (PRS.LineTextDescent < textDescent)
-			PRS.LineTextDescent = textDescent;
-
 		if (Asc.linerule_Exact === LineRule)
 		{
 			// Смещение не учитывается в метриках строки, когда расстояние между строк точное
@@ -5167,12 +5206,30 @@ ParaRun.prototype.Recalculate_LineMetrics = function(PRS, ParaPr, _CurLine, _Cur
 		else
 		{
 			let yOffset = this.getYOffset();
-			if (PRS.LineAscent < textAscent + yOffset)
-				PRS.LineAscent = textAscent + yOffset;
-
-			if (PRS.LineDescent < textDescent - yOffset)
-				PRS.LineDescent = textDescent - yOffset;
+			
+			if (yOffset >= 0)
+			{
+				PRS.LineAscent = Math.max(PRS.LineAscent, textAscent + yOffset);
+				textDescent    = Math.max(0, textDescent - yOffset);
+			}
+			else
+			{
+				PRS.LineDescent = Math.max(PRS.LineDescent, textDescent - yOffset);
+				textAscent2     = Math.max(0, textAscent2 + yOffset);
+			}
+			
+			textAscent = textAscent2 + metrics.LineGap;
 		}
+		
+		// Пересчитаем метрику строки относительно размера данного текста
+		if (PRS.LineTextAscent < textAscent)
+			PRS.LineTextAscent = textAscent;
+		
+		if (PRS.LineTextAscent2 < textAscent2)
+			PRS.LineTextAscent2 = textAscent2;
+		
+		if (PRS.LineTextDescent < textDescent)
+			PRS.LineTextDescent = textDescent;
 	}
 };
 
@@ -5333,8 +5390,7 @@ ParaRun.prototype.Recalculate_Range_Width = function(PRSC, _CurLine, _CurRange)
 
                 PRSC.SpacesCount = 0;
                 PRSC.Word        = false;
-
-                PRSC.Range.WBreak = Item.GetWidthVisible();
+				PRSC.LineBreak   = true;
 
                 break;
             }
@@ -5342,8 +5398,8 @@ ParaRun.prototype.Recalculate_Range_Width = function(PRSC, _CurLine, _CurRange)
             {
                 if ( true === PRSC.Word )
                     PRSC.Spaces += PRSC.SpacesCount;
-
-				PRSC.Range.WEnd = Item.GetWidthVisible();
+	
+				PRSC.ParaEnd = true;
 
                 break;
             }
@@ -5774,17 +5830,21 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
             }
             case para_End:
             {
-				Item.CheckMark(PRSA.Paragraph, PRSA.XEnd - PRSA.X);
-                PRSA.X += Item.GetWidthVisible();
+				Item.CheckMark(PRSA.Paragraph, PRSA.RTL ? PRSA.LeftSpace : PRSA.XEnd - PRSA.X);
+				let paraEndW = Item.GetWidthVisible();
+				PRSA.Range.WEnd = paraEndW;
+                PRSA.X += paraEndW;
 
                 break;
             }
             case para_NewLine:
             {
 				if (Item.IsPageBreak() || Item.IsColumnBreak())
-					Item.Update_String(PRSA.XEnd - PRSA.X);
-
-                PRSA.X += Item.WidthVisible;
+					Item.Update_String(PRSA.RTL ? PRSA.LeftSpace : PRSA.XEnd - PRSA.X);
+	
+				let breakW = Item.GetWidthVisible();
+				PRSA.Range.WBreak = breakW;
+                PRSA.X += breakW;
 
                 break;
             }
@@ -5922,9 +5982,8 @@ ParaRun.prototype.private_CheckInstrText = function(oItem)
 
 ParaRun.prototype.Refresh_RecalcData = function(oData)
 {
-	var oPara = this.Paragraph;
-
-	if (this.Type == para_Math_Run)
+	let oPara = this.GetParagraph();
+	if (this.IsMathRun())
 	{
 		if (this.Parent !== null && this.Parent !== undefined)
 		{
@@ -5972,6 +6031,10 @@ ParaRun.prototype.Refresh_RecalcData = function(oData)
 		}
 
 		oPara.Refresh_RecalcData2(0);
+	}
+	else if (oPara)
+	{
+		oPara.Refresh_RecalcData2();
 	}
 };
 ParaRun.prototype.Refresh_RecalcData2 = function()
@@ -8454,8 +8517,32 @@ ParaRun.prototype.Apply_Pr = function(TextPr)
 	}
 
 
-	if (undefined !== TextPr.Lang)
-		this.Set_Lang2(TextPr.Lang);
+	if (undefined !== TextPr.Lang && undefined !== TextPr.Lang.Val)
+	{
+		let lcid = TextPr.Lang.Val;
+		let dirFlag = this.GetDirectionFlagInRange(0, this.Content.length);
+		if (AscBidi.DIRECTION_FLAG.None === dirFlag)
+		{
+			this.Set_Lang_Bidi(lcid);
+			this.Set_Lang_Val(lcid);
+		}
+		else
+		{
+			if (AscBidi.DIRECTION_FLAG.LTR & dirFlag)
+				this.Set_Lang_Val(lcid);
+			if (AscBidi.DIRECTION_FLAG.RTL & dirFlag)
+				this.Set_Lang_Bidi(lcid);
+			
+			let paragraph = this.GetParagraph();
+			if (AscBidi.DIRECTION_FLAG.Other === dirFlag && paragraph)
+			{
+				if (paragraph.isRtlDirection())
+					this.Set_Lang_Bidi(lcid);
+				else
+					this.Set_Lang_Val(lcid);
+			}
+		}
+	}
 
 	if (undefined !== TextPr.Shd)
 		this.Set_Shd(null === TextPr.Shd ? undefined : TextPr.Shd);
@@ -10371,12 +10458,12 @@ ParaRun.prototype.Check_ForcedBreak = function(bStart, bEnd)
 {
     return this.Math_GetPosForcedBreak(bStart, bEnd) !== null;
 };
-ParaRun.prototype.Set_MathForcedBreak = function(bInsert)
+ParaRun.prototype.Set_MathForcedBreak = function(bInsert, alnAt)
 {
 	if (bInsert == true && false == this.MathPrp.IsBreak())
 	{
-		AscCommon.History.Add(new CChangesRunMathForcedBreak(this, true, undefined));
-		this.MathPrp.Insert_ForcedBreak();
+		AscCommon.History.Add(new CChangesRunMathForcedBreak(this, true, alnAt));
+		this.MathPrp.Insert_ForcedBreak(alnAt);
 	}
 	else if (bInsert == false && true == this.MathPrp.IsBreak())
 	{
@@ -10787,6 +10874,12 @@ ParaRun.prototype.SetThisElementCurrentInParagraph = function()
 
 	oContentPos.Add(this.State.ContentPos);
 	this.Paragraph.Set_ParaContentPos(oContentPos, true, -1, -1, false);
+};
+ParaRun.prototype.GetDocumentPositionForCurrentPosition = function()
+{
+	let docPos = this.GetDocumentPositionFromObject();
+	docPos.push({Class : this, Position : this.State.ContentPos});
+	return docPos;
 };
 ParaRun.prototype.GetAllParagraphs = function(Props, ParaArray)
 {
@@ -11440,6 +11533,37 @@ ParaRun.prototype.PreDelete = function(isDeep)
 
 	this.RemoveSelection();
 };
+ParaRun.prototype.CorrectPosToPermRanges = function(state, paraPos, depth, isCurrent)
+{
+	if (!isCurrent && state.inPermRange())
+	{
+		state.setPos(state.isForward() ? 0 : this.Content.length, depth);
+		state.stop(true);
+		return;
+	}
+	
+	let start, end;
+	if (state.isForward())
+	{
+		start = isCurrent ? paraPos.Get(depth) : 0;
+		end   = this.Content.length;
+	}
+	else
+	{
+		start = 0;
+		end   = isCurrent ? Math.min(this.Content.length, paraPos.Get(depth)) : this.Content.length;
+	}
+	
+	
+	for (let i = start; i < end; ++i)
+	{
+		if (!this.Content[i].IsDrawing() || this.Content[i].IsInline())
+		{
+			state.stop(false);
+			return;
+		}
+	}
+};
 ParaRun.prototype.GetCurrentComplexFields = function(arrComplexFields, isCurrent, isFieldPos)
 {
 	var nEndPos = isCurrent ? this.State.ContentPos : this.Content.length;
@@ -11789,6 +11913,23 @@ ParaRun.prototype.CollectTextToUnicode = function(ListForUnicode, oSettings)
 			if (HandleItem(this, pos))
 				break;
 		}
+	}
+};
+ParaRun.prototype.SetMathMetaData = function(oMathMetaData)
+{
+	if (!oMathMetaData)
+		return;
+
+	if (this.math_autocorrection)
+	{
+		let oOldMetaData = oMathMetaData.Copy();
+		this.math_autocorrection.Set(oMathMetaData);
+		AscCommon.History.Add(new CChangesRunMathMetaData(this, oOldMetaData, this.math_autocorrection));
+	}
+	else
+	{
+		this.math_autocorrection = oMathMetaData.Copy();
+		AscCommon.History.Add(new CChangesRunMathMetaData(this, false, this.math_autocorrection));
 	}
 };
 ParaRun.prototype.UpdateBookmarks = function(oManager)
@@ -12292,7 +12433,7 @@ ParaRun.prototype.CheckSpelling = function(oCollector, nDepth)
 		if (true === this.IsEmpty())
 			return;
 
-		oCollector.HandleLang(oCurTextPr.Lang.Val);
+		oCollector.HandleLang(oCurTextPr.Lang);
 	}
 
 	for (let nPos = nStartPos, nContentLen = this.Content.length; nPos < nContentLen; ++nPos)
@@ -12568,6 +12709,23 @@ ParaRun.prototype.GetFontSlotInRange = function(nStartPos, nEndPos)
 		return AscWord.fontslot_CS;
 
 	return nFontSlot;
+};
+ParaRun.prototype.GetDirectionFlagInRange = function(startPos, endPos)
+{
+	if (startPos >= endPos
+		|| startPos >= this.Content.length
+		|| endPos <= 0
+		|| this.IsMathRun())
+		return AscBidi.DIRECTION_FLAG.None;
+	
+	let dir = AscBidi.DIRECTION_FLAG.None;
+	for (let pos = startPos; pos < endPos; ++pos)
+	{
+		let item = this.Content[pos];
+		dir |= item.GetDirectionFlag();
+	}
+	
+	return dir;
 };
 /**
  * Get first find parent typeof CMathContent or MathBase

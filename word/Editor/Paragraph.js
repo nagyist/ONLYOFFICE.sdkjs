@@ -1783,6 +1783,26 @@ Paragraph.prototype.Internal_Recalculate_CurPos = function(updateCurPos, updateT
 			targetY = top;
 		}
 		
+		if (this.Parent && this.Parent instanceof AscWord.CDocumentContent)
+		{
+			let relPage = this.GetRelativePage(CurPage);
+			let clip = this.Parent.GetClip(relPage);
+			if (clip)
+			{
+				let x0 = clip.correctX0(targetX);
+				let x1 = clip.correctX1(targetX);
+				
+				let y0 = clip.correctY0(targetY);
+				let y1 = clip.correctY1(targetY + targetH);
+				
+				if (x0 > x1 || y0 > y1)
+				{
+					targetH = 0;
+					ascent  = 0;
+				}
+			}
+		}
+		
 		drawingDocument.SetTargetColor(color.r, color.g, color.b);
 		drawingDocument.SetTargetSize(targetH, ascent);
 		drawingDocument.UpdateTargetTransform(transform);
@@ -1840,19 +1860,8 @@ Paragraph.prototype.IsSingleRangeOnLine = function(nCurLine, nCurRange)
  */
 Paragraph.prototype.GetNumberingTextPr = function()
 {
-	var oNumPr = this.GetNumPr();
-	if (!oNumPr)
-		return AscWord.DEFAULT_TEXT_PR;
-
-	var oNumbering = this.Parent.GetNumbering();
-	var oNum       = oNumbering.GetNum(oNumPr.NumId);
-	if (!oNum)
-		return AscWord.DEFAULT_TEXT_PR;
-
-	var oLvl = oNum.GetLvl(oNumPr.Lvl);
-
 	let numTextPr = this.Get_CompiledPr2(false).TextPr.Copy();
-
+	
 	// Word не рисует подчеркивание у символа списка, если оно пришло из настроек для символа параграфа
 	let _underline = numTextPr.Underline;
 
@@ -1865,10 +1874,20 @@ Paragraph.prototype.GetNumberingTextPr = function()
 	}
 
 	numTextPr.Merge(paraMarkTextPr);
-
 	numTextPr.Underline = _underline;
-
-	numTextPr.Merge(oLvl.GetTextPr());
+	
+	let numbering = this.Parent.GetNumbering();
+	
+	let numPr = this.GetNumPr();
+	if (!numPr)
+		numPr = this.GetPrChangeNumPr();
+	
+	let num = numPr ? numbering.GetNum(numPr.NumId) : null;
+	if (!num)
+		return numTextPr;
+	
+	let numLvl = num.GetLvl(numPr.Lvl);
+	numTextPr.Merge(numLvl.GetTextPr());
 
 	// TODO: Пока возвращаем всегда шрифт лежащий в Ascii, в будущем надо будет это переделать
 	if (undefined !== numTextPr.RFonts && null !== numTextPr.RFonts)
@@ -1986,6 +2005,10 @@ Paragraph.prototype.IsEmptyRange = function(nCurLine, nCurRange)
 Paragraph.prototype.getLineCount = function()
 {
 	return this.GetLinesCount();
+};
+Paragraph.prototype.getLine = function(line)
+{
+	return this.Lines[line] ? this.Lines[line] : null;
 };
 Paragraph.prototype.GetLinesCount = function()
 {
@@ -3105,23 +3128,28 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 	var arrRunReviewAreasColors = [];
 	var arrRunReviewAreas       = [];
 	var arrRunReviewRects       = [];
+	let runReviewLineW          = [];
 
 	var oCurForm = null;
 	var arrFormAreasColors = [];
 	var arrFormAreas       = [];
 	var arrFormRects       = [];
+	let formLineW          = [];
 	
 	let drawRunPrReview = !pGraphics.isPrintMode && !pGraphics.isPdf();
 
 	for (var CurLine = StartLine; CurLine <= EndLine; CurLine++)
 	{
-		var Line  = this.Lines[CurLine];
-		var LineM = Line.Metrics;
+		var Line        = this.Lines[CurLine];
+		var lineMetrics = Line.Metrics;
+		
+		let lineY0 = (Page.Y + Line.Y - lineMetrics.TextAscent);
+		let lineY1 = (Page.Y + Line.Y + lineMetrics.TextDescent);
 
 		var Baseline        = Page.Y + Line.Y;
-		var UnderlineOffset = LineM.TextDescent * 0.4;
+		var UnderlineOffset = lineMetrics.TextDescent * 0.4;
 
-		PDSL.resetLine(CurLine, Baseline, UnderlineOffset);
+		PDSL.resetLine(CurLine, Baseline, UnderlineOffset, lineY0, lineY1);
 
 		// Сначала проанализируем данную строку: в массивы aStrikeout, aDStrikeout, aUnderline
 		// aSpelling сохраним позиции начала и конца продолжительных одинаковых настроек зачеркивания,
@@ -3262,6 +3290,7 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 					arrRunReviewRects = [];
 					arrRunReviewAreas.push(arrRunReviewRects);
 					arrRunReviewAreasColors.push(new AscWord.CDocumentColorA(Element.r, Element.g, Element.b, 255));
+					runReviewLineW.push(0);
 				}
 
 				arrRunReviewRectsLine.push({
@@ -3405,6 +3434,7 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 							arrFormRects = [];
 							arrFormAreas.push(arrFormRects);
 							arrFormAreasColors.push(new AscWord.CDocumentColorA(Element.r, Element.g, Element.b, Element.a));
+							formLineW.push(Element.w);
 						}
 
 						arrFormRectsLine.push({
@@ -3425,15 +3455,15 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 		pGraphics.End_Command();
 	}
 	
-	this.drawPolygons(pGraphics, arrRunReviewAreas, arrRunReviewAreasColors, 0, 0);
-	this.drawPolygons(pGraphics, arrFormAreas, arrFormAreasColors, 0, 0);
+	this.drawPolygons(pGraphics, arrRunReviewAreas, arrRunReviewAreasColors, runReviewLineW, 0);
+	this.drawPolygons(pGraphics, arrFormAreas, arrFormAreasColors, formLineW, 0);
 };
 Paragraph.prototype.drawPolygons = function(graphics, areas, colors, lineWidth, shift)
 {
 	for (let i = 0, areaCount = areas.length; i < areaCount; ++i)
 	{
 		graphics.p_color(colors[i].r, colors[i].g, colors[i].b, colors[i].a);
-		graphics.drawPolygonByRects(areas[i], lineWidth, shift);
+		graphics.drawPolygonByRects(areas[i], lineWidth[i], shift);
 	}
 };
 Paragraph.prototype.drawHorizontalBorder = function(graphics, curLine, border, lineAlign, y, isEmptyPara, X_left, X_right, leftMW, rightMW)
@@ -3922,6 +3952,14 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 						this.Selection.Use = false;
 
 					this.Internal_Content_Remove(StartPos);
+					
+					// Fix the content after deletion
+					if (!bOnAddText
+						&& !this.Content[StartPos].IsCursorPlaceable()
+						&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+					{
+						this.AddToContent(StartPos, new AscWord.Run());
+					}
 
 					this.CurPos.ContentPos = StartPos;
 					this.Content[StartPos].MoveCursorToStartPos();
@@ -4083,6 +4121,14 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			if (isStartDeleted && isEndDeleted)
 				this.Selection.Use = false;
 			
+			// Fix the content after deletion
+			if (!bOnAddText
+				&& !this.Content[StartPos].IsCursorPlaceable()
+				&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+			{
+				this.AddToContent(StartPos, new AscWord.Run());
+			}
+			
 			if (nCount > -1 && true !== bOnAddText)
 			{
 				this.Correct_ContentPos2();
@@ -4111,10 +4157,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 		if (true !== this.Content[this.CurPos.ContentPos].IsSelectionUse())
 		{
 			this.RemoveSelection();
-
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 		}
 		else
 		{
@@ -4123,10 +4165,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			this.Selection.Flag     = selectionflag_Common;
 			this.Selection.StartPos = this.CurPos.ContentPos;
 			this.Selection.EndPos   = this.CurPos.ContentPos;
-			
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 
 			this.Document_SetThisElementCurrent(false);
 
@@ -5696,6 +5734,24 @@ Paragraph.prototype.SetSelectionContentPos = function(oStartPos, oEndPos, isCorr
 {
 	return this.Set_SelectionContentPos(oStartPos, oEndPos, isCorrectAnchor);
 };
+/**
+ * Устанавливаем стартовую позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его стартовую границу
+ * @param startPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionStartContentPos = function(startPos)
+{
+	return this.SetSelectionContentPos(startPos, this.Get_ParaContentPos(true, false, false), false);
+};
+/**
+ * Устанавливаем конечную позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его конечную границу
+ * @param endPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionEndContentPos = function(endPos)
+{
+	return this.Set_SelectionContentPos(this.Get_ParaContentPos(true, true, false), endPos, true);
+};
 Paragraph.prototype.private_GetClosestPosInCombiningMark = function(oContentPos, nDiff)
 {
 	if (undefined === nDiff)
@@ -6552,6 +6608,51 @@ Paragraph.prototype.Get_StartPos = function()
 
 	this.Content[0].Get_StartPos(ContentPos, Depth + 1);
 	return ContentPos;
+};
+/**
+ * Correct the specified position to a placeable position within the paragraph
+ * @param {AscWord.CParagraphContentPos} paraPos
+ * @returns {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.GetCursorPlaceablePos = function(paraPos)
+{
+	let obj = this.GetClassesByPos(paraPos);
+	if (obj.length && obj[obj.length - 1] instanceof AscWord.Run)
+		return paraPos;
+	
+	for (let i = 0; i < obj.length; ++i)
+	{
+		if (!obj[i].IsCursorPlaceable())
+		{
+			let parent = i ? obj[i - 1] : this;
+			let curPos = paraPos.Get(i);
+			
+			let contentLen = parent.Content.length;
+			let checkEndPos = true;
+			while (curPos > 0 && !parent.Content[curPos].IsCursorPlaceable())
+				--curPos;
+			
+			while (curPos < contentLen && !parent.Content[curPos].IsCursorPlaceable())
+			{
+				checkEndPos = false;
+				++curPos;
+			}
+			
+			if (parent.Content[curPos].IsCursorPlaceable())
+			{
+				let contentPos = parent === this ? new AscWord.CParagraphContentPos() : this.Get_PosByElement(parent);
+				contentPos.Update(curPos, contentPos.GetDepth() + 1);
+				// TODO: Need to check IsCursorPlaceable for inner objects (GetStartPlaceablePos/GetEndPlaceablePos)
+				if (checkEndPos)
+					parent.Content[curPos].Get_EndPos(true, contentPos, contentPos.GetDepth() + 1);
+				else
+					parent.Content[curPos].Get_StartPos(contentPos, contentPos.GetDepth() + 1);
+				return contentPos;
+			}
+		}
+	}
+	
+	return paraPos;
 };
 /**
  * Получаем начальную позицию в параграфе
@@ -8613,12 +8714,6 @@ Paragraph.prototype.DrawSelectionOnPage = function(CurPage, clipInfo)
 					
 					drawSelectionState.beginRange(iRange);
 					
-					if (rangeEnd === this.Content.length - 1
-						&& this.GetLogicDocument()
-						&& this.GetLogicDocument().IsSelectParagraphEndMark
-						&& !this.GetLogicDocument().IsSelectParagraphEndMark())
-						--rangeEnd;
-					
 					for (let pos = rangeStart; pos <= rangeEnd; ++pos)
 					{
 						this.Content[pos].drawSelectionInRange(iLine, iRange, drawSelectionState);
@@ -9057,12 +9152,6 @@ Paragraph.prototype.GetSelectionBounds = function()
 				
 				if (StartPos > rangeEnd || EndPos < rangeStart)
 					continue;
-				
-				if (rangeEnd === this.Content.length - 1
-					&& this.GetLogicDocument()
-					&& this.GetLogicDocument().IsSelectParagraphEndMark
-					&& !this.GetLogicDocument().IsSelectParagraphEndMark())
-					--rangeEnd;
 				
 				drawSelectionState.beginRange(iRange);
 				for (var CurPos = rangeStart; CurPos <= rangeEnd; CurPos++)
@@ -13463,32 +13552,77 @@ Paragraph.prototype.Get_FrameAnchorPara = function()
 };
 /**
  * Разделяем данный параграф, возвращаем правую часть
- * @param {Paragraph} [oNewParagraph=undefined] Если не задан, тогда мы создаем новый
- * @param {AscWord.CParagraphContentPos} [oContentPos=undefined]
+ * @param {Paragraph} [newParagraph=undefined] Если не задан, тогда мы создаем новый
+ * @param {AscWord.CParagraphContentPos} [contentPos=undefined]
  * @param {boolean} [isNoDuplicate=false] специальный режим для Split, смотри функцию SplitNoDuplicate
  * @returns {Paragraph}
  */
-Paragraph.prototype.Split = function(oNewParagraph, oContentPos, isNoDuplicate)
+Paragraph.prototype.Split = function(newParagraph, contentPos, isNoDuplicate)
 {
-	if (!oNewParagraph)
-		oNewParagraph = new AscWord.Paragraph();
+	if (!contentPos)
+		contentPos = this.Get_ParaContentPos(false, false);
+	
+	let textPr = this.Get_TextPr(contentPos);
 
-	oNewParagraph.DeleteCommentOnRemove = false;
+	var oLogicDocument = this.GetLogicDocument();
+	var oStyles        = oLogicDocument && oLogicDocument.GetStyles ? oLogicDocument.GetStyles() : null;
+	if (oStyles instanceof AscWord.CStyles && (textPr.RStyle === oStyles.GetDefaultEndnoteReference() || textPr.RStyle === oStyles.GetDefaultFootnoteReference()))
+	{
+		textPr        = textPr.Copy();
+		textPr.RStyle = undefined;
+	}
+	
+	newParagraph = this.SplitContent(newParagraph, true, contentPos, isNoDuplicate);
+	
+	// Копируем все настройки в новый параграф. Делаем это после того как определили контент параграфов.
+	// У нового параграфа настройки конца параграфа делаем, как у старого (происходит в функции CopyPr), а у старого
+	// меняем их на настройки текущего рана.
+	this.CopyPr(newParagraph);
+	this.TextPr.Clear_Style();
+	this.TextPr.Apply_TextPr(textPr);
+
+	// Если на данном параграфе заканчивалась секция, тогда переносим конец секции на новый параграф
+	var SectPr = this.Get_SectionPr();
+	if (undefined !== SectPr)
+	{
+		this.Set_SectionPr(undefined);
+		newParagraph.Set_SectionPr(SectPr);
+	}
+
+	this.MoveCursorToEndPos(false, false);
+	newParagraph.MoveCursorToStartPos(false);
+	
+	return newParagraph;
+};
+/**
+ * Разделяем содержимое данного параграфа, перенося заданную часть в новый параграф
+ * @param {Paragraph} [newParagraph=undefined] Если не задан, тогда мы создаем новый
+ * @param {boolean} [after=true] true - все, что после позиции переносим в новый параграф, false - все, что до позиции
+ * @param {AscWord.CParagraphContentPos} [contentPos=undefined]
+ * @param {boolean} [isNoDuplicate=false] специальный режим для Split, смотри функцию SplitNoDuplicate
+ * @returns {Paragraph}
+ */
+Paragraph.prototype.SplitContent = function(newParagraph, after, contentPos, isNoDuplicate)
+{
+	if (!newParagraph)
+		newParagraph = new AscWord.Paragraph();
+	
+	newParagraph.DeleteCommentOnRemove = false;
 	this.DeleteCommentOnRemove          = false;
-
+	
 	// Обнулим селект и курсор
 	this.RemoveSelection();
-	oNewParagraph.RemoveSelection();
-
-	if (!oContentPos)
-		oContentPos = this.Get_ParaContentPos(false, false);
+	newParagraph.RemoveSelection();
 	
-	let complexFields = this.GetComplexFieldsByPos(oContentPos);
+	if (!contentPos)
+		contentPos = this.Get_ParaContentPos(false, false);
+	
+	let complexFields = this.GetComplexFieldsByPos(contentPos);
 	for (let iField = 0, nFields = complexFields.length; iField < nFields; ++iField)
 		complexFields[iField].StartCharsUpdate();
-
-	var TextPr = this.Get_TextPr(oContentPos);
-
+	
+	var TextPr = this.Get_TextPr(contentPos);
+	
 	var oLogicDocument = this.GetLogicDocument();
 	var oStyles        = oLogicDocument && oLogicDocument.GetStyles ? oLogicDocument.GetStyles() : null;
 	if (oStyles instanceof AscWord.CStyles && (TextPr.RStyle === oStyles.GetDefaultEndnoteReference() || TextPr.RStyle === oStyles.GetDefaultFootnoteReference()))
@@ -13496,7 +13630,7 @@ Paragraph.prototype.Split = function(oNewParagraph, oContentPos, isNoDuplicate)
 		TextPr        = TextPr.Copy();
 		TextPr.RStyle = undefined;
 	}
-
+	
 	let localTrack = false;
 	if (oLogicDocument
 		&& oLogicDocument.IsDocumentEditor()
@@ -13512,82 +13646,112 @@ Paragraph.prototype.Split = function(oNewParagraph, oContentPos, isNoDuplicate)
 		clearNotesOnPreDelete = oLogicDocument.ClearNotesOnPreDelete;
 		oLogicDocument.ClearNotesOnPreDelete = false;
 	}
-
-	var nCurPos = oContentPos.Get(0);
+	
+	var nCurPos = contentPos.Get(0);
 	if (true === isNoDuplicate)
 	{
-		oNewParagraph.Internal_Content_Remove2(0, oNewParagraph.Content.length);
-
-		this.Content[nCurPos].SplitNoDuplicate(oContentPos, 1, oNewParagraph);
-
-		var arrNewContent = this.Content.slice(nCurPos + 1);
-		oNewParagraph.ConcatContent(arrNewContent);
-		oNewParagraph.CorrectContent();
-
-		this.RemoveFromContent(nCurPos + 1, this.Content.length - nCurPos - 1, false);
+		newParagraph.Internal_Content_Remove2(0, newParagraph.Content.length);
+		this.Content[nCurPos].SplitNoDuplicate(contentPos, 1, newParagraph);
+		let newContent = [];
+		if (after)
+		{
+			newContent = this.Content.slice(nCurPos + 1);
+			this.RemoveFromContent(nCurPos + 1, this.Content.length - nCurPos - 1, false);
+		}
+		else
+		{
+			newContent = this.Content.slice(0, nCurPos + 1);
+			this.RemoveFromContent(0, nCurPos + 1, false);
+		}
 		this.CheckParaEnd();
+		newParagraph.ConcatContent(newContent);
+		newParagraph.CorrectContent();
 	}
 	else
 	{
-		// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
-		// ее на пустой ран с заданными настройками).
-		var NewElement = this.Content[nCurPos].Split(oContentPos, 1);
-
-		if (null === NewElement)
-		{
-			NewElement = new ParaRun(oNewParagraph);
-			NewElement.Set_Pr(TextPr.Copy());
-		}
-
 		// Теперь делим наш параграф на три части:
 		// 1. До элемента с номером nCurPos включительно (оставляем эту часть в исходном параграфе)
 		// 2. После элемента с номером nCurPos (добавляем эту часть в новый параграф)
 		// 3. Новый элемент, полученный после разделения элемента с номером nCurPos, который мы
 		//    добавляем в начало нового параграфа.
-
-		var NewContent = this.Content.slice(nCurPos + 1);
 		
-		this.Internal_Content_Remove2(nCurPos + 1, this.Content.length - nCurPos - 1);
+		let newContent = [];
+		if (after)
+		{
+			// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
+			// ее на пустой ран с заданными настройками).
+			var NewElement = this.Content[nCurPos].Split(contentPos, 1);
+			
+			if (null === NewElement)
+			{
+				NewElement = new AscWord.Run();
+				NewElement.Set_Pr(TextPr.Copy());
+			}
+			
+			newContent = this.Content.slice(nCurPos + 1);
+			this.Internal_Content_Remove2(nCurPos + 1, this.Content.length - nCurPos - 1);
+			newContent.splice(0, 0, NewElement);
+		}
+		else
+		{
+			
+			this.Content[nCurPos].RemoveSelection();
+			this.Content[nCurPos].Set_ParaContentPos(contentPos, 1);
+			
+			// Специальная заглушка для строгого редактирования. Т.е. мы даем добавлять параграф, когда курсор находится
+			// в начале параграфа, то не нужно делить текущий раз из-за текщих колизий в совместке. (Если проблема
+			// с обновлением изменений при разделении рана будет решена, то можно будет назад объединить этот код)
+			if (this.Content[nCurPos].IsCursorAtBegin())
+			{
+				if (nCurPos > 0)
+				{
+					newContent = this.Content.slice(0, nCurPos);
+					this.Internal_Content_Remove2(0, nCurPos);
+				}
+				
+				let newElement = new AscWord.Run();
+				newElement.Set_Pr(TextPr.Copy());
+				newContent.push(newElement);
+			}
+			else
+			{
+				// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
+				// ее на пустой ран с заданными настройками).
+				var NewElement = this.Content[nCurPos].Split(contentPos, 1);
+				
+				if (null === NewElement)
+				{
+					NewElement = new AscWord.Run();
+					NewElement.Set_Pr(TextPr.Copy());
+				}
+				
+				newContent = this.Content.slice(0, nCurPos + 1);
+				this.Internal_Content_Remove2(0, nCurPos + 1);
+				this.Internal_Content_Add(0, NewElement);
+			}
+		}
+		
 		this.CheckParaEnd();
 		
 		// Очищаем новый параграф и добавляем в него Right элемент и NewContent
-		oNewParagraph.Internal_Content_Remove2(0, oNewParagraph.Content.length);
-		oNewParagraph.ConcatContent(NewContent);
-		oNewParagraph.Internal_Content_Add(0, NewElement);
-		oNewParagraph.CorrectContent();
+		newParagraph.Internal_Content_Remove2(0, newParagraph.Content.length);
+		newParagraph.ConcatContent(newContent);
+		newParagraph.CorrectContent();
 	}
-
+	
 	if (false !== localTrack)
 		oLogicDocument.SetLocalTrackRevisions(localTrack);
-
-	// Копируем все настройки в новый параграф. Делаем это после того как определили контент параграфов.
-	// У нового параграфа настройки конца параграфа делаем, как у старого (происходит в функции CopyPr), а у старого
-	// меняем их на настройки текущего рана.
-	this.CopyPr(oNewParagraph);
-	this.TextPr.Clear_Style();
-	this.TextPr.Apply_TextPr(TextPr);
-
-	// Если на данном параграфе заканчивалась секция, тогда переносим конец секции на новый параграф
-	var SectPr = this.Get_SectionPr();
-	if (undefined !== SectPr)
-	{
-		this.Set_SectionPr(undefined);
-		oNewParagraph.Set_SectionPr(SectPr);
-	}
-
-	this.MoveCursorToEndPos(false, false);
-	oNewParagraph.MoveCursorToStartPos(false);
 	
 	if (oLogicDocument && oLogicDocument.IsDocumentEditor())
 		oLogicDocument.ClearNotesOnPreDelete = clearNotesOnPreDelete;
-
-	oNewParagraph.DeleteCommentOnRemove = true;
+	
+	newParagraph.DeleteCommentOnRemove = true;
 	this.DeleteCommentOnRemove          = true;
 	
 	for (let iField = 0, nFields = complexFields.length; iField < nFields; ++iField)
 		complexFields[iField].FinishCharsUpdate();
 	
-	return oNewParagraph;
+	return newParagraph;
 };
 /**
  * Присоединяем контент параграфа Para к текущему параграфу
@@ -16455,6 +16619,15 @@ Paragraph.prototype.SetParagraphBidi = function(isRtl)
 	
 	this.private_AddPrChange();
 	AscCommon.AddAndExecuteChange(new CChangesParagraphBidi(this, this.Pr.Bidi, isRtl));
+	
+	if (!this.bFromDocument)
+	{
+		let jc = this.GetParagraphAlign();
+		if (AscCommon.align_Left === jc)
+			this.Set_Align(AscCommon.align_Right);
+		else if (AscCommon.align_Right === jc)
+			this.Set_Align(AscCommon.align_Left);
+	}
 };
 Paragraph.prototype.GetParagraphBidi = function()
 {
@@ -16462,7 +16635,7 @@ Paragraph.prototype.GetParagraphBidi = function()
 };
 Paragraph.prototype.SetParagraphAlign = function(align)
 {
-	if (this.isRtlDirection())
+	if (this.isRtlDirection() && this.bFromDocument)
 	{
 		if (AscCommon.align_Left === align)
 			align = AscCommon.align_Right;
@@ -16733,6 +16906,47 @@ Paragraph.prototype.GetPermRangesByPos = function(paraPos)
 	let permRanges = this.GetCurrentPermRanges();
 	this.LoadSelectionState(state);
 	return permRanges;
+};
+/**
+ * Корректируем заданную позицию, чтобы она попала в каку-либо разрешенную область, но приэтом так, чтобы физически
+ * позиция не изменилась.
+ * @param {AscWord.CParagraphContentPos} paraPos
+ */
+Paragraph.prototype.CorrectPosToPermRanges = function(paraPos)
+{
+	if (this.GetPermRangesByPos(paraPos).length)
+		return paraPos;
+	
+	let state = new AscWord.ParagraphPosToPermRangeState();
+	state.setDirection(true);
+	let curPos = paraPos.Get(0);
+	for (let pos = curPos; pos < this.Content.length; ++pos)
+	{
+		state.setPos(pos, 0);
+		
+		if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+			break;
+		
+		if (state.isStopped())
+			break;
+	}
+	
+	if (!state.isFound())
+	{
+		state.setDirection(false);
+		for (let pos = curPos; pos >= 0; --pos)
+		{
+			state.setPos(pos, 0);
+			
+			if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+				break;
+			
+			if (state.isStopped())
+				break;
+		}
+	}
+	
+	return state.isFound() ? state.getCorrectedPos() : paraPos;
 };
 Paragraph.prototype.IsCurrentPosInComplexFieldCode = function()
 {
@@ -18955,6 +19169,17 @@ Paragraph.prototype.isRtlDirection = function()
 {
 	return !!this.Get_CompiledPr2(false).ParaPr.Bidi;
 };
+Paragraph.prototype.GetAllAnnotationMarks = function(marks)
+{
+	if (!marks)
+		marks = [];
+	
+	for (let i = 0; i < this.Content.length; ++i)
+	{
+		this.Content[i].GetAllAnnotationMarks(marks);
+	}
+	return marks;
+};
 
 Paragraph.prototype.asc_getText = function()
 {
@@ -20533,3 +20758,4 @@ window['AscCommonWord'].UnknownValue = UnknownValue;
 window['AscCommonWord'].type_Paragraph = type_Paragraph;
 
 window['AscWord'].Paragraph = Paragraph;
+window['AscWord'].CParagraphSearchPos = CParagraphSearchPos;

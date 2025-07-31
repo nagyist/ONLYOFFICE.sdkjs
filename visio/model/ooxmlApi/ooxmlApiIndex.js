@@ -566,7 +566,7 @@
 	 * Finds shape section by formula. Compares N with string argument. For Geometry use find sections.
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Section_Type | null}
+	 * @returns {Section_Type | undefined}
 	 */
 	SheetStorage.prototype.getSection = function getSection(formula) {
 		let section = this.inheritedElements[formula];
@@ -581,7 +581,7 @@
 	 * Returns link to object not copy.
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Row_Type | null}
+	 * @returns {Row_Type | undefined}
 	 */
 	SheetStorage.prototype.getRow = function getRow(formula) {
 		let row = this.inheritedElements[formula];
@@ -613,7 +613,7 @@
 	 * Let's search cells only directly in Section for now (if called on Section).
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Cell_Type|null}
+	 * @returns {Cell_Type | undefined}
 	 */
 	SheetStorage.prototype.getCell = function getCell(formula) {
 		// Cells can have N only no IX
@@ -636,7 +636,7 @@
 	SheetStorage.prototype.getCellNumberValue = function (formula, defaultValue) {
 		let cell = this.getCell(formula);
 		let result;
-		if (cell !== undefined) {
+		if (cell !== undefined && cell.v !== "Themed") {
 			result = Number(cell.v);
 		} else {
 			result = undefined;
@@ -654,7 +654,7 @@
 	 */
 	SheetStorage.prototype.getCellNumberValueWithScale = function (formula, pageScale) {
 		let cell = this.getCell(formula);
-		if (cell !== undefined) {
+		if (cell !== undefined && cell.v !== "Themed") {
 			return Number(cell.v) / pageScale;
 		} else {
 			return undefined;
@@ -668,7 +668,7 @@
 	 */
 	SheetStorage.prototype.getCellStringValue = function (formula) {
 		let cell = this.getCell(formula);
-		if (cell !== undefined) {
+		if (cell !== undefined && cell.v !== "Themed") {
 			return String(cell.v);
 		} else {
 			return undefined;
@@ -682,7 +682,7 @@
 	 * low performance function! use if can't use get section
 	 * @param {String} formula
 	 * @memberof SheetStorage
-	 * @returns {Section_Type[] | null}
+	 * @returns {Section_Type[]}
 	 */
 	SheetStorage.prototype.getSections = function(formula) {
 		// TODO check may be optimized. maybe use getGeometrySections
@@ -945,6 +945,9 @@
 	Cell_Type.prototype.calculateValue = function calculateCellValue(shape, pageInfo,
 																		 themes, themeValWasUsedFor,
 																		 gradientEnabled, themedColorsRow) {
+		if (this === null || this === undefined) {
+			return undefined;
+		}
 		let cellValue = this.v;
 		let cellName = this.n;
 		let cellFunction = this.f;
@@ -953,9 +956,10 @@
 
 		// supported cells
 		let fillResultCells = ["LineColor", "FillForegnd", "FillBkgnd"];
-		let fillColorResultCells = ["Color", "GradientStopColor"];
+		let fillColorResultCells = ["Color", "GradientStopColor", "ShdwForegnd"];
 		let numberResultCells = ["LinePattern", "LineWeight", "GradientStopColorTrans", "GradientStopPosition",
-		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap"];
+		"FillGradientAngle", "EndArrowSize", "BeginArrowSize", "FillPattern", "LineCap", "ShdwPattern",
+		"ShapeShdwOffsetX", "ShapeShdwOffsetY", "ShapeShdwShow", "ShapeShdwType", "ShapeShdwScaleFactor"];
 		let stringResultCells = ["EndArrow", "BeginArrow", "Font"];
 		let booleanResultCells = ["FillGradientEnabled"];
 
@@ -1283,6 +1287,9 @@
 		layersArray.forEach(function (layerIndexString) {
 			let layerIndex = Number(layerIndexString);
 			let layerInfo = layersInfo.getRow(layerIndex);
+			if (layerInfo === undefined) {
+				return; // go to next iteration
+			}
 			let layerElements = layerInfo.getElements();
 
 			// Unlink original array
@@ -1347,7 +1354,7 @@
 	 * Returns object of shape not copy!
 	 *
 	 * @memberof Shape_Type
-	 * @returns {Text_Type | null}
+	 * @returns {Text_Type | undefined}
 	 */
 	Shape_Type.prototype.getTextElement = function getTextElement() {
 		let text = this.inheritedElements["Text"];

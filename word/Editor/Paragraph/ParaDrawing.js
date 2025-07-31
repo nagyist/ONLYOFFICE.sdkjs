@@ -228,6 +228,10 @@ ParaDrawing.prototype.Get_Height = function()
 {
 	return this.Height * this.GetScaleCoefficient();
 };
+ParaDrawing.prototype.GetHeight = function()
+{
+	return this.Get_Height();
+};
 ParaDrawing.prototype.getHeight = function()
 {
 	return this.Get_Height();
@@ -343,6 +347,7 @@ ParaDrawing.prototype.Get_Props = function(OtherProps)
 	var Props    = {};
 	Props.Width  = this.GraphicObj.extX;
 	Props.Height = this.GraphicObj.extY;
+	Props.Form   = this.IsForm();
 	if (drawing_Inline === this.DrawingType)
 		Props.WrappingStyle = c_oAscWrapStyle2.Inline;
 	else if (WRAPPING_TYPE_NONE === this.wrappingType)
@@ -532,6 +537,9 @@ ParaDrawing.prototype.Get_Props = function(OtherProps)
 		if(undefined === OtherProps.description || Props.description !== OtherProps.description){
 			Props.description = undefined;
 		}
+		
+		if (OtherProps.Form || Props.Form)
+			Props.Form = true;
 	}
 
 	return Props;
@@ -1828,6 +1836,10 @@ ParaDrawing.prototype.Get_DrawingType = function()
 };
 ParaDrawing.prototype.Is_Inline = function()
 {
+	if (Asc.editor.isPdfEditor()) {
+		return drawing_Inline === this.DrawingType;
+	}
+
 	if(this.Parent &&
 		this.Parent.Get_ParentTextTransform &&
 		this.Parent.Get_ParentTextTransform())
@@ -1875,6 +1887,21 @@ ParaDrawing.prototype.SetForm = function(isForm)
 	History.Add(new CChangesParaDrawingForm(this, this.DrawingType, isForm));
 	this.Form = isForm;
 }
+ParaDrawing.prototype.IsInForm = function()
+{
+	let run = this.GetRun();
+	if (!run)
+		return false;
+	
+	let parentCCs = run.GetParentContentControls();
+	for (let i = 0; i < parentCCs.length; ++i)
+	{
+		if (parentCCs[i].IsForm())
+			return true;
+	}
+	
+	return false;
+};
 ParaDrawing.prototype.GetInnerForm = function()
 {
 	return this.GraphicObj ? this.GraphicObj.getInnerForm() : null;

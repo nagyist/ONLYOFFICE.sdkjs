@@ -15,7 +15,8 @@
 			"vendor/string.js",
 			"vendor/array.js",
 			"common/editorscommon.js",
-			"common/BulletPreviewDrawer.js",
+          "common/frameManager.js",
+          "common/BulletPreviewDrawer.js",
 			"common/HistoryCommon.js",
 			"common/TableId.js",
 			"common/TableIdChanges.js",
@@ -48,6 +49,8 @@
 			"common/api/restrictionSettings.js",
 			
 			"common/collaboration/deleted-text-recovery.js",
+			
+			"common/custom-xml/serialize-custom-xml.js",
 			
 			"common/nameMap.js",
 			"common/downloaderfiles.js",
@@ -376,6 +379,7 @@
 			"word/Editor/revisions/review-info.js",
 			"word/Editor/revisions/track-revisions-manager.js",
 			"word/Editor/custom-xml/custom-xml.js",
+			"word/Editor/custom-xml/custom-xml-changes.js",
 			"word/Editor/custom-xml/custom-xml-manager.js",
 			"word/Editor/custom-xml/data-binding.js",
 			

@@ -395,6 +395,17 @@
 			}
 			return res;
 		},
+		getImagesWithOtherExtension: function(imageLocal) {
+			var res = [];
+			var filename = GetFileName(imageLocal);
+			var prefix = this.mediaPrefix + filename + '.';
+			for (var i in this.urls) {
+				if (0 == i.indexOf(prefix) && !i.endsWith(imageLocal)) {
+					res.push(i.substring(this.mediaPrefix.length));
+				}
+			}
+			return res;
+		},
 
 		isThemeUrl: function(sUrl) {
 			return sUrl && (0 === sUrl.indexOf('theme'));
@@ -1300,13 +1311,9 @@
 
 	var UTF8Decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf8") : undefined;
 	function UTF8ArrayToString(u8Array, idx, maxBytesToRead) {
-		var endIdx = idx + maxBytesToRead;
-		var endPtr = idx;
-		while (u8Array[endPtr] && !(endPtr >= endIdx)) {
-			++endPtr;
-		}
-		if (endPtr - idx > 16 && u8Array.subarray && UTF8Decoder) {
-			return UTF8Decoder.decode(u8Array.subarray(idx, endPtr));
+		var endPtr = idx + maxBytesToRead;
+		if (endPtr - idx > 16 && UTF8Decoder) {
+			return UTF8Decoder.decode(new Uint8Array(u8Array.buffer, u8Array.byteOffset + idx, endPtr - idx));
 		} else {
 			var str = "";
 			while (idx < endPtr) {
@@ -3781,6 +3788,15 @@
 		}
 		return false;
 	};
+	parserHelper.prototype.isDefName = function(formula, start_pos) {
+		var _isArea = this.isArea(formula, start_pos);
+		var _isRef = !_isArea && this.isRef(formula, start_pos);
+		var _isName = !_isRef && !_isArea && this.isName(formula, start_pos);
+		if (_isName) {
+			return {defname: this.operand_str};
+		}
+		return false;
+	};
 	parserHelper.prototype.isName3D = function (formula, start_pos)
 	{
 		if (this instanceof parserHelper)
@@ -3789,12 +3805,17 @@
 		}
 
 		var _is3DRef = this.is3DRef(formula, start_pos);
-		if(_is3DRef && _is3DRef[0] && _is3DRef[1] && _is3DRef[1].length)
+		if(_is3DRef && _is3DRef[0])
 		{
-			var _startPos = this.pCurrPos;
-			var _isArea = this.isArea(formula, _startPos);
-			var _isRef = !_isArea && this.isRef(formula, _startPos);
-			return !_isRef && !_isArea && this.isName(formula, _startPos);
+			let _isName = false;
+			if (_is3DRef[1] && _is3DRef[1].length) {
+				_isName = this.isDefName(formula, this.pCurrPos);
+			} else {
+				_isName = _is3DRef[4];
+			}
+			if (_isName) {
+				return {defName: _isName.defname, sheet: _is3DRef[1], external: _is3DRef[3]};
+			}
 		}
 
 		return false;
@@ -3919,10 +3940,10 @@
 
 		const match = XRegExp.exec(subSTR, local ? rx_table_local : rx_table);
 
-		if (match != null && match["tableName"])
-		{
-			this.operand_str = tableIntersection ? "[" + match.columnName1 + "]" : match[0];
-			this.pCurrPos += tableIntersection ? match.columnName1.length + 2 : match[0].length;
+		if (match != null && match["tableName"]) {
+			let colNameToInsert = match["columnName1"] ? match["columnName1"] : "";
+			this.operand_str = tableIntersection ? "[" + colNameToInsert + "]" : match[0];
+			this.pCurrPos += tableIntersection ? colNameToInsert.length + 2 : match[0].length;
 			return match;
 		}
 
@@ -4007,7 +4028,7 @@
 			if (this.isArea(formula, indexStartRange) || this.isRef(formula, indexStartRange))
 			{
 				if (this.operand_str.length == formula.substring(indexStartRange).length)
-					return {sheet: sheetName, sheet2: is3DRefResult[2], range: this.operand_str};
+					return {sheet: sheetName, sheet2: is3DRefResult[2], range: this.operand_str, external: is3DRefResult[3]};
 				else
 					return null;
 			}
@@ -4547,6 +4568,10 @@
 	CIdCounter.prototype.Set_Load = function (bValue)
 	{
 		this.m_bLoad = bValue;
+	};
+	CIdCounter.prototype.IsLoad = function()
+	{
+		return this.m_bLoad;
 	};
 	CIdCounter.prototype.Clear = function ()
 	{
@@ -11024,7 +11049,7 @@
 		for (var oIterator = sWord.getUnicodeIterator(); oIterator.check(); oIterator.next())
 		{
 			var nCharCode = oIterator.value();
-			if (IsHangul(nCharCode) || IsCJKIdeographs(nCharCode))
+			if (IsHangul(nCharCode) || IsCJKIdeographs(nCharCode) || IsComplexScript(nCharCode))
 				return false;
 
 			if (0x73 === nCharCode)
@@ -11091,6 +11116,13 @@
 			return new CColor(0, 0, 0, 255);
 
 		return true === isDark ? res.Dark : res.Light;
+	}
+	function setUserColorById(userId, light, dark)
+	{
+		g_oUserColorById[userId] = {
+			Light : new CColor(light.r, light.g, light.b, 255),
+			Dark : new CColor(dark.r, dark.g, dark.b, 255),
+		};
 	}
 	function getUserColorById(userId, userName, isDark, isNumericValue)
 	{
@@ -11738,10 +11770,19 @@
 
 	function isEastAsianScript(value)
 	{
+		// CJK Symbols and Punctuation (3000–303F)
+		// Hiragana (3040-309F)
+		// Katakana (30A0–30FF)
 		// Bopomofo (3100–312F)
+		// Hangul Compatibility Jamo (3130–318F)
+		// Kanbun (3190–319F)
 		// Bopomofo Extended (31A0–31BF)
-		// CJK Unified Ideographs (4E00–9FEA)
+		// CJK Strokes (31C0–31EF)
+		// Katakana Phonetic Extensions (31F0–31FF)
+		// Enclosed CJK Letters and Months (3200-32FF)
+		// CJK Compatibility (3300-33FF)
 		// CJK Unified Ideographs Extension A (3400–4DB5)
+		// CJK Unified Ideographs (4E00–9FEA)
 		// CJK Unified Ideographs Extension B (20000–2A6D6)
 		// CJK Unified Ideographs Extension C (2A700–2B734)
 		// CJK Unified Ideographs Extension D (2B740–2B81D)
@@ -11751,20 +11792,14 @@
 		// CJK Compatibility Ideographs Supplement (2F800–2FA1F)
 		// Kangxi Radicals (2F00–2FDF)
 		// CJK Radicals Supplement (2E80–2EFF)
-		// CJK Strokes (31C0–31EF)
 		// Ideographic Description Characters (2FF0–2FFF)
 		// Hangul Jamo (1100–11FF)
 		// Hangul Jamo Extended-A (A960–A97F)
 		// Hangul Jamo Extended-B (D7B0–D7FF)
-		// Hangul Compatibility Jamo (3130–318F)
 		// Halfwidth and Fullwidth Forms (FF00–FFEF)
 		// Hangul Syllables (AC00–D7AF)
-		// Hiragana (3040–309F)
 		// Kana Extended-A (1B100–1B12F)
 		// Kana Supplement (1B000–1B0FF)
-		// Kanbun (3190–319F)
-		// Katakana (30A0–30FF)
-		// Katakana Phonetic Extensions (31F0–31FF)
 		// Lisu (A4D0–A4FF)
 		// Miao (16F00–16F9F)
 		// Nushu (1B170–1B2FF)
@@ -11772,11 +11807,9 @@
 		// Tangut Components (18800–18AFF)
 		// Yi Syllables (A000–A48F)
 		// Yi Radicals (A490–A4CF)
-
-		return ((0x3100 <= value && value <= 0x312F)
-			|| (0x31A0 <= value && value <= 0x31BF)
+		
+		return ((0x3000 <= value && value <= 0x4DB5)
 			|| (0x4E00 <= value && value <= 0x9FEA)
-			|| (0x3400 <= value && value <= 0x4DB5)
 			|| (0x20000 <= value && value <= 0x2A6D6)
 			|| (0x2A700 <= value && value <= 0x2B734)
 			|| (0x2B740 <= value && value <= 0x2B81D)
@@ -11786,20 +11819,14 @@
 			|| (0x2F800 <= value && value <= 0x2FA1F)
 			|| (0x2F00 <= value && value <= 0x2FDF)
 			|| (0x2E80 <= value && value <= 0x2EFF)
-			|| (0x31C0 <= value && value <= 0x31EF)
 			|| (0x2FF0 <= value && value <= 0x2FFF)
 			|| (0x1100 <= value && value <= 0x11FF)
 			|| (0xA960 <= value && value <= 0xA97F)
 			|| (0xD7B0 <= value && value <= 0xD7FF)
-			|| (0x3130 <= value && value <= 0x318F)
 			|| (0xFF00 <= value && value <= 0xFFEF)
 			|| (0xAC00 <= value && value <= 0xD7AF)
-			|| (0x3040 <= value && value <= 0x309F)
 			|| (0x1B100 <= value && value <= 0x1B12F)
 			|| (0x1B000 <= value && value <= 0x1B0FF)
-			|| (0x3190 <= value && value <= 0x319F)
-			|| (0x30A0 <= value && value <= 0x30FF)
-			|| (0x31F0 <= value && value <= 0x31FF)
 			|| (0xA4D0 <= value && value <= 0xA4FF)
 			|| (0x16F00 <= value && value <= 0x16F9F)
 			|| (0x1B170 <= value && value <= 0x1B2FF)
@@ -12251,7 +12278,7 @@
         this.isChangesHandled = false;
 
         this.cryptoMode = 0; // start crypto mode
-		this.isChartEditor = false;
+		this.isFrameEditor = false;
 
         this.isExistDecryptedChanges = false; // был ли хоть один запрос на расшифровку данных (были ли чужие изменения)
 
@@ -12285,7 +12312,7 @@
             if (!window["AscDesktopEditor"])
                 return false;
 
-            if (this.isChartEditor)
+            if (this.isFrameEditor)
             	return false;
 
             if (2 == this.cryptoMode)
@@ -14011,95 +14038,96 @@
 		}
 	}
 	
+	/**
+	 * @param {string} text
+	 * @param {Asc.asc_CTextOptions} options
+	 * @param {boolean} bTrimSpaces - Whether to trim spaces when using space delimiter
+	 * @returns {Array<Array<string>>} Matrix of parsed CSV values
+	 */
 	function parseText(text, options, bTrimSpaces) {
-		var delimiterChar;
-		if (options.asc_getDelimiterChar()) {
-			delimiterChar = options.asc_getDelimiterChar();
-		} else {
-			switch (options.asc_getDelimiter()) {
-				case AscCommon.c_oAscCsvDelimiter.None:
-					delimiterChar = undefined;
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Tab:
-					delimiterChar = "\t";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Semicolon:
-					delimiterChar = ";";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Colon:
-					delimiterChar = ":";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Comma:
-					delimiterChar = ",";
-					break;
-				case AscCommon.c_oAscCsvDelimiter.Space:
-					delimiterChar = " ";
-					break;
-			}
-		}
-
-		var textQualifier = options.asc_getTextQualifier();
-		var matrix = [];
-		//var rows = text.match(/[^\r\n]+/g);
-		var rows;
-		if (delimiterChar === '\n') {
-			rows = [text];
-		} else {
-			rows = text.split(/\r?\n/);
-		}
-		for (var i = 0; i < rows.length; ++i) {
-			var row = rows[i];
-			if(" " === delimiterChar && bTrimSpaces) {
-				var addSpace = false;
-				if(row[0] === delimiterChar) {
-					addSpace = true;
-				}
-				row = addSpace ? delimiterChar + row.trim() : row.trim();
-			}
-			//todo quotes
-			if (textQualifier) {
-				if (!row.length) {
-					matrix.push(row.split(delimiterChar));
-					continue;
-				}
-
-				var _text = "";
-				var startQualifier = false;
-				for (var j = 0; j < row.length; j++) {
-					if (!startQualifier && row[j] === textQualifier && (!row[j - 1] || (row[j - 1] && row[j - 1] === delimiterChar))) {
-						startQualifier = !startQualifier;
+		const delimiterChar = options.asc_getDelimiterChar() || {
+			[AscCommon.c_oAscCsvDelimiter.None]: undefined,
+			[AscCommon.c_oAscCsvDelimiter.Tab]: "\t",
+			[AscCommon.c_oAscCsvDelimiter.Semicolon]: ";",
+			[AscCommon.c_oAscCsvDelimiter.Colon]: ":",
+			[AscCommon.c_oAscCsvDelimiter.Comma]: ",",
+			[AscCommon.c_oAscCsvDelimiter.Space]: " "
+		}[options.asc_getDelimiter()];
+		
+		const textQualifier = options.asc_getTextQualifier();
+		const hasQualifier = !!textQualifier;
+		
+		if (!text.length) return [[]];
+		
+		let rows = delimiterChar === '\n' ? [text] : text.split(/\r\n|\r|\n/);
+		if (rows.length > 1 && rows[rows.length - 1] === '') rows.pop();
+		
+		const isSpace = delimiterChar === " ";
+		// Note: Using charCodeAt instead of codePointAt for performance.
+		// CSV delimiters are always basic ASCII chars (comma=44, semicolon=59, tab=9, etc.)
+		const delimiterCode = delimiterChar ? delimiterChar.charCodeAt(0) : 0;
+		const qualifierCode = hasQualifier ? textQualifier.charCodeAt(0) : 0;
+		
+		const processSpaceRow = (row) => {
+			if (!isSpace || !bTrimSpaces) return row;
+			const hasLeadingSpace = row.length > 0 && row.charCodeAt(0) === delimiterCode;
+			row = row.trim();
+			return hasLeadingSpace ? delimiterChar + row : row;
+		};
+		
+		const parseRowWithQualifiers = (row) => {
+			const fields = [];
+			const rowLength = row.length;
+			let textParts = [];
+			let insideQualifier = false;
+			let j = 0;
+			
+			while (j < rowLength) {
+				const charCode = row.charCodeAt(j);
+				if (charCode === qualifierCode) {
+					if (!insideQualifier && (j === 0 || row.charCodeAt(j - 1) === delimiterCode)) {
+						insideQualifier = true;
+						j++;
 						continue;
-					} else if (startQualifier && row[j] === textQualifier) {
-						startQualifier = !startQualifier;
-
-						if (j === row.length - 1) {
-							if (!matrix[i]) {
-								matrix[i] = [];
-							}
-							matrix[i].push(_text);
-						}
-
-						continue;
-					}
-					
-					if (!startQualifier && row[j] === delimiterChar) {
-						if (!matrix[i]) {
-							matrix[i] = [];
-						}
-						matrix[i].push(_text);
-						_text = "";
-					} else {
-						_text += row[j];
-						if (j === row.length - 1) {
-							if (!matrix[i]) {
-								matrix[i] = [];
-							}
-							matrix[i].push(_text);
+					} else if (insideQualifier) {
+						if (j + 1 < rowLength && row.charCodeAt(j + 1) === qualifierCode) {
+							textParts.push(textQualifier);
+							j += 2;
+							continue;
+						} else {
+							insideQualifier = false;
+							j++;
+							continue;
 						}
 					}
 				}
+				
+				if (!insideQualifier && charCode === delimiterCode) {
+					fields.push(textParts.join(''));
+					textParts = [];
+				} else {
+					textParts.push(row[j]);
+				}
+				j++;
+			}
+			
+			fields.push(textParts.join(''));
+			return fields;
+		};
+		
+		const matrix = [];
+		for (let i = 0; i < rows.length; i++) {
+			let row = processSpaceRow(rows[i]);
+			
+			if (!row.length) {
+				matrix.push([""]);
+				continue;
+			}
+			
+			if (hasQualifier) {
+				matrix.push(parseRowWithQualifiers(row));
 			} else {
-				matrix.push(row.split(delimiterChar));	
+				matrix.push(delimiterChar === undefined ? [row] : row.split(delimiterChar));
 			}
 		}
 		return matrix;
@@ -14969,6 +14997,437 @@
 		}
 	}
 
+
+	const LRI = '\u2066'; // LEFT-TO-RIGHT ISOLATE
+	const RLI = '\u2067'; // RIGHT-TO-LEFT ISOLATE
+	const PDI = '\u2069'; // POP DIRECTIONAL ISOLATE
+
+	function getLTRString(str) {
+		if (str.startsWith(LRI) && str.endsWith(PDI)) {
+			return str;
+		}
+
+		if (str.startsWith(RLI)) {
+			str = str.slice(1);
+		}
+		if (str.startsWith(LRI)) {
+			str = str.slice(1);
+		}
+		if (str.endsWith(PDI)) {
+			str = str.slice(0, -1);
+		}
+
+		return LRI + str + PDI;
+	}
+
+	function getRTLString(str) {
+		if (str.startsWith(RLI) && str.endsWith(PDI)) {
+			return str;
+		}
+
+		if (str.startsWith(LRI)) {
+			str = str.slice(1);
+		}
+		if (str.startsWith(RLI)) {
+			str = str.slice(1);
+		}
+		if (str.endsWith(PDI)) {
+			str = str.slice(0, -1);
+		}
+
+		return RLI + str + PDI;
+	}
+
+	function stripDirectionMarks(str) {
+		while (
+			str.startsWith('\u200E') ||
+			str.startsWith('\u200F') ||
+			str.startsWith(LRI) ||
+			str.startsWith(RLI)
+			) {
+			str = str.slice(1);
+		}
+
+		while (
+			str.endsWith('\u200E') ||
+			str.endsWith('\u200F') ||
+			str.endsWith(PDI)
+			) {
+			str = str.slice(0, -1);
+		}
+
+		return str;
+	}
+
+	function getCharStrongDir(char) {
+		let type = AscBidi.getType(char);
+		if (type & AscBidi.FLAG.STRONG) {
+			if (type & AscBidi.FLAG.RTL) {
+				return AscBidi.DIRECTION_FLAG.RTL;
+			} else {
+				return AscBidi.DIRECTION_FLAG.LTR;
+			}
+		}
+		return null;
+	}
+
+	function applyElementDirection(element) {
+		if (!element)
+			return;
+		if (AscCommon.AscBrowser.isIE) {
+			element.addEventListener('input', function () {
+				const text = element.textContent || element.innerText || '';
+				let dir = 'ltr';
+				for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {
+					let dir = AscCommon.getCharStrongDir(iter.value());
+					if (dir !== null) {
+						if (dir === AscBidi.TYPE.R) {
+							dir = 'rtl';
+						}
+						break;
+					}
+				}
+				element.dir = dir;
+			});
+		}
+		else {
+			element.dir = 'auto';
+		}
+	}
+
+
+	function getFirstStrongDirection(text) {
+		if(!text) return null;
+		for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {
+			let cp = iter.value();
+			let dir = getCharStrongDir(cp);
+			if (dir !== null) {
+				return dir;
+			}
+		}
+		return null;
+	}
+
+	function getGradientPoints(min_x, min_y, max_x, max_y, _angle, scale) {
+		let points = { x0 : 0, y0 : 0, x1 : 0, y1 : 0 };
+
+		let fAE = AscFormat.fApproxEqual;
+		if (fAE(min_x, max_x) && fAE(min_y, max_y)) {
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = min_x;
+			points.y1 = min_y;
+			return points;
+		}
+
+		if (fAE(min_x, max_x)) {
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = min_x;
+			points.y1 = max_y;
+			return points;
+		}
+
+		if (fAE(min_y, max_y)) {
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = max_x;
+			points.y1 = min_y;
+			return points;
+		}
+
+		let angle = _angle / 60000;
+		while (angle < 0)
+			angle += 360;
+		while (angle >= 360)
+			angle -= 360;
+
+		if (Math.abs(angle) < 1) {
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = max_x;
+			points.y1 = min_y;
+
+			return points;
+		}
+		else if (Math.abs(angle - 90) < 1) {
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = min_x;
+			points.y1 = max_y;
+
+			return points;
+		}
+		else if (Math.abs(angle - 180) < 1) {
+			points.x0 = max_x;
+			points.y0 = min_y;
+			points.x1 = min_x;
+			points.y1 = min_y;
+
+			return points;
+		}
+		else if (Math.abs(angle - 270) < 1) {
+			points.x0 = min_x;
+			points.y0 = max_y;
+			points.x1 = min_x;
+			points.y1 = min_y;
+
+			return points;
+		}
+
+		let grad_a = AscCommon.deg2rad(angle);
+		if (!scale) {
+			if (angle > 0 && angle < 90) {
+				let p = this.getNormalPoint(min_x, min_y, grad_a, max_x, max_y);
+
+				points.x0 = min_x;
+				points.y0 = min_y;
+				points.x1 = p.X;
+				points.y1 = p.Y;
+
+				return points;
+			}
+			if (angle > 90 && angle < 180) {
+				let p = this.getNormalPoint(max_x, min_y, grad_a, min_x, max_y);
+
+				points.x0 = max_x;
+				points.y0 = min_y;
+				points.x1 = p.X;
+				points.y1 = p.Y;
+
+				return points;
+			}
+			if (angle > 180 && angle < 270) {
+				let p = this.getNormalPoint(max_x, max_y, grad_a, min_x, min_y);
+
+				points.x0 = max_x;
+				points.y0 = max_y;
+				points.x1 = p.X;
+				points.y1 = p.Y;
+
+				return points;
+			}
+			if (angle > 270 && angle < 360) {
+				let p = this.getNormalPoint(min_x, max_y, grad_a, max_x, min_y);
+
+				points.x0 = min_x;
+				points.y0 = max_y;
+				points.x1 = p.X;
+				points.y1 = p.Y;
+
+				return points;
+			}
+			// никогда сюда не зайдем
+			return points;
+		}
+
+		// scale == true
+		let _grad_45 = (Math.PI / 2) - Math.atan2(max_y - min_y, max_x - min_x);
+		let _grad_90_45 = (Math.PI / 2) - _grad_45;
+		if (angle > 0 && angle < 90) {
+			if (angle <= 45)
+			{
+				grad_a = (_grad_45 * angle / 45);
+			}
+			else
+			{
+				grad_a = _grad_45 + _grad_90_45 * (angle - 45) / 45;
+			}
+
+			let p = this.getNormalPoint(min_x, min_y, grad_a, max_x, max_y);
+
+			points.x0 = min_x;
+			points.y0 = min_y;
+			points.x1 = p.X;
+			points.y1 = p.Y;
+
+			return points;
+		}
+		if (angle > 90 && angle < 180) {
+			if (angle <= 135) {
+				grad_a = Math.PI / 2 + _grad_90_45 * (angle - 90) / 45;
+			}
+			else {
+				grad_a = Math.PI / 2 + _grad_90_45 + _grad_45 * (angle - 135) / 45;
+			}
+
+			let p = this.getNormalPoint(max_x, min_y, grad_a, min_x, max_y);
+
+			points.x0 = max_x;
+			points.y0 = min_y;
+			points.x1 = p.X;
+			points.y1 = p.Y;
+
+			return points;
+		}
+		if (angle > 180 && angle < 270) {
+			if (angle <= 225)
+			{
+				grad_a = Math.PI + _grad_45 * (angle - 180) / 45;
+			}
+			else
+			{
+				grad_a = Math.PI + _grad_45 + _grad_90_45 * (angle - 225) / 45;
+			}
+
+			let p = this.getNormalPoint(max_x, max_y, grad_a, min_x, min_y);
+
+			points.x0 = max_x;
+			points.y0 = max_y;
+			points.x1 = p.X;
+			points.y1 = p.Y;
+
+			return points;
+		}
+		if (angle > 270 && angle < 360) {
+			if (angle <= 315)
+			{
+				grad_a = 3 * Math.PI / 2 + _grad_90_45 * (angle - 270) / 45;
+			}
+			else
+			{
+				grad_a = 3 * Math.PI / 2 + _grad_90_45 + _grad_45 * (angle - 315) / 45;
+			}
+
+			let p = this.getNormalPoint(min_x, max_y, grad_a, max_x, min_y);
+
+			points.x0 = min_x;
+			points.y0 = max_y;
+			points.x1 = p.X;
+			points.y1 = p.Y;
+
+			return points;
+		}
+		// никогда сюда не зайдем
+		return points;
+	}
+
+	function getNormalPoint(x0, y0, angle, x1, y1) {
+		// точка - пересечение прямой, проходящей через точку (x0, y0) под углом angle и
+		// перпендикуляра к первой прямой, проведенной из точки (x1, y1)
+		let ex1 = Math.cos(angle);
+		let ey1 = Math.sin(angle);
+
+		let ex2 = -ey1;
+		let ey2 = ex1;
+
+		let a = ex1 / ey1;
+		let b = ex2 / ey2;
+
+		let x = ((a * b * y1 - a * b * y0) - (a * x1 - b * x0)) / (b - a);
+		let y = (x - x0) / a + y0;
+
+		return { X : x, Y : y };
+	}
+	function CTree() {
+	}
+
+	CTree.prototype = {
+		constructor: CTree,
+		getChildren: function () {
+			return [];
+		},
+		fillObject: function (oCopy, oIdMap) {},
+		traverse: function (fCallback, bReverseOrder) {
+			if (fCallback(this)) {
+				return true;
+			}
+			let aChildren = this.getChildren();
+			if(bReverseOrder === undefined || bReverseOrder === true) {
+				for (let nChild = aChildren.length - 1; nChild > -1; --nChild) {
+					let oChild = aChildren[nChild];
+					if (oChild && oChild.traverse) {
+						if (oChild.traverse(fCallback, bReverseOrder)) {
+							return true;
+						}
+					}
+				}
+			}
+			else {
+				for (let nChild = 0; nChild < aChildren.length; ++nChild) {
+					let oChild = aChildren[nChild];
+					if (oChild && oChild.traverse) {
+						if (oChild.traverse(fCallback, bReverseOrder)) {
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		},
+		isEqual: function (oOther) {
+			if (!oOther) {
+				return false;
+			}
+			if (this.getObjectType() !== oOther.getObjectType()) {
+				return false;
+			}
+			var aThisChildren = this.getChildren();
+			var aOtherChildren = oOther.getChildren();
+			if (aThisChildren.length !== aOtherChildren.length) {
+				return false;
+			}
+			for (var nChild = 0; nChild < aThisChildren.length; ++nChild) {
+				var oThisChild = aThisChildren[nChild];
+				var oOtherChild = aOtherChildren[nChild];
+				if (oThisChild !== this.checkEqualChild(oThisChild, oOtherChild)) {
+					return false;
+				}
+			}
+			return true;
+		},
+		checkEqualChild: function (oThisChild, oOtherChild) {
+			if (AscCommon.isRealObject(oThisChild) && oThisChild.isEqual) {
+				if (!oThisChild.isEqual(oOtherChild)) {
+					return undefined;
+				}
+			} else {
+				if (oThisChild !== oOtherChild) {
+					return undefined;
+				}
+			}
+			return oThisChild;
+		},
+		preorderTraverse : function(nextLayerCallback, backtrackCallback, context) {
+			var stack = [];
+			var nodes = this.getChildren();
+			var i = 0;
+
+			while (i <= nodes.length) {
+				if (i === nodes.length) {
+					// backtrack
+					if (stack.length !== 0) {
+						let state = stack.pop();
+						nodes = state.nodes;
+						i = state.index + 1;
+						if (backtrackCallback) {
+							backtrackCallback();
+						}
+					} else {
+						break;
+					}
+				} else {
+					var node = nodes[i];
+
+					// Call the callback for the current node
+					if (nextLayerCallback) {
+						nextLayerCallback(context, node);
+					}
+
+					if (node.children && node.children.length > 0) {
+						// Save current state and go deeper
+						stack.push({ nodes: nodes, index: i });
+						nodes = node.children;
+						i = 0;
+					} else {
+						// Leaf node, move to next sibling
+						i++;
+					}
+				}
+			}
+		}
+	}
+
 	//------------------------------------------------------------export---------------------------------------------------
 	window['AscCommon'] = window['AscCommon'] || {};
 	window["AscCommon"].consoleLog = consoleLog;
@@ -15018,6 +15477,7 @@
 	window["AscCommon"].getUrlType = getUrlType;
 	window["AscCommon"].prepareUrl = prepareUrl;
 	window["AscCommon"].getUserColorById = getUserColorById;
+	window["AscCommon"].setUserColorById = setUserColorById;
 	window["AscCommon"].isNullOrEmptyString = isNullOrEmptyString;
 	window["AscCommon"].unleakString = unleakString;
 	window["AscCommon"].readValAttr = readValAttr;
@@ -15031,12 +15491,21 @@
 	window["AscCommon"].checkOOXMLSignature = checkOOXMLSignature;
 	window["AscCommon"].checkNativeViewerSignature = checkNativeViewerSignature;
 	window["AscCommon"].getEditorBySignature = getEditorBySignature;
+	window["AscCommon"].getLTRString = getLTRString;
+	window["AscCommon"].getRTLString = getRTLString;
+	window["AscCommon"].stripDirectionMarks = stripDirectionMarks;
+	window["AscCommon"].getCharStrongDir = getCharStrongDir;
+	window["AscCommon"].applyElementDirection = applyElementDirection;
+	window["AscCommon"].getFirstStrongDirection = getFirstStrongDirection;
+	window["AscCommon"].getGradientPoints = getGradientPoints;
+	window["AscCommon"].getNormalPoint = getNormalPoint;
 
 	window["AscCommon"].DocumentUrls = DocumentUrls;
 	window["AscCommon"].OpenFileResult = OpenFileResult;
 	window["AscCommon"].CLock = CLock;
 	window["AscCommon"].CContentChanges = CContentChanges;
 	window["AscCommon"].CContentChangesElement = CContentChangesElement;
+	window["AscCommon"].CTree = CTree;
 
 	window["AscCommon"].CorrectMMToTwips = CorrectMMToTwips;
 	window["AscCommon"].TwipsToMM = TwipsToMM;

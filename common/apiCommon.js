@@ -351,6 +351,8 @@ function (window, undefined) {
 		this.date = "";
 		this.isvisible = false;
 		this.isrequested = false;
+		
+		this.isForm = false;
 	}
 
 	asc_CSignatureLine.prototype.correct = function () {
@@ -365,6 +367,7 @@ function (window, undefined) {
 		if (this.image == null) this.image = "";
 		if (this.date == null) this.date = "";
 		if (this.isvisible == null) this.isvisible = false;
+		if (this.isForm === null) this.isForm = false;
 	};
 	asc_CSignatureLine.prototype.asc_getId = function () {
 		return this.id;
@@ -431,6 +434,12 @@ function (window, undefined) {
 	};
 	asc_CSignatureLine.prototype.asc_setRequested = function (v) {
 		this.isrequested = v;
+	};
+	asc_CSignatureLine.prototype.asc_getIsForm = function() {
+		return this.isForm;
+	};
+	asc_CSignatureLine.prototype.asc_setIsForm = function(v) {
+		this.isForm = v;
 	};
 
 	/**
@@ -609,6 +618,10 @@ function (window, undefined) {
 		this.gridlines = null;
 		this.numFmt = null;
 		this.isRadar = false;
+		this.majorUnit = null;
+		this.minorUnit = null;
+		this.majorUnitRule = false;
+		this.minorUnitRule = false;
 	}
 
 	asc_ValAxisSettings.prototype.isEqual = function (oPr) {
@@ -680,6 +693,18 @@ function (window, undefined) {
 			bEqualNumFmt = (this.numFmt === oPr.numFmt);
 		}
 		if (!bEqualNumFmt) {
+			return false;
+		}
+		if (this.minorUnit !== oPr.minorUnit) {
+			return false;
+		}
+		if (this.majorUnit !== oPr.majorUnit) {
+			return false;
+		}
+		if (this.minorUnitRule !== oPr.minorUnitRule) {
+			return false;
+		}
+		if (this.majorUnitRule !== oPr.majorUnitRule) {
 			return false;
 		}
 		return true;
@@ -783,6 +808,8 @@ function (window, undefined) {
 	asc_ValAxisSettings.prototype.setDefault = function () {
 		this.putMinValRule(Asc.c_oAscValAxisRule.auto);
 		this.putMaxValRule(Asc.c_oAscValAxisRule.auto);
+		this.putMajorUnitRule(Asc.c_oAscValAxisRule.auto);
+		this.putMinorUnitRule(Asc.c_oAscValAxisRule.auto);
 		this.putTickLabelsPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
 		this.putInvertValOrder(false);
 		this.putDispUnitsRule(Asc.c_oAscValAxUnits.none);
@@ -820,6 +847,30 @@ function (window, undefined) {
 	};
 	asc_ValAxisSettings.prototype.putIsRadarAxis = function (v) {
 		this.isRadar = v;
+	};
+	asc_ValAxisSettings.prototype.getMajorUnit = function () {
+		return this.majorUnit;
+	};
+	asc_ValAxisSettings.prototype.getMinorUnit = function () {
+		return this.minorUnit;
+	};
+	asc_ValAxisSettings.prototype.putMajorUnit = function (v) {
+		this.majorUnit = v;
+	};
+	asc_ValAxisSettings.prototype.putMinorUnit = function (v) {
+		this.minorUnit = v;
+	};
+	asc_ValAxisSettings.prototype.getMajorUnitRule = function () {
+		return this.majorUnitRule;
+	};
+	asc_ValAxisSettings.prototype.getMinorUnitRule = function () {
+		return this.minorUnitRule;
+	};
+	asc_ValAxisSettings.prototype.putMajorUnitRule = function (v) {
+		this.majorUnitRule = v;
+	};
+	asc_ValAxisSettings.prototype.putMinorUnitRule = function (v) {
+		this.minorUnitRule = v;
 	};
 
 	/** @constructor */
@@ -1065,6 +1116,7 @@ function (window, undefined) {
 
 		this.sRange = null;
 
+		this.fUpdateGeneralChart = null;
 
 		this.showMarker = null;
 		this.bLine = null;
@@ -1078,6 +1130,8 @@ function (window, undefined) {
 
 		this.view3D = null;
 
+		this.forcedWorksheet = null;
+
 		this.displayTrendlinesEquation = false;
 	}
 
@@ -1088,6 +1142,20 @@ function (window, undefined) {
 		}
 		else {
 			this.horizontalAxes[0] = v;
+		}
+	};
+	asc_ChartSettings.prototype._collectPropsFromDLbls = function (nDefaultDataLabelsPos, data_labels)
+	{
+		this.putShowSerName(data_labels.showSerName === true);
+		this.putShowCatName(data_labels.showCatName === true);
+		this.putShowVal(data_labels.showVal === true);
+		this.putSeparator(data_labels.separator);
+		if (data_labels.bDelete) {
+			this.putDataLabelsPos(Asc.c_oAscChartDataLabelsPos.none);
+		} else if (data_labels.showSerName || data_labels.showCatName || data_labels.showVal || data_labels.showPercent) {
+			this.putDataLabelsPos(AscFormat.isRealNumber(data_labels.dLblPos) ? data_labels.dLblPos : nDefaultDataLabelsPos);
+		} else {
+			this.putDataLabelsPos(Asc.c_oAscChartDataLabelsPos.none);
 		}
 	};
 	asc_ChartSettings.prototype.getHorAxisProps = function () {
@@ -1228,6 +1296,13 @@ function (window, undefined) {
 		this.horizontalAxes.length = 0;
 		this.verticalAxes.length = 0;
 		this.depthAxes.length = 0;
+	};
+	asc_ChartSettings.prototype.getExternalReference = function ()
+	{
+		if (this.chartSpace && this.chartSpace.externalReference)
+		{
+			return this.chartSpace.externalReference.getAscLink();
+		}
 	};
 	asc_ChartSettings.prototype.equalBool = function (a, b) {
 		return ((!!a) === (!!b));
@@ -1641,7 +1716,7 @@ function (window, undefined) {
 		}
 		this.bStartEdit = false;
 		AscCommon.History.EndTransaction();
-		this.updateChart();
+		this.updateChart(true);
 		this.updateInterface();
 	};
 	asc_ChartSettings.prototype.cancelEdit = function () {
@@ -1653,7 +1728,7 @@ function (window, undefined) {
 			AscCommon.History.Clear_Redo();
 		}
 		AscCommon.History._sendCanUndoRedo();
-		this.updateChart();
+		this.updateChart(true);
 		this.updateInterface();
 	};
 	asc_ChartSettings.prototype.startEditData = function () {
@@ -1667,9 +1742,10 @@ function (window, undefined) {
 		AscCommon.History.ClearPointIndex();
 		this.updateChart();
 	};
-	asc_ChartSettings.prototype.updateChart = function () {
+	asc_ChartSettings.prototype.updateChart = function (bSelect) {
 		if (this.chartSpace) {
 			this.chartSpace.onDataUpdate();
+			this.updateGeneralChart(bSelect);
 		}
 	};
 	asc_ChartSettings.prototype.getDisplayTrendlinesEquation = function() {
@@ -1677,6 +1753,377 @@ function (window, undefined) {
 	};
 	asc_ChartSettings.prototype.putDisplayTrendlinesEquation = function(v) {
 		this.displayTrendlinesEquation = v;
+	};
+
+	asc_ChartSettings.prototype.setDisplayAxes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxisTitlesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayChartTitle = function (bDisplay, bOverlay) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showChartTitle(bDisplay, bOverlay);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayDataLabels = function (bDisplay, nDataLabelPos) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showDataLabels(bDisplay, nDataLabelPos);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayDataTable = function (bDisplayDataTable, bDisplayLegendKeys) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showDataTable(bDisplayDataTable, bDisplayLegendKeys);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayErrorBars = function (bShowErrorBars, nErrorValueType) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const series = this.chartSpace.getAllSeries();
+		if (!series.length) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		series.forEach(function (ser) {
+			bShowErrorBars
+				? ser.createAllErrBars(nErrorValueType)
+				: ser.removeAllErrBars();
+		});
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayGridlines = function (bShowHorMajor, bShowVerMajor, bShowHorMinor, bShowVerMinor) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		function getGridlinesSetting(displayMajor, displayMinor) {
+			if (displayMajor && displayMinor) {
+				return Asc.c_oAscGridLinesSettings.majorMinor;
+			} else if (displayMajor) {
+				return Asc.c_oAscGridLinesSettings.major;
+			} else if (displayMinor) {
+				return Asc.c_oAscGridLinesSettings.minor;
+			} else {
+				return Asc.c_oAscGridLinesSettings.none;
+			}
+		}
+
+		const categoryAxis = plotArea.catAx;
+		const valueAxis = plotArea.valAx;
+
+		if (categoryAxis || valueAxis) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			if (categoryAxis) {
+				const catAxSettings = getGridlinesSetting(bShowVerMajor, bShowVerMinor);
+				categoryAxis.setGridlinesSetting(catAxSettings);
+			}
+			if (valueAxis) {
+				const valAxSettings = getGridlinesSetting(bShowHorMajor, bShowHorMinor);
+				valueAxis.setGridlinesSetting(valAxSettings);
+			}
+		}
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayLegend = function (bShow, nLegendPosition) {
+		if (!this.chartSpace || !this.chartSpace.chart) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		bShow
+			? this.chartSpace.chart.createLegend(nLegendPosition)
+			: this.chartSpace.chart.setLegend(null);
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	// asc_ChartSettings.prototype.setDisplayLines = function (bShow, nLineType) {};
+	asc_ChartSettings.prototype.setDisplayTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		this.chartSpace.showTrendlines(bShow, nTrendlineType, nForecastForward, nForecastBackward);
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayUpDownBars = function (bShow) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const chart = plotArea.chart;
+		const isAllowedChartType = chart instanceof AscFormat.CLineChart || chart instanceof AscFormat.CStockChart;
+		if (!chart || !isAllowedChartType) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		bShow
+			? chart.createUpDownBars()
+			: chart.setUpDownBars(null);
+
+		this.chartSpace.recalculateUpDownBars();
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+
+	asc_ChartSettings.prototype.setDisplayAxes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayAxisTitles = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showAxisTitlesByTypes(bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayChartTitle = function (bDisplay, bOverlay) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showChartTitle(bDisplay, bOverlay);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayDataLabels = function (bDisplay, nDataLabelPos) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showDataLabels(bDisplay, nDataLabelPos);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayDataTable = function (bDisplayDataTable, bDisplayLegendKeys) {
+		if (this.chartSpace) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			this.chartSpace.showDataTable(bDisplayDataTable, bDisplayLegendKeys);
+			this.updateChart();
+			const oLogicDocument = Asc.editor.getLogicDocument();
+			if (oLogicDocument) {
+				oLogicDocument.Recalculate();
+			}
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayErrorBars = function (bShowErrorBars, nErrorValueType) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const series = this.chartSpace.getAllSeries();
+		if (!series.length) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		series.forEach(function (ser) {
+			bShowErrorBars
+				? ser.createAllErrBars(nErrorValueType)
+				: ser.removeAllErrBars();
+		});
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayGridlines = function (bShowHorMajor, bShowVerMajor, bShowHorMinor, bShowVerMinor) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		function getGridlinesSetting(displayMajor, displayMinor) {
+			if (displayMajor && displayMinor) {
+				return Asc.c_oAscGridLinesSettings.majorMinor;
+			} else if (displayMajor) {
+				return Asc.c_oAscGridLinesSettings.major;
+			} else if (displayMinor) {
+				return Asc.c_oAscGridLinesSettings.minor;
+			} else {
+				return Asc.c_oAscGridLinesSettings.none;
+			}
+		}
+
+		const categoryAxis = plotArea.catAx;
+		const valueAxis = plotArea.valAx;
+
+		if (categoryAxis || valueAxis) {
+			AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+			if (categoryAxis) {
+				const catAxSettings = getGridlinesSetting(bShowVerMajor, bShowVerMinor);
+				categoryAxis.setGridlinesSetting(catAxSettings);
+			}
+			if (valueAxis) {
+				const valAxSettings = getGridlinesSetting(bShowHorMajor, bShowHorMinor);
+				valueAxis.setGridlinesSetting(valAxSettings);
+			}
+		}
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayLegend = function (bShow, nLegendPosition) {
+		if (!this.chartSpace || !this.chartSpace.chart) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		bShow
+			? this.chartSpace.chart.createLegend(nLegendPosition)
+			: this.chartSpace.chart.setLegend(null);
+
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	// asc_ChartSettings.prototype.setDisplayLines = function (bShow, nLineType) {};
+	asc_ChartSettings.prototype.setDisplayTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		this.chartSpace.showTrendlines(bShow, nTrendlineType, nForecastForward, nForecastBackward);
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+	asc_ChartSettings.prototype.setDisplayUpDownBars = function (bShow) {
+		if (!this.chartSpace) {
+			return;
+		}
+
+		const plotArea = this.chartSpace.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const chart = plotArea.chart;
+		const isAllowedChartType = chart instanceof AscFormat.CLineChart || chart instanceof AscFormat.CStockChart;
+		if (!chart || !isAllowedChartType) {
+			return;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
+		bShow
+			? chart.createUpDownBars()
+			: chart.setUpDownBars(null);
+
+		this.chartSpace.recalculateUpDownBars();
+		this.updateChart();
+		const oLogicDocument = Asc.editor.getLogicDocument();
+		if (oLogicDocument) {
+			oLogicDocument.Recalculate();
+		}
+	};
+
+	asc_ChartSettings.prototype.setFUpdateGeneralChart = function(fUpdate) {
+		this.fUpdateGeneralChart = fUpdate;
+	};
+	asc_ChartSettings.prototype.updateGeneralChart = function (bSelect)
+	{
+		if (this.fUpdateGeneralChart)
+		{
+			this.fUpdateGeneralChart(bSelect);
+		}
 	};
 
 	/** @constructor */
@@ -1830,6 +2277,9 @@ function (window, undefined) {
 	};
 	CColor.prototype.fromAscColor = function (oAscColor) {
 		return new CColor(oAscColor.r, oAscColor.g, oAscColor.b);
+	};
+	CColor.prototype.isEqual = function (r, g, b, a) {
+		return this.r === r && this.g === g && this.b === b && this.a === a;
 	};
 
 	/** @constructor */
@@ -2788,7 +3238,7 @@ function (window, undefined) {
 			this.CanEditInlineCC = true;
 		}
 	}
-	
+
 	asc_CParagraphProperty.prototype.asc_getRtlDirection = function() {
 		return this.Bidi;
 	};
@@ -3459,7 +3909,7 @@ function (window, undefined) {
 	function asc_CBaseFieldProperty() {
 		// common
 		this.type				= undefined;
-		
+
 		this.name				= undefined;
 		this.required			= undefined;
 		this.readOnly			= undefined;
@@ -3469,6 +3919,7 @@ function (window, undefined) {
 		this.stroke				= null;
 		this.strokeWidth		= undefined;
 		this.strokeStyle		= undefined;
+		this.tooltip			= undefined;
 		this.locked				= false;
 
 		this.fieldProps	= null;
@@ -3539,6 +3990,12 @@ function (window, undefined) {
 	asc_CBaseFieldProperty.prototype.asc_putPropLocked = function (v) {
 		this.locked = v;
 	};
+	asc_CBaseFieldProperty.prototype.asc_getTooltip = function () {
+		return this.tooltip;
+	};
+	asc_CBaseFieldProperty.prototype.asc_putTooltip = function (v) {
+		this.tooltip = v;
+	};
 	asc_CBaseFieldProperty.prototype.get_Locked = function () {
 		return this.coEditLocked;
 	};
@@ -3550,6 +4007,51 @@ function (window, undefined) {
 	};
 	asc_CBaseFieldProperty.prototype.asc_putFieldProps = function (v) {
 		this.fieldProps = v;
+	};
+	asc_CBaseFieldProperty.prototype.compare = function (pr) {
+		if (this.type !== pr.type) {
+			this.type = null;
+		}
+		if (this.name !== pr.name) {
+			this.name = null;
+		}
+		if (this.required !== pr.required) {
+			this.required = null;
+		}
+		if (this.readOnly !== pr.readOnly) {
+			this.readOnly = null;
+		}
+		if (this.rot !== pr.rot) {
+			this.rot = null;
+		}
+		if (this.display !== pr.display) {
+			this.display = null;
+		}
+		if (!this.fill || !pr.fill || this.fill.r !== pr.fill.r || this.fill.g !== pr.fill.g || this.fill.b !== pr.fill.b) {
+			this.fill = null;
+		}
+		if (!this.stroke || !pr.stroke || this.stroke.r !== pr.stroke.r || this.stroke.g !== pr.stroke.g || this.stroke.b !== pr.stroke.b) {
+			this.stroke = null;
+		}
+		if (this.strokeWidth !== pr.strokeWidth) {
+			this.strokeWidth = null;
+		}
+		if (this.strokeStyle !== pr.strokeStyle) {
+			this.strokeStyle = null;
+		}
+		if (this.tooltip !== pr.tooltip) {
+			this.tooltip = null;
+		}
+		if (this.locked !== pr.locked) {
+			this.locked = null;
+		}
+
+		if (this.type != undefined && this.fieldProps && pr.fieldProps) {
+			this.fieldProps.compare(pr.fieldProps);
+		}
+		else {
+			this.fieldProps = null;
+		}
 	};
 	//////////////////////////////////////////////////////////////////
 	///// Text field
@@ -3567,6 +4069,7 @@ function (window, undefined) {
 		this.comb				= undefined;
 		this.placeholder		= undefined;
 		this.autoFit			= undefined;
+		this.password			= undefined;
 	}
 	asc_CTextFieldProperty.prototype.asc_getDefaultValue = function () {
 		return this.defaultValue;
@@ -3610,6 +4113,12 @@ function (window, undefined) {
 	asc_CTextFieldProperty.prototype.asc_putAutoFit = function (v) {
 		this.autoFit = v;
 	};
+	asc_CTextFieldProperty.prototype.asc_getPassword = function () {
+		return this.password;
+	};
+	asc_CTextFieldProperty.prototype.asc_putPassword = function (v) {
+		this.password = v;
+	};
 	asc_CTextFieldProperty.prototype.asc_getFormat = function () {
 		return this.format;
 	};
@@ -3622,7 +4131,44 @@ function (window, undefined) {
 	asc_CTextFieldProperty.prototype.asc_putValidate = function (v) {
 		this.validate = v;
 	};
-	
+	asc_CTextFieldProperty.prototype.compare = function (pr) {
+		if (this.defaultValue !== pr.defaultValue) {
+			this.defaultValue = null;
+		}
+		if (this.multiline !== pr.multiline) {
+			this.multiline = null;
+		}
+		if (this.scrollLongText !== pr.scrollLongText) {
+			this.scrollLongText = null;
+		}
+		if (this.charLimit !== pr.charLimit) {
+			this.charLimit = null;
+		}
+		if (this.comb !== pr.comb) {
+			this.comb = null;
+		}
+		if (this.placeholder !== pr.placeholder) {
+			this.placeholder = null;
+		}
+		if (this.autoFit !== pr.autoFit) {
+			this.autoFit = null;
+		}
+
+		if (this.format && pr.format && this.format.type === pr.format.type) {
+			this.format.compare(pr.format);
+		}
+		else {
+			this.format = null;
+		}
+		
+		if (this.validate && pr.validate && this.validate.type === pr.validate.type) {
+			this.validate.compare(pr.validate);
+		}
+		else {
+			this.validate = null;
+		}
+	};
+
 	//////////////////////////////////////////////////////////////////
 	///// Combobox field
 	//////////////////////////////////////////////////////////////////
@@ -3679,11 +4225,42 @@ function (window, undefined) {
 	asc_CComboboxFieldProperty.prototype.asc_putValidate = function (v) {
 		this.validate = v;
 	};
+	asc_CComboboxFieldProperty.prototype.compare = function (pr) {
+		for (let i = 0; i < this.options.length; i++) {
+			let a = this.options[i];
+			let b = pr.options[i];
+
+			if (Array.isArray(a)) {
+				if (!Array.isArray(b) || a[0] !== b[0] || a[1] !== b[1]) {
+					this.options = null;
+					break;
+				}
+			}
+			else if (a !== b) {
+				this.options = null;
+				break;
+			}
+		}
+
+		if (this.commitOnSelChange !== pr.commitOnSelChange) {
+			this.commitOnSelChange = null;
+		}
+		if (this.editable !== pr.editable) {
+			this.editable = null;
+		}
+		if (this.placeholder !== pr.placeholder) {
+			this.placeholder = null;
+		}
+		if (this.autoFit !== pr.autoFit) {
+			this.autoFit = null;
+		}
+	};
 
 	//////////////////////////////////////////////////////////////////
 	///// Listbox field
 	//////////////////////////////////////////////////////////////////
 	function asc_CListboxFieldProperty() {
+		this.options		 	= null;
 		this.commitOnSelChange	= undefined;
 		this.multipleSelection	= undefined;
 	}
@@ -3704,6 +4281,30 @@ function (window, undefined) {
 	};
 	asc_CListboxFieldProperty.prototype.asc_putMultipleSelection = function (v) {
 		this.multipleSelection = v;
+	};
+	asc_CListboxFieldProperty.prototype.compare = function (pr) {
+		for (let i = 0; i < this.options.length; i++) {
+			let a = this.options[i];
+			let b = pr.options[i];
+
+			if (Array.isArray(a)) {
+				if (!Array.isArray(b) || a[0] !== b[0] || a[1] !== b[1]) {
+					this.options = null;
+					break;
+				}
+			}
+			else if (a !== b) {
+				this.options = null;
+				break;
+			}
+		}
+
+		if (this.commitOnSelChange !== pr.commitOnSelChange) {
+			this.commitOnSelChange = null;
+		}
+		if (this.multipleSelection !== pr.multipleSelection) {
+			this.multipleSelection = null;
+		}
 	};
 	//////////////////////////////////////////////////////////////////
 	///// Checkbox
@@ -3738,7 +4339,21 @@ function (window, undefined) {
 	asc_CCheckboxFieldProperty.prototype.asc_putToggleToOff = function (v) {
 		this.toggleToOff = v;
 	};
-	
+	asc_CCheckboxFieldProperty.prototype.compare = function (pr) {
+		if (this.checkboxStyle !== pr.checkboxStyle) {
+			this.checkboxStyle = null;
+		}
+		if (this.exportValue !== pr.exportValue) {
+			this.exportValue = null;
+		}
+		if (this.defaultChecked !== pr.defaultChecked) {
+			this.defaultChecked = null;
+		}
+		if (this.toggleToOff !== pr.toggleToOff) {
+			this.toggleToOff = null;
+		}
+	};
+
 	//////////////////////////////////////////////////////////////////
 	///// Radiobutton
 	//////////////////////////////////////////////////////////////////
@@ -3755,11 +4370,18 @@ function (window, undefined) {
 	asc_CRadiobuttonFieldProperty.prototype.asc_putRadiosInUnison = function (v) {
 		this.radiosInUnison = v;
 	};
+	asc_CRadiobuttonFieldProperty.prototype.compare = function (pr) {
+		asc_CCheckboxFieldProperty.prototype.compare.call(this, pr);
+
+		if (this.radiosInUnison !== pr.radiosInUnison) {
+			this.radiosInUnison = null;
+		}
+	};
 	//////////////////////////////////////////////////////////////////
 	///// Pushbutton
 	//////////////////////////////////////////////////////////////////
 	function asc_CButtonFieldProperty(buttonField) {
-		this.parentField	= buttonField;
+		this.parentFields	= [buttonField];
 
 		this.highlight		= undefined;
 		this.layout			= undefined;
@@ -3778,8 +4400,8 @@ function (window, undefined) {
 
 		this.DivId			= undefined;
 	}
-	asc_CButtonFieldProperty.prototype.getParentField = function () {
-		return this.parentField;
+	asc_CButtonFieldProperty.prototype.getParentFields = function () {
+		return this.parentFields;
 	};
 	asc_CButtonFieldProperty.prototype.asc_getHighlight = function () {
 		return this.highlight;
@@ -3862,9 +4484,10 @@ function (window, undefined) {
 	asc_CButtonFieldProperty.prototype.asc_putCurrentState = function(v) {
 		this.currentState = v;
 
-		// set to field state to add image (will clear after set image)
-		let oField = this.getParentField();
-		oField.asc_curImageState = v;
+		// set to fields state to add image (will clear after set image)
+		this.getParentFields().forEach(function(field) {
+			field.asc_curImageState = v;
+		});
 
 		this.drawTexture(v);
 	};
@@ -3915,7 +4538,7 @@ function (window, undefined) {
 		if (!sImageRasterId) {
 			return;
 		}
-		
+
 		var _img = Asc.editor.ImageLoader.map_image_index[AscCommon.getFullImageSrc2(sImageRasterId)];
 		if (_img != undefined && _img.Image != null && _img.Status != AscFonts.ImageLoadStatus.Loading)
 		{
@@ -3971,10 +4594,7 @@ function (window, undefined) {
 		}
 		let Api = Asc.editor;
 
-		// set to field state to add image (will clear after set image)
-		let oField = this.getParentField();
-
-		Api._addImageUrl([sUrl], oField);
+		Api._addImageUrl([sUrl], this.getParentFields());
 	};
 	asc_CButtonFieldProperty.prototype.showFileDialog = function (nState) {
 		if (!this.DivId){
@@ -3983,8 +4603,8 @@ function (window, undefined) {
 		let Api = Asc.editor;
 
 		// set to field state to add image (will clear after set image)
-		let oField = this.getParentField();
-		let oDoc = oField.GetDocument();
+		let aFields = this.getParentFields();
+		let oDoc = Asc.editor.getPDFDoc();
 		let oActionsQueue = oDoc.GetActionsQueue();
 
 		if (window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]()) {
@@ -3992,18 +4612,15 @@ function (window, undefined) {
                 var file = _file;
                 if (Array.isArray(file))
                     file = file[0];
-        
+
                 var _url = window["AscDesktopEditor"]["LocalFileGetImageUrl"](file);
-                editor._addImageUrl([AscCommon.g_oDocumentUrls.getImageUrl(_url)], oField);
+                Asc.editor._addImageUrl([AscCommon.g_oDocumentUrls.getImageUrl(_url)], aFields);
             });
         }
         else {
             AscCommon.ShowImageFileDialog(Api.documentId, Api.documentUserId, undefined, Api.documentShardKey, Api.documentWopiSrc, Api.documentUserSessionId, function(error, files) {
-                if (error.canceled == true) {
-                    oActionsQueue.Continue();
-                }
-                else {
-                    Api._uploadCallback(error, files, oField);
+                if (error.canceled !== true) {
+                    Api._uploadCallback(error, files, aFields);
                 }
 
 				AscCommon.global_mouseEvent.UnLockMouse();
@@ -4017,6 +4634,64 @@ function (window, undefined) {
                 AscCommon.global_mouseEvent.UnLockMouse();
             });
         }
+	};
+	asc_CButtonFieldProperty.prototype.compare = function (pr) {
+		let aFullNames = this.parentFields.map(function(field) {
+			return field.GetFullName();
+		});
+
+		let _t = this;
+		pr.parentFields.forEach(function(field) {
+			if (!aFullNames.includes(field.GetFullName())) {
+				_t.parentFields.push(field);
+			}
+		});
+
+		if (this.highlight !== pr.highlight) {
+			this.highlight = null;
+		}
+		if (this.layout !== pr.layout) {
+			this.layout = null;
+		}
+		if (this.scaleWhen !== pr.scaleWhen) {
+			this.scaleWhen = null;
+		}
+		if (this.scaleHow !== pr.scaleHow) {
+			this.scaleHow = null;
+		}
+		if (this.fitBounds !== pr.fitBounds) {
+			this.fitBounds = null;
+		}
+		if (!this.iconPos || !pr.iconPos || this.iconPos.X !== pr.iconPos.X || this.iconPos.Y !== pr.iconPos.Y) {
+			this.iconPos = null;
+		}
+		if (this.behavior !== pr.behavior) {
+			this.behavior = null;
+		}
+		if (this.currentState !== pr.currentState) {
+			this.currentState = null;
+		}
+		if (this.normalCaption !== pr.normalCaption) {
+			this.normalCaption = null;
+		}
+		if (this.hoverCaption !== pr.hoverCaption) {
+			this.hoverCaption = null;
+		}
+		if (this.downCaption !== pr.downCaption) {
+			this.downCaption = null;
+		}
+		if (this.normalImage !== pr.normalImage) {
+			this.normalImage = null;
+		}
+		if (this.hoverImage !== pr.hoverImage) {
+			this.hoverImage = null;
+		}
+		if (this.downImage !== pr.downImage) {
+			this.downImage = null;
+		}
+		if (this.radiosInUnison !== pr.radiosInUnison) {
+			this.radiosInUnison = null;
+		}
 	};
 	//////////////////////////////////////////////////////////////////
 	///// Number format
@@ -4063,6 +4738,23 @@ function (window, undefined) {
 	asc_CFieldNumberFormatProperty.prototype.asc_putCurrencyPrepend = function (v) {
 		this.currencyPrepend = v;
 	};
+	asc_CFieldNumberFormatProperty.prototype.compare = function (pr) {
+		if (this.decimals !== pr.decimals) {
+			this.decimals = null;
+		}
+		if (this.sepStyle !== pr.sepStyle) {
+			this.sepStyle = null;
+		}
+		if (this.negStyle !== pr.negStyle) {
+			this.negStyle = null;
+		}
+		if (this.currency !== pr.currency) {
+			this.currency = null;
+		}
+		if (this.currencyPrepend !== pr.currencyPrepend) {
+			this.currencyPrepend = null;
+		}
+	};
 	//////////////////////////////////////////////////////////////////
 	///// Percentage format
 	//////////////////////////////////////////////////////////////////
@@ -4087,6 +4779,14 @@ function (window, undefined) {
 	asc_CFieldPercentageFormatProperty.prototype.asc_putSepStyle = function (v) {
 		this.sepStyle = v;
 	};
+	asc_CFieldPercentageFormatProperty.prototype.compare = function (pr) {
+		if (this.decimals !== pr.decimals) {
+			this.decimals = null;
+		}
+		if (this.sepStyle !== pr.sepStyle) {
+			this.sepStyle = null;
+		}
+	};
 
 	//////////////////////////////////////////////////////////////////
 	///// Date format
@@ -4105,7 +4805,12 @@ function (window, undefined) {
 	asc_CFieldDateFormatProperty.prototype.asc_putFormat = function (v) {
 		this.format = v;
 	};
-	
+	asc_CFieldDateFormatProperty.prototype.compare = function (pr) {
+		if (this.format !== pr.format) {
+			this.format = null;
+		}
+	};
+
 	//////////////////////////////////////////////////////////////////
 	///// Time format
 	//////////////////////////////////////////////////////////////////
@@ -4122,6 +4827,11 @@ function (window, undefined) {
 	};
 	asc_CFieldTimeFormatProperty.prototype.asc_putFormat = function (v) {
 		this.format = v;
+	};
+	asc_CFieldTimeFormatProperty.prototype.compare = function (pr) {
+		if (this.format !== pr.format) {
+			this.format = null;
+		}
 	};
 
 	//////////////////////////////////////////////////////////////////
@@ -4148,6 +4858,14 @@ function (window, undefined) {
 	asc_CFieldSpecialFormatProperty.prototype.asc_putMask = function (v) {
 		this.mask = v;
 	};
+	asc_CFieldSpecialFormatProperty.prototype.compare = function (pr) {
+		if (this.format !== pr.format) {
+			this.format = null;
+		}
+		if (this.mask !== pr.mask) {
+			this.mask = null;
+		}
+	};
 
 	//////////////////////////////////////////////////////////////////
 	///// Regular (our custom) format
@@ -4165,6 +4883,11 @@ function (window, undefined) {
 	};
 	asc_CFieldRegularFormatProperty.prototype.asc_putRegExp = function (v) {
 		this.regExp = v;
+	};
+	asc_CFieldSpecialFormatProperty.prototype.compare = function (pr) {
+		if (this.regExp !== pr.regExp) {
+			this.regExp = null;
+		}
 	};
 
 	//////////////////////////////////////////////////////////////////
@@ -4205,6 +4928,14 @@ function (window, undefined) {
 	};
 	asc_CFieldValidateProperty.prototype.asc_putLessThen = function (v) {
 		this.lessThen = v;
+	};
+	asc_CFieldSpecialFormatProperty.prototype.compare = function (pr) {
+		if (this.greaterThen !== pr.greaterThen) {
+			this.greaterThen = null;
+		}
+		if (this.lessThen !== pr.lessThen) {
+			this.lessThen = null;
+		}
 	};
 
 	/** @constructor */
@@ -6802,6 +7533,45 @@ function (window, undefined) {
 		return 0;
 	};
 
+	/** @constructor */
+	function asc_CFormatCellsInfo() {
+		this.type = Asc.c_oAscNumFormatType.General;
+		this.decimalPlaces = 2;
+		this.separator = false;
+		this.symbol = null;
+		this.currency = null;
+	}
+	asc_CFormatCellsInfo.prototype.asc_setType = function (val) {
+		this.type = val;
+	};
+	asc_CFormatCellsInfo.prototype.asc_setDecimalPlaces = function (val) {
+		this.decimalPlaces = val;
+	};
+	asc_CFormatCellsInfo.prototype.asc_setSeparator = function (val) {
+		this.separator = val;
+	};
+	asc_CFormatCellsInfo.prototype.asc_setSymbol = function (val) {
+		this.symbol = val;
+	};
+	asc_CFormatCellsInfo.prototype.asc_setCurrencySymbol = function (val) {
+		this.currency = val;
+	};
+	asc_CFormatCellsInfo.prototype.asc_getType = function () {
+		return this.type;
+	};
+	asc_CFormatCellsInfo.prototype.asc_getDecimalPlaces = function () {
+		return this.decimalPlaces;
+	};
+	asc_CFormatCellsInfo.prototype.asc_getSeparator = function () {
+		return this.separator;
+	};
+	asc_CFormatCellsInfo.prototype.asc_getSymbol = function () {
+		return this.symbol;
+	};
+	asc_CFormatCellsInfo.prototype.asc_getCurrencySymbol = function () {
+		return this.currency;
+	};
+
 	/**
 	 * @constructor
 	 */
@@ -6852,7 +7622,7 @@ function (window, undefined) {
 	CDocInfoProp.prototype.put_SymbolsWSCount = function (v) {
 		this.SymbolsWSCount = v;
 	};
-	
+
 	/**
 	 * @constructor
 	 */
@@ -6988,6 +7758,8 @@ function (window, undefined) {
 	prot["asc_setVisible"] = prot.asc_setVisible;
 	prot["asc_getRequested"] = prot.asc_getRequested;
 	prot["asc_setRequested"] = prot.asc_setRequested;
+	prot["asc_getIsForm"] = prot.asc_getIsForm;
+	prot["asc_setIsForm"] = prot.asc_setIsForm;
 
 	window["AscCommon"].asc_CAscEditorPermissions = asc_CAscEditorPermissions;
 	prot = asc_CAscEditorPermissions.prototype;
@@ -7059,6 +7831,14 @@ function (window, undefined) {
 	prot["putNumFmt"] = prot.putNumFmt;
 	prot["getNumFmt"] = prot.getNumFmt;
 	prot["isRadarAxis"] = prot.isRadarAxis;
+	prot["getMajorUnit"] = prot.getMajorUnit;
+	prot["getMinorUnit"] = prot.getMinorUnit;
+	prot["putMajorUnit"] = prot.putMajorUnit;
+	prot["putMinorUnit"] = prot.putMinorUnit;
+	prot["getMajorUnitRule"] = prot.getMajorUnitRule;
+	prot["getMinorUnitRule"] = prot.getMinorUnitRule;
+	prot["putMajorUnitRule"] = prot.putMajorUnitRule;
+	prot["putMinorUnitRule"] = prot.putMinorUnitRule;
 
 	window["AscCommon"].asc_CatAxisSettings = asc_CatAxisSettings;
 	prot = asc_CatAxisSettings.prototype;
@@ -7181,6 +7961,19 @@ function (window, undefined) {
 	prot["setView3d"] = prot.setView3d;
 	prot["getDisplayTrendlinesEquation"] = prot.getDisplayTrendlinesEquation;
 	prot["putDisplayTrendlinesEquation"] = prot.putDisplayTrendlinesEquation;
+	prot["setDisplayAxes"] = prot.setDisplayAxes;
+	prot["setDisplayAxisTitles"] = prot.setDisplayAxisTitles;
+	prot["setDisplayChartTitle"] = prot.setDisplayChartTitle;
+	prot["setDisplayDataLabels"] = prot.setDisplayDataLabels;
+	prot["setDisplayDataTable"] = prot.setDisplayDataTable;
+	prot["setDisplayErrorBars"] = prot.setDisplayErrorBars;
+	prot["setDisplayGridlines"] = prot.setDisplayGridlines;
+	prot["setDisplayLegend"] = prot.setDisplayLegend;
+	prot["setDisplayTrendlines"] = prot.setDisplayTrendlines;
+	prot["setDisplayUpDownBars"] = prot.setDisplayUpDownBars;
+
+	prot["getExternalReference"] = prot.getExternalReference;
+
 
 	window["AscCommon"].asc_CRect = asc_CRect;
 	prot = asc_CRect.prototype;
@@ -7582,6 +8375,8 @@ function (window, undefined) {
 	prot["asc_putStrokeStyle"]	= prot.asc_putStrokeStyle;
 	prot["asc_getPropLocked"]	= prot.asc_getPropLocked;
 	prot["asc_putPropLocked"]	= prot.asc_putPropLocked;
+	prot["asc_getTooltip"]		= prot.asc_getTooltip;
+	prot["asc_putTooltip"]		= prot.asc_putTooltip;
 	prot["get_Locked"]			= prot.get_Locked;
 	prot["put_Locked"]			= prot.put_Locked;
 	prot["asc_getFieldProps"]	= prot.asc_getFieldProps;
@@ -7603,6 +8398,8 @@ function (window, undefined) {
 	prot["asc_putPlaceholder"]			= prot.asc_putPlaceholder;
 	prot["asc_getAutoFit"]				= prot.asc_getAutoFit;
 	prot["asc_putAutoFit"]				= prot.asc_putAutoFit;
+	prot["asc_getPassword"]				= prot.asc_getPassword;
+	prot["asc_putPassword"]				= prot.asc_putPassword;
 	prot["asc_getFormat"]				= prot.asc_getFormat;
 	prot["asc_putFormat"]				= prot.asc_putFormat;
 	prot["asc_getValidate"]				= prot.asc_getValidate;
@@ -7699,7 +8496,7 @@ function (window, undefined) {
 	prot["asc_getCurrencyPrepend"]	= prot.asc_getCurrencyPrepend;
 	prot["asc_putCurrencyPrepend"]	= prot.asc_putCurrencyPrepend;
 
-	
+
 	window["Asc"]["asc_CFieldPercentageFormatProperty"] = window["Asc"].asc_CFieldPercentageFormatProperty = asc_CFieldPercentageFormatProperty;
 	prot = asc_CFieldPercentageFormatProperty.prototype;
 	prot["asc_getType"]				= prot.asc_getType;
@@ -7713,13 +8510,13 @@ function (window, undefined) {
 	prot["asc_getType"]				= prot.asc_getType;
 	prot["asc_getFormat"]			= prot.asc_getFormat;
 	prot["asc_putFormat"]			= prot.asc_putFormat;
-	
+
 	window["Asc"]["asc_CFieldTimeFormatProperty"] = window["Asc"].asc_CFieldTimeFormatProperty = asc_CFieldTimeFormatProperty;
 	prot = asc_CFieldTimeFormatProperty.prototype;
 	prot["asc_getType"]				= prot.asc_getType;
 	prot["asc_getFormat"]			= prot.asc_getFormat;
 	prot["asc_putFormat"]			= prot.asc_putFormat;
-	
+
 	window["Asc"]["asc_CFieldSpecialFormatProperty"] = window["Asc"].asc_CFieldSpecialFormatProperty = asc_CFieldSpecialFormatProperty;
 	prot = asc_CFieldSpecialFormatProperty.prototype;
 	prot["asc_getType"]				= prot.asc_getType;
@@ -7727,13 +8524,13 @@ function (window, undefined) {
 	prot["asc_putFormat"]			= prot.asc_putFormat;
 	prot["asc_getMask"]				= prot.asc_getMask;
 	prot["asc_putMask"]				= prot.asc_putMask;
-	
+
 	window["Asc"]["asc_CFieldRegularFormatProperty"] = window["Asc"].asc_CFieldRegularFormatProperty = asc_CFieldRegularFormatProperty;
 	prot = asc_CFieldRegularFormatProperty.prototype;
 	prot["asc_getType"]				= prot.asc_getType;
 	prot["asc_getRegExp"]			= prot.asc_getRegExp;
 	prot["asc_putRegExp"]			= prot.asc_putRegExp;
-	
+
 	window["Asc"]["asc_CFieldValidateProperty"] = window["Asc"].asc_CFieldValidateProperty = asc_CFieldValidateProperty;
 	prot = asc_CFieldValidateProperty.prototype;
 	prot["asc_getType"]				= prot.asc_getType;
@@ -8131,7 +8928,7 @@ function (window, undefined) {
 	CDocInfoProp.prototype['put_SymbolsCount'] = CDocInfoProp.prototype.put_SymbolsCount;
 	CDocInfoProp.prototype['get_SymbolsWSCount'] = CDocInfoProp.prototype.get_SymbolsWSCount;
 	CDocInfoProp.prototype['put_SymbolsWSCount'] = CDocInfoProp.prototype.put_SymbolsWSCount;
-	
+
 	window["Asc"]["RangePermProp"] = window["Asc"].RangePermProp = RangePermProp;
 	prot = RangePermProp.prototype;
 	prot["get_canEditText"] = prot.get_canEditText;
@@ -8155,5 +8952,81 @@ function (window, undefined) {
 	{
 		return mm * AscCommon.g_dKoef_mm_to_pix;
 	};
+
+	window["Asc"].checkReturnCommand = function(obj, recursionDepth)
+	{
+		let depth = (recursionDepth === undefined) ? 0 : recursionDepth;
+		if (depth > 10)
+			return false;
+
+		switch (typeof obj)
+		{
+			case "undefined":
+			case "boolean":
+			case "number":
+			case "string":
+			case "symbol":
+			case "bigint":
+				return true;
+			case "object":
+			{
+				if (!obj)
+					return true;
+
+				if (Array.isArray(obj))
+				{
+					for (let i = 0, len = obj.length; i < len; i++)
+					{
+						if (!Asc.checkReturnCommand(obj[i], depth + 1))
+							return false;
+					}
+
+					return true;
+				}
+
+				if (Object.getPrototypeOf)
+				{
+					let prot = Object.getPrototypeOf(obj);
+					if (prot && prot.__proto__ && prot.__proto__.constructor && prot.__proto__.constructor.name)
+					{
+						if (prot.__proto__.constructor.name === "TypedArray")
+							return true;
+					}
+				}
+
+				for (let prop in obj)
+				{
+					let isNaturalProp = true;
+					if (obj.hasOwnProperty)
+						isNaturalProp = obj.hasOwnProperty(prop);
+					if (isNaturalProp)
+					{
+						if (!Asc.checkReturnCommand(obj[prop], depth + 1))
+							return false;
+					}
+				}
+
+				return true;
+			}
+			default:
+				break;
+		}
+
+		return false;
+	};
 	
+
+	window["Asc"]["asc_CFormatCellsInfo"] = window["Asc"].asc_CFormatCellsInfo = asc_CFormatCellsInfo;
+	prot = asc_CFormatCellsInfo.prototype;
+	prot["asc_setType"] = prot.asc_setType;
+	prot["asc_setDecimalPlaces"] = prot.asc_setDecimalPlaces;
+	prot["asc_setSeparator"] = prot.asc_setSeparator;
+	prot["asc_setSymbol"] = prot.asc_setSymbol;
+	prot["asc_setCurrencySymbol"] = prot.asc_setCurrencySymbol;
+	prot["asc_getType"] = prot.asc_getType;
+	prot["asc_getDecimalPlaces"] = prot.asc_getDecimalPlaces;
+	prot["asc_getSeparator"] = prot.asc_getSeparator;
+	prot["asc_getSymbol"] = prot.asc_getSymbol;
+	prot["asc_getCurrencySymbol"] = prot.asc_getCurrencySymbol;
+
 })(window);

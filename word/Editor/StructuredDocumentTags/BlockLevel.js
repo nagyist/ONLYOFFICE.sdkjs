@@ -657,6 +657,10 @@ CBlockLevelSdt.prototype.SetParagraphPr = function(oParaPr)
 {
 	return this.Content.SetParagraphPr(oParaPr);
 };
+CBlockLevelSdt.prototype.SetParagraphBidi = function(bidi)
+{
+	return this.Content.SetParagraphBidi(bidi);
+};
 CBlockLevelSdt.prototype.SetParagraphAlign = function(Align)
 {
 	return this.Content.SetParagraphAlign(Align);
@@ -1043,7 +1047,9 @@ CBlockLevelSdt.prototype.DrawContentControlsTrack = function(nType, X, Y, nCurPa
 			arrRects[i].B += padding;
 		}
 	}
-
+	if (AscCommon.ContentControlTrack.Hover === nType)
+		oLogicDocument.HoverCC.addCC(this);
+	
 	oDrawingDocument.addContentControlTrack(this, nType, arrRects);
 	return true;
 };
@@ -1861,7 +1867,7 @@ CBlockLevelSdt.prototype.private_FillPlaceholderContent = function()
 		{
 			for (var nIndex = 0, nCount = docPart.GetElementsCount(); nIndex < nCount; ++nIndex)
 			{
-				this.Content.AddToContent(0, docPart.GetElement(nIndex).Copy());
+				this.Content.AddToContent(nIndex, docPart.GetElement(nIndex).Copy());
 			}
 			
 			// Change the color of the paragraph end mark for default placeholders
@@ -1874,6 +1880,13 @@ CBlockLevelSdt.prototype.private_FillPlaceholderContent = function()
 				let run  = para.GetElement(0);
 				if (run && run.GetRStyle())
 					para.TextPr.SetRStyle(run.GetRStyle());
+			}
+			
+			// TODO: Need to handle numbering in placeholders
+			let allParagraph = this.Content.GetAllParagraphs();
+			for (let i = 0; i < allParagraph.length; ++i)
+			{
+				allParagraph[i].RemoveNumPr();
 			}
 		}
 	}

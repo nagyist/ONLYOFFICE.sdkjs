@@ -349,6 +349,57 @@
         }
     };
 
+    CGraphicObjects.prototype.cursorMoveEndOfLine = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToEndOfLine(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveStartOfLine = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToStartOfLine(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveToEndPos = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToEndPos(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
+
+    CGraphicObjects.prototype.cursorMoveToStartPos = function (AddToSelect) {
+        let oViewer = Asc.editor.getDocumentRenderer();
+        let oDoc = Asc.editor.getPDFDoc();
+
+        let content = this.getTargetDocContent(undefined, true);
+        if (content) {
+            content.MoveCursorToStartPos(AddToSelect);
+            
+            oViewer.onUpdateOverlay();
+            oDoc.UpdateInterface();
+        }
+    };
     CGraphicObjects.prototype.getDrawingProps = function () {
         return this.getDrawingPropsFromArray(this.getSelectedArray());
     };
@@ -504,6 +555,9 @@
                         if (arr[i].getDocContent) {
                             if (arr[i].IsDrawing() && arr[i].IsEditFieldShape()) {
                                 let oField = arr[i].GetEditField();
+                                let oContent = oField.GetTrigger(AscPDF.FORMS_TRIGGERS_TYPES.Format) ? oField.contentFormat : oField.content;
+                                let oCalcedTextPr = oContent ? oContent.GetCalculatedTextPr() : null;
+
                                 cur_pr = new AscWord.CTextPr();
 
                                 // font family
@@ -513,7 +567,7 @@
                                 };
 
                                 // font size
-                                cur_pr.SetFontSize(oField.GetTextSize());
+                                cur_pr.SetFontSize(oCalcedTextPr ? oCalcedTextPr.GetFontSize() : oField.GetTextSize());
                                 
                                 // font color
                                 let aColor = oField.GetTextColor();
@@ -521,9 +575,6 @@
                                 let oUnifill = AscFormat.CreateUnfilFromRGB(oRGB.r, oRGB.g, oRGB.b);
                                 cur_pr.Unifill = oUnifill;
                                 cur_pr.Unifill.fill.color.RGBA = cur_pr.Unifill.fill.color.color.RGBA;
-
-                                // align
-                                cur_pr.Jc = AscPDF.getInternalAlignByPdfType(oField.GetAlign());
                             }
                             else {
                                 content = arr[i].getDocContent();
@@ -1422,8 +1473,21 @@
                     this.lastSelectedObject = object;
                 }
                 this.checkShowMediaControlOnSelect();
-                if (!object.IsFreeText || !object.IsFreeText() || !object.IsInTextBox()) {
-                    oDoc.SetMouseDownObject(object, this.selectedObjects.length == 0);
+                if (!object.IsFreeText || !object.IsFreeText()) {
+                    let oAcitveObj = oDoc.GetActiveObject();
+                    if (oAcitveObj) {
+                        let oPrev = this.selectedObjects[0];
+
+                        // edit field shape
+                        if (object.IsDrawing() && object.IsEditFieldShape() && oAcitveObj == object.GetEditField()) {
+                            oDoc.SetMouseDownObject(oPrev && oPrev.GetEditField() || null, false);
+                            oDoc.activeForm = oPrev && oPrev.GetEditField() || null;
+                        }
+                        // other objects
+                        else if (oAcitveObj == object) {
+                            oDoc.SetMouseDownObject(oPrev || null, false);
+                        }
+                    }
                 }
                 return;
             }
@@ -1623,7 +1687,10 @@
                                 oField.SetAlign(AscPDF.getPdfTypeAlignByInternal(args[0]));
                             }
                             else if (f == CDocumentContent.prototype.IncreaseDecreaseFontSize) {
-                                let nCurFontSize = oField.GetTextSize();
+                                let oContent = oField.GetTrigger(AscPDF.FORMS_TRIGGERS_TYPES.Format) ? oField.contentFormat : oField.content;
+                                let oCalcedTextPr = oContent.GetCalculatedTextPr();
+                                
+                                let nCurFontSize = oCalcedTextPr.GetFontSize();
                                 let oTextPr = new AscWord.CTextPr();
                                 oTextPr.SetFontSize(nCurFontSize);
                                 oField.SetTextSize(oTextPr.GetIncDecFontSize(args[0]));
@@ -1730,6 +1797,113 @@
         if (this.document) {
             this.document.Recalculate();
         }
+    };
+
+    CGraphicObjects.prototype.checkRedrawOnChangeCursorPosition = function (oStartContent, oStartPara) {
+        let bRedraw = false;
+
+        let oDocContent = this.getTargetDocContent();
+       
+        let oEndContent = AscFormat.checkEmptyPlaceholderContent(oDocContent);
+        let oEndPara = null;
+        if (oStartContent || oEndContent) {
+            if (oStartContent !== oEndContent) {
+                bRedraw = true;
+            } else {
+                if (oEndContent) {
+                    oEndPara = oEndContent.GetCurrentParagraph();
+                }
+                if (oEndPara !== oStartPara &&
+                    (oStartPara && oStartPara.IsEmptyWithBullet() || oEndPara && oEndPara.IsEmptyWithBullet())) {
+                    bRedraw = true;
+                }
+            }
+        }
+        
+        if (bRedraw) {
+            function redraw(oContent) {
+                let oObject = oContent.GetParent();
+                while (!oObject.AddToRedraw && oObject.GetParent) {
+                    oObject = oObject.GetParent();
+                }
+                
+                oObject.AddToRedraw && oObject.AddToRedraw();
+            }
+
+            oStartContent && redraw(oStartContent);
+            oEndContent && redraw(oEndContent);
+            oDocContent && redraw(oDocContent);
+        }
+    };
+
+    CGraphicObjects.prototype.getSelectionImageData = function () {
+        let sImageUrl;
+        let aSelectedObjects = this.getSelectedArray();
+        if (this.selectedObjects.length > 0) {
+            let _bounds_cheker = new AscFormat.CSlideBoundsChecker();
+            let dKoef = AscCommon.g_dKoef_mm_to_pix;
+            let w_mm = 210;
+            let h_mm = 297;
+            let w_px = (w_mm * dKoef + 0.5) >> 0;
+            let h_px = (h_mm * dKoef + 0.5) >> 0;
+
+            _bounds_cheker.init(w_px, h_px, w_mm, h_mm);
+            _bounds_cheker.transform(1, 0, 0, 1, 0, 0);
+
+            _bounds_cheker.AutoCheckLineWidth = true;
+            for (let i = 0; i < aSelectedObjects.length; ++i) {
+                !aSelectedObjects[i].IsAnnot() && aSelectedObjects[i].draw(_bounds_cheker);
+            }
+
+            var _need_pix_width = _bounds_cheker.Bounds.max_x - _bounds_cheker.Bounds.min_x + 1;
+            var _need_pix_height = _bounds_cheker.Bounds.max_y - _bounds_cheker.Bounds.min_y + 1;
+
+            if (_need_pix_width > 0 && _need_pix_height > 0) {
+
+                var _canvas = document.createElement('canvas');
+                _canvas.width = _need_pix_width;
+                _canvas.height = _need_pix_height;
+
+                var _ctx = _canvas.getContext('2d');
+                if (!window["NATIVE_EDITOR_ENJINE"]) {
+                    var g = new AscCommon.CGraphics();
+                    g.init(_ctx, w_px, h_px, w_mm, h_mm);
+                    g.m_oFontManager = AscCommon.g_fontManager;
+
+                    g.m_oCoordTransform.tx = -_bounds_cheker.Bounds.min_x;
+                    g.m_oCoordTransform.ty = -_bounds_cheker.Bounds.min_y;
+                    g.transform(1, 0, 0, 1, 0, 0);
+
+
+                    AscCommon.IsShapeToImageConverter = true;
+                    for (let i = 0; i < aSelectedObjects.length; ++i) {
+                        aSelectedObjects[i].draw(g);
+                    }
+                    if (AscCommon.g_fontManager) {
+                        AscCommon.g_fontManager.m_pFont = null;
+                    }
+                    if (AscCommon.g_fontManager2) {
+                        AscCommon.g_fontManager2.m_pFont = null;
+                    }
+                    AscCommon.IsShapeToImageConverter = false;
+
+                    try {
+                        sImageUrl = _canvas.toDataURL("image/png");
+                    } catch (err) {
+                        sImageUrl = "";
+                    }
+                } else {
+                    sImageUrl = "";
+                }
+                return {
+                    src: sImageUrl,
+                    width: _need_pix_width,
+                    height: _need_pix_height,
+                    bounds: _bounds_cheker.Bounds
+                };
+            }
+        }
+        return null;
     }
 
     // import
@@ -1748,6 +1922,7 @@
     CGraphicObjects.prototype.getDrawingsPasteShift     = AscFormat.DrawingObjectsController.prototype.getDrawingsPasteShift;
     CGraphicObjects.prototype.removeCallback            = AscFormat.DrawingObjectsController.prototype.removeCallback;
     CGraphicObjects.prototype.getAllSingularDrawings    = AscFormat.DrawingObjectsController.prototype.getAllSingularDrawings;
+    CGraphicObjects.prototype.setParagraphBidi          = AscFormat.DrawingObjectsController.prototype.setParagraphBidi;
     CGraphicObjects.prototype.loadDocumentStateAfterLoadChanges = AscFormat.DrawingObjectsController.prototype.loadDocumentStateAfterLoadChanges;
 
     CGraphicObjects.prototype.startRecalculate = function() {};
