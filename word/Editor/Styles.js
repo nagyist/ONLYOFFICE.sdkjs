@@ -9706,6 +9706,10 @@ AscWord.CDocumentColor = CDocumentColor;
 	{
 		return this.ReadFromBinary(reader);
 	};
+	CDocumentColorA.prototype.IsEqual = function(color)
+	{
+		return this.isEqual(color);
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	AscWord.CDocumentColorA = CDocumentColorA;
 })();

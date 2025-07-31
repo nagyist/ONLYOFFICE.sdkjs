@@ -2090,6 +2090,13 @@
 				h += (offsets.H - b);
 			}
 
+			if (y > offsets.H)
+				y = offsets.H - h;
+			if (y < offsets.editorY)
+				y = offsets.editorY;
+			if (x < offsets.editorX)
+				x = offsets.editorX;
+
 			variation["size"] = [w, h];
 			variation["positionX"] = x;
 			variation["positionY"] = y;

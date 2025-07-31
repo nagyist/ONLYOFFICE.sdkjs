@@ -7043,8 +7043,8 @@ background-repeat: no-repeat;\
 			return oPresentation.GetSelectedText(true);
 		}
 
-		const value = AscCommon.isRealObject(aSelectedArray[0].nvSpPr.cNvPr.hlinkClick);
-		return value ? false : null;
+		const cNvProps = aSelectedArray[0].getCNvProps();
+		return cNvProps && AscCommon.isRealObject(cNvProps.hlinkClick) ? false : null;
 	};
 
 	// HyperProps - объект CHyperlinkProperty

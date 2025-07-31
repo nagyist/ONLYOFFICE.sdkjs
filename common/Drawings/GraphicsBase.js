@@ -451,6 +451,10 @@
 	CGraphicsBase.prototype.drawFlowAnchor = function(x, y)
 	{
 	};
+	
+	CGraphicsBase.prototype.drawPermissionMark = function(x, y, h, isStart, isActive)
+	{
+	};
 
 	CGraphicsBase.prototype.DrawFootnoteRect = function(x, y, w, h)
 	{

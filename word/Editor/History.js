@@ -1799,7 +1799,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	};
 	CHistory.prototype.startGroupPoints = function()
 	{
-		this.Create_NewPoint(AscDFH.historydescription_LongAction);
+		this.Create_NewPoint(AscDFH.historydescription_GroupPointsOpen);
 	};
 	CHistory.prototype.cancelGroupPoints = function()
 	{
@@ -1812,7 +1812,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		this.UndoRedoInProgress = true;
 		
 		let point;
-		for (let i = this.Points.length - 1; i >= startIndex; --i)
+		for (let i = this.Index; i >= startIndex; --i)
 		{
 			point = this.Points[i];
 			this.private_UndoPoint(point, changes);
@@ -1823,6 +1823,9 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 		
 		if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart)
 			window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide(true);
+		
+		this.Index = startIndex - 1;
+		this.ClearRedo()
 		
 		this.UndoRedoInProgress = false;
 		return changes;
@@ -1836,6 +1839,8 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 			return;
 		
 		let point = this.Points[startIndex];
+		point.Description = AscDFH.historydescription_GroupPoints;
+		
 		for (let i = startIndex + 1; i < this.Points.length; ++i)
 		{
 			point.Items = point.Items.concat(this.Points[i].Items);
@@ -1884,7 +1889,7 @@ CHistory.prototype.private_PostProcessingRecalcData = function()
 	{
 		for (let i = this.Index; i >= 0; --i)
 		{
-			if (AscDFH.historydescription_LongAction === this.Points[i].Description)
+			if (AscDFH.historydescription_GroupPointsOpen === this.Points[i].Description)
 				return i;
 		}
 		

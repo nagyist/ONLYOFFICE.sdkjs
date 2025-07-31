@@ -27691,6 +27691,67 @@ function isAllowPasteLink(pastedWb) {
 			oController.removeAllInks(arrInks);
 		}
 	};
+	WorksheetView.prototype.getSelectionCoords = function () {
+		let range = this._getSelection();
+		range = range && range.getLast();
+		if (!range) {
+			return null;
+		}
+		var visibleRange = this.getVisibleRange();
+		var intersectionVisibleRange = visibleRange.intersection(range);
+		if (!intersectionVisibleRange && this.topLeftFrozenCell) {
+			var cFrozen = this.topLeftFrozenCell.getCol0();
+			var rFrozen = this.topLeftFrozenCell.getRow0();
+			cFrozen -= 1;
+			rFrozen -= 1;
+
+			var frozenRange;
+			if (0 <= cFrozen && 0 <= rFrozen) {
+				frozenRange = new asc_Range(0, 0, cFrozen, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+			if (!intersectionVisibleRange && 0 <= cFrozen) {
+				frozenRange = new asc_Range(0, this.visibleRange.r1, cFrozen, this.visibleRange.r2);
+				intersectionVisibleRange = frozenRange.intersection(range);
+
+			}
+			if (!intersectionVisibleRange && 0 <= rFrozen) {
+				frozenRange = new asc_Range(this.visibleRange.c1, 0, this.visibleRange.c2, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+		}
+
+		let res = null;
+		if (!intersectionVisibleRange) {
+			range = visibleRange;
+			intersectionVisibleRange = visibleRange;
+		}
+
+		if (range && intersectionVisibleRange) {
+			let _elem = this.workbook.Api && this.workbook.Api.HtmlElement
+			let offs = _elem && AscCommon.UI && AscCommon.UI.getBoundingClientRect && AscCommon.UI.getBoundingClientRect(_elem);
+			if (offs) {
+				res = [];
+
+				res[0] = this.getCellCoord(range.c1, range.r1);
+				res[1] = this.getCellCoord(intersectionVisibleRange.c2, intersectionVisibleRange.r2);
+
+				if (this.getRightToLeft()) {
+					res[0]._x += res[0]._width;
+					res[1]._x += res[1]._width;
+				}
+
+				res[0]._x += offs.left;
+				res[1]._x += offs.left;
+				res[0]._y += offs.top;
+				res[1]._y += offs.top;
+			}
+		}
+
+		return res;
+	};
+
+	
 
 
 

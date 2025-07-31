@@ -11848,7 +11848,7 @@
 		if (ws.AutoFilter) {
 			_range = ws.AutoFilter.Ref;
 		} else {
-			let filterProps = ws.autoFilters.getAddFormatTableOptions(selectionRange);
+			let filterProps = ws.autoFilters.getAddFormatTableOptions(this.range.bbox);
 			_range = filterProps && filterProps.range && AscCommonExcel.g_oRangeCache.getAscRange(filterProps.range);
 		}
 
@@ -12035,8 +12035,22 @@
 				if (VisibleDropDown === false) {
 					autoFilterOptions.asc_setVisibleDropDown(VisibleDropDown);
 				}
-				ws.autoFilters.applyAutoFilter(autoFilterOptions, ws.selectionRange.getLast().clone());
-				//api.asc_applyAutoFilter(autoFilterOptions);
+				let applyFilterProps = ws.autoFilters.applyAutoFilter(autoFilterOptions, ws.selectionRange.getLast().clone());
+				let minChangeRow = applyFilterProps && applyFilterProps.minChangeRow;
+				if (null !== minChangeRow) {
+					let oWorksheet = Asc['editor'] && Asc['editor'].wb && Asc['editor'].wb.getWorksheet();
+					if (oWorksheet && oWorksheet.objectRender) {
+						let rangeOldFilter = applyFilterProps && applyFilterProps.rangeOldFilter;
+						if (rangeOldFilter) {
+							oWorksheet.objectRender.bUpdateMetrics = false;
+							oWorksheet._onUpdateFormatTable(rangeOldFilter, true);
+							oWorksheet.objectRender.bUpdateMetrics = true;
+						}
+						if (oWorksheet.objectRender.controller) {
+							oWorksheet.objectRender.updateSizeDrawingObjects({target: AscCommonExcel.c_oTargetType.RowResize, row: minChangeRow});
+						}
+					}
+				}
 			}
 		}
 	};
@@ -12139,6 +12153,29 @@
 			this.SetFormulaArray(sValue);
 		}
 	});
+
+	/**
+	 * Returns a range that represents the expanded range around the current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiRange | null} - Returns the expanded range or null if the range cannot be expanded.
+	 */
+	ApiRange.prototype.Expand = function () {
+		if (!this.range) {
+			return null;
+		}
+
+		let bbox = this.range.bbox;
+		let ws = this.range.worksheet;
+		let expandRange = ws && ws.autoFilters && ws.autoFilters.expandRange(bbox);
+
+		if (!expandRange) {
+			return null;
+		}
+
+		let res = ws.getRange3(expandRange.r1, expandRange.c1, expandRange.r2, expandRange.c2);
+		return new ApiRange(res);
+	};
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -18369,6 +18406,7 @@
 	ApiRange.prototype["SetAutoFilter"] = ApiRange.prototype.SetAutoFilter;
 	ApiRange.prototype["SetFormulaArray"] = ApiRange.prototype.SetFormulaArray;
 	ApiRange.prototype["GetFormulaArray"] = ApiRange.prototype.GetFormulaArray;
+	ApiRange.prototype["Expand"] = ApiRange.prototype.Expand;
 
 
 
