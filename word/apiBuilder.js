@@ -27352,73 +27352,217 @@
 		return 25.4 / 72.0 / 8 * pt;
 	}
 	
+	/**
+	 * Converts pixels to EMUs (English Metric Units).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PixelsToEmu.js
+	 */
 	function Px2Emu(px)
 	{
 		return private_MM2EMU(AscCommon.g_dKoef_pix_to_mm * px);
 	}
+	/**
+	 * Converts millimeters to pixels.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToPixels.js
+	 */
 	function Mm2Px(mm)
 	{
 		return mm * AscCommon.g_dKoef_mm_to_pix;
 	}
 
+	/**
+	 * Converts points to centimeters.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToCentimeters.js
+	 */
 	function PointsToCentimeters(pt) {
 		const ptToCm = g_dKoef_pt_to_mm / 10;
 		return pt * ptToCm;
 	}
+	/**
+	 * Converts points to EMUs (English Metric Units).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToEmus.js
+	 */
 	function PointsToEmus(pt) {
 		const ptToEm = g_dKoef_pt_to_mm * g_dKoef_mm_to_emu;
 		return pt * ptToEm;
 	}
+	/**
+	 * Converts points to inches.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToInches.js
+	 */
 	function PointsToInches(pt) {
 		const ptToIn = g_dKoef_pt_to_mm / g_dKoef_in_to_mm;
 		return pt * ptToIn;
 	}
+	/**
+	 * Converts points to lines (1 line = 12 points).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToLines.js
+	 */
 	function PointsToLines(pt) {
 		const ptToLines = 1 / 12;
 		return pt * ptToLines;
 	}
+	/**
+	 * Converts points to millimeters.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToMillimeters.js
+	 */
 	function PointsToMillimeters(pt) {
 		return pt * g_dKoef_pt_to_mm;
 	}
+	/**
+	 * Converts points to picas (1 pica = 12 points).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToPicas.js
+	 */
 	function PointsToPicas(pt) {
 		const ptToPc = g_dKoef_pt_to_mm / g_dKoef_pc_to_mm;
 		return pt * ptToPc;
 	}
+	/**
+	 * Converts points to pixels.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToPixels.js
+	 */
 	function PointsToPixels(pt) {
 		const ptToPx = g_dKoef_pt_to_mm / AscCommon.g_dKoef_pix_to_mm;
 		return pt * ptToPx;
 	}
+	/**
+	 * Converts points to twips.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToTwips.js
+	 */
 	function PointsToTwips(pt) {
 		return pt * g_dKoef_pt_to_twips;
 	}
+	/**
+	 * Converts centimeters to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CentimetersToPoints.js
+	 */
 	function CentimetersToPoints(cm) {
 		const cmToPt = 10 * g_dKoef_mm_to_pt;
 		return cm * cmToPt;
 	}
+	/**
+	 * Converts EMUs (English Metric Units) to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/EmusToPoints.js
+	 */
 	function EmusToPoints(emu) {
 		const emuToPt = g_dKoef_emu_to_mm * g_dKoef_mm_to_pt;
 		return emu * emuToPt;
 	}
+	/**
+	 * Converts inches to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/InchesToPoints.js
+	 */
 	function InchesToPoints(inches) {
 		const inToPt = g_dKoef_in_to_mm * g_dKoef_mm_to_pt;
 		return inches * inToPt;
 	}
+	/**
+	 * Converts lines to points (1 line = 12 points).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/LinesToPoints.js
+	 */
 	function LinesToPoints(lines) {
 		// 1 line == 12 points
 		const linesToPt = 12;
 		return lines * linesToPt;
 	}
+	/**
+	 * Converts millimeters to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToPoints.js
+	 */
 	function MillimetersToPoints(mm) {
 		return mm * g_dKoef_mm_to_pt;
 	}
+	/**
+	 * Converts picas to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PicasToPoints.js
+	 */
 	function PicasToPoints(pc) {
 		const pcToPt = g_dKoef_pc_to_mm * g_dKoef_mm_to_pt;
 		return pc * pcToPt;
 	}
+	/**
+	 * Converts pixels to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/PixelsToPoints.js
+	 */
 	function PixelsToPoints(px) {
 		const pxToPt = AscCommon.g_dKoef_pix_to_mm * g_dKoef_mm_to_pt;
 		return px * pxToPt;
 	}
+	/**
+	 * Converts twips to points.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/TwipsToPoints.js
+	 */
 	function TwipsToPoints(twips) {
 		return twips * g_dKoef_twips_to_pt;
 	}
