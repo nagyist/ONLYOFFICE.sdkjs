@@ -79,6 +79,9 @@
 		},
 		getGraphicController: function() {
 			return AscTest.DrawingDocument.m_oLogicDocument.GetCurrentController();
+		},
+		getMaxScrolledY: function() {
+			return 10;
 		}
 	};
 
