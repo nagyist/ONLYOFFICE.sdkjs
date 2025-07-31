@@ -55,11 +55,18 @@
 					  defaultValue, gradientEnabled, themedColorsRow) {
 		// https://visualsignals.typepad.co.uk/vislog/2013/05/visio-2013-themes-in-the-shapesheet-part-2.html
 
-		// if cell value is not 'Themed' waiting number representing color otherwise
-		// if QuickStyle cell is from 100 to 106 or from 200 to 206 using VariationColorIndex cell value and
-		// 	QuickStyle cell value % 100 get color from theme
-		// if QuickStyle cell value is not in that range it is smt like from 0 to 7 representing theme colors like:
-		//  dk1, lt1, accent1, ...
+
+		// 1) Calculate color
+		//  a) QuickStyleFillColor (or other cell) >= 100 && <= 106:
+		//		select variationClrScheme using VariationColorIndex then color using QuickStyleFillColor
+		//  b) 	if QuickStyle cell value is not in that range it is smt like from 0 to 7 representing theme colors like:
+		// 		dk1, lt1, accent1, ..
+		// 2) Apply modifiers
+		//  a) QuickStyleFillMatrix (or other cell) >= 100 && <= 103:
+		//      select variationStyleScheme using VariationStyleIndex then varStyle using QuickStyleFillMatrix and
+		// 		by appropriate property like fillIdx or other pick modifier from fmtScheme or fmtConnectorScheme
+		//  b) QuickStyleFillMatrix (or other cell) >= 1 && <= 6:
+		//  	pick modifier from fmtScheme or fmtConnectorScheme
 
 		/** @type {CUniColor} */
 		let calculatedColor = null;

@@ -2424,6 +2424,10 @@
 			return (dVal * 1000 + 0.5 >> 0);
 		}
 
+		/**
+		 * @constructor
+		 * @extends CBaseNoIdObject
+		 */
 		function CBaseColor() {
 			CBaseNoIdObject.call(this);
 			this.RGBA = {
@@ -2576,6 +2580,10 @@
 			return nValue;
 		}
 
+		/**
+		 * @constructor
+		 * @extends CBaseColor
+		 */
 		function CSysColor() {
 			CBaseColor.call(this);
 			this.id = "";
@@ -2771,6 +2779,10 @@
 			this.RGBA.B = RGB & 0xFF;
 		}
 
+		/**
+		 * @constructor
+		 * @extends CBaseColor
+		 */
 		function CPrstColor() {
 			CBaseColor.call(this);
 			this.id = "";
@@ -2870,6 +2882,10 @@
 			return "" + toHex(oRGBA.R) + toHex(oRGBA.G) + toHex(oRGBA.B);
 		}
 
+		/**
+		 * @constructor
+		 * @extends CBaseColor
+		 */
 		function CRGBColor() {
 			CBaseColor.call(this);
 
@@ -2945,6 +2961,11 @@
 				return 1.055 * (Math.pow(value , (1 / 2.4))) - 0.055;
 			return 1;
 		};
+
+		/**
+		 * @constructor
+		 * @extends CBaseColor
+		 */
 		function CSchemeColor() {
 			CBaseColor.call(this);
 			this.id = 0;
@@ -3031,6 +3052,10 @@
 			}
 		};
 
+		/**
+		 * @constructor
+		 * @extends CBaseColor
+		 */
 		function CStyleColor() {
 			CBaseColor.call(this);
 			this.bAuto = false;
@@ -3071,9 +3096,13 @@
 
 		/**
 		 * @constructor
+		 * @extends CBaseNoIdObject
 		 */
 		function CUniColor() {
 			CBaseNoIdObject.call(this);
+			/**
+			 * @type {CSysColor | CPrstColor | CRGBColor | CSchemeColor | CStyleColor | any}
+			 */
 			this.color = null;
 			this.Mods = null;//new CColorModifiers();
 			this.RGBA = {
