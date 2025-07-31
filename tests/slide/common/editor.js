@@ -82,6 +82,9 @@
 		},
 		getMaxScrolledY: function() {
 			return 10;
+		},
+		getCurScrolledY : function() {
+			return 0;
 		}
 	};
 
