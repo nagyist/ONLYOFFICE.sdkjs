@@ -2082,6 +2082,34 @@
 				}
 			}
 
+			// search for empty paragraphs and add space to them
+			// they need it to be displayed as dots in unordered list
+			// for bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=73676
+			for (let i = 0; i < oContent.Content.length; i++) {
+				const paragraph = oContent.Content[i];
+				const paragraphContent = paragraph.Content; // runs
+				let isParagraphEmpty = true;
+				if (paragraphContent.length > 0) {
+					// iterate through runs
+					for (let j = 0; j < paragraphContent.length; j++) {
+						let run = paragraphContent[j];
+						let runContent = run.Content; // symbols
+						let isRunEmpty = runContent.length === 0;
+						let isRunContainsOnlyParagraphMark = runContent.length === 1 &&
+								runContent[0] instanceof AscWord.CRunParagraphMark;
+						if (!(isRunEmpty || isRunContainsOnlyParagraphMark)) {
+							isParagraphEmpty = false;
+						}
+					}
+				}
+
+				if (isParagraphEmpty) {
+					let oRun = new ParaRun(paragraph, false);
+					oRun.AddText(" ");
+					paragraphContent.unshift(oRun);
+				}
+			}
+
 			// handle horizontal align i. e. defaultParagraph align
 
 			// handle vertical align
