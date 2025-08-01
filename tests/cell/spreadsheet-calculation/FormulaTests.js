@@ -25644,6 +25644,197 @@ $(function () {
 
 	QUnit.test("Test: \"XLOOKUP\"", function (assert) {
 
+		// Array tests
+
+		// Positive Cases:
+		// Case #1: Number, Array, Array. Exact match number
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3,4},{10,20,30,40})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #2: Number, Array, Array, , Number. Exact match number
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3,4},{10,20,30,40},,0)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #3: Number, Array, Array, , Number. Search for nearest smaller value (match_mode = -1)
+		oParser = new parserFormula('XLOOKUP(2.5,{1,2,3,4},{10,20,30,40},,-1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #4: Number, Array, Array, , Number. Search for nearest larger value (match_mode = 1)
+		oParser = new parserFormula('XLOOKUP(2.5,{1,2,3,4},{10,20,30,40},,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 30);
+
+		// Case #5: Number, Array, Array, , , Number. Search from last element (search_mode = -1)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3,2},{10,20,30,40},,,-1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 40);
+
+		// Case #6: Number, Array, Array, , , Number. Search from frist element (search_mode = 1)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3,2},{10,20,30,40},,,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #7: Number, Array, Array, , , Number. Wildcard search (match_mode = 2)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3,2},{10,20,30,40},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #8: String, Array, Array. Exact match string
+		oParser = new parserFormula('XLOOKUP("b",{"a","b","c","d"},{"apple","banana","cherry","date"})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "banana");
+
+		// Case #9: String, Array, Array. Search for nearest smaller value (match_mode = -1)
+		oParser = new parserFormula('XLOOKUP("b",{"a","a","c","d"},{"apple","apple2","cherry","date"},,-1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "apple");
+
+		// Case #10: Number, Array, Array, , Number. Search for nearest larger value (match_mode = 1)
+		oParser = new parserFormula('XLOOKUP("b",{"a","a","c","d"},{"apple","apple2","cherry","date"},,-1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "apple");
+
+		// Case #11: Boolean, Array, Array. Exact match boolean
+		oParser = new parserFormula('XLOOKUP(FALSE,{"a","b",FALSE,"d"},{1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 3);
+
+		// Case #12: Number, Array, Array, String. Search with if_not_found parameter
+		oParser = new parserFormula('XLOOKUP(5,{1,2,3,4},{10,20,30,40},"Not Found")', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "Not Found");
+
+		// Case #13: String, Array, Array, , Number. Wildcard search (match_mode = 2)
+		oParser = new parserFormula('XLOOKUP("a*",{"apple","banana","apricot"},{"fruit1","fruit2","fruit3"},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "fruit1");
+
+		// Case #14: String, Array, Array, , Number, Number. Wildcard with search_mode
+		oParser = new parserFormula('XLOOKUP("*le",{"apple","table","simple"},{"fruit","furniture","adjective"},,2,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "fruit");
+
+		// Case #15: String, Array, Array, , Number. Search with partial wildcard
+		oParser = new parserFormula('XLOOKUP("te?t",{"test","text","tent"},{"word1","word2","word3"},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "word1");
+
+		// Case #16: String, Array, Array. Search with empty values
+		oParser = new parserFormula('XLOOKUP("",{"","a","b"},{0,1,2})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 0);
+
+		// Case #17: String, Array, Array. Search in mixed array (numbers and text)
+		oParser = new parserFormula('XLOOKUP("test",{1,"test",3,"hello"},{10,20,30,40})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #18: String, Array, Array. Search with duplicate values (first match)
+		oParser = new parserFormula('XLOOKUP("x",{"x","y","x","z"},{"first","second","third","fourth"})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "first");
+
+		// Different result with MS
+		// Case #19: String, String, String. if searchValue = second arg, return third
+		// oParser = new parserFormula('XLOOKUP("123","123",22)', "A2", ws);
+		// assert.ok(oParser.parse());
+		// assert.strictEqual(_getValue(oParser.calculate()), 22);
+
+		// Case #20: Number, Array, Array, , Number, Number. BinarySearch
+		oParser = new parserFormula('XLOOKUP(1,{1,2,3,4},{1,2,3,4},,0,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 1);
+
+		// Case #21: Number, Array, Array, , Number, Number. Reversed binarySearch
+		oParser = new parserFormula('XLOOKUP(1,{4,3,2,1},{1,2,3,4},,0,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 4);
+
+		// Case #22: String, Array, Array, , Number, Number. BinarySearch
+		oParser = new parserFormula('XLOOKUP("1",{"1","2","3","4"},{1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 1);
+
+		// Case #23: Number, Array, Array, , Number, Number. BinarySearch
+		oParser = new parserFormula('XLOOKUP(1,{0,2,3,4},{1,2,3,4},,-1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 1);
+
+		// Case #24: Number, Array, Array, , Number, Number. Reversed BinarySearch
+		oParser = new parserFormula('XLOOKUP(1,{4,3,2,0},{1,2,3,4},,-1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 4);
+
+		// Case #25: Number, Array, Array, , Number, Number. Reversed BinarySearch
+		oParser = new parserFormula('XLOOKUP(1,{4,3,2,0},{1,2,3,4},,1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 3);
+
+		// Case #26: String, Array, Array, , Number, Number. BinarySearch. Mixed values, exact match.
+		oParser = new parserFormula('XLOOKUP("a",{1,2,3,4,5,6,7,8,"a",10},{1,2,3,4,5,6,7,8,9,10},,0,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 9);
+
+		// Case #27: String, Array, Array, , Number, Number. Reversed BinarySearch. Mixed values, exact match.
+		oParser = new parserFormula('XLOOKUP("a",{10,"a",9,8,7,6,5,4,3,2},{1,2,3,4,5,6,7,8,9,10},,0,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 2);
+
+		// Case #28: String, Array, Array, , Number, Number. BinarySearch. Mixed values, arg4 = 1.
+		oParser = new parserFormula('XLOOKUP("c",{1,"c",3,4,"a",6,"b","c","b",10},{1,2,3,4,5,6,7,8,9,10},,1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 8);
+
+		// Case #29: String, Array, Array, , Number, Number. BinarySearch. Mixed values, arg4 = -1.
+		oParser = new parserFormula('XLOOKUP("c",{1,"c",3,4,"a",6,"b","d","b",10},{1,2,3,4,5,6,7,8,9,10},,-1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 7);
+
+		// Case #30: String, Array, Array, , Number, Number. Reversed BinarySearch. Mixed values, arg4 = -1.
+		oParser = new parserFormula('XLOOKUP("c",{1,"c",3,4,"a",6,"b","d","b",10},{1,2,3,4,5,6,7,8,9,10},,-1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 2);
+
+		// Case #31: String, Array, Array, , Number, Number. Reversed BinarySearch. Mixed values, arg4 = -1.
+		oParser = new parserFormula('XLOOKUP("c",{1,"d",3,4,"a",6,"b","d","b",10},{1,2,3,4,5,6,7,8,9,10},,-1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 3);
+
+		// Case #32: String, Array, Array, , Number, Number. Reversed BinarySearch. Mixed values, arg4 = 1.
+		oParser = new parserFormula('XLOOKUP("c",{1,"d",3,4,"a",6,"b","d","b",10},{1,2,3,4,5,6,7,8,9,10},,1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 2);
+
+		// Negative Cases:
+		// Case #1: Number, Array, Array. Mismatched array sizes (should return #VALUE!)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #2: Number, Array, Array, , Number. Invalid match_mode value (should return #VALUE!)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},,5)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #3: Number, Array, Array, , , Number. Invalid search_mode value (should return #VALUE!)
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},,,3)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #4: Error, Array, Array
+		oParser = new parserFormula('XLOOKUP(#N/A,{"a",1,2,3},{1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #5: String, Array, Array, , Number, Number. BinarySearch. Mixed values, arg4 = 1. Bad order
+		oParser = new parserFormula('XLOOKUP("c",{1,"d",3,4,1,6,2,3,"b",10},{1,2,3,4,5,6,7,8,9,10},,1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Range tests
 		ws.getRange2("A551").setValue("6");
 		ws.getRange2("A552").setValue("2");
 		ws.getRange2("A553").setValue("test");
@@ -25680,103 +25871,6 @@ $(function () {
 		ws.getRange2("C560").setValue("k");
 		ws.getRange2("C561").setValue("l");
 		ws.getRange2("C565").setValue("99");
-		AscCommonExcel.g_oVLOOKUPCache.clean();
-
-		oParser = new parserFormula("XLOOKUP(14,A551:A561,C551:C561)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "u2");
-
-		oParser = new parserFormula("XLOOKUP(C565,A551:A561,B551:C561)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "n");
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "m1");
-
-		oParser = new parserFormula('XLOOKUP(1,A551:A561,B551:C561,"not found")', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "not found");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,1,1)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "f");
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "h3");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,-1,1)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "a");
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "a1");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,0)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), 0);
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,,-2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,-1,-2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP("test",A551:A561,B551:C561,,-1,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "n");
-
-		oParser = new parserFormula('XLOOKUP("tt",A551:A561,B551:C561,,-1,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "u");
-
-		oParser = new parserFormula('XLOOKUP("t???",A551:A561,B551:C561,,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
-
-		oParser = new parserFormula('XLOOKUP("t???",A551:A561,B551:C561,,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
-
-		oParser = new parserFormula('XLOOKUP("t?",A551:A561,B551:C561,,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "u");
-
-		oParser = new parserFormula('XLOOKUP("t?",A551:A561,B551:C561,,0)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP("t*",A551:A561,B551:C561,,0)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
-
-		oParser = new parserFormula('XLOOKUP("t*",A551:A561,B551:C561,,2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "test2");
-
-		oParser = new parserFormula('XLOOKUP(1,{1,2,3},{2,2,3})', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), 2);
-
-		oParser = new parserFormula('XLOOKUP(1,{1,2,3,4},{2,2,3})', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
-
-		oParser = new parserFormula('XLOOKUP(4,{1,2,6},{2,2,3},,1)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), 3);
-
-		oParser = new parserFormula('XLOOKUP(4,{1,2,6},{2,2,3},,-1)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), 2);
-
-		oParser = new parserFormula('XLOOKUP(4,{1,2,6},{2,2,3})', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
 
 		ws.getRange2("A203").setValue("Mark");
 		ws.getRange2("A204").setValue("Ned");
@@ -25806,21 +25900,7 @@ $(function () {
 		ws.getRange2("C208").setValue("38");
 		ws.getRange2("C209").setValue("40");
 		ws.getRange2("C210").setValue("69");
-		AscCommonExcel.g_oVLOOKUPCache.clean();
 
-		oParser = new parserFormula('XLOOKUP(19,B203:B210,A203:A210)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(19,B203:B210,A203:A210)');
-		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,B203:B210,A203:A210)');
-
-		oParser = new parserFormula('XLOOKUP(19,XLOOKUP(B202,B202:C202,B203:C210),A203:A210)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(19,XLOOKUP(B202,B202:C202,B202:C210),A203:A210)');
-		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,XLOOKUP(B202,B202:C202,B202:C210),A203:A210)');
-
-		oParser = new parserFormula('XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)');
-		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)');
-
-		// errors check
 		ws.getRange2("A300").setValue("String");
 		ws.getRange2("A301").setValue("1");
 		ws.getRange2("A302").setValue("2");
@@ -25846,37 +25926,6 @@ $(function () {
 		ws.getRange2("B309").setValue("10");
 		ws.getRange2("B310").setValue("11");
 		ws.getRange2("B311").setValue("12");
-		AscCommonExcel.g_oVLOOKUPCache.clean();
-
-		oParser = new parserFormula('XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!", 'Result of XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)');
-
-		oParser = new parserFormula('XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#NUM!", 'Result of XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)');
-
-		oParser = new parserFormula('XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#DIV/0!", 'Result of XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)');
-
-		// for bug 70550
-		ws.getRange2("A100:G110").setValue("1");
-		ws.getRange2("A101").setValue("2");
-		ws.getRange2("B101:G101").setValue("3");
-		AscCommonExcel.g_oVLOOKUPCache.clean();
-
-		oParser = new parserFormula('XLOOKUP(2,A100:A110,A100:G110,"",1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(2,A100:A110,A100:G110,"",1)');
-		assert.strictEqual(oParser.calculate().type, AscCommonExcel.cElementType.cellsRange, 'Result of XLOOKUP(2,A100:A110,A100:G110,"",1)');
-
-		oParser = new parserFormula('ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))', "A2", ws);
-		assert.ok(oParser.parse(), 'ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))');
-		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))');
-
-		oParser = new parserFormula('SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))', "A2", ws);
-		assert.ok(oParser.parse(), 'SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))');
-		assert.strictEqual(oParser.calculate().getValue(), 20, 'Result of SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))');
 
 		ws.getRange2("A1101:B1123").cleanAll();
 		ws.getRange2("A1101").setValue("0");
@@ -25926,72 +25975,239 @@ $(function () {
 		ws.getRange2("B1121").setValue("21");
 		ws.getRange2("B1122").setValue("22");
 		ws.getRange2("B1123").setValue("23");
+
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
+		// Positive Cases:
+		// Case #1: Number, Range, Range. Basic lookup returning single value
+		oParser = new parserFormula("XLOOKUP(14,A551:A561,C551:C561)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "u2");
+
+		// Case #2: Cell Reference, Range, Range. Lookup with cell reference returning array values
+		oParser = new parserFormula("XLOOKUP(C565,A551:A561,B551:C561)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "n");
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "m1");
+
+		// Case #3: Number, Range, Range, String. Lookup with if_not_found parameter (should return "not found")
+		oParser = new parserFormula('XLOOKUP(1,A551:A561,B551:C561,"not found")', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "not found");
+
+		// Case #4: Number, Range, Range, Number, Number, Number. Lookup with match_mode=1 (exact match or next smallest item)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,1,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "f");
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "h3");
+
+		// Case #5: Number, Range, Range, Number, Number, Number. Lookup with match_mode=-1 (exact match or next largest item)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,-1,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "a");
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "a1");
+
+		// Case #6: Number, Range, Range, Number, Number. Lookup with match_mode=0 (exact match only, should return 0 as if_not_found)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,0,0)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 0);
+
+		// Case #7: String, Range, Range, , Number, Number. Text lookup with match_mode=-1 and search_mode=2 (wildcard search)
+		oParser = new parserFormula('XLOOKUP("test",A551:A561,B551:C561,,-1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "n");
+
+		// Case #8: String, Range, Range, , Number, Number. Text lookup "tt" with match_mode=-1 and search_mode=2 (wildcard search)
+		oParser = new parserFormula('XLOOKUP("tt",A551:A561,B551:C561,,-1,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "u");
+
+		// Case #9: String, Range, Range, , Number. Wildcard lookup "t???" with search_mode=2 (? matches single character)
+		oParser = new parserFormula('XLOOKUP("t???",A551:A561,B551:C561,,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
+
+		// Case #10: String, Range, Range, , Number. Duplicate test - Wildcard lookup "t???" with search_mode=2
+		oParser = new parserFormula('XLOOKUP("t???",A551:A561,B551:C561,,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
+
+		// Case #11: String, Range, Range, , Number. Wildcard lookup "t?" with search_mode=2 (single ? wildcard)
+		oParser = new parserFormula('XLOOKUP("t?",A551:A561,B551:C561,,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "u");
+
+		// Case #12: String, Range, Range, , Number. Wildcard lookup "t*" with search_mode=2 (* matches any characters)
+		oParser = new parserFormula('XLOOKUP("t*",A551:A561,B551:C561,,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 0), "c");
+		assert.strictEqual(_getValue(oParser.calculate(), 0, 1), "test2");
+
+		// Case #13: Number, Range, Range
+		oParser = new parserFormula('XLOOKUP(19,B203:B210,A203:A210)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(19,B203:B210,A203:A210)');
+		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,B203:B210,A203:A210)');
+
+		// Case #14: Number, Formula, Range
+		oParser = new parserFormula('XLOOKUP(19,XLOOKUP(B202,B202:C202,B203:C210),A203:A210)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(19,XLOOKUP(B202,B202:C202,B202:C210),A203:A210)');
+		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,XLOOKUP(B202,B202:C202,B202:C210),A203:A210)');
+
+		// Case #15: Number, Array, Range
+		oParser = new parserFormula('XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)');
+		assert.strictEqual(_getValue(oParser.calculate()), "Jenna", 'Result of XLOOKUP(19,{87;67;16;68;21;72;19;14},A203:A210)');
+
+		// Negative Cases
+		// Case #1: Number, Range, Range. Basic lookup with no match (should return #N/A)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #2: String, Range, Range, , Number. Wildcard "t*" with match_mode=0 (exact match, should return #N/A)
+		oParser = new parserFormula('XLOOKUP("t*",A551:A561,B551:C561,,0)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #3: String, Range, Range, , Number. Wildcard "t?" with match_mode=0 (exact match, should return #N/A)
+		oParser = new parserFormula('XLOOKUP("t?",A551:A561,B551:C561,,0)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #4: Number, Range, Range, , Number, Number. Lookup with match_mode=-1 and search_mode=-2 (should return #N/A)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,-1,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #5: Number, Range, Range, , , Number. Lookup with search_mode=-2 (binary search descending, should return #N/A)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,,-2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #6: Number, Range, Range, , , Number. Lookup with search_mode=2 (binary search ascending, should return #N/A)
+		oParser = new parserFormula('XLOOKUP(10,A551:A561,B551:C561,,,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A");
+
+		// Case #7: Range, Range, Range, Number, Number , Number
+		oParser = new parserFormula('XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!", 'Result of XLOOKUP(A304,A300:A311,B300:B311,-2,0,1)');
+
+		// Case #8: Range, Range, Range, Number, Number , Number
+		oParser = new parserFormula('XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#NUM!", 'Result of XLOOKUP(A305,A300:A311,B300:B311,-2,0,1)');
+
+		// Case #9: Range, Range, Range, Number, Number , Number
+		oParser = new parserFormula('XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#DIV/0!", 'Result of XLOOKUP(A306,A300:A311,B300:B311,-2,0,1)');
+
+		// for bug 70550
+		ws.getRange2("A100:G110").setValue("1");
+		ws.getRange2("A101").setValue("2");
+		ws.getRange2("B101:G101").setValue("3");
+		AscCommonExcel.g_oVLOOKUPCache.clean();
+		
+		// Positive Cases:
+		// Case #16: Number, Range, Range, String, Number. XLOOKUP returning range reference (should return cellsRange type)
+		oParser = new parserFormula('XLOOKUP(2,A100:A110,A100:G110,"",1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2,A100:A110,A100:G110,"",1)');
+		assert.strictEqual(oParser.calculate().type, AscCommonExcel.cElementType.cellsRange, 'Result of XLOOKUP(2,A100:A110,A100:G110,"",1)');
+
+		// Case #17: XLOOKUP inside ISREF function. Testing if XLOOKUP result is a reference (should return TRUE)
+		oParser = new parserFormula('ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(XLOOKUP(2,A100:A110,A100:G110,"",1))');
+
+		// Case #18: XLOOKUP in range operation with SUM. Using XLOOKUP result as range reference in SUM function
+		oParser = new parserFormula('SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))', "A2", ws);
+		assert.ok(oParser.parse(), 'SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))');
+		assert.strictEqual(oParser.calculate().getValue(), 20, 'Result of SUM(XLOOKUP(2,A100:A110,A100:G110,"",1):XLOOKUP(2,A100:A110,A100:G110,"",1))');
+
+		// Case #19: Number, Range, Range, , Number, Number. Decimal lookup with match_mode=1 and search_mode=2 (next smallest)
 		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 4, 'Result of XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,2)');
 
+		// Case #20: Number, Range, Range, , Number, Number. Decimal lookup with match_mode=-1 and search_mode=2 (next largest)
 		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,-1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 3, 'Result of XLOOKUP(2.3,A1101:A1123,B1101:B1123,,-1,2)');
 
+		// Case #21: Number, Range, Range, , Number, Number. Decimal lookup with match_mode=1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP(2.4,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2.4,A1101:A1123,B1101:B1123,,1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 4, 'Result of XLOOKUP(2.4,A1101:A1123,B1101:B1123,,1,1)');
 
+		// Case #22: Number, Range, Range, , Number, Number. Decimal lookup with match_mode=-1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 4, 'Result of XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 
-		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,0)');
-
+		// Case #23: String, Range, Range, , Number, Number. Text lookup "CIANO" with match_mode=1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)');
 
+		// Case #24: String, Range, Range, , Number, Number. Text lookup "CIANO" with match_mode=-1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)');
 
+		// Case #25: Number, Range, Range, , Number, Number. Negative number lookup with match_mode=1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)');
 
+		// Case #26: Boolean, Range, Range, , Number, Number. Boolean FALSE lookup with match_mode=1 and search_mode=1
 		oParser = new parserFormula('XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP(FALSE,A1101:A1123,B1101:B1123,,1,1)');
 
-		oParser = new parserFormula('XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
-
+		// Case #27: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,2)');
 
+		// Case #28: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=-1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,2)');
 
+		// Case #29: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=1 and search_mode=1
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,1)');
 
+		// Case #30: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=-1 and search_mode=1
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,1)');
 
+		// Case #31: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=-1 and search_mode=-1
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 21, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,-1,-1)');
 
+		// Case #32: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=1 and search_mode=-1
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 22, 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,-1)');
 
+		// Negative Cases:
+		// Case #10: Number, Range, Range, , Number, Number. Decimal lookup with match_mode=0 (exact match only, should return #N/A)
+		oParser = new parserFormula('XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(2.3,A1101:A1123,B1101:B1123,,0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(2.3,A1101:A1123,B1101:B1123,,1,0)');
+
+		// Case #11: Error, Range, Range, , Number, Number. Error value #N/A lookup (should return #N/A)
+		oParser = new parserFormula('XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(#N/A,A1101:A1123,B1101:B1123,,1,1)');
+
+		// Case #12: String, Range, Range, , Number, Number. Text lookup "VIOLET" with match_mode=0 (exact match only, should return #N/A)
 		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)');
@@ -26021,65 +26237,77 @@ $(function () {
 		ws.getRange2("B1110").setValue("10");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
-		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
-
-		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
-
-		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 2)');
-
-		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
-
-		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
-
-		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
-
-		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
-
-		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 6, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
-
-		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
-		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
-
-		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
-		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
-
-		oParser = new parserFormula('XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
-		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
-
+		// Positive Cases:
+		// Case #33: Number, Range, Range, , Number, Number. Number match_mode=-1 and search_mode=-1 (reverse search)
 		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -1)');
 
+		// Case #34: Number, Range, Range, , Number, Number. Number match_mode=-1 and search_mode=-1 (reverse search)
 		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, -1, -1)');
 
+		// Case #35: Number, Range, Range, , Number, Number. Number match_mode=1 and search_mode=-1 (reverse linear search)
 		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, -1)');
 
+		// Case #36: Number, Range, Range, , Number, Number. Number match_mode=1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
+
+		// Case #37: Number, Range, Range, , Number, Number. Number match_mode=0 and search_mode=1 (exact match)
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 0, 1)');
+
+		// Case #38: Number, Range, Range, , Number, Number. Number match_mode=1 and search_mode=-2 (binary search descending)
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)');
+
+		// Case #39: Number, Range, Range, , Number, Number. Number match_mode=1 and search_mode=2 (binary search ascending)
+		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)');
+
+		// Case #40: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-2 (binary search descending)
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
+
+		// Case #41: String, Range, Range, , Number, Number. match_mode=1 and search_mode=2 (binary search ascending)
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 6, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 2)');
+
+		// Case #42: String, Range, Range, , Number, Number. match_mode=1 and search_mode=1 (linear search)
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
+
+		// Case #43: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-1 (reverse linear search)
+		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -1)');
+
+		// Negative Cases:
+		// Case #13: Number, Range, Range, , Number, Number. Number match_mode=-1 and search_mode=-1 (should return #N/A)
+		oParser = new parserFormula('XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP(0,A1101:A1110,B1101:B1110,, -1, -1)');
+
+		// Case #14: String, Range, Range, , Number, Number. match_mode=0 and search_mode=1 (exact match, should return #N/A)
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
+
+		// Case #15: String, Range, Range, , Number, Number. match_mode=0 (exact match only, should return #N/A)
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1123,B1101:B1123,,1,0)');
 
 		ws.getRange2("A1101:B1110").cleanAll();
 		ws.getRange2("A1101").setValue("a");
@@ -26105,33 +26333,37 @@ $(function () {
 		ws.getRange2("B1110").setValue("10");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
+		// Positive Cases:
+		// Case #44: Number, Range, Range, , Number, Number. match_mode=1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(2,A1101:A1110,B1101:B1110,, 1, 1)');
 
+		// Case #45: String, Range, Range, , Number, Number. match_mode=1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 1');
 
+		// Case #46: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-1 (reverse linear search)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
 
-		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
-		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -1');
-
+		// Case #47: String, Range, Range, , Number, Number. match_mode=1 and search_mode=2 (binary search ascending)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
 
-		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
-		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
-
+		// Case #48: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-2 (binary search descending)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
+
+		// Negative Cases:
+		// Case #16: String, Range, Range, , Number, Number. match_mode=0 and search_mode=1 (exact match, should return #N/A)
+		oParser = new parserFormula('XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
+		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'Result of XLOOKUP("VIOLET",A1101:A1110,B1101:B1110,, 0, 1)');
 
 		ws.getRange2("A1101:B1110").cleanAll();
 		ws.getRange2("A1101").setValue("a");
@@ -26157,22 +26389,29 @@ $(function () {
 		ws.getRange2("B1110").setValue("10");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
+		// Positive Cases:
+		// Case #49: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-2 (binary search descending)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, -2');
 
+		// Case #50: String, Range, Range, , Number, Number. match_mode=1 and search_mode=2 (binary search ascending)
 		oParser = new parserFormula('XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
 		assert.strictEqual(_getValue(oParser.calculate()), 2, 'Result of XLOOKUP("b",A1101:A1110,B1101:B1110,, 1, 2');
 
+		// Case #51: Number, Range, Range, , Number, Number. match_mode=1 and search_mode=2 (binary search ascending)
 		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, 2');
 
+		// Case #52: Number, Range, Range, , Number, Number. match_mode=1 and search_mode=-2 (binary search descending)
 		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2');
 		assert.strictEqual(_getValue(oParser.calculate()), 10, 'Result of XLOOKUP(1,A1101:A1110,B1101:B1110,, 1, -2');
 
+		// Negative Cases:
+		// Case #17: Number, Range, Range, , Number, Number. match_mode=-1 and search_mode=-2 (should return #N/A)
 		oParser = new parserFormula('XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'XLOOKUP(1,A1101:A1110,B1101:B1110,, -1, -2)');
@@ -26201,18 +26440,23 @@ $(function () {
 		ws.getRange2("B1110").setValue("10");
 		AscCommonExcel.g_oVLOOKUPCache.clean();
 
+		// Positive Cases:
+		// Case #53: String, Range, Range, , Number, Number. match_mode=-1 and search_mode=-2 (binary search descending)
 		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 6, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, -2)');
 
+		// Case #54: String, Range, Range, , Number, Number. match_mode=1 and search_mode=-2 (binary search descending)
 		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, -2)');
 
+		// Case #55: String, Range, Range, , Number, Number. match_mode=1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 5, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, 1, 1)');
 
+		// Case #56: String, Range, Range, , Number, Number. match_mode=-1 and search_mode=1 (linear search)
 		oParser = new parserFormula('XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'XLOOKUP("a",A1101:A1110,B1101:B1110,, -1, 1)');

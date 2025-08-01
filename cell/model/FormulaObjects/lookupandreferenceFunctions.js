@@ -3704,7 +3704,7 @@ function (window, undefined) {
 					res = this._simpleSearch(valueForSearching, revert, ws,startIndex, endIndex, rowCol, opt_arg4);
 				}
 			} else if (Math.abs(opt_arg5) === 2) {
-				res = this._xlookupBinarySearch(valueForSearching,  revert, opt_arg4, startIndex, endIndex, ws, rowCol);
+				res = this._xlookupBinarySearch(valueForSearching,  revert, opt_arg4, startIndex, endIndex, ws, rowCol, opt_array);
 			}
 		} else if (lookup) {
 			const typedCache = this._getTypedCache(ws, rowCol, valueForSearching.type);
