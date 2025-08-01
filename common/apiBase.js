@@ -1300,7 +1300,13 @@
 			}
 		}
 		return rData;
-	}
+	};
+	baseEditorsApi.prototype.toggleChartElementsCallback = function () {
+		const graphicController = Asc.editor.getGraphicController();
+		if (graphicController && typeof graphicController.checkSingleChartSelection === 'function') {
+			graphicController.checkSingleChartSelection();
+		}
+	};
 	// Open
 	baseEditorsApi.prototype.asc_LoadDocument                    = function(isRepeat)
 	{
@@ -4024,14 +4030,21 @@
         ret.W = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
         ret.H = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
+		ret.editorX = 0;
+		ret.editorY = 0;
+
         switch (this.editorId)
         {
             case c_oEditorId.Word:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
-                ret.X += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
-                ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorY += this.WordControl.Y;
+				ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+
+				ret.X += ret.editorX;
+				ret.Y += ret.editorY;
+
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
 
@@ -4043,19 +4056,22 @@
             }
             case c_oEditorId.Presentation:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
 
-                ret.X += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.X += ret.editorX;
 
+				ret.editorY += this.WordControl.Y;
                 if (!this.WordControl.m_oLogicDocument.IsFocusOnNotes())
                 {
-                    ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
                 else
                 {
-                    ret.Y += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
+
+				ret.Y += ret.editorY;
 
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
@@ -4087,6 +4103,16 @@
                     ret.Y = drDoc.TargetHtmlElementTop;
                     ret.TargetH = drDoc.m_dTargetSize * this.asc_getZoom() * AscCommon.g_dKoef_mm_to_pix;
                     off = this.HtmlElement;
+                } else if (Asc.c_oAscSelectionType.RangeCells === selectionType ||
+                    Asc.c_oAscSelectionType.RangeRow === selectionType ||
+                    Asc.c_oAscSelectionType.RangeCol === selectionType)
+                {
+                    let ws = this.wb.getWorksheet();
+                    let activeCellCoord = ws.getSelectionCoords();
+                    if (activeCellCoord) {
+                        ret.X = activeCellCoord[0]._x /*+ activeCellCoord[0]._width*/;
+                        ret.Y = activeCellCoord[0]._y /*+ activeCellCoord[0]._height*/;
+                    }
                 }
 
                 if (off) {
@@ -5706,6 +5732,33 @@
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
 
+	baseEditorsApi.prototype["native_callCommand"] = function(funcText, params)
+	{
+		if (!this.canRunBuilderScript())
+			return;
+
+		let jsonParam = (typeof params === "string") ? params : JSON.stringify(params);
+		this._beforeEvalCommand();
+		let script = "(function(){let Asc={};Asc.scope=" + jsonParam + ";return (" + funcText + ")(Asc.scope);})();";
+		let commandReturnValue = AscCommon.safePluginEval(script);
+		this._afterEvalCommand(undefined);
+		this.onEndBuilderScript();
+
+		if (!Asc.checkReturnCommand(commandReturnValue))
+			commandReturnValue = undefined;
+		return commandReturnValue;
+	};
+
+	baseEditorsApi.prototype["native_callMethod"] = function(name, params)
+	{
+		let returnValue = undefined;
+
+		this.callMethod(name, params, function(retValue) {
+			returnValue = retValue;
+		});
+
+		return returnValue;
+	};
 
 	baseEditorsApi.prototype.asc_mergeSelectedShapes = function(operation) {
 		if(AscCommon['PathBoolean']) {
@@ -5816,10 +5869,11 @@
 	{
 		++this.groupActionsCounter;
 		
+		AscCommon.History.startGroupPoints();
+		
 		if (this.groupActionsCounter > 1)
 			return;
 		
-		AscCommon.History.startGroupPoints();
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5855,9 +5909,14 @@
 		if (!this.isGroupActions())
 			return;
 		
+		--this.groupActionsCounter;
+		AscCommon.History.cancelGroupPoints();
+		
+		if (this.groupActionsCounter > 0)
+			return;
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
-		AscCommon.History.cancelGroupPoints();
 	};
 	baseEditorsApi.prototype.endGroupActions = function()
 	{
@@ -5865,12 +5924,13 @@
 			return;
 		
 		--this.groupActionsCounter;
+		AscCommon.History.endGroupPoints();
+		
 		if (this.groupActionsCounter > 0)
 			return;
 		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
-		AscCommon.History.endGroupPoints();
 	};
 	baseEditorsApi.prototype.isGroupActions = function()
 	{

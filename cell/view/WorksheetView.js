@@ -10646,7 +10646,9 @@ function isAllowPasteLink(pastedWb) {
 			diffHeight = this._getRowTop(rFrozen) - this._getRowTop(0);
 		}
 
-        if (this.workbook.getSmoothScrolling()) {
+		const isSmoothScroll = this.workbook.getSmoothScrolling();
+
+        if (isSmoothScroll) {
             //in px
             if (!isReverse) {
                 //down scroll
@@ -10715,7 +10717,7 @@ function isAllowPasteLink(pastedWb) {
        
 
         this._fixSelectionOfHiddenCells(0, delta >= 0 ? +1 : -1, fixStartRow);
-        var start = this._calcCellPosition(vr.c1, this.workbook.getSmoothScrolling() ? vr.r1 : fixStartRow.r1, 0, delta).row;
+        var start = this._calcCellPosition(vr.c1, isSmoothScroll ? vr.r1 : fixStartRow.r1, 0, delta).row;
         fixStartRow.assign(vr.c1, start, vr.c2, start);
         this._fixSelectionOfHiddenCells(0, delta >= 0 ? +1 : -1, fixStartRow);
         this._fixVisibleRange(fixStartRow);
@@ -10726,7 +10728,7 @@ function isAllowPasteLink(pastedWb) {
         }
         start = fixStartRow.r1;
 
-        if (start === vr.r1 && (!this.workbook.getSmoothScrolling() || (this.workbook.getSmoothScrolling() && currentScrollCorrect === deltaCorrect))) {
+        if (start === vr.r1 && (!isSmoothScroll || (isSmoothScroll && currentScrollCorrect === deltaCorrect))) {
             if (reinitScrollY) {
             	this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollVertical;
             	this._reinitializeScroll();
@@ -10752,13 +10754,13 @@ function isAllowPasteLink(pastedWb) {
 
         var topOldStart = this._getRowTop(oldStart);
         var dy = (this._getRowTop(start) + deltaCorrect - (topOldStart + currentScrollCorrect));
-		this.workbook.getSmoothScrolling() && this.setScrollCorrect(deltaCorrect);
+		isSmoothScroll && this.setScrollCorrect(deltaCorrect);
 
         // ToDo стоит тут переделать весь scroll
         vr.r1 = start;
 		let _beforeRowsCount = this.nRowsCount;
         this._updateVisibleRowsCount(undefined, function () {
-			if (!t.workbook.getSmoothScrolling()) {
+			if (!isSmoothScroll) {
 				return;
 			}
 			let _expandRowsHeight = 30 * t.defaultRowHeightPx;
@@ -10875,7 +10877,7 @@ function isAllowPasteLink(pastedWb) {
         var clearTop = this.cellsTop + diffHeight + (scrollDown && moveHeight > 0 ? moveHeight : 0);
         var clearHeight = (moveHeight > 0) ? Math.abs(dy) + lastRowHeight : ctxH - (this.cellsTop + diffHeight);
         let clearOffset = 0;
-        if (this.workbook.getSmoothScrolling() && (diffHeight + this._getRowTop(0)) !== clearTop) {
+        if (isSmoothScroll && (diffHeight + this._getRowTop(0)) !== clearTop) {
 			//need clear full row height
 			let firstDrawRow = vr.r1;
 			if (moveHeight > 0 && scrollDown) {
@@ -10894,11 +10896,11 @@ function isAllowPasteLink(pastedWb) {
 		this._updateDrawingArea();
 
         // Дорисовываем необходимое
-        if (dy < 0 || vr.r2 !== oldEnd || oldVRE_isPartial || dx !== 0 || (clearHeight !== 0 && this.workbook.getSmoothScrolling())) {
+        if (dy < 0 || vr.r2 !== oldEnd || oldVRE_isPartial || dx !== 0 || (clearHeight !== 0 && isSmoothScroll)) {
             var r1, r2;
             if (moveHeight > 0) {
                 if (scrollDown) {
-                    r1 = oldEnd + ((oldVRE_isPartial || (delta === 0 && this.workbook.getSmoothScrolling())) ? 0 : 1);
+                    r1 = oldEnd + ((oldVRE_isPartial || (delta === 0 && isSmoothScroll)) ? 0 : 1);
                     r2 = vr.r2;
                 } else {
                     r1 = vr.r1;
@@ -10909,7 +10911,7 @@ function isAllowPasteLink(pastedWb) {
                 r2 = vr.r2;
             }
 
-			if (this.workbook.getSmoothScrolling() && r2 < AscCommon.gc_nMaxRow0) {
+			if (isSmoothScroll && r2 < AscCommon.gc_nMaxRow0) {
 				r2++;
 			}
 			if (r1 > AscCommon.gc_nMaxRow0) {
@@ -10918,12 +10920,12 @@ function isAllowPasteLink(pastedWb) {
 			if (r2 > AscCommon.gc_nMaxRow0) {
 				r2 = AscCommon.gc_nMaxRow0;
 			}
-            if (this.workbook.getSmoothScrolling() && r2 < r1) {
+            if (isSmoothScroll && r2 < r1) {
                 r2 = r1;
             }
 
             let startClip = function () {
-                if (t.workbook.getSmoothScrolling()) {
+                if (isSmoothScroll) {
                     t._AddClipRect(ctx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
                     t.drawingGraphicCtx.AddClipRect && t._AddClipRect(t.drawingGraphicCtx, t.headersLeft - t.groupWidth, clearTop - clearOffset, ctxW, clearHeight + clearOffset);
                 }
@@ -10982,7 +10984,7 @@ function isAllowPasteLink(pastedWb) {
             }
         }
 
-		if (this.workbook.getSmoothScrolling()) {
+		if (isSmoothScroll) {
 
 			this._RemoveClipRect(ctx);
 			this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
@@ -11003,15 +11005,18 @@ function isAllowPasteLink(pastedWb) {
 			//todo need review
 			let controller = t.workbook.controller;
 			let scrollStep = controller.settings.vscrollStep;
-			if (!t.workbook.Api.isMobileVersion && !AscCommon.AscBrowser.isMacOs && !initRowsCount && t.workbook.getSmoothScrolling() && !isReverse && t.model.getRowsCount() >
+			if (!t.workbook.Api.isMobileVersion && !AscCommon.AscBrowser.isMacOs && !initRowsCount && isSmoothScroll && !isReverse && t.model.getRowsCount() >
 				t.visibleRange.r2 && controller.vsbMax && scrollStep && controller.vsbMax < (t.getVerticalScrollRange() * scrollStep)) {
 				return true;
 			}
 			return false;
 		};
 
-		if ((reinitScrollY && !this.workbook.getSmoothScrolling()) || (reinitScrollY && this.workbook.getSmoothScrolling() && deltaCorrect !== currentScrollCorrect) ||
-			(isReverse && initRowsCount && this._initRowsCount()) || (this.workbook.getSmoothScrolling() && initRowsCount && this.nRowsCount !== gc_nMaxRow) || isNeedExpand()) {
+		let _maxRow = this.model.isDefaultHeightHidden() ? this.nRowsCount : gc_nMaxRow;
+		if ((reinitScrollY && !isSmoothScroll) || (reinitScrollY && isSmoothScroll && deltaCorrect !== currentScrollCorrect) ||
+			(isReverse && initRowsCount && this._initRowsCount()) ||
+			(isSmoothScroll && initRowsCount && this.nRowsCount !== _maxRow) ||
+			isNeedExpand()) {
 			this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollVertical;
 		}
 
@@ -27686,6 +27691,67 @@ function isAllowPasteLink(pastedWb) {
 			oController.removeAllInks(arrInks);
 		}
 	};
+	WorksheetView.prototype.getSelectionCoords = function () {
+		let range = this._getSelection();
+		range = range && range.getLast();
+		if (!range) {
+			return null;
+		}
+		var visibleRange = this.getVisibleRange();
+		var intersectionVisibleRange = visibleRange.intersection(range);
+		if (!intersectionVisibleRange && this.topLeftFrozenCell) {
+			var cFrozen = this.topLeftFrozenCell.getCol0();
+			var rFrozen = this.topLeftFrozenCell.getRow0();
+			cFrozen -= 1;
+			rFrozen -= 1;
+
+			var frozenRange;
+			if (0 <= cFrozen && 0 <= rFrozen) {
+				frozenRange = new asc_Range(0, 0, cFrozen, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+			if (!intersectionVisibleRange && 0 <= cFrozen) {
+				frozenRange = new asc_Range(0, this.visibleRange.r1, cFrozen, this.visibleRange.r2);
+				intersectionVisibleRange = frozenRange.intersection(range);
+
+			}
+			if (!intersectionVisibleRange && 0 <= rFrozen) {
+				frozenRange = new asc_Range(this.visibleRange.c1, 0, this.visibleRange.c2, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+		}
+
+		let res = null;
+		if (!intersectionVisibleRange) {
+			range = visibleRange;
+			intersectionVisibleRange = visibleRange;
+		}
+
+		if (range && intersectionVisibleRange) {
+			let _elem = this.workbook.Api && this.workbook.Api.HtmlElement
+			let offs = _elem && AscCommon.UI && AscCommon.UI.getBoundingClientRect && AscCommon.UI.getBoundingClientRect(_elem);
+			if (offs) {
+				res = [];
+
+				res[0] = this.getCellCoord(range.c1, range.r1);
+				res[1] = this.getCellCoord(intersectionVisibleRange.c2, intersectionVisibleRange.r2);
+
+				if (this.getRightToLeft()) {
+					res[0]._x += res[0]._width;
+					res[1]._x += res[1]._width;
+				}
+
+				res[0]._x += offs.left;
+				res[1]._x += offs.left;
+				res[0]._y += offs.top;
+				res[1]._y += offs.top;
+			}
+		}
+
+		return res;
+	};
+
+	
 
 
 

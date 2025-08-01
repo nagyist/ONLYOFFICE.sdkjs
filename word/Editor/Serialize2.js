@@ -4479,6 +4479,16 @@ Binary_tblPrWriter.prototype =
 	WriteTbl: function(table)
     {
 		var oThis = this;
+		
+		// Обязательно пишем стиль самым первым (при сохранении в docx из бинарника эти данные напрямую в xml
+		// сохраняются), а MSWord плохо воспринимает некоторые параметры, если стиль идет после них (76106)
+		let styleId = table.GetTableStyle();
+		if (styleId)
+		{
+			this.memory.WriteByte(c_oSerProp_tblPrType.Style);
+			this.memory.WriteString2(styleId);
+		}
+		
 		this.WriteTblPr(table.Pr, table);
 		//Look
 		var oLook = table.Get_TableLook();
@@ -4498,13 +4508,6 @@ Binary_tblPrWriter.prototype =
 			if(!oLook.IsBandVer())
 				nLook |= 0x0400;
 			this.bs.WriteItem(c_oSerProp_tblPrType.Look, function(){oThis.memory.WriteLong(nLook);});
-		}
-		//Style
-		var sStyle = table.Get_TableStyle();
-		if(null != sStyle && "" != sStyle)
-		{
-			this.memory.WriteByte(c_oSerProp_tblPrType.Style);
-            this.memory.WriteString2(sStyle);
 		}
 	},
     WriteTblPr: function(tblPr, table)

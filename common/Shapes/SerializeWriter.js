@@ -3086,6 +3086,8 @@ function CBinaryFileWriter()
                 oThis.StartRecord(c_oAscFill.FILL_TYPE_BLIP);
 
                 oThis.WriteUChar(g_nodeAttributeStart);
+                oThis.WriteUChar(1);
+                oThis.WriteBool(fill.rotWithShape);
                 oThis.WriteUChar(g_nodeAttributeEnd);
 
                 var _src = fill.RasterImageId;
@@ -3101,35 +3103,7 @@ function CBinaryFileWriter()
 
                 oThis.WriteBlip(fill, _src);
 
-                if (fill.srcRect != null)
-                {
-                    oThis.StartRecord(1);
-                    oThis.WriteUChar(g_nodeAttributeStart);
-
-                    if (fill.srcRect.l != null)
-                    {
-                        var _num = (fill.srcRect.l * 1000) >> 0;
-                        oThis._WriteString1(0, "" + _num);
-                    }
-                    if (fill.srcRect.t != null)
-                    {
-                        var _num = (fill.srcRect.t * 1000) >> 0;
-                        oThis._WriteString1(1, "" + _num);
-                    }
-                    if (fill.srcRect.r != null)
-                    {
-                        var _num = ((100 - fill.srcRect.r) * 1000) >> 0;
-                        oThis._WriteString1(2, "" + _num);
-                    }
-                    if (fill.srcRect.b != null)
-                    {
-                        var _num = ((100 - fill.srcRect.b) * 1000) >> 0;
-                        oThis._WriteString1(3, "" + _num);
-                    }
-
-                    oThis.WriteUChar(g_nodeAttributeEnd);
-                    oThis.EndRecord();
-                }
+                oThis.WriteRecord2(1, fill.srcRect, oThis.WriteUniFillRect);
 
                 if (null != fill.tile)
                 {
@@ -3144,9 +3118,10 @@ function CBinaryFileWriter()
                     oThis.WriteUChar(g_nodeAttributeEnd);
                     oThis.EndRecord();
                 }
-                else
+                else if (fill.stretch != null)
                 {
                     oThis.StartRecord(3);
+                    oThis.WriteRecord2(0, fill.stretch.fillRect, oThis.WriteUniFillRect);
                     oThis.EndRecord();
                 }
 
@@ -3180,6 +3155,35 @@ function CBinaryFileWriter()
                 break;
         }
     };
+
+    this.WriteUniFillRect = function (rect)
+    {
+        oThis.WriteUChar(g_nodeAttributeStart);
+        let val;
+        if (rect.l != null)
+        {
+            val = (rect.l * 1000) >> 0;
+            oThis._WriteString1(0, "" + val);
+        }
+        if (rect.t != null)
+        {
+            val = (rect.t * 1000) >> 0;
+            oThis._WriteString1(1, "" + val);
+        }
+        if (rect.r != null)
+        {
+            val = ((100 - rect.r) * 1000) >> 0;
+            oThis._WriteString1(2, "" + val);
+        }
+        if (rect.b != null)
+        {
+            val = ((100 - rect.b) * 1000) >> 0;
+            oThis._WriteString1(3, "" + val);
+        }
+
+        oThis.WriteUChar(g_nodeAttributeEnd);
+    };
+
     this.WriteLn = function(ln)
     {
         if (undefined === ln || null == ln)

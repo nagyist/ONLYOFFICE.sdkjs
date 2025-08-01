@@ -982,13 +982,7 @@
 		let src = _image.src;
 		if (obj && obj.isShapeImageChangeUrl) {
 			let AscShapeProp       = new Asc.asc_CShapeProperty();
-			AscShapeProp.fill      = new Asc.asc_CShapeFill();
-			AscShapeProp.fill.type = Asc.c_oAscFill.FILL_TYPE_BLIP;
-			AscShapeProp.fill.fill = new Asc.asc_CFillBlip();
-			AscShapeProp.fill.fill.asc_putUrl(src);
-			if(obj.textureType !== null && obj.textureType !== undefined){
-                AscShapeProp.fill.fill.asc_putType(obj.textureType);
-			}
+			AscShapeProp.fillBlipFill(src, obj.textureType);
 			this.ShapeApply(AscShapeProp);
 		}
 		else if (obj && obj.isImageChangeUrl) {
@@ -999,12 +993,7 @@
 		else if (obj && obj.isTextArtChangeUrl) {
 			let AscShapeProp = new Asc.asc_CShapeProperty();
 			let oFill        = new Asc.asc_CShapeFill();
-			oFill.type       = Asc.c_oAscFill.FILL_TYPE_BLIP;
-			oFill.fill       = new Asc.asc_CFillBlip();
-			oFill.fill.asc_putUrl(src);
-            if(obj.textureType !== null && obj.textureType !== undefined){
-				oFill.fill.asc_putType(obj.textureType);
-            }
+			oFill.fillBlipFill(src, obj.textureType);
 			AscShapeProp.textArtProperties = new Asc.asc_TextArtProperties();
 			AscShapeProp.textArtProperties.asc_putFill(oFill);
 			this.ShapeApply(AscShapeProp);
@@ -1550,13 +1539,13 @@
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFDate_Format("' + sFormat + '");'
+					"JS": 'AFDate_FormatEx("' + sFormat + '");'
 				}]
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Format, aActionsFormat);
 
 				let aActionsKeystroke = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFDate_Keystroke("' + sFormat + '");'
+					"JS": 'AFDate_KeystrokeEx("' + sFormat + '");'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
 				if (oField.IsCanCommit()) {
@@ -1593,13 +1582,13 @@
 
 				let aActionsFormat = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFTime_Format(' + nFormat + ');'
+					"JS": 'AFTime_FormatEx(' + nFormat + ');'
 				}]
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Format, aActionsFormat);
 
 				let aActionsKeystroke = [{
 					"S": AscPDF.ACTIONS_TYPES.JavaScript,
-					"JS": 'AFTime_Keystroke(' + nFormat + ');'
+					"JS": 'AFTime_KeystrokeEx(' + nFormat + ');'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
 				if (oField.IsCanCommit()) {

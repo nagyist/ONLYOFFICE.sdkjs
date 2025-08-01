@@ -4365,6 +4365,32 @@
 		return new ApiDocument(this.WordControl.m_oLogicDocument);
 	};
 	/**
+	 * Returns the object by it's internal ID.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @param id {string} ID of the object.
+	 * @returns {?object}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetByInternalId.js
+	 */
+	Api.prototype.GetByInternalId = function(id)
+	{
+		let obj = AscCommon.g_oTableId.Get_ById(id);
+		if (!obj)
+			return null;
+		
+		if (obj instanceof AscWord.CDocument)
+			return new ApiDocument(obj);
+		else if (obj instanceof AscWord.CDocumentContent)
+			return new ApiDocumentContent(obj);
+		else if (obj instanceof AscWord.CInlineLevelSdt)
+			return new ApiInlineLvlSdt(obj);
+		else if (obj instanceof AscWord.CBlockLevelSdt)
+			return new ApiBlockLvlSdt(obj);
+			
+		return null;
+	};
+	/**
 	 * Creates a new paragraph.
 	 * @memberof Api
 	 * @typeofeditors ["CDE", "CSE"]
@@ -5577,6 +5603,18 @@
 	ApiDocumentContent.prototype.GetClassType = function()
 	{
 		return "documentContent";
+	};
+	/**
+	 * Returns an internal ID of the current document content.
+	 * @memberof ApiDocumentContent
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {string}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetInternalId.js
+	 */
+	ApiDocumentContent.prototype.GetInternalId = function()
+	{
+		return this.Sdt.GetId();
 	};
 	/**
 	 * Returns a number of elements in the current document.
@@ -7425,6 +7463,47 @@
 		this.Document.SetGlobalTrackRevisions(isTrack);
 		return true;
 	};
+	
+	var trackRevisionBuffer = {
+		name : "",
+		userId : "",
+		isTrack : false
+	};
+	/**
+	 * Special method for AI track revisions.
+	 * @memberof ApiDocument
+	 * @typeofeditors ["CDE"]
+	 * @param isTrack {boolean} - Specifies if the change tracking mode is set or not.
+	 * @param assistantName {string} - Specifies if the change tracking mode is set or not.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/SetAssistantTrackRevisions.js
+	 */
+	ApiDocument.prototype.SetAssistantTrackRevisions = function(isTrack, assistantName)
+	{
+		if (isTrack)
+		{
+			trackRevisionBuffer.isTrack = this.Document.IsTrackRevisions();
+			this.Document.SetGlobalTrackRevisions(true);
+			
+			let userInfo = Asc.editor.DocInfo.get_UserInfo();
+			trackRevisionBuffer.userId   = userInfo.get_Id();
+			trackRevisionBuffer.userName = userInfo.get_FullName();
+			
+			let userId = "uid-" + assistantName;
+			userInfo.put_Id(userId);
+			userInfo.put_FullName(assistantName);
+			
+			AscCommon.setUserColorById(userId, {r : 8, g: 145, b: 178}, {r : 8, g: 145, b: 178});
+		}
+		else
+		{
+			this.Document.SetGlobalTrackRevisions(trackRevisionBuffer.isTrack);
+			let userInfo = Asc.editor.DocInfo.get_UserInfo();
+			userInfo.put_Id(trackRevisionBuffer.userId);
+			userInfo.put_FullName(trackRevisionBuffer.userName);
+		}
+		return true;
+	};
 	/**
 	 * Checks if change tracking mode is enabled or not.
 	 * @memberof ApiDocument
@@ -8087,6 +8166,34 @@
 			comment = manager.GetById(sId);
 
 		return comment ? new ApiComment(comment) : null;
+	};
+	
+	/**
+	 * Show a comment by its ID.
+	 * @memberof ApiDocument
+	 * @typeofeditors ["CDE"]
+	 * @param {string | Array.string} commentId - The comment ID.
+	 * @returns {boolean}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/ShowComment.js
+	 */
+	ApiDocument.prototype.ShowComment = function(commentId)
+	{
+		let durableIds  = Array.isArray(commentId) ? commentId : [commentId];
+		let internalIds = [];
+		
+		let comments = this.Document.GetCommentsManager();
+		for (let i = 0; i < durableIds.length; ++i)
+		{
+			let comment = comments.GetByDurableId(durableIds[i]);
+			if (comment)
+				internalIds.push(comment.GetId());
+		}
+		
+		// Force recalculation to display the comment in the correct place
+		this.ForceRecalculate();
+		this.Document.ShowComment(internalIds);
+		return true;
 	};
 
 	/**
@@ -9155,7 +9262,47 @@
 	ApiDocument.prototype.GetCustomProperties = function () {
 		return new ApiCustomProperties(this.Document.CustomProperties);
 	};
-
+	
+	/**
+	 * Insert blank page to the current location.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertBlankPage.js
+	 */
+	ApiDocument.prototype.InsertBlankPage = function()
+	{
+		this.Document.AddBlankPage();
+		return true;
+	};
+	/**
+	 * Moves cursor to the start of the document.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorToStart.js
+	 */
+	ApiDocument.prototype.MoveCursorToStart = function()
+	{
+		this.Document.MoveCursorToStartOfDocument();
+		return true;
+	};
+	/**
+	 * Moves cursor to the end of the document.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorToEnd.js
+	 */
+	ApiDocument.prototype.MoveCursorToEnd = function()
+	{
+		this.Document.MoveCursorToStartOfDocument();
+		this.Document.MoveCursorToEndPos();
+		return true;
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiParagraph
@@ -10365,50 +10512,17 @@
 	/**
 	 * Selects the current paragraph.
 	 * @memberof ApiParagraph
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CPE"]
 	 * @return {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/Select.js
 	 */
 	ApiParagraph.prototype.Select = function()
 	{
-		var Document = private_GetLogicDocument();
-		
-		var StartRun	= this.Paragraph.GetFirstRun();
-		var StartPos	= StartRun.GetDocumentPositionFromObject();
-		var EndRun		= this.Paragraph.Content[this.Paragraph.Content.length - 1];
-		var EndPos		= EndRun.GetDocumentPositionFromObject();
-		
-		StartPos.push({Class: StartRun, Position: 0});
-		EndPos.push({Class: EndRun, Position: 1});
-
-		if (StartPos[0].Position === - 1)
-			return false;
-
-		StartPos[0].Class.SetSelectionByContentPositions(StartPos, EndPos);
-
-		var controllerType;
-
-		if (StartPos[0].Class.IsHdrFtr())
-		{
-			controllerType = docpostype_HdrFtr;
-		}
-		else if (StartPos[0].Class.IsFootnote())
-		{
-			controllerType = docpostype_Footnotes;
-		}
-		else if (StartPos[0].Class.Is_DrawingShape())
-		{
-			controllerType = docpostype_DrawingObjects;
-		}
-		else 
-		{
-			controllerType = docpostype_Content;
-		}
-		
-		Document.SetDocPosType(controllerType);
-		Document.UpdateSelection();
-
-		return true;	
+		let logicDocument = private_GetLogicDocument();
+		logicDocument.RemoveSelection();
+		this.Paragraph.SelectAll();
+		this.Paragraph.Document_SetThisElementCurrent();
+		return true;
 	};
 	/**
 	 * Searches for a scope of a paragraph object. The search results are a collection of ApiRange objects.
@@ -12839,36 +12953,11 @@
 	 */
 	ApiTable.prototype.Select = function()
 	{
-		var Document = private_GetLogicDocument();
-		
-		var aDocPos = this.Table.GetDocumentPositionFromObject();
-		
-		if (aDocPos[0].Position === - 1)
-			return false;
-
-		var controllerType;
-
-		if (aDocPos[0].Class.IsHdrFtr())
-		{
-			controllerType = docpostype_HdrFtr;
-		}
-		else if (aDocPos[0].Class.IsFootnote())
-		{
-			controllerType = docpostype_Footnotes;
-		}
-		else if (aDocPos[0].Class.Is_DrawingShape())
-		{
-			controllerType = docpostype_DrawingObjects;
-		}
-		else 
-		{
-			controllerType = docpostype_Content;
-		}
-		aDocPos[0].Class.CurPos.ContentPos = aDocPos[0].Position;
-		Document.SetDocPosType(controllerType);
-		Document.SelectTable(3);
-
-		return true;	
+		let logicDocument = private_GetLogicDocument();
+		logicDocument.RemoveSelection();
+		this.Table.SelectAll();
+		this.Table.Document_SetThisElementCurrent();
+		return true;
 	};
 	/**
 	 * Returns a Range object that represents the part of the document contained in the specified table.
@@ -22045,19 +22134,6 @@
 	 */
 	ApiFormBase.prototype.GetClassType = function()
 	{
-		if (this instanceof ApiTextForm)
-			return "textForm";
-		else if (this instanceof ApiComboBoxForm)
-			return "comboBoxForm";
-		else if (this instanceof ApiDateForm)
-			return "dateForm";
-		else if (this instanceof ApiCheckBoxForm)
-			return "checkBoxForm";
-		else if (this instanceof ApiPictureForm)
-			return "pictureForm";
-		else if (this instanceof ApiComplexForm)
-			return "complexForm";
-		
 		return "form";
 	};
 	/**
@@ -22545,6 +22621,18 @@
 	//------------------------------------------------------------------------------------------------------------------
 
 	/**
+	 * Returns a type of the ApiTextForm class.
+	 * @memberof ApiTextForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.0.4
+	 * @returns {"textForm"}
+	 * @see office-js-api/Examples/{Editor}/ApiTextForm/Methods/GetClassType.js
+	 */
+	ApiTextForm.prototype.GetClassType = function()
+	{
+		return "textForm";
+	};
+	/**
 	 * Checks if the text field content is autofit, i.e. whether the font size adjusts to the size of the fixed size form.
 	 * @memberof ApiTextForm
 	 * @typeofeditors ["CDE", "CFE"]
@@ -22758,7 +22846,19 @@
 	// ApiPictureForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiPictureForm class.
+	 * @memberof ApiPictureForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"pictureForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiPictureForm/Methods/GetClassType.js
+	 */
+	ApiPictureForm.prototype.GetClassType = function()
+	{
+		return "pictureForm";
+	};
 	/**
 	 * Returns the current scaling condition of the picture form.
 	 * @memberof ApiPictureForm
@@ -23022,7 +23122,19 @@
 	// ApiComboBoxForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiComboBoxForm class.
+	 * @memberof ApiComboBoxForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"comboBoxForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiComboBoxForm/Methods/GetClassType.js
+	 */
+	ApiComboBoxForm.prototype.GetClassType = function()
+	{
+		return "comboBoxForm";
+	};
 	/**
 	 * Returns the list values from the current combo box.
 	 * @memberof ApiComboBoxForm
@@ -23150,7 +23262,19 @@
 	// ApiCheckBoxForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiCheckBoxForm class.
+	 * @memberof ApiCheckBoxForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"checkBoxForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiCheckBoxForm/Methods/GetClassType.js
+	 */
+	ApiCheckBoxForm.prototype.GetClassType = function()
+	{
+		return "checkBoxForm";
+	};
 	/**
 	 * Checks the current checkbox.
 	 * @memberof ApiCheckBoxForm
@@ -23268,6 +23392,18 @@
 	//
 	//------------------------------------------------------------------------------------------------------------------
 	
+	/**
+	 * Returns a type of the ApiDateForm class.
+	 * @memberof ApiDateForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"dateForm"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiDateForm/Methods/GetClassType.js
+	 */
+	ApiDateForm.prototype.GetClassType = function()
+	{
+		return "dateForm";
+	};
 	/**
 	 * Gets the date format of the current form.
 	 * @memberof ApiDateForm
@@ -23445,7 +23581,19 @@
 	// ApiComplexForm
 	//
 	//------------------------------------------------------------------------------------------------------------------
-
+	
+	/**
+	 * Returns a type of the ApiComplexForm class.
+	 * @memberof ApiComplexForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @returns {"form"}
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/{Editor}/ApiComplexForm/Methods/GetClassType.js
+	 */
+	ApiComplexForm.prototype.GetClassType = function()
+	{
+		return "complexForm";
+	};
 	/**
 	 * Appends the text content of the given form to the end of the current complex form.
 	 * @memberof ApiComplexForm
@@ -23779,8 +23927,6 @@
 					let oRunInfo = Object.assign({}, allRunsInfo[nInfo]);
 					
 					let oDeleteReviewRun = null;
-					let oInsertReviewRun = null;
-
 					if (oChange.pos >= oRunInfo.GlobStartPos || oChange.pos + DelCount > oRunInfo.GlobStartPos)
 					{
 						let nPosToDel   = Math.max(0, oChange.pos - oRunInfo.GlobStartPos + oRunInfo.StartPos);
@@ -23852,13 +23998,24 @@
 						let oRunToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Run : oRunInfo.Run;
 						nPosToAdd = oRunInfo.Run.Content.length === 0 && oRunInfoToAdd ? oRunInfoToAdd.Pos : nPosToAdd;
 
-						// creting review add run
-						if (oDeleteReviewRun) {
+						if (oDeleteReviewRun)
+						{
 							let oPara = oDeleteReviewRun.Paragraph;
 							oRunToAdd = new ParaRun(oPara, false);
 							oRunToAdd.Set_Pr(oDeleteReviewRun.Pr.Copy(true));
 							oRunToAdd.SetReviewType(reviewtype_Add);
 							oPara.AddToContent(oPara.Content.indexOf(oDeleteReviewRun) + 1, oRunToAdd);
+							nPosToAdd = 0;
+						}
+						else if (isTrackRevisions && reviewtype_Add !== oRunToAdd.GetReviewType())
+						{
+							let runParent = oRunToAdd.GetParent();
+							let posInParent = oRunToAdd.GetPosInParent();
+							if (0 !== nPosToAdd)
+								oRunToAdd = oRunToAdd.Split2(nPosToAdd, runParent, posInParent++);
+
+							oRunToAdd.Split2(0, runParent, posInParent);
+							oRunToAdd.SetReviewType(reviewtype_Add);
 							nPosToAdd = 0;
 						}
 
@@ -25543,6 +25700,7 @@
 	// Export
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	Api.prototype["GetDocument"]                      = Api.prototype.GetDocument;
+	Api.prototype["GetByInternalId"]                  = Api.prototype.GetByInternalId;
 	Api.prototype["CreateParagraph"]                  = Api.prototype.CreateParagraph;
 	Api.prototype["CreateTable"]                      = Api.prototype.CreateTable;
 	Api.prototype["AddComment"]                       = Api.prototype.AddComment;
@@ -25695,6 +25853,7 @@
 	ApiDocument.prototype["SetFormsData"]                  = ApiDocument.prototype.SetFormsData;
 	ApiDocument.prototype["SetTrackRevisions"]             = ApiDocument.prototype.SetTrackRevisions;
 	ApiDocument.prototype["IsTrackRevisions"]              = ApiDocument.prototype.IsTrackRevisions;
+	ApiDocument.prototype["SetAssistantTrackRevisions"]    = ApiDocument.prototype.SetAssistantTrackRevisions;
 	ApiDocument.prototype["GetRange"]                      = ApiDocument.prototype.GetRange;
 	ApiDocument.prototype["GetRangeBySelect"]              = ApiDocument.prototype.GetRangeBySelect;
 	ApiDocument.prototype["Last"]                          = ApiDocument.prototype.Last;
@@ -25720,6 +25879,7 @@
 	ApiDocument.prototype["SetControlsHighlight"]          = ApiDocument.prototype.SetControlsHighlight;
 	ApiDocument.prototype["GetAllComments"]                = ApiDocument.prototype.GetAllComments;
 	ApiDocument.prototype["GetCommentById"]                = ApiDocument.prototype.GetCommentById;
+	ApiDocument.prototype["ShowComment"]                   = ApiDocument.prototype.ShowComment;
 	ApiDocument.prototype["GetStatistics"]                 = ApiDocument.prototype.GetStatistics;
 	ApiDocument.prototype["GetPageCount"]                  = ApiDocument.prototype.GetPageCount;
 	ApiDocument.prototype["GetCurrentPage"]                = ApiDocument.prototype.GetCurrentPage;
@@ -25755,9 +25915,13 @@
 	ApiDocument.prototype["AddDropDownListContentControl"] = ApiDocument.prototype.AddDropDownListContentControl;
 	ApiDocument.prototype["AddPictureContentControl"]      = ApiDocument.prototype.AddPictureContentControl;
 	ApiDocument.prototype["GetCustomXmlParts"]             = ApiDocument.prototype.GetCustomXmlParts;
-	ApiDocument.prototype["GetCore"]                     = ApiDocument.prototype.GetCore;
-	ApiDocument.prototype["GetCustomProperties"]         = ApiDocument.prototype.GetCustomProperties;
-
+	ApiDocument.prototype["GetCore"]                       = ApiDocument.prototype.GetCore;
+	ApiDocument.prototype["GetCustomProperties"]           = ApiDocument.prototype.GetCustomProperties;
+	ApiDocument.prototype["InsertBlankPage"]               = ApiDocument.prototype.InsertBlankPage;
+	ApiDocument.prototype["MoveCursorToStart"]             = ApiDocument.prototype.MoveCursorToStart;
+	ApiDocument.prototype["MoveCursorToEnd"]               = ApiDocument.prototype.MoveCursorToEnd;
+	
+	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
 	ApiParagraph.prototype["AddText"]                = ApiParagraph.prototype.AddText;
 	ApiParagraph.prototype["AddPageBreak"]           = ApiParagraph.prototype.AddPageBreak;
@@ -26465,7 +26629,8 @@
 	ApiFormBase.prototype["SetTag"]             = ApiFormBase.prototype.SetTag;
 	ApiFormBase.prototype["GetRole"]            = ApiFormBase.prototype.GetRole;
 	ApiFormBase.prototype["SetRole"]            = ApiFormBase.prototype.SetRole;
-
+	
+	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;
 	ApiTextForm.prototype["IsMultiline"]         = ApiTextForm.prototype.IsMultiline;
@@ -26478,6 +26643,7 @@
 	ApiTextForm.prototype["SetText"]             = ApiTextForm.prototype.SetText;
 	ApiTextForm.prototype["Copy"]                = ApiTextForm.prototype.Copy;
 	
+	ApiPictureForm.prototype["GetClassType"]       = ApiPictureForm.prototype.GetClassType;
 	ApiPictureForm.prototype["GetScaleFlag"]       = ApiPictureForm.prototype.GetScaleFlag;
 	ApiPictureForm.prototype["SetScaleFlag"]       = ApiPictureForm.prototype.SetScaleFlag;
 	ApiPictureForm.prototype["SetLockAspectRatio"] = ApiPictureForm.prototype.SetLockAspectRatio;
@@ -26490,28 +26656,32 @@
 	ApiPictureForm.prototype["SetImage"]           = ApiPictureForm.prototype.SetImage;
 	ApiPictureForm.prototype["Copy"]               = ApiPictureForm.prototype.Copy;
 	
-	ApiDateForm.prototype["GetFormat"]   = ApiDateForm.prototype.GetFormat;
-	ApiDateForm.prototype["SetFormat"]   = ApiDateForm.prototype.SetFormat;
-	ApiDateForm.prototype["GetLanguage"] = ApiDateForm.prototype.GetLanguage;
-	ApiDateForm.prototype["SetLanguage"] = ApiDateForm.prototype.SetLanguage;
-	ApiDateForm.prototype["GetTime"]     = ApiDateForm.prototype.GetTime;
-	ApiDateForm.prototype["SetTime"]     = ApiDateForm.prototype.SetTime;
-	ApiDateForm.prototype["SetDate"]     = ApiDateForm.prototype.SetDate;
-	ApiDateForm.prototype["GetDate"]     = ApiDateForm.prototype.GetDate;
-	ApiDateForm.prototype["Copy"]        = ApiDateForm.prototype.Copy;
+	ApiDateForm.prototype["GetClassType"] = ApiDateForm.prototype.GetClassType;
+	ApiDateForm.prototype["GetFormat"]    = ApiDateForm.prototype.GetFormat;
+	ApiDateForm.prototype["SetFormat"]    = ApiDateForm.prototype.SetFormat;
+	ApiDateForm.prototype["GetLanguage"]  = ApiDateForm.prototype.GetLanguage;
+	ApiDateForm.prototype["SetLanguage"]  = ApiDateForm.prototype.SetLanguage;
+	ApiDateForm.prototype["GetTime"]      = ApiDateForm.prototype.GetTime;
+	ApiDateForm.prototype["SetTime"]      = ApiDateForm.prototype.SetTime;
+	ApiDateForm.prototype["SetDate"]      = ApiDateForm.prototype.SetDate;
+	ApiDateForm.prototype["GetDate"]      = ApiDateForm.prototype.GetDate;
+	ApiDateForm.prototype["Copy"]         = ApiDateForm.prototype.Copy;
 	
+	ApiComplexForm.prototype["GetClassType"] = ApiComplexForm.prototype.GetClassType;
 	ApiComplexForm.prototype["Add"]          = ApiComplexForm.prototype.Add;
 	ApiComplexForm.prototype["GetSubForms"]  = ApiComplexForm.prototype.GetSubForms;
 	ApiComplexForm.prototype["ClearContent"] = ApiComplexForm.prototype.ClearContent;
 	ApiComplexForm.prototype["Copy"]         = ApiComplexForm.prototype.Copy;
-
-	ApiComboBoxForm.prototype["GetListValues"]       = ApiComboBoxForm.prototype.GetListValues;
-	ApiComboBoxForm.prototype["SetListValues"]       = ApiComboBoxForm.prototype.SetListValues;
-	ApiComboBoxForm.prototype["SelectListValue"]     = ApiComboBoxForm.prototype.SelectListValue;
-	ApiComboBoxForm.prototype["SetText"]             = ApiComboBoxForm.prototype.SetText;
-	ApiComboBoxForm.prototype["IsEditable"]          = ApiComboBoxForm.prototype.IsEditable;
-	ApiComboBoxForm.prototype["Copy"]                = ApiComboBoxForm.prototype.Copy;
-
+	
+	ApiComboBoxForm.prototype["GetClassType"]    = ApiComboBoxForm.prototype.GetClassType;
+	ApiComboBoxForm.prototype["GetListValues"]   = ApiComboBoxForm.prototype.GetListValues;
+	ApiComboBoxForm.prototype["SetListValues"]   = ApiComboBoxForm.prototype.SetListValues;
+	ApiComboBoxForm.prototype["SelectListValue"] = ApiComboBoxForm.prototype.SelectListValue;
+	ApiComboBoxForm.prototype["SetText"]         = ApiComboBoxForm.prototype.SetText;
+	ApiComboBoxForm.prototype["IsEditable"]      = ApiComboBoxForm.prototype.IsEditable;
+	ApiComboBoxForm.prototype["Copy"]            = ApiComboBoxForm.prototype.Copy;
+	
+	ApiCheckBoxForm.prototype["GetClassType"]  = ApiCheckBoxForm.prototype.GetClassType;
 	ApiCheckBoxForm.prototype["SetChecked"]    = ApiCheckBoxForm.prototype.SetChecked;
 	ApiCheckBoxForm.prototype["IsChecked"]     = ApiCheckBoxForm.prototype.IsChecked;
 	ApiCheckBoxForm.prototype["IsRadioButton"] = ApiCheckBoxForm.prototype.IsRadioButton;

@@ -17014,11 +17014,13 @@
 			if(bChange)
 			{
 				var backupObj = this.getValueData();
-				for (var i = 0, length = this.multiText.length; i < length; ++i) {
-					var elem = this.multiText[i];
+				let newMultiText = this._cloneMultiText();
+				for (var i = 0, length = newMultiText.length; i < length; ++i) {
+					var elem = newMultiText[i];
 					if (null != elem.format)
 						fAction(elem.format)
 				}
+				this.setValueMultiTextInternal(newMultiText);
 				//пробуем преобразовать в простую строку
 				if(this._minimizeMultiText(false))
 				{
@@ -18294,7 +18296,7 @@
 		}
 
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
 		AscCommon.History.Create_NewPoint();
@@ -18317,7 +18319,7 @@
 			// cell.Remove();
 		});
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValueData = function(val){
 		AscCommon.History.Create_NewPoint();

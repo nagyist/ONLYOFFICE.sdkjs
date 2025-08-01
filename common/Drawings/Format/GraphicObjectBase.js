@@ -1301,7 +1301,8 @@
 
 	CGraphicObjectBase.prototype.drawShdw = function (graphics) {
 		var outerShdw = this.getOuterShdw && this.getOuterShdw();
-		if (this.shdwSp && outerShdw && !graphics.isBoundsChecker()) {
+		const needToDrawShadow = AscCommon.IsShapeToImageConverter || !graphics.isBoundsChecker();
+		if (this.shdwSp && outerShdw && needToDrawShadow) {
 			this.shdwSp.transform = this.shdwSp.getShdwTransform(outerShdw, this);
 			this.shdwSp.recalculateBounds();
 			this.shdwSp.draw(graphics);

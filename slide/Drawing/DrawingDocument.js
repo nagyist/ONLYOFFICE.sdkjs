@@ -3526,7 +3526,7 @@ function DrawBackground(graphics, unifill, w, h)
 
 	graphics.SetIntegerGrid(false);
 
-	var _shape = {};
+	var _shape = AscFormat.ExecuteNoHistory(function(){ return new AscFormat.CShape();}, this, [], false);
 
 	_shape.brush           = unifill;
 	_shape.pen             = null;
@@ -5998,6 +5998,14 @@ function CThumbnailsManager(editorPage)
 			startOffset = this.const_offset_x;
 		}
 
+		if (this.m_bIsScrollVisible) {
+			const scrollApi = editor.WordControl.m_oScrollThumbApi;
+			if (scrollApi) {
+				this.m_dScrollY_max = isVerticalThumbnails ? scrollApi.getMaxScrolledY() : scrollApi.getMaxScrolledX();
+				this.m_dScrollY = isVerticalThumbnails ? scrollApi.getCurScrolledY() : scrollApi.getCurScrolledX();
+			}
+		}
+
 		const currentScrollPx = isRightToLeft && !isVerticalThumbnails
 			? this.m_dScrollY_max - this.m_dScrollY >> 0
 			: this.m_dScrollY >> 0;
@@ -6260,7 +6268,9 @@ function CThumbnailsManager(editorPage)
 				wordControl.m_oThumbnails_scroll.HtmlElement.style.display = 'none';
 			}
 			this.m_bIsScrollVisible = false;
-			this.m_dScrollY = isHorizontalOrientation ? this.m_dScrollY_max : 0;
+			this.m_dScrollY = isHorizontalOrientation && Asc.editor.isRtlInterface
+				? this.m_dScrollY_max
+				: 0;
 
 		} else {
 			// Scrollbar is needed

@@ -3830,6 +3830,34 @@ function(window, undefined) {
 		}
 		return null;
 	};
+	CChartSpace.prototype.showChartTitle = function (bDisplay, bOverlay) {
+		if (!this.chart) {
+			return;
+		}
+
+		const title = bDisplay ? createChartTitle(this.chart, bOverlay) : null;
+		this.chart.setTitle(title);
+
+		function createChartTitle(parent, bOverlay) {
+			const title = new AscFormat.CTitle();
+			title.setParent(parent);
+
+			const chartSpace = title.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				title.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				title.resetFormatting();
+			}
+
+			title.setOverlay(bOverlay);
+			return title;
+		};
+	};
 	CChartSpace.prototype.getAllTitles = function () {
 		var ret = [];
 		if (this.chart) {
@@ -5036,6 +5064,7 @@ function(window, undefined) {
 	};
 	CChartSpace.prototype.Refresh_RecalcData = function (data) {
 		switch (data.Type) {
+			case AscDFH.historyitem_AutoShapes_AddToDrawingObjects:
 			case AscDFH.historyitem_AutoShapes_SetDrawingBaseCoors: {
 				this.addToRecalculate();
 				break;
@@ -8913,6 +8942,72 @@ function(window, undefined) {
 			this.chartObj.preCalculateData(this);
 		}
 	};
+	CChartSpace.prototype.showDataLabels = function (bDisplay, nDataLabelPos) {
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const chart = plotArea.chart;
+		if (!chart) {
+			return;
+		}
+
+		if (!AscFormat.isRealNumber(nDataLabelPos)) {
+			nDataLabelPos = Asc.c_oAscChartDataLabelsPos.t;
+		}
+
+		const controller = this.getDrawingObjectsController();
+		const chartType = plotArea.charts.length > 1 ? plotArea.charts[0].getChartType() : this.getChartType();
+		nDataLabelPos = controller.getAllowedDataLabelsPosition(chartType, nDataLabelPos);
+
+		if (chart.dLbls) {
+			chart.dLbls.setShowVal(bDisplay);
+
+			if (bDisplay) {
+				chart.dLbls.setDLblPos(nDataLabelPos);
+			}
+		}
+
+		const series = chart.series;
+		series.forEach(function (ser) {
+			if (!bDisplay) {
+				ser.setDLbls(null);
+				return;
+			}
+
+			const dLbls = ser.dLbls || createDLbls(ser);
+			dLbls.setDLblPos(nDataLabelPos);
+			ser.setDLbls(dLbls);
+		});
+
+		function createDLbls(parent) {
+			const dataLabels = new AscFormat.CDLbls();
+			dataLabels.setParent(parent);
+
+			dataLabels.setShowBubbleSize(false);
+			dataLabels.setShowCatName(false);
+			dataLabels.setShowLeaderLines(false);
+			dataLabels.setShowLegendKey(false);
+			dataLabels.setShowPercent(false);
+			dataLabels.setShowSerName(false);
+			dataLabels.setShowVal(true);
+
+			const chartSpace = dataLabels.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				dataLabels.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				dataLabels.resetFormatting();
+			}
+
+			return dataLabels;
+		}
+	};
 	CChartSpace.prototype.recalculateDLbls = function () {
 		if (this.chart && this.chart.plotArea) {
 			this.cachedCanvas = null;
@@ -10178,15 +10273,47 @@ function(window, undefined) {
 
 		this.recalculateTrendlines();
 	};
-
-
 	CChartSpace.prototype.recalculateTrendlines = function () {
 		let aSeries = this.getAllSeries();
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
 			aSeries[nSer].recalculateTrendline();
 		}
 	};
+	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
+		const allSeries = this.getAllSeries();
+		allSeries.forEach(function (ser) {
+			bShow
+				? ser.setTrendline(createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward))
+				: ser.removeTrendline();
+		});
+		
+		function createTrendline(parent, trendlineType, nForecastForward, nForecastBackward) {
+			const trendline = new AscFormat.CTrendLine();
+			trendline.setParent(parent);
 
+			trendline.setDispEq(false);
+			trendline.setDispRSqr(false);
+			trendline.setTrendlineType(AscFormat.isRealNumber(trendlineType) ? trendlineType : AscFormat.TRENDLINE_TYPE_LINEAR);
+			if (AscFormat.isRealNumber(nForecastForward))
+				trendline.setForward(nForecastForward);
+			if (AscFormat.isRealNumber(nForecastBackward))
+				trendline.setBackward(nForecastBackward);
+
+			const chartSpace = trendline.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				trendline.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					AscFormat.g_oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				trendline.resetFormatting();
+			}
+
+			return trendline;
+		}
+	};
 	CChartSpace.prototype.GetRevisionsChangeElement = function (SearchEngine) {
 		var titles = this.getAllTitles(), i;
 		if (titles.length === 0) {
@@ -10663,7 +10790,43 @@ function(window, undefined) {
 	CChartSpace.prototype.getTheme = function () {
 		return this.getParentObjects().theme;
 	};
+	CChartSpace.prototype.showDataTable = function (bShow, bWithKeys) {
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
 
+		if (!bShow) {
+			plotArea.setDTable(null);
+			return;
+		}
+
+		const dTable = plotArea.dTable || createDTable(plotArea);
+		const showLegendKeys = bWithKeys == null ? true : bWithKeys;
+		dTable.setShowKeys(showLegendKeys);
+		plotArea.setDTable(dTable);
+
+		function createDTable(parent) {
+			const dataTable = new AscFormat.CDTable();
+			dataTable.setParent(parent);
+
+			dataTable.setShowHorzBorder(true);
+			dataTable.setShowOutline(true);
+			dataTable.setShowVertBorder(true);
+
+			const chartSpace = dataTable.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				dataTable.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					true
+				);
+			} else {
+				dataTable.resetFormatting();
+			}
+		}
+	};
 	CChartSpace.prototype.getSpPrFormStyleEntry = function (oStyleEntry, aColors, nIdx) {
 		return AscFormat.CBaseChartObject.prototype.getSpPrFormStyleEntry.call(this, oStyleEntry, aColors, nIdx);
 	};
@@ -10745,6 +10908,126 @@ function(window, undefined) {
 						break;
 					}
 				}
+			}
+		}
+	};
+	CChartSpace.prototype.showAxesByTypes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		const bShowPrimaryDateAx = bShowPrimaryCatAx;
+		const bShowSecondaryDateAx = bShowSecondaryCatAx;
+
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const axesByTypes = plotArea.getAxisByTypes();
+		axesByTypes.dateAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryDateAx ? showAxis(axis) : hideAxis(axis);
+			} else {
+				bShowSecondaryDateAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
+		axesByTypes.catAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryCatAx ? showAxis(axis) : hideAxis(axis);
+			} else {
+				bShowSecondaryCatAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
+		axesByTypes.valAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryValAx ? showAxis(axis) : hideAxis(axis);
+			} else {
+				bShowSecondaryValAx ? showAxis(axis) : hideAxis(axis);
+			}
+		});
+		axesByTypes.serAx.forEach(bShowSerAx ? showAxis : hideAxis);
+
+		function hideAxis(axis) {
+			axis.setDelete(true);
+			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NONE);
+
+			axis.setSpPr(null);
+			axis.setTxPr(null);
+		}
+
+		function showAxis(axis) {
+			axis.setDelete(false);
+			axis.setMajorTickMark(Asc.c_oAscTickMark.TICK_MARK_OUT);
+			axis.setMinorTickMark(Asc.c_oAscTickMark.TICK_MARK_NONE);
+			axis.setTickLblPos(Asc.c_oAscTickLabelsPos.TICK_LABEL_POSITION_NEXT_TO);
+
+			const chartSpace = axis.getChartSpace();
+			if (chartSpace.chartStyle && chartSpace.chartColors) {
+				axis.applyChartStyle(
+					chartSpace.chartStyle,
+					chartSpace.chartColors,
+					oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+					false
+				);
+			} else {
+				axis.resetFormatting();
+			}
+		}
+	};
+	CChartSpace.prototype.showAxisTitlesByTypes = function (bShowPrimaryCatAx, bShowSecondaryCatAx, bShowPrimaryValAx, bShowSecondaryValAx, bShowSerAx) {
+		const bShowPrimaryDateAx = bShowPrimaryCatAx;
+		const bShowSecondaryDateAx = bShowSecondaryCatAx;
+
+		const plotArea = this.getPlotArea();
+		if (!plotArea) {
+			return;
+		}
+
+		const axesByTypes = plotArea.getAxisByTypes();
+		axesByTypes.dateAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryDateAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryDateAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
+		axesByTypes.catAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryCatAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryCatAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
+		axesByTypes.valAx.forEach(function (axis, index) {
+			if (index === 0) {
+				bShowPrimaryValAx ? createTitle(axis) : removeTitle(axis);
+			} else {
+				bShowSecondaryValAx ? createTitle(axis) : removeTitle(axis);
+			}
+		});
+		axesByTypes.serAx.forEach(bShowSerAx ? createTitle : removeTitle);
+
+		function removeTitle(axis) {
+			axis.setTitle(null);
+		}
+
+		function createTitle(axis) {
+			if (!axis.title) {
+				const title = new AscFormat.CTitle();
+				title.setParent(axis);
+
+				const chartSpace = title.getChartSpace();
+				if (chartSpace.chartStyle && chartSpace.chartColors) {
+					title.applyChartStyle(
+						chartSpace.chartStyle,
+						chartSpace.chartColors,
+						oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
+						true
+					);
+				} else {
+					title.resetFormatting();
+				}
+
+				axis.setTitle(title);
 			}
 		}
 	};
@@ -12758,7 +13041,10 @@ function(window, undefined) {
 		let nChartType = options.getType();
 		let bScatter = AscFormat.isScatterChartType(nChartType);
 		let oDataRange = new AscFormat.CChartDataRefs(null);
-		let aSeriesRefs = oDataRange.getSeriesRefsFromUnionRefs(AscFormat.fParseChartFormulaExternal(sRange), bHorValues, bScatter, nChartType);
+		let aSeriesRefs = oDataRange.getSeriesRefsFromUnionRefs(
+			AscFormat.fParseChartFormulaExternal(sRange, options),
+			bHorValues, bScatter, nChartType
+		);
 		if (!Array.isArray(aSeriesRefs)) {
 			return [];
 		}

@@ -3237,6 +3237,9 @@ var editor;
 		//но рассчитывать на внешние вызовы ненадежно и вызовов нет при VersionHistory и refreshFile
 		this.asc_Resize();
 		this.initBroadcastChannelListeners();
+
+		// Toggle chart elements (bug #67197)
+		Asc.editor.asc_registerCallback('asc_onSelectionChanged', this.toggleChartElementsCallback);
 	};
 
 	// Переход на диапазон в листе

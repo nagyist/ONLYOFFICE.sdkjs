@@ -6112,11 +6112,30 @@ CPresentation.prototype.OnMouseDown = function (e, X, Y, PageIndex) {
 	let oContent1, oContent2;
 	var ret = null;
 	if (oController) {
+		const selectedBefore = getSelectedMoveAnimIdMap();
 		oContent1 = oController.getTargetDocContent();
 		var aStartAnims = oController.getAnimSelectionState();
 		ret = oController.onMouseDown(e, X, Y);
 		oController.checkRedrawAnimLabels(aStartAnims);
 		oContent2 = oController.getTargetDocContent();
+
+		const selectedAfter = getSelectedMoveAnimIdMap();
+		let moveAnimSelectionChanged = selectedBefore.length !== selectedAfter.length ||
+			selectedBefore.some((id, index) => id !== selectedAfter[index]);
+
+		if (moveAnimSelectionChanged) {
+			oSlide.showDrawingObjects();
+		}
+
+		function getSelectedMoveAnimIdMap() {
+			const selected = oController.getSelectedArray().filter(function (object) {
+				return object instanceof AscFormat.MoveAnimationDrawObject;
+			});
+			const ids = selected.map(function (object) {
+				return object.GetId();
+			})
+			return ids.sort();
+		}
 	}
 	let bUpdate = true;
 	if(oContent1 && oContent1 === oContent2) {
@@ -8667,7 +8686,8 @@ CPresentation.prototype.SendThemesThumbnails = function () {
 		aThemeInfo[aDocumentThemes.length - 1] = theme_load_info;
 	}
 	this.Api.sync_InitEditorThemes(this.Api.ThemeLoader.Themes.EditorThemes, aDocumentThemes);
-	const currentThemeIndex = this.GetCurrentMaster().getThemeIndex();
+	const currentMaster = this.GetCurrentMaster();
+	const currentThemeIndex = currentMaster && currentMaster.getThemeIndex && currentMaster.getThemeIndex() || 0;
 	this.Api.sendEvent("asc_onUpdateThemeIndex", currentThemeIndex);
 };
 
@@ -10674,22 +10694,12 @@ CPresentation.prototype.SetAnimationProperties = function (oPr, bStartDemo) {
 	}
 	var oSlide = this.GetCurrentSlide();
 	if (oSlide) {
-
-
-		var bStartDemo_ = bStartDemo;
-		if(bStartDemo_ !== true && bStartDemo_ !== false) {
-			bStartDemo_ = false;
-			var oCurPr = oController.getDrawingProps().animProps;
-			if (oPr && oCurPr && (oPr.asc_getSubtype() !== oCurPr.asc_getSubtype() || oCurPr.isEqualProperties(oPr))) {
-				bStartDemo_ = true;
-			}
-		}
 		if (this.IsSelectionLocked(AscCommon.changestype_Timing) === false) {
 			this.StartAction(0);
 			oSlide.setAnimationProperties(oPr);
 			this.FinalizeAction();
 			this.Document_UpdateInterfaceState();
-			if (bStartDemo_) {
+			if (bStartDemo) {
 				this.StartAnimationPreview();
 			}
 		}

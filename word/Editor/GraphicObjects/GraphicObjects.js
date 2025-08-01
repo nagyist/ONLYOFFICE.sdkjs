@@ -784,6 +784,7 @@ CGraphicObjects.prototype =
 
     checkSelectedObjectsForMove: DrawingObjectsController.prototype.checkSelectedObjectsForMove,
 
+    getDrawingProps: DrawingObjectsController.prototype.getDrawingProps,
     getDrawingPropsFromArray: DrawingObjectsController.prototype.getDrawingPropsFromArray,
     getSelectedObjectsByTypes: DrawingObjectsController.prototype.getSelectedObjectsByTypes,
 		getChartSettings: DrawingObjectsController.prototype.getChartSettings,
@@ -2288,6 +2289,8 @@ CGraphicObjects.prototype =
     getSelectionState: DrawingObjectsController.prototype.getSelectionState,
     resetTrackState: DrawingObjectsController.prototype.resetTrackState,
     applyPropsToChartSpace: DrawingObjectsController.prototype.applyPropsToChartSpace,
+	getAllowedDataLabelsPosition: DrawingObjectsController.prototype.getAllowedDataLabelsPosition,
+	checkSingleChartSelection: DrawingObjectsController.prototype.checkSingleChartSelection,
 
     documentUpdateSelectionState: function()
     {

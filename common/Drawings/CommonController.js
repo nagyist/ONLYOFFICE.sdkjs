@@ -4361,6 +4361,66 @@
 					oChartSpace.applyChartSettings(oProps);
 				},
 
+				getAllowedDataLabelsPosition: function (chartType, position) {
+					const types = Asc.c_oAscChartTypeSettings;
+					const positions = Asc.c_oAscChartDataLabelsPos;
+
+					const allowedDataLabelPositions = {
+						[types.barNormal]: [positions.ctr, positions.inBase, positions.inEnd, positions.outEnd],
+						[types.barStacked]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.barStackedPer]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.barNormal3d]: [],
+						[types.barStacked3d]: [],
+						[types.barStackedPer3d]: [],
+						[types.barNormal3dPerspective]: [],
+						[types.lineNormal]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStacked]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedPer]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineNormalMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.lineStackedPerMarker]: [positions.ctr, positions.l, positions.t, positions.r, positions.b],
+						[types.line3d]: [],
+						[types.pie]: [positions.ctr, positions.inEnd, positions.outEnd, positions.bestFit],
+						[types.pie3d]: [positions.ctr, positions.inEnd, positions.outEnd, positions.bestFit],
+						[types.hBarNormal]: [positions.ctr, positions.inBase, positions.inEnd, positions.outEnd],
+						[types.hBarStacked]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.hBarStackedPer]: [positions.ctr, positions.inBase, positions.inEnd],
+						[types.hBarNormal3d]: [],
+						[types.hBarStacked3d]: [],
+						[types.hBarStackedPer3d]: [],
+						[types.areaNormal]: [positions.show],
+						[types.areaStacked]: [positions.show],
+						[types.areaStackedPer]: [positions.show],
+						[types.doughnut]: [positions.show],
+						[types.stock]: [positions.show],
+						[types.scatter]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterLine]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterLineMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterNone]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterSmooth]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.scatterSmoothMarker]: [positions.ctr, positions.l, positions.r, positions.t, positions.b],
+						[types.surfaceNormal]: [],
+						[types.surfaceWireframe]: [],
+						[types.contourNormal]: [],
+						[types.contourWireframe]: [],
+						[types.comboCustom]: [],
+						[types.comboBarLine]: [],
+						[types.comboBarLineSecondary]: [],
+						[types.comboAreaBar]: [],
+						[types.radar]: [positions.show],
+						[types.radarMarker]: [positions.show],
+						[types.radarFilled]: [positions.show],
+						[types.unknown]: []
+					};
+
+					const allowedPositions = allowedDataLabelPositions[chartType] || [];
+
+					return allowedPositions.indexOf(position) > -1
+						? position
+						: allowedPositions[0] || null;
+				},
+
 				checkDlblsPosition: function (chart, chart_type, position) {
 					var finish_dlbl_pos = position;
 
@@ -4418,6 +4478,76 @@
 					return finish_dlbl_pos;
 				},
 
+				checkSingleChartSelection: function () {
+
+					const controller = Asc.editor.getGraphicController();
+					if (!controller) return;
+
+					const selectedArray = controller.getSelectedArray();
+					if (selectedArray.length === 1) {
+
+						const selectedObject = selectedArray[0];
+						if (selectedObject.isChart && selectedObject.isChart()) {
+
+							let left, top, width, height;
+
+							const editorId = Asc.editor.getEditorId();
+							switch (editorId) {
+								case AscCommon.c_oEditorId.Word: {
+									const logicDocument = Asc.editor.getLogicDocument();
+									if (!logicDocument) return;
+
+									const bounds = selectedObject.getRectBounds();
+									const pageIndex = logicDocument.GetCurPage();
+									const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, pageIndex);
+									const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, pageIndex);
+
+									left = convertedPosTopLeft.X;
+									top = convertedPosTopLeft.Y;
+									width = convertedPosRightBottom.X - convertedPosTopLeft.X;
+									height = convertedPosRightBottom.Y - convertedPosTopLeft.Y;
+									break;
+								}
+								case AscCommon.c_oEditorId.Spreadsheet: {
+									const ws = Asc.editor.wb.getWorksheet();
+									if (!ws) return;
+
+									const ppi = ws._getPPIX();
+									const mmToPx = Asc.getCvtRatio(3, 0, ppi);
+
+									const bounds = selectedObject.getRectBounds();
+									const right = AscCommon.AscBrowser.convertToRetinaValue(bounds.r * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+									const bottom = AscCommon.AscBrowser.convertToRetinaValue(bounds.b * mmToPx - ws._getOffsetY() + ws.cellsTop);
+									left = AscCommon.AscBrowser.convertToRetinaValue(bounds.l * mmToPx - ws._getOffsetX() + ws.cellsLeft);
+									top = AscCommon.AscBrowser.convertToRetinaValue(bounds.t * mmToPx - ws._getOffsetY() + ws.cellsTop);
+									width = right - left;
+									height = bottom - top;
+									break;
+								}
+								case AscCommon.c_oEditorId.Presentation: {
+									const logicDocument = Asc.editor.getLogicDocument();
+									if (!logicDocument) return;
+
+									const bounds = selectedObject.getRectBounds();
+									const slideIndex = logicDocument.GetCurrentSlide().getSlideIndex();
+									const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, slideIndex);
+									const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, slideIndex);
+
+									left = convertedPosTopLeft.X;
+									top = convertedPosTopLeft.Y;
+									width = convertedPosRightBottom.X - convertedPosTopLeft.X;
+									height = convertedPosRightBottom.Y - convertedPosTopLeft.Y;
+									break;
+								}
+								default: return;
+							}
+
+							const chartSpaceRect = new AscCommon.asc_CRect(left, top, width, height);
+							return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', chartSpaceRect);
+						}
+					}
+					return Asc.editor.sendEvent('asc_onSingleChartSelectionChanged', null);
+				},
 
 				getChartForRangesDrawing: function () {
 					var chart;
@@ -4437,6 +4567,108 @@
 					return ret;
 				},
 
+				getPropsFromChart: function (chart_space) {
+					var chart = chart_space.chart, plot_area = chart_space.chart.plotArea;
+					var ret = new Asc.asc_ChartSettings();
+					ret.chartSpace = chart_space;
+					var range_obj = chart_space.getRangeObjectStr();
+					if (range_obj) {
+						if (typeof range_obj.range === "string" && range_obj.range.length > 0) {
+							ret.putRange(range_obj.range);
+							ret.putInColumns(!range_obj.bVert);
+						}
+					}
+
+					ret.putStyle(chart_space.getChartStyleIdx());
+					ret.putDisplayTrendlinesEquation(chart_space.getDisplayTrendlinesEquation());
+
+					ret.putTitle(isRealObject(chart.title) ? (chart.title.overlay ? c_oAscChartTitleShowSettings.overlay : c_oAscChartTitleShowSettings.noOverlay) : c_oAscChartTitleShowSettings.none);
+
+					var oOrderedAxes = chart_space.getOrderedAxes();
+					var aAx = oOrderedAxes.getHorizontalAxes();
+					var nAx;
+					for (nAx = 0; nAx < aAx.length; ++nAx) {
+						ret.addHorAxesProps(aAx[nAx].getMenuProps());
+					}
+					aAx = oOrderedAxes.getVerticalAxes();
+					for (nAx = 0; nAx < aAx.length; ++nAx) {
+						ret.addVertAxesProps(aAx[nAx].getMenuProps());
+					}
+                    aAx = oOrderedAxes.getDepthAxes();
+                    for (nAx = 0; nAx < aAx.length; ++nAx) {
+                        ret.addDepthAxesProps(aAx[nAx].getMenuProps());
+                    }
+
+					if (chart.legend) {
+						ret.putLegendPos(chart.legend.getPropsPos());
+					} else {
+						ret.putLegendPos(c_oAscChartLegendShowSettings.none);
+					}
+					ret.putType(chart_space.getChartType());
+
+					//TODO: change work with labels and markers
+					var aPositions = chart_space.getPossibleDLblsPosition();
+					var nDefaultDatalabelsPos;
+					nDefaultDatalabelsPos = aPositions[0];
+					var oFirstChart;
+					if (plot_area.isChartEx()) {
+						oFirstChart = plot_area.plotAreaRegion
+					} else {
+						oFirstChart = plot_area.charts[0];
+					}
+					var aSeries = oFirstChart.series;
+					var nSer, oSeries;
+					var oFirstSeries = aSeries[0];
+					var data_labels = oFirstChart.dLbls;
+					if (data_labels) {
+						if (oFirstSeries && oFirstSeries.dLbls) {
+							this.collectPropsFromDLbls(nDefaultDatalabelsPos, oFirstSeries.dLbls, ret);
+						} else {
+							this.collectPropsFromDLbls(nDefaultDatalabelsPos, data_labels, ret);
+						}
+					} else {
+						if (oFirstSeries && oFirstSeries.dLbls) {
+							this.collectPropsFromDLbls(nDefaultDatalabelsPos, oFirstSeries.dLbls, ret);
+						} else {
+							ret.putShowSerName(false);
+							ret.putShowCatName(false);
+							ret.putShowVal(false);
+							ret.putSeparator("");
+							ret.putDataLabelsPos(c_oAscChartDataLabelsPos.none);
+						}
+					}
+					var bNoLine, bSmooth;
+					if (oFirstChart.getObjectType() === AscDFH.historyitem_type_LineChart) {
+						bNoLine = oFirstChart.isNoLine();
+						bSmooth = oFirstChart.isSmooth();
+						if (!bNoLine) {
+							ret.putLine(true);
+							ret.putSmooth(bSmooth);
+						} else {
+							ret.putLine(false);
+						}
+					} else if (oFirstChart.getObjectType() === AscDFH.historyitem_type_ScatterChart) {
+						ret.bLine = !oFirstChart.isNoLine();
+						ret.smooth = oFirstChart.isSmooth();
+						ret.showMarker = oFirstChart.isMarkerChart();
+					}
+					ret.putView3d(chart_space.getView3d());
+					return ret;
+				},
+
+				collectPropsFromDLbls: function (nDefaultDatalabelsPos, data_labels, ret) {
+					ret.putShowSerName(data_labels.showSerName === true);
+					ret.putShowCatName(data_labels.showCatName === true);
+					ret.putShowVal(data_labels.showVal === true);
+					ret.putSeparator(data_labels.separator);
+					if (data_labels.bDelete) {
+						ret.putDataLabelsPos(c_oAscChartDataLabelsPos.none);
+					} else if (data_labels.showSerName || data_labels.showCatName || data_labels.showVal || data_labels.showPercent) {
+						ret.putDataLabelsPos(AscFormat.isRealNumber(data_labels.dLblPos) ? data_labels.dLblPos : nDefaultDatalabelsPos);
+					} else {
+						ret.putDataLabelsPos(c_oAscChartDataLabelsPos.none);
+					}
+				},
 				_getChartSpace: function (chartSeries, options, bUseCache) {
 					switch (options.type) {
 						case c_oAscChartTypeSettings.lineNormal:
@@ -9004,89 +9236,98 @@
 					}
 				},
 
-
 				bringToFront: function () {
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						var selected = [];
-						for (var i = 0; i < sp_tree.length; ++i) {
-							if (sp_tree[i].selected) {
-								selected.push(sp_tree[i]);
-							}
-						}
-						for (var i = sp_tree.length - 1; i > -1; --i) {
-							if (sp_tree[i].selected) {
-								sp_tree[i].deleteDrawingBase();
-							}
-						}
-						for (i = 0; i < selected.length; ++i) {
-							selected[i].addToDrawingObjects(sp_tree.length);
-						}
-					} else {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.bringToFront();
+
+					} else {
+						const selected = sp_tree.filter(function (drawingObject) {
+							return drawingObject.selected;
+						});
+
+						sp_tree.forEach(function (drawingObject) {
+							if (drawingObject.selected) {
+								drawingObject.deleteDrawingBase();
+							}
+						});
+
+						selected.forEach(function (drawingObject) {
+							drawingObject.addToDrawingObjects(sp_tree.length);
+						});
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
 				bringForward: function () {
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						for (var i = sp_tree.length - 1; i > -1; --i) {
-							var sp = sp_tree[i];
-							if (sp.selected && i < sp_tree.length - 1 && !sp_tree[i + 1].selected) {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
+						this.selection.groupSelection.bringForward();
+
+					} else {
+						for (let i = sp_tree.length - 1; i > -1; --i) {
+							const sp = sp_tree[i];
+							const canMoveForward = i < sp_tree.length - 1 && !sp_tree[i + 1].selected;
+							if (sp.selected && canMoveForward) {
 								sp.deleteDrawingBase();
 								sp.addToDrawingObjects(i + 1);
 							}
 						}
-					} else {
-						this.selection.groupSelection.bringForward();
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
 				sendToBack: function () {
-
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
+					const sp_tree = this.getDrawingObjects();
 
-					if (!(this.selection.groupSelection)) {
-						var j = 0;
-						for (var i = 0; i < sp_tree.length; ++i) {
-							if (sp_tree[i].selected) {
-								var object = sp_tree[i];
-								object.deleteDrawingBase();
-								object.addToDrawingObjects(j);
-								++j;
-							}
-						}
-					} else {
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.sendToBack();
-					}
-					this.drawingObjects.showDrawingObjects();
 
+					} else {
+						let insertionIndex = 0;
+						sp_tree.forEach(function (drawingObject) {
+							if (drawingObject.selected) {
+								drawingObject.deleteDrawingBase();
+								drawingObject.addToDrawingObjects(insertionIndex);
+								insertionIndex++;
+							}
+						});
+					}
+
+					this.startRecalculate();
+					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
 
-
 				bringBackward: function () {
-
 					AscCommon.IsChangingDrawingZIndex = true;
-					var sp_tree = this.getDrawingObjects();
-					if (!(this.selection.groupSelection)) {
-						for (var i = 0; i < sp_tree.length; ++i) {
-							var sp = sp_tree[i];
-							if (sp.selected && i > 0 && !sp_tree[i - 1].selected) {
-								sp.deleteDrawingBase();
-								sp.addToDrawingObjects(i - 1);
-							}
-						}
-					} else {
+					const sp_tree = this.getDrawingObjects();
+
+					if (this.selection.groupSelection) {
 						this.selection.groupSelection.bringBackward();
+
+					} else {
+						sp_tree.forEach(function (drawingObject, index) {
+							const canMoveBackward = index > 0 && !sp_tree[index - 1].selected;
+							if (drawingObject.selected && canMoveBackward) {
+								drawingObject.deleteDrawingBase();
+								drawingObject.addToDrawingObjects(index - 1);
+							}
+						});
 					}
+
+					this.startRecalculate();
 					this.drawingObjects.showDrawingObjects();
 					AscCommon.IsChangingDrawingZIndex = false;
 				},
