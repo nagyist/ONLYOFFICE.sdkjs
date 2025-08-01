@@ -264,6 +264,8 @@
 			DocumentAndChangeMismatch: 1080,
 			EditProtectedRange       : 1081,
 
+			MacroUnavailableWarning: 1082,
+
 
 			// pdf forms
 			PDFFormsLocked: -1200
@@ -446,6 +448,8 @@
 	prot['DocumentAndChangeMismatch']        = prot.DocumentAndChangeMismatch;
 	prot['EditProtectedRange']               = prot.EditProtectedRange;
 	prot['PDFFormsLocked']                   = prot.PDFFormsLocked;
+
+	prot['MacroUnavailableWarning']                   = prot.MacroUnavailableWarning;
 
 
 

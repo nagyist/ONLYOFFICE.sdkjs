@@ -5539,7 +5539,7 @@
 
 			if (!this.cropObject) {
 				if (!this.txWarpStruct && !this.txWarpStructParamarksNoTransform || (!this.txWarpStructParamarksNoTransform && oController && (AscFormat.getTargetTextObject(oController) === this) || (!this.txBody && !this.textBoxContent)) /*|| this.haveSelectedDrawingInContent()*/) {
-					this.drawTxBody(graphics, transform, transformText, pageIndex);
+					this.drawTxBody(graphics, transform, _transform_text, pageIndex);
 
 					if (this.textBoxContent && graphics.isSupportTextDraw() && this.transformText) {
 						var old_start_page = this.textBoxContent.Get_StartPage_Relative();

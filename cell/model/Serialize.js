@@ -6156,14 +6156,16 @@
 							oThis.memory.WriteByte(oFormControlPr.selType);
 						});
 					}
-					if (oFormControlPr.textHAlign !== null) {
+					const nTextHAlign = oControl.getTextHAlign();
+					if (nTextHAlign !== null) {
 						this.bs.WriteItem(c_oSerControlTypes.TextHAlign, function() {
-							oThis.memory.WriteByte(oFormControlPr.textHAlign);
+							oThis.memory.WriteByte(nTextHAlign);
 						});
 					}
-					if (oFormControlPr.textVAlign !== null) {
+					const nTextVAlign = oControl.getTextVAlign();
+					if (nTextVAlign !== null) {
 						this.bs.WriteItem(c_oSerControlTypes.TextVAlign, function() {
-							oThis.memory.WriteByte(oFormControlPr.textVAlign);
+							oThis.memory.WriteByte(nTextVAlign);
 						});
 					}
 					if (oFormControlPr.val !== null) {
@@ -10700,9 +10702,8 @@
 						sp_pr.setParent(oControl);
 						if (oPr.shape && oPr.shape.txBody) {
 							const oTxBody = oPr.shape.txBody.createDuplicate();
-							const oBodyPr = oControl.controller.getBodyPr(oPr.shape);
-							oTxBody.setBodyPr(oBodyPr);
 							oControl.setTxBody(oTxBody);
+							oControl.initTextProperties();
 							oControl.clearVmlTxBody();
 						}
 						oDrawingBase.initAfterSerialize(oWorksheet);

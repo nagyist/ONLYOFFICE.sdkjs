@@ -72,41 +72,76 @@
 	function getVerticalAlignFromControlPr(nPr) {
 		switch (nPr) {
 			case CFormControlPr_verticalAlignment_bottom:
-				return;
+				return AscFormat.VERTICAL_ANCHOR_TYPE_BOTTOM;
 			case CFormControlPr_verticalAlignment_center:
-				return;
+				return AscFormat.VERTICAL_ANCHOR_TYPE_CENTER;
 			case CFormControlPr_verticalAlignment_distributed:
-				return;
+				return AscFormat.VERTICAL_ANCHOR_TYPE_DISTRIBUTED;
 			case CFormControlPr_verticalAlignment_justify:
-				return;
+				return AscFormat.VERTICAL_ANCHOR_TYPE_JUSTIFIED;
 			case CFormControlPr_verticalAlignment_top:
-				return;
+				return AscFormat.VERTICAL_ANCHOR_TYPE_TOP;
 			default:
-				return;
+				return null;
 		}
 	}
 	function getHorizontalAlignFromControl(nPr) {
 		switch (nPr) {
 			case CFormControlPr_horizontalAlignment_center:
-				return;
+				return AscCommon.align_Center;
 			case CFormControlPr_horizontalAlignment_continuous:
-				return;
+				return null;
 			case CFormControlPr_horizontalAlignment_distributed:
-				return;
+				return AscCommon.align_Distributed;
 			case CFormControlPr_horizontalAlignment_fill:
-				return;
+				return null;
 			case CFormControlPr_horizontalAlignment_general:
-				return;
+				return null;
 			case CFormControlPr_horizontalAlignment_justify:
-				return;
+				return AscCommon.align_Justify;
 			case CFormControlPr_horizontalAlignment_left:
-				return;
+				return  AscCommon.align_Left;
 			case CFormControlPr_horizontalAlignment_right:
-				return;
+				return AscCommon.align_Right;
 			case CFormControlPr_horizontalAlignment_centerContinuous:
-				return;
+				return AscCommon.align_CenterContinuous;
 			default:
-				return;
+				return null;
+		}
+	}
+
+	function getVerticalControlAlignFromBodyPr(nPr) {
+		switch (nPr) {
+			case AscFormat.VERTICAL_ANCHOR_TYPE_BOTTOM:
+				return CFormControlPr_verticalAlignment_bottom;
+			case AscFormat.VERTICAL_ANCHOR_TYPE_CENTER:
+				return CFormControlPr_verticalAlignment_center;
+			case AscFormat.VERTICAL_ANCHOR_TYPE_DISTRIBUTED:
+				return CFormControlPr_verticalAlignment_distributed;
+			case AscFormat.VERTICAL_ANCHOR_TYPE_JUSTIFIED:
+				return CFormControlPr_verticalAlignment_justify;
+			case AscFormat.VERTICAL_ANCHOR_TYPE_TOP:
+				return CFormControlPr_verticalAlignment_top;
+			default:
+				return null;
+		}
+	}
+	function getHorizontalAlignFromContentControl(nPr) {
+		switch (nPr) {
+			case AscCommon.align_Center:
+				return CFormControlPr_horizontalAlignment_center;
+			case AscCommon.align_Distributed:
+				return CFormControlPr_horizontalAlignment_distributed;
+			case AscCommon.align_Justify:
+				return CFormControlPr_horizontalAlignment_justify;
+			case AscCommon.align_Left:
+				return CFormControlPr_horizontalAlignment_left ;
+			case AscCommon.align_Right:
+				return CFormControlPr_horizontalAlignment_right;
+			case AscCommon.align_CenterContinuous:
+				return CFormControlPr_horizontalAlignment_centerContinuous;
+			default:
+				return null;
 		}
 	}
 
@@ -242,12 +277,40 @@
 	CControl.prototype.applySpecialPasteProps = function (oPastedWb) {
 		this.controller.applySpecialPasteProps(oPastedWb);
 	};
+	CControl.prototype.initTextProperties = function() {
+		this.controller.initTextProperties();
+	};
+	CControl.prototype.setMacro = function(pr) {
+		this.controlPr.setMacro(pr);
+	};
+	CControl.prototype.getTextHAlign = function() {
+		const oTxBody = this.txBody;
+		const oContent = oTxBody && oTxBody.content;
+		if (oContent) {
+			oContent.SetApplyToAll(true);
+			const oTextPr = oContent.GetDirectParaPr();
+			oContent.SetApplyToAll(false);
+			return getHorizontalAlignFromContentControl(oTextPr.Jc);
+		}
+		return null;
+	};
+	CControl.prototype.getTextVAlign = function() {
+		const oTxBody = this.txBody;
+		const oBodyPr = oTxBody && oTxBody.bodyPr;
+		if (oBodyPr) {
+			return getVerticalControlAlignFromBodyPr(oBodyPr.anchor);
+		}
+		return null;
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
 	}
 	CControlControllerBase.prototype.getFormControlPr = function() {
 		return this.control.formControlPr;
+	};
+	CControlControllerBase.prototype.getControlPr = function() {
+		return this.control.controlPr;
 	};
 	CControlControllerBase.prototype.getWorksheet = function() {
 		return this.control.Get_Worksheet();
@@ -257,10 +320,13 @@
 	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {};
 	CControlControllerBase.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
 	CControlControllerBase.prototype.init = function() {};
-	CControlControllerBase.prototype.getBodyPr = function(oControlShape) {return null;};
+	CControlControllerBase.prototype.initTextProperties = function() {return null;};
 	CControlControllerBase.prototype.applySpecialPasteProps = function(oPastedWb) {};
 	CControlControllerBase.prototype.getTextRect = function() {
 		return AscFormat.CShape.prototype.getTextRect.call(this.control);
+	};
+	CControlControllerBase.prototype.getChecked = function() {
+		return null;
 	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
@@ -275,10 +341,10 @@
 		this.isHold = false;
 	};
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
-	CCheckBoxController.prototype.getBodyPr = function (oControlShape) {
+	CCheckBoxController.prototype.initTextProperties = function () {
 		const oBodyPr = new AscFormat.CBodyPr();
 		oBodyPr.setInsets(CHECKBOX_BODYPR_INSETS_L, CHECKBOX_BODYPR_INSETS_T, CHECKBOX_BODYPR_INSETS_R, CHECKBOX_BODYPR_INSETS_B);
-		oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
+		oBodyPr.setAnchor(getVerticalAlignFromControlPr(this.control.formControlPr.textVAlign));
 		oBodyPr.vertOverflow = AscFormat.nVOTClip;
 		oBodyPr.wrap = AscFormat.nTWTSquare;
 		oBodyPr.upright = true;
@@ -610,26 +676,77 @@
 	CButtonController.prototype.setIsHold = function(bPr) {
 		this.isHold = bPr;
 	};
+	CButtonController.prototype.onMacroError = function() {
+		const oApi = Asc.editor;
+		if (oApi) {
+			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical);
+		}
+	};
 	CButtonController.prototype.getCursorInfo = function(e, nX, nY) {
-
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if(!oControl.hit(nX, nY)) {
+			return null;
+		}
+		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
 	CButtonController.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		if (e.CtrlKey) {
+			return false;
+		}
+		if(!oControl.hit(nX, nY)) {
+			return false;
+		}
 		this.setIsHold(true);
 		this.control.onUpdate();
 		return true;
 	};
 	CButtonController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+		if (e.button !== 0) {
+			return false;
+		}
+		const oControlPr = this.getControlPr();
+		const sMacro = oControlPr.getJSAMacroId();
+		if (sMacro === null) {
+			this.onMacroError();
+		} else {
+			this.runMacros(sMacro);
+		}
 		this.setIsHold(false);
 		this.control.onUpdate();
 		return true;
 	};
-	CButtonController.prototype.getBodyPr = function(oControlShape) {
+	CButtonController.prototype.runMacros = function(sMacro) {
+		const oApi = Asc.editor;
+		if (oApi) {
+			oApi.asc_runMacros(sMacro);
+		}
+	};
+	CButtonController.prototype.initTextProperties = function() {
+		const oControl = this.control;
 		const oBodyPr = new AscFormat.CBodyPr();
 		oBodyPr.setInsets(BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS);
-		oBodyPr.setAnchor(AscFormat.VERTICAL_ANCHOR_TYPE_CENTER);
+		oBodyPr.setAnchor(getVerticalAlignFromControlPr(oControl.formControlPr.textVAlign));
 		oBodyPr.vertOverflow = AscFormat.nVOTClip;
 		oBodyPr.wrap = AscFormat.nTWTSquare;
 		oBodyPr.upright = true;
+		const oTextBody = oControl.txBody;
+		oTextBody.setBodyPr(oBodyPr);
+		const oContent = oTextBody.content;
+		if (oContent) {
+			oContent.SetApplyToAll(true);
+			oContent.SetParagraphAlign(getHorizontalAlignFromControl(oControl.formControlPr.textHAlign));
+			oContent.SetApplyToAll(false);
+		}
 		return oBodyPr;
 	};
 	CButtonController.prototype.applySpecialPasteProps = function(oPastedWb) {
@@ -850,6 +967,13 @@
 		oCopy.setRecalcAlways(this.recalcAlways);
 		oCopy.setUiObject(this.uiObject);
 	};
+CControlPr.prototype.getJSAMacroId = function() {
+	const sMacro = this.macro;
+	if (typeof sMacro === "string" && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
+		return sMacro.slice(AscFormat.MACRO_PREFIX.length);
+	}
+	return null;
+};
 
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropLines] = AscDFH.CChangesDrawingsLong;
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_ObjectType] = AscDFH.CChangesDrawingsLong;
@@ -1291,4 +1415,6 @@
 	window["AscFormat"].CFormControlPr_checked_unchecked = CFormControlPr_checked_unchecked;
 	window["AscFormat"].CFormControlPr_checked_checked = CFormControlPr_checked_checked;
 	window["AscFormat"].CFormControlPr_checked_mixed = CFormControlPr_checked_mixed;
+	window["AscFormat"].getVerticalControlAlignFromBodyPr = getVerticalControlAlignFromBodyPr;
+	window["AscFormat"].getHorizontalAlignFromControl = getHorizontalAlignFromControl;
 })();
