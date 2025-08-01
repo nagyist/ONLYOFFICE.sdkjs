@@ -660,7 +660,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		{
 			var Num = Columns.Cols.length;
 			
-			// Когда задаются колонки не равномерно, то Word плюет на поля, заданные в документа и ориентируется только
+			// Когда задаются колонки неравномерно, то Word плюет на поля, заданные в документе и ориентируется только
 			// по размеру колонок дальше. (если ни 1 колонка не задана, тогда Word добавляет 1 колонку шириной 17.09 см)
 			
 			if (Num <= 0)
@@ -703,7 +703,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		}
 		
 		// Здесь есть 1 исключение: когда мы добавляем колонтитул для первой страницы, может так получиться, что
-		// у данной секции флаг TitlePage = False, а значит пересчет надо запускать с места где данный колонтитул
+		// у данной секции флаг TitlePage = False, а значит пересчет надо запускать с места, где данный колонтитул
 		// первый раз начнет использоваться, а не с текущей секции.
 		
 		if ((AscDFH.historyitem_Section_Header_First === Data.Type || AscDFH.historyitem_Section_Footer_First === Data.Type) && false === this.TitlePage)
@@ -767,7 +767,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		// Variable : PageMargins
 		// Byte     : Type
 		// Variable : Borders
-		// Колонтитулы не пишем в бинарник, при созданиии класса они всегда null, а TitlePage = false
+		// Колонтитулы не пишем в бинарник, при создании класса они всегда null, а TitlePage = false
 		// Variable : PageNumType
 		// Variable : AscWord.SectionColumns
 		// Variable : AscWord.FootnotePr
@@ -792,7 +792,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		// Variable : PageMargins
 		// Byte     : Type
 		// Variable : Borders
-		// Колонтитулы не пишем в бинарник, при созданиии класса они всегда null, а TitlePage = false
+		// Колонтитулы не пишем в бинарник, при создании класса они всегда null, а TitlePage = false
 		// Variable : PageNumType
 		// Variable : AscWord.SectionColumns
 		// Variable : AscWord.FootnotePr

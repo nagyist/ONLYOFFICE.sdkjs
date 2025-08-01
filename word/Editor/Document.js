@@ -89,26 +89,30 @@ var search_HdrFtr_Even         = 0x0004; // Поиск в колонтитуле
 var search_HdrFtr_Odd          = 0x0005; // Поиск в колонтитуле, который находится только на нечетных страницах, включая первую
 var search_HdrFtr_Odd_no_First = 0x0006; // Поиск в колонтитуле, который находится только на нечетных страницах, кроме первой
 
-// Типы которые возвращают классы Paragraph и CTable после пересчета страницы
-var recalcresult_NextElement = 0x01; // Пересчитываем следующий элемент
-var recalcresult_PrevPage    = 0x02; // Пересчитываем заново предыдущую страницу
-var recalcresult_CurPage     = 0x04; // Пересчитываем заново текущую страницу
-var recalcresult_NextPage    = 0x08; // Пересчитываем следующую страницу
-var recalcresult_NextLine    = 0x10; // Пересчитываем следующую строку
-var recalcresult_CurLine     = 0x20; // Пересчитываем текущую строку
-var recalcresult_CurPagePara = 0x40; // Специальный случай, когда мы встретили картинку в начале параграфа
-var recalcresult_ParaMath    = 0x80; // Пересчитываем заново неинлайновую формулу
+// Типы которые возвращают классы Paragraph/Table/BlockLevelSdt после пересчета страницы
+var recalcresult_NextElement     = 0x0001; // Пересчитываем следующий элемент
+var recalcresult_PrevPage        = 0x0002; // Пересчитываем заново предыдущую страницу
+var recalcresult_CurPage         = 0x0004; // Пересчитываем заново текущую страницу
+var recalcresult_NextPage        = 0x0008; // Пересчитываем следующую страницу
+var recalcresult_NextLine        = 0x0010; // Пересчитываем следующую строку
+var recalcresult_CurLine         = 0x0020; // Пересчитываем текущую строку
+var recalcresult_CurPagePara     = 0x0040; // Специальный случай, когда мы встретили картинку в начале параграфа
+var recalcresult_ParaMath        = 0x0080; // Пересчитываем заново неинлайновую формулу
+var recalcresult_NextSection     = 0x0100; // Пересчитываем следующий элемент уже в новой секции (Paragraph/BlockLevelSdt)
+var recalcresult_NextSection_Cur = 0x0200; // Пересчитываем текущий элемент уже в новой секции (только BlockLevelSdt)
 
 var recalcresultflags_Column            = 0x010000; // Пересчитываем только колонку
 var recalcresultflags_Page              = 0x020000; // Пересчитываем всю страницу
-var recalcresultflags_LastFromNewPage   = 0x040000; // Используется совсместно с recalcresult_NextPage, означает, что начало последнего элемента нужно перенести на новую страницу
-var recalcresultflags_LastFromNewColumn = 0x080000; // Используется совсместно с recalcresult_NextPage, означает, что начало последнего элемента нужно перенести на новую колонку
+var recalcresultflags_LastFromNewPage   = 0x040000; // Используется совместно с recalcresult_NextPage, означает, что начало последнего элемента нужно перенести на новую страницу
+var recalcresultflags_LastFromNewColumn = 0x080000; // Используется совместно с recalcresult_NextPage, означает, что начало последнего элемента нужно перенести на новую колонку
 var recalcresultflags_Footnotes         = 0x010000; // Сообщаем, что необходимо пересчитать сноски на данной странице
 
 // Типы которые возвращают классы CDocument и CDocumentContent после пересчета страницы
-var recalcresult2_End      = 0x00; // Документ рассчитан до конца
-var recalcresult2_NextPage = 0x01; // Рассчет нужно продолжить
-var recalcresult2_CurPage  = 0x02; // Нужно заново пересчитать данную страницу
+var recalcresult2_End             = 0x00; // Документ рассчитан до конца
+var recalcresult2_NextPage        = 0x01; // Расчет нужно продолжить
+var recalcresult2_CurPage         = 0x02; // Нужно заново пересчитать данную страницу
+var recalcresult2_NextSection     = 0x03; // Рассчитали до конца, но в конце был разрыв секции
+var recalcresult2_NextSection_Cur = 0x03; // Рассчитали не до конца, остановились на разрыве секции
 
 var document_EditingType_Common = 0x00; // Обычный режим редактирования
 var document_EditingType_Review = 0x01; // Режим рецензирования
@@ -28463,6 +28467,10 @@ CDocument.prototype.SetNumeralType = function(type)
 CDocument.prototype.GetNumeralType = function()
 {
 	return this.NumeralType;
+};
+CDocument.prototype.GetSections = function()
+{
+	return this.SectionsInfo;
 };
 
 function CDocumentSelectionState()

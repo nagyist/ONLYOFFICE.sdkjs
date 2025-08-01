@@ -80,209 +80,66 @@
 	};
 	DocumentSections.prototype.Reset_HdrFtrRecalculateCache = function()
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.Reset_RecalculateCache();
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.Reset_RecalculateCache();
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.Reset_RecalculateCache();
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.Reset_RecalculateCache();
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.Reset_RecalculateCache();
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.Reset_RecalculateCache();
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.Reset_RecalculateCache();
+		});
 	};
-	DocumentSections.prototype.GetAllParagraphs = function(Props, ParaArray)
+	DocumentSections.prototype.GetAllParagraphs = function(props, paragraphs)
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.GetAllParagraphs(Props, ParaArray);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.GetAllParagraphs(Props, ParaArray);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.GetAllParagraphs(Props, ParaArray);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.GetAllParagraphs(Props, ParaArray);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.GetAllParagraphs(Props, ParaArray);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.GetAllParagraphs(Props, ParaArray);
-		}
+		if (!paragraphs)
+			paragraphs = [];
+		
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.GetAllParagraphs(props, paragraphs);
+		});
+		
+		return paragraphs;
 	};
-	DocumentSections.prototype.GetAllTables = function(oProps, arrTables)
+	DocumentSections.prototype.GetAllTables = function(props, tables)
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.GetAllTables(oProps, arrTables);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.GetAllTables(oProps, arrTables);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.GetAllTables(oProps, arrTables);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.GetAllTables(oProps, arrTables);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.GetAllTables(oProps, arrTables);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.GetAllTables(oProps, arrTables);
-		}
+		if (!tables)
+			tables = [];
+		
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.GetAllTables(props, tables);
+		});
+		
+		return tables;
 	};
-	DocumentSections.prototype.GetAllDrawingObjects = function(arrDrawings)
+	DocumentSections.prototype.GetAllDrawingObjects = function(drawings)
 	{
-		for (var nIndex = 0, nCount = this.Elements.length; nIndex < nCount; ++nIndex)
-		{
-			var SectPr = this.Elements[nIndex].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.GetAllDrawingObjects(arrDrawings);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.GetAllDrawingObjects(arrDrawings);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.GetAllDrawingObjects(arrDrawings);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.GetAllDrawingObjects(arrDrawings);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.GetAllDrawingObjects(arrDrawings);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.GetAllDrawingObjects(arrDrawings);
-		}
+		if (!drawings)
+			drawings = [];
+		
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.GetAllDrawingObjects(drawings);
+		});
+		
+		return drawings;
 	};
-	DocumentSections.prototype.UpdateBookmarks = function(oBookmarkManager)
+	DocumentSections.prototype.UpdateBookmarks = function(bookmarkManager)
 	{
-		for (var nIndex = 0, nCount = this.Elements.length; nIndex < nCount; ++nIndex)
-		{
-			var SectPr = this.Elements[nIndex].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.UpdateBookmarks(oBookmarkManager);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.UpdateBookmarks(oBookmarkManager);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.UpdateBookmarks(oBookmarkManager);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.UpdateBookmarks(oBookmarkManager);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.UpdateBookmarks(oBookmarkManager);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.UpdateBookmarks(oBookmarkManager);
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.UpdateBookmarks(bookmarkManager);
+		});
 	};
-	DocumentSections.prototype.Document_CreateFontMap = function(FontMap)
+	DocumentSections.prototype.Document_CreateFontMap = function(fontMap)
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.Document_CreateFontMap(FontMap);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.Document_CreateFontMap(FontMap);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.Document_CreateFontMap(FontMap);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.Document_CreateFontMap(FontMap);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.Document_CreateFontMap(FontMap);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.Document_CreateFontMap(FontMap);
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.Document_CreateFontMap(fontMap);
+		});
 	};
-	DocumentSections.prototype.Document_CreateFontCharMap = function(FontCharMap)
+	DocumentSections.prototype.Document_CreateFontCharMap = function(fontCharMap)
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.Document_CreateFontCharMap(FontCharMap);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.Document_CreateFontCharMap(FontCharMap);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.Document_CreateFontCharMap(FontCharMap);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.Document_CreateFontCharMap(FontCharMap);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.Document_CreateFontCharMap(FontCharMap);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.Document_CreateFontCharMap(FontCharMap);
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.Document_CreateFontCharMap(fontCharMap);
+		});
 	};
-	DocumentSections.prototype.Document_Get_AllFontNames = function(AllFonts)
+	DocumentSections.prototype.Document_Get_AllFontNames = function(allFonts)
 	{
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.Document_Get_AllFontNames(AllFonts);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.Document_Get_AllFontNames(AllFonts);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.Document_Get_AllFontNames(AllFonts);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.Document_Get_AllFontNames(AllFonts);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.Document_Get_AllFontNames(AllFonts);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.Document_Get_AllFontNames(AllFonts);
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.Document_Get_AllFontNames(allFonts);
+		});
 	};
 	DocumentSections.prototype.Get_Index = function(Index)
 	{
@@ -427,46 +284,22 @@
 	 */
 	DocumentSections.prototype.GetAllHdrFtrs = function()
 	{
-		var HdrFtrs = [];
-		
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
-		{
-			var SectPr = this.Elements[Index].SectPr;
-			SectPr.GetAllHdrFtrs(HdrFtrs);
-		}
-		
-		return HdrFtrs;
+		let result = [];
+		this.forEachHdrFtr(function(hdrFtr){
+			result.push(hdrFtr);
+		});
+		return result;
 	};
-	DocumentSections.prototype.GetAllContentControls = function(arrContentControls)
+	DocumentSections.prototype.GetAllContentControls = function(contentControls)
 	{
-		for (var nIndex = 0, nCount = this.Elements.length; nIndex < nCount; ++nIndex)
-		{
-			var SectPr = this.Elements[nIndex].SectPr;
-			
-			if (null != SectPr.HeaderFirst)
-				SectPr.HeaderFirst.GetAllContentControls(arrContentControls);
-			
-			if (null != SectPr.HeaderDefault)
-				SectPr.HeaderDefault.GetAllContentControls(arrContentControls);
-			
-			if (null != SectPr.HeaderEven)
-				SectPr.HeaderEven.GetAllContentControls(arrContentControls);
-			
-			if (null != SectPr.FooterFirst)
-				SectPr.FooterFirst.GetAllContentControls(arrContentControls);
-			
-			if (null != SectPr.FooterDefault)
-				SectPr.FooterDefault.GetAllContentControls(arrContentControls);
-			
-			if (null != SectPr.FooterEven)
-				SectPr.FooterEven.GetAllContentControls(arrContentControls);
-		}
+		this.forEachHdrFtr(function(hdrFtr){
+			hdrFtr.GetAllContentControls(contentControls);
+		});
 	};
 	/**
 	 * Обновляем заданную секцию
 	 * @param oSectPr {AscWord.SectPr} - Секция, которую нужно обновить
-	 * @param oNewSectPr {?AscWord.SectPr} - Либо новое значение секции, либо undefined для удалении секции
+	 * @param oNewSectPr {?AscWord.SectPr} - Либо новое значение секции, либо undefined для удаления секции
 	 * @param isCheckHdrFtr {boolean} - Нужно ли проверять колонтитулы при удалении секции
 	 * @returns {boolean} Если не смогли обновить, возвращаем false
 	 */
@@ -790,9 +623,41 @@
 		
 		return null;
 	};
+	//------------------------------------------------------------------------------------------------------------------
+	// Private area
+	//------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Iterates through all sections and executes a callback function for each header and footer.
+	 * @param {Function} callback
+	 */
+	DocumentSections.prototype.forEachHdrFtr = function(callback)
+	{
+		for (let i = 0, count = this.Elements.length; i < count; ++i)
+		{
+			let sectPr = this.Elements[i].SectPr;
+			
+			if (null != sectPr.HeaderFirst)
+				callback.call(this, sectPr.HeaderFirst);
+			
+			if (null != sectPr.HeaderDefault)
+				callback.call(this, sectPr.HeaderDefault);
+			
+			if (null != sectPr.HeaderEven)
+				callback.call(this, sectPr.HeaderEven);
+			
+			if (null != sectPr.FooterFirst)
+				callback.call(this, sectPr.FooterFirst);
+			
+			if (null != sectPr.FooterDefault)
+				callback.call(this, sectPr.FooterDefault);
+			
+			if (null != sectPr.FooterEven)
+				callback.call(this, sectPr.FooterEven);
+		}
+	};
 	
 	
-	//----------------------------------------------------------------------------------------------------------------------
+	//------------------------------------------------------------------------------------------------------------------
 	
 	/**
 	 * Represents a document section associated with a specific paragraph.
@@ -812,5 +677,4 @@
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.DocumentSections = DocumentSections;
 	AscWord.DocumentSection  = DocumentSection;
-	
 })();
