@@ -10694,22 +10694,12 @@ CPresentation.prototype.SetAnimationProperties = function (oPr, bStartDemo) {
 	}
 	var oSlide = this.GetCurrentSlide();
 	if (oSlide) {
-
-
-		var bStartDemo_ = bStartDemo;
-		if(bStartDemo_ !== true && bStartDemo_ !== false) {
-			bStartDemo_ = false;
-			var oCurPr = oController.getDrawingProps().animProps;
-			if (oPr && oCurPr && (oPr.asc_getSubtype() !== oCurPr.asc_getSubtype() || oCurPr.isEqualProperties(oPr))) {
-				bStartDemo_ = true;
-			}
-		}
 		if (this.IsSelectionLocked(AscCommon.changestype_Timing) === false) {
 			this.StartAction(0);
 			oSlide.setAnimationProperties(oPr);
 			this.FinalizeAction();
 			this.Document_UpdateInterfaceState();
-			if (bStartDemo_) {
+			if (bStartDemo) {
 				this.StartAnimationPreview();
 			}
 		}

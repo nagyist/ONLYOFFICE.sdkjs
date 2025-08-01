@@ -4706,9 +4706,9 @@ background-repeat: no-repeat;\
 	{
 		this.WordControl.m_oLogicDocument.StopAnimationPreview();
 	};
-	asc_docs_api.prototype.asc_SetAnimationProperties = function(oPr)
+	asc_docs_api.prototype.asc_SetAnimationProperties = function(oPr, bStartDemo)
 	{
-		this.WordControl.m_oLogicDocument.SetAnimationProperties(oPr)
+		this.WordControl.m_oLogicDocument.SetAnimationProperties(oPr, bStartDemo)
 	};
 	asc_docs_api.prototype.asc_canMoveAnimationEarlier = function(nPositions)
 	{
