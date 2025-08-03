@@ -493,6 +493,8 @@
 	 * @property {string | number} CurrentPage - Returns the current page which is displayed for the page field (valid only for page fields).
 	 * @property {ApiPivotItem | ApiPivotItem[]} PivotItems - Returns an object that represents either a single pivot table item (the ApiPivotItem object)
 	 * or a collection of all the visible and hidden items (an array of the ApiPivotItem objects) in the specified field.
+	 * @property {string} AutoSortField - Returns the name of the field that is used to sort the specified field.
+	 * @property {SortOrder} AutoSortOrder - Returns the sort order for the specified field.
 	 */
 	function ApiPivotField(table, index, pivotField) {
 		/** @type {ApiPivotTable} */
@@ -539,12 +541,15 @@
 	 * @property {string} Value - Returns a name of the specified item in the pivot table field.
 	 * @property {string} Parent - Returns a parent of the pivot item.
 	 * @property {string} Field - Returns a field of the pivot item.
+	 * @property {boolean} Visible - Returns or sets a visibility of the pivot item.
 	 */
-	function ApiPivotItem(field, item) {
+	function ApiPivotItem(field, item, index) {
 		/** @type{ApiPivotField} */
 		this.field = field;
 		/** @type{CT_Item} */
 		this.pivotItem = item;
+		/** @type{number} */
+		this.index = index;
 	}
 
 
@@ -16879,7 +16884,7 @@
 		if (index != null) {
 			const item = pivotField[index];
 			if (item && item.t === Asc.c_oAscItemType.Data) {
-				return new ApiPivotItem(this, item);
+				return new ApiPivotItem(this, item, index);
 			}
 			private_MakeError('Invalid item index.');
 			return null;
@@ -16889,7 +16894,7 @@
 		return items.filter(function (item) {
 			return Asc.c_oAscItemType.Data === item.t;
 		}).map(function (item, index) {
-			return new ApiPivotItem(t, item);
+			return new ApiPivotItem(t, item, index);
 		})
 	};
 
@@ -18441,6 +18446,54 @@
 			return this.GetParent();
 		}
 	});
+
+	/**
+	 * Returns the visibility of the pivot item.
+	 * @memberof ApiPivotItem
+	 * @typeofeditors ["CSE"]
+	 * @returns {boolean} True if the pivot item is visible, false otherwise.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotItem/Methods/GetVisible.js
+	 */
+	ApiPivotItem.prototype.GetVisible = function () {
+		return !this.pivotItem.h;
+	};
+
+	/**
+	 * Sets the visibility of the pivot item.
+	 * Important: ensure at least one stays visible while hiding others
+	 * @memberof ApiPivotItem
+	 * @typeofeditors ["CSE"]
+	 * @param {boolean} visible - Specifies whether the pivot item should be visible.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotItem/Methods/SetVisible.js
+	 */
+	ApiPivotItem.prototype.SetVisible = function (visible) {
+		//todo add ManualUpdate for performance reason
+		if (visible === this.GetVisible()) {
+			return;
+		}
+		const autoFilterOptions = new Asc.AutoFiltersOptions();
+		this.field.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.field.index);
+
+		autoFilterOptions.values[this.index].asc_setVisible(!!visible);
+
+		let oFilter = new window["Asc"].AutoFilterObj();
+		oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.Filters);
+		autoFilterOptions.asc_setFilterObj(oFilter);
+
+		this.field.table.pivot.filterByFieldIndex(this.field.table.api, autoFilterOptions, this.field.index, false);
+	};
+
+	Object.defineProperty(ApiPivotItem.prototype, "Visible", {
+		get: function () {
+			return this.GetVisible();
+		},
+		set: function (visible) {
+			this.SetVisible(visible);
+		}
+	});
+
 
 	Api.prototype["Format"]                = Api.prototype.Format;
 	Api.prototype["AddSheet"]              = Api.prototype.AddSheet;
