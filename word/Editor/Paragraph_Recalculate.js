@@ -450,14 +450,19 @@ Paragraph.prototype.Recalculate_Page = function(CurPage, isStart, isFast)
     this.private_CheckColumnBreak(CurPage);
 
     this.Parent.RecalcInfo.Reset_WidowControl();
-
-    if (RecalcResult & recalcresult_NextElement && window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
-		window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();
-
-    if (RecalcResult & recalcresult_NextElement)
+	
+	if (RecalcResult & recalcresult_NextElement)
+	{
+		if (window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
+			window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();
+		
 		this.UpdateLineNumbersInfo();
-
-    return RecalcResult;
+		
+		if (this.Get_SectionPr())
+			RecalcResult = recalcresult_NextSection;
+	}
+	
+	return RecalcResult;
 };
 
 /**

@@ -760,6 +760,8 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
 
 	var oDocContentRI = this.GetDocumentContentForRecalcInfo();
 	var oRecalcInfo   = oDocContentRI.RecalcInfo;
+	
+	let checkSections = !this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent());
 
 	if (0 === PageIndex && true === bStart && oDocContentRI === this)
 	{
@@ -1289,7 +1291,12 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
         }
         else if (RecalcResult & recalcresult_NextElement)
         {
-            // Ничего не делаем
+			if (checkSections && Element.IsParagraph() && Element.Get_SectionPr())
+			{
+				this.Pages[PageIndex].EndPos = Index;
+				Result = recalcresult2_NextSection;
+				break;
+			}
         }
         else if (RecalcResult & recalcresult_NextPage)
         {
