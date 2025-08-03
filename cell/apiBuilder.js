@@ -16416,8 +16416,8 @@
 	};
 
 	Object.defineProperty(ApiPivotTable.prototype, "Parent", {
-		set: function () {
-			this.GetParent();
+		get: function () {
+			return this.GetParent();
 		}
 	});
 
@@ -18051,6 +18051,73 @@
 	Object.defineProperty(ApiPivotField.prototype, "PivotFilters", {
 		get: function () {
 			return this.GetPivotFilters();
+		}
+	});
+
+	/**
+	 * Establishes automatic field-sorting rules for PivotTable reports.
+	 * @memberof ApiPivotField
+	 * @typeofeditors ["CSE"]
+	 * @param {SortOrder} order - The sort order.
+	 * @param {string} field - The name of the field to sort by(pivotField.SourceName, pivotField.Name, dataField.Name).
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotField/Methods/AutoSort.js
+	 */
+	ApiPivotField.prototype.AutoSort = function (order, field) {
+		// Validate input parameters
+		if (typeof order !== "string") {
+			private_MakeError('Invalid type for "order" parameter. Expected string.');
+			return;
+		}
+
+		if (typeof field !== "string") {
+			private_MakeError('Invalid type for "field" parameter. Expected string.');
+			return;
+		}
+
+		let sortOrder = null;
+		switch (order) {
+			case "xlAscending":
+				sortOrder = Asc.c_oAscSortOptions.Ascending;
+				break;
+			case "xlDescending":
+				sortOrder = Asc.c_oAscSortOptions.Descending;
+				break;
+			case "xlManual":
+				sortOrder = null;
+				break;
+			default:
+				private_MakeError('Invalid sort order. Use "xlAscending", "xlDescending", or "xlManual".');
+				return;
+		}
+		const fieldIndex = this.table.pivot.dataFields.getIndexByName(field);
+		this.table.pivot.sortByFieldIndex(this.table.api, this.index, sortOrder, fieldIndex);
+	};
+	Object.defineProperty(ApiPivotField.prototype, "AutoSortField", {
+		get: function () {
+			const autoFilterOptions = new Asc.AutoFiltersOptions();
+			this.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.index);
+			const pivotObj = autoFilterOptions.asc_getPivotObj();
+			if (autoFilterOptions.asc_getSortState() === null || !pivotObj) {
+				return "";
+			}
+			const dataFields = pivotObj.asc_getDataFields();
+			const dataFieldIndexSorting = pivotObj.asc_getDataFieldIndexSorting();
+			return dataFields[dataFieldIndexSorting] || "";
+		}
+	});
+	Object.defineProperty(ApiPivotField.prototype, "AutoSortOrder", {
+		get: function () {
+			const autoFilterOptions = new Asc.AutoFiltersOptions();
+			this.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.index);
+			switch (autoFilterOptions.asc_getSortState()) {
+				case Asc.c_oAscSortOptions.Ascending:
+					return "xlAscending";
+				case Asc.c_oAscSortOptions.Descending:
+					return "xlDescending";
+				default:
+					return "xlManual";
+			}
 		}
 	});
 
