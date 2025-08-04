@@ -287,7 +287,7 @@
 								&& lineUniFillNoGradient.fill.color.color.id !== undefined);
 				if (isLineCSchemeColor) {
 					let newLineColor = new AscFormat.CRGBColor();
-					let oldLineColor = lineUniFillNoGradient.fill.color.color;
+					let oldLineColor = lineUniFillNoGradient.fill.color;
 					newLineColor.setColor(oldLineColor.RGBA.R, oldLineColor.RGBA.G, oldLineColor.RGBA.B);
 					newLineColor.RGBA.A = oldLineColor.RGBA.A;
 					lineUniFillNoGradient.fill.color.color = newLineColor;
@@ -298,7 +298,7 @@
 								&& uniFillForegndNoGradient.fill.color.color.id !== undefined);
 				if (isFillCSchemeColor) {
 					let newFillColor = new AscFormat.CRGBColor();
-					let oldFillColorLink = uniFillForegndNoGradient.fill.color.color;
+					let oldFillColorLink = uniFillForegndNoGradient.fill.color;
 					newFillColor.setColor(oldFillColorLink.RGBA.R, oldFillColorLink.RGBA.G, oldFillColorLink.RGBA.B);
 					newFillColor.RGBA.A = oldFillColorLink.RGBA.A;
 					uniFillForegndNoGradient.fill.color.color = newFillColor;
