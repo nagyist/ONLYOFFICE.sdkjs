@@ -3322,7 +3322,14 @@
 	Workbook.prototype.setOleSize = function (oPr) {
 		this.oleSize = oPr;
 	};
-
+	Workbook.prototype.RemoveDrawingObjectById = function (drawingId) {
+		AscCommon.History.Create_NewPoint();
+		const drawing = AscCommon.g_oTableId.Get_ById(drawingId);
+		const controller = drawing.getDrawingObjectsController();
+		drawing.deselect(controller);
+		drawing.deleteDrawingBase();
+		controller.startRecalculate();
+	};
 	Workbook.prototype.preparePivotForSerialization=function(pivotCaches, isCopyPaste){
 		var pivotCacheIndex = 0;
 		this.forEach(function(ws) {

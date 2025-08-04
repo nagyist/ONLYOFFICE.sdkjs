@@ -4645,6 +4645,8 @@
 	window['AscDFH'].historydescription_Document_ChangeExternalChartReference       = 0x01cd;
 	window['AscDFH'].historydescription_Document_RemoveExternalChartReferences      = 0x01ce;
 
+	window['AscDFH'].historydescription_Presentation_RemoveDrawingObject            = 0x01cf;
+
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;

@@ -8615,6 +8615,16 @@ CPresentation.prototype.InsertContent = function (Content) {
 	return oResult;
 };
 
+CPresentation.prototype.RemoveDrawingObjectById = function (drawingId) {
+	if (this.Document_Is_SelectionLocked(AscCommon.changestype_Remove)) return;
+
+	this.StartAction(AscDFH.historydescription_Presentation_RemoveDrawingObject);
+	const drawing = AscCommon.g_oTableId.Get_ById(drawingId);
+	const controller = drawing.getDrawingObjectsController();
+	drawing.deselect(controller);
+	drawing.deleteDrawingBase();
+	this.FinalizeAction();
+};
 
 CPresentation.prototype.Get_NearestPos = function (Page, X, Y, bNotes) {
 	var oCurSlide = this.GetCurrentSlide();
