@@ -345,12 +345,13 @@ CDocumentContentBase.prototype.private_ReindexContent = function(StartPos)
 		this.ReindexStartPos = StartPos;
 };
 /**
- * Специальная функия для рассчета пустого параграфа с разрывом секции.
+ * Специальная функция для расчета пустого параграфа с разрывом секции.
  * @param Element
  * @param PrevElement
  * @param PageIndex
  * @param ColumnIndex
  * @param ColumnsCount
+ * @returns {number} recalcResult
  */
 CDocumentContentBase.prototype.private_RecalculateEmptySectionParagraph = function(Element, PrevElement, PageIndex, ColumnIndex, ColumnsCount)
 {
@@ -382,6 +383,7 @@ CDocumentContentBase.prototype.private_RecalculateEmptySectionParagraph = functi
 	Element.Lines[0].Bottom        = LastVisibleBounds.H;
 	Element.Pages[0].Bounds.Top    = ___Y;
 	Element.Pages[0].Bounds.Bottom = ___Y + LastVisibleBounds.H;
+	return recalcresult_NextSection;
 };
 /**
  * Передвигаем курсор (от текущего положения) к началу ссылки на сноску

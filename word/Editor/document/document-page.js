@@ -69,6 +69,7 @@
 		this.EndSectionParas = [];
 		
 		this.ResetStartElement = false;
+		this.NextPageNewElement = false;
 		
 		this.Frames     = [];
 		this.FlowTables = [];
@@ -125,7 +126,7 @@
 	};
 	DocumentPage.prototype.Copy = function()
 	{
-		var NewPage = new CDocumentPage();
+		var NewPage = new DocumentPage();
 		
 		NewPage.Width          = this.Width;
 		NewPage.Height         = this.Height;

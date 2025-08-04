@@ -168,6 +168,10 @@
 	{
 		return this.SectionsInfo.Get_SectPr(nContentIndex);
 	};
+	CDocumentLayoutBase.prototype.GetLastSection = function()
+	{
+		return this.LogicDocument.SectPr;
+	};
 	/**
 	 * Получаем номер секции в общем списке секций
 	 * @param oSectPr {AscWord.SectPr}

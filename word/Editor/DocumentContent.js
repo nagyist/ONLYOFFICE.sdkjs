@@ -1292,12 +1292,6 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
         else if (RecalcResult & recalcresult_NextElement)
         {
 			// Do nothing
-			if (checkSections && Element.IsParagraph() && Element.Get_SectionPr())
-			{
-				this.Pages[PageIndex].EndPos = Index;
-				Result = recalcresult2_NextSection;
-				break;
-			}
         }
         else if (RecalcResult & recalcresult_NextPage)
         {
@@ -1308,13 +1302,17 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
 		else if (RecalcResult & recalcresult_NextSection)
 		{
 			this.Pages[PageIndex].EndPos = Index;
-			Result = recalcresult2_NextSection;
+			this.Pages[PageIndex].NextPageNewElement = true;
+			if (Index < Count - 1)
+				Result = recalcresult2_NextSection_Cur;
+			else
+				Result = recalcresult2_NextSection;
 			break;
 		}
 		else if (RecalcResult & recalcresult_NextSection_Cur)
 		{
 			this.Pages[PageIndex].EndPos = Index;
-			Result = recalcresult2_NextSection;
+			Result = recalcresult2_NextSection_Cur;
 			break;
 		}
     }

@@ -142,6 +142,10 @@
 		
 		return this.SectInfo;
 	};
+	CDocumentReadView.prototype.GetLastSection = function()
+	{
+		return this.SectPr;
+	};
 	CDocumentReadView.prototype.GetSectionIndex = function(oSectPr)
 	{
 		if (this.OriginalSectPr)

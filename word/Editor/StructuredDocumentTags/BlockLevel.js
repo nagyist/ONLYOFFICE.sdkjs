@@ -150,17 +150,22 @@ CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 
 	this.Content.RecalcInfo = this.Parent.RecalcInfo;
 
-	var RecalcResult = this.Content.Recalculate_Page(CurPage, true);
+	let recalcResult = this.Content.Recalculate_Page(CurPage, true);
 
-	if (recalcresult2_End === RecalcResult && window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
+	if (recalcresult2_End === recalcResult && window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();
 
-	if (recalcresult2_End === RecalcResult)
-		return recalcresult_NextElement;
-	else if (recalcresult2_NextPage === RecalcResult)
-		return recalcresult_NextPage;
-	else if (recalcresult2_CurPage === RecalcResult)
-		return recalcresult_CurPage;
+	switch (recalcResult)
+	{
+		case recalcresult2_End: return recalcresult_NextElement;
+		case recalcresult2_NextPage: return recalcresult_NextPage;
+		case recalcresult2_CurPage: return recalcresult_CurPage;
+		case recalcresult2_NextSection: return recalcresult_NextSection;
+		case recalcresult2_NextSection_Cur: return recalcresult_NextSection_Cur;
+	}
+	
+	// This should never happen
+	return recalcresult_NextElement;
 };
 CBlockLevelSdt.prototype.Get_PageBounds = function(CurPage)
 {
