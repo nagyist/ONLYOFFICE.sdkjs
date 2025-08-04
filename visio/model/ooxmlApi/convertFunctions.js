@@ -1068,9 +1068,11 @@
 			let backgroundColorHSL = {H: undefined, S: undefined, L: undefined};
 			let lineColorHSL = {H: undefined, S: undefined, L: undefined};
 			let fillColorHSL = {H: undefined, S: undefined, L: undefined};
+
 			// in quick style variation we need to consider fill.color not fill.color.color because
 			// fill.color consider mods applied. And we need to store new color to fill.color.color because
 			// fill.color is calculated in recalculate function from fill.color.color
+
 			// Calculate fill.color if it is not calculated
 			fillUniFill.fill.color.Calculate();
 			lineUniFill.fill.color.Calculate();
@@ -2066,20 +2068,7 @@
 			for (let i = 0; i < oContent.Content.length; i++) {
 				const paragraph = oContent.Content[i];
 				const paragraphContent = paragraph.Content; // runs
-				let isParagraphEmpty = true;
-				if (paragraphContent.length > 0) {
-					// iterate through runs
-					for (let j = 0; j < paragraphContent.length; j++) {
-						let run = paragraphContent[j];
-						let runContent = run.Content; // symbols
-						let isRunEmpty = runContent.length === 0;
-						let isRunContainsOnlyParagraphMark = runContent.length === 1 &&
-								runContent[0] instanceof AscWord.CRunParagraphMark;
-						if (!(isRunEmpty || isRunContainsOnlyParagraphMark)) {
-							isParagraphEmpty = false;
-						}
-					}
-				}
+				let isParagraphEmpty = paragraph.IsEmpty();
 
 				if (isParagraphEmpty) {
 					let oRun = new ParaRun(paragraph, false);
