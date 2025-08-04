@@ -36,16 +36,15 @@
 {
 
 	/**
-	 * accepts visio shadow arguments and common arguments, return OnlyOffice api objects of different types.
-	 * So for foreground color it return Unifill and for stroke too. May cause problems
+	 * accepts visio shadow and common parameters, return OnlyOffice api objects of different types.
+	 * So for foreground color it return Unifill and for stroke Unifill too. For font color returns CUniColor.
+	 * In the end Calculate() is called for colors to calculate their exact value on theme
 	 * https://learn.microsoft.com/ru-ru/office/client-developer/visio/themeval-function.
-	 * For font color return CUniColor.
-	 * themeValue - if no cell passed (cell is ignored)
 	 * @param {Cell_Type} cell
 	 * @param {Shape_Type} shape
 	 * @param {Page_Type} pageInfo
 	 * @param {CTheme[]} themes
-	 * @param {string?} themeValue - value to calculate if cell is not considered
+	 * @param {string?} themeValue - value to calculate if cell is not considered (cell is ignored)
 	 * @param {string?} defaultValue
 	 * @param {boolean?} gradientEnabled
 	 * @param {number?}  themedColorsRow
