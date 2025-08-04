@@ -278,32 +278,6 @@
 			// Default theme which come to visioDocument.themes[0] should not be considered.
 			// See bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=76044
 			if (this.calculateColorThemeIndex(pageInfo) !== 0) {
-				// don't use color id because in handleQuickStyleVariation we change colors rgb.
-				// Color id makes rgb not considered
-				// lineUniFillNoGradient.calculate(visioDocument.themes[0]);
-				// uniFillForegndNoGradient.calculate(visioDocument.themes[0]);
-				let isLineCSchemeColor = lineUniFillNoGradient.fill && lineUniFillNoGradient.fill.color
-						&& lineUniFillNoGradient.fill.color.color && (lineUniFillNoGradient.fill.color.color.id !== null
-								&& lineUniFillNoGradient.fill.color.color.id !== undefined);
-				if (isLineCSchemeColor) {
-					let newLineColor = new AscFormat.CRGBColor();
-					let oldLineColor = lineUniFillNoGradient.fill.color;
-					newLineColor.setColor(oldLineColor.RGBA.R, oldLineColor.RGBA.G, oldLineColor.RGBA.B);
-					newLineColor.RGBA.A = oldLineColor.RGBA.A;
-					lineUniFillNoGradient.fill.color.color = newLineColor;
-				}
-
-				let isFillCSchemeColor = uniFillForegndNoGradient.fill && uniFillForegndNoGradient.fill.color
-						&& uniFillForegndNoGradient.fill.color.color && (uniFillForegndNoGradient.fill.color.color.id !== null
-								&& uniFillForegndNoGradient.fill.color.color.id !== undefined);
-				if (isFillCSchemeColor) {
-					let newFillColor = new AscFormat.CRGBColor();
-					let oldFillColorLink = uniFillForegndNoGradient.fill.color;
-					newFillColor.setColor(oldFillColorLink.RGBA.R, oldFillColorLink.RGBA.G, oldFillColorLink.RGBA.B);
-					newFillColor.RGBA.A = oldFillColorLink.RGBA.A;
-					uniFillForegndNoGradient.fill.color.color = newFillColor;
-				}
-
 				let newFills = handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
 				uniFillForegndNoGradient = newFills[0];
 				lineUniFillNoGradient = newFills[1];
@@ -1090,6 +1064,7 @@
 			// https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/68bb0221-d8a1-476e-a132-8c60a49cea63?redirectedfrom=MSDN
 			// consider "QuickStyleVariation" cell
 			// https://visualsignals.typepad.co.uk/vislog/2013/05/visio-2013-themes-in-the-shapesheet-part-2.html
+
 			let backgroundColorHSL = {H: undefined, S: undefined, L: undefined};
 			let lineColorHSL = {H: undefined, S: undefined, L: undefined};
 			let fillColorHSL = {H: undefined, S: undefined, L: undefined};
