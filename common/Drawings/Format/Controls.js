@@ -209,8 +209,8 @@
 	CControl.prototype.isControl = function () {
 		return true;
 	}
-	CControl.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
-		return this.controller.onMouseDown(e, nX, nY, nPageIndex);
+	CControl.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+		return this.controller.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	}
 	CControl.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
 		return this.controller.onMouseUp(e, nX, nY, nPageIndex, oController);
@@ -315,9 +315,21 @@
 	CControlControllerBase.prototype.getWorksheet = function() {
 		return this.control.Get_Worksheet();
 	};
+	CControlControllerBase.prototype.getParsedFmlaLink = function() {
+		const oFormControlPr = this.getFormControlPr();
+		if (oFormControlPr.fmlaLink) {
+			const oWs = this.getWorksheet();
+			let aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaLink, oWs, true, true, true);
+			const oRef = aParsedRef[0];
+			if (oRef) {
+				return new AscCommonExcel.Range(oRef.worksheet, oRef.bbox.r1, oRef.bbox.c1, oRef.bbox.r1, oRef.bbox.c1);
+			}
+		}
+		return null;
+	};
 	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
 	CControlControllerBase.prototype.getCursorInfo = function(e, nX, nY) {};
-	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {};
+	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {};
 	CControlControllerBase.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
 	CControlControllerBase.prototype.init = function() {};
 	CControlControllerBase.prototype.initTextProperties = function() {return null;};
@@ -342,13 +354,17 @@
 	};
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
 	CCheckBoxController.prototype.initTextProperties = function () {
-		const oBodyPr = new AscFormat.CBodyPr();
-		oBodyPr.setInsets(CHECKBOX_BODYPR_INSETS_L, CHECKBOX_BODYPR_INSETS_T, CHECKBOX_BODYPR_INSETS_R, CHECKBOX_BODYPR_INSETS_B);
-		oBodyPr.setAnchor(getVerticalAlignFromControlPr(this.control.formControlPr.textVAlign));
-		oBodyPr.vertOverflow = AscFormat.nVOTClip;
-		oBodyPr.wrap = AscFormat.nTWTSquare;
-		oBodyPr.upright = true;
-		return oBodyPr;
+		const oControl = this.control;
+		const oTxBody = oControl.txBody;
+		if (oTxBody) {
+			const oBodyPr = new AscFormat.CBodyPr();
+			oBodyPr.setInsets(CHECKBOX_BODYPR_INSETS_L, CHECKBOX_BODYPR_INSETS_T, CHECKBOX_BODYPR_INSETS_R, CHECKBOX_BODYPR_INSETS_B);
+			oBodyPr.setAnchor(getVerticalAlignFromControlPr(this.control.formControlPr.textVAlign));
+			oBodyPr.vertOverflow = AscFormat.nVOTClip;
+			oBodyPr.wrap = AscFormat.nTWTSquare;
+			oBodyPr.upright = true;
+			oTxBody.setBodyPr(oBodyPr);
+		}
 	};
 	CCheckBoxController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
@@ -416,7 +432,7 @@
 		return !(this.isChecked() || this.isMixed());
 	};
 	CCheckBoxController.prototype.isExternalCheckBox = function() {
-		const oRef = this.getParsedRef();
+		const oRef = this.getParsedFmlaLink();
 		const oWbModel = Asc.editor && Asc.editor.wbModel;
 		if (oRef && oWbModel) {
 			return oRef.worksheet.workbook !== oWbModel;
@@ -433,7 +449,7 @@
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
-	CCheckBoxController.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+	CCheckBoxController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return false;
@@ -467,20 +483,8 @@
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
 		return true;
 	}
-	CCheckBoxController.prototype.getParsedRef = function() {
-		const oFormControlPr = this.getFormControlPr();
-		if (oFormControlPr.fmlaLink) {
-			const oWs = this.getWorksheet();
-			let aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaLink, oWs, true, true, true);
-			const oRef = aParsedRef[0];
-			if (oRef) {
-				return new AscCommonExcel.Range(oRef.worksheet, oRef.bbox.r1, oRef.bbox.c1, oRef.bbox.r1, oRef.bbox.c1);
-			}
-		}
-		return null;
-	};
 	CCheckBoxController.prototype.getCheckedFromRange = function () {
-		const oRef = this.getParsedRef();
+		const oRef = this.getParsedFmlaLink();
 		let nRetValue = null;
 		if (oRef) {
 			oRef._foreachNoEmpty(function(oCell) {
@@ -513,7 +517,7 @@
 	}
 	CCheckBoxController.prototype.updateCellFromControl = function (oController) {
 		const oThis = this;
-		const oRef = this.getParsedRef();
+		const oRef = this.getParsedFmlaLink();
 		if (oRef) {
 			oRef._foreachNoEmpty(function(oCell) {
 				if (oCell) {
@@ -692,7 +696,7 @@
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
-	CButtonController.prototype.onMouseDown = function(e, nX, nY, nPageIndex) {
+	CButtonController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return false;
@@ -749,9 +753,158 @@
 		}
 		return oBodyPr;
 	};
-	CButtonController.prototype.applySpecialPasteProps = function(oPastedWb) {
+
+	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
+	function CSpinButton() {
+		this.isHold = false;
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.rot = 0;
+	}
+	CSpinButton.prototype.draw = function (graphics) {
+		if (this.isHold) {
+
+		} else {
+			graphics._s();
+			graphics._m(this.x, this.y);
+			graphics._l(this.x + this.extX, this.y);
+			graphics._l(this.x + this.extX, this.y + this.extY);
+			graphics._l(this.x, this.y + this.extY);
+			graphics._z();
+
+			graphics._e();
+			const cx = this.x + this.extX / 2;
+			const cy = this.y + this.extY / 2;
+			const nHalfRectSide = SPINBUTTON_RECTANGLE_SIDE_SCALE / 2;
+			graphics._m(cx - this.extX * nHalfRectSide, cy - this.extY * nHalfRectSide);
+			graphics._l(cx + this.extX * nHalfRectSide, cy - this.extY * nHalfRectSide);
+			graphics._l(cx, cy + this.extY * nHalfRectSide);
+			graphics._z();
+		}
+		graphics_e();
+	};
+	CSpinButton.prototype.hit = function (nX, nY) {
 
 	};
+	CSpinButton.prototype.onMouseDown = function (nX, nY, oDrawingController) {
+
+	};
+	CSpinButton.prototype.onMouseUp = function (nX, nY, oDrawingController) {
+
+	};
+	function CSpinController(oControl) {
+		CControlControllerBase.call(this, oControl);
+		this.upButton = new CSpinButton(this);
+		this.downButton = new CSpinButton(this);
+		this.timeoutId = null;
+		this.initButtonEventHandlers();
+	};
+	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
+	CSpinController.prototype.startAction = function (fCallback) {
+		const oThis = this;
+		if (oThis.timeoutId === null) {
+			fCallback();
+			oThis.timeoutId = setTimeout(function () {
+				(function f() {
+					fCallback();
+					oThis.timeoutId = setTimeout(f, 100);
+				})();
+			}, 500);
+		}
+	};
+	CSpinController.prototype.endAction = function () {
+		clearTimeout(this.timeoutId);
+	};
+	CSpinController.prototype.initButtonEventHandlers = function () {
+		const oController = this;
+
+		this.downButton.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+			oController.startAction(oController.decrement.bind(oController), oDrawingController);
+			return true;
+		};
+		this.upButton.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+
+			oController.startAction(oController.increment.bind(oController), oDrawingController);
+			return true;
+		};
+		this.downButton.onMouseUp = function () {
+			oController.endAction();
+
+		};
+		this.upButton.onMouseUp = function () {
+			oController.endAction();
+		};
+	};
+	CSpinController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
+		this.upButton.draw(graphics);
+		this.downButton.draw(graphics);
+	};
+	CSpinController.prototype.getCursorInfo = function(e, nX, nY) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if(!oControl.hit(nX, nY)) {
+			return null;
+		}
+		return {cursorType: "pointer", objectId: oControl.GetId()};
+	};
+	CSpinController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		if (this.upButton.onMouseDown(nX, nY, oDrawingController)) {
+			return true;
+		}
+		if (this.downButton.onMouseDown(nX, nY, oDrawingController)) {
+			return true;
+		}
+		return false;
+	};
+	CSpinController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
+	CSpinController.prototype.init = function() {};
+	CSpinController.prototype.initTextProperties = function() {};
+	CSpinController.prototype.applySpecialPasteProps = function(oPastedWb) {};
+	CSpinController.prototype.hit = function (nX, nY) {
+		return this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY);
+	};
+	CSpinController.prototype.increment = function (oDrawingController) {
+		this.doAction(oDrawingController, true);
+	};
+	CSpinController.prototype.decrement = function (oDrawingController) {
+		this.doAction(oDrawingController, false);
+	};
+	CSpinController.prototype.doAction = function (oDrawingController, isIncrement) {
+		const oThis = this;
+		oDrawingController.checkObjectsAndCallback(function () {
+			const oRef = oThis.getParsedFmlaLink();
+			if (oRef) {
+				const oFormControlPr = oThis.getFormControlPr();
+				const nIncValue = AscFormat.isRealNumber() ? oFormControlPr.inc : 1;
+				const nCurrentValue = oFormControlPr.val || 0;
+				const nNewValue = isIncrement ? nCurrentValue + nIncValue : nCurrentValue - nIncValue;
+				oFormControlPr.setVal(nCurrentValue + nIncValue);
+				oRef._foreachNoEmpty(function (oCell) {
+					const oCellValue = new AscCommonExcel.CCellValue();
+					oCellValue.number = nNewValue;
+					oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
+				});
+			}
+		}, [], undefined,AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+	};
+
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;

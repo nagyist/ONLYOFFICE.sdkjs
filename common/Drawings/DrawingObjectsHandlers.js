@@ -485,7 +485,7 @@ function handleBaseAnnot(annot, drawingObjectsController, e, x, y, group, pageIn
 
 	function handleControl(drawing, drawingObjectsController, e, x, y, group, pageIndex, bWord) {
 		if (drawingObjectsController.handleEventMode === HANDLE_EVENT_MODE_HANDLE) {
-			var bRet = drawing.onMouseDown(e, x, y);
+			var bRet = drawing.onMouseDown(e, x, y, pageIndex, drawingObjectsController);
 			if (!bRet) {
 				return handleShapeImage(drawing, drawingObjectsController, e, x, y, group, pageIndex, bWord);
 
