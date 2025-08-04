@@ -315,7 +315,7 @@
         this.Pages.length = nPageIndex + 1;
         if(0 === this.FullRecalc.ColumnIndex && true === this.FullRecalc.Start)
         {
-            var oPage      = new CDocumentPage();
+            var oPage      = new AscWord.DocumentPage();
             oPage.Pos = this.FullRecalc.StartIndex;
             oPage.Sections[0] = new CDocumentPageSection();
             for (var i = 0; i < nColumnsCount; ++i)

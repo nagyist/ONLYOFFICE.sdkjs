@@ -776,7 +776,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
     if (true === bStart)
     {
         this.Pages.length         = PageIndex;
-        this.Pages[PageIndex]     = new CDocumentPage();
+        this.Pages[PageIndex]     = new AscWord.DocumentPage();
         this.Pages[PageIndex].Pos = StartIndex;
 
         if (this.LogicDocument && this.LogicDocument.IsDocumentEditor() && oDocContentRI === this)
@@ -1291,6 +1291,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
         }
         else if (RecalcResult & recalcresult_NextElement)
         {
+			// Do nothing
 			if (checkSections && Element.IsParagraph() && Element.Get_SectionPr())
 			{
 				this.Pages[PageIndex].EndPos = Index;
@@ -1304,6 +1305,18 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
             Result                       = recalcresult2_NextPage;
             break;
         }
+		else if (RecalcResult & recalcresult_NextSection)
+		{
+			this.Pages[PageIndex].EndPos = Index;
+			Result = recalcresult2_NextSection;
+			break;
+		}
+		else if (RecalcResult & recalcresult_NextSection_Cur)
+		{
+			this.Pages[PageIndex].EndPos = Index;
+			Result = recalcresult2_NextSection;
+			break;
+		}
     }
 
     this.Pages[PageIndex].Bounds.Left   = X;
@@ -2175,7 +2188,7 @@ CDocumentContent.prototype.IsContentOnFirstPage = function()
 CDocumentContent.prototype.StartFromNewPage = function()
 {
 	this.Pages.length = 1;
-	this.Pages[0]     = new CDocumentPage();
+	this.Pages[0]     = new AscWord.DocumentPage();
 
 	var Element = this.Content[0];
 	Element.StartFromNewPage();
