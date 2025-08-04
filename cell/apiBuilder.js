@@ -111,7 +111,10 @@
 	 * @property {number} Col - Returns the column number for the selected cell.
 	 * @property {ApiRange} Rows - Returns the ApiRange object that represents the rows of the specified range.
 	 * @property {ApiRange} Cols - Returns the ApiRange object that represents the columns of the specified range.
+	 * @property {ApiRange} Columns - Returns the ApiRange object that represents the columns of the specified range.
 	 * @property {ApiRange} Cells - Returns a Range object that represents all the cells in the specified range or a specified cell.
+	 * @property {ApiRange} EntireRow - Returns a Range object that represents the entire row(s) that contains the specified range.
+	 * @property {ApiRange} EntireColumn - Returns a Range object that represents the entire column(s) that contains the specified range.
 	 * @property {number} Count - Returns the rows or columns count.
 	 * @property {string} Address - Returns the range address.
 	 * @property {string} Value - Returns a value from the first cell of the specified range or sets it to this cell.
@@ -136,6 +139,7 @@
 	 * @property {ApiColor|'No Fill'} FillColor - Returns or sets the background color of the current cell range.
 	 * @property {string} NumberFormat - Sets a value that represents the format code for the object.
 	 * @property {ApiRange} MergeArea - Returns the cell or cell range from the merge area.
+	 * @property {ApiRange} CurrentRegion - Returns a range that represents the expanded range around the current range.
 	 * @property {ApiWorksheet} Worksheet - Returns the ApiWorksheet object that represents the worksheet containing the specified range.
 	 * @property {ApiName} DefName - Returns the ApiName object.
 	 * @property {ApiComment | null} Comments - Returns the ApiComment collection that represents all the comments from the specified worksheet.
@@ -489,6 +493,8 @@
 	 * @property {string | number} CurrentPage - Returns the current page which is displayed for the page field (valid only for page fields).
 	 * @property {ApiPivotItem | ApiPivotItem[]} PivotItems - Returns an object that represents either a single pivot table item (the ApiPivotItem object)
 	 * or a collection of all the visible and hidden items (an array of the ApiPivotItem objects) in the specified field.
+	 * @property {string} AutoSortField - Returns the name of the field that is used to sort the specified field.
+	 * @property {SortOrder} AutoSortOrder - Returns the sort order for the specified field.
 	 */
 	function ApiPivotField(table, index, pivotField) {
 		/** @type {ApiPivotTable} */
@@ -535,12 +541,15 @@
 	 * @property {string} Value - Returns a name of the specified item in the pivot table field.
 	 * @property {string} Parent - Returns a parent of the pivot item.
 	 * @property {string} Field - Returns a field of the pivot item.
+	 * @property {boolean} Visible - Returns or sets a visibility of the pivot item.
 	 */
-	function ApiPivotItem(field, item) {
+	function ApiPivotItem(field, item, index) {
 		/** @type{ApiPivotField} */
 		this.field = field;
 		/** @type{CT_Item} */
 		this.pivotItem = item;
+		/** @type{number} */
+		this.index = index;
 	}
 
 
@@ -9595,17 +9604,16 @@
 	ApiRange.prototype.GetRows = function (nRow) {
 		let result = null;
 		if (typeof nRow === "undefined") {
-			result = this;
+			nRow = 1;
+		}
+		if (typeof nRow === "number") {
+			nRow--;
+			let r = this.range.bbox.r1 + nRow;
+			if (r > AscCommon.gc_nMaxRow0) r = AscCommon.gc_nMaxRow0;
+			if (r < 0) r = 0;
+			result = new ApiRange(this.range.worksheet.getRange3(r, this.range.bbox.c1, r, this.range.bbox.c2));
 		} else {
-			if (typeof nRow === "number") {
-				nRow--;
-				let r = this.range.bbox.r1 + nRow;
-				if (r > AscCommon.gc_nMaxRow0) r = AscCommon.gc_nMaxRow0;
-				if (r < 0) r = 0;
-				result = new ApiRange(this.range.worksheet.getRange3(r, this.range.bbox.c1, r, this.range.bbox.c2));
-			} else {
-				logError(new Error('The nRow must be a number that greater than 0 and less then ' + (AscCommon.gc_nMaxRow0 + 1)));
-			}
+			logError(new Error('The nRow must be a number that greater than 0 and less then ' + (AscCommon.gc_nMaxRow0 + 1)));
 		}
 		return result;
 	};
@@ -9626,21 +9634,25 @@
 	ApiRange.prototype.GetCols = function (nCol) {
 		let result = null;
 		if (typeof nCol === "undefined") {
-			result = this;
+			nCol = 1;
+		}
+		if (typeof nCol === "number") {
+			nCol--;
+			let c = this.range.bbox.c1 + nCol;
+			if (c > AscCommon.gc_nMaxCol0) c = AscCommon.gc_nMaxCol0;
+			if (c < 0) c = 0;
+			result = new ApiRange(this.range.worksheet.getRange3(this.range.bbox.r1, c, this.range.bbox.r2, c));
 		} else {
-			if (typeof nCol === "number") {
-				nCol--;
-				let c = this.range.bbox.c1 + nCol;
-				if (c > AscCommon.gc_nMaxCol0) c = AscCommon.gc_nMaxCol0;
-				if (c < 0) c = 0;
-				result = new ApiRange(this.range.worksheet.getRange3(this.range.bbox.r1, c, this.range.bbox.r2, c));
-			} else {
-				logError(new Error('The nCol must be a number that greater than 0 and less then ' + (AscCommon.gc_nMaxCol0 + 1)));
-			}
+			logError(new Error('The nCol must be a number that greater than 0 and less then ' + (AscCommon.gc_nMaxCol0 + 1)));
 		}
 		return result;
 	};
 	Object.defineProperty(ApiRange.prototype, "Cols", {
+		get: function () {
+			return this.GetCols();
+		}
+	});
+	Object.defineProperty(ApiRange.prototype, "Columns", {
 		get: function () {
 			return this.GetCols();
 		}
@@ -12159,6 +12171,8 @@
 	 * @memberof ApiRange
 	 * @typeofeditors ["CSE"]
 	 * @returns {ApiRange | null} - Returns the expanded range or null if the range cannot be expanded.
+	 * @since 9.0.4
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/Expand.js
 	 */
 	ApiRange.prototype.Expand = function () {
 		if (!this.range) {
@@ -12177,6 +12191,150 @@
 		return new ApiRange(res);
 	};
 
+	Object.defineProperty(ApiRange.prototype, "CurrentRegion", {
+		get: function () {
+			return this.Expand();
+		}
+	});
+
+	/**
+	 * Returns a Range object that represents a range that's offset from this range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {number} rowOffset - The number of rows to offset the range.
+	 * @param {number} columnOffset - The number of columns to offset the range.
+	 * @returns {ApiRange | null} - Returns the offset range or null if invalid.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/Offset.js
+	 */
+	ApiRange.prototype.Offset = function (rowOffset, columnOffset) {
+		if (!this.range) {
+			return null;
+		}
+
+		let bbox = this.range.bbox;
+		let newR1 = bbox.r1 + (rowOffset || 0);
+		let newC1 = bbox.c1 + (columnOffset || 0);
+		let newR2 = bbox.r2 + (rowOffset || 0);
+		let newC2 = bbox.c2 + (columnOffset || 0);
+
+		// Check bounds
+		if (newR1 < 0 || newC1 < 0 || newR2 >= AscCommon.gc_nMaxRow || newC2 >= AscCommon.gc_nMaxCol) {
+			return null;
+		}
+
+		let res = this.range.worksheet.getRange3(newR1, newC1, newR2, newC2);
+		return new ApiRange(res);
+	};
+
+	/**
+	 * Resizes the range by changing the number of rows and columns.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {number} rowSize - The number of rows for the new range.
+	 * @param {number} columnSize - The number of columns for the new range.
+	 * @returns {ApiRange | null} - Returns the resized range or null if invalid.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/Resize.js
+	 */
+	ApiRange.prototype.Resize = function (rowSize, columnSize) {
+		if (!this.range) {
+			return null;
+		}
+
+		let bbox = this.range.bbox;
+		let newRowSize = rowSize || (bbox.r2 - bbox.r1 + 1);
+		let newColSize = columnSize || (bbox.c2 - bbox.c1 + 1);
+
+		if (newRowSize <= 0 || newColSize <= 0) {
+			return null;
+		}
+
+		let newR2 = bbox.r1 + newRowSize - 1;
+		let newC2 = bbox.c1 + newColSize - 1;
+
+		// Check bounds
+		if (newR2 >= AscCommon.gc_nMaxRow || newC2 >= AscCommon.gc_nMaxCol) {
+			return null;
+		}
+
+		let res = this.range.worksheet.getRange3(bbox.r1, bbox.c1, newR2, newC2);
+		return new ApiRange(res);
+	};
+
+	/**
+	 * Returns a Range object that represents a cell or a range of cells.
+	 * When applied to a Range object, the property is relative to that Range object.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {string | ApiRange} cell1 - The first cell address (e.g., "A1" or "A1:B2").
+	 * @param {string | ApiRange} [cell2] - The second cell address (optional, defines corner with cell1).
+	 * @returns {ApiRange | null} - Returns the range relative to this range, or null if invalid.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/GetRange.js
+	 */
+	ApiRange.prototype.GetRange = function (cell1, cell2) {
+		if (!this.range) {
+			return null;
+		}
+
+		const apiWorksheet = new ApiWorksheet(this.range.worksheet);
+		const absoluteRange = apiWorksheet.GetRange(cell1, cell2);
+		
+		if (!absoluteRange || !absoluteRange.range) {
+			return null;
+		}
+		
+		const targetBbox = absoluteRange.range.bbox;
+		const rowCount = targetBbox.r2 - targetBbox.r1 + 1;
+		const colCount = targetBbox.c2 - targetBbox.c1 + 1;
+		
+		return this.Offset(targetBbox.r1, targetBbox.c1).Resize(rowCount, colCount);
+	};
+
+	/**
+	 * Returns a Range object that represents the entire row(s) that contains the specified range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiRange | null} - Returns the entire row range or null if invalid.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/GetEntireRow.js
+	 */
+	ApiRange.prototype.GetEntireRow = function () {
+		if (!this.range) {
+			return null;
+		}
+		let bbox = this.range.bbox;
+		let res = this.range.worksheet.getRange3(bbox.r1, 0, bbox.r2, AscCommon.gc_nMaxCol - 1);
+		return new ApiRange(res);
+	};
+	Object.defineProperty(ApiRange.prototype, "EntireRow", {
+		get: function () {
+			return this.GetEntireRow();
+		}
+	});
+
+	/**
+	 * Returns a Range object that represents the entire column(s) that contains the specified range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiRange | null} - Returns the entire column range or null if invalid.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/Cell/ApiRange/Methods/GetEntireColumn.js
+	 */
+	ApiRange.prototype.GetEntireColumn = function () {
+		if (!this.range) {
+			return null;
+		}
+		let bbox = this.range.bbox;
+		let res = this.range.worksheet.getRange3(0, bbox.c1, AscCommon.gc_nMaxRow - 1, bbox.c2);
+		return new ApiRange(res);
+	};
+	Object.defineProperty(ApiRange.prototype, "EntireColumn", {
+		get: function () {
+			return this.GetEntireColumn();
+		}
+	});
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiDrawing
@@ -16263,8 +16421,8 @@
 	};
 
 	Object.defineProperty(ApiPivotTable.prototype, "Parent", {
-		set: function () {
-			this.GetParent();
+		get: function () {
+			return this.GetParent();
 		}
 	});
 
@@ -16726,7 +16884,7 @@
 		if (index != null) {
 			const item = pivotField[index];
 			if (item && item.t === Asc.c_oAscItemType.Data) {
-				return new ApiPivotItem(this, item);
+				return new ApiPivotItem(this, item, index);
 			}
 			private_MakeError('Invalid item index.');
 			return null;
@@ -16736,7 +16894,7 @@
 		return items.filter(function (item) {
 			return Asc.c_oAscItemType.Data === item.t;
 		}).map(function (item, index) {
-			return new ApiPivotItem(t, item);
+			return new ApiPivotItem(t, item, index);
 		})
 	};
 
@@ -17901,6 +18059,73 @@
 		}
 	});
 
+	/**
+	 * Establishes automatic field-sorting rules for PivotTable reports.
+	 * @memberof ApiPivotField
+	 * @typeofeditors ["CSE"]
+	 * @param {SortOrder} order - The sort order.
+	 * @param {string} field - The name of the field to sort by(pivotField.SourceName, pivotField.Name, dataField.Name).
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotField/Methods/AutoSort.js
+	 */
+	ApiPivotField.prototype.AutoSort = function (order, field) {
+		// Validate input parameters
+		if (typeof order !== "string") {
+			private_MakeError('Invalid type for "order" parameter. Expected string.');
+			return;
+		}
+
+		if (typeof field !== "string") {
+			private_MakeError('Invalid type for "field" parameter. Expected string.');
+			return;
+		}
+
+		let sortOrder = null;
+		switch (order) {
+			case "xlAscending":
+				sortOrder = Asc.c_oAscSortOptions.Ascending;
+				break;
+			case "xlDescending":
+				sortOrder = Asc.c_oAscSortOptions.Descending;
+				break;
+			case "xlManual":
+				sortOrder = null;
+				break;
+			default:
+				private_MakeError('Invalid sort order. Use "xlAscending", "xlDescending", or "xlManual".');
+				return;
+		}
+		const fieldIndex = this.table.pivot.dataFields.getIndexByName(field);
+		this.table.pivot.sortByFieldIndex(this.table.api, this.index, sortOrder, fieldIndex);
+	};
+	Object.defineProperty(ApiPivotField.prototype, "AutoSortField", {
+		get: function () {
+			const autoFilterOptions = new Asc.AutoFiltersOptions();
+			this.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.index);
+			const pivotObj = autoFilterOptions.asc_getPivotObj();
+			if (autoFilterOptions.asc_getSortState() === null || !pivotObj) {
+				return "";
+			}
+			const dataFields = pivotObj.asc_getDataFields();
+			const dataFieldIndexSorting = pivotObj.asc_getDataFieldIndexSorting();
+			return dataFields[dataFieldIndexSorting] || "";
+		}
+	});
+	Object.defineProperty(ApiPivotField.prototype, "AutoSortOrder", {
+		get: function () {
+			const autoFilterOptions = new Asc.AutoFiltersOptions();
+			this.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.index);
+			switch (autoFilterOptions.asc_getSortState()) {
+				case Asc.c_oAscSortOptions.Ascending:
+					return "xlAscending";
+				case Asc.c_oAscSortOptions.Descending:
+					return "xlDescending";
+				default:
+					return "xlManual";
+			}
+		}
+	});
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiPivotFilters
@@ -18222,6 +18447,54 @@
 		}
 	});
 
+	/**
+	 * Returns the visibility of the pivot item.
+	 * @memberof ApiPivotItem
+	 * @typeofeditors ["CSE"]
+	 * @returns {boolean} True if the pivot item is visible, false otherwise.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotItem/Methods/GetVisible.js
+	 */
+	ApiPivotItem.prototype.GetVisible = function () {
+		return !this.pivotItem.h;
+	};
+
+	/**
+	 * Sets the visibility of the pivot item.
+	 * Important: ensure at least one stays visible while hiding others
+	 * @memberof ApiPivotItem
+	 * @typeofeditors ["CSE"]
+	 * @param {boolean} visible - Specifies whether the pivot item should be visible.
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPivotItem/Methods/SetVisible.js
+	 */
+	ApiPivotItem.prototype.SetVisible = function (visible) {
+		//todo add ManualUpdate for performance reason
+		if (visible === this.GetVisible()) {
+			return;
+		}
+		const autoFilterOptions = new Asc.AutoFiltersOptions();
+		this.field.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.field.index);
+
+		autoFilterOptions.values[this.index].asc_setVisible(!!visible);
+
+		let oFilter = new window["Asc"].AutoFilterObj();
+		oFilter.asc_setType(Asc.c_oAscAutoFilterTypes.Filters);
+		autoFilterOptions.asc_setFilterObj(oFilter);
+
+		this.field.table.pivot.filterByFieldIndex(this.field.table.api, autoFilterOptions, this.field.index, false);
+	};
+
+	Object.defineProperty(ApiPivotItem.prototype, "Visible", {
+		get: function () {
+			return this.GetVisible();
+		},
+		set: function (visible) {
+			this.SetVisible(visible);
+		}
+	});
+
+
 	Api.prototype["Format"]                = Api.prototype.Format;
 	Api.prototype["AddSheet"]              = Api.prototype.AddSheet;
 	Api.prototype["GetSheets"]             = Api.prototype.GetSheets;
@@ -18407,6 +18680,11 @@
 	ApiRange.prototype["SetFormulaArray"] = ApiRange.prototype.SetFormulaArray;
 	ApiRange.prototype["GetFormulaArray"] = ApiRange.prototype.GetFormulaArray;
 	ApiRange.prototype["Expand"] = ApiRange.prototype.Expand;
+	ApiRange.prototype["Offset"] = ApiRange.prototype.Offset;
+	ApiRange.prototype["Resize"] = ApiRange.prototype.Resize;
+	ApiRange.prototype["GetRange"] = ApiRange.prototype.GetRange;
+	ApiRange.prototype["GetEntireRow"] = ApiRange.prototype.GetEntireRow;
+	ApiRange.prototype["GetEntireColumn"] = ApiRange.prototype.GetEntireColumn;
 
 
 
