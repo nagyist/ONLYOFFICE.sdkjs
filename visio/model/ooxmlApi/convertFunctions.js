@@ -227,7 +227,7 @@
 					let fillObj = uniFillForegndNoGradient.fill;
 					fillObj.color.color.RGBA.A = fillObj.color.color.RGBA.A * (1 - fillForegndTransValue);
 				} else {
-					AscCommon.consoleLog("fillForegndTrans value is themed or something. Not calculated for", this);
+					// AscCommon.consoleLog("fillForegndTrans value is themed or something. Not calculated for", this);
 				}
 			} else {
 				AscCommon.consoleLog("fillForegnd cell not found for", this);
@@ -1096,6 +1096,9 @@
 			// in quick style variation we need to consider fill.color not fill.color.color because
 			// fill.color consider mods applied. And we need to store new color to fill.color.color because
 			// fill.color is calculated in recalculate function from fill.color.color
+			// Calculate fill.color if it is not calculated
+			fillUniFill.fill.color.Calculate();
+			lineUniFill.fill.color.Calculate();
 			let lineColorRGBA = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.RGBA;
 			let fillColorRGBA = fillUniFill.fill && fillUniFill.fill.color && fillUniFill.fill.color.RGBA;
 			// let lineColorNoMods = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.color
