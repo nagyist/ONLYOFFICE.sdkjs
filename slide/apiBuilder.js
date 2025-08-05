@@ -365,6 +365,10 @@
      */
 
     /**
+	 * @typedef {("blank" | "chart" | "chartAndTx" | "clipArtAndTx" | "clipArtAndVertTx" | "cust" | "dgm" | "fourObj" | "mediaAndTx" | "obj" | "objAndTwoObj" | "objAndTx" | "objOnly" | "objOverTx" | "objTx" | "picTx" | "secHead" | "tbl" | "title" | "titleOnly" | "twoColTx" | "twoObj" | "twoObjAndObj" | "twoObjAndTx" | "twoObjOverTx" | "twoTxTwoObj" | "tx" | "txAndChart" | "txAndClipArt" | "txAndMedia" | "txAndObj" | "txAndTwoObj" | "txOverObj" | "vertTitleAndTx" | "vertTitleAndTxOverChart" | "vertTx")} LayoutType - Available layout types.
+     */
+
+    /**
      * Any valid drawing element.
      * @typedef {(ApiShape | ApiImage | ApiGroup | ApiOleObject | ApiTable | ApiChart )} Drawing
      * @see office-js-api/Examples/Enumerations/Drawing.js
@@ -712,7 +716,7 @@
      * @returns {ApiShape}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateShape.js
 	 */
-    Api.prototype.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke){
+	Api.prototype.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke){
         var oCurrentSlide = private_GetCurrentSlide();
         sType   = sType   || "rect";
         nWidth  = nWidth  || 914400;
@@ -1157,12 +1161,17 @@
      * @typeofeditors ["CPE"]
      * @memberof ApiPresentation
      * @param {ApiSlide} oSlide - The slide created using the {@link Api#CreateSlide} method.
+     * @param {?number} nIndex - Index of the slide to be added. If not specified, the slide will be added to the end of the presentation.
      * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/AddSlide.js
 	 */
-    ApiPresentation.prototype.AddSlide = function(oSlide) {
+    ApiPresentation.prototype.AddSlide = function(oSlide, nIndex) {
         if(this.Presentation){
             oSlide.Slide.setSlideNum(this.Presentation.Slides.length);
-            this.Presentation.insertSlide(this.Presentation.Slides.length, oSlide.Slide);
+			let index = this.Presentation.Slides.length;
+			if(AscFormat.isRealNumber(nIndex) && nIndex >= 0 && nIndex < this.Presentation.Slides.length) {
+				index = nIndex;
+			}
+            this.Presentation.insertSlide(index, oSlide.Slide);
         }
     };
 
@@ -1755,6 +1764,21 @@
     };
 
     /**
+     * Returns a layout of the specified slide master by its position.
+     * @typeofeditors ["CPE"]
+     * @param {LayoutType} sType - Layout position.
+     * @returns {ApiLayout | null} - returns null if position is invalid.
+     * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetLayoutByType.js
+	 */
+    ApiMaster.prototype.GetLayoutByType = function(sType)
+    {
+		let type = AscCommonSlide.LAYOUT_TYPE_MAP[sType];
+		let layout = this.Master.getMatchingLayout(type)
+		if(!layout) return null;
+		return new ApiLayout(layout)
+    };
+
+    /**
      * Adds a layout to the specified slide master.
      * @typeofeditors ["CPE"]
      * @param {number} [nPos = ApiMaster.GetLayoutsCount()] - Position where a layout will be added.
@@ -2174,6 +2198,17 @@
             return false;
         
         return true;
+    };
+
+    /**
+     * Returns a type if the current layout.
+     * @typeofeditors ["CPE"]
+     * @returns {boolean}
+     * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GetLayoutType.js
+	 */
+    ApiLayout.prototype.GetLayoutType = function()
+    {
+		this.Layout.getType();
     };
 
     /**
@@ -5266,6 +5301,7 @@
     ApiMaster.prototype["GetClassType"]                   = ApiMaster.prototype.GetClassType;
     ApiMaster.prototype["GetAllLayouts"]                  = ApiMaster.prototype.GetAllLayouts;
     ApiMaster.prototype["GetLayout"]                      = ApiMaster.prototype.GetLayout;
+    ApiMaster.prototype["GetLayoutByType"]                = ApiMaster.prototype.GetLayoutByType;
     ApiMaster.prototype["AddLayout"]                      = ApiMaster.prototype.AddLayout;
     ApiMaster.prototype["RemoveLayout"]                   = ApiMaster.prototype.RemoveLayout;
     ApiMaster.prototype["GetLayoutsCount"]                = ApiMaster.prototype.GetLayoutsCount;
@@ -5290,6 +5326,8 @@
     
     ApiLayout.prototype["GetClassType"]                   = ApiLayout.prototype.GetClassType;
     ApiLayout.prototype["SetName"]                        = ApiLayout.prototype.SetName;
+    ApiLayout.prototype["GetLayoutType"]                  = ApiLayout.prototype.GetLayoutType;
+    ApiLayout.prototype["GetName"]                        = ApiLayout.prototype.GetName;
     ApiLayout.prototype["AddObject"]                      = ApiLayout.prototype.AddObject;
     ApiLayout.prototype["RemoveObject"]                   = ApiLayout.prototype.RemoveObject;
     ApiLayout.prototype["SetBackground"]                  = ApiLayout.prototype.SetBackground;

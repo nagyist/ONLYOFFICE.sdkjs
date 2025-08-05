@@ -3266,7 +3266,8 @@ CTable.prototype.private_RecalculatePage = function(CurPage)
 
             var CellMar       = Cell.GetMargins();
             var VAlign        = Cell.Get_VAlign();
-            var CellPageIndex = CurPage - Cell.Content.Get_StartPage_Relative();
+			let cellContent   = Cell.GetContent();
+            var CellPageIndex = CurPage - cellContent.Get_StartPage_Relative();
 
             if ( CellPageIndex >= Cell.PagesCount )
                 continue;
@@ -3275,7 +3276,20 @@ CTable.prototype.private_RecalculatePage = function(CurPage)
             var TempCurRow = Cell.Row.Index;
 
             // Для прилегания к верху или для второй страницы ничего не делаем (так изначально рассчитывалось)
-            if ( vertalignjc_Top === VAlign || CellPageIndex > 1 || (1 === CellPageIndex && true === this.RowsInfo[TempCurRow].FirstPage ) )
+			let topAlign = (vertalignjc_Top === VAlign);
+			if (!topAlign)
+			{
+				for (let tmpCellPage = 0; tmpCellPage < CellPageIndex; ++tmpCellPage)
+				{
+					if (!cellContent.IsEmptyPage(tmpCellPage))
+					{
+						topAlign = true;
+						break;
+					}
+				}
+			}
+			
+            if (topAlign)
             {
                 Cell.Temp.Y_VAlign_offset[CellPageIndex] = 0;
                 continue;

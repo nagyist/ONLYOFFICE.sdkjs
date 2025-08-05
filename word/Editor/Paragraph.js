@@ -3140,13 +3140,16 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 
 	for (var CurLine = StartLine; CurLine <= EndLine; CurLine++)
 	{
-		var Line  = this.Lines[CurLine];
-		var LineM = Line.Metrics;
+		var Line        = this.Lines[CurLine];
+		var lineMetrics = Line.Metrics;
+		
+		let lineY0 = (Page.Y + Line.Y - lineMetrics.TextAscent);
+		let lineY1 = (Page.Y + Line.Y + lineMetrics.TextDescent);
 
 		var Baseline        = Page.Y + Line.Y;
-		var UnderlineOffset = LineM.TextDescent * 0.4;
+		var UnderlineOffset = lineMetrics.TextDescent * 0.4;
 
-		PDSL.resetLine(CurLine, Baseline, UnderlineOffset);
+		PDSL.resetLine(CurLine, Baseline, UnderlineOffset, lineY0, lineY1);
 
 		// Сначала проанализируем данную строку: в массивы aStrikeout, aDStrikeout, aUnderline
 		// aSpelling сохраним позиции начала и конца продолжительных одинаковых настроек зачеркивания,
@@ -3949,6 +3952,14 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 						this.Selection.Use = false;
 
 					this.Internal_Content_Remove(StartPos);
+					
+					// Fix the content after deletion
+					if (!bOnAddText
+						&& !this.Content[StartPos].IsCursorPlaceable()
+						&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+					{
+						this.AddToContent(StartPos, new AscWord.Run());
+					}
 
 					this.CurPos.ContentPos = StartPos;
 					this.Content[StartPos].MoveCursorToStartPos();
@@ -4110,6 +4121,14 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			if (isStartDeleted && isEndDeleted)
 				this.Selection.Use = false;
 			
+			// Fix the content after deletion
+			if (!bOnAddText
+				&& !this.Content[StartPos].IsCursorPlaceable()
+				&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+			{
+				this.AddToContent(StartPos, new AscWord.Run());
+			}
+			
 			if (nCount > -1 && true !== bOnAddText)
 			{
 				this.Correct_ContentPos2();
@@ -4138,10 +4157,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 		if (true !== this.Content[this.CurPos.ContentPos].IsSelectionUse())
 		{
 			this.RemoveSelection();
-
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 		}
 		else
 		{
@@ -4150,10 +4165,6 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			this.Selection.Flag     = selectionflag_Common;
 			this.Selection.StartPos = this.CurPos.ContentPos;
 			this.Selection.EndPos   = this.CurPos.ContentPos;
-			
-			// TODO: Переделать корректировку содержимого
-			// if (nCount > -1 && true !== bOnAddText)
-			// 	this.Correct_Content();
 
 			this.Document_SetThisElementCurrent(false);
 
@@ -5722,6 +5733,24 @@ Paragraph.prototype.SetSelectionLineRangePos = function(isStart, line, range)
 Paragraph.prototype.SetSelectionContentPos = function(oStartPos, oEndPos, isCorrectAnchor)
 {
 	return this.Set_SelectionContentPos(oStartPos, oEndPos, isCorrectAnchor);
+};
+/**
+ * Устанавливаем стартовую позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его стартовую границу
+ * @param startPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionStartContentPos = function(startPos)
+{
+	return this.SetSelectionContentPos(startPos, this.Get_ParaContentPos(true, false, false), false);
+};
+/**
+ * Устанавливаем конечную позицию селекта внутри данного параграфа
+ * NB: Данная функция не стартует селект в параграфе, а лишь выставляет его конечную границу
+ * @param endPos {AscWord.CParagraphContentPos}
+ */
+Paragraph.prototype.SetSelectionEndContentPos = function(endPos)
+{
+	return this.Set_SelectionContentPos(this.Get_ParaContentPos(true, true, false), endPos, true);
 };
 Paragraph.prototype.private_GetClosestPosInCombiningMark = function(oContentPos, nDiff)
 {
@@ -16878,6 +16907,47 @@ Paragraph.prototype.GetPermRangesByPos = function(paraPos)
 	this.LoadSelectionState(state);
 	return permRanges;
 };
+/**
+ * Корректируем заданную позицию, чтобы она попала в каку-либо разрешенную область, но приэтом так, чтобы физически
+ * позиция не изменилась.
+ * @param {AscWord.CParagraphContentPos} paraPos
+ */
+Paragraph.prototype.CorrectPosToPermRanges = function(paraPos)
+{
+	if (this.GetPermRangesByPos(paraPos).length)
+		return paraPos;
+	
+	let state = new AscWord.ParagraphPosToPermRangeState();
+	state.setDirection(true);
+	let curPos = paraPos.Get(0);
+	for (let pos = curPos; pos < this.Content.length; ++pos)
+	{
+		state.setPos(pos, 0);
+		
+		if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+			break;
+		
+		if (state.isStopped())
+			break;
+	}
+	
+	if (!state.isFound())
+	{
+		state.setDirection(false);
+		for (let pos = curPos; pos >= 0; --pos)
+		{
+			state.setPos(pos, 0);
+			
+			if (this.Content[pos].CorrectPosToPermRanges(state, paraPos, 1, pos === curPos))
+				break;
+			
+			if (state.isStopped())
+				break;
+		}
+	}
+	
+	return state.isFound() ? state.getCorrectedPos() : paraPos;
+};
 Paragraph.prototype.IsCurrentPosInComplexFieldCode = function()
 {
 	let cfStatePos = this.GetCurrentComplexFields(true);
@@ -19098,6 +19168,17 @@ Paragraph.prototype.getLayoutFontSizeCoefficient = function()
 Paragraph.prototype.isRtlDirection = function()
 {
 	return !!this.Get_CompiledPr2(false).ParaPr.Bidi;
+};
+Paragraph.prototype.GetAllAnnotationMarks = function(marks)
+{
+	if (!marks)
+		marks = [];
+	
+	for (let i = 0; i < this.Content.length; ++i)
+	{
+		this.Content[i].GetAllAnnotationMarks(marks);
+	}
+	return marks;
 };
 
 Paragraph.prototype.asc_getText = function()

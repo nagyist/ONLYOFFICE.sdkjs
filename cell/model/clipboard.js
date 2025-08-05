@@ -423,10 +423,16 @@
 			var wb = window["Asc"]["editor"].wb;
 			//if open range dialog - return
 			if (ws.getSelectionDialogMode() && (!wb.getCellEditMode() || wb.isWizardMode)) {
+				if (callback) {
+					callback(false);
+				}
 				return;
 			}
 			var cellEditor = wb.cellEditor;
 			t.pasteProcessor.clean();
+
+			// Set the paste callback
+			AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = callback;
 
 			if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart) {
 				window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide();
@@ -531,13 +537,80 @@
 		Clipboard.prototype.drawSelectedArea = function (ws, opt_get_bytes) {
 			let activeRange = ws.model.selectionRange.getLast();
 
-			let base64;
-			//ws.workbook._executeWithoutZoom(function () {
-				let ctx = ws.workbook.printForCopyPaste(ws, activeRange);
-				if (ctx && ctx.canvas) {
-					base64 = ctx.canvas.toDataURL("image/png");
+			// Canvas limitations for different browsers:
+			// Chrome/Edge: 32767px x 32767px
+			// Firefox: 32767px x 32767px
+			// Safari: 4096px x 4096px (most restrictive)
+			// IE9+: 8192px x 8192px
+			// IE8: 4096px x 4096px
+
+			let maxCanvasHeight, maxCanvasWidth, maxCanvasArea;
+
+			if (AscCommon.AscBrowser.isIE) {
+				maxCanvasHeight = 8192;
+				maxCanvasWidth = 8192;
+				maxCanvasArea = 8192 * 8192;
+			} else if (AscCommon.AscBrowser.isSafariMacOs) {
+				// Safari (not Chrome)
+				maxCanvasHeight = 4096;
+				maxCanvasWidth = 4096;
+				maxCanvasArea = 4096 * 4096;
+			} else {
+				// Chrome, Firefox, Edge and other modern browsers
+				maxCanvasHeight = 32767;
+				maxCanvasWidth = 32767;
+				maxCanvasArea = 268435456;
+			}
+
+			let estimatedHeight = ws._getRowTop(activeRange.r2 + 1) - ws._getRowTop(activeRange.r1);
+			let estimatedWidth = ws._getColLeft(activeRange.c2 + 1) - ws._getColLeft(activeRange.c1);
+
+			// Check height limitations
+			if (estimatedHeight > maxCanvasHeight) {
+				let currentHeight = 0;
+				let maxRow = activeRange.r1;
+
+				for (let row = activeRange.r1; row <= activeRange.r2; row++) {
+					let rowHeight = ws._getRowHeight(row);
+					if (currentHeight + rowHeight > maxCanvasHeight) {
+						break;
+					}
+					currentHeight += rowHeight;
+					maxRow = row;
 				}
-			//})
+
+				activeRange = new Asc.Range(activeRange.c1, activeRange.r1, activeRange.c2, maxRow);
+				estimatedHeight = ws._getRowTop(activeRange.r2 + 1) - ws._getRowTop(activeRange.r1);
+			}
+
+			// Check width limitations
+			if (estimatedWidth > maxCanvasWidth) {
+				let currentWidth = 0;
+				let maxCol = activeRange.c1;
+
+				for (let col = activeRange.c1; col <= activeRange.c2; col++) {
+					let colWidth = ws._getColLeft(col + 1) - ws._getColLeft(col);
+					if (currentWidth + colWidth > maxCanvasWidth) {
+						break;
+					}
+					currentWidth += colWidth;
+					maxCol = col;
+				}
+
+				activeRange = new Asc.Range(activeRange.c1, activeRange.r1, maxCol, activeRange.r2);
+				estimatedWidth = ws._getColLeft(activeRange.c2 + 1) - ws._getColLeft(activeRange.c1);
+			}
+
+			//TODO cut by max size
+			if (estimatedHeight * estimatedWidth >= maxCanvasArea) {
+				return;
+			}
+
+			let base64;
+			let ctx = ws.workbook.printForCopyPaste(ws, activeRange, true);
+			if (ctx && ctx.canvas) {
+				base64 = ctx.canvas.toDataURL("image/png");
+			}
 
 			if (opt_get_bytes && base64) {
 				// Get base64 data without header
@@ -1990,6 +2063,10 @@
 							t._insertBinaryIntoShapeContent(worksheet, pasteData.content, true);
 						}
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2057,6 +2134,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2066,6 +2147,10 @@
 					if (isCellEditMode) {
 						var text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						var callback = function (isSuccess) {
@@ -2073,6 +2158,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2321,6 +2410,10 @@
 				if (null === content) {
 					window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -2330,6 +2423,10 @@
 					if (isCellEditMode) {
 						let text = this._getTextFromWord(docContent);
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(text !== false);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 						return text;
 					} else if (isIntoShape) {
 						let callback = function (isSuccess) {
@@ -2337,6 +2434,10 @@
 								t._insertBinaryIntoShapeContent(worksheet, docContent);
 							}
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						};
 
 						worksheet.objectRender.controller.checkPasteInText(callback);
@@ -2942,7 +3043,7 @@
 					AscFormat.CheckSpPrXfrm2(graphicObject);
 					xfrm = graphicObject.spPr.xfrm;
 
-					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1) - ws._getColLeft(0), 0, 3);
+					curCol = xfrm.offX - startCol + ws.objectRender.convertMetric(ws._getColLeft(addImagesFromWord[i].col + activeRange.c1, true) - (ws.getRightToLeft() ? - ws._getColLeft(0) : ws._getColLeft(0)), 0, 3);
 					curRow = xfrm.offY - startRow + ws.objectRender.convertMetric(ws._getRowTop(addImagesFromWord[i].row + activeRange.r1) - ws._getRowTop(0), 0, 3);
 
 					xfrm.setOffX(curCol);
@@ -3054,6 +3155,10 @@
 						} else {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 						}
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(isSuccess);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
 					};
 
 					worksheet.objectRender.controller.checkPasteInText(callback);
@@ -3072,7 +3177,7 @@
 					}
 				}
 
-				this.pasteCallBack = cb;
+				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = cb;
 
 				this.activeRange = worksheet.model.selectionRange.getLast().clone();
 				worksheet.workbook.handlers.trigger("cleanCopyData", true);
@@ -3699,6 +3804,10 @@
 				var t = this;
 				if (!text || (text && !text.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -3719,6 +3828,12 @@
 				if (isIntoShape) {
 					var callback = function (isSuccess) {
 						if (isSuccess === false) {
+							window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
+							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return false;
 						}
 
@@ -3755,6 +3870,11 @@
 
 						t._insertSelectedContentIntoShapeContent(worksheet, selectedElements, isIntoShape);
 
+						if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(true);
+							AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+						}
+
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 						window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 
@@ -3790,6 +3910,10 @@
 						if (resmove === -2) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
 							worksheet.handlers.trigger("onErrorEvent", c_oAscError.ID.CannotMoveRange, c_oAscError.Level.NoCritical);
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 						} else if (resmove === -1) {
 							worksheet.model.workbook.handlers.trigger("asc_onConfirmAction", Asc.c_oAscConfirm.ConfirmReplaceRange,
 								function (can) {
@@ -3797,6 +3921,10 @@
 										worksheet.setSelectionInfo('paste', {data: aResult, bText: true});
 									} else {
 										window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+										if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+											AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+										}
 									}
 								});
 						} else {
@@ -4191,6 +4319,10 @@
 
 				if (!documentContent || (documentContent && !documentContent.length)) {
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+					if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+						AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+					}
 					return;
 				}
 
@@ -4204,6 +4336,10 @@
 					if (this.aResult.props && this.aResult.props.addImagesFromWord && this.aResult.props.addImagesFromWord.length === 1 && this.aResult.content) {
 						if (1 === this.aResult.content.length && 1 === this.aResult.content[0].length && this.aResult.content[0][0].content && this.aResult.content[0][0].content.length === 0) {
 							window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
+							if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+								AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+							}
 							return;
 						} else {
 							this.aResult.props.addImagesFromWord = [];

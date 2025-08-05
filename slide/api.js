@@ -2567,7 +2567,10 @@ background-repeat: no-repeat;\
 		}
 	};
 	asc_docs_api.prototype._saveCheck = function() {
-		return !this.isLongAction() && !(this.isSlideShow());
+		return (!this.isLongAction()
+			&& !this.isGroupActions()
+			&& !(this.isSlideShow())
+		);
 	};
 	asc_docs_api.prototype._haveOtherChanges = function () {
 		return AscCommon.CollaborativeEditing.Have_OtherChanges();
@@ -7036,8 +7039,8 @@ background-repeat: no-repeat;\
 			return oPresentation.GetSelectedText(true);
 		}
 
-		const value = AscCommon.isRealObject(aSelectedArray[0].nvSpPr.cNvPr.hlinkClick);
-		return value ? false : null;
+		const cNvProps = aSelectedArray[0].getCNvProps();
+		return cNvProps && AscCommon.isRealObject(cNvProps.hlinkClick) ? false : null;
 	};
 
 	// HyperProps - объект CHyperlinkProperty
@@ -8822,7 +8825,8 @@ background-repeat: no-repeat;\
 		let logicDocument = this.getLogicDocument();
 		if (!logicDocument)
 			return false;
-
+		
+		this.executeGroupActionsStart();
 		logicDocument.StartAction(AscDFH.historydescription_BuilderScript);
 		return true;
 	};
@@ -8835,6 +8839,7 @@ background-repeat: no-repeat;\
 		if (callback)
 			callback(true)
 		
+		this.executeGroupActionsEnd();
 		return true;
 	};
 

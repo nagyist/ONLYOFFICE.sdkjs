@@ -1425,6 +1425,11 @@ var CPresentation = CPresentation || function(){};
                 oDrDoc.TargetEnd();
             }
         }
+        // check redraw if focus is lost
+        if (oCurObject && oCurObject.IsDrawing() && oCurObject != oMouseDownObject) {
+            let oStartContent = AscFormat.checkEmptyPlaceholderContent(oCurObject.GetDocContent());
+            oController.checkRedrawOnChangeCursorPosition(oStartContent, null);
+        }
 
         if (oViewer.canSelectPageText()) {
             oViewer.isMouseMoveBetweenDownUp = true;
@@ -3461,7 +3466,7 @@ var CPresentation = CPresentation || function(){};
         let bUseContentsAsComment = oAnnot.IsUseContentAsComment();
         
         if (oAnnot.IsUseInDocument()) {
-            if ((bUseContentsAsComment && oAnnot.GetContents()) || (bUseContentsAsComment == false && oAnnot.GetReply(0) instanceof AscPDF.CAnnotationText)) {
+            if ((bUseContentsAsComment && oAnnot.GetContents() != null) || (bUseContentsAsComment == false && oAnnot.GetReply(0) instanceof AscPDF.CAnnotationText)) {
                 editor.sendEvent("asc_onAddComment", oAnnot.GetId(), oAnnot.GetAscCommentData());
             }
         }
@@ -5960,7 +5965,6 @@ var CPresentation = CPresentation || function(){};
             author:         sAuthor,
             modDate:        nCurTime,
             creationDate:   nCurTime,
-            contents:       '',
             hidden:         false
         }
 
@@ -7950,6 +7954,7 @@ var CPresentation = CPresentation || function(){};
                     oFieldProps.asc_putPlaceholder(oMeta['placeholder']);
                 }
                 oFieldProps.asc_putAutoFit(field.GetTextSize() == 0);
+                oFieldProps.asc_putPassword(field.IsPassword());
                 oFieldProps.asc_putFormat(oFormatProps);
                 oFieldProps.asc_putValidate(oValidateProps);
                 break;

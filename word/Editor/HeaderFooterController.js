@@ -566,3 +566,11 @@ CHdrFtrController.prototype.CollectSelectedReviewChanges = function(oTrackManage
 {
 	this.HdrFtr.CollectSelectedReviewChanges(oTrackManager);
 };
+CHdrFtrController.prototype.GetCurrentTopDocContent = function()
+{
+	let curHdrFtr = this.HdrFtr.Get_CurHdrFtr();
+	if (curHdrFtr)
+		return curHdrFtr.GetContent();
+	
+	return this.LogicDocument;
+};

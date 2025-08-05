@@ -317,7 +317,7 @@
         this.textAlign = null;
         this.ctrlKey = null;
         this.shiftKey = null;
-        this.ReadingOrder = null;
+        this.readingOrder = null;
     }
 
     CellFlags.prototype.clone = function () {
@@ -327,7 +327,7 @@
         oRes.merged = this.merged ? this.merged.clone() : null;
         oRes.textAlign = this.textAlign;
         oRes.verticalText = this.verticalText;
-        oRes.ReadingOrder = this.ReadingOrder;
+        oRes.readingOrder = this.readingOrder;
         return oRes;
     };
     CellFlags.prototype.isMerged = function () {
@@ -337,7 +337,7 @@
 	    return getMergeType(this.merged);
 	};
 	CellFlags.prototype.getReadingOrder = function () {
-		return this.ReadingOrder;
+		return this.readingOrder;
 	};
 
     function CellBorderObject(borders, mergeInfo, col, row) {
@@ -3812,14 +3812,27 @@
 		};
 
 		if (printOnlySelection) {
+			let selection;
+			if (pageOptions && pageOptions.pageSetup && pageOptions.pageSetup.selection) {
+				selection = pageOptions.pageSetup.selection;
+				let _arrRanges = [];
+				for (let i = 0; i < selection.length; i++) {
+					let _selectionRange = new asc_Range(selection[i].c1, selection[i].r1, selection[i].c2, selection[i].r2);
+					_arrRanges.push(_selectionRange);
+				}
+				selection = _arrRanges;
+			}
 			var tempPrintScale;
 			//подменяем scale на временный для печати выделенной области
 			if(fitToWidth || fitToHeight) {
-				tempPrintScale = this.calcPrintScale(fitToWidth, fitToHeight, true);
+				tempPrintScale = this.calcPrintScale(fitToWidth, fitToHeight, selection ? selection : true);
 			}
 
-			for (var i = 0; i < this.model.selectionRange.ranges.length; ++i) {
-				range = this.model.selectionRange.ranges[i];
+			if (!selection) {
+				selection = this.model.selectionRange.ranges;
+			}
+			for (var i = 0; i < selection.length; ++i) {
+				range = selection[i];
 				if (c_oAscSelectionType.RangeCells === range.getType()) {
 					if(!doNotRecalc) {
 						this._prepareCellTextMetricsCache(range);
@@ -4100,7 +4113,7 @@
 					t.model.PagePrintOptions.pageSetup.scale = _modelScale;
 				}
 
-				drawingCtx.RemoveClipRect && drawingCtx.RemoveClipRect();
+				t._RemoveClipRect(drawingCtx);
 
 				if (transformMatrix) {
 					drawingCtx.setTransform(transformMatrix.sx, transformMatrix.shy, transformMatrix.shx,
@@ -4119,10 +4132,22 @@
 				oBaseTransform.sx = printScale;
 				oBaseTransform.sy = printScale;
 
-				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getRightToLeft() ? -1 : 1) * (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
-				oBaseTransform.ty = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * (printPagesData.pageClipRectTop + (printPagesData.topFieldInPx - printPagesData.pageClipRectTop + titleHeight) * printScale) - (t.getCellTop(range.r1, 3) - t.getCellTop(0, 3)) * printScale;
 
-				//oDocRenderer.transform(oDocRenderer.m_oFullTransform.sx, oDocRenderer.m_oFullTransform.shy, oDocRenderer.m_oFullTransform.shx, oDocRenderer.m_oFullTransform.sy, 100,200)
+				oBaseTransform.tx = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX()) * ( -offsetCols * printScale  +  printPagesData.pageClipRectLeft + (printPagesData.leftFieldInPx - printPagesData.pageClipRectLeft + titleWidth) * printScale) - (t.getRightToLeft() ? -1 : 1) * (t.getCellLeft(range.c1, 3) - t.getCellLeft(0, 3)) * printScale;
+
+				const pxToMm = asc_getcvt(0/*mm*/, 3/*px*/, t._getPPIX());
+				const pageClipRectLeft = printPagesData.pageClipRectLeft;
+				const leftFieldInPx = printPagesData.leftFieldInPx;
+				const rightToLeft = t.getRightToLeft() ? -1 : 1;
+				const rangeLeft = t.getCellLeft(range.c1);
+				const col0Left = t.getCellLeft(0);
+				const rangeWidth = rangeLeft - col0Left;
+
+				const _txPx = printScale * (-offsetCols + leftFieldInPx - rightToLeft*pageClipRectLeft + titleWidth - rightToLeft * rangeWidth) + rightToLeft*pageClipRectLeft;
+				oBaseTransform.tx = _txPx * pxToMm;
+
+				oBaseTransform.ty = pxToMm * (printPagesData.pageClipRectTop + (printPagesData.topFieldInPx - printPagesData.pageClipRectTop + titleHeight) * printScale) - (t.getCellTop(range.r1, 3) - t.getCellTop(0, 3)) * printScale;
+
 
 				let bGraphics = !!(oDocRenderer instanceof AscCommon.CGraphics);
 				let clipL, clipT, clipR, clipB;
@@ -4170,15 +4195,31 @@
 					clipT = clipTopShape >> 0;
 					clipR = (clipLeftShape + clipWidthShape + 0.5) >> 0;
 					clipB = (clipTopShape + clipHeightShape + 0.5) >> 0;
+
+					let _printScale;
+					if (t.getRightToLeft()) {
+						let renderingSettings = t.getRenderingSettings();
+						if (renderingSettings) {
+							_printScale = renderingSettings.printScale;
+							renderingSettings.printScale = null;
+						}
+					}
+					
 					drawingCtx.AddClipRect && t._AddClipRect(drawingCtx, clipL, clipT, clipR - clipL, clipB - clipT);
+
+					if (_printScale) {
+						renderingSettings.printScale = printScale;
+					}
+
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oBaseTransform);
 					}
+					
 					t.objectRender.print(drawingPrintOptions);
 					if (oDocRenderer.SetBaseTransform) {
 						oDocRenderer.SetBaseTransform(oOldBaseTransform);
 					}
-					drawingCtx.RemoveClipRect && drawingCtx.RemoveClipRect();
+					t._RemoveClipRect(drawingCtx);
 				}
 				t.visibleRange = tmpVisibleRange;
 			};
@@ -4493,7 +4534,7 @@
 		this.model.setFitToPage(!fitToHeightAuto || !fitToWidthAuto);
 	};
 
-	WorksheetView.prototype.calcPrintScale = function(width, height, bSelection, ignorePrintArea) {
+	WorksheetView.prototype.calcPrintScale = function(width, height, _selection, ignorePrintArea) {
 		//TODO для печати не нужно учитывать размер группы
 		if(this.groupWidth || this.groupHeight) {
 			this.ignoreGroupSize = true;
@@ -4631,8 +4672,8 @@
 			}
 		};
 
-		if(bSelection) {
-			calcScaleByRanges(this._getSelection().ranges);
+		if(_selection) {
+			calcScaleByRanges(asc_typeof(_selection) === "object" ? _selection : this._getSelection().ranges);
 		} else {
 			//TODO ignorePrintArea - необходимо протащить флаг!
 			var printArea = !ignorePrintArea && this.model.workbook.getDefinesNames("Print_Area", this.model.getId());
@@ -4951,7 +4992,7 @@
           }
 
         if (isUseMainClip)
-            ctx.RemoveClipRect();
+            this._RemoveClipRect(ctx);
       };
 
     /** Рисует заголовки видимых строк */
@@ -5001,7 +5042,7 @@
 			t += h;
         }
         if (isUseMainClip)
-            ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
     };
 
     /**
@@ -5208,7 +5249,7 @@
 
 		this._fillText(ctx, text, textX, textY + Asc.round(tm.baseline * this.getZoom()), undefined, sr.charWidths);
 
-		ctx.RemoveClipRect();
+		this._RemoveClipRect(ctx);
     };
 
 	WorksheetView.prototype.drawHeaderFooter = function (drawingCtx, printPagesData, indexPrintPage, countPrintPages) {
@@ -5663,7 +5704,7 @@
 		}
 
 		if (!drawingCtx && !window['IS_NATIVE_EDITOR'] && isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		//this._drawPageBreakPreviewLines(drawingCtx, range, leftFieldInPx, topFieldInPx, width, height);
@@ -6587,7 +6628,7 @@
 			}
 
 			if (clipUse) {
-				ctx.RemoveClipRect();
+				this._RemoveClipRect(ctx);
 			}
 		} else {
 			this._AddClipRect(ctx, x1, y1, w, h);
@@ -6628,8 +6669,8 @@
 				}
 			}
 
-			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color)
-			ctx.RemoveClipRect();
+			this._drawText(this.stringRender.restoreInternalState(ct.state), ctx, textX, textY, textW, color);
+			this._RemoveClipRect(ctx);
 		}
 
 
@@ -7122,8 +7163,7 @@
 		// draw area
 		drawAreaStroke(traceManager._getPrecedentsAreas());
 		// remove clip range
-		ctx.RemoveClipRect();
-
+		this._RemoveClipRect(ctx);
 		return true;
 	};
 
@@ -7252,7 +7292,7 @@
 				if (_x1 < _x2 && _y1 < _y2) {
 					this._AddClipRect(ctx, x1, y1, x2 - x1, y2 - y1);
 					this._drawText(this.stringRender, undefined, tX1, tY1, 100, this.settings.activeCellBorderColor);
-					ctx.RemoveClipRect();
+					this._RemoveClipRect(ctx);
 				}
 			}
 		}
@@ -10032,6 +10072,7 @@
             fl.shrinkToFit = fl.wrapText ? false : align.getShrinkToFit();
             fl.merged = c.hasMerged();
             fl.textAlign = c.getAlignHorizontalByValue(align.getAlignHorizontal());
+			fl.readingOrder = align.getReadingOrder();
         }
         return fl;
     };
@@ -10875,7 +10916,8 @@
         }
 
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.RemoveClipRect();
+
+			this._RemoveClipRect(ctx);
 			this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
 		}
 
@@ -11230,7 +11272,7 @@
         }
 
 		if (this.workbook.getSmoothScrolling()) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 			this.drawingGraphicCtx.RemoveClipRect && this.drawingGraphicCtx.RemoveClipRect();
 		}
 
@@ -13571,6 +13613,7 @@
         var objectInfo = new asc_CCellInfo();
         var xfs = new AscCommonExcel.CellXfs();
         var horAlign = null, vertAlign = null, angle = null;
+		let readingOrder = null;
 
         var graphicObjects = this.objectRender.getSelectedGraphicObjects();
         if (graphicObjects.length) {
@@ -13599,7 +13642,8 @@
             objectInfo.text = oController.GetSelectedText(true);
 
             horAlign = paraPr.Jc;
-            vertAlign = Asc.c_oAscVAlign.Center;
+			readingOrder = paraPr.Bidi === true ? Asc.c_oReadingOrderTypes.RTL : null;
+			vertAlign = Asc.c_oAscVAlign.Center;
             var shape_props = oController.getDrawingProps().shapeProps;
             if (shape_props) {
                 switch (shape_props.verticalTextAlign) {
@@ -13656,6 +13700,7 @@
 
         var align = new AscCommonExcel.Align();
         align.setAlignHorizontal(horAlign);
+        align.setReadingOrder(readingOrder);
         align.setAlignVertical(vertAlign);
         align.setAngle(angle);
         xfs.setAlign(align);
@@ -15998,6 +16043,10 @@
     WorksheetView.prototype.setSelectionInfo = function (prop, val, onlyActive, isMineComments) {
         // Проверка глобального лока
         if (this.collaborativeEditing.getGlobalLock() || !window["Asc"]["editor"].canEdit()) {
+            if (prop === "paste" && AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+                AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+                AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+            }
             return;
         }
 
@@ -16015,6 +16064,9 @@
 
         const onSelectionCallback = function (isSuccess) {
             if (false === isSuccess) {
+				if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+				}
 				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
                 return;
             }
@@ -16129,6 +16181,9 @@
 							range.setIndent(0);
 						}
                         range.setAlignHorizontal(val);
+                        break;
+                    case "readingOrder":
+                        range.setReadingOrder(val);
                         break;
                     case "va":
                         range.setAlignVertical(val);
@@ -16497,7 +16552,7 @@
             });
 
 			if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
-				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack();
+				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(true);
 				AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
 			}
 			t.model.workbook.handlers.trigger("cleanCutData", true, true);
@@ -16536,6 +16591,10 @@
 				return;
 			} else if (!val.fromBinary && this.isMultiSelect()) {
 				t.handlers.trigger("onErrorEvent", c_oAscError.ID.PasteMultiSelectError, c_oAscError.Level.NoCritical);
+				if (AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack) {
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack(false);
+					AscCommonExcel.g_clipboardExcel.pasteProcessor.pasteCallBack = null;
+				}
 				return false;
 			} else {
 
@@ -19546,6 +19605,13 @@
 				t.traceDependentsManager && t.traceDependentsManager.clearAll();
 			}
 
+			let _prepareTextMetrics = function () {
+				t._cleanCellsTextMetricsCache();
+				t.objectRender.bUpdateMetrics = false;
+				t._prepareCellTextMetricsCache();
+				t.objectRender.bUpdateMetrics = true;
+			};
+
 			var addFilterCallBack;
 			if (bIsChangeFilterToTable)//CHANGE FILTER TO TABLEPART
 			{
@@ -19559,6 +19625,7 @@
 
 					t.model.autoFilters.changeAutoFilterToTablePart(styleName, ar, addFormatTableOptionsObj);
 
+					_prepareTextMetrics();
 					t._updateRange(filterRange);
 					t._autoFitColumnsWidth([new Asc.Range(filterRange.c1, filterRange.r1, filterRange.c2, filterRange.r1)], true);
 					t.draw();
@@ -19608,6 +19675,7 @@
 						t.model.workbook.dependencyFormulas.unlockRecal();
 
 						if (styleName) {
+							_prepareTextMetrics();
 							t._updateRange(filterRange);
 							t._autoFitColumnsWidth([new Asc.Range(filterRange.c1, filterRange.r1, filterRange.c2, filterRange.r1)], true);
 						}
@@ -20622,7 +20690,7 @@
 		if (props.idPivotCollapse) {
 			this._drawPivotCollapseButton(offsetX, offsetY, props);
 			if (isClip) {
-				ctx.RemoveClipRect();
+				this._RemoveClipRect(ctx);
 			}
 			return;
 		}
@@ -20846,7 +20914,7 @@
 		_drawButton(x1 + diffX, y1 + diffY);
 
 		if (isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 	};
 
@@ -23750,7 +23818,7 @@
 		}
 
 		if (isClip) {
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		this._drawGroupDataButtons(drawingCtx, buttons, leftFieldInPx, topFieldInPx, bCol);
@@ -23825,7 +23893,7 @@
 			this._lineVerPrevPx(ctx, x, y + h, y - borderSize);
 
 			ctx.stroke();
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 		ctx.closePath();
 
@@ -23866,7 +23934,7 @@
 			}
 
 			ctx.stroke();
-			ctx.RemoveClipRect();
+			this._RemoveClipRect(ctx);
 		}
 
 		ctx.closePath();
@@ -27421,7 +27489,18 @@
 
 
 	WorksheetView.prototype._AddClipRect = function (ctx, x, y, w, h, skipRtl) {
-		ctx.AddClipRect(this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - x - w) : x, y, w, h)
+		let _x = this.getRightToLeft() && !skipRtl ? (this.getCtxWidth(ctx) - x - w) : x;
+		ctx.AddClipRect && ctx.AddClipRect(_x, y, w, h);
+		if (this.stringRender) {
+			this.stringRender.addClipRect(_x, y, w, h);
+		}
+		return ctx;
+	};
+	WorksheetView.prototype._RemoveClipRect = function (ctx) {
+		ctx.RemoveClipRect && ctx.RemoveClipRect();
+		if (this.stringRender) {
+			this.stringRender.removeClipRect();
+		}
 		return ctx;
 	};
 	WorksheetView.prototype._moveTo = function (ctx, x, y) {
@@ -27483,6 +27562,66 @@
 			oController.removeAllInks(arrInks);
 		}
 	};
+	WorksheetView.prototype.getSelectionCoords = function () {
+		let range = this._getSelection();
+		range = range && range.getLast();
+		if (!range) {
+			return null;
+		}
+		var visibleRange = this.getVisibleRange();
+		var intersectionVisibleRange = visibleRange.intersection(range);
+		if (!intersectionVisibleRange && this.topLeftFrozenCell) {
+			var cFrozen = this.topLeftFrozenCell.getCol0();
+			var rFrozen = this.topLeftFrozenCell.getRow0();
+			cFrozen -= 1;
+			rFrozen -= 1;
+
+			var frozenRange;
+			if (0 <= cFrozen && 0 <= rFrozen) {
+				frozenRange = new asc_Range(0, 0, cFrozen, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+			if (!intersectionVisibleRange && 0 <= cFrozen) {
+				frozenRange = new asc_Range(0, this.visibleRange.r1, cFrozen, this.visibleRange.r2);
+				intersectionVisibleRange = frozenRange.intersection(range);
+
+			}
+			if (!intersectionVisibleRange && 0 <= rFrozen) {
+				frozenRange = new asc_Range(this.visibleRange.c1, 0, this.visibleRange.c2, rFrozen);
+				intersectionVisibleRange = frozenRange.intersection(range);
+			}
+		}
+
+		let res = null;
+		if (!intersectionVisibleRange) {
+			range = visibleRange;
+			intersectionVisibleRange = visibleRange;
+		}
+
+		if (range && intersectionVisibleRange) {
+			let _elem = this.workbook.Api && this.workbook.Api.HtmlElement
+			let offs = _elem && AscCommon.UI && AscCommon.UI.getBoundingClientRect && AscCommon.UI.getBoundingClientRect(_elem);
+			if (offs) {
+				res = [];
+
+				res[0] = this.getCellCoord(range.c1, range.r1);
+				res[1] = this.getCellCoord(intersectionVisibleRange.c2, intersectionVisibleRange.r2);
+
+				if (this.getRightToLeft()) {
+					res[0]._x += res[0]._width;
+					res[1]._x += res[1]._width;
+				}
+
+				res[0]._x += offs.left;
+				res[1]._x += offs.left;
+				res[0]._y += offs.top;
+				res[1]._y += offs.top;
+			}
+		}
+
+		return res;
+	};
+
 	
 
 
@@ -28165,7 +28304,7 @@
 					}
 				}
 
-				if (specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length) {
+				if (specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length && !(window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
 					allowedSpecialPasteProps.push(sProps.picture);
 				}
 
@@ -29561,6 +29700,12 @@
 		if (undefined !== rangeStyle.alignHorizontal && specialPasteProps.alignHorizontal) {
 			if (!align || align.getAlignHorizontal() !== rangeStyle.alignHorizontal) {
 				range.setAlignHorizontal(rangeStyle.alignHorizontal);
+			}
+		}
+		//readingOrder
+		if (undefined !== rangeStyle.readingOrder && specialPasteProps.readingOrder) {
+			if (!align || align.getReadingOrder() !== rangeStyle.readingOrder) {
+				range.setReadingOrder(rangeStyle.readingOrder);
 			}
 		}
 		//fontSize

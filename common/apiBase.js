@@ -106,6 +106,8 @@
 		this.LongActionCallbacksParams = [];
 		this.IsActionRestrictionCurrent  = 0;
 		this.IsActionRestrictionPrev  = null;
+		
+		this.groupActionsCounter = 0;
 
 		// AutoSave
 		this.autoSaveGap = 0;					// Интервал автосохранения (0 - означает, что автосохранения нет) в милесекундах
@@ -1818,6 +1820,13 @@
 			if (data) {
 				data.proxy = AscCommon.getBaseUrl() + "../../../../ai-proxy";
 				t.aiPluginSettings = JSON.stringify(data);
+			}
+		};
+		this.CoAuthoringApi.onMiscEvent = function(data)
+		{
+			if (data['type'] === 'updateVersion')
+			{
+				t.sendEvent("updateVersion", data['success']);
 			}
 		};
 		this.CoAuthoringApi.onWarning                 = function(code)
@@ -3572,7 +3581,12 @@
 	};
 	baseEditorsApi.prototype.canRunBuilderScript = function()
 	{
-		return this.asc_canPaste();
+		this.executeGroupActionsStart();
+		let res = this.asc_canPaste();
+		if (!res)
+			this.executeGroupActionsEnd();
+		
+		return res;
 	};
 	baseEditorsApi.prototype.onEndBuilderScript = function(callback)
 	{
@@ -3604,6 +3618,7 @@
 		if (callback)
 			callback(true);
 		
+		this.executeGroupActionsEnd();
 		return true;
 	};
 
@@ -3917,14 +3932,21 @@
         ret.W = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
         ret.H = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
+		ret.editorX = 0;
+		ret.editorY = 0;
+
         switch (this.editorId)
         {
             case c_oEditorId.Word:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
-                ret.X += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
-                ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainView.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.editorY += this.WordControl.Y;
+				ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+
+				ret.X += ret.editorX;
+				ret.Y += ret.editorY;
+
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
 
@@ -3936,19 +3958,22 @@
             }
             case c_oEditorId.Presentation:
             {
-                ret.X += this.WordControl.X;
-                ret.Y += this.WordControl.Y;
+				ret.editorX += this.WordControl.X;
+				ret.editorX += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
 
-                ret.X += (this.WordControl.m_oMainParent.AbsolutePosition.L * AscCommon.g_dKoef_mm_to_pix);
+				ret.X += ret.editorX;
 
+				ret.editorY += this.WordControl.Y;
                 if (!this.WordControl.m_oLogicDocument.IsFocusOnNotes())
                 {
-                    ret.Y += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oMainView.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
                 else
                 {
-                    ret.Y += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
+					ret.editorY += (this.WordControl.m_oNotesContainer.AbsolutePosition.T * AscCommon.g_dKoef_mm_to_pix);
                 }
+
+				ret.Y += ret.editorY;
 
                 ret.X += (this.WordControl.m_oDrawingDocument.TargetHtmlElementLeft);
                 ret.Y += (this.WordControl.m_oDrawingDocument.TargetHtmlElementTop);
@@ -3980,6 +4005,16 @@
                     ret.Y = drDoc.TargetHtmlElementTop;
                     ret.TargetH = drDoc.m_dTargetSize * this.asc_getZoom() * AscCommon.g_dKoef_mm_to_pix;
                     off = this.HtmlElement;
+                } else if (Asc.c_oAscSelectionType.RangeCells === selectionType ||
+                    Asc.c_oAscSelectionType.RangeRow === selectionType ||
+                    Asc.c_oAscSelectionType.RangeCol === selectionType)
+                {
+                    let ws = this.wb.getWorksheet();
+                    let activeCellCoord = ws.getSelectionCoords();
+                    if (activeCellCoord) {
+                        ret.X = activeCellCoord[0]._x /*+ activeCellCoord[0]._width*/;
+                        ret.Y = activeCellCoord[0]._y /*+ activeCellCoord[0]._height*/;
+                    }
                 }
 
                 if (off) {
@@ -4928,6 +4963,24 @@
 
 		return true;
     };
+
+    baseEditorsApi.prototype.attachEventWithRpcTimeout = function(name, callback, listenerId, timeout) {
+        const timeoutId = setTimeout(() => {
+            //callback with isTimeout=true as first parameter
+            callback.apply(this, [true]);
+            this.detachEvent(name, listenerId);
+        }, timeout);
+        
+        const wrappedCallback = function() {
+            clearTimeout(timeoutId);
+            //callback with isTimeout=false as first parameter followed by any original arguments
+            const args = Array.prototype.slice.call(arguments);
+            args.unshift(false);
+            callback.apply(this, args);
+            this.detachEvent(name, listenerId);
+        };
+        return this.attachEvent(name, wrappedCallback, listenerId);
+    };
     baseEditorsApi.prototype.detachEvent = function(name, listenerId)
     {
         if (!this.internalEvents.hasOwnProperty(name))
@@ -5539,6 +5592,33 @@
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
 
+	baseEditorsApi.prototype["native_callCommand"] = function(funcText, params)
+	{
+		if (!this.canRunBuilderScript())
+			return;
+
+		let jsonParam = (typeof params === "string") ? params : JSON.stringify(params);
+		this._beforeEvalCommand();
+		let script = "(function(){let Asc={};Asc.scope=" + jsonParam + ";return (" + funcText + ")(Asc.scope);})();";
+		let commandReturnValue = AscCommon.safePluginEval(script);
+		this._afterEvalCommand(undefined);
+		this.onEndBuilderScript();
+
+		if (!Asc.checkReturnCommand(commandReturnValue))
+			commandReturnValue = undefined;
+		return commandReturnValue;
+	};
+
+	baseEditorsApi.prototype["native_callMethod"] = function(name, params)
+	{
+		let returnValue = undefined;
+
+		this.callMethod(name, params, function(retValue) {
+			returnValue = retValue;
+		});
+
+		return returnValue;
+	};
 
 	baseEditorsApi.prototype.asc_mergeSelectedShapes = function(operation) {
 		if(AscCommon['PathBoolean']) {
@@ -5637,6 +5717,81 @@
 	};
 
 	baseEditorsApi.prototype.initBroadcastChannelListeners = function() {
+	};
+	baseEditorsApi.prototype.updateSelection = function()
+	{
+	};
+	
+	baseEditorsApi.prototype.startGroupActions = function()
+	{
+		++this.groupActionsCounter;
+		
+		AscCommon.History.startGroupPoints();
+		
+		if (this.groupActionsCounter > 1)
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
+	};
+	baseEditorsApi.prototype.executeGroupActions = function(f)
+	{
+		if (!this.isGroupActions())
+			return f.call();
+		
+		this.executeGroupActionsStart();
+		let res = f.call();
+		this.updateSelection();
+		this.executeGroupActionsEnd();
+		return res;
+	};
+	baseEditorsApi.prototype.executeGroupActionsStart = function()
+	{
+		if (!this.isGroupActions())
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
+	};
+	baseEditorsApi.prototype.executeGroupActionsEnd = function()
+	{
+		if (!this.isGroupActions())
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
+	};
+	baseEditorsApi.prototype.cancelGroupActions = function()
+	{
+		if (!this.isGroupActions())
+			return;
+		
+		--this.groupActionsCounter;
+		AscCommon.History.cancelGroupPoints();
+		
+		if (this.groupActionsCounter > 0)
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
+	};
+	baseEditorsApi.prototype.endGroupActions = function()
+	{
+		if (!this.isGroupActions())
+			return;
+		
+		--this.groupActionsCounter;
+		AscCommon.History.endGroupPoints();
+		
+		if (this.groupActionsCounter > 0)
+			return;
+		
+		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
+	};
+	baseEditorsApi.prototype.isGroupActions = function()
+	{
+		return this.groupActionsCounter > 0;
 	};
 
 	//----------------------------------------------------------export----------------------------------------------------

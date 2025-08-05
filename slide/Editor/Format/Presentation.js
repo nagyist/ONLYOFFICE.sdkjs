@@ -557,7 +557,8 @@ function CPresentation(DrawingDocument) {
 	//Props
 	this.App = null;
 	this.Core = null;
-	this.CustomProperties = new AscCommon.CCustomProperties();;
+	this.CustomProperties = new AscCommon.CCustomProperties();
+	this.customXmlManager = new AscWord.CustomXmlManager(this);
 
 	this.StartPage = 0; // Для совместимости с CDocumentContent
 	this.CurPage = 0;
@@ -8995,6 +8996,12 @@ CPresentation.prototype.addNextSlideAction = function (layoutIndex) {
 			layout = aLayouts[0];
 		}
 	}
+	if (!layout) {
+		const arrAllMasters = this.GetAllMasters();
+		const oMaster = arrAllMasters[0];
+		oMaster.addTitleLayout();
+		layout = oMaster.sldLayoutLst[0];
+	}
 	hf = layout.hf || layout.Master.hf;
 	new_slide = new Slide(this, layout, this.CurPage + 1);
 	new_slide.setNotes(AscCommonSlide.CreateNotes());
@@ -11572,6 +11579,15 @@ CPresentation.prototype.isPreserveSelectionSlides = function() {
 
 	return true;
 };
+
+/**
+ * @returns {AscWord.CustomXmlManager}
+ */
+CPresentation.prototype.getCustomXmlManager = function()
+{
+	return this.customXmlManager;
+};
+
 function collectSelectedObjects(aSpTree, aCollectArray, bRecursive, oIdMap, bSourceFormatting) {
 	var oSp;
 	var oPr = new AscFormat.CCopyObjectProperties();

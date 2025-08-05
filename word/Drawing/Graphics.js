@@ -2579,6 +2579,51 @@
 				this.m_oFullTransform.sy,this.m_oFullTransform.tx,this.m_oFullTransform.ty);
 		}
 	};
+	
+	CGraphics.prototype.drawPermissionMark = function(x, y, h, isStart, isActive)
+	{
+		if (isActive)
+			this.p_color(164, 160, 0, 255);
+		else
+			this.p_color(127, 127, 127, 255);
+
+		if (!global_MatrixTransformer.IsIdentity2(this.m_oTransform))
+		{
+			let coeff = this.m_oCoordTransform.sx;
+			
+			this.p_width(2 / coeff * 1000);
+			let shift = isStart ? 3 / coeff : -3 / coeff;
+			this._s();
+			this._m(x + shift, y);
+			this._l(x, y);
+			this._l(x, y + h);
+			this._l(x + shift, y + h);
+			this.ds();
+			this._s();
+		}
+		else
+		{
+			let pen_w = 2;
+			
+			let ctx = this.m_oContext;
+			ctx.setTransform(1, 0, 0, 1, 0, 0);
+			ctx.lineWidth = 2;
+			
+			let _y = (this.m_oFullTransform.TransformPointY(x, y) >> 0) + 0.5 - 0.5;
+			let _b = (this.m_oFullTransform.TransformPointY(x, y + h) >> 0) + 0.5 - 0.5;
+			
+			let _x0 = (this.m_oFullTransform.TransformPointX(x, y) >> 0) + 0.5 - 0.5 - pen_w / 2;
+			let _x1 = _x0 + (isStart ? pen_w / 2 + 3 : -pen_w / 2 - 3);
+			
+			ctx.beginPath();
+			ctx.moveTo(_x1, _y);
+			ctx.lineTo(_x0, _y);
+			ctx.lineTo(_x0, _b);
+			ctx.lineTo(_x1, _b);
+			ctx.stroke();
+			ctx.beginPath();
+		}
+	};
 
 	CGraphics.prototype.StartClipPath = function()
 	{

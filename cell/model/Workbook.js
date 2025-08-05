@@ -3165,7 +3165,14 @@
 		this.workbookProtection = null;
 		this.fileSharing = null;
 
-		this.customXmls = null;//[]
+		if (isMainLogicDocument) {
+			this.customXmlManager = new AscWord.CustomXmlManager(this);
+		} else {
+			AscFormat.ExecuteNoHistory(function () {
+				this.customXmlManager = new AscWord.CustomXmlManager(this);
+			}, this, [], true);
+		}
+
 		this.oGoalSeek = null;
 		this.oSolver = null;
 
@@ -6001,6 +6008,14 @@
 			oWorksheet.getAllInks(arrInks);
 		}
 		return arrInks;
+	};
+
+	/**
+	 * @returns {AscWord.CustomXmlManager}
+	 */
+	Workbook.prototype.getCustomXmlManager = function()
+	{
+		return this.customXmlManager;
 	};
 
 	/**
@@ -13334,6 +13349,7 @@
 		printProps.pageSetup.headerFooter = this && this.headerFooter && this.headerFooter.getForInterface();
 		var printArea = this.workbook.getDefinesNames("Print_Area", this.getId());
 		printProps.pageSetup.printArea = printArea ? printArea.clone() : false;
+		printProps.pageSetup.selection = this.selectionRange.ranges;
 
 		printProps.printTitlesHeight = this.PagePrintOptions.printTitlesHeight;
 		printProps.printTitlesWidth = this.PagePrintOptions.printTitlesWidth;
@@ -15105,6 +15121,11 @@
 		if(AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal)
 			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_AlignHorizontal, this.ws.getId(), new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new UndoRedoData_CellSimpleData(this.nRow, this.nCol, oRes.oldVal, oRes.newVal));
 	};
+	Cell.prototype.setReadingOrder=function(val){
+		var oRes = this.ws.workbook.oStyleManager.setReadingOrder(this, val);
+		if(AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal)
+			AscCommon.History.Add(AscCommonExcel.g_oUndoRedoCell, AscCH.historyitem_Cell_ReadingOrder, this.ws.getId(), new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new UndoRedoData_CellSimpleData(this.nRow, this.nCol, oRes.oldVal, oRes.newVal));
+	};
 	Cell.prototype.setFill=function(val){
 		var oRes = this.ws.workbook.oStyleManager.setFill(this, val);
 		if(AscCommon.History.Is_On() && oRes.oldVal != oRes.newVal)
@@ -16725,11 +16746,13 @@
 			if(bChange)
 			{
 				var backupObj = this.getValueData();
-				for (var i = 0, length = this.multiText.length; i < length; ++i) {
-					var elem = this.multiText[i];
+				let newMultiText = this._cloneMultiText();
+				for (var i = 0, length = newMultiText.length; i < length; ++i) {
+					var elem = newMultiText[i];
 					if (null != elem.format)
 						fAction(elem.format)
 				}
+				this.setValueMultiTextInternal(newMultiText);
 				//пробуем преобразовать в простую строку
 				if(this._minimizeMultiText(false))
 				{
@@ -18012,6 +18035,7 @@
 		}
 
 		AscCommon.History.EndTransaction();
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
 		AscCommon.History.Create_NewPoint();
@@ -18034,7 +18058,7 @@
 			// cell.Remove();
 		});
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 	Range.prototype.setValueData = function(val){
 		AscCommon.History.Create_NewPoint();
@@ -18382,6 +18406,28 @@
 						  },
 						  function(cell){
 							  cell.setAlignHorizontal(val);
+						  });
+	};
+	Range.prototype.setReadingOrder=function(val){
+		AscCommon.History.Create_NewPoint();
+		this.createCellOnRowColCross();
+		var fSetProperty = this._setProperty;
+		var nRangeType = this._getRangeType();
+		if(c_oRangeType.All == nRangeType)
+		{
+			this.worksheet.getAllCol().setReadingOrder(val);
+			fSetProperty = this._setPropertyNoEmpty;
+		}
+		fSetProperty.call(this, function(row){
+							  if(c_oRangeType.All == nRangeType && null == row.xfs)
+								  return;
+							  row.setReadingOrder(val);
+						  },
+						  function(col){
+							  col.setReadingOrder(val);
+						  },
+						  function(cell){
+							  cell.setReadingOrder(val);
 						  });
 	};
 	Range.prototype.setFill=function(val){
@@ -18773,6 +18819,15 @@
 		});
 		AscCommon.History.EndTransaction();
 	};
+	Range.prototype.changeReadingOrder=function(readingOrder){
+		AscCommon.History.Create_NewPoint();
+		AscCommon.History.StartTransaction();
+
+		this._setPropertyNoEmpty(null, null,function(cell){
+			cell.changeTextCase(readingOrder);
+		});
+		AscCommon.History.EndTransaction();
+	};
 	Range.prototype.getType=function(){
 		var type;
 		this.worksheet._getCellNoEmpty(this.bbox.r1,this.bbox.c1, function(cell) {
@@ -19055,7 +19110,17 @@
 			this.worksheet._getCellNoEmpty(nRow, nCol, function(cell) {
 				if(cell){
 					switch(cell.getType()){
-						case CellValueType.String:align = AscCommon.align_Left;break;
+						case CellValueType.String: {
+
+							let dir = AscCommon.getFirstStrongDirection(cell.text);
+							if (dir === AscBidi.DIRECTION_FLAG.RTL) {
+								align = AscCommon.align_Right;
+							}
+							else {
+								align = AscCommon.align_Left;
+							}
+							break;
+						}
 						case CellValueType.Bool:
 						case CellValueType.Error:align = AscCommon.align_Center;break;
 						default:
