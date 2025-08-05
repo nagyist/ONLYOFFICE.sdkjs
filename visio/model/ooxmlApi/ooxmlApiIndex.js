@@ -1847,6 +1847,45 @@
 	}
 
 	/**
+	 * calculate color theme index and get theme from themes.
+	 * Todo for proper cell select proper themeIndex ConnectorSchemeIndex / EffectSchemeIndex / FontSchemeIndex ...
+	 * @param {Page_Type} pageInfo
+	 * @param {CTheme[]} themes
+	 * @return {*}
+	 */
+	Shape_Type.prototype.getTheme = function getTheme(pageInfo, themes) {
+		let isConnectorShape = this.isConnectorStyleIherited;
+
+		let themeIndex = this.calculateColorThemeIndex(pageInfo);
+
+		// find theme by themeIndex
+		let theme = themes.find(function (theme) {
+			// if search by theme index - theme.themeElements.themeExt.themeSchemeSchemeEnum
+			let findThemeByElement;
+			if (isConnectorShape && theme.themeElements.themeExt) {
+				findThemeByElement = theme.themeElements.themeExt.themeSchemeSchemeEnum;
+			} else if (!isConnectorShape && theme.themeElements.clrScheme.clrSchemeExtLst) {
+				findThemeByElement = theme.themeElements.clrScheme.clrSchemeExtLst.schemeEnum;
+			}
+
+			if (!findThemeByElement) {
+				return false;
+			}
+
+			let themeEnum = Number(findThemeByElement);
+			return themeEnum === themeIndex;
+		});
+
+		// themes.find didn't find anything
+		if (theme === undefined) {
+			AscCommon.consoleLog("Theme was not found by theme enum in themes. using themes[0]");
+			theme = themes[0];
+		}
+
+		return theme;
+	}
+
+	/**
 	 * get deep copy of object with prototypes
 	 * @param object
 	 * @return {any}

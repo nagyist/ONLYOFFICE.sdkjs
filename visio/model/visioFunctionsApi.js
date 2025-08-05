@@ -233,8 +233,6 @@
 
 		// lets define if shape is connector
 		// consider 2.2.7.4.9	Connector
-		// let isConnectorShape = shape.getCellNumberValue("EndArrow") !== 0
-		// 	|| shape.getCellNumberValue("BeginArrow") !== 0;
 		let isConnectorShape = shape.isConnectorStyleIherited;
 
 		// TODO rewrite themeScopeCellName choose consider 2.2.7.4.2	Dynamic Theme Identification
@@ -247,37 +245,15 @@
 		// ext uri="{D75FF423-9257-4291-A4FE-1B2448832E17} - themeSchemeSchemeEnum to find theme
 		let themeIndex = shape.calculateColorThemeIndex(pageInfo);
 
-
-		// if THEMEVAL was called with themeValue (argument like "FillColor") even if themeIndex is 0 we should
-		// use any theme otherwise if no themeValue argument was passed and 0 themeIndex is used we should return
-		// default value
-		let theme = themes[0];
+		// TODO: if THEMEVAL was called with themeValue (argument like "FillColor") even if themeIndex is 0 we should return
+		// color of default theme otherwise if no themeValue argument was passed and 0 themeIndex is used we should return
+		// initialDefaultValue value
+		let theme;
+		// 0 theme index (default theme in visio) is considered as default value for now
 		if (themeIndex === 0) {
 			return initialDefaultValue;
 		} else {
-			// find theme by themeIndex
-			theme = themes.find(function (theme) {
-				// if search by theme index - theme.themeElements.themeExt.themeSchemeSchemeEnum
-				let findThemeByElement;
-				if (isConnectorShape && theme.themeElements.themeExt) {
-					findThemeByElement = theme.themeElements.themeExt.themeSchemeSchemeEnum;
-				} else if (!isConnectorShape && theme.themeElements.clrScheme.clrSchemeExtLst) {
-					findThemeByElement = theme.themeElements.clrScheme.clrSchemeExtLst.schemeEnum;
-				}
-
-				if (!findThemeByElement) {
-					return false;
-				}
-
-				let themeEnum = Number(findThemeByElement);
-				return themeEnum === themeIndex;
-			});
-
-			// themes.find didn't find anything
-			if (theme === undefined) {
-				AscCommon.consoleLog("Theme was not found by theme enum in themes. using themes[0]");
-				theme = themes[0];
-			}
+			theme = shape.getTheme(pageInfo, themes);
 		}
 
 
