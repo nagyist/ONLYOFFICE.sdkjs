@@ -183,6 +183,10 @@
 				this.controller = new CButtonController(this);
 				break;
 			}
+			case CFormControlPr_objectType_spin: {
+				this.controller = new CSpinController(this);
+				break;
+			}
 			default: {
 				return false;
 			}
@@ -302,6 +306,10 @@
 		}
 		return null;
 	};
+	CControl.prototype.recalculateTransform = function() {
+		AscFormat.CShape.prototype.recalculateTransform.call(this);
+		this.controller.recalculateTransform();
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -340,6 +348,7 @@
 	CControlControllerBase.prototype.getChecked = function() {
 		return null;
 	};
+	CControlControllerBase.prototype.recalculateTransform = function() {};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -755,38 +764,59 @@
 	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
-	function CSpinButton() {
+	function CSpinButton(oControl, bIsUp) {
 		this.isHold = false;
 		this.x = null;
 		this.y = null;
 		this.extX = null;
 		this.extY = null;
 		this.rot = 0;
+		this.isUp = !!bIsUp;
+		this.control = oControl;
 	}
 	CSpinButton.prototype.draw = function (graphics) {
+		let arrPenColor;
+		let arrFillColor;
 		if (this.isHold) {
-
+			arrPenColor = [255, 255, 255, 255];
+			arrFillColor = [0, 0, 0, 255];
 		} else {
+			arrPenColor = [0, 0, 0, 255];
+			arrFillColor = [255, 255, 255, 255];
+		}
+			graphics.p_width(500);
+		graphics.b_color1.apply(graphics, arrFillColor);
+		graphics.p_color.apply(graphics, arrPenColor);
 			graphics._s();
 			graphics._m(this.x, this.y);
 			graphics._l(this.x + this.extX, this.y);
 			graphics._l(this.x + this.extX, this.y + this.extY);
 			graphics._l(this.x, this.y + this.extY);
 			graphics._z();
+			graphics.df();
+			graphics.ds();
 
-			graphics._e();
-			const cx = this.x + this.extX / 2;
-			const cy = this.y + this.extY / 2;
-			const nHalfRectSide = SPINBUTTON_RECTANGLE_SIDE_SCALE / 2;
-			graphics._m(cx - this.extX * nHalfRectSide, cy - this.extY * nHalfRectSide);
-			graphics._l(cx + this.extX * nHalfRectSide, cy - this.extY * nHalfRectSide);
-			graphics._l(cx, cy + this.extY * nHalfRectSide);
-			graphics._z();
+		graphics.b_color1.apply(graphics, arrPenColor);
+		graphics._e();
+		const cx = this.x + this.extX / 2;
+		const cy = this.y + this.extY / 2;
+		const nHalfRectSide = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
+
+		if (this.isUp) {
+			graphics._m(cx - nHalfRectSide, cy + nHalfRectSide);
+			graphics._l(cx + nHalfRectSide, cy + nHalfRectSide);
+			graphics._l(cx, cy - nHalfRectSide / 2);
+		} else {
+			graphics._m(cx - nHalfRectSide, cy - nHalfRectSide);
+			graphics._l(cx + nHalfRectSide, cy - nHalfRectSide);
+			graphics._l(cx, cy + nHalfRectSide / 2);
 		}
-		graphics_e();
+		graphics._z();
+		graphics.df();
+		graphics._e();
 	};
 	CSpinButton.prototype.hit = function (nX, nY) {
-
+		return AscFormat.HitToRect(nX, nY, this.control.transform, 0, 0, this.extX, this.extY);
 	};
 	CSpinButton.prototype.onMouseDown = function (nX, nY, oDrawingController) {
 
@@ -796,12 +826,12 @@
 	};
 	function CSpinController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.upButton = new CSpinButton(this);
-		this.downButton = new CSpinButton(this);
+		this.upButton = new CSpinButton(oControl, true);
+		this.downButton = new CSpinButton(oControl, false);
 		this.timeoutId = null;
 		this.initButtonEventHandlers();
 	};
-	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
+	AscFormat.InitClassWithoutType(CSpinController, CControlControllerBase);
 	CSpinController.prototype.startAction = function (fCallback) {
 		const oThis = this;
 		if (oThis.timeoutId === null) {
@@ -903,6 +933,19 @@
 				});
 			}
 		}, [], undefined,AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+	};
+	CSpinController.prototype.recalculateTransform = function() {
+		const oControl = this.control;
+		const nHalfHeight = oControl.extY / 2;
+		this.upButton.x = oControl.x;
+		this.upButton.y = oControl.y;
+		this.upButton.extX = oControl.extX;
+		this.upButton.extY = nHalfHeight;
+
+		this.downButton.x = oControl.x;
+		this.downButton.y = oControl.y + nHalfHeight;
+		this.downButton.extX = oControl.extX;
+		this.downButton.extY = nHalfHeight;
 	};
 
 
