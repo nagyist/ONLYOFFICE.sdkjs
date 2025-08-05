@@ -278,7 +278,8 @@
 			// Default theme which come to visioDocument.themes[0] should not be considered.
 			// See bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=76044
 			if (this.calculateColorThemeIndex(pageInfo) !== 0) {
-				let newFills = handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient, this, themeValWasUsedFor);
+				let newFills = handleQuickStyleVariation(lineUniFillNoGradient, uniFillForegndNoGradient,
+						this, themeValWasUsedFor, pageInfo, visioDocument.themes);
 				uniFillForegndNoGradient = newFills[0];
 				lineUniFillNoGradient = newFills[1];
 			}
@@ -1058,9 +1059,11 @@
 		 * @param {CUniFill} fillUniFill
 		 * @param {Shape_Type} shape
 		 * @param {{lineUniFill: boolean, uniFillForegnd: boolean}} themeValWasUsedFor
+		 * @param {Page_Type} pageInfo
+		 * @param {CTheme[]} themes
 		 * @return {[]} [newFillUnifill, newLineUniFill]
 		 */
-		function handleQuickStyleVariation(lineUniFill, fillUniFill, shape, themeValWasUsedFor) {
+		function handleQuickStyleVariation(lineUniFill, fillUniFill, shape, themeValWasUsedFor, pageInfo, themes) {
 			// https://learn.microsoft.com/en-us/openspecs/sharepoint_protocols/ms-vsdx/68bb0221-d8a1-476e-a132-8c60a49cea63?redirectedfrom=MSDN
 			// consider "QuickStyleVariation" cell
 			// https://visualsignals.typepad.co.uk/vislog/2013/05/visio-2013-themes-in-the-shapesheet-part-2.html
@@ -1074,8 +1077,10 @@
 			// fill.color is calculated in recalculate function from fill.color.color
 
 			// Calculate fill.color if it is not calculated
-			fillUniFill.fill.color.Calculate();
-			lineUniFill.fill.color.Calculate();
+			let theme = shape.getTheme(pageInfo, themes);
+			fillUniFill.fill.color.Calculate(theme);
+			lineUniFill.fill.color.Calculate(theme);
+
 			let lineColorRGBA = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.RGBA;
 			let fillColorRGBA = fillUniFill.fill && fillUniFill.fill.color && fillUniFill.fill.color.RGBA;
 			// let lineColorNoMods = lineUniFill.fill && lineUniFill.fill.color && lineUniFill.fill.color.color
