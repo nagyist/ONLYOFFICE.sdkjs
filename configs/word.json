@@ -268,6 +268,7 @@
 			"word/Editor/Layout/ReadView.js",
 			"word/Editor/document/document-background.js",
 			"word/Editor/document/document-page.js",
+			"word/Editor/document/document-page-section.js",
 			"word/Editor/DocumentContentBase.js",
 			"word/Editor/Document.js",
 			"word/Editor/document-composite-input.js",

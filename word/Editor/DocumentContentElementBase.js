@@ -177,6 +177,9 @@ CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, Pag
 	this.ColumnNum    = ColumnAbs ? ColumnAbs : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
 };
+CDocumentContentElementBase.prototype.ResetSection = function(section, sectPr)
+{
+};
 CDocumentContentElementBase.prototype.SetUseXLimit = function(isUse)
 {
 	this.UseXLimit = isUse;

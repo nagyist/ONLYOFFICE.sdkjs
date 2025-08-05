@@ -131,6 +131,11 @@ CBlockLevelSdt.prototype.IsInline = function()
 {
 	return true;
 };
+CBlockLevelSdt.prototype.ResetSection = function(sectionIndex, sectPr)
+{
+	
+	//this.Content.ResetSection(sectionIndex, sectPr);
+};
 CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount)
 {
 	this.Content.Reset(X, Y, XLimit, YLimit);

@@ -409,10 +409,11 @@ function CDocumentRecalculateState()
 
 	this.TimerStartTime = 0;
 	this.TimerStartPage = 0;
-
-	this.StartPagesCount   = 2;     // количество страниц, которые мы обсчитываем в первый раз без таймеров
-    this.ResetStartElement = false;
-    this.MainStartPos      = -1;
+	
+	this.StartPagesCount     = 2;     // количество страниц, которые мы обсчитываем в первый раз без таймеров
+	this.ResetStartElement   = false;
+	this.ResetElementSection = false;
+	this.MainStartPos        = -1;
 
     this.Continue     = false; // параметр сигнализирующий, о том что нужно продолжить пересчет (для нерекурсивного метода)
 
@@ -438,216 +439,6 @@ function Document_Recalculate_HdrFtrPageCount()
 	var LogicDocument = editor.WordControl.m_oLogicDocument;
 	LogicDocument.private_RecalculateHdrFtrPageCountUpdate();
 }
-
-function CDocumentPageSection()
-{
-    this.Pos    = 0;
-    this.EndPos = -1;
-
-    this.Y      = 0;
-    this.YLimit = 0;
-
-    this.YLimit2 = 0;
-
-    this.Index   = -1;
-
-    this.Columns = [];
-    this.ColumnsSep = false;
-
-    this.IterationsCount       = 0;
-    this.CurrentY              = 0;
-    this.RecalculateBottomLine = true;
-    this.CanDecrease           = true;
-    this.WasIncrease           = false; // Было ли хоть раз увеличение
-    this.IterationStep         = 10;
-    this.IterationDirection    = 0;
-}
-/**
- * Инициализируем параметры данной секции
- * @param {number} nPageAbs
- * @param {AscWord.SectPr} oSectPr
- * @param {Number} nSectionIndex
- */
-CDocumentPageSection.prototype.Init = function(nPageAbs, oSectPr, nSectionIndex)
-{
-	var oFrame  = oSectPr.GetContentFrame(nPageAbs);
-	var nX      = oFrame.Left;
-	var nXLimit = oFrame.Right;
-
-	for (var nCurColumn = 0, nColumnsCount = oSectPr.GetColumnsCount(); nCurColumn < nColumnsCount; ++nCurColumn)
-	{
-		this.Columns[nCurColumn] = new CDocumentPageColumn();
-
-		this.Columns[nCurColumn].X      = nX;
-		this.Columns[nCurColumn].XLimit = nColumnsCount - 1 === nCurColumn ? nXLimit : nX + oSectPr.GetColumnWidth(nCurColumn);
-
-		nX += oSectPr.GetColumnWidth(nCurColumn) + oSectPr.GetColumnSpace(nCurColumn);
-	}
-	this.ColumnsSep = oSectPr.GetColumnSep();
-
-	this.Y       = oFrame.Top;
-	this.YLimit  = oFrame.Bottom;
-	this.YLimit2 = oFrame.Bottom;
-	this.Index   = nSectionIndex;
-};
-CDocumentPageSection.prototype.Copy = function()
-{
-    var NewSection = new CDocumentPageSection();
-
-    NewSection.Pos    = this.Pos;
-    NewSection.EndPos = this.EndPos;
-    NewSection.Y      = this.Y;
-    NewSection.YLimit = this.YLimit;
-
-    for (var ColumnIndex = 0, Count = this.Columns.length; ColumnIndex < Count; ++ColumnIndex)
-    {
-		NewSection.Columns[ColumnIndex] = this.Columns[ColumnIndex].Copy();
-    }
-
-    return NewSection;
-};
-CDocumentPageSection.prototype.Shift = function(Dx, Dy)
-{
-    this.Y      += Dy;
-    this.YLimit += Dy;
-
-    for (var ColumnIndex = 0, Count = this.Columns.length; ColumnIndex < Count; ++ColumnIndex)
-    {
-        this.Columns[ColumnIndex].Shift(Dx, Dy);
-    }
-};
-/**
- * Происходи ли процесс расчета нижней границы разрыва секции на текущей странице
- * @returns {boolean}
- */
-CDocumentPageSection.prototype.IsCalculatingSectionBottomLine = function()
-{
-    return (this.IterationsCount > 0 && true === this.RecalculateBottomLine);
-};
-/**
- * Можно ли расчитывать нижнюю границу разрыва секции на текущей странице
- * @returns {boolean}
- */
-CDocumentPageSection.prototype.CanRecalculateBottomLine = function()
-{
-    return this.RecalculateBottomLine;
-};
-/**
- * Запрещаем возможность расчета нижней границы разрыва секции на текущей страницы
- */
-CDocumentPageSection.prototype.ForbidRecalculateBottomLine = function()
-{
-	this.RecalculateBottomLine = false;
-};
-CDocumentPageSection.prototype.GetY = function()
-{
-    return this.Y;
-};
-CDocumentPageSection.prototype.GetYLimit = function()
-{
-    if (0 === this.IterationsCount)
-        return this.YLimit;
-    else
-        return this.CurrentY;
-};
-/**
- * Производим шаг рассчета нижней границы рарзрыва секции
- * @param {boolean} isIncrease
- * @returns {number}
- */
-CDocumentPageSection.prototype.IterateBottomLineCalculation = function(isIncrease)
-{
-	// Алгоритм следующий:
-	// На первом шаге мы прогнозируем положение границы по уже имеющемуся объему текста и
-	// ширине колонок.
-	// Далее мы сдвигаем границу на значение IterationStep, вверх или вниз в зависимости
-	// от результата расчета страницы. При перемене направления сдвига мы всегда уменьшаем шаг
-	// в 2 раза. Также мы можем уменьшать шаг в 2 раза, если сдвигаем границу вверх, и хотябы
-	// раз до этого двигали ее вниз. Останавливаем итерацию при попытке подвинуть границу наверх,
-	// когда шаг итерации становится менее 2мм.
-
-	if (0 === this.IterationsCount)
-	{
-		// Пытаемся заранее спрогнозировать позицию, где должно быть разделение. Учитывая, что колонки могут быть разной
-		// ширины, мы расчитываем суммарную занимаемую текстом область. Делим ее по колонкам, с учетом их суммарной
-		// ширины.
-
-		var nSumArea = 0, nSumWidth = 0;
-		for (var nColumnIndex = 0, nColumnsCount = this.Columns.length; nColumnIndex < nColumnsCount; ++nColumnIndex)
-		{
-			var oColumn = this.Columns[nColumnIndex];
-			if (true !== oColumn.Empty)
-				nSumArea += (oColumn.Bounds.Bottom - this.Y) * (oColumn.XLimit - oColumn.X);
-
-			nSumWidth += oColumn.XLimit - oColumn.X;
-		}
-
-		if (nSumWidth > 0.001)
-			this.CurrentY = this.Y + nSumArea / nSumWidth;
-		else
-			this.CurrentY = this.Y;
-	}
-	else
-	{
-		if (false === isIncrease)
-		{
-			if (this.IterationDirection > 0 || this.WasIncrease)
-				this.IterationStep /= 2;
-
-			this.CurrentY -= this.IterationStep;
-			this.IterationDirection = -1;
-
-			if (this.CurrentY < this.Y)
-			{
-				// Такое может быть, когда у нас всего одна строка в начале страницы, которую мы размещаем всегда
-				this.CurrentY    = this.Y;
-				this.CanDecrease = false;
-			}
-		}
-		else
-		{
-			if (this.IterationDirection < 0)
-				this.IterationStep /= 2;
-
-			this.CurrentY += this.IterationStep;
-			this.IterationDirection = 1;
-
-			this.WasIncrease = true;
-		}
-	}
-
-	if (this.IterationStep < 2)
-		this.CanDecrease = false;
-
-	this.CurrentY = Math.min(this.CurrentY, this.YLimit2);
-
-	this.IterationsCount++;
-	return this.CurrentY;
-};
-CDocumentPageSection.prototype.Reset_Columns = function()
-{
-    for (var ColumnIndex = 0, Count = this.Columns.length; ColumnIndex < Count; ++ColumnIndex)
-    {
-        this.Columns[ColumnIndex].Reset();
-    }
-};
-/**
- * Можем ли мы провести еще одну итерацию с уменьшением нижней границы
- * @returns {boolean}
- */
-CDocumentPageSection.prototype.CanDecreaseBottomLine = function()
-{
-	return this.CanDecrease;
-};
-CDocumentPageSection.prototype.CanIncreaseBottomLine = function()
-{
-	// Данная функция не должна возвращать false, если возвращает, значит неправильно работает алгоритм по вычислению
-	// нижней границы continuous секции
-	// if (!(this.YLimit2 - this.CurrentY > 0.001))
-	// 	console.log("Bad continuous section calculate");
-
-	return (this.YLimit2 - this.CurrentY > 0.001);
-};
 
 function CDocumentPageColumn()
 {
@@ -3836,7 +3627,7 @@ CDocument.prototype.Recalculate_Page = function()
             Page.Margins.Right  = oFrame.Right;
             Page.Margins.Bottom = oFrame.Bottom;
 
-            Page.Sections[0] = new CDocumentPageSection();
+            Page.Sections[0] = new AscWord.DocumentPageSection();
             Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
         }
 
@@ -3934,11 +3725,12 @@ CDocument.prototype.Recalculate_Page = function()
  */
 CDocument.prototype.Recalculate_PageColumn                   = function()
 {
-    var PageIndex          = this.FullRecalc.PageIndex;
-    var SectionIndex       = this.FullRecalc.SectionIndex;
-    var ColumnIndex        = this.FullRecalc.ColumnIndex;
-    var StartIndex         = this.FullRecalc.StartIndex;
-    var bResetStartElement = this.FullRecalc.ResetStartElement;
+	let PageIndex            = this.FullRecalc.PageIndex;
+	let SectionIndex         = this.FullRecalc.SectionIndex;
+	let ColumnIndex          = this.FullRecalc.ColumnIndex;
+	let StartIndex           = this.FullRecalc.StartIndex;
+	let bResetStartElement   = this.FullRecalc.ResetStartElement;
+	let bResetElementSection = this.FullRecalc.NewSectionStartElement;
 
 	// // Recalculation LOG
 	// console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
@@ -3978,6 +3770,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
     var _SectionIndex       = SectionIndex;
     var _bStart             = false;
     var _bResetStartElement = false;
+	let _bResetElementSection = false;
     var _bEndnotesContinue  = false;
 
     var Count = this.Content.length;
@@ -4142,12 +3935,19 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				if ((0 === Index && 0 === PageIndex && 0 === ColumnIndex) || Index != StartIndex || (Index === StartIndex && true === bResetStartElement))
 				{
 					Element.Set_DocumentIndex(Index);
+					Element.ResetSection(SectionIndex, SectPr);
 					Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount);
 				}
+				else if (Index === StartIndex && true === bResetElementSection)
+				{
+					Element.ResetSection(SectionIndex, SectPr);
+					Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount);
+				}
+				
 
 				// Делаем как в Word: Обработаем особый случай, когда на данном параграфе заканчивается секция, и он
 				// пустой. В такой ситуации этот параграф не добавляет смещения по Y, и сам приписывается в конец
-				// предыдущего элемента. Второй подряд идущий такой же параграф обсчитывается по обычному.
+				// предыдущего элемента. Второй подряд идущий такой же параграф обсчитывается по-обычному.
 
 				var SectInfoElement = this.SectionsInfo.Get_SectPr(Index);
 				var PrevElement     = this.Content[Index - 1]; // может быть undefined, но в следующем условии сразу стоит проверка на Index > 0
@@ -4517,7 +4317,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 						_bStart             = false;
 						_bResetStartElement = true;
 						
-						var NewPageSection = new CDocumentPageSection();
+						var NewPageSection = new AscWord.DocumentPageSection();
 						NewPageSection.Init(PageIndex, nextSectPr, this.Layout.GetSectionIndex(nextSectPr));
 						NewPageSection.Pos           = Index;
 						NewPageSection.EndPos        = Index;
@@ -4654,7 +4454,7 @@ CDocument.prototype.IsContinueRecalculateOnTimer = function()
 		&& (!window["native"] || undefined === window["native"]["WC_CheckSuspendRecalculate"]))
 		return false;
 	
-	// this.FullRecalc.PageIndex - страница, с которой продолжится пересчет, значит расчитана предыдущая страница
+	// this.FullRecalc.PageIndex - страница, с которой продолжится пересчет, значит рассчитана предыдущая страница
 	let page = this.FullRecalc.PageIndex - 1;
 	
 	let timeLimit = this.Layout.GetCalculateTimeLimit();
@@ -16667,7 +16467,7 @@ CDocument.prototype.Get_StyleNameById = function(StyleId)
 
 	return Style.Get_Name();
 };
-CDocument.prototype.private_GetElementPageIndex = function(ElementPos, PageIndex, ColumnIndex, ColumnsCount)
+CDocument.prototype.private_GetElementPageIndex = function(ElementPos, PageIndex, ColumnIndex, ColumnsCount, SectionIndex)
 {
 	var Element = this.Content[ElementPos];
 	if (!Element)
