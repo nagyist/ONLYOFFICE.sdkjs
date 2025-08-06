@@ -212,7 +212,7 @@
 		{
 			this.path = basePath;
 
-			let services = {};
+			let services = Object.create(null);
 			for (let i = 0; i < plugins.length; i++)
 			{
 				let newPlugin = plugins[i];
@@ -862,14 +862,11 @@
 			}
 		},
 
-		setUsedBackgroundPlugins : function(services)
-		{
-			window.localStorage.setItem("asc_plugins_background", JSON.stringify(services));
-		},
-
+		// Added a new list (stopped) for compatibility.
+		// And so that those background plugins that were in the delivery initially - were launched.
 		addUsedBackgroundPlugins : function(guid)
 		{
-			let services = this.api.getUsedBackgroundPlugins();
+			let services = this.api.getUsedBackgroundPlugins(true);
 			for (let i = 0, len = services.length; i < len; i++)
 			{
 				if (services[i] === guid)
@@ -877,11 +874,31 @@
 			}
 			services.push(guid);
 			this.api.setUsedBackgroundPlugins(services);
+
+			let removed = this.api.getStoppedBackgroundPlugins();
+			for (let i = 0, len = removed.length; i < len; i++)
+			{
+				if (removed[i] === guid)
+				{
+					removed.splice(i, 1);
+					this.api.setStoppedBackgroundPlugins(removed);
+					return;
+				}
+			}
 		},
 
 		removeUsedBackgroundPlugins : function(guid)
 		{
-			let services = this.api.getUsedBackgroundPlugins();
+			let removed = this.api.getStoppedBackgroundPlugins();
+			for (let i = 0, len = removed.length; i < len; i++)
+			{
+				if (removed[i] === guid)
+					return;
+			}
+			removed.push(guid);
+			this.api.setStoppedBackgroundPlugins(removed);
+
+			let services = this.api.getUsedBackgroundPlugins(true);
 			for (let i = 0, len = services.length; i < len; i++)
 			{
 				if (services[i] === guid)
