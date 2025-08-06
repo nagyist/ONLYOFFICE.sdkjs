@@ -2070,17 +2070,17 @@
 			// search for empty paragraphs and add space to them
 			// they need it to be displayed as dots in unordered list
 			// for bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=73676
-			for (let i = 0; i < oContent.Content.length; i++) {
-				const paragraph = oContent.Content[i];
-				const paragraphContent = paragraph.Content; // runs
-				let isParagraphEmpty = paragraph.IsEmpty();
-
-				if (isParagraphEmpty) {
-					let oRun = new ParaRun(paragraph, false);
-					oRun.AddText(" ");
-					paragraphContent.unshift(oRun);
-				}
-			}
+			// for (let i = 0; i < oContent.Content.length; i++) {
+			// 	const paragraph = oContent.Content[i];
+			// 	const paragraphContent = paragraph.Content; // runs
+			// 	let isParagraphEmpty = paragraph.IsEmpty();
+			//
+			// 	if (isParagraphEmpty) {
+			// 		let oRun = new ParaRun(paragraph, false);
+			// 		oRun.AddText(" ");
+			// 		paragraphContent.unshift(oRun);
+			// 	}
+			// }
 
 			// handle horizontal align i. e. defaultParagraph align
 
