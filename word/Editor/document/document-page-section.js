@@ -89,6 +89,10 @@
 		this.YLimit2 = oFrame.Bottom;
 		this.Index   = nSectionIndex;
 	};
+	DocumentPageSection.prototype.GetIndex = function()
+	{
+		return this.Index;
+	};
 	DocumentPageSection.prototype.Copy = function()
 	{
 		var NewSection = new DocumentPageSection();

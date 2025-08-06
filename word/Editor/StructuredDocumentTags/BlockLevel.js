@@ -56,6 +56,8 @@ function CBlockLevelSdt(oLogicDocument, oParent)
 
 	this.SkipSpecialLock = false;
 	this.Current         = false;
+	
+	this.Sections = [];
 }
 
 CBlockLevelSdt.prototype = Object.create(CDocumentContentElementBase.prototype);
@@ -131,12 +133,22 @@ CBlockLevelSdt.prototype.IsInline = function()
 {
 	return true;
 };
-CBlockLevelSdt.prototype.ResetSection = function(sectionIndex, sectPr)
+CBlockLevelSdt.prototype.GetElementPageIndex = function(page, column, columnCount, sectionIndex)
 {
+	if (undefined === sectionIndex)
+	{
+		sectionIndex = this.SectionNum;
+		console.log("Fix sectionIndex");
+	}
 	
-	//this.Content.ResetSection(sectionIndex, sectPr);
+	let section = this.Sections[sectionIndex - this.SectionNum];
+	if (!section)
+		return 0;
+	
+	let startColumn = sectionIndex === this.SectionNum ? this.GetStartColumn() : 0;
+	return column - startColumn + (page - section.GetParentStartPage()) * section.GetColumnCount() + section.GetStartPage();
 };
-CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount)
+CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount, sectionAbs, sectPr)
 {
 	this.Content.Reset(X, Y, XLimit, YLimit);
 	this.Content.Set_StartPage(0);
@@ -148,6 +160,22 @@ CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnA
 	this.PageNum      = PageAbs;
 	this.ColumnNum    = ColumnAbs ? ColumnAbs : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
+	this.SectionNum   = sectionAbs ? sectionAbs : 0;
+	this.ResetSection(PageAbs, sectionAbs, sectPr);
+};
+CBlockLevelSdt.prototype.ResetSection = function(pageAbs, sectionAbs, sectPr)
+{
+	console.log(`Reset section ${sectionAbs}`);
+	if (sectionAbs < this.SectionNum)
+	{
+		// This should never happen
+		this.SectionNum = sectionAbs;
+	}
+	
+	this.Sections.length = sectionAbs - this.SectionNum;
+	
+	let pageCount = this.Content.GetPagesCount();
+	this.Sections.push(new AscWord.DocumentElementSection(pageAbs, pageCount, -1, sectPr));
 };
 CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 {
@@ -156,6 +184,8 @@ CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 	this.Content.RecalcInfo = this.Parent.RecalcInfo;
 
 	let recalcResult = this.Content.Recalculate_Page(CurPage, true);
+	
+	this.Sections[this.Sections.length - 1].endPage = this.Content.GetPagesCount() - 1;
 
 	if (recalcresult2_End === recalcResult && window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();

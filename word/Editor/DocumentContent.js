@@ -1894,6 +1894,14 @@ CDocumentContent.prototype.Get_PagesCount = function()
 {
 	return this.Pages.length;
 };
+CDocumentContent.prototype.GetPageCount = function()
+{
+	return this.Pages.length;
+};
+CDocumentContent.prototype.GetPagesCount = function()
+{
+	return this.Pages.length;
+};
 CDocumentContent.prototype.GetSummaryHeight = function()
 {
 	var Height = 0;

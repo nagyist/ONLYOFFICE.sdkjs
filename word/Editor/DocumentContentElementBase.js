@@ -167,7 +167,7 @@ CDocumentContentElementBase.prototype.Get_Id = function()
 {
 	return this.GetId();
 };
-CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount)
+CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount, sectionAbs, sectPr)
 {
 	this.X            = X;
 	this.Y            = Y;
@@ -176,8 +176,10 @@ CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, Pag
 	this.PageNum      = PageAbs;
 	this.ColumnNum    = ColumnAbs ? ColumnAbs : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
+	this.SectionNum   = sectionAbs;
+	this.ResetSection(sectionAbs, sectPr);
 };
-CDocumentContentElementBase.prototype.ResetSection = function(section, sectPr)
+CDocumentContentElementBase.prototype.ResetSection = function(sectionAbs, sectPr)
 {
 };
 CDocumentContentElementBase.prototype.SetUseXLimit = function(isUse)
@@ -909,6 +911,15 @@ CDocumentContentElementBase.prototype.Get_StartColumn = function()
 CDocumentContentElementBase.prototype.Get_ColumnsCount = function()
 {
 	return this.ColumnsCount;
+};
+CDocumentContentElementBase.prototype.GetStartSection = function()
+{
+	return this.SectionNum;
+};
+CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, column, columnCount, sectionIndex)
+{
+	let startPage = this.Get_StartPage_Relative();
+	return column - this.GetStartColumn() + (page - startPage) * columnCount;
 };
 CDocumentContentElementBase.prototype.GetStartColumn = function()
 {
