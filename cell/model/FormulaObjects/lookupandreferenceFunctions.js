@@ -4586,6 +4586,17 @@ function (window, undefined) {
 		if (cElementType.error === arg0.type) {
 			return arg0;
 		}
+		if (cElementType.cell === arg1.type) {
+			arg1 = arg1.getValue();
+		}
+		if (cElementType.number === arg1.type || cElementType.string === arg1.type || cElementType.error === arg1.type || cElementType.cell === arg1.type) {
+			const arr1 = new cArray();
+			arr1.addElement(arg1);
+			arg1 = arr1;
+			const arr2 = new cArray();
+			arr2.addElement(arg2);
+			arg2 = arr2;
+		}
 
 		if (!((cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type ||
 			cElementType.array === arg1.type) &&
