@@ -834,42 +834,134 @@ AscFormat.GenerateDefaultTheme = function GenerateDefaultTheme(presentation, opt
 
 		var scheme = theme.themeElements.clrScheme;
 
-		// TODO where are link colors?
+		// TODO change colors
 		scheme.colors[8] = AscFormat.CreateUniColorRGB(0, 0, 0);
 		scheme.colors[12] = AscFormat.CreateUniColorRGB(255, 255, 255);
-		scheme.colors[9] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[13] = AscFormat.CreateUniColorRGB(255, 255, 255);
-		scheme.colors[0] = AscFormat.CreateUniColorRGB(0, 0, 0); //CreateUniColorRGB(0xFF, 0x81, 0xBD);//
-		scheme.colors[1] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[2] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[3] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[4] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[5] = AscFormat.CreateUniColorRGB(0, 0, 0);
-		scheme.colors[11] = AscFormat.CreateUniColorRGB(0x05, 0x63, 0xC1);
-		scheme.colors[10] = AscFormat.CreateUniColorRGB(0x80, 0x00, 0x80);
+		scheme.colors[9] = AscFormat.CreateUniColorRGB(0x1F, 0x49, 0x7D);
+		scheme.colors[13] = AscFormat.CreateUniColorRGB(0xEE, 0xEC, 0xE1);
+		scheme.colors[0] = AscFormat.CreateUniColorRGB(0x4F, 0x81, 0xBD); //CreateUniColorRGB(0xFF, 0x81, 0xBD);//
+		scheme.colors[1] = AscFormat.CreateUniColorRGB(0xC0, 0x50, 0x4D);
+		scheme.colors[2] = AscFormat.CreateUniColorRGB(0x9B, 0xBB, 0x59);
+		scheme.colors[3] = AscFormat.CreateUniColorRGB(0x80, 0x64, 0xA2);
+		scheme.colors[4] = AscFormat.CreateUniColorRGB(0x4B, 0xAC, 0xC6);
+		scheme.colors[5] = AscFormat.CreateUniColorRGB(0xF7, 0x96, 0x46);
+		scheme.colors[11] = AscFormat.CreateUniColorRGB(0x05, 0x63, 0xC1); // link
+		scheme.colors[10] = AscFormat.CreateUniColorRGB(0x80, 0x00, 0x80); // followed link
+
 		// -------------- fill styles -------------------------
-		var brush = AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(255, 255, 255));
-		for (let i = 0; i < 6; i++) {
-			theme.themeElements.fmtScheme.fillStyleLst.push(brush);
-		}
+		var brush = new AscFormat.CUniFill();
+		brush.setFill(new AscFormat.CSolidFill());
+		brush.fill.setColor(new AscFormat.CUniColor());
+		brush.fill.color.setColor(new AscFormat.CSchemeColor());
+		brush.fill.color.color.setId(phClr);
+		theme.themeElements.fmtScheme.fillStyleLst.push(brush);
+
+		brush = new AscFormat.CUniFill();
+
+		let oFill = new AscFormat.CGradFill();
+		oFill.rotateWithShape = true;
+		brush.setFill(oFill);
+		let oLin = new AscFormat.GradLin();
+		oFill.setLin(oLin);
+		oLin.setAngle(16200000);
+		oLin.setScale(true);
+		let oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(0);
+
+		let oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "tint", val: 50000}, {name: "satMod", val: 300000}]);
+		oGs.setColor(oColor);
+
+		oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(35000);
+		oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "tint", val: 37000}, {name: "satMod", val: 300000}]);
+		oGs.setColor(oColor);
+
+		oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(100000);
+		oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "tint", val: 15000}, {name: "satMod", val: 350000}]);
+		oGs.setColor(oColor);
+
+		theme.themeElements.fmtScheme.fillStyleLst.push(brush);
+
+		brush = new AscFormat.CUniFill();
+
+		oFill = new AscFormat.CGradFill();
+		brush.setFill(oFill);
+		oFill.rotateWithShape = true;
+		oLin = new AscFormat.GradLin();
+		oFill.setLin(oLin);
+		oLin.setAngle(16200000);
+		oLin.setScale(false);
+		oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(0);
+		oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "shade", val: 51000}, {name: "satMod", val: 130000}]);
+		oGs.setColor(oColor);
+
+		oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(80000);
+		oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "shade", val: 93000}, {name: "satMod", val: 130000}]);
+		oGs.setColor(oColor);
+
+		oGs = new AscFormat.CGs();
+		oFill.addColor(oGs);
+		oGs.setPos(100000);
+		oColor = AscFormat.CreateSchemeUnicolorWithMods(14, [{name: "shade", val: 94000}, {name: "satMod", val: 135000}]);
+		oGs.setColor(oColor);
+
+		theme.themeElements.fmtScheme.fillStyleLst.push(brush);
 		// ----------------------------------------------------
 
 		// -------------- back styles -------------------------
-		var brush = AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(255, 255, 255));
-		for (let i = 0; i < 6; i++) {
-			theme.themeElements.fmtScheme.bgFillStyleLst.push(brush);
-		}
+		brush = new AscFormat.CUniFill();
+		brush.setFill(new AscFormat.CSolidFill());
+		brush.fill.setColor(new AscFormat.CUniColor());
+		brush.fill.color.setColor(new AscFormat.CSchemeColor());
+		brush.fill.color.color.setId(phClr);
+		theme.themeElements.fmtScheme.bgFillStyleLst.push(brush);
+
+		brush = AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(0, 0, 0));
+		theme.themeElements.fmtScheme.bgFillStyleLst.push(brush);
+
+		brush = AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(0, 0, 0));
+		theme.themeElements.fmtScheme.bgFillStyleLst.push(brush);
 		// ----------------------------------------------------
 
 		var pen = new AscFormat.CLn();
 		pen.setW(9525);
-		pen.setFill(AscFormat.CreateUniFillByUniColor(AscFormat.CreateUniColorRGB(0, 0, 0)));
+		pen.setFill(new AscFormat.CUniFill());
+		pen.Fill.setFill(new AscFormat.CSolidFill());
+		pen.Fill.fill.setColor(new AscFormat.CUniColor());
+		pen.Fill.fill.color.setColor(new AscFormat.CSchemeColor());
+		pen.Fill.fill.color.color.setId(phClr);
 		pen.Fill.fill.color.setMods(new AscFormat.CColorModifiers());
 
-		for (let i = 0; i < 6; i++) {
-			theme.themeElements.fmtScheme.lnStyleLst.push(pen);
-		}
+		pen.Fill.fill.color.Mods.addMod("shade", 95000);
+		pen.Fill.fill.color.Mods.addMod("satMod", 105000);
+		theme.themeElements.fmtScheme.lnStyleLst.push(pen);
 
+		pen = new AscFormat.CLn();
+		pen.setW(25400);
+		pen.setFill(new AscFormat.CUniFill());
+		pen.Fill.setFill(new AscFormat.CSolidFill());
+
+		pen.Fill.fill.setColor(new AscFormat.CUniColor());
+		pen.Fill.fill.color.setColor(new AscFormat.CSchemeColor());
+		pen.Fill.fill.color.color.setId(phClr);
+		theme.themeElements.fmtScheme.lnStyleLst.push(pen);
+
+		pen = new AscFormat.CLn();
+		pen.setW(38100);
+		pen.setFill(new AscFormat.CUniFill());
+		pen.Fill.setFill(new AscFormat.CSolidFill());
+		pen.Fill.fill.setColor(new AscFormat.CUniColor());
+		pen.Fill.fill.color.setColor(new AscFormat.CSchemeColor());
+		pen.Fill.fill.color.color.setId(phClr);
+		theme.themeElements.fmtScheme.lnStyleLst.push(pen);
 		theme.extraClrSchemeLst = [];
 
 		theme.themeElements.themeExt = new AscFormat.CThemeExt();
@@ -878,6 +970,7 @@ AscFormat.GenerateDefaultTheme = function GenerateDefaultTheme(presentation, opt
 		theme.themeElements.clrScheme.clrSchemeExtLst = new AscFormat.CClrSchemeExtLst();
 		theme.themeElements.clrScheme.clrSchemeExtLst.schemeEnum = "0";
 
+		theme.themeElements.themeExt.fmtConnectorScheme = new AscFormat.FmtScheme();
 
 		return theme;
 	}, this, []);

@@ -306,8 +306,11 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		}
 
 		for (let i = 0; i < this.themes.length; i++) {
-			let themeContent = docPart.part.addPart(AscCommon.openXml.Types.theme);
-			themeContent.part.setDataXml(this.themes[i], memory);
+			let theme = this.themes[i];
+			if (theme.themeElements.themeExt.themeSchemeSchemeEnum !== "0") {
+				let themeContent = docPart.part.addPart(AscCommon.openXml.Types.theme);
+				themeContent.part.setDataXml(theme, memory);
+			}
 		}
 
 		// Not realized, file defines schema and data of that schema
