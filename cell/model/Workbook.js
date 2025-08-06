@@ -12391,8 +12391,8 @@
 		}
 	};
 
-	Worksheet.prototype.getDataValidationProps = function (doExtend) {
-		var _selection = this.getSelection();
+	Worksheet.prototype.getDataValidationProps = function (doExtend, ranges) {
+		var _selection = ranges ? ranges : this.getSelection().ranges;
 		
 		if (!this.dataValidations) {
 			var newDataValidation = new window['AscCommonExcel'].CDataValidation();
@@ -12401,7 +12401,7 @@
 			newDataValidation.allowBlank = true;
 			return newDataValidation;
 		} else {
-			return this.dataValidations.getProps(_selection.ranges, doExtend, this);
+			return this.dataValidations.getProps(_selection, doExtend, this);
 		}
 	};
 
