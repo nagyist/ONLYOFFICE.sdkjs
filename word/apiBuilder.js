@@ -24429,8 +24429,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToPicas.js
 	 */
 	Api.prototype.PointsToPicas = function PointsToPicas(pt) {
-		const ptToPc = g_dKoef_pt_to_mm / g_dKoef_pc_to_mm;
-		return pt * ptToPc;
+		return pt / g_dKoef_pc_to_pt;
 	};
 
 	/**
@@ -24532,8 +24531,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PicasToPoints.js
 	 */
 	Api.prototype.PicasToPoints = function PicasToPoints(pc) {
-		const pcToPt = g_dKoef_pc_to_mm * g_dKoef_mm_to_pt;
-		return pc * pcToPt;
+		return pc * g_dKoef_pc_to_pt;
 	};
 
 	/**
