@@ -46,8 +46,8 @@
 	/**
 	 *    // Docs old:
 	 * // Text_Type complexType: https://learn.microsoft.com/ru-ru/office/client-developer/visio/text_type-complextypevisio-xml
-	 * @returns {Text_Type}
 	 * @constructor
+	 * @extends CBaseFormatNoIdObject
 	 */
 	function Text_Type() {
 		AscFormat.CBaseFormatNoIdObject.call(this);
