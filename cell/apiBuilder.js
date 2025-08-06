@@ -11078,8 +11078,8 @@
 	 * @typeofeditors ["CSE"]
 	 * @param {PasteType} [sPasteType="xlPasteAll"]  - Paste option.
 	 * @param {PasteSpecialOperation} [sPasteSpecialOperation="xlPasteSpecialOperationNone"] - The mathematical operation which will be applied to the copied data.
-	 * @param {boolean} bSkipBlanks [bSkipBlanks=false] - Specifies whether to avoid replacing values in the paste area when blank cells occur in the copy area.
-	 * @param {boolean} bTranspose [bTranspose=false] - Specifies whether the pasted data will be transposed from rows to columns.
+	 * @param {boolean} [bSkipBlanks=false] - Specifies whether to avoid replacing values in the paste area when blank cells occur in the copy area.
+	 * @param {boolean} [bTranspose=false] - Specifies whether the pasted data will be transposed from rows to columns.
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/PasteSpecial.js
 	 */
