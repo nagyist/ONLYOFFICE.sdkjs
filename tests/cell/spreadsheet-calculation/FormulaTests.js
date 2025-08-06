@@ -22980,15 +22980,65 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #18: Error, Array, Number
-		oParser = new parserFormula('HLOOKUP(#N/A,{"",0,#N/A,#N/A,"","","";1,2,3,4,5,6,7},2)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		// Case #19: Number, Array, Number. Array not contains exact match, but contains value < seachValue
+		// Case #18: Number, Array, Number. Array not contains exact match, but contains value < seachValue
 		oParser = new parserFormula('HLOOKUP(25,{26,66,13,24,70,"","";1,2,3,4,5,6,7},2)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 4);
+
+		// Case #19: Number, Array, Number, Number (Number -> Boolean, FALSE)
+		oParser = new parserFormula("HLOOKUP(1,{1,2;2,3;3,4},3,0)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #20: Number, Array, Number, Boolean. Array not sorted
+		oParser = new parserFormula("HLOOKUP(1,{5,8,3,-20,1;1,2,3,4,5},2,FALSE)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 5);
+
+		// Case #21: String, Array, Number, Boolean. Array not sorted
+		oParser = new parserFormula('HLOOKUP("a",{"b","a","-c","k",1;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #22: Empty, Array, Number, Boolean. Array not sorted
+		oParser = new parserFormula('HLOOKUP(,{0,0,1,"k",1;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #23: Number, Array, Number, Boolean. Array not sorted and contains similar values
+		oParser = new parserFormula("HLOOKUP(1,{-1,2,5,1,1;1,2,3,4,5},2,FALSE)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 4);
+
+		// Case #24: String, Array, Number, Boolean. Array not sorted and contains similar values
+		oParser = new parserFormula('HLOOKUP("a",{"b","a","a","a","c";1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #25: Boolean, Array, Number, Boolean. Array not sorted and contains similar values
+		oParser = new parserFormula('HLOOKUP(FALSE,{TRUE,FALSE,FALSE,"a",FALSE;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #26: Empty, Array, Number, Boolean. Array not sorted and contains errors, similar zero values
+		oParser = new parserFormula('HLOOKUP(,{#N/A,2,0,0,#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #27: Empty, Array, Number, Boolean. Array not sorted and contains errors, similar zero values, Booleans
+		oParser = new parserFormula('HLOOKUP(,{FALSE,TRUE,0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #28: String, Array, Number, Boolean. Trying to find empty string
+		oParser = new parserFormula('HLOOKUP("",{"","",0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #29: String, Array, Number, Boolean. Trying to find string with space
+		oParser = new parserFormula('HLOOKUP(" ",{""," ",0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
 
 		// Negative Cases:
 		// Case #1: Array, Array, Array with wrong data
@@ -23058,98 +23108,44 @@ $(function () {
 		oParser = new parserFormula('HLOOKUP("item",{123;1},2)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		// arg3 = FALSE, accurate matches
 		
-		// Positive Cases:
-		// Case #1: Number, Array, Number, Number (Number -> Boolean, FALSE)
-		oParser = new parserFormula("HLOOKUP(1,{1,2;2,3;3,4},3,0)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #2: Number, Array, Number, Boolean. Array not sorted
-		oParser = new parserFormula("HLOOKUP(1,{5,8,3,-20,1;1,2,3,4,5},2,FALSE)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 5);
-
-		// Case #3: String, Array, Number, Boolean. Array not sorted
-		oParser = new parserFormula('HLOOKUP("a",{"b","a","-c","k",1;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Case #4: Empty, Array, Number, Boolean. Array not sorted
-		oParser = new parserFormula('HLOOKUP(,{0,0,1,"k",1;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 1);
-
-		// Case #5: Number, Array, Number, Boolean. Array not sorted and contains similar values
-		oParser = new parserFormula("HLOOKUP(1,{-1,2,5,1,1;1,2,3,4,5},2,FALSE)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 4);
-
-		// Case #6: String, Array, Number, Boolean. Array not sorted and contains similar values
-		oParser = new parserFormula('HLOOKUP("a",{"b","a","a","a","c";1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Case #7: Boolean, Array, Number, Boolean. Array not sorted and contains similar values
-		oParser = new parserFormula('HLOOKUP(FALSE,{TRUE,FALSE,FALSE,"a",FALSE;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Case #8: Empty, Array, Number, Boolean. Array not sorted and contains errors, similar zero values
-		oParser = new parserFormula('HLOOKUP(,{#N/A,2,0,0,#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #9: Empty, Array, Number, Boolean. Array not sorted and contains errors, similar zero values, Booleans
-		oParser = new parserFormula('HLOOKUP(,{FALSE,TRUE,0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #10: String, Array, Number, Boolean. Trying to find empty string
-		oParser = new parserFormula('HLOOKUP("",{"","",0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 1);
-
-		// Case #11: String, Array, Number, Boolean. Trying to find string with space
-		oParser = new parserFormula('HLOOKUP(" ",{""," ",0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Negative Cases:
-		// Case #1: String, Array, Number, Number, Boolean. Array not contains string
+		// Case #14: String, Array, Number, Number, Boolean. Array not contains string
 		oParser = new parserFormula('HLOOKUP("a",{5,8,3,-20,1;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// Case #2: Error, Array, Number, Number, Boolean. Returning error = search value
+		// Case #15: Error, Array, Number, Number, Boolean. Returning error = search value
 		oParser = new parserFormula('HLOOKUP(#N/A,{5,8,3,-20,1;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// Case #3: Error, Array, Number, Number, Boolean. Returning error = search value
+		// Case #16: Error, Array, Number, Number, Boolean. Returning error = search value
 		oParser = new parserFormula('HLOOKUP(#VALUE!,{5,8,3,-20,1;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
 
-		// Case #4: String, Array, Number, Number, Boolean. Array not contains string
+		// Case #17: String, Array, Number, Number, Boolean. Array not contains string
 		oParser = new parserFormula('HLOOKUP("5",{5,8,3,-20,1;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// Case #5: String, Array, Number, Boolean. Trying to find empty string
+		// Case #18: String, Array, Number, Boolean. Trying to find empty string
 		oParser = new parserFormula('HLOOKUP("",{" "," ",0," ",#N/A;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// Case #6: Empty, Array, Number, Boolean. Array contains Booleans
+		// Case #19: Empty, Array, Number, Boolean. Array contains Booleans
 		oParser = new parserFormula('HLOOKUP(,{FALSE,FALSE,FALSE,FALSE,FALSE;1,2,3,4,5},2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// Case #7: Empty, Array, Number, Boolean. Array contains Booleans and empty strings
+		// Case #20: Empty, Array, Number, Boolean. Array contains Booleans and empty strings
 		oParser = new parserFormula('HLOOKUP(,{"",FALSE,"",FALSE,"";1,2,3,4,5},2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+
+		// Case #21: Error, Array, Number
+		oParser = new parserFormula('HLOOKUP(#N/A,{"",0,#N/A,#N/A,"","","";1,2,3,4,5,6,7},2)', "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
@@ -23187,19 +23183,19 @@ $(function () {
 		ws.getRange2("J502").setValue("1.71");
 		ws.getRange2("J503").setValue("0");
 
-		ws.getRange2("A100").setValue("2");
-		ws.getRange2("B100").setValue("4");
-		ws.getRange2("C100").setValue("40");
-		ws.getRange2("A101").setValue("1");
-		ws.getRange2("B101").setValue("2");
-		ws.getRange2("C101").setValue("3");
-		ws.getRange2("E100").setValue("1");
-		ws.getRange2("E101").setValue("1");
-		ws.getRange2("E102").setValue("1");
-		ws.getRange2("F100").setValue("2");
-		ws.getRange2("F101").setValue("1");
-		ws.getRange2("G100").setValue("3");
-		ws.getRange2("G101").setValue("1");
+		ws.getRange2("A8100").setValue("2");
+		ws.getRange2("B8100").setValue("4");
+		ws.getRange2("C8100").setValue("40");
+		ws.getRange2("A8101").setValue("1");
+		ws.getRange2("B8101").setValue("2");
+		ws.getRange2("C8101").setValue("3");
+		ws.getRange2("E8100").setValue("1");
+		ws.getRange2("E8101").setValue("1");
+		ws.getRange2("E8102").setValue("1");
+		ws.getRange2("F8100").setValue("2");
+		ws.getRange2("F8101").setValue("1");
+		ws.getRange2("G8100").setValue("3");
+		ws.getRange2("G8101").setValue("1");
 
 		ws.getRange2("A1401:M1402").cleanAll();
 		ws.getRange2("A1401").setValue("AnyStringValue2");
@@ -23485,9 +23481,6 @@ $(function () {
 		ws.getRange2("AJ1132").setValue("10");
 
 		AscCommonExcel.g_oHLOOKUPCache.clean();
-		let cellWithFormula = new AscCommonExcel.CCellWithFormula(ws, 0, 0);
-
-		// arg3 = TRUE, inaccurate matches
 
 		// Positive Cases:
 		// Case #1: Number, Range, Number
@@ -23506,20 +23499,20 @@ $(function () {
 		assert.strictEqual(oParser.calculate().getValue(), 1.71);
 
 		// Case #4: Number, Range, Array
-		oParser = new parserFormula("HLOOKUP(5,A100:C101,{1,1,1})", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A100:C101,{1,1,1})");
+		oParser = new parserFormula("HLOOKUP(5,A8100:C8101,{1,1,1})", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A8100:C8101,{1,1,1})");
 		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 4, "Result of HLOOKUP(5,A100:C101,{1,1,1})[0,0]");
-		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 4, "Result of HLOOKUP(5,A100:C101,{1,1,1})[0,1]");
-		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 4, "Result of HLOOKUP(5,A100:C101,{1,1,1})[0,2]");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 4, "Result of HLOOKUP(5,A8100:C8101,{1,1,1})[0,0]");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 4, "Result of HLOOKUP(5,A8100:C8101,{1,1,1})[0,1]");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 4, "Result of HLOOKUP(5,A8100:C8101,{1,1,1})[0,2]");
 
 		// Case #5: Array, Range, Range
-		oParser = new parserFormula("HLOOKUP({2,4,40},A100:C101,E100)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP({2,4,40},A100:C101,E100)");
+		oParser = new parserFormula("HLOOKUP({2,4,40},A8100:C8101,E8100)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP({2,4,40},A8100:C8101,E8100)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 2, "Result of HLOOKUP({2,4,40},A100:C101,E100)[0,0]");
-		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 4, "Result of HLOOKUP({2,4,40},A100:C101,E100)[0,1]");
-		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 40, "Result of HLOOKUP({2,4,40},A100:C101,E100)[0,2]");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 2, "Result of HLOOKUP({2,4,40},A8100:C8101,E8100)[0,0]");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 4, "Result of HLOOKUP({2,4,40},A8100:C8101,E8100)[0,1]");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 40, "Result of HLOOKUP({2,4,40},A8100:C8101,E8100)[0,2]");
 
 		// Case #6: Array, Range, Array
 		oParser = new parserFormula("HLOOKUP({2,4,40},{1,2,3;4,5,6},{1;2;3})", "A2", ws);
@@ -23574,217 +23567,208 @@ $(function () {
 		assert.ok(oParser.parse(), 'HLOOKUP(576,K103:Y104,2)');
 		assert.strictEqual(oParser.calculate().getValue(), 0.21, 'Result of HLOOKUP(576,K103:Y104,2)');
 
-		// range 1 modify
-		ws.getRange2("U100").setValue("0");
-		ws.getRange2("V100").setValue("0");
-		ws.getRange2("W100").setValue("0");
-		ws.getRange2("X100").setValue("0");
-
-		// range 2 modify
-		ws.getRange2("W103").setValue("0");
-		ws.getRange2("X103").setValue("0");
-		ws.getRange2("Y103").setValue("0");
-		AscCommonExcel.g_oHLOOKUPCache.clean();
-
-		// Case #17: Number, Range, Number. For bug 63026. cEmpty tests.
-		oParser = new parserFormula('HLOOKUP(576,K100:X101,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(576,K100:X101,2)');
-		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP(576,K100:X101,2)');
-
-		// Case #18: Number, Range, Number. For bug 63026. cEmpty tests.
-		oParser = new parserFormula('HLOOKUP(576,K103:Y104,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(576,K103:Y104,2)');
-		assert.strictEqual(oParser.calculate().getValue(), 0.21, 'Result of HLOOKUP(576,K103:Y104,2)');
-
-		// range 1 modify
-		ws.getRange2("U100").setValue("FALSE");
-		ws.getRange2("V100").setValue("FALSE");
-		ws.getRange2("W100").setValue("FALSE");
-		ws.getRange2("X100").setValue("FALSE");
-
-		// range 2 modify
-		ws.getRange2("W103").setValue("FALSE");
-		ws.getRange2("X103").setValue("FALSE");
-		ws.getRange2("Y103").setValue("FALSE");
-		AscCommonExcel.g_oHLOOKUPCache.clean();
-
-		// Case #19: Number, Range, Number. For bug 63026. cEmpty tests.
-		oParser = new parserFormula('HLOOKUP(576,K100:X101,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(576,K100:X101,2)');
-		assert.strictEqual(oParser.calculate().getValue(), 0.3477, 'Result of HLOOKUP(576,K100:X101,2)');
-
-		// Case #20: Number, Range, Number. For bug 63026. cEmpty tests.
-		oParser = new parserFormula('HLOOKUP(576,K103:Y104,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(576,K103:Y104,2)');
-		assert.strictEqual(oParser.calculate().getValue(), 0.21, 'Result of HLOOKUP(576,K103:Y104,2)');
-
-		// Case #21.1: Range, Range, Number. For bug 54560.
+		// Case #16.1: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(G303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(G303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Aa", 'Result of HLOOKUP(G303,G303:V303,1)');
 
-		// Case #21.2: Range, Range, Number. For bug 54560.
+		// Case #16.2: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(H303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(H303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ae", 'Result of HLOOKUP(H303,G303:V303,1)');
 
-		// Case #21.3: Range, Range, Number. For bug 54560.
+		// Case #16.3: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(I303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(I303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ba", 'Result of HLOOKUP(I303,G303:V303,1)');
 
-		// Case #21.4: Range, Range, Number. For bug 54560.
+		// Case #16.4: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(J303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(J303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Be", 'Result of HLOOKUP(J303,G303:V303,1)');
 
-		// Case #21.5: Range, Range, Number. For bug 54560.
+		// Case #16.5: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(K303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(K303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "CA", 'Result of HLOOKUP(K303,G303:V303,1)');
 
-		// Case #21.6: Range, Range, Number. For bug 54560.
+		// Case #16.6: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(L303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(L303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "CE", 'Result of HLOOKUP(L303,G303:V303,1)');
 
-		// Case #21.7: Range, Range, Number. For bug 54560.
+		// Case #16.7: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(M303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(M303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "DA", 'Result of HLOOKUP(M303,G303:V303,1)');
 
-		// Case #21.8: Range, Range, Number. For bug 54560.
+		// Case #16.8: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(N303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(N303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "DE", 'Result of HLOOKUP(N303,G303:V303,1)');
 
-		// Case #21.9: String, Range, Number. For bug 54560.
+		// Case #16.9: String, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP("Ha",G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP("Ha",G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ha", 'Result of HLOOKUP("Ha",G303:V303,1)');
 
-		// Case #21.10: Range, Range, Number. For bug 54560.
+		// Case #16.10: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(O303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(O303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ha", 'Result of HLOOKUP(O303,G303:V303,1)');
 
-		// Case #21.11: Range, Range, Number. For bug 54560.
+		// Case #16.11: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(P303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(P303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "HE", 'Result of HLOOKUP(P303,G303:V303,1)');
 
-		// Case #21.12: Range, Range, Number. For bug 54560.
+		// Case #16.12: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(Q303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(Q303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ia", 'Result of HLOOKUP(Q303,G303:V303,1)');
 
-		// Case #21.13: Range, Range, Number. For bug 54560.
+		// Case #16.13: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(R303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(R303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ie", 'Result of HLOOKUP(R303,G303:V303,1)');
 
-		// Case #21.14: Range, Range, Number. For bug 54560.
+		// Case #16.14: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(S303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(S303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ja", 'Result of HLOOKUP(S303,G303:V303,1)');
 
-		// Case #21.15: Range, Range, Number. For bug 54560.
+		// Case #16.15: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(T303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(T303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Je", 'Result of HLOOKUP(T303,G303:V303,1)');
 
-		// Case #21.16: Range, Range, Number. For bug 54560.
+		// Case #16.16: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(U303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(U303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ka", 'Result of HLOOKUP(U303,G303:V303,1)');
 
-		// Case #21.17: Range, Range, Number. For bug 54560.
+		// Case #16.17: Range, Range, Number. For bug 54560.
 		oParser = new parserFormula('HLOOKUP(V303,G303:V303,1)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(V303,G303:V303,1)');
 		assert.strictEqual(oParser.calculate().getValue(), "Ke", 'Result of HLOOKUP(V303,G303:V303,1)');
 
-		// Case #22: Number, Range, Number. For bug 67099.
+		// Case #17: Number, Range, Number. For bug 67099.
 		oParser = new parserFormula('HLOOKUP(3,AA201:AH202,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(3,AA201:AH202,2)');
 		assert.strictEqual(oParser.calculate().getValue(), "Looked result(3)", 'Result of HLOOKUP(3,AA201:AH202,2)');
 
-		// Case #23: Range, Range, Number. For bug 67099.
+		// Case #18: Range, Range, Number. For bug 67099.
 		oParser = new parserFormula('HLOOKUP(AC201,AA201:AH202,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(AC201,AA201:AH202,2)');
 		assert.strictEqual(oParser.calculate().getValue(), "Looked result(3)", 'Result of HLOOKUP(AC201,AA201:AH202,2)');
 
-		// Case #24: Number, Range, Number. Range contains same values in second half.
+		// Case #19: Number, Range, Number. Range contains same values in second half.
 		oParser = new parserFormula('HLOOKUP(1,AA1101:AJ1102,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(1,AA1101:AJ1102,2)');
 		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of HLOOKUP(1,AA1101:AJ1102,2)');
 
-		// Case #25: Number, Range, Number. Range contains same values in first half.
+		// Case #20: Number, Range, Number. Range contains same values in first half.
 		oParser = new parserFormula('HLOOKUP(1,AA1111:AJ1112,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(1,AA1111:AJ1112,2)');
 		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP(1,AA1111:AJ1112,2)');
 
-		// Case #26: Number, Range, Number. Range contains same values in second half and has error
+		// Case #21: Number, Range, Number. Range contains same values in second half and has error
 		oParser = new parserFormula('HLOOKUP(1,AA1121:AJ1122,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(1,AA1121:AJ1122,2)');
 		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of HLOOKUP(1,AA1121:AJ1122,2)');
 
-		// Case #27: Number, Range, Number. Range contains <= value in first half and exact match as first element
+		// Case #22: Number, Range, Number. Range contains <= value in first half and exact match as first element
 		oParser = new parserFormula('HLOOKUP(1,AA1131:AJ1132,2)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(1,AA1131:AJ1132,2)');
 		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP(1,AA1131:AJ1132,2)');
 
-		// Case #28: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:C100,A100:C101,E100)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:C100,A100:C101,E100)");
+		// Case #23: Range, Range, Range
+		oParser = new parserFormula("HLOOKUP(A8100:C8100,A8100:C8101,F8100)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(A8100:C8100,A8100:C8101,F8100)");
+		debugger;
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), 2, "Result of HLOOKUP(A100:C100,A100:C101,E100)[0,0]");
+		assert.strictEqual(array.getValue(), 1, "Result of HLOOKUP(A8100:C8100,A8100:C8101,F8100)[0,0]");
 
-		// Case #29: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:C100,A100:C101,F100)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:C100,A100:C101,F100)");
-		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), 1, "Result of HLOOKUP(A100:C100,A100:C101,F100)[0,0]");
+		// Case #24: Number, Range, Number
+		oParser = new parserFormula('HLOOKUP(2.24,A1401:M1402,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(2.24,A1401:M1402,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP("2.24",A1401:M1402,2,FALSE)');
+
+		// Case #25: Number, Range, Number
+		oParser = new parserFormula('HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)');
+
+		// Case #26: Number, Range, Number
+		oParser = new parserFormula('HLOOKUP("Sandra",A1401:M1402,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP("Sandra",A1401:M1402,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 9, 'Result of HLOOKUP("Sandra",A1401:M1402,2,FALSE)');
+
+		// Case #27: Number, Range, Number
+		oParser = new parserFormula('HLOOKUP(,A1401:M1402,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(,A1401:M1402,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 12, 'Result of HLOOKUP(,A1401:M1402,2,FALSE)');
+
+		// Case #28: String, Range, Number. For bug 65016
+		oParser = new parserFormula('HLOOKUP("SANDRA",E301:Q302,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP("SANDRA",E301:Q302,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 9, 'Result of HLOOKUP("SANDRA",E301:Q302,2,FALSE)');
+
+		// Case #29: Boolean, Range, Number. For bug 65016
+		oParser = new parserFormula('HLOOKUP(TRUE,E301:Q302,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(TRUE,E301:Q302,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of HLOOKUP(TRUE,E301:Q302,2,FALSE)');
+
+		// Case #30: Number, Range, Number. For bug 65016
+		oParser = new parserFormula('HLOOKUP(5,E301:Q302,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse(), 'HLOOKUP(5,E301:Q302,2,FALSE)');
+		assert.strictEqual(oParser.calculate().getValue(), 13, 'Result of HLOOKUP(5,E301:Q302,2,FALSE)');
+
+		// Case #31: String, Range, Number. Range not contains strings
+		oParser = new parserFormula('HLOOKUP("2",A501:J503,2,FALSE)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 		
 		// Negative Cases:
 		// Case #1: Number, Range, Range
-		oParser = new parserFormula("HLOOKUP(5,A100:C101,E100:G100)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A100:C101,E100:G100)");
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of HLOOKUP(5,A100:C101,E100:G100)");
+		oParser = new parserFormula("HLOOKUP(5,A8100:C8101,E8100:G8100)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A8100:C8101,E8100:G8100)");
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of HLOOKUP(5,A8100:C8101,E8100:G8100)");
 
 		// Case #2: Number, Range, Range
-		oParser = new parserFormula("HLOOKUP(5,A100:C101,{1;2;3})", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A100:C101,{1;2;3})");
-		assert.strictEqual(oParser.calculate().getValue(), "#REF!", "Result of HLOOKUP(5,A100:C101,{1;2;3})");
+		oParser = new parserFormula("HLOOKUP(5,A8100:C8101,{1;2;3})", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A8100:C8101,{1;2;3})");
+		assert.strictEqual(oParser.calculate().getValue(), "#REF!", "Result of HLOOKUP(5,A8100:C8101,{1;2;3})");
 		
 		// Case #3: Number, Range, Range
-		oParser = new parserFormula("HLOOKUP(5,A100:C101,E101:G101)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A100:C101,E101:G101)");
+		oParser = new parserFormula("HLOOKUP(5,A8100:C8101,E8101:G8101)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(5,A8100:C8101,E8101:G8101)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(5,A100:C101,E101:G101)[0,0]");
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(5,A8100:C8101,E8101:G8101)[0,0]");
 
 		// Case #4: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:C100,A100:C101,E100:G100)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:C100,A100:C101,E100:G100)");
+		oParser = new parserFormula("HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8100)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8100)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A100:C100,A100:C101,E100:G100)");
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8100)");
 
 		// Case #5: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:C100,A100:C101,E100:G101)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:C100,A100:C101,E100:G101)");
+		oParser = new parserFormula("HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8101)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8101)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A100:C100,A100:C101,E100:G101)[0,0]");
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A8100:C8100,A8100:C8101,E8100:G8101)[0,0]");
 
 		// Case #6: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:B100,A100:C101,F100:G101)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:B100,A100:C101,F100:G101)");
+		oParser = new parserFormula("HLOOKUP(A8100:B8100,A8100:C8101,F8100:G8101)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(A8100:B8100,A8100:C8101,F8100:G8101)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A100:B100,A100:C101,F100:G101)[0,0]");
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A8100:B8100,A8100:C8101,F8100:G8101)[0,0]");
 
 		// Case #7: Range, Range, Range
-		oParser = new parserFormula("HLOOKUP(A100:C100,A100:C101,G100:G101)", "A2", ws);
-		assert.ok(oParser.parse(), "Parse HLOOKUP(A100:C100,A100:C101,G100:G101)");
+		oParser = new parserFormula("HLOOKUP(A8100:C8100,A8100:C8101,G8100:G8101)", "A2", ws);
+		assert.ok(oParser.parse(), "Parse HLOOKUP(A8100:C8100,A8100:C8101,G8100:G8101)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A100:C100,A100:C101,G100:G101)[0,0]");
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of HLOOKUP(A8100:C8100,A8100:C8101,G8100:G8101)[0,0]");
 
 		// Case #8: Empty, Range, Number. Range not contains value <= 0
 		oParser = new parserFormula('HLOOKUP(,A501:J503,2)', "A2", ws);
@@ -23816,61 +23800,17 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
 
-		// arg3 = FALSE, exact matches
-
-		// Positive Cases
-		// Case #1: Number, Range, Number
-		oParser = new parserFormula('HLOOKUP(2.24,A1401:M1402,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(2.24,A1401:M1402,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of HLOOKUP("2.24",A1401:M1402,2,FALSE)');
-
-		// Case #2: Number, Range, Number
-		oParser = new parserFormula('HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of HLOOKUP("AnyStringValue2",A1401:M1402,2,FALSE)');
-
-		// Case #3: Number, Range, Number
-		oParser = new parserFormula('HLOOKUP("Sandra",A1401:M1402,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP("Sandra",A1401:M1402,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 9, 'Result of HLOOKUP("Sandra",A1401:M1402,2,FALSE)');
-
-		// Case #4: Number, Range, Number
-		oParser = new parserFormula('HLOOKUP(,A1401:M1402,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(,A1401:M1402,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 12, 'Result of HLOOKUP(,A1401:M1402,2,FALSE)');
-
-		// Case #5: String, Range, Number. For bug 65016
-		oParser = new parserFormula('HLOOKUP("SANDRA",E301:Q302,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP("SANDRA",E301:Q302,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 9, 'Result of HLOOKUP("SANDRA",E301:Q302,2,FALSE)');
-
-		// Case #6: Boolean, Range, Number. For bug 65016
-		oParser = new parserFormula('HLOOKUP(TRUE,E301:Q302,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(TRUE,E301:Q302,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of HLOOKUP(TRUE,E301:Q302,2,FALSE)');
-
-		// Case #7: Number, Range, Number. For bug 65016
-		oParser = new parserFormula('HLOOKUP(5,E301:Q302,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse(), 'HLOOKUP(5,E301:Q302,2,FALSE)');
-		assert.strictEqual(oParser.calculate().getValue(), 13, 'Result of HLOOKUP(5,E301:Q302,2,FALSE)');
-
-		// Case #8: String, Range, Number. Range not contains strings
-		oParser = new parserFormula('HLOOKUP("2",A501:J503,2,FALSE)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		// Negative Cases:
-		// Case #1: Number, Range, Number
+		// Case #14: Number, Range, Number
 		oParser = new parserFormula('HLOOKUP(#DIV/0!,A1401:M1402,2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(#DIV/0!,A1401:M1402,2,FALSE)');
 		assert.strictEqual(oParser.calculate().getValue(), "#DIV/0!", 'Result of HLOOKUP(#DIV/0!,A1401:M1402,2,FALSE)');
 
-		// Case #2: Number, Range, Number
+		// Case #15: Number, Range, Number
 		oParser = new parserFormula('HLOOKUP("",A1401:M1402,2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP("",A1401:M1402,2,FALSE)');
 		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of HLOOKUP("",A1401:M1402,2,FALSE)');
 
-		// Case #3: Range, Range, Number. For bug 65016. Searchval = Error, should return Error
+		// Case #16: Range, Range, Number. For bug 65016. Searchval = Error, should return Error
 		oParser = new parserFormula('HLOOKUP(K301,E301:Q302,2,FALSE)', "A2", ws);
 		assert.ok(oParser.parse(), 'HLOOKUP(K301,E301:Q302,2,FALSE)');
 		assert.strictEqual(oParser.calculate().getValue(), "#DIV/0!", 'Result of HLOOKUP(K301,E301:Q302,2,FALSE)');
