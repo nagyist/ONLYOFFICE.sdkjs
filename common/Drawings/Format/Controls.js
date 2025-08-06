@@ -335,6 +335,23 @@
 		}
 		return null;
 	};
+	CControlControllerBase.prototype.setRangeValue = function (oRef, oCellValue) {
+		oRef._foreach(function (oCell) {
+			if (oCell) {
+				oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, new AscCommonExcel.CCellValue(oCellValue)));
+
+			}
+		});
+		const oWb = Asc.editor.wb;
+		const nWorksheetIndex = oRef.worksheet.getIndex();
+		const oWs = oWb && oWb.getWorksheet(nWorksheetIndex, true);
+		if (oWs) {
+			oWs._updateRange(oRef.bbox);
+			if (oWb.wsActive === nWorksheetIndex) {
+				oWs.draw();
+			}
+		}
+	};
 	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
 	CControlControllerBase.prototype.getCursorInfo = function(e, nX, nY) {};
 	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {};
@@ -488,7 +505,7 @@
 			} else {
 				oFormControlPr.setChecked(CFormControlPr_checked_checked);
 			}
-			oThis.updateCellFromControl(oController);
+			oThis.updateCellFromControl();
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
 		return true;
 	}
@@ -524,26 +541,12 @@
 		}
 		return oCellValue;
 	}
-	CCheckBoxController.prototype.updateCellFromControl = function (oController) {
+	CCheckBoxController.prototype.updateCellFromControl = function () {
 		const oThis = this;
 		const oRef = this.getParsedFmlaLink();
 		if (oRef) {
-			oRef._foreachNoEmpty(function(oCell) {
-				if (oCell) {
-					const oCellValue = oThis.getCellValueFromControl();
-					oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
-
-				}
-			});
-			const oWb = Asc.editor.wb;
-			const nWorksheetIndex = oRef.worksheet.getIndex();
-			const oWs = oWb && oWb.getWorksheet(nWorksheetIndex, true);
-			if (oWs) {
-				oWs._updateRange(oRef.bbox);
-				if (oWb.wsActive === nWorksheetIndex) {
-					oWs.draw();
-				}
-			}
+			const oCellValue = oThis.getCellValueFromControl();
+			this.setRangeValue(oRef, oCellValue);
 		}
 	};
 	CCheckBoxController.prototype.getTextRect = function () {
@@ -773,8 +776,15 @@
 		this.rot = 0;
 		this.isUp = !!bIsUp;
 		this.control = oControl;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
 	}
+	CSpinButton.prototype.setIsHold = function (pr) {
+		this.isHold = pr;
+	};
 	CSpinButton.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
 		let arrPenColor;
 		let arrFillColor;
 		if (this.isHold) {
@@ -784,39 +794,40 @@
 			arrPenColor = [0, 0, 0, 255];
 			arrFillColor = [255, 255, 255, 255];
 		}
-			graphics.p_width(500);
+		graphics.p_width(0);
 		graphics.b_color1.apply(graphics, arrFillColor);
 		graphics.p_color.apply(graphics, arrPenColor);
-			graphics._s();
-			graphics._m(this.x, this.y);
-			graphics._l(this.x + this.extX, this.y);
-			graphics._l(this.x + this.extX, this.y + this.extY);
-			graphics._l(this.x, this.y + this.extY);
-			graphics._z();
-			graphics.df();
-			graphics.ds();
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.df();
+		graphics.ds();
 
 		graphics.b_color1.apply(graphics, arrPenColor);
 		graphics._e();
-		const cx = this.x + this.extX / 2;
-		const cy = this.y + this.extY / 2;
-		const nHalfRectSide = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
-
+		const cx = this.extX / 2;
+		const cy = this.extY / 2;
+		const nRectHeight = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
+		const nHalfRectHeight = nRectHeight / 2;
 		if (this.isUp) {
-			graphics._m(cx - nHalfRectSide, cy + nHalfRectSide);
-			graphics._l(cx + nHalfRectSide, cy + nHalfRectSide);
-			graphics._l(cx, cy - nHalfRectSide / 2);
+			graphics._m(cx - nRectHeight, cy + nHalfRectHeight);
+			graphics._l(cx + nRectHeight, cy + nHalfRectHeight);
+			graphics._l(cx, cy - nHalfRectHeight);
 		} else {
-			graphics._m(cx - nHalfRectSide, cy - nHalfRectSide);
-			graphics._l(cx + nHalfRectSide, cy - nHalfRectSide);
-			graphics._l(cx, cy + nHalfRectSide / 2);
+			graphics._m(cx - nRectHeight, cy - nHalfRectHeight);
+			graphics._l(cx + nRectHeight, cy - nHalfRectHeight);
+			graphics._l(cx, cy + nHalfRectHeight);
 		}
 		graphics._z();
 		graphics.df();
 		graphics._e();
+		graphics.RestoreGrState();
 	};
 	CSpinButton.prototype.hit = function (nX, nY) {
-		return AscFormat.HitToRect(nX, nY, this.control.transform, 0, 0, this.extX, this.extY);
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
 	};
 	CSpinButton.prototype.onMouseDown = function (nX, nY, oDrawingController) {
 
@@ -846,6 +857,7 @@
 	};
 	CSpinController.prototype.endAction = function () {
 		clearTimeout(this.timeoutId);
+		this.timeoutId = null;
 	};
 	CSpinController.prototype.initButtonEventHandlers = function () {
 		const oController = this;
@@ -854,7 +866,8 @@
 			if (!this.hit(nX, nY)) {
 				return false;
 			}
-			oController.startAction(oController.decrement.bind(oController), oDrawingController);
+			oController.startAction(oController.decrement.bind(oController, oDrawingController));
+			this.setIsHold(true);
 			return true;
 		};
 		this.upButton.onMouseDown = function (nX, nY, oDrawingController) {
@@ -862,15 +875,23 @@
 				return false;
 			}
 
-			oController.startAction(oController.increment.bind(oController), oDrawingController);
+			oController.startAction(oController.increment.bind(oController, oDrawingController));
+			this.setIsHold(true);
 			return true;
 		};
 		this.downButton.onMouseUp = function () {
 			oController.endAction();
-
+			if (this.isHold) {
+				this.setIsHold(false);
+				this.control.onUpdate();
+			}
 		};
 		this.upButton.onMouseUp = function () {
 			oController.endAction();
+			if (this.isHold) {
+				this.setIsHold(false);
+				this.control.onUpdate();
+			}
 		};
 	};
 	CSpinController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
@@ -895,6 +916,9 @@
 		if (e.button !== 0) {
 			return false;
 		}
+		if (e.CtrlKey) {
+			return false;
+		}
 		if (this.upButton.onMouseDown(nX, nY, oDrawingController)) {
 			return true;
 		}
@@ -903,7 +927,10 @@
 		}
 		return false;
 	};
-	CSpinController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
+	CSpinController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+		this.upButton.onMouseUp();
+		this.downButton.onMouseUp();
+	};
 	CSpinController.prototype.init = function() {};
 	CSpinController.prototype.initTextProperties = function() {};
 	CSpinController.prototype.applySpecialPasteProps = function(oPastedWb) {};
@@ -920,28 +947,53 @@
 		const oThis = this;
 		oDrawingController.checkObjectsAndCallback(function () {
 			const oRef = oThis.getParsedFmlaLink();
+			const oFormControlPr = oThis.getFormControlPr();
+			const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
+			const nMaxValue = oFormControlPr.max || 0;
+			const nMinValue = oFormControlPr.min || 0;
+			let nCurrentValue;
 			if (oRef) {
-				const oFormControlPr = oThis.getFormControlPr();
-				const nIncValue = AscFormat.isRealNumber() ? oFormControlPr.inc : 1;
-				const nCurrentValue = oFormControlPr.val || 0;
-				const nNewValue = isIncrement ? nCurrentValue + nIncValue : nCurrentValue - nIncValue;
-				oFormControlPr.setVal(nCurrentValue + nIncValue);
-				oRef._foreachNoEmpty(function (oCell) {
-					const oCellValue = new AscCommonExcel.CCellValue();
-					oCellValue.number = nNewValue;
-					oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
+				let nRefValue = 0;
+				oRef.worksheet._getCellNoEmpty(oRef.bbox.r1, oRef.bbox.c1, function (oCell) {
+					if (oCell && !oCell.isNullText()) {
+						nRefValue = oCell.number;
+					}
 				});
+				if (nRefValue === null) {
+					nRefValue = oFormControlPr.val;
+				}
+				nCurrentValue = nRefValue || 0;
+			} else {
+				nCurrentValue = oFormControlPr.val || 0;
 			}
-		}, [], undefined,AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+			const nNewValue = Math.min(Math.max(isIncrement ? nCurrentValue + nIncValue : nCurrentValue - nIncValue, nMinValue), nMaxValue);
+			oFormControlPr.setVal(nNewValue);
+			if (oRef) {
+				const oCellValue = new AscCommonExcel.CCellValue();
+				oCellValue.number = nNewValue;
+				oThis.setRangeValue(oRef, oCellValue);
+			}
+		}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
 	};
 	CSpinController.prototype.recalculateTransform = function() {
 		const oControl = this.control;
+		const oControlMatrix = oControl.transform;
 		const nHalfHeight = oControl.extY / 2;
 		this.upButton.x = oControl.x;
 		this.upButton.y = oControl.y;
 		this.upButton.extX = oControl.extX;
 		this.upButton.extY = nHalfHeight;
+		this.upButton.transform = oControlMatrix.CreateDublicate();
+		this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 
+		const oDownMatrix = oControlMatrix.CreateDublicate();
+		const nUpX = oDownMatrix.TransformPointX(0, 0);
+		const nUpY = oDownMatrix.TransformPointY(0, 0);
+		const nDownX = oDownMatrix.TransformPointX(0, nHalfHeight);
+		const nDownY = oDownMatrix.TransformPointY(0, nHalfHeight);
+		oDownMatrix.Translate(nDownX - nUpX, nDownY - nUpY);
+		this.downButton.transform = oDownMatrix;
+		this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
 		this.downButton.x = oControl.x;
 		this.downButton.y = oControl.y + nHalfHeight;
 		this.downButton.extX = oControl.extX;
