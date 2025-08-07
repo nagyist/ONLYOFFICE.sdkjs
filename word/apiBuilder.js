@@ -10201,19 +10201,20 @@
 	};
 	/**
 	 * Specifies the reading order for the paragraph. Possible values are:
-	 * <b>"context"</b>
+	 * <b>null</b> - Use standart direction parameter.
 	 * <b>"ltr"</b> - Left-to-Right text direction.
 	 * <b>"rtl"</b> - Right-to-Left text direction.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE"]
-	 * @param {("context" | "ltr" | "rtl")} [direction = "context"]
+	 * @param {("ltr" | "rtl" | null)} [direction = null]
 	 * @returns {ApiParagraph} - Returns paragraph itself (ApiParagraph)
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/SetReadingOrder.js
 	 */
 	ApiParagraph.prototype.SetReadingOrder = function (direction) {
-		const isRTL = direction === 'rtl';
+		const allowed = ['ltr', 'rtl'];
+		const bidi = allowed.indexOf(direction) === -1 ? null : direction;
 		this.Paragraph.SetApplyToAll(true);
-		this.Paragraph.SetParagraphBidi(isRTL);
+		this.Paragraph.SetParagraphBidi(bidi);
 		this.Paragraph.SetApplyToAll(false);
 		return this;
 	};
