@@ -41,34 +41,156 @@ const g_cacheNamePrefix = 'document_editor_static_';
 const g_cacheName = g_cacheNamePrefix + g_version;
 const patternPrefix = new RegExp(g_version + "/(web-apps|sdkjs|sdkjs-plugins|fonts|dictionaries)");
 const isDesktopEditor = navigator.userAgent.indexOf("AscDesktopEditor") !== -1;
+let g_storageInfoCache = null;
 
-function putInCache(request, response) {
+/**
+ * Check if a response is safe to cache
+ * @param {Request} request
+ * @param {Response} response
+ * @returns {boolean} true if response can be safely cached
+ */
+function safeToCache(request, response) {
+	return request.method === 'GET'                                 // only GET requests
+		&& response
+		&& response.ok                                              // status 200-299. todo 0 or 1223?
+		&& (response.type === 'basic' || response.type === 'cors')  // same-origin or CORS
+		&& !response.redirected;                  	                // no 30x redirect chain
+}
+
+/**
+ * Get storage information (size limits and health) with single API call
+ * @returns {Promise<{maxEntrySize: number, isHealthy: boolean}>} Storage info
+ */
+function getStorageInfo() {
+	if (g_storageInfoCache !== null) {
+		return Promise.resolve(g_storageInfoCache);
+	}
+	
+	if (!navigator.storage || !navigator.storage.estimate) {
+		// Fallback values if API not available
+		g_storageInfoCache = {
+			maxEntrySize: 50 * 1024 * 1024,
+			isHealthy: true
+		};
+		return Promise.resolve(g_storageInfoCache);
+	}
+	
+	return navigator.storage.estimate()
+		.then(function(estimate) {
+			// Calculate max entry size: cache ≈ 10% of quota, cap entry at 1/8th
+			const cacheSize = Math.min(estimate.quota * 0.10, 1024 * 1024 * 1024); // 1 GiB max
+			const maxEntrySize = cacheSize / 8; // Per-entry cap is 1/8th of cache size
+			
+			// Calculate storage health: back off when disk is 80% full
+			const usageRatio = estimate.usage / estimate.quota;
+			const isHealthy = usageRatio < 0.8;
+			
+			g_storageInfoCache = { maxEntrySize: maxEntrySize, isHealthy: isHealthy };
+			return g_storageInfoCache;
+		})
+		.catch(function(error) {
+			// Fallback values on error
+			g_storageInfoCache = {
+				maxEntrySize: 50 * 1024 * 1024,
+				isHealthy: true
+			};
+			return g_storageInfoCache;
+		});
+}
+
+/**
+ * Check if response size is within cacheable limits
+ * @param {Response} response
+ * @returns {Promise<boolean>} true if response is not too large
+ */
+function isReasonableSize(response) {
+	const size = Number(response.headers.get('content-length')) || 0;
+	if (size === 0) {
+		return Promise.resolve(true); // No size header, assume reasonable
+	}
+	
+	return getStorageInfo()
+		.then(function(info) {
+			return size < info.maxEntrySize;
+		});
+}
+
+/**
+ * Check if storage quota is healthy for caching
+ * @returns {Promise<boolean>} true if storage is healthy
+ */
+function storageHealthy() {
+	return getStorageInfo()
+		.then(function(info) {
+			return info.isHealthy;
+		});
+}
+
+/**
+ * Put response in cache with retry logic for transient errors
+ * @param {Request} request
+ * @param {Response} response - Pre-cloned response ready for caching
+ * @param {number} attempt - Current attempt number (for retry logic)
+ * @returns {Promise} Promise that resolves when caching completes or fails
+ */
+function putInCache(request, response, attempt = 0) {
 	return caches.open(g_cacheName)
-		.then(function (cache) {
+		.then(function(cache) {
 			return cache.put(request, response);
 		})
-		.catch(function (err) {
-			console.error('putInCache failed with ' + err);
+		.catch(function(err) {
+			// Transient quota/disk hiccup? Retry up to 2x with exponential back-off
+			if (attempt < 2) {
+				return new Promise(function(resolve) {
+					setTimeout(resolve, 250 * Math.pow(2, attempt)); // 250ms, 500ms
+				})
+				.then(function() {
+					// Need fresh clone for retry since previous attempt consumed stream
+					return putInCache(request, response.clone(), attempt + 1);
+				});
+			} else {
+				const size = response.headers ? response.headers.get('content-length') : 'unknown';
+				console.error('putInCache failed after max retries:', {
+					url: request.url,
+					method: request.method,
+					responseSize: size,
+					responseType: response.type,
+					cacheName: g_cacheName,
+					error: err.message || err
+				});
+			}
 		});
 }
 
 function cacheFirst(event) {
-	let request = event.request;
-	return caches.match(request, {cacheName: g_cacheName})
-		.then(function (responseFromCache) {
-			if (responseFromCache) {
-				return responseFromCache;
-			} else {
-				return fetch(request)
-					.then(function (responseFromNetwork) {
-						//todo 0 or 1223?
-						//ensure response safe to cache
-						if (responseFromNetwork.status === 200) {
-							event.waitUntil(putInCache(request, responseFromNetwork.clone()));
+	const request = event.request;
+	
+	return caches.match(request, { cacheName: g_cacheName })
+		.then(function(cached) {
+			return cached || fetch(request).then(function(networkResp) {
+			// Clone immediately to avoid "body already used" errors
+			const responseForCache = networkResp.clone();
+			
+			// Fire-and-forget caching **after** responding to the page
+			if (safeToCache(request, networkResp)) {
+				event.waitUntil(
+					// Check all caching conditions before proceeding
+					Promise.all([
+						storageHealthy(),
+						isReasonableSize(networkResp)
+					])
+					.then(function(results) {
+						const healthy = results[0];
+						const sizeOk = results[1];
+						
+						if (healthy && sizeOk) {
+							return putInCache(request, responseForCache);
 						}
-						return responseFromNetwork;
-					});
+					})
+				);
 			}
+			return networkResp;
+			});
 		});
 }
 function activateWorker(event) {
@@ -78,11 +200,14 @@ function activateWorker(event) {
 			return caches.keys();
 		})
 		.then(function (keys) {
-			return Promise.all(keys.map(function(cache){
-				if (cache.includes(g_cacheNamePrefix) && !cache.includes(g_cacheName)) {
+			const deletePromises = keys
+				.filter(function(cache) {
+					return cache.includes(g_cacheNamePrefix) && !cache.includes(g_cacheName);
+				})
+				.map(function(cache) {
 					return caches.delete(cache);
-				}
-			}));
+				});
+			return Promise.all(deletePromises);
 		}).catch(function (err) {
 			console.error('activateWorker failed with ' + err);
 		});
