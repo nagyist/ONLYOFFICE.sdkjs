@@ -10211,8 +10211,12 @@
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/SetReadingOrder.js
 	 */
 	ApiParagraph.prototype.SetReadingOrder = function (direction) {
-		const allowed = ['ltr', 'rtl'];
-		const bidi = allowed.indexOf(direction) === -1 ? null : direction;
+		let bidi;
+		switch (direction) {
+			case 'ltr': bidi = 0; break;
+			case 'rtl': bidi = 1; break;
+			default: bidi = null;
+		}
 		this.Paragraph.SetApplyToAll(true);
 		this.Paragraph.SetParagraphBidi(bidi);
 		this.Paragraph.SetApplyToAll(false);
