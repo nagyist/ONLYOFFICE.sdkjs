@@ -1466,6 +1466,12 @@
 					indentationLeft = indentationLeftCell.getNumberValue() * AscCommonWord.g_dKoef_in_to_mm;
 				}
 
+				// handle first line indentation
+				let indentationFirstLineCell = paragraphPropsFinal && paragraphPropsFinal.getCell("IndFirst");
+				let indentationFirstLine;
+				if (indentationLeftCell) {
+					indentationFirstLine = indentationFirstLineCell.getNumberValue() * AscCommonWord.g_dKoef_in_to_mm;
+				}
 
 
 				// create new paragraph to hold new properties
@@ -1508,6 +1514,7 @@
 				// paragraph.Add_PresentationNumbering(Bullet);
 
 				paragraph.Pr.Ind.Left = indentationLeft;
+				paragraph.Pr.Ind.FirstLine = indentationFirstLine;
 
 				oContent.Content.push(paragraph);
 				paragraph.SetParent(oContent);
