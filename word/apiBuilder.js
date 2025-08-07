@@ -10200,6 +10200,24 @@
 		return this;
 	};
 	/**
+	 * Specifies the reading order for the paragraph. Possible values are:
+	 * <b>"context"</b>
+	 * <b>"ltr"</b> - Left-to-Right text direction.
+	 * <b>"rtl"</b> - Right-to-Left text direction.
+	 * @memberof ApiParagraph
+	 * @typeofeditors ["CDE"]
+	 * @param {("context" | "ltr" | "rtl")} [direction = "context"]
+	 * @returns {ApiParagraph} - Returns paragraph itself (ApiParagraph)
+	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/SetReadingOrder.js
+	 */
+	ApiParagraph.prototype.SetReadingOrder = function (direction) {
+		const isRTL = direction === 'rtl';
+		this.Paragraph.SetApplyToAll(true);
+		this.Paragraph.SetParagraphBidi(isRTL);
+		this.Paragraph.SetApplyToAll(false);
+		return this;
+	};
+	/**
 	 * Returns the last element of the paragraph which is not empty.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE"]
@@ -26210,6 +26228,7 @@
 	ApiParagraph.prototype["SetStrikeout"]           = ApiParagraph.prototype.SetStrikeout;
 	ApiParagraph.prototype["SetUnderline"]           = ApiParagraph.prototype.SetUnderline;
 	ApiParagraph.prototype["SetVertAlign"]           = ApiParagraph.prototype.SetVertAlign;
+	ApiParagraph.prototype["SetReadingOrder"]        = ApiParagraph.prototype.SetReadingOrder;
 	ApiParagraph.prototype["Last"]                   = ApiParagraph.prototype.Last;
 	ApiParagraph.prototype["GetAllContentControls"]  = ApiParagraph.prototype.GetAllContentControls;
 	ApiParagraph.prototype["GetAllDrawingObjects"]   = ApiParagraph.prototype.GetAllDrawingObjects;
