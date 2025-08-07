@@ -24775,755 +24775,921 @@ $(function () {
 	});
 
 	QUnit.test("Test: \"LOOKUP\"", function (assert) {
-		AscCommonExcel.g_oLOOKUPCache.clean();
 		let array;
-		ws.getRange2("A102").setValue("4.14");
-		ws.getRange2("A103").setValue("4.19");
-		ws.getRange2("A104").setValue("5.17");
-		ws.getRange2("A105").setValue("5.77");
-		ws.getRange2("A106").setValue("6.39");
 
-		ws.getRange2("B102").setValue("red");
-		ws.getRange2("B103").setValue("orange");
-		ws.getRange2("B104").setValue("yellow");
-		ws.getRange2("B105").setValue("green");
-		ws.getRange2("B106").setValue("blue");
+		// Array tests
+
+		// Positive Cases:
+		// Case #1: Number, Array, Array. Bug 65722 - lookup value in large sorted array with mixed types
+		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})');
+		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})');
+
+		// Case #2: Number, Array, Array. Lookup value in shorter sorted array
+		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})');
+		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})');
+
+		// Case #3: Number, Array, Array. Lookup value in minimal sorted array
+		oParser = new parserFormula('LOOKUP(20,{0,1,49.75},{"KP";"NB";4})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75},{"KP";"NB";4})');
+		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75},{"KP";"NB";4})');
+
+		// Case #4: Number, Array, Array. Lookup array shorter than result array
+		oParser = new parserFormula('LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})');
+		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})');
+
+		// Case #5: String, Array. Bug 67640 - array mode lookup by first row, return from last row
+		oParser = new parserFormula('LOOKUP("C",{"a","b","c","d";1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("C",{"a","b","c","d";1,2,3,4})');
+		assert.strictEqual(oParser.calculate().getValue(), 3, 'Result of LOOKUP("C",{"a","b","c","d";1,2,3,4})');
+
+		// Case #6: String, Array. Lookup string value greater than available, returns last match
+		oParser = new parserFormula('LOOKUP("bump",{"a",1;"b",2;"c",3})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("bump",{"a",1;"b",2;"c",3})');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP("bump",{"a",1;"b",2;"c",3})');
+
+		// Case #7: Number, Array. Lookup in 2D array by first row, return from last row
+		oParser = new parserFormula('LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})');
+		assert.strictEqual(oParser.calculate().getValue(), 16, 'Result of LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})');
+
+		// Case #8: Number, Array. Array mode lookup by first column, return from last column
+		oParser = new parserFormula('LOOKUP(20,{0,1;49.75,55.75;12,13})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;49.75,55.75;12,13})');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(20,{0,1;49.75,55.75;12,13})');
+
+		// Case #9: Number, Array. Lookup by first column with mixed types, return string from last column
+		oParser = new parserFormula('LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})');
+		assert.strictEqual(oParser.calculate().getValue(), "ds", 'Result of LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})');
+
+		// Case #10: Number, Array, Array. 2D lookup array with single row result array
+		oParser = new parserFormula('LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})');
+		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})');
+
+		// Case #11: Number, Array, Number. Bug 67743 - exact match found in 2D array
+		oParser = new parserFormula('LOOKUP(10,{10,11,12;2,3,4},2)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(10,{10,11,12;2,3,4},2)');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(10,{10,11,12;2,3,4},2)');
+
+		// Case #12: Boolean, Array, Array. TRUE lookup in boolean array
+		oParser = new parserFormula('LOOKUP(TRUE,{FALSE,TRUE},{0,1})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(TRUE,{FALSE,TRUE},{0,1})');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(TRUE,{FALSE,TRUE},{0,1})');
+
+		// Case #13: Boolean, Array, Array. TRUE lookup when only FALSE exists
+		oParser = new parserFormula('LOOKUP(TRUE,{FALSE,FALSE},{1,2})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(TRUE,{FALSE,FALSE},{1,2})');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(TRUE,{FALSE,FALSE},{1,2})');
+
+		// Case #14: Number, Array, Array. Lookup with negative numbers in sorted array
+		oParser = new parserFormula('LOOKUP(0,{-10,-5,0,5,10},{"A","B","C","D","E"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(0,{-10,-5,0,5,10},{"A","B","C","D","E"})');
+		assert.strictEqual(oParser.calculate().getValue(), "C", 'Result of LOOKUP(0,{-10,-5,0,5,10},{"A","B","C","D","E"})');
+
+		// Case #15: Number, Array, Array. Lookup with decimal precision
+		oParser = new parserFormula('LOOKUP(3.14159,{1.1,2.2,3.14,4.4},{10,20,30,40})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(3.14159,{1.1,2.2,3.14,4.4},{10,20,30,40})');
+		assert.strictEqual(oParser.calculate().getValue(), 30, 'Result of LOOKUP(3.14159,{1.1,2.2,3.14,4.4},{10,20,30,40})');
+
+		// Case #16: Number, Array, Array. Lookup with single element arrays
+		oParser = new parserFormula('LOOKUP(5,{5},{"found"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(5,{5},{"found"})');
+		assert.strictEqual(oParser.calculate().getValue(), "found", 'Result of LOOKUP(5,{5},{"found"})');
+
+		// Case #17: Number, Array, Array. Lookup with mixed numeric types (integers and decimals)
+		oParser = new parserFormula('LOOKUP(2.5,{1,2,3,4},{100,200,300,400})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2.5,{1,2,3,4},{100,200,300,400})');
+		assert.strictEqual(oParser.calculate().getValue(), 200, 'Result of LOOKUP(2.5,{1,2,3,4},{100,200,300,400})');
+
+		// Case #18: String, Array. Lookup in 2D array with strings by first column, return from last column
+		oParser = new parserFormula('LOOKUP("M",{"A","apple";"M","mango";"Z","zebra"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("M",{"A","apple";"M","mango";"Z","zebra"})');
+		assert.strictEqual(oParser.calculate().getValue(), "mango", 'Result of LOOKUP("M",{"A","apple";"M","mango";"Z","zebra"})');
+
+		// Case #19: Number, Array, Array. Lookup with zero in array
+		oParser = new parserFormula('LOOKUP(0,{-1,0,1},{"negative","zero","positive"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(0,{-1,0,1},{"negative","zero","positive"})');
+		assert.strictEqual(oParser.calculate().getValue(), "zero", 'Result of LOOKUP(0,{-1,0,1},{"negative","zero","positive"})');
+
+		// Case #20: Number, Array, Array. Lookup with large numbers
+		oParser = new parserFormula('LOOKUP(1000000,{100,1000,10000,100000,1000000},{1,2,3,4,5})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1000000,{100,1000,10000,100000,1000000},{1,2,3,4,5})');
+		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of LOOKUP(1000000,{100,1000,10000,100000,1000000},{1,2,3,4,5})');
+
+		// Case #21: String, Array, Array. Lookup with special characters in strings
+		oParser = new parserFormula('LOOKUP("@",{"!","#","@","$"},{1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("@",{"!","#","@","$"},{1,2,3,4})');
+		assert.strictEqual(oParser.calculate().getValue(), 3, 'Result of LOOKUP("@",{"!","#","@","$"},{1,2,3,4})');
+
+		// Case #22: Number, Array. Lookup in 3D-like array structure (multiple rows, single lookup)
+		oParser = new parserFormula('LOOKUP(15,{5,10,15,20;100,200,300,400;1000,2000,3000,4000})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(15,{5,10,15,20;100,200,300,400;1000,2000,3000,4000})');
+		assert.strictEqual(oParser.calculate().getValue(), 3000, 'Result of LOOKUP(15,{5,10,15,20;100,200,300,400;1000,2000,3000,4000})');
+
+		// Case #23: Number, Array, Array. Lookup with fractional numbers in scientific notation
+		oParser = new parserFormula('LOOKUP(0.001,{0.0001,0.001,0.01,0.1},{1,2,3,4})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(0.001,{0.0001,0.001,0.01,0.1},{1,2,3,4})');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(0.001,{0.0001,0.001,0.01,0.1},{1,2,3,4})');
+
+		// Case #24: Boolean, Array, Array. FALSE lookup in mixed boolean array
+		oParser = new parserFormula('LOOKUP(FALSE,{FALSE,TRUE,TRUE},{10,20,30})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(FALSE,{FALSE,TRUE,TRUE},{10,20,30})');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of LOOKUP(FALSE,{FALSE,TRUE,TRUE},{10,20,30})');
+
+		// Case #25: String, Array, Array. Lookup with empty string in array
+		oParser = new parserFormula('LOOKUP("",{"","a","b"},{"empty","first","second"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("",{"","a","b"},{"empty","first","second"})');
+		assert.strictEqual(oParser.calculate().getValue(), "empty", 'Result of LOOKUP("",{"","a","b"},{"empty","first","second"})');
+
+		// Case #26: Number, Array, Array. Lookup with mismatched array sizes
+		oParser = new parserFormula('LOOKUP(2,{1,2,3},{10,20})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,{1,2,3},{10,20})');
+		assert.strictEqual(oParser.calculate().getValue(), 20, 'Result of LOOKUP(2,{1,2,3},{10,20})');
+
+		// Case #27: Number, Array, Array. Unsorted lookup array
+		oParser = new parserFormula('LOOKUP(3,{5,1,3,2},{50,10,30,20})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(3,{5,1,3,2},{50,10,30,20})');
+		assert.strictEqual(oParser.calculate().getValue(), 30, 'Result of LOOKUP(3,{5,1,3,2},{50,10,30,20})');
+
+		// Case #28: Number, Array, Array. Lookup with error values in lookup array
+		oParser = new parserFormula('LOOKUP(2,{1,#DIV/0!,3},{10,20,30})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,{1,#DIV/0!,3},{10,20,30})');
+		assert.strictEqual(oParser.calculate().getValue(), 10, 'Result of LOOKUP(2,{1,#DIV/0!,3},{10,20,30})');
+
+		// Case #29: Number, Array, Array. Lookup with very large array where value not found, returns last match
+		oParser = new parserFormula('LOOKUP(999,{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{10,20,30,40,50,60,70,80,90,100,110,120,130,140,150})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(999,{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{10,20,30,40,50,60,70,80,90,100,110,120,130,140,150})');
+		assert.strictEqual(oParser.calculate().getValue(), 150, 'Result of LOOKUP(999,{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},{10,20,30,40,50,60,70,80,90,100,110,120,130,140,150})');
+
+		// Case #30: Number, Array, Array. Lookup with duplicate values in lookup array, returns last match
+		oParser = new parserFormula('LOOKUP(2,{1,2,2,3},{10,20,25,30})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,{1,2,2,3},{10,20,25,30})');
+		assert.strictEqual(oParser.calculate().getValue(), 25, 'Result of LOOKUP(2,{1,2,2,3},{10,20,25,30})');
+
+		// Case #31: Number, Array. Lookup in single-element array smaller than lookup value
+		oParser = new parserFormula('LOOKUP(10,{5})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(10,{5})');
+		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of LOOKUP(10,{5})');
+
+		// Negative Cases:
+		// Case #1: Number, Array, Array. Result array shorter than lookup array, returns #N/A
+		oParser = new parserFormula('LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})');
+
+		// Case #2: Number, Number, Array. Single value lookup with 2D result array, returns #N/A
+		oParser = new parserFormula('LOOKUP(1,1,{"KP","NB";1,2})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1,1,{"KP","NB";1,2})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(1,1,{"KP","NB";1,2})');
+
+		// Case #3: Number, Array, Array. 1D lookup array with 2D result array, returns #N/A
+		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})');
+
+		// Case #4: Number, Array, Array. 2D lookup array with 2D result array, returns #N/A
+		oParser = new parserFormula('LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})');
+
+		// Case #5: Number, Array, Array. Single row lookup array with 2D result array, returns #N/A
+		oParser = new parserFormula('LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})');
+
+		// Case #6: Number, Array, Array. 2D lookup array with 2D result array, returns #N/A
+		oParser = new parserFormula('LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})');
+
+		// Case #7: Number, Array, Number. Bug 67743 - no exact match in 2D array, returns #N/A
+		oParser = new parserFormula('LOOKUP(11,{10,11,12;2,3,4},2)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(11,{10,11,12;2,3,4},2)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(11,{10,11,12;2,3,4},2)');
+
+		// Case #8: Number, Array, Array. Lookup value smaller than minimum in array, returns #N/A
+		oParser = new parserFormula('LOOKUP(-5,{0,1,2,3},{10,20,30,40})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(-5,{0,1,2,3},{10,20,30,40})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(-5,{0,1,2,3},{10,20,30,40})');
+
+		// Case #9: String, Array, Array. String lookup smaller than minimum, returns #N/A
+		oParser = new parserFormula('LOOKUP("A",{"B","C","D"},{"second","third","fourth"})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("A",{"B","C","D"},{"second","third","fourth"})');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP("A",{"B","C","D"},{"second","third","fourth"})');
+
+		// Case #10: Number, Array, Array. Lookup with error values in result array, returns error
+		oParser = new parserFormula('LOOKUP(2,{1,2,3},{10,#VALUE!,30})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,{1,2,3},{10,#VALUE!,30})');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of LOOKUP(2,{1,2,3},{10,#VALUE!,30})');
+
+		// Different with MS
+		// Case #11: Number, Array, Array. Lookup with mismatched array sizes, index beyond result array, returns #N/A
+		// oParser = new parserFormula('LOOKUP(5,{1,2,3},{10,20})', "A2", ws);
+		// assert.ok(oParser.parse(), 'LOOKUP(5,{1,2,3},{10,20})');
+		// assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(5,{1,2,3},{10,20})');
 
 
-		oParser = new parserFormula("LOOKUP(4.19, A102:A106, B102:B106)", "A2", ws);
+		// Range tests
+
+		ws.getRange2("A1000").setValue("4.14");
+		ws.getRange2("A1001").setValue("4.19");
+		ws.getRange2("A1002").setValue("5.17");
+		ws.getRange2("A1003").setValue("5.77");
+		ws.getRange2("A1004").setValue("6.39");
+
+		ws.getRange2("B1000").setValue("red");
+		ws.getRange2("B1001").setValue("orange");
+		ws.getRange2("B1002").setValue("yellow");
+		ws.getRange2("B1003").setValue("green");
+		ws.getRange2("B1004").setValue("blue");
+
+		ws.getRange2("C1020").setValue("4.14");
+		ws.getRange2("D1020").setValue("4.19");
+		ws.getRange2("E1020").setValue("5.17");
+		ws.getRange2("F1020").setValue("5.77");
+		ws.getRange2("G1020").setValue("6.39");
+		ws.getRange2("H1020").setValue("7.99");
+
+		ws.getRange2("C1021").setValue("red");
+		ws.getRange2("D1021").setValue("orange");
+		ws.getRange2("E1021").setValue("yellow");
+		ws.getRange2("F1021").setValue("green");
+		ws.getRange2("G1021").setValue("blue");
+		ws.getRange2("H1021").setValue("black");
+
+		ws.getRange2("A1040").setValue("0");
+		ws.getRange2("A1041").setValue("1");
+		ws.getRange2("A1042").setValue("");
+		ws.getRange2("A1043").setValue("3");
+		ws.getRange2("A1044").setValue("3");
+		ws.getRange2("A1045").setValue("3");
+		ws.getRange2("A1046").setValue("TRUE");
+		ws.getRange2("A1047").setValue("FALSE");
+
+		ws.getRange2("B1041").setValue("a");
+		ws.getRange2("B1042").setValue("b");
+		ws.getRange2("B1043").setValue("c");
+		ws.getRange2("B1044").setValue("d");
+		ws.getRange2("B1045").setValue("e");
+		ws.getRange2("B1046").setValue("f");
+		ws.getRange2("B1047").setValue("g");
+		ws.getRange2("B1048").setValue("h");
+		ws.getRange2("B1049").setValue("i");
+
+		ws.getRange2("C1041").setValue("1");
+		ws.getRange2("C1042").setValue("2");
+		ws.getRange2("C1043").setValue("3");
+		ws.getRange2("C1044").setValue("4");
+		ws.getRange2("C1045").setValue("5");
+		ws.getRange2("C1046").setValue("6");
+		ws.getRange2("C1047").setValue("7");
+		ws.getRange2("C1048").setValue("8");
+		ws.getRange2("C1049").setValue("9");
+
+		ws.getRange2("G1070").setValue("0");
+		ws.getRange2("G1071").setValue("1");
+		ws.getRange2("G1072").setValue("2");
+		ws.getRange2("G1073").setValue("3");
+		ws.getRange2("G1074").setValue("3");
+		ws.getRange2("G1075").setValue("TRUE");
+		ws.getRange2("G1076").setValue("FALSE");
+
+		ws.getRange2("H1070").setValue("a");
+		ws.getRange2("H1071").setValue("b");
+		ws.getRange2("H1072").setValue("c");
+		ws.getRange2("H1073").setValue("d");
+		ws.getRange2("H1074").setValue("e");
+		ws.getRange2("H1075").setValue("f");
+		ws.getRange2("H1076").setValue("g");
+
+		ws.getRange2("C1090").setValue("2");
+		ws.getRange2("D1090").setValue("");
+		ws.getRange2("E1090").setValue("4");
+		ws.getRange2("F1090").setValue("5");
+		ws.getRange2("G1090").setValue("");
+		ws.getRange2("H1090").setValue("");
+		ws.getRange2("I1090").setValue("6");
+		ws.getRange2("J1090").setValue("");
+		ws.getRange2("K1090").setValue("7");
+
+		ws.getRange2("C1091").setValue("a");
+		ws.getRange2("D1091").setValue("b");
+		ws.getRange2("E1091").setValue("c");
+		ws.getRange2("F1091").setValue("d");
+		ws.getRange2("G1091").setValue("e");
+		ws.getRange2("H1091").setValue("f");
+		ws.getRange2("I1091").setValue("g");
+		ws.getRange2("J1091").setValue("h");
+		ws.getRange2("K1091").setValue("i");
+
+		ws.getRange2("A1110").setValue("1");
+		ws.getRange2("A1111").setValue("2");
+		ws.getRange2("A1112").setValue("3");
+		ws.getRange2("A1113").setValue("4");
+		ws.getRange2("A1114").setValue("5");
+		ws.getRange2("B1110").setValue("2");
+		ws.getRange2("B1111").setValue("4");
+		ws.getRange2("B1112").setValue("6");
+		ws.getRange2("B1113").setValue("8");
+		ws.getRange2("B1114").setValue("11");
+		ws.getRange2("C1110").setValue("3");
+		ws.getRange2("C1111").setValue("6");
+		ws.getRange2("C1112").setValue("9");
+		ws.getRange2("C1113").setValue("12");
+		ws.getRange2("C1114").setValue("16");
+		ws.getRange2("D1110").setValue("4");
+		ws.getRange2("D1111").setValue("8");
+		ws.getRange2("D1112").setValue("12");
+		ws.getRange2("D1113").setValue("16");
+		ws.getRange2("D1114").setValue("20");
+		ws.getRange2("E1110").setValue("5");
+		ws.getRange2("E1111").setValue("10");
+		ws.getRange2("E1112").setValue("14");
+		ws.getRange2("E1113").setValue("20");
+		ws.getRange2("E1114").setValue("25");
+
+		ws.getRange2("A1130").setValue("a");
+		ws.getRange2("A1131").setValue("b");
+		ws.getRange2("A1132").setValue("c");
+		ws.getRange2("A1133").setValue("d");
+
+		ws.getRange2("B1130").setValue("b");
+		ws.getRange2("C1130").setValue("c");
+		ws.getRange2("D1130").setValue("d");
+
+		ws.getRange2("A1150").setValue("1");
+		ws.getRange2("A1151").setValue("1");
+		ws.getRange2("A1152").setValue("#DIV/0!");
+		ws.getRange2("A1153").setValue("#DIV/0!");
+		ws.getRange2("A1154").setValue("#DIV/0!");
+		ws.getRange2("A1155").setValue("#DIV/0!");
+		ws.getRange2("A1156").setValue("#DIV/0!");
+
+		ws.getRange2("B1150").setValue("1");
+		ws.getRange2("B1151").setValue("2");
+		ws.getRange2("B1152").setValue("3");
+		ws.getRange2("B1153").setValue("4");
+		ws.getRange2("B1154").setValue("5");
+		ws.getRange2("B1155").setValue("6");
+		ws.getRange2("B1156").setValue("7");
+
+		ws.getRange2("C1150").setValue("1");
+		ws.getRange2("C1151").setValue("1");
+		ws.getRange2("C1152").setValue("0");
+		ws.getRange2("C1153").setValue("0");
+		ws.getRange2("C1154").setValue("0");
+		ws.getRange2("C1155").setValue("0");
+		ws.getRange2("C1156").setValue("0");
+
+		ws.getRange2("C1150").setValue("10");
+		ws.getRange2("C1151").setValue("1");
+		ws.getRange2("C1152").setValue("2");
+		ws.getRange2("C1153").setValue("3");
+		ws.getRange2("C1154").setValue("4");
+		ws.getRange2("C1155").setValue("5");
+		ws.getRange2("C1156").setValue("10");
+
+		ws.getRange2("A1180").setValue("2");
+		ws.getRange2("A1181").setValue("1");
+		ws.getRange2("A1185").setValue("1");
+		ws.getRange2("A1186").setValue("3");
+		ws.getRange2("B1180").setValue("0");
+		ws.getRange2("B1181").setValue("1");
+		ws.getRange2("B1182").setValue("2");
+		ws.getRange2("B1183").setValue("3");
+		ws.getRange2("B1184").setValue("4");
+		ws.getRange2("B1185").setValue("5");
+		ws.getRange2("B1186").setValue("6");
+		ws.getRange2("B1187").setValue("7");
+		ws.getRange2("B1188").setValue("8");
+		ws.getRange2("B1189").setValue("9");
+		ws.getRange2("B1190").setValue("10");
+
+		ws.getRange2("A1200").setValue("2");
+		ws.getRange2("A1201").setValue("4");
+		ws.getRange2("A1202").setValue("40");
+		ws.getRange2("B1200").setValue("1");
+		ws.getRange2("C1200").setValue("2");
+		ws.getRange2("D1200").setValue("3");
+
+		let currentSheet = ws.getName();
+
+		ws.getRange2("E1210").setValue("3");
+		ws.getRange2("A1210:A1220").setValue("4000");
+		ws.getRange2("A1215").setValue("3");
+		ws.getRange2("B1210:B1220").setValue("1000");
+		ws.getRange2("B1210").setValue("1");
+		ws.getRange2("B1215").setValue("55");
+
+		ws.getRange2("A1300:B1350").cleanAll();
+		ws.getRange2("A1300").setValue("0");
+		ws.getRange2("A1301").setValue("0");
+		ws.getRange2("A1302").setValue("2.1");
+		ws.getRange2("A1303").setValue("2.4");
+		ws.getRange2("A1304").setValue("2.4");
+		ws.getRange2("A1305").setValue("9");
+		ws.getRange2("A1306").setValue("10");
+		ws.getRange2("A1307").setValue("11");
+		ws.getRange2("A1308").setValue("11");
+		ws.getRange2("A1309").setValue("11");
+		ws.getRange2("A1310").setValue("12");
+		ws.getRange2("A1311").setValue("12");
+		ws.getRange2("A1312").setValue("12");
+		ws.getRange2("A1313").setValue("67");
+		ws.getRange2("A1314").setValue("");
+		ws.getRange2("A1315").setValue("ALDEBARAN");
+		ws.getRange2("A1316").setValue("BLUE");
+		ws.getRange2("A1317").setValue("CIANO");
+		ws.getRange2("A1318").setValue("RED");
+		ws.getRange2("A1319").setValue("#N/A");
+		ws.getRange2("A1320").setValue("Vega");
+		ws.getRange2("A1321").setValue("FALSE");
+		ws.getRange2("A1322").setValue("TRUE");
+
+		ws.getRange2("B1300").setValue("1");
+		ws.getRange2("B1301").setValue("2");
+		ws.getRange2("B1302").setValue("3");
+		ws.getRange2("B1303").setValue("4");
+		ws.getRange2("B1304").setValue("5");
+		ws.getRange2("B1305").setValue("6");
+		ws.getRange2("B1306").setValue("7");
+		ws.getRange2("B1307").setValue("8");
+		ws.getRange2("B1308").setValue("9");
+		ws.getRange2("B1309").setValue("10");
+		ws.getRange2("B1310").setValue("11");
+		ws.getRange2("B1311").setValue("12");
+		ws.getRange2("B1312").setValue("13");
+		ws.getRange2("B1313").setValue("14");
+		ws.getRange2("B1314").setValue("15");
+		ws.getRange2("B1315").setValue("16");
+		ws.getRange2("B1316").setValue("17");
+		ws.getRange2("B1317").setValue("18");
+		ws.getRange2("B1318").setValue("19");
+		ws.getRange2("B1319").setValue("20");
+		ws.getRange2("B1320").setValue("21");
+		ws.getRange2("B1321").setValue("22");
+		ws.getRange2("B1322").setValue("23");
+
+		AscCommonExcel.g_oLOOKUPCache.clean();
+
+		// Range tests
+
+		// Positive Cases:
+		// Case #1: Number, Range, Range. Lookup decimal value in sorted numeric range
+		oParser = new parserFormula("LOOKUP(4.19, A1000:A1004, B1000:B1004)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(_getValue(oParser.calculate()), "orange");
 
-		oParser = new parserFormula("LOOKUP(5.75, A102:A106, B102:B106)", "A2", ws);
+		// Case #2: Number, Range, Range. Lookup value between sorted decimals, returns closest match
+		oParser = new parserFormula("LOOKUP(5.75, A1000:A1004, B1000:B1004)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "yellow");
 
-		oParser = new parserFormula("LOOKUP(7.66, A102:A106, B102:B106)", "A2", ws);
+		// Case #3: Number, Range, Range. Lookup value greater than max, returns last match
+		oParser = new parserFormula("LOOKUP(7.66, A1000:A1004, B1000:B1004)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "blue");
 
-		oParser = new parserFormula("LOOKUP(0, A102:A106, B102:B106)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		ws.getRange2("C101").setValue("4.14");
-		ws.getRange2("D101").setValue("4.19");
-		ws.getRange2("E101").setValue("5.17");
-		ws.getRange2("F101").setValue("5.77");
-		ws.getRange2("G101").setValue("6.39");
-		ws.getRange2("H101").setValue("7.99");
-
-		ws.getRange2("C102").setValue("red");
-		ws.getRange2("D102").setValue("orange");
-		ws.getRange2("E102").setValue("yellow");
-		ws.getRange2("F102").setValue("green");
-		ws.getRange2("G102").setValue("blue");
-		ws.getRange2("H102").setValue("black");
-
-		oParser = new parserFormula("LOOKUP(4.19,C101:H101,C102:H102)", "A2", ws);
+		// Case #4: Number, Range, Range. Horizontal lookup in sorted range
+		oParser = new parserFormula("LOOKUP(4.19,C1020:H1020,C1021:H1021)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "orange");
 
-		oParser = new parserFormula("LOOKUP(5.75,C101:H101,C102:H102)", "A2", ws);
+		// Case #5: Number, Range, Range. Horizontal lookup with approximate match
+		oParser = new parserFormula("LOOKUP(5.75,C1020:H1020,C1021:H1021)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "yellow");
 
-		oParser = new parserFormula("LOOKUP(7.66,C101:H101,C102:H102)", "A2", ws);
+		// Case #6: Number, Range, Range. Horizontal lookup greater than max value
+		oParser = new parserFormula("LOOKUP(7.66,C1020:H1020,C1021:H1021)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "blue");
 
-		oParser = new parserFormula("LOOKUP(0,C101:H101,C102:H102)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		oParser = new parserFormula("LOOKUP(5.17,C101:H101,C102:H102)", "A2", ws);
+		// Case #7: Number, Range, Range. Exact match in horizontal range
+		oParser = new parserFormula("LOOKUP(5.17,C1020:H1020,C1021:H1021)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "yellow");
 
-		oParser = new parserFormula("LOOKUP(9,C101:H101,C102:H102)", "A2", ws);
+		// Case #8: Number, Range, Range. Lookup value greater than all in horizontal range
+		oParser = new parserFormula("LOOKUP(9,C1020:H1020,C1021:H1021)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "black");
 
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		ws.getRange2("A101").setValue("0");
-		ws.getRange2("A102").setValue("1");
-		ws.getRange2("A103").setValue("");
-		ws.getRange2("A104").setValue("3");
-		ws.getRange2("A105").setValue("3");
-		ws.getRange2("A106").setValue("3");
-		ws.getRange2("A107").setValue("TRUE");
-		ws.getRange2("A108").setValue("FALSE");
-
-		ws.getRange2("B102").setValue("a");
-		ws.getRange2("B103").setValue("b");
-		ws.getRange2("B104").setValue("c");
-		ws.getRange2("B105").setValue("d");
-		ws.getRange2("B106").setValue("e");
-		ws.getRange2("B107").setValue("f");
-		ws.getRange2("B108").setValue("g");
-		ws.getRange2("B109").setValue("h");
-		ws.getRange2("B110").setValue("i");
-
-		ws.getRange2("C102").setValue("1");
-		ws.getRange2("C103").setValue("2");
-		ws.getRange2("C104").setValue("3");
-		ws.getRange2("C105").setValue("4");
-		ws.getRange2("C106").setValue("5");
-		ws.getRange2("C107").setValue("6");
-		ws.getRange2("C108").setValue("7");
-		ws.getRange2("C109").setValue("8");
-		ws.getRange2("C110").setValue("9");
-
-		oParser = new parserFormula("LOOKUP(1,A102:A105,B102:B105)", "A2", ws);
+		// Case #9: Number, Range, Range. Exact match with integer value
+		oParser = new parserFormula("LOOKUP(1,A1041:A1044,B1041:B1044)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "a");
 
-		oParser = new parserFormula("LOOKUP(,A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
-
-		// TODO: review tests with ranges after adding dynamic arrays
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,B102:B105)");
+		// Case #10: Range, Range, Range. Single cell range lookup
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,B1041:B1044)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue().getValue(), "a", "Result of LOOKUP(A102:A102,A102:A105,B102:B105)");
+		assert.strictEqual(array.getValue().getValue(), "a", "Result of LOOKUP(A1041:A1041,A1041:A1044,B1041:B1044)");
 
-		oParser = new parserFormula("LOOKUP(A102:A103,A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A103,A102:A105,B102:B105)");
+		// Case #11: Range, Range, Boolean. Single cell range with boolean result
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,TRUE)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,TRUE)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#VALUE!", "Result of LOOKUP(A102:A103,A102:A105,B102:B105)");
+		assert.strictEqual(array.getValue(), "TRUE", "Result of LOOKUP(A1041:A1041,A1041:A1044,TRUE)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,TRUE)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,TRUE)");
+		// Case #12: Range, Range, Number. Single cell range with numeric result
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,1)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,1)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "TRUE", "Result of LOOKUP(A102:A102,A102:A105,TRUE)");
+		assert.strictEqual(array.getValue(), 1, "Result of LOOKUP(A1041:A1041,A1041:A1044,1)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,1)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,1)");
+		// Case #13: Range, Range, Range. Single cell ranges with matching positions
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,A1041:A1041)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,A1041:A1041)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), 1, "Result of LOOKUP(A102:A102,A102:A105,1)");
+		assert.strictEqual(array.getValue(), 1, "Result of LOOKUP(A1041:A1041,A1041:A1044,A1041:A1041)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,a)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,a)");
+		// Case #14: Range, Range, Range. Single cell ranges with empty result
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,A1042:A1042)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,A1042:A1042)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "#NAME?", "Result of LOOKUP(A102:A102,A102:A105,a)");
+		assert.strictEqual(array.getValue(), "", "Result of LOOKUP(A1041:A1041,A1041:A1044,A1042:A1042)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,A102:A102)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,A102:A102)");
+		// Case #15: Range, Range, Range. Single cell ranges with numeric result
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,A1043:A1043)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,A1043:A1043)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), 1, "Result of LOOKUP(A102:A102,A102:A105,A102:A102)");
+		assert.strictEqual(array.getValue(), 3, "Result of LOOKUP(A1041:A1041,A1041:A1044,A1043:A1043)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,A103:A103)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,A103:A103)");
+		// Case #16: Range, Range, Range. Single cell lookup with range result
+		oParser = new parserFormula("LOOKUP(A1041,A1041:A1044,A1041)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,A1041:A1044,1)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 1, "Result of LOOKUP(1,A1041:A1044,1)");
+
+		// Case #17: Array, Range, Range. Array lookup returning multiple results
+		oParser = new parserFormula("LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), "", "Result of LOOKUP(A102:A102,A102:A105,A103:A103)");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "a", "Result of LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A1041:A1044,B1041:B1044)");
 
-		oParser = new parserFormula("LOOKUP(A102:A102,A102:A105,A104:A104)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A102:A102,A102:A105,A104:A104)");
+		// Case #18: Array, Range, Range. Array lookup with exact matches
+		oParser = new parserFormula("LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getValue(), 3, "Result of LOOKUP(A102:A102,A102:A105,A104:A104)");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A1041:A1044,B1041:B1044)");
 
-		oParser = new parserFormula("LOOKUP(A102,A102:A105,)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,A102:A105,)");
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A102:A105,)");
-
-		oParser = new parserFormula("LOOKUP(A102,A102,)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,A102,)");
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A102,)");
-
-		oParser = new parserFormula("LOOKUP(A102,A105,)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,A105,)");
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A105,)");
-
-		oParser = new parserFormula("LOOKUP(A102,A102:A105,A102)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,A102:A105,1)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 1, "Result of LOOKUP(1,A102:A105,1)");
-
-		oParser = new parserFormula("LOOKUP({2,13,14,15},A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP({2,13,14,15},A102:A105,B102:B105)");
+		// Case #19: Array, Range, Range. Array lookup with values greater than max
+		oParser = new parserFormula("LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "a", "Result of LOOKUP({2,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({2,13,14,15},A102:A105,B102:B105)");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)");
+		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A1041:A1044,B1041:B1044)");
 
-		oParser = new parserFormula("LOOKUP({3,13,14,15},A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP({3,13,14,15},A102:A105,B102:B105)");
+		// Case #20: Array, Range, Range. Array lookup with zero value
+		oParser = new parserFormula("LOOKUP({0},A1040:A1044,A1040:A1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP({0},A1040:A1044,A1040:A1044)");
 		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({3,13,14,15},A102:A105,B102:B105)");
+		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), 0, "Result of LOOKUP({0},A1040:A1044,A1040:A1044)");
 
-		oParser = new parserFormula("LOOKUP({12,13,14,15},A102:A105,B102:B105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP({12,13,14,15},A102:A105,B102:B105)");
-		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,1).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,2).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A102:A105,B102:B105)");
-		assert.strictEqual(array.getElementRowCol(0,3).getValue().getValue(), "d", "Result of LOOKUP({12,13,14,15},A102:A105,B102:B105)");
-
-		oParser = new parserFormula("LOOKUP({0},A101:A105,A101:A105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP({0},A101:A105,A101:A105)");
-		array = oParser.calculate();
-		assert.strictEqual(array.getElementRowCol(0,0).getValue().getValue(), 0, "Result of LOOKUP({0},A101:A105,A101:A105)");
-
-		// oParser = new parserFormula("LOOKUP({2},{0,1,2,3,4},B102:B108)", "A2", ws);
-		// assert.ok(oParser.parse(), "LOOKUP({2},{0,1,2,3,4},B102:B108)");
-		// assert.strictEqual(oParser.calculate().getValue(), "c", "Result of LOOKUP({2},{0,1,2,3,4},B102:B108)");
-
+		// Case #21: Array, Array, Array. Array lookup with exact match
 		oParser = new parserFormula("LOOKUP({2},{0,1,2,3,4},{10,11,12,13,14})", "A2", ws);
 		assert.ok(oParser.parse(), "LOOKUP({2},{0,1,2,3,4},{10,11,12,13,14})");
 		array = oParser.calculate();
 		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 12, "Result of LOOKUP({2},{0,1,2,3,4},{10,11,12,13,14})");
 
-		oParser = new parserFormula("LOOKUP(3,A102:A106,B102:B106)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(3,A102:A106,B102:B106)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "e", "Result of LOOKUP(3,A102:A106,B102:B106)");
+		// Case #22: Number, Range, Range. Lookup with extended range
+		oParser = new parserFormula("LOOKUP(3,A1041:A1045,B1041:B1045)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(3,A1041:A1045,B1041:B1045)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "e", "Result of LOOKUP(3,A1041:A1045,B1041:B1045)");
 
-		oParser = new parserFormula("LOOKUP(A104,A102:A106,B102:B106)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A104,A102:A106,B102:B106)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "e", "Result of LOOKUP(3,A102:A106,B102:B106)");
+		// Case #23: Range, Range, Range. Range reference lookup
+		oParser = new parserFormula("LOOKUP(A1043,A1041:A1045,B1041:B1045)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1043,A1041:A1045,B1041:B1045)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "e", "Result of LOOKUP(3,A1041:A1045,B1041:B1045)");
 
-		oParser = new parserFormula("LOOKUP(TRUE,A102:A108,B102:B108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(TRUE,A102:A108,B102:B108)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,A102:A108,B102:B108)");
+		// Case #24: Boolean, Range, Range. TRUE lookup in mixed range
+		oParser = new parserFormula("LOOKUP(TRUE,A1041:A1047,B1041:B1047)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(TRUE,A1041:A1047,B1041:B1047)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,A1041:A1047,B1041:B1047)");
 
-		oParser = new parserFormula("LOOKUP(A107,A102:A108,B102:B108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(TRUE,A102:A108,B102:B108)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,A102:A108,B102:B108)");
+		// Case #25: Range, Range, Range. Range reference with TRUE value
+		oParser = new parserFormula("LOOKUP(A1046,A1041:A1047,B1041:B1047)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(TRUE,A1041:A1047,B1041:B1047)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,A1041:A1047,B1041:B1047)");
 
-		oParser = new parserFormula("LOOKUP(FALSE,A102:A108,B102:B108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(FALSE,A102:A108,B102:B108)");
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,A102:A108,B102:B108)");
+		// Case #26: Boolean, Range, Range. TRUE lookup in different range
+		oParser = new parserFormula("LOOKUP(TRUE,G1070:G1076,H1070:H1076)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(TRUE,G1070:G1076,H1070:H1076)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,G1070:G1076,H1070:H1076)");
 
-		oParser = new parserFormula("LOOKUP(A108,A102:A108,B102:B108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(FALSE,A102:A108,B102:B108)");
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,A102:A108,B102:B108)");
+		// Case #27: Range, Range, Range. Range reference with TRUE in different location
+		oParser = new parserFormula("LOOKUP(G1075,G1070:G1076,H1070:H1076)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(TRUE,G1070:G1076,H1070:H1076)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,G1070:G1076,H1070:H1076)");
 
-		ws.getRange2("B106").setValue("#DIV/0!");
-		AscCommonExcel.g_oLOOKUPCache.clean();
-		oParser = new parserFormula('LOOKUP("b",B102:B110,C102:C110)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 2);
-
-		ws.getRange2("B106").setValue("a");
-		AscCommonExcel.g_oLOOKUPCache.clean();
-		oParser = new parserFormula('LOOKUP("b",B102:B110,C102:C110)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 5);
-
-		ws.getRange2("B106").setValue("0");
-		AscCommonExcel.g_oLOOKUPCache.clean();
-		oParser = new parserFormula('LOOKUP("b",B102:B110,C102:C110)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 2);
-
-		ws.getRange2("B106").setValue("TRUE");
-		AscCommonExcel.g_oLOOKUPCache.clean();
-		oParser = new parserFormula('LOOKUP("b",B102:B110,C102:C110)', "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 2);
-
-		ws.getRange2("G102").setValue("0");
-		ws.getRange2("G103").setValue("1");
-		ws.getRange2("G104").setValue("2");
-		ws.getRange2("G105").setValue("3");
-		ws.getRange2("G106").setValue("3");
-		ws.getRange2("G107").setValue("TRUE");
-		ws.getRange2("G108").setValue("FALSE");
-
-		ws.getRange2("H102").setValue("a");
-		ws.getRange2("H103").setValue("b");
-		ws.getRange2("H104").setValue("c");
-		ws.getRange2("H105").setValue("d");
-		ws.getRange2("H106").setValue("e");
-		ws.getRange2("H107").setValue("f");
-		ws.getRange2("H108").setValue("g");
-
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		// BOOLEAN TESTS
-		oParser = new parserFormula("LOOKUP(TRUE,G102:G108,H102:H108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(TRUE,G102:G108,H102:H108)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,G102:G108,H102:H108)");
-
-		oParser = new parserFormula("LOOKUP(G107,G102:G108,H102:H108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(TRUE,G102:G108,H102:H108)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), "f", "Result of LOOKUP(TRUE,G102:G108,H102:H108)");
-
-		oParser = new parserFormula("LOOKUP(FALSE,G102:G108,H102:H108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(FALSE,G102:G108,H102:H108)");
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,G102:G108,H102:H108)");
-
-		oParser = new parserFormula("LOOKUP(G108,G102:G108,H102:H108)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(FALSE,G102:G108,H102:H108)");
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,G102:G108,H102:H108)");
-
-		ws.getRange2("C101").setValue("2");
-		ws.getRange2("D101").setValue("");
-		ws.getRange2("E101").setValue("4");
-		ws.getRange2("F101").setValue("5");
-		ws.getRange2("G101").setValue("");
-		ws.getRange2("H101").setValue("");
-		ws.getRange2("I101").setValue("6");
-		ws.getRange2("J101").setValue("");
-		ws.getRange2("K101").setValue("7");
-
-		ws.getRange2("C102").setValue("a");
-		ws.getRange2("D102").setValue("b");
-		ws.getRange2("E102").setValue("c");
-		ws.getRange2("F102").setValue("d");
-		ws.getRange2("G102").setValue("e");
-		ws.getRange2("H102").setValue("f");
-		ws.getRange2("I102").setValue("g");
-		ws.getRange2("J102").setValue("h");
-		ws.getRange2("K102").setValue("i");
-
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		oParser = new parserFormula("LOOKUP(3,C101:K101,C102:K102)", "A2", ws);
+		// Case #28: Number, Range, Range. Lookup in sparse range with empty cells
+		oParser = new parserFormula("LOOKUP(3,C1090:K1090,C1091:K1091)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "a");
 
-		oParser = new parserFormula("LOOKUP(2,C101:K101,C102:K102)", "A2", ws);
+		// Case #29: Number, Range, Range. Lookup exact match in sparse range
+		oParser = new parserFormula("LOOKUP(2,C1090:K1090,C1091:K1091)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "a");
 
-		oParser = new parserFormula("LOOKUP(7,C101:K101,C102:K102)", "A2", ws);
+		// Case #30: Number, Range, Range. Lookup max value in sparse range
+		oParser = new parserFormula("LOOKUP(7,C1090:K1090,C1091:K1091)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "i");
 
-		oParser = new parserFormula("LOOKUP(10,C101:K101,C102:K102)", "A2", ws);
+		// Case #31: Number, Range, Range. Lookup value greater than max in sparse range
+		oParser = new parserFormula("LOOKUP(10,C1090:K1090,C1091:K1091)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue().getValue(), "i");
 
-		oParser = new parserFormula("LOOKUP(1,C101:K101,C102:K102)", "A2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+		// Case #32: Number, Range. 2D range lookup by first row, return from last row
+		oParser = new parserFormula("LOOKUP(3,A1110:E1112)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(3,A1110:E1112)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 9, "Result of LOOKUP(3,A1110:E1112)");
 
-		// arr tests
-		ws.getRange2("A101").setValue("1");
-		ws.getRange2("A102").setValue("2");
-		ws.getRange2("A103").setValue("3");
-		ws.getRange2("A104").setValue("4");
-		ws.getRange2("A105").setValue("5");
-		ws.getRange2("B101").setValue("2");
-		ws.getRange2("B102").setValue("4");
-		ws.getRange2("B103").setValue("6");
-		ws.getRange2("B104").setValue("8");
-		ws.getRange2("B105").setValue("11");
-		ws.getRange2("C101").setValue("3");
-		ws.getRange2("C102").setValue("6");
-		ws.getRange2("C103").setValue("9");
-		ws.getRange2("C104").setValue("12");
-		ws.getRange2("C105").setValue("16");
-		ws.getRange2("D101").setValue("4");
-		ws.getRange2("D102").setValue("8");
-		ws.getRange2("D103").setValue("12");
-		ws.getRange2("D104").setValue("16");
-		ws.getRange2("D105").setValue("20");
-		ws.getRange2("E101").setValue("5");
-		ws.getRange2("E102").setValue("10");
-		ws.getRange2("E103").setValue("14");
-		ws.getRange2("E104").setValue("20");
-		ws.getRange2("E105").setValue("25");
+		// Case #33: Range, Range. Range reference in 2D lookup
+		oParser = new parserFormula("LOOKUP(A1112,A1110:E1112)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1112,A1110:E1112)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 9, "Result of LOOKUP(3,A1110:E1112)");
 
-		AscCommonExcel.g_oLOOKUPCache.clean();
+		// Case #34: Number, Range. Lookup value greater than available in 2D range
+		oParser = new parserFormula("LOOKUP(6,A1110:E1112)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(6,A1110:E1112)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 14, "Result of LOOKUP(6,A1110:E1112)");
 
-		// columns > rows
-		oParser = new parserFormula("LOOKUP(3,A101:E103)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(3,A101:E103)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 9, "Result of LOOKUP(3,A101:E103)");
+		// Case #35: Number, Range. 2D range lookup by first column, return from last column
+		oParser = new parserFormula("LOOKUP(2,A1110:C1114)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(2,A1110:C1114)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 6, "Result of LOOKUP(2,A1110:C1114)");
 
-		oParser = new parserFormula("LOOKUP(A103,A101:E103)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(A103,A101:E103)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 9, "Result of LOOKUP(3,A101:E103)");
+		// Case #36: Range, Range. Range reference in 2D column lookup
+		oParser = new parserFormula("LOOKUP(B1110,A1110:C1114)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(B1110,A1110:C1114)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 6, "Result of LOOKUP(2,A1110:C1114)");
 
-		oParser = new parserFormula("LOOKUP(6,A101:E103)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(6,A101:E103)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 14, "Result of LOOKUP(6,A101:E103)");
+		// Case #37: Number, Range. Lookup value greater than max in 2D column range
+		oParser = new parserFormula("LOOKUP(6,A1110:C1114)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(6,A1110:C1114)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 16, "Result of LOOKUP(6,A1110:C1114)");
 
-		// rows > columns
-		oParser = new parserFormula("LOOKUP(2,A101:C105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(2,A101:C105)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 6, "Result of LOOKUP(2,A101:C105)");
+		// Case #38: Number, Range. 2D range lookup with wider result area
+		oParser = new parserFormula("LOOKUP(2,A1110:E1114)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(2,A1110:E1114)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 10, "Result of LOOKUP(2,A1110:E1114)");
 
-		oParser = new parserFormula("LOOKUP(B101,A101:C105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(B101,A101:C105)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 6, "Result of LOOKUP(2,A101:C105)");
+		// Case #39: Number, Range. Another 2D range lookup with wider result area
+		oParser = new parserFormula("LOOKUP(3,A1110:E1114)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(3,A1110:E1114)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 14, "Result of LOOKUP(3,A1110:E1114)");
 
-		oParser = new parserFormula("LOOKUP(6,A101:C105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(6,A101:C105)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 16, "Result of LOOKUP(6,A101:C105)");
+		// Case #40: Number, Array, Range. Array lookup with horizontal range result
+		oParser = new parserFormula("LOOKUP(1,{1,0,0,1},A1130:D1130)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,{1,0,0,1},A1130:D1130)");
+		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1,0,0,1},A1130:D1130)");
 
-		// rows === columns (should lookup through the first column)
-		oParser = new parserFormula("LOOKUP(2,A101:E105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(2,A101:E105)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 10, "Result of LOOKUP(2,A101:E105)");
+		// Case #41: Number, Array, Range. Array lookup with vertical array and horizontal range
+		oParser = new parserFormula("LOOKUP(1,{1;0;0;1},A1130:D1130)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,{1;0;0;1},A1130:D1130)");
+		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1;0;0;1},A1130:D1130)");
 
-		oParser = new parserFormula("LOOKUP(3,A101:E105)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(3,A101:E105)");
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 14, "Result of LOOKUP(3,A101:E105)");
+		// Case #42: Number, Array, Range. Array lookup with vertical range result
+		oParser = new parserFormula("LOOKUP(1,{1;0;0;1},A1130:A1133)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,{1;0;0;1},A1130:A1133)");
+		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1;0;0;1},A1130:A1133)");
 
-		ws.getRange2("A200").setValue("a");
-		ws.getRange2("A201").setValue("b");
-		ws.getRange2("A202").setValue("c");
-		ws.getRange2("A203").setValue("d");
+		// Case #43: Number, Array, Range. Array lookup with horizontal array and vertical range
+		oParser = new parserFormula("LOOKUP(1,{1,0,0,1},A1130:A1133)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,{1,0,0,1},A1130:A1133)");
+		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1,0,0,1},A1130:A1133)");
 
-		ws.getRange2("B200").setValue("b");
-		ws.getRange2("C200").setValue("c");
-		ws.getRange2("D200").setValue("d");
-
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		oParser = new parserFormula("LOOKUP(1,{1,0,0,1},A200:D200)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,{1,0,0,1},A200:D200)");
-		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1,0,0,1},A200:D200)");
-		
-		oParser = new parserFormula("LOOKUP(1,{1;0;0;1},A200:D200)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,{1;0;0;1},A200:D200)");
-		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1;0;0;1},A200:D200)");	
-
-		oParser = new parserFormula("LOOKUP(1,{1;0;0;1},A200:A203)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,{1;0;0;1},A200:A203)");
-		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1;0;0;1},A200:A203)");	
-
-		oParser = new parserFormula("LOOKUP(1,{1,0,0,1},A200:A203)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,{1,0,0,1},A200:A203)");
-		assert.strictEqual(oParser.calculate().getValue(), "d", "Result of LOOKUP(1,{1,0,0,1},A200:A203)");
-
-		ws.getRange2("A100").setValue("1");
-		ws.getRange2("A101").setValue("1");
-		ws.getRange2("A102").setValue("#DIV/0!");
-		ws.getRange2("A103").setValue("#DIV/0!");
-		ws.getRange2("A104").setValue("#DIV/0!");
-		ws.getRange2("A105").setValue("#DIV/0!");
-		ws.getRange2("A106").setValue("#DIV/0!");
-
-		ws.getRange2("B100").setValue("1");
-		ws.getRange2("B101").setValue("2");
-		ws.getRange2("B102").setValue("3");
-		ws.getRange2("B103").setValue("4");
-		ws.getRange2("B104").setValue("5");
-		ws.getRange2("B105").setValue("6");
-		ws.getRange2("B106").setValue("7");
-
-		ws.getRange2("C100").setValue("1");
-		ws.getRange2("C101").setValue("1");
-		ws.getRange2("C102").setValue("0");
-		ws.getRange2("C103").setValue("0");
-		ws.getRange2("C104").setValue("0");
-		ws.getRange2("C105").setValue("0");
-		ws.getRange2("C106").setValue("0");
-
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		oParser = new parserFormula("LOOKUP(1,A100:A106,B100:B106)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,A100:A106,B100:B106)");
+		// Case #44: Number, Range, Range. Lookup with error values in range
+		oParser = new parserFormula("LOOKUP(1,A1150:A1156,B1150:B1156)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,A1150:A1156,B1150:B1156)");
 		oParser.setArrayFormulaRef(ws.getRange2("A2").bbox);
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 2, "Result of LOOKUP(1,A100:A106,B100:B106)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 2, "Result of LOOKUP(1,A1150:A1156,B1150:B1156)");
 
-		oParser = new parserFormula("LOOKUP(1,1/C100:C106,B100:B106)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(1,1/C100:C106,B100:B106)");
+		// Case #45: Number, Range, Range. Lookup in range with first and last value test
+		oParser = new parserFormula("LOOKUP(3,C1150:C1156,B1150:B1156)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(3,C1150:C1156,B1150:B1156) - first and last value test");
 		oParser.setArrayFormulaRef(ws.getRange2("A2").bbox);
-		assert.strictEqual(oParser.calculate().getValue(), 2, "Result of LOOKUP(1,1/C100:C106,B100:B106)");
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 4, "Result of LOOKUP(3,C1150:C1156,B1150:B1156)");
 
-		// first and last value test
-		ws.getRange2("C100").setValue("10");
-		ws.getRange2("C101").setValue("1");
-		ws.getRange2("C102").setValue("2");
-		ws.getRange2("C103").setValue("3");
-		ws.getRange2("C104").setValue("4");
-		ws.getRange2("C105").setValue("5");
-		ws.getRange2("C106").setValue("10");
-
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		oParser = new parserFormula("LOOKUP(3,C100:C106,B100:B106)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(3,C100:C106,B100:B106) - first and last value test");
-		oParser.setArrayFormulaRef(ws.getRange2("A2").bbox);
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 4, "Result of LOOKUP(3,C100:C106,B100:B106)");
-
-		// base value tests
+		// Case #46: String, String, Array. Single value lookup with array result
 		oParser = new parserFormula('LOOKUP("b","a",{1,2,3,4,5})', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP("b","a",{1,2,3,4,5})');
 		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP("b","a",{1,2,3,4,5})');
 
+		// Case #47: String, String, Number. Single value lookup with numeric result
 		oParser = new parserFormula('LOOKUP("b","a",-1)', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP("b","a",-1)');
 		assert.strictEqual(oParser.calculate().getValue(), -1, 'Result of LOOKUP("b","a",-1)');
 
+		// Case #48: Boolean, Boolean, Boolean. Boolean lookup with boolean result
 		oParser = new parserFormula('LOOKUP(FALSE,FALSE,TRUE)', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(FALSE,FALSE,TRUE)');
 		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of LOOKUP(FALSE,FALSE,TRUE)');
 
+		// Case #49: Boolean, Boolean, String. Boolean lookup with string result
 		oParser = new parserFormula('LOOKUP(TRUE,FALSE,"a")', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(TRUE,FALSE,"a")');
 		assert.strictEqual(oParser.calculate().getValue(), "a", 'Result of LOOKUP(TRUE,FALSE,"a")');
 
+		// Case #50: Number, Number, String. Numeric lookup with single value and string result
 		oParser = new parserFormula('LOOKUP(3,1,"a")', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(3,1,"a")');
 		assert.strictEqual(oParser.calculate().getValue(), "a", 'Result of LOOKUP(3,1,"a")');
 
+		// Case #51: Number, Number, String. Exact match numeric lookup
 		oParser = new parserFormula('LOOKUP(3,3,"a")', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(3,3,"a")');
 		assert.strictEqual(oParser.calculate().getValue(), "a", 'Result of LOOKUP(3,3,"a")');
 
+		// Case #52: Empty, Range, Range. Bug 65306 - lookup with empty value and CODE function
+		ws.getRange2("N1160").setValue("янв");
+		ws.getRange2("O1160").setValue("0")
+		oParser = new parserFormula("LOOKUP(,-CODE(N1160:O1160),N1160:O1160)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(,-CODE(N1160:O1160),N1160:O1160)");
+		assert.strictEqual(oParser.calculate().getValue(), 0, "Result of LOOKUP(,-CODE(N1160:O1160),N1160:O1160)");
+
+		// Case #53: Number, Range, Range. Bug 62730 - lookup with range arithmetic in lookup array
+		oParser = new parserFormula('LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190)');
+
+		// Case #54: Number, Range, Range. Bug 62730 - lookup with range arithmetic, different value
+		oParser = new parserFormula('LOOKUP(2,A1180:A1190+A1180:A1190,B1180:B1190)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2,A1180:A1190+A1180:A1190,B1180:B1190)');
+		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of LOOKUP(2,A1180:A1190+A1180:A1190,B1180:B1190)');
+
+		// Case #55: Number, Range, Range. Bug 62730 - lookup with arithmetic in both ranges
+		oParser = new parserFormula('LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190+B1180:B1190)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190+B1180:B1190)');
+		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1190+B1180:B1190)');
+
+		// Case #56: Number, Range, Range. Bug 62730 - lookup with arithmetic and compatible range sizes
+		oParser = new parserFormula('LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1185)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1185)');
+		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1185)');
+
+		// Case #57: Number, Range, Array. Bug 67743 - lookup with range arithmetic and array result
+		oParser = new parserFormula('LOOKUP(3,A1200:A1202+{1},{1})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(3,A1200:A1202+{1},{1})');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(3,A1200:A1202+{1},{1})');
+
+		// Case #58: Number, Range, Array. Lookup with range and array result
+		oParser = new parserFormula('LOOKUP(5,A1200:A1202,{1,2})', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(5,A1200:A1202,{1,2})');
+		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(5,A1200:A1202,{1,2})');
+
+		// Case #59: Number, Range, Range. Lookup with range arithmetic and range result
+		oParser = new parserFormula('LOOKUP(5,A1200:A1202+{1},A1200:A1201)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(5,A1200:A1202+{1},A1200:A1201)');
+		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of LOOKUP(5,A1200:A1202+{1},A1200:A1201)');
+
+		// Case #60: Number, Range, Range. Lookup with range arithmetic and horizontal result
+		oParser = new parserFormula('LOOKUP(5,A1200:A1202+{1},A1200:D1200)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(5,A1200:A1202+{1},A1200:D1200)');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(5,A1200:A1202+{1},A1200:D1200)');
+
+		// Case #61: Range, Range, Range. Bug 69527 - lookup with sheet reference in lookup value
+		oParser = new parserFormula('LOOKUP(' + currentSheet + '!E1210,A1210:A1220,B1210:B1220)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(' + currentSheet + '!E1210,A1210:A1220,B1210:B1220)');
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 55, 'Result of LOOKUP(' + currentSheet + '!E1210,A1210:A1220,B1210:B1220)');
+
+		// Case #62: Range, Range, Range. Bug 69527 - lookup with sheet reference in lookup array
+		oParser = new parserFormula('LOOKUP(E1210,' + currentSheet + '!A1215,B1210:B1220)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(E1210,' + currentSheet + '!A1215,B1210:B1220)');
+		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(E1210,' + currentSheet + '!A1215,B1210:B1220)');
+
+		// Case #63: Range, Range, Range. Bug 69527 - lookup with sheet reference in result array
+		oParser = new parserFormula('LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)');
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 3, 'Result of LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)');
+
+		// Case #64: Number, Range. 2D range lookup with mixed data types
+		oParser = new parserFormula('LOOKUP(2.3,A1300:B1322)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(2.3,A1300:B1322)');
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 3, 'Result of LOOKUP(2.3,A1300:B1322)');
+
+		// Case #65: String, Range. String lookup in 2D range with mixed types
+		oParser = new parserFormula('LOOKUP("CIANO",A1300:B1322)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP("CIANO",A1300:B1322)');
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 18, 'Result of LOOKUP("CIANO",A1300:B1322)');
+
+		// Case #66: Boolean, Range. FALSE lookup in 2D range with mixed types
+		oParser = new parserFormula('LOOKUP(FALSE,A1300:B1322)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(FALSE,A1300:B1322)');
+		assert.strictEqual(oParser.calculate().getValue().getValue(), 22, 'Result of LOOKUP(FALSE,A1300:B1322)');
+
+		// Negative Cases:
+		// Case #1: Number, Range, Range. Lookup value smaller than minimum, returns #N/A
+		oParser = new parserFormula("LOOKUP(0, A1000:A1004, B1000:B1004)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+
+		// Case #2: Number, Range, Range. Horizontal lookup value smaller than minimum, returns #N/A
+		oParser = new parserFormula("LOOKUP(0,C1020:H1020,C1021:H1021)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+
+		// Case #3: Empty, Range, Range. Empty lookup value in range, returns #N/A
+		oParser = new parserFormula("LOOKUP(,A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+
+		// Case #4: Range, Range, Range. Multi-cell range as lookup value, returns #VALUE!
+		oParser = new parserFormula("LOOKUP(A1041:A1042,A1041:A1044,B1041:B1044)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1042,A1041:A1044,B1041:B1044)");
+		array = oParser.calculate();
+		assert.strictEqual(array.getValue(), "#VALUE!", "Result of LOOKUP(A1041:A1042,A1041:A1044,B1041:B1044)");
+
+		// Case #5: Range, Range, String. Range lookup with undefined variable, returns #NAME?
+		oParser = new parserFormula("LOOKUP(A1041:A1041,A1041:A1044,a)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(A1041:A1041,A1041:A1044,a)");
+		array = oParser.calculate();
+		assert.strictEqual(array.getValue(), "#NAME?", "Result of LOOKUP(A1041:A1041,A1041:A1044,a)");
+
+		// Case #6: Range, Range, Empty. Range lookup with empty result parameter, returns #VALUE!
+		oParser = new parserFormula("LOOKUP(A1041,A1041:A1044,)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,A1041:A1044,)");
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A1041:A1044,)");
+
+		// Case #7: Range, Range, Empty. Single cell lookup with empty result parameter, returns #VALUE!
+		oParser = new parserFormula("LOOKUP(A1041,A1041,)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,A1041,)");
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A1041,)");
+
+		// Case #8: Range, Range, Empty. Different single cell lookup with empty result parameter, returns #VALUE!
+		oParser = new parserFormula("LOOKUP(A1041,A1044,)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(1,A1044,)");
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", "Result of LOOKUP(1,A1044,)");
+
+		// Case #9: Boolean, Range, Range. FALSE lookup in mixed range, returns #N/A
+		oParser = new parserFormula("LOOKUP(FALSE,A1041:A1047,B1041:B1047)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(FALSE,A1041:A1047,B1041:B1047)");
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,A1041:A1047,B1041:B1047)");
+
+		// Case #10: Range, Range, Range. Range reference with FALSE value, returns #N/A
+		oParser = new parserFormula("LOOKUP(A1047,A1041:A1047,B1041:B1047)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(FALSE,A1041:A1047,B1041:B1047)");
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,A1041:A1047,B1041:B1047)");
+
+		// Case #11: Boolean, Range, Range. FALSE lookup in different range, returns #N/A
+		oParser = new parserFormula("LOOKUP(FALSE,G1070:G1076,H1070:H1076)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(FALSE,G1070:G1076,H1070:H1076)");
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,G1070:G1076,H1070:H1076)");
+
+		// Case #12: Range, Range, Range. Range reference with FALSE in different location, returns #N/A
+		oParser = new parserFormula("LOOKUP(G1076,G1070:G1076,H1070:H1076)", "A2", ws);
+		assert.ok(oParser.parse(), "LOOKUP(FALSE,G1070:G1076,H1070:H1076)");
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", "Result of LOOKUP(FALSE,G1070:G1076,H1070:H1076)");
+
+		// Case #13: Number, Range, Range. Lookup value smaller than minimum in sparse range, returns #N/A
+		oParser = new parserFormula("LOOKUP(1,C1090:K1090,C1091:K1091)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A");
+
+		// Case #14: Number, Range, Range. Bug 62730 - lookup with arithmetic and incompatible range sizes, returns #N/A
+		oParser = new parserFormula('LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1181)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1181)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(1,A1180:A1190+A1180:A1190,B1180:B1187+B1180:B1181)');
+
+		// Case #15: Number, Range, Range. Bug 67743 - lookup with range arithmetic and incompatible result range, returns #N/A
+		oParser = new parserFormula('LOOKUP(5,A1200:A1202+{1},A1200:D1201)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(5,A1200:A1202+{1},A1200:D1201)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(5,A1200:A1202+{1},A1200:D1201)');
+
+		// Case #16: Number, Number, String. Lookup value greater than single lookup value, returns #VALUE!
 		oParser = new parserFormula('LOOKUP(3,4,"a")', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(3,4,"a")');
 		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of LOOKUP(3,4,"a")');
 
+		// Case #17: Number, String, Number. Lookup with string in lookup array, returns #VALUE!
 		oParser = new parserFormula('LOOKUP(3,"a",1)', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(3,"a",1)');
 		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Result of LOOKUP(3,"a",1)');
 
-		// for bug 65306
-		ws.getRange2("N102").setValue("янв");
-		ws.getRange2("O102").setValue("0");
-		oParser = new parserFormula("LOOKUP(,-CODE(N102:O102),N102:O102)", "A2", ws);
-		assert.ok(oParser.parse(), "LOOKUP(,-CODE(N102:O102),N102:O102)");
-		assert.strictEqual(oParser.calculate().getValue(), 0, "Result of LOOKUP(,-CODE(N102:O102),N102:O102)");
+		// Case #18: Number, Range. Lookup value smaller than minimum in 2D range, returns #N/A
+		oParser = new parserFormula('LOOKUP(-1,A1300:B1322)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(-1,A1300:B1322)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(-1,A1300:B1322)');
 
-		// for bug 65722 
-		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})');
-		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75,55.75,61.75,67.75,72.75,78.75,84.75,89.75,94.75,97.75},{"KP";"NB";4;3.7;3.3;3;2.7;2.3;2;1.7;1.3;1})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})');
-		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75,55.75},{"KP";"NB";4;3.7;3.3;3;2.7})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1,49.75},{"KP";"NB";4})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75},{"KP";"NB";4})');
-		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1,49.75},{"KP";"NB";4})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})');
-		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1},{"KP";"NB";4;3.7;3.3;3;2.7})');
-
-		oParser = new parserFormula('LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(50,{0,1,2,3,49.75,55.75},{"KP";"NB"})');
-
-		oParser = new parserFormula('LOOKUP(1,1,{"KP","NB";1,2})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(1,1,{"KP","NB";1,2})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(1,1,{"KP","NB";1,2})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{0,1,49.75,55.75},{"KP","NB";1,2})');
-
-		oParser = new parserFormula('LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(2,{1,2;1,2},{"KP","NB";1,2})');
-
-		// for bug 62730
-		ws.getRange2("A100:B110").cleanAll();
-		ws.getRange2("A100").setValue("2");
-		ws.getRange2("A101").setValue("1");
-		ws.getRange2("A105").setValue("1");
-		ws.getRange2("A106").setValue("3");
-		ws.getRange2("B100").setValue("0");
-		ws.getRange2("B101").setValue("1");
-		ws.getRange2("B102").setValue("2");
-		ws.getRange2("B103").setValue("3");
-		ws.getRange2("B104").setValue("4");
-		ws.getRange2("B105").setValue("5");
-		ws.getRange2("B106").setValue("6");
-		ws.getRange2("B107").setValue("7");
-		ws.getRange2("B108").setValue("8");
-		ws.getRange2("B109").setValue("9");
-		ws.getRange2("B110").setValue("10");
-
-		oParser = new parserFormula('LOOKUP(1,A100:A110+A100:A110,B100:B110)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(1,A100:A110+A100:A110,B100:B110)');
-		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of LOOKUP(1,A100:A110+A100:A110,B100:B110)');
-
-		oParser = new parserFormula('LOOKUP(2,A100:A110+A100:A110,B100:B110)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(2,A100:A110+A100:A110,B100:B110)');
-		assert.strictEqual(oParser.calculate().getValue(), 5, 'Result of LOOKUP(2,A100:A110+A100:A110,B100:B110)');
-
-		oParser = new parserFormula('LOOKUP(1,A100:A110+A100:A110,B100:B110+B100:B110)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(1,A100:A110+A100:A110,B100:B110+B100:B110)');
-		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of LOOKUP(1,A100:A110+A100:A110,B100:B110+B100:B110)');
-
-		oParser = new parserFormula('LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B101)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B101)');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B101)');
-
-		oParser = new parserFormula('LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B105)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B105)');
-		assert.strictEqual(oParser.calculate().getValue(), 8, 'Result of LOOKUP(1,A100:A110+A100:A110,B100:B107+B100:B105)');
-
-		// for bug 67640 
-		// array mode - lookup by first row and return index from the last row
-		oParser = new parserFormula('LOOKUP("C",{"a","b","c","d";1,2,3,4})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP("C",{"a","b","c","d";1,2,3,4})');
-		assert.strictEqual(oParser.calculate().getValue(), 3, 'Result of LOOKUP("C",{"a","b","c","d";1,2,3,4})');
-
-		oParser = new parserFormula('LOOKUP("bump",{"a",1;"b",2;"c",3})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP("bump",{"a",1;"b",2;"c",3})');
-		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP("bump",{"a",1;"b",2;"c",3})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})');
-		assert.strictEqual(oParser.calculate().getValue(), 16, 'Result of LOOKUP(20,{0,1,2;3,4,5;11,12,13;14,15,16})');
-
-		// array mode - lookup by first column and return index from the last column
-		oParser = new parserFormula('LOOKUP(20,{0,1;49.75,55.75;12,13})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;49.75,55.75;12,13})');
-		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(20,{0,1;49.75,55.75;12,13})');
-
-		oParser = new parserFormula('LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})');
-		assert.strictEqual(oParser.calculate().getValue(), "ds", 'Result of LOOKUP(20,{0,1;2,55.75;12,13;15,"ds"})');
-
-		// single row array(arg1) && two dimension array(arg2)
-		oParser = new parserFormula('LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{-1,20},{"KP","NB";"sd","sf"})');
-
-		// two dimension array(arg1) && single row array(arg2)
-		oParser = new parserFormula('LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})');
-		assert.strictEqual(oParser.calculate().getValue(), "NB", 'Result of LOOKUP(20,{0,1;1,1},{"KP","NB","sd"})');
-
-		// two dimension array(arg1) && two dimension array(arg2)
-		oParser = new parserFormula('LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(20,{0,1;1,1},{"KP","NB";"sd","sf"})');
-
-		// for bug 67743
-		// array || array test
-		ws.getRange2("A201").setValue("2");
-		ws.getRange2("A202").setValue("4");
-		ws.getRange2("A203").setValue("40");
-		ws.getRange2("B201").setValue("1");
-		ws.getRange2("C201").setValue("2");
-		ws.getRange2("D201").setValue("3");
-
-		oParser = new parserFormula('LOOKUP(10,{10,11,12;2,3,4},2)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(10,{10,11,12;2,3,4},2)');
-		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(10,{10,11,12;2,3,4},2)');
-
-		oParser = new parserFormula('LOOKUP(11,{10,11,12;2,3,4},2)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(11,{10,11,12;2,3,4},2)');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(11,{10,11,12;2,3,4},2)');
-		
-		oParser = new parserFormula('LOOKUP(3,A201:A203+{1},{1})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(3,A201:A203+{1},{1})');
-		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(3,A1:A3+{1},{1})');
-
-		oParser = new parserFormula('LOOKUP(5,A201:A203,{1,2})', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(5,A201:A203,{1,2})');
-		assert.strictEqual(oParser.calculate().getValue(), 2, 'Result of LOOKUP(5,A201:A203,{1,2})');
-
-		oParser = new parserFormula('LOOKUP(5,A201:A203+{1},A201:A202)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(5,A201:A203+{1},A201:A202)');
-		assert.strictEqual(oParser.calculate().getValue(), 4, 'Result of LOOKUP(5,A201:A203+{1},A201:A202)');
-
-		oParser = new parserFormula('LOOKUP(5,A201:A203+{1},A201:D201)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(5,A201:A203+{1},A201:D201)');
-		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(5,A201:A203+{1},A201:D201)');
-
-		oParser = new parserFormula('LOOKUP(5,A201:A203+{1},A201:D202)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(5,A201:A203+{1},A201:D202)');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(5,A201:A203+{1},A201:D202)');
-
-		// for bug 69527
-		// cell3D tests
-		let currentSheet = ws.getName();
-
-		ws.getRange2("E200").setValue("3");
-		ws.getRange2("A200:A210").setValue("4000");
-		ws.getRange2("A205").setValue("3");
-		ws.getRange2("B200:B210").setValue("1000");
-		ws.getRange2("B200").setValue("1");
-		ws.getRange2("B205").setValue("55");
-
-		oParser = new parserFormula('LOOKUP(' + currentSheet + '!E200,A200:A210,B200:B210)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(' + currentSheet + '!E200,A200:A210,B200:B210)');
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 55, 'Result of LOOKUP(' + currentSheet + '!E200,A200:A210,B200:B210)');
-
-		oParser = new parserFormula('LOOKUP(E200,' + currentSheet + '!A205,B200:B210)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(E200,' + currentSheet + '!A205,B200:B210)');
-		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(E200,' + currentSheet + '!A205,B200:B210)');
-
-		oParser = new parserFormula('LOOKUP(E200,A200:A210,' + currentSheet + '!A205)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(E200,A200:A210,' + currentSheet + '!A205)');
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 3, 'Result of LOOKUP(E200,A200:A210,' + currentSheet + '!A205)');
-
-		ws.getRange2("A1101:B1123").cleanAll();
-		ws.getRange2("A1101").setValue("0");
-		ws.getRange2("A1102").setValue("0");
-		ws.getRange2("A1103").setValue("2.1");
-		ws.getRange2("A1104").setValue("2.4");
-		ws.getRange2("A1105").setValue("2.4");
-		ws.getRange2("A1106").setValue("9");
-		ws.getRange2("A1107").setValue("10");
-		ws.getRange2("A1108").setValue("11");
-		ws.getRange2("A1109").setValue("11");
-		ws.getRange2("A1110").setValue("11");
-		ws.getRange2("A1111").setValue("12");
-		ws.getRange2("A1112").setValue("12");
-		ws.getRange2("A1113").setValue("12");
-		ws.getRange2("A1114").setValue("67");
-		ws.getRange2("A1115").setValue("");
-		ws.getRange2("A1116").setValue("ALDEBARAN");
-		ws.getRange2("A1117").setValue("BLUE");
-		ws.getRange2("A1118").setValue("CIANO");
-		ws.getRange2("A1119").setValue("RED");
-		ws.getRange2("A1120").setValue("#N/A");
-		ws.getRange2("A1121").setValue("Vega");
-		ws.getRange2("A1122").setValue("FALSE");
-		ws.getRange2("A1123").setValue("TRUE");
-
-		ws.getRange2("B1101").setValue("1");
-		ws.getRange2("B1102").setValue("2");
-		ws.getRange2("B1103").setValue("3");
-		ws.getRange2("B1104").setValue("4");
-		ws.getRange2("B1105").setValue("5");
-		ws.getRange2("B1106").setValue("6");
-		ws.getRange2("B1107").setValue("7");
-		ws.getRange2("B1108").setValue("8");
-		ws.getRange2("B1109").setValue("9");
-		ws.getRange2("B1110").setValue("10");
-		ws.getRange2("B1111").setValue("11");
-		ws.getRange2("B1112").setValue("12");
-		ws.getRange2("B1113").setValue("13");
-		ws.getRange2("B1114").setValue("14");
-		ws.getRange2("B1115").setValue("15");
-		ws.getRange2("B1116").setValue("16");
-		ws.getRange2("B1117").setValue("17");
-		ws.getRange2("B1118").setValue("18");
-		ws.getRange2("B1119").setValue("19");
-		ws.getRange2("B1120").setValue("20");
-		ws.getRange2("B1121").setValue("21");
-		ws.getRange2("B1122").setValue("22");
-		ws.getRange2("B1123").setValue("23");
-		AscCommonExcel.g_oLOOKUPCache.clean();
-
-		oParser = new parserFormula('LOOKUP(2.3,A1101:B1123)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(2.3,A1101:B1123)');
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 3, 'Result of LOOKUP(2.3,A1101:B1123)');
-
-		oParser = new parserFormula('LOOKUP("CIANO",A1101:B1123)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP("CIANO",A1101:B1123)');
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 18, 'Result of LOOKUP("CIANO",A1101:B1123)');
-
-		oParser = new parserFormula('LOOKUP(-1,A1101:B1123)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(-1,A1101:B1123)');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(-1,A1101:B1123)');
-
-		oParser = new parserFormula('LOOKUP(FALSE,A1101:B1123)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(FALSE,A1101:B1123)');
-		assert.strictEqual(oParser.calculate().getValue().getValue(), 22, 'Result of LOOKUP(FALSE,A1101:B1123)');
-
-		oParser = new parserFormula('LOOKUP(#N/A,A1101:B1123)', "A2", ws);
-		assert.ok(oParser.parse(), 'LOOKUP(#N/A,A1101:B1123)');
-		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(#N/A,A1101:B1123)');
+		// Case #19: Error, Range. Error value lookup in 2D range, returns #N/A
+		oParser = new parserFormula('LOOKUP(#N/A,A1300:B1322)', "A2", ws);
+		assert.ok(oParser.parse(), 'LOOKUP(#N/A,A1300:B1322)');
+		assert.strictEqual(oParser.calculate().getValue(), "#N/A", 'Result of LOOKUP(#N/A,A1300:B1322)');
 
 	});
 
@@ -25623,11 +25789,10 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(_getValue(oParser.calculate()), "first");
 
-		// Different result with MS
 		// Case #19: String, String, String. if searchValue = second arg, return third
-		// oParser = new parserFormula('XLOOKUP("123","123",22)', "A2", ws);
-		// assert.ok(oParser.parse());
-		// assert.strictEqual(_getValue(oParser.calculate()), 22);
+		oParser = new parserFormula('XLOOKUP("123","123",22)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 22);
 
 		// Case #20: Number, Array, Array, , Number, Number. BinarySearch
 		oParser = new parserFormula('XLOOKUP(1,{1,2,3,4},{1,2,3,4},,0,2)', "A2", ws);
@@ -26244,6 +26409,11 @@ $(function () {
 		oParser = new parserFormula('XLOOKUP("a",A1501:A1510,B1501:B1510,, -1, 1)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP("a",A1501:A1510,B1501:B1510,, -1, 1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 1, 'XLOOKUP("a",A1501:A1510,B1501:B1510,, -1, 1)');
+
+		// Case #57: Range, Range, String. if searchValue = second arg, return third
+		oParser = new parserFormula('XLOOKUP(A1501,A1501,22)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 22);
 
 		// Negative Cases
 		// Case #1: Number, Range, Range. Basic lookup with no match (should return #N/A)
