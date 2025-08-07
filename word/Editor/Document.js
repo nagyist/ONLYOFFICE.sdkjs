@@ -3722,7 +3722,7 @@ CDocument.prototype.Recalculate_Page = function()
 	// console.log("PageIndex " + PageIndex + " " + ((new Date()).getTime() - nStartTime)/ 1000);
 };
 /**
- * Пересчитываем следующую колоноку.
+ * Пересчитываем следующую колонку.
  */
 CDocument.prototype.Recalculate_PageColumn                   = function()
 {
@@ -3731,11 +3731,12 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 	let ColumnIndex          = this.FullRecalc.ColumnIndex;
 	let StartIndex           = this.FullRecalc.StartIndex;
 	let bResetStartElement   = this.FullRecalc.ResetStartElement;
-	let bResetElementSection = this.FullRecalc.ResetElementSectionu;
+	let bResetElementSection = this.FullRecalc.ResetElementSection;
 
-	// // Recalculation LOG
-	// console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
-	// console.log(this.RecalcInfo);
+	// Recalculation LOG
+	console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
+	console.log(this.RecalcInfo);
+	console.log(`ResetElementSection = ${bResetElementSection}`);
 
     var StartPos = this.Get_PageContentStartPos2(PageIndex, ColumnIndex, 0, StartIndex);
 
@@ -3937,7 +3938,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				{
 					Element.Set_DocumentIndex(Index);
 					if (Index === StartIndex && bResetElementSection)
-						Element.ResetSection(1/*PageSection.GetIndex()*/, SectPr);
+						Element.ResetSection(PageIndex, 1/*PageSection.GetIndex()*/, SectPr);
 					else
 						Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, 0/*PageSection.GetIndex()*/, SectPr);
 				}
@@ -4293,13 +4294,14 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 					{
 						PageSection.IterateBottomLineCalculation(false);
 						
-						bContinue           = true;
-						_PageIndex          = PageIndex;
-						_SectionIndex       = SectionIndex;
-						_ColumnIndex        = 0;
-						_StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
-						_bStart             = false;
-						_bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
+						bContinue             = true;
+						_PageIndex            = PageIndex;
+						_SectionIndex         = SectionIndex;
+						_ColumnIndex          = 0;
+						_StartIndex           = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
+						_bStart               = false;
+						_bResetStartElement   = 0 === SectionIndex ? Page.ResetStartElement : true;
+						_bResetElementSection = 0 === SectionIndex ? false : PageSection.ResetElementSection;
 						
 						this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
 						
@@ -4318,11 +4320,12 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 						
 						var NewPageSection = new AscWord.DocumentPageSection();
 						NewPageSection.Init(PageIndex, nextSectPr, this.Layout.GetSectionIndex(nextSectPr));
-						NewPageSection.Pos           = Index;
-						NewPageSection.EndPos        = Index;
-						NewPageSection.Y             = SectionY + 0.001;
-						NewPageSection.YLimit        = this.Pages[PageIndex].YLimit;
-						NewPageSection.YLimit2       = this.Pages[PageIndex].YLimit;
+						NewPageSection.Pos                 = Index;
+						NewPageSection.EndPos              = Index;
+						NewPageSection.Y                   = SectionY + 0.001;
+						NewPageSection.YLimit              = this.Pages[PageIndex].YLimit;
+						NewPageSection.YLimit2             = this.Pages[PageIndex].YLimit;
+						NewPageSection.ResetElementSection = nextIndex === Index;
 						Page.Sections[_SectionIndex] = NewPageSection;
 						// YLimit, YLimit2 проставляем здесь, потому что в функции Init учитываются настройки уже
 						// новой секции, а нам нужно расчет вести с учетом отступов самой первой секции
@@ -5461,6 +5464,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
     for (var SectionIndex = 0, SectionsCount = Page.Sections.length; SectionIndex < SectionsCount; ++SectionIndex)
     {
         var PageSection = Page.Sections[SectionIndex];
+		let sectionAbs  = PageSection.GetIndex();
 
         this.Endnotes.Draw(nPageIndex, PageSection.Index, pGraphics);
 
@@ -5483,7 +5487,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
                 pGraphics.SaveGrState();
 	
 				// For documents created in Word 2010, we clip the columns as it was done in Word 2010,
-				// despite the fact that in new versions of Word they are always not clipped
+				// although in new versions of Word they are always not clipped
 				if (compatibilityMode <= AscCommon.document_compatibility_mode_Word14)
 				{
 					var X    = ColumnIndex === 0 ? 0 : Column.X - Column.SpaceBefore / 2;
@@ -5498,7 +5502,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
             	if (Page.IsFlowTable(oElement) || Page.IsFrame(oElement))
             		continue;
 
-				var ElementPageIndex = this.private_GetElementPageIndex(ContentPos, nPageIndex, ColumnIndex, ColumnsCount);
+				var ElementPageIndex = this.private_GetElementPageIndex(ContentPos, nPageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 				this.Content[ContentPos].Draw(ElementPageIndex, pGraphics);
             }
 
@@ -5514,7 +5518,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
 
 				if (ColumnStartPos <= nTableIndex && nTableIndex <= ColumnEndPos)
 				{
-					var nElementPageIndex = this.private_GetElementPageIndex(oTable.GetIndex(), nPageIndex, ColumnIndex, ColumnsCount);
+					var nElementPageIndex = this.private_GetElementPageIndex(oTable.GetIndex(), nPageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 					oTable.Draw(nElementPageIndex, pGraphics);
 				}
 			}
@@ -5536,7 +5540,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
 
 					for (var nFlowIndex = oFrame.StartIndex; nFlowIndex < oFrame.StartIndex + oFrame.FlowCount; ++nFlowIndex)
 					{
-						var nElementPageIndex = this.private_GetElementPageIndex(nFlowIndex, nPageIndex, ColumnIndex, ColumnsCount);
+						var nElementPageIndex = this.private_GetElementPageIndex(nFlowIndex, nPageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 						this.Content[nFlowIndex].Draw(nElementPageIndex, pGraphics);
 					}
 
@@ -16535,7 +16539,7 @@ CDocument.prototype.private_GetElementPageIndexByXY = function(ElementPos, X, Y,
 		}
 	}
 
-	return this.private_GetElementPageIndex(ElementPos, PageIndex, ResultColumn, ColumnsCount);
+	return this.private_GetElementPageIndex(ElementPos, PageIndex, ResultColumn, ColumnsCount, PageSection.GetIndex());
 };
 CDocument.prototype.Get_DocumentPagePositionByContentPosition = function(ContentPosition)
 {

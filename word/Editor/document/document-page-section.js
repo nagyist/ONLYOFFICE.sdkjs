@@ -43,6 +43,8 @@
 		this.Pos    = 0;
 		this.EndPos = -1;
 		
+		this.ResetElementSection = false;
+		
 		this.Y      = 0;
 		this.YLimit = 0;
 		
@@ -160,6 +162,7 @@
 	 */
 	DocumentPageSection.prototype.IterateBottomLineCalculation = function(isIncrease)
 	{
+		console.log(`Iteration: ${this.IterationsCount}`);
 		// Алгоритм следующий:
 		// На первом шаге мы прогнозируем положение границы по уже имеющемуся объему текста и
 		// ширине колонок.

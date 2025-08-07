@@ -769,9 +769,17 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
 		oRecalcInfo.FlowObjectPageBreakBefore = false;
 	}
 
+	let resetStartElement = false;
     var StartIndex = 0;
     if (PageIndex > 0)
-        StartIndex = this.Pages[PageIndex - 1].EndPos;
+	{
+		StartIndex = this.Pages[PageIndex - 1].EndPos;
+		if (this.Pages[PageIndex - 1].NextPageNewElement)
+		{
+			resetStartElement = true;
+			StartIndex += 1;
+		}
+	}
 
     if (true === bStart)
     {
@@ -825,7 +833,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
             if (true === oRecalcInfo.Can_RecalcObject())
             {
 				var ElementPageIndex = 0;
-				if ((0 === Index && 0 === PageIndex) || Index !== StartIndex)
+				if ((0 === Index && 0 === PageIndex) || Index !== StartIndex || (Index === StartIndex && resetStartElement))
 				{
 					Element.Set_DocumentIndex(Index);
 					Element.Reset(X, Y, XLimit, YLimit, PageIndex, 0, 1);
@@ -1244,7 +1252,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
         }
         else
         {
-            if (( 0 === Index && 0 === PageIndex ) || Index != StartIndex)
+            if ((0 === Index && 0 === PageIndex) || Index !== StartIndex || (Index === StartIndex && resetStartElement))
             {
                 Element.Set_DocumentIndex(Index);
                 Element.Reset(X, Y, XLimit, YLimit, PageIndex, 0, 1);

@@ -173,9 +173,9 @@ CBlockLevelSdt.prototype.ResetSection = function(pageAbs, sectionAbs, sectPr)
 	}
 	
 	this.Sections.length = sectionAbs - this.SectionNum;
-	
-	let pageCount = this.Content.GetPagesCount();
-	this.Sections.push(new AscWord.DocumentElementSection(pageAbs, pageCount, -1, sectPr));
+
+	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
+	this.Sections.push(new AscWord.DocumentElementSection(pageAbs, startPage, startPage, sectPr));
 };
 CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 {
