@@ -310,6 +310,9 @@
 		AscFormat.CShape.prototype.recalculateTransform.call(this);
 		this.controller.recalculateTransform();
 	};
+	CControl.prototype.is3DControl = function() {
+		return !this.formControlPr.noThreeD;
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -767,6 +770,8 @@
 	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
+	const SPINBUTTON_3D_SHADOW_OFFSET = 0.25;
+	const SPINBUTTON_3D_HOLD_OFFSET = 0.125;
 	function CSpinButton(oControl, bIsUp) {
 		this.isHold = false;
 		this.x = null;
@@ -785,46 +790,109 @@
 	CSpinButton.prototype.draw = function (graphics) {
 		graphics.SaveGrState();
 		graphics.transform3(this.transform);
-		let arrPenColor;
-		let arrFillColor;
-		if (this.isHold) {
-			arrPenColor = [255, 255, 255, 255];
-			arrFillColor = [0, 0, 0, 255];
-		} else {
-			arrPenColor = [0, 0, 0, 255];
-			arrFillColor = [255, 255, 255, 255];
-		}
-		graphics.p_width(0);
-		graphics.b_color1.apply(graphics, arrFillColor);
-		graphics.p_color.apply(graphics, arrPenColor);
-		graphics._s();
-		graphics._m(0, 0);
-		graphics._l(this.extX, 0);
-		graphics._l(this.extX, this.extY);
-		graphics._l(0, this.extY);
-		graphics._z();
-		graphics.df();
-		graphics.ds();
+		let arrPenColor = [0, 0, 0, 255];
+		let arrRectColor = [0, 0, 0, 255];
+		let nRectCX = this.extX / 2;
+		let nRectCY = this.extY / 2;
+		const bIsUse3D = this.control.is3DControl();
 
-		graphics.b_color1.apply(graphics, arrPenColor);
+		if (bIsUse3D) {
+			const arrWhiteColor = [255, 255, 255, 255];
+			const arrShadowColor = [100, 100, 100, 255];
+			const arrButtonColor = [240, 240, 240, 255];
+
+			graphics.b_color1.apply(graphics, arrShadowColor);
+			graphics._e();
+			graphics._m(SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+			graphics._l(this.extX, SPINBUTTON_3D_SHADOW_OFFSET);
+			graphics._l(this.extX, this.extY);
+			graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY);
+			graphics._z();
+			graphics.df();
+
+			graphics.b_color1.apply(graphics, arrWhiteColor);
+			graphics._e();
+			graphics._m(0, this.extY);
+			graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
+			graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+			graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+			graphics._l(this.extX, 0);
+			graphics._l(0, 0);
+			graphics._z();
+			graphics.df();
+
+			graphics._e();
+			if (this.isHold) {
+				nRectCX = SPINBUTTON_3D_SHADOW_OFFSET + (this.extX - SPINBUTTON_3D_SHADOW_OFFSET) / 2;
+				nRectCY = SPINBUTTON_3D_SHADOW_OFFSET + (this.extY - SPINBUTTON_3D_SHADOW_OFFSET) / 2;
+
+				graphics.b_color1.apply(graphics, arrButtonColor);
+				graphics._m(SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET);
+				graphics._l(this.extX - SPINBUTTON_3D_HOLD_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET);
+				graphics._l(this.extX - SPINBUTTON_3D_HOLD_OFFSET, this.extY - SPINBUTTON_3D_HOLD_OFFSET);
+				graphics._l(SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET, this.extY - SPINBUTTON_3D_HOLD_OFFSET);
+			} else {
+				graphics.b_color1.apply(graphics, arrShadowColor);
+				graphics._e();
+				graphics._m(this.extX, 0);
+				graphics._l(this.extX, SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._z();
+				graphics.df();
+
+				graphics._e();
+				graphics._m(0, this.extY);
+				graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY);
+				graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._z();
+				graphics.df();
+
+				graphics.b_color1.apply(graphics, arrButtonColor);
+				graphics._m(SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
+				graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
+			}
+			graphics._z();
+			graphics.df();
+		} else {
+			let arrFillColor;
+			if (this.isHold) {
+				arrRectColor = [255, 255, 255, 255];
+				arrFillColor = [0, 0, 0, 255];
+			} else {
+				arrFillColor = [255, 255, 255, 255];
+			}
+			graphics.p_width(0);
+			graphics.b_color1.apply(graphics, arrFillColor);
+			graphics.p_color.apply(graphics, arrPenColor);
+			graphics._s();
+			graphics._m(0, 0);
+			graphics._l(this.extX, 0);
+			graphics._l(this.extX, this.extY);
+			graphics._l(0, this.extY);
+			graphics._z();
+			graphics.ds();
+			graphics.df();
+		}
+
+		graphics.b_color1.apply(graphics, arrRectColor);
 		graphics._e();
-		const cx = this.extX / 2;
-		const cy = this.extY / 2;
 		const nRectHeight = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
 		const nHalfRectHeight = nRectHeight / 2;
 		if (this.isUp) {
-			graphics._m(cx - nRectHeight, cy + nHalfRectHeight);
-			graphics._l(cx + nRectHeight, cy + nHalfRectHeight);
-			graphics._l(cx, cy - nHalfRectHeight);
+			graphics._m(nRectCX - nRectHeight, nRectCY + nHalfRectHeight);
+			graphics._l(nRectCX + nRectHeight, nRectCY + nHalfRectHeight);
+			graphics._l(nRectCX, nRectCY - nHalfRectHeight);
 		} else {
-			graphics._m(cx - nRectHeight, cy - nHalfRectHeight);
-			graphics._l(cx + nRectHeight, cy - nHalfRectHeight);
-			graphics._l(cx, cy + nHalfRectHeight);
+			graphics._m(nRectCX - nRectHeight, nRectCY - nHalfRectHeight);
+			graphics._l(nRectCX + nRectHeight, nRectCY - nHalfRectHeight);
+			graphics._l(nRectCX, nRectCY + nHalfRectHeight);
 		}
 		graphics._z();
 		graphics.df();
-		graphics._e();
 		graphics.RestoreGrState();
+		graphics._e();
 	};
 	CSpinButton.prototype.hit = function (nX, nY) {
 		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
@@ -895,8 +963,8 @@
 		};
 	};
 	CSpinController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
-		this.upButton.draw(graphics);
 		this.downButton.draw(graphics);
+		this.upButton.draw(graphics);
 	};
 	CSpinController.prototype.getCursorInfo = function(e, nX, nY) {
 		const oControl = this.control;
