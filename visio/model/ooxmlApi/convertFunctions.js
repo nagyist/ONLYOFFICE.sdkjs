@@ -1948,15 +1948,23 @@
 			 */
 			const isTextInherited = textElement.isInherited;
 
+			// UPD: now with binary file read \r\n in original is replaced with \n! Focus is made for binary \n
+
 			// visio set extra \r\n at the end of each text element: see fix below. Both are needed
+			// UPD: fix below works for both binary read with \n and xml with \r\n
 			let lastTextEl = textElement.elements[textElement.elements.length - 1];
-			if (typeof lastTextEl === "string" && lastTextEl.endsWith("\r\n")) {
-				lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
-				textElement.elements[textElement.elements.length - 1] = lastTextEl;
+			if (typeof lastTextEl === "string") {
+				if (lastTextEl.endsWith("\r\n")) {
+					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
+				} else if (lastTextEl.endsWith("\n")) {
+					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 1);
+				}
 			}
+			textElement.elements[textElement.elements.length - 1] = lastTextEl;
 
 			// read text:
-			// consider CRLF (\r\n) as new paragraph start. Right after CRLF visio searches for pp
+			// consider CRLF (\r\n) (UPD: \n for binary read) as new paragraph start.
+			// Right after CRLF visio searches for pp
 			// which will be properties for new paragraph.
 			// (Or if it is something after CRLF it doesn't search for pp)
 
@@ -1975,8 +1983,9 @@
 					if (typeof textElementPart === "string") {
 						// "LSCRLF" transforms to line drop and new paragraph without line drop so we get one
 						// line drop where should be two line drops so let's add extra line drop
-						textElementPart = textElementPart.replaceAll("\u2028\r\n", "\u2028\u2028\r\n");
-						let textArr = textElementPart.split("\r\n");
+						textElementPart = textElementPart.replaceAll("\u2028\n", "\u2028\u2028\n"); // for new open: binary
+						textElementPart = textElementPart.replaceAll("\u2028\r\n", "\u2028\u2028\r\n"); // for old open
+						let textArr = textElementPart.split("\n");
 
 						for (let j = 0; j < textArr.length; j++) {
 							let text = textArr[j];
@@ -2062,6 +2071,7 @@
 			}
 
 			// visio set \r\n at the end of each paragraph
+			// UPD: works same for both binary read with \n and xml read with \r\n
 			for (let i = 0; i < oContent.Content.length; i++) {
 				const paragraph = oContent.Content[i];
 				if (paragraph.Content.length > 1) {
