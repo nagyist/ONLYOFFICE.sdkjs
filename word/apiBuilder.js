@@ -3948,6 +3948,12 @@
 	 */
 
 	/**
+	 * The types of elements that can be added to the paragraph structure.
+	 * @typedef {("ltr" | "rtl")} ReadingOrder
+	 * @see office-js-api/Examples/Enumerations/ReadingOrder.js
+	 */
+
+	/**
 	 * The possible values for the base which the relative horizontal positioning of an object will be calculated from.
 	 * @typedef {("character" | "column" | "leftMargin" | "rightMargin" | "margin" | "page")} RelFromH
 	 * @see office-js-api/Examples/Enumerations/RelFromH.js
@@ -10206,19 +10212,17 @@
 	 * <b>"rtl"</b> - Right-to-Left text direction.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE"]
-	 * @param {("ltr" | "rtl" | null)} [direction = null]
+	 * @param {?ReadingOrder} [readingOrder = undefined]
 	 * @returns {ApiParagraph} - Returns paragraph itself (ApiParagraph)
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/SetReadingOrder.js
 	 */
-	ApiParagraph.prototype.SetReadingOrder = function (direction) {
-		let bidi;
-		switch (direction) {
-			case 'ltr': bidi = 0; break;
-			case 'rtl': bidi = 1; break;
-			default: bidi = null;
-		}
+	ApiParagraph.prototype.SetReadingOrder = function (readingOrder) {
+		const map = {
+			'ltr': false,
+			'rtl': true
+		};
 		this.Paragraph.SetApplyToAll(true);
-		this.Paragraph.SetParagraphBidi(bidi);
+		this.Paragraph.SetParagraphBidi(map[readingOrder]);
 		this.Paragraph.SetApplyToAll(false);
 		return this;
 	};
