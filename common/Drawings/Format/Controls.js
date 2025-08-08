@@ -32,11 +32,11 @@
 
 "use strict";
 
-(function() {
+(function () {
 
 	const CFormControlPr_checked_unchecked = 0;
-	const CFormControlPr_checked_checked   = 1;
-	const CFormControlPr_checked_mixed     = 2;
+	const CFormControlPr_checked_checked = 1;
+	const CFormControlPr_checked_mixed = 2;
 
 	const CFormControlPr_objectType_button = 0;
 	const CFormControlPr_objectType_checkBox = 1;
@@ -85,6 +85,7 @@
 				return null;
 		}
 	}
+
 	function getHorizontalAlignFromControl(nPr) {
 		switch (nPr) {
 			case CFormControlPr_horizontalAlignment_center:
@@ -100,7 +101,7 @@
 			case CFormControlPr_horizontalAlignment_justify:
 				return AscCommon.align_Justify;
 			case CFormControlPr_horizontalAlignment_left:
-				return  AscCommon.align_Left;
+				return AscCommon.align_Left;
 			case CFormControlPr_horizontalAlignment_right:
 				return AscCommon.align_Right;
 			case CFormControlPr_horizontalAlignment_centerContinuous:
@@ -126,6 +127,7 @@
 				return null;
 		}
 	}
+
 	function getHorizontalAlignFromContentControl(nPr) {
 		switch (nPr) {
 			case AscCommon.align_Center:
@@ -135,7 +137,7 @@
 			case AscCommon.align_Justify:
 				return CFormControlPr_horizontalAlignment_justify;
 			case AscCommon.align_Left:
-				return CFormControlPr_horizontalAlignment_left ;
+				return CFormControlPr_horizontalAlignment_left;
 			case AscCommon.align_Right:
 				return CFormControlPr_horizontalAlignment_right;
 			case AscCommon.align_CenterContinuous:
@@ -147,12 +149,13 @@
 
 	AscDFH.changesFactory[AscDFH.historyitem_Control_ControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_Control_FormControlPr] = AscDFH.CChangesDrawingsObject;
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_ControlPr] = function(oClass, pr) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_ControlPr] = function (oClass, pr) {
 		oClass.controlPr = pr;
 	}
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_FormControlPr] = function(oClass, pr) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_FormControlPr] = function (oClass, pr) {
 		oClass.formControlPr = pr;
 	}
+
 	function CControl() {
 		AscFormat.CShape.call(this);
 		this.name = null;
@@ -162,6 +165,7 @@
 		this.formControlPr = new CFormControlPr();
 		this.controller = null;
 	}
+
 	AscFormat.InitClass(CControl, AscFormat.CShape, AscDFH.historyitem_type_Control);
 	CControl.prototype.superclass = AscFormat.CGraphicObjectBase;
 	CControl.prototype.fillObject = function (oCopy, oPr) {
@@ -173,7 +177,7 @@
 			oCopy.setFormControlPr(this.formControlPr.createDuplicate());
 		}
 	};
-	CControl.prototype.initController = function() {
+	CControl.prototype.initController = function () {
 		switch (this.formControlPr.objectType) {
 			case CFormControlPr_objectType_checkBox: {
 				this.controller = new CCheckBoxController(this);
@@ -204,7 +208,7 @@
 		return nX > 0 && nX < this.extX && nY > 0 && nY < this.extY;
 	}
 	CControl.prototype.hitInPath = CControl.prototype.hitInInnerArea;
-	CControl.prototype.hitInTextRect = function(x, y) {
+	CControl.prototype.hitInTextRect = function (x, y) {
 		if (this.selected) {
 			return AscFormat.CShape.prototype.hitInTextRect.call(this, x, y);
 		}
@@ -213,10 +217,13 @@
 	CControl.prototype.isControl = function () {
 		return true;
 	}
-	CControl.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+	CControl.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		return this.controller.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	}
-	CControl.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+	CControl.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.controller.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+	}
+	CControl.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
 		return this.controller.onMouseUp(e, nX, nY, nPageIndex, oController);
 	}
 	CControl.prototype.getCursorInfo = function (e, nX, nY) {
@@ -228,15 +235,15 @@
 	CControl.prototype.canRotate = function () {
 		return false;
 	};
-	CControl.prototype.setControlPr = function(pr) {
+	CControl.prototype.setControlPr = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_ControlPr, this.controlPr, pr));
 		this.controlPr = pr;
 	};
-	CControl.prototype.setFormControlPr = function(pr) {
+	CControl.prototype.setFormControlPr = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_FormControlPr, this.formControlPr, pr));
 		this.formControlPr = pr;
 	};
-	CControl.prototype.clearVmlTxBody = function() {
+	CControl.prototype.clearVmlTxBody = function () {
 		const oDocContent = this.getDocContent();
 		for (let i = 0; i < oDocContent.Content.length; i++) {
 			const oParagraph = oDocContent.Content[i];
@@ -281,13 +288,13 @@
 	CControl.prototype.applySpecialPasteProps = function (oPastedWb) {
 		this.controller.applySpecialPasteProps(oPastedWb);
 	};
-	CControl.prototype.initTextProperties = function() {
+	CControl.prototype.initTextProperties = function () {
 		this.controller.initTextProperties();
 	};
-	CControl.prototype.setMacro = function(pr) {
+	CControl.prototype.setMacro = function (pr) {
 		this.controlPr.setMacro(pr);
 	};
-	CControl.prototype.getTextHAlign = function() {
+	CControl.prototype.getTextHAlign = function () {
 		const oTxBody = this.txBody;
 		const oContent = oTxBody && oTxBody.content;
 		if (oContent) {
@@ -298,7 +305,7 @@
 		}
 		return null;
 	};
-	CControl.prototype.getTextVAlign = function() {
+	CControl.prototype.getTextVAlign = function () {
 		const oTxBody = this.txBody;
 		const oBodyPr = oTxBody && oTxBody.bodyPr;
 		if (oBodyPr) {
@@ -306,27 +313,28 @@
 		}
 		return null;
 	};
-	CControl.prototype.recalculateTransform = function() {
+	CControl.prototype.recalculateTransform = function () {
 		AscFormat.CShape.prototype.recalculateTransform.call(this);
 		this.controller.recalculateTransform();
 	};
-	CControl.prototype.is3DControl = function() {
+	CControl.prototype.is3DControl = function () {
 		return !this.formControlPr.noThreeD;
 	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
 	}
-	CControlControllerBase.prototype.getFormControlPr = function() {
+
+	CControlControllerBase.prototype.getFormControlPr = function () {
 		return this.control.formControlPr;
 	};
-	CControlControllerBase.prototype.getControlPr = function() {
+	CControlControllerBase.prototype.getControlPr = function () {
 		return this.control.controlPr;
 	};
-	CControlControllerBase.prototype.getWorksheet = function() {
+	CControlControllerBase.prototype.getWorksheet = function () {
 		return this.control.Get_Worksheet();
 	};
-	CControlControllerBase.prototype.getParsedFmlaLink = function() {
+	CControlControllerBase.prototype.getParsedFmlaLink = function () {
 		const oFormControlPr = this.getFormControlPr();
 		if (oFormControlPr.fmlaLink) {
 			const oWs = this.getWorksheet();
@@ -355,20 +363,21 @@
 			}
 		}
 	};
-	CControlControllerBase.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {};
-	CControlControllerBase.prototype.getCursorInfo = function(e, nX, nY) {};
-	CControlControllerBase.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {};
-	CControlControllerBase.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {};
-	CControlControllerBase.prototype.init = function() {};
-	CControlControllerBase.prototype.initTextProperties = function() {return null;};
-	CControlControllerBase.prototype.applySpecialPasteProps = function(oPastedWb) {};
-	CControlControllerBase.prototype.getTextRect = function() {
+	CControlControllerBase.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {};
+	CControlControllerBase.prototype.getCursorInfo = function (e, nX, nY) {};
+	CControlControllerBase.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {};
+	CControlControllerBase.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {return false;};
+	CControlControllerBase.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {};
+	CControlControllerBase.prototype.init = function () {};
+	CControlControllerBase.prototype.initTextProperties = function () {return null;};
+	CControlControllerBase.prototype.applySpecialPasteProps = function (oPastedWb) {};
+	CControlControllerBase.prototype.getTextRect = function () {
 		return AscFormat.CShape.prototype.getTextRect.call(this.control);
 	};
-	CControlControllerBase.prototype.getChecked = function() {
+	CControlControllerBase.prototype.getChecked = function () {
 		return null;
 	};
-	CControlControllerBase.prototype.recalculateTransform = function() {};
+	CControlControllerBase.prototype.recalculateTransform = function () {};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -377,6 +386,7 @@
 	const CHECKBOX_BODYPR_INSETS_T = 32004 / 36000;
 	const CHECKBOX_BODYPR_INSETS_B = 32004 / 36000;
 	const CHECKBOX_OFFSET_X = CHECKBOX_SIDE_SIZE + (CHECKBOX_X_OFFSET * 2 - CHECKBOX_BODYPR_INSETS_L);
+
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
 		this.isHold = false;
@@ -395,7 +405,7 @@
 			oTxBody.setBodyPr(oBodyPr);
 		}
 	};
-	CCheckBoxController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
+	CCheckBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
 		const oMainTransfrom = transform || oControl.transform;
 		const checkBoxTransform = oMainTransfrom.CreateDublicate();
@@ -449,18 +459,18 @@
 
 		graphics.RestoreGrState();
 	};
-	CCheckBoxController.prototype.isChecked = function() {
+	CCheckBoxController.prototype.isChecked = function () {
 		const nCheckValue = this.getChecked();
 		return nCheckValue === CFormControlPr_checked_checked;
 	};
-	CCheckBoxController.prototype.isMixed = function() {
+	CCheckBoxController.prototype.isMixed = function () {
 		const nCheckValue = this.getChecked();
 		return nCheckValue === CFormControlPr_checked_mixed;
 	};
-	CCheckBoxController.prototype.isEmpty = function() {
+	CCheckBoxController.prototype.isEmpty = function () {
 		return !(this.isChecked() || this.isMixed());
 	};
-	CCheckBoxController.prototype.isExternalCheckBox = function() {
+	CCheckBoxController.prototype.isExternalCheckBox = function () {
 		const oRef = this.getParsedFmlaLink();
 		const oWbModel = Asc.editor && Asc.editor.wbModel;
 		if (oRef && oWbModel) {
@@ -473,12 +483,12 @@
 		if (oControl.selected) {
 			return null;
 		}
-		if(!oControl.hit(nX, nY)) {
+		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
-	CCheckBoxController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+	CCheckBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return false;
@@ -493,7 +503,7 @@
 		oControl.onUpdate();
 		return true;
 	}
-	CCheckBoxController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+	CCheckBoxController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
 		const oControl = this.control;
 		this.setIsHold(false);
 		if (this.isExternalCheckBox()) {
@@ -501,7 +511,7 @@
 			return false;
 		}
 		const oThis = this;
-		oController.checkObjectsAndCallback(function() {
+		oController.checkObjectsAndCallback(function () {
 			const oFormControlPr = oThis.getFormControlPr();
 			if (!oThis.isEmpty()) {
 				oFormControlPr.setChecked(CFormControlPr_checked_unchecked);
@@ -516,7 +526,7 @@
 		const oRef = this.getParsedFmlaLink();
 		let nRetValue = null;
 		if (oRef) {
-			oRef._foreachNoEmpty(function(oCell) {
+			oRef._foreachNoEmpty(function (oCell) {
 				if (oCell) {
 					const bValue = oCell.getBoolValue();
 					if (oCell.type === AscCommon.CellValueType.Bool || oCell.type === AscCommon.CellValueType.Number) {
@@ -558,7 +568,7 @@
 		oTextRect.r += CHECKBOX_OFFSET_X;
 		return oTextRect;
 	};
-	CCheckBoxController.prototype.setIsHold = function(pr) {
+	CCheckBoxController.prototype.setIsHold = function (pr) {
 		this.isHold = pr;
 	}
 	CCheckBoxController.prototype.getChecked = function () {
@@ -605,7 +615,7 @@
 			const arrF = AscFormat.getParsedCopyRefs(sRef, oParentWb);
 			if (arrF.length) {
 				const oFirstRef = arrF[0];
-				const sSheetName  = oFirstRef.sheet;
+				const sSheetName = oFirstRef.sheet;
 				const oWorksheet = new AscCommonExcel.Worksheet(oParentWb);
 				oWorksheet.sName = sSheetName;
 				const oRange = oWorksheet.getRange2(oFirstRef.range);
@@ -621,7 +631,7 @@
 					oRes[sSheetName].minR = oBBox.r1;
 
 					const oCellValue = this.getCellValueFromControl();
-					oWorksheet._getCell(oBBox.c1, oBBox.r1, function(oCell) {
+					oWorksheet._getCell(oBBox.c1, oBBox.r1, function (oCell) {
 						oCell.setValueData(new AscCommonExcel.UndoRedoData_CellValueData(null, oCellValue));
 					});
 					if (oFirstRef.defName) {
@@ -635,12 +645,13 @@
 
 	const BUTTON_OFFSET = 0.5;
 	const BUTTON_BODYPR_INSETS = 27432 / 36000;
+
 	function CButtonController(oControl) {
 		CControlControllerBase.call(this, oControl);
 		this.isHold = false;
 	};
 	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
-	CButtonController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
+	CButtonController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
 		graphics.SaveGrState();
 		transform = transform || oControl.transform;
@@ -692,26 +703,26 @@
 		graphics.RestoreGrState();
 		oControl.drawTxBody(graphics, transform, _transformText, pageIndex);
 	};
-	CButtonController.prototype.setIsHold = function(bPr) {
+	CButtonController.prototype.setIsHold = function (bPr) {
 		this.isHold = bPr;
 	};
-	CButtonController.prototype.onMacroError = function() {
+	CButtonController.prototype.onMacroError = function () {
 		const oApi = Asc.editor;
 		if (oApi) {
 			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical);
 		}
 	};
-	CButtonController.prototype.getCursorInfo = function(e, nX, nY) {
+	CButtonController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return null;
 		}
-		if(!oControl.hit(nX, nY)) {
+		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
-	CButtonController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+	CButtonController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return false;
@@ -722,14 +733,14 @@
 		if (e.CtrlKey) {
 			return false;
 		}
-		if(!oControl.hit(nX, nY)) {
+		if (!oControl.hit(nX, nY)) {
 			return false;
 		}
 		this.setIsHold(true);
 		this.control.onUpdate();
 		return true;
 	};
-	CButtonController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+	CButtonController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
 		if (e.button !== 0) {
 			return false;
 		}
@@ -744,13 +755,13 @@
 		this.control.onUpdate();
 		return true;
 	};
-	CButtonController.prototype.runMacros = function(sMacro) {
+	CButtonController.prototype.runMacros = function (sMacro) {
 		const oApi = Asc.editor;
 		if (oApi) {
 			oApi.asc_runMacros(sMacro);
 		}
 	};
-	CButtonController.prototype.initTextProperties = function() {
+	CButtonController.prototype.initTextProperties = function () {
 		const oControl = this.control;
 		const oBodyPr = new AscFormat.CBodyPr();
 		oBodyPr.setInsets(BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS, BUTTON_BODYPR_INSETS);
@@ -772,6 +783,7 @@
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
 	const SPINBUTTON_3D_SHADOW_OFFSET = 0.25;
 	const SPINBUTTON_3D_HOLD_OFFSET = 0.125;
+
 	function CSpinButton(oControl, bIsUp) {
 		this.isHold = false;
 		this.x = null;
@@ -784,6 +796,7 @@
 		this.transform = new AscCommon.CMatrix();
 		this.invertTransform = new AscCommon.CMatrix();
 	}
+
 	CSpinButton.prototype.setIsHold = function (pr) {
 		this.isHold = pr;
 	};
@@ -903,6 +916,7 @@
 	CSpinButton.prototype.onMouseUp = function (nX, nY, oDrawingController) {
 
 	};
+
 	function CSpinController(oControl) {
 		CControlControllerBase.call(this, oControl);
 		this.upButton = new CSpinButton(oControl, true);
@@ -962,21 +976,21 @@
 			}
 		};
 	};
-	CSpinController.prototype.draw = function(graphics, transform, transformText, pageIndex, opt) {
+	CSpinController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		this.downButton.draw(graphics);
 		this.upButton.draw(graphics);
 	};
-	CSpinController.prototype.getCursorInfo = function(e, nX, nY) {
+	CSpinController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return null;
 		}
-		if(!oControl.hit(nX, nY)) {
+		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
-	CSpinController.prototype.onMouseDown = function(e, nX, nY, nPageIndex, oDrawingController) {
+	CSpinController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
 			return false;
@@ -995,13 +1009,13 @@
 		}
 		return false;
 	};
-	CSpinController.prototype.onMouseUp = function(e, nX, nY, nPageIndex, oController) {
+	CSpinController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
 		this.upButton.onMouseUp();
 		this.downButton.onMouseUp();
 	};
-	CSpinController.prototype.init = function() {};
-	CSpinController.prototype.initTextProperties = function() {};
-	CSpinController.prototype.applySpecialPasteProps = function(oPastedWb) {};
+	CSpinController.prototype.init = function () {};
+	CSpinController.prototype.initTextProperties = function () {};
+	CSpinController.prototype.applySpecialPasteProps = function (oPastedWb) {};
 	CSpinController.prototype.hit = function (nX, nY) {
 		return this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY);
 	};
@@ -1043,7 +1057,7 @@
 			}
 		}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
 	};
-	CSpinController.prototype.recalculateTransform = function() {
+	CSpinController.prototype.recalculateTransform = function () {
 		const oControl = this.control;
 		const oControlMatrix = oControl.transform;
 		const nHalfHeight = oControl.extY / 2;
@@ -1085,54 +1099,55 @@
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_Print] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_RecalcAlways] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_UiObject] = AscDFH.CChangesDrawingsBool;
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AltText] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AltText] = function (oClass, value) {
 		this.altText = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoFill] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoFill] = function (oClass, value) {
 		this.autoFill = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoLine] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoLine] = function (oClass, value) {
 		this.autoLine = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoPict] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_AutoPict] = function (oClass, value) {
 		this.autoPict = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Dde] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Dde] = function (oClass, value) {
 		this.dde = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_DefaultSize] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_DefaultSize] = function (oClass, value) {
 		this.defaultSize = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Disabled] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Disabled] = function (oClass, value) {
 		this.disabled = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Cf] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Cf] = function (oClass, value) {
 		this.cf = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_LinkedCell] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_LinkedCell] = function (oClass, value) {
 		this.linkedCell = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_ListFillRange] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_ListFillRange] = function (oClass, value) {
 		this.listFillRange = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RId] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RId] = function (oClass, value) {
 		this.rId = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Locked] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Locked] = function (oClass, value) {
 		this.locked = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Macro] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Macro] = function (oClass, value) {
 		this.macro = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Print] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_Print] = function (oClass, value) {
 		this.print = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RecalcAlways] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_RecalcAlways] = function (oClass, value) {
 		this.recalcAlways = value;
 	};
-	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_UiObject] = function(oClass, value) {
+	AscDFH.drawingsChangesMap[AscDFH.historyitem_ControlPr_UiObject] = function (oClass, value) {
 		this.uiObject = value;
 	};
+
 	function CControlPr() {
 		AscFormat.CBaseFormatObject.call(this);
 		this.altText = null;
@@ -1152,117 +1167,118 @@
 		this.recalcAlways = null;
 		this.uiObject = null;
 	}
+
 	AscFormat.InitClass(CControlPr, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_ControlPr);
-	CControlPr.prototype.setAltText = function(pr) {
+	CControlPr.prototype.setAltText = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_AltText, this.altText, pr));
 		this.altText = pr;
 	}
-	CControlPr.prototype.getAltText = function() {
+	CControlPr.prototype.getAltText = function () {
 		return this.altText;
 	};
-	CControlPr.prototype.setAutoFill = function(pr) {
+	CControlPr.prototype.setAutoFill = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoFill, this.autoFill, pr));
 		this.autoFill = pr;
 	}
-	CControlPr.prototype.getAutoFill = function() {
+	CControlPr.prototype.getAutoFill = function () {
 		return this.autoFill;
 	};
-	CControlPr.prototype.setAutoLine = function(pr) {
+	CControlPr.prototype.setAutoLine = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoLine, this.autoLine, pr));
 		this.autoLine = pr;
 	}
-	CControlPr.prototype.getAutoLine = function() {
+	CControlPr.prototype.getAutoLine = function () {
 		return this.autoLine;
 	};
-	CControlPr.prototype.setAutoPict = function(pr) {
+	CControlPr.prototype.setAutoPict = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_AutoPict, this.autoPict, pr));
 		this.autoPict = pr;
 	}
-	CControlPr.prototype.getAutoPict = function() {
+	CControlPr.prototype.getAutoPict = function () {
 		return this.autoPict;
 	};
-	CControlPr.prototype.setDde = function(pr) {
+	CControlPr.prototype.setDde = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Dde, this.dde, pr));
 		this.dde = pr;
 	}
-	CControlPr.prototype.getDde = function() {
+	CControlPr.prototype.getDde = function () {
 		return this.dde;
 	};
-	CControlPr.prototype.setDefaultSize = function(pr) {
+	CControlPr.prototype.setDefaultSize = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_DefaultSize, this.defaultSize, pr));
 		this.defaultSize = pr;
 	}
-	CControlPr.prototype.getDefaultSize = function() {
+	CControlPr.prototype.getDefaultSize = function () {
 		return this.defaultSize;
 	};
-	CControlPr.prototype.setDisabled = function(pr) {
+	CControlPr.prototype.setDisabled = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Disabled, this.disabled, pr));
 		this.disabled = pr;
 	}
-	CControlPr.prototype.getDisabled = function() {
+	CControlPr.prototype.getDisabled = function () {
 		return this.disabled;
 	};
-	CControlPr.prototype.setCf = function(pr) {
+	CControlPr.prototype.setCf = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_Cf, this.cf, pr));
 		this.cf = pr;
 	}
-	CControlPr.prototype.getCf = function() {
+	CControlPr.prototype.getCf = function () {
 		return this.cf;
 	};
-	CControlPr.prototype.setLinkedCell = function(pr) {
+	CControlPr.prototype.setLinkedCell = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_LinkedCell, this.linkedCell, pr));
 		this.linkedCell = pr;
 	}
-	CControlPr.prototype.getLinkedCell = function() {
+	CControlPr.prototype.getLinkedCell = function () {
 		return this.linkedCell;
 	};
-	CControlPr.prototype.setListFillRange = function(pr) {
+	CControlPr.prototype.setListFillRange = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_ListFillRange, this.listFillRange, pr));
 		this.listFillRange = pr;
 	}
-	CControlPr.prototype.getListFillRange = function() {
+	CControlPr.prototype.getListFillRange = function () {
 		return this.listFillRange;
 	};
-	CControlPr.prototype.setRId = function(pr) {
+	CControlPr.prototype.setRId = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_ControlPr_RId, this.rId, pr));
 		this.rId = pr;
 	}
-	CControlPr.prototype.getRId = function() {
+	CControlPr.prototype.getRId = function () {
 		return this.rId;
 	};
-	CControlPr.prototype.setLocked = function(pr) {
+	CControlPr.prototype.setLocked = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Locked, this.locked, pr));
 		this.locked = pr;
 	}
-	CControlPr.prototype.getLocked = function() {
+	CControlPr.prototype.getLocked = function () {
 		return this.locked;
 	};
-	CControlPr.prototype.setMacro = function(pr) {
+	CControlPr.prototype.setMacro = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_ControlPr_Macro, this.macro, pr));
 		this.macro = pr;
 	}
-	CControlPr.prototype.getMacro = function() {
+	CControlPr.prototype.getMacro = function () {
 		return this.macro;
 	};
-	CControlPr.prototype.setPrint = function(pr) {
+	CControlPr.prototype.setPrint = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_Print, this.print, pr));
 		this.print = pr;
 	}
-	CControlPr.prototype.getPrint = function() {
+	CControlPr.prototype.getPrint = function () {
 		return this.print;
 	};
-	CControlPr.prototype.setRecalcAlways = function(pr) {
+	CControlPr.prototype.setRecalcAlways = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_RecalcAlways, this.recalcAlways, pr));
 		this.recalcAlways = pr;
 	}
-	CControlPr.prototype.getRecalcAlways = function() {
+	CControlPr.prototype.getRecalcAlways = function () {
 		return this.recalcAlways;
 	};
-	CControlPr.prototype.setUiObject = function(pr) {
+	CControlPr.prototype.setUiObject = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_ControlPr_UiObject, this.uiObject, pr));
 		this.uiObject = pr;
 	};
-	CControlPr.prototype.getUiObject = function() {
+	CControlPr.prototype.getUiObject = function () {
 		return this.uiObject;
 	};
 	CControlPr.prototype.fillObject = function (oCopy, oPr) {
@@ -1283,13 +1299,13 @@
 		oCopy.setRecalcAlways(this.recalcAlways);
 		oCopy.setUiObject(this.uiObject);
 	};
-CControlPr.prototype.getJSAMacroId = function() {
-	const sMacro = this.macro;
-	if (typeof sMacro === "string" && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
-		return sMacro.slice(AscFormat.MACRO_PREFIX.length);
-	}
-	return null;
-};
+	CControlPr.prototype.getJSAMacroId = function () {
+		const sMacro = this.macro;
+		if (typeof sMacro === "string" && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
+			return sMacro.slice(AscFormat.MACRO_PREFIX.length);
+		}
+		return null;
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_DropLines] = AscDFH.CChangesDrawingsLong;
 	AscDFH.changesFactory[AscDFH.historyitem_FormControlPr_ObjectType] = AscDFH.CChangesDrawingsLong;
@@ -1423,6 +1439,7 @@ CControlPr.prototype.getJSAMacroId = function() {
 	AscDFH.drawingContentChanges[AscDFH.historyitem_FormControlPr_RemoveItemFromLst] = function (oClass) {
 		return oClass.itemLst;
 	};
+
 	function CFormControlPr() {
 		AscFormat.CBaseFormatObject.call(this);
 		this.dropLines = null;
@@ -1460,222 +1477,223 @@ CControlPr.prototype.getJSAMacroId = function() {
 
 		this.isExternalFmlaLink = false;
 	}
+
 	AscFormat.InitClass(CFormControlPr, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_FormControlPr);
-	CFormControlPr.prototype.setDropLines = function(pr) {
+	CFormControlPr.prototype.setDropLines = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_DropLines, this.dropLines, pr));
 		this.dropLines = pr;
 	}
-	CFormControlPr.prototype.getDropLines = function() {
+	CFormControlPr.prototype.getDropLines = function () {
 		return this.dropLines;
 	}
-	CFormControlPr.prototype.setObjectType = function(pr) {
+	CFormControlPr.prototype.setObjectType = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_ObjectType, this.objectType, pr));
 		this.objectType = pr;
 	}
-	CFormControlPr.prototype.getObjectType = function() {
+	CFormControlPr.prototype.getObjectType = function () {
 		return this.objectType;
 	}
-	CFormControlPr.prototype.setChecked = function(pr) {
+	CFormControlPr.prototype.setChecked = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Checked, this.checked, pr));
 		this.checked = pr;
 	}
-	CFormControlPr.prototype.getChecked = function() {
+	CFormControlPr.prototype.getChecked = function () {
 		return this.checked;
 	}
-	CFormControlPr.prototype.setDropStyle = function(pr) {
+	CFormControlPr.prototype.setDropStyle = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_DropStyle, this.dropStyle, pr));
 		this.dropStyle = pr;
 	}
-	CFormControlPr.prototype.getDropStyle = function() {
+	CFormControlPr.prototype.getDropStyle = function () {
 		return this.dropStyle;
 	}
-	CFormControlPr.prototype.setDx = function(pr) {
+	CFormControlPr.prototype.setDx = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Dx, this.dx, pr));
 		this.dx = pr;
 	}
-	CFormControlPr.prototype.getDx = function() {
+	CFormControlPr.prototype.getDx = function () {
 		return this.dx;
 	}
-	CFormControlPr.prototype.setInc = function(pr) {
+	CFormControlPr.prototype.setInc = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Inc, this.inc, pr));
 		this.inc = pr;
 	}
-	CFormControlPr.prototype.getInc = function() {
+	CFormControlPr.prototype.getInc = function () {
 		return this.inc;
 	}
-	CFormControlPr.prototype.setMin = function(pr) {
+	CFormControlPr.prototype.setMin = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Min, this.min, pr));
 		this.min = pr;
 	}
-	CFormControlPr.prototype.getMin = function() {
+	CFormControlPr.prototype.getMin = function () {
 		return this.min;
 	}
-	CFormControlPr.prototype.setMax = function(pr) {
+	CFormControlPr.prototype.setMax = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Max, this.max, pr));
 		this.max = pr;
 	}
-	CFormControlPr.prototype.getMax = function() {
+	CFormControlPr.prototype.getMax = function () {
 		return this.max;
 	}
-	CFormControlPr.prototype.setPage = function(pr) {
+	CFormControlPr.prototype.setPage = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Page, this.page, pr));
 		this.page = pr;
 	}
-	CFormControlPr.prototype.getPage = function() {
+	CFormControlPr.prototype.getPage = function () {
 		return this.page;
 	}
-	CFormControlPr.prototype.setSel = function(pr) {
+	CFormControlPr.prototype.setSel = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Sel, this.sel, pr));
 		this.sel = pr;
 	}
-	CFormControlPr.prototype.getSel = function() {
+	CFormControlPr.prototype.getSel = function () {
 		return this.sel;
 	}
-	CFormControlPr.prototype.setSelType = function(pr) {
+	CFormControlPr.prototype.setSelType = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_SelType, this.selType, pr));
 		this.selType = pr;
 	}
-	CFormControlPr.prototype.getSelType = function() {
+	CFormControlPr.prototype.getSelType = function () {
 		return this.selType;
 	}
-	CFormControlPr.prototype.setTextHAlign = function(pr) {
+	CFormControlPr.prototype.setTextHAlign = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_TextHAlign, this.textHAlign, pr));
 		this.textHAlign = pr;
 	}
-	CFormControlPr.prototype.getTextHAlign = function() {
+	CFormControlPr.prototype.getTextHAlign = function () {
 		return this.textHAlign;
 	}
-	CFormControlPr.prototype.setTextVAlign = function(pr) {
+	CFormControlPr.prototype.setTextVAlign = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_TextVAlign, this.textVAlign, pr));
 		this.textVAlign = pr;
 	}
-	CFormControlPr.prototype.getTextVAlign = function() {
+	CFormControlPr.prototype.getTextVAlign = function () {
 		return this.textVAlign;
 	}
-	CFormControlPr.prototype.setVal = function(pr) {
+	CFormControlPr.prototype.setVal = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_Val, this.val, pr));
 		this.val = pr;
 	}
-	CFormControlPr.prototype.getVal = function() {
+	CFormControlPr.prototype.getVal = function () {
 		return this.val;
 	}
-	CFormControlPr.prototype.setWidthMin = function(pr) {
+	CFormControlPr.prototype.setWidthMin = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_WidthMin, this.widthMin, pr));
 		this.widthMin = pr;
 	}
-	CFormControlPr.prototype.getWidthMin = function() {
+	CFormControlPr.prototype.getWidthMin = function () {
 		return this.widthMin;
 	}
-	CFormControlPr.prototype.setEditVal = function(pr) {
+	CFormControlPr.prototype.setEditVal = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsLong(this, AscDFH.historyitem_FormControlPr_EditVal, this.editVal, pr));
 		this.editVal = pr;
 	}
-	CFormControlPr.prototype.getEditVal = function() {
+	CFormControlPr.prototype.getEditVal = function () {
 		return this.editVal;
 	}
-	CFormControlPr.prototype.setFmlaGroup = function(pr) {
+	CFormControlPr.prototype.setFmlaGroup = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaGroup, this.fmlaGroup, pr));
 		this.fmlaGroup = pr;
 	}
-	CFormControlPr.prototype.getFmlaGroup = function() {
+	CFormControlPr.prototype.getFmlaGroup = function () {
 		return this.fmlaGroup;
 	}
-	CFormControlPr.prototype.setFmlaLink = function(pr) {
+	CFormControlPr.prototype.setFmlaLink = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaLink, this.fmlaLink, pr));
 		this.fmlaLink = pr;
 	}
-	CFormControlPr.prototype.getFmlaLink = function() {
+	CFormControlPr.prototype.getFmlaLink = function () {
 		return this.fmlaLink;
 	}
-	CFormControlPr.prototype.setFmlaRange = function(pr) {
+	CFormControlPr.prototype.setFmlaRange = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaRange, this.fmlaRange, pr));
 		this.fmlaRange = pr;
 	}
-	CFormControlPr.prototype.getFmlaRange = function() {
+	CFormControlPr.prototype.getFmlaRange = function () {
 		return this.fmlaRange;
 	}
-	CFormControlPr.prototype.setFmlaTxbx = function(pr) {
+	CFormControlPr.prototype.setFmlaTxbx = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_FmlaTxbx, this.fmlaTxbx, pr));
 		this.fmlaTxbx = pr;
 	}
-	CFormControlPr.prototype.getFmlaTxbx = function() {
+	CFormControlPr.prototype.getFmlaTxbx = function () {
 		return this.fmlaTxbx;
 	}
-	CFormControlPr.prototype.setColored = function(pr) {
+	CFormControlPr.prototype.setColored = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_Colored, this.colored, pr));
 		this.colored = pr;
 	}
-	CFormControlPr.prototype.getColored = function() {
+	CFormControlPr.prototype.getColored = function () {
 		return this.colored;
 	}
-	CFormControlPr.prototype.setFirstButton = function(pr) {
+	CFormControlPr.prototype.setFirstButton = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_FirstButton, this.firstButton, pr));
 		this.firstButton = pr;
 	}
-	CFormControlPr.prototype.getFirstButton = function() {
+	CFormControlPr.prototype.getFirstButton = function () {
 		return this.firstButton;
 	}
-	CFormControlPr.prototype.setHoriz = function(pr) {
+	CFormControlPr.prototype.setHoriz = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_Horiz, this.horiz, pr));
 		this.horiz = pr;
 	}
-	CFormControlPr.prototype.getHoriz = function() {
+	CFormControlPr.prototype.getHoriz = function () {
 		return this.horiz;
 	}
-	CFormControlPr.prototype.setJustLastX = function(pr) {
+	CFormControlPr.prototype.setJustLastX = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_JustLastX, this.justLastX, pr));
 		this.justLastX = pr;
 	}
-	CFormControlPr.prototype.getJustLastX = function() {
+	CFormControlPr.prototype.getJustLastX = function () {
 		return this.justLastX;
 	}
-	CFormControlPr.prototype.setLockText = function(pr) {
+	CFormControlPr.prototype.setLockText = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_LockText, this.lockText, pr));
 		this.lockText = pr;
 	}
-	CFormControlPr.prototype.getLockText = function() {
+	CFormControlPr.prototype.getLockText = function () {
 		return this.lockText;
 	}
-	CFormControlPr.prototype.setMultiSel = function(pr) {
+	CFormControlPr.prototype.setMultiSel = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsString(this, AscDFH.historyitem_FormControlPr_MultiSel, this.multiSel, pr));
 		this.multiSel = pr;
 	}
-	CFormControlPr.prototype.getMultiSel = function() {
+	CFormControlPr.prototype.getMultiSel = function () {
 		return this.multiSel;
 	}
-	CFormControlPr.prototype.setNoThreeD = function(pr) {
+	CFormControlPr.prototype.setNoThreeD = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_NoThreeD, this.noThreeD, pr));
 		this.noThreeD = pr;
 	}
-	CFormControlPr.prototype.getNoThreeD = function() {
+	CFormControlPr.prototype.getNoThreeD = function () {
 		return this.noThreeD;
 	}
-	CFormControlPr.prototype.setNoThreeD2 = function(pr) {
+	CFormControlPr.prototype.setNoThreeD2 = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_NoThreeD2, this.noThreeD2, pr));
 		this.noThreeD2 = pr;
 	}
-	CFormControlPr.prototype.getNoThreeD2 = function() {
+	CFormControlPr.prototype.getNoThreeD2 = function () {
 		return this.noThreeD2;
 	}
-	CFormControlPr.prototype.setMultiLine = function(pr) {
+	CFormControlPr.prototype.setMultiLine = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_MultiLine, this.multiLine, pr));
 		this.multiLine = pr;
 	}
-	CFormControlPr.prototype.getMultiLine = function() {
+	CFormControlPr.prototype.getMultiLine = function () {
 		return this.multiLine;
 	}
-	CFormControlPr.prototype.setVerticalBar = function(pr) {
+	CFormControlPr.prototype.setVerticalBar = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_VerticalBar, this.verticalBar, pr));
 		this.verticalBar = pr;
 	}
-	CFormControlPr.prototype.getVerticalBar = function() {
+	CFormControlPr.prototype.getVerticalBar = function () {
 		return this.verticalBar;
 	}
-	CFormControlPr.prototype.setPasswordEdit = function(pr) {
+	CFormControlPr.prototype.setPasswordEdit = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsBool(this, AscDFH.historyitem_FormControlPr_PasswordEdit, this.passwordEdit, pr));
 		this.passwordEdit = pr;
 	}
-	CFormControlPr.prototype.getPasswordEdit = function() {
+	CFormControlPr.prototype.getPasswordEdit = function () {
 		return this.passwordEdit;
 	}
 	CFormControlPr.prototype.addItemToLst = function (nIdx, sPr) {
