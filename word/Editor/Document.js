@@ -410,10 +410,10 @@ function CDocumentRecalculateState()
 	this.TimerStartTime = 0;
 	this.TimerStartPage = 0;
 	
-	this.StartPagesCount     = 2;     // количество страниц, которые мы обсчитываем в первый раз без таймеров
-	this.ResetStartElement   = false;
-	this.ResetElementSection = false;
-	this.MainStartPos        = -1;
+	this.StartPagesCount   = 2;     // количество страниц, которые мы обсчитываем в первый раз без таймеров
+	this.ResetStartElement = false; // для стартового элемента расчета колонки или страницы
+	this.ResetSectionStart = false; // для стартового элемента расчета секции на странице
+	this.MainStartPos      = -1;
 
     this.Continue     = false; // параметр сигнализирующий, о том что нужно продолжить пересчет (для нерекурсивного метода)
 
@@ -3300,20 +3300,20 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
     // Очищаем данные пересчета
     this.RecalcInfo.Reset();
 	
-	this.FullRecalc.PageIndex           = StartPage;
-	this.FullRecalc.SectionIndex        = 0;
-	this.FullRecalc.ColumnIndex         = 0;
-	this.FullRecalc.StartIndex          = StartIndex;
-	this.FullRecalc.Start               = true;
-	this.FullRecalc.StartPage           = StartPage;
-	this.FullRecalc.ResetStartElement   = this.private_RecalculateIsNewSection(StartPage, StartIndex);
-	this.FullRecalc.ResetElementSection = false;
-	this.FullRecalc.Endnotes            = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
-	this.FullRecalc.StartPagesCount     = undefined !== nNoTimerPageIndex ? Math.min(100, Math.max(nNoTimerPageIndex - StartPage, 2)) : 2;
-	this.FullRecalc.StartTime           = performance.now();
-	this.FullRecalc.TimerStartTime      = this.FullRecalc.StartTime;
-	this.FullRecalc.TimerStartPage      = StartPage;
-	this.FullRecalc.ScrollToTarget      = true;
+	this.FullRecalc.PageIndex         = StartPage;
+	this.FullRecalc.SectionIndex      = 0;
+	this.FullRecalc.ColumnIndex       = 0;
+	this.FullRecalc.StartIndex        = StartIndex;
+	this.FullRecalc.Start             = true;
+	this.FullRecalc.StartPage         = StartPage;
+	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage, StartIndex);
+	this.FullRecalc.ResetSectionStart = false;
+	this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
+	this.FullRecalc.StartPagesCount   = undefined !== nNoTimerPageIndex ? Math.min(100, Math.max(nNoTimerPageIndex - StartPage, 2)) : 2;
+	this.FullRecalc.StartTime         = performance.now();
+	this.FullRecalc.TimerStartTime    = this.FullRecalc.StartTime;
+	this.FullRecalc.TimerStartPage    = StartPage;
+	this.FullRecalc.ScrollToTarget    = true;
 
 
 	// Если у нас произошли какие-либо изменения с основной частью документа, тогда начинаем его пересчитывать сразу,
@@ -3726,17 +3726,16 @@ CDocument.prototype.Recalculate_Page = function()
  */
 CDocument.prototype.Recalculate_PageColumn                   = function()
 {
-	let PageIndex            = this.FullRecalc.PageIndex;
-	let SectionIndex         = this.FullRecalc.SectionIndex;
-	let ColumnIndex          = this.FullRecalc.ColumnIndex;
-	let StartIndex           = this.FullRecalc.StartIndex;
-	let bResetStartElement   = this.FullRecalc.ResetStartElement;
-	let bResetElementSection = this.FullRecalc.ResetElementSection;
+	let PageIndex          = this.FullRecalc.PageIndex;
+	let SectionIndex       = this.FullRecalc.SectionIndex;
+	let ColumnIndex        = this.FullRecalc.ColumnIndex;
+	let StartIndex         = this.FullRecalc.StartIndex;
+	let bResetStartElement = this.FullRecalc.ResetStartElement;
+	let bResetSectionStart = this.FullRecalc.ResetSectionStart;
 
-	// Recalculation LOG
-	console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
-	console.log(this.RecalcInfo);
-	console.log(`ResetElementSection = ${bResetElementSection}`);
+	// // Recalculation LOG
+	// console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
+	// console.log(this.RecalcInfo);
 
     var StartPos = this.Get_PageContentStartPos2(PageIndex, ColumnIndex, 0, StartIndex);
 
@@ -3764,16 +3763,16 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
     var SectPr       = this.Layout.GetSectionByPos(StartIndex);
     var ColumnsCount = SectPr.GetColumnsCount();
 	
-	var bReDraw               = true;
-	var bContinue             = false;
-	var _PageIndex            = PageIndex;
-	var _ColumnIndex          = ColumnIndex;
-	var _StartIndex           = StartIndex;
-	var _SectionIndex         = SectionIndex;
-	var _bStart               = false;
-	var _bResetStartElement   = false;
-	let _bResetElementSection = false;
-	var _bEndnotesContinue    = false;
+	var bReDraw             = true;
+	var bContinue           = false;
+	var _PageIndex          = PageIndex;
+	var _ColumnIndex        = ColumnIndex;
+	var _StartIndex         = StartIndex;
+	var _SectionIndex       = SectionIndex;
+	var _bStart             = false;
+	var _bResetStartElement = false;
+	let _bResetSectionStart = false;
+	var _bEndnotesContinue  = false;
 
     var Count = this.Content.length;
     var Index;
@@ -3937,7 +3936,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				if ((0 === Index && 0 === PageIndex && 0 === ColumnIndex) || Index !== StartIndex || (Index === StartIndex && bResetStartElement))
 				{
 					Element.Set_DocumentIndex(Index);
-					if (Index === StartIndex && bResetElementSection)
+					if (Index === StartIndex && bResetSectionStart)
 						Element.ResetSection(PageIndex, 1/*PageSection.GetIndex()*/, SectPr);
 					else
 						Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, 0/*PageSection.GetIndex()*/, SectPr);
@@ -4040,6 +4039,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 _StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
                 _bStart             = false;
                 _bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
+				_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
 
                 this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
 
@@ -4059,6 +4059,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 _StartIndex         = Index;
                 _bStart             = true;
                 _bResetStartElement = true;
+				_bResetSectionStart = false;
 
                 if (_ColumnIndex >= ColumnsCount)
                 {
@@ -4087,6 +4088,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 _StartIndex         = Index;
                 _bStart             = true;
                 _bResetStartElement = true;
+				_bResetSectionStart = false;
 
                 if (PageColumn.EndPos === PageColumn.Pos)
                 {
@@ -4248,6 +4250,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 								_StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
 								_bStart             = false;
 								_bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
+								_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
 								_bEndnotesContinue  = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Endnotes === true;
 								
 								this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
@@ -4264,6 +4267,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 								_bEndnotesContinue  = true;
 								_bStart             = true;
 								_bResetStartElement = true;
+								_bResetSectionStart = false;
 							}
 							
 							break;
@@ -4294,14 +4298,14 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 					{
 						PageSection.IterateBottomLineCalculation(false);
 						
-						bContinue             = true;
-						_PageIndex            = PageIndex;
-						_SectionIndex         = SectionIndex;
-						_ColumnIndex          = 0;
-						_StartIndex           = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
-						_bStart               = false;
-						_bResetStartElement   = 0 === SectionIndex ? Page.ResetStartElement : true;
-						_bResetElementSection = 0 === SectionIndex ? false : PageSection.ResetElementSection;
+						bContinue           = true;
+						_PageIndex          = PageIndex;
+						_SectionIndex       = SectionIndex;
+						_ColumnIndex        = 0;
+						_StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
+						_bStart             = false;
+						_bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
+						_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
 						
 						this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
 						
@@ -4309,23 +4313,23 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 					}
 					else
 					{
-						bContinue             = true;
-						_PageIndex            = PageIndex;
-						_SectionIndex         = SectionIndex + 1;
-						_ColumnIndex          = 0;
-						_StartIndex           = nextIndex;
-						_bStart               = false;
-						_bResetStartElement   = true;
-						_bResetElementSection = nextIndex === Index;
+						bContinue           = true;
+						_PageIndex          = PageIndex;
+						_SectionIndex       = SectionIndex + 1;
+						_ColumnIndex        = 0;
+						_StartIndex         = nextIndex;
+						_bStart             = false;
+						_bResetStartElement = true;
+						_bResetSectionStart = nextIndex === Index;
 						
 						var NewPageSection = new AscWord.DocumentPageSection();
 						NewPageSection.Init(PageIndex, nextSectPr, this.Layout.GetSectionIndex(nextSectPr));
-						NewPageSection.Pos                 = Index;
-						NewPageSection.EndPos              = Index;
-						NewPageSection.Y                   = SectionY + 0.001;
-						NewPageSection.YLimit              = this.Pages[PageIndex].YLimit;
-						NewPageSection.YLimit2             = this.Pages[PageIndex].YLimit;
-						NewPageSection.ResetElementSection = nextIndex === Index;
+						NewPageSection.Pos               = Index;
+						NewPageSection.EndPos            = Index;
+						NewPageSection.Y                 = SectionY + 0.001;
+						NewPageSection.YLimit            = this.Pages[PageIndex].YLimit;
+						NewPageSection.YLimit2           = this.Pages[PageIndex].YLimit;
+						NewPageSection.ResetSectionStart = nextIndex === Index;
 						Page.Sections[_SectionIndex] = NewPageSection;
 						// YLimit, YLimit2 проставляем здесь, потому что в функции Init учитываются настройки уже
 						// новой секции, а нам нужно расчет вести с учетом отступов самой первой секции
@@ -4334,14 +4338,14 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				}
 				else
 				{
-					bContinue             = true;
-					_PageIndex            = PageIndex + 1;
-					_SectionIndex         = 0;
-					_ColumnIndex          = 0;
-					_StartIndex           = nextIndex;
-					_bStart               = true;
-					_bResetStartElement   = true;
-					_bResetElementSection = nextIndex === Index;
+					bContinue           = true;
+					_PageIndex          = PageIndex + 1;
+					_SectionIndex       = 0;
+					_ColumnIndex        = 0;
+					_StartIndex         = nextIndex;
+					_bStart             = true;
+					_bResetStartElement = true;
+					_bResetSectionStart = nextIndex === Index;
 					break;
 				}
 			}
@@ -4435,16 +4439,16 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 	
 	if (true === bContinue)
 	{
-		this.FullRecalc.PageIndex           = _PageIndex;
-		this.FullRecalc.SectionIndex        = _SectionIndex;
-		this.FullRecalc.ColumnIndex         = _ColumnIndex;
-		this.FullRecalc.StartIndex          = _StartIndex;
-		this.FullRecalc.Start               = _bStart;
-		this.FullRecalc.ResetStartElement   = _bResetStartElement;
-		this.FullRecalc.ResetElementSection = _bResetElementSection;
-		this.FullRecalc.MainStartPos        = _StartIndex;
-		this.FullRecalc.Endnotes            = _bEndnotesContinue;
-		this.FullRecalc.Continue            = true;
+		this.FullRecalc.PageIndex         = _PageIndex;
+		this.FullRecalc.SectionIndex      = _SectionIndex;
+		this.FullRecalc.ColumnIndex       = _ColumnIndex;
+		this.FullRecalc.StartIndex        = _StartIndex;
+		this.FullRecalc.Start             = _bStart;
+		this.FullRecalc.ResetStartElement = _bResetStartElement;
+		this.FullRecalc.ResetSectionStart = _bResetSectionStart;
+		this.FullRecalc.MainStartPos      = _StartIndex;
+		this.FullRecalc.Endnotes          = _bEndnotesContinue;
+		this.FullRecalc.Continue          = true;
 	}
 	else
 	{

@@ -43,7 +43,7 @@
 		this.Pos    = 0;
 		this.EndPos = -1;
 		
-		this.ResetElementSection = false;
+		this.ResetSectionStart = false; // Если секция разбилась внутри блочного контент контрола
 		
 		this.Y      = 0;
 		this.YLimit = 0;
