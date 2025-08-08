@@ -1956,11 +1956,12 @@
 			if (typeof lastTextEl === "string") {
 				if (lastTextEl.endsWith("\r\n")) {
 					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
+					textElement.elements[textElement.elements.length - 1] = lastTextEl;
 				} else if (lastTextEl.endsWith("\n")) {
 					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 1);
+					textElement.elements[textElement.elements.length - 1] = lastTextEl;
 				}
 			}
-			textElement.elements[textElement.elements.length - 1] = lastTextEl;
 
 			// read text:
 			// consider CRLF (\r\n) (UPD: \n for binary read) as new paragraph start.
@@ -1981,14 +1982,17 @@
 
 				if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 					if (typeof textElementPart === "string") {
-						// "LSCRLF" transforms to line drop and new paragraph without line drop so we get one
-						// line drop where should be two line drops so let's add extra line drop
-						textElementPart = textElementPart.replaceAll("\u2028\n", "\u2028\u2028\n"); // for new open: binary
-						textElementPart = textElementPart.replaceAll("\u2028\r\n", "\u2028\u2028\r\n"); // for old open
-						let textArr = textElementPart.split("\n");
+						// Split on CRLF, or LF
+						let textArr = textElementPart.split(/\r\n|\n/);
 
 						for (let j = 0; j < textArr.length; j++) {
 							let text = textArr[j];
+
+							// "LSCRLF" transforms to line drop and new paragraph without line drop so we get one
+							// line drop where should be two line drops so let's add extra line drop
+							if (j !== textArr.length - 1 && text.charAt(text.length - 1) === "\u2028") {
+								text += "\u2028";
+							}
 
 							// if j > 0 CR exists in textArr and should be handled as new paragraph start
 							if (j > 0) {
