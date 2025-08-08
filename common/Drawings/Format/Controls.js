@@ -191,11 +191,15 @@
 				this.controller = new CSpinController(this);
 				break;
 			}
+			case CFormControlPr_objectType_scroll: {
+				this.controller = new CScrollController(this);
+				break;
+			}
 			default: {
 				return false;
 			}
 		}
-		// this.controller.init();
+		this.controller.init();
 		return true;
 	}
 	CControl.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
@@ -323,6 +327,7 @@
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
+		this.timeoutId = null;
 	}
 
 	CControlControllerBase.prototype.getFormControlPr = function () {
@@ -378,6 +383,22 @@
 		return null;
 	};
 	CControlControllerBase.prototype.recalculateTransform = function () {};
+	CControlControllerBase.prototype.startStepAction = function (fCallback) {
+		const oThis = this;
+		if (oThis.timeoutId === null) {
+			fCallback();
+			oThis.timeoutId = setTimeout(function () {
+				(function f() {
+					fCallback();
+					oThis.timeoutId = setTimeout(f, 100);
+				})();
+			}, 500);
+		}
+	};
+	CControlControllerBase.prototype.endStepAction = function () {
+		clearTimeout(this.timeoutId);
+		this.timeoutId = null;
+	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -497,6 +518,9 @@
 			return false;
 		}
 		if (e.CtrlKey) {
+			return false;
+		}
+		if (!oControl.hit(nX, nY)) {
 			return false;
 		}
 		this.setIsHold(true);
@@ -781,7 +805,7 @@
 	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
-	const SPINBUTTON_3D_SHADOW_OFFSET = 0.25;
+	const SPINBUTTON_3D_SHADOW_OFFSET = 0.5;
 	const SPINBUTTON_3D_HOLD_OFFSET = 0.125;
 
 	function CSpinButton(oControl, bIsUp) {
@@ -921,26 +945,10 @@
 		CControlControllerBase.call(this, oControl);
 		this.upButton = new CSpinButton(oControl, true);
 		this.downButton = new CSpinButton(oControl, false);
-		this.timeoutId = null;
 		this.initButtonEventHandlers();
 	};
 	AscFormat.InitClassWithoutType(CSpinController, CControlControllerBase);
-	CSpinController.prototype.startAction = function (fCallback) {
-		const oThis = this;
-		if (oThis.timeoutId === null) {
-			fCallback();
-			oThis.timeoutId = setTimeout(function () {
-				(function f() {
-					fCallback();
-					oThis.timeoutId = setTimeout(f, 100);
-				})();
-			}, 500);
-		}
-	};
-	CSpinController.prototype.endAction = function () {
-		clearTimeout(this.timeoutId);
-		this.timeoutId = null;
-	};
+
 	CSpinController.prototype.initButtonEventHandlers = function () {
 		const oController = this;
 
@@ -948,7 +956,7 @@
 			if (!this.hit(nX, nY)) {
 				return false;
 			}
-			oController.startAction(oController.decrement.bind(oController, oDrawingController));
+			oController.startStepAction(oController.decrement.bind(oController, oDrawingController));
 			this.setIsHold(true);
 			return true;
 		};
@@ -957,19 +965,19 @@
 				return false;
 			}
 
-			oController.startAction(oController.increment.bind(oController, oDrawingController));
+			oController.startStepAction(oController.increment.bind(oController, oDrawingController));
 			this.setIsHold(true);
 			return true;
 		};
 		this.downButton.onMouseUp = function () {
-			oController.endAction();
+			oController.endStepAction();
 			if (this.isHold) {
 				this.setIsHold(false);
 				this.control.onUpdate();
 			}
 		};
 		this.upButton.onMouseUp = function () {
-			oController.endAction();
+			oController.endStepAction();
 			if (this.isHold) {
 				this.setIsHold(false);
 				this.control.onUpdate();
@@ -1082,6 +1090,636 @@
 		this.downButton.extY = nHalfHeight;
 	};
 
+
+	// ScrollBar Controller Constants
+	const SCROLLBAR_BUTTON_SIZE_RATIO = 0.15; // Buttons at the top/bottom or left/right take 15% of the total size each
+	const SCROLLBAR_THUMB_MIN_SIZE_RATIO = 0.1; // Minimum thumb size is 10% of the scrollable area
+	const SCROLLBAR_TRIANGLE_SIZE_RATIO = 0.4; // Triangle size is 40% of the button size
+
+	// ScrollBar Button Component
+	function CScrollBarButton(oControl, bIsFirst) {
+		this.isHold = false;
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.isFirst = !!bIsFirst; // first button (up or left)
+		this.control = oControl;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+	}
+
+	CScrollBarButton.prototype.setIsHold = function (pr) {
+		this.isHold = pr;
+	};
+
+	CScrollBarButton.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+
+		// Draw button background
+		let arrPenColor = [0, 0, 0, 255];
+		let arrFillColor = this.isHold ? [200, 200, 200, 255] : [240, 240, 240, 255];
+
+		graphics.p_width(0);
+		graphics.b_color1.apply(graphics, arrFillColor);
+		graphics.p_color.apply(graphics, arrPenColor);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.df();
+		graphics.ds();
+
+		// Draw triangle
+		graphics.b_color1.apply(graphics, arrPenColor);
+		graphics._e();
+		const cx = this.extX / 2;
+		const cy = this.extY / 2;
+		const triangleSize = Math.min(this.extX, this.extY) * SCROLLBAR_TRIANGLE_SIZE_RATIO;
+		const halfTriangleSize = triangleSize / 2;
+
+		// Get orientation from parent controller
+		const oController = this.control.controller;
+		const isVertical = oController.isVertical();
+		if (isVertical) {
+			// Vertical scrollbar - up/down arrows
+			if (this.isFirst) {
+				// Up arrow
+				graphics._m(cx - halfTriangleSize, cy + halfTriangleSize * 0.7);
+				graphics._l(cx + halfTriangleSize, cy + halfTriangleSize * 0.7);
+				graphics._l(cx, cy - halfTriangleSize * 0.7);
+			} else {
+				// Down arrow
+				graphics._m(cx - halfTriangleSize, cy - halfTriangleSize * 0.7);
+				graphics._l(cx + halfTriangleSize, cy - halfTriangleSize * 0.7);
+				graphics._l(cx, cy + halfTriangleSize * 0.7);
+			}
+		} else {
+			// Horizontal scrollbar - left/right arrows
+			if (this.isFirst) {
+				// Left arrow
+				graphics._m(cx + halfTriangleSize * 0.7, cy - halfTriangleSize);
+				graphics._l(cx + halfTriangleSize * 0.7, cy + halfTriangleSize);
+				graphics._l(cx - halfTriangleSize * 0.7, cy);
+			} else {
+				// Right arrow
+				graphics._m(cx - halfTriangleSize * 0.7, cy - halfTriangleSize);
+				graphics._l(cx - halfTriangleSize * 0.7, cy + halfTriangleSize);
+				graphics._l(cx + halfTriangleSize * 0.7, cy);
+			}
+		}
+
+		graphics._z();
+		graphics.df();
+		graphics._e();
+
+		graphics.RestoreGrState();
+	};
+
+	CScrollBarButton.prototype.hit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
+	};
+
+	// ScrollBar Thumb Component
+	function CScrollBarThumb(oControl) {
+		this.isHold = false;
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.control = oControl;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+	}
+
+	CScrollBarThumb.prototype.setIsHold = function (pr) {
+		this.isHold = pr;
+	};
+
+	CScrollBarThumb.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+
+		// Draw thumb
+		let arrPenColor = [100, 100, 100, 255];
+		let arrFillColor = this.isHold ? [150, 150, 150, 255] : [180, 180, 180, 255];
+
+		graphics.p_width(0);
+		graphics.b_color1.apply(graphics, arrFillColor);
+		graphics.p_color.apply(graphics, arrPenColor);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.df();
+		graphics.ds();
+		graphics.RestoreGrState();
+	};
+
+	CScrollBarThumb.prototype.hit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
+	};
+
+	function CTrackArea() {
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+		this.isHold = false;
+	}
+	CTrackArea.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+
+		const trackFillColor = [220, 220, 220, 255]; // Light gray
+		const trackPenColor = [180, 180, 180, 255]; // Darker gray for border
+
+		graphics.p_width(0);
+		graphics.b_color1.apply(graphics, trackFillColor);
+		graphics.p_color.apply(graphics, trackPenColor);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.df();
+		graphics.ds();
+
+		graphics.RestoreGrState();
+	};
+	CTrackArea.prototype.setIsHold = function (pr) {
+		this.isHold = pr;
+	};
+	CTrackArea.prototype.hit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
+	}
+
+	// ScrollBar Controller Implementation
+	function CScrollController(oControl) {
+		CControlControllerBase.call(this, oControl);
+		this.upButton = new CScrollBarButton(oControl, true);  // First button (up or left)
+		this.downButton = new CScrollBarButton(oControl, false); // Second button (down or right)
+		this.thumb = new CScrollBarThumb(oControl);
+		this.trackArea = new CTrackArea();
+
+		this.thumbDragStartPos = null;
+		this.thumbDragStartValue = null;
+
+		this.trackAreaHoldDirection = 0;
+
+		this.initButtonEventHandlers();
+	}
+
+	AscFormat.InitClassWithoutType(CScrollController, CControlControllerBase);
+	CScrollController.prototype.initButtonEventHandlers = function () {
+		const oController = this;
+
+		// Up button handlers
+		this.upButton.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+			oController.startStepAction(oController.decrement.bind(oController, oDrawingController));
+			this.setIsHold(true);
+			this.control.onUpdate();
+			return true;
+		};
+
+		this.upButton.onMouseUp = function () {
+			oController.endStepAction();
+			if (this.isHold) {
+				this.setIsHold(false);
+				this.control.onUpdate();
+			}
+		};
+
+		// Down button handlers
+		this.downButton.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+			oController.startStepAction(oController.increment.bind(oController, oDrawingController));
+			this.setIsHold(true);
+			this.control.onUpdate();
+			return true;
+		};
+
+		this.downButton.onMouseUp = function () {
+			oController.endStepAction();
+			if (this.isHold) {
+				this.setIsHold(false);
+				this.control.onUpdate();
+			}
+		};
+
+		// Thumb handlers
+		this.thumb.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+
+			this.setIsHold(true);
+			const isVertical = oController.isVertical();
+			if (isVertical) {
+				oController.thumbDragStartPos = nY;
+			} else {
+				oController.thumbDragStartPos = nX;
+			}
+			const nValue = oController.getValue();
+			oController.thumbDragStartValue = nValue;
+			this.control.onUpdate();
+			return true;
+		};
+
+		this.thumb.onMouseMove = function (nX, nY, oDrawingController) {
+			if (!this.isHold) {
+				return false;
+			}
+
+			let deltaPos;
+			let trackSize;
+
+			const isVertical = oController.isVertical();
+			if (isVertical) {
+				deltaPos = nY - oController.thumbDragStartPos;
+				trackSize = oController.trackArea.extY;
+			} else {
+				deltaPos = nX - oController.thumbDragStartPos;
+				trackSize = oController.trackArea.extX;
+			}
+
+			const nMin = oController.getMinValue();
+			const nMax = oController.getMaxValue();
+			const valueRange = nMax - nMin;
+
+			// Calculate how much to move the value based on the mouse movement
+			const valueDelta = (deltaPos / trackSize) * valueRange;
+			let newValue = oController.thumbDragStartValue + valueDelta;
+
+			// Constrain to min/max range
+			newValue = Math.max(nMin, Math.min(nMax, newValue));
+
+			// Update the value and linked cell
+			oController.setValue(newValue, oDrawingController);
+			this.control.onUpdate();
+			return true;
+		};
+		this.thumb.onMouseUp = function () {
+			if (this.isHold) {
+				this.setIsHold(false);
+				this.control.onUpdate();
+			}
+		};
+		this.trackArea.onMouseDown = function (nX, nY, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+
+			// Get track coordinates
+			let localPos, thumbMin, thumbMax;
+			const oFormControlPr = oController.getFormControlPr();
+			const nPageSize = AscFormat.isRealNumber(oFormControlPr.page) ? oFormControlPr.page : 10;
+
+			this.trackArea.setIsHold(true);
+			const isVertical = oController.isVertical();
+			const oThumb = oController.thumb;
+			if (isVertical) {
+				localPos = this.invertTransform.TransformPointY(nX, nY);
+				thumbMin = oThumb.y - this.y;
+				thumbMax = thumbMin + oThumb.extY;
+
+
+				if (localPos >= thumbMin && localPos <= thumbMax) {
+					return false;
+				}
+			} else {
+				localPos = this.invertTransform.TransformPointX(nX, nY);
+				thumbMin = oThumb.x - this.x;
+				thumbMax = thumbMin + oThumb.extX;
+
+
+				if (localPos >= thumbMin && localPos <= thumbMax) {
+					return false;
+				}
+			}
+			const nTempTrackAreaHold = (localPos < thumbMin) ? -1 : 1;
+
+			if (this.trackAreaHoldDirection === 0 || nTempTrackAreaHold === this.trackAreaHoldDirection) {
+				this.trackAreaHoldDirection = nTempTrackAreaHold;
+				const nMinValue = oController.getMinValue();
+				const nMaxValue = oController.getMaxValue();
+				const nValue = oController.getCurrentValue();
+				if (this.trackAreaHoldDirection === -1) {
+					this.setValue(Math.max(nMinValue, nValue - nPageSize), oDrawingController);
+				} else {
+					this.setValue(Math.min(nMaxValue, nValue + nPageSize), oDrawingController);
+				}
+			}
+
+			this.control.onUpdate();
+			this.startStepAction(this.performTrackAreaStep.bind(this, oDrawingController));
+			return true;
+		};
+		this.trackArea.onMouseUp = function () {
+			this.setIsHold(false);
+		};
+		this.trackArea.onMouseMove = function () {
+			if (this.isHold) {
+
+			}
+		};
+	};
+
+	CScrollController.prototype.trackAreaHit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.trackArea.invertTransform, 0, 0, this.trackArea.extX, this.trackArea.extY);
+	};
+	CScrollController.prototype.isVertical = function () {
+		const oControl = this.control;
+		return oControl.extY > oControl.extX;
+	};
+
+	CScrollController.prototype.handleTrackClick = function (nX, nY, oDrawingController) {
+
+	};
+	CScrollController.prototype.getMinValue = function () {
+
+	};
+	CScrollController.prototype.getMaxValue = function () {
+
+	};
+	CScrollController.prototype.getCurrentValue = function () {
+
+	};
+	CScrollController.prototype.performTrackAreaStep = function (oDrawingController) {
+		const oFormControlPr = this.getFormControlPr();
+		const nPageSize = AscFormat.isRealNumber(oFormControlPr.page) ? oFormControlPr.page : 10;
+
+		const nMinValue = this.getMinValue();
+		const nMaxValue = this.getMaxValue();
+		const nCurrentValue = this.getCurrentValue();
+		// Apply a step in the previously determined direction
+		if (this.trackAreaHoldDirection < 0) {
+			// Moving up/left
+			this.setValue(Math.max(nMinValue, nCurrentValue - nPageSize), oDrawingController);
+		} else {
+			// Moving down/right
+			this.setValue(Math.min(nMaxValue, nCurrentValue + nPageSize), oDrawingController);
+		}
+
+		this.control.onUpdate();
+	};
+
+	CScrollController.prototype.onMouseUp = function () {
+		this.trackArea.onMouseUp();
+		this.upButton.onMouseUp();
+		this.downButton.onMouseUp();
+		this.thumb.onMouseUp();
+	};
+
+	CScrollController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		this.trackArea.draw(graphics);
+		this.upButton.draw(graphics);
+		this.downButton.draw(graphics);
+		this.thumb.draw(graphics);
+	};
+
+	CScrollController.prototype.getCursorInfo = function (e, nX, nY) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if (!oControl.hit(nX, nY)) {
+			return null;
+		}
+		if (this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY) || this.thumb.hit(nX, nY) || this.trackAreaHit(nX, nY)) {
+			return {cursorType: "pointer", objectId: oControl.GetId()};
+		}
+
+		return null;
+	};
+
+	CScrollController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		if (e.CtrlKey) {
+			return false;
+		}
+		return this.upButton.onMouseDown(nX, nY, oDrawingController) || this.downButton.onMouseDown(nX, nY, oDrawingController) ||
+			this.thumb.onMouseDown(nX, nY, oDrawingController) || this.trackArea.onMouseDown(nX, nY, oDrawingController);
+	};
+
+	CScrollController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		// Handle thumb dragging
+		if (this.thumb.isHold) {
+			this.thumb.onMouseMove(nX, nY, oDrawingController);
+			return true;
+		}
+		return false;
+	};
+
+	CScrollController.prototype.increment = function (oDrawingController) {
+		this.doAction(oDrawingController, true);
+	};
+
+	CScrollController.prototype.decrement = function (oDrawingController) {
+		this.doAction(oDrawingController, false);
+	};
+
+	CScrollController.prototype.pageUp = function (oDrawingController) {
+		const nMinValue = this.getMinValue();
+		const nCurrentValue = this.getCurrentValue();
+		const oFormControlPr = this.getFormControlPr();
+		const nPageSize = AscFormat.isRealNumber(oFormControlPr.page) ? oFormControlPr.page : 10;
+		this.setValue(Math.max(nMinValue, nCurrentValue - nPageSize), oDrawingController);
+	};
+
+	CScrollController.prototype.pageDown = function (oDrawingController) {
+		const nMaxValue = this.getMaxValue();
+		const nCurrentValue = this.getCurrentValue();
+		const oFormControlPr = this.getFormControlPr();
+		const nPageSize = AscFormat.isRealNumber(oFormControlPr.page) ? oFormControlPr.page : 10;
+		this.setValue(Math.min(nMaxValue, nCurrentValue + nPageSize), oDrawingController);
+	};
+
+	CScrollController.prototype.doAction = function (oDrawingController, isIncrement) {
+		const oThis = this;
+		oDrawingController.checkObjectsAndCallback(function () {
+			const oFormControlPr = oThis.getFormControlPr();
+			const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
+
+			const nMinValue = oThis.getMinValue();
+			const nMaxValue = oThis.getMaxValue();
+			const nCurrentValue = this.getCurrentValue();
+			// Calculate new value
+			const newValue = isIncrement ?
+				Math.min(nMaxValue, nCurrentValue + nIncValue) :
+				Math.max(nMinValue, nCurrentValue - nIncValue);
+
+			oThis.setValue(newValue, oDrawingController);
+		}, [], undefined, AscDFH.historydescription_Spreadsheet_ScrollbarControl, [], true);
+	};
+
+	CScrollController.prototype.setValue = function (newValue, oDrawingController) {
+		const roundedValue = Math.round(newValue);
+		// Update the form control property
+		const oFormControlPr = this.getFormControlPr();
+		oFormControlPr.setVal(roundedValue);
+
+		// Update the linked cell if it exists
+		const oRef = this.getParsedFmlaLink();
+		if (oRef) {
+			const oCellValue = new AscCommonExcel.CCellValue();
+			oCellValue.number = roundedValue;
+			this.setRangeValue(oRef, oCellValue);
+		}
+
+		// Recalculate thumb position
+		this.recalculateTransform();
+	};
+
+	CScrollController.prototype.recalculateTransform = function () {
+		const oControl = this.control;
+		const oControlMatrix = oControl.transform;
+
+		// Get control dimensions
+		const controlWidth = oControl.extX;
+		const controlHeight = oControl.extY;
+
+		// Determine orientation based on dimensions
+		const isVertical = this.isVertical();
+		const nMinValue = this.getMinValue();
+		const nMaxValue = this.getMaxValue();
+		const nCurrentValue = this.getCurrentValue();
+		if (isVertical) {
+			// VERTICAL SCROLLBAR
+			// Calculate button dimensions
+			const buttonHeight = controlHeight * SCROLLBAR_BUTTON_SIZE_RATIO;
+			const trackHeight = controlHeight - (buttonHeight * 2);
+
+			// Setup up button
+			this.upButton.x = oControl.x;
+			this.upButton.y = oControl.y;
+			this.upButton.extX = controlWidth;
+			this.upButton.extY = buttonHeight;
+			this.upButton.transform = oControlMatrix.CreateDublicate();
+			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
+
+			// Setup down button (positioned at the bottom)
+			const downButtonMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(downButtonMatrix, 0, controlHeight - buttonHeight);
+			this.downButton.transform = downButtonMatrix;
+			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
+			this.downButton.x = oControl.x;
+			this.downButton.y = oControl.y + controlHeight - buttonHeight;
+			this.downButton.extX = controlWidth;
+			this.downButton.extY = buttonHeight;
+
+			// Setup track area
+			this.trackArea.x = oControl.x;
+			this.trackArea.y = oControl.y + buttonHeight;
+			this.trackArea.extX = controlWidth;
+			this.trackArea.extY = trackHeight;
+			const trackMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(trackMatrix, 0, buttonHeight);
+			this.trackArea.transform = trackMatrix;
+			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
+
+			// Calculate thumb dimensions and position
+			const valueRange = nMaxValue - nMinValue;
+			const thumbMinHeight = trackHeight * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
+			const thumbHeight = Math.max(thumbMinHeight, trackHeight / (valueRange + 1));
+
+			// Calculate thumb position based on current value
+			let thumbPositionRatio = 0;
+			if (valueRange > 0) {
+				thumbPositionRatio = (nCurrentValue - nMinValue) / valueRange;
+			}
+
+			// Available space for thumb to move (trackHeight minus thumb height)
+			const thumbTrackSpace = trackHeight - thumbHeight;
+			const thumbY = thumbPositionRatio * thumbTrackSpace;
+
+			// Setup thumb
+			this.thumb.x = oControl.x;
+			this.thumb.y = oControl.y + buttonHeight + thumbY;
+			this.thumb.extX = controlWidth;
+			this.thumb.extY = thumbHeight;
+
+			const thumbMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(thumbMatrix, 0, buttonHeight + thumbY);
+			this.thumb.transform = thumbMatrix;
+			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
+		} else {
+			// HORIZONTAL SCROLLBAR
+			// Calculate button dimensions
+			const buttonWidth = controlWidth * SCROLLBAR_BUTTON_SIZE_RATIO;
+			const trackWidth = controlWidth - (buttonWidth * 2);
+
+			// Setup left button
+			this.upButton.x = oControl.x;
+			this.upButton.y = oControl.y;
+			this.upButton.extX = buttonWidth;
+			this.upButton.extY = controlHeight;
+			this.upButton.transform = oControlMatrix.CreateDublicate();
+			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
+
+			// Setup right button (positioned at the right)
+			const rightButtonMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(rightButtonMatrix, controlWidth - buttonWidth, 0);
+			this.downButton.transform = rightButtonMatrix;
+			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
+			this.downButton.x = oControl.x + controlWidth - buttonWidth;
+			this.downButton.y = oControl.y;
+			this.downButton.extX = buttonWidth;
+			this.downButton.extY = controlHeight;
+
+			// Setup track area
+
+			const trackMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(trackMatrix, buttonWidth, 0);
+			this.trackArea.transform = trackMatrix;
+			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
+
+			// Calculate thumb dimensions and position
+			const valueRange = nMaxValue - nMinValue;
+			const thumbMinWidth = trackWidth * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
+			const thumbWidth = Math.max(thumbMinWidth, trackWidth / (valueRange + 1));
+
+			// Calculate thumb position based on current value
+			let thumbPositionRatio = 0;
+			if (valueRange > 0) {
+				thumbPositionRatio = (nCurrentValue - nMinValue) / valueRange;
+			}
+
+			// Available space for thumb to move (trackWidth minus thumb width)
+			const thumbTrackSpace = trackWidth - thumbWidth;
+			const thumbX = thumbPositionRatio * thumbTrackSpace;
+
+			// Setup thumb
+			this.thumb.x = oControl.x + buttonWidth + thumbX;
+			this.thumb.y = oControl.y;
+			this.thumb.extX = thumbWidth;
+			this.thumb.extY = controlHeight;
+
+			const thumbMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(thumbMatrix, buttonWidth + thumbX, 0);
+			this.thumb.transform = thumbMatrix;
+			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
+		}
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
