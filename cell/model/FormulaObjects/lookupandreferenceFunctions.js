@@ -4381,8 +4381,14 @@ function (window, undefined) {
 			}
 
 			if (arg2Rows === 1) {
+				if (lookingIndex >= arg2.getCountElementInRow()) {
+					return new cError(cErrorType.not_available)
+				}
 				return arg2.getElementRowCol(0, lookingIndex);
 			} else if (arg2Cols === 1) {
+				if (lookingIndex >= arg2.rowCount) {
+					return new cError(cErrorType.not_available)
+				}
 				return arg2.getElementRowCol(lookingIndex, 0);
 			} else {
 				// return from last row/col
