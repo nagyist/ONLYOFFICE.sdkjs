@@ -161,9 +161,9 @@ CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnA
 	this.ColumnNum    = ColumnAbs ? ColumnAbs : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
 	this.SectionNum   = sectionAbs ? sectionAbs : 0;
-	this.ResetSection(PageAbs, sectionAbs, sectPr);
+	this.ResetSection(X, Y, XLimit, YLimit, PageAbs, sectionAbs, sectPr);
 };
-CBlockLevelSdt.prototype.ResetSection = function(pageAbs, sectionAbs, sectPr)
+CBlockLevelSdt.prototype.ResetSection = function(X, Y, XLimit, YLimit, pageAbs, sectionAbs, sectPr)
 {
 	console.log(`Reset section ${sectionAbs}`);
 	if (sectionAbs < this.SectionNum)
@@ -175,7 +175,16 @@ CBlockLevelSdt.prototype.ResetSection = function(pageAbs, sectionAbs, sectPr)
 	this.Sections.length = sectionAbs - this.SectionNum;
 
 	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
-	this.Sections.push(new AscWord.DocumentElementSection(pageAbs, startPage, startPage, sectPr));
+	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr));
+};
+CBlockLevelSdt.prototype.GetElementSectionByPage = function(curPage)
+{
+	for (let i = 0; i < this.Sections.length; ++i)
+	{
+		if (this.Sections[i].GetEndPage() >= curPage)
+			return this.Sections[i];
+	}
+	return this.Sections[this.Sections.length - 1];
 };
 CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 {
@@ -1344,19 +1353,34 @@ CBlockLevelSdt.prototype.IsInTable = function(bReturnTopTable)
 };
 CBlockLevelSdt.prototype.Get_PageContentStartPos = function(CurPage)
 {
+	let section = this.GetElementSectionByPage(CurPage);
+	
+	if (!section)
+	{
+		return {
+			X : this.X,
+			Y : this.Y,
+			XLimit : this.XLimit,
+			YLimit : this.YLimit
+		}
+	}
+	
+	if (section.GetStartPage() === CurPage)
+		return section.GetContentStartPos();
+
 	var StartPage   = this.Get_AbsolutePage(0);
 	var StartColumn = this.Get_AbsoluteColumn(0);
-
+	
 	if (this.Parent instanceof CDocumentContent)
 	{
 		StartPage   = this.Parent.Get_AbsolutePage(0) - StartPage;
 		StartColumn = this.Parent.StartColumn;
-
+		
 		// Такого не должно быть, но на всякий случай
 		if (StartPage < 0)
 			StartPage = 0;
 	}
-
+	
 	return this.Parent.Get_PageContentStartPos2(StartPage, StartColumn, CurPage, this.Index);
 };
 CBlockLevelSdt.prototype.CheckTableCoincidence = function(Table)

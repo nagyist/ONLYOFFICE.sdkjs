@@ -38,8 +38,12 @@
 	/**
 	 * @constructor
 	 */
-	function DocumentElementSection(parentStartPage, startPage, endPage, sectPr)
+	function DocumentElementSection(x, y, xLimit, yLimit, parentStartPage, startPage, endPage, sectPr)
 	{
+		this.x               = x;
+		this.y               = y;
+		this.xLimit          = xLimit;
+		this.yLimit          = yLimit;
 		this.parentStartPage = parentStartPage; // Страница внешнего элемента, с которой начинается данная секция
 		this.sectPr          = sectPr;
 		this.startPage       = startPage;
@@ -61,6 +65,15 @@
 	DocumentElementSection.prototype.GetColumnCount = function()
 	{
 		return this.columnCount;
+	};
+	DocumentElementSection.prototype.GetContentStartPos = function()
+	{
+		return {
+			X : this.x,
+			Y : this.y,
+			XLimit : this.xLimit,
+			YLimit : this.yLimit
+		}
 	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.DocumentElementSection = DocumentElementSection;

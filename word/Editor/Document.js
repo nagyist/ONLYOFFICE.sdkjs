@@ -3937,7 +3937,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				{
 					Element.Set_DocumentIndex(Index);
 					if (Index === StartIndex && bResetSectionStart)
-						Element.ResetSection(PageIndex, 1/*PageSection.GetIndex()*/, SectPr);
+						Element.ResetSection(X, Y, XLimit, YLimit, PageIndex, 1/*PageSection.GetIndex()*/, SectPr);
 					else
 						Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, 0/*PageSection.GetIndex()*/, SectPr);
 				}

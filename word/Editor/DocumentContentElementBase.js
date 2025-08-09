@@ -167,19 +167,19 @@ CDocumentContentElementBase.prototype.Get_Id = function()
 {
 	return this.GetId();
 };
-CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount, sectionAbs, sectPr)
+CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, pageAbs, ColumnAbs, ColumnsCount, sectionAbs, sectPr)
 {
 	this.X            = X;
 	this.Y            = Y;
 	this.XLimit       = XLimit;
 	this.YLimit       = YLimit;
-	this.PageNum      = PageAbs;
+	this.PageNum      = pageAbs;
 	this.ColumnNum    = ColumnAbs ? ColumnAbs : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
 	this.SectionNum   = sectionAbs;
-	this.ResetSection(pageAbs, sectionAbs, sectPr);
+	this.ResetSection(X, Y, XLimit, YLimit, pageAbs, sectionAbs, sectPr);
 };
-CDocumentContentElementBase.prototype.ResetSection = function(pageAbs, sectionAbs, sectPr)
+CDocumentContentElementBase.prototype.ResetSection = function(X, Y, XLimit, YLimit, pageAbs, sectionAbs, sectPr)
 {
 };
 CDocumentContentElementBase.prototype.SetUseXLimit = function(isUse)
