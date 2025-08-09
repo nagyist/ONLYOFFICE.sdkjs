@@ -32,16 +32,24 @@
 
 "use strict";
 
-let g_version = "0.0.0-0";//make empty for develop version
+let g_version = "0.0.0-0";//"localhost:8000" for develop version
 const pathnameParts = self.location.pathname.split('/');
 if (pathnameParts.length > 1 && pathnameParts[pathnameParts.length - 2]) {
 	g_version = pathnameParts[pathnameParts.length - 2];
 }
 const g_cacheNamePrefix = 'document_editor_static_';
 const g_cacheName = g_cacheNamePrefix + g_version;
-const patternPrefix = new RegExp(g_version + "/(web-apps|sdkjs|sdkjs-plugins|fonts|dictionaries)");
+const g_cacheablePrefixes = [
+	"web-apps/",
+	"sdkjs/",
+	"fonts/",
+	"sdkjs-plugins/",
+	"dictionaries/"
+];
 const isDesktopEditor = navigator.userAgent.indexOf("AscDesktopEditor") !== -1;
 let g_storageInfoCache = null;
+let g_storageInfoCacheTime = 0;
+const STORAGE_INFO_CACHE_DURATION = 30000; // 30 seconds
 
 /**
  * Check if a response is safe to cache
@@ -62,7 +70,8 @@ function safeToCache(request, response) {
  * @returns {Promise<{maxEntrySize: number, isHealthy: boolean}>} Storage info
  */
 function getStorageInfo() {
-	if (g_storageInfoCache !== null) {
+	const now = Date.now();
+	if (g_storageInfoCache !== null && (now - g_storageInfoCacheTime) < STORAGE_INFO_CACHE_DURATION) {
 		return Promise.resolve(g_storageInfoCache);
 	}
 	
@@ -72,11 +81,22 @@ function getStorageInfo() {
 			maxEntrySize: 50 * 1024 * 1024,
 			isHealthy: true
 		};
+		g_storageInfoCacheTime = now;
 		return Promise.resolve(g_storageInfoCache);
 	}
 	
 	return navigator.storage.estimate()
 		.then(function(estimate) {
+			// Validate estimate fields; fall back if missing or invalid
+			if (!estimate || typeof estimate.quota !== 'number' || !isFinite(estimate.quota) || estimate.quota <= 0 ||
+				typeof estimate.usage !== 'number' || !isFinite(estimate.usage)) {
+				g_storageInfoCache = {
+					maxEntrySize: 50 * 1024 * 1024,
+					isHealthy: true
+				};
+				g_storageInfoCacheTime = Date.now();
+				return g_storageInfoCache;
+			}
 			// Calculate max entry size: cache ≈ 10% of quota, cap entry at 1/8th
 			const cacheSize = Math.min(estimate.quota * 0.10, 1024 * 1024 * 1024); // 1 GiB max
 			const maxEntrySize = cacheSize / 8; // Per-entry cap is 1/8th of cache size
@@ -86,6 +106,7 @@ function getStorageInfo() {
 			const isHealthy = usageRatio < 0.8;
 			
 			g_storageInfoCache = { maxEntrySize: maxEntrySize, isHealthy: isHealthy };
+			g_storageInfoCacheTime = Date.now();
 			return g_storageInfoCache;
 		})
 		.catch(function(error) {
@@ -94,6 +115,7 @@ function getStorageInfo() {
 				maxEntrySize: 50 * 1024 * 1024,
 				isHealthy: true
 			};
+			g_storageInfoCacheTime = Date.now();
 			return g_storageInfoCache;
 		});
 }
@@ -129,37 +151,39 @@ function storageHealthy() {
 /**
  * Put response in cache with retry logic for transient errors
  * @param {Request} request
- * @param {Response} response - Pre-cloned response ready for caching
+ * @param {Response} response - Response to cache; this function clones per attempt to preserve the original for retries
  * @param {number} attempt - Current attempt number (for retry logic)
  * @returns {Promise} Promise that resolves when caching completes or fails
  */
-function putInCache(request, response, attempt = 0) {
-	return caches.open(g_cacheName)
-		.then(function(cache) {
-			return cache.put(request, response);
-		})
-		.catch(function(err) {
-			// Transient quota/disk hiccup? Retry up to 2x with exponential back-off
-			if (attempt < 2) {
-				return new Promise(function(resolve) {
-					setTimeout(resolve, 250 * Math.pow(2, attempt)); // 250ms, 500ms
-				})
-				.then(function() {
-					// Need fresh clone for retry since previous attempt consumed stream
-					return putInCache(request, response.clone(), attempt + 1);
-				});
-			} else {
-				const size = response.headers ? response.headers.get('content-length') : 'unknown';
-				console.error('putInCache failed after max retries:', {
-					url: request.url,
-					method: request.method,
-					responseSize: size,
-					responseType: response.type,
-					cacheName: g_cacheName,
-					error: err.message || err
-				});
-			}
-		});
+function putInCache(request, response, attempt) {
+    if (typeof attempt === 'undefined') attempt = 0;
+    return caches.open(g_cacheName)
+        .then(function(cache) {
+            // Clone at the moment of caching so the provided response remains pristine for retries
+            return cache.put(request, response.clone());
+        })
+        .catch(function(err) {
+            // Transient quota/disk hiccup? Retry up to 2x with exponential back-off
+            if (attempt < 2) {
+                return new Promise(function(resolve) {
+                    setTimeout(resolve, 250 * Math.pow(2, attempt)); // 250ms, 500ms
+                })
+                .then(function() {
+                    // Reuse the original unconsumed response; a fresh clone will be created inside cache.put
+                    return putInCache(request, response, attempt + 1);
+                });
+            } else {
+                const size = response.headers ? response.headers.get('content-length') : 'unknown';
+                console.error('putInCache failed after max retries:', {
+                    url: request.url,
+                    method: request.method,
+                    responseSize: size,
+                    responseType: response.type,
+                    cacheName: g_cacheName,
+                    error: err && (err.message || err)
+                });
+            }
+        });
 }
 
 function cacheFirst(event) {
@@ -174,16 +198,12 @@ function cacheFirst(event) {
 			// Fire-and-forget caching **after** responding to the page
 			if (safeToCache(request, networkResp)) {
 				event.waitUntil(
-					// Check all caching conditions before proceeding
-					Promise.all([
-						storageHealthy(),
-						isReasonableSize(networkResp)
-					])
-					.then(function(results) {
-						const healthy = results[0];
-						const sizeOk = results[1];
+					getStorageInfo()
+					.then(function(info) {
+						const size = Number(networkResp.headers.get('content-length')) || 0;
+						const sizeOk = size === 0 || size < info.maxEntrySize;
 						
-						if (healthy && sizeOk) {
+						if (info.isHealthy && sizeOk) {
 							return putInCache(request, responseForCache);
 						}
 					})
@@ -212,6 +232,27 @@ function activateWorker(event) {
 			console.error('activateWorker failed with ' + err);
 		});
 }
+/**
+ * Filter function for cacheable paths
+ * @param {string} url
+ * @returns {boolean}
+ */
+function matchesCacheablePath(url) {
+	const g_versionNeedle = "/" + g_version + "/";
+    const versionIndex = url.indexOf(g_versionNeedle);
+    if (versionIndex === -1) return false;
+
+    // Position just after "/<version>/"
+    const i = versionIndex + g_versionNeedle.length;
+
+	for (let k = 0; k < g_cacheablePrefixes.length; k++) {
+		//startsWith not supported in ie11 but at first service worker not supported
+		if (url.startsWith(g_cacheablePrefixes[k], i)) {
+            return true;
+        }
+    }
+    return false;
+}
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(self.skipWaiting());
@@ -222,14 +263,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-	let request = event.request;
-	if (request.method !== "GET" || !patternPrefix.test(request.url)) {
+	const request = event.request;
+	const url = request.url;
+	
+	// Fast path: check method and URL pattern in one go
+	if (request.method !== "GET" || !matchesCacheablePath(url)) {
 		return;
 	}
 
-	if (isDesktopEditor) {
-		if (-1 !== request.url.indexOf("/sdkjs/common/AllFonts.js"))
-			return;
+	// Desktop editor exclusion
+	if (isDesktopEditor && url.indexOf("/sdkjs/common/AllFonts.js") !== -1) {
+		return;
 	}
 
 	event.respondWith(cacheFirst(event));
