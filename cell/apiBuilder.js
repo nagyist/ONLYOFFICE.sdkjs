@@ -18176,7 +18176,6 @@
 	/**
 	 * Pivot filter type.
 	 * @typedef {("xlAfter" | "xlAfterOrEqualTo" | "xlAllDatesInPeriodApril" | "xlAllDatesInPeriodAugust" | "xlAllDatesInPeriodDecember" | "xlAllDatesInPeriodFebruary" | "xlAllDatesInPeriodJanuary" | "xlAllDatesInPeriodJuly" | "xlAllDatesInPeriodJune" | "xlAllDatesInPeriodMarch" | "xlAllDatesInPeriodMay" | "xlAllDatesInPeriodNovember" | "xlAllDatesInPeriodOctober" | "xlAllDatesInPeriodQuarter1" | "xlAllDatesInPeriodQuarter2" | "xlAllDatesInPeriodQuarter3" | "xlAllDatesInPeriodQuarter4" | "xlAllDatesInPeriodSeptember" | "xlBefore" | "xlBeforeOrEqualTo" | "xlBottomCount" | "xlBottomPercent" | "xlBottomSum" | "xlCaptionBeginsWith" | "xlCaptionContains" | "xlCaptionDoesNotBeginWith" | "xlCaptionDoesNotContain" | "xlCaptionDoesNotEndWith" | "xlCaptionDoesNotEqual" | "xlCaptionEndsWith" | "xlCaptionEquals" | "xlCaptionIsBetween" | "xlCaptionIsGreaterThan" | "xlCaptionIsGreaterThanOrEqualTo" | "xlCaptionIsLessThan" | "xlCaptionIsLessThanOrEqualTo" | "xlCaptionIsNotBetween" | "xlDateBetween" | "xlDateLastMonth" | "xlDateLastQuarter" | "xlDateLastWeek" | "xlDateLastYear" | "xlDateNextMonth" | "xlDateNextQuarter" | "xlDateNextWeek" | "xlDateNextYear" | "xlDateThisMonth" | "xlDateThisQuarter" | "xlDateThisWeek" | "xlDateThisYear" | "xlDateToday" | "xlDateTomorrow" | "xlDateYesterday" | "xlNotSpecificDate" | "xlSpecificDate" | "xlTopCount" | "xlTopPercent" | "xlTopSum" | "xlValueDoesNotEqual" | "xlValueEquals" | "xlValueIsBetween" | "xlValueIsGreaterThan" | "xlValueIsGreaterThanOrEqualTo" | "xlValueIsLessThan" | "xlValueIsLessThanOrEqualTo" | "xlValueIsNotBetween" | "xlYearToDate") } XlPivotFilterType
-	 * @see office-js-api/Examples/Enumerations/XlPivotFilterType.js
 	 */
 
 	/**
@@ -18186,8 +18185,8 @@
 	 * @typeofeditors ["CSE"]
 	 * @param {XlPivotFilterType} filterType - The type of filter to add. Must match VBA XlPivotFilterType enum values.
 	 * @param {ApiPivotDataField} [dataField] - The data field object to filter by. Required for value filters (xlValue* types) and top/bottom filters.
-	 * @param {string | number} [value1] - The first value for the filter condition. Required for comparison filters, between filters, and top/bottom count.
-	 * @param {string | number} [value2] - The second value for "Between" conditions (xlCaptionIsBetween, xlCaptionIsNotBetween, xlValueIsBetween).
+	 * @param {string | number | Date} [value1] - The first value for the filter condition. Required for comparison filters, between filters, and top/bottom count.
+	 * @param {string | number | Date} [value2] - The second value for "Between" conditions (xlCaptionIsBetween, xlCaptionIsNotBetween, xlValueIsBetween).
 	 * @param {boolean} [wholeDayFilter] - Whether to filter by whole day for date filters. Reserved for future use, currently not implemented.
 	 * @since 9.1.0
 	 * @see office-js-api/Examples/{Editor}/ApiPivotFilters/Methods/Add.js
@@ -18201,13 +18200,14 @@
 
 		const autoFilterOptions = new Asc.AutoFiltersOptions();
 		this.field.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.field.index);
+		autoFilterOptions.asc_setIsDateFilter(false);
 
 		// Convert values to strings for filter processing (preserve original validation above)
 		if (value1 !== undefined && value1 !== null) {
-			value1 = value1 + '';
+			value1 = checkFormat(value1).toString();
 		}
 		if (value2 !== undefined && value2 !== null) {
-			value2 = value2 + '';
+			value2 = checkFormat(value2).toString();
 		}
 		if (applyCaptionFilter(autoFilterOptions, filterType, value1, value2) ||
 			applyValueFilter(autoFilterOptions, filterType, value1, value2, dataField) ||
@@ -18380,14 +18380,22 @@
 		// Handle comparison date filters that need custom filter logic
 		const captionFilters = {
 			'xlSpecificDate': Asc.c_oAscCustomAutoFilter.equals,
-			'xlNotSpecificDate': Asc.c_oAscCustomAutoFilter.doesNotEqual
+			'xlNotSpecificDate': Asc.c_oAscCustomAutoFilter.doesNotEqual,
+			'xlAfter': Asc.c_oAscCustomAutoFilter.isGreaterThan,
+			'xlBefore': Asc.c_oAscCustomAutoFilter.isLessThan,
+			'xlAfterOrEqualTo': Asc.c_oAscCustomAutoFilter.isGreaterThanOrEqualTo,
+			'xlBeforeOrEqualTo': Asc.c_oAscCustomAutoFilter.isLessThanOrEqualTo
 		};
 		const betweenFilters = {
 			'xlDateBetween': true,
 			'xlDateNotBetween': false
 		};
-
-		return addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2);
+		
+		const res = addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2);
+		if (res) {
+			autoFilterOptions.asc_setIsDateFilter(true);
+		}
+		return res;
 	}
 
 	//------------------------------------------------------------------------------------------------------------------

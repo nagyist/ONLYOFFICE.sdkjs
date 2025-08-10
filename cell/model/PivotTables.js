@@ -171,10 +171,10 @@ var c_oAscPivotFilterType = {
 	ValueBetween: 56,
 	ValueNotBetween: 57,
 	DateEqual: 58,
-	DateOlderThan: 59,
-	DateOlderThanOrEqual: 60,
-	DateNewerThan: 61,
-	DateNewerThanOrEqual: 62,
+	DateNewerThan: 59,
+	DateNewerThanOrEqual: 60,
+	DateOlderThan: 61,
+	DateOlderThanOrEqual: 62,
 	DateNotEqual: 63,
 	DateBetween: 64,
 	DateNotBetween: 65,
@@ -4500,6 +4500,9 @@ CT_pivotTableDefinition.prototype.fillAutoFiltersOptions = function (autoFilterO
 	autoFilterObject.asc_setValues(values);
 	autoFilterObject.asc_setFilterObj(filterObj);
 	autoFilterObject.asc_setPivotObj(pivotFilterObj);
+	autoFilterObject.asc_setIsTextFilter(null === iMeasureFld);
+	autoFilterObject.asc_setIsDateFilter(pivotFilter && pivotFilter.isDateFilter() || false);
+	autoFilterObject.asc_setTimeFormat(false);
 };
 CT_pivotTableDefinition.prototype.getPivotTableButtons = function (range, buttons) {
 	if (!this.intersection(range)) {
@@ -5131,10 +5134,11 @@ CT_pivotTableDefinition.prototype.getFilterMaps = function(cacheFieldsWithData) 
 			if (filterColumn) {
 				this.checkPivotFieldItems(pivotFilter.fld);
 				if (pivotFilter.isLabelFilter()) {
+					let num = pivotFilter.isDateFilter() ? null : this.getPivotFieldNum(pivotFilter.fld);
 					if (cacheField.hasGroup() && cacheField.getSharedItems()) {
-						labelFilters.push({index: pivotFilter.fld, isGroup: true, map: pivotField.getFilterMapFilterColumnGroup(cacheField, filterColumn, this.getPivotFieldNum(pivotFilter.fld))});
+						labelFilters.push({index: pivotFilter.fld, isGroup: true, map: pivotField.getFilterMapFilterColumnGroup(cacheField, filterColumn, num)});
 					} else {
-						labelFilters.push({index: pivotFilter.fld, map: pivotField.getFilterMapFilterColumn(cacheField, filterColumn, this.getPivotFieldNum(pivotFilter.fld))});
+						labelFilters.push({index: pivotFilter.fld, map: pivotField.getFilterMapFilterColumn(cacheField, filterColumn, num)});
 					}
 				} else {
 					valueFilters.push({index: pivotFilter.fld, pivotField: pivotField, pivotFilter: pivotFilter});
@@ -7307,10 +7311,11 @@ CT_pivotTableDefinition.prototype.filterPivotItems = function(index, autoFilterO
 				this.filterPivotItemsFilters(index, autoFilterObject.values);
 				break;
 			case c_oAscAutoFilterTypes.CustomFilters:
+				const isDate = autoFilterObject.asc_getIsDateFilter();
 				if (0 < iMeasureFld && iMeasureFld <= this.getDataFieldsCount()) {
-					pivotFilter.initFromCustom(index, filter.filter, iMeasureFld - 1);
+					pivotFilter.initFromCustom(index, filter.filter, isDate, iMeasureFld - 1);
 				} else {
-					pivotFilter.initFromCustom(index, filter.filter, null);
+					pivotFilter.initFromCustom(index, filter.filter, isDate, null);
 				}
 				break;
 			case c_oAscAutoFilterTypes.DynamicFilter:
@@ -18834,6 +18839,10 @@ CT_PivotFilter.prototype.Read_FromBinary2 = function(reader) {
 CT_PivotFilter.prototype.isLabelFilter = function() {
 	return !this.isValueFilter();
 };
+CT_PivotFilter.prototype.isDateFilter = function() {
+	return (c_oAscPivotFilterType.DateEqual <= this.type && this.type <= c_oAscPivotFilterType.DateNotBetween) ||
+		(c_oAscPivotFilterType.LastMonth <= this.type && this.type <= c_oAscPivotFilterType.Yesterday);
+};
 CT_PivotFilter.prototype.isValueFilter = function() {
 	return (c_oAscPivotFilterType.ValueEqual <= this.type && this.type <= c_oAscPivotFilterType.ValueNotBetween) ||
 		(c_oAscPivotFilterType.Count <= this.type && this.type <= c_oAscPivotFilterType.Sum);
@@ -18852,19 +18861,23 @@ CT_PivotFilter.prototype.initTemplate = function(fld) {
 	this.autoFilter = autoFilter;
 	this.type = Asc.c_oAscPivotFilterType.Unknown;
 };
-CT_PivotFilter.prototype.initFromCustom = function(index, filter, iMeasureFld) {
-	//todo date
+/**
+ * @param {number} index
+ * @param {Asc.CustomFilters} filter
+ * @param {boolean} isDate
+ * @param {number} iMeasureFld
+ */
+CT_PivotFilter.prototype.initFromCustom = function(index, filter, isDate, iMeasureFld) {
 	this.initTemplate(index);
 	this.fld = index;
 	this.iMeasureFld = iMeasureFld;
-	var isCaption = null === iMeasureFld;
-	var isDate = false;
+	var isCaption = !isDate && null === iMeasureFld;
 	var baseEqual;
 	var baseBetween;
-	if(isCaption){
+	if (isCaption) {
 		baseEqual = Asc.c_oAscPivotFilterType.CaptionEqual;
 		baseBetween = Asc.c_oAscPivotFilterType.CaptionBetween;
-	} else if(isDate){
+	} else if(isDate) {
 		baseEqual = Asc.c_oAscPivotFilterType.DateEqual;
 		baseBetween = Asc.c_oAscPivotFilterType.DateBetween;
 	} else {
