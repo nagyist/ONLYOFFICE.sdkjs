@@ -228,9 +228,13 @@
 
 		if (this.themes) {
 			for (let i = 0; i < this.themes.length; i++) {
-				pWriter.StartRecord(15);
-				pWriter.WriteTheme(this.themes[i]);
-				pWriter.EndRecord();
+				let theme = this.themes[i];
+				// theme with id 0 is default theme (no theme in visio) - this theme should not be saved
+				if (theme.themeElements.themeExt.themeSchemeSchemeEnum !== "0") {
+					pWriter.StartRecord(15);
+					pWriter.WriteTheme(theme);
+					pWriter.EndRecord();
+				}
 			}
 		}
 		//todo VbaProject
