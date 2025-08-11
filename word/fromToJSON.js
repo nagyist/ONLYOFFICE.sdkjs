@@ -3645,7 +3645,7 @@
 			return undefined;
 
 		var sReviewType = undefined;
-		switch (oRow.ReviewType)
+		switch (oRow.GetReviewType())
 		{
 			case reviewtype_Common:
 				sReviewType = "common";
@@ -4929,7 +4929,7 @@
 			bFromDocument = oParent.bFromDocument;
 
 		var sReviewType = undefined;
-		switch (oRun.ReviewType)
+		switch (oRun.GetReviewType())
 		{
 			case reviewtype_Common:
 				sReviewType = "common";
