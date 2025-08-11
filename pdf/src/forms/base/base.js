@@ -1562,17 +1562,19 @@
         return this._needRecalc;
     };
     CBaseField.prototype.Refresh_RecalcData = function(){};
-    CBaseField.prototype.SetWasChanged = function(isChanged) {
-        let oViewer = Asc.editor.getDocumentRenderer();
-        let canChange = !oViewer.IsOpenFormsInProgress && !AscCommon.History.UndoRedoInProgress;
-        if (this._wasChanged == isChanged || !canChange) {
-            return;
-        }
-        
-        AscCommon.History.Add(new CChangesPDFFormChanged(this, this._wasChanged, isChanged));
+    CBaseField.prototype.SetWasChanged = function(isChanged, viewSync) {
+        let oViewer   = Asc.editor.getDocumentRenderer();
+        let canChange = !oViewer.IsOpenAnnotsInProgress && AscCommon.History.CanAddChanges();
 
-        this._wasChanged = isChanged;
-        this.IsWidget() && this.SetDrawFromStream(!isChanged);
+        let changed = this._wasChanged !== isChanged && canChange;
+        if (changed) {
+            AscCommon.History.Add(new CChangesPDFFormChanged(this, this._wasChanged, isChanged));
+            this._wasChanged = isChanged;
+        }
+
+        if (this.IsWidget() && false !== viewSync && canChange && (isChanged || changed)) {
+            this.SetDrawFromStream(!isChanged);
+        }
     };
 
     CBaseField.prototype.UndoNotAppliedChanges = function() {
@@ -1771,7 +1773,8 @@
         AscCommon.History.Add(new CChangesPDFFormTooltip(this, this._tooltip, sTooltip));
 
         this._tooltip = sTooltip;
-        this.SetWasChanged(true);
+        
+        this.SetWasChanged(true, false);
         return true;
     };
     CBaseField.prototype.GetTooltip = function(bInherit) {
@@ -2472,10 +2475,17 @@
         return this._textSize;
     };
     CBaseField.prototype.SetRect = function(aOrigRect) {
+        let nOldExtX = this.GetWidth();
+        let nOldExtY = this.GetHeight();
+
         AscCommon.History.Add(new CChangesPDFFormRect(this, this.GetRect(), aOrigRect));
 
         this._rect = aOrigRect;
-        this.SetWasChanged(true);
+
+        let nNewExtX = this.GetWidth();
+        let nNewExtY = this.GetHeight();
+        this.SetWasChanged(true, !(nOldExtX == nNewExtX && nOldExtY == nNewExtY));
+        
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();
 
@@ -2522,10 +2532,18 @@
     };
     CBaseField.prototype.GetWidth = function() {
         let aRect = this.GetRect();
+        if (!aRect) {
+            return 0;
+        }
+
         return aRect[2] - aRect[0];
     };
     CBaseField.prototype.GetHeight = function() {
         let aRect = this.GetRect();
+        if (!aRect) {
+            return 0;
+        }
+
         return aRect[3] - aRect[1];
     };
 
@@ -3255,8 +3273,8 @@
         memory.Seek(nEndPos);
     };
     CBaseField.prototype.WriteRenderToBinary = function(memory) {
-        // пока только для text, combobox
-        if (true == memory.isForSplit || memory.isCopyPaste || null == this.content) {
+        // пока только для text, combobox, listbox
+        if (true == memory.isForSplit || memory.isCopyPaste || null == this.content || this.IsNeedDrawFromStream()) {
             return;
         }
 
