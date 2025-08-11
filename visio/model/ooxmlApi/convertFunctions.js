@@ -1344,19 +1344,21 @@
 
 			/**
 			 * Searches for pp element after passed element in textElements
-			 * @param {[]} textElements
+			 * @param {[]} textElements - elements with pp tp cp and text with \n
 			 * @param {number} currentIndex
-			 * @param {string?} afterDropText
-			 * @return {number} row num
+			 * @param {string?} afterDropText - afterDropText without \n
+			 * @param {boolean?} isNextElementLineDrop
+			 * @return {number | undefined} row num
 			 */
-			function searchForPP(textElements, currentIndex, afterDropText) {
+			function searchForPP(textElements, currentIndex, afterDropText, isNextElementLineDrop) {
 				if (afterDropText === undefined) {
 					afterDropText = "";
 				}
 				let afterNext = textElements[currentIndex + 2];
 				let next = textElements[currentIndex + 1];
-				// if there is text after \r\n
-				if (afterDropText.length > 2) {
+				// if there is something after \n
+				// also check for isNextElementLineDrop - means new paragraph start
+				if (afterDropText.length > 0 || isNextElementLineDrop) {
 					return undefined;
 				} else if (afterNext && afterNext.kind === AscVisio.c_oVsdxTextKind.PP) {
 					return afterNext.ix;
@@ -1971,13 +1973,22 @@
 
 			// interesting moment: if pp comes in text, so it ignores
 			textElement.elements.forEach(function(textElementPart, i) {
+				// init currentParagraph: if there is text in first element use default paragraph with
+				// properties from 0 paragraph props row
+				// otherwise search for pp tag witch can set paragraph properties for future text
 				if (i === 0) {
-					currentParagraphPropsRow = searchForPP(textElement.elements, i);
-					// check defaultParagraph properties: get pp_Type object and in paragraphPropsCommon get needed Row (0)
-					currentParagraphPropsRow = currentParagraphPropsRow === undefined ? 0 : currentParagraphPropsRow;
-					parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
-							paragraphPropsCommon, textCShape);
-					currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
+					if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
+						parseParagraphAndAddToShapeContent(0,
+								paragraphPropsCommon, textCShape);
+						currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
+					} else {
+						currentParagraphPropsRow = searchForPP(textElement.elements, i);
+						// check defaultParagraph properties: get pp_Type object and in paragraphPropsCommon get needed Row (0)
+						currentParagraphPropsRow = currentParagraphPropsRow === undefined ? 0 : currentParagraphPropsRow;
+						parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
+								paragraphPropsCommon, textCShape);
+						currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
+					}
 				}
 
 				if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
@@ -1996,7 +2007,9 @@
 
 							// if j > 0 CR exists in textArr and should be handled as new paragraph start
 							if (j > 0) {
-								let nextPP = searchForPP(textElement.elements, i, text);
+								// instead of lineDrop we get "" after split();
+								let isNextElementLineDrop = textArr[j + 1] === "";
+								let nextPP = searchForPP(textElement.elements, i, text, isNextElementLineDrop);
 								currentParagraphPropsRow = nextPP ? nextPP : currentParagraphPropsRow;
 
 								parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
@@ -2021,7 +2034,6 @@
 									visioDocument, pageInfo);
 							currentParagraph.Add_ToContent(currentParagraph.Content.length - 1, oRun);
 						}
-
 					} else if (textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 						// text field
 
