@@ -17100,8 +17100,10 @@
 			return "Columns";
 		} else if (this.pivotField.axis === Asc.c_oAscAxis.AxisPage) {
 			return "Filters"
+		} else if (this.pivotField.dataField) {
+			return "Values";
 		} else {
-			return "Hidden"
+			return "Hidden";
 		}
 	};
 
@@ -17116,6 +17118,7 @@
 	 */
 	ApiPivotField.prototype.SetOrientation = function (type) {
 		switch (type) {
+			case "xlRowField":
 			case "Rows":
 				if (this.pivotField.axis !== Asc.c_oAscAxis.AxisRow) {
 					this.table.pivot.asc_moveToRowField(this.table.api, this.index);
@@ -17123,6 +17126,7 @@
 					private_MakeError('The field already has that orientation.')
 				}
 				break;
+			case "xlColumnField":
 			case "Columns":
 				if (this.pivotField.axis !== Asc.c_oAscAxis.AxisCol) {
 					this.table.pivot.asc_moveToColField(this.table.api, this.index);
@@ -17130,6 +17134,7 @@
 					private_MakeError('The field already has that orientation.')
 				}
 				break;
+			case "xlPageField":
 			case "Filters":
 				if (this.pivotField.axis !== Asc.c_oAscAxis.AxisPage) {
 					this.table.pivot.asc_moveToPageField(this.table.api, this.index);
@@ -17137,9 +17142,11 @@
 					private_MakeError('The field already has that orientation.')
 				}
 				break;
+			case "xlDataField":
 			case "Values":
 				this.table.pivot.asc_moveToDataField(this.table.api, this.index);
 				break;
+			case "xlHidden":
 			case "Hidden":
 				this.Remove();
 				break;
@@ -17463,7 +17470,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiPivotField/Methods/GetShowingInAxis.js
 	 */
 	ApiPivotField.prototype.GetShowingInAxis = function () {
-		return this.pivotField.axis !== null || this.pivotField.dataField;
+		return this.pivotField.showingInAxis();
 	};
 
 	Object.defineProperty(ApiPivotField.prototype, "ShowingInAxis", {
@@ -18200,7 +18207,6 @@
 
 		const autoFilterOptions = new Asc.AutoFiltersOptions();
 		this.field.table.pivot.fillAutoFiltersOptions(autoFilterOptions, this.field.index);
-		autoFilterOptions.asc_setIsDateFilter(false);
 
 		// Convert values to strings for filter processing (preserve original validation above)
 		if (value1 !== undefined && value1 !== null) {
@@ -20269,11 +20275,14 @@
 	ApiPivotField.prototype["SetNumberFormat"]           = ApiPivotField.prototype.SetNumberFormat;
 	ApiPivotField.prototype["SetFunction"]               = ApiPivotField.prototype.SetFunction;
 	ApiPivotField.prototype["GetFunction"]               = ApiPivotField.prototype.GetFunction;
+	ApiPivotField.prototype["AutoSort"]                  = ApiPivotField.prototype.AutoSort;
 
 	ApiPivotItem.prototype["GetName"]    = ApiPivotItem.prototype.GetName;
 	ApiPivotItem.prototype["GetCaption"] = ApiPivotItem.prototype.GetCaption;
 	ApiPivotItem.prototype["GetValue"]   = ApiPivotItem.prototype.GetValue;
 	ApiPivotItem.prototype["GetParent"]  = ApiPivotItem.prototype.GetParent;
+	ApiPivotItem.prototype["GetVisible"] = ApiPivotItem.prototype.GetVisible;
+	ApiPivotItem.prototype["SetVisible"] = ApiPivotItem.prototype.SetVisible;
 
 	ApiValidation.prototype["Add"]                  = ApiValidation.prototype.Add;
 	ApiValidation.prototype["Delete"]               = ApiValidation.prototype.Delete;

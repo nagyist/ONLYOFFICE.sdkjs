@@ -3684,7 +3684,7 @@
                         pptx_content_writer.BinaryFileWriter.ImportFromMemory(old);
                     });
                 }
-				var macros = this.wb.oApi.macros.GetData();
+				var macros = this.wb.oApi.macros && this.wb.oApi.macros.GetData();
                 let customFunctions = this.wb.oApi["pluginMethod_GetCustomFunctions"] && this.wb.oApi["pluginMethod_GetCustomFunctions"]();
                 if (customFunctions) {
                     customFunctions = AscCommonExcel.mergeCustomFunctions(customFunctions, true);

@@ -2778,7 +2778,6 @@ CT_PivotCacheRecords.prototype.getDataMap = function(options) {
 	const indexes = options.rowIndexes.concat(options.colIndexes);
 	const filters = this._splitLabelFilters(indexes, options.filterMaps.labelFilters, options.cacheFieldsWithData);
 	const itemsWithDataMap = new Map();
-	const calculatedItems = options.cacheDefinition.getCalculatedItems();
 	let dataMap = new PivotDataElem(options.dataFields.length);
 	const calculatedIndexes = indexes.map(function(fld, index) {
 		return t._getCalculatedIndexes(options.cacheFields, fld);
@@ -5118,9 +5117,7 @@ CT_pivotTableDefinition.prototype.getFilterMaps = function(cacheFieldsWithData) 
 	if (pivotFields) {
 		for (i = 0; i < pivotFields.length; ++i) {
 			pivotField = pivotFields[i];
-			if ((c_oAscAxis.AxisRow === pivotField.axis || c_oAscAxis.AxisCol === pivotField.axis ||
-				(c_oAscAxis.AxisPage === pivotField.axis && pivotField.multipleItemSelectionAllowed))
-				&& !pivotField.isAllVisible()) {
+			if (pivotField.showingInAxisForFilter() && !pivotField.isAllVisible()) {
 				labelFilters.push({index: i, map: pivotField.getFilterMap()});
 			}
 		}
@@ -5131,7 +5128,7 @@ CT_pivotTableDefinition.prototype.getFilterMaps = function(cacheFieldsWithData) 
 			pivotField = pivotFields[pivotFilter.fld];
 			cacheField = cacheFields[pivotFilter.fld];
 			var filterColumn = pivotField && pivotFilter.getFilterColumn();
-			if (filterColumn) {
+			if (filterColumn && pivotField.showingInAxisForFilter()) {
 				this.checkPivotFieldItems(pivotFilter.fld);
 				if (pivotFilter.isLabelFilter()) {
 					let num = pivotFilter.isDateFilter() ? null : this.getPivotFieldNum(pivotFilter.fld);
@@ -17844,6 +17841,14 @@ CT_PivotField.prototype.hasCalculated = function() {
 	}
 	return false;
 };
+CT_PivotField.prototype.showingInAxis = function() {
+	return this.axis !== null || this.dataField;
+};
+CT_PivotField.prototype.showingInAxisForFilter = function() {
+	return c_oAscAxis.AxisRow === this.axis || c_oAscAxis.AxisCol === this.axis ||
+		(c_oAscAxis.AxisPage === this.axis && this.multipleItemSelectionAllowed);
+};
+
 function CT_PivotFieldX14() {
 //Attributes
 	this.fillDownLabels = false;
