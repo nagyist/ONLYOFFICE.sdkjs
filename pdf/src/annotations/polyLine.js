@@ -225,7 +225,7 @@
     CAnnotationPolyLine.prototype.GetLineEnd = function() {
         return this._lineEnd;
     };
-    CAnnotationPolyLine.prototype.GetMinShapeRect = function() {
+    CAnnotationPolyLine.prototype.private_CalcBoundingRect = function() {
         let nLineWidth  = this.GetWidth();
         let aVertices   = this.GetVertices();
 
@@ -483,32 +483,32 @@
             case AscPDF.LINE_END_TYPE.OpenArrow:
             case AscPDF.LINE_END_TYPE.ClosedArrow:
                 oSize.width = 6 * nLineW;
-                oSize.height = 3 * nLineW;
+                oSize.height = 6 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.Diamond:
             case AscPDF.LINE_END_TYPE.Square:
-                oSize.width = 4 * nLineW;
-                oSize.height = 4 * nLineW;
+                oSize.width = 6 * nLineW;
+                oSize.height = 6 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.Circle:
-                oSize.width = 4 * nLineW;
-                oSize.height = 4 * nLineW;
+                oSize.width = 6 * nLineW;
+                oSize.height = 6 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.RClosedArrow:
-                oSize.width = 6 * nLineW;
-                oSize.height = 6 * nLineW;
+                oSize.width = 8 * nLineW;
+                oSize.height = 8 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.ROpenArrow:
-                oSize.width = 6 * nLineW;
-                oSize.height = 6 * nLineW;
+                oSize.width = 8 * nLineW;
+                oSize.height = 8 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.Butt:
-                oSize.width = 5 * nLineW;
-                oSize.height = 1.5 * nLineW;
+                oSize.width = 6 * nLineW;
+                oSize.height = 6 * nLineW;
                 break;
             case AscPDF.LINE_END_TYPE.Slash:
                 oSize.width = 6 * nLineW;
-                oSize.height = 3 * nLineW;
+                oSize.height = 6 * nLineW;
                 break;
         }
 

@@ -107,16 +107,6 @@
     CPdfDrawingPrototype.prototype.OnBlur = function() {
         AscCommon.History.ForbidUnionPoint();
     };
-    CPdfDrawingPrototype.prototype.recalculateContent = function() {
-        let parentPrototype = Object.getPrototypeOf(Object.getPrototypeOf(this));
-        let oRecalcData = null;
-        // Вызов родительского метода
-        if (parentPrototype && parentPrototype.recalculateContent && parentPrototype.recalculateContent != CPdfDrawingPrototype.prototype.recalculateContent) {
-            oRecalcData = parentPrototype.recalculateContent.call(this);
-        }
-
-        return oRecalcData;
-    };
     CPdfDrawingPrototype.prototype.SetParentPage = function(oParent) {
         this.parent = oParent;
     };

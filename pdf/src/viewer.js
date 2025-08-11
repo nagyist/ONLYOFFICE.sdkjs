@@ -1714,7 +1714,9 @@
 					let oGeomEditSelection = oController.selection.geometrySelection ? oController.selection.geometrySelection : null;
 
 					if (oActiveAnnot == oDoc.GetShapeBasedAnnotById(this.DrawingObjects.getGraphicInfoUnderCursor(nAnnotPage, oPt.x, oPt.y).objectId)) {
-						if (oActiveAnnot.hitToHandles(oPt.x, oPt.y) != -1 || (oGeomEditSelection && oGeomEditSelection.hitToGeometryEdit(oPt.x, oPt.y))) {
+						let isHitted = oActiveAnnot.hitInBoundingRect(oPt.x, oPt.y) || oActiveAnnot.hitToHandles(oPt.x, oPt.y) != -1 || oActiveAnnot.hitInPath(oPt.x, oPt.y) || oActiveAnnot.hitInInnerArea(oPt.x, oPt.y) || oActiveAnnot.hitInTextRect(oPt.x, oPt.y) || oGeomEditSelection && oGeomEditSelection.hitToGeometryEdit(oPt.x, oPt.y);
+
+						if (isHitted) {
 							return oActiveAnnot;
 						}
 					}
@@ -1756,7 +1758,8 @@
 					// у draw аннотаций ищем по path
 					if (oAnnot.IsShapeBased())
 					{
-						if (oAnnot.hitInBoundingRect(pageObjectMM.x, pageObjectMM.y) || oAnnot.hitToHandles(pageObjectMM.x, pageObjectMM.y) != -1 || oAnnot.hitInPath(pageObjectMM.x, pageObjectMM.y) || oAnnot.hitInInnerArea(pageObjectMM.x, pageObjectMM.y))
+						let isHitted = oAnnot.hitInBoundingRect(pageObjectMM.x, pageObjectMM.y) || oAnnot.hitToHandles(pageObjectMM.x, pageObjectMM.y) != -1 || oAnnot.hitInPath(pageObjectMM.x, pageObjectMM.y) || oAnnot.hitInInnerArea(pageObjectMM.x, pageObjectMM.y);
+						if (isHitted)
 							return oAnnot;
 					}
 
@@ -2476,10 +2479,13 @@
 				oDrDoc.AutoShapesTrack.CorrectOverlayBounds();
 			}
 			else if (oDoc.mouseDownAnnot) {
-				if (oDoc.mouseDownAnnot.IsFreeText() && oDoc.mouseDownAnnot.IsInTextBox() && oDoc.mouseDownAnnot.GetDocContent().IsSelectionUse()) {
+				let oController = Asc.editor.getPDFDoc().GetController();
+				let oContent = oController.getTargetDocContent();
+
+				if (oContent && oContent.IsSelectionUse()) {
 					ctx.beginPath();
 					oDrDoc.SetTextSelectionOutline(true);
-					oDoc.mouseDownAnnot.GetDocContent().DrawSelectionOnPage(0);
+					oContent.DrawSelectionOnPage(0);
 					oDrDoc.private_EndDrawSelection();
 				}
 				else {
