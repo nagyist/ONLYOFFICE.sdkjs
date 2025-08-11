@@ -2484,7 +2484,7 @@ CTable.prototype.FindParaWithOutlineLvl = function (nOutlineLvl, bBackward, nSta
 /**
  * Данная функция запрашивает новую позицию для содержимого у ячейки, разбивающейся на несколько страниц
  */
-CTable.prototype.Get_PageContentStartPos = function(CurPage, RowIndex, CellIndex)
+CTable.prototype.GetCellPageContentFrame = function(CurPage, RowIndex, CellIndex)
 {
 	var Row      = this.Content[RowIndex];
 	var Cell     = Row.Get_Cell(CellIndex);

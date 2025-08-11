@@ -974,8 +974,11 @@
 			return this.Get_Styles(0);
 		}
 	};
-
-	CGraphicFrame.prototype.Get_PageContentStartPos = function (PageNum) {
+	
+	CGraphicFrame.prototype.GetPageContentFrame = function(page, sectPr){
+		return this.GetColumnContentFrame(page, 0, sectPr);
+	};
+	CGraphicFrame.prototype.GetColumnContentFrame = function(page, column, sectPr){
 		var presentation = editor.WordControl.m_oLogicDocument;
 		return {
 			X: 0,
@@ -985,11 +988,6 @@
 			MaxTopBorder: 0
 		};
 
-
-	};
-
-	CGraphicFrame.prototype.Get_PageContentStartPos2 = function () {
-		return this.Get_PageContentStartPos();
 	};
 
 	CGraphicFrame.prototype.Refresh_RecalcData = function () {

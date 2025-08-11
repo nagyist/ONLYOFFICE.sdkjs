@@ -250,7 +250,7 @@ CDocumentControllerBase.prototype.Is_DrawingShape = function(bRetShape)
  * Получаем стартовую позицию для заданной страницы.
  * @returns {{X: number, Y: number, XLimit: number, YLimit: number}}
  */
-CDocumentControllerBase.prototype.Get_PageContentStartPos = function(PageAbs)
+CDocumentControllerBase.prototype.GetPageContentFrame = function(pageAbs)
 {
 	return {X : 0, Y : 0, XLimit : 0, YLimit : 0};
 };

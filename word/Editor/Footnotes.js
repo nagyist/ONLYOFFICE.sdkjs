@@ -790,13 +790,18 @@ CFootnotesController.prototype.Refresh_RecalcData2 = function(nRelPageIndex)
 		}
 	}
 };
-CFootnotesController.prototype.Get_PageContentStartPos = function(nPageAbs, nColumnAbs)
+CFootnotesController.prototype.GetPageContentFrame = function(nPageAbs, nColumnAbs, sectPr)
 {
 	var oColumn = this.private_GetPageColumn(nPageAbs, nColumnAbs);
 	if (!oColumn)
 		return {X : 0, Y : 0, XLimit : 0, YLimit : 0};
 
-	return {X : oColumn.X, Y : oColumn.Height, XLimit : oColumn.XLimit, YLimit : oColumn.YLimit - oColumn.Y};
+	return {
+		X : oColumn.X,
+		Y : oColumn.Height,
+		XLimit : oColumn.XLimit,
+		YLimit : oColumn.YLimit - oColumn.Y
+	};
 };
 CFootnotesController.prototype.GetCurFootnote = function()
 {

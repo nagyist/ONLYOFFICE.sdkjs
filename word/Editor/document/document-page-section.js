@@ -51,6 +51,7 @@
 		this.YLimit2 = 0;
 		
 		this.Index   = -1;
+		this.SectPr  = null;
 		
 		this.Columns = [];
 		this.ColumnsSep = false;
@@ -90,10 +91,15 @@
 		this.YLimit  = oFrame.Bottom;
 		this.YLimit2 = oFrame.Bottom;
 		this.Index   = nSectionIndex;
+		this.SectPr  = oSectPr;
 	};
 	DocumentPageSection.prototype.GetIndex = function()
 	{
 		return this.Index;
+	};
+	DocumentPageSection.prototype.GetSectPr = function()
+	{
+		return this.SectPr;
 	};
 	DocumentPageSection.prototype.Copy = function()
 	{

@@ -584,11 +584,11 @@ CTableCell.prototype =
 
 		return this.Row.IsUseInDocument(this.GetId());
     },
-
-    Get_PageContentStartPos : function(PageNum)
-    {
-        return this.Row.Table.Get_PageContentStartPos(PageNum + this.Content.StartPage, this.Row.Index, this.Index, true );
-    },
+	
+	GetPageContentFrame : function(page)
+	{
+		return this.Row.Table.GetCellPageContentFrame(page + this.Content.StartPage, this.Row.Index, this.Index);
+	},
 
     Set_CurrentElement : function(bUpdateStates)
     {

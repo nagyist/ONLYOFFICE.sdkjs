@@ -358,11 +358,16 @@ CHeaderFooter.prototype =
     {
         return undefined;
     },
-
-    Get_PageContentStartPos : function ()
-    {
-        return { X : this.Content.X, Y : 0, XLimit : this.Content.XLimit, YLimit : 0 };
-    },
+	
+	GetPageContentFrame : function()
+	{
+		return {
+			X      : this.Content.X,
+			Y      : 0,
+			XLimit : this.Content.XLimit,
+			YLimit : 0
+		};
+	},
 
     Set_CurrentElement : function(bUpdateStates, PageAbs)
     {
@@ -1754,9 +1759,9 @@ CHeaderFooterController.prototype =
 
         // Подправляем позиции автофигур с учетом возможно изменившихся границ колонтитулов. Делаем это для всех автофигур,
         // потому что колонтитулы рассчитываются первыми на странице и внутри них нет обтекания.
-        var PageLimits = this.LogicDocument.Get_PageContentStartPos(PageIndex);
-        this.private_UpdateDrawingVerticalPositions(HeaderDrawings, PageLimits.Y, PageLimits.YLimit);
-        this.private_UpdateDrawingVerticalPositions(FooterDrawings, PageLimits.Y, PageLimits.YLimit);
+        let contentFrame = this.LogicDocument.GetPageContentFrame(PageIndex);
+        this.private_UpdateDrawingVerticalPositions(HeaderDrawings, contentFrame.Y, contentFrame.YLimit);
+        this.private_UpdateDrawingVerticalPositions(FooterDrawings, contentFrame.Y, contentFrame.YLimit);
 
         this.private_MergeFlowObjectsFromHeaderAndFooter(PageIndex, HeaderDrawings, HeaderTables, FooterDrawings, FooterTables);
 
@@ -1892,10 +1897,10 @@ CHeaderFooterController.prototype =
     {
         if ( true === this.Lock.Is_Locked() )
         {
-            var PageLimits = this.LogicDocument.Get_PageContentStartPos( PageNum_Abs );
+            let contentFrame = this.LogicDocument.GetPageContentFrame( PageNum_Abs );
 
             var MMData_header = new AscCommon.CMouseMoveData();
-            var Coords = this.DrawingDocument.ConvertCoordsToCursorWR( PageLimits.X, PageLimits.Y, PageNum_Abs );
+            var Coords = this.DrawingDocument.ConvertCoordsToCursorWR( contentFrame.X, contentFrame.Y, PageNum_Abs );
             MMData_header.X_abs            = Coords.X;
             MMData_header.Y_abs            = Coords.Y + 2;
             MMData_header.Type             = Asc.c_oAscMouseMoveDataTypes.LockedObject;
@@ -1905,7 +1910,7 @@ CHeaderFooterController.prototype =
             editor.sync_MouseMoveCallback( MMData_header );
 
             var MMData_footer = new AscCommon.CMouseMoveData();
-            Coords = this.DrawingDocument.ConvertCoordsToCursorWR( PageLimits.X, PageLimits.YLimit, PageNum_Abs );
+            Coords = this.DrawingDocument.ConvertCoordsToCursorWR( contentFrame.X, contentFrame.YLimit, PageNum_Abs );
             MMData_footer.X_abs            = Coords.X;
             MMData_footer.Y_abs            = Coords.Y - 2;
             MMData_footer.Type             = Asc.c_oAscMouseMoveDataTypes.LockedObject;
@@ -2369,11 +2374,11 @@ CHeaderFooterController.prototype =
         // Сначала проверяем, не попали ли мы в контент документа. Если да, тогда надо
         // активировать работу с самим документом (просто вернуть false здесь)
 
-        var PageMetrics = this.LogicDocument.Get_PageContentStartPos( PageIndex );
+        let contentFrame = this.LogicDocument.GetPageContentFrame( PageIndex );
         
         if ( MouseEvent.ClickCount >= 2 && (!editor.isStartAddShape && !editor.isInkDrawerOn()) &&
-            !( Y <= PageMetrics.Y      || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Header ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) ) &&
-            !( Y >= PageMetrics.YLimit || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Footer ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) ) )
+            !( Y <= contentFrame.Y      || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Header ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) ) &&
+            !( Y >= contentFrame.YLimit || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Footer ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) ) )
         {
             // Убираем селект, если он был
             if ( null != this.CurHdrFtr )
@@ -2391,7 +2396,7 @@ CHeaderFooterController.prototype =
 
         // Проверяем попали ли мы в колонтитул, если он есть. Если мы попали в
         // область колонтитула, а его там нет, тогда добавим новый колонтитул.
-        if ( Y <= PageMetrics.Y || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Header ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) || (editor.isStartAddShape || editor.isInkDrawerOn()) )
+        if ( Y <= contentFrame.Y || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Header ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) || (editor.isStartAddShape || editor.isInkDrawerOn()) )
         {
             if ( null === this.Pages[PageIndex].Header )
             {
@@ -2417,7 +2422,7 @@ CHeaderFooterController.prototype =
             else
                 HdrFtr = this.Pages[PageIndex].Header;
         }
-        else if ( Y >= PageMetrics.YLimit || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Footer ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) )
+        else if ( Y >= contentFrame.YLimit || ( null !== ( TempHdrFtr = this.Pages[PageIndex].Footer ) && true === TempHdrFtr.Is_PointInDrawingObjects( X, Y ) ) )
         {
             if ( null === this.Pages[PageIndex].Footer )
             {

@@ -159,6 +159,17 @@
 		
 		return this.SectionsInfo.Get_SectPr(nContentIndex).SectPr;
 	};
+	/**
+	 * Получаем настройки секции на заданной странице
+	 * @param pageAbs {number}
+	 * @returns {AscWord.SectPr}
+	 */
+	CDocumentLayoutBase.prototype.GetPageStartSection = function(pageAbs)
+	{
+		let docPage = this.LogicDocument.GetPage(pageAbs);
+		let pageSection = docPage ? docPage.GetSection(0) : null;
+		return pageSection ? pageSection.GetSectPr() : this.LogicDocument.GetSectPr();
+	};
 	CDocumentLayoutBase.prototype.GetSectionByPos = function(nContentIndex)
 	{
 		let sectInfo = this.SectionsInfo.Get_SectPr(nContentIndex);

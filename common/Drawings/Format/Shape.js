@@ -6594,8 +6594,12 @@
 				}
 			}
 		};
-
-		CShape.prototype.Get_PageContentStartPos = function (pageNum) {
+		
+		CShape.prototype.GetPageContentFrame = function(page, sectPr){
+			return this.GetColumnContentFrame(page, 0, sectPr);
+		};
+		
+		CShape.prototype.GetColumnContentFrame = function(page, column, sectPr){
 			if (this.textBoxContent) {
 				if (this.getTextRect) {
 					var rect = this.getTextRect();

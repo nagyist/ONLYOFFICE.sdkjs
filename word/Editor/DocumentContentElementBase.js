@@ -200,9 +200,24 @@ CDocumentContentElementBase.prototype.ResetSection = function(X, Y, XLimit, YLim
 	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
 	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr));
 };
+CDocumentContentElementBase.prototype.GetElementSectionByPage = function(curPage)
+{
+	if (!this.Sections.length)
+		return null;
+	else if (1 === this.Sections.length)
+		return this.Sections[0];
+	
+	for (let i = 0; i < this.Sections.length; ++i)
+	{
+		if (this.Sections[i].GetEndPage() >= curPage)
+			return this.Sections[i];
+	}
+	return this.Sections[this.Sections.length - 1];
+};
 CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
 {
-	if (0 === curPage)
+	let section = this.GetElementSectionByPage(curPage);
+	if (0 === curPage || !section)
 	{
 		return {
 			X : this.X,
@@ -212,7 +227,16 @@ CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
 		}
 	}
 	
-	return this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, curPage, this.Index);
+	let columnCount = section.GetColumnCount();
+	let startColumn = section === this.Sections[0] ? this.ColumnNum : 0;
+	
+	let startPage = section.GetStartPage();
+	curPage -= section.GetStartPage();
+	
+	let column = (startColumn + curPage) - ((startColumn + curPage) / columnCount | 0) * columnCount;
+	let page   = startPage + ((startColumn + curPage) / columnCount | 0);
+	
+	return this.Parent.GetColumnContentFrame(page, column, section.GetSectPr());
 };
 CDocumentContentElementBase.prototype.SetUseXLimit = function(isUse)
 {

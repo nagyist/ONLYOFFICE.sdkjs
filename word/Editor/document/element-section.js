@@ -75,6 +75,10 @@
 			YLimit : this.yLimit
 		}
 	};
+	DocumentElementSection.prototype.GetSectPr = function()
+	{
+		return this.sectPr;
+	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.DocumentElementSection = DocumentElementSection;
 })();

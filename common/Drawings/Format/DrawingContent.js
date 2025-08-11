@@ -215,15 +215,16 @@
         }
         return nColumnCount;
     };
-
-    CDrawingDocContent.prototype.Get_PageContentStartPos2 = function(StartPageIndex, StartColumnIndex, ElementPageIndex, ElementIndex){
-        var ColumnsCount = this.Get_ColumnsCount();
-        var nColumnIndex    = (StartColumnIndex + ElementPageIndex) - ((StartColumnIndex + ElementPageIndex) / ColumnsCount | 0) * ColumnsCount;
-        return this.Get_PageContentStartPos3(nColumnIndex);
-    };
-
-
-    CDrawingDocContent.prototype.Get_PageContentStartPos3 = function(nColumnIndex){
+	
+	CDrawingDocContent.prototype.GetPageContentFrame = function(page, sectPr){
+		return this._GetColumnContentFrame(0);
+	};
+	
+	CDrawingDocContent.prototype.GetColumnContentFrame = function(page, column, sectPr){
+		return this._GetColumnContentFrame(columnAbs);
+	};
+	
+    CDrawingDocContent.prototype._GetColumnContentFrame = function(nColumnIndex){
 
         var X = this.X;
         var Y = this.Y;
@@ -333,7 +334,7 @@
         var nColumnIndex        = this.FullRecalc.ColumnIndex;
         var nStartIndex         = this.FullRecalc.StartIndex;
 
-        var oStartPos = this.Get_PageContentStartPos3(nColumnIndex);
+        var oStartPos = this._GetColumnContentFrame(nColumnIndex);
         var X = oStartPos.X;
         var Y = oStartPos.Y;
         var XLimit = oStartPos.XLimit;

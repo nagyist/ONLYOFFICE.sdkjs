@@ -304,16 +304,26 @@ CDocumentContent.prototype.SetParent = function(oParent)
 //-----------------------------------------------------------------------------------
 // Функции, к которым идет обращение из контента
 //-----------------------------------------------------------------------------------
-CDocumentContent.prototype.Get_PageContentStartPos = function(PageNum)
+CDocumentContent.prototype.GetColumnContentFrame = function(page, column, sectPr)
 {
-	if (this.Parent)
-		return this.Parent.Get_PageContentStartPos(PageNum);
-
-	return {X : 0, Y : 0, XLimit : 210, YLimit : 297};
+	return this.GetPageContentFrame(page, sectPr);
 };
-CDocumentContent.prototype.Get_PageContentStartPos2 = function(StartPageIndex, StartColumnIndex, ElementPageIndex, ElementIndex)
+CDocumentContent.prototype.GetPageContentFrame = function(page, sectPr)
 {
-    return this.Get_PageContentStartPos(StartPageIndex + ElementPageIndex);
+	if (0 === page)
+	{
+		return {
+			X      : this.X,
+			Y      : this.Y,
+			XLimit : this.XLimit,
+			YLimit : this.YLimit
+		}
+	}
+	
+	if (this.Parent)
+		return this.Parent.GetPageContentFrame(page);
+	
+	return {X : 0, Y : 0, XLimit : 210, YLimit : 297};
 };
 CDocumentContent.prototype.Get_PageLimits = function(nCurPage)
 {
@@ -793,28 +803,15 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
 
     var Count = this.Content.length;
 
-    var StartPos;
-    if (0 === PageIndex)
-    {
-        StartPos = {
-            X      : this.X,
-            Y      : this.Y,
-            XLimit : this.XLimit,
-            YLimit : this.YLimit
-        }
-    }
-    else
-    {
-		StartPos = this.Get_PageContentStartPos(PageIndex);
-    }
+    let contentFrame = this.GetPageContentFrame(PageIndex);
 
-    this.Pages[PageIndex].Update_Limits(StartPos);
+    this.Pages[PageIndex].Update_Limits(contentFrame);
 
-    var X      = StartPos.X;
-    var StartY = StartPos.Y;
+    var X      = contentFrame.X;
+    var StartY = contentFrame.Y;
     var Y      = StartY;
-    var YLimit = StartPos.YLimit;
-    var XLimit = StartPos.XLimit;
+    var YLimit = contentFrame.YLimit;
+    var XLimit = contentFrame.XLimit;
 
     var Result = recalcresult2_End;
 

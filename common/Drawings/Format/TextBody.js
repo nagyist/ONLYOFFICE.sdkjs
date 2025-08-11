@@ -277,7 +277,10 @@
 
         return false;
     };
-    CTextBody.prototype.Get_PageContentStartPos = function(pageNum) {
+    CTextBody.prototype.GetPageContentFrame = function(page, sectPr){
+        return {X: 0, Y: 0, XLimit: this.contentWidth, YLimit: 20000};
+    };
+    CTextBody.prototype.GetColumnContentFrame = function(page, column, sectPr){
         return {X: 0, Y: 0, XLimit: this.contentWidth, YLimit: 20000};
     };
     CTextBody.prototype.Get_Numbering = function() {

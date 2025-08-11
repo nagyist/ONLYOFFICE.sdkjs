@@ -299,7 +299,7 @@ CEndnotesController.prototype.Refresh_RecalcData2 = function(nRelPageIndex)
 		}
 	}
 };
-CEndnotesController.prototype.Get_PageContentStartPos = function(nPageAbs, nColumnAbs, nSectionAbs)
+CEndnotesController.prototype.GetColumnContentFrame = function(nPageAbs, nColumnAbs, nSectionAbs)
 {
 	var oColumn = this.private_GetPageColumn(nPageAbs, nColumnAbs, nSectionAbs);
 	if (!oColumn)

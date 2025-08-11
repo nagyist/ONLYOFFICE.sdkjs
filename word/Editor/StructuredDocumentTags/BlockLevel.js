@@ -163,15 +163,6 @@ CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnA
 	this.SectionNum   = sectionAbs ? sectionAbs : 0;
 	this.ResetSection(X, Y, XLimit, YLimit, PageAbs, sectionAbs, sectPr);
 };
-CBlockLevelSdt.prototype.GetElementSectionByPage = function(curPage)
-{
-	for (let i = 0; i < this.Sections.length; ++i)
-	{
-		if (this.Sections[i].GetEndPage() >= curPage)
-			return this.Sections[i];
-	}
-	return this.Sections[this.Sections.length - 1];
-};
 CBlockLevelSdt.prototype.Recalculate_Page = function(CurPage)
 {
 	this.SetIsRecalculated(true);
@@ -1336,40 +1327,6 @@ CBlockLevelSdt.prototype.Check_AutoFit = function()
 CBlockLevelSdt.prototype.IsInTable = function(bReturnTopTable)
 {
 	return this.Parent.IsInTable(bReturnTopTable);
-};
-CBlockLevelSdt.prototype.Get_PageContentStartPos = function(CurPage)
-{
-	let section = this.GetElementSectionByPage(CurPage);
-	
-	if (!section)
-	{
-		return {
-			X : this.X,
-			Y : this.Y,
-			XLimit : this.XLimit,
-			YLimit : this.YLimit
-		}
-	}
-	
-	if (section.GetStartPage() === CurPage)
-		return section.GetContentStartPos();
-	
-	
-
-	var StartPage   = this.Get_AbsolutePage(0);
-	var StartColumn = this.Get_AbsoluteColumn(0);
-	
-	if (this.Parent instanceof CDocumentContent)
-	{
-		StartPage   = this.Parent.Get_AbsolutePage(0) - StartPage;
-		StartColumn = this.Parent.StartColumn;
-		
-		// Такого не должно быть, но на всякий случай
-		if (StartPage < 0)
-			StartPage = 0;
-	}
-	
-	return this.GetPageContentFrame(CurPage);
 };
 CBlockLevelSdt.prototype.CheckTableCoincidence = function(Table)
 {

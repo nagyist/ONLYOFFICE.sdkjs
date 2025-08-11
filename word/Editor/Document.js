@@ -2103,20 +2103,22 @@ CDocument.prototype.IsThisElementCurrent          = function()
 {
     return true;
 };
-CDocument.prototype.Get_PageContentStartPos = function(nPageAbs, nContentIndex)
+CDocument.prototype.GetPageContentFrame = function(pageAbs, sectPr)
 {
-	let oSectPr = this.Layout.GetSection(nPageAbs, nContentIndex);
-	return this.Layout.GetPageContentFrame(nPageAbs, oSectPr);
+	if (!sectPr)
+		sectPr = this.Layout.GetPageStartSection(pageAbs);
+	
+	return this.Layout.GetPageContentFrame(pageAbs, sectPr);
 };
-CDocument.prototype.Get_PageContentStartPos2 = function(StartPageIndex, StartColumnIndex, ElementPageIndex, ElementIndex)
+CDocument.prototype.GetColumnContentFrame = function(pageAbs, columnAbs, sectPr)
 {
-	let oSectPr = this.Layout.GetSection(StartPageIndex, ElementIndex);
-
-	let ColumnsCount = oSectPr.GetColumnsCount();
-	let ColumnAbs    = (StartColumnIndex + ElementPageIndex) - ((StartColumnIndex + ElementPageIndex) / ColumnsCount | 0) * ColumnsCount;
-	let PageAbs      = StartPageIndex + ((StartColumnIndex + ElementPageIndex) / ColumnsCount | 0);
-
-	return this.Layout.GetColumnContentFrame(PageAbs, ColumnAbs, oSectPr);
+	if (!sectPr)
+		sectPr = this.Layout.GetPageStartSection(pageAbs);
+	
+	if (undefined === columnAbs)
+		columnAbs = 0;
+	
+	return this.Layout.GetColumnContentFrame(pageAbs, columnAbs, sectPr);
 };
 CDocument.prototype.Get_PageLimits = function(nPageIndex)
 {
@@ -3699,18 +3701,17 @@ CDocument.prototype.Recalculate_Page = function()
 		// // Recalculation LOG
 		// console.log("Regular Recalculation" + PageIndex);
 
-        var StartPos = this.Get_PageContentStartPos(PageIndex, StartIndex);
-
+        let pageFrame = this.GetPageContentFrame(PageIndex);
 		this.Footnotes.Reset(PageIndex, this.Layout.GetSectionByPos(StartIndex));
 
         this.Pages[PageIndex].ResetStartElement = this.FullRecalc.ResetStartElement;
-        this.Pages[PageIndex].X                 = StartPos.X;
-        this.Pages[PageIndex].XLimit            = StartPos.XLimit;
-        this.Pages[PageIndex].Y                 = StartPos.Y;
-        this.Pages[PageIndex].YLimit            = StartPos.YLimit;
+        this.Pages[PageIndex].X                 = pageFrame.X;
+        this.Pages[PageIndex].XLimit            = pageFrame.XLimit;
+        this.Pages[PageIndex].Y                 = pageFrame.Y;
+        this.Pages[PageIndex].YLimit            = pageFrame.YLimit;
 
-        this.Pages[PageIndex].Sections[0].Y      = StartPos.Y;
-        this.Pages[PageIndex].Sections[0].YLimit = StartPos.YLimit;
+        this.Pages[PageIndex].Sections[0].Y      = pageFrame.Y;
+        this.Pages[PageIndex].Sections[0].YLimit = pageFrame.YLimit;
         this.Pages[PageIndex].Sections[0].Pos    = StartIndex;
         this.Pages[PageIndex].Sections[0].EndPos = StartIndex;
     }
@@ -3736,17 +3737,19 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 	// // Recalculation LOG
 	// console.log("Page " + PageIndex + " Section " + SectionIndex + " Column " + ColumnIndex + " Element " + StartIndex);
 	// console.log(this.RecalcInfo);
-
-    var StartPos = this.Get_PageContentStartPos2(PageIndex, ColumnIndex, 0, StartIndex);
-
-    var X      = StartPos.X;
-    var Y      = StartPos.Y;
-    var YLimit = StartPos.YLimit;
-    var XLimit = StartPos.XLimit;
-
+	
     var Page        = this.Pages[PageIndex];
     var PageSection = Page.Sections[SectionIndex];
     var PageColumn  = PageSection.Columns[ColumnIndex];
+	
+	var SectPr       = PageSection.GetSectPr();//this.Layout.GetSectionByPos(StartIndex);
+	let contentFrame = this.GetColumnContentFrame(PageIndex, ColumnIndex, SectPr);
+	
+	var X      = contentFrame.X;
+	var Y      = contentFrame.Y;
+	var YLimit = contentFrame.YLimit;
+	var XLimit = contentFrame.XLimit;
+	
 
     PageColumn.X           = X;
     PageColumn.XLimit      = XLimit;
@@ -3754,13 +3757,12 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
     PageColumn.YLimit      = YLimit;
     PageColumn.Pos         = StartIndex;
     PageColumn.Empty       = false;
-    PageColumn.SpaceBefore = StartPos.ColumnSpaceBefore;
-    PageColumn.SpaceAfter  = StartPos.ColumnSpaceAfter;
+    PageColumn.SpaceBefore = contentFrame.ColumnSpaceBefore;
+    PageColumn.SpaceAfter  = contentFrame.ColumnSpaceAfter;
     PageColumn.Endnotes    = this.FullRecalc.Endnotes;
 
     this.Footnotes.ContinueElementsFromPreviousColumn(PageIndex, ColumnIndex, Y, YLimit);
 
-    var SectPr       = this.Layout.GetSectionByPos(StartIndex);
     var ColumnsCount = SectPr.GetColumnsCount();
 	
 	var bReDraw             = true;
@@ -4514,7 +4516,7 @@ CDocument.prototype.private_RecalculateShiftFootnotes = function(nPageAbs, nColu
 	else
 	{
 		var dFootnotesHeight = this.Footnotes.GetHeight(nPageAbs, nColumnAbs);
-		var oPageMetrics     = this.Get_PageContentStartPos(nPageAbs);
+		var oPageMetrics     = this.GetPageContentFrame(nPageAbs);
 		this.Footnotes.Shift(nPageAbs, nColumnAbs, 0, oPageMetrics.YLimit - dFootnotesHeight);
 	}
 };
@@ -7574,7 +7576,7 @@ CDocument.prototype.Selection_SetStart         = function(X, Y, MouseEvent)
 			bFootnotes = true;
 	}
 
-    var PageMetrics = this.Get_PageContentStartPos(this.CurPage, this.Pages[this.CurPage].Pos);
+    var PageMetrics = this.GetPageContentFrame(this.CurPage);
 
 	var oldDocPosType = this.GetDocPosType();
     // Проверяем, не попали ли мы в колонтитул (если мы попадаем в Flow-объект, то попадание в колонтитул не проверяем)
@@ -10749,7 +10751,7 @@ CDocument.prototype.private_HandleMouseRightClickOnHeaderFooter = function(X, Y,
 		&& -1 === this.DrawingObjects.IsInDrawingObject(X, Y, nPageIndex, this)
 		&& !this.DrawingObjects.getTableByXY(X, Y, nPageIndex, this))
 	{
-		var oPageMetrics = this.Get_PageContentStartPos(nPageIndex, this.Pages[nPageIndex].Pos);
+		var oPageMetrics = this.GetPageContentFrame(nPageIndex);
 
 		if (Y <= oPageMetrics.Y || Y > oPageMetrics.YLimit)
 		{
@@ -10811,9 +10813,8 @@ CDocument.prototype.private_IsHitInHdrFtr = function(nY, nCurPage)
 	if (!this.Pages[nCurPage])
 		return false;
 
-	var oPageMetrics = this.Get_PageContentStartPos(nCurPage, this.Pages[nCurPage].Pos);
-
-	return (nY <= oPageMetrics.Y || nY > oPageMetrics.YLimit);
+	let pageFrame = this.GetPageContentFrame(nCurPage);
+	return (nY <= pageFrame.Y || nY > pageFrame.YLimit);
 };
 CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function()
 {
