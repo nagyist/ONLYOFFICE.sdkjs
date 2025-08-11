@@ -11984,29 +11984,6 @@
 		}
 	});
 
-	/**
-	 * Returns a range that represents the expanded range around the current range.
-	 * @memberof ApiRange
-	 * @typeofeditors ["CSE"]
-	 * @returns {ApiRange | null} - Returns the expanded range or null if the range cannot be expanded.
-	 */
-	ApiRange.prototype.Expand = function () {
-		if (!this.range) {
-			return null;
-		}
-
-		let bbox = this.range.bbox;
-		let ws = this.range.worksheet;
-		let expandRange = ws && ws.autoFilters && ws.autoFilters.expandRange(bbox);
-
-		if (!expandRange) {
-			return null;
-		}
-
-		let res = ws.getRange3(expandRange.r1, expandRange.c1, expandRange.r2, expandRange.c2);
-		return new ApiRange(res);
-	};
-
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiDrawing
@@ -17944,7 +17921,6 @@
 	ApiRange.prototype["SetAutoFilter"] = ApiRange.prototype.SetAutoFilter;
 	ApiRange.prototype["SetFormulaArray"] = ApiRange.prototype.SetFormulaArray;
 	ApiRange.prototype["GetFormulaArray"] = ApiRange.prototype.GetFormulaArray;
-	ApiRange.prototype["Expand"] = ApiRange.prototype.Expand;
 
 
 
