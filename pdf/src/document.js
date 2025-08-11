@@ -2081,7 +2081,6 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.UpdateCursorType = function(x, y, e) {
         let oViewer         = this.Viewer;
         let oController     = this.GetController();
-        let oDrDoc          = this.GetDrawingDocument();
         
         let IsOnDrawer      = this.Api.isDrawInkMode();
         let IsOnEraser      = this.Api.isEraseInkMode();
@@ -2091,6 +2090,8 @@ var CPresentation = CPresentation || function(){};
         let oMouseMoveField         = oViewer.getPageFieldByMouse();
         let oMouseMoveAnnot         = oViewer.getPageAnnotByMouse();
         let oMouseMoveDrawing       = oViewer.getPageDrawingByMouse();
+
+        let isHitted = oMouseMoveLink || oMouseMoveField || oMouseMoveAnnot || oMouseMoveDrawing;
 
         // координаты клика на странице в MM
         var pageObject = oViewer.getPageByCoords2(x, y);
@@ -2188,7 +2189,7 @@ var CPresentation = CPresentation || function(){};
 
         // если не обновлен по drawing объектам и не задан по объектам из pdf то выставляем дефолтный
         if (cursorType == undefined) {
-            if (isCursorUpdated == false) {
+            if (isCursorUpdated == false || !isHitted) {
                 cursorType = defaultCursor;
                 oViewer.setCursorType(cursorType);
             }
@@ -3625,7 +3626,7 @@ var CPresentation = CPresentation || function(){};
         oDrDoc.UpdateTargetFromPaint = true;
 
         let oForm       = this.activeForm;
-        let oFreeText   = this.mouseDownAnnot && this.mouseDownAnnot.IsFreeText() ? this.mouseDownAnnot : null;
+        let oAnnot      = this.mouseDownAnnot;
         let oDrawing    = this.activeDrawing;
 
         let oContent;
@@ -3634,9 +3635,13 @@ var CPresentation = CPresentation || function(){};
             oForm.Remove(nDirection, isCtrlKey);
             oContent = oForm.GetDocContent();
         }
-        else if (oFreeText && oFreeText.IsInTextBox()) {
-            oFreeText.Remove(nDirection, isCtrlKey);
-            oContent = oFreeText.GetDocContent();
+        else if (oAnnot) {
+            let oContent = oController.getTargetDocContent();
+
+            if (oContent) {
+                oAnnot.Remove(nDirection, isCtrlKey);
+                oContent = oAnnot.GetDocContent();
+            }
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oDrawing.Remove(nDirection, isCtrlKey);
@@ -4446,7 +4451,7 @@ var CPresentation = CPresentation || function(){};
         let oDrDoc = this.GetDrawingDocument();
 
         let oForm       = this.activeForm;
-        let oFreeText   = this.mouseDownAnnot && this.mouseDownAnnot.IsFreeText() ? this.mouseDownAnnot : null;
+        let oAnnot      = this.mouseDownAnnot;
         let oDrawing    = this.activeDrawing;
         let oController = this.GetController();
 
@@ -4457,9 +4462,12 @@ var CPresentation = CPresentation || function(){};
             oForm.MoveCursorLeft(isShiftKey, isCtrlKey);
             oContent = oForm.GetDocContent();
         }
-        else if (oFreeText && oFreeText.IsInTextBox()) {
-            oFreeText.MoveCursorLeft(isShiftKey, isCtrlKey);
-            oContent = oFreeText.GetDocContent();
+        else if (oAnnot) {
+            oContent = oController.getTargetDocContent();
+
+            if (oContent) {
+                oController.cursorMoveLeft(isShiftKey, isCtrlKey);
+            }
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oController.cursorMoveLeft(isShiftKey, isCtrlKey);
@@ -4479,7 +4487,7 @@ var CPresentation = CPresentation || function(){};
         let oDrDoc = this.GetDrawingDocument();
 
         let oForm       = this.activeForm;
-        let oFreeText   = this.mouseDownAnnot && this.mouseDownAnnot.IsFreeText() ? this.mouseDownAnnot : null;
+        let oAnnot      = this.mouseDownAnnot;
         let oDrawing    = this.activeDrawing;
         let oController = this.GetController();
 
@@ -4502,9 +4510,12 @@ var CPresentation = CPresentation || function(){};
                 }
             }
         }
-        else if (oFreeText && oFreeText.IsInTextBox()) {
-            oFreeText.MoveCursorUp(isShiftKey, isCtrlKey);
-            oContent = oFreeText.GetDocContent();
+        else if (oAnnot) {
+            oContent = oController.getTargetDocContent();
+
+            if (oContent) {
+                oController.cursorMoveUp(isShiftKey, isCtrlKey);
+            }
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oController.cursorMoveUp(isShiftKey, isCtrlKey);
@@ -4524,7 +4535,7 @@ var CPresentation = CPresentation || function(){};
         let oDrDoc = this.GetDrawingDocument();
 
         let oForm       = this.activeForm;
-        let oFreeText   = this.mouseDownAnnot && this.mouseDownAnnot.IsFreeText() ? this.mouseDownAnnot : null;
+        let oAnnot      = this.mouseDownAnnot;
         let oDrawing    = this.activeDrawing;
         let oController = this.GetController();
 
@@ -4535,9 +4546,12 @@ var CPresentation = CPresentation || function(){};
             oForm.MoveCursorRight(isShiftKey, isCtrlKey);
             oContent = oForm.GetDocContent();
         }
-        else if (oFreeText && oFreeText.IsInTextBox()) {
-            oFreeText.MoveCursorRight(isShiftKey, isCtrlKey);
-            oContent = oFreeText.GetDocContent();
+        else if (oAnnot) {
+            oContent = oController.getTargetDocContent();
+
+            if (oContent) {
+                oController.cursorMoveRight(isShiftKey, isCtrlKey);
+            }
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oController.cursorMoveRight(isShiftKey, isCtrlKey);
@@ -4556,10 +4570,10 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.MoveCursorDown = function(isShiftKey, isCtrlKey) {
         let oDrDoc = this.GetDrawingDocument();
 
-        let oForm           = this.activeForm;
-        let oFreeText       = this.mouseDownAnnot && this.mouseDownAnnot.IsFreeText() ? this.mouseDownAnnot : null;
-        let oDrawing        = this.activeDrawing;
-        let oController     = this.GetController();
+        let oForm       = this.activeForm;
+        let oAnnot      = this.mouseDownAnnot;
+        let oDrawing    = this.activeDrawing;
+        let oController = this.GetController();
 
         oDrDoc.UpdateTargetFromPaint = true;
 
@@ -4582,9 +4596,12 @@ var CPresentation = CPresentation || function(){};
             }
             
         }
-        else if (oFreeText && oFreeText.IsInTextBox()) {
-            oFreeText.MoveCursorDown(isShiftKey, isCtrlKey);
-            oContent = oFreeText.GetDocContent();
+        else if (oAnnot) {
+            oContent = oController.getTargetDocContent();
+
+            if (oContent) {
+                oController.cursorMoveDown(isShiftKey, isCtrlKey);
+            }
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oController.cursorMoveDown(isShiftKey, isCtrlKey);
@@ -7849,7 +7866,7 @@ var CPresentation = CPresentation || function(){};
 		if (activeForm && this.checkFieldFont(activeForm) && activeForm.IsCanEditText()) {
 			return activeForm;
 		}
-		else if (activeAnnot && activeAnnot.IsFreeText() && activeAnnot.IsInTextBox()) {
+		else if (activeAnnot && ((activeAnnot.IsFreeText() && activeAnnot.IsInTextBox()) || (activeAnnot.IsLine() && activeAnnot.IsDoCaption()))) {
 			return activeAnnot;
 		}
 		else if (activeDrawing && activeDrawing.GetDocContent()) {

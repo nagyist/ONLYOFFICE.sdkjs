@@ -4138,7 +4138,13 @@
 	AscDFH.historyitem_type_Pdf_Annot_FreeText_Rotate		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 4;
 
 	// annot line
-	AscDFH.historyitem_Pdf_Line_Points			= AscDFH.historyitem_type_Pdf_Annot_Line | 1;
+	AscDFH.historyitem_Pdf_Line_Annot_Points		= AscDFH.historyitem_type_Pdf_Annot_Line | 1;
+	AscDFH.historyitem_Pdf_Line_Annot_Leader_Length	= AscDFH.historyitem_type_Pdf_Annot_Line | 2;
+	AscDFH.historyitem_Pdf_Line_Annot_Leader_Ext	= AscDFH.historyitem_type_Pdf_Annot_Line | 3;
+	AscDFH.historyitem_Pdf_Line_Annot_Do_Caption	= AscDFH.historyitem_type_Pdf_Annot_Line | 4;
+	AscDFH.historyitem_Pdf_Line_Annot_Start			= AscDFH.historyitem_type_Pdf_Annot_Line | 5;
+	AscDFH.historyitem_Pdf_Line_Annot_End			= AscDFH.historyitem_type_Pdf_Annot_Line | 6;
+	AscDFH.historyitem_type_Pdf_Annot_Line_RC		= AscDFH.historyitem_type_Pdf_Annot_Line | 6;
 	
 	// annot stamp
 	AscDFH.historyitem_Pdf_Stamp_Type			 = AscDFH.historyitem_type_Pdf_Annot_Stamp | 1;

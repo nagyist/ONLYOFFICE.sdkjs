@@ -5523,8 +5523,15 @@
 							transform_text = _transform_text;
 						}
 
+						let isPdfAnnot = false;
+						if (Asc.editor.isPdfEditor()) {
+							if (this.IsAnnot && this.IsAnnot()) {
+								isPdfAnnot = true;
+							}
+						}
+
 						if (this instanceof CShape) {
-							if (!(oController && (AscFormat.getTargetTextObject(oController) === this)))
+							if (!(oController && (AscFormat.getTargetTextObject(oController) === this)) && !isPdfAnnot)
 								this.clipTextRect(graphics, transform, transformText, pageIndex);
 						}
 						graphics.transform3(transform_text, true);
