@@ -48,7 +48,7 @@
 		this.sectPr          = sectPr;
 		this.startPage       = startPage;
 		this.endPage         = endPage;
-		this.columnCount     = sectPr.GetColumnsCount();
+		this.columnCount     = sectPr ? sectPr.GetColumnsCount() : 1;
 	}
 	DocumentElementSection.prototype.GetParentStartPage = function()
 	{

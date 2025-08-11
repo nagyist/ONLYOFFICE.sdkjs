@@ -57,6 +57,8 @@ function CDocumentContentElementBase(oParent)
 	this.PageNum      = 0;
 	this.ColumnNum    = 0;
 	this.ColumnsCount = 0;
+	this.SectionNum   = 0;
+	this.Sections     = [];
 	this.UseXLimit    = true;
 	this.UseYLimit    = true;
 }
@@ -181,6 +183,36 @@ CDocumentContentElementBase.prototype.Reset = function(X, Y, XLimit, YLimit, pag
 };
 CDocumentContentElementBase.prototype.ResetSection = function(X, Y, XLimit, YLimit, pageAbs, sectionAbs, sectPr)
 {
+	if (undefined === sectionAbs || undefined === sectPr)
+	{
+		sectPr     = null;
+		sectionAbs = this.SectionNum;
+	}
+	
+	if (sectionAbs < this.SectionNum)
+	{
+		// This should never happen
+		this.SectionNum = sectionAbs;
+	}
+	
+	this.Sections.length = sectionAbs - this.SectionNum;
+	
+	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
+	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr));
+};
+CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
+{
+	if (0 === curPage)
+	{
+		return {
+			X : this.X,
+			Y : this.Y,
+			XLimit : this.XLimit,
+			YLimit : this.YLimit
+		}
+	}
+	
+	return this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, curPage, this.Index);
 };
 CDocumentContentElementBase.prototype.SetUseXLimit = function(isUse)
 {

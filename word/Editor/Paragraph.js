@@ -762,7 +762,7 @@ Paragraph.prototype.getColorMap = function()
 {
 	return this.GetColorMap();
 };
-Paragraph.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, ColumnsCount)
+Paragraph.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, ColumnsCount, sectionIndex, sectPr)
 {
 	this.X      = X;
 	this.Y      = Y;
@@ -782,6 +782,8 @@ Paragraph.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, C
 	{
 		this.private_RecalculateColumnLimits();
 	}
+	
+	this.ResetSection(X, Y, XLimit, YLimit, PageNum, sectionIndex, sectPr);
 };
 Paragraph.prototype.private_RecalculateColumnLimits = function()
 {

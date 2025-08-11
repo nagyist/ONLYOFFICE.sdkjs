@@ -163,20 +163,6 @@ CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnA
 	this.SectionNum   = sectionAbs ? sectionAbs : 0;
 	this.ResetSection(X, Y, XLimit, YLimit, PageAbs, sectionAbs, sectPr);
 };
-CBlockLevelSdt.prototype.ResetSection = function(X, Y, XLimit, YLimit, pageAbs, sectionAbs, sectPr)
-{
-	console.log(`Reset section ${sectionAbs}`);
-	if (sectionAbs < this.SectionNum)
-	{
-		// This should never happen
-		this.SectionNum = sectionAbs;
-	}
-	
-	this.Sections.length = sectionAbs - this.SectionNum;
-
-	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
-	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr));
-};
 CBlockLevelSdt.prototype.GetElementSectionByPage = function(curPage)
 {
 	for (let i = 0; i < this.Sections.length; ++i)
@@ -1367,6 +1353,8 @@ CBlockLevelSdt.prototype.Get_PageContentStartPos = function(CurPage)
 	
 	if (section.GetStartPage() === CurPage)
 		return section.GetContentStartPos();
+	
+	
 
 	var StartPage   = this.Get_AbsolutePage(0);
 	var StartColumn = this.Get_AbsoluteColumn(0);
@@ -1381,7 +1369,7 @@ CBlockLevelSdt.prototype.Get_PageContentStartPos = function(CurPage)
 			StartPage = 0;
 	}
 	
-	return this.Parent.Get_PageContentStartPos2(StartPage, StartColumn, CurPage, this.Index);
+	return this.GetPageContentFrame(CurPage);
 };
 CBlockLevelSdt.prototype.CheckTableCoincidence = function(Table)
 {

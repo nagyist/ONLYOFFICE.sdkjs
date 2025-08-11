@@ -1777,29 +1777,22 @@ CTable.prototype.private_RecalculatePageXY = function(CurPage)
         else
             FirstRow = Math.min(this.Pages[CurPage - 1].LastRow + 1, this.Content.length - 1);
     }
-
-    var TempMaxTopBorder = this.Get_MaxTopBorder(FirstRow);
-    this.Pages.length = Math.max(CurPage, 0);
-    if (0 === CurPage)
-    {
-		let yLimit = this.YLimit;
-		if (!this.IsInline()
-			&& c_oAscVAnchor.Text === this.PositionV.RelativeFrom
-			&& !this.PositionV.Align)
-		{
-			yLimit -= this.PositionV.Value;
-		}
-
-		this.Pages.length = 1;
-		this.Pages[0]     = new CTablePage(this.X, this.Y, this.XLimit, yLimit, FirstRow, TempMaxTopBorder);
-    }
-    else
-    {
-        var StartPos = this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, CurPage, this.Index);
-
-		this.Pages.length = CurPage + 1;
-        this.Pages[CurPage] = new CTablePage(StartPos.X, StartPos.Y, StartPos.XLimit, StartPos.YLimit, FirstRow, TempMaxTopBorder);
-    }
+	
+	let maxTopBorder = this.Get_MaxTopBorder(FirstRow);
+	let contentFrame = this.GetPageContentFrame(CurPage);
+	
+	this.Pages.length = CurPage + 1;
+	
+	let yLimit = contentFrame.YLimit;
+	if (0 === CurPage
+		&& !this.IsInline()
+		&& c_oAscVAnchor.Text === this.PositionV.RelativeFrom
+		&& !this.PositionV.Align)
+	{
+		yLimit -= this.PositionV.Value;
+	}
+	
+	this.Pages[CurPage] = new CTablePage(contentFrame.X, contentFrame.Y, contentFrame.XLimit, yLimit, FirstRow, maxTopBorder);
 };
 CTable.prototype.private_RecalculatePositionX = function(CurPage)
 {

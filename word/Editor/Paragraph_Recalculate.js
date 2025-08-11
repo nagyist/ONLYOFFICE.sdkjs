@@ -554,8 +554,6 @@ Paragraph.prototype.recalculateRangeFast = function(iRange, iLine)
 };
 Paragraph.prototype.private_RecalculateFastRange       = function(PRS, CurRange, CurLine)
 {
-    var XStart, YStart, XLimit, YLimit;
-
     // Определим номер страницы
     var CurPage  = 0;
     var PagesLen = this.Pages.length;
@@ -573,23 +571,13 @@ Paragraph.prototype.private_RecalculateFastRange       = function(PRS, CurRange,
         return -1;
 
     var ParaPr = this.Get_CompiledPr2(false).ParaPr;
-
-    if ( 0 === CurPage )//|| ( undefined != this.Get_FramePr() && this.Parent instanceof CDocument ) )
-    {
-        XStart = this.X;
-        YStart = this.Y;
-        XLimit = this.XLimit;
-        YLimit = this.YLimit;
-    }
-    else
-    {
-        var PageStart = this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, CurPage, this.Index);
-
-        XStart = PageStart.X;
-        YStart = PageStart.Y;
-        XLimit = PageStart.XLimit;
-        YLimit = PageStart.YLimit;
-    }
+	
+	let contentFrame = this.GetPageContentFrame(CurPage);
+	
+	let XStart = contentFrame.X;
+	let YStart = contentFrame.Y;
+	let XLimit = contentFrame.XLimit;
+	let YLimit = contentFrame.YLimit;
 
     PRS.XStart = XStart;
     PRS.YStart = YStart;
@@ -824,7 +812,7 @@ Paragraph.prototype.private_RecalculatePageXY          = function(CurLine, CurPa
     }
     else
     {
-        var PageStart = this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, CurPage, this.Index);
+        var PageStart = this.GetPageContentFrame(CurPage);
 
         XStart = PageStart.X;
         YStart = PageStart.Y;
@@ -2347,7 +2335,7 @@ Paragraph.prototype.private_RecalculateRangeEndPos     = function(PRS, PRP, Dept
 
 Paragraph.prototype.private_RecalculateGetTabPos = function(PRS, X, ParaPr, CurPage, NumTab)
 {
-	let contentFrame = this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, CurPage, this.Index);
+	let contentFrame = this.GetPageContentFrame(CurPage);
 	
 	let startX = contentFrame.X;
 	let endX   = contentFrame.XLimit;

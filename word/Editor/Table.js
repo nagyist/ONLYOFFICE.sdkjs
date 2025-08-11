@@ -2499,13 +2499,13 @@ CTable.prototype.Get_PageContentStartPos = function(CurPage, RowIndex, CellIndex
 	RowIndex = RowIndex + VMerge_count - 1;
 	Row      = this.Content[RowIndex];
 
-	var Pos = this.Parent.Get_PageContentStartPos2(this.PageNum, this.ColumnNum, CurPage, this.Index);
+	let contentFrame = this.GetPageContentFrame(CurPage);
 
 	// На момент обращения к данной функции, у всех ячеек всех строк до текущей (включительно) должны быть
 	// просчитаны верхние границы. И также должен быть просчитан заголовок на данной странице, если он есть.
 
 	var bHeader = false;
-	var Y       = Pos.Y;
+	var Y       = contentFrame.Y;
 	if (true !== this.HeaderInfo.HeaderRecalculate && -1 != this.HeaderInfo.PageIndex && this.HeaderInfo.Count > 0 && CurPage > this.HeaderInfo.PageIndex && true === this.HeaderInfo.Pages[CurPage].Draw)
 	{
 		Y       = this.HeaderInfo.Pages[CurPage].RowsInfo[this.HeaderInfo.Count - 1].TableRowsBottom;
@@ -2528,21 +2528,21 @@ CTable.prototype.Get_PageContentStartPos = function(CurPage, RowIndex, CellIndex
 	// Далее вычислим маскимальную ширину верхней границы всех ячеек в данной
 	// строке, учитывая ячейки, учавствующие в вертикальном объединении.
 	var MaxTopBorder = this.private_GetMaxTopBorderWidth(RowIndex, bHeader);
-
-	Pos.X = this.Pages[CurPage].X;
+	
+	contentFrame.X = this.Pages[CurPage].X;
 
 	Y += MaxTopBorder;
 
 	// Учтем верхнее поле ячейки
 	Y += CellMar.Top.W;
 
-	var YLimit = Pos.YLimit;
+	var YLimit = contentFrame.YLimit;
 
 	YLimit -= this.Pages[CurPage].FootnotesH;
 
 	// TODO: Здесь надо учитывать нижнюю границу ячейки и вычесть ее ширину из YLimit
-	return {X        : Pos.X + CellInfo.X_content_start,
-		XLimit       : Pos.X + CellInfo.X_content_end,
+	return {X        : contentFrame.X + CellInfo.X_content_start,
+		XLimit       : contentFrame.X + CellInfo.X_content_end,
 		Y            : Y,
 		YLimit       : YLimit,
 		MaxTopBorder : MaxTopBorder
@@ -3098,7 +3098,7 @@ CTable.prototype.Move = function(X, Y, PageNum, NearestPos)
 	oTargetTable.Document_SetThisElementCurrent(true);
 	logicDocument.UpdateSelection();
 };
-CTable.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, ColumnsCount)
+CTable.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, ColumnsCount, sectionIndex, sectPr)
 {
 	this.X_origin = X;
 	this.X        = X;
@@ -3113,6 +3113,8 @@ CTable.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, Colu
 	this.private_CheckYLimitForFlowTableInHdrFtr();
 	this.private_CalculateTableWidthRange();
 	this.private_CheckRangeOnReset();
+	
+	this.ResetSection(X, Y, XLimit, YLimit, PageNum, sectionIndex, sectPr);
 };
 CTable.prototype.private_CalculateTableWidthRange = function()
 {
