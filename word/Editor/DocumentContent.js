@@ -1282,6 +1282,9 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
             var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, 0, 1);
             Y                    = Element.Get_PageBounds(ElementPageIndex).Bottom;
         }
+		
+		if (checkSections && ((RecalcResult & recalcresult_NextSection) || (RecalcResult & recalcresult_NextSection_Cur)))
+			RecalcResult = recalcresult_NextElement;
 
         if (RecalcResult & recalcresult_CurPage)
         {

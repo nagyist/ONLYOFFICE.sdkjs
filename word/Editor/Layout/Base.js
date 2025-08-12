@@ -168,7 +168,8 @@
 	{
 		let docPage = this.LogicDocument.GetPage(pageAbs);
 		let pageSection = docPage ? docPage.GetSection(0) : null;
-		return pageSection ? pageSection.GetSectPr() : this.LogicDocument.GetSectPr();
+		let sectPr = pageSection ? pageSection.GetSectPr() : this.LogicDocument.GetFinalSectPr();
+		return this.CheckSectPr(sectPr);
 	};
 	CDocumentLayoutBase.prototype.GetSectionByPos = function(nContentIndex)
 	{
@@ -179,7 +180,11 @@
 	{
 		return this.SectionsInfo.Get_SectPr(nContentIndex);
 	};
-	CDocumentLayoutBase.prototype.GetLastSection = function()
+	CDocumentLayoutBase.prototype.CheckSectPr = function(sectPr)
+	{
+		return sectPr;
+	};
+	CDocumentLayoutBase.prototype.GetFinalSectPr = function()
 	{
 		return this.LogicDocument.SectPr;
 	};

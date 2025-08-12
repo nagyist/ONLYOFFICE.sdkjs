@@ -87,6 +87,20 @@
 	{
 		return this.Sections[nIndex] ? this.Sections[nIndex] : null;
 	};
+	DocumentPage.prototype.GetFirstSectPr = function()
+	{
+		if (!this.Sections.length)
+			return null;
+		
+		return this.Sections[0].GetSectPr();
+	};
+	DocumentPage.prototype.GetLastSectPr = function()
+	{
+		if (!this.Sections.length)
+			return null;
+		
+		return this.Sections[this.Sections.length - 1].GetSectPr();
+	};
 	DocumentPage.prototype.Update_Limits = function(Limits)
 	{
 		this.X      = Limits.X;

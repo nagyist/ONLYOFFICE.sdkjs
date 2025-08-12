@@ -45,6 +45,21 @@
 		this.logicDocument = logicDocument;
 		this.Elements = [];
 	}
+	DocumentSections.prototype.GetFirstSectPr = function()
+	{
+		if (!this.Elements.length)
+			return this.logicDocument.GetFinalSectPr();
+		
+		return this.Elements[0].SectPr;
+	};
+	DocumentSections.prototype.GetNextSectPr = function(sectPr)
+	{
+		let index = this.Find(sectPr);
+		if (-1 === index || index >= this.Elements.length - 1)
+			return sectPr;
+		
+		return this.Elements[index + 1].SectPr;
+	};
 	DocumentSections.prototype.Add = function(SectPr, Index)
 	{
 		this.Elements.push(new DocumentSection(SectPr, Index));

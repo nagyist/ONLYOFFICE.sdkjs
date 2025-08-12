@@ -142,7 +142,11 @@
 		
 		return this.SectInfo;
 	};
-	CDocumentReadView.prototype.GetLastSection = function()
+	CDocumentReadView.prototype.CheckSectPr = function(sectPr)
+	{
+		return this.SectPr;
+	};
+	CDocumentReadView.prototype.GetFinalSectPr = function()
 	{
 		return this.SectPr;
 	};
