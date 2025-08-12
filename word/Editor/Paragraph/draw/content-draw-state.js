@@ -694,7 +694,7 @@
 		else if (para_PresentationNumbering === numItem.Type)
 		{
 			var bIsEmpty = para.IsEmpty();
-			if (true || !bIsEmpty ||
+			if ((para.LogicDocument && para.LogicDocument.IsVisioEditor()) || !bIsEmpty ||
 				para.IsThisElementCurrent() ||
 				para.Parent.IsSelectionUse() && para.Parent.IsSelectionEmpty() && para.Parent.Selection.StartPos === para.GetIndex())
 			{

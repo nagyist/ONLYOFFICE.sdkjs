@@ -79,7 +79,6 @@ AscDFH.historyitem_type_VisioWindow = 328;
 	 */
 	function CVisioDocument(Api, DrawingDocument, isMainLogicDocument) {
 		AscFormat.CBaseFormatNoIdObject.call(this);
-		this.isVisioDocument = true;
 		this.start = null;
 		this.key = null;
 		this.metric = null;
@@ -196,8 +195,14 @@ AscDFH.historyitem_type_VisioWindow = 328;
 	CVisioDocument.prototype.IsDocumentEditor = function() {
 		return false;
 	};
+	/**
+	 * @return {boolean}
+	 * @memberof CVisioDocument
+	 */
+	CVisioDocument.prototype.IsVisioEditor = function() {
+		return true;
+	};
 	CVisioDocument.prototype.IsPresentationEditor = function() {
-		//todo add new editor func
 		return true;
 	};
 	CVisioDocument.prototype.IsSpreadSheetEditor = function() {
