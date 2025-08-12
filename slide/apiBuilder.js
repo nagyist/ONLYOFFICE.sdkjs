@@ -1790,6 +1790,20 @@
 	};
 
 
+    /**
+	 * Retrieves the custom XML manager associated with the presentation.
+	 * This manager allows manipulation and access to custom XML parts within the presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @since 9.1.0
+	 * @returns {ApiCustomXmlParts|null} Returns an instance of ApiCustomXmlParts if the custom XML manager exists, otherwise returns null.
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCustomXmlParts.js
+	 */
+	ApiPresentation.prototype.GetCustomXmlParts = function()
+	{
+		return new AscBuilder.ApiCustomXmlParts(this.Presentation);
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
     //
     // ApiMaster

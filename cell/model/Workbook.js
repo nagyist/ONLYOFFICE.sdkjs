@@ -3322,7 +3322,14 @@
 	Workbook.prototype.setOleSize = function (oPr) {
 		this.oleSize = oPr;
 	};
-
+	Workbook.prototype.RemoveDrawingObjectById = function (drawingId) {
+		AscCommon.History.Create_NewPoint();
+		const drawing = AscCommon.g_oTableId.Get_ById(drawingId);
+		const controller = drawing.getDrawingObjectsController();
+		drawing.deselect(controller);
+		drawing.deleteDrawingBase();
+		controller.startRecalculate();
+	};
 	Workbook.prototype.preparePivotForSerialization=function(pivotCaches, isCopyPaste){
 		var pivotCacheIndex = 0;
 		this.forEach(function(ws) {
@@ -12462,8 +12469,8 @@
 		}
 	};
 
-	Worksheet.prototype.getDataValidationProps = function (doExtend) {
-		var _selection = this.getSelection();
+	Worksheet.prototype.getDataValidationProps = function (doExtend, ranges) {
+		var _selection = ranges ? ranges : this.getSelection().ranges;
 		
 		if (!this.dataValidations) {
 			var newDataValidation = new window['AscCommonExcel'].CDataValidation();
@@ -12472,7 +12479,7 @@
 			newDataValidation.allowBlank = true;
 			return newDataValidation;
 		} else {
-			return this.dataValidations.getProps(_selection.ranges, doExtend, this);
+			return this.dataValidations.getProps(_selection, doExtend, this);
 		}
 	};
 

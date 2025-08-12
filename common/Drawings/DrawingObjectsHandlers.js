@@ -529,6 +529,12 @@ function handleShapeImage(drawing, drawingObjectsController, e, x, y, group, pag
     if (drawing.group && drawing.group.IsFreeText && drawing.group.IsFreeText() && drawing.group.IsInTextBox() == false) {
         hit_in_text_rect = false;
     }
+    else if (drawing.IsLine && drawing.IsLine()) {
+        let oDoc = Asc.editor.getPDFDoc();
+        if (oDoc.GetActiveObject() != drawing) {
+            hit_in_text_rect = false;
+        }
+    }
 
     if(hit_in_inner_area || hit_in_path || hit_in_text_rect)
     {

@@ -8615,6 +8615,16 @@ CPresentation.prototype.InsertContent = function (Content) {
 	return oResult;
 };
 
+CPresentation.prototype.RemoveDrawingObjectById = function (drawingId) {
+	if (this.Document_Is_SelectionLocked(AscCommon.changestype_Remove)) return;
+
+	this.StartAction(AscDFH.historydescription_Presentation_RemoveDrawingObject);
+	const drawing = AscCommon.g_oTableId.Get_ById(drawingId);
+	const controller = drawing.getDrawingObjectsController();
+	drawing.deselect(controller);
+	drawing.deleteDrawingBase();
+	this.FinalizeAction();
+};
 
 CPresentation.prototype.Get_NearestPos = function (Page, X, Y, bNotes) {
 	var oCurSlide = this.GetCurrentSlide();
@@ -9049,6 +9059,12 @@ CPresentation.prototype.addNextSlideAction = function (layoutIndex) {
 		else {
 			layout = aLayouts[0];
 		}
+	}
+	if (!layout) {
+		const arrAllMasters = this.GetAllMasters();
+		const oMaster = arrAllMasters[0];
+		oMaster.addTitleLayout();
+		layout = oMaster.sldLayoutLst[0];
 	}
 	hf = layout.hf || layout.Master.hf;
 	new_slide = new Slide(this, layout, this.CurPage + 1);

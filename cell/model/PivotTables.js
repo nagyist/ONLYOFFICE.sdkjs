@@ -171,10 +171,10 @@ var c_oAscPivotFilterType = {
 	ValueBetween: 56,
 	ValueNotBetween: 57,
 	DateEqual: 58,
-	DateOlderThan: 59,
-	DateOlderThanOrEqual: 60,
-	DateNewerThan: 61,
-	DateNewerThanOrEqual: 62,
+	DateNewerThan: 59,
+	DateNewerThanOrEqual: 60,
+	DateOlderThan: 61,
+	DateOlderThanOrEqual: 62,
 	DateNotEqual: 63,
 	DateBetween: 64,
 	DateNotBetween: 65,
@@ -2778,7 +2778,6 @@ CT_PivotCacheRecords.prototype.getDataMap = function(options) {
 	const indexes = options.rowIndexes.concat(options.colIndexes);
 	const filters = this._splitLabelFilters(indexes, options.filterMaps.labelFilters, options.cacheFieldsWithData);
 	const itemsWithDataMap = new Map();
-	const calculatedItems = options.cacheDefinition.getCalculatedItems();
 	let dataMap = new PivotDataElem(options.dataFields.length);
 	const calculatedIndexes = indexes.map(function(fld, index) {
 		return t._getCalculatedIndexes(options.cacheFields, fld);
@@ -4500,6 +4499,9 @@ CT_pivotTableDefinition.prototype.fillAutoFiltersOptions = function (autoFilterO
 	autoFilterObject.asc_setValues(values);
 	autoFilterObject.asc_setFilterObj(filterObj);
 	autoFilterObject.asc_setPivotObj(pivotFilterObj);
+	autoFilterObject.asc_setIsTextFilter(null === iMeasureFld);
+	autoFilterObject.asc_setIsDateFilter(pivotFilter && pivotFilter.isDateFilter() || false);
+	autoFilterObject.asc_setTimeFormat(false);
 };
 CT_pivotTableDefinition.prototype.getPivotTableButtons = function (range, buttons) {
 	if (!this.intersection(range)) {
@@ -5115,9 +5117,7 @@ CT_pivotTableDefinition.prototype.getFilterMaps = function(cacheFieldsWithData) 
 	if (pivotFields) {
 		for (i = 0; i < pivotFields.length; ++i) {
 			pivotField = pivotFields[i];
-			if ((c_oAscAxis.AxisRow === pivotField.axis || c_oAscAxis.AxisCol === pivotField.axis ||
-				(c_oAscAxis.AxisPage === pivotField.axis && pivotField.multipleItemSelectionAllowed))
-				&& !pivotField.isAllVisible()) {
+			if (pivotField.showingInAxisForFilter() && !pivotField.isAllVisible()) {
 				labelFilters.push({index: i, map: pivotField.getFilterMap()});
 			}
 		}
@@ -5128,13 +5128,14 @@ CT_pivotTableDefinition.prototype.getFilterMaps = function(cacheFieldsWithData) 
 			pivotField = pivotFields[pivotFilter.fld];
 			cacheField = cacheFields[pivotFilter.fld];
 			var filterColumn = pivotField && pivotFilter.getFilterColumn();
-			if (filterColumn) {
+			if (filterColumn && pivotField.showingInAxisForFilter()) {
 				this.checkPivotFieldItems(pivotFilter.fld);
 				if (pivotFilter.isLabelFilter()) {
+					let num = pivotFilter.isDateFilter() ? null : this.getPivotFieldNum(pivotFilter.fld);
 					if (cacheField.hasGroup() && cacheField.getSharedItems()) {
-						labelFilters.push({index: pivotFilter.fld, isGroup: true, map: pivotField.getFilterMapFilterColumnGroup(cacheField, filterColumn, this.getPivotFieldNum(pivotFilter.fld))});
+						labelFilters.push({index: pivotFilter.fld, isGroup: true, map: pivotField.getFilterMapFilterColumnGroup(cacheField, filterColumn, num)});
 					} else {
-						labelFilters.push({index: pivotFilter.fld, map: pivotField.getFilterMapFilterColumn(cacheField, filterColumn, this.getPivotFieldNum(pivotFilter.fld))});
+						labelFilters.push({index: pivotFilter.fld, map: pivotField.getFilterMapFilterColumn(cacheField, filterColumn, num)});
 					}
 				} else {
 					valueFilters.push({index: pivotFilter.fld, pivotField: pivotField, pivotFilter: pivotFilter});
@@ -7307,10 +7308,11 @@ CT_pivotTableDefinition.prototype.filterPivotItems = function(index, autoFilterO
 				this.filterPivotItemsFilters(index, autoFilterObject.values);
 				break;
 			case c_oAscAutoFilterTypes.CustomFilters:
+				const isDate = autoFilterObject.asc_getIsDateFilter();
 				if (0 < iMeasureFld && iMeasureFld <= this.getDataFieldsCount()) {
-					pivotFilter.initFromCustom(index, filter.filter, iMeasureFld - 1);
+					pivotFilter.initFromCustom(index, filter.filter, isDate, iMeasureFld - 1);
 				} else {
-					pivotFilter.initFromCustom(index, filter.filter, null);
+					pivotFilter.initFromCustom(index, filter.filter, isDate, null);
 				}
 				break;
 			case c_oAscAutoFilterTypes.DynamicFilter:
@@ -17839,6 +17841,14 @@ CT_PivotField.prototype.hasCalculated = function() {
 	}
 	return false;
 };
+CT_PivotField.prototype.showingInAxis = function() {
+	return this.axis !== null || this.dataField;
+};
+CT_PivotField.prototype.showingInAxisForFilter = function() {
+	return c_oAscAxis.AxisRow === this.axis || c_oAscAxis.AxisCol === this.axis ||
+		(c_oAscAxis.AxisPage === this.axis && this.multipleItemSelectionAllowed);
+};
+
 function CT_PivotFieldX14() {
 //Attributes
 	this.fillDownLabels = false;
@@ -18834,6 +18844,10 @@ CT_PivotFilter.prototype.Read_FromBinary2 = function(reader) {
 CT_PivotFilter.prototype.isLabelFilter = function() {
 	return !this.isValueFilter();
 };
+CT_PivotFilter.prototype.isDateFilter = function() {
+	return (c_oAscPivotFilterType.DateEqual <= this.type && this.type <= c_oAscPivotFilterType.DateNotBetween) ||
+		(c_oAscPivotFilterType.LastMonth <= this.type && this.type <= c_oAscPivotFilterType.Yesterday);
+};
 CT_PivotFilter.prototype.isValueFilter = function() {
 	return (c_oAscPivotFilterType.ValueEqual <= this.type && this.type <= c_oAscPivotFilterType.ValueNotBetween) ||
 		(c_oAscPivotFilterType.Count <= this.type && this.type <= c_oAscPivotFilterType.Sum);
@@ -18852,19 +18866,23 @@ CT_PivotFilter.prototype.initTemplate = function(fld) {
 	this.autoFilter = autoFilter;
 	this.type = Asc.c_oAscPivotFilterType.Unknown;
 };
-CT_PivotFilter.prototype.initFromCustom = function(index, filter, iMeasureFld) {
-	//todo date
+/**
+ * @param {number} index
+ * @param {Asc.CustomFilters} filter
+ * @param {boolean} isDate
+ * @param {number} iMeasureFld
+ */
+CT_PivotFilter.prototype.initFromCustom = function(index, filter, isDate, iMeasureFld) {
 	this.initTemplate(index);
 	this.fld = index;
 	this.iMeasureFld = iMeasureFld;
-	var isCaption = null === iMeasureFld;
-	var isDate = false;
+	var isCaption = !isDate && null === iMeasureFld;
 	var baseEqual;
 	var baseBetween;
-	if(isCaption){
+	if (isCaption) {
 		baseEqual = Asc.c_oAscPivotFilterType.CaptionEqual;
 		baseBetween = Asc.c_oAscPivotFilterType.CaptionBetween;
-	} else if(isDate){
+	} else if(isDate) {
 		baseEqual = Asc.c_oAscPivotFilterType.DateEqual;
 		baseBetween = Asc.c_oAscPivotFilterType.DateBetween;
 	} else {

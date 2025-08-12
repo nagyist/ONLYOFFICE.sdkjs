@@ -1429,7 +1429,7 @@
 		};
 	}
 
-	Api.prototype.getUsedBackgroundPlugins = function()
+	Api.prototype.getUsedBackgroundPlugins = function(noCheckBundled)
 	{
 		let services = [];
 		try
@@ -1442,13 +1442,71 @@
 		{
 			services = [];
 		}
+
+		if (window.g_asc_plugins && noCheckBundled !== true)
+		{
+			let allPlugins = window.g_asc_plugins.plugins;
+			let unbundledPlugins = this.getUnbundledPlugins();
+			let bundledBackground = Object.create(null);
+
+			for (let i = 0, len = allPlugins.length; i < len; i++)
+			{
+				let item = allPlugins[i];
+				if (item.isBackground() && !unbundledPlugins[item.guid])
+					bundledBackground[item.guid] = true;
+			}
+
+			for (let i = 0, len = services.length; i < len; i++)
+			{
+				if (bundledBackground[services[i]])
+					delete bundledBackground[services[i]];
+			}
+
+			for (let i in bundledBackground)
+			{
+				services.push(i);
+			}
+		}
+
 		return services;
 	};
 	Api.prototype["getUsedBackgroundPlugins"] = Api.prototype.getUsedBackgroundPlugins;
 
 	Api.prototype.setUsedBackgroundPlugins = function(services)
 	{
-		window.localStorage.setItem("asc_plugins_background", JSON.stringify(services));
+		try
+		{
+			window.localStorage.setItem("asc_plugins_background", JSON.stringify(services));
+		}
+		catch (e)
+		{
+		}
+	};
+
+	Api.prototype.getStoppedBackgroundPlugins = function()
+	{
+		let services = [];
+		try
+		{
+			services = JSON.parse(window.localStorage.getItem("asc_plugins_background_stopped"));
+			if (!services)
+				services = [];
+		}
+		catch (e)
+		{
+			services = [];
+		}
+		return services;
+	};
+	Api.prototype.setStoppedBackgroundPlugins = function(services)
+	{
+		try
+		{
+			window.localStorage.setItem("asc_plugins_background_stopped", JSON.stringify(services));
+		}
+		catch (e)
+		{
+		}
 	};
 
 	Api.prototype.checkInstalledPlugins = function()
@@ -1519,6 +1577,72 @@
 			}, 10);
 
 		}
+	};
+
+	// return user-changed plugins guids
+	Api.prototype.getUnbundledPlugins = function()
+	{
+		let changed = Object.create(null);
+
+		let localStorageItems = getLocalStorageItem("asc_plugins_installed");
+		if (localStorageItems)
+		{
+			for (let item in localStorageItems)
+			{
+				if (localStorageItems[item]["guid"])
+					changed[localStorageItems[item]["guid"]] = true;
+			}
+		}
+
+		localStorageItems = getLocalStorageItem("asc_plugins_removed");
+		if (localStorageItems)
+		{
+			for (let item in localStorageItems)
+			{
+				if (localStorageItems[item]["guid"])
+					changed[localStorageItems[item]["guid"]] = true;
+			}
+		}
+
+		if (window["Asc"]["extensionPlugins"] && window["Asc"]["extensionPlugins"].length)
+		{
+			let arrayExtensions = window["Asc"]["extensionPlugins"];
+			for (let i = 0, len = arrayExtensions.length; i < len; i++)
+			{
+				if (arrayExtensions[i]["guid"])
+					changed[arrayExtensions[i]["guid"]] = true;
+			}
+		}
+
+		let backgroundUsed = this.getUsedBackgroundPlugins(true);
+		for (let i = 0, len = backgroundUsed.length; i < len; i++)
+		{
+			changed[backgroundUsed[i]] = true;
+		}
+		backgroundUsed = this.getStoppedBackgroundPlugins();
+		for (let i = 0, len = backgroundUsed.length; i < len; i++)
+		{
+			changed[backgroundUsed[i]] = true;
+		}
+
+		if (window["UpdateInstallPlugins"] && window["AscDesktopEditor"])
+		{
+			try
+			{
+				let plugins = JSON.parse(window["AscDesktopEditor"]["GetInstallPlugins"]());
+				let userPlugins = plugins[1] || [];
+
+				for (var i = 0, len = userPlugins.length; i < len; i++)
+				{
+					changed[userPlugins[i]["guid"]] = true;
+				}
+			}
+			catch (e)
+			{
+			}
+		}
+
+		return changed;
 	};
 
     /**
