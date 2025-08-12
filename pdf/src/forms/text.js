@@ -571,7 +571,7 @@
         // 5. Marker dimensions and position inside the field
         let markW = 18;
         let markH = Hf - 2 * borders.top * scale;
-        let markX = X + Wf - borders.left * scale - markW;
+        let markX = this.IsRTL() ? X + borders.left * scale : X + Wf - borders.left * scale - markW;
         let markY = Y + borders.top * scale;
 
         let cx = X + Wf / 2, cy = Y + Hf / 2;
@@ -1141,14 +1141,6 @@
 
         this.SetNeedRecalc(false);
     };
-    CTextField.prototype.private_NeedShapeText = function() {
-        this.content.GetAllParagraphs().forEach(function(paragraph) {
-            paragraph.RecalcInfo.NeedShapeText();
-        });
-        this.contentFormat.GetAllParagraphs().forEach(function(paragraph) {
-            paragraph.RecalcInfo.NeedShapeText();
-        });
-    };
     CTextField.prototype._isCenterAlign = function() {
 		return false == this.IsMultiline();
 	};
@@ -1702,27 +1694,26 @@
     CTextField.prototype.CheckAlignInternal = function() {
         this.SetNeedCheckAlign(false);
 
+        let isRTL = this.IsRTL();
+
         // если выравнивание по центру или справа, то оно должно переключаться на left если ширина контента выходит за пределы формы
         // вызывается на момент коммита формы
-        if ([AscPDF.ALIGN_TYPE.center, AscPDF.ALIGN_TYPE.right].includes(this.GetAlign())) {
+        if (this.IsTextOutOfForm(this.content).hor) {
+            if (this.content.GetAlign() != (isRTL ? AscPDF.ALIGN_TYPE.right : AscPDF.ALIGN_TYPE.left)) {
+                this.content.SetAlign((isRTL ? AscPDF.ALIGN_TYPE.right : AscPDF.ALIGN_TYPE.left));
+            }
+        }
+        else if (this.content.GetAlign() != this.GetAlign()) {
+            this.content.SetAlign(this.GetAlign());
+        }
 
-            if (this.IsTextOutOfForm(this.content).hor) {
-                if (this.content.GetAlign() != AscPDF.ALIGN_TYPE.left) {
-                    this.content.SetAlign(AscPDF.ALIGN_TYPE.left);
-                }
+        if (this.IsTextOutOfForm(this.contentFormat).hor) {
+            if (this.contentFormat.GetAlign() != (isRTL ? AscPDF.ALIGN_TYPE.right : AscPDF.ALIGN_TYPE.left)) {
+                this.contentFormat.SetAlign((isRTL ? AscPDF.ALIGN_TYPE.right : AscPDF.ALIGN_TYPE.left));
             }
-            else if (this.content.GetAlign() != this.GetAlign()) {
-                this.content.SetAlign(this.GetAlign());
-            }
-
-            if (this.IsTextOutOfForm(this.contentFormat).hor) {
-                if (this.contentFormat.GetAlign() != AscPDF.ALIGN_TYPE.left) {
-                    this.contentFormat.SetAlign(AscPDF.ALIGN_TYPE.left);
-                }
-            }
-            else if (this.contentFormat.GetAlign() != this.GetAlign()) {
-                this.contentFormat.SetAlign(this.GetAlign());
-            }
+        }
+        else if (this.contentFormat.GetAlign() != this.GetAlign()) {
+            this.contentFormat.SetAlign(this.GetAlign());
         }
     };
     CTextField.prototype.SetNeedCheckAlign = function(bCheck) {
@@ -1846,22 +1837,7 @@
 
         this.SetNeedCommit(false);
     };
-	CTextField.prototype.SetAlign = function(nAlignType) {
-        AscCommon.History.Add(new CChangesPDFTextFormAlign(this, this._alignment, nAlignType));
-
-        this._alignment = nAlignType;
-		this.content.SetAlign(nAlignType);
-		if (this.contentFormat)
-			this.contentFormat.SetAlign(nAlignType);
-		
-        this.SetWasChanged(true);
-		this.SetNeedRecalc(true);
-	};
-	CTextField.prototype.GetAlign = function() {
-		return this._alignment;
-	};
-
-    CTextField.prototype.DoFormatAction = function() {
+	CTextField.prototype.DoFormatAction = function() {
         let oFormatTrigger      = this.GetTrigger(AscPDF.FORMS_TRIGGERS_TYPES.Format);
         let oActionRunScript    = oFormatTrigger ? oFormatTrigger.GetActions()[0] : null;
 

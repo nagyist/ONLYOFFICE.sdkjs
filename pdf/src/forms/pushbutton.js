@@ -1232,6 +1232,7 @@
 			let oStyle = this.GetFontStyle();
 			this.content.SetBold(oStyle.bold);
 			this.content.SetItalic(oStyle.italic);
+            this.UpdateMEOptions();
             if (this.GetTextSize()) {
                 this.content.SetFontSize(this.GetTextSize());
             }

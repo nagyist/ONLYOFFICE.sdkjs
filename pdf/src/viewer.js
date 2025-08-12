@@ -3623,6 +3623,11 @@
 					let sFont = field.GetTextFontActual();
 					if (sFont)
 						fontMap[sFont] = true;
+
+					if (field.IsHindiDigits() && !oDoc.HindiFontLoaded) {
+						oDoc.HindiFontLoaded = true;
+						AscFonts.FontPickerByCharacter.getFontsByString(String.fromCodePoint(0x0660, 0x0661, 0x0662, 0x0663, 0x0664, 0x0665, 0x0666, 0x0667, 0x0668, 0x0669));
+					}
 				}
 			});
 			

@@ -4046,16 +4046,19 @@
 	AscDFH.historyitem_Pdf_Form_Locked			= AscDFH.historyitem_type_Pdf_Form | 23;
 	AscDFH.historyitem_Pdf_Form_Rotate			= AscDFH.historyitem_type_Pdf_Form | 24;
 	AscDFH.historyitem_Pdf_Form_Tooltip			= AscDFH.historyitem_type_Pdf_Form | 25;
+	AscDFH.historyitem_Pdf_Form_ME_Options		= AscDFH.historyitem_type_Pdf_Form | 26;
+	AscDFH.historyitem_Pdf_Form_Align			= AscDFH.historyitem_type_Pdf_Form | 27;
+
+
 	
 	// text
 	AscDFH.historyitem_Pdf_Text_Form_Multiline			= AscDFH.historyitem_type_Pdf_Text_Field | 1;
-	AscDFH.historyitem_Pdf_Text_Form_Align				= AscDFH.historyitem_type_Pdf_Text_Field | 2;
-	AscDFH.historyitem_Pdf_Text_Form_Char_Limit			= AscDFH.historyitem_type_Pdf_Text_Field | 3;
-	AscDFH.historyitem_Pdf_Text_Form_Comb				= AscDFH.historyitem_type_Pdf_Text_Field | 4;
-	AscDFH.historyitem_Pdf_Text_Form_DoNot_Scroll		= AscDFH.historyitem_type_Pdf_Text_Field | 5;
-	AscDFH.historyitem_Pdf_Text_Form_Password			= AscDFH.historyitem_type_Pdf_Text_Field | 6;
-	AscDFH.historyitem_Pdf_Text_Form_File_Select		= AscDFH.historyitem_type_Pdf_Text_Field | 7;
-	AscDFH.historyitem_Pdf_Text_Form_DoNot_Spell_Check	= AscDFH.historyitem_type_Pdf_Text_Field | 8;
+	AscDFH.historyitem_Pdf_Text_Form_Char_Limit			= AscDFH.historyitem_type_Pdf_Text_Field | 2;
+	AscDFH.historyitem_Pdf_Text_Form_Comb				= AscDFH.historyitem_type_Pdf_Text_Field | 3;
+	AscDFH.historyitem_Pdf_Text_Form_DoNot_Scroll		= AscDFH.historyitem_type_Pdf_Text_Field | 4;
+	AscDFH.historyitem_Pdf_Text_Form_Password			= AscDFH.historyitem_type_Pdf_Text_Field | 5;
+	AscDFH.historyitem_Pdf_Text_Form_File_Select		= AscDFH.historyitem_type_Pdf_Text_Field | 6;
+	AscDFH.historyitem_Pdf_Text_Form_DoNot_Spell_Check	= AscDFH.historyitem_type_Pdf_Text_Field | 7;
 
 	// combobox
 	AscDFH.historyitem_Pdf_Combobox_Form_Editable = AscDFH.historyitem_type_Pdf_Combobox_Field | 1;

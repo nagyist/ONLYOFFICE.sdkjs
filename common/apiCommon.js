@@ -3920,6 +3920,7 @@ function (window, undefined) {
 		this.strokeWidth		= undefined;
 		this.strokeStyle		= undefined;
 		this.tooltip			= undefined;
+		this.digitsType			= undefined;
 		this.locked				= false;
 
 		this.fieldProps	= null;
@@ -3996,6 +3997,12 @@ function (window, undefined) {
 	asc_CBaseFieldProperty.prototype.asc_putTooltip = function (v) {
 		this.tooltip = v;
 	};
+	asc_CBaseFieldProperty.prototype.asc_getDigitsType = function () {
+		return this.digitsType;
+	};
+	asc_CBaseFieldProperty.prototype.asc_putDigitsType = function (v) {
+		this.digitsType = v;
+	};
 	asc_CBaseFieldProperty.prototype.get_Locked = function () {
 		return this.coEditLocked;
 	};
@@ -4041,6 +4048,9 @@ function (window, undefined) {
 		}
 		if (this.tooltip !== pr.tooltip) {
 			this.tooltip = null;
+		}
+		if (this.hindiDigits !== pr.hindiDigits) {
+			this.hindiDigits = null;
 		}
 		if (this.locked !== pr.locked) {
 			this.locked = null;
@@ -8377,6 +8387,8 @@ function (window, undefined) {
 	prot["asc_putPropLocked"]	= prot.asc_putPropLocked;
 	prot["asc_getTooltip"]		= prot.asc_getTooltip;
 	prot["asc_putTooltip"]		= prot.asc_putTooltip;
+	prot["asc_getDigitsType"]	= prot.asc_getDigitsType;
+	prot["asc_putDigitsType"]	= prot.asc_putDigitsType;
 	prot["get_Locked"]			= prot.get_Locked;
 	prot["put_Locked"]			= prot.put_Locked;
 	prot["asc_getFieldProps"]	= prot.asc_getFieldProps;
