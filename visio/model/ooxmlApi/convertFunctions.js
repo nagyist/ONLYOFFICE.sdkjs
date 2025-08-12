@@ -269,8 +269,8 @@
 					lineUniFillNoGradient.transparent = 255 - lineTransValue * 255;
 				}
 			} else {
-				AscCommon.consoleLog("LineColor cell for line stroke (border) was not found painting red");
-				lineUniFillNoGradient = AscFormat.CreateUnfilFromRGB(255,0,0);
+				AscCommon.consoleLog("LineColor cell for line stroke (border) was not found painting dark");
+				lineUniFillNoGradient = AscFormat.CreateUnfilFromRGB(255, 255, 255);
 			}
 
 			// calculate variation before pattern bcs pattern can make NoFillUniFill object without color
