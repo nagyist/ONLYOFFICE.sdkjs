@@ -9486,6 +9486,23 @@
 		}
 	};
 
+	/**
+	 * Retrieves the custom XML manager associated with the current sheet.
+	 * This manager allows manipulation and access to custom XML parts within the current sheet.
+	 * @memberof ApiWorksheet
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @returns {ApiCustomXmlParts|null} Returns an instance of ApiCustomXmlParts if the custom XML manager exists, otherwise returns null.
+	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetCustomXmlParts.js
+	 */
+	ApiWorksheet.prototype.GetCustomXmlParts = function()
+	{
+		if (!(this.worksheet && this.worksheet.workbook))
+			return null;
+
+		let workbook = this.worksheet.workbook;
+		return new AscBuilder.ApiCustomXmlParts(workbook);
+	};
 
 
 	/**
