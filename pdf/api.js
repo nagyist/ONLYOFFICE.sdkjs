@@ -911,6 +911,10 @@
 		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new AscCommon.asc_CSelectedObject(Asc.c_oAscTypeSelectElement.Annot, obj);
 	};
 	PDFEditorApi.prototype.sync_fieldPropCallback = function(aFields) {
+		if (aFields.length == 0) {
+			return;
+		}
+
 		let aFieldsProps = aFields.map(function(field) {
 			return AscPDF.CreateAscFieldPropFromObj(field);
 		});
@@ -2097,6 +2101,24 @@
 			oController.selectedObjects.forEach(function(shape) {
 				let field = shape.GetEditField();
 				field.SetRotate(nAngle);
+			});
+
+			return true;
+        }, AscDFH.historydescription_Pdf_ChangeField);
+	};
+	PDFEditorApi.prototype.SetFieldDigitsType = function(nType) {
+		let oDoc = this.getPDFDoc();
+		let oController = oDoc.GetController();
+		let oForm = oDoc.activeForm;
+
+		if (!oForm) {
+			return false;
+		}
+
+		return oDoc.DoAction(function() {
+			oController.selectedObjects.forEach(function(shape) {
+				let field = shape.GetEditField();
+				field.SetDigitsType(nType);
 			});
 
 			return true;
@@ -4810,6 +4832,7 @@
 	PDFEditorApi.prototype['SetFieldLocked']			= PDFEditorApi.prototype.SetFieldLocked;
 	PDFEditorApi.prototype['SetFieldTooltip']			= PDFEditorApi.prototype.SetFieldTooltip;
 	PDFEditorApi.prototype['SetFieldRotate']			= PDFEditorApi.prototype.SetFieldRotate;
+	PDFEditorApi.prototype['SetFieldDigitsType']		= PDFEditorApi.prototype.SetFieldDigitsType;
 	// text field
 	PDFEditorApi.prototype['SetTextFieldMultiline']		= PDFEditorApi.prototype.SetTextFieldMultiline;
 	PDFEditorApi.prototype['SetTextFieldCharLimit']		= PDFEditorApi.prototype.SetTextFieldCharLimit;

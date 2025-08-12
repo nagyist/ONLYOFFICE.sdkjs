@@ -502,6 +502,11 @@ var CPresentation = CPresentation || function(){};
         }
 
         oField.SetDocument(this);
+
+        if (Asc.editor.isRtlInterface) {
+            oField.SetMEOptions(0b001);
+        }
+
         return oField;
     };
     CPDFDoc.prototype.onUpdateRestrictions = function() {
@@ -2975,6 +2980,8 @@ var CPresentation = CPresentation || function(){};
                 oParent.SetParentCurIdxs(aParentsInfo[i]["curIdxs"]);
             if (aParentsInfo[i]["opt"])
                 oParent.SetOptions(aParentsInfo[i]["opt"]);
+            if (aParentsInfo[i]["MEOptions"] != null)
+                oParent.SetMEOptions(aParentsInfo[i]["MEOptions"]);
 
             // flags
             if (aParentsInfo[i]["editable"])
@@ -4421,6 +4428,7 @@ var CPresentation = CPresentation || function(){};
         else if (oAcitveObj && oAcitveObj.IsForm()) {
             let oController = this.GetController();
             let nAlignType = oAcitveObj.GetAlign();
+            let isRTL = oAcitveObj.IsRTL();
 
             oController.selectedObjects.forEach(function(shape) {
                 let oField = shape.GetEditField();
@@ -4428,9 +4436,13 @@ var CPresentation = CPresentation || function(){};
                 if (nAlignType != oField.GetAlign()) {
                     nAlignType = undefined;
                 }
+                if (isRTL != oField.IsRTL()) {
+                    isRTL = false;
+                }
             });
 
             Asc.editor.sync_PrAlignCallBack(AscPDF.getInternalAlignByPdfType(nAlignType));
+            Asc.editor.sendEvent("asc_onTextDirection", isRTL);
         }
     };
     CPDFDoc.prototype.UpdateTextProps = function() {
@@ -7769,6 +7781,10 @@ var CPresentation = CPresentation || function(){};
         if (oField.GetType() == AscPDF.FIELD_TYPES.button && oField.IsNeedDrawFromStream())
             return true;
 
+        if (oField.IsHindiDigits() && !this.HindiFontLoaded) {
+            this.HindiFontLoaded = true;
+            AscFonts.FontPickerByCharacter.getFontsByString(String.fromCodePoint(0x0660, 0x0661, 0x0662, 0x0663, 0x0664, 0x0665, 0x0666, 0x0667, 0x0668, 0x0669));
+        }
         if (oField.content) {
             AscFonts.FontPickerByCharacter.getFontsByString(oField.content.getAllText());
         }
@@ -8329,6 +8345,9 @@ var CPresentation = CPresentation || function(){};
         }
 
         // common
+        if (formJson["MEOptions"]){
+            oForm.SetMEOptions(formJson["MEOptions"]);
+        }
         if (formJson["alignment"] != null && [AscPDF.FIELD_TYPES.combobox, AscPDF.FIELD_TYPES.text, AscPDF.FIELD_TYPES.listbox].includes(formJson["type"])) {
             oForm.SetAlign(formJson["alignment"]);
         }
@@ -8459,6 +8478,7 @@ var CPresentation = CPresentation || function(){};
         oCommonProps.asc_putDisplay(field.GetDisplay());
         oCommonProps.asc_putPropLocked(field.IsLocked());
         oCommonProps.asc_putTooltip(field.GetTooltip());
+        oCommonProps.asc_putDigitsType(field.GetDigitsType());
         oCommonProps.put_Locked(field.IsCoEditLocked());
 
         // bg
