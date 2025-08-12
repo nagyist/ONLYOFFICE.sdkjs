@@ -392,7 +392,7 @@ var editor;
 			&& !this.isLongAction()
 			&& !this.isGroupActions()
 			&& !this.asc_getIsTrackShape()
-			&& !this.isOpenedChartFrame
+			&& !this.isOpenedFrameEditor
 			&& History.IsEndTransaction()
 		);
 	};

@@ -321,7 +321,7 @@
 		AscFormat.CShape.prototype.recalculateTransform.call(this);
 		this.controller.recalculateTransform();
 	};
-	CControl.prototype.is3DControl = function () {
+	CControl.prototype.isUse3D = function () {
 		return !this.formControlPr.noThreeD;
 	};
 
@@ -943,7 +943,7 @@
 		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
 	};
 	CButtonBase.prototype.isUse3D = function () {
-		return this.control.is3DControl();
+		return this.control.isUse3D();
 	};
 	CButtonBase.prototype.setIsHold = function (pr) {
 		this.isHold = pr;
@@ -1203,10 +1203,16 @@
 	}
 	AscFormat.InitClassWithoutType(CTrackArea, CButtonBase);
 	CTrackArea.prototype.getFlatFillColor = function () {
-		return [240, 240, 240, 255];
+		if (this.control.isUse3D()) {
+			return [240, 240, 240, 255];
+		}
+		return [255, 255, 255, 255];
 	}
 	CTrackArea.prototype.getFlatPenColor = function () {
-		return null;
+		if (this.control.isUse3D()) {
+			return null;
+		}
+		return [0, 0, 0, 255];
 	}
 	CTrackArea.prototype.isUse3D = function () {
 		return false;
@@ -1225,11 +1231,26 @@
 		this.downButton = new CSpinButton(oControl); // Second button (down or right)
 		this.thumb = new CButtonBase(oControl);
 		this.trackArea = new CTrackArea(oControl);
+		this.isStartGroupPoints = false;
 
 		this.initButtonEventHandlers();
 	}
 
 	AscFormat.InitClassWithoutType(CScrollController, CControlControllerBase);
+	CScrollController.prototype.startGroupPoints = function() {
+		if (!this.isStartGroupPoints) {
+			this.isStartGroupPoints = true;
+			Asc.editor.startGroupActions();
+		}
+	};
+	CScrollController.prototype.endGroupPoints = function(oDrawingController) {
+		if (this.isStartGroupPoints) {
+			const nCurrentValue = this.getCurrentValue(this.getParsedFmlaLink());
+			Asc.editor.cancelGroupActions();
+			this.setValue(nCurrentValue, oDrawingController);
+			this.isStartGroupPoints = false;
+		}
+	};
 	CScrollController.prototype.initButtonEventHandlers = function () {
 		const oController = this;
 
@@ -1239,6 +1260,7 @@
 		};
 
 		this.upButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oController.endGroupPoints(oDrawingController);
 			oController.endStepAction();
 			return true;
 		};
@@ -1248,6 +1270,7 @@
 			oController.startStepAction(oController.increment.bind(oController, oDrawingController));
 		};
 		this.downButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oController.endGroupPoints(oDrawingController);
 			oController.endStepAction();
 			return true;
 		};
@@ -1256,7 +1279,6 @@
 		this.thumb._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 			return true;
 		};
-
 		this.thumb._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
 			let deltaPos;
 			let trackSize;
@@ -1275,11 +1297,11 @@
 
 			let newValue = (deltaPos / trackSize) * valueRange;
 			newValue = Math.max(nMin, Math.min(nMax, newValue));
-
 			oController.setValue(newValue, oDrawingController);
 			return true;
 		};
 		this.thumb._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oController.endGroupPoints(oDrawingController);
 			return true;
 		};
 		this.trackArea.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
@@ -1448,38 +1470,40 @@
 
 	CScrollController.prototype.doAction = function (oDrawingController, isIncrement) {
 		const oThis = this;
-		oDrawingController.checkObjectsAndCallback(function () {
-			const oFormControlPr = oThis.getFormControlPr();
-			const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
+		const oFormControlPr = oThis.getFormControlPr();
+		const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
 
-			const nMinValue = oThis.getMinValue();
-			const nMaxValue = oThis.getMaxValue();
-			const nCurrentValue = oThis.getCurrentValue(oThis.getParsedFmlaLink());
-			// Calculate new value
-			const newValue = isIncrement ?
-				Math.min(nMaxValue, nCurrentValue + nIncValue) :
-				Math.max(nMinValue, nCurrentValue - nIncValue);
+		const nMinValue = oThis.getMinValue();
+		const nMaxValue = oThis.getMaxValue();
+		const nCurrentValue = oThis.getCurrentValue(oThis.getParsedFmlaLink());
+		// Calculate new value
+		const newValue = isIncrement ?
+			Math.min(nMaxValue, nCurrentValue + nIncValue) :
+			Math.max(nMinValue, nCurrentValue - nIncValue);
 
-			oThis.setValue(newValue, oDrawingController);
-		}, [], undefined, AscDFH.historydescription_Spreadsheet_ScrollbarControl, [], true);
+		oThis.setValue(newValue, oDrawingController);
 	};
 
 	CScrollController.prototype.setValue = function (newValue, oDrawingController) {
-		const roundedValue = Math.round(newValue);
-		// Update the form control property
-		const oFormControlPr = this.getFormControlPr();
-		oFormControlPr.setVal(roundedValue);
+			this.startGroupPoints();
+		const oThis = this;
+		oDrawingController.checkObjectsAndCallback(function () {
+			// Update the form control property
+			const nRoundedValue = Math.round(newValue);
+			const oFormControlPr = oThis.getFormControlPr();
+			oFormControlPr.setVal(nRoundedValue);
 
-		// Update the linked cell if it exists
-		const oRef = this.getParsedFmlaLink();
-		if (oRef) {
-			const oCellValue = new AscCommonExcel.CCellValue();
-			oCellValue.number = roundedValue;
-			this.setRangeValue(oRef, oCellValue);
-		}
+			// Update the linked cell if it exists
+			const oRef = oThis.getParsedFmlaLink();
+			if (oRef) {
+				const oCellValue = new AscCommonExcel.CCellValue();
+				oCellValue.number = nRoundedValue;
+				oThis.setRangeValue(oRef, oCellValue);
+			}
 
-		// Recalculate thumb position
-		this.recalculateTransform();
+			// Recalculate thumb position
+			oThis.recalculateTransform();
+		}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
 	};
 
 	CScrollController.prototype.recalculateTransform = function () {
@@ -1533,7 +1557,7 @@
 
 			// Calculate thumb dimensions and position
 			const valueRange = nMaxValue - nMinValue;
-			const thumbMinHeight = trackHeight * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
+			const thumbMinHeight = controlWidth * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
 			const thumbHeight = Math.max(thumbMinHeight, trackHeight / (valueRange + 1));
 
 			// Calculate thumb position based on current value
@@ -1550,7 +1574,7 @@
 			this.thumb.x = oControl.x;
 			this.thumb.y = oControl.y + buttonHeight + thumbY;
 			this.thumb.extX = controlWidth;
-			this.thumb.extY = controlWidth * 0.2;
+			this.thumb.extY = thumbHeight;
 
 			const thumbMatrix = oControlMatrix.CreateDublicate();
 			global_MatrixTransformer.TranslateAppend(thumbMatrix, 0, buttonHeight + thumbY);
