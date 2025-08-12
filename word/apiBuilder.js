@@ -5994,11 +5994,13 @@
 	 * Class representing a custom XML manager, which provides methods to manage custom XML parts in the document.
 	 * @param doc - The current document.
 	 * @constructor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 */
 	function ApiCustomXmlParts(doc)
 	{
-		this.customXMLManager = doc ? doc.getCustomXmlManager() : new AscWord.CustomXmlManager(null);
+		this.customXMLManager = (doc && doc.getCustomXmlManager)
+			? doc.getCustomXmlManager()
+			: new AscWord.CustomXmlManager(null);
 	}
 	ApiCustomXmlParts.prototype = Object.create(ApiCustomXmlParts.prototype);
 	ApiCustomXmlParts.prototype.constructor = ApiCustomXmlParts;
@@ -6006,7 +6008,7 @@
 	/**
 	 * Adds a new custom XML part to the XML manager.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xml - The XML string to be added.
 	 * @returns {ApiCustomXmlPart} The newly created ApiCustomXmlPart object.
@@ -6021,7 +6023,7 @@
 	/**
 	 * Returns a type of the ApiCustomXmlParts class.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {"customXmlParts"}
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlParts/Methods/GetClassType.js
 	 */
@@ -6033,7 +6035,7 @@
 	/**
 	 * Returns a custom XML part by its ID from the XML manager.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xmlPartId - The XML part ID.
 	 * @returns {ApiCustomXmlPart|null} The corresponding ApiCustomXmlPart object if found, or null if no match is found.
@@ -6051,7 +6053,7 @@
 	/**
 	 * Returns custom XML parts by namespace from the XML manager.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} namespace - The namespace of the XML parts.
 	 * @returns {ApiCustomXmlPart[]} An array of ApiCustomXmlPart objects or null if no matching XML parts are found.
@@ -6073,7 +6075,7 @@
 	/**
 	 * Returns a number of custom XML parts in the XML manager.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {number} The number of custom XML parts.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlParts/Methods/GetCount.js
@@ -6086,7 +6088,7 @@
 	/**
 	 * Returns all custom XML parts from the XML manager.
 	 * @memberof ApiCustomXmlParts
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {ApiCustomXmlPart[]} An array of all custom XML parts.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlParts/Methods/GetAll.js
@@ -6108,7 +6110,7 @@
 	/**
 	 * Class representing a custom XML part.
 	 * @constructor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {Object} customXMl - The custom XML object.
 	 * @param {Object} customXmlManager - The custom XML manager instance.
@@ -6125,7 +6127,7 @@
 	/**
 	 * Returns a type of the ApiCustomXmlPart class.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {"customXmlPart"}
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlPart/Methods/GetClassType.js
 	 */
@@ -6137,7 +6139,7 @@
 	/**
 	 * Returns the ID of the custom XML part.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {string}
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlPart/Methods/GetId.js
 	 */
@@ -6149,7 +6151,7 @@
 	/**
 	 * Retrieves nodes from custom XML based on the provided XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath expression to search for nodes.
 	 * @returns {ApiCustomXmlNode[]} An array of ApiCustomXmlNode objects corresponding to the found nodes.
@@ -6172,7 +6174,7 @@
 	/**
 	 * Retrieves the XML string from the custom XML part.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The XML string.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlPart/Methods/GetXml.js
@@ -6185,7 +6187,7 @@
 	/**
 	 * Deletes the XML from the custom XML manager.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {boolean} True if the XML was successfully deleted.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlPart/Methods/Delete.js
@@ -6198,7 +6200,7 @@
 	/**
 	 * Deletes an attribute from the XML node at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node from which to delete the attribute.
 	 * @param {string} name - The name of the attribute to delete.
@@ -6213,7 +6215,7 @@
 	/**
 	 * Inserts an attribute into the XML node at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node to insert the attribute into.
 	 * @param {string} name - The name of the attribute to insert.
@@ -6229,7 +6231,7 @@
 	/**
 	 * Returns an attribute from the XML node at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node from which to get the attribute.
 	 * @param {string} name - The name of the attribute to find.
@@ -6244,7 +6246,7 @@
 	/**
 	 * Updates an attribute of the XML node at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node whose attribute should be updated.
 	 * @param {string} name - The name of the attribute to update.
@@ -6260,7 +6262,7 @@
 	/**
 	 * Deletes an XML element at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node to delete.
 	 * @returns {boolean} True if the element was successfully deleted.
@@ -6274,7 +6276,7 @@
 	/**
 	 * Inserts an XML element at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the parent node where the new element will be inserted.
 	 * @param {string} xmlStr - The XML string to insert.
@@ -6290,7 +6292,7 @@
 	/**
 	 * Updates an XML element at the specified XPath.
 	 * @memberof ApiCustomXmlPart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath of the node to update.
 	 * @param {string} xmlStr - The XML string to replace the node content with.
@@ -6308,7 +6310,7 @@
 	 * @since 9.0.0
 	 * @param xmlNode - The custom XML node.
 	 * @param xmlPart - The custom XML part.
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 */
 	function ApiCustomXmlNode(xmlNode, xmlPart)
 	{
@@ -6321,7 +6323,7 @@
 	/**
 	 * Returns a type of the ApiCustomXmlNode class.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {"customXmlNode"}
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetClassType.js
 	 */
@@ -6333,7 +6335,7 @@
 	/**
 	 * Returns nodes from the custom XML node based on the given XPath.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xPath - The XPath expression to match nodes.
 	 * @returns {ApiCustomXmlNode[]} An array of nodes that match the given XPath.
@@ -6348,7 +6350,7 @@
 	/**
 	 * Returns the absolute XPath of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The absolute XPath of the current node.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetXPath.js
@@ -6361,7 +6363,7 @@
 	/**
 	 * Returns the name of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The name of the current node.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetNodeName.js
@@ -6374,7 +6376,7 @@
 	/**
 	 * Returns the XML string representation of the current node content.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The XML string representation of the current node content.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetNodeValue.js
@@ -6387,7 +6389,7 @@
 	/**
 	 * Returns the XML string of the current node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The XML string representation of the current node.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetXml.js
@@ -6401,7 +6403,7 @@
 	 * Returns the inner text of the current node and its child nodes.
 	 * For example: `<text>123<one>4</one></text>` returns `"1234"`.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {string} The combined text content of the node and its descendants.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetText.js
@@ -6414,7 +6416,7 @@
 	/**
 	 * Sets the XML content for the current node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} xml - The XML string to set as the content of the current node.
 	 * @returns {boolean} Returns `true` if the XML was successfully set.
@@ -6428,7 +6430,7 @@
 	/**
 	 * Sets the text content of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} str - The text content to set for the node.
 	 * @returns {boolean} Returns `true` if the text was successfully set.
@@ -6445,7 +6447,7 @@
 	/**
 	 * Sets the XML content of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} strXml - The XML string to set as the node content.
 	 * @returns {boolean} Returns `true` if the XML was successfully set.
@@ -6462,7 +6464,7 @@
 	/**
 	 * Deletes the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {boolean} Returns `true` if the node was successfully deleted.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/Delete.js
@@ -6479,7 +6481,7 @@
 	/**
 	 * Returns the parent of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {ApiCustomXmlNode | null} The parent node, or `null` if the current node has no parent.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetParent.js
@@ -6495,7 +6497,7 @@
 	/**
 	 * Creates a child node for the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} nodeName - The name of the new child node.
 	 * @returns {ApiCustomXmlNode} The newly created child node.
@@ -6519,7 +6521,7 @@
 	/**
 	 * Returns a list of attributes of the current XML node.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @returns {CustomXmlNodeAttribute[]} An array of attribute objects.
 	 * @see office-js-api/Examples/{Editor}/ApiCustomXmlNode/Methods/GetAttributes.js
@@ -6542,7 +6544,7 @@
 	 * Sets an attribute for the custom XML node.
 	 * If the attribute already exists, it will not be modified.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} name - The name of the attribute to set.
 	 * @param {string} value - The value to assign to the attribute.
@@ -6566,7 +6568,7 @@
 	 * Updates the value of an existing attribute in the custom XML node.
 	 * If the attribute doesn't exist, the update will not occur.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} name - The name of the attribute to update.
 	 * @param {string} value - The new value to assign to the attribute.
@@ -6589,7 +6591,7 @@
 	 * Deletes an attribute from the custom XML node.
 	 * If the attribute exists, it will be removed.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} name - The name of the attribute to delete.
 	 * @returns {boolean} Returns `true` if the attribute was successfully deleted, `false` if the attribute didn't exist.
@@ -6611,7 +6613,7 @@
 	 * Retrieves the attribute value from the custom XML node.
 	 * If the attribute doesn't exist, it returns `false`.
 	 * @memberof ApiCustomXmlNode
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @since 9.0.0
 	 * @param {string} name - The name of the attribute to retrieve.
 	 * @returns {string |null} The value of the attribute if it exists, or `null` if the attribute is not found.
@@ -27144,6 +27146,7 @@
 	window['AscBuilder'].ApiComplexForm      = ApiComplexForm;
 	window['AscBuilder'].ApiCore             = ApiCore;
 	window['AscBuilder'].ApiCustomProperties = ApiCustomProperties;
+	window['AscBuilder'].ApiCustomXmlParts	 = ApiCustomXmlParts;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Area for internal usage
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
