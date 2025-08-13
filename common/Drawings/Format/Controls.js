@@ -146,6 +146,25 @@
 				return null;
 		}
 	}
+	function CStepManager() {
+		this.timeoutId = null;
+	}
+	CStepManager.prototype.start = function (fCallback) {
+		const oThis = this;
+		if (oThis.timeoutId === null) {
+			fCallback();
+			oThis.timeoutId = setTimeout(function () {
+				(function f() {
+					fCallback();
+					oThis.timeoutId = setTimeout(f, 100);
+				})();
+			}, 500);
+		}
+	};
+	CStepManager.prototype.end = function () {
+		clearTimeout(this.timeoutId);
+		this.timeoutId = null;
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_Control_ControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_Control_FormControlPr] = AscDFH.CChangesDrawingsObject;
@@ -329,7 +348,6 @@
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
-		this.timeoutId = null;
 	}
 
 	CControlControllerBase.prototype.getFormControlPr = function () {
@@ -385,22 +403,6 @@
 		return null;
 	};
 	CControlControllerBase.prototype.recalculateTransform = function () {};
-	CControlControllerBase.prototype.startStepAction = function (fCallback) {
-		const oThis = this;
-		if (oThis.timeoutId === null) {
-			fCallback();
-			oThis.timeoutId = setTimeout(function () {
-				(function f() {
-					fCallback();
-					oThis.timeoutId = setTimeout(f, 100);
-				})();
-			}, 500);
-		}
-	};
-	CControlControllerBase.prototype.endStepAction = function () {
-		clearTimeout(this.timeoutId);
-		this.timeoutId = null;
-	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -1062,6 +1064,7 @@
 		CControlControllerBase.call(this, oControl);
 		this.upButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_UP);
 		this.downButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_DOWN);
+		this.stepManager = new CStepManager();
 		this.initButtonEventHandlers();
 	};
 	AscFormat.InitClassWithoutType(CSpinController, CControlControllerBase);
@@ -1070,17 +1073,17 @@
 		const oController = this;
 
 		this.downButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.startStepAction(oController.decrement.bind(oController, oDrawingController));
+			oController.stepManager.start(oController.decrement.bind(oController, oDrawingController));
 		};
 		this.upButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.startStepAction(oController.increment.bind(oController, oDrawingController));
+			oController.stepManager.start(oController.increment.bind(oController, oDrawingController));
 		};
 		this.downButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.endStepAction();
+			oController.stepManager.end();
 			return true;
 		};
 		this.upButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.endStepAction();
+			oController.stepManager.end();
 			return true;
 		};
 	};
@@ -1117,7 +1120,7 @@
 		}
 		return false;
 	};
-	CSpinController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
+	CSpinController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
 		this.upButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
 		this.downButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
 	};
@@ -1191,9 +1194,8 @@
 	};
 
 
-	// ScrollBar Controller Constants
-	const SCROLLBAR_BUTTON_SIZE_RATIO = 0.15; // Buttons at the top/bottom or left/right take 15% of the total size each
-	const SCROLLBAR_THUMB_MIN_SIZE_RATIO = 0.2; // Minimum thumb size is 10% of the scrollable area
+	const SCROLLBAR_BUTTON_SIZE_RATIO = 0.15;
+	const SCROLLBAR_THUMB_MIN_SIZE_RATIO = 0.2;
 
 	function CTrackArea(oControl) {
 		CButtonBase.call(this, oControl);
@@ -1226,206 +1228,87 @@
 		this.isHold = bOldHold;
 	}
 
-	// ScrollBar Controller Implementation
 	function CScrollController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.upButton = new CSpinButton(oControl);  // First button (up or left)
-		this.downButton = new CSpinButton(oControl); // Second button (down or right)
-		this.thumb = new CButtonBase(oControl);
-		this.trackArea = new CTrackArea(oControl);
-		this.isStartGroupPoints = false;
-
+		this.scroll = new CScrollContainer(oControl);
 		this.initButtonEventHandlers();
 	}
 
 	AscFormat.InitClassWithoutType(CScrollController, CControlControllerBase);
-	CScrollController.prototype.startGroupPoints = function() {
-		if (!this.isStartGroupPoints) {
-			this.isStartGroupPoints = true;
-			Asc.editor.startGroupActions();
-		}
+	CScrollController.prototype.startGroupPoints = function () {
+		Asc.editor.startGroupActions();
 	};
-	CScrollController.prototype.endGroupPoints = function(oDrawingController) {
-		if (this.isStartGroupPoints) {
-			const nCurrentValue = this.getCurrentValue(this.getParsedFmlaLink());
-			Asc.editor.cancelGroupActions();
-			this.setValue(nCurrentValue, oDrawingController);
-			this.isStartGroupPoints = false;
-		}
+	CScrollController.prototype.endGroupPoints = function (oDrawingController) {
+		const nCurrentValue = this.scroll.getCurrentValue();
+		Asc.editor.cancelGroupActions();
+		this.scroll.setValue(nCurrentValue, oDrawingController);
 	};
 	CScrollController.prototype.initButtonEventHandlers = function () {
 		const oController = this;
-
-		// Up button handlers
-		this.upButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.startStepAction(oController.decrement.bind(oController, oDrawingController));
+		this.scroll.getMinValue = function () {
+			const oFormControlPr = oController.getFormControlPr();
+			return oFormControlPr.min || 0;
 		};
-
-		this.upButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.endGroupPoints(oDrawingController);
-			oController.endStepAction();
-			return true;
+		this.scroll.getMaxValue = function () {
+			const oFormControlPr = oController.getFormControlPr();
+			return oFormControlPr.max || 0;
 		};
-
-		// Down button handlers
-		this.downButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.startStepAction(oController.increment.bind(oController, oDrawingController));
-		};
-		this.downButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.endGroupPoints(oDrawingController);
-			oController.endStepAction();
-			return true;
-		};
-
-		// Thumb handlers
-		this.thumb._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			return true;
-		};
-		this.thumb._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-			let deltaPos;
-			let trackSize;
-			const isVertical = oController.isVertical();
-			if (isVertical) {
-				deltaPos = nY - oController.trackArea.y;
-				trackSize = oController.trackArea.extY;
-			} else {
-				deltaPos = nX - oController.trackArea.x;
-				trackSize = oController.trackArea.extX;
-			}
-
-			const nMin = oController.getMinValue();
-			const nMax = oController.getMaxValue();
-			const valueRange = nMax - nMin;
-
-			let newValue = (deltaPos / trackSize) * valueRange;
-			newValue = Math.max(nMin, Math.min(nMax, newValue));
-			oController.setValue(newValue, oDrawingController);
-			return true;
-		};
-		this.thumb._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.endGroupPoints(oDrawingController);
-			return true;
-		};
-		this.trackArea.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			if (!this.hit(nX, nY)) {
-				return false;
-			}
-
-			this.currentMousePostion.x = nX;
-			this.currentMousePostion.y = nY;
-			if (!oController.initPerformTrackAreaStep()) {
-				return false;
-			}
-			this.setIsHold(true);
-			oController.startStepAction(oController.performTrackAreaStep.bind(oController, oDrawingController));
-			return true;
-		};
-		this.trackArea._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			this.trackAreaHoldDirection = 0;
-			oController.endStepAction();
-			return true;
-		};
-		this.trackArea._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-			this.currentMousePostion.x = nX;
-			this.currentMousePostion.y = nY;
-			return false;
-		};
-	};
-	CScrollController.prototype.isVertical = function () {
-		const oControl = this.control;
-		return oControl.extY > oControl.extX;
-	};
-	CScrollController.prototype.getPageSize = function () {
-		const oFormControlPr = this.getFormControlPr();
-		return oFormControlPr.page || 1;
-	}
-	CScrollController.prototype.getMinValue = function () {
-		const oFormControlPr = this.getFormControlPr();
-		return oFormControlPr.min || 0;
-	};
-	CScrollController.prototype.getMaxValue = function () {
-		const oFormControlPr = this.getFormControlPr();
-		return oFormControlPr.max || 0;
-	};
-	CScrollController.prototype.getCurrentValue = function (oRef) {
-		const oFormControlPr = this.getFormControlPr();
-		let nCurrentValue;
-		if (oRef) {
-			let nRefValue = 0;
-			oRef.worksheet._getCellNoEmpty(oRef.bbox.r1, oRef.bbox.c1, function (oCell) {
-				if (oCell && !oCell.isNullText()) {
-					nRefValue = oCell.number;
+		this.scroll.getCurrentValue = function () {
+			const oFormControlPr = oController.getFormControlPr();
+			const oRef = oController.getParsedFmlaLink();
+			let nCurrentValue;
+			if (oRef) {
+				let nRefValue = 0;
+				oRef.worksheet._getCellNoEmpty(oRef.bbox.r1, oRef.bbox.c1, function (oCell) {
+					if (oCell && !oCell.isNullText()) {
+						nRefValue = oCell.number;
+					}
+				});
+				if (nRefValue === null) {
+					nRefValue = oFormControlPr.val;
 				}
-			});
-			if (nRefValue === null) {
-				nRefValue = oFormControlPr.val;
+				nCurrentValue = nRefValue || 0;
+			} else {
+				nCurrentValue = oFormControlPr.val || 0;
 			}
-			nCurrentValue = nRefValue || 0;
-		} else {
-			nCurrentValue = oFormControlPr.val || 0;
-		}
-		return nCurrentValue;
-	};
-	CScrollController.prototype.initPerformTrackAreaStep = function () {
-		let localPos, thumbMin, thumbMax;
-		const isVertical = this.isVertical();
-		const oThumb = this.thumb;
-		const oTrackArea = this.trackArea;
-		const nX = oTrackArea.currentMousePostion.x;
-		const nY = oTrackArea.currentMousePostion.y;
-		if (isVertical) {
-			localPos = oTrackArea.invertTransform.TransformPointY(nX, nY);
-			thumbMin = oThumb.y - oTrackArea.y;
-			thumbMax = thumbMin + oThumb.extY;
-		} else {
-			localPos = oTrackArea.invertTransform.TransformPointX(nX, nY);
-			thumbMin = oThumb.x - oTrackArea.x;
-			thumbMax = thumbMin + oThumb.extX;
-		}
-		if (localPos >= thumbMin && localPos <= thumbMax) {
-			return false;
-		}
+			return nCurrentValue;
+		};
+		this.scroll._setValue = function (newValue, oDrawingController) {
+			oDrawingController.checkObjectsAndCallback(function () {
+				const nRoundedValue = Math.round(newValue);
+				const oFormControlPr = oController.getFormControlPr();
+				oFormControlPr.setVal(nRoundedValue);
 
-		const nTempTrackAreaHold = (localPos < thumbMin) ? -1 : 1;
+				const oRef = oController.getParsedFmlaLink();
+				if (oRef) {
+					const oCellValue = new AscCommonExcel.CCellValue();
+					oCellValue.number = nRoundedValue;
+					oController.setRangeValue(oRef, oCellValue);
+				}
 
-		if (oTrackArea.trackAreaHoldDirection === 0 || nTempTrackAreaHold === oTrackArea.trackAreaHoldDirection) {
-			oTrackArea.trackAreaHoldDirection = nTempTrackAreaHold;
-			return true;
-		}
-		return false;
-	}
-	CScrollController.prototype.performTrackAreaStep = function (oDrawingController, bSkipUpdate) {
-		if (this.initPerformTrackAreaStep()) {
-			const nMinValue = this.getMinValue();
-			const nMaxValue = this.getMaxValue();
-			const nPageSize = this.getPageSize();
-
-			const nValue = this.getCurrentValue(this.getParsedFmlaLink());
-			const nNewValue = this.trackArea.trackAreaHoldDirection === -1 ? nValue - nPageSize : nValue + nPageSize;
-			this.setValue(Math.min(Math.max(nMinValue, nNewValue), nMaxValue), oDrawingController);
-
-			if (!bSkipUpdate) {
-				this.control.onUpdate();
-			}
-			return true;
-		} else {
-			this.endStepAction();
-		}
-		return false;
-	};
-
-	CScrollController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-		this.trackArea.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
-		this.upButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
-		this.downButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
-		this.thumb.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+				oController.recalculateThumbTransform();
+			}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+		};
+		this.scroll.getPageValue = function () {
+			const oFormControlPr = oController.getFormControlPr();
+			const nPage = oFormControlPr.getPage();
+			return AscFormat.isRealNumber(nPage) ? nPage : 1;
+		};
+		this.scroll.getIncrementValue = function () {
+			const oFormControlPr = oController.getFormControlPr();
+			const nInc = oFormControlPr.getInc();
+			return AscFormat.isRealNumber(nInc) ? nInc : 1;
+		};
+		this.scroll.onStartChangeValues = function () {
+			oController.startGroupPoints();
+		};
+		this.scroll.onEndChangeValues = function (oDrawingController) {
+			oController.endGroupPoints(oDrawingController);
+		};
 	};
 
 	CScrollController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
-		this.trackArea.draw(graphics);
-		this.upButton.draw(graphics);
-		this.downButton.draw(graphics);
-		this.thumb.draw(graphics);
+		this.scroll.draw(graphics);
 	};
 
 	CScrollController.prototype.getCursorInfo = function (e, nX, nY) {
@@ -1436,13 +1319,15 @@
 		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
-		if (this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY) || this.thumb.hit(nX, nY) || this.trackArea.hit(nX, nY)) {
+		if (this.scroll.hit(nX, nY)) {
 			return {cursorType: "default", objectId: oControl.GetId()};
 		}
 
 		return null;
 	};
-
+	CScrollController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.scroll.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+	};
 	CScrollController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
@@ -1454,197 +1339,368 @@
 		if (e.CtrlKey) {
 			return false;
 		}
-		return this.upButton.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) || this.downButton.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) ||
-			this.thumb.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) || this.trackArea.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+		return this.scroll.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	};
 
 	CScrollController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		return this.thumb.onMouseMove(e, nX, nY, nPageIndex, oDrawingController) || this.trackArea.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
-	};
-
-	CScrollController.prototype.increment = function (oDrawingController) {
-		this.doAction(oDrawingController, true);
-	};
-
-	CScrollController.prototype.decrement = function (oDrawingController) {
-		this.doAction(oDrawingController, false);
-	};
-
-	CScrollController.prototype.doAction = function (oDrawingController, isIncrement) {
-		const oThis = this;
-		const oFormControlPr = oThis.getFormControlPr();
-		const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
-
-		const nMinValue = oThis.getMinValue();
-		const nMaxValue = oThis.getMaxValue();
-		const nCurrentValue = oThis.getCurrentValue(oThis.getParsedFmlaLink());
-		// Calculate new value
-		const newValue = isIncrement ?
-			Math.min(nMaxValue, nCurrentValue + nIncValue) :
-			Math.max(nMinValue, nCurrentValue - nIncValue);
-
-		oThis.setValue(newValue, oDrawingController);
-	};
-
-	CScrollController.prototype.setValue = function (newValue, oDrawingController) {
-			this.startGroupPoints();
-		const oThis = this;
-		oDrawingController.checkObjectsAndCallback(function () {
-			// Update the form control property
-			const nRoundedValue = Math.round(newValue);
-			const oFormControlPr = oThis.getFormControlPr();
-			oFormControlPr.setVal(nRoundedValue);
-
-			// Update the linked cell if it exists
-			const oRef = oThis.getParsedFmlaLink();
-			if (oRef) {
-				const oCellValue = new AscCommonExcel.CCellValue();
-				oCellValue.number = nRoundedValue;
-				oThis.setRangeValue(oRef, oCellValue);
-			}
-
-			// Recalculate thumb position
-			oThis.recalculateTransform();
-		}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+		return this.scroll.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
 	};
 
 	CScrollController.prototype.recalculateTransform = function () {
 		const oControl = this.control;
-		const oControlMatrix = oControl.transform;
+		this.scroll.x = oControl.x;
+		this.scroll.y = oControl.y;
+		this.scroll.extX = oControl.extX;
+		this.scroll.extY = oControl.extY;
+		this.scroll.transform = oControl.transform.CreateDublicate();
+		this.scroll.invertTransform = oControl.invertTransform.CreateDublicate();
+		this.scroll.recalculateTransform();
+	};
 
-		// Get control dimensions
-		const controlWidth = oControl.extX;
-		const controlHeight = oControl.extY;
+	function CScrollContainer(oControl) {
+		this.control = oControl;
+		this.upButton = new CSpinButton(oControl);
+		this.downButton = new CSpinButton(oControl);
+		this.thumb = new CButtonBase(oControl);
+		this.trackArea = new CTrackArea(oControl);
+		this.stepManager = new CStepManager();
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+		this.isChangeValues = false;
+		this.initButtonEventHandlers();
+	}
+	CScrollContainer.prototype.getMinValue = function () {
 
-		// Determine orientation based on dimensions
-		const isVertical = this.isVertical();
+	};
+	CScrollContainer.prototype.getMaxValue = function () {
+
+	};
+	CScrollContainer.prototype.getCurrentValue = function () {
+
+	};
+	CScrollContainer.prototype.getIncrementValue = function () {
+		return 1;
+	}
+	CScrollContainer.prototype.getPageValue = function () {
+		return 1;
+	}
+	CScrollContainer.prototype._setValue = function () {
+
+	};
+	CScrollContainer.prototype.onEndChangeValues = function () {
+
+	};
+	CScrollContainer.prototype.onStartChangeValues = function () {
+
+	};
+	CScrollContainer.prototype.setValue = function (nNewValue, oDrawingController) {
+		this.startChangeValues();
+		this._setValue(nNewValue, oDrawingController);
+	};
+	CScrollContainer.prototype.isVertical = function () {
+		return this.extY > this.extX;
+	};
+	CScrollContainer.prototype.increment = function (oDrawingController) {
+		this.doIncrement(oDrawingController, true);
+	};
+	CScrollContainer.prototype.decrement = function (oDrawingController) {
+		this.doIncrement(oDrawingController, false);
+	};
+	CScrollContainer.prototype.doIncrement = function (oDrawingController, bIsIncrement) {
+		const nIncValue = this.getIncrementValue();
 		const nMinValue = this.getMinValue();
 		const nMaxValue = this.getMaxValue();
-		const nCurrentValue = this.getCurrentValue(this.getParsedFmlaLink());
-		if (isVertical) {
-			// VERTICAL SCROLLBAR
-			// Calculate button dimensions
-			const buttonHeight = Math.min(controlHeight * SCROLLBAR_BUTTON_SIZE_RATIO, controlWidth);
-			const trackHeight = controlHeight - (buttonHeight * 2);
+		const nCurrentValue = this.getCurrentValue();
+		const nNewValue = bIsIncrement ?
+			Math.min(nMaxValue, nCurrentValue + nIncValue) :
+			Math.max(nMinValue, nCurrentValue - nIncValue);
+		this.setValue(nNewValue, oDrawingController);
+	};
+	CScrollContainer.prototype.endChangeValues = function (oDrawingController) {
+		if (this.isChangeValues) {
+			this.onEndChangeValues(oDrawingController);
+			this.isChangeValues = false;
+		}
+	};
+	CScrollContainer.prototype.startChangeValues = function () {
+		if (!this.isChangeValues) {
+			this.isChangeValues = true;
+			this.onStartChangeValues();
+		}
+	};
+	CScrollContainer.prototype.initButtonEventHandlers = function () {
+		const oThis = this;
 
-			// Setup up button
-			this.upButton.x = oControl.x;
-			this.upButton.y = oControl.y;
-			this.upButton.extX = controlWidth;
-			this.upButton.extY = buttonHeight;
+		this.upButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oThis.stepManager.start(oThis.decrement.bind(oThis, oDrawingController));
+		};
+
+		this.upButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oThis.endChangeValues(oDrawingController);
+			oThis.stepManager.end();
+			return true;
+		};
+
+		this.downButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oThis.stepManager.start(oThis.increment.bind(oThis, oDrawingController));
+		};
+		this.downButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oThis.endChangeValues(oDrawingController);
+			oThis.stepManager.end();
+			return true;
+		};
+
+		this.thumb._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+			return true;
+		};
+		this.thumb._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+			let nRelPos;
+			let nTrackSize;
+			const bIsVertical = oThis.isVertical();
+			if (bIsVertical) {
+				nRelPos = nY - oThis.trackArea.y;
+				nTrackSize = oThis.trackArea.extY;
+			} else {
+				nRelPos = nX - oThis.trackArea.x;
+				nTrackSize = oThis.trackArea.extX;
+			}
+
+			const nMin = oThis.getMinValue();
+			const nMax = oThis.getMaxValue();
+			const nRange = nMax - nMin;
+
+			let nNewValue = (nRelPos / nTrackSize) * nRange;
+			nNewValue = Math.max(nMin, Math.min(nMax, nNewValue));
+			oThis.setValue(nNewValue, oDrawingController);
+			return true;
+		};
+		this.thumb._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			oThis.endChangeValues(oDrawingController);
+			return true;
+		};
+		this.trackArea.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+			if (!this.hit(nX, nY)) {
+				return false;
+			}
+
+			this.currentMousePostion.x = nX;
+			this.currentMousePostion.y = nY;
+			if (!oThis.initPerformTrackAreaStep()) {
+				return false;
+			}
+			this.setIsHold(true);
+			oThis.stepManager.start(oThis.performTrackAreaStep.bind(oThis, oDrawingController));
+			return true;
+		};
+		this.trackArea._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+			this.trackAreaHoldDirection = 0;
+			oThis.stepManager.end();
+			oThis.endChangeValues(oDrawingController);
+			return true;
+		};
+		this.trackArea._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+			this.currentMousePostion.x = nX;
+			this.currentMousePostion.y = nY;
+			return false;
+		};
+	};
+	CScrollContainer.prototype.initPerformTrackAreaStep = function () {
+		let nLocalPos, nThumbMin, nThumbMax;
+		const bIsVertical = this.isVertical();
+		const oThumb = this.thumb;
+		const oTrackArea = this.trackArea;
+		const nX = oTrackArea.currentMousePostion.x;
+		const nY = oTrackArea.currentMousePostion.y;
+		if (bIsVertical) {
+			nLocalPos = oTrackArea.invertTransform.TransformPointY(nX, nY);
+			nThumbMin = oThumb.y - oTrackArea.y;
+			nThumbMax = nThumbMin + oThumb.extY;
+		} else {
+			nLocalPos = oTrackArea.invertTransform.TransformPointX(nX, nY);
+			nThumbMin = oThumb.x - oTrackArea.x;
+			nThumbMax = nThumbMin + oThumb.extX;
+		}
+		if (nLocalPos >= nThumbMin && nLocalPos <= nThumbMax) {
+			return false;
+		}
+
+		const nTempTrackAreaHold = (nLocalPos < nThumbMin) ? -1 : 1;
+
+		if (oTrackArea.trackAreaHoldDirection === 0 || nTempTrackAreaHold === oTrackArea.trackAreaHoldDirection) {
+			oTrackArea.trackAreaHoldDirection = nTempTrackAreaHold;
+			return true;
+		}
+		return false;
+	};
+	CScrollContainer.prototype.performTrackAreaStep = function (oDrawingController, bSkipUpdate) {
+		if (this.initPerformTrackAreaStep()) {
+			const nMinValue = this.getMinValue();
+			const nMaxValue = this.getMaxValue();
+			const nPageSize = this.getPageValue();
+
+			const nValue = this.getCurrentValue();
+			const nNewValue = this.trackArea.trackAreaHoldDirection === -1 ? nValue - nPageSize : nValue + nPageSize;
+			this.setValue(Math.min(Math.max(nMinValue, nNewValue), nMaxValue), oDrawingController);
+
+			if (!bSkipUpdate) {
+				this.control.onUpdate();
+			}
+			return true;
+		} else {
+			this.stepManager.end();
+		}
+		return false;
+	};
+	CScrollContainer.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.upButton.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) || this.downButton.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) ||
+			this.thumb.onMouseDown(e, nX, nY, nPageIndex, oDrawingController) || this.trackArea.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+	};
+	CScrollContainer.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		this.trackArea.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		this.upButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		this.downButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		this.thumb.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+	};
+	CScrollContainer.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.thumb.onMouseMove(e, nX, nY, nPageIndex, oDrawingController) || this.trackArea.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+	};
+
+	CScrollContainer.prototype.recalculateTransform = function () {
+		const oControlMatrix = this.transform;
+
+		const nScrollWidth = this.extX;
+		const nScrollHeight = this.extY;
+
+		const bIsVertical = this.isVertical();
+		const nMinValue = this.getMinValue();
+		const nMaxValue = this.getMaxValue();
+		const nCurrentValue = this.getCurrentValue();
+		const nValueRange = nMaxValue - nMinValue;
+		if (nValueRange < 1) {
+			return;
+		}
+		if (bIsVertical) {
+			const nButtonHeight = Math.min(nScrollHeight * SCROLLBAR_BUTTON_SIZE_RATIO, nScrollWidth);
+			const nTrackHeight = nScrollHeight - (nButtonHeight * 2);
+
+			this.upButton.x = this.x;
+			this.upButton.y = this.y;
+			this.upButton.extX = nScrollWidth;
+			this.upButton.extY = nButtonHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_UP;
 
-			// Setup down button (positioned at the bottom)
-			const downButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(downButtonMatrix, 0, controlHeight - buttonHeight);
-			this.downButton.transform = downButtonMatrix;
+			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonHeight);
+			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
-			this.downButton.x = oControl.x;
-			this.downButton.y = oControl.y + controlHeight - buttonHeight;
-			this.downButton.extX = controlWidth;
-			this.downButton.extY = buttonHeight;
+			this.downButton.x = this.x;
+			this.downButton.y = this.y + nScrollHeight - nButtonHeight;
+			this.downButton.extX = nScrollWidth;
+			this.downButton.extY = nButtonHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_DOWN;
 
-			// Setup track area
-			this.trackArea.x = oControl.x;
-			this.trackArea.y = oControl.y + buttonHeight;
-			this.trackArea.extX = controlWidth;
-			this.trackArea.extY = trackHeight;
-			const trackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(trackMatrix, 0, buttonHeight);
-			this.trackArea.transform = trackMatrix;
+			this.trackArea.x = this.x;
+			this.trackArea.y = this.y + nButtonHeight;
+			this.trackArea.extX = nScrollWidth;
+			this.trackArea.extY = nTrackHeight;
+			const oTrackMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonHeight);
+			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
-
-			// Calculate thumb dimensions and position
-			const valueRange = nMaxValue - nMinValue;
-			const thumbMinHeight = controlWidth * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
-			const thumbHeight = Math.max(thumbMinHeight, trackHeight / (valueRange + 1));
-
-			// Calculate thumb position based on current value
-			let thumbPositionRatio = 0;
-			if (valueRange > 0) {
-				thumbPositionRatio = (nCurrentValue - nMinValue) / valueRange;
-			}
-
-			// Available space for thumb to move (trackHeight minus thumb height)
-			const thumbTrackSpace = trackHeight - thumbHeight;
-			const thumbY = thumbPositionRatio * thumbTrackSpace;
-
-			// Setup thumb
-			this.thumb.x = oControl.x;
-			this.thumb.y = oControl.y + buttonHeight + thumbY;
-			this.thumb.extX = controlWidth;
-			this.thumb.extY = thumbHeight;
-
-			const thumbMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(thumbMatrix, 0, buttonHeight + thumbY);
-			this.thumb.transform = thumbMatrix;
-			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
 		} else {
-			// HORIZONTAL SCROLLBAR
-			// Calculate button dimensions
-			const nButtonSide = Math.min(controlWidth * SCROLLBAR_BUTTON_SIZE_RATIO, controlHeight);
-			const trackWidth = controlWidth - (nButtonSide * 2);
+			const nButtonSide = Math.min(nScrollWidth * SCROLLBAR_BUTTON_SIZE_RATIO, nScrollHeight);
+			const nTrackWidth = nScrollWidth - (nButtonSide * 2);
 
-			// Setup left button
-			this.upButton.x = oControl.x;
-			this.upButton.y = oControl.y;
+			this.upButton.x = this.x;
+			this.upButton.y = this.y;
 			this.upButton.extX = nButtonSide;
-			this.upButton.extY = controlHeight;
+			this.upButton.extY = nScrollHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_LEFT;
 
-			// Setup right button (positioned at the right)
-			const rightButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(rightButtonMatrix, controlWidth - nButtonSide, 0);
-			this.downButton.transform = rightButtonMatrix;
+			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, nScrollWidth - nButtonSide, 0);
+			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
-			this.downButton.x = oControl.x + controlWidth - nButtonSide;
-			this.downButton.y = oControl.y;
+			this.downButton.x = this.x + nScrollWidth - nButtonSide;
+			this.downButton.y = this.y;
 			this.downButton.extX = nButtonSide;
-			this.downButton.extY = controlHeight;
+			this.downButton.extY = nScrollHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_RIGHT;
 
-			// Setup track area
-			this.trackArea.x = oControl.x + nButtonSide;
-			this.trackArea.y = oControl.y;
-			this.trackArea.extX = trackWidth;
-			this.trackArea.extY = controlHeight;
-			const trackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(trackMatrix, nButtonSide, 0);
-			this.trackArea.transform = trackMatrix;
+			this.trackArea.x = this.x + nButtonSide;
+			this.trackArea.y = this.y;
+			this.trackArea.extX = nTrackWidth;
+			this.trackArea.extY = nScrollHeight;
+			const oTrackMatrix = oControlMatrix.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, nButtonSide, 0);
+			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
+		}
+		this.recalculateThumbTransform(nMinValue, nMaxValue, nCurrentValue);
+	};
+	CScrollContainer.prototype.recalculateThumbTransform = function (nMinValue, nMaxValue, nCurrentValue) {
+		const bIsVertical = this.isVertical();
+		const nValueRange = nMaxValue - nMinValue;
+		const nThumbPositionRatio = nValueRange > 0 ? (nCurrentValue - nMinValue) / nValueRange : 0;
+		const nButtonSide = this.upButton.extY;
 
-			// Calculate thumb dimensions and position
-			const valueRange = nMaxValue - nMinValue;
-			const thumbMinWidth = controlHeight * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
-			const thumbWidth = Math.max(thumbMinWidth, trackWidth / (valueRange + 1));
+		if (bIsVertical) {
+			const nScrollWidth = this.extX;
+			const nTrackHeight = this.trackArea.extY;
+			const nThumbMinHeight = nScrollWidth * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
+			const nThumbHeight = Math.max(nThumbMinHeight, nTrackHeight / (nValueRange + 1));
 
-			// Calculate thumb position based on current value
-			let thumbPositionRatio = 0;
-			if (valueRange > 0) {
-				thumbPositionRatio = (nCurrentValue - nMinValue) / valueRange;
-			}
+			const nThumbTrackSpace = nTrackHeight - nThumbHeight;
+			const nThumbY = nThumbPositionRatio * nThumbTrackSpace;
 
-			// Available space for thumb to move (trackWidth minus thumb width)
-			const thumbTrackSpace = trackWidth - thumbWidth;
-			const thumbX = thumbPositionRatio * thumbTrackSpace;
+			this.thumb.x = this.x;
+			this.thumb.y = this.y + nButtonSide + nThumbY;
+			this.thumb.extX = nScrollWidth;
+			this.thumb.extY = nThumbHeight;
 
-			// Setup thumb
-			this.thumb.x = oControl.x + nButtonSide + thumbX;
-			this.thumb.y = oControl.y;
-			this.thumb.extX = thumbWidth;
-			this.thumb.extY = controlHeight;
+			const oThumbMatrix = this.transform.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oThumbMatrix, 0, nButtonSide + nThumbY);
+			this.thumb.transform = oThumbMatrix;
+			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
+		} else {
+			const nScrollHeight = this.extY;
+			const nTrackWidth = this.trackArea.extX;
+			const nThumbMinWidth = nScrollHeight * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
+			const nThumbWidth = Math.max(nThumbMinWidth, nTrackWidth / (nValueRange + 1));
 
-			const thumbMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(thumbMatrix, nButtonSide + thumbX, 0);
-			this.thumb.transform = thumbMatrix;
+			const nThumbTrackSpace = nTrackWidth - nThumbWidth;
+			const nThumbX = nThumbPositionRatio * nThumbTrackSpace;
+
+			this.thumb.x = this.x + nButtonSide + nThumbX;
+			this.thumb.y = this.y;
+			this.thumb.extX = nThumbWidth;
+			this.thumb.extY = nScrollHeight;
+
+			const oThumbMatrix = this.transform.CreateDublicate();
+			global_MatrixTransformer.TranslateAppend(oThumbMatrix, nButtonSide + nThumbX, 0);
+			this.thumb.transform = oThumbMatrix;
 			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
 		}
 	};
+
+	CScrollContainer.prototype.draw = function (graphics) {
+		this.trackArea.draw(graphics);
+		this.thumb.draw(graphics);
+		this.downButton.draw(graphics);
+		this.upButton.draw(graphics);
+	};
+	CScrollContainer.prototype.hit = function (nX, nY) {
+		return this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY) || this.thumb.hit(nX, nY) || this.trackArea.hit(nX, nY);
+	}
+
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
