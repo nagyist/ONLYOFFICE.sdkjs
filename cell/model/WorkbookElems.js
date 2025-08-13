@@ -5092,18 +5092,6 @@ var g_oFontProperties = {
 			WrapText: 8
 	};
 
-	const c_oReadingOrderTypes = {
-		Context: 0,
-		LTR: 1,
-		RTL: 2
-	};
-
-	window['Asc']['c_oReadingOrderTypes'] = window['Asc'].c_oReadingOrderTypes = c_oReadingOrderTypes;
-	prot = c_oReadingOrderTypes;
-	prot['Context'] = prot.Context;
-	prot['LTR'] = prot.LTR;
-	prot['RTL'] = prot.RTL;
-
 	window['Asc']['c_oSerAligmentTypes'] = window['Asc'].c_oSerAligmentTypes = c_oSerAligmentTypes;
 	prot = c_oSerAligmentTypes;
 	prot['Horizontal'] = prot.Horizontal;
