@@ -1977,6 +1977,7 @@
 				// otherwise search for pp tag witch can set paragraph properties for future text
 				if (i === 0) {
 					if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
+						currentParagraphPropsRow = 0;
 						parseParagraphAndAddToShapeContent(0,
 								paragraphPropsCommon, textCShape);
 						currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
