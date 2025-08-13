@@ -735,7 +735,7 @@ NullState.prototype =
 		if(!e.IsLocked) {
 			return this.emulateMouseUp(e, x, y, pageIndex);
 		}
-		this.control.onMouseMove(e, x, y, pageIndex);
+		this.control.onMouseMove(e, x, y, pageIndex, this.controller);
 	};
 	ControlState.prototype.onMouseUp = function (e, x, y, pageIndex) {
 		if(this.drawingObjects.handleEventMode === HANDLE_EVENT_MODE_CURSOR)

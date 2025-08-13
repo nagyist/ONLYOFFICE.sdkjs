@@ -161,8 +161,8 @@
 		this.name = null;
 		this.link = null;
 		this.rId = null;
-		this.controlPr = new CControlPr();
-		this.formControlPr = new CFormControlPr();
+		this.setFormControlPr(new CFormControlPr());
+		this.setControlPr(new CControlPr());
 		this.controller = null;
 	}
 
@@ -242,10 +242,12 @@
 	CControl.prototype.setControlPr = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_ControlPr, this.controlPr, pr));
 		this.controlPr = pr;
+		this.controlPr.setParent(this);
 	};
 	CControl.prototype.setFormControlPr = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_FormControlPr, this.formControlPr, pr));
 		this.formControlPr = pr;
+		this.formControlPr.setParent(this);
 	};
 	CControl.prototype.clearVmlTxBody = function () {
 		const oDocContent = this.getDocContent();
@@ -1941,6 +1943,10 @@
 		oClass.textVAlign = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Val] = function (oClass, value) {
+			if(oClass.parent) {
+				oClass.parent.recalcInfo.recalculateTransform = true;
+				oClass.parent.addToRecalculate();
+			}
 		oClass.val = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_WidthMin] = function (oClass, value) {
