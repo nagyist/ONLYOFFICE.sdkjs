@@ -16158,6 +16158,29 @@
 			}, this, []);
 		}
 
+		/**
+		 * Don't use this method. Use GetDefaultTheme
+		 * @return {CTheme}
+		 */
+		function generateDefaultVisioTheme() {
+			let theme = GenerateDefaultTheme(null, "Calibri");
+			let scheme = theme.themeElements.clrScheme;
+			// TODO change other colors
+			scheme.colors[11] = AscFormat.CreateUniColorRGB(0x05, 0x63, 0xC1); // link
+			scheme.colors[10] = AscFormat.CreateUniColorRGB(0x80, 0x00, 0x80); // followed link
+
+
+			theme.themeElements.themeExt = new AscFormat.CThemeExt();
+			theme.themeElements.themeExt.themeSchemeSchemeEnum = "0";
+
+			theme.themeElements.clrScheme.clrSchemeExtLst = new AscFormat.CClrSchemeExtLst();
+			theme.themeElements.clrScheme.clrSchemeExtLst.schemeEnum = "0";
+
+			theme.themeElements.themeExt.fmtConnectorScheme = new AscFormat.FmtScheme();
+
+			return theme;
+		}
+
 		function GetDefaultTheme() {
 			if(!AscFormat.DEFAULT_THEME) {
 				AscFormat.DEFAULT_THEME = GenerateDefaultTheme(null);
@@ -20527,6 +20550,8 @@
 		window['AscFormat'].CVarStyle = CVarStyle;
 		window['AscFormat'].CFontProps = CFontProps;
 		window['AscFormat'].CLineStyle = CLineStyle;
+
+		window['AscFormat'].generateDefaultVisioTheme = generateDefaultVisioTheme;
 
 		window["AscFormat"].RECT_ALIGN_B = RECT_ALIGN_B;
 		window["AscFormat"].RECT_ALIGN_BL = RECT_ALIGN_BL;
