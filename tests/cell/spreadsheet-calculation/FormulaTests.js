@@ -23232,7 +23232,7 @@ $(function () {
 		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 4, "Result of HLOOKUP({2,3,4},{1,2,3;2,3,4},2)[0,1]");
 		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 4, "Result of HLOOKUP({2,3,4},{1,2,3;2,3,4},2)[0,2]");
 
-		// Case #4: Array, Array, Number, FALSE
+		// Case #4: Array, Array, Number, Boolean
 		oParser = new parserFormula("HLOOKUP({2,3,4},{1,2;2,3;3,4},2,FALSE)", "A2", ws);
 		assert.ok(oParser.parse(), "Parse HLOOKUP({2,3,4},{1,2;2,3;3,4},2,FALSE)");
 		array = oParser.calculate();
@@ -25557,7 +25557,7 @@ $(function () {
 		assert.ok(oParser.parse(), 'LOOKUP(E1210,' + currentSheet + '!A1215,B1210:B1220)');
 		assert.strictEqual(oParser.calculate().getValue(), 1, 'Result of LOOKUP(E1210,' + currentSheet + '!A1215,B1210:B1220)');
 
-		// Case #94: Ref, Area, 3DRef. Bug 69527 - lookup with sheet reference in result array
+		// Case #94: Ref, Area, Ref3D. Bug 69527 - lookup with sheet reference in result array
 		oParser = new parserFormula('LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)', "A2", ws);
 		assert.ok(oParser.parse(), 'LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)');
 		assert.strictEqual(oParser.calculate().getValue().getValue(), 3, 'Result of LOOKUP(E1210,A1210:A1220,' + currentSheet + '!A1215)');
