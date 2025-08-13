@@ -66,7 +66,7 @@
 	{
 		return this.columnCount;
 	};
-	DocumentElementSection.prototype.GetContentStartPos = function()
+	DocumentElementSection.prototype.GetContentFrame = function()
 	{
 		return {
 			X : this.x,

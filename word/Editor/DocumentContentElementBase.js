@@ -226,6 +226,10 @@ CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
 			YLimit : this.YLimit
 		}
 	}
+	else if (curPage === section.GetStartPage())
+	{
+		return section.GetContentFrame();
+	}
 	
 	let columnCount = section.GetColumnCount();
 	let startColumn = section === this.Sections[0] ? this.ColumnNum : 0;
@@ -1522,11 +1526,9 @@ CDocumentContentElementBase.prototype.isWholeElementInPermRange = function()
 	
 	return AscWord.PermRangesManager.isInPermRange(startRanges, endRanges);
 };
-/**
- * @param {AscWord.DocumentSections} documentSections
- */
-CDocumentContentElementBase.prototype.CollectSections = function(documentSections)
+CDocumentContentElementBase.prototype.GetAllSectPrParagraphs = function(paragraphs)
 {
+	return paragraphs ? [] : paragraphs;
 };
 
 //--------------------------------------------------------export--------------------------------------------------------

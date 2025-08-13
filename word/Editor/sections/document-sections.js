@@ -44,9 +44,15 @@
 	{
 		this.logicDocument = logicDocument;
 		this.Elements = [];
+		
+		this.needUpdate = true;
+		
+		this.paragraphToCheck = {};
 	}
 	DocumentSections.prototype.GetFirstSectPr = function()
 	{
+		this.Update();
+		
 		if (!this.Elements.length)
 			return this.logicDocument.GetFinalSectPr();
 		
@@ -54,18 +60,21 @@
 	};
 	DocumentSections.prototype.GetNextSectPr = function(sectPr)
 	{
+		this.Update();
+		
 		let index = this.Find(sectPr);
 		if (-1 === index || index >= this.Elements.length - 1)
 			return sectPr;
 		
 		return this.Elements[index + 1].SectPr;
 	};
-	DocumentSections.prototype.Add = function(SectPr, Index)
+	DocumentSections.prototype.Add = function(sectPr, paragraph)
 	{
-		this.Elements.push(new DocumentSection(SectPr, Index));
+		this.Elements.push(new DocumentSection(sectPr, paragraph));
 	};
 	DocumentSections.prototype.GetSectionsCount = function()
 	{
+		this.Update();
 		return this.Elements.length;
 	};
 	DocumentSections.prototype.Clear = function()
@@ -76,6 +85,8 @@
 	{
 		if (!HdrFtr)
 			return -1;
+		
+		this.Update();
 		
 		var Count = this.Elements.length;
 		for (var Index = 0; Index < Count; Index++)
@@ -171,6 +182,7 @@
 	};
 	DocumentSections.prototype.Get_Count = function()
 	{
+		this.Update();
 		return this.Elements.length;
 	};
 	DocumentSections.prototype.Get_SectPr = function(Index)
@@ -183,6 +195,8 @@
 	}
 	DocumentSections.prototype.Find = function(SectPr)
 	{
+		this.Update();
+		
 		var Count = this.Elements.length;
 		for (var Index = 0; Index < Count; Index++)
 		{
@@ -193,46 +207,94 @@
 		
 		return -1;
 	};
-	DocumentSections.prototype.UpdateAll = function()
+	DocumentSections.prototype.Update = function()
 	{
+		if (!this.CheckNeedUpdate())
+			return;
+		
 		this.Clear();
-		this.logicDocument.CollectSections(this);
-		this.Add(this.logicDocument.GetFinalSectPr(), this.logicDocument.GetElementsCount());
-	};
-	DocumentSections.prototype.Update_OnAdd = function(Pos, Items)
-	{
-		var Count = Items.length;
-		var Len   = this.Elements.length;
 		
-		// Сначала обновим старые метки
-		for (var Index = 0; Index < Len; Index++)
+		let paragraphs = this.logicDocument.GetAllSectPrParagraphs();
+		for (let i = 0; i < paragraphs.length; ++i)
 		{
-			if (this.Elements[Index].Index >= Pos)
-				this.Elements[Index].Index += Count;
+			this.Add(paragraphs[i].Get_SectionPr(), paragraphs[i]);
 		}
+		this.Add(this.logicDocument.GetFinalSectPr(), this.logicDocument.GetElementsCount());
 		
-		// Если среди новых элементов были параграфы с настройками секции, тогда добавим их здесь
-		for (var Index = 0; Index < Count; Index++)
+		// Когда полностью обновляются секции надо пересчитывать с самого начала
+		this.logicDocument.RecalcInfo.Set_NeedRecalculateFromStart(true);
+		
+		this.needUpdate = false;
+	};
+	DocumentSections.prototype.CheckNeedUpdate = function()
+	{
+		for (let paraId in this.paragraphToCheck)
 		{
-			var Item   = Items[Index];
-			var SectPr = (type_Paragraph === Item.GetType() ? Item.Get_SectionPr() : undefined);
-			
-			if (undefined !== SectPr)
+			let para = this.paragraphToCheck[paraId];
+			if (!para.Get_SectionPr() || para.CanAddSectionPr())
 			{
-				var TempPos = 0;
-				for (; TempPos < Len; TempPos++)
-				{
-					if (Pos + Index <= this.Elements[TempPos].Index)
-						break;
-				}
-				
-				this.Elements.splice(TempPos, 0, new DocumentSection(SectPr, Pos + Index));
-				Len++;
+				this.needUpdate = true;
+				break;
 			}
 		}
+		
+		return this.needUpdate;
+	};
+	DocumentSections.prototype.CheckParagraph = function(paragraph)
+	{
+		if (paragraph && paragraph.Get_SectionPr())
+			this.paragraphToCheck[paragraph.GetId()] = paragraph;
+	};
+	DocumentSections.prototype.Update_OnAdd = function(items)
+	{
+		this.needUpdate = true;
+		return;
+		if (this.needUpdate)
+			return;
+		
+		for (let i = 0; i < items.length; ++i)
+		{
+			if (items[i].GetAllSectPrParagraphs().length)
+			{
+				this.needUpdate = true;
+				return;
+			}
+		}
+		
+		// var Count = Items.length;
+		// var Len   = this.Elements.length;
+		//
+		// // Сначала обновим старые метки
+		// for (var Index = 0; Index < Len; Index++)
+		// {
+		// 	if (this.Elements[Index].Index >= Pos)
+		// 		this.Elements[Index].Index += Count;
+		// }
+		//
+		// // Если среди новых элементов были параграфы с настройками секции, тогда добавим их здесь
+		// for (var Index = 0; Index < Count; Index++)
+		// {
+		// 	var Item   = Items[Index];
+		// 	var SectPr = (type_Paragraph === Item.GetType() ? Item.Get_SectionPr() : undefined);
+		//
+		// 	if (undefined !== SectPr)
+		// 	{
+		// 		var TempPos = 0;
+		// 		for (; TempPos < Len; TempPos++)
+		// 		{
+		// 			if (Pos + Index <= this.Elements[TempPos].Index)
+		// 				break;
+		// 		}
+		//
+		// 		this.Elements.splice(TempPos, 0, new DocumentSection(SectPr, Pos + Index));
+		// 		Len++;
+		// 	}
+		// }
 	};
 	DocumentSections.prototype.Update_OnRemove = function(Pos, Count, bCheckHdrFtr)
 	{
+		this.needUpdate = true;
+		return;
 		var Len = this.Elements.length;
 		
 		for (var Index = 0; Index < Len; Index++)
@@ -326,8 +388,12 @@
 	 */
 	DocumentSections.prototype.UpdateSection = function(oSectPr, oNewSectPr, isCheckHdrFtr)
 	{
+		this.needUpdate = true;
+		return;
 		if (oSectPr === oNewSectPr || !oSectPr)
 			return false;
+		
+		this.Update();
 		
 		for (var nIndex = 0, nCount = this.Elements.length; nIndex < nCount; ++nIndex)
 		{
@@ -653,6 +719,8 @@
 	 */
 	DocumentSections.prototype.forEachHdrFtr = function(callback)
 	{
+		this.Update();
+		
 		for (let i = 0, count = this.Elements.length; i < count; ++i)
 		{
 			let sectPr = this.Elements[i].SectPr;
@@ -689,10 +757,8 @@
 	 */
 	function DocumentSection(sectPr, paragraph)
 	{
-		this.SectPr = sectPr;
+		this.SectPr    = sectPr;
 		this.Paragraph = paragraph;
-		
-		this.Index = paragraph;
 	}
 	
 	//--------------------------------------------------------export----------------------------------------------------

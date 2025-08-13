@@ -2816,9 +2816,9 @@ CBlockLevelSdt.prototype.RemoveThisFromParent = function(updatePosition)
 		}
 	}
 };
-CBlockLevelSdt.prototype.CollectSections = function(documentSections)
+CBlockLevelSdt.prototype.GetAllSectPrParagraphs = function(paragraphs)
 {
-	return this.Content.CollectSections(documentSections);
+	return this.Content.GetAllSectPrParagraphs(paragraphs);
 };
 
 //--------------------------------------------------------export--------------------------------------------------------

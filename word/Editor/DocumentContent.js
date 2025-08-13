@@ -771,7 +771,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
 	var oDocContentRI = this.GetDocumentContentForRecalcInfo();
 	var oRecalcInfo   = oDocContentRI.RecalcInfo;
 	
-	let checkSections = !this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent());
+	let allowSectionBreak = !this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent());
 
 	if (0 === PageIndex && true === bStart && oDocContentRI === this)
 	{
@@ -1283,7 +1283,7 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
             Y                    = Element.Get_PageBounds(ElementPageIndex).Bottom;
         }
 		
-		if (checkSections && ((RecalcResult & recalcresult_NextSection) || (RecalcResult & recalcresult_NextSection_Cur)))
+		if (!allowSectionBreak && ((RecalcResult & recalcresult_NextSection) || (RecalcResult & recalcresult_NextSection_Cur)))
 			RecalcResult = recalcresult_NextElement;
 
         if (RecalcResult & recalcresult_CurPage)
@@ -7451,7 +7451,9 @@ CDocumentContent.prototype.Internal_Content_Add = function(Position, NewObject, 
 
 	var PrevObj = this.Content[Position - 1] ? this.Content[Position - 1] : null;
 	var NextObj = this.Content[Position] ? this.Content[Position] : null;
-
+	
+	this.UpdateSectionsOnChange();
+	
 	this.private_RecalculateNumbering([NewObject]);
 	AscCommon.History.Add(new CChangesDocumentContentAddItem(this, Position, [NewObject]));
 	this.Content.splice(Position, 0, NewObject);
@@ -7491,6 +7493,8 @@ CDocumentContent.prototype.Internal_Content_Remove = function(Position, Count, i
 
 	for (var Index = 0; Index < Count; Index++)
 		this.Content[Position + Index].PreDelete();
+	
+	this.UpdateSectionsOnChange();
 
 	AscCommon.History.Add(new CChangesDocumentContentRemoveItem(this, Position, this.Content.slice(Position, Position + Count)));
 	var Elements = this.Content.splice(Position, Count);
@@ -7538,6 +7542,12 @@ CDocumentContent.prototype.Internal_Content_RemoveAll = function()
 
 	AscCommon.History.Add(new CChangesDocumentRemoveItem(this, 0, this.Content.slice(0, this.Content.length)));
 	this.Content = [];
+};
+CDocumentContent.prototype.UpdateSectionsOnChange = function()
+{
+	let logicDocument = this.GetLogicDocument();
+	if (logicDocument && logicDocument.IsDocumentEditor())
+		logicDocument.SectionsInfo.Update_OnAdd();
 };
 //-----------------------------------------------------------------------------------
 // Функции для работы с номерами страниц

@@ -14890,8 +14890,12 @@ Paragraph.prototype.IgnoreMisspelledWord = function(oElement)
 };
 Paragraph.prototype.CanAddSectionPr = function()
 {
-	let oParent = this.Parent;
-	return (oParent && (oParent.GetTopDocumentContent() instanceof CDocument) && !oParent.IsTableCellContent() && this.IsUseInDocument());
+	let logicDocument = this.GetLogicDocument();
+	return (logicDocument
+		&& logicDocument.IsDocumentEditor()
+		&& this.IsUseInDocument()
+		&& !this.IsTableCellContent()
+		&& this.GetTopDocumentContent() === logicDocument);
 };
 //----------------------------------------------------------------------------------------------------------------------
 // Search
@@ -15100,7 +15104,9 @@ Paragraph.prototype.Get_SectionPr = function()
 Paragraph.prototype.Set_SectionPr = function(sectPr, update)
 {
 	let logicDocument = this.GetLogicDocument();
-	if (logicDocument && logicDocument !== this.GetParent() && true !== this.LogicDocument.ForceCopySectPr)
+	if (logicDocument
+		&& logicDocument !== this.GetTopDocumentContent()
+		&& true !== this.LogicDocument.ForceCopySectPr)
 		return;
 	
 	if (sectPr === this.SectPr)
@@ -15662,14 +15668,15 @@ Paragraph.prototype.GetDocumentSectPr = function()
 {
 	return this.Get_SectPr();
 };
-/**
- * @param {AscWord.DocumentSections} documentSections
- */
-Paragraph.prototype.CollectSections = function(documentSections)
+Paragraph.prototype.GetAllSectPrParagraphs = function(paragraphs)
 {
-	let sectPr = this.Get_SectionPr();
-	if (sectPr)
-		documentSections.Add(sectPr, this.GetIndex());
+	if (!paragraphs)
+		paragraphs = [];
+	
+	if (this.Get_SectionPr())
+		paragraphs.push(this);
+	
+	return paragraphs;
 };
 Paragraph.prototype.CheckRevisionsChanges = function(oRevisionsManager)
 {

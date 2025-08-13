@@ -11202,7 +11202,10 @@ CDocument.prototype.Internal_Content_Add = function(Position, NewObject, isCorre
 
 	var PrevObj = this.Content[Position - 1] ? this.Content[Position - 1] : null;
 	var NextObj = this.Content[Position] ? this.Content[Position] : null;
-
+	
+	// Обновим информацию о секциях
+	this.SectionsInfo.Update_OnAdd(Position, [NewObject]);
+	
 	this.private_RecalculateNumbering([NewObject]);
 	this.History.Add(new CChangesDocumentAddItem(this, Position, [NewObject]));
 	this.Content.splice(Position, 0, NewObject);
@@ -11216,10 +11219,7 @@ CDocument.prototype.Internal_Content_Add = function(Position, NewObject, isCorre
 
 	if (null != NextObj)
 		NextObj.Set_DocumentPrev(NewObject);
-
-	// Обновим информацию о секциях
-	this.SectionsInfo.Update_OnAdd(Position, [NewObject]);
-
+	
 	if (false !== isCorrectContent)
 	{
 		// В последнем параграфе не должно быть разрыва секции
@@ -11250,7 +11250,10 @@ CDocument.prototype.Internal_Content_Remove = function(Position, Count, isCorrec
 	{
 		this.Content[Position + Index].PreDelete();
 	}
-
+	
+	// Обновим информацию о секциях
+	this.SectionsInfo.Update_OnRemove(Position, Count, true);
+	
 	this.History.Add(new CChangesDocumentRemoveItem(this, Position, this.Content.slice(Position, Position + Count)));
 	var Elements = this.Content.splice(Position, Count);
 	this.private_RecalculateNumbering(Elements);
@@ -11271,10 +11274,7 @@ CDocument.prototype.Internal_Content_Remove = function(Position, Count, isCorrec
 		if (this.Content.length <= 0 || !this.Content[this.Content.length - 1].IsParagraph())
 			this.Internal_Content_Add(this.Content.length, new AscWord.Paragraph());
 	}
-
-	// Обновим информацию о секциях
-	this.SectionsInfo.Update_OnRemove(Position, Count, true);
-
+	
 	// Проверим не является ли рамкой последний параграф
 	this.private_CheckFramePrLastParagraph();
 
@@ -14356,10 +14356,7 @@ CDocument.prototype.Viewer_OnChangePosition = function()
  */
 CDocument.prototype.UpdateAllSectionsInfo = function()
 {
-	this.SectionsInfo.UpdateAll();
-	
-	// Когда полностью обновляются секции надо пересчитывать с самого начала
-	this.RecalcInfo.Set_NeedRecalculateFromStart(true);
+	this.SectionsInfo.Update();
 };
 /**
  * Обновляем информацию о заданной секции
