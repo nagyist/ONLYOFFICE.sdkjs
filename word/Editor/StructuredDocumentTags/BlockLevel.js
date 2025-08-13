@@ -2816,6 +2816,11 @@ CBlockLevelSdt.prototype.RemoveThisFromParent = function(updatePosition)
 		}
 	}
 };
+CBlockLevelSdt.prototype.CollectSections = function(documentSections)
+{
+	return this.Content.CollectSections(documentSections);
+};
+
 //--------------------------------------------------------export--------------------------------------------------------
 window['AscCommonWord'] = window['AscCommonWord'] || {};
 window['AscCommonWord'].CBlockLevelSdt = CBlockLevelSdt;

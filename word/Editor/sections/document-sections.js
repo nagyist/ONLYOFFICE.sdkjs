@@ -193,6 +193,12 @@
 		
 		return -1;
 	};
+	DocumentSections.prototype.UpdateAll = function()
+	{
+		this.Clear();
+		this.logicDocument.CollectSections(this);
+		this.Add(this.logicDocument.GetFinalSectPr(), this.logicDocument.GetElementsCount());
+	};
 	DocumentSections.prototype.Update_OnAdd = function(Pos, Items)
 	{
 		var Count = Items.length;

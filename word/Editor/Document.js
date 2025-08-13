@@ -3312,7 +3312,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 	this.FullRecalc.StartPage         = StartPage;
 	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage, StartIndex);
 	this.FullRecalc.ResetSectionStart = false;
-	this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(nPageAbs);
+	this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(StartPage);
 	this.FullRecalc.NextSectPr        = null;
 	this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
 	this.FullRecalc.StartPagesCount   = undefined !== nNoTimerPageIndex ? Math.min(100, Math.max(nNoTimerPageIndex - StartPage, 2)) : 2;
@@ -14356,18 +14356,8 @@ CDocument.prototype.Viewer_OnChangePosition = function()
  */
 CDocument.prototype.UpdateAllSectionsInfo = function()
 {
-	this.SectionsInfo.Clear();
-
-	var Count = this.Content.length;
-	for (var Index = 0; Index < Count; Index++)
-	{
-		var Element = this.Content[Index];
-		if (type_Paragraph === Element.GetType() && undefined !== Element.Get_SectionPr())
-			this.SectionsInfo.Add(Element.Get_SectionPr(), Index);
-	}
-
-	this.SectionsInfo.Add(this.SectPr, Count);
-
+	this.SectionsInfo.UpdateAll();
+	
 	// Когда полностью обновляются секции надо пересчитывать с самого начала
 	this.RecalcInfo.Set_NeedRecalculateFromStart(true);
 };

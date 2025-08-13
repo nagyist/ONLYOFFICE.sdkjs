@@ -2983,3 +2983,13 @@ CDocumentContentBase.prototype.GetCurrentContentControl = function()
 	let blockSdt = selectedInfo.GetBlockLevelSdt();
 	return blockSdt ? blockSdt : null;
 };
+/**
+ * @param {AscWord.DocumentSections} documentSections
+ */
+CDocumentContentBase.prototype.CollectSections = function(documentSections)
+{
+	for (let i = 0; i < this.Content.length; ++i)
+	{
+		this.Content[i].CollectSections(documentSections);
+	}
+};

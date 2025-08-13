@@ -1522,6 +1522,12 @@ CDocumentContentElementBase.prototype.isWholeElementInPermRange = function()
 	
 	return AscWord.PermRangesManager.isInPermRange(startRanges, endRanges);
 };
+/**
+ * @param {AscWord.DocumentSections} documentSections
+ */
+CDocumentContentElementBase.prototype.CollectSections = function(documentSections)
+{
+};
 
 //--------------------------------------------------------export--------------------------------------------------------
 window['AscCommonWord'] = window['AscCommonWord'] || {};

@@ -15662,6 +15662,15 @@ Paragraph.prototype.GetDocumentSectPr = function()
 {
 	return this.Get_SectPr();
 };
+/**
+ * @param {AscWord.DocumentSections} documentSections
+ */
+Paragraph.prototype.CollectSections = function(documentSections)
+{
+	let sectPr = this.Get_SectionPr();
+	if (sectPr)
+		documentSections.Add(sectPr, this.GetIndex());
+};
 Paragraph.prototype.CheckRevisionsChanges = function(oRevisionsManager)
 {
 	var sParaId = this.GetId();
