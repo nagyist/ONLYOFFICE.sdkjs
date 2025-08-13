@@ -1978,17 +1978,13 @@
 				if (i === 0) {
 					if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 						currentParagraphPropsRow = 0;
-						parseParagraphAndAddToShapeContent(0,
-								paragraphPropsCommon, textCShape);
-						currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
 					} else {
 						currentParagraphPropsRow = searchForPP(textElement.elements, i);
-						// check defaultParagraph properties: get pp_Type object and in paragraphPropsCommon get needed Row (0)
 						currentParagraphPropsRow = currentParagraphPropsRow === undefined ? 0 : currentParagraphPropsRow;
-						parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
-								paragraphPropsCommon, textCShape);
-						currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
 					}
+					parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
+							paragraphPropsCommon, textCShape);
+					currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
 				}
 
 				if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
