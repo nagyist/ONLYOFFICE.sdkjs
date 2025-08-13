@@ -51,8 +51,8 @@ AscFormat.CShape.prototype.getParentObjects = function ()
 	if (this.parent) {
 		oTheme = this.parent.themes[0];
 	} else {
-		AscCommon.consoleLog("Parent was not set for shape/group. GenerateDefaultTheme is used. shape/group:", this);
-		oTheme = AscFormat.GenerateDefaultTheme(null, null);
+		AscCommon.consoleLog("Parent was not set for shape/group. GetDefaultTheme will be used. shape/group:", this);
+		oTheme = AscFormat.GetDefaultTheme();
 	}
 	return {slide: null, layout: null, master: null, theme: oTheme};
 };

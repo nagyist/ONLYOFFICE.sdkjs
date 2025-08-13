@@ -361,7 +361,7 @@ AscDFH.historyitem_type_VisioWindow = 328;
 	CVisioDocument.prototype.AfterOpenDocument = function(zip, context) {
 		if (!this.themes.length) {
 			AscCommon.consoleLog("No themes found by filenames. Creating default theme");
-			this.themes.push(AscFormat.GenerateDefaultTheme(null, null));
+			this.themes.push(AscFormat.GetDefaultTheme());
 		}
 	};
 
