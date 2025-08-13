@@ -1952,7 +1952,7 @@
 
 			// UPD: now with binary file read \r\n in original is replaced with \n! Focus is made for binary \n
 
-			// visio set extra \r\n at the end of each text element: see fix below. Both are needed
+			// visio set extra \r\n at the end of each text element (text tag): see fix below.
 			// UPD: fix below works for both binary read with \n and xml with \r\n
 			let lastTextEl = textElement.elements[textElement.elements.length - 1];
 			if (typeof lastTextEl === "string") {
@@ -1969,9 +1969,8 @@
 			// consider CRLF (\r\n) (UPD: \n for binary read) as new paragraph start.
 			// Right after CRLF visio searches for pp
 			// which will be properties for new paragraph.
-			// (Or if it is something after CRLF it doesn't search for pp)
+			// (Or if it is something after CRLF it doesn't search for pp. E.g. if pp comes in text, it ignores)
 
-			// interesting moment: if pp comes in text, so it ignores
 			textElement.elements.forEach(function(textElementPart, i) {
 				// init currentParagraph: if there is text in first element use default paragraph with
 				// properties from 0 paragraph props row
@@ -1998,12 +1997,6 @@
 
 						for (let j = 0; j < textArr.length; j++) {
 							let text = textArr[j];
-
-							// "LSCRLF" transforms to line drop and new paragraph without line drop so we get one
-							// line drop where should be two line drops so let's add extra line drop
-							if (j !== textArr.length - 1 && text.charAt(text.length - 1) === "\u2028") {
-								text += "\u2028";
-							}
 
 							// if j > 0 CR exists in textArr and should be handled as new paragraph start
 							if (j > 0) {
@@ -2086,34 +2079,6 @@
 				parseParagraphAndAddToShapeContent(0, paragraphPropsCommon, textCShape);
 			}
 
-			// visio set \r\n at the end of each paragraph
-			// UPD: works same for both binary read with \n and xml read with \r\n
-			for (let i = 0; i < oContent.Content.length; i++) {
-				const paragraph = oContent.Content[i];
-				if (paragraph.Content.length > 1) {
-					// get second to last run. extra line drop should be here. Bcs last run is default
-					const penultimateRun = paragraph.Content[paragraph.Content.length - 2];
-					if (penultimateRun.Content[penultimateRun.Content.length - 1] instanceof AscWord.CRunBreak) {
-						// remove CRunBreak i.e. lineBreak from run
-						penultimateRun.Content.splice(penultimateRun.Content.length - 1, 1);
-					}
-				}
-			}
-
-			// search for empty paragraphs and add space to them
-			// they need it to be displayed as dots in unordered list
-			// for bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=73676
-			// for (let i = 0; i < oContent.Content.length; i++) {
-			// 	const paragraph = oContent.Content[i];
-			// 	const paragraphContent = paragraph.Content; // runs
-			// 	let isParagraphEmpty = paragraph.IsEmpty();
-			//
-			// 	if (isParagraphEmpty) {
-			// 		let oRun = new ParaRun(paragraph, false);
-			// 		oRun.AddText(" ");
-			// 		paragraphContent.unshift(oRun);
-			// 	}
-			// }
 
 			// handle horizontal align i. e. defaultParagraph align
 
