@@ -664,6 +664,10 @@ CTableCell.prototype =
     {
         return this.Row.Table.Get_AbsoluteColumn(CurPage);
     },
+	GetAbsoluteSection : function(curPage)
+	{
+		return this.Row.Table.GetAbsoluteSection(curPage);
+	},
     //-----------------------------------------------------------------------------------
     // Работаем с содержимым ячейки
     //-----------------------------------------------------------------------------------

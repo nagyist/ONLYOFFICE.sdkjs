@@ -199,7 +199,7 @@ CDocumentContentElementBase.prototype.ResetSection = function(X, Y, XLimit, YLim
 	
 	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
 	let startColumn = this.Sections.length ? this.GetStartColumn() : 0;
-	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr, startColumn));
+	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr, startColumn, this.Sections.length));
 };
 CDocumentContentElementBase.prototype.GetElementSectionByPage = function(curPage)
 {
@@ -960,7 +960,7 @@ CDocumentContentElementBase.prototype.GetOutlineParagraphs = function(arrOutline
 {
 };
 //----------------------------------------------------------------------------------------------------------------------
-// Функции для работы с номерами страниц
+// Функции для работы с номерами страниц/колонок/секций
 //----------------------------------------------------------------------------------------------------------------------
 CDocumentContentElementBase.prototype.Get_StartPage_Absolute = function()
 {
@@ -984,12 +984,32 @@ CDocumentContentElementBase.prototype.GetStartSection = function()
 };
 CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, column, columnCount, sectionIndex)
 {
-	let startPage = this.Get_StartPage_Relative();
-	return column - this.GetStartColumn() + (page - startPage) * columnCount;
+	if (undefined === this.SectionNum || this.Sections.length <= 1)
+	{
+		let startPage = this.Get_StartPage_Relative();
+		return column - this.GetStartColumn() + (page - startPage) * columnCount;
+	}
+	else
+	{
+		if (undefined === sectionIndex)
+		{
+			sectionIndex = this.SectionNum;
+			console.log("Fix sectionIndex");
+		}
+		
+		let section = this.Sections[sectionIndex - this.SectionNum];
+		if (!section)
+			return 0;
+		
+		let startPage   = section.GetStartPage();
+		let columnCount = section.GetColumnCount();
+		let startColumn = section.GetStartColumn();
+		
+		return column - startColumn + (page - section.GetParentStartPage()) * columnCount + startPage;
+	}
 };
 CDocumentContentElementBase.prototype.GetElementPageIndexByXY = function(x, y, page)
 {
-
 };
 CDocumentContentElementBase.prototype.GetStartColumn = function()
 {
@@ -999,12 +1019,38 @@ CDocumentContentElementBase.prototype.GetColumnsCount = function()
 {
 	return this.ColumnsCount;
 };
-CDocumentContentElementBase.prototype.private_GetRelativePageIndex = function(CurPage)
+CDocumentContentElementBase.prototype.GetAbsoluteSection = function(curPage)
 {
-	if (!this.ColumnsCount || 0 === this.ColumnsCount)
-		return this.PageNum + CurPage;
-
-	return this.PageNum + ((this.ColumnNum + CurPage) / this.ColumnsCount | 0);
+	if (!this.Parent || !this.Parent.GetAbsoluteSection)
+		return 0;
+	
+	if (this.Parent instanceof AscWord.Document)
+	{
+		let elementSection = this.GetElementSectionByPage(curPage);
+		return this.SectionNum + elementSection.GetIndex();
+	}
+	
+	return this.Parent.GetAbsoluteSection(this.GetRelativePage(curPage));
+};
+CDocumentContentElementBase.prototype.private_GetRelativePageIndex = function(curPage)
+{
+	if (undefined === this.SectionNum || this.Sections.length <= 1)
+	{
+		if (!this.ColumnsCount || 0 === this.ColumnsCount)
+			return this.PageNum + curPage;
+		
+		return this.PageNum + ((this.ColumnNum + curPage) / this.ColumnsCount | 0);
+	}
+	else
+	{
+		let elementSection = this.GetElementSectionByPage(curPage);
+		
+		let startPage   = elementSection.GetParentStartPage();
+		let columnCount = elementSection.GetColumnCount();
+		let startColumn = elementSection.GetStartColumn();
+		
+		return startPage + ((startColumn + curPage) / columnCount | 0);
+	}
 };
 CDocumentContentElementBase.prototype.private_GetAbsolutePageIndex = function(CurPage)
 {

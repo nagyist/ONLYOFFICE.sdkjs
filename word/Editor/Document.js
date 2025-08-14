@@ -16573,7 +16573,7 @@ CDocument.prototype.Get_DocumentPagePositionByContentPosition = function(Content
 	for (; ParaPos < Count; ++ParaPos)
 	{
 		var Element = ContentPosition[ParaPos].Class;
-		if (Element instanceof Paragraph)
+		if (Element instanceof AscWord.Paragraph)
 		{
 			Para = Element;
 			break;
@@ -16592,12 +16592,15 @@ CDocument.prototype.Get_DocumentPagePositionByContentPosition = function(Content
 	var ParaPos = Para.Get_ParaPosByContentPos(ParaContentPos);
 	if (!ParaPos)
 		return;
-
-	var Result    = new CDocumentPagePosition();
-	Result.Page   = Para.Get_AbsolutePage(ParaPos.Page);
-	Result.Column = Para.Get_AbsoluteColumn(ParaPos.Page);
-
-	return Result;
+	
+	let pagePos = new CDocumentPagePosition();
+	
+	pagePos.Page        = Para.GetAbsolutePage(ParaPos.Page);
+	pagePos.Column      = Para.GetAbsoluteColumn(ParaPos.Page);
+	pagePos.Section     = Para.GetAbsoluteSection(ParaPos.Page);
+	pagePos.PageSection = this.Pages[pagePos.Page] ? this.Pages[pagePos.Page].GetSectionIndexByAbsoluteIndex(pagePos.Section) : 0;
+	
+	return pagePos;
 };
 CDocument.prototype.private_GetPageSectionByContentPosition = function(PageIndex, ContentPosition)
 {
@@ -28220,8 +28223,9 @@ CRevisionsChangeParagraphSearchEngine.prototype.GetDirection = function()
 
 function CDocumentPagePosition()
 {
-    this.Page   = 0;
-    this.Column = 0;
+	this.Page    = 0;
+	this.Column  = 0;
+	this.Section = 0;
 }
 
 function CDocumentNumberingInfoCounter()

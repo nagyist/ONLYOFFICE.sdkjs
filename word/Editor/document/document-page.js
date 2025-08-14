@@ -87,6 +87,14 @@
 	{
 		return this.Sections[nIndex] ? this.Sections[nIndex] : null;
 	};
+	DocumentPage.prototype.GetSectionIndexByAbsoluteIndex = function(sectionIndex)
+	{
+		if (this.Sections.length <= 1)
+			return 0;
+		
+		let startIndex = this.Sections[0].GetIndex();
+		return Math.max(0, Math.min(this.Sections.length - 1, sectionIndex - startIndex));
+	};
 	DocumentPage.prototype.GetFirstSectPr = function()
 	{
 		if (!this.Sections.length)

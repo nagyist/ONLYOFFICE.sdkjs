@@ -133,21 +133,6 @@ CBlockLevelSdt.prototype.IsInline = function()
 {
 	return true;
 };
-CBlockLevelSdt.prototype.GetElementPageIndex = function(page, column, columnCount, sectionIndex)
-{
-	if (undefined === sectionIndex)
-	{
-		sectionIndex = this.SectionNum;
-		console.log("Fix sectionIndex");
-	}
-	
-	let section = this.Sections[sectionIndex - this.SectionNum];
-	if (!section)
-		return 0;
-	
-	let startColumn = sectionIndex === this.SectionNum ? this.GetStartColumn() : 0;
-	return column - startColumn + (page - section.GetParentStartPage()) * section.GetColumnCount() + section.GetStartPage();
-};
 CBlockLevelSdt.prototype.Reset = function(X, Y, XLimit, YLimit, PageAbs, ColumnAbs, ColumnsCount, sectionAbs, sectPr)
 {
 	this.Content.Reset(X, Y, XLimit, YLimit);

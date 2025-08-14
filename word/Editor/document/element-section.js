@@ -38,7 +38,7 @@
 	/**
 	 * @constructor
 	 */
-	function DocumentElementSection(x, y, xLimit, yLimit, parentStartPage, startPage, endPage, sectPr, startColumn)
+	function DocumentElementSection(x, y, xLimit, yLimit, parentStartPage, startPage, endPage, sectPr, startColumn, index)
 	{
 		this.x               = x;
 		this.y               = y;
@@ -50,6 +50,7 @@
 		this.endPage         = endPage;
 		this.columnCount     = sectPr ? sectPr.GetColumnsCount() : 1;
 		this.startColumn     = startColumn ? startColumn : 0;
+		this.index           = index;
 	}
 	DocumentElementSection.prototype.GetParentStartPage = function()
 	{
@@ -87,6 +88,10 @@
 	DocumentElementSection.prototype.GetSectPr = function()
 	{
 		return this.sectPr;
+	};
+	DocumentElementSection.prototype.GetIndex = function()
+	{
+		return this.index;
 	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.DocumentElementSection = DocumentElementSection;

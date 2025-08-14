@@ -7617,6 +7617,13 @@ CDocumentContent.prototype.GetAbsoluteColumn = function(nCurPage)
 {
 	return this.Get_AbsoluteColumn(nCurPage);
 };
+CDocumentContent.prototype.GetAbsoluteSection = function(curPage)
+{
+	if (!this.Parent || !this.Parent.GetAbsoluteSection)
+		return 0;
+	
+	return this.Parent.GetAbsoluteSection(this.private_GetRelativePageIndex(curPage));
+};
 //-----------------------------------------------------------------------------------
 // Undo/Redo функции
 //-----------------------------------------------------------------------------------
