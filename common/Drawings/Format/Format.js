@@ -3809,10 +3809,10 @@
 		};
 
 		CBlipFill.flipTypes = {
-			'none': 0,
-			'x': 1,
-			'y': 2,
-			'xy': 3,
+			none: 0,
+			x: 1,
+			y: 2,
+			xy: 3
 		};
 
 		function CSrcRect(l, t, r, b) {
@@ -20339,6 +20339,10 @@
 		window['AscFormat'].getGrayscaleValue = getGrayscaleValue;
 
 		window['AscFormat'].CBlipFill = window['Asc']['asc_CFillBlip'] = window['Asc'].asc_CFillBlip = CBlipFill;
+		CBlipFill.flipTypes["none"] = CBlipFill.flipTypes.none;
+		CBlipFill.flipTypes["x"] = CBlipFill.flipTypes.x;
+		CBlipFill.flipTypes["y"] = CBlipFill.flipTypes.y;
+		CBlipFill.flipTypes["xy"] = CBlipFill.flipTypes.xy;
 		prot = CBlipFill.prototype;
 		prot['asc_getTile'] = prot.asc_getTile = prot.getTile;
 		prot['asc_setTile'] = prot.asc_setTile = prot.setTile;
@@ -20353,12 +20357,12 @@
 		prot['asc_getType'] = prot.asc_getType = prot['get_type'] = prot.get_type = prot.getType;
 		prot['asc_setType'] = prot.asc_setType = prot['asc_putType'] = prot.asc_putType = prot['put_type'] = prot.put_type = prot.setType;
 		prot['asc_getTextureId'] = prot.asc_getTextureId = prot['get_texture_id'] = prot.get_texture_id = prot.getTextureId;
-		prot['asc_setTextureId'] = prot.asc_setTextureId = prot['put_texture_id'] = prot.put_texture_id = prot.setTextureId;
+		prot['asc_putTextureId'] = prot.asc_putTextureId = prot['put_texture_id'] = prot.put_texture_id = prot.setTextureId;
 		prot['asc_getUrl'] = prot.asc_getUrl = prot['get_url'] = prot.get_url = prot.getUrl;
 		prot['asc_setUrl'] = prot.asc_setUrl = prot['asc_putUrl'] = prot.asc_putUrl = prot['put_url'] = prot.put_url = prot.setUrl;
 
 		window['AscFormat'].CBlipFillTile = CBlipFillTile;
-		CBlipFillTile['flipTypes'] = CBlipFill.flipTypes;
+		CBlipFillTile['flipTypes'] = CBlipFillTile.flipTypes = CBlipFill.flipTypes;
 		prot = CBlipFillTile.prototype;
 		prot['getTx'] = prot.getTx;
 		prot['setTx'] = prot.setTx;
