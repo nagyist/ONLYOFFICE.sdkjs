@@ -38,6 +38,10 @@
 	const CFormControlPr_checked_checked = 1;
 	const CFormControlPr_checked_mixed = 2;
 
+	const CFormControlPr_selType_single = 0;
+	const CFormControlPr_selType_multi = 1;
+	const CFormControlPr_selType_extended = 2;
+
 	const CFormControlPr_objectType_button = 0;
 	const CFormControlPr_objectType_checkBox = 1;
 	const CFormControlPr_objectType_drop = 2;
@@ -196,6 +200,19 @@
 			oCopy.setFormControlPr(this.formControlPr.createDuplicate());
 		}
 	};
+	CControl.prototype.recalculateListAndComboControllers = function () {
+		if (this.controller && (this.formControlPr.objectType === CFormControlPr_objectType_list || this.formControlPr.objectType === CFormControlPr_objectType_drop)) {
+			if (this.formControlPr.objectType === CFormControlPr_objectType_list) {
+				// ListBox recalculation
+
+			} else if (this.formControlPr.objectType === CFormControlPr_objectType_drop) {
+				// ComboBox recalculation
+				this.controller.updateListItems();
+				this.controller.updateSelectedIndex();
+				this.controller.setupCellChangeListener();
+			}
+		}
+	}
 	CControl.prototype.initController = function () {
 		switch (this.formControlPr.objectType) {
 			case CFormControlPr_objectType_checkBox: {
@@ -212,6 +229,14 @@
 			}
 			case CFormControlPr_objectType_scroll: {
 				this.controller = new CScrollController(this);
+				break;
+			}
+			case CFormControlPr_objectType_list: {
+				this.controller = new CListBoxController(this);
+				break;
+			}
+			case CFormControlPr_objectType_drop: {
+				this.controller = new CComboBoxController(this);
 				break;
 			}
 			default: {
@@ -342,6 +367,10 @@
 		AscFormat.CShape.prototype.recalculateTransform.call(this);
 		this.controller.recalculateTransform();
 	};
+	CControl.prototype.recalculate = function () {
+		AscFormat.CShape.prototype.recalculate.call(this);
+		this.controller.recalculate();
+	};
 	CControl.prototype.isUse3D = function () {
 		return !this.formControlPr.noThreeD;
 	};
@@ -403,6 +432,7 @@
 		return null;
 	};
 	CControlControllerBase.prototype.recalculateTransform = function () {};
+	CControlControllerBase.prototype.recalculate = function() {};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -1274,6 +1304,7 @@
 			return nCurrentValue;
 		};
 		this.scroll._setValue = function (newValue, oDrawingController) {
+			const oThis = this;
 			oDrawingController.checkObjectsAndCallback(function () {
 				const nRoundedValue = Math.round(newValue);
 				const oFormControlPr = oController.getFormControlPr();
@@ -1286,7 +1317,7 @@
 					oController.setRangeValue(oRef, oCellValue);
 				}
 
-				oController.recalculateThumbTransform();
+				oThis.recalculateThumbTransform(oThis.getMinValue(), oThis.getMaxValue(), nRoundedValue);
 			}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
 		};
 		this.scroll.getPageValue = function () {
@@ -1701,6 +1732,1029 @@
 		return this.upButton.hit(nX, nY) || this.downButton.hit(nX, nY) || this.thumb.hit(nX, nY) || this.trackArea.hit(nX, nY);
 	}
 
+	// ListBox Implementation
+	const LISTBOX_ITEM_HEIGHT = 4; // Height of each list item in mm
+	const LISTBOX_SCROLL_WIDTH = 4; // Width of scroll area in mm
+	const LISTBOX_PADDING = 1; // Padding inside list area
+	const LISTBOX_MAX_ITEM_HEIGHT = 8; // Maximum height for items in mm
+
+	// ListBox Item Class
+	function CListBoxItem(oListBox, nIndex, sText) {
+		this.listBox = oListBox;
+		this.index = nIndex;
+		this.text = sText || "";
+		this.x = 0;
+		this.y = 0;
+		this.width = 0;
+		this.height = LISTBOX_ITEM_HEIGHT;
+		this.isSelected = false;
+		this.isVisible = false;
+		this.isHovered = false;
+		this.clipHeight = LISTBOX_ITEM_HEIGHT; // Actual visible height (for partial items)
+	}
+
+	CListBoxItem.prototype.setPosition = function (nX, nY, nWidth, nHeight, nClipHeight) {
+		this.x = nX;
+		this.y = nY;
+		this.width = nWidth;
+		this.height = nHeight || LISTBOX_ITEM_HEIGHT;
+		this.clipHeight = nClipHeight || this.height;
+	};
+
+	CListBoxItem.prototype.setSelected = function (bSelected) {
+		this.isSelected = bSelected;
+	};
+
+	CListBoxItem.prototype.setVisible = function (bVisible) {
+		this.isVisible = bVisible;
+	};
+
+	CListBoxItem.prototype.setHovered = function (bHovered) {
+		this.isHovered = bHovered;
+	};
+
+	CListBoxItem.prototype.draw = function (graphics) {
+		if (!this.isVisible) {
+			return;
+		}
+
+		// Save graphics state for clipping
+		graphics.SaveGrState();
+		
+		// Add clipping for partial items
+		if (this.clipHeight < this.height) {
+			graphics.AddClipRect(this.x, this.y, this.width, this.clipHeight);
+		}
+
+		// Draw item background
+		if (this.isSelected) {
+			graphics.b_color1(0, 120, 215, 255); // Blue selection color
+		} else if (this.isHovered && this.listBox.isShowHover()) {
+			graphics.b_color1(240, 240, 240, 255); // Light gray hover color
+		} else {
+			graphics.b_color1(255, 255, 255, 255); // White background
+		}
+
+		graphics._s();
+		graphics._m(this.x, this.y);
+		graphics._l(this.x + this.width, this.y);
+		graphics._l(this.x + this.width, this.y + this.height);
+		graphics._l(this.x, this.y + this.height);
+		graphics._z();
+		graphics.df();
+		graphics._e();
+
+		// Draw item text
+		if (this.text) {
+			const nTextPadding = 0.5; // Small padding from left edge
+			const nFontSize = 8; // Font size in mm
+			const nTextX = this.x + nTextPadding;
+			// Center text vertically by adjusting for font baseline
+			const nTextY = this.y + 0.8 * this.height; // Adjust for font baseline
+			
+			graphics.b_color1(this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, 255);
+			
+			// Set font properties for text rendering
+			graphics.SetFont({
+				FontFamily: {
+					Name: "Arial",
+					Index: -1,
+				},
+				FontSize: nFontSize,
+				Bold: false,
+				Italic: false
+			});
+			
+			// Draw text at calculated position with proper vertical centering
+			graphics.t(this.text, nTextX, nTextY);
+		}
+
+		graphics.RestoreGrState();
+	};
+
+	CListBoxItem.prototype.hit = function (nX, nY) {
+		return nX >= this.x && nX <= this.x + this.width &&
+			   nY >= this.y && nY <= this.y + this.clipHeight;
+	};
+
+	CListBoxItem.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (this.hit(nX, nY)) {
+			this.listBox.handleItemClick(this.index, e.CtrlKey, e.ShiftKey, oDrawingController);
+			return true;
+		}
+		return false;
+	};
+
+	// Separate ListBox Component
+	function CListBox(oControl) {
+		this.control = oControl;
+		this.selectedIndices = []; // Array of selected item indices
+		this.scrollOffset = 0; // Current scroll position
+		this.scrollContainer = new CScrollContainer(oControl);
+		this.listItems = []; // Array of list item strings
+		this.itemObjects = []; // Array of CListBoxItem objects
+		this.visibleItemsCount = 0; // Number of items that can be displayed
+		this.hoveredIndex = -1; // Index of currently hovered item
+		this.x = 0;
+		this.y = 0;
+		this.extX = 0;
+		this.extY = 0;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+		this.initScrollContainer();
+	}
+
+	// Overridable methods for ListBox behavior
+	CListBox.prototype.isMultiSelection = function () {
+		return false; // Default: single selection only
+	};
+
+	CListBox.prototype.isExtendedSelection = function () {
+		return false; // Default: no extended selection with Ctrl
+	};
+
+	CListBox.prototype.isShowScroll = function () {
+		return true; // Default: show scroll when needed
+	};
+
+	CListBox.prototype.isShowHover = function () {
+		return true; // Default: show hover effects
+	};
+
+	CListBox.prototype.onChangeSelection = function (aOldSelection, aNewSelection) {
+		// Override this method to handle selection changes
+		// Called before rendering updates
+	};
+
+	CListBox.prototype.initScrollContainer = function () {
+		const oThis = this;
+		
+		// Configure scroll container for ListBox
+		this.scrollContainer.getMinValue = function () {
+			return 0;
+		};
+		
+		this.scrollContainer.getMaxValue = function () {
+			return Math.max(0, oThis.listItems.length - oThis.visibleItemsCount);
+		};
+		
+		this.scrollContainer.getCurrentValue = function () {
+			return oThis.scrollOffset;
+		};
+		
+		this.scrollContainer.getIncrementValue = function () {
+			return 1;
+		};
+		
+		this.scrollContainer.getPageValue = function () {
+			return Math.max(1, Math.floor(oThis.visibleItemsCount / 2));
+		};
+		
+		this.scrollContainer._setValue = function (newValue, oDrawingController) {
+			oThis.scrollOffset = Math.round(newValue);
+			oThis.control.onUpdate();
+		};
+		
+		this.scrollContainer.onStartChangeValues = function () {
+			// Start scroll operation
+		};
+		
+		this.scrollContainer.onEndChangeValues = function (oDrawingController) {
+			// End scroll operation
+		};
+	};
+
+	CListBox.prototype.setItems = function (aItems) {
+		this.listItems = aItems || [];
+		this.createItemObjects();
+	};
+
+	CListBox.prototype.createItemObjects = function () {
+		this.itemObjects = [];
+		for (let i = 0; i < this.listItems.length; i++) {
+			const oItem = new CListBoxItem(this, i, this.listItems[i]);
+			this.itemObjects.push(oItem);
+		}
+	};
+
+	CListBox.prototype.setSelectedIndices = function (aIndices) {
+		const aOldSelection = this.selectedIndices.slice();
+		this.selectedIndices = aIndices || [];
+		this.onChangeSelection(aOldSelection, this.selectedIndices);
+	};
+
+	CListBox.prototype.getSelectedIndices = function () {
+		return this.selectedIndices.slice();
+	};
+
+	CListBox.prototype.calculateItemHeights = function () {
+		if (this.listItems.length === 0) {
+			return;
+		}
+
+		const nAvailableHeight = this.extY - LISTBOX_PADDING * 2;
+
+		const nFullItemsCount = Math.floor(nAvailableHeight / LISTBOX_ITEM_HEIGHT);
+		const nRemainingHeight = nAvailableHeight % LISTBOX_ITEM_HEIGHT;
+
+		if (nRemainingHeight > 0 && this.listItems.length > nFullItemsCount) {
+			const nExtraHeightPerItem = nRemainingHeight / Math.min(nFullItemsCount, this.listItems.length);
+			const nNewItemHeight = Math.min(LISTBOX_ITEM_HEIGHT + nExtraHeightPerItem, LISTBOX_MAX_ITEM_HEIGHT);
+
+			this.visibleItemsCount = Math.floor(nAvailableHeight / nNewItemHeight);
+
+			for (let i = 0; i < this.itemObjects.length; i++) {
+				this.itemObjects[i].height = nNewItemHeight;
+			}
+		} else {
+			this.visibleItemsCount = nFullItemsCount;
+			// Keep default item height
+			for (let i = 0; i < this.itemObjects.length; i++) {
+				this.itemObjects[i].height = LISTBOX_ITEM_HEIGHT;
+			}
+		}
+	};
+
+	CListBox.prototype.handleItemClick = function (nItemIndex, bCtrlKey, bShiftKey, oDrawingController) {
+		const aOldSelection = this.selectedIndices.slice();
+		let aNewSelection = [];
+
+		if (this.isMultiSelection()) {
+			// Multi selection mode - toggle selection
+			const nExistingIndex = this.selectedIndices.indexOf(nItemIndex);
+			if (nExistingIndex !== -1) {
+				aNewSelection = this.selectedIndices.slice();
+				aNewSelection.splice(nExistingIndex, 1);
+			} else {
+				aNewSelection = this.selectedIndices.slice();
+				aNewSelection.push(nItemIndex);
+			}
+		} else if (this.isExtendedSelection() && bCtrlKey) {
+			// Extended selection mode with Ctrl - toggle selection
+			const nExistingIndex = this.selectedIndices.indexOf(nItemIndex);
+			if (nExistingIndex !== -1) {
+				aNewSelection = this.selectedIndices.slice();
+				aNewSelection.splice(nExistingIndex, 1);
+			} else {
+				aNewSelection = this.selectedIndices.slice();
+				aNewSelection.push(nItemIndex);
+			}
+		} else {
+			// Single selection mode or extended without Ctrl
+			aNewSelection = [nItemIndex];
+		}
+
+		this.setSelectedIndices(aNewSelection);
+		this.control.onUpdate();
+	};
+	CListBox.prototype.recalculateTransform = function() {
+		this.calculateItemHeights();
+		this.recalculateScrollTransform();
+	};
+	CListBox.prototype.draw = function (graphics, transform) {
+		const oTransform = transform || this.transform;
+		
+		graphics.SaveGrState();
+		graphics.transform3(oTransform);
+		graphics.AddClipRect(0, 0, this.extX, this.extY);
+		
+		// Calculate dimensions
+		const nScrollWidth = this.isShowScroll() ? LISTBOX_SCROLL_WIDTH : 0;
+		const nListWidth = this.extX - nScrollWidth;
+
+		// Recalculate item heights
+
+
+		// Draw list background
+		graphics.b_color1(255, 255, 255, 255);
+		graphics.p_color(0, 0, 0, 255);
+		graphics.p_width(0);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(nListWidth, 0);
+		graphics._l(nListWidth, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.ds();
+		graphics.df();
+		graphics._e();
+		
+		// Update and draw list items
+		const nStartIndex = this.scrollOffset;
+		const nEndIndex = Math.min(nStartIndex + this.visibleItemsCount + 1, this.listItems.length);
+		
+		// Hide all items first
+		for (let i = 0; i < this.itemObjects.length; i++) {
+			this.itemObjects[i].setVisible(false);
+			this.itemObjects[i].setHovered(false);
+		}
+		
+		// Show and position visible items
+		let nCurrentY = LISTBOX_PADDING;
+		for (let i = nStartIndex; i < nEndIndex; i++) {
+			if (i < this.itemObjects.length) {
+				const oItem = this.itemObjects[i];
+				const bSelected = this.selectedIndices.indexOf(i) !== -1;
+				const bHovered = this.hoveredIndex === i;
+				
+				// Check if this item fits completely or partially
+				const nRemainingHeight = this.extY - LISTBOX_PADDING - nCurrentY;
+				if (nRemainingHeight <= 0) {
+					break;
+				}
+				
+				let nClipHeight = Math.min(oItem.height, nRemainingHeight);
+				
+				// Set item properties
+				oItem.setPosition(LISTBOX_PADDING, nCurrentY, nListWidth - LISTBOX_PADDING * 2, oItem.height, nClipHeight);
+				oItem.setSelected(bSelected);
+				oItem.setHovered(bHovered);
+				oItem.setVisible(true);
+				
+				// Draw the item
+				oItem.draw(graphics);
+				
+				nCurrentY += oItem.height;
+			}
+		}
+		
+		graphics.RestoreGrState();
+		
+		// Draw scroll container if enabled
+		if (this.isShowScroll() && this.listItems.length > this.visibleItemsCount) {
+			this.scrollContainer.draw(graphics);
+		}
+	};
+
+	CListBox.prototype.recalculateScrollTransform = function () {
+		const nScrollWidth = this.isShowScroll() ? LISTBOX_SCROLL_WIDTH : 0;
+		const nListWidth = this.extX - nScrollWidth;
+		
+		this.scrollContainer.x = this.x + nListWidth;
+		this.scrollContainer.y = this.y;
+		this.scrollContainer.extX = nScrollWidth;
+		this.scrollContainer.extY = this.extY;
+		this.scrollContainer.transform = this.transform.CreateDublicate();
+		global_MatrixTransformer.TranslateAppend(this.scrollContainer.transform, nListWidth, 0);
+		this.scrollContainer.invertTransform = global_MatrixTransformer.Invert(this.scrollContainer.transform);
+		this.scrollContainer.recalculateTransform();
+	};
+
+	CListBox.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		// Check if click is in scroll area
+		if (this.isShowScroll() && this.listItems.length > this.visibleItemsCount) {
+			const nScrollWidth = LISTBOX_SCROLL_WIDTH;
+			const nListWidth = this.extX - nScrollWidth;
+			const nLocalX = this.invertTransform.TransformPointX(nX, nY);
+			
+			if (nLocalX >= nListWidth) {
+				// Click in scroll area
+				return this.scrollContainer.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+			}
+		}
+		
+		// Click in list area - check visible items
+		const nLocalX = this.invertTransform.TransformPointX(nX, nY);
+		const nLocalY = this.invertTransform.TransformPointY(nX, nY);
+		
+		for (let i = 0; i < this.itemObjects.length; i++) {
+			const oItem = this.itemObjects[i];
+			if (oItem.isVisible && oItem.onMouseDown(e, nLocalX, nLocalY, nPageIndex, oDrawingController)) {
+				return true;
+			}
+		}
+		
+		return false;
+	};
+
+	CListBox.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (this.isShowScroll()) {
+			return this.scrollContainer.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		}
+		return false;
+	};
+
+	CListBox.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		// Handle hover effects
+		if (this.isShowHover()) {
+			const nLocalX = this.invertTransform.TransformPointX(nX, nY);
+			const nLocalY = this.invertTransform.TransformPointY(nX, nY);
+			
+			let nNewHoveredIndex = -1;
+			for (let i = 0; i < this.itemObjects.length; i++) {
+				const oItem = this.itemObjects[i];
+				if (oItem.isVisible && oItem.hit(nLocalX, nLocalY)) {
+					nNewHoveredIndex = i;
+					break;
+				}
+			}
+			
+			if (nNewHoveredIndex !== this.hoveredIndex) {
+				this.hoveredIndex = nNewHoveredIndex;
+				this.control.onUpdate();
+			}
+		}
+		
+		// Handle scroll container mouse move
+		if (this.isShowScroll()) {
+			return this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		}
+		
+		return false;
+	};
+
+	CListBox.prototype.hit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
+	};
+
+	// Updated CListBoxController using the new CListBox component
+	function CListBoxController(oControl) {
+		CControlControllerBase.call(this, oControl);
+		this.listBox = new CListBox(oControl);
+		this.setupListBoxBehavior();
+		this.recalcInfo = {
+			recalculateItems: true
+		};
+	}
+
+	AscFormat.InitClassWithoutType(CListBoxController, CControlControllerBase);
+	CListBoxController.prototype.recalculate = function() {
+		if (this.recalcInfo.recalculateItems) {
+			this.recalcInfo.recalculateItems = false;
+			this.recalculateItems();
+		}
+	};
+	CListBoxController.prototype.recalculateItems = function() {
+		this.updateListItems();
+		this.updateSelectedIndices();
+		this.setupCellChangeListener();
+	};
+	CListBoxController.prototype.setupListBoxBehavior = function () {
+		const oThis = this;
+		const oFormControlPr = this.getFormControlPr();
+		
+		// Override ListBox methods based on form control properties
+		this.listBox.isMultiSelection = function () {
+			return oFormControlPr.selType === CFormControlPr_selType_multi;
+		};
+		
+		this.listBox.isExtendedSelection = function () {
+			return oFormControlPr.selType === CFormControlPr_selType_extended;
+		};
+		
+		this.listBox.isShowScroll = function () {
+			return true;
+		};
+		
+		this.listBox.isShowHover = function () {
+			return false;
+		};
+		
+		this.listBox.onChangeSelection = function (aOldSelection, aNewSelection) {
+			// Update selection in form control properties
+			oThis.updateSelectionInFormControl(aNewSelection);
+			// Update linked cell when selection changes
+			if (aNewSelection.length === 1 && oFormControlPr.selType !== CFormControlPr_selType_multi) {
+				oThis.updateLinkedCell(aNewSelection[0] + 1); // Convert to 1-based index
+			}
+		};
+	};
+
+	CListBoxController.prototype.updateListItems = function () {
+		const aItems = [];
+		const oFormControlPr = this.getFormControlPr();
+		
+		if (oFormControlPr.fmlaRange) {
+			const oWs = this.getWorksheet();
+			if (oWs) {
+				try {
+					const aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaRange, oWs, true, true, true);
+					const oRef = aParsedRef[0];
+					if (oRef) {
+						const oRange = new AscCommonExcel.Range(oRef.worksheet, oRef.bbox.r1, oRef.bbox.c1, oRef.bbox.r2, oRef.bbox.c1);
+						oRange._foreach(function (oCell, nRow, nCol) {
+							if (oCell && !oCell.isNullText()) {
+								aItems.push(oCell.getValueWithoutFormat());
+							} else {
+								aItems.push("");
+							}
+						});
+					}
+				} catch (e) {
+					// Error parsing range, use empty list
+				}
+			}
+		}
+		
+		this.listBox.setItems(aItems);
+	};
+
+	CListBoxController.prototype.setupCellChangeListener = function () {
+		// Set up listener to update list items when cells in fmlaRange change
+		const oThis = this;
+		const oFormControlPr = this.getFormControlPr();
+		
+		if (oFormControlPr.fmlaRange) {
+			const oWs = this.getWorksheet();
+			if (oWs) {
+				// Add listener for cell changes in the range
+				// This will be called when any cell in the worksheet changes
+				const originalOnCellValueChanged = oWs.onCellValueChanged;
+				oWs.onCellValueChanged = function(nRow, nCol) {
+					if (originalOnCellValueChanged) {
+						originalOnCellValueChanged.call(this, nRow, nCol);
+					}
+					
+					// Check if the changed cell is in our range
+					try {
+						const aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaRange, oWs, true, true, true);
+						const oRef = aParsedRef[0];
+						if (oRef && nRow >= oRef.bbox.r1 && nRow <= oRef.bbox.r2 && nCol === oRef.bbox.c1) {
+							// Cell in our range changed, update list items
+							oThis.updateListItems();
+							oThis.control.onUpdate();
+						}
+					} catch (e) {
+						// Error parsing range, ignore
+					}
+				};
+			}
+		}
+	};
+
+	CListBoxController.prototype.updateSelectedIndices = function () {
+		// Get selection from form control properties
+		const oFormControlPr = this.getFormControlPr();
+		const aSelectedIndices = [];
+		
+		if (oFormControlPr.selType === CFormControlPr_selType_multi) {
+			// Multi-selection: parse multiSel string
+			if (oFormControlPr.multiSel) {
+				const aIndices = oFormControlPr.multiSel.split(", ");
+				for (let i = 0; i < aIndices.length; i++) {
+					const nIndex = parseInt(aIndices[i], 10) - 1; // Convert to 0-based index
+					if (!isNaN(nIndex) && nIndex >= 0) {
+						aSelectedIndices.push(nIndex);
+					}
+				}
+			}
+		} else {
+			// Single selection: use sel property
+			if (typeof oFormControlPr.sel === "number" && oFormControlPr.sel > 0) {
+				const nSelectedIndex = oFormControlPr.sel - 1; // Convert to 0-based index
+				if (nSelectedIndex >= 0) {
+					aSelectedIndices.push(nSelectedIndex);
+				}
+			}
+		}
+		
+		this.listBox.setSelectedIndices(aSelectedIndices);
+	};
+
+	CListBoxController.prototype.updateSelectionInFormControl = function (aSelectedIndices) {
+		const oFormControlPr = this.getFormControlPr();
+		
+		if (oFormControlPr.selType === CFormControlPr_selType_multi) {
+			// Multi-selection: store in multiSel as comma-separated string
+			if (aSelectedIndices.length > 0) {
+				const aOneBased = aSelectedIndices.map(function(index) { return index + 1; }); // Convert to 1-based
+				oFormControlPr.setMultiSel(aOneBased.join(", "));
+			} else {
+				oFormControlPr.setMultiSel("");
+			}
+		} else {
+			// Single selection: store in sel property
+			if (aSelectedIndices.length > 0) {
+				oFormControlPr.setSel(aSelectedIndices[0] + 1); // Convert to 1-based index
+			} else {
+				oFormControlPr.setSel(0);
+			}
+		}
+	};
+
+	CListBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		this.listBox.draw(graphics, transform);
+	};
+
+	CListBoxController.prototype.recalculateTransform = function () {
+		const oControl = this.control;
+		this.listBox.x = oControl.x;
+		this.listBox.y = oControl.y;
+		this.listBox.extX = oControl.extX;
+		this.listBox.extY = oControl.extY;
+		this.listBox.transform = oControl.transform.CreateDublicate();
+		this.listBox.invertTransform = oControl.invertTransform.CreateDublicate();
+	};
+
+	CListBoxController.prototype.getCursorInfo = function (e, nX, nY) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if (!oControl.hit(nX, nY)) {
+			return null;
+		}
+		return {cursorType: "pointer", objectId: oControl.GetId()};
+	};
+
+	CListBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		
+		return this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+	};
+
+	CListBoxController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.listBox.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+	};
+
+	CListBoxController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		return this.listBox.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+	};
+
+	CListBoxController.prototype.updateLinkedCell = function (nValue) {
+		const oRef = this.getParsedFmlaLink();
+		if (oRef) {
+			const oCellValue = new AscCommonExcel.CCellValue();
+			oCellValue.type = AscCommon.CellValueType.Number;
+			oCellValue.number = nValue;
+			this.setRangeValue(oRef, oCellValue);
+		}
+	};
+
+	CListBoxController.prototype.initTextProperties = function () {
+		// ListBox doesn't use text properties like other controls
+		return null;
+	};
+
+	CListBoxController.prototype.applySpecialPasteProps = function (oPastedWb) {
+		// Handle special paste properties if needed
+	};
+
+
+	// ComboBoxController Implementation
+	function CComboBoxController(oControl) {
+		CControlControllerBase.call(this, oControl);
+		this.listBox = new CListBox(oControl);
+		this.isDropdownOpen = false;
+		this.selectedIndex = -1;
+		this.selectedText = "";
+		this.setupComboBoxBehavior();
+	}
+
+	AscFormat.InitClassWithoutType(CComboBoxController, CControlControllerBase);
+
+	CComboBoxController.prototype.setupComboBoxBehavior = function () {
+		const oThis = this;
+		
+		// Override ListBox methods for ComboBox behavior
+		this.listBox.isMultiSelection = function () {
+			return false; // ComboBox always single selection
+		};
+		
+		this.listBox.isExtendedSelection = function () {
+			return false; // ComboBox doesn't support extended selection
+		};
+		
+		this.listBox.isShowScroll = function () {
+			const oFormControlPr = oThis.getFormControlPr();
+			const nDropLines = oFormControlPr.dropLines || 8;
+			return oThis.listBox.listItems.length > nDropLines;
+		};
+		
+		this.listBox.isShowHover = function () {
+			return true; // Always show hover for ComboBox
+		};
+		
+		this.listBox.onChangeSelection = function (aOldSelection, aNewSelection) {
+			if (aNewSelection.length > 0) {
+				const nSelectedIndex = aNewSelection[0];
+				oThis.selectedIndex = nSelectedIndex;
+				oThis.selectedText = oThis.listBox.listItems[nSelectedIndex] || "";
+				oThis.updateLinkedCell(nSelectedIndex + 1); // Convert to 1-based index
+				oThis.closeDropdown();
+			}
+		};
+	};
+
+	CComboBoxController.prototype.init = function () {
+		this.control.recalculateListAndComboControllers();
+	};
+
+	CComboBoxController.prototype.updateListItems = function () {
+		const aItems = [];
+		const oFormControlPr = this.getFormControlPr();
+		
+		if (oFormControlPr.fmlaRange) {
+			const oWs = this.getWorksheet();
+			if (oWs) {
+				try {
+					const aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaRange, oWs, true, true, true);
+					const oRef = aParsedRef[0];
+					if (oRef) {
+						const oRange = new AscCommonExcel.Range(oRef.worksheet, oRef.bbox.r1, oRef.bbox.c1, oRef.bbox.r2, oRef.bbox.c1);
+						oRange._foreach(function (oCell, nRow, nCol) {
+							if (oCell && !oCell.isNullText()) {
+								aItems.push(oCell.getValueWithoutFormat());
+							} else {
+								aItems.push("");
+							}
+						});
+					}
+				} catch (e) {
+					// Error parsing range, use empty list
+				}
+			}
+		}
+		
+		this.listBox.setItems(aItems);
+	};
+
+	CComboBoxController.prototype.setupCellChangeListener = function () {
+		// Set up listener to update list items when cells in fmlaRange change
+		const oThis = this;
+		const oFormControlPr = this.getFormControlPr();
+		
+		if (oFormControlPr.fmlaRange) {
+			const oWs = this.getWorksheet();
+			if (oWs) {
+				// Add listener for cell changes in the range
+				// This will be called when any cell in the worksheet changes
+				const originalOnCellValueChanged = oWs.onCellValueChanged;
+				oWs.onCellValueChanged = function(nRow, nCol) {
+					if (originalOnCellValueChanged) {
+						originalOnCellValueChanged.call(this, nRow, nCol);
+					}
+					
+					// Check if the changed cell is in our range
+					try {
+						const aParsedRef = AscCommonExcel.getRangeByRef(oFormControlPr.fmlaRange, oWs, true, true, true);
+						const oRef = aParsedRef[0];
+						if (oRef && nRow >= oRef.bbox.r1 && nRow <= oRef.bbox.r2 && nCol === oRef.bbox.c1) {
+							// Cell in our range changed, update list items and selected text
+							oThis.updateListItems();
+							oThis.updateSelectedIndex();
+							oThis.control.onUpdate();
+						}
+					} catch (e) {
+						// Error parsing range, ignore
+					}
+				};
+			}
+		}
+	};
+
+	CComboBoxController.prototype.updateSelectedIndex = function () {
+		// Get selection from linked cell
+		const oRef = this.getParsedFmlaLink();
+		let nSelectedIndex = -1;
+		
+		if (oRef) {
+			oRef._foreachNoEmpty(function (oCell) {
+				if (oCell && oCell.type === AscCommon.CellValueType.Number) {
+					nSelectedIndex = Math.floor(oCell.number) - 1; // Convert to 0-based index
+				}
+			});
+		}
+		
+		if (nSelectedIndex >= 0 && nSelectedIndex < this.listBox.listItems.length) {
+			this.selectedIndex = nSelectedIndex;
+			this.selectedText = this.listBox.listItems[nSelectedIndex] || "";
+			this.listBox.setSelectedIndices([nSelectedIndex]);
+		} else {
+			this.selectedIndex = -1;
+			this.selectedText = "";
+			this.listBox.setSelectedIndices([]);
+		}
+	};
+
+	CComboBoxController.prototype.openDropdown = function () {
+		this.isDropdownOpen = true;
+		this.control.onUpdate();
+	};
+
+	CComboBoxController.prototype.closeDropdown = function () {
+		this.isDropdownOpen = false;
+		this.control.onUpdate();
+	};
+
+	CComboBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		const oControl = this.control;
+		const oTransform = transform || oControl.transform;
+		
+		graphics.SaveGrState();
+		graphics.transform3(oTransform);
+		
+		// Draw ComboBox main area (label + button)
+		const nButtonWidth = 4; // Width of dropdown button in mm
+		const nLabelWidth = oControl.extX - nButtonWidth;
+		
+		// Draw label background
+		graphics.b_color1(255, 255, 255, 255);
+		graphics.p_color(0, 0, 0, 255);
+		graphics.p_width(0);
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(nLabelWidth, 0);
+		graphics._l(nLabelWidth, oControl.extY);
+		graphics._l(0, oControl.extY);
+		graphics._z();
+		graphics.ds();
+		graphics.df();
+		graphics._e();
+		
+		// Draw selected text in label
+		if (this.selectedText) {
+			const nTextPadding = 0.5;
+			const nFontSize = 8;
+			const nTextX = nTextPadding;
+			const nTextY = 0.8 * oControl.extY;
+			
+			graphics.b_color1(0, 0, 0, 255);
+			graphics.SetFont({
+				FontFamily: {
+					Name: "Arial",
+					Index: -1,
+				},
+				FontSize: nFontSize,
+				Bold: false,
+				Italic: false
+			});
+			
+			graphics.t(this.selectedText, nTextX, nTextY);
+		}
+		
+		// Draw dropdown button
+		graphics.b_color1(240, 240, 240, 255);
+		graphics.p_color(0, 0, 0, 255);
+		graphics.p_width(0);
+		graphics._s();
+		graphics._m(nLabelWidth, 0);
+		graphics._l(oControl.extX, 0);
+		graphics._l(oControl.extX, oControl.extY);
+		graphics._l(nLabelWidth, oControl.extY);
+		graphics._z();
+		graphics.ds();
+		graphics.df();
+		graphics._e();
+		
+		// Draw dropdown arrow
+		const nArrowCX = nLabelWidth + nButtonWidth / 2;
+		const nArrowCY = oControl.extY / 2;
+		const nArrowSize = 1;
+		
+		graphics.b_color1(0, 0, 0, 255);
+		graphics._s();
+		graphics._m(nArrowCX - nArrowSize, nArrowCY - nArrowSize / 2);
+		graphics._l(nArrowCX + nArrowSize, nArrowCY - nArrowSize / 2);
+		graphics._l(nArrowCX, nArrowCY + nArrowSize / 2);
+		graphics._z();
+		graphics.df();
+		graphics._e();
+		
+		graphics.RestoreGrState();
+		
+		// Draw dropdown list if open
+		if (this.isDropdownOpen) {
+			this.drawDropdownList(graphics, transform);
+		}
+	};
+
+	CComboBoxController.prototype.drawDropdownList = function (graphics, transform) {
+		const oControl = this.control;
+		const oFormControlPr = this.getFormControlPr();
+		const nDropLines = oFormControlPr.dropLines || 8;
+		
+		// Calculate dropdown dimensions based on requirements:
+		// - If items < dropLines: show all items, no scroll
+		// - If items >= dropLines: show only dropLines items, with scroll
+		const nItemHeight = LISTBOX_ITEM_HEIGHT;
+		const nActualItems = this.listBox.listItems.length;
+		const nVisibleItems = Math.min(nDropLines, nActualItems);
+		const nDropdownHeight = nVisibleItems * nItemHeight + LISTBOX_PADDING * 2;
+		
+		// Position dropdown below the ComboBox
+		this.listBox.x = oControl.x;
+		this.listBox.y = oControl.y + oControl.extY;
+		this.listBox.extX = oControl.extX;
+		this.listBox.extY = nDropdownHeight;
+		
+		// Create transform for dropdown
+		const oDropdownTransform = (transform || oControl.transform).CreateDublicate();
+		global_MatrixTransformer.TranslateAppend(oDropdownTransform, 0, oControl.extY);
+		
+		this.listBox.transform = oDropdownTransform;
+		this.listBox.invertTransform = global_MatrixTransformer.Invert(oDropdownTransform);
+		
+		// Set visible items count for proper display
+		this.listBox.visibleItemsCount = nVisibleItems;
+		
+		// Temporarily override the isShowScroll method for this draw call
+		const originalIsShowScroll = this.listBox.isShowScroll;
+		this.listBox.isShowScroll = function () {
+			// Show scroll only if we have more items than dropLines
+			return nActualItems > nDropLines;
+		};
+		
+		// Draw the dropdown list
+		this.listBox.draw(graphics, oDropdownTransform);
+		
+		// Restore original isShowScroll method
+		this.listBox.isShowScroll = originalIsShowScroll;
+	};
+
+	CComboBoxController.prototype.getCursorInfo = function (e, nX, nY) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return null;
+		}
+		if (!oControl.hit(nX, nY)) {
+			return null;
+		}
+		return {cursorType: "pointer", objectId: oControl.GetId()};
+	};
+
+	CComboBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const oControl = this.control;
+		if (oControl.selected) {
+			return false;
+		}
+		if (e.button !== 0) {
+			return false;
+		}
+		
+		// Check if click is in dropdown list (when open)
+		if (this.isDropdownOpen) {
+			const oInvertTransform = oControl.getInvertTransform();
+			const nLocalX = oInvertTransform.TransformPointX(nX, nY);
+			const nLocalY = oInvertTransform.TransformPointY(nX, nY);
+			
+			// Check if click is in dropdown area
+			const oFormControlPr = this.getFormControlPr();
+			const nDropLines = oFormControlPr.dropLines || 8;
+			const nVisibleItems = Math.min(nDropLines, this.listBox.listItems.length);
+			const nDropdownHeight = nVisibleItems * LISTBOX_ITEM_HEIGHT + LISTBOX_PADDING * 2;
+			
+			if (nLocalY > oControl.extY && nLocalY <= oControl.extY + nDropdownHeight) {
+				// Click in dropdown list area
+				return this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+			} else {
+				// Click outside dropdown - close it
+				this.closeDropdown();
+				return true;
+			}
+		} else {
+			// Dropdown is closed - open it on any click in ComboBox area
+			if (oControl.hit(nX, nY)) {
+				this.openDropdown();
+				return true;
+			}
+		}
+		
+		return false;
+	};
+
+	CComboBoxController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (this.isDropdownOpen) {
+			return this.listBox.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		}
+		return false;
+	};
+
+	CComboBoxController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (this.isDropdownOpen) {
+			return this.listBox.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		}
+		return false;
+	};
+
+	CComboBoxController.prototype.updateLinkedCell = function (nValue) {
+		const oRef = this.getParsedFmlaLink();
+		if (oRef) {
+			const oCellValue = new AscCommonExcel.CCellValue();
+			oCellValue.type = AscCommon.CellValueType.Number;
+			oCellValue.number = nValue;
+			this.setRangeValue(oRef, oCellValue);
+		}
+	};
+
+	CComboBoxController.prototype.initTextProperties = function () {
+		// ComboBox doesn't use text properties like other controls
+		return null;
+	};
+
+	CComboBoxController.prototype.applySpecialPasteProps = function (oPastedWb) {
+		// Handle special paste properties if needed
+	};
+
+	CComboBoxController.prototype.recalculateTransform = function () {
+		// Transform will be set in draw method
+	};
 
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
