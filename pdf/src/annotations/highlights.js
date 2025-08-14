@@ -657,6 +657,150 @@
         memory.Seek(nEndPos);
     };
 
+    /**
+	 * Class representing a reduct annotation.
+	 * @constructor
+    */
+    function CAnnotationRedact(sName, nPage, aRect, oDoc) {
+        CAnnotationTextMarkup.call(this, sName, AscPDF.ANNOTATIONS_TYPES.Redact, nPage, aRect, oDoc);
+    }
+    CAnnotationRedact.prototype.constructor = CAnnotationRedact;
+    AscFormat.InitClass(CAnnotationRedact, CAnnotationTextMarkup, AscDFH.historyitem_type_Pdf_Annot_Redact);
+
+    CAnnotationRedact.prototype.IsRedact = function() {
+        return true;
+    };
+    CAnnotationRedact.prototype.SetHovered = function(isHovered) {
+        if (this._hovered != isHovered) {
+            this.AddToRedraw();
+        }
+
+        this._hovered = isHovered;
+    };
+    CAnnotationRedact.prototype.IsHovered = function() {
+        return this._hovered;
+    };
+    CAnnotationRedact.prototype.SetRedactId = function(sRedactId) {
+        AscCommon.History.Add(new CChangesPDFRedactAnnotRedactId(this, this._redactId, sRedactId));
+        this._redactId = sRedactId;
+
+        this.AddToRedraw();
+    };
+    CAnnotationRedact.prototype.GetRedactId = function() {
+        return this._redactId;
+    };
+    CAnnotationRedact.prototype.IsHidden = function() {
+        return AscPDF.CAnnotationBase.prototype.IsHidden.call(this) || !!this.GetRedactId();
+    };
+    CAnnotationRedact.prototype.Draw = function(oGraphicsPDF) {
+        if (this.IsHidden() == true)
+            return;
+
+        if (this.IsHovered()) {
+            this._DrawHovered(oGraphicsPDF);
+        }
+        else {
+            this._DrawRect(oGraphicsPDF);
+        }
+    };
+    CAnnotationRedact.prototype._DrawHovered = function(oGraphicsPDF) {
+        let oRGBFill = this.GetRGBColor(this.GetFillColor());
+
+        let aQuads = this.GetQuads();
+        for (let i = 0; i < aQuads.length; i++) {
+            let aPoints = aQuads[i];
+
+            let oPoint1 = {
+                x: aPoints[0],
+                y: aPoints[1]
+            }
+            let oPoint2 = {
+                x: aPoints[2],
+                y: aPoints[3]
+            }
+            let oPoint3 = {
+                x: aPoints[4],
+                y: aPoints[5]
+            }
+            let oPoint4 = {
+                x: aPoints[6],
+                y: aPoints[7]
+            }
+
+            let dx = oPoint2.x - oPoint1.x;
+            let dy = oPoint2.y - oPoint1.y;
+            let angle1          = Math.atan2(dy, dx);
+            let rotationAngle   = angle1;
+
+            oGraphicsPDF.SetGlobalAlpha(this.GetOpacity());
+
+            oGraphicsPDF.BeginPath();
+            oGraphicsPDF.SetFillStyle(oRGBFill.r, oRGBFill.g, oRGBFill.b);
+
+            if (rotationAngle == 0 || rotationAngle == 3/2 * Math.PI) {
+                let aMinRect = getMinRect(aPoints);
+
+                oGraphicsPDF.SetIntegerGrid(true);
+                oGraphicsPDF.Rect(aMinRect[0], aMinRect[1], aMinRect[2] - aMinRect[0], aMinRect[3] - aMinRect[1], true);
+                oGraphicsPDF.SetIntegerGrid(false);
+            }
+            else {
+                oGraphicsPDF.MoveTo(oPoint1.x, oPoint1.y);
+                oGraphicsPDF.LineTo(oPoint2.x, oPoint2.y);
+                oGraphicsPDF.LineTo(oPoint4.x, oPoint4.y);
+                oGraphicsPDF.LineTo(oPoint3.x, oPoint3.y);
+                oGraphicsPDF.ClosePath();
+            }
+
+            oGraphicsPDF.Fill();
+        }
+
+        let aUnitedRegion = this.GetUnitedRegion();
+        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+    };
+    CAnnotationRedact.prototype._DrawRect = function(oGraphicsPDF) {
+        let oRGBStroke = this.GetRGBColor(this.GetStrokeColor());
+
+        oGraphicsPDF.SetLineWidth(1);
+        oGraphicsPDF.SetGlobalAlpha(1);
+        oGraphicsPDF.SetStrokeStyle(oRGBStroke.r, oRGBStroke.g, oRGBStroke.b, 255);
+        oGraphicsPDF.BeginPath();
+
+        this.private_fillRegion(this.GetUnitedRegion(), oGraphicsPDF);
+        oGraphicsPDF.Stroke();
+    };
+    CAnnotationRedact.prototype.private_fillRegion = function(polygon, oGraphicsPDF) {
+        for (let i = 0, countPolygons = polygon.regions.length; i < countPolygons; i++)
+        {
+            let region = polygon.regions[i];
+            let countPoints = region.length;
+
+            if (2 > countPoints)
+                continue;
+
+            let X = region[0][0];
+            let Y = region[0][1];
+
+            oGraphicsPDF.MoveTo((X), (Y));
+
+            for (let j = 1, countPoints = region.length; j < countPoints; j++)
+            {
+                X = region[j][0];
+                Y = region[j][1];
+
+                oGraphicsPDF.LineTo((X), (Y));
+            }
+
+            oGraphicsPDF.ClosePath();
+        }
+    };
+    CAnnotationRedact.prototype.onMouseExit = function() {
+        this.SetHovered(false);
+    };
+    CAnnotationRedact.prototype.onMouseEnter = function() {
+        this.SetHovered(true);
+    };
+
     function findMaxSideWithRotation(x1, y1, x2, y2, x3, y3, x4, y4) {
         // Найдите центр поворота
         const x_center = (x1 + x3) / 2;
@@ -746,6 +890,7 @@
             oCtx.closePath();
         }
     }
+
     function getMinRect(aPoints) {
         let xMax = aPoints[0], yMax = aPoints[1], xMin = xMax, yMin = yMax;
         for(let i = 1; i < aPoints.length; i++) {
@@ -832,6 +977,7 @@
     window["AscPDF"].CAnnotationStrikeout   = CAnnotationStrikeout;
     window["AscPDF"].CAnnotationSquiggly    = CAnnotationSquiggly;
     window["AscPDF"].CAnnotationCaret       = CAnnotationCaret;
+    window["AscPDF"].CAnnotationRedact      = CAnnotationRedact;
     window["AscPDF"].fillRegion             = fillRegion;
     window["AscPDF"].IsInQuads              = IsInQuads;
     

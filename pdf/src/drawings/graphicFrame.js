@@ -39,6 +39,7 @@
     function CPdfGraphicFrame()
     {
         AscFormat.CGraphicFrame.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfGraphicFrame.prototype.constructor = CPdfGraphicFrame;

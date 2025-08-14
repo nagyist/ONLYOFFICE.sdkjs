@@ -38,6 +38,7 @@
     */
     function CPdfShape() {
         AscFormat.CShape.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfShape.prototype.constructor = CPdfShape;
@@ -129,10 +130,10 @@
         this.recalculateShdw();
         this.SetNeedRecalc(false);
     };
-    CPdfShape.prototype.recalculateBounds = function() {
+    CPdfShape.prototype.recalculateBounds = function(bLine) {
         let boundsChecker = new AscFormat.CSlideBoundsChecker();
         
-        // boundsChecker.CheckLineWidth(this);
+        bLine && boundsChecker.CheckLineWidth(this);
         boundsChecker.DO_NOT_DRAW_ANIM_LABEL = true;
         this.draw(boundsChecker);
         boundsChecker.CorrectBounds();

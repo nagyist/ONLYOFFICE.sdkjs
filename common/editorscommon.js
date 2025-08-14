@@ -4529,6 +4529,7 @@
 		this.m_nOFormEditCounter = 0;
 		
 		this.m_nPdfNewFormCounter = 0;
+		this.m_nPdfRedactCounter = 0;
 
 		this.m_nTurnOffCounter = 0;
 	}
@@ -4572,6 +4573,7 @@
 		this.m_nOFormEditCounter = 0;
 
 		this.m_nPdfNewFormCounter = 0;
+		this.m_nPdfRedactCounter = 0;
 	};
 	CIdCounter.prototype.GetNewIdForOForm = function()
 	{
@@ -4583,6 +4585,13 @@
 	CIdCounter.prototype.GetNewIdForPdfForm = function()
 	{
 		return ++this.m_nPdfNewFormCounter;
+	};
+	CIdCounter.prototype.GetNewIdForPdfRedact = function()
+	{
+		if (true === this.m_bLoad || null === this.m_sUserId)
+			return ("_redact_" + (++this.m_nPdfRedactCounter));
+		else
+			return ("" + this.m_sUserId + "_redact_" + (++this.m_nPdfRedactCounter));
 	};
 
 	function CLock()

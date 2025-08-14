@@ -545,6 +545,24 @@
 		this.getPDFDoc().SelectSearchElement(id);
 		this.DocumentRenderer.onUpdateOverlay();
 	};
+	PDFEditorApi.prototype.asc_RedactSearchElement = function(id) {
+		if (!this.DocumentRenderer)
+			return false;
+		
+		this.getPDFDoc().MarkSearchElementForRedact(id);
+	};
+	PDFEditorApi.prototype.asc_RedactAllSearchElements = function() {
+		if (!this.DocumentRenderer)
+			return false;
+		
+		this.getPDFDoc().MarkAllSearchElementsForRedact();
+	};
+	PDFEditorApi.prototype.asc_GetRedactSearchInfo = function(id) {
+		if (!this.DocumentRenderer)
+			return false;
+		
+		return this.getPDFDoc().GetSearchRedactInfo(id);
+	};
 	PDFEditorApi.prototype.ContentToHTML = function() {
 		if (!this.DocumentRenderer)
 			return "";
@@ -1386,6 +1404,61 @@
 			}
 		}
 		
+	};
+
+	PDFEditorApi.prototype.SetRedactTool = function(bUse) {
+		let oDoc = this.getPDFDoc();
+		oDoc.BlurActiveObject();
+		
+		this.isRedactTool = bUse;
+	};
+	PDFEditorApi.prototype.IsRedactTool = function() {
+		return this.isRedactTool;
+	};
+	PDFEditorApi.prototype.RedactPages = function(aIdxs) {
+		let oDoc = this.getPDFDoc();
+		let oFile = oDoc.Viewer.file;
+
+		oDoc.DoAction(function() {
+			aIdxs.forEach(function(idx) {
+				let oPage = oFile.pages[idx];
+				if (!oPage) {
+					return;
+				}
+				
+				let aSelQuads = [{ page: idx, quads: [[
+					0, 0,				// left up
+					oPage.W, 0, 		// right up
+					0, oPage.H,			// left down
+					oPage.W, oPage.H 	// right down
+				]]}];
+
+				oDoc.AddRedactAnnot(aSelQuads);
+			})
+		}, AscDFH.historydescription_Pdf_AddAnnot);
+	};
+	PDFEditorApi.prototype.ApplyRedact = function() {
+		let oDoc = this.getPDFDoc();
+		return oDoc.ApplyRedact();
+	};
+
+	PDFEditorApi.prototype.HasRedact = function() {
+		let oDoc = this.getPDFDoc();
+
+		return !!oDoc.annots.find(function(annot) {
+			return annot.IsRedact() && !annot.GetRedactId();
+		});
+	};
+	PDFEditorApi.prototype.RemoveAllRedact = function() {
+		let oDoc = this.getPDFDoc();
+
+		oDoc.DoAction(function() {
+			oDoc.annots.forEach(function(annot) {
+				if (annot.IsRedact() && !annot.GetRedactId()) {
+					oDoc.RemoveAnnot(annot.GetId());
+				}
+			})
+		}, AscDFH.historydescription_Pdf_ContextMenuRemove);
 	};
 
 	/////////////////////////////////////////////////////////////
@@ -4883,6 +4956,9 @@
 	PDFEditorApi.prototype['asc_isSelectSearchingResults']	= PDFEditorApi.prototype.asc_isSelectSearchingResults;
 	PDFEditorApi.prototype['asc_StartTextAroundSearch']		= PDFEditorApi.prototype.asc_StartTextAroundSearch;
 	PDFEditorApi.prototype['asc_SelectSearchElement']		= PDFEditorApi.prototype.asc_SelectSearchElement;
+	PDFEditorApi.prototype['asc_RedactSearchElement']		= PDFEditorApi.prototype.asc_RedactSearchElement;
+	PDFEditorApi.prototype['asc_RedactAllSearchElements']	= PDFEditorApi.prototype.asc_RedactAllSearchElements;
+	PDFEditorApi.prototype['asc_GetRedactSearchInfo']		= PDFEditorApi.prototype.asc_GetRedactSearchInfo;
 	PDFEditorApi.prototype['ContentToHTML']					= PDFEditorApi.prototype.ContentToHTML;
 	PDFEditorApi.prototype['goToPage']						= PDFEditorApi.prototype.goToPage;
 	PDFEditorApi.prototype['getCountPages']					= PDFEditorApi.prototype.getCountPages;
@@ -5001,6 +5077,14 @@
 
 	// freetext
 	PDFEditorApi.prototype['AddFreeTextAnnot']	= PDFEditorApi.prototype.AddFreeTextAnnot;
+
+	// redact
+	PDFEditorApi.prototype['SetRedactTool']		= PDFEditorApi.prototype.SetRedactTool;
+	PDFEditorApi.prototype['IsRedactTool']		= PDFEditorApi.prototype.IsRedactTool;
+	PDFEditorApi.prototype['RedactPages']		= PDFEditorApi.prototype.RedactPages;
+	PDFEditorApi.prototype['ApplyRedact']		= PDFEditorApi.prototype.ApplyRedact;
+	PDFEditorApi.prototype['HasRedact']			= PDFEditorApi.prototype.HasRedact;
+	PDFEditorApi.prototype['RemoveAllRedact']	= PDFEditorApi.prototype.RemoveAllRedact;
 
 	// forms
 	PDFEditorApi.prototype['IsEditFieldsMode']			= PDFEditorApi.prototype.IsEditFieldsMode;
