@@ -16510,53 +16510,57 @@ CDocument.prototype.private_GetElementPageIndexByXY = function(ElementPos, X, Y,
 	var PageSection = null;
 	for (var SectionIndex = 0, SectionsCount = Page.Sections.length; SectionIndex < SectionsCount; ++SectionIndex)
 	{
-		if (Page.Sections[SectionIndex].Pos <= ElementPos && ElementPos <= Page.Sections[SectionIndex].EndPos)
+		if (Page.Sections[SectionIndex].Y > Y)
 		{
-			PageSection = Page.Sections[SectionIndex];
+			PageSection = SectionIndex ? Page.Sections[SectionIndex - 1] : Page.Sections[0];
 			break;
 		}
 	}
 
 	if (!PageSection)
 		return 0;
+	
+	let sectionNum = PageSection.GetIndex();
+	
+	let elementSection = Element.GetElementSectionBySectionNumber(sectionNum);
 
-	var ElementStartPage   = Element.Get_StartPage_Relative();
-	var ElementStartColumn = Element.Get_StartColumn();
-	var ElementPagesCount  = Element.Get_PagesCount();
+	let elementStartPage   = elementSection.GetParentStartPage();
+	let elementStartColumn = elementSection.GetStartColumn();
+	let elementPagesCount  = elementSection.GetPageCount();
+	let columnCount        = elementSection.GetColumnCount();
 
-	var ColumnsCount = PageSection.Columns.length;
-	var StartColumn  = 0;
-	var EndColumn    = ColumnsCount - 1;
+	let startColumn  = 0;
+	let endColumn    = columnCount - 1;
 
-	if (PageIndex === ElementStartPage)
+	if (PageIndex === elementStartPage)
 	{
-		StartColumn = Element.Get_StartColumn();
-		EndColumn   = Math.min(ElementStartColumn + ElementPagesCount - 1, ColumnsCount - 1);
+		startColumn = elementStartColumn;
+		endColumn   = Math.min(elementStartColumn + elementPagesCount - 1, columnCount - 1);
 	}
 	else
 	{
-		StartColumn = 0;
-		EndColumn   = Math.min(ElementPagesCount - ElementStartColumn + (PageIndex - ElementStartPage) * ColumnsCount, ColumnsCount - 1);
+		startColumn = 0;
+		endColumn   = Math.min(elementPagesCount - elementStartColumn + (PageIndex - elementStartPage) * columnCount, columnCount - 1);
 	}
 
-	if (!PageSection.Columns[EndColumn])
+	if (!PageSection.Columns[endColumn])
 		return 0;
 
 	// TODO: Разобраться с ситуацией, когда пустые колонки стоят не только в конце
-	while (true === PageSection.Columns[EndColumn].Empty && EndColumn > StartColumn)
-		EndColumn--;
+	while (true === PageSection.Columns[endColumn].Empty && endColumn > startColumn)
+		--endColumn;
 
-	var ResultColumn = EndColumn;
-	for (var ColumnIndex = StartColumn; ColumnIndex < EndColumn; ++ColumnIndex)
+	let resultColumn = endColumn;
+	for (var ColumnIndex = startColumn; ColumnIndex < endColumn; ++ColumnIndex)
 	{
 		if (X < (PageSection.Columns[ColumnIndex].XLimit + PageSection.Columns[ColumnIndex + 1].X) / 2)
 		{
-			ResultColumn = ColumnIndex;
+			resultColumn = ColumnIndex;
 			break;
 		}
 	}
-
-	return this.private_GetElementPageIndex(ElementPos, PageIndex, ResultColumn, ColumnsCount, PageSection.GetIndex());
+	
+	return Element.GetElementPageIndex(PageIndex, resultColumn, columnCount, PageSection.GetIndex());
 };
 CDocument.prototype.Get_DocumentPagePositionByContentPosition = function(ContentPosition)
 {

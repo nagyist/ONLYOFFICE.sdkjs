@@ -38,7 +38,7 @@
 	/**
 	 * @constructor
 	 */
-	function DocumentElementSection(x, y, xLimit, yLimit, parentStartPage, startPage, endPage, sectPr)
+	function DocumentElementSection(x, y, xLimit, yLimit, parentStartPage, startPage, endPage, sectPr, startColumn)
 	{
 		this.x               = x;
 		this.y               = y;
@@ -49,6 +49,7 @@
 		this.startPage       = startPage;
 		this.endPage         = endPage;
 		this.columnCount     = sectPr ? sectPr.GetColumnsCount() : 1;
+		this.startColumn     = startColumn ? startColumn : 0;
 	}
 	DocumentElementSection.prototype.GetParentStartPage = function()
 	{
@@ -62,9 +63,17 @@
 	{
 		return this.endPage;
 	};
+	DocumentElementSection.prototype.GetPageCount = function()
+	{
+		return (this.startPage > this.endPage ? 0 : this.endPage - this.startPage + 1);
+	};
 	DocumentElementSection.prototype.GetColumnCount = function()
 	{
 		return this.columnCount;
+	};
+	DocumentElementSection.prototype.GetStartColumn = function()
+	{
+		return this.startColumn;
 	};
 	DocumentElementSection.prototype.GetContentFrame = function()
 	{
