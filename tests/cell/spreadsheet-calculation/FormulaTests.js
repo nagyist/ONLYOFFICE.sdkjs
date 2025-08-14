@@ -24419,9 +24419,9 @@ $(function () {
 		assert.strictEqual(oParser.calculate().getValue(), 3, 'Result of VLOOKUP(2.3,D1101:C1123,2,TRUE)');
 
 		// Case #43: String, Area, Number. Area contains exact match
-		oParser = new parserFormula('VLOOKUP("CIANO",D1101:C1123,2,TRUE)', "A2", ws);
-		assert.ok(oParser.parse(), 'VLOOKUP("CIANO",D1101:C1123,2,TRUE)');
-		assert.strictEqual(oParser.calculate().getValue(), 18, 'Result of VLOOKUP("CIANO",D1101:C1123,2,TRUE)');
+		oParser = new parserFormula('VLOOKUP("cIaNo",D1101:C1123,2,TRUE)', "A2", ws);
+		assert.ok(oParser.parse(), 'VLOOKUP("cIaNo",D1101:C1123,2,TRUE)');
+		assert.strictEqual(oParser.calculate().getValue(), 18, 'Result of VLOOKUP("cIaNo",D1101:C1123,2,TRUE)');
 
 		// Case #44: Boolean, Area, Number. Area contains exact match
 		oParser = new parserFormula('VLOOKUP(FALSE,D1101:C1123,2,TRUE)', "A2", ws);
@@ -26297,15 +26297,15 @@ $(function () {
 		assert.ok(oParser.parse(), 'XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 		assert.strictEqual(_getValue(oParser.calculate()), 4, 'Result of XLOOKUP(2.4,A1101:A1123,B1101:B1123,,-1,1)');
 
-		// Case #55: String, Area, Area, , Number, Number. String lookup with match_mode=1 and search_mode=2
-		oParser = new parserFormula('XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,1,2)');
+		// Case #55: String, Area, Area, , Number, Number. String lookup with match_mode=1 and search_mode=2. Case sensitivity check
+		oParser = new parserFormula('XLOOKUP("cIano",A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("cIano",A1101:A1123,B1101:B1123,,1,2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("cIano",A1101:A1123,B1101:B1123,,1,2)');
 
 		// Case #56: String, Area, Area, , Number, Number. String lookup with match_mode=-1 and search_mode=2
-		oParser = new parserFormula('XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
-		assert.ok(oParser.parse(), 'XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)');
-		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("CIANO",A1101:A1123,B1101:B1123,,-1,2)');
+		oParser = new parserFormula('XLOOKUP("cIano",A1101:A1123,B1101:B1123,,-1,2)', "A2", ws);
+		assert.ok(oParser.parse(), 'XLOOKUP("cIano",A1101:A1123,B1101:B1123,,-1,2)');
+		assert.strictEqual(_getValue(oParser.calculate()), 18, 'Result of XLOOKUP("cIano",A1101:A1123,B1101:B1123,,-1,2)');
 
 		// Case #57: Number, Area, Area, , Number, Number. Negative number lookup with match_mode=1 and search_mode=2
 		oParser = new parserFormula('XLOOKUP(-1,A1101:A1123,B1101:B1123,,1,2)', "A2", ws);
@@ -26512,6 +26512,42 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(_getValue(oParser.calculate()), 4);
 
+		// TODO DYNAMIC ARRAYS in TESTS
+		// Case #98: Number, Array, Array, Array, Array, Array. 4,5,6 args as arrays
+		// oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},{1},{1},{1})', "A2", ws);
+		// assert.ok(oParser.parse());
+		// assert.strictEqual(_getValue(oParser.calculate()), 20);
+
+		// Case #99: Number, Array, Array, String, Number, Number. if_not_found empty string 
+		oParser = new parserFormula('XLOOKUP(7,{4,5,6},{1,2,3},"",1,1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "");
+
+		// Case #100: String, Array, Array, , Number, Number. Wildcard with ~
+		oParser = new parserFormula('XLOOKUP("t~*st",{"test","thst","t*st","teest"},{1,2,3,4},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 3);
+
+		// Case #101: String, Array, Array, , Number, Number. Wildcard
+		oParser = new parserFormula('XLOOKUP("?????",{"test","thst","t*st","teest"},{1,2,3,4},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 4);
+
+		// Case #102: String, Array, Array, , Number, Number. Wildcard
+		oParser = new parserFormula('XLOOKUP("t*est",{"test2","t  ass&^=d asd12312_%$!##****32 sdfsdfsdfsest","test123","teees t"},{1,2,3,4},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 2);
+
+		// Case #103: String, Array, Array, , Number, Number. Wildcard
+		oParser = new parserFormula('XLOOKUP("t*est",{"test2","t  ass&^=d asd12312_%$!##****32 sdfsdfsdfsest","test123","teees t"},{1,2,3,4},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 2);
+
+		// Case #104: String, Array, Array, , Number, Number. Wildcard
+		oParser = new parserFormula('XLOOKUP("t*est",{"t*est","t  ass&^=d asd12312_%$!##****32 sdfsdfsdfsest","test123","teees t"},{1,2,3,4},,2)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), 1);
+
 		// Negative Cases:
 		// Case #1: Number, Array, Array. Mismatched array sizes (should return #VALUE!)
 		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20})', "A2", ws);
@@ -26622,6 +26658,31 @@ $(function () {
 		oParser = new parserFormula('XLOOKUP(1,A1401:A1410,B1401:B1410,, -1, -2)', "A2", ws);
 		assert.ok(oParser.parse(), 'XLOOKUP(1,A1401:A1410,B1401:B1410,, -1, -2)');
 		assert.strictEqual(_getValue(oParser.calculate()), "#N/A", 'XLOOKUP(1,A1401:A1410,B1401:B1410,, -1, -2)');
+
+		// Case #23: Number, Array, Array, String, String, String. bad 4,5,6 args
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},"a","b","c")', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #24: Number, Array, Array, Number, Number, Number. bad 4,5,6 args
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},20,10,30)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #25: Number, Array, Array, Name, Name, Name. bad 4,5,6 args, not existed Name
+		oParser = new parserFormula('XLOOKUP(2,{1,2,3},{10,20,30},AWESOMEBADARG,AWESOMEBADARG,AWESOMEBADARG)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#NAME?");
+
+		// Case #26: String, Array, Array, , Number, Number. Sizes mismatch
+		oParser = new parserFormula('XLOOKUP("a",A1501:A1555,B1501:B1510,, -1, 1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
+
+		// Case #26: String, Array, Array, , Number, Number. Sizes mismatch
+		oParser = new parserFormula('XLOOKUP("a",A1501:A1510,B1501:B1515,, -1, 1)', "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(_getValue(oParser.calculate()), "#VALUE!");
 
 		wb.delDefinesNames(defName3D);
 		wb.delDefinesNames(defNameArea3D);
