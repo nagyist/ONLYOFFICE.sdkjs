@@ -817,12 +817,7 @@ AscCommonWord.CPresentationField.prototype.private_GetString = function()
 	return sStr;
 };
 
-AscFormat.GetDefaultTheme = function GetDefaultTheme() {
-	if(!AscFormat.DEFAULT_THEME) {
-		AscFormat.DEFAULT_THEME = AscFormat.generateDefaultVisioTheme();
-	}
-	return AscFormat.DEFAULT_THEME;
-}
+AscFormat.GenerateDefaultTheme = AscFormat.GenerateDefaultVisioTheme;
 
 //todo CMobileDelegateEditorDiagram
 AscCommon.CMobileDelegateEditorPresentation.prototype.GetObjectTrack = function(x, y, page, bSelected, bText) { return false; }

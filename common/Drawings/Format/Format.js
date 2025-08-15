@@ -16162,8 +16162,11 @@
 		 * Don't use this method. Use GetDefaultTheme
 		 * @return {CTheme}
 		 */
-		function generateDefaultVisioTheme() {
-			let theme = GenerateDefaultTheme(null, "Calibri");
+		function GenerateDefaultVisioTheme(presentation, opt_fontName) {
+			if (!opt_fontName) {
+				opt_fontName = "Calibri";
+			}
+			let theme = GenerateDefaultTheme(presentation, opt_fontName);
 			let scheme = theme.themeElements.clrScheme;
 			// TODO change other colors
 			scheme.colors[11] = AscFormat.CreateUniColorRGB(0x05, 0x63, 0xC1); // link
@@ -16183,7 +16186,7 @@
 
 		function GetDefaultTheme() {
 			if(!AscFormat.DEFAULT_THEME) {
-				AscFormat.DEFAULT_THEME = GenerateDefaultTheme(null);
+				AscFormat.DEFAULT_THEME = AscFormat.GenerateDefaultTheme(null);
 			}
 			return AscFormat.DEFAULT_THEME;
 		}
@@ -20268,6 +20271,7 @@
 		window['AscFormat'].CBulletType = CBulletType;
 		window['AscFormat'].TextListStyle = TextListStyle;
 		window['AscFormat'].GenerateDefaultTheme = GenerateDefaultTheme;
+		window['AscFormat'].GenerateDefaultVisioTheme = GenerateDefaultVisioTheme;
 		window['AscFormat'].GenerateDefaultMasterSlide = GenerateDefaultMasterSlide;
 		window['AscFormat'].GenerateDefaultSlideLayout = GenerateDefaultSlideLayout;
 		window['AscFormat'].GenerateDefaultSlide = GenerateDefaultSlide;
@@ -20550,8 +20554,6 @@
 		window['AscFormat'].CVarStyle = CVarStyle;
 		window['AscFormat'].CFontProps = CFontProps;
 		window['AscFormat'].CLineStyle = CLineStyle;
-
-		window['AscFormat'].generateDefaultVisioTheme = generateDefaultVisioTheme;
 
 		window["AscFormat"].RECT_ALIGN_B = RECT_ALIGN_B;
 		window["AscFormat"].RECT_ALIGN_BL = RECT_ALIGN_BL;
