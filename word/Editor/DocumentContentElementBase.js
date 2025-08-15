@@ -997,11 +997,12 @@ CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, colum
 		if (!section)
 			return 0;
 		
-		let startPage   = section.GetStartPage();
-		let columnCount = section.GetColumnCount();
-		let startColumn = section.GetStartColumn();
+		let parentStartPage = section.GetParentStartPage();
+		let startPage       = section.GetStartPage();
+		let columnCount     = section.GetColumnCount();
+		let startColumn     = section.GetStartColumn();
 		
-		return column - startColumn + (page - section.GetParentStartPage()) * columnCount + startPage;
+		return column - startColumn + (page - parentStartPage) * columnCount + startPage;
 	}
 };
 CDocumentContentElementBase.prototype.GetElementPageIndexByXY = function(x, y, page)
@@ -1041,11 +1042,12 @@ CDocumentContentElementBase.prototype.private_GetRelativePageIndex = function(cu
 	{
 		let elementSection = this.GetElementSectionByPage(curPage);
 		
-		let startPage   = elementSection.GetParentStartPage();
-		let columnCount = elementSection.GetColumnCount();
-		let startColumn = elementSection.GetStartColumn();
+		let parentStartPage = elementSection.GetParentStartPage();
+		let columnCount     = elementSection.GetColumnCount();
+		let startColumn     = elementSection.GetStartColumn();
+		let startPage       = elementSection.GetStartPage();
 		
-		return startPage + ((startColumn + curPage) / columnCount | 0);
+		return parentStartPage + ((startColumn + curPage - startPage) / columnCount | 0);
 	}
 };
 CDocumentContentElementBase.prototype.private_GetAbsolutePageIndex = function(CurPage)
