@@ -2323,6 +2323,10 @@ CDocument.prototype.IsPdfEditor = function()
 {
 	return false;
 };
+CDocument.prototype.IsVisioEditor = function()
+{
+	return false;
+};
 CDocument.prototype.Init                           = function()
 {
 

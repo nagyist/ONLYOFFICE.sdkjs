@@ -1344,19 +1344,21 @@
 
 			/**
 			 * Searches for pp element after passed element in textElements
-			 * @param {[]} textElements
+			 * @param {[]} textElements - elements with pp tp cp and text with \n
 			 * @param {number} currentIndex
-			 * @param {string?} afterDropText
-			 * @return {number} row num
+			 * @param {string?} afterDropText - afterDropText without \n
+			 * @param {boolean?} isNextElementLineDrop
+			 * @return {number | undefined} row num
 			 */
-			function searchForPP(textElements, currentIndex, afterDropText) {
+			function searchForPP(textElements, currentIndex, afterDropText, isNextElementLineDrop) {
 				if (afterDropText === undefined) {
 					afterDropText = "";
 				}
 				let afterNext = textElements[currentIndex + 2];
 				let next = textElements[currentIndex + 1];
-				// if there is text after \r\n
-				if (afterDropText.length > 2) {
+				// if there is something after \n
+				// also check for isNextElementLineDrop - means new paragraph start
+				if (afterDropText.length > 0 || isNextElementLineDrop) {
 					return undefined;
 				} else if (afterNext && afterNext.kind === AscVisio.c_oVsdxTextKind.PP) {
 					return afterNext.ix;
@@ -1466,6 +1468,12 @@
 					indentationLeft = indentationLeftCell.getNumberValue() * AscCommonWord.g_dKoef_in_to_mm;
 				}
 
+				// handle first line indentation
+				let indentationFirstLineCell = paragraphPropsFinal && paragraphPropsFinal.getCell("IndFirst");
+				let indentationFirstLine;
+				if (indentationLeftCell) {
+					indentationFirstLine = indentationFirstLineCell.getNumberValue() * AscCommonWord.g_dKoef_in_to_mm;
+				}
 
 
 				// create new paragraph to hold new properties
@@ -1508,6 +1516,7 @@
 				// paragraph.Add_PresentationNumbering(Bullet);
 
 				paragraph.Pr.Ind.Left = indentationLeft;
+				paragraph.Pr.Ind.FirstLine = indentationFirstLine;
 
 				oContent.Content.push(paragraph);
 				paragraph.SetParent(oContent);
@@ -1941,24 +1950,38 @@
 			 */
 			const isTextInherited = textElement.isInherited;
 
-			// visio set extra \r\n at the end of each text element: see fix below. Both are needed
+			// UPD: now with binary file read \r\n in original is replaced with \n! Focus is made for binary \n
+
+			// visio set extra \r\n at the end of each text element (text tag): see fix below.
+			// UPD: fix below works for both binary read with \n and xml with \r\n
 			let lastTextEl = textElement.elements[textElement.elements.length - 1];
-			if (typeof lastTextEl === "string" && lastTextEl.endsWith("\r\n")) {
-				lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
-				textElement.elements[textElement.elements.length - 1] = lastTextEl;
+			if (typeof lastTextEl === "string") {
+				if (lastTextEl.endsWith("\r\n")) {
+					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
+					textElement.elements[textElement.elements.length - 1] = lastTextEl;
+				} else if (lastTextEl.endsWith("\n")) {
+					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 1);
+					textElement.elements[textElement.elements.length - 1] = lastTextEl;
+				}
 			}
 
 			// read text:
-			// consider CRLF (\r\n) as new paragraph start. Right after CRLF visio searches for pp
+			// consider CRLF (\r\n) (UPD: \n for binary read) as new paragraph start.
+			// Right after CRLF visio searches for pp
 			// which will be properties for new paragraph.
-			// (Or if it is something after CRLF it doesn't search for pp)
+			// (Or if it is something after CRLF it doesn't search for pp. E.g. if pp comes in text, it ignores)
 
-			// interesting moment: if pp comes in text, so it ignores
 			textElement.elements.forEach(function(textElementPart, i) {
+				// init currentParagraph: if there is text in first element use default paragraph with
+				// properties from 0 paragraph props row
+				// otherwise search for pp tag witch can set paragraph properties for future text
 				if (i === 0) {
-					currentParagraphPropsRow = searchForPP(textElement.elements, i);
-					// check defaultParagraph properties: get pp_Type object and in paragraphPropsCommon get needed Row (0)
-					currentParagraphPropsRow = currentParagraphPropsRow === undefined ? 0 : currentParagraphPropsRow;
+					if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
+						currentParagraphPropsRow = 0;
+					} else {
+						currentParagraphPropsRow = searchForPP(textElement.elements, i);
+						currentParagraphPropsRow = currentParagraphPropsRow === undefined ? 0 : currentParagraphPropsRow;
+					}
 					parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
 							paragraphPropsCommon, textCShape);
 					currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
@@ -1966,17 +1989,17 @@
 
 				if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 					if (typeof textElementPart === "string") {
-						// "LSCRLF" transforms to line drop and new paragraph without line drop so we get one
-						// line drop where should be two line drops so let's add extra line drop
-						textElementPart = textElementPart.replaceAll("\u2028\r\n", "\u2028\u2028\r\n");
-						let textArr = textElementPart.split("\r\n");
+						// Split on CRLF, or LF
+						let textArr = textElementPart.split(/\r\n|\n/);
 
 						for (let j = 0; j < textArr.length; j++) {
 							let text = textArr[j];
 
 							// if j > 0 CR exists in textArr and should be handled as new paragraph start
 							if (j > 0) {
-								let nextPP = searchForPP(textElement.elements, i, text);
+								// instead of lineDrop we get "" after split();
+								let isNextElementLineDrop = textArr[j + 1] === "";
+								let nextPP = searchForPP(textElement.elements, i, text, isNextElementLineDrop);
 								currentParagraphPropsRow = nextPP ? nextPP : currentParagraphPropsRow;
 
 								parseParagraphAndAddToShapeContent(currentParagraphPropsRow,
@@ -2001,7 +2024,6 @@
 									visioDocument, pageInfo);
 							currentParagraph.Add_ToContent(currentParagraph.Content.length - 1, oRun);
 						}
-
 					} else if (textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 						// text field
 
@@ -2054,33 +2076,6 @@
 				parseParagraphAndAddToShapeContent(0, paragraphPropsCommon, textCShape);
 			}
 
-			// visio set \r\n at the end of each paragraph
-			for (let i = 0; i < oContent.Content.length; i++) {
-				const paragraph = oContent.Content[i];
-				if (paragraph.Content.length > 1) {
-					// get second to last run. extra line drop should be here. Bcs last run is default
-					const penultimateRun = paragraph.Content[paragraph.Content.length - 2];
-					if (penultimateRun.Content[penultimateRun.Content.length - 1] instanceof AscWord.CRunBreak) {
-						// remove CRunBreak i.e. lineBreak from run
-						penultimateRun.Content.splice(penultimateRun.Content.length - 1, 1);
-					}
-				}
-			}
-
-			// search for empty paragraphs and add space to them
-			// they need it to be displayed as dots in unordered list
-			// for bug https://bugzilla.onlyoffice.com/show_bug.cgi?id=73676
-			for (let i = 0; i < oContent.Content.length; i++) {
-				const paragraph = oContent.Content[i];
-				const paragraphContent = paragraph.Content; // runs
-				let isParagraphEmpty = paragraph.IsEmpty();
-
-				if (isParagraphEmpty) {
-					let oRun = new ParaRun(paragraph, false);
-					oRun.AddText(" ");
-					paragraphContent.unshift(oRun);
-				}
-			}
 
 			// handle horizontal align i. e. defaultParagraph align
 
