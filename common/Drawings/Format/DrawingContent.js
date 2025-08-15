@@ -643,17 +643,14 @@
         }
     };
 
-    CDrawingDocContent.prototype.Internal_GetContentPosByXY = function(X, Y, PageNum, ColumnsInfo)
+    CDrawingDocContent.prototype.Internal_GetContentPosByXY = function(X, Y, PageNum)
     {
-        if (!ColumnsInfo)
-            ColumnsInfo = {Column : 0, ColumnsCount : 1};
-
         if (undefined === PageNum || null === PageNum)
             PageNum = this.CurPage;
         // Теперь проверим пустые параграфы с окончанием секций
         var SectCount = this.Pages[PageNum].EndSectionParas.length;
         if(this.Pages[PageNum].Sections.length === 0){
-            return CDocumentContent.prototype.Internal_GetContentPosByXY.call(this, X, Y, PageNum, ColumnsInfo);
+            return CDocumentContent.prototype.Internal_GetContentPosByXY.call(this, X, Y, PageNum);
         }
         for (var Index = 0; Index < SectCount; ++Index)
         {
@@ -661,12 +658,7 @@
             var Bounds = Item.Pages[0].Bounds;
 
             if (Y < Bounds.Bottom && Y > Bounds.Top && X > Bounds.Left && X < Bounds.Right)
-            {
-                var Element              = this.Content[Item.Index];
-                ColumnsInfo.Column       = Element.Get_StartColumn();
-                ColumnsInfo.ColumnsCount = Element.GetColumnCount();
                 return Item.Index;
-            }
         }
 
         // Сначала мы определим секцию и колонку, в которую попали
@@ -691,9 +683,6 @@
         // TODO: Разобраться с ситуацией, когда пустые колонки стоят не только в конце
         while (ColumnIndex > 0 && true === PageSection.Columns[ColumnIndex].Empty)
             ColumnIndex--;
-
-        ColumnsInfo.Column       = ColumnIndex;
-        ColumnsInfo.ColumnsCount = ColumnsCount;
 
         var Column   = PageSection.Columns[ColumnIndex];
         var StartPos = Column.Pos;
@@ -914,7 +903,7 @@
     		return 0;
 
     	var ElementStartPage   = Element.Get_StartPage_Relative();
-    	var ElementStartColumn = Element.Get_StartColumn();
+    	var ElementStartColumn = Element.GetStartColumn();
     	var ElementPagesCount  = Element.Get_PagesCount();
 
     	var ColumnsCount = PageSection.Columns.length;
@@ -923,7 +912,7 @@
 
     	if (PageIndex === ElementStartPage)
     	{
-    		StartColumn = Element.Get_StartColumn();
+    		StartColumn = Element.GetStartColumn();
     		EndColumn   = Math.min(ElementStartColumn + ElementPagesCount - 1, ColumnsCount - 1);
     	}
     	else

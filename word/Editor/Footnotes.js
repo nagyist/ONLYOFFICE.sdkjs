@@ -659,7 +659,7 @@ CFootnotesController.prototype.GetFootnoteNumberOnPage = function(nPageAbs, nCol
 							&& true !== oFootnote.IsCustomMarkFollows()
 							&& (0 !== nFootnoteIndex
 							|| oFootnote.Pages.length <= 1
-							|| (0 === nFootnoteIndex && 1 === oColumn.Elements.length && nPageIndex === oFootnote.Get_StartPage_Absolute() && nColumnIndex === oFootnote.Get_StartColumn_Absolute())))
+							|| (0 === nFootnoteIndex && 1 === oColumn.Elements.length && nPageIndex === oFootnote.Get_StartPage_Absolute() && nColumnIndex === oFootnote.GetStartColumnAbsolute())))
 							nFootnotesCount++;
 					}
 				}

@@ -6650,7 +6650,7 @@
 				warpGeometry && warpGeometry.Recalculate(dWidth, dHeight);
 				this.recalcInfo.warpGeometry = warpGeometry;
 				var bCheckWordArtContent = this.checkContentWordArt(oContent);
-				var bColumns = oContent.Get_ColumnsCount() > 1;
+				var bColumns = oContent.GetColumnCount() > 1;
 				var bContentRecalculated = false;
 				if (bTransform || bCheckWordArtContent) {
 					var bNeedRecalc = this.checkNeedRecalcDocContentForTxWarp(oBodyPr), dOneLineWidth,

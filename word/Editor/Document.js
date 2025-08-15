@@ -3757,6 +3757,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 	var YLimit = contentFrame.YLimit;
 	var XLimit = contentFrame.XLimit;
 	
+	let sectionAbs = PageSection.GetIndex();
 
     PageColumn.X           = X;
     PageColumn.XLimit      = XLimit;
@@ -3971,14 +3972,14 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				}
 				else
 				{
-					var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, SectionIndex); // TODO: SectionIndex заменить на PageSection.GetIndex()
+					var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 					RecalcResult         = Element.Recalculate_Page(ElementPageIndex);
 				}
 			}
 
 			if (true != bFlow && (RecalcResult & recalcresult_NextElement || RecalcResult & recalcresult_NextPage))
 			{
-				var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, SectionIndex); // TODO: SectionIndex заменить на PageSection.GetIndex()
+				var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 				Y                    = Element.Get_PageBounds(ElementPageIndex).Bottom;
 			}
 
@@ -4103,7 +4104,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 if (PageColumn.EndPos === PageColumn.Pos)
                 {
                     var Element          = this.Content[PageColumn.Pos];
-                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount);
+                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
                     if (true === Element.IsEmptyPage(ElementPageIndex))
                         PageColumn.Empty = true;
                 }
@@ -4134,14 +4135,14 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 if (PageColumn.EndPos === PageColumn.Pos)
                 {
                     var Element          = this.Content[PageColumn.Pos];
-                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount);
+                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
                     if (true === Element.IsEmptyPage(ElementPageIndex))
                         PageColumn.Empty = true;
                 }
 
                 for (var TempColumnIndex = ColumnIndex + 1; TempColumnIndex < ColumnsCount; ++TempColumnIndex)
                 {
-                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, TempColumnIndex, ColumnsCount);
+                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, TempColumnIndex, ColumnsCount, sectionAbs);
                     this.Content[Index].Recalculate_SkipPage(ElementPageIndex);
 
                     PageSection.Columns[TempColumnIndex].Empty  = true;
@@ -4177,7 +4178,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 if (PageColumn.EndPos === PageColumn.Pos)
                 {
                     var Element          = this.Content[PageColumn.Pos];
-                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount);
+                    var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
                     if (true === Element.IsEmptyPage(ElementPageIndex))
                         PageColumn.Empty = true;
                 }
@@ -7394,11 +7395,8 @@ CDocument.prototype.Interface_Update_HdrFtrPr = function()
 		this.Api.sync_HeadersAndFootersPropCallback(this.HdrFtr.Get_Props());
 	}
 };
-CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, ColumnsInfo)
+CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage)
 {
-    if (!ColumnsInfo)
-        ColumnsInfo = {Column : 0, ColumnsCount : 1};
-
     if (undefined === nCurPage || null === nCurPage)
 		nCurPage = this.CurPage;
 
@@ -7411,12 +7409,7 @@ CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, Column
 	var oFlow    = this.DrawingObjects.getTableByXY(X, Y, nCurPage, this);
 	var nFlowPos = this.private_GetContentIndexByFlowObject(oFlow, X, Y);
 	if (-1 !== nFlowPos)
-	{
-		var oElement             = this.Content[nFlowPos];
-		ColumnsInfo.Column       = oElement.GetStartColumn();
-		ColumnsInfo.ColumnsCount = oElement.GetColumnCount();
 		return nFlowPos;
-	}
 
     // Теперь проверим пустые параграфы с окончанием секций
     var SectCount = this.Pages[nCurPage].EndSectionParas.length;
@@ -7426,12 +7419,7 @@ CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, Column
         var Bounds = Item.Pages[0].Bounds;
 
         if (Y < Bounds.Bottom && Y > Bounds.Top && X > Bounds.Left && X < Bounds.Right)
-        {
-            var Element              = this.Content[Item.Index];
-            ColumnsInfo.Column       = Element.Get_StartColumn();
-            ColumnsInfo.ColumnsCount = Element.GetColumnCount();
-            return Item.Index;
-        }
+            return Item.GetIndex();
     }
 
     // Сначала мы определим секцию и колонку, в которую попали
@@ -7456,9 +7444,6 @@ CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, Column
     // TODO: Разобраться с ситуацией, когда пустые колонки стоят не только в конце
     while (ColumnIndex > 0 && (true === PageSection.Columns[ColumnIndex].Empty || PageSection.Columns[ColumnIndex].EndPos < PageSection.Columns[ColumnIndex].Pos))
         ColumnIndex--;
-
-    ColumnsInfo.Column       = ColumnIndex;
-    ColumnsInfo.ColumnsCount = ColumnsCount;
 
     var Column   = PageSection.Columns[ColumnIndex];
     var StartPos = Column.Pos;
@@ -8484,11 +8469,9 @@ CDocument.prototype.IsTableBorder = function(X, Y, PageIndex)
 		}
 		else
 		{
-			var ColumnsInfo      = {};
-			var ElementPos       = this.Internal_GetContentPosByXY(X, Y, PageIndex, ColumnsInfo);
-			var Element          = this.Content[ElementPos];
-			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, PageIndex, ColumnsInfo.Column, ColumnsInfo.Column, ColumnsInfo.ColumnsCount);
-			return Element.IsTableBorder(X, Y, ElementPageIndex);
+			var ContentPos       = this.Internal_GetContentPosByXY(X, Y, PageIndex);
+			var ElementPageIndex = this.private_GetElementPageIndexByXY(ContentPos, X, Y, PageIndex);
+			return this.Content[ContentPos].IsTableBorder(X, Y, ElementPageIndex);
 		}
 	}
 };

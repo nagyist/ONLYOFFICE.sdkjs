@@ -2414,7 +2414,7 @@ CDocumentContent.prototype.Document_UpdateRulersState = function(CurPage)
 			{
 				var ElementPos       = this.Selection.StartPos;
 				var Element          = this.Content[ElementPos];
-				var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.GetColumnCount());
+				var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.GetStartColumn(), Element.GetColumnCount());
 				Element.Document_UpdateRulersState(ElementPageIndex);
 			}
 			else
@@ -2458,7 +2458,7 @@ CDocumentContent.prototype.Document_UpdateRulersState = function(CurPage)
 		{
 			var ElementPos       = this.CurPos.ContentPos;
 			var Element          = this.Content[ElementPos];
-			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.GetColumnCount());
+			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.GetStartColumn(), Element.GetColumnCount());
 			Element.Document_UpdateRulersState(ElementPageIndex);
 		}
 	}
@@ -7560,9 +7560,9 @@ CDocumentContent.prototype.Get_StartPage_Relative = function()
 {
 	return this.StartPage;
 };
-CDocumentContent.prototype.Get_StartColumn_Absolute = function()
+CDocumentContent.prototype.GetStartColumnAbsolute = function()
 {
-	return this.Get_AbsoluteColumn(0);
+	return this.GetAbsoluteColumn(0);
 };
 CDocumentContent.prototype.Set_StartPage = function(StartPage, StartColumn, ColumnsCount)
 {
@@ -7591,7 +7591,7 @@ CDocumentContent.prototype.private_GetAbsolutePageIndex = function(CurPage)
 
 	return this.Parent.Get_AbsolutePage(this.private_GetRelativePageIndex(CurPage));
 };
-CDocumentContent.prototype.Get_StartColumn = function()
+CDocumentContent.prototype.GetStartColumn = function()
 {
 	return this.StartColumn;
 };
@@ -8628,7 +8628,7 @@ CDocumentContent.prototype.private_GetElementPageIndex = function(ElementPos, Pa
         return 0;
 
     var StartPage   = Element.Get_StartPage_Relative();
-    var StartColumn = Element.Get_StartColumn();
+    var StartColumn = Element.GetStartColumn();
 
     return ColumnIndex - StartColumn + (PageIndex - StartPage) * ColumnsCount;
 };

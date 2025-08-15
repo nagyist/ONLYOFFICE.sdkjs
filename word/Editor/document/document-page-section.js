@@ -168,7 +168,6 @@
 	 */
 	DocumentPageSection.prototype.IterateBottomLineCalculation = function(isIncrease)
 	{
-		console.log(`Iteration: ${this.IterationsCount}`);
 		// Алгоритм следующий:
 		// На первом шаге мы прогнозируем положение границы по уже имеющемуся объему текста и
 		// ширине колонок.

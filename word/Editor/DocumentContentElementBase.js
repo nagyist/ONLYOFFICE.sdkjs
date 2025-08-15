@@ -970,7 +970,7 @@ CDocumentContentElementBase.prototype.Get_StartPage_Relative = function()
 {
 	return this.PageNum;
 };
-CDocumentContentElementBase.prototype.Get_StartColumn = function()
+CDocumentContentElementBase.prototype.GetStartColumn = function()
 {
 	return this.ColumnNum;
 };
@@ -1007,10 +1007,6 @@ CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, colum
 };
 CDocumentContentElementBase.prototype.GetElementPageIndexByXY = function(x, y, page)
 {
-};
-CDocumentContentElementBase.prototype.GetStartColumn = function()
-{
-	return this.ColumnNum;
 };
 CDocumentContentElementBase.prototype.GetColumnCount = function()
 {

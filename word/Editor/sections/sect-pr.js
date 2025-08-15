@@ -532,10 +532,6 @@ var section_footnote_RestartEachPage   = 0x02;
 	{
 		return this.PageNumType.ChapSep;
 	};
-	SectPr.prototype.Get_ColumnsCount = function()
-	{
-		return this.Columns.Get_Count();
-	};
 	SectPr.prototype.Get_ColumnWidth = function(ColIndex)
 	{
 		return this.Columns.Get_ColumnWidth(ColIndex);
@@ -1180,7 +1176,7 @@ var section_footnote_RestartEachPage   = 0x02;
 	};
 	SectPr.prototype.GetColumnCount                   = function()
 	{
-		return this.Columns.Get_Count();
+		return this.Columns.GetCount();
 	};
 	SectPr.prototype.GetColumnWidth                   = function(nColIndex)
 	{

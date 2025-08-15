@@ -123,7 +123,7 @@
 			this.Cols[Pos].Read_FromBinary(Reader);
 		}
 	};
-	SectionColumns.prototype.Get_Count                   = function()
+	SectionColumns.prototype.GetCount                   = function()
 	{
 		if (true === this.EqualWidth)
 		{
