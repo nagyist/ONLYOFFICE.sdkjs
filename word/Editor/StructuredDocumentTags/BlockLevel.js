@@ -259,13 +259,13 @@ CBlockLevelSdt.prototype.Draw = function(CurPage, oGraphics)
 		oGraphics.DrawLockObjectRect(this.Lock.Get_Type(), oBounds.Left, oBounds.Top, oBounds.Right - oBounds.Left, oBounds.Bottom - oBounds.Top);
 	}
 };
-CBlockLevelSdt.prototype.Get_CurrentPage_Absolute = function()
+CBlockLevelSdt.prototype.GetAbsoluteCurrentPage = function()
 {
-	return this.Content.Get_CurrentPage_Absolute();
+	return this.Content.GetAbsoluteCurrentPage();
 };
-CBlockLevelSdt.prototype.Get_CurrentPage_Relative = function()
+CBlockLevelSdt.prototype.GetRelativeCurrentPage = function()
 {
-	return this.Content.Get_CurrentPage_Relative();
+	return this.Content.GetRelativeCurrentPage();
 };
 CBlockLevelSdt.prototype.IsInText = function(X, Y, CurPage)
 {
@@ -285,7 +285,7 @@ CBlockLevelSdt.prototype.UpdateCursorType = function(X, Y, CurPage)
 	if (true === this.Lock.Is_Locked() && X < oBounds.Right && X > oBounds.Left && Y > oBounds.Top && Y < oBounds.Bottom)
 	{
 		var MMData              = new AscCommon.CMouseMoveData();
-		var Coords              = this.LogicDocument.DrawingDocument.ConvertCoordsToCursorWR(oBounds.Left, oBounds.Top, this.Get_AbsolutePage(CurPage), this.Get_ParentTextTransform());
+		var Coords              = this.LogicDocument.DrawingDocument.ConvertCoordsToCursorWR(oBounds.Left, oBounds.Top, this.GetAbsolutePage(CurPage), this.Get_ParentTextTransform());
 		MMData.X_abs            = Coords.X - 5;
 		MMData.Y_abs            = Coords.Y;
 		MMData.Type             = Asc.c_oAscMouseMoveDataTypes.LockedObject;
@@ -1300,7 +1300,7 @@ CBlockLevelSdt.prototype.Refresh_RecalcData2 = function(CurPage)
 	if (!this.Parent)
 		return;
 
-	this.Parent.Refresh_RecalcData2(this.Index, this.private_GetRelativePageIndex(CurPage));
+	this.Parent.Refresh_RecalcData2(this.Index, this.GetRelativePage(CurPage));
 };
 CBlockLevelSdt.prototype.Refresh_RecalcData = function(Data)
 {
@@ -1321,7 +1321,7 @@ CBlockLevelSdt.prototype.CheckRange = function(X0, Y0, X1, Y1, _Y0, _Y1, X_lf, X
 {
 	if (true === Inner)
 	{
-		var PageRel = this.Get_AbsolutePage(CurPage) - this.Get_AbsolutePage(0) + this.Get_StartPage_Relative();
+		var PageRel = this.GetAbsolutePage(CurPage) - this.GetAbsolutePage(0) + this.GetRelativeStartPage();
 		return this.Parent.CheckRange(X0, Y0, X1, Y1, _Y0, _Y1, X_lf, X_rf, PageRel, Inner, bMathWrap);
 	}
 	else

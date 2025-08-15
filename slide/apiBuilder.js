@@ -2147,7 +2147,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -2557,7 +2557,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -3795,7 +3795,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -4371,7 +4371,7 @@
         let oGraphicObjects = oSlide.graphicObjects;
 
         oGraphicObjects.resetSelection();
-        oGraphicObjects.selectObject(this.Drawing, this.Drawing.Get_AbsolutePage())
+        oGraphicObjects.selectObject(this.Drawing, this.Drawing.GetAbsolutePage())
         
         let canUngroup = oGraphicObjects.canUnGroup();
         if (!canUngroup) {

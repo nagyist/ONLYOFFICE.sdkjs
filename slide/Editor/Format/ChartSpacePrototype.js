@@ -478,7 +478,7 @@ CTable.prototype.DrawSelectionOnPage = function(CurPage)
         return;
 
     var Page    = this.Pages[CurPage];
-    var PageAbs = this.private_GetAbsolutePageIndex(CurPage);
+    var PageAbs = this.GetAbsolutePage(CurPage);
 
     var H;
     switch (this.Selection.Type)
@@ -495,7 +495,7 @@ CTable.prototype.DrawSelectionOnPage = function(CurPage)
                 var X_end   = Page.X + CellInfo.X_cell_end;
 
                 var Cell_Pages   = Cell.Content_Get_PagesCount();
-                var Cell_PageRel = CurPage - Cell.Content.Get_StartPage_Relative();
+                var Cell_PageRel = CurPage - Cell.Content.GetRelativeStartPage();
                 if (Cell_PageRel < 0 || Cell_PageRel >= Cell_Pages)
                     continue;
 
@@ -533,7 +533,7 @@ CTable.prototype.DrawSelectionOnPage = function(CurPage)
         case table_Selection_Text:
         {
             var Cell = this.Content[this.Selection.StartPos.Pos.Row].Get_Cell(this.Selection.StartPos.Pos.Cell);
-            var Cell_PageRel = CurPage - Cell.Content.Get_StartPage_Relative();
+            var Cell_PageRel = CurPage - Cell.Content.GetRelativeStartPage();
             Cell.Content_DrawSelectionOnPage(Cell_PageRel);
             break;
         }

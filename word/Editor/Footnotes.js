@@ -583,7 +583,7 @@ CFootnotesController.prototype.GetFootnoteNumberOnPage = function(nPageAbs, nCol
 			if (oColumn.Elements.length > 0)
 			{
 				var oFootnote  = oColumn.Elements[oColumn.Elements.length - 1];
-				var nStartPage = oFootnote.Get_StartPage_Absolute();
+				var nStartPage = oFootnote.GetAbsoluteStartPage();
 
 				if (nStartPage >= nPageAbs || (nStartPage === nPageAbs - 1 && true !== oFootnote.IsContentOnFirstPage()))
 					return oFootnote.GetNumber() + 1 + nAdditional;
@@ -659,7 +659,7 @@ CFootnotesController.prototype.GetFootnoteNumberOnPage = function(nPageAbs, nCol
 							&& true !== oFootnote.IsCustomMarkFollows()
 							&& (0 !== nFootnoteIndex
 							|| oFootnote.Pages.length <= 1
-							|| (0 === nFootnoteIndex && 1 === oColumn.Elements.length && nPageIndex === oFootnote.Get_StartPage_Absolute() && nColumnIndex === oFootnote.GetStartColumnAbsolute())))
+							|| (0 === nFootnoteIndex && 1 === oColumn.Elements.length && nPageIndex === oFootnote.GetAbsoluteStartPage() && nColumnIndex === oFootnote.GetStartColumnAbsolute())))
 							nFootnotesCount++;
 					}
 				}
@@ -1447,7 +1447,7 @@ CFootnotesController.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY)
 CFootnotesController.prototype.GetCurPage = function()
 {
 	if (null !== this.CurFootnote)
-		return this.CurFootnote.Get_StartPage_Absolute();
+		return this.CurFootnote.GetAbsoluteStartPage();
 
 	return -1;
 };
@@ -2896,7 +2896,7 @@ CFootnotesController.prototype.UpdateInterfaceState = function()
 };
 CFootnotesController.prototype.UpdateRulersState = function()
 {
-	var nPageAbs = this.CurFootnote.Get_StartPage_Absolute();
+	var nPageAbs = this.CurFootnote.GetAbsoluteStartPage();
 	if (this.LogicDocument.Pages[nPageAbs])
 	{
 		var nPos    = this.LogicDocument.Pages[nPageAbs].Pos;

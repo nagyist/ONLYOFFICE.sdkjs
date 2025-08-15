@@ -1579,7 +1579,7 @@
     CAnnotationFreeText.canRotate = function() {
         return false;
     };
-    CAnnotationFreeText.prototype.Get_AbsolutePage = function() {
+    CAnnotationFreeText.prototype.GetAbsolutePage = function() {
         return this.GetPage();
     };
     CAnnotationFreeText.prototype.select = function (drawingObjectsController, pageIndex) {

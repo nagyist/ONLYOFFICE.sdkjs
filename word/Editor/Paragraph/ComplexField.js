@@ -921,7 +921,7 @@ CComplexField.prototype.private_CalculatePAGE = function()
 	var nPage      = oParagraph.getPageByLine(nLine);
 
 	var oLogicDocument = oParagraph.LogicDocument;
-	return oLogicDocument.Get_SectionPageNumInfo2(oParagraph.Get_AbsolutePage(nPage)).CurPage;
+	return oLogicDocument.Get_SectionPageNumInfo2(oParagraph.GetAbsolutePage(nPage)).CurPage;
 };
 CComplexField.prototype.private_UpdateTOC = function()
 {

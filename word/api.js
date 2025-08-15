@@ -2546,7 +2546,7 @@ background-repeat: no-repeat;\
 
 			var _X       = elem.X;
 			var _Y       = elem.Y;
-			var _PageNum = elem.GetCurrentPageAbsolute();
+			var _PageNum = elem.GetAbsoluteCurrentPage();
 
 			if (elem.IsTable())
 			{

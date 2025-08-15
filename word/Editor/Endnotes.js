@@ -1452,7 +1452,7 @@ CEndnotesController.prototype.RecalculateCurPos = function(bUpdateX, bUpdateY, i
 CEndnotesController.prototype.GetCurPage = function()
 {
 	if (this.CurEndnote)
-		return this.CurEndnote.Get_StartPage_Absolute();
+		return this.CurEndnote.GetAbsoluteStartPage();
 
 	return -1;
 };
@@ -2873,7 +2873,7 @@ CEndnotesController.prototype.UpdateInterfaceState = function()
 };
 CEndnotesController.prototype.UpdateRulersState = function()
 {
-	var nPageAbs = this.CurEndnote.Get_StartPage_Absolute();
+	var nPageAbs = this.CurEndnote.GetAbsoluteStartPage();
 	if (this.LogicDocument.Pages[nPageAbs])
 	{
 		var nPos    = this.LogicDocument.Pages[nPageAbs].Pos;

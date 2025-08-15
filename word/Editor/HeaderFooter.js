@@ -444,7 +444,7 @@ CHeaderFooter.prototype =
         if (-1 !== this.RecalcInfo.CurPage)
             return this.Content.RecalculateCurPos();
 
-        this.DrawingDocument.UpdateTarget(0, 0, this.Content.Get_StartPage_Absolute());
+        this.DrawingDocument.UpdateTarget(0, 0, this.Content.GetAbsoluteStartPage());
         return null;
     },
 
@@ -481,12 +481,12 @@ CHeaderFooter.prototype =
 
     Is_PointInDrawingObjects : function(X, Y)
     {
-        return this.Content.Is_PointInDrawingObjects( X, Y, this.Content.Get_StartPage_Absolute() );
+        return this.Content.Is_PointInDrawingObjects( X, Y, this.Content.GetAbsoluteStartPage() );
     },
 
 	Is_PointInFlowTable : function(X, Y)
 	{
-		return this.Content.Is_PointInFlowTable(X, Y, this.Content.Get_StartPage_Absolute());
+		return this.Content.Is_PointInFlowTable(X, Y, this.Content.GetAbsoluteStartPage());
 	},
 
     CheckRange : function(X0, Y0, X1, Y1, _Y0, _Y1, X_lf, X_rf, bMathWrap)
@@ -611,7 +611,7 @@ CHeaderFooter.prototype =
 
 	UpdateCursorType : function(X, Y, PageAbs)
     {
-        if (PageAbs != this.Content.Get_StartPage_Absolute())
+        if (PageAbs !== this.Content.GetAbsoluteStartPage())
             this.DrawingDocument.SetCursorType("text", new AscCommon.CMouseMoveData());
         else
             return this.Content.UpdateCursorType(X, Y, 0);
@@ -659,7 +659,7 @@ CHeaderFooter.prototype =
             this.DrawingDocument.Set_RulerState_HdrFtr( false, Bounds.Top, SectPr.GetPageHeight() );
         }
 
-        this.Content.Document_UpdateRulersState( this.Content.Get_StartPage_Absolute() );
+        this.Content.Document_UpdateRulersState( this.Content.GetAbsoluteStartPage() );
     },
 
     Document_UpdateSelectionState : function()
@@ -1080,7 +1080,7 @@ CHeaderFooter.prototype =
 		if (-1 === this.RecalcInfo.CurPage)
 			return false;
 
-		var HdrFtrPage = this.Content.Get_StartPage_Absolute();
+		var HdrFtrPage = this.Content.GetAbsoluteStartPage();
 		if (undefined !== NearPos || HdrFtrPage === PageAbs)
 			return this.Content.CheckPosInSelection(X, Y, 0, NearPos);
 
@@ -1109,22 +1109,22 @@ CHeaderFooter.prototype =
 //-----------------------------------------------------------------------------------
 // Функции для работы с номерами страниц
 //-----------------------------------------------------------------------------------
-    Get_StartPage_Absolute : function()
+	GetAbsoluteStartPage : function()
     {
         return 0;
     },
-
-    Get_StartPage_Relative : function()
+	
+	GetRelativeStartPage : function()
     {
         return 0;
     },
-
-    Get_AbsolutePage : function(CurPage)
+	
+	GetAbsolutePage : function(CurPage)
     {
         return CurPage;
     },
-
-    Get_AbsoluteColumn : function(CurPage)
+	
+	GetAbsoluteColumn : function(CurPage)
     {
         return 0;
     },
@@ -1598,7 +1598,7 @@ CHeaderFooterController.prototype =
     Get_CurPage : function()
     {
         if ( null != this.CurHdrFtr )
-            return this.CurHdrFtr.Content.Get_StartPage_Absolute();
+            return this.CurHdrFtr.Content.GetAbsoluteStartPage();
 
         return 0;
     },

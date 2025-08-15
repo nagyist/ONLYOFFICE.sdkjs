@@ -872,7 +872,7 @@ ParaMath.prototype.Get_AlignToLine = function(_CurLine, _CurRange, _Page, _X, _X
         XEnd   = _XLimit;
     }
 
-    var Page = this.Paragraph == null ? 0 : this.Paragraph.Get_AbsolutePage(_Page);
+    var Page = this.Paragraph == null ? 0 : this.Paragraph.GetAbsolutePage(_Page);
     var LineState = this.PageInfo.Get_LineState(_CurLine, Page);
     var StyleLine = LineState.StyleLine,
         WidthLine = LineState.Width,
@@ -1392,7 +1392,7 @@ ParaMath.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
     var Para         = PRS.Paragraph;
     var ParaLine     = PRS.Line;
     var ParaRange    = PRS.Range;
-    var Page         = this.Paragraph == null ? 0 : this.Paragraph.Get_AbsolutePage(PRS.Page);
+    var Page         = this.Paragraph == null ? 0 : this.Paragraph.GetAbsolutePage(PRS.Page);
     var RelativePage = PRS.Page;
 
     var bStartRange  = this.Root.IsStartRange(ParaLine, ParaRange);
@@ -1874,7 +1874,7 @@ ParaMath.prototype.private_UpdateXLimits = function(PRS)
     var MathSettings = Get_WordDocumentDefaultMathSettings();
     var WrapState = this.PageInfo.Get_CurrentWrapState();
 
-    var Page = this.Paragraph == null ? 0 : this.Paragraph.Get_AbsolutePage(PRS.Page);
+    var Page = this.Paragraph == null ? 0 : this.Paragraph.GetAbsolutePage(PRS.Page);
 
     PRS.X    += MathSettings.Get_LeftMargin(WrapState);
     PRS.XEnd -= MathSettings.Get_RightMargin(WrapState);
@@ -2886,7 +2886,7 @@ ParaMath.prototype.Get_ContentSelection = function()
                 Y:      oBound.Y,
                 W:      oBound.W,
                 H:      oBound.H,
-                Page:   this.Paragraph.Get_AbsolutePage(oBound.Page)
+                Page:   this.Paragraph.GetAbsolutePage(oBound.Page)
             };
         }
         else
@@ -3097,7 +3097,7 @@ ParaMath.prototype.private_GetBounds = function(Content)
                 Y:      Y,
                 W:      oBound.W,
                 H:      Height,
-                Page:   this.Paragraph.Get_AbsolutePage(oBound.Page)
+                Page:   this.Paragraph.GetAbsolutePage(oBound.Page)
             };
         }
     }

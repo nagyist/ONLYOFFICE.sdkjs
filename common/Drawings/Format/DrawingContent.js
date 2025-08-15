@@ -902,7 +902,7 @@
     	if (!PageSection)
     		return 0;
 
-    	var ElementStartPage   = Element.Get_StartPage_Relative();
+    	var ElementStartPage   = Element.GetRelativeStartPage();
     	var ElementStartColumn = Element.GetStartColumn();
     	var ElementPagesCount  = Element.Get_PagesCount();
 

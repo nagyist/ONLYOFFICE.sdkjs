@@ -3238,7 +3238,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 			if (type_Paragraph === PrevElement.GetType() && PrevElement.IsKeepNext())
 			{
 				ChangeIndex--;
-				RecalcData.Inline.PageNum = PrevElement.Get_AbsolutePage(PrevElement.GetPagesCount());
+				RecalcData.Inline.PageNum = PrevElement.GetAbsolutePage(PrevElement.GetPagesCount());
 				// считаем, что изменилась последняя страница
 			}
 			else
@@ -3248,7 +3248,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 		}
 
 		var ChangedElement = this.Content[ChangeIndex];
-		if (ChangedElement.GetPagesCount() > 0 && -1 !== ChangedElement.GetIndex() && ChangedElement.Get_StartPage_Absolute() < RecalcData.Inline.PageNum - 1)
+		if (ChangedElement.GetPagesCount() > 0 && -1 !== ChangedElement.GetIndex() && ChangedElement.GetAbsoluteStartPage() < RecalcData.Inline.PageNum - 1)
 		{
 			StartPage  = ChangedElement.GetStartPageForRecalculate(RecalcData.Inline.PageNum - 1);
 
@@ -3457,7 +3457,7 @@ CDocument.prototype.private_RecalculateFastRunRange = function(arrChanges, nStar
 			// Если за данным параграфом следовал пустой параграф с новой секцией, тогда его тоже надо пересчитать.
 			var NextElement = oParagraph.Get_DocumentNext();
 			if (null !== NextElement && true === this.Pages[nPageIndex].Check_EndSectionPara(NextElement))
-				this.private_RecalculateEmptySectionParagraph(NextElement, oParagraph, nPageIndex, oParagraph.Get_AbsoluteColumn(oParagraph.Get_PagesCount() - 1), oParagraph.GetColumnCount());
+				this.private_RecalculateEmptySectionParagraph(NextElement, oParagraph, nPageIndex, oParagraph.GetAbsoluteColumn(oParagraph.Get_PagesCount() - 1), oParagraph.GetColumnCount());
 
 			// Перерисуем страницу, на которой произошли изменения
 			this.DrawingDocument.OnRecalculatePage(nPageIndex, this.Pages[nPageIndex]);
@@ -3646,7 +3646,7 @@ CDocument.prototype.Recalculate_Page = function()
         var MainStartPos = this.FullRecalc.MainStartPos;
         if (null !== OldPage && ( -1 === MainStartPos || MainStartPos > StartIndex ))
         {
-            if (OldPage.EndPos >= Count - 1 && PageIndex - this.Content[Count - 1].Get_StartPage_Absolute() >= this.Content[Count - 1].GetPagesCount() - 1)
+            if (OldPage.EndPos >= Count - 1 && PageIndex - this.Content[Count - 1].GetAbsoluteStartPage() >= this.Content[Count - 1].GetPagesCount() - 1)
             {
 				// // Recalculation LOG
 				// console.log("HdrFtr Recalculation " + PageIndex);
@@ -7896,7 +7896,7 @@ CDocument.prototype.Selection_SetEnd = function(X, Y, MouseEvent)
 						this.Api.sync_HyperlinkClickCallback(sBookmarkName ? sValue + "#" + sBookmarkName : sValue);
 
 						oHyperlink.SetVisited(true);
-						for (var PageIdx = Item.Get_AbsolutePage(0); PageIdx < Item.Get_AbsolutePage(0) + Item.Get_PagesCount(); PageIdx++)
+						for (var PageIdx = Item.GetAbsolutePage(0); PageIdx < Item.GetAbsolutePage(0) + Item.Get_PagesCount(); PageIdx++)
 							this.DrawingDocument.OnRecalculatePage(PageIdx, this.Pages[PageIdx]);
 
 						this.DrawingDocument.OnEndRecalculate(false, true);
@@ -12855,15 +12855,15 @@ CDocument.prototype.Can_CopyCut = function()
 //----------------------------------------------------------------------------------------------------------------------
 // Функции для работы с номерами страниц
 //----------------------------------------------------------------------------------------------------------------------
-CDocument.prototype.Get_StartPage_Absolute = function()
+CDocument.prototype.GetAbsoluteStartPage = function()
 {
 	return 0;
 };
-CDocument.prototype.Get_StartPage_Relative = function()
+CDocument.prototype.GetRelativeStartPage = function()
 {
 	return 0;
 };
-CDocument.prototype.Get_AbsolutePage = function(CurPage)
+CDocument.prototype.GetAbsolutePage = function(CurPage)
 {
 	return CurPage;
 };
@@ -19163,7 +19163,7 @@ CDocument.prototype.controller_GetCurPage = function()
 {
 	var nPos = this.private_GetSelectionPos(true).End;
 	if (nPos >= 0 && (null === this.FullRecalc.Id || this.FullRecalc.StartIndex > nPos))
-		return this.Content[nPos].Get_CurrentPage_Absolute();
+		return this.Content[nPos].GetAbsoluteCurrentPage();
 
 	return -1;
 };
@@ -19417,7 +19417,7 @@ CDocument.prototype.AddPlaceholderImages = function (aImages, oPlaceholder)
 				{
 					this.StartAction(AscDFH.historydescription_Document_AddPlaceholderImages);
 					oPlaceholderTarget.applyImagePlaceholderCallback && oPlaceholderTarget.applyImagePlaceholderCallback(aImages, oPlaceholder);
-					const nDrawingPage = oPlaceholderTarget.Get_AbsolutePage();
+					const nDrawingPage = oPlaceholderTarget.GetAbsolutePage();
 					if (AscFormat.isRealNumber(nDrawingPage))
 					{
 						oPlaceholderTarget.Set_CurrentElement(false, nDrawingPage, true);
@@ -19735,8 +19735,8 @@ CDocument.prototype.controller_AddToParagraph = function(ParaItem, bRecalculate)
 							else
 							{
 								// Просто перерисовываем нужные страницы
-								var StartPage = this.Content[StartPos].Get_StartPage_Absolute();
-								var EndPage   = this.Content[EndPos].Get_StartPage_Absolute() + this.Content[EndPos].GetPagesCount() - 1;
+								var StartPage = this.Content[StartPos].GetAbsoluteStartPage();
+								var EndPage   = this.Content[EndPos].GetAbsoluteStartPage() + this.Content[EndPos].GetPagesCount() - 1;
 								this.ReDraw(StartPage, EndPage);
 							}
 						}
@@ -19900,7 +19900,7 @@ CDocument.prototype.controller_AddToParagraph = function(ParaItem, bRecalculate)
 			if (para_TextPr === ParaItem.Type && false === ParaItem.Value.Check_NeedRecalc())
 			{
 				// Просто перерисовываем нужные страницы
-				var StartPage = Item.Get_StartPage_Absolute();
+				var StartPage = Item.GetAbsoluteStartPage();
 				var EndPage   = StartPage + Item.Pages.length - 1;
 				this.ReDraw(StartPage, EndPage);
 			}

@@ -1461,7 +1461,7 @@ CDocumentContentBase.prototype.SetSelectionByContentPositions = function(StartDo
 
 	if (this.Parent && this.LogicDocument)
 	{
-		this.Parent.Set_CurrentElement(false, this.Get_StartPage_Absolute(), this);
+		this.Parent.Set_CurrentElement(false, this.GetAbsoluteStartPage(), this);
 		this.LogicDocument.Selection.Use   = true;
 		this.LogicDocument.Selection.Start = false;
 	}

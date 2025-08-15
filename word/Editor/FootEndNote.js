@@ -85,13 +85,13 @@ CFootEndnote.prototype.GetElementPageIndex = function(nPageAbs, nColumnAbs)
 };
 CFootEndnote.prototype.GetPageContentFrame = function(nCurPage)
 {
-	var nPageAbs   = this.Get_AbsolutePage(nCurPage);
-	var nColumnAbs = this.Get_AbsoluteColumn(nCurPage);
+	var nPageAbs   = this.GetAbsolutePage(nCurPage);
+	var nColumnAbs = this.GetAbsoluteColumn(nCurPage);
 	return this.Parent.GetColumnContentFrame(nPageAbs, nColumnAbs, this.GetSectionIndex());
 };
 CFootEndnote.prototype.Refresh_RecalcData2 = function(nIndex, nCurPage)
 {
-	this.Parent.Refresh_RecalcData2(this.Get_AbsolutePage(nCurPage));
+	this.Parent.Refresh_RecalcData2(this.GetAbsolutePage(nCurPage));
 };
 CFootEndnote.prototype.Write_ToBinary2 = function(Writer)
 {
@@ -201,7 +201,7 @@ CFootEndnote.prototype.OnFastRecalculate = function()
 };
 CFootEndnote.prototype.Get_ColumnFields = function(nElementIndex, nColumnIndex)
 {
-	return this.Parent.GetColumnFields(this.Get_StartPage_Absolute(), nColumnIndex, this.GetSectionIndex());
+	return this.Parent.GetColumnFields(this.GetAbsoluteStartPage(), nColumnIndex, this.GetSectionIndex());
 };
 CFootEndnote.prototype.SetSectionIndex = function(nSectionIndex)
 {

@@ -247,16 +247,16 @@
             this.parent.OnContentReDraw();
         }
     };
-    CTextBody.prototype.Get_StartPage_Absolute = function() {
+    CTextBody.prototype.GetAbsoluteStartPage = function() {
         return 0;//TODO;
     };
-    CTextBody.prototype.Get_AbsolutePage = function(CurPage) {
-        if(this.parent && this.parent.Get_AbsolutePage) {
-            return this.parent.Get_AbsolutePage(CurPage);
+    CTextBody.prototype.GetAbsolutePage = function(CurPage) {
+        if(this.parent && this.parent.GetAbsolutePage) {
+            return this.parent.GetAbsolutePage(CurPage);
         }
         return 0;//TODO;
     };
-    CTextBody.prototype.Get_AbsoluteColumn = function(CurPage) {
+    CTextBody.prototype.GetAbsoluteColumn = function(CurPage) {
         return 0;//TODO;
     };
     CTextBody.prototype.Get_TextBackGroundColor = function() {

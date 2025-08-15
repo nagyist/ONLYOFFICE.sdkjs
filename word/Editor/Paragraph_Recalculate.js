@@ -68,7 +68,7 @@ Paragraph.prototype.Recalculate_FastWholeParagraph = function()
 	}
 
     // Если изменения происходят в специальном пустом параграфе-конце секции, тогда запускаем обычный пересчет
-    if (this.bFromDocument && this.LogicDocument && (!this.LogicDocument.Pages[this.Get_StartPage_Absolute()] || true === this.LogicDocument.Pages[this.Get_StartPage_Absolute()].Check_EndSectionPara(this)))
+    if (this.bFromDocument && this.LogicDocument && (!this.LogicDocument.Pages[this.GetAbsoluteStartPage()] || true === this.LogicDocument.Pages[this.GetAbsoluteStartPage()].Check_EndSectionPara(this)))
         return [];
 
     // Если параграф - рамка с автошириной, надо пересчитывать по обычному
@@ -107,7 +107,7 @@ Paragraph.prototype.Recalculate_FastWholeParagraph = function()
             && isPageBreakLastLine2 === (this.Lines[this.Lines.length - 1].Info & paralineinfo_BreakRealPage))
         {
             //console.log("Recalc Fast WholeParagraph 1 page");
-            return [this.Get_AbsolutePage(0)];
+            return [this.GetAbsolutePage(0)];
         }
     }
     else if (2 === this.Pages.length)
@@ -182,12 +182,12 @@ Paragraph.prototype.Recalculate_FastWholeParagraph = function()
 
         if (true === StartFromNewPage)
         {
-            return [this.Get_AbsolutePage(1)];
+            return [this.GetAbsolutePage(1)];
         }
         else
         {
-            var PageAbs0 = this.Get_AbsolutePage(0);
-            var PageAbs1 = this.Get_AbsolutePage(1);
+            var PageAbs0 = this.GetAbsolutePage(0);
+            var PageAbs1 = this.GetAbsolutePage(1);
             if (PageAbs0 !== PageAbs1)
                 return [PageAbs0, PageAbs1];
             else
@@ -413,7 +413,7 @@ Paragraph.prototype.RecalculateFastRunRange = function(oParaPos)
 
 	//console.log("Recalc Fast Range");
 
-    return this.Get_AbsolutePage(Result);
+    return this.GetAbsolutePage(Result);
 };
 
 /**
@@ -845,7 +845,7 @@ Paragraph.prototype.private_RecalculatePageBreak       = function(CurLine, CurPa
     if (isParentDocument || isParentBlockSdt)
     {
         // Начинаем параграф с новой страницы
-        var PageRelative = this.private_GetRelativePageIndex(CurPage) - this.Get_StartPage_Relative();
+        var PageRelative = this.GetRelativePage(CurPage) - this.GetRelativeStartPage();
         if (0 === PageRelative && true === ParaPr.PageBreakBefore)
         {
             // Если это первый элемент документа или секции, тогда не надо начинать его с новой страницы.
@@ -1594,7 +1594,7 @@ Paragraph.prototype.private_RecalculateLineBottomBound = function(CurLine, CurPa
     var BreakPageLineEmpty = (LineInfo & paralineinfo_BreakPage && LineInfo & paralineinfo_Empty && !(LineInfo & paralineinfo_End) ? true : false);
     PRS.BreakPageLineEmpty = BreakPageLineEmpty;
 
-    var RealCurPage = this.private_GetRelativePageIndex(CurPage) - this.Get_StartPage_Relative();
+    var RealCurPage = this.GetRelativePage(CurPage) - this.GetRelativeStartPage();
 
     var YLimit = PRS.YLimit;
     var oTopDocument = PRS.TopDocument;
@@ -1666,11 +1666,11 @@ Paragraph.prototype.private_RecalculateLineCheckRanges = function(CurLine, CurPa
     if (this.bFromDocument && PRS.GetTopDocument() === this.LogicDocument && !PRS.IsInTable())
 	{
 		// Заглушка для случая, когда параграф лежит в CBlockLevelSdt
-		PageFields = this.LogicDocument.Get_ColumnFields(PRS.GetTopIndex(), this.Get_AbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage));
+		PageFields = this.LogicDocument.Get_ColumnFields(PRS.GetTopIndex(), this.GetAbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage));
 	}
 	else
 	{
-		PageFields = this.Parent.Get_ColumnFields ? this.Parent.Get_ColumnFields(this.Get_Index(), this.Get_AbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage)) : this.Parent.Get_PageFields(this.private_GetRelativePageIndex(CurPage), this.Parent.IsHdrFtr());
+		PageFields = this.Parent.Get_ColumnFields ? this.Parent.Get_ColumnFields(this.Get_Index(), this.GetAbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage)) : this.Parent.Get_PageFields(this.GetRelativePage(CurPage), this.Parent.IsHdrFtr());
 	}
 
     var Ranges = PRS.Ranges;
@@ -1688,7 +1688,7 @@ Paragraph.prototype.private_RecalculateLineCheckRanges = function(CurLine, CurPa
 	}
 
     if ( true === this.Use_Wrap() )
-        Ranges2 = this.Parent.CheckRange(Left, Top, Right, Bottom, Top2, Bottom2, PageFields.X, PageFields.XLimit, this.private_GetRelativePageIndex(CurPage), true, PRS.MathNotInline);
+        Ranges2 = this.Parent.CheckRange(Left, Top, Right, Bottom, Top2, Bottom2, PageFields.X, PageFields.XLimit, this.GetRelativePage(CurPage), true, PRS.MathNotInline);
     else
         Ranges2 = [];
 
@@ -2352,7 +2352,7 @@ Paragraph.prototype.private_RecalculateGetTabPos = function(PRS, X, ParaPr, CurP
 	
 	if (this.isRtlDirection())
 	{
-		let pageRel = this.private_GetRelativePageIndex(CurPage);
+		let pageRel = this.GetRelativePage(CurPage);
 		let pageLimits = this.Parent.Get_PageLimits(pageRel);
 		
 		let range = this.Lines[PRS.Line].Ranges[PRS.Range];
@@ -2614,7 +2614,7 @@ Paragraph.prototype.private_CheckNeedBeforeSpacing = function(CurPage, Parent, P
 	var SectionIndex  = LogicDocument.GetSectionIndexByElementIndex(this.Get_Index());
 	var FirstElement  = LogicDocument.GetFirstElementInSection(SectionIndex);
 
-	if (0 !== SectionIndex && (!FirstElement || FirstElement.Get_AbsolutePage(0) === PageAbs))
+	if (0 !== SectionIndex && (!FirstElement || FirstElement.GetAbsolutePage(0) === PageAbs))
 		return true;
 
 	return false;
@@ -3487,8 +3487,8 @@ CParagraphRecalculateStateWrap.prototype.Reset_Page = function(Paragraph, CurPag
 	this.Paragraph   = Paragraph;
 	this.Parent      = Paragraph.Parent;
 	this.TopDocument = Paragraph.Parent.GetTopDocumentContent();
-	this.PageAbs     = Paragraph.Get_AbsolutePage(CurPage);
-	this.ColumnAbs   = Paragraph.Get_AbsoluteColumn(CurPage);
+	this.PageAbs     = Paragraph.GetAbsolutePage(CurPage);
+	this.ColumnAbs   = Paragraph.GetAbsoluteColumn(CurPage);
 	this.InTable     = Paragraph.IsTableCellContent();
 	this.SectPr      = null;
 	this.TopIndex    = -1;

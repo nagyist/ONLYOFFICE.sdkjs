@@ -962,11 +962,11 @@ CDocumentContentElementBase.prototype.GetOutlineParagraphs = function(arrOutline
 //----------------------------------------------------------------------------------------------------------------------
 // Функции для работы с номерами страниц/колонок/секций
 //----------------------------------------------------------------------------------------------------------------------
-CDocumentContentElementBase.prototype.Get_StartPage_Absolute = function()
+CDocumentContentElementBase.prototype.GetAbsoluteStartPage = function()
 {
-	return this.Get_AbsolutePage(0);
+	return this.GetAbsolutePage(0);
 };
-CDocumentContentElementBase.prototype.Get_StartPage_Relative = function()
+CDocumentContentElementBase.prototype.GetRelativeStartPage = function()
 {
 	return this.PageNum;
 };
@@ -982,7 +982,7 @@ CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, colum
 {
 	if (undefined === this.SectionNum || this.Sections.length <= 1)
 	{
-		let startPage = this.Get_StartPage_Relative();
+		let startPage = this.GetRelativeStartPage();
 		return column - this.GetStartColumn() + (page - startPage) * columnCount;
 	}
 	else
@@ -1025,7 +1025,7 @@ CDocumentContentElementBase.prototype.GetAbsoluteSection = function(curPage)
 	
 	return this.Parent.GetAbsoluteSection(this.GetRelativePage(curPage));
 };
-CDocumentContentElementBase.prototype.private_GetRelativePageIndex = function(curPage)
+CDocumentContentElementBase.prototype.GetRelativePage = function(curPage)
 {
 	if (undefined === this.SectionNum || this.Sections.length <= 1)
 	{
@@ -1046,69 +1046,28 @@ CDocumentContentElementBase.prototype.private_GetRelativePageIndex = function(cu
 		return parentStartPage + ((startColumn + curPage - startPage) / columnCount | 0);
 	}
 };
-CDocumentContentElementBase.prototype.private_GetAbsolutePageIndex = function(CurPage)
+CDocumentContentElementBase.prototype.GetAbsolutePage = function(CurPage)
 {
-	return this.Parent.Get_AbsolutePage(this.private_GetRelativePageIndex(CurPage));
+	return this.Parent.GetAbsolutePage(this.GetRelativePage(CurPage));
 };
-CDocumentContentElementBase.prototype.Get_AbsolutePage = function(CurPage)
-{
-	return this.private_GetAbsolutePageIndex(CurPage);
-};
-CDocumentContentElementBase.prototype.Get_AbsoluteColumn = function(CurPage)
+CDocumentContentElementBase.prototype.GetAbsoluteColumn = function(CurPage)
 {
 	if (this.Parent instanceof CDocument)
 		return this.private_GetColumnIndex(CurPage);
 
-	return this.Parent.Get_AbsoluteColumn(this.private_GetRelativePageIndex(CurPage));
+	return this.Parent.GetAbsoluteColumn(this.GetRelativePage(CurPage));
 };
 CDocumentContentElementBase.prototype.private_GetColumnIndex = function(CurPage)
 {
 	return (this.ColumnNum + CurPage) - (((this.ColumnNum + CurPage) / this.ColumnsCount | 0) * this.ColumnsCount);
 };
-CDocumentContentElementBase.prototype.Get_CurrentPage_Absolute = function()
+CDocumentContentElementBase.prototype.GetAbsoluteCurrentPage = function()
 {
-	return this.private_GetAbsolutePageIndex(0);
+	return this.GetAbsolutePage(0);
 };
-CDocumentContentElementBase.prototype.Get_CurrentPage_Relative = function()
+CDocumentContentElementBase.prototype.GetRelativeCurrentPage = function()
 {
-	return this.private_GetRelativePageIndex(0);
-};
-CDocumentContentElementBase.prototype.GetCurrentPageAbsolute = function()
-{
-	return this.Get_CurrentPage_Absolute();
-};
-CDocumentContentElementBase.prototype.GetAbsolutePage = function(CurPage)
-{
-	return this.private_GetAbsolutePageIndex(CurPage);
-};
-CDocumentContentElementBase.prototype.GetAbsoluteColumn = function(CurPage)
-{
-	return this.Get_AbsoluteColumn(CurPage);
-};
-/**
- * Получаем начальный номер страницы данного элемента относительно родительского класса
- * @returns {number}
- */
-CDocumentContentElementBase.prototype.GetStartPageRelative = function()
-{
-	return this.PageNum;
-};
-/**
- * Получаем номер страницы, относительно родительского класса
- * @param {number} nCurPage
- * @returns {number}
- */
-CDocumentContentElementBase.prototype.GetRelativePage = function(nCurPage)
-{
-	return this.private_GetRelativePageIndex(nCurPage);
-};
-/**
- * Получаем обсолютный начальный номер страницы данного элемента
- * @returns {number}
- */
-CDocumentContentElementBase.prototype.GetStartPageAbsolute = function()
-{
-	return this.private_GetAbsolutePageIndex(0);
+	return this.GetRelativePage(0);
 };
 //----------------------------------------------------------------------------------------------------------------------
 CDocumentContentElementBase.prototype.GetPagesCount = function()

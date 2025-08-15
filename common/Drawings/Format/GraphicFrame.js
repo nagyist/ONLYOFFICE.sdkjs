@@ -722,11 +722,11 @@
 		}
 	};
 
-	CGraphicFrame.prototype.Get_AbsolutePage = function (CurPage) {
-		return this.Get_StartPage_Absolute();
+	CGraphicFrame.prototype.GetAbsolutePage = function (CurPage) {
+		return this.GetAbsoluteStartPage();
 	};
 
-	CGraphicFrame.prototype.Get_AbsoluteColumn = function (CurPage) {
+	CGraphicFrame.prototype.GetAbsoluteColumn = function (CurPage) {
 		return 0;
 	};
 

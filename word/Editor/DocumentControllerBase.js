@@ -100,7 +100,7 @@ CDocumentControllerBase.prototype.Is_DrawingShape = function(bReturnShape)
  * @param {number} CurPage
  * @returns {number}
  */
-CDocumentControllerBase.prototype.Get_AbsolutePage = function(CurPage)
+CDocumentControllerBase.prototype.GetAbsolutePage = function(CurPage)
 {
 	return CurPage;
 };
@@ -109,7 +109,7 @@ CDocumentControllerBase.prototype.Get_AbsolutePage = function(CurPage)
  * @param {number} CurPage
  * @returns {number}
  */
-CDocumentControllerBase.prototype.Get_AbsoluteColumn = function(CurPage)
+CDocumentControllerBase.prototype.GetAbsoluteColumn = function(CurPage)
 {
 	return 0;
 };
