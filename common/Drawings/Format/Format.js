@@ -16187,9 +16187,35 @@
 			}, this, []);
 		}
 
+		/**
+		 * Don't use this method. Use GetDefaultTheme
+		 * @return {CTheme}
+		 */
+		function GenerateDefaultVisioTheme(presentation, opt_fontName) {
+			if (!opt_fontName) {
+				opt_fontName = "Calibri";
+			}
+			let theme = GenerateDefaultTheme(presentation, opt_fontName);
+			let scheme = theme.themeElements.clrScheme;
+			// TODO change other colors
+			scheme.colors[11] = AscFormat.CreateUniColorRGB(0x05, 0x63, 0xC1); // link
+			scheme.colors[10] = AscFormat.CreateUniColorRGB(0x80, 0x00, 0x80); // followed link
+
+
+			theme.themeElements.themeExt = new AscFormat.CThemeExt();
+			theme.themeElements.themeExt.themeSchemeSchemeEnum = "0";
+
+			theme.themeElements.clrScheme.clrSchemeExtLst = new AscFormat.CClrSchemeExtLst();
+			theme.themeElements.clrScheme.clrSchemeExtLst.schemeEnum = "0";
+
+			theme.themeElements.themeExt.fmtConnectorScheme = new AscFormat.FmtScheme();
+
+			return theme;
+		}
+
 		function GetDefaultTheme() {
 			if(!AscFormat.DEFAULT_THEME) {
-				AscFormat.DEFAULT_THEME = GenerateDefaultTheme(null);
+				AscFormat.DEFAULT_THEME = AscFormat.GenerateDefaultTheme(null);
 			}
 			return AscFormat.DEFAULT_THEME;
 		}
@@ -20274,6 +20300,7 @@
 		window['AscFormat'].CBulletType = CBulletType;
 		window['AscFormat'].TextListStyle = TextListStyle;
 		window['AscFormat'].GenerateDefaultTheme = GenerateDefaultTheme;
+		window['AscFormat'].GenerateDefaultVisioTheme = GenerateDefaultVisioTheme;
 		window['AscFormat'].GenerateDefaultMasterSlide = GenerateDefaultMasterSlide;
 		window['AscFormat'].GenerateDefaultSlideLayout = GenerateDefaultSlideLayout;
 		window['AscFormat'].GenerateDefaultSlide = GenerateDefaultSlide;

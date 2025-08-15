@@ -434,7 +434,8 @@
 				result = getMedifiersResult && getMedifiersResult.fontPropsObject.color;
 			} else if (cellName === "FillForegnd" || cellName === "FillBkgnd") {
 				//leave result because it is fill
-				if (getMedifiersResult.fill.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
+				if (getMedifiersResult && getMedifiersResult.fill &&
+						getMedifiersResult.fill.type === Asc.c_oAscFill.FILL_TYPE_PATT) {
 					let uniColor;
 					if (cellName === "FillForegnd") {
 						uniColor = getMedifiersResult.fill.fgClr;
