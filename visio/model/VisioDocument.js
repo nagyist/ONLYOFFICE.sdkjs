@@ -203,7 +203,7 @@ AscDFH.historyitem_type_VisioWindow = 328;
 		return true;
 	};
 	CVisioDocument.prototype.IsPresentationEditor = function() {
-		return true;
+		return false;
 	};
 	CVisioDocument.prototype.IsSpreadSheetEditor = function() {
 		return false;

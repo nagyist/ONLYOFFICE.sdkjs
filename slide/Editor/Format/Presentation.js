@@ -726,6 +726,9 @@ CPresentation.prototype.IsSpreadSheetEditor = function () {
 CPresentation.prototype.IsPdfEditor = function() {
 	return false;
 };
+CPresentation.prototype.IsVisioEditor = function() {
+	return false;
+};
 CPresentation.prototype.GetWidthMM = function () {
 	return this.GetWidthEMU() / g_dKoef_mm_to_emu;
 };
