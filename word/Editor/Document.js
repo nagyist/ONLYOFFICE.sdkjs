@@ -2197,7 +2197,7 @@ CDocument.prototype.Get_ColumnFields = function(nElementIndex, nColumnIndex, nPa
 	var X      = oFrame.Left;
 	var XLimit = oFrame.Right;
 
-	var ColumnsCount = oSectPr.GetColumnsCount();
+	var ColumnsCount = oSectPr.GetColumnCount();
 	if (nColumnIndex >= ColumnsCount)
 		nColumnIndex = ColumnsCount - 1;
 
@@ -3457,7 +3457,7 @@ CDocument.prototype.private_RecalculateFastRunRange = function(arrChanges, nStar
 			// Если за данным параграфом следовал пустой параграф с новой секцией, тогда его тоже надо пересчитать.
 			var NextElement = oParagraph.Get_DocumentNext();
 			if (null !== NextElement && true === this.Pages[nPageIndex].Check_EndSectionPara(NextElement))
-				this.private_RecalculateEmptySectionParagraph(NextElement, oParagraph, nPageIndex, oParagraph.Get_AbsoluteColumn(oParagraph.Get_PagesCount() - 1), oParagraph.Get_ColumnsCount());
+				this.private_RecalculateEmptySectionParagraph(NextElement, oParagraph, nPageIndex, oParagraph.Get_AbsoluteColumn(oParagraph.Get_PagesCount() - 1), oParagraph.GetColumnCount());
 
 			// Перерисуем страницу, на которой произошли изменения
 			this.DrawingDocument.OnRecalculatePage(nPageIndex, this.Pages[nPageIndex]);
@@ -3568,7 +3568,7 @@ CDocument.prototype.private_RecalculateFastParagraph = function(arrChanges, nSta
 		var oNextElement  = para.Get_DocumentNext();
 		var nLastFastPage = _pages[_pages.length - 1];
 		if (null !== oNextElement && true === this.Pages[nLastFastPage].Check_EndSectionPara(oNextElement))
-			this.private_RecalculateEmptySectionParagraph(oNextElement, para, nLastFastPage, para.GetAbsoluteColumn(para.GetPagesCount() - 1), para.GetColumnsCount());
+			this.private_RecalculateEmptySectionParagraph(oNextElement, para, nLastFastPage, para.GetAbsoluteColumn(para.GetPagesCount() - 1), para.GetColumnCount());
 	}
 	
 	let bUpdatePlaceholders = false;
@@ -3770,7 +3770,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 
     this.Footnotes.ContinueElementsFromPreviousColumn(PageIndex, ColumnIndex, Y, YLimit);
 
-    var ColumnsCount = SectPr.GetColumnsCount();
+    var ColumnsCount = SectPr.GetColumnCount();
 	
 	var bReDraw             = true;
 	var bContinue           = false;
@@ -7414,7 +7414,7 @@ CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, Column
 	{
 		var oElement             = this.Content[nFlowPos];
 		ColumnsInfo.Column       = oElement.GetStartColumn();
-		ColumnsInfo.ColumnsCount = oElement.GetColumnsCount();
+		ColumnsInfo.ColumnsCount = oElement.GetColumnCount();
 		return nFlowPos;
 	}
 
@@ -7429,7 +7429,7 @@ CDocument.prototype.Internal_GetContentPosByXY = function(X, Y, nCurPage, Column
         {
             var Element              = this.Content[Item.Index];
             ColumnsInfo.Column       = Element.Get_StartColumn();
-            ColumnsInfo.ColumnsCount = Element.Get_ColumnsCount();
+            ColumnsInfo.ColumnsCount = Element.GetColumnCount();
             return Item.Index;
         }
     }
@@ -12217,7 +12217,7 @@ CDocument.prototype.Document_UpdateRulersStateBySection = function(nPos)
 	var nCurPos = undefined === nPos ? ( this.Selection.Use === true ? this.Selection.EndPos : this.CurPos.ContentPos ) : nPos;
 
 	var oSectPr = this.SectionsInfo.Get_SectPr(nCurPos).SectPr;
-	if (oSectPr.GetColumnsCount() > 1)
+	if (oSectPr.GetColumnCount() > 1)
 	{
 		this.ColumnsMarkup.UpdateFromSectPr(oSectPr, this.CurPage);
 
@@ -16562,46 +16562,6 @@ CDocument.prototype.private_GetElementPageIndexByXY = function(ElementPos, X, Y,
 	
 	return Element.GetElementPageIndex(PageIndex, resultColumn, columnCount, PageSection.GetIndex());
 };
-CDocument.prototype.Get_DocumentPagePositionByContentPosition = function(ContentPosition)
-{
-	if (!ContentPosition)
-		return null;
-
-	var Para    = null;
-	var ParaPos = 0;
-	var Count   = ContentPosition.length;
-	for (; ParaPos < Count; ++ParaPos)
-	{
-		var Element = ContentPosition[ParaPos].Class;
-		if (Element instanceof AscWord.Paragraph)
-		{
-			Para = Element;
-			break;
-		}
-	}
-
-	if (!Para)
-		return null;
-
-	var ParaContentPos = new AscWord.CParagraphContentPos();
-	for (var Pos = ParaPos; Pos < Count; ++Pos)
-	{
-		ParaContentPos.Update(ContentPosition[Pos].Position, Pos - ParaPos);
-	}
-
-	var ParaPos = Para.Get_ParaPosByContentPos(ParaContentPos);
-	if (!ParaPos)
-		return;
-	
-	let pagePos = new CDocumentPagePosition();
-	
-	pagePos.Page        = Para.GetAbsolutePage(ParaPos.Page);
-	pagePos.Column      = Para.GetAbsoluteColumn(ParaPos.Page);
-	pagePos.Section     = Para.GetAbsoluteSection(ParaPos.Page);
-	pagePos.PageSection = this.Pages[pagePos.Page] ? this.Pages[pagePos.Page].GetSectionIndexByAbsoluteIndex(pagePos.Section) : 0;
-	
-	return pagePos;
-};
 CDocument.prototype.private_GetPageSectionByContentPosition = function(PageIndex, ContentPosition)
 {
 	var Page = this.Pages[PageIndex];
@@ -16872,7 +16832,7 @@ CDocument.prototype.GetCurrentColumnWidth = function()
 		nCurPos = this.CurPos.ContentPos;
 
 	var oSectPr       = this.SectionsInfo.Get_SectPr(nCurPos).SectPr;
-	var nColumnsCount = oSectPr.Get_ColumnsCount();
+	var nColumnsCount = oSectPr.GetColumnCount();
 
 	if (nColumnsCount > 1)
 	{
@@ -19199,7 +19159,7 @@ CDocument.prototype.controller_CanUpdateTarget = function()
 	else if (null !== this.FullRecalc.Id && this.FullRecalc.StartIndex === nPos)
 	{
 		var oElement     = this.Content[nPos];
-		var nElementPage = this.private_GetElementPageIndex(nPos, this.FullRecalc.PageIndex, this.FullRecalc.ColumnIndex, oElement.Get_ColumnsCount());
+		var nElementPage = this.private_GetElementPageIndex(nPos, this.FullRecalc.PageIndex, this.FullRecalc.ColumnIndex, oElement.GetColumnCount());
 		return oElement.CanUpdateTarget(nElementPage);
 	}
 
@@ -19603,9 +19563,9 @@ CDocument.prototype.controller_AddInlineTable = function(nCols, nRows, nMode)
 		var W    = (PageFields.XLimit - PageFields.X + nAdd);
 		var Grid = [];
 
-		if (SectPr.Get_ColumnsCount() > 1)
+		if (SectPr.GetColumnCount() > 1)
 		{
-			for (var CurCol = 0, ColsCount = SectPr.Get_ColumnsCount(); CurCol < ColsCount; ++CurCol)
+			for (var CurCol = 0, ColsCount = SectPr.GetColumnCount(); CurCol < ColsCount; ++CurCol)
 			{
 				var ColumnWidth = SectPr.Get_ColumnWidth(CurCol);
 				if (W > ColumnWidth)
@@ -21403,7 +21363,8 @@ CDocument.prototype.controller_DrawSelectionOnPage = function(PageAbs)
 	var Page = this.Pages[PageAbs];
 	for (var SectionIndex = 0, SectionsCount = Page.Sections.length; SectionIndex < SectionsCount; ++SectionIndex)
 	{
-		var PageSection = Page.Sections[SectionIndex];
+		var PageSection  = Page.Sections[SectionIndex];
+		let sectionIndex = PageSection.GetIndex();
 		for (var ColumnIndex = 0, ColumnsCount = PageSection.Columns.length; ColumnIndex < ColumnsCount; ++ColumnIndex)
 		{
 			this.DrawingDocument.UpdateTargetTransform(null);
@@ -21429,7 +21390,7 @@ CDocument.prototype.controller_DrawSelectionOnPage = function(PageAbs)
 
 					for (var Index = Start; Index <= End; ++Index)
 					{
-						var ElementPage = this.private_GetElementPageIndex(Index, PageAbs, ColumnIndex, ColumnsCount);
+						var ElementPage = this.private_GetElementPageIndex(Index, PageAbs, ColumnIndex, ColumnsCount, sectionIndex);
 						this.Content[Index].DrawSelectionOnPage(ElementPage);
 					}
 
@@ -22032,15 +21993,16 @@ CDocument.prototype.controller_UpdateRulersState = function()
 
 		if (oSelection.Start === oSelection.End && type_Paragraph !== this.Content[oSelection.Start].GetType())
 		{
-			var PagePos = this.Get_DocumentPagePositionByContentPosition(this.GetContentPosition(true, true));
-
-			var Page   = PagePos ? PagePos.Page : this.CurPage;
-			var Column = PagePos ? PagePos.Column : 0;
-
-			var ElementPos       = oSelection.Start;
-			var Element          = this.Content[ElementPos];
-			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, Page, Column, Element.Get_ColumnsCount());
-			Element.Document_UpdateRulersState(ElementPageIndex);
+			let pagePos = AscWord.DocumentPagePosition.fromDocumentPosition(this.GetContentPosition(true, true), this);
+			
+			let page        = pagePos ? pagePos.Page : this.CurPage;
+			let column      = pagePos ? pagePos.Column : 0;
+			let columnCount = pagePos ? pagePos.ColumnCount : 1;
+			let section     = pagePos ? pagePos.Section : 0;
+			
+			let element          = this.Content[oSelection.Start];
+			let elementPageIndex = element.GetElementPageIndex(page, column, columnCount, section);
+			element.Document_UpdateRulersState(elementPageIndex);
 		}
 		else
 		{
@@ -22085,15 +22047,16 @@ CDocument.prototype.controller_UpdateRulersState = function()
 
 		if (this.CurPos.ContentPos >= 0 && (null === this.FullRecalc.Id || this.FullRecalc.StartIndex > this.CurPos.ContentPos))
 		{
-			var PagePos = this.Get_DocumentPagePositionByContentPosition(this.GetContentPosition(false));
-
-			var Page   = PagePos ? PagePos.Page : this.CurPage;
-			var Column = PagePos ? PagePos.Column : 0;
-
-			var ElementPos       = this.CurPos.ContentPos;
-			var Element          = this.Content[ElementPos];
-			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, Page, Column, Element.Get_ColumnsCount());
-			Element.Document_UpdateRulersState(ElementPageIndex);
+			var pagePos = AscWord.DocumentPagePosition.fromDocumentPosition(this.GetContentPosition(false), this);
+			
+			let page        = pagePos ? pagePos.Page : this.CurPage;
+			let column      = pagePos ? pagePos.Column : 0;
+			let columnCount = pagePos ? pagePos.ColumnCount : 1;
+			let section     = pagePos ? pagePos.Section : 0;
+			
+			let element          = this.Content[this.CurPos.ContentPos];
+			let elementPageIndex = element.GetElementPageIndex(page, column, columnCount, section);
+			element.Document_UpdateRulersState(elementPageIndex);
 		}
 	}
 };
@@ -22470,7 +22433,7 @@ CDocument.prototype.controller_GetColumnSize = function()
 {
 	var nContentPos = true === this.Selection.Use ? ( this.Selection.StartPos < this.Selection.EndPos ? this.Selection.StartPos : this.Selection.EndPos ) : this.CurPos.ContentPos;
 
-	var oPagePos   = this.Get_DocumentPagePositionByContentPosition(this.GetContentPosition(this.Selection.Use, false));
+	var oPagePos   = AscWord.DocumentPagePosition.fromDocumentPosition(this.GetContentPosition(this.Selection.Use, false), this);
 	var nColumnAbs = oPagePos ? oPagePos.Column : 0;
 	var nPageAbs   = oPagePos ? oPagePos.Page : 0;
 
@@ -22482,7 +22445,7 @@ CDocument.prototype.controller_GetColumnSize = function()
 	var X      = oFrame.Left;
 	var XLimit = oFrame.Right;
 
-	var ColumnsCount = oSectPr.GetColumnsCount();
+	var ColumnsCount = oSectPr.GetColumnCount();
 	for (var ColumnIndex = 0; ColumnIndex < nColumnAbs; ++ColumnIndex)
 	{
 		X += oSectPr.GetColumnWidth(ColumnIndex);
@@ -26975,9 +26938,9 @@ CDocument.prototype.private_ConvertTextToTable = function(oProps, oSelectedConte
 		var PageFields = this.Get_PageFields(this.CurPage);
 		var nAdd = this.GetCompatibilityMode() <= AscCommon.document_compatibility_mode_Word14 ?  2 * 1.9 : 0;
 		W = (PageFields.XLimit - PageFields.X + nAdd);
-		if (SectPr.Get_ColumnsCount() > 1)
+		if (SectPr.GetColumnCount() > 1)
 			{
-				for (var CurCol = 0, ColsCount = SectPr.Get_ColumnsCount(); CurCol < ColsCount; ++CurCol)
+				for (var CurCol = 0, ColsCount = SectPr.GetColumnCount(); CurCol < ColsCount; ++CurCol)
 				{
 					var ColumnWidth = SectPr.Get_ColumnWidth(CurCol);
 					if (W > ColumnWidth)
@@ -28220,13 +28183,6 @@ CRevisionsChangeParagraphSearchEngine.prototype.GetDirection = function()
 {
     return this.Direction;
 };
-
-function CDocumentPagePosition()
-{
-	this.Page    = 0;
-	this.Column  = 0;
-	this.Section = 0;
-}
 
 function CDocumentNumberingInfoCounter()
 {

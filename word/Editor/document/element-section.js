@@ -48,7 +48,7 @@
 		this.sectPr          = sectPr;
 		this.startPage       = startPage;
 		this.endPage         = endPage;
-		this.columnCount     = sectPr ? sectPr.GetColumnsCount() : 1;
+		this.columnCount     = sectPr ? sectPr.GetColumnCount() : 1;
 		this.startColumn     = startColumn ? startColumn : 0;
 		this.index           = index;
 	}

@@ -95,7 +95,7 @@
 			YLimit = oPageSection.GetYLimit();
 		}
 
-		let nColumnsCount = oSectPr.GetColumnsCount();
+		let nColumnsCount = oSectPr.GetColumnCount();
 		for (let nColumnIndex = 0; nColumnIndex < nColumnAbs; ++nColumnIndex)
 		{
 			X += oSectPr.GetColumnWidth(nColumnIndex);

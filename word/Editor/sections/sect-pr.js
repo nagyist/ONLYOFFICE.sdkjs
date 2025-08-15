@@ -1037,14 +1037,14 @@ var section_footnote_RestartEachPage   = 0x02;
 		
 		if (this.IsEqualColumnWidth())
 		{
-			if (this.GetColumnsCount() !== oColumnsProps.get_Num()
+			if (this.GetColumnCount() !== oColumnsProps.get_Num()
 				|| Math.abs(this.GetColumnSpace() - oColumnsProps.get_Space()) > 0.01763)
 				return false;
 		}
 		else
 		{
 			var nColumnsCount = oColumnsProps.get_ColsCount();
-			if (nColumnsCount !== this.GetColumnsCount())
+			if (nColumnsCount !== this.GetColumnCount())
 				return false;
 			
 			for (var nIndex = 0; nIndex < nColumnsCount; ++nIndex)
@@ -1178,7 +1178,7 @@ var section_footnote_RestartEachPage   = 0x02;
 		
 		return Asc.c_oAscPageOrientation.PagePortrait;
 	};
-	SectPr.prototype.GetColumnsCount                  = function()
+	SectPr.prototype.GetColumnCount                   = function()
 	{
 		return this.Columns.Get_Count();
 	};

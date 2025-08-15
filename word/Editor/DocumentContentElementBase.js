@@ -974,10 +974,6 @@ CDocumentContentElementBase.prototype.Get_StartColumn = function()
 {
 	return this.ColumnNum;
 };
-CDocumentContentElementBase.prototype.Get_ColumnsCount = function()
-{
-	return this.ColumnsCount;
-};
 CDocumentContentElementBase.prototype.GetStartSection = function()
 {
 	return this.SectionNum;
@@ -1015,7 +1011,7 @@ CDocumentContentElementBase.prototype.GetStartColumn = function()
 {
 	return this.ColumnNum;
 };
-CDocumentContentElementBase.prototype.GetColumnsCount = function()
+CDocumentContentElementBase.prototype.GetColumnCount = function()
 {
 	return this.ColumnsCount;
 };

@@ -76,7 +76,7 @@
 		var nX      = oFrame.Left;
 		var nXLimit = oFrame.Right;
 		
-		for (var nCurColumn = 0, nColumnsCount = oSectPr.GetColumnsCount(); nCurColumn < nColumnsCount; ++nCurColumn)
+		for (var nCurColumn = 0, nColumnsCount = oSectPr.GetColumnCount(); nCurColumn < nColumnsCount; ++nCurColumn)
 		{
 			this.Columns[nCurColumn] = new CDocumentPageColumn();
 			

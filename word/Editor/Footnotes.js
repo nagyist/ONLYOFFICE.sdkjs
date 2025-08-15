@@ -238,7 +238,7 @@ CFootnotesController.prototype.Reset = function(nPageIndex, oSectPr)
 	var X      = oFrame.Left;
 	var XLimit = oFrame.Right;
 
-	var nColumnsCount = oSectPr.GetColumnsCount();
+	var nColumnsCount = oSectPr.GetColumnCount();
 	for (var nColumnIndex = 0; nColumnIndex < nColumnsCount; ++nColumnIndex)
 	{
 		var _X = X;

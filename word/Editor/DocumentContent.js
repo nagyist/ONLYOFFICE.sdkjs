@@ -2414,7 +2414,7 @@ CDocumentContent.prototype.Document_UpdateRulersState = function(CurPage)
 			{
 				var ElementPos       = this.Selection.StartPos;
 				var Element          = this.Content[ElementPos];
-				var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.Get_ColumnsCount());
+				var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.GetColumnCount());
 				Element.Document_UpdateRulersState(ElementPageIndex);
 			}
 			else
@@ -2458,7 +2458,7 @@ CDocumentContent.prototype.Document_UpdateRulersState = function(CurPage)
 		{
 			var ElementPos       = this.CurPos.ContentPos;
 			var Element          = this.Content[ElementPos];
-			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.Get_ColumnsCount());
+			var ElementPageIndex = this.private_GetElementPageIndex(ElementPos, this.CurPage, Element.Get_StartColumn(), Element.GetColumnCount());
 			Element.Document_UpdateRulersState(ElementPageIndex);
 		}
 	}
@@ -7570,12 +7570,15 @@ CDocumentContent.prototype.Set_StartPage = function(StartPage, StartColumn, Colu
 	this.StartColumn  = undefined !== StartColumn ? StartColumn : 0;
 	this.ColumnsCount = undefined !== ColumnsCount ? ColumnsCount : 1;
 };
-CDocumentContent.prototype.Get_ColumnsCount = function()
+CDocumentContent.prototype.GetColumnCount = function()
 {
 	return this.ColumnsCount;
 };
 CDocumentContent.prototype.private_GetRelativePageIndex = function(CurPage)
 {
+	if (this.Parent && this.Parent.private_GetRelativePageIndex)
+		return this.Parent.private_GetRelativePageIndex(CurPage);
+	
 	if (!this.ColumnsCount || 0 === this.ColumnsCount)
 		return this.StartPage + CurPage;
 

@@ -95,6 +95,14 @@
 		let startIndex = this.Sections[0].GetIndex();
 		return Math.max(0, Math.min(this.Sections.length - 1, sectionIndex - startIndex));
 	};
+	DocumentPage.prototype.GetColumnCount = function(sectionIndex)
+	{
+		if (!this.Sections.length)
+			return 1;
+		
+		sectionIndex = Math.max(0, Math.min(sectionIndex, this.Sections.length - 1));
+		return this.Sections[sectionIndex].GetColumnCount();
+	};
 	DocumentPage.prototype.GetFirstSectPr = function()
 	{
 		if (!this.Sections.length)
@@ -271,7 +279,62 @@
 			}
 		}
 	};
+	
+	/**
+	 * @constructor
+	 */
+	function DocumentPagePosition()
+	{
+		this.Page        = 0;
+		this.Column      = 0;
+		this.Section     = 0;
+		this.PageSection = 0;
+		this.ColumnCount = 1;
+	}
+	DocumentPagePosition.fromDocumentPosition = function(docPos, logicDocument)
+	{
+		if (!docPos)
+			return null;
+		
+		let paragraph = null;
+		let paraPos   = null;
+		for (let pos = 0, posLen = docPos.length; pos < posLen; ++pos)
+		{
+			let obj = docPos[pos].Class;
+			if (obj instanceof AscWord.Paragraph)
+			{
+				let startPos = pos;
+				paragraph = obj;
+				let paraContentPos = new AscWord.CParagraphContentPos();
+				for (; pos < posLen; ++pos)
+				{
+					paraContentPos.Update(docPos[pos].Position, pos - startPos);
+				}
+				
+				paraPos = paragraph.Get_ParaPosByContentPos(paraContentPos);
+				break;
+			}
+		}
+		
+		if (!paragraph || !paraPos)
+			return null;
+		
+		let pagePos = new DocumentPagePosition();
+		
+		pagePos.Page        = paragraph.GetAbsolutePage(paraPos.Page);
+		pagePos.Column      = paragraph.GetAbsoluteColumn(paraPos.Page);
+		pagePos.Section     = paragraph.GetAbsoluteSection(paraPos.Page);
+		pagePos.PageSection = logicDocument.Pages[pagePos.Page] ? logicDocument.Pages[pagePos.Page].GetSectionIndexByAbsoluteIndex(pagePos.Section) : 0;
+		pagePos.ColumnCount = 1;
+		
+		let docSection = logicDocument.SectionsInfo.Get_SectPr2(pagePos.Section);
+		if (docSection)
+			pagePos.ColumnCount = docSection.SectPr.GetColumnCount();
+		
+		return pagePos;
+	};
 	//--------------------------------------------------------export----------------------------------------------------
-	AscWord.DocumentPage = DocumentPage;
+	AscWord.DocumentPage         = DocumentPage;
+	AscWord.DocumentPagePosition = DocumentPagePosition;
 	
 })();

@@ -123,7 +123,7 @@
     };
     CDrawingDocContent.prototype.GetSummaryHeight = function(){
         var fSummHeight = 0;
-        var nColumnsCount = this.Get_ColumnsCount();
+        var nColumnsCount = this.GetColumnCount();
         for(var i = 0; i < this.Pages.length; ++i){
             var oPage = this.Pages[i];
             var fPageHeight = 0;
@@ -207,7 +207,7 @@
         return width + boxError;
     };
 
-    CDrawingDocContent.prototype.Get_ColumnsCount = function(){
+    CDrawingDocContent.prototype.GetColumnCount = function(){
         var nColumnCount = 1;
         if(this.Parent.getBodyPr){
             var oBodyPr = this.Parent.getBodyPr();
@@ -232,7 +232,7 @@
         var YLimit = this.YLimit;
         var ColumnSpaceBefore = 0;
         var ColumnSpaceAfter = 0;
-        var nNumCol = this.Get_ColumnsCount();
+        var nNumCol = this.GetColumnCount();
         var oBodyPr = this.Parent.getBodyPr && this.Parent.getBodyPr();
         if(nNumCol > 1 && oBodyPr)
         {
@@ -263,7 +263,7 @@
 
     CDrawingDocContent.prototype.RecalculateContent = function(fWidth, fHeight, nStartPage){
         this.CalculateAllFields();
-        if(this.Get_ColumnsCount() === 1){
+        if(this.GetColumnCount() === 1){
             CDocumentContent.prototype.RecalculateContent.call(this, fWidth, fHeight, nStartPage);
         }
         else{
@@ -280,7 +280,7 @@
                     ++nItCount;
                 }
                 var fNeedHeight = fHigh;
-                if(this.Get_ColumnsCount() > 1){
+                if(this.GetColumnCount() > 1){
                     while((fHigh - fLow) > 0.1){
                         var fCheckHeight = fLow +  (fHigh - fLow)/2;
                         this.Start_Recalculate(fWidth, fCheckHeight);
@@ -311,7 +311,7 @@
 
     CDrawingDocContent.prototype.Recalculate_PageDrawing   = function()
     {
-        var nColumnsCount = this.Get_ColumnsCount();
+        var nColumnsCount = this.GetColumnCount();
         var nPageIndex = this.FullRecalc.PageIndex;
         this.Pages.length = nPageIndex + 1;
         if(0 === this.FullRecalc.ColumnIndex && true === this.FullRecalc.Start)
@@ -340,7 +340,7 @@
         var XLimit = oStartPos.XLimit;
         var YLimit = oStartPos.YLimit;
 
-        var nColumnsCount = this.Get_ColumnsCount();
+        var nColumnsCount = this.GetColumnCount();
 
         var aContent = this.Content;
         var nCount = aContent.length;
@@ -664,7 +664,7 @@
             {
                 var Element              = this.Content[Item.Index];
                 ColumnsInfo.Column       = Element.Get_StartColumn();
-                ColumnsInfo.ColumnsCount = Element.Get_ColumnsCount();
+                ColumnsInfo.ColumnsCount = Element.GetColumnCount();
                 return Item.Index;
             }
         }
