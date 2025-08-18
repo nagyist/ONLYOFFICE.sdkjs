@@ -686,16 +686,35 @@ var section_footnote_RestartEachPage   = 0x02;
 	//------------------------------------------------------------------------------------------------------------------
 	SectPr.prototype.Refresh_RecalcData = function(Data)
 	{
-		// Найдем данную секцию в документе
-		var Index = this.LogicDocument.SectionsInfo.Find(this);
-		
-		if (-1 === Index)
+		let sectionIndex = this.LogicDocument.SectionsInfo.Find(this);
+		if (-1 === sectionIndex)
 			return;
 		
 		if (AscDFH.historyitem_Section_LnNumType === Data.Type)
 		{
 			AscCommon.History.AddLineNumbersToRecalculateData();
 			return;
+		}
+		
+		let logicDocument = this.LogicDocument;
+		function refreshRecalc(sectionIndex)
+		{
+			if (0 === sectionIndex)
+			{
+				logicDocument.Refresh_RecalcData2(0, 0);
+			}
+			else
+			{
+				let paragraph = logicDocument.SectionsInfo.Elements[sectionIndex - 1].Paragraph;
+				if (paragraph)
+				{
+					let nextParagraph = paragraph.GetNextParagraph();
+					if (nextParagraph)
+						paragraph = nextParagraph;
+					
+					paragraph.Refresh_RecalcData2(0);
+				}
+			}
 		}
 		
 		// Здесь есть 1 исключение: когда мы добавляем колонтитул для первой страницы, может так получиться, что
@@ -705,12 +724,12 @@ var section_footnote_RestartEachPage   = 0x02;
 		if ((AscDFH.historyitem_Section_Header_First === Data.Type || AscDFH.historyitem_Section_Footer_First === Data.Type) && false === this.TitlePage)
 		{
 			var bHeader       = AscDFH.historyitem_Section_Header_First === Data.Type ? true : false
-			var SectionsCount = this.LogicDocument.SectionsInfo.GetSectionsCount();
-			while (Index < SectionsCount - 1)
+			var SectionsCount = logicDocument.SectionsInfo.GetSectionsCount();
+			while (sectionIndex < SectionsCount - 1)
 			{
-				Index++;
+				++sectionIndex;
 				
-				var TempSectPr = this.LogicDocument.SectionsInfo.Get_SectPr2(Index).SectPr;
+				var TempSectPr = logicDocument.SectionsInfo.Get_SectPr2(sectionIndex).SectPr;
 				
 				// Если в следующей секции свой колонтитул, тогда наш добавленный колонтитул вообще ни на что не влияет
 				if ((true === bHeader && null !== TempSectPr.Get_Header_First()) || (true !== bHeader && null !== TempSectPr.Get_Footer_First()))
@@ -718,33 +737,12 @@ var section_footnote_RestartEachPage   = 0x02;
 				
 				// Если в следующей секции есть титульная страница, значит мы нашли нужную секцию
 				if (true === TempSectPr.Get_TitlePage())
-				{
-					if (0 === Index)
-					{
-						this.LogicDocument.Refresh_RecalcData2(0, 0);
-					}
-					else
-					{
-						var DocIndex = this.LogicDocument.SectionsInfo.Elements[Index - 1].Index + 1;
-						this.LogicDocument.Refresh_RecalcData2(DocIndex, 0);
-					}
-				}
+					refreshRecalc(sectionIndex);
 			}
 		}
 		else
 		{
-			if (0 === Index)
-			{
-				// Первая секция, значит мы должны пересчитать начиная с самого начала документа
-				this.LogicDocument.Refresh_RecalcData2(0, 0);
-			}
-			else
-			{
-				// Ищем номер элемента, на котором закончилась предыдущая секция, начиная со следующего после него элемента
-				// и пересчитываем документ.
-				var DocIndex = this.LogicDocument.SectionsInfo.Elements[Index - 1].Index + 1;
-				this.LogicDocument.Refresh_RecalcData2(DocIndex, 0);
-			}
+			refreshRecalc(sectionIndex);
 		}
 		
 		// Дополнительно кроме этого мы должны обновить пересчет в колонтитулах, причем только начиная с данной секции

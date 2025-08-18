@@ -407,7 +407,6 @@ function CDocumentRecalculateState()
     this.StartPage    = 0;
 	this.Endnotes     = false;
 	this.SectPr       = null;
-	this.NextSectPr   = null;
 
 	this.TimerStartTime = 0;
 	this.TimerStartPage = 0;
@@ -3313,7 +3312,6 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage, StartIndex);
 	this.FullRecalc.ResetSectionStart = false;
 	this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(StartPage);
-	this.FullRecalc.NextSectPr        = null;
 	this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
 	this.FullRecalc.StartPagesCount   = undefined !== nNoTimerPageIndex ? Math.min(100, Math.max(nNoTimerPageIndex - StartPage, 2)) : 2;
 	this.FullRecalc.StartTime         = performance.now();
@@ -4457,7 +4455,6 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 		this.FullRecalc.ResetStartElement = _bResetStartElement;
 		this.FullRecalc.ResetSectionStart = _bResetSectionStart;
 		this.FullRecalc.SectPr            = _sectPr;
-		this.FullRecalc.NextSectPr        = _sectPr;
 		this.FullRecalc.MainStartPos      = _StartIndex;
 		this.FullRecalc.Endnotes          = _bEndnotesContinue;
 		this.FullRecalc.Continue          = true;
@@ -5130,7 +5127,6 @@ CDocument.prototype.private_RecalculateHdrFtrPageCountUpdate = function()
 			this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(nPageAbs, this.Pages[nPageAbs].Pos);
 			this.FullRecalc.ResetSectionStart = false;
 			this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(nPageAbs);
-			this.FullRecalc.NextSectPr        = null;
 			this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(nPageAbs);
 			this.FullRecalc.MainStartPos      = this.Pages[nPageAbs].Pos;
 
@@ -19133,20 +19129,29 @@ CDocument.prototype.TurnOnCheckChartSelection = function()
 //----------------------------------------------------------------------------------------------------------------------
 CDocument.prototype.controller_CanUpdateTarget = function()
 {
-	var nPos = this.private_GetSelectionPos(true).End;
-
-	if (null != this.FullRecalc.Id && this.FullRecalc.StartIndex < this.CurPos.ContentPos)
-	{
+	let curPos = this.private_GetSelectionPos(true).End;
+	
+	if (!this.FullRecalc.Id || curPos < this.FullRecalc.StartIndex)
+		return true;
+	
+	if (curPos > this.FullRecalc.StartIndex)
 		return false;
-	}
-	else if (null !== this.FullRecalc.Id && this.FullRecalc.StartIndex === nPos)
-	{
-		var oElement     = this.Content[nPos];
-		var nElementPage = this.private_GetElementPageIndex(nPos, this.FullRecalc.PageIndex, this.FullRecalc.ColumnIndex, oElement.GetColumnCount());
-		return oElement.CanUpdateTarget(nElementPage);
-	}
-
-	return true;
+	
+	let pageIndex    = this.FullRecalc.PageIndex;
+	let columnIndex  = this.FullRecalc.ColumnIndex;
+	let sectionIndex = this.FullRecalc.SectionIndex;
+	let sectPr       = this.FullRecalc.SectPr;
+	let columnCount  = sectPr.GetColumnCount();
+	
+	let page        = this.Pages[pageIndex];
+	let pageSection = page ? page.Sections[sectionIndex] : null;
+	
+	if (!pageSection)
+		return false;
+	
+	let element = this.Content[curPos];
+	let elementPageIndex = element.GetElementPageIndex(pageIndex, columnIndex, columnCount, pageSection.GetIndex());
+	return element.CanUpdateTarget(elementPageIndex);
 };
 CDocument.prototype.controller_RecalculateCurPos = function(bUpdateX, bUpdateY, isUpdateTarget)
 {
