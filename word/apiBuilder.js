@@ -9311,6 +9311,25 @@
 		this.Document.MoveCursorToEndPos();
 		return true;
 	};
+	/**
+	 * Moves cursor to the start of the specified page in document.
+	 * @memberof ApiDocument
+	 * @param {number} index - index of page to go
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.1
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GoToPage.js
+	 */
+	ApiDocument.prototype.GoToPage = function(index)
+	{
+		let nCount = this.GetPageCount();
+		if (typeof(index) !== "number" || index < 0 || index >= nCount) {
+			return false;
+		}
+		
+		this.Document.GoToPage(index);
+		return true;
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiParagraph
@@ -26193,6 +26212,7 @@
 	ApiDocument.prototype["InsertBlankPage"]               = ApiDocument.prototype.InsertBlankPage;
 	ApiDocument.prototype["MoveCursorToStart"]             = ApiDocument.prototype.MoveCursorToStart;
 	ApiDocument.prototype["MoveCursorToEnd"]               = ApiDocument.prototype.MoveCursorToEnd;
+	ApiDocument.prototype["GoToPage"]                      = ApiDocument.prototype.GoToPage;
 	
 	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
