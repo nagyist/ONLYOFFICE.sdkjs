@@ -2924,12 +2924,16 @@ var CPresentation = CPresentation || function(){};
             pageOffset = 0;
         }
 
+        let _t = this;
+
         this.Viewer.IsOpenFormsInProgress = true;
         if (oFormsInfo["Fields"] == null) {
             this.Viewer.IsOpenFormsInProgress = false;
             return;
         }
         
+        let oFieldsMap = {};
+
         for (let i = 0; i < oFormsInfo["Fields"].length; i++) {
             let oFormInfo = oFormsInfo["Fields"][i];
             let oForm = AscPDF.ReadFieldFromJSON(oFormInfo, this);
@@ -2944,6 +2948,35 @@ var CPresentation = CPresentation || function(){};
             this.private_AfterFillFormsParents();
         }
         
+        this.widgets.forEach(function(widget) {
+            if (widget.GetParent() == null) {
+                let sName = widget.GetPartialName();
+                
+                if (!oFieldsMap[sName]) {
+                    oFieldsMap[sName] = [];
+                }
+
+                oFieldsMap[sName].push(widget);
+            }
+        });
+
+        Object.values(oFieldsMap).forEach(function(widgets) {
+            if (widgets.length < 2) {
+                return;
+            }
+
+            let oParent = _t.CreateField(widgets[0].GetFullName(), widgets[0].GetType(), []);
+
+            widgets.forEach(function(widget) {
+                oParent.DrainLogicFrom(widget);
+                widget.SetPartialName(undefined);
+            });
+
+            widgets.forEach(function(widget) {
+                oParent.AddKid(widget);
+            });
+        });
+
         if (Array.isArray(oFormsInfo["CO"]) && oFormsInfo["CO"].length > 0)
             this.GetCalculateInfo().SetCalculateOrder(oFormsInfo["CO"]);
         

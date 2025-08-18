@@ -1608,7 +1608,7 @@
         let aPartNames = sName.split('.').filter(function(item) {
             if (item != "")
                 return item;
-        })
+        });
 
         // по формату не больше 20 вложенностей
         if (aPartNames.length > 20)
