@@ -1731,30 +1731,35 @@
 	}
 
 
-	const LISTBOX_ITEM_HEIGHT = 4;
+	const LISTBOX_ITEM_HEIGHT = 2;
 	const LISTBOX_SCROLL_WIDTH = 4;
 	const LISTBOX_PADDING = 1;
-	const LISTBOX_MAX_ITEM_HEIGHT = 6;
+	const LISTBOX_MAX_ITEM_HEIGHT = 4;
 
-
+	const LISTBOXITEM_TEXTPR = {
+		FontFamily: {
+			Name: "Arial",
+			Index: -1,
+		},
+		FontSize: 8
+	};
 	function CListBoxItem(oListBox, sText) {
 		this.listBox = oListBox;
 		this.text = sText || "";
 		this.x = 0;
 		this.y = 0;
-		this.width = 0;
-		this.height = LISTBOX_ITEM_HEIGHT;
+		this.extX = 0;
+		this.extY = LISTBOX_ITEM_HEIGHT;
+		this.textY = 0;
 		this.isSelected = false;
 		this.isHovered = false;
-		this.clipHeight = LISTBOX_ITEM_HEIGHT;
 	}
 
-	CListBoxItem.prototype.setPosition = function (nX, nY, nWidth, nHeight, nClipHeight) {
+	CListBoxItem.prototype.setPosition = function (nX, nY, nWidth, nHeight) {
 		this.x = nX;
 		this.y = nY;
-		this.width = nWidth;
-		this.height = nHeight || LISTBOX_ITEM_HEIGHT;
-		this.clipHeight = nClipHeight || this.height;
+		this.extX = nWidth;
+		this.extY = nHeight || LISTBOX_ITEM_HEIGHT;
 	};
 
 	CListBoxItem.prototype.setSelected = function (bSelected) {
@@ -1768,8 +1773,6 @@
 	CListBoxItem.prototype.draw = function (graphics, nItemHeight, nItemWidth) {
 
 		graphics.SaveGrState();
-		graphics.AddClipRect(this.x, this.y, this.width, this.clipHeight);
-
 		if (this.isSelected) {
 			graphics.b_color1(0, 120, 215, 255);
 		} else if (this.isHovered) {
@@ -1780,9 +1783,9 @@
 
 		graphics._s();
 		graphics._m(this.x, this.y);
-		graphics._l(this.x + this.width, this.y);
-		graphics._l(this.x + this.width, this.y + this.height);
-		graphics._l(this.x, this.y + this.height);
+		graphics._l(this.x + this.extX, this.y);
+		graphics._l(this.x + this.extX, this.y + this.extY);
+		graphics._l(this.x, this.y + this.extY);
 		graphics._z();
 		graphics.df();
 		graphics._e();
@@ -1790,10 +1793,8 @@
 
 		if (this.text) {
 			const nTextPadding = 0.5;
-			const nFontSize = 8;
 			const nTextX = this.x + nTextPadding;
 
-			const nTextY = this.y + 0.8 * this.height;
 			
 			graphics.b_color1(this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, 255);
 
@@ -1803,21 +1804,19 @@
 					Name: "Arial",
 					Index: -1,
 				},
-				FontSize: nFontSize,
-				Bold: false,
-				Italic: false
+				FontSize: 8
 			});
 
 
-			graphics.t(this.text, nTextX, nTextY);
+			graphics.t(this.text, nTextX, this.textY);
 		}
 
 		graphics.RestoreGrState();
 	};
 
 	CListBoxItem.prototype.hit = function (nX, nY) {
-		return nX >= this.x && nX <= this.x + this.width &&
-			   nY >= this.y && nY <= this.y + this.clipHeight;
+		return nX >= this.x && nX <= this.x + this.extX &&
+			   nY >= this.y && nY <= this.y + this.extY;
 	};
 
 	CListBoxItem.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController, nItemIndex) {
@@ -1827,6 +1826,10 @@
 		}
 		return false;
 	};
+	CListBoxItem.prototype.recalculateTextPosition = function () {
+		this.textY = this.y + this.extY / 2 + this.listBox.getTextOffset();
+	};
+
 
 
 	function CListBox(oControl) {
@@ -1842,9 +1845,19 @@
 		this.extY = 0;
 		this.transform = new AscCommon.CMatrix();
 		this.invertTransform = new AscCommon.CMatrix();
+		this.textOffset = null;
 		this.initScrollContainer();
 	}
-
+	CListBox.prototype.getTextOffset = function () {
+		if (this.textOffset === null) {
+			const oTextPr = new AscWord.CTextPr();
+			oTextPr.Set_FromObject(LISTBOXITEM_TEXTPR);
+			AscCommon.g_oTextMeasurer.SetTextPr(oTextPr);
+			AscCommon.g_oTextMeasurer.SetFontSlot(fontslot_ASCII);
+			this.textOffset = AscCommon.g_oTextMeasurer.GetHeight() / 2 + AscCommon.g_oTextMeasurer.GetDescender();
+		}
+		return this.textOffset;
+	};
 	CListBox.prototype.isMultiSelection = function () {
 		return false;
 	};
@@ -1890,6 +1903,7 @@
 		
 		this.scrollContainer._setValue = function (newValue, oDrawingController) {
 			oThis.scrollPosition = Math.round(newValue);
+			oThis.recalculateTransform();
 			oThis.control.onUpdate();
 		};
 	};
@@ -1903,59 +1917,44 @@
 		}
 	};
 
-	CListBox.prototype.calculateItemHeights = function () {
+	CListBox.prototype.recalculateItemPositions = function () {
 		if (this.listItems.length === 0) {
 			return;
 		}
-
-		const nAvailableHeight = this.extY - LISTBOX_PADDING * 2;
-
-		const nFullItemsCount = Math.floor(nAvailableHeight / LISTBOX_ITEM_HEIGHT);
-		const nRemainingHeight = nAvailableHeight % LISTBOX_ITEM_HEIGHT;
-
-		if (nRemainingHeight > 0 && this.listItems.length > nFullItemsCount) {
-			const nExtraHeightPerItem = nRemainingHeight / Math.min(nFullItemsCount, this.listItems.length);
-			const nNewItemHeight = Math.min(LISTBOX_ITEM_HEIGHT + nExtraHeightPerItem, LISTBOX_MAX_ITEM_HEIGHT);
-
-			this.visibleItemsCount = Math.floor(nAvailableHeight / nNewItemHeight);
-
-			for (let i = 0; i < this.listItems.length; i++) {
-				this.listItems[i].height = nNewItemHeight;
-			}
-		} else {
-			this.visibleItemsCount = nFullItemsCount;
-
-			for (let i = 0; i < this.listItems.length; i++) {
-				this.listItems[i].height = LISTBOX_ITEM_HEIGHT;
-			}
-		}
-
 		const nItemCount = this.extY / LISTBOX_MAX_ITEM_HEIGHT;
 		const nMaxItemCount = Math.ceil(nItemCount);
-		const nCalcItemHeight = this.extY / nMaxItemCount;
+		let nCalcItemHeight = this.extY / nMaxItemCount;
 
+		const nScrollWidth = this.isShowScroll() ? LISTBOX_SCROLL_WIDTH : 0;
+		const nListWidth = this.extX - nScrollWidth;
 		if (nCalcItemHeight < LISTBOX_ITEM_HEIGHT) {
-
+			nCalcItemHeight = LISTBOX_ITEM_HEIGHT;
+			this.visibleItemsCount = Math.ceil(this.extY / LISTBOX_ITEM_HEIGHT);
 		} else {
 			this.visibleItemsCount = nMaxItemCount;
-			for (let i = 0; this.sc)
 		}
-		const oThis = this;
-		let nHeight = this.extY;
 		for (let i = 0; i < this.listItems.length; i += 1) {
-			nHeight -
+			this.listItems[i].setPosition(0, 0, nListWidth, nCalcItemHeight);
 		}
-		let nCurrentY = LISTBOX_PADDING;
+		this.recalculateVisibleItemPositions();
+	};
+
+	CListBox.prototype.recalculateVisibleItemPositions = function () {
+		let nIndex = 0;
 		this.checkVisibleItems(function (oItem) {
-			const nRemainingHeight = oThis.extY - LISTBOX_PADDING - nCurrentY;
-			let nClipHeight = Math.min(oItem.height, nRemainingHeight);
-			oItem.setPosition(LISTBOX_PADDING, nCurrentY, nListWidth - LISTBOX_PADDING * 2, oItem.height, nClipHeight);
-			nCurrentY += oItem.height;
+			oItem.y = oItem.extY * nIndex;
+			oItem.recalculateTextPosition();
+			nIndex++;
+		});
+	};
+	CListBox.prototype.recalculateVisibleItemTextPositions = function () {
+		this.checkVisibleItems(function (oItem) {
+			oItem.recalculateTextPosition();
 		});
 	};
 	CListBox.prototype.resetSelectedIndices = function () {
 		for (let sIndex in this.selectedIndices) {
-			this.selectedIndices.setSelected(false);
+			this.selectedIndices[sIndex].setSelected(false);
 		}
 		this.selectedIndices = {};
 	};
@@ -1982,7 +1981,7 @@
 		this.control.onUpdate();
 	};
 	CListBox.prototype.recalculateTransform = function() {
-		this.calculateItemHeights();
+		this.recalculateItemPositions();
 		this.recalculateScrollTransform();
 	};
 	CListBox.prototype.draw = function (graphics, transform) {
@@ -2042,8 +2041,8 @@
 		return false;
 	}
 	CListBox.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isShowScroll()) {
-			return this.scrollContainer.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+		if (this.isShowScroll() && this.scrollContainer.onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
+			return true;
 		}
 
 		const nLocalX = this.invertTransform.TransformPointX(nX, nY);
