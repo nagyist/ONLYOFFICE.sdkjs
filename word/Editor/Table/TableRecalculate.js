@@ -233,7 +233,7 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
             isColumnBreakOnPrevLine = true;
     }
 
-    if ((true === isPageBreakOnPrevLine && (0 !== this.private_GetColumnIndex(CurPage) || (0 === CurPage && null !== PrevElement)))
+    if ((true === isPageBreakOnPrevLine && (0 !== this.GetAbsoluteColumn(CurPage) || (0 === CurPage && null !== PrevElement)))
         || (true === isColumnBreakOnPrevLine && 0 === CurPage))
     {
         this.Recalculate_SkipPage(CurPage);

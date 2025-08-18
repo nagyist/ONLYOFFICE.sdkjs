@@ -7558,6 +7558,9 @@ CDocumentContent.prototype.GetAbsoluteStartPage = function()
 };
 CDocumentContent.prototype.GetRelativeStartPage = function()
 {
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetRelativeStartPage();
+	
 	return this.StartPage;
 };
 CDocumentContent.prototype.GetStartColumnAbsolute = function()
@@ -7572,11 +7575,14 @@ CDocumentContent.prototype.Set_StartPage = function(StartPage, StartColumn, Colu
 };
 CDocumentContent.prototype.GetColumnCount = function()
 {
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetColumnCount();
+	
 	return this.ColumnsCount;
 };
 CDocumentContent.prototype.GetRelativePage = function(CurPage)
 {
-	if (this.Parent && this.Parent.GetRelativePage)
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
 		return this.Parent.GetRelativePage(CurPage);
 	
 	if (!this.ColumnsCount || 0 === this.ColumnsCount)
@@ -7586,6 +7592,9 @@ CDocumentContent.prototype.GetRelativePage = function(CurPage)
 };
 CDocumentContent.prototype.GetAbsolutePage = function(CurPage)
 {
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetAbsolutePage(CurPage);
+	
 	if (!this.Parent)
 		return CurPage;
 
@@ -7593,14 +7602,16 @@ CDocumentContent.prototype.GetAbsolutePage = function(CurPage)
 };
 CDocumentContent.prototype.GetStartColumn = function()
 {
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetStartColumn();
+	
 	return this.StartColumn;
 };
 CDocumentContent.prototype.GetAbsoluteColumn = function(CurPage)
 {
-	return this.private_GetColumnIndex(CurPage);
-};
-CDocumentContent.prototype.private_GetColumnIndex = function(CurPage)
-{
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetAbsoluteColumn(CurPage);
+	
 	// TODO: Разобраться здесь нужно ли данное условие. Оно появилось из-за параграфов в таблице в
 	//       основной части документа и из-за параграфов в сносках.
 	if (this.Parent && 1 === this.ColumnsCount)
@@ -7610,6 +7621,9 @@ CDocumentContent.prototype.private_GetColumnIndex = function(CurPage)
 };
 CDocumentContent.prototype.GetAbsoluteSection = function(curPage)
 {
+	if (this.Parent instanceof AscWord.CBlockLevelSdt)
+		return this.Parent.GetAbsoluteSection(curPage);
+	
 	if (!this.Parent || !this.Parent.GetAbsoluteSection)
 		return 0;
 	

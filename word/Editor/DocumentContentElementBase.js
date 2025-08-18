@@ -1050,16 +1050,20 @@ CDocumentContentElementBase.prototype.GetAbsolutePage = function(CurPage)
 {
 	return this.Parent.GetAbsolutePage(this.GetRelativePage(CurPage));
 };
-CDocumentContentElementBase.prototype.GetAbsoluteColumn = function(CurPage)
+CDocumentContentElementBase.prototype.GetAbsoluteColumn = function(curPage)
 {
-	if (this.Parent instanceof CDocument)
-		return this.private_GetColumnIndex(CurPage);
+	if (this.Parent instanceof AscWord.Document)
+	{
+		let elementSection = this.GetElementSectionByPage(curPage);
+		
+		let columnCount = elementSection.GetColumnCount();
+		let startColumn = elementSection.GetStartColumn();
+		let startPage   = elementSection.GetStartPage();
+		
+		return (startColumn + curPage - startPage) - (((startColumn + curPage - startPage) / columnCount | 0) * columnCount);
+	}
 
-	return this.Parent.GetAbsoluteColumn(this.GetRelativePage(CurPage));
-};
-CDocumentContentElementBase.prototype.private_GetColumnIndex = function(CurPage)
-{
-	return (this.ColumnNum + CurPage) - (((this.ColumnNum + CurPage) / this.ColumnsCount | 0) * this.ColumnsCount);
+	return this.Parent.GetAbsoluteColumn(this.GetRelativePage(curPage));
 };
 CDocumentContentElementBase.prototype.GetAbsoluteCurrentPage = function()
 {
