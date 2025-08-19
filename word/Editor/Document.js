@@ -12190,26 +12190,23 @@ CDocument.prototype.Document_UpdateRulersState = function()
 {
 	this.UpdateRulers();
 };
-CDocument.prototype.Document_UpdateRulersStateBySection = function(nPos)
+CDocument.prototype.Document_UpdateRulersStateBySection = function()
 {
-	// В данной функции мы уже точно знаем, что нам секцию нужно выбирать исходя из текущего параграфа
-	var nCurPos = undefined === nPos ? ( this.Selection.Use === true ? this.Selection.EndPos : this.CurPos.ContentPos ) : nPos;
-
-	var oSectPr = this.SectionsInfo.Get_SectPr(nCurPos).SectPr;
-	if (oSectPr.GetColumnCount() > 1)
+	let paragraph = this.GetCurrentParagraph();
+	if (!paragraph)
+		return;
+	
+	let sectPr = this.SectionsInfo.GetSectPrByElement(paragraph);
+	if (sectPr.GetColumnCount() > 1)
 	{
-		this.ColumnsMarkup.UpdateFromSectPr(oSectPr, this.CurPage);
-
-		var oElement = this.Content[nCurPos];
-		if (oElement.IsParagraph())
-			this.ColumnsMarkup.SetCurCol(oElement.Get_CurrentColumn());
-
+		this.ColumnsMarkup.UpdateFromSectPr(sectPr, this.CurPage);
+		this.ColumnsMarkup.SetCurCol(paragraph.Get_CurrentColumn());
 		this.DrawingDocument.Set_RulerState_Columns(this.ColumnsMarkup);
 	}
 	else
 	{
-		var oFrame = oSectPr.GetContentFrame(this.CurPage);
-		this.DrawingDocument.Set_RulerState_Paragraph({L : oFrame.Left, T : oFrame.Top, R : oFrame.Right, B : oFrame.Bottom}, true);
+		let frame = sectPr.GetContentFrame(this.CurPage);
+		this.DrawingDocument.Set_RulerState_Paragraph({L : frame.Left, T : frame.Top, R : frame.Right, B : frame.Bottom}, true);
 	}
 };
 CDocument.prototype.Document_UpdateSelectionState = function()

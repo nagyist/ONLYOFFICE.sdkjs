@@ -198,7 +198,7 @@ CDocumentContentElementBase.prototype.ResetSection = function(X, Y, XLimit, YLim
 	this.Sections.length = sectionAbs - this.SectionNum;
 	
 	let startPage = this.Sections.length ? this.Sections[this.Sections.length - 1].endPage + 1 : 0;
-	let startColumn = this.Sections.length ? this.GetStartColumn() : 0;
+	let startColumn = this.Sections.length ? 0 : this.GetStartColumn();
 	this.Sections.push(new AscWord.DocumentElementSection(X, Y, XLimit, YLimit, pageAbs, startPage, startPage, sectPr, startColumn, this.Sections.length));
 };
 CDocumentContentElementBase.prototype.GetElementSectionByPage = function(curPage)

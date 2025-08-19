@@ -185,6 +185,38 @@
 		this.Update();
 		return this.Elements.length;
 	};
+	DocumentSections.prototype.GetSectPrByElement = function(element)
+	{
+		let finalSectPr = this.logicDocument.GetFinalSectPr();
+		if (!element)
+			return finalSectPr;
+		
+		let docPos = element.GetDocumentPositionFromObject();
+		if (!docPos || !docPos.length)
+			return finalSectPr;
+		
+		let topClass = docPos[0].Class;
+		if (topClass !== this.logicDocument)
+		{
+			let sectPr = topClass.Get_SectPr();
+			return sectPr ? sectPr : finalSectPr;
+		}
+		
+		let b = 0;
+		let e = this.Elements.length - 1;
+		
+		while (b < e)
+		{
+			let m = (b + e) >> 1;
+			let _docPos = this.Elements[m].Paragraph.GetDocumentPositionFromObject();
+			if (AscWord.CompareDocumentPositions(docPos, _docPos) <= 0)
+				e = m;
+			else
+				b = m + 1;
+		}
+		
+		return this.Elements[b].SectPr;
+	};
 	DocumentSections.prototype.Get_SectPr = function(Index)
 	{
 		return this.GetByContentPos(Index);
