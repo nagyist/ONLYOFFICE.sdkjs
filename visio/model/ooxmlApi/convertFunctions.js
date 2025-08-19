@@ -124,7 +124,7 @@
 
 		let isShapeDeleted = this.del === "1" || this.del === true;
 		if (isShapeDeleted) {
-			return null;
+			return createEmptyShape();
 		}
 
 
@@ -1204,7 +1204,7 @@
 		 * @param {number} pagesCount
 		 * @param {Page_Type} pageInfo
 		 * @param {CUniFill?} layerColor
-		 * @return {CShape} textCShape
+		 * @return {CShape | null} return textCShape or null if no text
 		 */
 		function getTextCShape(theme, shape, cShape, lineUniFill,
 							   fillUniFill, drawingPageScale, maxHeightScaledIn, currentPageIndex, pagesCount, pageInfo, layerColor) {
