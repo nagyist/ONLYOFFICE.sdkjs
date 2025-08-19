@@ -760,8 +760,7 @@ CDocumentContent.prototype.Reset_RecalculateCache = function()
 		this.Content[Index].Reset_RecalculateCache();
 	}
 };
-// Пересчитываем отдельную страницу DocumentContent
-CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, bStart)
+CDocumentContent.prototype.Recalculate_Page = function(PageIndex, bStart)
 {
 	this.Recalculated = true;
 	
@@ -1256,14 +1255,11 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
                 Element.SetUseXLimit(this.UseXLimit);
                 Element.SetUseYLimit(this.UseYLimit);
             }
-
-            if (this.IsEmptyParagraphAfterTableInTableCell(Index))
-            {
-                RecalcResult = recalcresult_NextElement;
-
-                this.private_RecalculateEmptySectionParagraph(Element, this.Content[Index - 1], PageIndex, 0, 1);
-
-                // Добавим в список особых параграфов
+			
+			if (this.IsEmptyParagraphAfterTableInTableCell(Index)
+				|| (allowSectionBreak && (Index !== StartIndex || !resetStartElement) && this.IsEmptySectionFlowParagraph(Index)))
+			{
+				RecalcResult = this.private_RecalculateEmptySectionParagraph(Element, this.Content[Index - 1], PageIndex, 0, 1);
                 this.Pages[PageIndex].EndSectionParas.push(Element);
 
                 // Выставляем этот флаг, чтобы у нас не менялось значение по Y
@@ -1271,7 +1267,6 @@ CDocumentContent.prototype.Recalculate_Page               = function(PageIndex, 
             }
             else
             {
-
                 var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, 0, 1);
                 RecalcResult         = Element.Recalculate_Page(ElementPageIndex);
             }

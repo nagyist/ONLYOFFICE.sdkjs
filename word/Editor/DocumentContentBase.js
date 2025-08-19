@@ -383,7 +383,7 @@ CDocumentContentBase.prototype.private_RecalculateEmptySectionParagraph = functi
 	Element.Lines[0].Bottom        = LastVisibleBounds.H;
 	Element.Pages[0].Bounds.Top    = ___Y;
 	Element.Pages[0].Bounds.Bottom = ___Y + LastVisibleBounds.H;
-	return recalcresult_NextSection;
+	return Element.Get_SectionPr() ? recalcresult_NextSection : recalcresult_NextElement;
 };
 /**
  * Передвигаем курсор (от текущего положения) к началу ссылки на сноску
@@ -2994,4 +2994,16 @@ CDocumentContentBase.prototype.GetAllSectPrParagraphs = function(paragraphs)
 	}
 	
 	return paragraphs;
+};
+CDocumentContentBase.prototype.IsEmptySectionFlowParagraph = function(index)
+{
+	if (0 === index || index > this.Content.length)
+		return false;
+	
+	let element = this.Content[index];
+	if (!element.IsParagraph() || !element.IsEmpty() || !element.Get_SectionPr())
+		return false;
+	
+	let prevElement = this.Content[index - 1];
+	return (!prevElement.IsParagraph() || !prevElement.Get_SectionPr());
 };

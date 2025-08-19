@@ -3955,14 +3955,9 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				// Делаем как в Word: Обработаем особый случай, когда на данном параграфе заканчивается секция, и он
 				// пустой. В такой ситуации этот параграф не добавляет смещения по Y, и сам приписывается в конец
 				// предыдущего элемента. Второй подряд идущий такой же параграф обсчитывается по-обычному.
-
-				var SectInfoElement = this.SectionsInfo.Get_SectPr(Index);
-				var PrevElement     = this.Content[Index - 1]; // может быть undefined, но в следующем условии сразу стоит проверка на Index > 0
-				if (Index > 0 && (Index !== StartIndex || true !== bResetStartElement) && Index === SectInfoElement.Index && true === Element.IsEmpty() && (type_Paragraph !== PrevElement.GetType() || undefined === PrevElement.Get_SectionPr()))
+				if ((Index !== StartIndex || true !== bResetStartElement) && this.IsEmptySectionFlowParagraph(Index))
 				{
-					RecalcResult = this.private_RecalculateEmptySectionParagraph(Element, PrevElement, PageIndex, ColumnIndex, ColumnsCount);
-
-					// Добавим в список особых параграфов
+					RecalcResult = this.private_RecalculateEmptySectionParagraph(Element, this.Content[Index - 1], PageIndex, ColumnIndex, ColumnsCount);
 					this.Pages[PageIndex].EndSectionParas.push(Element);
 
 					// Выставляем этот флаг, чтобы у нас не менялось значение по Y
