@@ -361,11 +361,13 @@
 	CControl.prototype.isUse3D = function () {
 		return !this.formControlPr.noThreeD;
 	};
+	CControl.prototype.handleChangeRanges = function (arrRanges) {
+		return this.controller.handleChangeRanges(arrRanges);
+	}
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
 	}
-
 	CControlControllerBase.prototype.getFormControlPr = function () {
 		return this.control.formControlPr;
 	};
@@ -431,6 +433,7 @@
 	};
 	CControlControllerBase.prototype.recalculateTransform = function () {};
 	CControlControllerBase.prototype.recalculate = function() {};
+	CControlControllerBase.prototype.handleChangeRanges = function (aRanges) {return false};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -1780,16 +1783,8 @@
 		} else {
 			graphics.b_color1(255, 255, 255, 255);
 		}
-
-		graphics._s();
-		graphics._m(this.x, this.y);
-		graphics._l(this.x + this.extX, this.y);
-		graphics._l(this.x + this.extX, this.y + this.extY);
-		graphics._l(this.x, this.y + this.extY);
-		graphics._z();
-		graphics.df();
-		graphics._e();
-
+		graphics.SetIntegerGrid(true);
+		graphics.TableRect(this.x, this.y, this.extX, this.extY);
 
 		if (this.text) {
 			const nTextPadding = 0.5;
@@ -1908,6 +1903,7 @@
 		};
 	};
 	CListBox.prototype.updateListItems = function (oRange) {
+		this.listItems = [];
 		if (oRange) {
 			const oThis = this;
 			oRange._foreach(function (oCell) {
@@ -1924,9 +1920,7 @@
 		const nItemCount = this.extY / LISTBOX_MAX_ITEM_HEIGHT;
 		const nMaxItemCount = Math.ceil(nItemCount);
 		let nCalcItemHeight = this.extY / nMaxItemCount;
-
-		const nScrollWidth = this.isShowScroll() ? LISTBOX_SCROLL_WIDTH : 0;
-		const nListWidth = this.extX - nScrollWidth;
+		const nListWidth = this.extX;
 		if (nCalcItemHeight < LISTBOX_ITEM_HEIGHT) {
 			nCalcItemHeight = LISTBOX_ITEM_HEIGHT;
 			this.visibleItemsCount = Math.ceil(this.extY / LISTBOX_ITEM_HEIGHT);
@@ -1989,23 +1983,20 @@
 		
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
-		graphics.AddClipRect(0, 0, this.extX, this.extY);
-
-		const nScrollWidth = this.isShowScroll() ? LISTBOX_SCROLL_WIDTH : 0;
-		const nListWidth = this.extX - nScrollWidth;
-
 		graphics.b_color1(255, 255, 255, 255);
 		graphics.p_color(0, 0, 0, 255);
 		graphics.p_width(0);
 		graphics._s();
 		graphics._m(0, 0);
-		graphics._l(nListWidth, 0);
-		graphics._l(nListWidth, this.extY);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
 		graphics._l(0, this.extY);
 		graphics._z();
 		graphics.ds();
 		graphics.df();
 		graphics._e();
+
+		graphics.AddClipRect(0, 0, this.extX, this.extY);
 		this.checkVisibleItems(function (oItem) {
 			oItem.draw(graphics);
 		});
@@ -2041,15 +2032,22 @@
 		return false;
 	}
 	CListBox.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (!this.hit(nX, nY)) {
+			return false;
+		}
+		if (e.CtrlKey && !this.isExtendedSelection()) {
+			return false;
+		}
 		if (this.isShowScroll() && this.scrollContainer.onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
 			return true;
 		}
 
 		const nLocalX = this.invertTransform.TransformPointX(nX, nY);
 		const nLocalY = this.invertTransform.TransformPointY(nX, nY);
-		return this.checkVisibleItems(function (oItem, nItemIndex) {
+		this.checkVisibleItems(function (oItem, nItemIndex) {
 			return oItem.onMouseDown(e, nLocalX, nLocalY, nPageIndex, oDrawingController, nItemIndex);
 		});
+		return true;
 	};
 
 	CListBox.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
@@ -2060,8 +2058,8 @@
 	};
 
 	CListBox.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isShowScroll() && this.scrollContainer.isHold) {
-			return this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		if (this.isShowScroll() && this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
+			return true;
 		}
 
 		if (this.isShowHover()) {
@@ -2091,7 +2089,7 @@
 	};
 
 	CListBox.prototype.getSingleSelectedIndex = function () {
-		if (!this.isMultiSelection() && this.isExtendedSelection()) {
+		if (!this.isMultiSelection() && !this.isExtendedSelection()) {
 			for (let sIndex in this.selectedIndices) {
 				return parseInt(sIndex, 10);
 			}
@@ -2109,15 +2107,28 @@
 	}
 
 	AscFormat.InitClassWithoutType(CListBoxController, CControlControllerBase);
+	CListBoxController.prototype.handleChangeRanges = function (aRanges) {
+		const oParsedRange = this.getParsedFmlaRange();
+		const oParsedLink = this.getParsedFmlaLink();
+		for (let i = 0; i < aRanges.length; i += 1) {
+			if (oParsedRange.isIntersect(aRanges[i]) || oParsedLink.isIntersect(aRanges[i])) {
+				this.recalculateItems();
+				return true;
+			}
+		}
+		return false;
+	};
 	CListBoxController.prototype.recalculate = function() {
 		if (this.recalcInfo.recalculateItems) {
 			this.recalcInfo.recalculateItems = false;
 			this.recalculateItems();
+			this.recalculateTransform();
 		}
 	};
 	CListBoxController.prototype.recalculateItems = function() {
 		this.updateListItems();
 		this.updateSelectedIndices();
+		this.listBox.recalculateTransform();
 	};
 	CListBoxController.prototype.setupListBoxBehavior = function () {
 		const oThis = this;
@@ -2152,6 +2163,7 @@
 
 	CListBoxController.prototype.updateSelectedIndices = function () {
 		const oFormControlPr = this.getFormControlPr();
+		this.listBox.resetSelectedIndices();
 		if (oFormControlPr.selType === CFormControlPr_selType_multi) {
 			if (oFormControlPr.multiSel) {
 				const aIndices = oFormControlPr.multiSel.split(", ");
@@ -2272,6 +2284,7 @@
 	CComboBoxController.prototype.recalculateItems = function () {
 		this.updateListItems();
 		this.updateSelectedIndex();
+		this.listBox.recalculateTransform();
 	};
 	CComboBoxController.prototype.setupComboBoxBehavior = function () {
 		const oThis = this;

@@ -16182,7 +16182,7 @@ function RangeDataManagerElem(bbox, data)
 					});
 				}
 			}
-			wbView && wbView.handleChartsOnWorkbookChange(aRanges);
+			wbView && wbView.handleDrawingsOnWorkbookChange(aRanges);
 		}
 		return isChanged;
 	};

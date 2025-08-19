@@ -1826,11 +1826,11 @@ function isAllowPasteLink(pastedWb) {
             }
 			if (bIsHiddenArr) {
 				if (bIsHiddenArr.length) {
-					Asc.editor.wb.handleChartsOnWorkbookChange(bIsHiddenArr);
+					Asc.editor.wb.handleDrawingsOnWorkbookChange(bIsHiddenArr);
 				}
 			} else if (bIsHidden !== t.model.getColHidden(col)) {
 				var oRange = new AscCommonExcel.Range(t.model, 0, col, gc_nMaxRow0, col);
-				Asc.editor.wb.handleChartsOnWorkbookChange([oRange]);
+				Asc.editor.wb.handleDrawingsOnWorkbookChange([oRange]);
 			}
 
 			if (t.objectRender) {
@@ -1972,11 +1972,11 @@ function isAllowPasteLink(pastedWb) {
 
 			if (bIsHiddenArr) {
 				if (bIsHiddenArr.length) {
-					Asc.editor.wb.handleChartsOnWorkbookChange(bIsHiddenArr);
+					Asc.editor.wb.handleDrawingsOnWorkbookChange(bIsHiddenArr);
 				}
 			} else if (bIsHidden !== t.model.getRowHidden(row)) {
 				var oRange = new AscCommonExcel.Range(t.model, row, gc_nMaxCol0, row, gc_nMaxCol0);
-				Asc.editor.wb.handleChartsOnWorkbookChange([oRange]);
+				Asc.editor.wb.handleDrawingsOnWorkbookChange([oRange]);
 			}
 
 			if (t.objectRender) {
@@ -17286,7 +17286,7 @@ function isAllowPasteLink(pastedWb) {
 						}
 					}
 				}
-				Asc.editor.wb.handleChartsOnWorkbookChange(aRanges);
+				Asc.editor.wb.handleDrawingsOnWorkbookChange(aRanges);
 			}
 			if (isUpdateDefaultWidth) {
 				let beforeDefaultWidth = t.defaultColWidthPx;
@@ -19651,7 +19651,7 @@ function isAllowPasteLink(pastedWb) {
                 oBBox = ranges[nRange];
                 aRanges.push(new AscCommonExcel.Range(this.model, oBBox.r1, oBBox.c1, oBBox.r2, oBBox.c2));
             }
-            Asc.editor.wb.handleChartsOnWorkbookChange(aRanges);
+            Asc.editor.wb.handleDrawingsOnWorkbookChange(aRanges);
 			this.cellCommentator.updateActiveComment();
 
 			if (this._initRowsCount()) {
@@ -20574,7 +20574,7 @@ function isAllowPasteLink(pastedWb) {
             oBBox = arrChanged[nRange];
             aRanges.push(new AscCommonExcel.Range(this.model, oBBox.r1, oBBox.c1, oBBox.r2, oBBox.c2));
         }
-        Asc.editor.wb.handleChartsOnWorkbookChange(aRanges);
+        Asc.editor.wb.handleDrawingsOnWorkbookChange(aRanges);
 		this.scrollType |= AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal;
 		this.draw(lockDraw);
 		this._updateSelectionNameAndInfo();
@@ -25055,7 +25055,7 @@ function isAllowPasteLink(pastedWb) {
                 oBBox = arrChangedRanges[nRange];
                 aRanges.push(new AscCommonExcel.Range(t.model, oBBox.r1, oBBox.c1, oBBox.r2, oBBox.c2));
             }
-            Asc.editor.wb.handleChartsOnWorkbookChange(aRanges);
+            Asc.editor.wb.handleDrawingsOnWorkbookChange(aRanges);
 		}
 
 		if(updateRow) {
