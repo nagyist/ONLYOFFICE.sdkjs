@@ -2574,13 +2574,14 @@
 
 	/**
 	 * converts !Shape TypeGroup! To CGroupShape Recursively.
-	 * let's say shape can only have subshapes if its Type='Group'.
+	 * Shape can only have subshapes if its Type='Group'.
+	 * Can be called on shapes Type not 'Group' then shape just adds to currentGroupHandling
 	 * @memberOf Shape_Type
 	 * @param {CVisioDocument} visioDocument
 	 * @param {Page_Type} pageInfo
 	 * @param {Number} drawingPageScale
 	 * @param {CGroupShape?} currentGroupHandling
-	 * @return {CGroupShape}
+	 * @return {CGroupShape | undefined}
 	 */
 	Shape_Type.prototype.convertGroup = function (visioDocument, pageInfo,
 												  drawingPageScale, currentGroupHandling) {
@@ -2662,11 +2663,10 @@
 				}
 
 				// handle sub-shapes
-				currentGroupHandling = groupShape;
 				let subShapes = this.getSubshapes();
 				for (let i = 0; i < subShapes.length; i++) {
 					const subShape = subShapes[i];
-					subShape.convertGroup(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
+					subShape.convertGroup(visioDocument, pageInfo, drawingPageScale, groupShape);
 				}
 
 				// if group geometry should be on the top layer
@@ -2685,6 +2685,8 @@
 					groupShape.addToSpTree(groupShape.spTree.length, cShapeOrCGroupShape.spTree[1]);
 					groupShape.spTree[groupShape.spTree.length - 1].setGroup(groupShape);
 				}
+
+				return groupShape;
 			}
 		} else {
 			// if read cShape not CGroupShape
@@ -2698,8 +2700,6 @@
 				}
 			}
 		}
-
-		return currentGroupHandling;
 	}
 
 	/**
