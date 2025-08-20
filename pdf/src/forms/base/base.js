@@ -1608,7 +1608,7 @@
         let aPartNames = sName.split('.').filter(function(item) {
             if (item != "")
                 return item;
-        })
+        });
 
         // по формату не больше 20 вложенностей
         if (aPartNames.length > 20)
@@ -2621,7 +2621,7 @@
 
         let nNewExtX = this.GetWidth();
         let nNewExtY = this.GetHeight();
-        this.SetWasChanged(true, !(nOldExtX == nNewExtX && nOldExtY == nNewExtY));
+        this.SetWasChanged(true, !(Math.abs(nOldExtX - nNewExtX) < 0.001 && Math.abs(nOldExtY == nNewExtY) < 0.001));
         
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();

@@ -131,6 +131,7 @@
 	 * @property {string} FontName - Sets the specified font family as the font name for the current cell range.
 	 * @property {'center' | 'bottom' | 'top' | 'distributed' | 'justify'} AlignVertical - Sets the text vertical alignment to the current cell range.
 	 * @property {'left' | 'right' | 'center' | 'justify'} AlignHorizontal - Sets the text horizontal alignment to the current cell range.
+	 * @property {'context' | 'ltr' | 'rtl'} ReadingOrder - Sets the direction (reading order) of the text in the current cell range.
 	 * @property {boolean} Bold - Sets the bold property to the text characters from the current cell or cell range.
 	 * @property {boolean} Italic - Sets the italic property to the text characters in the current cell or cell range.
 	 * @property {'none' | 'single' | 'singleAccounting' | 'double' | 'doubleAccounting'} Underline - Sets the type of underline applied to the font.
@@ -10364,6 +10365,28 @@
 	});
 
 	/**
+	 * Sets the direction (reading order) of the text in the current cell range.
+	 *
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @param {'context' | 'ltr' | 'rtl'} direction - The direction (reading order) that will be applied to the cell contents.
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/SetReadingOrder.js
+	 */
+	ApiRange.prototype.SetReadingOrder = function (direction) {
+		const map = {
+			"context": Asc.c_oReadingOrderTypes.Context, // 0
+			"ltr": Asc.c_oReadingOrderTypes.LTR, // 1
+			"rtl": Asc.c_oReadingOrderTypes.RTL, // 2
+		};
+		this.range.setReadingOrder(map[direction] || 0);
+	};
+	Object.defineProperty(ApiRange.prototype, "ReadingOrder", {
+		set: function (direction) {
+			return this.SetReadingOrder(direction);
+		}
+	});
+
+	/**
 	 * Sets the bold property to the text characters in the current cell or cell range.
 	 * @memberof ApiRange
 	 * @typeofeditors ["CSE"]
@@ -19551,6 +19574,7 @@
 	ApiRange.prototype["SetFontName"] = ApiRange.prototype.SetFontName;
 	ApiRange.prototype["SetAlignVertical"] = ApiRange.prototype.SetAlignVertical;
 	ApiRange.prototype["SetAlignHorizontal"] = ApiRange.prototype.SetAlignHorizontal;
+	ApiRange.prototype["SetReadingOrder"] = ApiRange.prototype.SetReadingOrder;
 	ApiRange.prototype["SetBold"] = ApiRange.prototype.SetBold;
 	ApiRange.prototype["SetItalic"] = ApiRange.prototype.SetItalic;
 	ApiRange.prototype["SetUnderline"] = ApiRange.prototype.SetUnderline;

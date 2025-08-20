@@ -1655,6 +1655,10 @@ var editor;
   spreadsheet_api.prototype.isDocumentModified = function() {
     return this.asc_isDocumentModified();
   };
+  spreadsheet_api.prototype.sync_currentSheetCallback = function(number) {
+    if (window.g_asc_plugins)
+      window.g_asc_plugins.onPluginEvent("onChangeCurrentSheet", number);
+  };
 
   // Actions and callbacks interface
 
@@ -3632,6 +3636,7 @@ var editor;
         if (res) {
           t.wbModel.getWorksheet(index).setHidden(false);
           t.wb.showWorksheet(index);
+          t.sync_currentSheetCallback(index);
         }
       };
       if (isHidden) {
@@ -10311,6 +10316,7 @@ var editor;
   prot["asc_GetShowVerticalScroll"]= prot.asc_GetShowVerticalScroll;
   prot["asc_SetShowHorizontalScroll"]= prot.asc_SetShowHorizontalScroll;
   prot["asc_GetShowHorizontalScroll"]= prot.asc_GetShowHorizontalScroll;
+  prot["sync_currentSheetCallback"]= prot.sync_currentSheetCallback;
 
 
 

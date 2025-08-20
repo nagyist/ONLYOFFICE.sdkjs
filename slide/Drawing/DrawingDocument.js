@@ -2944,7 +2944,7 @@ function CDrawingDocument()
 		var watermark = this.m_oWordControl.m_oApi.watermarkDraw;
 		let oPresentation = this.m_oWordControl.m_oLogicDocument;
 
-		var pagescount = oPresentation.isVisioDocument ? oPresentation.GetSlidesCount() : oPresentation.Slides.length;
+		var pagescount = oPresentation.IsVisioEditor() ? oPresentation.GetSlidesCount() : oPresentation.Slides.length;
 
 		if (-1 == this.m_lCurrentRendererPage)
 		{
@@ -2973,7 +2973,7 @@ function CDrawingDocument()
 			if ((true === isSelection && !this.m_oLogicDocument.IsMasterMode()) && !this.m_oWordControl.Thumbnails.isSelectedPage(i))
 				continue;
 
-			if (oPresentation.isVisioDocument)
+			if (oPresentation.IsVisioEditor())
 			{
 				//todo override
 				renderer.BeginPage(this.m_oLogicDocument.GetWidthMM(), this.m_oLogicDocument.GetHeightMM());
@@ -5471,7 +5471,7 @@ function CThumbnailsManager(editorPage)
 				var g = new AscCommon.CGraphics();
 				g.IsNoDrawingEmptyPlaceholder = true;
 				g.IsThumbnail = true;
-				if (this.m_oWordControl.m_oLogicDocument.isVisioDocument)
+				if (this.m_oWordControl.m_oLogicDocument.IsVisioEditor())
 				{
 					//todo override CThumbnailsManager
 					let SlideWidth = this.m_oWordControl.m_oLogicDocument.GetWidthMM(i);
@@ -6015,7 +6015,7 @@ function CThumbnailsManager(editorPage)
 
 		const totalSlidesCount = this.GetSlidesCount();
 		for (let slideIndex = 0; slideIndex < totalSlidesCount; slideIndex++) {
-			if (this.m_oWordControl.m_oLogicDocument.isVisioDocument) {
+			if (this.m_oWordControl.m_oLogicDocument.IsVisioEditor()) {
 				let visioSlideWidthMm = this.m_oWordControl.m_oLogicDocument.GetWidthMM(slideIndex);
 				let visioSlideHeightMm = this.m_oWordControl.m_oLogicDocument.GetHeightMM(slideIndex);
 				if (isVerticalThumbnails) {
@@ -6368,7 +6368,7 @@ function CThumbnailsManager(editorPage)
 
 		let cumulativeThumbnailLength = 0;
 
-		if (oPresentation.isVisioDocument) {
+		if (oPresentation.IsVisioEditor()) {
 			for (let nIdx = 0; nIdx < slidesCount; ++nIdx) {
 				const originalSlideWidth = oPresentation.GetWidthMM(nIdx);
 				const originalSlideHeight = oPresentation.GetHeightMM(nIdx);
