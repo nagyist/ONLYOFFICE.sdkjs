@@ -186,9 +186,12 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
 {
     if (true !== this.Is_Inline()) // Случай Flow разбирается в Document.js
         return true;
-
-    if (!this.LogicDocument || this.Parent !== this.LogicDocument)
-        return true;
+	
+	let logicDocument = this.GetLogicDocument();
+	if (!this.Parent || !this.Parent.IsAllowSectionBreak() || !logicDocument)
+		return true;
+	
+	let docSections = logicDocument.GetSections();
 
     var isPageBreakOnPrevLine   = false;
     var isColumnBreakOnPrevLine = false;
@@ -201,7 +204,7 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
     if (null !== PrevElement && type_Paragraph === PrevElement.Get_Type() && true === PrevElement.Is_Empty() && undefined !== PrevElement.Get_SectionPr())
 	{
 		var PrevSectPr = PrevElement.Get_SectionPr();
-		var CurSectPr  = this.LogicDocument.SectionsInfo.Get_SectPr(this.Index).SectPr;
+		var CurSectPr  = docSections.GetSectPrByElement(this);
 		if (c_oAscSectionBreakType.Continuous === CurSectPr.Get_Type() && true === CurSectPr.Compare_PageSize(PrevSectPr))
 			PrevElement = PrevElement.Get_DocumentPrev();
 	}
@@ -212,7 +215,7 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
         if (undefined !== PrevElement.Get_SectionPr())
         {
             var PrevSectPr = PrevElement.Get_SectionPr();
-            var CurSectPr  = this.LogicDocument.SectionsInfo.Get_SectPr(this.Index).SectPr;
+            var CurSectPr  = docSections.GetSectPrByElement(this);
             if (c_oAscSectionBreakType.Continuous !== CurSectPr.Get_Type() || true !== CurSectPr.Compare_PageSize(PrevSectPr))
                 bNeedPageBreak = false;
         }
@@ -482,18 +485,10 @@ CTable.prototype.private_RecalculateGrid = function()
 		{
 			// Случай, когда таблица лежит внутри CBlockLevelSdt
 			if (this.Parent instanceof CDocumentContent && this.LogicDocument && this.Parent.IsBlockLevelSdtContent() && this.Parent.GetTopDocumentContent() === this.LogicDocument && !this.Parent.IsTableCellContent())
-			{
-				var nTopIndex = -1;
-				var arrPos    = this.GetDocumentPositionFromObject();
-				if (arrPos.length > 0)
-					nTopIndex = arrPos[0].Position;
-
-				if (-1 !== nTopIndex)
-					oPageFields = this.LogicDocument.Get_ColumnFields(nTopIndex, this.GetAbsoluteColumn(this.PageNum), this.GetAbsolutePage(this.PageNum));
-			}
+				oPageFields = this.LogicDocument.GetColumnFields(this.GetAbsolutePage(this.PageNum), this.GetAbsoluteColumn(this.PageNum), this.GetAbsoluteSection(this.PageNum));
 
 			if (!oPageFields)
-				oPageFields = this.Parent.Get_ColumnFields ? this.Parent.Get_ColumnFields(this.Get_Index(), this.GetAbsoluteColumn(this.PageNum), this.GetAbsolutePage(this.PageNum)) : this.Parent.Get_PageFields(this.GetRelativePage(this.PageNum), this.Parent.IsHdrFtr());
+				oPageFields = this.Parent.GetColumnFields ? this.Parent.GetColumnFields(this.GetAbsolutePage(this.PageNum), this.GetAbsoluteColumn(this.PageNum), this.GetAbsoluteSection(this.PageNum)) : this.Parent.Get_PageFields(this.GetRelativePage(this.PageNum), this.Parent.IsHdrFtr());
 		}
 
 		var oFramePr = this.GetFramePr();

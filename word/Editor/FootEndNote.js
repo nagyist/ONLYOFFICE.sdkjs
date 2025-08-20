@@ -199,9 +199,9 @@ CFootEndnote.prototype.OnFastRecalculate = function()
 {
 	this.NeedUpdateHint = true;
 };
-CFootEndnote.prototype.Get_ColumnFields = function(nElementIndex, nColumnIndex)
+CFootEndnote.prototype.GetColumnFields = function(pageIndex, columnIndex, sectionIndex)
 {
-	return this.Parent.GetColumnFields(this.GetAbsoluteStartPage(), nColumnIndex, this.GetSectionIndex());
+	return this.Parent.GetColumnFields(this.GetAbsoluteStartPage(), columnIndex, this.GetSectionIndex());
 };
 CFootEndnote.prototype.SetSectionIndex = function(nSectionIndex)
 {

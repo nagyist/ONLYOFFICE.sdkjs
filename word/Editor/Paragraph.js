@@ -14142,7 +14142,7 @@ Paragraph.prototype.Refresh_RecalcData = function(Data)
 			let logicDocument = this.GetLogicDocument();
 			if (logicDocument instanceof AscWord.Document)
 			{
-				let documentSections = logicDocument.GetDocumentSections();
+				let documentSections = logicDocument.GetSections();
 				let sectionIndex     = documentSections.GetIndexByElement(this);
 				let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
 

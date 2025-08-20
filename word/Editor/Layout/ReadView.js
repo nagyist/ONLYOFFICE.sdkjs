@@ -121,29 +121,18 @@
 			ColumnSpaceAfter  : 0
 		};
 	};
-	CDocumentReadView.prototype.GetSection = function(nPageAbs, nContentIndex)
+	CDocumentReadView.prototype.GetSectionByElement = function(element)
 	{
 		if (this.OriginalSectPr)
-			return AscWord.CDocumentLayoutBase.prototype.GetSection.apply(this, arguments);
+			return AscWord.GetSectionByElement.prototype.GetSectionByElement.apply(this, arguments);
 		
 		return this.SectPr;
-	};
-	CDocumentReadView.prototype.GetSectionByPos = function(nContentIndex)
-	{
-		if (this.OriginalSectPr)
-			return AscWord.CDocumentLayoutBase.prototype.GetSectionByPos.apply(this, arguments);
-		
-		return this.SectPr;
-	};
-	CDocumentReadView.prototype.GetSectionInfo = function(nContentIndex)
-	{
-		if (this.OriginalSectPr)
-			return AscWord.CDocumentLayoutBase.prototype.GetSectionInfo.apply(this, arguments);
-		
-		return this.SectInfo;
 	};
 	CDocumentReadView.prototype.CheckSectPr = function(sectPr)
 	{
+		if (this.OriginalSectPr)
+			return AscWord.GetSectionByElement.prototype.CheckSectPr.apply(this, arguments);
+		
 		return this.SectPr;
 	};
 	CDocumentReadView.prototype.GetFinalSectPr = function()

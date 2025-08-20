@@ -3007,3 +3007,11 @@ CDocumentContentBase.prototype.IsEmptySectionFlowParagraph = function(index)
 	let prevElement = this.Content[index - 1];
 	return (!prevElement.IsParagraph() || !prevElement.Get_SectionPr());
 };
+CDocumentContentBase.prototype.IsTableCellContent = function()
+{
+	return false;
+};
+CDocumentContentBase.prototype.IsAllowSectionBreak = function()
+{
+	return (!this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent()));
+};

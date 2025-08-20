@@ -45,7 +45,7 @@
 	function CDocumentLayoutBase(oLogicDocument)
 	{
 		this.LogicDocument = oLogicDocument;
-		this.SectionsInfo  = oLogicDocument.GetSectionsInfo();
+		this.SectionsInfo  = oLogicDocument.GetSections();
 	}
 	
 	CDocumentLayoutBase.prototype.IsPrintMode = function()
@@ -147,20 +147,6 @@
 		};
 	};
 	/**
-	 * Получаем настройки секции на заданной странице, или заданного элемента
-	 * @param nPageAbs {number} Если номер элемента не задан, тогда получаем по заданному номеру страницы
-	 * @param nContentIndex {?number} Если задан номер элемента, то ориентируемся на него
-	 * @returns {AscWord.SectPr}
-	 */
-	CDocumentLayoutBase.prototype.GetSection = function(nPageAbs, nContentIndex)
-	{
-		let oPage;
-		if (undefined === nContentIndex && (oPage = this.LogicDocument.GetPage(nPageAbs)))
-			nContentIndex = oPage.GetStartPos();
-		
-		return this.SectionsInfo.Get_SectPr(nContentIndex).SectPr;
-	};
-	/**
 	 * Получаем настройки секции на заданной странице
 	 * @param pageAbs {number}
 	 * @returns {AscWord.SectPr}
@@ -172,14 +158,9 @@
 		let sectPr = pageSection ? pageSection.GetSectPr() : this.LogicDocument.GetFinalSectPr();
 		return this.CheckSectPr(sectPr);
 	};
-	CDocumentLayoutBase.prototype.GetSectionByPos = function(nContentIndex)
+	CDocumentLayoutBase.prototype.GetSectionByElement = function(element)
 	{
-		let sectInfo = this.SectionsInfo.Get_SectPr(nContentIndex);
-		return sectInfo ? sectInfo.SectPr : null;
-	};
-	CDocumentLayoutBase.prototype.GetSectionInfo = function(nContentIndex)
-	{
-		return this.SectionsInfo.Get_SectPr(nContentIndex);
+		return this.SectionsInfo.GetSectPrByElement(element);
 	};
 	CDocumentLayoutBase.prototype.CheckSectPr = function(sectPr)
 	{

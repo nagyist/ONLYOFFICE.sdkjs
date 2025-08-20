@@ -44,7 +44,7 @@
 	{
 		AscWord.CDocumentLayoutBase.call(this, oLogicDocument);
 
-		this.SectionsInfo = oLogicDocument.GetSectionsInfo();
+		this.SectionsInfo = oLogicDocument.GetSections();
 	}
 	CDocumentPrintView.prototype = Object.create(AscWord.CDocumentLayoutBase.prototype);
 	CDocumentPrintView.prototype.constructor = CDocumentPrintView;

@@ -2121,29 +2121,29 @@ CDocument.prototype.GetColumnContentFrame = function(pageAbs, columnAbs, sectPr)
 	
 	return this.Layout.GetColumnContentFrame(pageAbs, columnAbs, sectPr);
 };
-CDocument.prototype.Get_PageLimits = function(nPageIndex)
+CDocument.prototype.Get_PageLimits = function(pageIndex)
 {
-	var nIndex  = this.Pages[nPageIndex] ? this.Pages[nPageIndex].Pos : 0;
-	var oSectPr = this.Layout.GetSectionByPos(nIndex);
-
+	let sectPr = this.Pages[pageIndex] ? this.Pages[pageIndex].GetFirstSectPr() : this.GetFinalSectPr();
+	sectPr = this.Layout.CheckSectPr(sectPr);
+	
 	return {
 		X      : 0,
 		Y      : 0,
-		XLimit : oSectPr.GetPageWidth(),
-		YLimit : oSectPr.GetPageHeight()
+		XLimit : sectPr.GetPageWidth(),
+		YLimit : sectPr.GetPageHeight()
 	};
 };
-CDocument.prototype.Get_PageFields = function(nPageIndex, isHdrFtr, oSectPr)
+CDocument.prototype.Get_PageFields = function(nPageIndex, isHdrFtr, sectPr)
 {
 	let oPage = this.Pages[nPageIndex];
 
-	if (!oSectPr)
+	if (!sectPr)
 	{
-		let nIndex = oPage ? oPage.Pos : 0;
-		oSectPr    = this.Layout.GetSectionByPos(nIndex);
+		sectPr = oPage ? oPage.GetFirstSectPr() : this.GetFinalSectPr();
+		sectPr = this.Layout.CheckSectPr(sectPr);
 	}
 
-	var oFrame  = oSectPr.GetContentFrame(nPageIndex);
+	var oFrame = sectPr.GetContentFrame(nPageIndex);
 	if (!oPage)
 	{
 		return {
@@ -2175,39 +2175,39 @@ CDocument.prototype.Get_PageFields = function(nPageIndex, isHdrFtr, oSectPr)
 		YLimit : nBottom
 	};
 };
-CDocument.prototype.Get_ColumnFields = function(nElementIndex, nColumnIndex, nPageIndex)
+CDocument.prototype.GetColumnFields = function(pageIndex, columnIndex, sectionIndex)
 {
-	if (undefined === nElementIndex)
+	if (undefined === sectionIndex)
 	{
-		if (!this.Page[nPageIndex])
+		if (!this.Page[pageIndex])
 		{
 			return {
 				X      : 0,
 				XLimit : 0
 			};
 		}
-
-		nPageIndex = this.Pages[nPageIndex].Pos;
+		
+		sectionIndex = this.Pages[pageIndex].GetSection(0).GetIndex();
 	}
-
-	var oSectPr = this.Layout.GetSectionByPos(nElementIndex);
-	var oFrame  = oSectPr.GetContentFrame(nPageIndex);
+	
+	let sectPr = this.Layout.CheckSectPr(this.SectionsInfo.GetSectPrByIndex(sectionIndex));
+	var oFrame = sectPr.GetContentFrame(pageIndex);
 
 	var X      = oFrame.Left;
 	var XLimit = oFrame.Right;
 
-	var ColumnsCount = oSectPr.GetColumnCount();
-	if (nColumnIndex >= ColumnsCount)
-		nColumnIndex = ColumnsCount - 1;
+	var ColumnsCount = sectPr.GetColumnCount();
+	if (columnIndex >= ColumnsCount)
+		columnIndex = ColumnsCount - 1;
 
-	for (var ColIndex = 0; ColIndex < nColumnIndex; ++ColIndex)
+	for (var ColIndex = 0; ColIndex < columnIndex; ++ColIndex)
 	{
-		X += oSectPr.GetColumnWidth(ColIndex);
-		X += oSectPr.GetColumnSpace(ColIndex);
+		X += sectPr.GetColumnWidth(ColIndex);
+		X += sectPr.GetColumnSpace(ColIndex);
 	}
 
-	if (ColumnsCount - 1 !== nColumnIndex)
-		XLimit = X + oSectPr.GetColumnWidth(nColumnIndex);
+	if (ColumnsCount - 1 !== columnIndex)
+		XLimit = X + sectPr.GetColumnWidth(columnIndex);
 
 	return {
 		X      : X,
@@ -3611,6 +3611,7 @@ CDocument.prototype.Recalculate_Page = function()
     var ColumnIndex  = this.FullRecalc.ColumnIndex;
     var bStart       = this.FullRecalc.Start;        // флаг, который говорит о том, рассчитываем мы эту страницу первый раз или нет (за один общий пересчет)
     var StartIndex   = this.FullRecalc.StartIndex;
+	let SectPr       = this.FullRecalc.SectPr;
 
     // var nStartTime = (new Date()).getTime();
 
@@ -3624,7 +3625,6 @@ CDocument.prototype.Recalculate_Page = function()
             this.Pages[PageIndex] = Page;
             Page.Pos              = StartIndex;
 			
-			let SectPr = this.FullRecalc.SectPr;
 			Page.Sections[0] = new AscWord.DocumentPageSection();
 			Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
 
@@ -3687,10 +3687,10 @@ CDocument.prototype.Recalculate_Page = function()
                 this.FullRecalc.StartIndex        = this.Pages[PageIndex + 1].Pos;
                 this.FullRecalc.ResetStartElement = false;
 
-                var CurSectInfo  = this.Layout.GetSectionInfo(this.Pages[PageIndex + 1].Pos);
-                var PrevSectInfo = this.Layout.GetSectionInfo(this.Pages[PageIndex].EndPos);
+                let curSectPr  = this.Pages[PageIndex + 1].GetFirstSectPr();
+                let prevSectPr = this.Pages[PageIndex].GetLastSectPr();
 
-                if (PrevSectInfo !== CurSectInfo)
+                if (prevSectPr !== curSectPr)
                     this.FullRecalc.ResetStartElement = true;
 
 				this.FullRecalc.Continue = true;
@@ -3712,7 +3712,7 @@ CDocument.prototype.Recalculate_Page = function()
 		// console.log("Regular Recalculation" + PageIndex);
 
         let pageFrame = this.GetPageContentFrame(PageIndex);
-		this.Footnotes.Reset(PageIndex, this.Layout.GetSectionByPos(StartIndex));
+		this.Footnotes.Reset(PageIndex, SectPr);
 
         this.Pages[PageIndex].ResetStartElement = this.FullRecalc.ResetStartElement;
         this.Pages[PageIndex].X                 = pageFrame.X;
@@ -3753,7 +3753,6 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
     var PageSection = Page.Sections[SectionIndex];
     var PageColumn  = PageSection.Columns[ColumnIndex];
 	
-	//var SectPr       = PageSection.GetSectPr();//this.Layout.GetSectionByPos(StartIndex);
 	let contentFrame = this.GetColumnContentFrame(PageIndex, ColumnIndex, SectPr);
 	
 	var X      = contentFrame.X;
@@ -4514,14 +4513,15 @@ CDocument.prototype.private_RecalculateIsNewSection = function(nPageAbs, nConten
 };
 CDocument.prototype.private_RecalculateGetStartSectPr = function(page)
 {
+	let sectPr = this.GetFinalSectPr();
 	if (0 === page)
-		return this.SectionsInfo.GetFirstSectPr();
+		sectPr = this.SectionsInfo.GetFirstSectPr();
 	else if (this.Pages[page])
-		return this.Pages[page].GetFirstSectPr();
+		sectPr = this.Pages[page].GetFirstSectPr();
 	else if (page > 0 && !this.Pages[page] && this.Pages[page - 1])
-		return this.Pages[page - 1].GetLastSectPr();
+		sectPr = this.Pages[page - 1].GetLastSectPr();
 	
-	return this.GetFinalSectPr();
+	return this.Layout.CheckSectPr(sectPr);
 };
 CDocument.prototype.private_RecalculateShiftFootnotes = function(nPageAbs, nColumnAbs, dY, oSectPr)
 {
@@ -14331,7 +14331,7 @@ CDocument.prototype.Viewer_OnChangePosition = function()
 /**
  * @returns {AscWord.DocumentSections}
  */
-CDocument.prototype.GetDocumentSections = function()
+CDocument.prototype.GetSections = function()
 {
 	return this.SectionsInfo;
 };
@@ -14726,10 +14726,6 @@ CDocument.prototype.GetCurrentSectionPr = function()
 CDocument.prototype.GetSectionsCount = function()
 {
 	return this.SectionsInfo.GetSectionsCount();
-};
-CDocument.prototype.GetSectionsInfo = function()
-{
-	return this.SectionsInfo;
 };
 CDocument.prototype.GetFinalSectPr = function()
 {
@@ -15586,9 +15582,9 @@ CDocument.prototype.TurnOnHistory = function()
 	this.TableId.TurnOn();
 	this.History.TurnOn();
 };
-CDocument.prototype.Get_SectPr = function(nContentPos)
+CDocument.prototype.Get_SectPr = function(contentPos)
 {
-	return this.Layout.GetSectionByPos(nContentPos);
+	return this.Layout.GetSectionByElement(this.Content[contentPos]);
 };
 CDocument.prototype.Add_ToContent = function(Pos, Item, isCorrectContent)
 {
@@ -26628,8 +26624,8 @@ CDocument.prototype.SetLineNumbersProps = function(nApplyType, oProps)
  */
 CDocument.prototype.GetLineNumbersProps = function()
 {
-	var oSectPr = this.Layout.GetSectionByPos(this.CurPos.ContentPos);
-	return oSectPr.HaveLineNumbers() ? oSectPr.GetLineNumbers().Copy() : null;
+	let sectPr = this.Layout.GetSectionByElement(this.GetCurrentParagraph());
+	return sectPr.HaveLineNumbers() ? sectPr.GetLineNumbers().Copy() : null;
 };
 /**
  * Получаем список секции на основе по заданному типу
@@ -28038,10 +28034,6 @@ CDocument.prototype.SetNumeralType = function(type)
 CDocument.prototype.GetNumeralType = function()
 {
 	return this.NumeralType;
-};
-CDocument.prototype.GetSections = function()
-{
-	return this.SectionsInfo;
 };
 
 function CDocumentSelectionState()

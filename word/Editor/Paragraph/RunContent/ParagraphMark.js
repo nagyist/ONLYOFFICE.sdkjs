@@ -160,8 +160,8 @@
 		
 		if (sectPr)
 		{
-			let nextSectPr = logicDocument.GetSections().Get_SectPr(paragraph.GetIndex() + 1).SectPr;
-			this.UpdateSectionEnd(nextSectPr.Type, rangeW, logicDocument);
+			let nextSectPr = logicDocument.GetSections().GetNextSectPr(sectPr);
+			this.UpdateSectionEnd(nextSectPr.GetType(), rangeW, logicDocument);
 		}
 		else
 		{

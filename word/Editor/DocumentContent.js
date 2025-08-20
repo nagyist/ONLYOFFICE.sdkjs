@@ -770,7 +770,7 @@ CDocumentContent.prototype.Recalculate_Page = function(PageIndex, bStart)
 	var oDocContentRI = this.GetDocumentContentForRecalcInfo();
 	var oRecalcInfo   = oDocContentRI.RecalcInfo;
 	
-	let allowSectionBreak = !this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent());
+	let allowSectionBreak = this.IsAllowSectionBreak();
 
 	if (0 === PageIndex && true === bStart && oDocContentRI === this)
 	{

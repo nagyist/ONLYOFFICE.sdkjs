@@ -58,6 +58,9 @@
 		
 		return this.Elements[0].SectPr;
 	};
+	/**
+	 * @returns {AscWord.SectPr}
+	 */
 	DocumentSections.prototype.GetNextSectPr = function(sectPr)
 	{
 		this.Update();

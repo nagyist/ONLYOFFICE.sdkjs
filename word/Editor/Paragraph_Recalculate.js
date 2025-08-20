@@ -1666,11 +1666,11 @@ Paragraph.prototype.private_RecalculateLineCheckRanges = function(CurLine, CurPa
     if (this.bFromDocument && PRS.GetTopDocument() === this.LogicDocument && !PRS.IsInTable())
 	{
 		// Заглушка для случая, когда параграф лежит в CBlockLevelSdt
-		PageFields = this.LogicDocument.Get_ColumnFields(PRS.GetTopIndex(), this.GetAbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage));
+		PageFields = this.LogicDocument.GetColumnFields(this.GetAbsolutePage(CurPage), this.GetAbsoluteColumn(CurPage), this.GetAbsoluteSection(CurPage));
 	}
 	else
 	{
-		PageFields = this.Parent.Get_ColumnFields ? this.Parent.Get_ColumnFields(this.Get_Index(), this.GetAbsoluteColumn(CurPage), this.GetAbsolutePage(CurPage)) : this.Parent.Get_PageFields(this.GetRelativePage(CurPage), this.Parent.IsHdrFtr());
+		PageFields = this.Parent.GetColumnFields ? this.Parent.GetColumnFields(this.GetAbsolutePage(CurPage), this.GetAbsoluteColumn(CurPage), this.GetAbsoluteSection(CurPage)) : this.Parent.Get_PageFields(this.GetRelativePage(CurPage), this.Parent.IsHdrFtr());
 	}
 
     var Ranges = PRS.Ranges;
@@ -2610,7 +2610,7 @@ Paragraph.prototype.private_CheckNeedBeforeSpacing = function(CurPage, Parent, P
 	// тогда добавляем расстояние, а если нет - нет. Но подсчет первой страницы здесь не совпадает с тем, как она
 	// считается для нумерации. Если разрыв секции идет на текущей странице, то первой считается сразу данная страница.
 
-	let documentSections = topDocument.GetDocumentSections();
+	let documentSections = topDocument.GetSections();
 	let sectionIndex     = documentSections.GetIndexByElement(this);
 	let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
 	
