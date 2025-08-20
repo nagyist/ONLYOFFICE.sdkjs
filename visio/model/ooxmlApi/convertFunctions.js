@@ -2656,12 +2656,6 @@
 					groupShape.spTree[groupShape.spTree.length - 1].setGroup(groupShape);
 				}
 
-				if (currentGroupHandling) {
-					// insert group to currentGroupHandling
-					currentGroupHandling.addToSpTree(currentGroupHandling.spTree.length, groupShape);
-					currentGroupHandling.spTree[currentGroupHandling.spTree.length - 1].setGroup(currentGroupHandling);
-				}
-
 				// handle sub-shapes
 				let subShapes = this.getSubshapes();
 				for (let i = 0; i < subShapes.length; i++) {
@@ -2684,6 +2678,12 @@
 				if (cShapeOrCGroupShape instanceof CGroupShape) {
 					groupShape.addToSpTree(groupShape.spTree.length, cShapeOrCGroupShape.spTree[1]);
 					groupShape.spTree[groupShape.spTree.length - 1].setGroup(groupShape);
+				}
+
+				if (currentGroupHandling) {
+					// insert group to currentGroupHandling
+					currentGroupHandling.addToSpTree(currentGroupHandling.spTree.length, groupShape);
+					currentGroupHandling.spTree[currentGroupHandling.spTree.length - 1].setGroup(currentGroupHandling);
 				}
 
 				return groupShape;
