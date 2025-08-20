@@ -1094,6 +1094,11 @@ CDocumentContentElementBase.prototype.GetIndex = function()
 
 	return this.Index;
 };
+CDocumentContentElementBase.prototype.GetTopIndex = function()
+{
+	let docPos = this.GetDocumentPositionFromObject();
+	return (docPos && docPos.length > 0 ? docPos[0].Position : -1);
+};
 CDocumentContentElementBase.prototype.getPageBounds = function(iPage)
 {
 	return this.Get_PageBounds(iPage);

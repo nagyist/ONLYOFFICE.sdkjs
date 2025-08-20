@@ -83,24 +83,25 @@
 	{
 		let oLogicDocument = this.LogicDocument;
 		
-		let nSectionIndex = this.SectionsInfo.Get_Index(oLogicDocument.GetPage(nPageAbs).GetStartPos());
-		let oSectPr       = this.SectionsInfo.Get_SectPr2(nSectionIndex).SectPr;
-		let startSectPr   = oSectPr;
+		let docPage      = oLogicDocument.GetPage(nPageAbs);
+		let sectionIndex = docPage.GetSection(0).GetIndex();
+		let sectPr       = this.SectionsInfo.GetSectPrByIndex(sectionIndex);
+		let startSectPr  = sectPr;
 		
-		isEven  = isEven && oSectPr.IsEvenAndOdd();
-		isFirst = isFirst && oSectPr.IsTitlePage();
+		isEven  = isEven && sectPr.IsEvenAndOdd();
+		isFirst = isFirst && sectPr.IsTitlePage();
 		
 		let oHeader = null;
 		let oFooter = null;
-		while (nSectionIndex >= 0)
+		while (sectionIndex >= 0)
 		{
-			oSectPr = this.SectionsInfo.Get_SectPr2(nSectionIndex--).SectPr;
+			sectPr = this.SectionsInfo.GetSectPrByIndex(sectionIndex--);
 			
 			if (!oHeader)
-				oHeader = oSectPr.GetHdrFtr(true, isFirst, isEven);
+				oHeader = sectPr.GetHdrFtr(true, isFirst, isEven);
 			
 			if (!oFooter)
-				oFooter = oSectPr.GetHdrFtr(false, isFirst, isEven);
+				oFooter = sectPr.GetHdrFtr(false, isFirst, isEven);
 			
 			if (oHeader && oFooter)
 				break;

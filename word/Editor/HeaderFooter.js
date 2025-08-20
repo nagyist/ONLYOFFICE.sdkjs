@@ -1359,15 +1359,8 @@ CHeaderFooter.prototype.GetSectionPr = function()
 };
 CHeaderFooter.prototype.Get_SectPr = function()
 {
-    if (this.LogicDocument)
-    {
-        var SectionsInfo = this.LogicDocument.SectionsInfo;
-        var Index = SectionsInfo.Find_ByHdrFtr(this);
-        if (-1 !== Index)
-            return SectionsInfo.Get_SectPr2(Index).SectPr;
-    }
-
-    return null;
+	let sectionIndex = this.GetSectionIndex();
+	return (-1 !== sectionIndex ? this.LogicDocument.SectionsInfo.GetSectPrByIndex(sectionIndex) : null);
 };
 CHeaderFooter.prototype.SetParagraphFramePr = function(FramePr, bDelete)
 {
@@ -1625,7 +1618,7 @@ CHeaderFooterController.prototype =
             Pr.DifferentFirst   = SectPr.Get_TitlePage();
             Pr.DifferentEvenOdd = EvenAndOddHeaders;
             
-            if ( SectPr === this.LogicDocument.SectionsInfo.Get_SectPr2(0).SectPr )
+            if ( SectPr === this.LogicDocument.SectionsInfo.GetSectPrByIndex(0) )
             {
                 // У первой секции не может быть повторяющихся колонтитулов. Посылаем особое значение (null) в меню
                 Pr.LinkToPrevious = null;

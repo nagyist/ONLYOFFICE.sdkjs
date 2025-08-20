@@ -729,14 +729,14 @@ var section_footnote_RestartEachPage   = 0x02;
 			{
 				++sectionIndex;
 				
-				var TempSectPr = logicDocument.SectionsInfo.Get_SectPr2(sectionIndex).SectPr;
+				let sectPr = logicDocument.SectionsInfo.GetSectPrByIndex(sectionIndex);
 				
 				// Если в следующей секции свой колонтитул, тогда наш добавленный колонтитул вообще ни на что не влияет
-				if ((true === bHeader && null !== TempSectPr.Get_Header_First()) || (true !== bHeader && null !== TempSectPr.Get_Footer_First()))
+				if ((true === bHeader && null !== sectPr.Get_Header_First()) || (true !== bHeader && null !== sectPr.Get_Footer_First()))
 					break;
 				
 				// Если в следующей секции есть титульная страница, значит мы нашли нужную секцию
-				if (true === TempSectPr.Get_TitlePage())
+				if (true === sectPr.Get_TitlePage())
 					refreshRecalc(sectionIndex);
 			}
 		}

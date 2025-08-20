@@ -2610,14 +2610,11 @@ Paragraph.prototype.private_CheckNeedBeforeSpacing = function(CurPage, Parent, P
 	// тогда добавляем расстояние, а если нет - нет. Но подсчет первой страницы здесь не совпадает с тем, как она
 	// считается для нумерации. Если разрыв секции идет на текущей странице, то первой считается сразу данная страница.
 
-	var LogicDocument = topDocument;
-	var SectionIndex  = LogicDocument.GetSectionIndexByElementIndex(this.Get_Index());
-	var FirstElement  = LogicDocument.GetFirstElementInSection(SectionIndex);
-
-	if (0 !== SectionIndex && (!FirstElement || FirstElement.GetAbsolutePage(0) === PageAbs))
-		return true;
-
-	return false;
+	let documentSections = topDocument.GetDocumentSections();
+	let sectionIndex     = documentSections.GetIndexByElement(this);
+	let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
+	
+	return (0 !== sectionIndex && (!firstParagraph || firstParagraph.GetAbsolutePage(0) === PageAbs));
 };
 
 Paragraph.prototype.ShapeText = function()

@@ -14139,14 +14139,15 @@ Paragraph.prototype.Refresh_RecalcData = function(Data)
 		}
 		case AscDFH.historyitem_Paragraph_SectionPr:
 		{
-			if (this.Parent instanceof CDocument)
+			let logicDocument = this.GetLogicDocument();
+			if (logicDocument instanceof AscWord.Document)
 			{
-				this.Parent.UpdateContentIndexing();
-				var nSectionIndex = this.Parent.GetSectionIndexByElementIndex(this.GetIndex());
-				var oFirstElement = this.Parent.GetFirstElementInSection(nSectionIndex);
+				let documentSections = logicDocument.GetDocumentSections();
+				let sectionIndex     = documentSections.GetIndexByElement(this);
+				let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
 
-				if (oFirstElement)
-					this.Parent.Refresh_RecalcData2(oFirstElement.GetIndex(), oFirstElement.GetRelativePage(0));
+				if (firstParagraph)
+					this.Parent.Refresh_RecalcData2(firstParagraph.GetIndex(), firstParagraph.GetRelativePage(0));
 			}
 
 			break;

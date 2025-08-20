@@ -327,9 +327,8 @@
 		pagePos.PageSection = logicDocument.Pages[pagePos.Page] ? logicDocument.Pages[pagePos.Page].GetSectionIndexByAbsoluteIndex(pagePos.Section) : 0;
 		pagePos.ColumnCount = 1;
 		
-		let docSection = logicDocument.SectionsInfo.Get_SectPr2(pagePos.Section);
-		if (docSection)
-			pagePos.ColumnCount = docSection.SectPr.GetColumnCount();
+		let sectPr = logicDocument.SectionsInfo.GetSectPrByIndex(pagePos.Section);
+		pagePos.ColumnCount = sectPr.GetColumnCount();
 		
 		return pagePos;
 	};

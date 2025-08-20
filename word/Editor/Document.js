@@ -3103,7 +3103,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
         // Колонтитул может быть записан в данной секции, но в ней не использоваться. Нам нужно начинать пересчет
         // с места использования данного колонтитула.
 
-        var SectPr     = this.SectionsInfo.Get_SectPr2(FindIndex).SectPr;
+        var SectPr     = this.SectionsInfo.GetSectPrByIndex(FindIndex);
         var HdrFtrInfo = SectPr.GetHdrFtrInfo(HdrFtr);
 
         if (null !== HdrFtrInfo)
@@ -3121,7 +3121,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 
                 while (CurSectIndex < SectCount)
                 {
-                    var CurSectPr = this.SectionsInfo.Get_SectPr2(CurSectIndex).SectPr;
+                    var CurSectPr = this.SectionsInfo.GetSectPrByIndex(CurSectIndex);
 
                     if (FindIndex === CurSectIndex || null === CurSectPr.GetHdrFtr(bHeader, bFirst, bEven))
                     {
@@ -3174,7 +3174,9 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 		MainChange = false;
 
 		// Выставляем начало изменений на начало секции
-		ChangeIndex               = ( 0 === SectPrIndex ? 0 : this.SectionsInfo.Get_SectPr2(SectPrIndex - 1).Index + 1 );
+		// TODO: Для блочного контент контрола нужно расчитывать номер страницы, а не выставлять 0
+		let firstParagraph = this.SectionsInfo.GetFirstParagraph(SectPrIndex);
+		ChangeIndex               = firstParagraph.GetTopIndex();
 		RecalcData.Inline.PageNum = 0;
 	}
 	else if (-1 === SectPrIndex)
@@ -3191,8 +3193,10 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 		MainChange = true;
 
 		ChangeIndex = RecalcData.Inline.Pos;
-
-		var ChangeIndex2 = ( 0 === SectPrIndex ? 0 : this.SectionsInfo.Get_SectPr2(SectPrIndex - 1).Index + 1 );
+		
+		// TODO: Для блочного контент контрола нужно расчитывать номер страницы, а не выставлять 0
+		let firstParagraph = this.SectionsInfo.GetFirstParagraph(SectPrIndex);
+		let ChangeIndex2   = firstParagraph.GetTopIndex();
 
 		if (ChangeIndex2 <= ChangeIndex)
 		{
@@ -3619,12 +3623,14 @@ CDocument.prototype.Recalculate_Page = function()
             var Page              = new AscWord.DocumentPage();
             this.Pages[PageIndex] = Page;
             Page.Pos              = StartIndex;
+			
+			let SectPr = this.FullRecalc.SectPr;
+			Page.Sections[0] = new AscWord.DocumentPageSection();
+			Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
 
             if (true === this.HdrFtr.Recalculate(PageIndex))
                 this.FullRecalc.MainStartPos = StartIndex;
-
-            //var SectPr = this.Layout.GetSectionByPos(StartIndex);
-			let SectPr = this.FullRecalc.SectPr;
+			
 			var oFrame = SectPr.GetContentFrame(PageIndex);
 
             Page.Width          = SectPr.PageSize.W;
@@ -11310,7 +11316,7 @@ CDocument.prototype.Document_SetHdrFtrFirstPage = function(Value)
 	if (true === Value)
 	{
 		// Если мы добавляем разные колонтитулы для первой страницы, а этих колонтитулов нет, тогда создаем их
-		var FirstSectPr = this.SectionsInfo.Get_SectPr2(0).SectPr;
+		var FirstSectPr = this.SectionsInfo.GetSectPrByIndex(0);
 		var FirstHeader = FirstSectPr.Get_Header_First();
 		var FirstFooter = FirstSectPr.Get_Footer_First();
 
@@ -11374,7 +11380,7 @@ CDocument.prototype.Document_SetHdrFtrEvenAndOddHeaders = function(Value)
 	{
 		// Если мы добавляем разные колонтитулы для четных и нечетных страниц, а этих колонтитулов нет, тогда
 		// создаем их в самой первой секции
-		FirstSectPr = this.SectionsInfo.Get_SectPr2(0).SectPr;
+		FirstSectPr = this.SectionsInfo.GetSectPrByIndex(0);
 		if (null === FirstSectPr.Get_Header_Even())
 		{
 			var Header = new CHeaderFooter(this.HdrFtr, this, this.DrawingDocument, hdrftr_Header);
@@ -11389,7 +11395,7 @@ CDocument.prototype.Document_SetHdrFtrEvenAndOddHeaders = function(Value)
 	}
 	else
 	{
-		FirstSectPr = this.SectionsInfo.Get_SectPr2(0).SectPr;
+		FirstSectPr = this.SectionsInfo.GetSectPrByIndex(0);
 	}
 
 	if (null !== FirstSectPr.Get_Header_First() && true === FirstSectPr.TitlePage)
@@ -11493,7 +11499,7 @@ CDocument.prototype.Document_SetHdrFtrLink = function(bLinkToPrevious)
 	var SectPr = this.SectionsInfo.Get_SectPr(Index).SectPr;
 
 	// У самой первой секции не может быть повторяющихся колонтитулов, поэтому не делаем ничего
-	if (SectPr === this.SectionsInfo.Get_SectPr2(0).SectPr)
+	if (SectPr === this.SectionsInfo.GetSectPrByIndex(0))
 		return;
 
 	// Определим тип колонтитула, в котором мы находимся
@@ -14323,6 +14329,13 @@ CDocument.prototype.Viewer_OnChangePosition = function()
 // Функции для работы с секциями
 //----------------------------------------------------------------------------------------------------------------------
 /**
+ * @returns {AscWord.DocumentSections}
+ */
+CDocument.prototype.GetDocumentSections = function()
+{
+	return this.SectionsInfo;
+};
+/**
  * Обновляем информацию о всех секциях в данном документе
  */
 CDocument.prototype.UpdateAllSectionsInfo = function()
@@ -14435,22 +14448,20 @@ CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
 
 	return true;
 };
-CDocument.prototype.Get_SectionFirstPage = function(SectIndex, Page_abs)
+CDocument.prototype.Get_SectionFirstPage = function(sectionIndex, page)
 {
-	if (SectIndex <= 0)
+	if (sectionIndex <= 0)
 		return 0;
-
-	var StartIndex = this.SectionsInfo.Get_SectPr2(SectIndex - 1).Index;
-
+	
 	// Ищем номер страницы, на которой закончилась предыдущая секция
-	var CurPage = Page_abs;
-	for (; CurPage > 0; CurPage--)
+	let curPage = page;
+	for (; curPage > 0; --curPage)
 	{
-		if (this.Pages[CurPage].EndPos >= StartIndex && this.Pages[CurPage].Pos <= StartIndex)
+		if (this.Pages[curPage].GetSection(0).GetIndex() < sectionIndex)
 			break;
 	}
-
-	return CurPage + 1;
+	
+	return curPage + 1;
 };
 CDocument.prototype.Get_SectionPageNumInfo = function(Page_abs)
 {
@@ -14464,13 +14475,13 @@ CDocument.prototype.Get_SectionPageNumInfo = function(Page_abs)
 	var SectIndex = PageNumInfo.SectIndex;
 	if (SectIndex > 0)
 	{
-		var CurSectInfo  = this.SectionsInfo.Get_SectPr2(SectIndex);
-		var PrevSectInfo = this.SectionsInfo.Get_SectPr2(SectIndex - 1);
+		let curSectPr  = this.SectionsInfo.GetSectPrByIndex(SectIndex);
+		let prevSectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex - 1);
 
-		if (CurSectInfo !== PrevSectInfo && c_oAscSectionBreakType.Continuous === CurSectInfo.SectPr.Get_Type() && true === CurSectInfo.SectPr.Compare_PageSize(PrevSectInfo.SectPr))
+		if (curSectPr !== prevSectPr && c_oAscSectionBreakType.Continuous === curSectPr.Get_Type() && true === curSectPr.Compare_PageSize(prevSectPr))
 		{
-			var ElementIndex = PrevSectInfo.Index;
-			if (ElementIndex < this.Content.length - 1 && true !== this.Content[ElementIndex + 1].IsStartFromNewPage())
+			let paragraph = this.SectionsInfo.GetFirstParagraph(SectIndex);
+			if (paragraph && true !== paragraph.IsStartFromNewPage())
 				bCheckFP = false;
 		}
 	}
@@ -14483,19 +14494,15 @@ CDocument.prototype.Get_SectionPageNumInfo = function(Page_abs)
 };
 CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 {
-	var StartIndex = 0;
-
 	// Такое может случится при первом рассчете документа, и когда мы находимся в автофигуре
-	if (undefined !== this.Pages[Page_abs])
-		StartIndex = this.Pages[Page_abs].Pos;
-
-	var SectIndex      = this.SectionsInfo.Get_Index(StartIndex);
+	let SectIndex = this.Pages[Page_abs] ? this.Pages[Page_abs].GetSection(0).GetIndex() : 0;
 	var StartSectIndex = SectIndex;
-
+	
+	let sectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex);
 	if (0 === SectIndex)
 	{
-		var PageNumStart = this.SectionsInfo.Get_SectPr2(0).SectPr.GetPageNumStart();
-		var BT           = this.SectionsInfo.Get_SectPr2(0).SectPr.Get_Type();
+		var PageNumStart = sectPr.GetPageNumStart();
+		var BT           = sectPr.Get_Type();
 
 		// Нумерация начинается с 1, если начальное значение не задано. Заметим, что в Word нумерация может начинаться и
 		// со значения 0, а все отрицательные значения воспринимаются как продолжение нумерации с предыдущей секции.
@@ -14511,19 +14518,20 @@ CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 	var SectionFirstPage = this.Get_SectionFirstPage(SectIndex, Page_abs);
 
 	var FirstPage    = SectionFirstPage;
-	var PageNumStart = this.SectionsInfo.Get_SectPr2(SectIndex).SectPr.GetPageNumStart();
-	var BreakType    = this.SectionsInfo.Get_SectPr2(SectIndex).SectPr.Get_Type();
+	var PageNumStart = sectPr.GetPageNumStart();
+	var BreakType    = sectPr.Get_Type();
 
 	var StartInfo = [];
 	StartInfo.push({FirstPage : FirstPage, BreakType : BreakType});
 
 	while ((PageNumStart < 0 || c_oAscSectionBreakType.Continuous === BreakType) && SectIndex > 0)
 	{
-		SectIndex--;
+		--SectIndex;
+		sectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex);
 
 		FirstPage    = this.Get_SectionFirstPage(SectIndex, Page_abs);
-		PageNumStart = this.SectionsInfo.Get_SectPr2(SectIndex).SectPr.GetPageNumStart();
-		BreakType    = this.SectionsInfo.Get_SectPr2(SectIndex).SectPr.Get_Type();
+		PageNumStart = sectPr.GetPageNumStart();
+		BreakType    = sectPr.Get_Type();
 
 		StartInfo.push({FirstPage : FirstPage, BreakType : BreakType});
 	}
@@ -14579,14 +14587,13 @@ CDocument.prototype.Create_SectionHdrFtr = function(Type, PageIndex)
 	var _bFirst = SectionPageInfo.bFirst;
 	var _bEven  = SectionPageInfo.bEven;
 
-	var StartIndex = this.Pages[PageIndex].Pos;
-	var SectIndex  = this.SectionsInfo.Get_Index(StartIndex);
-	var CurSectPr  = this.SectionsInfo.Get_SectPr2(SectIndex).SectPr;
+	let SectIndex = this.Pages[PageIndex].GetSection(0).GetIndex();
+	var CurSectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex);
 
 	var bEven  = ( true === _bEven && true === EvenAndOddHeaders ? true : false );
 	var bFirst = ( true === _bFirst && true === CurSectPr.TitlePage ? true : false );
 
-	var SectPr = this.SectionsInfo.Get_SectPr2(0).SectPr;
+	var SectPr = this.SectionsInfo.GetSectPrByIndex(0);
 	var HdrFtr = new CHeaderFooter(this.HdrFtr, this, this.DrawingDocument, Type);
 
 	if (hdrftr_Header === Type)
@@ -14612,16 +14619,21 @@ CDocument.prototype.Create_SectionHdrFtr = function(Type, PageIndex)
 };
 CDocument.prototype.On_SectionChange = function(_SectPr)
 {
-	var Index = this.SectionsInfo.Find(_SectPr);
-	if (-1 === Index)
+	let sectionIndex = this.SectionsInfo.Find(_SectPr);
+	if (-1 === sectionIndex)
 		return;
 
-	var SectPr  = null;
-	var HeaderF = null, HeaderD = null, HeaderE = null, FooterF = null, FooterD = null, FooterE = null;
-
-	while (Index >= 0)
+	let SectPr  = null;
+	var HeaderF = null;
+	let HeaderD = null;
+	let HeaderE = null;
+	let FooterF = null;
+	let FooterD = null;
+	let FooterE = null;
+	
+	while (sectionIndex >= 0 && (!HeaderF || !HeaderD || !HeaderE || !FooterF || !FooterD || !FooterE))
 	{
-		SectPr = this.SectionsInfo.Get_SectPr2(Index).SectPr;
+		SectPr = this.SectionsInfo.GetSectPrByIndex(sectionIndex);
 
 		if (null === HeaderF)
 			HeaderF = SectPr.Get_Header_First();
@@ -14641,7 +14653,7 @@ CDocument.prototype.On_SectionChange = function(_SectPr)
 		if (null === FooterE)
 			FooterE = SectPr.Get_Footer_Even();
 
-		Index--;
+		--sectionIndex;
 	}
 
 	if (null !== HeaderF)
@@ -14710,18 +14722,6 @@ CDocument.prototype.GetCurrentSectionPr = function()
 		return this.controller_GetCurrentSectionPr();
 
 	return oSectPr;
-};
-CDocument.prototype.GetFirstElementInSection = function(SectionIndex)
-{
-	if (SectionIndex <= 0)
-		return this.Content[0] ? this.Content[0] : null;
-
-	var nElementPos = this.SectionsInfo.Get_SectPr2(SectionIndex - 1).Index + 1;
-	return this.Content[nElementPos] ? this.Content[nElementPos] : null;
-};
-CDocument.prototype.GetSectionIndexByElementIndex = function(ElementIndex)
-{
-	return this.SectionsInfo.Get_Index(ElementIndex);
 };
 CDocument.prototype.GetSectionsCount = function()
 {
@@ -18762,34 +18762,34 @@ CDocument.prototype.SetFootnotePr = function(oFootnotePr, bApplyToAll)
 		{
 			for (var nIndex = 0, nCount = this.SectionsInfo.GetSectionsCount(); nIndex < nCount; ++nIndex)
 			{
-				var oSectPr = this.SectionsInfo.Get_SectPr2(nIndex).SectPr;
+				let sectPr = this.SectionsInfo.GetSectPrByIndex(nIndex);
 				if (undefined !== nNumStart)
-					oSectPr.SetFootnoteNumStart(nNumStart);
+					sectPr.SetFootnoteNumStart(nNumStart);
 
 				if (undefined !== nNumRestart)
-					oSectPr.SetFootnoteNumRestart(nNumRestart);
+					sectPr.SetFootnoteNumRestart(nNumRestart);
 
 				if (undefined !== nNumFormat)
-					oSectPr.SetFootnoteNumFormat(nNumFormat);
+					sectPr.SetFootnoteNumFormat(nNumFormat);
 
 				if (undefined !== nPos)
-					oSectPr.SetFootnotePos(nPos);
+					sectPr.SetFootnotePos(nPos);
 			}
 		}
 		else
 		{
-			var oSectPr = this.GetCurrentSectionPr();
+			let sectPr = this.GetCurrentSectionPr();
 			if (undefined !== nNumStart)
-				oSectPr.SetFootnoteNumStart(nNumStart);
+				sectPr.SetFootnoteNumStart(nNumStart);
 
 			if (undefined !== nNumRestart)
-				oSectPr.SetFootnoteNumRestart(nNumRestart);
+				sectPr.SetFootnoteNumRestart(nNumRestart);
 
 			if (undefined !== nNumFormat)
-				oSectPr.SetFootnoteNumFormat(nNumFormat);
+				sectPr.SetFootnoteNumFormat(nNumFormat);
 
 			if (undefined !== nPos)
-				oSectPr.SetFootnotePos(nPos);
+				sectPr.SetFootnotePos(nPos);
 		}
 
 		this.Recalculate();
@@ -18958,28 +18958,28 @@ CDocument.prototype.SetEndnotePr = function(oEndnotePr, bApplyToAll)
 		{
 			for (var nIndex = 0, nCount = this.SectionsInfo.GetSectionsCount(); nIndex < nCount; ++nIndex)
 			{
-				var oSectPr = this.SectionsInfo.Get_SectPr2(nIndex).SectPr;
+				let sectPr = this.SectionsInfo.GetSectPrByIndex(nIndex);
 				if (undefined !== nNumStart)
-					oSectPr.SetEndnoteNumStart(nNumStart);
+					sectPr.SetEndnoteNumStart(nNumStart);
 
 				if (undefined !== nNumRestart)
-					oSectPr.SetEndnoteNumRestart(nNumRestart);
+					sectPr.SetEndnoteNumRestart(nNumRestart);
 
 				if (undefined !== nNumFormat)
-					oSectPr.SetEndnoteNumFormat(nNumFormat);
+					sectPr.SetEndnoteNumFormat(nNumFormat);
 			}
 		}
 		else
 		{
-			var oSectPr = this.GetCurrentSectionPr();
+			let sectPr = this.GetCurrentSectionPr();
 			if (undefined !== nNumStart)
-				oSectPr.SetEndnoteNumStart(nNumStart);
+				sectPr.SetEndnoteNumStart(nNumStart);
 
 			if (undefined !== nNumRestart)
-				oSectPr.SetEndnoteNumRestart(nNumRestart);
+				sectPr.SetEndnoteNumRestart(nNumRestart);
 
 			if (undefined !== nNumFormat)
-				oSectPr.SetEndnoteNumFormat(nNumFormat);
+				sectPr.SetEndnoteNumFormat(nNumFormat);
 		}
 
 		this.Recalculate();

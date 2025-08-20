@@ -6772,9 +6772,7 @@
 		}
 
 		var oSectPr = new AscWord.SectPr(this.Document);
-
-		var nContentPos = oParagraph.Paragraph.GetIndex();
-		var oCurSectPr = this.Document.SectionsInfo.Get_SectPr(nContentPos).SectPr;
+		var oCurSectPr = this.Document.SectionsInfo.GetSectPrByElement(oParagraph.Paragraph).SectPr;
 
 		oSectPr.Copy(oCurSectPr);
 		oCurSectPr.Set_Type(oSectPr.Type);
@@ -11146,8 +11144,7 @@
 			return false;
 
 		let oSectPr = oSection.Section;
-		let nContentPos = this.Paragraph.GetIndex();
-		let oCurSectPr = oDoc.SectionsInfo.Get_SectPr(nContentPos).SectPr;
+		let oCurSectPr = oDoc.SectionsInfo.GetSectPrByElement(this.Paragraph).SectPr;
 
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);

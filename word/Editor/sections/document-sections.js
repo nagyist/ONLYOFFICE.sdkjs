@@ -187,6 +187,8 @@
 	};
 	DocumentSections.prototype.GetSectPrByElement = function(element)
 	{
+		this.Update();
+		
 		let finalSectPr = this.logicDocument.GetFinalSectPr();
 		if (!element)
 			return finalSectPr;
@@ -217,14 +219,22 @@
 		
 		return this.Elements[b].SectPr;
 	};
+	DocumentSections.prototype.GetFirstParagraph = function(sectionIndex)
+	{
+		if (0 === sectionIndex)
+			return this.logicDocument.GetFirstParagraph();
+		
+		let prevParagraph = this.Elements[sectionIndex - 1].Paragraph;
+		return prevParagraph.GetNextParagraph();
+	};
+	DocumentSections.prototype.GetSectPrByIndex = function(index)
+	{
+		return this.Elements[index].SectPr;
+	};
 	DocumentSections.prototype.Get_SectPr = function(Index)
 	{
 		return this.GetByContentPos(Index);
 	};
-	DocumentSections.prototype.Get_SectPr2 = function(Index)
-	{
-		return this.Elements[Index];
-	}
 	DocumentSections.prototype.Find = function(SectPr)
 	{
 		this.Update();
@@ -375,6 +385,44 @@
 	DocumentSections.prototype.Get = function(nIndex)
 	{
 		return this.Elements[nIndex];
+	};
+	/**
+	 * Получаем номер секции, в которой лежит заданный элемент
+	 * @param element
+	 * @returns {number}
+	 */
+	DocumentSections.prototype.GetIndexByElement = function(element)
+	{
+		this.Update();
+		
+		let b = 0;
+		let e = this.Elements.length - 1;
+		
+		if (!element)
+			return e;
+		
+		let docPos = element.GetDocumentPositionFromObject();
+		if (!docPos || !docPos.length)
+			return e;
+		
+		let topClass = docPos[0].Class;
+		if (topClass !== this.logicDocument)
+		{
+			let sectPr = topClass.Get_SectPr();
+			return sectPr ? this.Find(sectPr) : e;
+		}
+		
+		while (b < e)
+		{
+			let m = (b + e) >> 1;
+			let _docPos = this.Elements[m].Paragraph.GetDocumentPositionFromObject();
+			if (AscWord.CompareDocumentPositions(docPos, _docPos) <= 0)
+				e = m;
+			else
+				b = m + 1;
+		}
+		
+		return b;
 	};
 	/**
 	 * Получаем секцию по заданной позиции контента
