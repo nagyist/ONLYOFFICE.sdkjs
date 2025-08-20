@@ -793,6 +793,11 @@ DrawingArea.prototype.init = function() {
 DrawingArea.prototype.clear = function() {
     this.worksheet.drawingGraphicCtx.clear();
 };
+	DrawingArea.prototype.clearRect = function(oRect) {
+		const oStartInfo = this.convertCoordsToCursorWR(oRect.l, oRect.t);
+		const oEndInfo = this.convertCoordsToCursorWR(oRect.r, oRect.b);
+		this.worksheet.drawingGraphicCtx.clearRect(oStartInfo.X, oStartInfo.Y, oEndInfo.X - oStartInfo.X, oEndInfo.Y - oStartInfo.Y);
+	};
 
 DrawingArea.prototype.drawObject = function(object, oRect) {
     for ( var i = 0; i < this.frozenPlaces.length; i++ ) {

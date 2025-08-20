@@ -2323,11 +2323,13 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         if (worksheet.model !== api.wb.model.getActiveWs()) {
             return;
         }
-        if (!oUpdateRect) {
-            if(!window['IS_NATIVE_EDITOR']) {
-                _this.drawingArea.clear();
-            }
-                }
+				if (!window['IS_NATIVE_EDITOR']) {
+					if (oUpdateRect) {
+						_this.drawingArea.clearRect(oUpdateRect);
+					} else {
+						_this.drawingArea.clear();
+					}
+				}
         for (var nDrawing = 0; nDrawing < aObjects.length; nDrawing++) {
             _this.drawingArea.drawObject(aObjects[nDrawing], oUpdateRect);
                 }
