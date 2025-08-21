@@ -6679,7 +6679,7 @@ function CSlideDrawer()
 				this.CachedCanvas.width  = _need_pix_width + 100;
 				this.CachedCanvas.height = _need_pix_height + 100;
 
-				this.CachedCanvasCtx = this.CachedCanvas.getContext('2d');
+				this.CachedCanvasCtx = AscCommon.AscBrowser.getContext2D(this.CachedCanvas);
 			}
 			else
 			{
