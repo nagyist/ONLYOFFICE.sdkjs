@@ -645,8 +645,7 @@ CHeaderFooter.prototype =
         if ( -1 === this.RecalcInfo.CurPage )
             return;
         
-        var Index  = this.LogicDocument.Pages[this.RecalcInfo.CurPage].Pos; 
-        var SectPr = this.LogicDocument.SectionsInfo.Get_SectPr(Index).SectPr;
+        var SectPr = this.LogicDocument.Pages[this.RecalcInfo.CurPage].GetFirstSectPr();
         var Bounds = this.Get_Bounds();
         
         // нужно обновить линейку
@@ -1607,8 +1606,7 @@ CHeaderFooterController.prototype =
             if ( undefined === this.LogicDocument.Pages[this.CurHdrFtr.RecalcInfo.CurPage] )
                 return Pr;
             
-            var Index  = this.LogicDocument.Pages[this.CurHdrFtr.RecalcInfo.CurPage].Pos;            
-            var SectPr = this.LogicDocument.SectionsInfo.Get_SectPr(Index).SectPr;
+            let SectPr = this.LogicDocument.Pages[this.CurHdrFtr.RecalcInfo.CurPage].GetFirstSectPr();
 
             if ( hdrftr_Footer === Pr.Type )
                 Pr.Position = SectPr.GetPageMarginFooter();

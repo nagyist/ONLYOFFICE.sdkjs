@@ -348,12 +348,13 @@ CDocumentContent.prototype.Get_PageLimits = function(nCurPage)
 		if (!this.Parent || !this.LogicDocument)
 			return {X : 0, Y : 0, XLimit : 210, YLimit : 297};
 
-		var nPageAbs = this.GetAbsolutePage(nCurPage);
-		var Index    = ( undefined !== this.LogicDocument.Pages[nPageAbs] ? this.LogicDocument.Pages[nPageAbs].Pos : 0 );
-		var SectPr   = this.LogicDocument.SectionsInfo.Get_SectPr(Index).SectPr;
+		let absPage = this.GetAbsolutePage(nCurPage);
+		let docPage = this.LogicDocument.Pages[absPage];
+		let sectPr  = docPage ? docPage.GetFirstSectPr() : this.LogicDocument.GetFinalSectPr();
+		
 
-		var W = SectPr.GetPageWidth();
-		var H = SectPr.GetPageHeight();
+		var W = sectPr.GetPageWidth();
+		var H = sectPr.GetPageHeight();
 
 		return {X : 0, Y : 0, XLimit : W, YLimit : H};
 	}
@@ -377,11 +378,11 @@ CDocumentContent.prototype.Get_PageFields = function(PageIndex, isHdrFtr, oSectP
 				return {X : 0, Y : 0, XLimit : 210, YLimit : 297};
 
 			var Page_abs = this.GetAbsolutePage(PageIndex);
-			var Index    = ( undefined !== this.LogicDocument.Pages[Page_abs] ? this.LogicDocument.Pages[Page_abs].Pos : 0 );
-			var SectPr   = this.LogicDocument.SectionsInfo.Get_SectPr(Index).SectPr;
+			let docPage  = this.LogicDocument.Pages[Page_abs];
+			let sectPr   = docPage ? docPage.GetFirstSectPr() : this.LogicDocument.GetFinalSectPr();
 
-			var W = SectPr.GetPageWidth();
-			var H = SectPr.GetPageHeight();
+			var W = sectPr.GetPageWidth();
+			var H = sectPr.GetPageHeight();
 
 			return {X : 0, Y : 0, XLimit : W, YLimit : H};
 		}

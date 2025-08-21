@@ -836,6 +836,8 @@ Paragraph.prototype.private_RecalculatePageBreak       = function(CurLine, CurPa
 	if (undefined !== this.Get_SectionPr() && true === this.IsEmpty())
 		return true;
 
+	let logicDocument = this.GetLogicDocument();
+	
 	var isParentDocument = this.Parent instanceof CDocument;
 	var isParentBlockSdt = this.Parent instanceof CDocumentContent
 		&& this.Parent.Parent instanceof CBlockLevelSdt
@@ -880,9 +882,9 @@ Paragraph.prototype.private_RecalculatePageBreak       = function(CurLine, CurPa
             }
             else if (this.Parent === this.LogicDocument && type_Paragraph === Prev.GetType() && undefined !== Prev.Get_SectionPr())
             {
-                var PrevSectPr = Prev.Get_SectionPr();
-                var CurSectPr = this.LogicDocument.SectionsInfo.Get_SectPr(this.Index).SectPr;
-                if (c_oAscSectionBreakType.Continuous !== CurSectPr.Get_Type() || true !== CurSectPr.Compare_PageSize(PrevSectPr))
+				let prevSectPr = Prev.Get_SectionPr();
+				let curSectPr  = logicDocument.GetSections().GetNextSectPr(prevSectPr);
+                if (c_oAscSectionBreakType.Continuous !== curSectPr.Get_Type() || true !== curSectPr.Compare_PageSize(prevSectPr))
                     bNeedPageBreak = false;
             }
 
@@ -936,9 +938,9 @@ Paragraph.prototype.private_RecalculatePageBreak       = function(CurLine, CurPa
 			var oFootnotes = this.LogicDocument ? this.LogicDocument.Footnotes : null;
 			if (null !== PrevElement && type_Paragraph === PrevElement.Get_Type() && true === PrevElement.Is_Empty() && undefined !== PrevElement.Get_SectionPr())
 			{
-				var PrevSectPr = PrevElement.Get_SectionPr();
-				var CurSectPr  = this.LogicDocument.SectionsInfo.Get_SectPr(this.Index).SectPr;
-				if (c_oAscSectionBreakType.Continuous === CurSectPr.Get_Type() && true === CurSectPr.Compare_PageSize(PrevSectPr) && oFootnotes && oFootnotes.IsEmptyPage(PrevElement.GetAbsolutePage(PrevElement.GetPagesCount() - 1)))
+				let prevSectPr = PrevElement.Get_SectionPr();
+				let curSectPr  = logicDocument.GetSections().GetNextSectPr(prevSectPr);
+				if (c_oAscSectionBreakType.Continuous === curSectPr.Get_Type() && true === curSectPr.Compare_PageSize(prevSectPr) && oFootnotes && oFootnotes.IsEmptyPage(PrevElement.GetAbsolutePage(PrevElement.GetPagesCount() - 1)))
 					PrevElement = PrevElement.Get_DocumentPrev();
 			}
 
@@ -953,9 +955,9 @@ Paragraph.prototype.private_RecalculatePageBreak       = function(CurLine, CurPa
 				var bNeedPageBreak = true;
 				if (type_Paragraph === PrevElement.GetType() && undefined !== PrevElement.Get_SectionPr())
 				{
-					var PrevSectPr = PrevElement.Get_SectionPr();
-					var CurSectPr  = this.LogicDocument.SectionsInfo.Get_SectPr(this.Index).SectPr;
-					if (c_oAscSectionBreakType.Continuous !== CurSectPr.Get_Type() || true !== CurSectPr.Compare_PageSize(PrevSectPr) || (oFootnotes && !oFootnotes.IsEmptyPage(PrevElement.GetAbsolutePage(PrevElement.GetPagesCount() - 1))))
+					let prevSectPr = PrevElement.Get_SectionPr();
+					let curSectPr  = logicDocument.GetSections().GetNextSectPr(prevSectPr);
+					if (c_oAscSectionBreakType.Continuous !== curSectPr.Get_Type() || true !== curSectPr.Compare_PageSize(prevSectPr) || (oFootnotes && !oFootnotes.IsEmptyPage(PrevElement.GetAbsolutePage(PrevElement.GetPagesCount() - 1))))
 						bNeedPageBreak = false;
 				}
 

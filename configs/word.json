@@ -344,6 +344,10 @@
 			"word/Editor/sections/section-columns.js",
 			"word/Editor/sections/section-page.js",
 			
+			"word/Editor/api/document-column-props.js",
+			"word/Editor/api/document-columns-props.js",
+			"word/Editor/api/document-section-props.js",
+			
 			"word/Drawing/Graphics.js",
 			"word/Drawing/ShapeDrawer.js",
 			"word/Drawing/buttons.js",

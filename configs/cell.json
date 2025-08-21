@@ -390,6 +390,10 @@
 			"word/Editor/custom-xml/custom-xml-manager.js",
 			"word/Editor/custom-xml/data-binding.js",
 			
+			"word/Editor/api/document-column-props.js",
+			"word/Editor/api/document-columns-props.js",
+			"word/Editor/api/document-section-props.js",
+			
 			"word/apiBuilder.js",
 			"slide/apiBuilder.js",
 			"cell/apiBuilder.js",

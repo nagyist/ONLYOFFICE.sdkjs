@@ -366,6 +366,10 @@
 			"word/Editor/custom-xml/custom-xml-manager.js",
 			"word/Editor/custom-xml/data-binding.js",
 			
+			"word/Editor/api/document-column-props.js",
+			"word/Editor/api/document-columns-props.js",
+			"word/Editor/api/document-section-props.js",
+			
 			"slide/Editor/Format/ImagePrototype.js",
 			"slide/Editor/Format/GroupPrototype.js",
 			"slide/Editor/Format/ChartSpacePrototype.js",

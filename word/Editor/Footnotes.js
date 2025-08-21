@@ -2899,9 +2899,8 @@ CFootnotesController.prototype.UpdateRulersState = function()
 	var nPageAbs = this.CurFootnote.GetAbsoluteStartPage();
 	if (this.LogicDocument.Pages[nPageAbs])
 	{
-		var nPos    = this.LogicDocument.Pages[nPageAbs].Pos;
-		var oSectPr = this.LogicDocument.SectionsInfo.Get_SectPr(nPos).SectPr;
-		var oFrame  = oSectPr.GetContentFrame(nPageAbs);
+		let sectPr = this.LogicDocument.Pages[nPageAbs].GetFirstSectPr();
+		var oFrame = sectPr.GetContentFrame(nPageAbs);
 
 		this.DrawingDocument.Set_RulerState_Paragraph({L : oFrame.Left, T : oFrame.Top, R : oFrame.Right, B : oFrame.Bottom}, true);
 	}

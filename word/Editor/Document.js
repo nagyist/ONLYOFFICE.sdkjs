@@ -142,259 +142,6 @@ AscWord.ViewPositionType = {
 	SelectionEnd   : 0x03
 };
 
-function CDocumentColumnProps()
-{
-    this.W     = 0;
-    this.Space = 0;
-}
-CDocumentColumnProps.prototype.put_W = function(W)
-{
-    this.W = W;
-};
-CDocumentColumnProps.prototype.get_W = function()
-{
-    return this.W;
-};
-CDocumentColumnProps.prototype.put_Space = function(Space)
-{
-    this.Space = Space;
-};
-CDocumentColumnProps.prototype.get_Space = function()
-{
-    return this.Space;
-};
-
-function CDocumentColumnsProps()
-{
-    this.EqualWidth = true;
-    this.Num        = 1;
-    this.Sep        = false;
-    this.Space      = 30;
-
-    this.Cols       = [];
-
-    this.TotalWidth = 230;
-}
-CDocumentColumnsProps.prototype.From_SectPr = function(SectPr)
-{
-    var Columns = SectPr.Columns;
-
-    this.TotalWidth = SectPr.GetContentFrameWidth();
-    this.EqualWidth = Columns.EqualWidth;
-    this.Num        = Columns.Num;
-    this.Sep        = Columns.Sep;
-    this.Space      = Columns.Space;
-
-    for (var Index = 0, Count = Columns.Cols.length; Index < Count; ++Index)
-    {
-        var Col = new CDocumentColumnProps();
-        Col.put_W(Columns.Cols[Index].W);
-        Col.put_Space(Columns.Cols[Index].Space);
-        this.Cols[Index] = Col;
-    }
-};
-CDocumentColumnsProps.prototype.get_EqualWidth = function()
-{
-    return this.EqualWidth;
-};
-CDocumentColumnsProps.prototype.put_EqualWidth = function(EqualWidth)
-{
-    this.EqualWidth = EqualWidth;
-};
-CDocumentColumnsProps.prototype.get_Num = function()
-{
-    return this.Num;
-};
-CDocumentColumnsProps.prototype.put_Num = function(Num)
-{
-    this.Num = Num;
-};
-CDocumentColumnsProps.prototype.get_Sep = function()
-{
-    return this.Sep;
-};
-CDocumentColumnsProps.prototype.put_Sep = function(Sep)
-{
-    this.Sep = Sep;
-};
-CDocumentColumnsProps.prototype.get_Space = function()
-{
-    return this.Space;
-};
-CDocumentColumnsProps.prototype.put_Space = function(Space)
-{
-    this.Space = Space;
-};
-CDocumentColumnsProps.prototype.get_ColsCount = function()
-{
-    return this.Cols.length;
-};
-CDocumentColumnsProps.prototype.get_Col = function(Index)
-{
-    return this.Cols[Index];
-};
-CDocumentColumnsProps.prototype.put_Col = function(Index, Col)
-{
-    this.Cols[Index] = Col;
-};
-CDocumentColumnsProps.prototype.put_ColByValue = function(Index, W, Space)
-{
-    var Col = new CDocumentColumnProps();
-    Col.put_W(W);
-    Col.put_Space(Space);
-    this.Cols[Index] = Col;
-};
-CDocumentColumnsProps.prototype.get_TotalWidth = function()
-{
-    return this.TotalWidth;
-};
-
-function CDocumentSectionProps(oSectPr, oLogicDocument)
-{
-    if (oSectPr && oLogicDocument)
-    {
-        this.W      = oSectPr.GetPageWidth();
-        this.H      = oSectPr.GetPageHeight();
-        this.Orient = oSectPr.GetOrientation();
-
-        this.Left   = oSectPr.GetPageMarginLeft();
-        this.Top    = oSectPr.GetPageMarginTop();
-        this.Right  = oSectPr.GetPageMarginRight();
-        this.Bottom = oSectPr.GetPageMarginBottom();
-
-        this.Header = oSectPr.GetPageMarginHeader();
-        this.Footer = oSectPr.GetPageMarginFooter();
-
-		this.Gutter        = oSectPr.GetGutter();
-		this.GutterRTL     = oSectPr.IsGutterRTL();
-		this.GutterAtTop   = oLogicDocument.IsGutterAtTop();
-		this.MirrorMargins = oLogicDocument.IsMirrorMargins();
-    }
-    else
-    {
-        this.W      = undefined;
-        this.H      = undefined;
-        this.Orient = undefined;
-
-        this.Left   = undefined;
-        this.Top    = undefined;
-        this.Right  = undefined;
-        this.Bottom = undefined;
-
-        this.Header = undefined;
-        this.Footer = undefined;
-
-        this.Gutter        = undefined;
-        this.GutterRTL     = undefined;
-        this.GutterAtTop   = undefined;
-        this.MirrorMargins = undefined;
-    }
-}
-CDocumentSectionProps.prototype.get_W = function()
-{
-    return this.W;
-};
-CDocumentSectionProps.prototype.put_W = function(W)
-{
-    this.W = W;
-};
-CDocumentSectionProps.prototype.get_H = function()
-{
-    return this.H;
-};
-CDocumentSectionProps.prototype.put_H = function(H)
-{
-    this.H = H;
-};
-CDocumentSectionProps.prototype.get_Orientation = function()
-{
-    return this.Orient;
-};
-CDocumentSectionProps.prototype.put_Orientation = function(Orient)
-{
-    this.Orient = Orient;
-};
-CDocumentSectionProps.prototype.get_LeftMargin = function()
-{
-    return this.Left;
-};
-CDocumentSectionProps.prototype.put_LeftMargin = function(Left)
-{
-    this.Left = Left;
-};
-CDocumentSectionProps.prototype.get_TopMargin = function()
-{
-    return this.Top;
-};
-CDocumentSectionProps.prototype.put_TopMargin = function(Top)
-{
-    this.Top = Top;
-};
-CDocumentSectionProps.prototype.get_RightMargin = function()
-{
-    return this.Right;
-};
-CDocumentSectionProps.prototype.put_RightMargin = function(Right)
-{
-    this.Right = Right;
-};
-CDocumentSectionProps.prototype.get_BottomMargin = function()
-{
-    return this.Bottom;
-};
-CDocumentSectionProps.prototype.put_BottomMargin = function(Bottom)
-{
-    this.Bottom = Bottom;
-};
-CDocumentSectionProps.prototype.get_HeaderDistance = function()
-{
-    return this.Header;
-};
-CDocumentSectionProps.prototype.put_HeaderDistance = function(Header)
-{
-    this.Header = Header;
-};
-CDocumentSectionProps.prototype.get_FooterDistance = function()
-{
-    return this.Footer;
-};
-CDocumentSectionProps.prototype.put_FooterDistance = function(Footer)
-{
-    this.Footer = Footer;
-};
-CDocumentSectionProps.prototype.get_Gutter = function()
-{
-	return this.Gutter;
-};
-CDocumentSectionProps.prototype.put_Gutter = function(nGutter)
-{
-	this.Gutter = nGutter;
-};
-CDocumentSectionProps.prototype.get_GutterRTL = function()
-{
-	return this.GutterRTL;
-};
-CDocumentSectionProps.prototype.put_GutterRTL = function(isRTL)
-{
-	this.GutterRTL = isRTL;
-};
-CDocumentSectionProps.prototype.get_GutterAtTop = function()
-{
-	return this.GutterAtTop;
-};
-CDocumentSectionProps.prototype.put_GutterAtTop = function(isAtTop)
-{
-	this.GutterAtTop = isAtTop;
-};
-CDocumentSectionProps.prototype.get_MirrorMargins = function()
-{
-	return this.MirrorMargins;
-};
-CDocumentSectionProps.prototype.put_MirrorMargins = function(isMirrorMargins)
-{
-	this.MirrorMargins = isMirrorMargins;
-};
-
 function CDocumentRecalculateState()
 {
     this.Id           = null;
@@ -3313,7 +3060,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 	this.FullRecalc.StartIndex        = StartIndex;
 	this.FullRecalc.Start             = true;
 	this.FullRecalc.StartPage         = StartPage;
-	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage, StartIndex);
+	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage);
 	this.FullRecalc.ResetSectionStart = false;
 	this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(StartPage);
 	this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
@@ -3896,9 +3643,9 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 					var bNeedPageBreak = true;
 					if (undefined !== PrevElement.Get_SectionPr())
 					{
-						var PrevSectPr = PrevElement.Get_SectionPr();
-						var CurSectPr  = this.SectionsInfo.Get_SectPr(Index).SectPr;
-						if (c_oAscSectionBreakType.Continuous !== CurSectPr.Get_Type() || true !== CurSectPr.Compare_PageSize(PrevSectPr))
+						let prevSectPr = PrevElement.Get_SectionPr();
+						let curSectPr  = this.SectionsInfo.GetNextSectPr(prevSectPr);
+						if (c_oAscSectionBreakType.Continuous !== curSectPr.Get_Type() || true !== curSectPr.Compare_PageSize(prevSectPr))
 							bNeedPageBreak = false;
 					}
 
@@ -4493,23 +4240,18 @@ CDocument.prototype.private_IsStartTimeoutOnRecalc = function(page)
 	// }
 	// return nRes;
 };
-CDocument.prototype.private_RecalculateIsNewSection = function(nPageAbs, nContentIndex)
+CDocument.prototype.private_RecalculateIsNewSection = function(nPageAbs)
 {
-	// TODO: Проверить если секция разбита внутри элемента
-	
 	// Определим, является ли данная страница первой в новой секции
-	var bNewSection = (0 === nPageAbs);
-	if (0 !== nPageAbs)
-	{
-		var PrevStartIndex = this.Pages[nPageAbs - 1].Pos;
-		var CurSectInfo    = this.SectionsInfo.Get_SectPr(nContentIndex);
-		var PrevSectInfo   = this.SectionsInfo.Get_SectPr(PrevStartIndex);
-
-		if (PrevSectInfo !== CurSectInfo && (c_oAscSectionBreakType.Continuous !== CurSectInfo.SectPr.Get_Type() || true !== CurSectInfo.SectPr.Compare_PageSize(PrevSectInfo.SectPr) ))
-			bNewSection = true;
-	}
-
-	return bNewSection;
+	if (0 === nPageAbs)
+		return true;
+	
+	let curSectPr  = this.private_RecalculateGetStartSectPr(nPageAbs);
+	let prevSectPr = this.Pages[nPageAbs - 1].GetFirstSectPr();
+	
+	return (curSectPr !== prevSectPr
+		&& (c_oAscSectionBreakType.Continuous !== curSectPr.GetType() || true !== curSectPr.Compare_PageSize(prevSectPr))
+	);
 };
 CDocument.prototype.private_RecalculateGetStartSectPr = function(page)
 {
@@ -5125,7 +4867,7 @@ CDocument.prototype.private_RecalculateHdrFtrPageCountUpdate = function()
 			this.FullRecalc.StartIndex        = this.Pages[nPageAbs].Pos;
 			this.FullRecalc.Start             = true;
 			this.FullRecalc.StartPage         = nPageAbs;
-			this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(nPageAbs, this.Pages[nPageAbs].Pos);
+			this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(nPageAbs);
 			this.FullRecalc.ResetSectionStart = false;
 			this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(nPageAbs);
 			this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(nPageAbs);
@@ -5463,8 +5205,7 @@ CDocument.prototype.Draw                                     = function(nPageInd
     this.Comments.Reset_Drawing(nPageIndex);
 
     // Определим секцию
-    var Page_StartPos = this.Pages[nPageIndex].Pos;
-    var SectPr        = this.SectionsInfo.Get_SectPr(Page_StartPos).SectPr;
+    var SectPr = this.Pages[nPageIndex].GetFirstSectPr();
 
 	this.Background.draw(pGraphics, SectPr, this.GetTheme(), this.GetColorMap());
 
@@ -5589,12 +5330,6 @@ CDocument.prototype.Draw                                     = function(nPageInd
     {
         pGraphics.put_GlobalAlpha(false, 1.0);
 
-		// Рисуем колонтитулы
-        var SectIndex = this.SectionsInfo.Get_Index(Page_StartPos);
-        var SectCount = this.SectionsInfo.Get_Count();
-
-        var SectIndex = ( 1 === SectCount ? -1 : SectIndex );
-
         var Header = this.HdrFtr.Pages[nPageIndex].Header;
         var Footer = this.HdrFtr.Pages[nPageIndex].Footer;
 
@@ -5638,8 +5373,9 @@ CDocument.prototype.Draw                                     = function(nPageInd
 		if (null !== oHdrFtrLine.Bottom && oHdrFtrLine.Bottom < nFooterY)
 			nFooterY = oHdrFtrLine.Bottom;
 
-        pGraphics.DrawHeaderEdit(nHeaderY, this.HdrFtr.Lock.Get_Type(), SectIndex, RepH, HeaderInfo);
-        pGraphics.DrawFooterEdit(nFooterY, this.HdrFtr.Lock.Get_Type(), SectIndex, RepF, FooterInfo);
+		let sectIndex = this.SectionsInfo.Find(SectPr);
+        pGraphics.DrawHeaderEdit(nHeaderY, this.HdrFtr.Lock.Get_Type(), sectIndex, RepH, HeaderInfo);
+        pGraphics.DrawFooterEdit(nFooterY, this.HdrFtr.Lock.Get_Type(), sectIndex, RepF, FooterInfo);
     }
 };
 CDocument.prototype.DrawPageBorders = function(Graphics, oSectPr, nPageIndex)
@@ -7167,8 +6903,7 @@ CDocument.prototype.SetDocumentMargin = function(oMargins, isFromRuler)
 {
 	// TODO: Document.Set_DocumentOrientation Сделать в зависимости от выделения
 
-	var nCurPos = this.CurPos.ContentPos;
-	var oSectPr = this.SectionsInfo.Get_SectPr(nCurPos).SectPr;
+	var oSectPr = this.GetCurrentSectPr();
 
 	var L = oMargins.Left;
 	var T = oMargins.Top;
@@ -7209,11 +6944,9 @@ CDocument.prototype.SetDocumentMargin = function(oMargins, isFromRuler)
 CDocument.prototype.Set_DocumentPageSize = function(W, H, bNoRecalc)
 {
 	// TODO: Document.Set_DocumentOrientation Сделать в зависимости от выделения
-
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-	SectPr.SetPageSize(W, H);
+	
+	let sectPr = this.GetCurrentSectPr();
+	sectPr.SetPageSize(W, H);
 
 	this.DrawingObjects.CheckAutoFit();
 	if (true != bNoRecalc)
@@ -7227,25 +6960,17 @@ CDocument.prototype.Set_DocumentPageSize = function(W, H, bNoRecalc)
 CDocument.prototype.Get_DocumentPageSize = function()
 {
 	// TODO: Document.Get_DocumentOrientation Сделать в зависимости от выделения
-
-	var CurPos             = this.CurPos.ContentPos;
-	var SectionInfoElement = this.SectionsInfo.Get_SectPr(CurPos);
-
-	if (undefined === SectionInfoElement)
-		return true;
-
-	var SectPr = SectionInfoElement.SectPr;
-
-	return {W : SectPr.GetPageWidth(), H : SectPr.GetPageHeight()};
+	let sectPr = this.GetCurrentSectPr();
+	return {
+		W : sectPr.GetPageWidth(),
+		H : sectPr.GetPageHeight()
+	};
 };
 CDocument.prototype.Set_DocumentOrientation = function(Orientation, bNoRecalc)
 {
 	// TODO: Document.Set_DocumentOrientation Сделать в зависимости от выделения
-
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-	SectPr.SetOrientation(Orientation, true);
+	let sectPr = this.GetCurrentSectPr();
+	sectPr.SetOrientation(Orientation, true);
 
 	this.DrawingObjects.CheckAutoFit();
 	if (true != bNoRecalc)
@@ -7259,16 +6984,8 @@ CDocument.prototype.Set_DocumentOrientation = function(Orientation, bNoRecalc)
 CDocument.prototype.Get_DocumentOrientation = function()
 {
 	// TODO: Document.Get_DocumentOrientation Сделать в зависимости от выделения
-
-	var CurPos             = this.CurPos.ContentPos;
-	var SectionInfoElement = this.SectionsInfo.Get_SectPr(CurPos);
-
-	if (undefined === SectionInfoElement)
-		return true;
-
-	var SectPr = SectionInfoElement.SectPr;
-
-	return ( SectPr.GetOrientation() === Asc.c_oAscPageOrientation.PagePortrait ? true : false );
+	let sectPr = this.GetCurrentSectPr();
+	return (sectPr.GetOrientation() === Asc.c_oAscPageOrientation.PagePortrait);
 };
 CDocument.prototype.Set_DocumentDefaultTab = function(DTab)
 {
@@ -11308,10 +11025,8 @@ CDocument.prototype.Document_SetHdrFtrFirstPage = function(Value)
 		|| -1 === (nCurPage = oCurHdrFtr.GetPage()))
 		return;
 
-	var Index  = this.Pages[nCurPage].Pos;
-	var SectPr = this.SectionsInfo.Get_SectPr(Index).SectPr;
-
-	SectPr.Set_TitlePage(Value);
+	let sectPr = this.Pages[nCurPage].GetFirstSectPr();
+	sectPr.Set_TitlePage(Value);
 
 	if (true === Value)
 	{
@@ -11338,25 +11053,20 @@ CDocument.prototype.Document_SetHdrFtrFirstPage = function(Value)
 	}
 	else
 	{
-		var TempSectPr = SectPr;
-		var TempIndex  = Index;
-		while (null === TempSectPr.Get_Header_Default())
+		let sectionIndex = this.SectionsInfo.Find(sectPr);
+		while (!sectPr.Get_Header_Default() && sectionIndex > 0)
 		{
-			TempIndex--;
-			if (TempIndex < 0)
-				break;
-
-			TempSectPr = this.SectionsInfo.Get_SectPr(TempIndex).SectPr;
+			sectPr = this.SectionsInfo.GetSectPrByIndex(--sectionIndex);
+		}
+		
+		let hdrFtr = sectPr.Get_Header_Default();
+		if (!hdrFtr)
+		{
+			hdrFtr = new CHeaderFooter(this.HdrFtr, this, this.DrawingDocument, hdrftr_Header);
+			sectPr.Set_Header_Default(hdrFtr);
 		}
 
-		var oHeader = TempSectPr.Get_Header_Default();
-		if (!oHeader)
-		{
-			var oHeader = new CHeaderFooter(this.HdrFtr, this, this.DrawingDocument, hdrftr_Header);
-			TempSectPr.Set_Header_Default(oHeader);
-		}
-
-		this.HdrFtr.Set_CurHdrFtr(TempSectPr.Get_Header_Default());
+		this.HdrFtr.Set_CurHdrFtr(sectPr.Get_Header_Default());
 	}
 
 
@@ -11434,13 +11144,11 @@ CDocument.prototype.Document_SetHdrFtrDistance = function(Value)
 	if (-1 === CurPage)
 		return;
 
-	var Index  = this.Pages[CurPage].Pos;
-	var SectPr = this.SectionsInfo.Get_SectPr(Index).SectPr;
-
+	let sectPr = this.Pages[CurPage].GetFirstSectPr();
 	if (hdrftr_Header === CurHdrFtr.Type)
-		SectPr.SetPageMarginHeader(Value);
+		sectPr.SetPageMarginHeader(Value);
 	else
-		SectPr.SetPageMarginFooter(Value);
+		sectPr.SetPageMarginFooter(Value);
 
 	this.Recalculate();
 
@@ -11458,18 +11166,17 @@ CDocument.prototype.Document_SetHdrFtrBounds = function(Y0, Y1)
 	var CurPage = CurHdrFtr.RecalcInfo.CurPage;
 	if (-1 === CurPage)
 		return;
-
-	var Index  = this.Pages[CurPage].Pos;
-	var SectPr = this.SectionsInfo.Get_SectPr(Index).SectPr;
+	
+	let sectPr = this.Pages[CurPage].GetFirstSectPr();
 	var Bounds = CurHdrFtr.Get_Bounds();
 
 	if (hdrftr_Header === CurHdrFtr.Type)
 	{
 		if (null !== Y0)
-			SectPr.SetPageMarginHeader(Y0);
+			sectPr.SetPageMarginHeader(Y0);
 
 		if (null !== Y1)
-			SectPr.SetPageMargins(undefined, Y1, undefined, undefined);
+			sectPr.SetPageMargins(undefined, Y1, undefined, undefined);
 	}
 	else
 	{
@@ -11477,8 +11184,8 @@ CDocument.prototype.Document_SetHdrFtrBounds = function(Y0, Y1)
 		{
 			var H   = Bounds.Bottom - Bounds.Top;
 			var _Y1 = Y0 + H;
-
-			SectPr.SetPageMarginFooter(SectPr.GetPageHeight() - _Y1);
+			
+			sectPr.SetPageMarginFooter(sectPr.GetPageHeight() - _Y1);
 		}
 	}
 
@@ -11494,9 +11201,8 @@ CDocument.prototype.Document_SetHdrFtrLink = function(bLinkToPrevious)
 		return;
 
 	var PageIndex = CurHdrFtr.RecalcInfo.CurPage;
-
-	var Index  = this.Pages[PageIndex].Pos;
-	var SectPr = this.SectionsInfo.Get_SectPr(Index).SectPr;
+	
+	var SectPr = this.Pages[PageIndex].GetFirstSectPr();
 
 	// У самой первой секции не может быть повторяющихся колонтитулов, поэтому не делаем ничего
 	if (SectPr === this.SectionsInfo.GetSectPrByIndex(0))
@@ -11573,10 +11279,8 @@ CDocument.prototype.SetSectionStartPage = function(nStartPage)
 	if (-1 === nCurPage)
 		return;
 
-	var nIndex  = this.Pages[nCurPage].Pos;
-	var oSectPr = this.SectionsInfo.Get_SectPr(nIndex).SectPr;
-
-	oSectPr.SetPageNumStart(nStartPage);
+	let sectPr = this.Pages[nCurPage].GetFirstSectPr();
+	sectPr.SetPageNumStart(nStartPage);
 
 	this.Recalculate();
 
@@ -11594,9 +11298,7 @@ CDocument.prototype.SetSectionPageNumFormat = function(format)
 	if (-1 === curPage)
 		return;
 
-	let startIndex = this.Pages[curPage].Pos;
-	let sectPr     = this.SectionsInfo.Get_SectPr(startIndex).SectPr;
-
+	let sectPr = this.Pages[curPage].GetFirstSectPr();
 	sectPr.SetPageNumFormat(format);
 
 	this.Recalculate();
@@ -12565,31 +12267,19 @@ CDocument.prototype.Document_UpdateSectionPr = function()
 	this.Api.sync_DocSizeCallback(PageSize.W, PageSize.H);
 
 	// Обновляем настройки колонок
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-	if (SectPr)
+	let sectPr = this.GetCurrentSectPr();
+	if (sectPr)
 	{
-		var ColumnsPr = new CDocumentColumnsProps();
-		ColumnsPr.From_SectPr(SectPr);
+		var ColumnsPr = Asc.CDocumentColumnsProps.fromSectPr(sectPr);
 		this.Api.sync_ColumnsPropsCallback(ColumnsPr);
-		this.Api.sync_LineNumbersPropsCollback(SectPr.GetLineNumbers());
-		this.Api.sync_SectionPropsCallback(new CDocumentSectionProps(SectPr, this));
+		this.Api.sync_LineNumbersPropsCollback(sectPr.GetLineNumbers());
+		this.Api.sync_SectionPropsCallback(new Asc.CDocumentSectionProps(sectPr, this));
 	}
 };
 CDocument.prototype.Get_ColumnsProps = function()
 {
-	// Обновляем настройки колонок
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-	var ColumnsPr = new CDocumentColumnsProps();
-	if (SectPr)
-	{
-		ColumnsPr.From_SectPr(SectPr);
-	}
-
-	return ColumnsPr;
+	let sectPr = this.GetCurrentSectPr();
+	return Asc.CDocumentColumnsProps.fromSectPr(sectPr);
 };
 CDocument.prototype.GetWatermark = function()
 {
@@ -14717,11 +14407,16 @@ CDocument.prototype.Create_HdrFtrWidthPageNum = function(PageIndex, AlignV, Alig
 };
 CDocument.prototype.GetCurrentSectionPr = function()
 {
+	// TODO: Проверить этот метод, использовать вместо него GetCurrentSectPr
 	var oSectPr = this.Controller.GetCurrentSectionPr();
 	if (null === oSectPr)
 		return this.controller_GetCurrentSectionPr();
 
 	return oSectPr;
+};
+CDocument.prototype.GetCurrentSectPr = function()
+{
+	return this.SectionsInfo.GetSectPrByElement(this.GetCurrentParagraph());
 };
 CDocument.prototype.GetSectionsCount = function()
 {
@@ -28627,52 +28322,3 @@ window['AscCommon'].X_Right_Margin = X_Right_Margin;
 window['AscCommon'].Y_Bottom_Margin = Y_Bottom_Margin;
 window['AscCommon'].Y_Top_Margin = Y_Top_Margin;
 window['AscCommon'].selectionflag_Common = selectionflag_Common;
-
-CDocumentColumnProps.prototype['put_W']     = CDocumentColumnProps.prototype.put_W;
-CDocumentColumnProps.prototype['get_W']     = CDocumentColumnProps.prototype.get_W;
-CDocumentColumnProps.prototype['put_Space'] = CDocumentColumnProps.prototype.put_Space;
-CDocumentColumnProps.prototype['get_Space'] = CDocumentColumnProps.prototype.get_Space;
-
-window['Asc']['CDocumentColumnsProps'] = CDocumentColumnsProps;
-CDocumentColumnsProps.prototype['get_EqualWidth'] = CDocumentColumnsProps.prototype.get_EqualWidth;
-CDocumentColumnsProps.prototype['put_EqualWidth'] = CDocumentColumnsProps.prototype.put_EqualWidth;
-CDocumentColumnsProps.prototype['get_Num']        = CDocumentColumnsProps.prototype.get_Num       ;
-CDocumentColumnsProps.prototype['put_Num']        = CDocumentColumnsProps.prototype.put_Num       ;
-CDocumentColumnsProps.prototype['get_Sep']        = CDocumentColumnsProps.prototype.get_Sep       ;
-CDocumentColumnsProps.prototype['put_Sep']        = CDocumentColumnsProps.prototype.put_Sep       ;
-CDocumentColumnsProps.prototype['get_Space']      = CDocumentColumnsProps.prototype.get_Space     ;
-CDocumentColumnsProps.prototype['put_Space']      = CDocumentColumnsProps.prototype.put_Space     ;
-CDocumentColumnsProps.prototype['get_ColsCount']  = CDocumentColumnsProps.prototype.get_ColsCount ;
-CDocumentColumnsProps.prototype['get_Col']        = CDocumentColumnsProps.prototype.get_Col       ;
-CDocumentColumnsProps.prototype['put_Col']        = CDocumentColumnsProps.prototype.put_Col       ;
-CDocumentColumnsProps.prototype['put_ColByValue'] = CDocumentColumnsProps.prototype.put_ColByValue;
-CDocumentColumnsProps.prototype['get_TotalWidth'] = CDocumentColumnsProps.prototype.get_TotalWidth;
-
-window['Asc']['CDocumentSectionProps'] = window['Asc'].CDocumentSectionProps = CDocumentSectionProps;
-CDocumentSectionProps.prototype["get_W"]              = CDocumentSectionProps.prototype.get_W;
-CDocumentSectionProps.prototype["put_W"]              = CDocumentSectionProps.prototype.put_W;
-CDocumentSectionProps.prototype["get_H"]              = CDocumentSectionProps.prototype.get_H;
-CDocumentSectionProps.prototype["put_H"]              = CDocumentSectionProps.prototype.put_H;
-CDocumentSectionProps.prototype["get_Orientation"]    = CDocumentSectionProps.prototype.get_Orientation;
-CDocumentSectionProps.prototype["put_Orientation"]    = CDocumentSectionProps.prototype.put_Orientation;
-CDocumentSectionProps.prototype["get_LeftMargin"]     = CDocumentSectionProps.prototype.get_LeftMargin;
-CDocumentSectionProps.prototype["put_LeftMargin"]     = CDocumentSectionProps.prototype.put_LeftMargin;
-CDocumentSectionProps.prototype["get_TopMargin"]      = CDocumentSectionProps.prototype.get_TopMargin;
-CDocumentSectionProps.prototype["put_TopMargin"]      = CDocumentSectionProps.prototype.put_TopMargin;
-CDocumentSectionProps.prototype["get_RightMargin"]    = CDocumentSectionProps.prototype.get_RightMargin;
-CDocumentSectionProps.prototype["put_RightMargin"]    = CDocumentSectionProps.prototype.put_RightMargin;
-CDocumentSectionProps.prototype["get_BottomMargin"]   = CDocumentSectionProps.prototype.get_BottomMargin;
-CDocumentSectionProps.prototype["put_BottomMargin"]   = CDocumentSectionProps.prototype.put_BottomMargin;
-CDocumentSectionProps.prototype["get_HeaderDistance"] = CDocumentSectionProps.prototype.get_HeaderDistance;
-CDocumentSectionProps.prototype["put_HeaderDistance"] = CDocumentSectionProps.prototype.put_HeaderDistance;
-CDocumentSectionProps.prototype["get_FooterDistance"] = CDocumentSectionProps.prototype.get_FooterDistance;
-CDocumentSectionProps.prototype["put_FooterDistance"] = CDocumentSectionProps.prototype.put_FooterDistance;
-CDocumentSectionProps.prototype["get_Gutter"]         = CDocumentSectionProps.prototype.get_Gutter;
-CDocumentSectionProps.prototype["put_Gutter"]         = CDocumentSectionProps.prototype.put_Gutter;
-CDocumentSectionProps.prototype["get_GutterRTL"]      = CDocumentSectionProps.prototype.get_GutterRTL;
-CDocumentSectionProps.prototype["put_GutterRTL"]      = CDocumentSectionProps.prototype.put_GutterRTL;
-CDocumentSectionProps.prototype["get_GutterAtTop"]    = CDocumentSectionProps.prototype.get_GutterAtTop;
-CDocumentSectionProps.prototype["put_GutterAtTop"]    = CDocumentSectionProps.prototype.put_GutterAtTop;
-CDocumentSectionProps.prototype["get_MirrorMargins"]  = CDocumentSectionProps.prototype.get_MirrorMargins;
-CDocumentSectionProps.prototype["put_MirrorMargins"]  = CDocumentSectionProps.prototype.put_MirrorMargins;
-
