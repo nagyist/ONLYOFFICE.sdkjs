@@ -170,6 +170,103 @@
 		this.timeoutId = null;
 	};
 
+	function CButtonBase(oControl) {
+		this.x = null;
+		this.y = null;
+		this.extX = null;
+		this.extY = null;
+		this.transform = new AscCommon.CMatrix();
+		this.invertTransform = new AscCommon.CMatrix();
+		this.control = oControl;
+		this.isHold = false;
+		this.isHover = false;
+	}
+	CButtonBase.prototype.getFlatFillColor = function () {
+		if (this.isHold) {
+			return [225, 225, 225, 255];
+		}
+		if (this.isHover) {
+			return [234, 234, 234, 255];
+		}
+		return [244, 244, 244, 255];
+	};
+	CButtonBase.prototype.getFlatPenColor = function () {
+		return [202, 202, 202, 255];
+	};
+	CButtonBase.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+		const arrPenColor = this.getFlatPenColor();
+		graphics.p_width(0);
+		graphics.p_color.apply(graphics, arrPenColor);
+		graphics.b_color1.apply(graphics, this.getFlatFillColor());
+		graphics._s();
+		graphics._m(0, 0);
+		graphics._l(this.extX, 0);
+		graphics._l(this.extX, this.extY);
+		graphics._l(0, this.extY);
+		graphics._z();
+		graphics.ds();
+		graphics.df();
+		graphics.RestoreGrState();
+		graphics._e();
+	};
+	CButtonBase.prototype.hit = function (nX, nY) {
+		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
+	};
+	CButtonBase.prototype.setIsHold = function (pr) {
+		this.isHold = pr;
+	};
+	CButtonBase.prototype.setIsHover = function (pr) {
+		this.isHover = pr;
+	};
+	CButtonBase.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (!this.hit(nX, nY)) {
+			return false;
+		}
+
+		this.setIsHold(true);
+		if (this._onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
+			this.control.onUpdate();
+		}
+		return true;
+	};
+	CButtonBase.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		if (this.isHold) {
+			this.setIsHold(false);
+			if (this._onMouseUp(e, nX, nY, nPageIndex, oDrawingController)) {
+				this.control.onUpdate();
+			}
+			return true;
+		}
+		return false;
+	};
+	CButtonBase.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const bOldIsHover = this.isHover;
+		this.setIsHover(this.hit(nX, nY));
+		let bRet = false;
+		let bUpdate = bOldIsHover !== this.isHover;
+		if (this.isHover) {
+			if (this._onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
+				bUpdate = true;
+			}
+			bRet = true;
+		}
+		if (bUpdate) {
+			this.control.onUpdate();
+		}
+		return bRet;
+	};
+	CButtonBase.prototype._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
+
+	};
+	CButtonBase.prototype._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+
+	};
+	CButtonBase.prototype._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+
+	};
+
 	AscDFH.changesFactory[AscDFH.historyitem_Control_ControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.changesFactory[AscDFH.historyitem_Control_FormControlPr] = AscDFH.CChangesDrawingsObject;
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_Control_ControlPr] = function (oClass, pr) {
@@ -355,9 +452,6 @@
 		AscFormat.CShape.prototype.recalculate.call(this);
 		this.controller.recalculate();
 	};
-	CControl.prototype.isUse3D = function () {
-		return !this.formControlPr.noThreeD;
-	};
 	CControl.prototype.handleChangeRanges = function (arrRanges) {
 		return this.controller.handleChangeRanges(arrRanges);
 	}
@@ -441,7 +535,7 @@
 	CControlControllerBase.prototype.handleFmlaLink = function (aRanges) {return false;};
 	CControlControllerBase.prototype.handleFmlaRange = function (aRanges) {return false;};
 	CControlControllerBase.prototype.onUpdate = function () {
-		return AscFormat.CShape.prototype.onUpdate.call(this);
+		return AscFormat.CShape.prototype.onUpdate.call(this.control);
 	};
 	CControlControllerBase.prototype.hitInInnerArea = function (nX, nY) {
 		const oControl = this.control;
@@ -485,12 +579,8 @@
 		checkBoxTransform.ty += (oControl.extY - CHECKBOX_SIDE_SIZE) / 2;
 		graphics.transform3(checkBoxTransform);
 		graphics.b_color1(255, 255, 255, 255);
-		graphics.p_color(0, 0, 0, 255);
-		if (this.isHold) {
-			graphics.p_width(1000);
-		} else {
-			graphics.p_width(0);
-		}
+		graphics.p_color(51, 51, 51, 255);
+		graphics.p_width(0);
 		graphics._s();
 		graphics._m(0, 0);
 		graphics._l(0, CHECKBOX_SIDE_SIZE);
@@ -715,68 +805,48 @@
 		return oRes;
 	};
 
-	const BUTTON_OFFSET = 0.5;
 	const BUTTON_BODYPR_INSETS = 27432 / 36000;
 
 	function CButtonController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.isHold = false;
+		this.button = new CButtonBase(oControl);
+		this.initButton();
 	};
 	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
+	CButtonController.prototype.initButton = function () {
+		const oThis = this;
+		this.button._onMouseMove = function () {
+			return false;
+		};
+		this.button._onMouseDown = function () {
+			return true;
+		};
+		this.button._onMouseUp = function () {
+			const oControlPr = oThis.getControlPr();
+			const sMacro = oControlPr.getJSAMacroId();
+			if (sMacro === null) {
+				oThis.onMacroError();
+			} else {
+				oThis.runMacros(sMacro);
+			}
+			return true;
+		}
+	};
 	CButtonController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
-		graphics.SaveGrState();
 		transform = transform || oControl.transform;
-		let arrLeftShadowColor;
-		let arrRightShadowColor;
-		let _transformText = transformText || oControl.transformText;
-		if (this.isHold) {
-			arrLeftShadowColor = [100, 100, 100, 255];
-			arrRightShadowColor = [255, 255, 255, 255];
-			_transformText = _transformText.CreateDublicate();
-			_transformText.Translate(BUTTON_OFFSET, BUTTON_OFFSET);
-		} else {
-			arrLeftShadowColor = [255, 255, 255, 255];
-			arrRightShadowColor = [100, 100, 100, 255];
-		}
-		graphics.transform3(transform);
-		graphics.b_color1.apply(graphics, arrLeftShadowColor);
-		graphics._s();
-		graphics._m(0, 0);
-		graphics._l(oControl.extX, 0);
-		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
-		graphics._l(BUTTON_OFFSET, BUTTON_OFFSET);
-		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
-		graphics._l(0, oControl.extY);
-		graphics._z();
-		graphics.df();
-
-		graphics._e();
-		graphics.b_color1.apply(graphics, arrRightShadowColor);
-		graphics._m(oControl.extX, 0);
-		graphics._l(oControl.extX, oControl.extY);
-		graphics._l(0, oControl.extY);
-		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
-		graphics._l(oControl.extX - BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
-		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
-		graphics._z();
-		graphics.df();
-
-		graphics._e();
-		graphics.b_color1(240, 240, 240, 255);
-		graphics._m(BUTTON_OFFSET, BUTTON_OFFSET);
-		graphics._l(oControl.extX - BUTTON_OFFSET, BUTTON_OFFSET);
-		graphics._l(oControl.extX - BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
-		graphics._l(BUTTON_OFFSET, oControl.extY - BUTTON_OFFSET);
-		graphics._z();
-		graphics.df();
-
-		graphics._e();
-		graphics.RestoreGrState();
-		oControl.drawTxBody(graphics, transform, _transformText, pageIndex);
+		transformText = transformText || oControl.transformText;
+		this.button.draw(graphics);
+		oControl.drawTxBody(graphics, transform, transformText, pageIndex);
 	};
-	CButtonController.prototype.setIsHold = function (bPr) {
-		this.isHold = bPr;
+	CButtonController.prototype.recalculateTransform = function () {
+		const oControl = this.control;
+		this.button.x = oControl.x;
+		this.button.y = oControl.y;
+		this.button.extX = oControl.extX;
+		this.button.extY = oControl.extY;
+		this.button.transform = oControl.transform.CreateDublicate();
+		this.button.invertTransform = oControl.invertTransform.CreateDublicate();
 	};
 	CButtonController.prototype.onMacroError = function () {
 		const oApi = Asc.editor;
@@ -805,27 +875,13 @@
 		if (e.CtrlKey) {
 			return false;
 		}
-		if (!oControl.hit(nX, nY)) {
-			return false;
-		}
-		this.setIsHold(true);
-		this.control.onUpdate();
-		return true;
+		return this.button.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	};
 	CButtonController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
-		if (e.button !== 0) {
-			return false;
-		}
-		const oControlPr = this.getControlPr();
-		const sMacro = oControlPr.getJSAMacroId();
-		if (sMacro === null) {
-			this.onMacroError();
-		} else {
-			this.runMacros(sMacro);
-		}
-		this.setIsHold(false);
-		this.control.onUpdate();
-		return true;
+		return this.button.onMouseUp(e, nX, nY, nPageIndex, oController);
+	};
+	CButtonController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oController) {
+		return this.button.onMouseMove(e, nX, nY, nPageIndex, oController);
 	};
 	CButtonController.prototype.runMacros = function (sMacro) {
 		const oApi = Asc.editor;
@@ -852,195 +908,7 @@
 		return oBodyPr;
 	};
 
-	function CButtonBase(oControl) {
-		this.x = null;
-		this.y = null;
-		this.extX = null;
-		this.extY = null;
-		this.transform = new AscCommon.CMatrix();
-		this.invertTransform = new AscCommon.CMatrix();
-		this.control = oControl;
-		this.isHold = false;
-	}
-	CButtonBase.prototype.getButtonRectWithout3D = function () {
-		if (this.isUse3D()) {
-			if (this.isHold) {
-				return {l: SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET, t: SPINBUTTON_3D_SHADOW_OFFSET + SPINBUTTON_3D_HOLD_OFFSET, r: this.extX - SPINBUTTON_3D_HOLD_OFFSET, b: this.extY - SPINBUTTON_3D_HOLD_OFFSET}
-			} else {
-				return {l: SPINBUTTON_3D_SHADOW_OFFSET, t: SPINBUTTON_3D_SHADOW_OFFSET, r: this.extX - SPINBUTTON_3D_SHADOW_OFFSET, b: this.extY - SPINBUTTON_3D_SHADOW_OFFSET};
-			}
-		}
-		return {l: 0, t: 0, r: this.extX, b: this.extY};
-	};
-	CButtonBase.prototype.draw3DShadow = function (graphics) {
-		graphics.b_color1.apply(graphics, this.get3DShadowColor());
-		graphics._e();
-		graphics._m(SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(this.extX, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(this.extX, this.extY);
-		graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY);
-		graphics._z();
-		graphics.df();
-
-		graphics.b_color1.apply(graphics, this.get3DEdgeColor());
-		graphics._e();
-		graphics._m(0, this.extY);
-		graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(this.extX, 0);
-		graphics._l(0, 0);
-		graphics._z();
-		graphics.df();
-	};
-	CButtonBase.prototype.draw3DButton = function (graphics) {
-		const arrShadowColor = this.get3DShadowColor();
-		graphics.b_color1.apply(graphics, arrShadowColor);
-		graphics._e();
-		graphics._m(this.extX, 0);
-		graphics._l(this.extX, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._l(this.extX - SPINBUTTON_3D_SHADOW_OFFSET, SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._z();
-		graphics.df();
-
-		graphics._e();
-		graphics._m(0, this.extY);
-		graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY);
-		graphics._l(SPINBUTTON_3D_SHADOW_OFFSET, this.extY - SPINBUTTON_3D_SHADOW_OFFSET);
-		graphics._z();
-		graphics.df();
-
-		const oButtonRect = this.getButtonRectWithout3D();
-		graphics.b_color1.apply(graphics, this.get3DButtonColor());
-		graphics._e();
-		graphics._m(oButtonRect.l, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.b);
-		graphics._l(oButtonRect.l, oButtonRect.b);
-		graphics._z();
-		graphics.df();
-	};
-	CButtonBase.prototype.draw3DButtonHold = function (graphics) {
-		const oButtonRect = this.getButtonRectWithout3D();
-		graphics.b_color1.apply(graphics, this.get3DButtonColor());
-		graphics._e();
-		graphics._m(oButtonRect.l, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.b);
-		graphics._l(oButtonRect.l, oButtonRect.b);
-		graphics._z();
-		graphics.df();
-	};
-	CButtonBase.prototype.drawFlatButton = function (graphics) {
-		const oButtonRect = this.getButtonRectWithout3D();
-		const arrPenColor = this.getFlatPenColor();
-		if (arrPenColor) {
-			graphics.p_width(0);
-			graphics.p_color.apply(graphics, arrPenColor);
-		}
-		graphics.b_color1.apply(graphics, this.getFlatFillColor());
-		graphics._s();
-		graphics._m(oButtonRect.l, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.t);
-		graphics._l(oButtonRect.r, oButtonRect.b);
-		graphics._l(oButtonRect.l, oButtonRect.b);
-		graphics._z();
-		if (arrPenColor) {
-			graphics.ds();
-		}
-		graphics.df();
-	}
-	CButtonBase.prototype.getFlatFillColor = function () {
-		if (this.isHold) {
-			return [0, 0, 0, 255];
-		} else {
-			return [255, 255, 255, 255];
-		}
-	};
-	CButtonBase.prototype.getFlatPenColor = function () {
-		return [0, 0, 0, 255];
-	};
-	CButtonBase.prototype.get3DShadowColor = function () {
-		return [100, 100, 100, 255];
-	};
-	CButtonBase.prototype.get3DEdgeColor = function () {
-		return [255, 255, 255, 255];
-	};
-	CButtonBase.prototype.get3DButtonColor = function () {
-		return [240, 240, 240, 255];
-	};
-	CButtonBase.prototype.draw = function (graphics) {
-		graphics.SaveGrState();
-		graphics.transform3(this.transform);
-		const bIsUse3D = this.isUse3D();
-
-		if (bIsUse3D) {
-			this.draw3DShadow(graphics);
-			if (this.isHold) {
-				this.draw3DButtonHold(graphics);
-			} else {
-				this.draw3DButton(graphics);
-			}
-		} else {
-			this.drawFlatButton(graphics);
-		}
-		graphics.RestoreGrState();
-		graphics._e();
-	};
-	CButtonBase.prototype.hit = function (nX, nY) {
-		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
-	};
-	CButtonBase.prototype.isUse3D = function () {
-		return this.control.isUse3D();
-	};
-	CButtonBase.prototype.setIsHold = function (pr) {
-		this.isHold = pr;
-	};
-	CButtonBase.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (!this.hit(nX, nY)) {
-			return false;
-		}
-
-		this.setIsHold(true);
-		if (this._onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
-			this.control.onUpdate();
-		}
-		return true;
-	};
-	CButtonBase.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isHold) {
-			this.setIsHold(false);
-			if (this._onMouseUp(e, nX, nY, nPageIndex, oDrawingController)) {
-				this.control.onUpdate();
-			}
-			return true;
-		}
-		return false;
-	};
-	CButtonBase.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isHold) {
-			if (this._onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
-				this.control.onUpdate();
-			}
-			return true;
-		}
-		return false;
-	};
-	CButtonBase.prototype._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-
-	};
-	CButtonBase.prototype._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-
-	};
-	CButtonBase.prototype._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-
-	};
-
-
-
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
-	const SPINBUTTON_3D_SHADOW_OFFSET = 0.5;
-	const SPINBUTTON_3D_HOLD_OFFSET = 0.125;
 	const SPINBUTTON_DIRECTION_UP = 1;
 	const SPINBUTTON_DIRECTION_DOWN = 2;
 	const SPINBUTTON_DIRECTION_RIGHT = 3;
@@ -1052,7 +920,7 @@
 	AscFormat.InitClassWithoutType(CSpinButton, CButtonBase);
 
 	CSpinButton.prototype.getRectColor = function () {
-		if (!this.isUse3D() && this.isHold) {
+		if (this.isHold) {
 			return [255, 255, 255, 255];
 		}
 		return [0, 0, 0, 255];
@@ -1062,9 +930,8 @@
 		const arrRectColor = this.getRectColor();
 		graphics.SaveGrState();
 		graphics.transform3(this.transform);
-		const oButtonRect = this.getButtonRectWithout3D();
-		const nRectCX = oButtonRect.l + (oButtonRect.r - oButtonRect.l) / 2;
-		const nRectCY = oButtonRect.t + (oButtonRect.b - oButtonRect.t) / 2;
+		const nRectCX = this.extX / 2;
+		const nRectCY = this.extY / 2;
 		graphics.b_color1.apply(graphics, arrRectColor);
 		graphics._s();
 		const nRectHeight = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
@@ -1251,19 +1118,7 @@
 	}
 	AscFormat.InitClassWithoutType(CTrackArea, CButtonBase);
 	CTrackArea.prototype.getFlatFillColor = function () {
-		if (this.control.isUse3D()) {
-			return [240, 240, 240, 255];
-		}
-		return [255, 255, 255, 255];
-	}
-	CTrackArea.prototype.getFlatPenColor = function () {
-		if (this.control.isUse3D()) {
-			return null;
-		}
-		return [0, 0, 0, 255];
-	}
-	CTrackArea.prototype.isUse3D = function () {
-		return false;
+		return [244, 244, 244, 255];
 	}
 	CTrackArea.prototype.draw = function (graphics) {
 		const bOldHold = this.isHold;
@@ -1786,6 +1641,7 @@
 		},
 		FontSize: 8
 	};
+	const LISTBOX_TEXT_PADDING = 1;
 	function CListBoxItem(oListBox, sText) {
 		this.listBox = oListBox;
 		this.text = sText || "";
@@ -1827,22 +1683,9 @@
 		graphics.TableRect(this.x, this.y, this.extX, this.extY);
 
 		if (this.text) {
-			const nTextPadding = 0.5;
-			const nTextX = this.x + nTextPadding;
-
-			
+			const nTextX = this.x + LISTBOX_TEXT_PADDING;
 			graphics.b_color1(this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, 255);
-
-
-			graphics.SetFont({
-				FontFamily: {
-					Name: "Arial",
-					Index: -1,
-				},
-				FontSize: 8
-			});
-
-
+			graphics.SetFont(LISTBOXITEM_TEXTPR);
 			graphics.t(this.text, nTextX, this.textY);
 		}
 
@@ -1856,7 +1699,7 @@
 
 	CListBoxItem.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController, nItemIndex) {
 		if (this.hit(nX, nY)) {
-			this.listBox.handleItemClick(nItemIndex, e.CtrlKey);
+			this.listBox.handleItemClick(nItemIndex, e.CtrlKey, oDrawingController);
 			return true;
 		}
 		return false;
@@ -1909,7 +1752,7 @@
 		return true;
 	};
 
-	CListBox.prototype.onChangeSelection = function () {
+	CListBox.prototype.onChangeSelection = function (oDrawingController) {
 	};
 
 	CListBox.prototype.initScrollContainer = function () {
@@ -2000,7 +1843,7 @@
 		this.selectedIndices[nIndex].setSelected(false);
 		delete this.selectedIndices[nIndex];
 	};
-	CListBox.prototype.handleItemClick = function (nItemIndex, bCtrlKey) {
+	CListBox.prototype.handleItemClick = function (nItemIndex, bCtrlKey, oDrawingController) {
 		if (this.isMultiSelection() || this.isExtendedSelection() && bCtrlKey) {
 			if (this.selectedIndices[nItemIndex]) {
 				this.removeSelectedIndex(nItemIndex);
@@ -2011,7 +1854,7 @@
 			this.resetSelectedIndices();
 			this.addSelectedIndex(nItemIndex);
 		}
-		this.onChangeSelection();
+		this.onChangeSelection(oDrawingController);
 		this.control.onUpdate();
 	};
 	CListBox.prototype.recalculateTransform = function() {
@@ -2203,9 +2046,11 @@
 			return false;
 		};
 		
-		this.listBox.onChangeSelection = function () {
-			oThis.updateSelectionInFormControl();
-			oThis.updateLinkedCell();
+		this.listBox.onChangeSelection = function (oDrawingController) {
+			oDrawingController.checkObjectsAndCallback(function () {
+				oThis.updateSelectionInFormControl();
+				oThis.updateLinkedCell();
+			}, [], undefined, AscDFH.historydescription_Spreadsheet_SelectListBox, [], true);
 		};
 	};
 
@@ -2340,6 +2185,7 @@
 	function CComboBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
 		this.listBox = new CListBox(oControl);
+		this.dropButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_DOWN);
 		this.isDropdownOpen = false;
 		this.selectedText = "";
 		this.recalcInfo = {
@@ -2358,9 +2204,18 @@
 	CComboBoxController.prototype.recalculateItems = function () {
 		this.updateListItems();
 		this.updateSelectedIndex();
-		this.listBox.recalculateTransform();
+		this.recalculateListBoxTransform();
 	};
 	CComboBoxController.prototype.recalculateTransform = function () {
+		const oControl = this.control;
+		this.dropButton.extY = oControl.extY;
+		this.dropButton.extX = Math.min(oControl.extY, oControl.extX);
+		const nXOffset = (oControl.extX - this.dropButton.extX);
+		this.dropButton.x = oControl.x + nXOffset;
+		this.dropButton.y = oControl.y;
+		this.dropButton.transform = oControl.transform.CreateDublicate();
+		this.dropButton.transform.Translate(nXOffset, 0);
+		this.dropButton.invertTransform = this.dropButton.transform.CreateDublicate().Invert();
 		this.recalculateListBoxTransform();
 	};
 	CComboBoxController.prototype.setupComboBoxBehavior = function () {
@@ -2385,18 +2240,25 @@
 			return true;
 		};
 		
-		this.listBox.onChangeSelection = function () {
-			const nIndex = this.getSingleSelectedIndex() + 1;
-			if (!nIndex) {
+		this.listBox.onChangeSelection = function (oDrawingController) {
+			const nIndex = this.getSingleSelectedIndex();
+			if (nIndex === -1) {
 				return;
 			}
-			oThis.selectedText = oThis.listBox.listItems[nIndex].text;
-			oThis.updateLinkedCell();
-			oThis.closeDropdown();
+			oDrawingController.checkObjectsAndCallback(function () {
+				oThis.selectedText = oThis.listBox.listItems[nIndex].text;
+				oThis.updateLinkedCell();
+				oThis.updateSelectionInFormControl();
+				oThis.closeDropdown();
+			}, [], undefined, AscDFH.historydescription_Spreadsheet_SelectListBox, [], true);
 		};
 	};
-
-	CComboBoxController.prototype.updateListItems = function (oRef) {
+	CComboBoxController.prototype.updateSelectionInFormControl = function () {
+		const oFormControlPr = this.getFormControlPr();
+		const nIndex = this.listBox.getSingleSelectedIndex() + 1;
+		oFormControlPr.setSel(nIndex ? nIndex : null);
+	};
+	CComboBoxController.prototype.updateListItems = function () {
 		this.listBox.updateListItems(this.getParsedFmlaRange());
 	};
 
@@ -2412,13 +2274,17 @@
 	};
 
 	CComboBoxController.prototype.openDropdown = function () {
-		this.isDropdownOpen = true;
-		this.control.onUpdate();
+		if (!this.isDropdownOpen) {
+			this.isDropdownOpen = true;
+			this.control.onUpdate();
+		}
 	};
 
 	CComboBoxController.prototype.closeDropdown = function () {
-		this.isDropdownOpen = false;
-		this.control.onUpdate();
+		if (this.isDropdownOpen) {
+			this.isDropdownOpen = false;
+			this.control.onUpdate();
+		}
 	};
 
 	CComboBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
@@ -2428,9 +2294,7 @@
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
 
-		const nButtonWidth = 4;
-		const nLabelWidth = oControl.extX - nButtonWidth;
-
+		const nLabelWidth = oControl.extX - this.dropButton.extX;
 		graphics.b_color1(255, 255, 255, 255);
 		graphics.p_color(0, 0, 0, 255);
 		graphics.p_width(0);
@@ -2443,58 +2307,20 @@
 		graphics.ds();
 		graphics.df();
 		graphics._e();
-
 		if (this.selectedText) {
-			const nTextPadding = 0.5;
-			const nFontSize = 8;
-			const nTextX = nTextPadding;
-			const nTextY = 0.8 * oControl.extY;
-			
+			const nTextX = LISTBOX_TEXT_PADDING;
+			const nTextY = this.control.extY / 2 + this.listBox.getTextOffset();
 			graphics.b_color1(0, 0, 0, 255);
-			graphics.SetFont({
-				FontFamily: {
-					Name: "Arial",
-					Index: -1,
-				},
-				FontSize: nFontSize,
-				Bold: false,
-				Italic: false
-			});
-			
+			graphics.SetFont(LISTBOXITEM_TEXTPR);
 			graphics.t(this.selectedText, nTextX, nTextY);
 		}
 
-		graphics.b_color1(240, 240, 240, 255);
-		graphics.p_color(0, 0, 0, 255);
-		graphics.p_width(0);
-		graphics._s();
-		graphics._m(nLabelWidth, 0);
-		graphics._l(oControl.extX, 0);
-		graphics._l(oControl.extX, oControl.extY);
-		graphics._l(nLabelWidth, oControl.extY);
-		graphics._z();
-		graphics.ds();
-		graphics.df();
-		graphics._e();
-
-		const nArrowCX = nLabelWidth + nButtonWidth / 2;
-		const nArrowCY = oControl.extY / 2;
-		const nArrowSize = 1;
-		
-		graphics.b_color1(0, 0, 0, 255);
-		graphics._s();
-		graphics._m(nArrowCX - nArrowSize, nArrowCY - nArrowSize / 2);
-		graphics._l(nArrowCX + nArrowSize, nArrowCY - nArrowSize / 2);
-		graphics._l(nArrowCX, nArrowCY + nArrowSize / 2);
-		graphics._z();
-		graphics.df();
-		graphics._e();
-		
-		graphics.RestoreGrState();
+		this.dropButton.draw(graphics);
 
 		if (this.isDropdownOpen) {
 			this.listBox.draw(graphics);
 		}
+		graphics.RestoreGrState();
 	};
 
 	CComboBoxController.prototype.recalculateListBoxTransform = function () {
@@ -2538,28 +2364,14 @@
 		}
 
 		if (this.isDropdownOpen) {
-			const oInvertTransform = oControl.getInvertTransform();
-			const nLocalX = oInvertTransform.TransformPointX(nX, nY);
-			const nLocalY = oInvertTransform.TransformPointY(nX, nY);
-
-			const oFormControlPr = this.getFormControlPr();
-			const nDropLines = oFormControlPr.dropLines || 8;
-			const nVisibleItems = Math.min(nDropLines, this.listBox.listItems.length);
-			const nDropdownHeight = nVisibleItems * LISTBOX_ITEM_HEIGHT + LISTBOX_PADDING * 2;
-			
-			if (nLocalY > oControl.extY && nLocalY <= oControl.extY + nDropdownHeight) {
-				return this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
-			} else {
+			if (!this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
 				this.closeDropdown();
-				return true;
 			}
-		} else {
-			if (oControl.hit(nX, nY)) {
-				this.openDropdown();
-				return true;
-			}
+			return oControl.hit(nX, nY);
+		} else if (oControl.hit(nX, nY)) {
+			this.openDropdown();
+			return true;
 		}
-		
 		return false;
 	};
 
@@ -2591,11 +2403,19 @@
 			this.setRangeValue(oRef, oCellValue);
 		}
 	};
-
 	CComboBoxController.prototype.onUpdate = function () {
 		const oRect = new AscFormat.CGraphicBounds(this.control.x - 1, this.control.y - 1, this.control.x + this.control.extX + 1, this.control.y + this.control.extY + this.listBox.extY + 1);
 		return AscFormat.CShape.prototype.onUpdate.call(this.control, oRect);
 	};
+	CComboBoxController.prototype.hitInInnerArea = function (nX, nY) {
+		const oControl = this.control;
+		if (this.isDropdownOpen) {
+			return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY + this.listBox.extY);
+		} else {
+			return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY);
+		}
+	};
+
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoLine] = AscDFH.CChangesDrawingsBool;
@@ -2881,6 +2701,10 @@
 		oClass.page = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_Sel] = function (oClass, value) {
+		if(oClass.parent) {
+			oClass.parent.recalcInfo.recalculateItems = true;
+			oClass.parent.addToRecalculate();
+		}
 		oClass.sel = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_SelType] = function (oClass, value) {
@@ -2933,6 +2757,10 @@
 		oClass.lockText = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_MultiSel] = function (oClass, value) {
+		if(oClass.parent) {
+			oClass.parent.recalcInfo.recalculateTransform = true;
+			oClass.parent.addToRecalculate();
+		}
 		oClass.multiSel = value;
 	};
 	AscDFH.drawingsChangesMap[AscDFH.historyitem_FormControlPr_NoThreeD] = function (oClass, value) {

@@ -4715,6 +4715,7 @@
 
 	window['AscDFH'].historydescription_Spreadsheet_SwitchCheckbox                  = 0x01d0;
 	window['AscDFH'].historydescription_Spreadsheet_IncrementControl                = 0x01d1;
+	window['AscDFH'].historydescription_Spreadsheet_SelectListBox                   = 0x01d2;
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;
