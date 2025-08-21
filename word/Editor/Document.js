@@ -14064,9 +14064,10 @@ CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
 		this.MoveCursorLeft(false, false);
 	}
 
+	// TODO: Надо передалть на текущий параграф и проверить верхнюю таблицу у него (если она есть)
 	var nContentPos = this.CurPos.ContentPos;
 	var oElement    = this.Content[nContentPos];
-	var oCurSectPr  = this.SectionsInfo.Get_SectPr(nContentPos).SectPr;
+	var oCurSectPr  = this.SectionsInfo.GetSectPrByElement(oElement);
 	if (oElement.IsParagraph())
 	{
 		// Если мы стоим в параграфе, тогда делим данный параграф на 2 в текущей точке(даже если мы стоим в начале
@@ -14485,8 +14486,8 @@ CDocument.prototype.CompareDrawingsLogicPositions = function(Drawing1, Drawing2)
 	if (!TopElement1 || !TopElement2)
 		return 0;
 
-	var TopIndex1 = TopElement1.Get_Index();
-	var TopIndex2 = TopElement2.Get_Index();
+	var TopIndex1 = TopElement1.GetIndex();
+	var TopIndex2 = TopElement2.GetIndex();
 
 	if (TopIndex1 < TopIndex2)
 		return 1;
@@ -16316,8 +16317,8 @@ CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
 			nDirection = -1;
 		}
 
-		var oStartSectPr = this.SectionsInfo.Get_SectPr(nStartPos).SectPr;
-		var oEndSectPr   = this.SectionsInfo.Get_SectPr(nEndPos).SectPr;
+		var oStartSectPr = this.SectionsInfo.GetSectPrByElement(this.Content[nStartPos]);
+		var oEndSectPr   = this.SectionsInfo.GetSectPrByElement(this.Content[nEndPos]);
 		if (!oStartSectPr || !oEndSectPr || (oStartSectPr === oEndSectPr && oStartSectPr.IsEqualColumnProps(ColumnsProps)))
 			return;
 
@@ -16396,17 +16397,12 @@ CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
 	}
 	else
 	{
-		var CurPos = this.CurPos.ContentPos;
-		var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-		if (!SectPr)
-			return;
-
+		let sectPr = this.GetCurrentSectPr();
 		if (false === this.Document_Is_SelectionLocked(AscCommon.changestype_Document_SectPr))
 		{
 			this.StartAction(AscDFH.historydescription_Document_SetColumnsProps);
-
-			SectPr.SetColumnProps(ColumnsProps);
+			
+			sectPr.SetColumnProps(ColumnsProps);
 
 			this.Recalculate();
 			this.UpdateSelection();
@@ -16422,9 +16418,7 @@ CDocument.prototype.GetTopDocumentContent = function(isOneLevel)
 };
 CDocument.prototype.Set_SectionProps = function(Props)
 {
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
+	let SectPr = this.GetCurrentSectPr();
 	if (SectPr && false === this.Document_Is_SelectionLocked(AscCommon.changestype_Document_SectPr))
 	{
 		this.StartAction(AscDFH.historydescription_Document_SetSectionProps);
@@ -16476,10 +16470,8 @@ CDocument.prototype.Set_SectionProps = function(Props)
 };
 CDocument.prototype.Get_SectionProps = function()
 {
-	var CurPos = this.CurPos.ContentPos;
-	var SectPr = this.SectionsInfo.Get_SectPr(CurPos).SectPr;
-
-	return new Asc.CDocumentSectionProps(SectPr, this);
+	let sectPr = this.GetCurrentSectPr();
+	return new Asc.CDocumentSectionProps(sectPr, this);
 };
 /**
  * Получаем ширину текущей колонки
@@ -16487,26 +16479,17 @@ CDocument.prototype.Get_SectionProps = function()
  */
 CDocument.prototype.GetCurrentColumnWidth = function()
 {
-	var nCurPos = 0;
-	if (this.Controller === this.LogicDocumentController)
-		nCurPos = this.Selection.Use ? this.Selection.EndPos : this.CurPos.ContentPos;
-	else
-		nCurPos = this.CurPos.ContentPos;
+	let paragraph = this.GetCurrentParagraph();
+	if (!paragraph)
+		return 0;
+	
+	let sectPr = this.SectionsInfo.GetSectPrByElement(paragraph);
+	let columnCount = sectPr.GetColumnCount();
 
-	var oSectPr       = this.SectionsInfo.Get_SectPr(nCurPos).SectPr;
-	var nColumnsCount = oSectPr.GetColumnCount();
+	if (columnCount > 1)
+		return sectPr.Get_ColumnWidth(paragraph.Get_CurrentColumn());
 
-	if (nColumnsCount > 1)
-	{
-		var oParagraph = this.GetCurrentParagraph();
-		if (!oParagraph)
-			return 0;
-
-		var nCurrentColumn = oParagraph.Get_CurrentColumn();
-		return oSectPr.Get_ColumnWidth(nCurrentColumn);
-	}
-
-	return oSectPr.GetContentFrameWidth();
+	return sectPr.GetContentFrameWidth();
 };
 CDocument.prototype.Get_FirstParagraph = function()
 {
@@ -19224,7 +19207,7 @@ CDocument.prototype.controller_AddInlineTable = function(nCols, nRows, nMode)
 	{
 		// Ширину таблицы делаем по минимальной ширине колонки.
 		var oPage  = this.Pages[this.CurPage];
-		var SectPr = this.SectionsInfo.Get_SectPr(this.CurPos.ContentPos).SectPr;
+		var SectPr = this.SectionsInfo.GetSectPrByElement(Item);
 
 		var PageFields = this.Get_PageFields(this.CurPage);
 
@@ -21233,8 +21216,11 @@ CDocument.prototype.controller_GetSelectedContent = function(oSelectedContent)
 	{
 		this.Content[Index].GetSelectedContent(oSelectedContent);
 	}
-
-	oSelectedContent.SetLastSection(this.SectionsInfo.Get_SectPr(EndPos).SectPr);
+	
+	if (EndPos >= this.Content.length - 1)
+		oSelectedContent.SetLastSection(this.GetFinalSectPr());
+	else
+		oSelectedContent.SetLastSection(this.SectionsInfo.GetSectPrByElement(this.Content[EndPos + 1]));
 };
 CDocument.prototype.controller_UpdateCursorType = function(X, Y, PageAbs, MouseEvent)
 {
@@ -22102,13 +22088,11 @@ CDocument.prototype.controller_RestoreDocumentStateAfterLoadChanges = function(S
 };
 CDocument.prototype.controller_GetColumnSize = function()
 {
-	var nContentPos = true === this.Selection.Use ? ( this.Selection.StartPos < this.Selection.EndPos ? this.Selection.StartPos : this.Selection.EndPos ) : this.CurPos.ContentPos;
-
 	var oPagePos   = AscWord.DocumentPagePosition.fromDocumentPosition(this.GetContentPosition(this.Selection.Use, false), this);
 	var nColumnAbs = oPagePos ? oPagePos.Column : 0;
 	var nPageAbs   = oPagePos ? oPagePos.Page : 0;
 
-	var oSectPr = this.Get_SectPr(nContentPos);
+	var oSectPr = this.GetCurrentSectPr();
 	var oFrame  = oSectPr.GetContentFrame(nPageAbs);
 
 	var Y      = oFrame.Top;
@@ -22133,8 +22117,8 @@ CDocument.prototype.controller_GetColumnSize = function()
 };
 CDocument.prototype.controller_GetCurrentSectionPr = function()
 {
-	var nContentPos = this.CurPos.ContentPos;
-	return this.SectionsInfo.Get_SectPr(nContentPos).SectPr;
+	let paragraph = this.controller_GetCurrentParagraph();
+	return this.SectionsInfo.GetSectPrByElement(paragraph);
 };
 CDocument.prototype.controller_AddContentControl = function(nContentControlType)
 {
@@ -26605,7 +26589,7 @@ CDocument.prototype.private_ConvertTextToTable = function(oProps, oSelectedConte
 	var W;
 	if (oItem === this)
 	{
-		var SectPr = this.SectionsInfo.Get_SectPr(this.CurPos.ContentPos).SectPr;
+		var SectPr = this.SectionsInfo.GetCurrentSectPr();
 		var PageFields = this.Get_PageFields(this.CurPage);
 		var nAdd = this.GetCompatibilityMode() <= AscCommon.document_compatibility_mode_Word14 ?  2 * 1.9 : 0;
 		W = (PageFields.XLimit - PageFields.X + nAdd);

@@ -952,10 +952,6 @@ CDocumentContentElementBase.prototype.IsInPlaceholder = function()
 	
 	return false;
 };
-CDocumentContentElementBase.prototype.Get_Index = function()
-{
-	return this.GetIndex();
-};
 CDocumentContentElementBase.prototype.GetOutlineParagraphs = function(arrOutline, oPr)
 {
 };

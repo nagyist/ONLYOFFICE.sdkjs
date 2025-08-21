@@ -170,24 +170,6 @@
 			hdrFtr.Document_Get_AllFontNames(allFonts);
 		});
 	};
-	DocumentSections.prototype.Get_Index = function(Index)
-	{
-		var Count = this.Elements.length;
-		
-		for (var Pos = 0; Pos < Count; Pos++)
-		{
-			if (Index <= this.Elements[Pos].Index)
-				return Pos;
-		}
-		
-		// Последний элемент здесь это всегда конечная секция документа
-		return (Count - 1);
-	};
-	DocumentSections.prototype.Get_Count = function()
-	{
-		this.Update();
-		return this.Elements.length;
-	};
 	DocumentSections.prototype.GetSectPrByElement = function(element)
 	{
 		this.Update();
@@ -378,6 +360,7 @@
 	};
 	DocumentSections.prototype.GetCount = function()
 	{
+		this.Update();
 		return this.Elements.length;
 	};
 	/**
@@ -387,6 +370,7 @@
 	 */
 	DocumentSections.prototype.Get = function(nIndex)
 	{
+		this.Update();
 		return this.Elements[nIndex];
 	};
 	/**
