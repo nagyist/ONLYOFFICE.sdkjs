@@ -1927,7 +1927,8 @@
 		};
 		this.CoAuthoringApi.onWarning                 = function(code)
 		{
-			t.sendEvent('asc_onError', code || c_oAscError.ID.Warning, c_oAscError.Level.NoCritical);
+			const error = undefined !== code ? AscCommon.mapAscServerErrorToAscError(code) : c_oAscError.ID.Warning;
+			t.sendEvent('asc_onError', error, c_oAscError.Level.NoCritical);
 		};
 		this.CoAuthoringApi.onMeta                    = function(data)
 		{
