@@ -3722,7 +3722,11 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				}
 			}
 
-			if (true != bFlow && (RecalcResult & recalcresult_NextElement || RecalcResult & recalcresult_NextPage))
+			if (!bFlow
+				&& (RecalcResult & recalcresult_NextElement
+					|| RecalcResult & recalcresult_NextPage
+					|| RecalcResult & recalcresult_NextSection_Cur
+					|| RecalcResult & recalcresult_NextSection))
 			{
 				var ElementPageIndex = this.private_GetElementPageIndex(Index, PageIndex, ColumnIndex, ColumnsCount, sectionAbs);
 				Y                    = Element.Get_PageBounds(ElementPageIndex).Bottom;
