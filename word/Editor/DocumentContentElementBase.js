@@ -240,7 +240,6 @@ CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
 	let columnCount = section.GetColumnCount();
 	let startColumn = section === this.Sections[0] ? this.ColumnNum : 0;
 	
-	let startPage = section.GetStartPage();
 	curPage -= section.GetStartPage();
 	
 	let column = (startColumn + curPage) - ((startColumn + curPage) / columnCount | 0) * columnCount;
