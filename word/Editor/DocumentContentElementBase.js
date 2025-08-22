@@ -244,7 +244,7 @@ CDocumentContentElementBase.prototype.GetPageContentFrame = function(curPage)
 	curPage -= section.GetStartPage();
 	
 	let column = (startColumn + curPage) - ((startColumn + curPage) / columnCount | 0) * columnCount;
-	let page   = startPage + ((startColumn + curPage) / columnCount | 0);
+	let page   = section.GetParentStartPage() + ((startColumn + curPage) / columnCount | 0);
 	
 	return this.Parent.GetColumnContentFrame(page, column, section.GetSectPr());
 };
