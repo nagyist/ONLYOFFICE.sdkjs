@@ -169,7 +169,12 @@
 		clearTimeout(this.timeoutId);
 		this.timeoutId = null;
 	};
-
+function getFlatPenColor() {
+	return [202, 202, 202, 255];
+}
+	function getFlatCheckBoxPenColor() {
+		return [51, 51, 51, 255];
+	}
 	function CButtonBase(oControl) {
 		this.x = null;
 		this.y = null;
@@ -191,7 +196,7 @@
 		return [244, 244, 244, 255];
 	};
 	CButtonBase.prototype.getFlatPenColor = function () {
-		return [202, 202, 202, 255];
+		return getFlatPenColor();
 	};
 	CButtonBase.prototype.draw = function (graphics) {
 		graphics.SaveGrState();
@@ -246,7 +251,7 @@
 		this.setIsHover(this.hit(nX, nY));
 		let bRet = false;
 		let bUpdate = bOldIsHover !== this.isHover;
-		if (this.isHover) {
+		if (this.isHover || this.isHold) {
 			if (this._onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
 				bUpdate = true;
 			}
@@ -550,11 +555,66 @@
 	const CHECKBOX_BODYPR_INSETS_B = 32004 / 36000;
 	const CHECKBOX_OFFSET_X = CHECKBOX_SIDE_SIZE + (CHECKBOX_X_OFFSET * 2 - CHECKBOX_BODYPR_INSETS_L);
 
+	function CCheckBox(oControl) {
+		CButtonBase.call(this, oControl);
+	}
+	AscFormat.InitClassWithoutType(CCheckBox, CButtonBase);
+	CCheckBox.prototype.getFlatPenColor = function () {
+		return getFlatCheckBoxPenColor();
+	};
+	CCheckBox.prototype.isChecked = function () {
+
+	};
+	CCheckBox.prototype.isMixed = function () {
+
+	};
+	CCheckBox.prototype.getFlatFillColor = function () {
+		if (this.isHold) {
+			return [225, 225, 225, 255];
+		}
+		if (this.isHover) {
+			return [234, 234, 234, 255];
+		}
+		return [255, 255, 255, 255];
+	};
+	CCheckBox.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+		startRoundControl(graphics, 0, 0, this.extX, this.extY, 2, getFlatCheckBoxPenColor());
+		CButtonBase.prototype.draw.call(this, graphics);
+		graphics.p_color.apply(graphics, this.getFlatPenColor());
+		graphics.p_width(400);
+		graphics._s();
+		if (this.isChecked()) {
+			graphics._m(2.5, 0.75);
+			graphics._l(1, 2.25);
+			graphics._l(0.5, 1.75);
+			graphics.ds();
+
+		} else if (this.isMixed()) {
+			graphics._m(CHECKBOX_SIDE_SIZE * 0.2, CHECKBOX_SIDE_SIZE * 0.5);
+			graphics._l(CHECKBOX_SIDE_SIZE * 0.8, CHECKBOX_SIDE_SIZE * 0.5);
+			graphics.ds();
+		}
+		graphics._e();
+		endRoundControl(graphics);
+	};
+
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.isHold = false;
-	};
+		this.checkBox = new CCheckBox(oControl);
+		this.initCheckBoxHandlers();
+	}
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
+	CCheckBoxController.prototype.initCheckBoxHandlers = function () {
+		const oThis = this;
+		this.checkBox.isChecked = function () {
+			return oThis.isChecked();
+		};
+		this.checkBox.isMixed = function () {
+			return oThis.isMixed();
+		};
+	};
 	CCheckBoxController.prototype.initTextProperties = function () {
 		const oControl = this.control;
 		const oTxBody = oControl.txBody;
@@ -568,55 +628,24 @@
 			oTxBody.setBodyPr(oBodyPr);
 		}
 	};
+	CCheckBoxController.prototype.recalculateTransform = function () {
+		const oControl = this.control;
+		const oCheckBoxTransform = oControl.transform.CreateDublicate();
+		const nXOffset = CHECKBOX_X_OFFSET;
+		const nYOffset = (oControl.extY - CHECKBOX_SIDE_SIZE) / 2;
+		oCheckBoxTransform.tx += nXOffset;
+		oCheckBoxTransform.ty += nYOffset;
+		this.checkBox.x = oControl.x + nXOffset;
+		this.checkBox.y = oControl.y + nYOffset;
+		this.checkBox.extX = CHECKBOX_SIDE_SIZE;
+		this.checkBox.extY = CHECKBOX_SIDE_SIZE;
+		this.checkBox.transform = oCheckBoxTransform;
+		this.checkBox.invertTransform = oCheckBoxTransform.CreateDublicate().Invert();
+	};
 	CCheckBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
-		const oMainTransfrom = transform || oControl.transform;
-		const checkBoxTransform = oMainTransfrom.CreateDublicate();
 		AscFormat.CShape.prototype.draw.call(oControl, graphics, transform, transformText, pageIndex, opt);
-		graphics.SaveGrState();
-		graphics.AddClipRect(oControl.x, oControl.y, oControl.extX, oControl.extY);
-		checkBoxTransform.tx += CHECKBOX_X_OFFSET;
-		checkBoxTransform.ty += (oControl.extY - CHECKBOX_SIDE_SIZE) / 2;
-		graphics.transform3(checkBoxTransform);
-		graphics.b_color1(255, 255, 255, 255);
-		graphics.p_color(51, 51, 51, 255);
-		graphics.p_width(0);
-		graphics._s();
-		graphics._m(0, 0);
-		graphics._l(0, CHECKBOX_SIDE_SIZE);
-		graphics._l(CHECKBOX_SIDE_SIZE, CHECKBOX_SIDE_SIZE);
-		graphics._l(CHECKBOX_SIDE_SIZE, 0);
-		graphics._z();
-		graphics.ds();
-		graphics.df();
-		graphics._e();
-		if (this.isChecked()) {
-			graphics.p_color(0, 0, 0, 255);
-			graphics.p_width(400);
-			graphics._m(2.5, 0.75);
-			graphics._l(1, 2.25);
-			graphics._l(0.5, 1.75);
-			graphics.ds();
-			graphics._e();
-		} else if (this.isMixed()) {
-			graphics.b_color1(0, 0, 0, 255);
-			graphics._s();
-			const nRectCount = 7;
-			const nRectWidth = CHECKBOX_SIDE_SIZE / nRectCount;
-			for (let i = 0; i < nRectCount; i += 1) {
-				const nX = i * nRectWidth;
-				for (let j = 0; j < nRectCount; j += 1) {
-					const nY = j * nRectWidth;
-					if ((i % 2) === (j % 2)) {
-						graphics.TableRect(nX, nY, nRectWidth, nRectWidth);
-
-					}
-				}
-			}
-			graphics._e();
-		}
-
-		graphics.RestoreGrState();
+		this.checkBox.draw(graphics);
 	};
 	CCheckBoxController.prototype.isChecked = function () {
 		const nCheckValue = this.getChecked();
@@ -661,13 +690,23 @@
 		if (!oControl.hit(nX, nY)) {
 			return false;
 		}
-		this.setIsHold(true);
+		this.checkBox.setIsHold(true);
 		oControl.onUpdate();
 		return true;
 	}
+	CCheckBoxController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const bOldIsHover = this.checkBox.isHover;
+		const bIsHit = this.control.hit(nX, nY);
+		this.checkBox.setIsHover(bIsHit);
+		if (bOldIsHover !== this.checkBox.isHover) {
+			this.control.onUpdate();
+		}
+		return bIsHit;
+	}
+
 	CCheckBoxController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
 		const oControl = this.control;
-		this.setIsHold(false);
+		this.checkBox.setIsHold(false);
 		if (this.isExternalCheckBox()) {
 			oControl.onUpdate();
 			return false;
@@ -730,9 +769,6 @@
 		oTextRect.r += CHECKBOX_OFFSET_X;
 		return oTextRect;
 	};
-	CCheckBoxController.prototype.setIsHold = function (pr) {
-		this.isHold = pr;
-	}
 	CCheckBoxController.prototype.getChecked = function () {
 		const nRangeValue = this.getCheckedFromRange();
 		if (nRangeValue !== null) {
@@ -805,6 +841,29 @@
 		return oRes;
 	};
 
+	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
+		graphics.save();
+		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm, extX / 2, extY / 2);
+		graphics.p_color.apply(graphics, arrColor);
+		graphics.p_width(0);
+		graphics.StartClipPath();
+		graphics._s();
+		graphics._m(x, y + nRadius);
+		graphics._c2(x, y, x + nRadius, y);
+		graphics._l(x + extX - nRadius, y);
+		graphics._c2(x + extX, y, x + extX, y + nRadius);
+		graphics._l(x + extX, y + extY - nRadius);
+		graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
+		graphics._l(x + nRadius, y + extY);
+		graphics._c2(x, y + extY, x, y + extY - nRadius);
+		graphics._z();
+		graphics.ds();
+		graphics.EndClipPath();
+	}
+	function endRoundControl(graphics) {
+		graphics.restore();
+	}
+
 	const BUTTON_BODYPR_INSETS = 27432 / 36000;
 
 	function CButtonController(oControl) {
@@ -836,8 +895,13 @@
 		const oControl = this.control;
 		transform = transform || oControl.transform;
 		transformText = transformText || oControl.transformText;
+		graphics.SaveGrState();
+		graphics.transform3(transform);
+		startRoundControl(graphics, 0, 0, oControl.extX, oControl.extY, 4, getFlatPenColor());
 		this.button.draw(graphics);
 		oControl.drawTxBody(graphics, transform, transformText, pageIndex);
+		endRoundControl(graphics);
+		graphics.RestoreGrState();
 	};
 	CButtonController.prototype.recalculateTransform = function () {
 		const oControl = this.control;
@@ -918,55 +982,51 @@
 		this.direction = nDirection || SPINBUTTON_DIRECTION_UP;
 	}
 	AscFormat.InitClassWithoutType(CSpinButton, CButtonBase);
-
-	CSpinButton.prototype.getRectColor = function () {
-		if (this.isHold) {
-			return [255, 255, 255, 255];
-		}
-		return [0, 0, 0, 255];
-	};
 	CSpinButton.prototype.draw = function (graphics) {
 		CButtonBase.prototype.draw.call(this, graphics);
-		const arrRectColor = this.getRectColor();
+		const arrRectColor = [51, 51, 51, 255];
 		graphics.SaveGrState();
 		graphics.transform3(this.transform);
 		const nRectCX = this.extX / 2;
 		const nRectCY = this.extY / 2;
-		graphics.b_color1.apply(graphics, arrRectColor);
-		graphics._s();
 		const nRectHeight = (SPINBUTTON_RECTANGLE_SIDE_SCALE) * Math.min(this.extX, this.extY);
 		const nHalfRectHeight = nRectHeight / 2;
+		graphics.p_width(nRectHeight * 200);
+		graphics.p_color.apply(graphics, arrRectColor);
+		graphics._s();
+
 		switch (this.direction) {
 			case SPINBUTTON_DIRECTION_UP: {
 				graphics._m(nRectCX - nRectHeight, nRectCY + nHalfRectHeight);
-				graphics._l(nRectCX + nRectHeight, nRectCY + nHalfRectHeight);
 				graphics._l(nRectCX, nRectCY - nHalfRectHeight);
+				graphics._l(nRectCX + nRectHeight, nRectCY + nHalfRectHeight);
 				break;
 			}
 			case SPINBUTTON_DIRECTION_DOWN: {
 				graphics._m(nRectCX - nRectHeight, nRectCY - nHalfRectHeight);
-				graphics._l(nRectCX + nRectHeight, nRectCY - nHalfRectHeight);
 				graphics._l(nRectCX, nRectCY + nHalfRectHeight);
+				graphics._l(nRectCX + nRectHeight, nRectCY - nHalfRectHeight);
 				break;
 			}
 			case SPINBUTTON_DIRECTION_LEFT: {
 				graphics._m(nRectCX + nHalfRectHeight, nRectCY - nRectHeight);
-				graphics._l(nRectCX + nHalfRectHeight, nRectCY + nRectHeight);
 				graphics._l(nRectCX - nHalfRectHeight, nRectCY);
+				graphics._l(nRectCX + nHalfRectHeight, nRectCY + nRectHeight);
 				break;
 			}
 			case SPINBUTTON_DIRECTION_RIGHT: {
 				graphics._m(nRectCX - nHalfRectHeight, nRectCY - nRectHeight);
-				graphics._l(nRectCX - nHalfRectHeight, nRectCY + nRectHeight);
 				graphics._l(nRectCX + nHalfRectHeight, nRectCY);
+				graphics._l(nRectCX - nHalfRectHeight, nRectCY + nRectHeight);
 				break;
 			}
 			default: {
 				break;
 			}
 		}
+		graphics.ds();
 		graphics._z();
-		graphics.df();
+		// graphics.df();
 		graphics.RestoreGrState();
 		graphics._e();
 	};
@@ -999,8 +1059,14 @@
 		};
 	};
 	CSpinController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		graphics.SaveGrState()
+		transform = transform || this.control.transform;
+		graphics.transform3(transform);
+		startRoundControl(graphics, 0, 0, this.control.extX, this.control.extY, 2, getFlatPenColor());
 		this.downButton.draw(graphics);
 		this.upButton.draw(graphics);
+		endRoundControl(graphics);
+		graphics.RestoreGrState();
 	};
 	CSpinController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
@@ -1034,6 +1100,12 @@
 	CSpinController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
 		this.upButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
 		this.downButton.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+	};
+	CSpinController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		let bRet = 0;
+		bRet |= this.upButton.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		bRet |= this.downButton.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		return !!bRet;
 	};
 	CSpinController.prototype.init = function () {};
 	CSpinController.prototype.initTextProperties = function () {};
@@ -1105,7 +1177,6 @@
 	};
 
 
-	const SCROLLBAR_BUTTON_SIZE_RATIO = 0.15;
 	const SCROLLBAR_THUMB_MIN_SIZE_RATIO = 0.2;
 
 	function CTrackArea(oControl) {
@@ -1208,7 +1279,14 @@
 	};
 
 	CScrollController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		graphics.SaveGrState();
+		const oControl = this.control;
+		transform = transform || oControl.transform;
+		graphics.transform3(transform);
+		startRoundControl(graphics, 0, 0, oControl.extX, oControl.extY, 2, getFlatPenColor());
 		this.scroll.draw(graphics);
+		endRoundControl(graphics);
+		graphics.RestoreGrState();
 	};
 
 	CScrollController.prototype.getCursorInfo = function (e, nX, nY) {
@@ -1257,11 +1335,30 @@
 		this.scroll.recalculateTransform();
 	};
 
+	function CThumbButton(oControl) {
+		CButtonBase.call(this, oControl);
+	}
+	AscFormat.InitClassWithoutType(CThumbButton, CButtonBase);
+	CThumbButton.prototype.getFlatFillColor = function () {
+		if (this.isHold || this.isHover) {
+			return [51, 51, 51, 255];
+		}
+		return [148, 148, 148, 255];
+	};
+	CThumbButton.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.transform3(this.transform);
+		startRoundControl(graphics, 0, 0, this.extX, this.extY, 4, getFlatPenColor());
+		CButtonBase.prototype.draw.call(this, graphics);
+		endRoundControl(graphics);
+		graphics.RestoreGrState();
+	};
+
 	function CScrollContainer(oControl) {
 		this.control = oControl;
 		this.upButton = new CSpinButton(oControl);
 		this.downButton = new CSpinButton(oControl);
-		this.thumb = new CButtonBase(oControl);
+		this.thumb = new CThumbButton(oControl);
 		this.trackArea = new CTrackArea(oControl);
 		this.stepManager = new CStepManager();
 		this.x = null;
@@ -1361,25 +1458,26 @@
 			return true;
 		};
 		this.thumb._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-			let nRelPos;
-			let nTrackSize;
-			const bIsVertical = oThis.isVertical();
-			if (bIsVertical) {
-				nRelPos = nY - oThis.trackArea.y;
-				nTrackSize = oThis.trackArea.extY;
-			} else {
-				nRelPos = nX - oThis.trackArea.x;
-				nTrackSize = oThis.trackArea.extX;
+			if (this.isHold) {
+
+				const nTrackSize = oThis.getThumbTrackSpace();
+				const bIsVertical = oThis.isVertical();
+				let nRelPos;
+				if (bIsVertical) {
+					nRelPos = nY - (oThis.trackArea.y + oThis.getThumbTrackOffset());
+				} else {
+					nRelPos = nX - (oThis.trackArea.x + oThis.getThumbTrackOffset());
+				}
+
+				const nMin = oThis.getMinValue();
+				const nMax = oThis.getMaxValue();
+				const nRange = nMax - nMin;
+
+				let nNewValue = (nRelPos / nTrackSize) * nRange;
+				nNewValue = Math.max(nMin, Math.min(nMax, nNewValue));
+				oThis.setValue(nNewValue, oDrawingController);
+				return true;
 			}
-
-			const nMin = oThis.getMinValue();
-			const nMax = oThis.getMaxValue();
-			const nRange = nMax - nMin;
-
-			let nNewValue = (nRelPos / nTrackSize) * nRange;
-			nNewValue = Math.max(nMin, Math.min(nMax, nNewValue));
-			oThis.setValue(nNewValue, oDrawingController);
-			return true;
 		};
 		this.thumb._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
 			oThis.endChangeValues(oDrawingController);
@@ -1406,8 +1504,10 @@
 			return true;
 		};
 		this.trackArea._onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-			this.currentMousePostion.x = nX;
-			this.currentMousePostion.y = nY;
+			if (this.isHold) {
+				this.currentMousePostion.x = nX;
+				this.currentMousePostion.y = nY;
+			}
 			return false;
 		};
 	};
@@ -1478,7 +1578,12 @@
 		if (!this.isCanScroll()) {
 			return;
 		}
-		return this.thumb.onMouseMove(e, nX, nY, nPageIndex, oDrawingController) || this.trackArea.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		let bButtonRet = 0;
+		bButtonRet |= this.upButton.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		bButtonRet |= this.downButton.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		bButtonRet |= this.thumb.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		bButtonRet |= this.trackArea.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		return bButtonRet;
 	};
 
 	CScrollContainer.prototype.recalculateTransform = function () {
@@ -1495,44 +1600,43 @@
 		const nMinValue = this.getMinValue();
 		const nMaxValue = this.getMaxValue();
 		const nCurrentValue = this.getCurrentValue();
+		const nButtonSide = Math.min(this.extX, this.extY);
 		if (bIsVertical) {
-			const nButtonHeight = Math.min(nScrollHeight * SCROLLBAR_BUTTON_SIZE_RATIO, nScrollWidth);
-			const nTrackHeight = nScrollHeight - (nButtonHeight * 2);
+			const nTrackHeight = nScrollHeight - (nButtonSide * 2);
 
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
-			this.upButton.extX = nScrollWidth;
-			this.upButton.extY = nButtonHeight;
+			this.upButton.extX = nButtonSide;
+			this.upButton.extY = nButtonSide;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_UP;
 
 			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonHeight);
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonSide);
 			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
 			this.downButton.x = this.x;
-			this.downButton.y = this.y + nScrollHeight - nButtonHeight;
-			this.downButton.extX = nScrollWidth;
-			this.downButton.extY = nButtonHeight;
+			this.downButton.y = this.y + nScrollHeight - nButtonSide;
+			this.downButton.extX = nButtonSide;
+			this.downButton.extY = nButtonSide;
 			this.downButton.direction = SPINBUTTON_DIRECTION_DOWN;
 
 			this.trackArea.x = this.x;
-			this.trackArea.y = this.y + nButtonHeight;
+			this.trackArea.y = this.y + nButtonSide;
 			this.trackArea.extX = nScrollWidth;
 			this.trackArea.extY = nTrackHeight;
 			const oTrackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonHeight);
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonSide);
 			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
 		} else {
-			const nButtonSide = Math.min(nScrollWidth * SCROLLBAR_BUTTON_SIZE_RATIO, nScrollHeight);
 			const nTrackWidth = nScrollWidth - (nButtonSide * 2);
 
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
 			this.upButton.extX = nButtonSide;
-			this.upButton.extY = nScrollHeight;
+			this.upButton.extY = nButtonSide;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_LEFT;
@@ -1544,7 +1648,7 @@
 			this.downButton.x = this.x + nScrollWidth - nButtonSide;
 			this.downButton.y = this.y;
 			this.downButton.extX = nButtonSide;
-			this.downButton.extY = nScrollHeight;
+			this.downButton.extY = nButtonSide;
 			this.downButton.direction = SPINBUTTON_DIRECTION_RIGHT;
 
 			this.trackArea.x = this.x + nButtonSide;
@@ -1558,6 +1662,16 @@
 		}
 		this.recalculateThumbTransform(nMinValue, nMaxValue, nCurrentValue);
 	};
+	const ThumbTrackSpaceOffset = 2;
+	CScrollContainer.prototype.getThumbTrackSpace = function () {
+		if (this.isVertical()) {
+			return this.trackArea.extY - ThumbTrackSpaceOffset - this.thumb.extY;
+		}
+		return this.trackArea.extX - ThumbTrackSpaceOffset - this.thumb.extX;
+	};
+	CScrollContainer.prototype.getThumbTrackOffset = function () {
+		return ThumbTrackSpaceOffset / 2;
+	};
 	CScrollContainer.prototype.recalculateThumbTransform = function (nMinValue, nMaxValue, nCurrentValue) {
 		const bIsVertical = this.isVertical();
 		const nValueRange = nMaxValue - nMinValue;
@@ -1569,17 +1683,20 @@
 			const nTrackHeight = this.trackArea.extY;
 			const nThumbMinHeight = nScrollWidth * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
 			const nThumbHeight = Math.max(nThumbMinHeight, nTrackHeight / (nValueRange + 1));
-
-			const nThumbTrackSpace = nTrackHeight - nThumbHeight;
-			const nThumbY = nThumbPositionRatio * nThumbTrackSpace;
-
-			this.thumb.x = this.x;
-			this.thumb.y = this.y + nButtonSide + nThumbY;
-			this.thumb.extX = nScrollWidth;
 			this.thumb.extY = nThumbHeight;
 
+			const nThumbTrackSpace = this.getThumbTrackSpace();
+			const nThumbY = nThumbPositionRatio * nThumbTrackSpace + this.getThumbTrackOffset();
+
+			const nThumbWidth = nScrollWidth * 0.8;
+			const nXOffset = (nScrollWidth - nThumbWidth) / 2;
+			this.thumb.x = this.x + nXOffset;
+			this.thumb.y = this.y + nButtonSide + nThumbY;
+			this.thumb.extX = nThumbWidth;
+
+
 			const oThumbMatrix = this.transform.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oThumbMatrix, 0, nButtonSide + nThumbY);
+			global_MatrixTransformer.TranslateAppend(oThumbMatrix, nXOffset, nButtonSide + nThumbY);
 			this.thumb.transform = oThumbMatrix;
 			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
 		} else {
@@ -1587,17 +1704,19 @@
 			const nTrackWidth = this.trackArea.extX;
 			const nThumbMinWidth = nScrollHeight * SCROLLBAR_THUMB_MIN_SIZE_RATIO;
 			const nThumbWidth = Math.max(nThumbMinWidth, nTrackWidth / (nValueRange + 1));
-
-			const nThumbTrackSpace = nTrackWidth - nThumbWidth;
-			const nThumbX = nThumbPositionRatio * nThumbTrackSpace;
-
-			this.thumb.x = this.x + nButtonSide + nThumbX;
-			this.thumb.y = this.y;
 			this.thumb.extX = nThumbWidth;
-			this.thumb.extY = nScrollHeight;
+			const nThumbTrackSpace = this.getThumbTrackSpace();
+			const nThumbX = nThumbPositionRatio * nThumbTrackSpace + this.getThumbTrackOffset();
+
+			const nThumbHeight = nScrollHeight * 0.8;
+			const nYOffset = (nScrollHeight - nThumbHeight) / 2;
+			this.thumb.x = this.x + nButtonSide + nThumbX;
+			this.thumb.y = this.y + nYOffset;
+
+			this.thumb.extY = nThumbHeight;
 
 			const oThumbMatrix = this.transform.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oThumbMatrix, nButtonSide + nThumbX, 0);
+			global_MatrixTransformer.TranslateAppend(oThumbMatrix, nButtonSide + nThumbX, nYOffset);
 			this.thumb.transform = oThumbMatrix;
 			this.thumb.invertTransform = global_MatrixTransformer.Invert(this.thumb.transform);
 		}
@@ -1668,27 +1787,31 @@
 	CListBoxItem.prototype.setHovered = function (bHovered) {
 		this.isHovered = bHovered;
 	};
-
-	CListBoxItem.prototype.draw = function (graphics, nItemHeight, nItemWidth) {
-
-		graphics.SaveGrState();
+	CListBoxItem.prototype.getItemBackgroundColor = function () {
 		if (this.isSelected) {
-			graphics.b_color1(0, 120, 215, 255);
-		} else if (this.isHovered) {
-			graphics.b_color1(240, 240, 240, 255);
-		} else {
-			graphics.b_color1(255, 255, 255, 255);
+			return [225, 225, 225, 255];
 		}
+		if (this.isHovered) {
+			return [234, 234, 234, 255];
+		}
+		return [255, 255, 255, 255];
+	};
+	CListBoxItem.prototype.getItemTextColor = function () {
+		return [51, 51, 51, 255];
+	};
+
+	CListBoxItem.prototype.draw = function (graphics) {
+		graphics.SaveGrState();
+		graphics.b_color1.apply(graphics, this.getItemBackgroundColor());
 		graphics.SetIntegerGrid(true);
 		graphics.TableRect(this.x, this.y, this.extX, this.extY);
 
 		if (this.text) {
 			const nTextX = this.x + LISTBOX_TEXT_PADDING;
-			graphics.b_color1(this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, this.isSelected ? 255 : 0, 255);
+			graphics.b_color1.apply(graphics, this.getItemTextColor());
 			graphics.SetFont(LISTBOXITEM_TEXTPR);
 			graphics.t(this.text, nTextX, this.textY);
 		}
-
 		graphics.RestoreGrState();
 	};
 
@@ -1745,10 +1868,6 @@
 	};
 
 	CListBox.prototype.isShowScroll = function () {
-		return true;
-	};
-
-	CListBox.prototype.isShowHover = function () {
 		return true;
 	};
 
@@ -1863,32 +1982,32 @@
 	};
 	CListBox.prototype.draw = function (graphics, transform) {
 		const oTransform = transform || this.transform;
-		
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
-		graphics.b_color1(255, 255, 255, 255);
-		graphics.p_color(0, 0, 0, 255);
-		graphics.p_width(0);
-		graphics._s();
-		graphics._m(0, 0);
-		graphics._l(this.extX, 0);
-		graphics._l(this.extX, this.extY);
-		graphics._l(0, this.extY);
-		graphics._z();
-		graphics.ds();
-		graphics.df();
-		graphics._e();
+		startRoundControl(graphics, 0, 0, this.extX, this.extY, 2, getFlatPenColor());
+		// graphics.b_color1(255, 255, 255, 255);
+		// graphics.p_color(0, 0, 0, 255);
+		// graphics.p_width(0);
+		// graphics._s();
+		// graphics._m(0, 0);
+		// graphics._l(this.extX, 0);
+		// graphics._l(this.extX, this.extY);
+		// graphics._l(0, this.extY);
+		// graphics._z();
+		// graphics.ds();
+		// graphics.df();
+		// graphics._e();
 
 		graphics.AddClipRect(0, 0, this.extX, this.extY);
 		this.checkVisibleItems(function (oItem) {
 			oItem.draw(graphics);
 		});
-		graphics.RestoreGrState();
-
 
 		if (this.isShowScroll() && this.listItems.length > this.visibleItemsCount) {
 			this.scrollContainer.draw(graphics);
 		}
+		endRoundControl(graphics);
+		graphics.RestoreGrState();
 	};
 
 	CListBox.prototype.recalculateScrollTransform = function () {
@@ -1945,24 +2064,25 @@
 			return true;
 		}
 
-		if (this.isShowHover()) {
 			const nLocalX = this.invertTransform.TransformPointX(nX, nY);
 			const nLocalY = this.invertTransform.TransformPointY(nX, nY);
 
-			let bUpdate;
+			let bUpdate = 0;
+			let bHit = false;
 			this.checkVisibleItems(function (oItem) {
-				if (bUpdate) {
+				if (bHit) {
+					bUpdate |= oItem.isHovered;
 					oItem.setHovered(false);
 				} else {
-					bUpdate = oItem.hit(nLocalX, nLocalY);
-					oItem.setHovered(bUpdate);
+					bHit = oItem.hit(nLocalX, nLocalY);
+					bUpdate |= oItem.isHovered !== bHit;
+					oItem.setHovered(bHit);
 				}
 			});
 			
 			if (bUpdate) {
 				this.control.onUpdate();
 			}
-		}
 		
 		return false;
 	};
@@ -2040,10 +2160,6 @@
 		
 		this.listBox.isShowScroll = function () {
 			return true;
-		};
-		
-		this.listBox.isShowHover = function () {
-			return false;
 		};
 		
 		this.listBox.onChangeSelection = function (oDrawingController) {
@@ -2236,10 +2352,6 @@
 			return oThis.listBox.listItems.length > nDropLines;
 		};
 		
-		this.listBox.isShowHover = function () {
-			return true;
-		};
-		
 		this.listBox.onChangeSelection = function (oDrawingController) {
 			const nIndex = this.getSingleSelectedIndex();
 			if (nIndex === -1) {
@@ -2293,10 +2405,9 @@
 		
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
-
+		startRoundControl(graphics, 0, 0, oControl.extX, oControl.extY, 2, getFlatPenColor());
 		const nLabelWidth = oControl.extX - this.dropButton.extX;
 		graphics.b_color1(255, 255, 255, 255);
-		graphics.p_color(0, 0, 0, 255);
 		graphics.p_width(0);
 		graphics._s();
 		graphics._m(0, 0);
@@ -2304,7 +2415,6 @@
 		graphics._l(nLabelWidth, oControl.extY);
 		graphics._l(0, oControl.extY);
 		graphics._z();
-		graphics.ds();
 		graphics.df();
 		graphics._e();
 		if (this.selectedText) {
@@ -2316,10 +2426,12 @@
 		}
 
 		this.dropButton.draw(graphics);
+		endRoundControl(graphics);
 
 		if (this.isDropdownOpen) {
 			this.listBox.draw(graphics);
 		}
+
 		graphics.RestoreGrState();
 	};
 
@@ -2332,12 +2444,13 @@
 		const nActualItems = this.listBox.listItems.length;
 		const nVisibleItems = Math.min(nDropLines, nActualItems);
 		const nDropdownHeight = nVisibleItems * nItemHeight + LISTBOX_PADDING * 2;
+		const nYOffset = 1 + oControl.extY;
 		this.listBox.x = oControl.x;
-		this.listBox.y = oControl.y + oControl.extY;
+		this.listBox.y = oControl.y + nYOffset;
 		this.listBox.extX = oControl.extX;
 		this.listBox.extY = nDropdownHeight;
 		const oDropdownTransform = oControl.transform.CreateDublicate();
-		global_MatrixTransformer.TranslateAppend(oDropdownTransform, 0, oControl.extY);
+		global_MatrixTransformer.TranslateAppend(oDropdownTransform, 0, nYOffset);
 		this.listBox.transform = oDropdownTransform;
 		this.listBox.invertTransform = global_MatrixTransformer.Invert(oDropdownTransform);
 		this.listBox.recalculateTransform();
@@ -2404,7 +2517,7 @@
 		}
 	};
 	CComboBoxController.prototype.onUpdate = function () {
-		const oRect = new AscFormat.CGraphicBounds(this.control.x - 1, this.control.y - 1, this.control.x + this.control.extX + 1, this.control.y + this.control.extY + this.listBox.extY + 1);
+		const oRect = new AscFormat.CGraphicBounds(this.control.x - 1, this.control.y - 1, this.control.x + this.control.extX + 1, this.listBox.y + this.listBox.extY + 1);
 		return AscFormat.CShape.prototype.onUpdate.call(this.control, oRect);
 	};
 	CComboBoxController.prototype.hitInInnerArea = function (nX, nY) {
