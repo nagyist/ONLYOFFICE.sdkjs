@@ -794,9 +794,13 @@ DrawingArea.prototype.clear = function() {
     this.worksheet.drawingGraphicCtx.clear();
 };
 	DrawingArea.prototype.clearRect = function(oRect) {
-		const oStartInfo = this.convertCoordsToCursorWR(oRect.l, oRect.t);
-		const oEndInfo = this.convertCoordsToCursorWR(oRect.r, oRect.b);
-		this.worksheet.drawingGraphicCtx.clearRect(oStartInfo.X, oStartInfo.Y, oEndInfo.X - oStartInfo.X, oEndInfo.Y - oStartInfo.Y);
+		var canvas = this.worksheet.objectRender.getDrawingCanvas();
+		var oT = canvas.shapeCtx.m_oCoordTransform;
+		var l = (oT.TransformPointX(oRect.l, oRect.t) >> 0) - 1;
+		var t = (oT.TransformPointY(oRect.l, oRect.t) >> 0) - 1;
+		var r = (oT.TransformPointX(oRect.r, oRect.b) >> 0) + 1;
+		var b = (oT.TransformPointY(oRect.r, oRect.b) >> 0) + 1;
+		canvas.shapeCtx.m_oContext.clearRect(l, t, r - l, b - t);
 	};
 
 DrawingArea.prototype.drawObject = function(object, oRect) {
