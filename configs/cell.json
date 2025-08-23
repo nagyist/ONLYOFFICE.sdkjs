@@ -399,6 +399,8 @@
 
 			"common/Native/native_graphics.js",
 			
+			"word/Editor/document-visitor.js",
+			
 			"vendor/easysax.js",
 			"common/openxml.js"
 		],

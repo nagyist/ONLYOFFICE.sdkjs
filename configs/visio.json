@@ -354,7 +354,8 @@
 			"visio/model/overrides.js",
 			"visio/model/SerializeReader.js",
 			"visio/model/SerializeWriter.js",
-
+			
+			"word/Editor/document-visitor.js",
 			"slide/Editor/CollaborativeEditing.js"
 		],
 		"desktop": {
