@@ -175,14 +175,14 @@ function getFlatPenColor() {
 	function getFlatCheckBoxPenColor() {
 		return [51, 51, 51, 255];
 	}
-	function CButtonBase(oControl) {
+	function CButtonBase(oController) {
 		this.x = null;
 		this.y = null;
 		this.extX = null;
 		this.extY = null;
 		this.transform = new AscCommon.CMatrix();
 		this.invertTransform = new AscCommon.CMatrix();
-		this.control = oControl;
+		this.controller = oController;
 		this.isHold = false;
 		this.isHover = false;
 	}
@@ -220,9 +220,15 @@ function getFlatPenColor() {
 		return AscFormat.HitToRect(nX, nY, this.invertTransform, 0, 0, this.extX, this.extY);
 	};
 	CButtonBase.prototype.setIsHold = function (pr) {
+		if (this.isHold !== pr) {
+			this.controller.checkNeedUpdate();
+		}
 		this.isHold = pr;
 	};
 	CButtonBase.prototype.setIsHover = function (pr) {
+		if (this.isHover !== pr) {
+			this.controller.checkNeedUpdate();
+		}
 		this.isHover = pr;
 	};
 	CButtonBase.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
@@ -232,7 +238,7 @@ function getFlatPenColor() {
 
 		this.setIsHold(true);
 		if (this._onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
-			this.control.onUpdate();
+			this.controller.checkNeedUpdate();
 		}
 		return true;
 	};
@@ -240,27 +246,18 @@ function getFlatPenColor() {
 		if (this.isHold) {
 			this.setIsHold(false);
 			if (this._onMouseUp(e, nX, nY, nPageIndex, oDrawingController)) {
-				this.control.onUpdate();
+				this.controller.checkNeedUpdate();
 			}
 			return true;
 		}
 		return false;
 	};
 	CButtonBase.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		const bOldIsHover = this.isHover;
 		this.setIsHover(this.hit(nX, nY));
-		let bRet = false;
-		let bUpdate = bOldIsHover !== this.isHover;
 		if (this.isHover || this.isHold) {
-			if (this._onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
-				bUpdate = true;
-			}
-			bRet = true;
+			return this._onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
 		}
-		if (bUpdate) {
-			this.control.onUpdate();
-		}
-		return bRet;
+		return false;
 	};
 	CButtonBase.prototype._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 
@@ -301,6 +298,9 @@ function getFlatPenColor() {
 		if (this.formControlPr) {
 			oCopy.setFormControlPr(this.formControlPr.createDuplicate());
 		}
+	};
+	CControl.prototype.isNeedResetState = function() {
+		return this.controller.isNeedResetState();
 	};
 	CControl.prototype.initController = function () {
 		switch (this.formControlPr.objectType) {
@@ -352,13 +352,19 @@ function getFlatPenColor() {
 		return true;
 	}
 	CControl.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		return this.controller.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+		const bRet = this.controller.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+		this.controller.updateControl();
+		return bRet;
 	}
 	CControl.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		return this.controller.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		const bRet = this.controller.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+		this.controller.updateControl();
+		return bRet;
 	}
-	CControl.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
-		return this.controller.onMouseUp(e, nX, nY, nPageIndex, oController);
+	CControl.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
+		const bRet = this.controller.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
+		this.controller.updateControl();
+		return bRet;
 	}
 	CControl.prototype.getCursorInfo = function (e, nX, nY) {
 		return this.controller.getCursorInfo(e, nX, nY);
@@ -463,9 +469,13 @@ function getFlatPenColor() {
 	CControl.prototype.onUpdate = function () {
 		this.controller.onUpdate();
 	};
+	CControl.prototype.isNeedWriteShape = function() {
+		return this.controller.isNeedWriteShape();
+	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
+		this.isNeedUpdate = false;
 	}
 	CControlControllerBase.prototype.getFormControlPr = function () {
 		return this.control.formControlPr;
@@ -546,6 +556,33 @@ function getFlatPenColor() {
 		const oControl = this.control;
 		return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY);
 	};
+	CControlControllerBase.prototype.handleRef = function(aRanges, oRef, fCallback) {
+		if (!oRef) {
+			return false;
+		}
+		for (let i = 0; i < aRanges.length; i += 1) {
+			if (oRef.isIntersect(aRanges[i])) {
+				fCallback();
+				return true;
+			}
+		}
+		return false;
+	};
+	CControlControllerBase.prototype.isNeedResetState = function () {
+		return true;
+	};
+	CControlControllerBase.prototype.checkNeedUpdate = function() {
+		this.isNeedUpdate = true;
+	};
+	CControlControllerBase.prototype.updateControl = function() {
+		if (this.isNeedUpdate) {
+			this.isNeedUpdate = false;
+			this.control.onUpdate();
+		}
+	};
+	CControlControllerBase.prototype.isNeedWriteShape = function() {
+		return false;
+	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
 	const CHECKBOX_X_OFFSET = 1.5;
@@ -555,8 +592,8 @@ function getFlatPenColor() {
 	const CHECKBOX_BODYPR_INSETS_B = 32004 / 36000;
 	const CHECKBOX_OFFSET_X = CHECKBOX_SIDE_SIZE + (CHECKBOX_X_OFFSET * 2 - CHECKBOX_BODYPR_INSETS_L);
 
-	function CCheckBox(oControl) {
-		CButtonBase.call(this, oControl);
+	function CCheckBox(oController) {
+		CButtonBase.call(this, oController);
 	}
 	AscFormat.InitClassWithoutType(CCheckBox, CButtonBase);
 	CCheckBox.prototype.getFlatPenColor = function () {
@@ -602,7 +639,7 @@ function getFlatPenColor() {
 
 	function CCheckBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.checkBox = new CCheckBox(oControl);
+		this.checkBox = new CCheckBox(this);
 		this.initCheckBoxHandlers();
 	}
 	AscFormat.InitClassWithoutType(CCheckBoxController, CControlControllerBase);
@@ -691,24 +728,18 @@ function getFlatPenColor() {
 			return false;
 		}
 		this.checkBox.setIsHold(true);
-		oControl.onUpdate();
 		return true;
 	}
 	CCheckBoxController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		const bOldIsHover = this.checkBox.isHover;
 		const bIsHit = this.control.hit(nX, nY);
 		this.checkBox.setIsHover(bIsHit);
-		if (bOldIsHover !== this.checkBox.isHover) {
-			this.control.onUpdate();
-		}
 		return bIsHit;
 	}
 
 	CCheckBoxController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
-		const oControl = this.control;
 		this.checkBox.setIsHold(false);
 		if (this.isExternalCheckBox()) {
-			oControl.onUpdate();
+			this.checkNeedUpdate();
 			return false;
 		}
 		const oThis = this;
@@ -721,6 +752,7 @@ function getFlatPenColor() {
 			}
 			oThis.updateCellFromControl();
 		}, [], false, AscDFH.historydescription_Spreadsheet_SwitchCheckbox, [this.control]);
+		this.checkNeedUpdate();
 		return true;
 	}
 	CCheckBoxController.prototype.getCheckedFromRange = function () {
@@ -840,10 +872,13 @@ function getFlatPenColor() {
 		}
 		return oRes;
 	};
+	CCheckBoxController.prototype.isNeedWriteShape = function() {
+		return true;
+	};
 
 	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
 		graphics.save();
-		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm, extX / 2, extY / 2);
+		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm * AscCommon.AscBrowser.retinaPixelRatio, extX / 2, extY / 2);
 		graphics.p_color.apply(graphics, arrColor);
 		graphics.p_width(0);
 		graphics.StartClipPath();
@@ -868,7 +903,7 @@ function getFlatPenColor() {
 
 	function CButtonController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.button = new CButtonBase(oControl);
+		this.button = new CButtonBase(this);
 		this.initButton();
 	};
 	AscFormat.InitClassWithoutType(CButtonController, CControlControllerBase);
@@ -971,14 +1006,17 @@ function getFlatPenColor() {
 		}
 		return oBodyPr;
 	};
+	CButtonController.prototype.isNeedWriteShape = function() {
+		return true;
+	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
 	const SPINBUTTON_DIRECTION_UP = 1;
 	const SPINBUTTON_DIRECTION_DOWN = 2;
 	const SPINBUTTON_DIRECTION_RIGHT = 3;
 	const SPINBUTTON_DIRECTION_LEFT = 4;
-	function CSpinButton(oControl, nDirection) {
-		CButtonBase.call(this, oControl);
+	function CSpinButton(oController, nDirection) {
+		CButtonBase.call(this, oController);
 		this.direction = nDirection || SPINBUTTON_DIRECTION_UP;
 	}
 	AscFormat.InitClassWithoutType(CSpinButton, CButtonBase);
@@ -1033,8 +1071,8 @@ function getFlatPenColor() {
 
 	function CSpinController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.upButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_UP);
-		this.downButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_DOWN);
+		this.upButton = new CSpinButton(this, SPINBUTTON_DIRECTION_UP);
+		this.downButton = new CSpinButton(this, SPINBUTTON_DIRECTION_DOWN);
 		this.stepManager = new CStepManager();
 		this.initButtonEventHandlers();
 	};
@@ -1179,8 +1217,8 @@ function getFlatPenColor() {
 
 	const SCROLLBAR_THUMB_MIN_SIZE_RATIO = 0.2;
 
-	function CTrackArea(oControl) {
-		CButtonBase.call(this, oControl);
+	function CTrackArea(oController) {
+		CButtonBase.call(this, oController);
 		this.trackAreaHoldDirection = 0;
 		this.currentMousePostion = {
 			x: 0,
@@ -1200,7 +1238,7 @@ function getFlatPenColor() {
 
 	function CScrollController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.scroll = new CScrollContainer(oControl);
+		this.scroll = new CScrollContainer(this);
 		this.initButtonEventHandlers();
 	}
 
@@ -1335,8 +1373,8 @@ function getFlatPenColor() {
 		this.scroll.recalculateTransform();
 	};
 
-	function CThumbButton(oControl) {
-		CButtonBase.call(this, oControl);
+	function CThumbButton(oController) {
+		CButtonBase.call(this, oController);
 	}
 	AscFormat.InitClassWithoutType(CThumbButton, CButtonBase);
 	CThumbButton.prototype.getFlatFillColor = function () {
@@ -1354,12 +1392,12 @@ function getFlatPenColor() {
 		graphics.RestoreGrState();
 	};
 
-	function CScrollContainer(oControl) {
-		this.control = oControl;
-		this.upButton = new CSpinButton(oControl);
-		this.downButton = new CSpinButton(oControl);
-		this.thumb = new CThumbButton(oControl);
-		this.trackArea = new CTrackArea(oControl);
+	function CScrollContainer(oController) {
+		this.controller = oController;
+		this.upButton = new CSpinButton(oController);
+		this.downButton = new CSpinButton(oController);
+		this.thumb = new CThumbButton(oController);
+		this.trackArea = new CTrackArea(oController);
 		this.stepManager = new CStepManager();
 		this.x = null;
 		this.y = null;
@@ -1550,7 +1588,7 @@ function getFlatPenColor() {
 			this.setValue(Math.min(Math.max(nMinValue, nNewValue), nMaxValue), oDrawingController);
 
 			if (!bSkipUpdate) {
-				this.control.onUpdate();
+				this.controller.checkNeedUpdate();
 			}
 			return true;
 		} else {
@@ -1750,7 +1788,6 @@ function getFlatPenColor() {
 
 	const LISTBOX_ITEM_HEIGHT = 2;
 	const LISTBOX_SCROLL_WIDTH = 4;
-	const LISTBOX_PADDING = 1;
 	const LISTBOX_MAX_ITEM_HEIGHT = 4;
 
 	const LISTBOXITEM_TEXTPR = {
@@ -1833,11 +1870,11 @@ function getFlatPenColor() {
 
 
 
-	function CListBox(oControl) {
-		this.control = oControl;
+	function CListBox(oController) {
+		this.controller = oController;
 		this.selectedIndices = {};
 		this.scrollPosition = 0;
-		this.scrollContainer = new CScrollContainer(oControl);
+		this.scrollContainer = new CScrollContainer(oController);
 		this.listItems = [];
 		this.visibleItemsCount = 0;
 		this.x = 0;
@@ -1901,7 +1938,7 @@ function getFlatPenColor() {
 		this.scrollContainer._setValue = function (newValue, oDrawingController) {
 			oThis.scrollPosition = Math.round(newValue);
 			oThis.recalculateTransform();
-			oThis.control.onUpdate();
+			oThis.controller.checkNeedUpdate();
 		};
 	};
 	CListBox.prototype.updateListItems = function (oRange) {
@@ -1909,7 +1946,7 @@ function getFlatPenColor() {
 		if (oRange) {
 			const oThis = this;
 			oRange._foreach(function (oCell) {
-				const sItem = oCell && !oCell.isNullText() ? oCell.getValueWithoutFormat() : "";
+				const sItem = oCell && !oCell.isNullText() ? oCell.getValue() : "";
 				oThis.listItems.push(new CListBoxItem(oThis, sItem));
 			});
 		}
@@ -1955,12 +1992,21 @@ function getFlatPenColor() {
 		this.selectedIndices = {};
 	};
 	CListBox.prototype.addSelectedIndex = function (nIndex) {
-		this.selectedIndices[nIndex] = this.listItems[nIndex];
-		this.selectedIndices[nIndex].setSelected(true);
+		nIndex = Math.max(0, Math.min(nIndex, this.listItems.length - 1));
+		if (this.listItems[nIndex]) {
+			this.selectedIndices[nIndex] = this.listItems[nIndex];
+			this.selectedIndices[nIndex].setSelected(true);
+			return nIndex;
+		}
+		return null;
 	};
 	CListBox.prototype.removeSelectedIndex = function (nIndex) {
-		this.selectedIndices[nIndex].setSelected(false);
-		delete this.selectedIndices[nIndex];
+		if (this.selectedIndices[nIndex]) {
+			this.selectedIndices[nIndex].setSelected(false);
+			delete this.selectedIndices[nIndex];
+			return nIndex;
+		}
+		return null;
 	};
 	CListBox.prototype.handleItemClick = function (nItemIndex, bCtrlKey, oDrawingController) {
 		if (this.isMultiSelection() || this.isExtendedSelection() && bCtrlKey) {
@@ -1974,7 +2020,7 @@ function getFlatPenColor() {
 			this.addSelectedIndex(nItemIndex);
 		}
 		this.onChangeSelection(oDrawingController);
-		this.control.onUpdate();
+		this.controller.checkNeedUpdate();
 	};
 	CListBox.prototype.recalculateTransform = function() {
 		this.recalculateItemPositions();
@@ -2081,7 +2127,7 @@ function getFlatPenColor() {
 			});
 			
 			if (bUpdate) {
-				this.control.onUpdate();
+				this.controller.checkNeedUpdate();
 			}
 		
 		return false;
@@ -2102,7 +2148,7 @@ function getFlatPenColor() {
 
 	function CListBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.listBox = new CListBox(oControl);
+		this.listBox = new CListBox(this);
 		this.recalcInfo = {
 			recalculateItems: true
 		};
@@ -2111,27 +2157,13 @@ function getFlatPenColor() {
 
 	AscFormat.InitClassWithoutType(CListBoxController, CControlControllerBase);
 	CListBoxController.prototype.handleFmlaRange = function (aRanges) {
-		const oParsedRange = this.getParsedFmlaRange();
-		for (let i = 0; i < aRanges.length; i += 1) {
-			if (oParsedRange.isIntersect(aRanges[i])) {
-				this.updateListItems();
-				return true;
-			}
-		}
-		return false;
+		return this.handleRef(aRanges, this.getParsedFmlaRange(), this.updateListItems.bind(this));
 	};
 	CListBoxController.prototype.handleFmlaLink = function (aRanges) {
 		if (this.listBox.isMultiSelection() || this.listBox.isExtendedSelection()) {
 			return false;
 		}
-		const oParsedLink = this.getParsedFmlaLink();
-		for (let i = 0; i < aRanges.length; i += 1) {
-			if (oParsedLink.isIntersect(aRanges[i])) {
-				this.updateSelectedIndices();
-				return true;
-			}
-		}
-		return false;
+		return this.handleRef(aRanges, this.getParsedFmlaLink(), this.updateSelectedIndices.bind(this));
 	};
 	CListBoxController.prototype.recalculate = function() {
 		if (this.recalcInfo.recalculateItems) {
@@ -2300,8 +2332,8 @@ function getFlatPenColor() {
 
 	function CComboBoxController(oControl) {
 		CControlControllerBase.call(this, oControl);
-		this.listBox = new CListBox(oControl);
-		this.dropButton = new CSpinButton(oControl, SPINBUTTON_DIRECTION_DOWN);
+		this.listBox = new CListBox(this);
+		this.dropButton = new CSpinButton(this, SPINBUTTON_DIRECTION_DOWN);
 		this.isDropdownOpen = false;
 		this.selectedText = "";
 		this.recalcInfo = {
@@ -2375,30 +2407,51 @@ function getFlatPenColor() {
 	};
 
 	CComboBoxController.prototype.updateSelectedIndex = function () {
-		const oFormControlPr = this.getFormControlPr();
-		const nSelectedIndex = AscFormat.isRealNumber(oFormControlPr.sel) ? oFormControlPr.sel - 1 : -1;
-		if (nSelectedIndex >= 0 && this.listBox.listItems[nSelectedIndex]) {
-			this.selectedText = this.listBox.listItems[nSelectedIndex].text;
-			this.listBox.addSelectedIndex(nSelectedIndex);
+		this.listBox.resetSelectedIndices();
+		const nFmlaLinkIndex = this.getFmlaLinkIndex();
+		if (nFmlaLinkIndex !== null) {
+			if (nFmlaLinkIndex >= 0) {
+				const nIndex = this.listBox.addSelectedIndex(nFmlaLinkIndex);
+				if (nIndex !== null) {
+					this.selectedText = this.listBox.listItems[nIndex].text;
+				}
+			}
 		} else {
-			this.selectedText = "";
+			const oFormControlPr = this.getFormControlPr();
+			const nSelectedIndex = AscFormat.isRealNumber(oFormControlPr.sel) ? oFormControlPr.sel - 1 : -1;
+			if (nSelectedIndex >= 0 && this.listBox.listItems[nSelectedIndex]) {
+				const nIndex = this.listBox.addSelectedIndex(nSelectedIndex);
+				if (nIndex !== null) {
+					this.selectedText = this.listBox.listItems[nIndex].text;
+				}
+			} else {
+				this.selectedText = "";
+			}
 		}
 	};
 
 	CComboBoxController.prototype.openDropdown = function () {
 		if (!this.isDropdownOpen) {
 			this.isDropdownOpen = true;
-			this.control.onUpdate();
+			this.dropButton.setIsHold(true);
+			Asc.editor && Asc.editor.addDropDown(this);
+			this.checkNeedUpdate();
 		}
 	};
 
 	CComboBoxController.prototype.closeDropdown = function () {
 		if (this.isDropdownOpen) {
+			this.dropButton.setIsHold(false);
 			this.isDropdownOpen = false;
-			this.control.onUpdate();
+			Asc.editor && Asc.editor.resetDropDowns();
+			this.checkNeedUpdate();
 		}
 	};
-
+	CComboBoxController.prototype.drawDropDown = function(graphics) {
+		if (this.isDropdownOpen) {
+			this.listBox.draw(graphics);
+		}
+	};
 	CComboBoxController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
 		const oControl = this.control;
 		const oTransform = transform || oControl.transform;
@@ -2427,11 +2480,6 @@ function getFlatPenColor() {
 
 		this.dropButton.draw(graphics);
 		endRoundControl(graphics);
-
-		if (this.isDropdownOpen) {
-			this.listBox.draw(graphics);
-		}
-
 		graphics.RestoreGrState();
 	};
 
@@ -2443,7 +2491,7 @@ function getFlatPenColor() {
 		const nItemHeight = LISTBOX_MAX_ITEM_HEIGHT;
 		const nActualItems = this.listBox.listItems.length;
 		const nVisibleItems = Math.min(nDropLines, nActualItems);
-		const nDropdownHeight = nVisibleItems * nItemHeight + LISTBOX_PADDING * 2;
+		const nDropdownHeight = nVisibleItems * nItemHeight;
 		const nYOffset = 1 + oControl.extY;
 		this.listBox.x = oControl.x;
 		this.listBox.y = oControl.y + nYOffset;
@@ -2461,7 +2509,7 @@ function getFlatPenColor() {
 		if (oControl.selected) {
 			return null;
 		}
-		if (!oControl.hit(nX, nY)) {
+		if (!this.hitInInnerArea(nX, nY)) {
 			return null;
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
@@ -2473,13 +2521,13 @@ function getFlatPenColor() {
 			return false;
 		}
 		if (e.button !== 0) {
+			this.closeDropdown();
 			return false;
 		}
 
 		if (this.isDropdownOpen) {
-			if (!this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
-				this.closeDropdown();
-			}
+			this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
+			this.closeDropdown();
 			return oControl.hit(nX, nY);
 		} else if (oControl.hit(nX, nY)) {
 			this.openDropdown();
@@ -2496,10 +2544,12 @@ function getFlatPenColor() {
 	};
 
 	CComboBoxController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
+		let bRet = this.hitInComboBox(nX, nY);
+		this.dropButton.setIsHover(bRet);
 		if (this.isDropdownOpen) {
-			return this.listBox.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+			bRet |= this.listBox.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
 		}
-		return false;
+		return !!bRet;
 	};
 
 	CComboBoxController.prototype.updateLinkedCell = function () {
@@ -2521,14 +2571,42 @@ function getFlatPenColor() {
 		return AscFormat.CShape.prototype.onUpdate.call(this.control, oRect);
 	};
 	CComboBoxController.prototype.hitInInnerArea = function (nX, nY) {
-		const oControl = this.control;
 		if (this.isDropdownOpen) {
-			return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY + this.listBox.extY);
+			const oControl = this.control;
+			return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY + this.listBox.extY + 1);
 		} else {
-			return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY);
+			return this.hitInComboBox(nX, nY);
 		}
 	};
-
+	CComboBoxController.prototype.hitInComboBox = function (nX, nY) {
+		const oControl = this.control;
+		return AscFormat.HitToRect(nX, nY, oControl.invertTransform, 0, 0, oControl.extX, oControl.extY);
+	};
+	CComboBoxController.prototype.isNeedResetState = function () {
+		return !this.isDropdownOpen;
+	};
+	CComboBoxController.prototype.handleFmlaRange = function (aRanges) {
+		return this.handleRef(aRanges, this.getParsedFmlaRange(), this.updateListItems.bind(this));
+	};
+	CComboBoxController.prototype.handleFmlaLink = function (aRanges) {
+		return this.handleRef(aRanges, this.getParsedFmlaLink(), this.updateSelectedIndex.bind(this));
+	};
+	CComboBoxController.prototype.getFmlaLinkIndex = function () {
+		const oParsedLink = this.getParsedFmlaLink();
+		if (oParsedLink) {
+			let nIndex = null;
+			oParsedLink._foreach(function (oCell) {
+				if (oCell) {
+					const nNumber = oCell.getNumberValue();
+					if (nNumber !== null) {
+						nIndex = nNumber - 1;
+					}
+				}
+			});
+			return nIndex;
+		}
+		return null;
+	};
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AltText] = AscDFH.CChangesDrawingsString;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoFill] = AscDFH.CChangesDrawingsBool;
 	AscDFH.changesFactory[AscDFH.historyitem_ControlPr_AutoLine] = AscDFH.CChangesDrawingsBool;

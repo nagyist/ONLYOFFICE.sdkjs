@@ -6023,9 +6023,11 @@
 					oThis.memory.WriteString2(oControl.name);
 					}
 					this.WriteControlPr(oControl);
-					this.bs.WriteItem(c_oSerControlTypes.Shape, function() {
-						oThis.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oControl, null, null, null);});
-					});
+					if (oControl.isNeedWriteShape()) {
+						this.bs.WriteItem(c_oSerControlTypes.Shape, function() {
+							oThis.bs.WriteItem(c_oSer_DrawingType.pptxDrawing, function(){pptx_content_writer.WriteDrawing(oThis.memory, oControl, null, null, null);});
+						});
+					}
 				};
 				this.WriteControlPr = function(oControl) {
 					const oControlPr = oControl.getControlPr();
@@ -10705,6 +10707,8 @@
 							oControl.setTxBody(oTxBody);
 							oControl.initTextProperties();
 							oControl.clearVmlTxBody();
+						} else {
+							oControl.createTextBody();
 						}
 						oDrawingBase.initAfterSerialize(oWorksheet);
 					}

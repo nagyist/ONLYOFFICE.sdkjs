@@ -729,10 +729,10 @@ NullState.prototype =
 		{
 			return {cursorType: "default", objectId: this.control.Get_Id()};
 		}
-		return null;
+		return this.control.onMouseDown(e, x, y, pageIndex, this.controller);
 	};
 	ControlState.prototype.onMouseMove = function (e, x, y, pageIndex) {
-		if(!e.IsLocked) {
+		if(!e.IsLocked && this.control.isNeedResetState()) {
 			return this.emulateMouseUp(e, x, y, pageIndex);
 		}
 		this.control.onMouseMove(e, x, y, pageIndex, this.controller);
@@ -743,7 +743,9 @@ NullState.prototype =
 			return {cursorType: "default", objectId: this.control.Get_Id()};
 		}
 		var bRet = this.control.onMouseUp(e, x, y, pageIndex, this.controller);
-		this.changeControllerState(new NullState(this.drawingObjects));
+		if (this.control.isNeedResetState()) {
+			this.changeControllerState(new NullState(this.drawingObjects));
+		}
 		return bRet;
 	};
 	ControlState.prototype.getCursorInfo = function () {
