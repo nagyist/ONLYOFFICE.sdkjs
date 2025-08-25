@@ -354,7 +354,6 @@ function getFlatPenColor() {
 				return false;
 			}
 		}
-		this.controller.init();
 		return true;
 	}
 	CControl.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
