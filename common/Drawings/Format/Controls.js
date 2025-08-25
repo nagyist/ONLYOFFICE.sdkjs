@@ -558,7 +558,6 @@ function getFlatPenColor() {
 	CControlControllerBase.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {};
 	CControlControllerBase.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {return false;};
 	CControlControllerBase.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {};
-	CControlControllerBase.prototype.init = function () {};
 	CControlControllerBase.prototype.initTextProperties = function () {return null;};
 	CControlControllerBase.prototype.applySpecialPasteProps = function (oPastedWb) {};
 	CControlControllerBase.prototype.handleChangeRanges = function (aRanges) {
@@ -1146,7 +1145,6 @@ function getFlatPenColor() {
 		bRet |= this.downButton.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
 		return !!bRet;
 	};
-	CSpinController.prototype.init = function () {};
 	CSpinController.prototype.initTextProperties = function () {};
 	CSpinController.prototype.applySpecialPasteProps = function (oPastedWb) {};
 	CSpinController.prototype.hit = function (nX, nY) {

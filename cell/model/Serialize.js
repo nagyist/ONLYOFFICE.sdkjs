@@ -12971,7 +12971,6 @@
             {
                 pptx_content_loader.Reader.AssignConnectedObjects();
             }
-	        wb.initControls();
 			if(!pasteBinaryFromExcel)
 				History.TurnOn();
             //чтобы удалялся stream с бинарником
