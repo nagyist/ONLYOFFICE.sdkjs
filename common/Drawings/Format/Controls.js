@@ -150,6 +150,28 @@
 				return null;
 		}
 	}
+	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
+		graphics.save();
+		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm * AscCommon.AscBrowser.retinaPixelRatio, extX / 2, extY / 2);
+		graphics.p_color.apply(graphics, arrColor);
+		graphics.p_width(0);
+		graphics.StartClipPath();
+		graphics._s();
+		graphics._m(x, y + nRadius);
+		graphics._c2(x, y, x + nRadius, y);
+		graphics._l(x + extX - nRadius, y);
+		graphics._c2(x + extX, y, x + extX, y + nRadius);
+		graphics._l(x + extX, y + extY - nRadius);
+		graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
+		graphics._l(x + nRadius, y + extY);
+		graphics._c2(x, y + extY, x, y + extY - nRadius);
+		graphics._z();
+		graphics.ds();
+		graphics.EndClipPath();
+	}
+	function endRoundControl(graphics) {
+		graphics.restore();
+	}
 	function CStepManager() {
 		this.timeoutId = null;
 	}
@@ -381,6 +403,12 @@ function getFlatPenColor() {
 	CControl.prototype.canRotate = function () {
 		return false;
 	};
+	CControl.prototype.canEditText = function () {
+		return this.controller.canEditText();
+	};
+	CControl.prototype.canEditGeometry = function () {
+		return false;
+	};
 	CControl.prototype.setControlPr = function (pr) {
 		AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsObject(this, AscDFH.historyitem_Control_ControlPr, this.controlPr, pr));
 		this.controlPr = pr;
@@ -520,13 +548,9 @@ function getFlatPenColor() {
 			}
 		});
 		const oWb = Asc.editor.wb;
-		const nWorksheetIndex = oRef.worksheet.getIndex();
-		const oWs = oWb && oWb.getWorksheet(nWorksheetIndex, true);
-		if (oWs) {
-			oWs._updateRange(oRef.bbox);
-			if (oWb.wsActive === nWorksheetIndex) {
-				oWs.draw();
-			}
+		const oActiveWs = oWb && oWb.getWorksheet();
+		if (oActiveWs) {
+			oActiveWs.draw();
 		}
 	};
 	CControlControllerBase.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {};
@@ -586,6 +610,9 @@ function getFlatPenColor() {
 	};
 	CControlControllerBase.prototype.forceUpdate = function() {
 		this.control.onUpdate();
+	};
+	CControlControllerBase.prototype.canEditText = function () {
+		return false;
 	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
@@ -876,29 +903,9 @@ function getFlatPenColor() {
 		}
 		return oRes;
 	};
-
-	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
-		graphics.save();
-		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm * AscCommon.AscBrowser.retinaPixelRatio, extX / 2, extY / 2);
-		graphics.p_color.apply(graphics, arrColor);
-		graphics.p_width(0);
-		graphics.StartClipPath();
-		graphics._s();
-		graphics._m(x, y + nRadius);
-		graphics._c2(x, y, x + nRadius, y);
-		graphics._l(x + extX - nRadius, y);
-		graphics._c2(x + extX, y, x + extX, y + nRadius);
-		graphics._l(x + extX, y + extY - nRadius);
-		graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
-		graphics._l(x + nRadius, y + extY);
-		graphics._c2(x, y + extY, x, y + extY - nRadius);
-		graphics._z();
-		graphics.ds();
-		graphics.EndClipPath();
-	}
-	function endRoundControl(graphics) {
-		graphics.restore();
-	}
+	CCheckBoxController.prototype.canEditText = function () {
+		return AscFormat.CShape.prototype.canEditText.call(this.control);
+	};
 
 	const BUTTON_BODYPR_INSETS = 27432 / 36000;
 
@@ -1007,6 +1014,9 @@ function getFlatPenColor() {
 		}
 		return oBodyPr;
 	};
+	CButtonController.prototype.canEditText = function () {
+		return AscFormat.CShape.prototype.canEditText.call(this.control);
+	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
 	const SPINBUTTON_DIRECTION_UP = 1;
@@ -1106,19 +1116,12 @@ function getFlatPenColor() {
 	};
 	CSpinController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return null;
-		}
 		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
 	CSpinController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		const oControl = this.control;
-		if (oControl.selected) {
-			return false;
-		}
 		if (e.button !== 0) {
 			return false;
 		}
@@ -1327,12 +1330,6 @@ function getFlatPenColor() {
 
 	CScrollController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return null;
-		}
-		if (!oControl.hit(nX, nY)) {
-			return null;
-		}
 		if (this.scroll.hit(nX, nY)) {
 			return {cursorType: "default", objectId: oControl.GetId()};
 		}
@@ -1344,9 +1341,6 @@ function getFlatPenColor() {
 	};
 	CScrollController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return false;
-		}
 		if (e.button !== 0) {
 			return false;
 		}
@@ -2280,9 +2274,6 @@ function getFlatPenColor() {
 
 	CListBoxController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return null;
-		}
 		if (!oControl.hit(nX, nY)) {
 			return null;
 		}
@@ -2291,9 +2282,6 @@ function getFlatPenColor() {
 
 	CListBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return false;
-		}
 		if (e.button !== 0) {
 			return false;
 		}
@@ -2504,11 +2492,11 @@ function getFlatPenColor() {
 
 	CComboBoxController.prototype.getCursorInfo = function (e, nX, nY) {
 		const oControl = this.control;
-		if (oControl.selected) {
-			return null;
-		}
 		if (!this.hitInInnerArea(nX, nY)) {
 			return null;
+		}
+		if (oControl.selected) {
+			return {cursorType: "default", objectId: oControl.GetId()};
 		}
 		return {cursorType: "pointer", objectId: oControl.GetId()};
 	};
@@ -2516,10 +2504,10 @@ function getFlatPenColor() {
 	CComboBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const oControl = this.control;
 		if (oControl.selected) {
-			return false;
+			return true;
 		}
 		if (e.button !== 0) {
-			this.closeDropdown();
+			this.closeDropdown(oDrawingController);
 			return false;
 		}
 
