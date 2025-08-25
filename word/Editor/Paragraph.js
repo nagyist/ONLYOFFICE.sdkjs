@@ -775,7 +775,8 @@ Paragraph.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, C
 	this.PageNum      = PageNum;
 	this.ColumnNum    = ColumnNum ? ColumnNum : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
-
+	this.SectionNum   = sectionIndex ? sectionIndex : 0;
+	
 	// При первом пересчете параграфа this.Parent.RecalcInfo.Can_RecalcObject() всегда будет true, а вот при повторных
 	// уже нет Кроме случая, когда параграф меняет свое местоположение на страницах и колонках
 	if (true === this.Parent.RecalcInfo.Can_RecalcObject() || ColumnNumOld !== this.ColumnNum || PageNumOld !== this.PageNum)
