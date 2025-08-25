@@ -811,7 +811,7 @@ function getFlatPenColor() {
 			oCellValue.number = 1;
 		} else if (oFormControlPr.checked === CFormControlPr_checked_mixed) {
 			oCellValue.type = AscCommon.CellValueType.Error;
-			oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(cErrorType.not_available);
+			oCellValue.text = AscCommonExcel.cError.prototype.getStringFromErrorType(AscCommonExcel.cErrorType.not_available);
 		} else {
 			oCellValue.type = AscCommon.CellValueType.Bool;
 			oCellValue.number = 0;
