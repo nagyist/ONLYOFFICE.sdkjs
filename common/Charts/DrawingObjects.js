@@ -2333,6 +2333,10 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         for (var nDrawing = 0; nDrawing < aObjects.length; nDrawing++) {
             _this.drawingArea.drawObject(aObjects[nDrawing], oUpdateRect);
                 }
+				const aDropDowns = _this.controller.dropDowns;
+			for (var nDrawing = 0; nDrawing < aDropDowns.length; nDrawing++) {
+				_this.drawingArea.drawDropDown(aDropDowns[nDrawing], oUpdateRect);
+			}
         _this.OnUpdateOverlay();
         _this.controller.updateSelectionState(true);
         AscCommon.CollaborativeEditing.Update_ForeignCursorsPositions();

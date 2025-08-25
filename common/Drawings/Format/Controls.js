@@ -336,6 +336,12 @@ function getFlatPenColor() {
 		return true;
 	}
 	CControl.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
+		const oUR = graphics.updatedRect;
+		if (oUR && this.bounds) {
+			if (!oUR.isIntersectOther(this.bounds)) {
+				return;
+			}
+		}
 		this.controller.draw(graphics, transform, transformText, pageIndex, opt);
 	};
 	CControl.prototype.hitInInnerArea = function (x, y) {
@@ -353,17 +359,17 @@ function getFlatPenColor() {
 	}
 	CControl.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const bRet = this.controller.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
-		this.controller.updateControl();
+		this.controller.update();
 		return bRet;
 	}
 	CControl.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const bRet = this.controller.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
-		this.controller.updateControl();
+		this.controller.update();
 		return bRet;
 	}
 	CControl.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
 		const bRet = this.controller.onMouseUp(e, nX, nY, nPageIndex, oDrawingController);
-		this.controller.updateControl();
+		this.controller.update();
 		return bRet;
 	}
 	CControl.prototype.getCursorInfo = function (e, nX, nY) {
@@ -571,14 +577,15 @@ function getFlatPenColor() {
 	CControlControllerBase.prototype.checkNeedUpdate = function() {
 		this.isNeedUpdate = true;
 	};
-	CControlControllerBase.prototype.updateControl = function() {
+	CControlControllerBase.prototype.update = function() {
 		if (this.isNeedUpdate) {
 			this.isNeedUpdate = false;
 			this.control.onUpdate();
+			this.forceUpdate();
 		}
 	};
-	CControlControllerBase.prototype.isNeedWriteShape = function() {
-		return false;
+	CControlControllerBase.prototype.forceUpdate = function() {
+		this.control.onUpdate();
 	};
 
 	const CHECKBOX_SIDE_SIZE = 3;
@@ -2384,7 +2391,7 @@ function getFlatPenColor() {
 				oThis.selectedText = oThis.listBox.listItems[nIndex].text;
 				oThis.updateLinkedCell();
 				oThis.updateSelectionInFormControl();
-				oThis.closeDropdown();
+				oThis.closeDropdown(oDrawingController);
 			}, [], undefined, AscDFH.historydescription_Spreadsheet_SelectListBox, [], true);
 		};
 	};
@@ -2421,20 +2428,20 @@ function getFlatPenColor() {
 		}
 	};
 
-	CComboBoxController.prototype.openDropdown = function () {
+	CComboBoxController.prototype.openDropdown = function (oDrawingController) {
 		if (!this.isDropdownOpen) {
 			this.isDropdownOpen = true;
 			this.dropButton.setIsHold(true);
-			Asc.editor && Asc.editor.addDropDown(this);
+			oDrawingController.addDropDown(this);
 			this.checkNeedUpdate();
 		}
 	};
 
-	CComboBoxController.prototype.closeDropdown = function () {
+	CComboBoxController.prototype.closeDropdown = function (oDrawingController) {
 		if (this.isDropdownOpen) {
 			this.dropButton.setIsHold(false);
 			this.isDropdownOpen = false;
-			Asc.editor && Asc.editor.resetDropDowns();
+			oDrawingController.resetDropDowns();
 			this.checkNeedUpdate();
 		}
 	};
@@ -2517,11 +2524,12 @@ function getFlatPenColor() {
 		}
 
 		if (this.isDropdownOpen) {
-			this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
-			this.closeDropdown();
+			if (!this.listBox.onMouseDown(e, nX, nY, nPageIndex, oDrawingController)) {
+				this.closeDropdown(oDrawingController);
+			}
 			return oControl.hit(nX, nY);
 		} else if (oControl.hit(nX, nY)) {
-			this.openDropdown();
+			this.openDropdown(oDrawingController);
 			return true;
 		}
 		return false;

@@ -527,15 +527,17 @@ function FrozenPlace(ws, type) {
 		// этот рестор нужен для восстановления сложных вложенных клипов
         canvas.m_oContext.restore();
 	};
-	
-	_this.drawObject = function(object, oRect) {
-	
-		var oUpdateRect = _this.worksheet.rangeToRectAbs(_this.range, 3);
+	_this.getUpdateRect = function (oRect) {
+		let oUpdateRect = _this.worksheet.rangeToRectAbs(_this.range, 3);
 		if(oRect) {
 			oUpdateRect = oUpdateRect.intersection(oRect);
-			if(!oUpdateRect) {
-				return;
-			}
+		}
+		return oUpdateRect;
+	}
+	_this._updateGraphicCanvas = function (fCallback, oRect) {
+		var oUpdateRect = _this.getUpdateRect(oRect);
+		if (!oUpdateRect) {
+			return;
 		}
 		var canvas = _this.worksheet.objectRender.getDrawingCanvas();
 		_this.setTransform(canvas.shapeCtx, canvas.shapeOverlayCtx, canvas.autoShapeTrack);
@@ -555,22 +557,31 @@ function FrozenPlace(ws, type) {
 
 		_this.clip(canvas.shapeCtx, oClipRect);
 		canvas.shapeCtx.updatedRect = oUpdateRect;
-		object.draw(canvas.shapeCtx);
+		fCallback(canvas.shapeCtx);
 		canvas.shapeCtx.updatedRect = null;
-		// Lock
-		if ( (object.graphicObject.lockType !== undefined) && (object.graphicObject.lockType !== AscCommon.c_oAscLockTypes.kLockTypeNone) ) {
-			var oApi = Asc['editor'];
-			if(oApi){
-				if (!oApi.collaborativeEditing.getFast() || object.graphicObject.lockType !== AscCommon.c_oAscLockTypes.kLockTypeMine){
-					canvas.shapeCtx.SetIntegerGrid(false);
-					canvas.shapeCtx.transform3(object.graphicObject.transform, false);
-					canvas.shapeCtx.DrawLockObjectRect(object.graphicObject.lockType, 0, 0, object.graphicObject.extX, object.graphicObject.extY );
-					canvas.shapeCtx.reset();
-					canvas.shapeCtx.SetIntegerGrid(true);
+		_this.restore(canvas.shapeCtx);
+	}
+	_this.drawObject = function(object, oRect) {
+		this._updateGraphicCanvas(function (graphics) {
+			object.draw(graphics);
+			if ( (object.graphicObject.lockType !== undefined) && (object.graphicObject.lockType !== AscCommon.c_oAscLockTypes.kLockTypeNone) ) {
+				var oApi = Asc['editor'];
+				if(oApi){
+					if (!oApi.collaborativeEditing.getFast() || object.graphicObject.lockType !== AscCommon.c_oAscLockTypes.kLockTypeMine){
+						graphics.SetIntegerGrid(false);
+						graphics.transform3(object.graphicObject.transform, false);
+						graphics.DrawLockObjectRect(object.graphicObject.lockType, 0, 0, object.graphicObject.extX, object.graphicObject.extY );
+						graphics.reset();
+						graphics.SetIntegerGrid(true);
+					}
 				}
 			}
-		}
-		_this.restore(canvas.shapeCtx);
+		}, oRect);
+	};
+	_this.drawDropDown = function(object, oRect) {
+		this._updateGraphicCanvas(function (graphics) {
+			object.drawDropDown(graphics);
+		});
 	};
 	
 	_this.updateRange = function(object, oRange) {
@@ -810,6 +821,11 @@ DrawingArea.prototype.drawObject = function(object, oRect) {
         }
     }
 };
+	DrawingArea.prototype.drawDropDown = function(object, oRect) {
+		for ( var i = 0; i < this.frozenPlaces.length; i++ ) {
+			this.frozenPlaces[i].drawDropDown(object, oRect);
+		}
+	};
 DrawingArea.prototype.updateRange = function(object, oRange) {
     for ( var i = 0; i < this.frozenPlaces.length; i++ ) {
         if ( this.frozenPlaces[i].isObjectInside(object) ) {
