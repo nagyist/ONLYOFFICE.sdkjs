@@ -1952,19 +1952,6 @@
 
 			// UPD: now with binary file read \r\n in original is replaced with \n! Focus is made for binary \n
 
-			// visio set extra \r\n at the end of each text element (text tag): see fix below.
-			// UPD: fix below works for both binary read with \n and xml with \r\n
-			let lastTextEl = textElement.elements[textElement.elements.length - 1];
-			if (typeof lastTextEl === "string") {
-				if (lastTextEl.endsWith("\r\n")) {
-					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 2);
-					textElement.elements[textElement.elements.length - 1] = lastTextEl;
-				} else if (lastTextEl.endsWith("\n")) {
-					lastTextEl = lastTextEl.slice(0, lastTextEl.length - 1);
-					textElement.elements[textElement.elements.length - 1] = lastTextEl;
-				}
-			}
-
 			// read text:
 			// consider CRLF (\r\n) (UPD: \n for binary read) as new paragraph start.
 			// Right after CRLF visio searches for pp
@@ -1986,6 +1973,19 @@
 							paragraphPropsCommon, textCShape);
 					currentParagraph = oContent.Content.slice(-1)[0]; // last paragraph
 				}
+
+				// visio set extra \r\n at the end of each Text tag: see fix below.
+				// UPD: fix below works for both binary read with \n and xml with \r\n
+				if (i === textElement.elements.length - 1) {
+					if (typeof textElementPart === "string") {
+						if (textElementPart.endsWith("\r\n")) {
+							textElementPart = textElementPart.slice(0, textElementPart.length - 2);
+						} else if (textElementPart.endsWith("\n")) {
+							textElementPart = textElementPart.slice(0, textElementPart.length - 1);
+						}
+					}
+				}
+
 
 				if (typeof textElementPart === "string" || textElementPart.kind === AscVisio.c_oVsdxTextKind.FLD) {
 					if (typeof textElementPart === "string") {
