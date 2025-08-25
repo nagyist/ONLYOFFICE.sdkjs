@@ -3109,6 +3109,7 @@ CTable.prototype.Reset = function(X, Y, XLimit, YLimit, PageNum, ColumnNum, Colu
 	this.PageNum      = PageNum;
 	this.ColumnNum    = ColumnNum ? ColumnNum : 0;
 	this.ColumnsCount = ColumnsCount ? ColumnsCount : 1;
+	this.SectionNum   = sectionIndex ? sectionIndex : 0;
 	
 	this.private_CheckYLimitForFlowTableInHdrFtr();
 	this.private_CalculateTableWidthRange();
