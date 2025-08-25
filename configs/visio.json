@@ -101,6 +101,7 @@
 			"common/Drawings/Format/TextBody.js",
 			"slide/Editor/Format/TextBodyPrototype.js",
 			"common/Drawings/Format/GraphicFrame.js",
+			"common/Drawings/Format/Controls.js",
 			"common/Charts/charts.js",
 			"common/Charts/DrawingObjects.js",
 			"common/Charts/3DTransformation.js",
