@@ -8249,8 +8249,11 @@
 				row.setCalcHeight(true);
 				row.setHidden(false);
 				var oNewProps = row.getHeightProp();
-				if(false === oOldProps.isEqual(oNewProps))
+				if (oOldProps.isEqual(oNewProps)) {
+					row.setChanged(false);
+				} else {
 					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_RowProp, oThis.getId(), row._getUpdateRange(), new UndoRedoData_IndexSimpleProp(row.index, true, oOldProps, oNewProps));
+				}
 			}
 		};
 		if(0 == start && gc_nMaxRow0 == stop)
