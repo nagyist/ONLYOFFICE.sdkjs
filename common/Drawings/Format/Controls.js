@@ -469,9 +469,6 @@ function getFlatPenColor() {
 	CControl.prototype.onUpdate = function () {
 		this.controller.onUpdate();
 	};
-	CControl.prototype.isNeedWriteShape = function() {
-		return this.controller.isNeedWriteShape();
-	};
 
 	function CControlControllerBase(oControl) {
 		this.control = oControl;
@@ -872,9 +869,6 @@ function getFlatPenColor() {
 		}
 		return oRes;
 	};
-	CCheckBoxController.prototype.isNeedWriteShape = function() {
-		return true;
-	};
 
 	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
 		graphics.save();
@@ -1005,9 +999,6 @@ function getFlatPenColor() {
 			oContent.SetApplyToAll(false);
 		}
 		return oBodyPr;
-	};
-	CButtonController.prototype.isNeedWriteShape = function() {
-		return true;
 	};
 
 	const SPINBUTTON_RECTANGLE_SIDE_SCALE = 0.25;
