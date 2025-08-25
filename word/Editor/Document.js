@@ -24185,7 +24185,7 @@ CDocument.prototype.AddComplexField = function(instruction)
 		return null;
 	
 	this.StartAction(AscDFH.historydescription_Document_AddComplexField, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
-	let complexField = this.AddFieldWithInstruction(instruction);
+	let complexField = this.AddFieldWithInstruction(instruction, this.GetDirectTextPr().Copy());
 	this.FinalizeAction();
 	return complexField;
 };
