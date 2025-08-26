@@ -76,7 +76,7 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SaveAs] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.SaveAs, keyCodes.KeyS, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenHelpMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenHelpMenu, keyCodes.F1, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ShowContextMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.F10, false, true, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.ContextMenu, false, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseMenu, keyCodes.Esc, false, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseMenu, keyCodes.Escape, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Zoom100] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Zoom100, keyCodes.Digit0, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.GoToFirstSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.GoToFirstSlide, keyCodes.Home, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.GoToLastSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.GoToLastSlide, keyCodes.End, false, false, false, false)];
@@ -111,7 +111,7 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DemonstrationGoToPreviousSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationGoToPreviousSlide, keyCodes.PageUp, false, false, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationGoToPreviousSlide, keyCodes.ArrowLeft, false, false, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationGoToPreviousSlide, keyCodes.ArrowUp, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DemonstrationGoToFirstSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationGoToFirstSlide, keyCodes.Home, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DemonstrationGoToLastSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationGoToLastSlide, keyCodes.End, false, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DemonstrationClosePreview] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationClosePreview, keyCodes.Esc, false, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DemonstrationClosePreview] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DemonstrationClosePreview, keyCodes.Escape, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EditUndo] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EditUndo, keyCodes.KeyZ, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EditRedo] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EditRedo, keyCodes.KeyY, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CopyFormat] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CopyFormat, keyCodes.KeyC, true, false, true, false)];
