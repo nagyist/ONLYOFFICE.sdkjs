@@ -10904,9 +10904,6 @@ CDocument.prototype.Internal_Content_Add = function(Position, NewObject, isCorre
 	var PrevObj = this.Content[Position - 1] ? this.Content[Position - 1] : null;
 	var NextObj = this.Content[Position] ? this.Content[Position] : null;
 	
-	// Обновим информацию о секциях
-	this.SectionsInfo.Update_OnAdd(Position, [NewObject]);
-	
 	this.private_RecalculateNumbering([NewObject]);
 	this.History.Add(new CChangesDocumentAddItem(this, Position, [NewObject]));
 	this.Content.splice(Position, 0, NewObject);
@@ -10936,6 +10933,8 @@ CDocument.prototype.Internal_Content_Add = function(Position, NewObject, isCorre
 
 	if (type_Paragraph === NewObject.GetType())
 		this.DocumentOutline.CheckParagraph(NewObject);
+	
+	this.UpdateSectionsAfterAdd([NewObject]);
 };
 CDocument.prototype.Internal_Content_Remove = function(Position, Count, isCorrectContent)
 {
@@ -10952,10 +10951,10 @@ CDocument.prototype.Internal_Content_Remove = function(Position, Count, isCorrec
 		this.Content[Position + Index].PreDelete();
 	}
 	
-	// Обновим информацию о секциях
-	this.SectionsInfo.Update_OnRemove(Position, Count, true);
+	let removedElements = this.Content.slice(Position, Position + Count);
+	this.UpdateSectionsBeforeRemove(removedElements, true);
 	
-	this.History.Add(new CChangesDocumentRemoveItem(this, Position, this.Content.slice(Position, Position + Count)));
+	this.History.Add(new CChangesDocumentRemoveItem(this, Position, removedElements));
 	var Elements = this.Content.splice(Position, Count);
 	this.private_RecalculateNumbering(Elements);
 	this.private_UpdateSelectionPosOnRemove(Position, Count);

@@ -7452,8 +7452,6 @@ CDocumentContent.prototype.Internal_Content_Add = function(Position, NewObject, 
 	var PrevObj = this.Content[Position - 1] ? this.Content[Position - 1] : null;
 	var NextObj = this.Content[Position] ? this.Content[Position] : null;
 	
-	this.UpdateSectionsOnChange();
-	
 	this.private_RecalculateNumbering([NewObject]);
 	AscCommon.History.Add(new CChangesDocumentContentAddItem(this, Position, [NewObject]));
 	this.Content.splice(Position, 0, NewObject);
@@ -7461,7 +7459,7 @@ CDocumentContent.prototype.Internal_Content_Add = function(Position, NewObject, 
 	NewObject.Set_Parent(this);
 	NewObject.Set_DocumentNext(NextObj);
 	NewObject.Set_DocumentPrev(PrevObj);
-
+	
 	if (null != PrevObj)
 		PrevObj.Set_DocumentNext(NewObject);
 
@@ -7481,6 +7479,7 @@ CDocumentContent.prototype.Internal_Content_Add = function(Position, NewObject, 
 
 	this.private_ReindexContent(Position);
 	this.OnContentChange();
+	this.UpdateSectionsAfterAdd([NewObject]);
 	this.Recalculated = false;
 };
 CDocumentContent.prototype.Internal_Content_Remove = function(Position, Count, isCorrectContent)
@@ -7494,9 +7493,10 @@ CDocumentContent.prototype.Internal_Content_Remove = function(Position, Count, i
 	for (var Index = 0; Index < Count; Index++)
 		this.Content[Position + Index].PreDelete();
 	
-	this.UpdateSectionsOnChange();
+	let removedElements = this.Content.slice(Position, Position + Count);
+	this.UpdateSectionsBeforeRemove(removedElements, true);
 
-	AscCommon.History.Add(new CChangesDocumentContentRemoveItem(this, Position, this.Content.slice(Position, Position + Count)));
+	AscCommon.History.Add(new CChangesDocumentContentRemoveItem(this, Position, removedElements));
 	var Elements = this.Content.splice(Position, Count);
 	this.private_RecalculateNumbering(Elements);
 	this.private_UpdateSelectionPosOnRemove(Position, Count);
@@ -7539,15 +7539,12 @@ CDocumentContent.prototype.Internal_Content_RemoveAll = function()
 	{
 		this.Content[index].PreDelete();
 	}
+	
+	let removedElements = this.Content.slice(0, this.Content.length);
+	this.UpdateSectionsBeforeRemove(removedElements, true);
 
-	AscCommon.History.Add(new CChangesDocumentRemoveItem(this, 0, this.Content.slice(0, this.Content.length)));
+	AscCommon.History.Add(new CChangesDocumentRemoveItem(this, 0, removedElements));
 	this.Content = [];
-};
-CDocumentContent.prototype.UpdateSectionsOnChange = function()
-{
-	let logicDocument = this.GetLogicDocument();
-	if (logicDocument && logicDocument.IsDocumentEditor())
-		logicDocument.SectionsInfo.Update_OnAdd();
 };
 //-----------------------------------------------------------------------------------
 // Функции для работы с номерами страниц

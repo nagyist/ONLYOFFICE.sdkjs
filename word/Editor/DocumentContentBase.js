@@ -3015,3 +3015,34 @@ CDocumentContentBase.prototype.IsAllowSectionBreak = function()
 {
 	return (!this.IsTableCellContent() && (this.GetLogicDocument() === this.GetTopDocumentContent()));
 };
+/**
+ * Данный метод должен вызываться ПОСЛЕ добавления элементов в контент (выставление родительского, индексации и прочее)
+ * @param {AscWord.CDocumentContentElementBase[]} items
+ */
+CDocumentContentBase.prototype.UpdateSectionsAfterAdd = function(items)
+{
+	let logicDocument = this.GetLogicDocument();
+	if (!logicDocument
+		|| !logicDocument.IsDocumentEditor()
+		|| !this.IsUseInDocument()
+		|| this.IsTableCellContent())
+		return;
+	
+	logicDocument.GetSections().UpdateOnAdd(items);
+};
+/**
+ * Данный метод должен вызываться ДО удаления элементов из контента
+ * @param {AscWord.CDocumentContentElementBase[]} items
+ * @param {boolean} checkHdrFtr
+ */
+CDocumentContentBase.prototype.UpdateSectionsBeforeRemove = function(items, checkHdrFtr)
+{
+	let logicDocument = this.GetLogicDocument();
+	if (!logicDocument
+		|| !logicDocument.IsDocumentEditor()
+		|| !this.IsUseInDocument()
+		|| this.IsTableCellContent())
+		return;
+	
+	logicDocument.GetSections().UpdateOnRemove(items, checkHdrFtr);
+};
