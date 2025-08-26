@@ -547,9 +547,16 @@ function getFlatPenColor() {
 			}
 		});
 		const oWb = Asc.editor.wb;
-		const oActiveWs = oWb && oWb.getWorksheet();
-		if (oActiveWs) {
-			oActiveWs.draw();
+		if (oWb) {
+			const oActiveWs = oWb.getWorksheet(null, true);
+			const nWorksheetIndex = oRef.worksheet.getIndex();
+			const oWs = oWb.getWorksheet(nWorksheetIndex, true);
+			if (oWs) {
+				oWs._updateRange(oRef.bbox);
+			}
+			if (oActiveWs) {
+				oActiveWs.draw();
+			}
 		}
 	};
 	CControlControllerBase.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {};
@@ -1083,22 +1090,43 @@ function getFlatPenColor() {
 		this.initButtonEventHandlers();
 	};
 	AscFormat.InitClassWithoutType(CSpinController, CControlControllerBase);
-
+	CSpinController.prototype.startChangeValue = function (fCallback) {
+		Asc.editor.startGroupActions();
+		this.stepManager.start(fCallback);
+	};
+	CSpinController.prototype.endChangeValue = function (oDrawingController) {
+		const oFormControlPr = this.getFormControlPr();
+		const nCurrentValue = oFormControlPr.val;
+		Asc.editor.cancelGroupActions();
+		this.stepManager.end();
+		if (nCurrentValue !== null) {
+			const oThis = this;
+			oDrawingController.checkObjectsAndCallback(function () {
+				oFormControlPr.setVal(nCurrentValue);
+				const oRef = oThis.getParsedFmlaLink();
+				if (oRef) {
+					const oCellValue = new AscCommonExcel.CCellValue();
+					oCellValue.number = nCurrentValue;
+					oThis.setRangeValue(oRef, oCellValue);
+				}
+			}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+		}
+	};
 	CSpinController.prototype.initButtonEventHandlers = function () {
 		const oController = this;
 
 		this.downButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.stepManager.start(oController.decrement.bind(oController, oDrawingController));
+			oController.startChangeValue(oController.decrement.bind(oController, oDrawingController));
 		};
 		this.upButton._onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.stepManager.start(oController.increment.bind(oController, oDrawingController));
+			oController.startChangeValue(oController.increment.bind(oController, oDrawingController));
 		};
 		this.downButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.stepManager.end();
+			oController.endChangeValue(oDrawingController);
 			return true;
 		};
 		this.upButton._onMouseUp = function (e, nX, nY, nPageIndex, oDrawingController) {
-			oController.stepManager.end();
+			oController.endChangeValue(oDrawingController);
 			return true;
 		};
 	};
@@ -1156,36 +1184,33 @@ function getFlatPenColor() {
 		this.doAction(oDrawingController, false);
 	};
 	CSpinController.prototype.doAction = function (oDrawingController, isIncrement) {
-		const oThis = this;
-		oDrawingController.checkObjectsAndCallback(function () {
-			const oRef = oThis.getParsedFmlaLink();
-			const oFormControlPr = oThis.getFormControlPr();
-			const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
-			const nMaxValue = oFormControlPr.max || 0;
-			const nMinValue = oFormControlPr.min || 0;
-			let nCurrentValue;
-			if (oRef) {
-				let nRefValue = 0;
-				oRef.worksheet._getCellNoEmpty(oRef.bbox.r1, oRef.bbox.c1, function (oCell) {
-					if (oCell && !oCell.isNullText()) {
-						nRefValue = oCell.number;
-					}
-				});
-				if (nRefValue === null) {
-					nRefValue = oFormControlPr.val;
+		const oRef = this.getParsedFmlaLink();
+		const oFormControlPr = this.getFormControlPr();
+		const nIncValue = AscFormat.isRealNumber(oFormControlPr.inc) ? oFormControlPr.inc : 1;
+		const nMaxValue = oFormControlPr.max || 0;
+		const nMinValue = oFormControlPr.min || 0;
+		let nCurrentValue;
+		if (oRef) {
+			let nRefValue = 0;
+			oRef.worksheet._getCellNoEmpty(oRef.bbox.r1, oRef.bbox.c1, function (oCell) {
+				if (oCell && !oCell.isNullText()) {
+					nRefValue = oCell.number;
 				}
-				nCurrentValue = nRefValue || 0;
-			} else {
-				nCurrentValue = oFormControlPr.val || 0;
+			});
+			if (nRefValue === null) {
+				nRefValue = oFormControlPr.val;
 			}
-			const nNewValue = Math.min(Math.max(isIncrement ? nCurrentValue + nIncValue : nCurrentValue - nIncValue, nMinValue), nMaxValue);
-			oFormControlPr.setVal(nNewValue);
-			if (oRef) {
-				const oCellValue = new AscCommonExcel.CCellValue();
-				oCellValue.number = nNewValue;
-				oThis.setRangeValue(oRef, oCellValue);
-			}
-		}, [], undefined, AscDFH.historydescription_Spreadsheet_IncrementControl, [], true);
+			nCurrentValue = nRefValue || 0;
+		} else {
+			nCurrentValue = oFormControlPr.val || 0;
+		}
+		const nNewValue = Math.min(Math.max(isIncrement ? nCurrentValue + nIncValue : nCurrentValue - nIncValue, nMinValue), nMaxValue);
+		oFormControlPr.setVal(nNewValue);
+		if (oRef) {
+			const oCellValue = new AscCommonExcel.CCellValue();
+			oCellValue.number = nNewValue;
+			this.setRangeValue(oRef, oCellValue);
+		}
 	};
 	CSpinController.prototype.recalculateTransform = function () {
 		const oControl = this.control;
@@ -2020,20 +2045,6 @@ function getFlatPenColor() {
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
 		startRoundControl(graphics, 0, 0, this.extX, this.extY, 2, getFlatPenColor());
-		// graphics.b_color1(255, 255, 255, 255);
-		// graphics.p_color(0, 0, 0, 255);
-		// graphics.p_width(0);
-		// graphics._s();
-		// graphics._m(0, 0);
-		// graphics._l(this.extX, 0);
-		// graphics._l(this.extX, this.extY);
-		// graphics._l(0, this.extY);
-		// graphics._z();
-		// graphics.ds();
-		// graphics.df();
-		// graphics._e();
-
-		graphics.AddClipRect(0, 0, this.extX, this.extY);
 		this.checkVisibleItems(function (oItem) {
 			oItem.draw(graphics);
 		});
