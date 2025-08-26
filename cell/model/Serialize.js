@@ -6252,9 +6252,18 @@
 				};
 				this.WriteControls = function (aControls) {
 					const oThis = this;
-					for (let i = 0; i < aControls.length; i += 1) {
-						const oControl = aControls[i];
-						this.bs.WriteItem(c_oSerControlTypes.Control, function () {oThis.WriteControl(oControl);});
+					if (this.isCopyPaste) {
+						for (let i = 0; i < aControls.length; i += 1) {
+							const oControl = aControls[i];
+							if (oControl.graphicObject && oControl.graphicObject.selected) {
+								this.bs.WriteItem(c_oSerControlTypes.Control, function () {oThis.WriteControl(oControl);});
+							}
+						}
+					} else {
+						for (let i = 0; i < aControls.length; i += 1) {
+							const oControl = aControls[i];
+							this.bs.WriteItem(c_oSerControlTypes.Control, function () {oThis.WriteControl(oControl);});
+						}
 					}
 				};
         this.WriteDrawings = function(aDrawings)
