@@ -56,18 +56,18 @@
 		
 		var Columns = sectPr.Columns;
 		
-		this.TotalWidth = sectPr.GetContentFrameWidth();
-		this.EqualWidth = Columns.EqualWidth;
-		this.Num        = Columns.Num;
-		this.Sep        = Columns.Sep;
-		this.Space      = Columns.Space;
+		props.TotalWidth = sectPr.GetContentFrameWidth();
+		props.EqualWidth = Columns.EqualWidth;
+		props.Num        = Columns.Num;
+		props.Sep        = Columns.Sep;
+		props.Space      = Columns.Space;
 		
 		for (var Index = 0, Count = Columns.Cols.length; Index < Count; ++Index)
 		{
 			var Col = new Asc.CDocumentColumnProps();
 			Col.put_W(Columns.Cols[Index].W);
 			Col.put_Space(Columns.Cols[Index].Space);
-			this.Cols[Index] = Col;
+			props.Cols[Index] = Col;
 		}
 		
 		return props;

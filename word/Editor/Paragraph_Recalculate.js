@@ -2614,7 +2614,7 @@ Paragraph.prototype.private_CheckNeedBeforeSpacing = function(CurPage, Parent, P
 
 	let documentSections = topDocument.GetSections();
 	let sectionIndex     = documentSections.GetIndexByElement(this);
-	let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
+	let firstParagraph   = -1 !== sectionIndex ? documentSections.GetFirstParagraph(sectionIndex) : null;
 	
 	return (0 !== sectionIndex && (!firstParagraph || firstParagraph.GetAbsolutePage(0) === PageAbs));
 };

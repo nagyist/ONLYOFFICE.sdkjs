@@ -3025,7 +3025,8 @@ CDocumentContentBase.prototype.UpdateSectionsAfterAdd = function(items)
 	if (!logicDocument
 		|| !logicDocument.IsDocumentEditor()
 		|| !this.IsUseInDocument()
-		|| this.IsTableCellContent())
+		|| this.IsTableCellContent()
+		|| this.GetTopDocumentContent() !== logicDocument)
 		return;
 	
 	logicDocument.GetSections().UpdateOnAdd(items);
@@ -3041,7 +3042,8 @@ CDocumentContentBase.prototype.UpdateSectionsBeforeRemove = function(items, chec
 	if (!logicDocument
 		|| !logicDocument.IsDocumentEditor()
 		|| !this.IsUseInDocument()
-		|| this.IsTableCellContent())
+		|| this.IsTableCellContent()
+		|| this.GetTopDocumentContent() !== logicDocument)
 		return;
 	
 	logicDocument.GetSections().UpdateOnRemove(items, checkHdrFtr);

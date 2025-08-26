@@ -225,16 +225,17 @@
 	{
 		return this.GetByContentPos(Index);
 	};
-	DocumentSections.prototype.Find = function(SectPr)
+	DocumentSections.prototype.Find = function(sectPr)
 	{
+		if (!sectPr)
+			return -1;
+		
 		this.Update();
 		
-		var Count = this.Elements.length;
-		for (var Index = 0; Index < Count; Index++)
+		for (let i = 0, count = this.Elements.length; i < count; ++i)
 		{
-			var Element = this.Elements[Index];
-			if (Element.SectPr === SectPr)
-				return Index;
+			if (this.Elements[i].SectPr === sectPr)
+				return i;
 		}
 		
 		return -1;
@@ -279,6 +280,8 @@
 	};
 	DocumentSections.prototype.UpdateOnAdd = function(items)
 	{
+		this.Update();
+		
 		for (let i = 0, count = items.length; i < count; ++i)
 		{
 			let paragraphs = items[i].GetAllSectPrParagraphs();
@@ -286,14 +289,16 @@
 			{
 				let paragraph = paragraphs[paraIndex];
 				
-				let paraId = paragraph;
+				let paraId = paragraph.GetId();
 				let sectPr = paragraph.Get_SectionPr();
 				if (!sectPr || this.paraToSection[paraId])
 					continue;
 				
-				let docSection = new DocumentSection(sectPr, paragraph);
 				let sectionPos = this.GetIndexByElement(paragraph);
+				if (-1 === sectionPos)
+					continue;
 				
+				let docSection = new DocumentSection(sectPr, paragraph);
 				this.paraToSection[paraId] = docSection;
 				this.Elements.splice(sectionPos, 0, docSection);
 				
@@ -303,6 +308,8 @@
 	};
 	DocumentSections.prototype.UpdateOnRemove = function(items, checkHdrFtr)
 	{
+		this.Update();
+		
 		let paragraphs = [];
 		for (let i = 0, count = items.length; i < count; ++i)
 		{
@@ -313,6 +320,9 @@
 		for (let i = 0, count = paragraphs.length; i < count; ++i)
 		{
 			let sectionPos = this.GetIndexByElement(paragraphs[i]);
+			if (-1 === sectionPos)
+				continue;
+			
 			if (checkHdrFtr && sectionPos < this.Elements.length - 1)
 			{
 				let currSectPr = this.Elements[sectionPos].SectPr;
@@ -328,6 +338,8 @@
 				}
 			}
 			
+			let paraId = this.Elements[sectionPos].Paragraph.GetId();
+			delete this.paraToSection[paraId];
 			this.Elements.splice(sectionPos, 1);
 			console.log(`Add section at pos ${sectionPos}`);
 		}
@@ -360,17 +372,17 @@
 		let e = this.Elements.length - 1;
 		
 		if (!element)
-			return e;
+			return -1;
 		
 		let docPos = element.GetDocumentPositionFromObject();
 		if (!docPos || !docPos.length)
-			return e;
+			return -1;
 		
 		let topClass = docPos[0].Class;
 		if (topClass !== this.logicDocument)
 		{
 			let sectPr = topClass.Get_SectPr();
-			return sectPr ? this.Find(sectPr) : e;
+			return this.Find(sectPr);
 		}
 		
 		while (b < e)
@@ -422,57 +434,64 @@
 	};
 	/**
 	 * Обновляем заданную секцию
-	 * @param oSectPr {AscWord.SectPr} - Секция, которую нужно обновить
-	 * @param oNewSectPr {?AscWord.SectPr} - Либо новое значение секции, либо undefined для удаления секции
-	 * @param isCheckHdrFtr {boolean} - Нужно ли проверять колонтитулы при удалении секции
+	 * @param paragraph {AscWord.Paragraph} - Параграф, в котором обновляется секция
+	 * @param prevSectPr {AscWord.SectPr} - Предыдущая секция в заданном параграфе (если она была)
+	 * @param checkHdrFtr {boolean} - Нужно ли проверять колонтитулы при удалении секции
 	 * @returns {boolean} Если не смогли обновить, возвращаем false
 	 */
-	DocumentSections.prototype.UpdateSection = function(oSectPr, oNewSectPr, isCheckHdrFtr)
+	DocumentSections.prototype.UpdateSection = function(paragraph, prevSectPr, checkHdrFtr)
 	{
-		this.needUpdate = true;
-		return;
-		if (oSectPr === oNewSectPr || !oSectPr)
-			return false;
-		
 		this.Update();
 		
-		for (var nIndex = 0, nCount = this.Elements.length; nIndex < nCount; ++nIndex)
+		console.log(`UpdateSection`);
+		let newSectPr = paragraph.Get_SectionPr();
+		if (prevSectPr)
 		{
-			if (oSectPr === this.Elements[nIndex].SectPr)
+			let sectionPos = this.Find(prevSectPr);
+			if (-1 === sectionPos || this.paraToSection[paragraph.GetId()] !== this.Elements[sectionPos])
+				return;
+			
+			if (newSectPr)
 			{
-				if (!oNewSectPr)
+				this.Elements[sectionPos].SectPr = newSectPr;
+			}
+			else
+			{
+				if (checkHdrFtr && sectionPos < this.Elements.length - 1)
 				{
-					// Копируем поведение Word: Если у следующей секции не задан вообще ни один колонтитул,
-					// тогда копируем ссылки на колонтитулы из удаляемой секции. Если задан хоть один колонтитул,
-					// тогда этого не делаем.
-					if (true === isCheckHdrFtr && nIndex < nCount - 1)
+					let currSectPr = this.Elements[sectionPos].SectPr;
+					let nextSectPr = this.Elements[sectionPos + 1].SectPr;
+					if (nextSectPr.IsAllHdrFtrNull() && !currSectPr.IsAllHdrFtrNull())
 					{
-						var oCurrSectPr = this.Elements[nIndex].SectPr;
-						var oNextSectPr = this.Elements[nIndex + 1].SectPr;
-						
-						if (true === oNextSectPr.IsAllHdrFtrNull() && true !== oCurrSectPr.IsAllHdrFtrNull())
-						{
-							oNextSectPr.Set_Header_First(oCurrSectPr.Get_Header_First());
-							oNextSectPr.Set_Header_Even(oCurrSectPr.Get_Header_Even());
-							oNextSectPr.Set_Header_Default(oCurrSectPr.Get_Header_Default());
-							oNextSectPr.Set_Footer_First(oCurrSectPr.Get_Footer_First());
-							oNextSectPr.Set_Footer_Even(oCurrSectPr.Get_Footer_Even());
-							oNextSectPr.Set_Footer_Default(oCurrSectPr.Get_Footer_Default());
-						}
+						nextSectPr.Set_Header_First(currSectPr.Get_Header_First());
+						nextSectPr.Set_Header_Even(currSectPr.Get_Header_Even());
+						nextSectPr.Set_Header_Default(currSectPr.Get_Header_Default());
+						nextSectPr.Set_Footer_First(currSectPr.Get_Footer_First());
+						nextSectPr.Set_Footer_Even(currSectPr.Get_Footer_Even());
+						nextSectPr.Set_Footer_Default(currSectPr.Get_Footer_Default());
 					}
-					
-					this.Elements.splice(nIndex, 1);
 				}
-				else
-				{
-					this.Elements[nIndex].SectPr = oNewSectPr;
-				}
-				
-				return true;
+				delete this.paraToSection[paragraph.GetId()];
+				this.Elements.splice(sectionPos, 1);
 			}
 		}
-		
-		return false;
+		else if (newSectPr)
+		{
+			if (this.paraToSection[paragraph.GetId()])
+			{
+				this.paraToSection[paragraph.GetId()].SectPr = newSectPr;
+			}
+			else
+			{
+				let sectionPos = this.GetIndexByElement();
+				if (-1 === sectionPos)
+					return;
+				
+				let documentSection = new DocumentSection(newSectPr, paragraph);
+				this.paraToSection[paragraph.GetId()] = documentSection;
+				this.Elements.splice(sectionPos, 0, documentSection);
+			}
+		}
 	};
 	DocumentSections.prototype.private_GetHdrFtrsArray = function(oCurHdrFtr)
 	{

@@ -14145,7 +14145,7 @@ Paragraph.prototype.Refresh_RecalcData = function(Data)
 			{
 				let documentSections = logicDocument.GetSections();
 				let sectionIndex     = documentSections.GetIndexByElement(this);
-				let firstParagraph   = documentSections.GetFirstParagraph(sectionIndex);
+				let firstParagraph   = -1 !== sectionIndex ? documentSections.GetFirstParagraph(sectionIndex) : null;
 
 				if (firstParagraph)
 					this.Parent.Refresh_RecalcData2(firstParagraph.GetIndex(), firstParagraph.GetRelativePage(0));
@@ -15119,13 +15119,33 @@ Paragraph.prototype.Set_SectionPr = function(sectPr, update)
 	
 	AscCommon.History.Add(new CChangesParagraphSectPr(this, oldSectPr, sectPr));
 	
-	if (logicDocument && false !== update)
-		logicDocument.UpdateSectionInfo(oldSectPr, sectPr, true);
+	if (false !== update)
+		this.UpdateSectionInfo(oldSectPr, true);
 	
 	// TODO: Когда избавимся от ParaEnd переделать тут
 	let paraEndRun = this.GetParaEndRun();
 	if (paraEndRun)
 		paraEndRun.RecalcMeasure();
+};
+/**
+ * Обновляем информацию о заданной секции
+ * @param prevSectPr {AscWord.SectPr} - Если не задано, значит добавляется новая секция
+ * @param checkHdrFtr {boolean} - Проверять ли колонтитулы при удалении секции
+ */
+Paragraph.prototype.UpdateSectionInfo = function(prevSectPr, checkHdrFtr)
+{
+	if (prevSectPr === this.SectPr)
+		return;
+	
+	let logicDocument = this.GetLogicDocument();
+	if (!logicDocument
+		|| !logicDocument.IsDocumentEditor()
+		|| !this.IsUseInDocument()
+		|| this.IsTableCellContent()
+		|| this.GetTopDocumentContent() !== logicDocument)
+		return;
+	
+	logicDocument.GetSections().UpdateSection(this, prevSectPr, checkHdrFtr);
 };
 Paragraph.prototype.SetSectionPr = function(sectPr, isUpdate)
 {
