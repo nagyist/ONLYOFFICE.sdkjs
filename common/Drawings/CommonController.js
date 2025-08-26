@@ -4543,7 +4543,7 @@
 							selectedObjects = Asc.editor.getSelectedElements();
 
 							isChart = function (object) {
-								return object.get_ObjectType && object.get_ObjectType() === Asc.c_oAscTypeSelectElement.Chart;
+								return object.asc_getObjectType && object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Chart;
 							};
 
 							getRect = function (bounds) {
