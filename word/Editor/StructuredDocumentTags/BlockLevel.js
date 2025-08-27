@@ -1011,9 +1011,9 @@ CBlockLevelSdt.prototype.DrawContentControlsTrack = function(nType, X, Y, nCurPa
 			let contentBounds = this.Content.GetContentBounds(nPageIndex);
 			let pageBounds    = this.Content.GetPageBounds(nPageIndex);
 			if (isFullWidth)
-				arrRects.push({X : pageBounds.Left, Y : contentBounds.Top, R : pageBounds.Right, B : contentBounds.Bottom, Page : nPageAbs});
+				arrRects.push({X : pageBounds.Left, Y : contentBounds.Top, R : pageBounds.Right, B : contentBounds.Bottom, Page : nPageAbs, PageRel : nPageIndex});
 			else
-				arrRects.push({X : contentBounds.Left, Y : contentBounds.Top, R : contentBounds.Right, B : contentBounds.Bottom, Page : nPageAbs});
+				arrRects.push({X : contentBounds.Left, Y : contentBounds.Top, R : contentBounds.Right, B : contentBounds.Bottom, Page : nPageAbs, PageRel : nPageIndex});
 		}
 	}
 
@@ -1050,12 +1050,29 @@ CBlockLevelSdt.prototype.DrawContentControlsTrack = function(nType, X, Y, nCurPa
 	
 	if (padding)
 	{
+		let checkBounds = oLogicDocument && oLogicDocument.IsDocumentEditor();
+		
 		for (let i = 0; i < arrRects.length; ++i)
 		{
 			arrRects[i].X -= padding;
 			arrRects[i].Y -= padding;
 			arrRects[i].R += padding;
 			arrRects[i].B += padding;
+			
+			if (checkBounds)
+			{
+				let pageAbs = arrRects[i].Page;
+				let pageRel = arrRects[i].PageRel;
+				let sectionAbs = this.GetAbsoluteSection(pageRel);
+				let documentPage = oLogicDocument.GetPage(pageAbs);
+				let pageSectionIndex = documentPage ? documentPage.GetSectionIndexByAbsoluteIndex(sectionAbs) : -1;
+				let pageSection = documentPage ? documentPage.GetSection(pageSectionIndex) : null;
+				if (pageSection)
+				{
+					arrRects[i].Y = pageSection.CorrectY(arrRects[i].Y);
+					arrRects[i].B = pageSection.CorrectY(arrRects[i].B);
+				}
+			}
 		}
 	}
 	if (AscCommon.ContentControlTrack.Hover === nType)

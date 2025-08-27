@@ -127,6 +127,10 @@
 			this.Columns[ColumnIndex].Shift(Dx, Dy);
 		}
 	};
+	DocumentPageSection.prototype.CorrectY = function(y)
+	{
+		return (y < this.Y ? this.Y : (y > this.YLimit ? this.YLimit : y));
+	};
 	/**
 	 * Происходи ли процесс расчета нижней границы разрыва секции на текущей странице
 	 * @returns {boolean}

@@ -1009,14 +1009,14 @@ CDocumentContentElementBase.prototype.GetColumnCount = function()
 };
 CDocumentContentElementBase.prototype.GetAbsoluteSection = function(curPage)
 {
-	if (!this.Parent || !this.Parent.GetAbsoluteSection)
-		return 0;
-	
 	if (this.Parent instanceof AscWord.Document)
 	{
 		let elementSection = this.GetElementSectionByPage(curPage);
 		return this.SectionNum + elementSection.GetIndex();
 	}
+	
+	if (!this.Parent || !this.Parent.GetAbsoluteSection)
+		return 0;
 	
 	return this.Parent.GetAbsoluteSection(this.GetRelativePage(curPage));
 };
