@@ -2489,7 +2489,7 @@
             let master     = this.Layout.Master;
             let layoutCopy = this.Layout.createDuplicate();
             let position = getAddIndex(nPos, master.sldLayoutLst.length);
-			position.addToSldLayoutLstToPos(position, layoutCopy);
+			master.addToSldLayoutLstToPos(position, layoutCopy);
             return new ApiLayout(layoutCopy);
         }
         return null;
