@@ -2694,7 +2694,9 @@ CPresentation.prototype.GetSlideObjectsWithTheme = function (oTheme) {
 
 	return result;
 };
-
+CPresentation.prototype.RecalculateByChanges = function(arrChanges, nStartIndex, nEndIndex) {
+	this.Recalculate(History.Get_RecalcData(null, arrChanges, nStartIndex, nEndIndex));
+};
 CPresentation.prototype.Recalculate = function (RecalcData) {
 	this.DrawingDocument.OnStartRecalculate(this.GetSlidesCount());
 	this.StopAnimationPreview();

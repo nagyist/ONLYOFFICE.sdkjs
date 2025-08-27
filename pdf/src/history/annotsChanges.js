@@ -542,7 +542,9 @@ CChangesFreeTextCallout.prototype.Type = AscDFH.historyitem_type_Pdf_Annot_FreeT
 CChangesFreeTextCallout.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetCallout(Value);
+	oAnnot._callout = Value;
+	oAnnot.recalcGeometry();
+	oAnnot.SetNeedRecalc(true);
 };
 
 /**
@@ -719,7 +721,24 @@ CChangesPDFAnnotContents.prototype.Type = AscDFH.historyitem_Pdf_Annot_Contents;
 CChangesPDFAnnotContents.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetContents(Value);
+	let oDoc = Asc.editor.getPDFDoc();
+
+	if (oAnnot.IsFreeText() || oAnnot.IsLine() && !oAnnot.IsUseContentAsComment()) {
+		this._contents = Value;
+	}
+	else {
+		let bSendAddCommentEvent = false;
+        if (oAnnot._contents == null && Value != null)
+            bSendAddCommentEvent = true;
+        
+        oAnnot._contents  = Value;
+         
+        if (bSendAddCommentEvent)
+            oDoc.CheckComment(oAnnot);
+        
+        if (oAnnot._contents == null && oAnnot.IsUseInDocument())
+            Asc.editor.sync_RemoveComment(oAnnot.GetId());
+	}
 };
 
 /**

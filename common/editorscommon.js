@@ -1119,6 +1119,9 @@
 			case c_oAscServerError.ChangeDocInfo :
 				nRes = Asc.c_oAscError.ID.AccessDeny;
 				break;
+			case c_oAscServerError.ForcedViewMode :
+				nRes = Asc.c_oAscError.ID.ForcedViewMode;
+				break;
 			case c_oAscServerError.Storage :
 			case c_oAscServerError.StorageFileNoFound :
 			case c_oAscServerError.StorageRead :
@@ -1716,7 +1719,9 @@
 		VKeyKeyExpire:       -122,
 		VKeyUserCountExceed: -123,
 
-		Password: -180
+		Password: -180,
+
+		ForcedViewMode: -200
 	};
 
 	//todo get from server config
@@ -15444,6 +15449,7 @@
 	window["AscCommon"].openFileCommand = openFileCommand;
 	window["AscCommon"].sendCommand = sendCommand;
 	window["AscCommon"].sendSaveFile = sendSaveFile;
+	window["AscCommon"].c_oAscServerError = c_oAscServerError;
 	window["AscCommon"].mapAscServerErrorToAscError = mapAscServerErrorToAscError;
 	window["AscCommon"].joinUrls = joinUrls;
 	window["AscCommon"].getFullImageSrc2 = getFullImageSrc2;

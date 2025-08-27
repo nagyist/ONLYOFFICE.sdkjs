@@ -5260,7 +5260,7 @@ function CThumbnailsManager(editorPage)
 
 		this.m_oWordControl.m_oApi.clearEyedropperImgData();
 
-		const context = canvas.getContext("2d");
+		const context = AscCommon.AscBrowser.getContext2D(canvas);
 		context.clearRect(0, 0, canvas.width, canvas.height);
 
 		const digitDistance = this.const_offset_x * g_dKoef_pix_to_mm;
@@ -6679,7 +6679,7 @@ function CSlideDrawer()
 				this.CachedCanvas.width  = _need_pix_width + 100;
 				this.CachedCanvas.height = _need_pix_height + 100;
 
-				this.CachedCanvasCtx = this.CachedCanvas.getContext('2d');
+				this.CachedCanvasCtx = AscCommon.AscBrowser.getContext2D(this.CachedCanvas);
 			}
 			else
 			{
@@ -6924,7 +6924,7 @@ function CNotesDrawer(page)
 	this.OnPaint = function()
 	{
 		var element = this.HtmlPage.m_oNotes.HtmlElement;
-		var ctx = element.getContext('2d');
+		var ctx = AscCommon.AscBrowser.getContext2D(element);
 		ctx.clearRect(0, 0, element.width, element.height);
 
 		if (-1 == this.Slide || this.IsEmptyDraw)

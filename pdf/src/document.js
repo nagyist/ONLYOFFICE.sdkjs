@@ -3669,19 +3669,15 @@ var CPresentation = CPresentation || function(){};
         let oAnnot      = this.mouseDownAnnot;
         let oDrawing    = this.activeDrawing;
 
-        let oContent;
+        let oContent = oController.getTargetDocContent();
         
         if (oForm && oForm.IsCanEditText()) {
             oForm.Remove(nDirection, isCtrlKey);
             oContent = oForm.GetDocContent();
         }
-        else if (oAnnot) {
-            let oContent = oController.getTargetDocContent();
-
-            if (oContent) {
-                oAnnot.Remove(nDirection, isCtrlKey);
-                oContent = oAnnot.GetDocContent();
-            }
+        else if (oAnnot && oContent) {
+            oAnnot.Remove(nDirection, isCtrlKey);
+            oContent = oAnnot.GetDocContent();
         }
         else if (oDrawing && oDrawing.IsInTextBox()) {
             oDrawing.Remove(nDirection, isCtrlKey);

@@ -26,6 +26,7 @@
 			"visio/apiDefines.js",
 			"common/collaborativeHistory.js",
 			"common/CollaborativeEditingBase.js",
+			"slide/Editor/CollaborativeEditing.js",
 			"common/macros.js",
 			"common/apiBase.js",
 			"common/apiBase_plugins.js",
@@ -355,8 +356,8 @@
 			"visio/model/overrides.js",
 			"visio/model/SerializeReader.js",
 			"visio/model/SerializeWriter.js",
-
-			"slide/Editor/CollaborativeEditing.js"
+			
+			"word/Editor/document-visitor.js"
 		],
 		"desktop": {
 			"min": [

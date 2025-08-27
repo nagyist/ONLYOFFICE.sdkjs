@@ -568,7 +568,6 @@
             return;
 
         let oViewer         = editor.getDocumentRenderer();
-        let oDoc            = this.GetDocument();
         let sCurContents    = this.GetContents();
         
         this._contents = contents;
@@ -677,16 +676,18 @@
                 let nCharCode = oRCInfo["text"][nChar].charCodeAt(0);
                 
                 if (nCharCode == 13) {
-                    oLastUsedPara.Correct_Content();
-                    oLastUsedPara.AddToParagraph(new AscWord.ParaTextPr(oRun.GetTextPr()));
+                    if (i != aRCInfo.length - 1) {
+                        oLastUsedPara.Correct_Content();
+                        oLastUsedPara.AddToParagraph(new AscWord.ParaTextPr(oRun.GetTextPr()));
 
-                    oLastUsedPara = new AscWord.Paragraph(oContent, true);
-                    oContent.Internal_Content_Add(oContent.GetElementsCount(), oLastUsedPara);
+                        oLastUsedPara = new AscWord.Paragraph(oContent, true);
+                        oContent.Internal_Content_Add(oContent.GetElementsCount(), oLastUsedPara);
 
-                    oRun = new ParaRun(oLastUsedPara, false);
-                    setRunPr(oRun, oRCInfo);
-                    oLastUsedPara.AddToContentToEnd(oRun);
-                    oLastUsedPara.Set_Align(AscPDF.getInternalAlignByPdfType(oRCInfo["alignment"]));
+                        oRun = new ParaRun(oLastUsedPara, false);
+                        setRunPr(oRun, oRCInfo);
+                        oLastUsedPara.AddToContentToEnd(oRun);
+                        oLastUsedPara.Set_Align(AscPDF.getInternalAlignByPdfType(oRCInfo["alignment"]));
+                    }
                 }
                 else {
                     oRun.AddToContentToEnd(AscPDF.codePointToRunElement(nCharCode));

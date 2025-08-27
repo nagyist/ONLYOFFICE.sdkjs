@@ -233,6 +233,7 @@ CHistory.prototype =
                 oItem.Data.Undo();
                 arrChanges.push(oItem.Data);
             }
+						this.Document.RecalculateByChanges(arrChanges);
             oPoint.Items.length = _bottomIndex + 1;
             this.Document.SetSelectionState( oPoint.State );
         }
