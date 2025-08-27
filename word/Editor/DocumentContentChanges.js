@@ -66,7 +66,7 @@ CChangesDocumentContentAddItem.prototype.Undo = function()
 	{
 		var Pos = true !== this.UseArray ? this.Pos : this.PosArray[nIndex];
 		
-		oDocument.UpdateSectionsBeforeRemove(oDocument.Content[Pos], false);
+		oDocument.UpdateSectionsBeforeRemove([oDocument.Content[Pos]], false);
 		
 		var Elements = oDocument.Content.splice(Pos, 1);
 		oDocument.private_RecalculateNumbering(Elements);

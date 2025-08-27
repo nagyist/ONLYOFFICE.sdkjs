@@ -73,21 +73,10 @@
 		
 		return this.Elements[index + 1].SectPr;
 	};
-	DocumentSections.prototype.Add = function(sectPr, paragraph)
-	{
-		let documentSection = new DocumentSection(sectPr, paragraph);
-		this.paraToSection[paragraph.GetId()] = documentSection;
-		this.Elements.push(documentSection);
-	};
 	DocumentSections.prototype.GetSectionsCount = function()
 	{
 		this.Update();
 		return this.Elements.length;
-	};
-	DocumentSections.prototype.Clear = function()
-	{
-		this.Elements.length = 0;
-		this.paraToSection = {};
 	};
 	DocumentSections.prototype.Find_ByHdrFtr = function(HdrFtr)
 	{
@@ -221,10 +210,6 @@
 	{
 		return this.Elements[index].SectPr;
 	};
-	DocumentSections.prototype.Get_SectPr = function(Index)
-	{
-		return this.GetByContentPos(Index);
-	};
 	DocumentSections.prototype.Find = function(sectPr)
 	{
 		if (!sectPr)
@@ -245,14 +230,14 @@
 		if (!this.CheckNeedUpdate())
 			return;
 		
-		this.Clear();
+		this._clear();
 		
 		let paragraphs = this.logicDocument.GetAllSectPrParagraphs();
 		for (let i = 0; i < paragraphs.length; ++i)
 		{
-			this.Add(paragraphs[i].Get_SectionPr(), paragraphs[i]);
+			this._addSection(paragraphs[i].Get_SectionPr(), paragraphs[i]);
 		}
-		this.Add(this.logicDocument.GetFinalSectPr(), this.logicDocument);
+		this._addSection(this.logicDocument.GetFinalSectPr(), this.logicDocument);
 		
 		// Когда полностью обновляются секции надо пересчитывать с самого начала
 		this.logicDocument.RecalcInfo.Set_NeedRecalculateFromStart(true);
@@ -298,11 +283,7 @@
 				if (-1 === sectionPos)
 					continue;
 				
-				let docSection = new DocumentSection(sectPr, paragraph);
-				this.paraToSection[paraId] = docSection;
-				this.Elements.splice(sectionPos, 0, docSection);
-				
-				console.log(`Add section at pos ${sectionPos}`);
+				this._insertSection(sectionPos, sectPr, paragraph);
 			}
 		}
 	};
@@ -338,10 +319,7 @@
 				}
 			}
 			
-			let paraId = this.Elements[sectionPos].Paragraph.GetId();
-			delete this.paraToSection[paraId];
-			this.Elements.splice(sectionPos, 1);
-			console.log(`Add section at pos ${sectionPos}`);
+			this._removeSection(sectionPos);
 		}
 	};
 	DocumentSections.prototype.GetCount = function()
@@ -398,23 +376,6 @@
 		return b;
 	};
 	/**
-	 * Получаем секцию по заданной позиции контента
-	 * @param {number} nContentPos
-	 * @returns {DocumentSection}
-	 */
-	DocumentSections.prototype.GetByContentPos = function(nContentPos)
-	{
-		var nCount = this.Elements.length;
-		for (var nPos = 0; nPos < nCount; ++nPos)
-		{
-			if (nContentPos <= this.Elements[nPos].Index)
-				return this.Elements[nPos];
-		}
-		
-		// Последний элемент здесь это всегда конечная секция документа
-		return this.Elements[nCount - 1];
-	};
-	/**
 	 * Получаем массив всех колонтитулов, используемых в данном документе
 	 * @returns {Array.CHeaderFooter}
 	 */
@@ -443,7 +404,6 @@
 	{
 		this.Update();
 		
-		console.log(`UpdateSection`);
 		let newSectPr = paragraph.Get_SectionPr();
 		if (prevSectPr)
 		{
@@ -471,8 +431,7 @@
 						nextSectPr.Set_Footer_Default(currSectPr.Get_Footer_Default());
 					}
 				}
-				delete this.paraToSection[paragraph.GetId()];
-				this.Elements.splice(sectionPos, 1);
+				this._removeSection(sectionPos);
 			}
 		}
 		else if (newSectPr)
@@ -483,13 +442,11 @@
 			}
 			else
 			{
-				let sectionPos = this.GetIndexByElement();
+				let sectionPos = this.GetIndexByElement(paragraph);
 				if (-1 === sectionPos)
 					return;
 				
-				let documentSection = new DocumentSection(newSectPr, paragraph);
-				this.paraToSection[paragraph.GetId()] = documentSection;
-				this.Elements.splice(sectionPos, 0, documentSection);
+				this._insertSection(sectionPos, newSectPr, paragraph)
 			}
 		}
 	};
@@ -804,8 +761,33 @@
 				callback.call(this, sectPr.FooterEven);
 		}
 	};
-	
-	
+	DocumentSections.prototype._clear = function()
+	{
+		//console.log(`Clear all sections`);
+		this.Elements.length = 0;
+		this.paraToSection = {};
+	};
+	DocumentSections.prototype._insertSection = function(pos, sectPr, paragraph)
+	{
+		//console.log(`Insert sections at pos ${pos} paraId=${paragraph.GetId()}`);
+		let documentSection = new DocumentSection(sectPr, paragraph);
+		this.paraToSection[paragraph.GetId()] = documentSection;
+		this.Elements.splice(pos, 0, documentSection);
+	};
+	DocumentSections.prototype._addSection = function(sectPr, paragraph)
+	{
+		let documentSection = new DocumentSection(sectPr, paragraph);
+		this.paraToSection[paragraph.GetId()] = documentSection;
+		this.Elements.push(documentSection);
+		//console.log(`Add section at the end. Current count=${this.Elements.length} paraId=${paragraph.GetId()}`);
+	};
+	DocumentSections.prototype._removeSection = function(pos)
+	{
+		let docSection = this.Elements[pos];
+		//console.log(`Remove section at pos ${pos} paraId=${docSection.Paragraph.GetId()}`);
+		delete this.paraToSection[docSection.Paragraph.GetId()];
+		this.Elements.splice(pos, 1);
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	
 	/**
