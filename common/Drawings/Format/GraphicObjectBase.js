@@ -1171,7 +1171,7 @@
 				if (geometry) {
 					oSpPr.setGeometry(geometry.createDuplicate());
 				}
-				if (this.getObjectType() === AscDFH.historyitem_type_Shape
+				if ((this.getObjectType() === AscDFH.historyitem_type_Shape || this.getObjectType() === AscDFH.historyitem_type_Control)
 					&& (!this.brush || !this.brush.isVisible())) {
 					if (this.pen && this.pen.isVisible()) {
 						oSpPr.Fill = AscFormat.CreateNoFillUniFill();
@@ -3993,6 +3993,9 @@
 	CGraphicObjectBase.prototype.getDocContent = function () {
 		return null;
 	};
+	CGraphicObjectBase.prototype.isControl = function() {
+		return false;
+	}
 	var ANIM_LABEL_WIDTH_PIX = 22;
 	var ANIM_LABEL_HEIGHT_PIX = 17;
 

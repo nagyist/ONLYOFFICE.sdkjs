@@ -8111,7 +8111,13 @@ PasteProcessor.prototype =
 		//если есть срез в контенте - вставляем только картинку
 		var _sheet = tempWorkbook.aWorksheets[0];
 		var pDrawings;
-		if (_sheet && _sheet.aSlicers && _sheet.aSlicers.length) {
+		let arrSlicers = null;
+		let arrControls = null;
+		if (_sheet) {
+			arrSlicers = _sheet.aSlicers;
+			arrControls = _sheet.getDrawingControls();
+		}
+		if (arrSlicers && arrSlicers.length || arrControls && arrControls.length) {
 			if (tempWorkbook.Core && tempWorkbook.Core.subject) {
 				var _str = tempWorkbook.Core.subject;
 				var _parseStr = _str.split(";");

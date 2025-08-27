@@ -5490,6 +5490,7 @@ function CBinaryFileWriter()
             switch(grObject.getObjectType())
             {
                 case AscDFH.historyitem_type_Shape:
+                case AscDFH.historyitem_type_Control:
                 case AscDFH.historyitem_type_Cnx:
                 {
                     if(grObject.bWordShape)

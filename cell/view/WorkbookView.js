@@ -4193,30 +4193,45 @@
           }
       }
   };
-    WorkbookView.prototype.handleChartsOnWorkbookChange = function (aRanges) {
+    WorkbookView.prototype.handleDrawingsOnWorkbookChange = function (aRanges) {
         if(!Array.isArray(aRanges) || aRanges.length === 0) {
             return;
         }
-        var aRefsToChange = [];
+        var aChartRefsToChange = [];
         var aCharts = [];
+				let bHandled = false;
         this.model.handleDrawings(function(oDrawing) {
-            if(oDrawing.getObjectType() === AscDFH.historyitem_type_ChartSpace) {
-                var nPrevLength = aRefsToChange.length;
-                oDrawing.collectIntersectionRefs(aRanges, aRefsToChange);
-                if(aRefsToChange.length > nPrevLength) {
-                    aCharts.push(oDrawing);
-                }
-            }
+					switch (oDrawing.getObjectType()) {
+						case AscDFH.historyitem_type_ChartSpace: {
+							const nPrevLength = aChartRefsToChange.length;
+							oDrawing.collectIntersectionRefs(aRanges, aChartRefsToChange);
+							if(aChartRefsToChange.length > nPrevLength) {
+								aCharts.push(oDrawing);
+								bHandled = true;
+							}
+							break;
+						}
+						case AscDFH.historyitem_type_Control: {
+							bHandled |= oDrawing.handleChangeRanges(aRanges);
+							break;
+						}
+						default: {
+							break;
+						}
+					}
         });
-        if(aRefsToChange.length > 0) {
-            for(var nRef = 0; nRef < aRefsToChange.length; ++nRef) {
-                aRefsToChange[nRef].updateCacheAndCat();
+        if(aChartRefsToChange.length > 0) {
+            for(var nRef = 0; nRef < aChartRefsToChange.length; ++nRef) {
+                aChartRefsToChange[nRef].updateCacheAndCat();
             }
             for(var nChart = 0; nChart < aCharts.length; ++nChart) {
                 aCharts[nChart].recalculate();
             }
             this.onShowDrawingObjects();
         }
+				if (bHandled) {
+					this.onShowDrawingObjects();
+				}
 				this.Api.frameManager.updateGeneralDiagramCache(aRanges);
     };
     WorkbookView.prototype.handleChartsOnChangeSheetName = function (oWorksheet, sOldName, sNewName) {
