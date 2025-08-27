@@ -87,6 +87,10 @@
 	{
 		return this.Sections[nIndex] ? this.Sections[nIndex] : null;
 	};
+	DocumentPage.prototype.GetSectionCount = function()
+	{
+		return this.Sections.length;
+	};
 	DocumentPage.prototype.GetSectionIndexByAbsoluteIndex = function(sectionIndex)
 	{
 		if (this.Sections.length <= 1)
@@ -116,6 +120,13 @@
 			return null;
 		
 		return this.Sections[this.Sections.length - 1].GetSectPr();
+	};
+	DocumentPage.prototype.GetLastSection = function()
+	{
+		if (!this.Sections.length)
+			return null;
+		
+		return this.Sections[this.Sections.length - 1];
 	};
 	DocumentPage.prototype.Update_Limits = function(Limits)
 	{

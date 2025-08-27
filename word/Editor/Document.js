@@ -16158,16 +16158,16 @@ CDocument.prototype.private_GetElementPageIndexByXY = function(ElementPos, X, Y,
 	if (!Element)
 		return 0;
 
-	var Page = this.Pages[PageIndex];
+	let Page = this.Pages[PageIndex];
 	if (!Page)
 		return 0;
-
-	var PageSection = null;
-	for (var SectionIndex = 0, SectionsCount = Page.Sections.length; SectionIndex < SectionsCount; ++SectionIndex)
+	
+	let PageSection = Page.GetLastSection();
+	for (let sectionIndex = 0, SectionsCount = Page.GetSectionCount(); sectionIndex < SectionsCount; ++sectionIndex)
 	{
-		if (Page.Sections[SectionIndex].Y > Y)
+		if (Page.Sections[sectionIndex].Y > Y)
 		{
-			PageSection = SectionIndex ? Page.Sections[SectionIndex - 1] : Page.Sections[0];
+			PageSection = sectionIndex ? Page.Sections[sectionIndex - 1] : Page.Sections[0];
 			break;
 		}
 	}
