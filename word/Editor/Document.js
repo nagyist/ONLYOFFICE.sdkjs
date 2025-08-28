@@ -14045,7 +14045,7 @@ CDocument.prototype.Check_SectionLastParagraph = function()
 	if (type_Paragraph === Element.GetType() && undefined !== Element.Get_SectionPr())
 		this.Internal_Content_Add(Count, new AscWord.Paragraph(), false);
 };
-CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
+CDocument.prototype.AddSectionBreak = function(sectionBreakType)
 {
 	if (docpostype_Content !== this.GetDocPosType())
 		return false;
@@ -14055,57 +14055,70 @@ CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
 		// Если у нас есть селект, тогда ставим курсор в начало селекта
 		this.MoveCursorLeft(false, false);
 	}
-
-	// TODO: Надо передалть на текущий параграф и проверить верхнюю таблицу у него (если она есть)
-	var nContentPos = this.CurPos.ContentPos;
-	var oElement    = this.Content[nContentPos];
-	var oCurSectPr  = this.SectionsInfo.GetSectPrByElement(oElement);
-	if (oElement.IsParagraph())
-	{
-		// Если мы стоим в параграфе, тогда делим данный параграф на 2 в текущей точке(даже если мы стоим в начале
-		// или в конце параграфа) и к первому параграфу приписываем конец секции
-
-		var oNewParagraph = oElement.Split();
-		oNewParagraph.MoveCursorToStartPos(false);
-
-		this.AddToContent(nContentPos + 1, oNewParagraph);
-		this.CurPos.ContentPos = nContentPos + 1;
-
-		// Заметим, что после функции Split, у параграфа Element не может быть окончания секции, т.к. если она
-		// была в нем изначально, тогда после функции Split, окончание секции перенеслось в новый параграф.
-	}
-	else if (oElement.IsTable())
+	
+	let curSectPr = null;
+	let paragraph = null;
+	let tables = this.GetCurrentTablesStack();
+	if (tables.length)
 	{
 		// Если мы стоим в таблице, тогда делим данную таблицу на 2 по текущему ряду(текущий ряд попадает во
 		// вторую таблицу). Вставляем между таблицами параграф, и к этому параграфу приписываем окончание
 		// секции. Если мы стоим в первой строке таблицы, таблицу делить не надо, достаточно добавить новый
 		// параграф перед ней.
 
-		var oNewParagraph = new AscWord.Paragraph();
-		var oNewTable     = oElement.Split();
-
-		if (null === oNewTable)
+		let table = tables[0];
+		if (table.GetTopDocumentContent() !== this || -1 === table.GetIndex())
+			return false;
+		
+		curSectPr = this.SectionsInfo.GetSectPrByElement(table);
+		
+		let docContent = table.GetParent();
+		let tablePos   = table.GetIndex();
+		
+		let newParagraph = new AscWord.Paragraph();
+		let newTable     = table.Split();
+		
+		if (!newTable)
 		{
-			this.AddToContent(nContentPos, oNewParagraph);
-			this.CurPos.ContentPos = nContentPos + 1;
+			docContent.AddToContent(tablePos, newParagraph);
+			docContent.CurPos.ContentPos = tablePos + 1;
 		}
 		else
 		{
-			this.AddToContent(nContentPos + 1, oNewParagraph);
-			this.AddToContent(nContentPos + 2, oNewTable);
-			this.CurPos.ContentPos = nContentPos + 2;
+			docContent.AddToContent(tablePos + 1, newParagraph);
+			docContent.AddToContent(tablePos + 2, newTable);
+			docContent.CurPos.ContentPos = tablePos + 2;
 		}
-
-		this.Content[this.CurPos.ContentPos].MoveCursorToStartPos(false);
-
-		oElement = oNewParagraph;
+		
+		table.MoveCursorToStartPos(false);
+		
+		paragraph = newParagraph;
 	}
 	else
 	{
-		return false;
+		paragraph = this.GetCurrentParagraph();
+		if (!paragraph || paragraph.GetTopDocumentContent() !== this || -1 === paragraph.GetIndex())
+			return false;
+		
+		curSectPr = this.SectionsInfo.GetSectPrByElement(paragraph);
+		
+		let docContent = paragraph.GetParent();
+		let paraPos    = paragraph.GetIndex();
+		
+		let newParagraph = paragraph.Split();
+		newParagraph.MoveCursorToStartPos(false);
+		
+		docContent.AddToContent(paraPos + 1, newParagraph);
+		docContent.CurPos.ContentPos = paraPos + 1;
+		
+		// Заметим, что после функции Split, у параграфа Element не может быть окончания секции, т.к. если она
+		// была в нем изначально, тогда после функции Split, окончание секции перенеслось в новый параграф.
 	}
-
-	var oSectPr = new AscWord.SectPr(this);
+	
+	if (!paragraph || !curSectPr)
+		return false;
+	
+	let sectPr = new AscWord.SectPr(this);
 
 	// В данном месте мы ставим разрыв секции. Чтобы до текущего места ничего не изменилось, мы у новой
 	// для новой секции копируем все настройки из старой, а в старую секцию выставляем приходящий тип
@@ -14114,21 +14127,17 @@ CDocument.prototype.Add_SectionBreak = function(SectionBreakType)
 	// как не влияющие на пересчет.
 
 	this.History.MinorChanges = true;
-
-	oSectPr.Copy(oCurSectPr);
-	oCurSectPr.Set_Type(SectionBreakType);
-	oCurSectPr.SetPageNumStart(-1);
-	oCurSectPr.Clear_AllHdrFtr();
+	
+	sectPr.Copy(curSectPr);
+	curSectPr.Set_Type(sectionBreakType);
+	curSectPr.SetPageNumStart(-1);
+	curSectPr.Clear_AllHdrFtr();
 
 	this.History.MinorChanges = false;
-
-	oElement.Set_SectionPr(oSectPr);
-	oElement.Refresh_RecalcData2(0, 0);
-
-	this.Recalculate();
-	this.UpdateInterface();
-	this.UpdateSelection();
-
+	
+	paragraph.Set_SectionPr(sectPr);
+	paragraph.Refresh_RecalcData2(0, 0);
+	
 	return true;
 };
 CDocument.prototype.Get_SectionFirstPage = function(sectionIndex, page)

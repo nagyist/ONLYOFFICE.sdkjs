@@ -514,8 +514,8 @@
 					{
 						var oCurPara = LogicDocument.GetCurrentParagraph();
 						LogicDocument.Content[oCurPara.Index].Document_SetThisElementCurrent();
-						LogicDocument.Add_SectionBreak(_current["Props"]["SectionBreak"]);
-						LogicDocument.Add_SectionBreak(_current["Props"]["SectionBreak"]);
+						LogicDocument.AddSectionBreak(_current["Props"]["SectionBreak"]);
+						LogicDocument.AddSectionBreak(_current["Props"]["SectionBreak"]);
 						LogicDocument.Content[oCurPara.Index + 1].Document_SetThisElementCurrent();
 					}
 
@@ -9136,14 +9136,15 @@ background-repeat: no-repeat;\
 		return obj;
 	};
 
-	asc_docs_api.prototype.add_SectionBreak = function(_Type)
+	asc_docs_api.prototype.add_SectionBreak = function(breakType)
 	{
-		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
-		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddSectionBreak);
-			this.WordControl.m_oLogicDocument.Add_SectionBreak(_Type);
-			this.WordControl.m_oLogicDocument.FinalizeAction();
-		}
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument || logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
+			return;
+		
+		logicDocument.StartAction(AscDFH.historydescription_Document_AddSectionBreak, null, ACTION_FLAGS.UPDATEALL_RECALCULATE);
+		logicDocument.AddSectionBreak(breakType);
+		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype.asc_GetSectionsCount = function()
 	{

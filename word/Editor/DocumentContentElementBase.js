@@ -1541,7 +1541,7 @@ CDocumentContentElementBase.prototype.isWholeElementInPermRange = function()
 };
 CDocumentContentElementBase.prototype.GetAllSectPrParagraphs = function(paragraphs)
 {
-	return paragraphs ? [] : paragraphs;
+	return paragraphs ? paragraphs : [];
 };
 
 //--------------------------------------------------------export--------------------------------------------------------
