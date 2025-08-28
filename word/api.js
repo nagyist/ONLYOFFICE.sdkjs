@@ -5429,30 +5429,27 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.put_AddPageBreak              = function()
 	{
-		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Content))
-		{
-			var Document = this.WordControl.m_oLogicDocument;
-
-			if (null === Document.IsCursorInHyperlink(false))
-			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddPageBreak);
-				this.WordControl.m_oLogicDocument.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Page));
-				this.WordControl.m_oLogicDocument.FinalizeAction();
-			}
-		}
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument
+			|| null !== logicDocument.IsCursorInHyperlink(false)
+			|| logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
+			return;
+		
+		logicDocument.StartAction(AscDFH.historydescription_Document_AddPageBreak, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+		logicDocument.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Page));
+		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype.put_AddColumnBreak            = function()
 	{
-		var Document = this.WordControl.m_oLogicDocument;
-		if (false === Document.Document_Is_SelectionLocked(changestype_Paragraph_Content))
-		{
-			if (null === Document.IsCursorInHyperlink(false))
-			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddPageBreak);
-				this.WordControl.m_oLogicDocument.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Column));
-				this.WordControl.m_oLogicDocument.FinalizeAction();
-			}
-		}
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument
+			|| null !== logicDocument.IsCursorInHyperlink(false)
+			|| logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
+			return;
+		
+		logicDocument.StartAction(AscDFH.historydescription_Document_AddPageBreak, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+		logicDocument.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Column));
+		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype.Update_ParaInd                = function(paraInd, isRtl)
 	{
