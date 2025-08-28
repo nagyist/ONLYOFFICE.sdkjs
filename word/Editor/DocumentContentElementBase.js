@@ -1543,6 +1543,18 @@ CDocumentContentElementBase.prototype.GetAllSectPrParagraphs = function(paragrap
 {
 	return paragraphs ? paragraphs : [];
 };
+CDocumentContentElementBase.prototype.GetParentTables = function()
+{
+	let tables = [];
+	
+	let docPos = this.GetDocumentPositionFromObject();
+	for (let i = 0, count = docPos.length; i < count; ++i)
+	{
+		if (docPos[i].Class instanceof AscWord.Table)
+			tables.push(docPos[i].Class);
+	}
+	return tables;
+};
 
 //--------------------------------------------------------export--------------------------------------------------------
 window['AscCommonWord'] = window['AscCommonWord'] || {};

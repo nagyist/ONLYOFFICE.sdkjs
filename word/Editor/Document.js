@@ -16297,7 +16297,7 @@ CDocument.prototype.Update_ColumnsMarkupFromRuler = function(oNewMarkup)
 		this.FinalizeAction();
 	}
 };
-CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
+CDocument.prototype.SetColumnProps = function(columnProps)
 {
 	if (this.IsSelectionUse())
 	{
@@ -16306,111 +16306,105 @@ CDocument.prototype.Set_ColumnsProps = function(ColumnsProps)
 
 		// К селекту мы применяем колонки не так как ворд.
 		// Элементы попавшие в селект полностью входят в  новую секцию, даже если они выделены частично.
-
-		var nStartPos  = this.Selection.StartPos;
-		var nEndPos    = this.Selection.EndPos;
-		var nDirection = 1;
-
-		if (nEndPos < nStartPos)
-		{
-			nStartPos  = this.Selection.EndPos;
-			nEndPos    = this.Selection.StartPos;
-			nDirection = -1;
-		}
-
-		var oStartSectPr = this.SectionsInfo.GetSectPrByElement(this.Content[nStartPos]);
-		var oEndSectPr   = this.SectionsInfo.GetSectPrByElement(this.Content[nEndPos]);
-		if (!oStartSectPr || !oEndSectPr || (oStartSectPr === oEndSectPr && oStartSectPr.IsEqualColumnProps(ColumnsProps)))
+		
+		let startParagraph = this.GetFirstParagraphInSelection();
+		let endParagraph   = this.GetLastParagraphInSelection();
+		
+		if (!startParagraph
+			|| !endParagraph
+			|| startParagraph.GetTopDocumentContent() !== this
+			|| endParagraph.GetTopDocumentContent() !== this)
 			return;
-
+		
+		let startSectPr = this.SectionsInfo.GetSectPrByElement(startParagraph);
+		let endSectPr   = this.SectionsInfo.GetSectPrByElement(endParagraph);
+		
+		if (!startSectPr || !endSectPr || (startSectPr === endSectPr && startSectPr.IsEqualColumnProps(columnProps)))
+			return;
+		
 		if (this.IsSelectionLocked(AscCommon.changestype_Document_SectPr))
 			return;
-
-		this.StartAction(AscDFH.historydescription_Document_SetColumnsProps);
-
-		var oEndParagraph = null;
-		if (type_Paragraph !== this.Content[nEndPos].GetType())
+		
+		this.StartAction(AscDFH.historydescription_Document_SetColumnsProps, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+		
+		let startDocPos = this.GetContentPosition(true, true);
+		let endDocPos   = this.GetContentPosition(true, false);
+		
+		this.TrackDocumentPositions([startDocPos, endDocPos]);
+		this.RemoveSelection();
+		
+		let tables = endParagraph.GetParentTables();
+		if (tables.length)
 		{
-			oEndParagraph = new AscWord.Paragraph();
-			this.Add_ToContent(nEndPos + 1, oEndParagraph);
+			let table = tables[0];
+			
+			let docContent = table.GetParent();
+			let tablePos   = table.GetIndex();
+			
+			endParagraph = new AscWord.Paragraph();
+			docContent.AddToContent(tablePos + 1, endParagraph);
+		}
+		
+		let startElement = startParagraph;
+		if (startParagraph.GetParentTables().length)
+			startElement = startParagraph.GetParentTables()[0];
+		
+		let prevParagraph = startElement.GetPrevParagraph();
+		if (prevParagraph && !prevParagraph.Get_SectionPr())
+		{
+			let docContent = startElement.GetParent();
+			let elementPos = startElement.GetIndex();
+			
+			let sectPr = new AscWord.SectPr(this);
+			sectPr.Copy(startSectPr, false);
+
+			let paragraph = new AscWord.Paragraph();
+			docContent.AddToContent(elementPos, paragraph);
+			paragraph.Set_SectionPr(sectPr, true);
+		}
+		
+		if (endParagraph !== this.Content[this.Content.length - 1])
+		{
+			endSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
+			let sectPr = new AscWord.SectPr(this);
+			sectPr.Copy(endSectPr, false);
+			endParagraph.Set_SectionPr(sectPr, true);
+			
+			if (startSectPr === endSectPr)
+				startSectPr = sectPr;
 		}
 		else
 		{
-			oEndParagraph = this.Content[nEndPos];
+			endSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
+			endSectPr.SetColumnProps(columnProps);
 		}
+		
+		let startIndex = this.SectionsInfo.Find(startSectPr);
+		let endIndex   = this.SectionsInfo.Find(endSectPr);
 
-		if (nStartPos > 0
-			&& (type_Paragraph !== this.Content[nStartPos - 1].GetType()
-			|| !this.Content[nStartPos - 1].Get_SectionPr()))
+		for (let sectionIndex = startIndex; sectionIndex < endIndex; ++sectionIndex)
 		{
-			var oSectPr = new AscWord.SectPr(this);
-			oSectPr.Copy(oStartSectPr, false);
-
-			var oStartParagraph = new AscWord.Paragraph();
-			this.Add_ToContent(nStartPos, oStartParagraph);
-			oStartParagraph.Set_SectionPr(oSectPr, true);
-
-			nStartPos++;
-			nEndPos++;
+			let sectPr = this.SectionsInfo.GetSectPrByIndex(sectionIndex);
+			sectPr.SetColumnProps(columnProps);
 		}
-
-		if (nEndPos !== this.Content.length - 1)
-		{
-			oEndSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
-			var oSectPr = new AscWord.SectPr(this);
-			oSectPr.Copy(oEndSectPr, false);
-			oEndParagraph.Set_SectionPr(oSectPr, true);
-			oSectPr.SetColumnProps(ColumnsProps);
-		}
-		else
-		{
-			oEndSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
-			oEndSectPr.SetColumnProps(ColumnsProps);
-		}
-
-		for (var nIndex = nStartPos; nIndex < nEndPos; ++nIndex)
-		{
-			var oElement = this.Content[nIndex];
-			if (type_Paragraph === oElement.GetType())
-			{
-				var oCurSectPr = oElement.Get_SectionPr();
-				if (oCurSectPr)
-					oCurSectPr.SetColumnProps(ColumnsProps);
-			}
-		}
-
-		if (nDirection >= 0)
-		{
-			this.Selection.StartPos = nStartPos;
-			this.Selection.EndPos   = nEndPos;
-		}
-		else
-		{
-			this.Selection.StartPos = nEndPos;
-			this.Selection.EndPos   = nStartPos;
-		}
-
-		this.Recalculate();
-		this.UpdateSelection();
-		this.UpdateInterface();
-		this.UpdateRulers();
+		
+		this.RefreshDocumentPositions([startDocPos, endDocPos]);
+		this.UntrackDocumentPositions([startDocPos, endDocPos]);
+		
+		this.Selection.Use = true;
+		this.SetContentSelection(startDocPos, endDocPos, 0, 0, 0);
+		
 		this.FinalizeAction();
 	}
 	else
 	{
 		let sectPr = this.GetCurrentSectPr();
-		if (false === this.Document_Is_SelectionLocked(AscCommon.changestype_Document_SectPr))
-		{
-			this.StartAction(AscDFH.historydescription_Document_SetColumnsProps);
-			
-			sectPr.SetColumnProps(ColumnsProps);
-
-			this.Recalculate();
-			this.UpdateSelection();
-			this.UpdateInterface();
-			this.UpdateRulers();
-			this.FinalizeAction();
-		}
+		if (!sectPr || this.IsSelectionLocked(AscCommon.changestype_Document_SectPr, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE))
+			return;
+		
+		this.StartAction(AscDFH.historydescription_Document_SetColumnsProps, null, AscWord.ACTION_FLAGS.UPDATEALL_RECALCULATE);
+		sectPr.SetColumnProps(columnProps);
+		this.FinalizeAction();
 	}
 };
 CDocument.prototype.GetTopDocumentContent = function(isOneLevel)
@@ -25628,6 +25622,13 @@ CDocument.prototype.RefreshDocumentPositions = function(arrPositions)
 	for (var nIndex = 0, nCount = arrPositions.length; nIndex < nCount; ++nIndex)
 	{
 		this.CollaborativeEditing.Update_DocumentPosition(arrPositions[nIndex]);
+	}
+};
+CDocument.prototype.UntrackDocumentPositions = function(docPositions)
+{
+	for (let i = 0, count = docPositions.length; i < count; ++i)
+	{
+		this.CollaborativeEditing.Remove_DocumentPosition(docPositions[i]);
 	}
 };
 /**

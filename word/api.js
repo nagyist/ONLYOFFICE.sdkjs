@@ -5281,7 +5281,7 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.asc_SetColumnsProps       = function(ColumnsProps)
 	{
-		this.WordControl.m_oLogicDocument.Set_ColumnsProps(ColumnsProps);
+		this.WordControl.m_oLogicDocument.SetColumnProps(ColumnsProps);
 	};
 	asc_docs_api.prototype.asc_GetColumnsProps       = function()
 	{
