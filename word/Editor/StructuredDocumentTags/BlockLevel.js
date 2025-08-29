@@ -608,8 +608,6 @@ CBlockLevelSdt.prototype.Remove = function(nCount, isRemoveWholeElement, bRemove
 };
 CBlockLevelSdt.prototype.Is_Empty = function()
 {
-	return this.Content.Is_Empty();
-	
 	if (!this.Content.Is_Empty())
 		return false;
 	
