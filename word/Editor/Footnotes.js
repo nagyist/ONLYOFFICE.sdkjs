@@ -790,12 +790,17 @@ CFootnotesController.prototype.Refresh_RecalcData2 = function(nRelPageIndex)
 		}
 	}
 };
-CFootnotesController.prototype.GetPageContentFrame = function(nPageAbs, nColumnAbs, sectPr)
+CFootnotesController.prototype.GetPageContentFrame = function(nPageAbs, sectPr)
+{
+	
+	return this.GetColumnContentFrame(nPageAbs, 0, sectPr);
+};
+CFootnotesController.prototype.GetColumnContentFrame = function(nPageAbs, nColumnAbs, sectPr)
 {
 	var oColumn = this.private_GetPageColumn(nPageAbs, nColumnAbs);
 	if (!oColumn)
 		return {X : 0, Y : 0, XLimit : 0, YLimit : 0};
-
+	
 	return {
 		X : oColumn.X,
 		Y : oColumn.Height,

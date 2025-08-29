@@ -609,6 +609,15 @@ CBlockLevelSdt.prototype.Remove = function(nCount, isRemoveWholeElement, bRemove
 CBlockLevelSdt.prototype.Is_Empty = function()
 {
 	return this.Content.Is_Empty();
+	
+	if (!this.Content.Is_Empty())
+		return false;
+	
+	let p = this.Content.GetElement(0);
+	if (!p)
+		return true;
+	
+	return (p.IsParagraph() && !p.Get_SectionPr());
 };
 CBlockLevelSdt.prototype.Add = function(oParaItem)
 {
