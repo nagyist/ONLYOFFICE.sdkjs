@@ -3371,6 +3371,7 @@ CDocument.prototype.Recalculate_Page = function()
             var Page              = new AscWord.DocumentPage();
             this.Pages[PageIndex] = Page;
             Page.Pos              = StartIndex;
+			Page.SectPr           = SectPr;
 			
 			Page.Sections[0] = new AscWord.DocumentPageSection();
 			Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
@@ -3386,9 +3387,6 @@ CDocument.prototype.Recalculate_Page = function()
             Page.Margins.Top    = oFrame.Top;
             Page.Margins.Right  = oFrame.Right;
             Page.Margins.Bottom = oFrame.Bottom;
-
-            Page.Sections[0] = new AscWord.DocumentPageSection();
-            Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
         }
 
         var Count = this.Content.length;
@@ -14182,16 +14180,18 @@ CDocument.prototype.Get_SectionPageNumInfo = function(Page_abs)
 	var bFirst = ( FP === CP && true === bCheckFP ? true : false );
 	var bEven  = ( 0 === CP % 2 ? true : false ); // Четность/нечетность проверяется по текущему номеру страницы в секции, с учетом нумерации в секциях
 
-	return new AscWord.SectionPageNumInfo(FP, CP, bFirst, bEven, Page_abs);
+	return new AscWord.SectionPageNumInfo(FP, CP, bFirst, bEven, Page_abs, PageNumInfo.Invalid);
 };
 CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 {
 	// Такое может случится при первом рассчете документа, и когда мы находимся в автофигуре
-	let SectIndex = this.Pages[Page_abs] ? this.Pages[Page_abs].GetSection(0).GetIndex() : 0;
-	var StartSectIndex = SectIndex;
+	let sectPr    = this.Pages[Page_abs] ? this.Pages[Page_abs].GetSectPr() : null;
+	let sectIndex = this.SectionsInfo.Find(sectPr);
+	if (-1 === sectIndex)
+		return {FirstPage : 0, CurPage : 0, SectIndex : 0, Invalid : true};
 	
-	let sectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex);
-	if (0 === SectIndex)
+	let startSectIndex = sectIndex;
+	if (0 === sectIndex)
 	{
 		var PageNumStart = sectPr.GetPageNumStart();
 		var BT           = sectPr.Get_Type();
@@ -14204,10 +14204,10 @@ CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 		if ((c_oAscSectionBreakType.OddPage === BT && 0 === PageNumStart % 2) || (c_oAscSectionBreakType.EvenPage === BT && 1 === PageNumStart % 2))
 			PageNumStart++;
 
-		return {FirstPage : PageNumStart, CurPage : Page_abs + PageNumStart, SectIndex : StartSectIndex};
+		return {FirstPage : PageNumStart, CurPage : Page_abs + PageNumStart, SectIndex : startSectIndex};
 	}
 
-	var SectionFirstPage = this.Get_SectionFirstPage(SectIndex, Page_abs);
+	var SectionFirstPage = this.Get_SectionFirstPage(sectIndex, Page_abs);
 
 	var FirstPage    = SectionFirstPage;
 	var PageNumStart = sectPr.GetPageNumStart();
@@ -14216,12 +14216,12 @@ CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 	var StartInfo = [];
 	StartInfo.push({FirstPage : FirstPage, BreakType : BreakType});
 
-	while ((PageNumStart < 0 || c_oAscSectionBreakType.Continuous === BreakType) && SectIndex > 0)
+	while ((PageNumStart < 0 || c_oAscSectionBreakType.Continuous === BreakType) && sectIndex > 0)
 	{
-		--SectIndex;
-		sectPr = this.SectionsInfo.GetSectPrByIndex(SectIndex);
+		--sectIndex;
+		sectPr = this.SectionsInfo.GetSectPrByIndex(sectIndex);
 
-		FirstPage    = this.Get_SectionFirstPage(SectIndex, Page_abs);
+		FirstPage    = this.Get_SectionFirstPage(sectIndex, Page_abs);
 		PageNumStart = sectPr.GetPageNumStart();
 		BreakType    = sectPr.Get_Type();
 
@@ -14262,7 +14262,7 @@ CDocument.prototype.Get_SectionPageNumInfo2 = function(Page_abs)
 											// но такой рассчет оказался неверным)
 											// + 1 потому что FP начинает считать от 1, а Page_abs от 0
 
-	return {FirstPage : _FP, CurPage : _CP, SectIndex : StartSectIndex};
+	return {FirstPage : _FP, CurPage : _CP, SectIndex : startSectIndex};
 };
 CDocument.prototype.Get_SectionHdrFtr = function(nPageAbs, isFirst, isEven)
 {

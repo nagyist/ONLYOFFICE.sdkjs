@@ -64,6 +64,7 @@
 		this.OriginXLimit = 0; // которая имеет вертикальное выравнивание по центру или по низу
 		this.OriginYLimit = 0;
 		
+		this.SectPr   = null;
 		this.Sections = [];
 		
 		this.EndSectionParas = [];
@@ -82,6 +83,10 @@
 	DocumentPage.prototype.GetEndPos = function()
 	{
 		return this.EndPos;
+	};
+	DocumentPage.prototype.GetSectPr = function()
+	{
+		return this.SectPr;
 	};
 	DocumentPage.prototype.GetSection = function(nIndex)
 	{

@@ -197,20 +197,24 @@
 	 * @param isFirst
 	 * @param isEven
 	 * @param pageNum
+	 * @param invalid
 	 * @constructor
 	 */
-	function SectionPageNumInfo(firstPage, currentPage, isFirst, isEven, pageNum)
+	function SectionPageNumInfo(firstPage, currentPage, isFirst, isEven, pageNum, invalid)
 	{
 		this.FirstPage = firstPage;
 		this.CurPage   = currentPage;
 		this.bFirst    = isFirst;
 		this.bEven     = isEven;
 		this.PageNum   = pageNum;
+		this.Invalid   = invalid !== undefined ? invalid :false;
 	}
 	
 	SectionPageNumInfo.prototype.Compare = function(info)
 	{
 		return (info
+			&& !this.Invalid
+			&& !info.Invalid
 			&& this.CurPage === info.CurPage
 			&& this.bFirst === info.bFirst
 			&& this.bEven === info.bEven
