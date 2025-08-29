@@ -4104,6 +4104,8 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				_bResetStartElement = true;
 				_bResetSectionStart = nextIndex === Index;
 				_sectPr             = nextSectPr;
+				
+				this.Pages[PageIndex].NextPageNewSection = true;
 				break;
 			}
 		}
@@ -4259,11 +4261,15 @@ CDocument.prototype.private_RecalculateGetStartSectPr = function(page)
 {
 	let sectPr = this.GetFinalSectPr();
 	if (0 === page)
+	{
 		sectPr = this.SectionsInfo.GetFirstSectPr();
-	else if (this.Pages[page])
-		sectPr = this.Pages[page].GetFirstSectPr();
-	else if (page > 0 && !this.Pages[page] && this.Pages[page - 1])
+	}
+	else if (page > 0 && this.Pages[page - 1])
+	{
 		sectPr = this.Pages[page - 1].GetLastSectPr();
+		if (this.Pages[page - 1].NextPageNewSection)
+			sectPr = this.SectionsInfo.GetNextSectPr(sectPr);
+	}
 	
 	return this.Layout.CheckSectPr(sectPr);
 };

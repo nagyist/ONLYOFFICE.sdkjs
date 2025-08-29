@@ -69,8 +69,9 @@
 		
 		this.EndSectionParas = [];
 		
-		this.ResetStartElement = false;
+		this.ResetStartElement  = false;
 		this.NextPageNewElement = false;
+		this.NextPageNewSection = false;
 		
 		this.Frames     = [];
 		this.FlowTables = [];
