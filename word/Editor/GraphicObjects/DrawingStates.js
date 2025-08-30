@@ -329,7 +329,7 @@ NullState.prototype =
         {
             this.drawingObjects.setStartTrackPos(x, y, pageIndex);
             start_target_doc_content = checkEmptyPlaceholderContent(this.drawingObjects.getTargetDocContent());
-            nStartPage = start_target_doc_content && start_target_doc_content.Get_AbsolutePage();
+            nStartPage = start_target_doc_content && start_target_doc_content.GetAbsolutePage();
         }
         const oThis = this;
         const fRecalculatePages = function() {

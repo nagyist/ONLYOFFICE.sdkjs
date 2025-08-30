@@ -2307,19 +2307,19 @@ PropLocker.prototype = {
 
 };
 
-AscFormat.CTextBody.prototype.Get_StartPage_Absolute = function()
+AscFormat.CTextBody.prototype.GetAbsoluteStartPage = function()
 {
-    if(this.parent && this.parent.Get_StartPage_Absolute)
+    if(this.parent && this.parent.GetAbsoluteStartPage)
     {
-        return this.parent.Get_StartPage_Absolute();
+        return this.parent.GetAbsoluteStartPage();
     }
     return 0;
 };
-AscFormat.CTextBody.prototype.Get_AbsolutePage = function(CurPage)
+AscFormat.CTextBody.prototype.GetAbsolutePage = function(CurPage)
 {
-    return this.Get_StartPage_Absolute();
+    return this.GetAbsoluteStartPage();
 };
-AscFormat.CTextBody.prototype.Get_AbsoluteColumn = function(CurPage)
+AscFormat.CTextBody.prototype.GetAbsoluteColumn = function(CurPage)
 {
     return 0;//TODO;
 };

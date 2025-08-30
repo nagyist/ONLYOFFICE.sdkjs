@@ -11923,7 +11923,7 @@ PasteProcessor.prototype =
 					/*if (AscCommon.g_clipboardBase.pastedFrom === AscCommon.c_oClipboardPastedFrom.Word && pPr.msoWordSection && "section-break" === pPr["mso-break-type"]) {
 						//section break
 						oThis._Add_NewParagraph();
-						var oSectPr = new CSectionPr(oThis.oLogicDocument);
+						var oSectPr = new AscWord.SectPr(oThis.oLogicDocument);
 						var msoWordSection = oThis._findElemFromMsoHeadStyle("@page", pPr.msoWordSection);
 						if (msoWordSection && msoWordSection[0]) {
 							var sMsoColumns = msoWordSection[0]["mso-columns"];
@@ -12959,7 +12959,7 @@ PasteProcessor.prototype =
 				}
 				var oSectPr;
 				if (nStartPos > 0 && (type_Paragraph !== aContent[nStartPos - 1].GetType() || !aContent[nStartPos - 1].Get_SectionPr())) {
-					oSectPr = new CSectionPr(this.oLogicDocument);
+					oSectPr = new AscWord.SectPr(this.oLogicDocument);
 					oSectPr.Copy(oStartSectPr, false);
 					var oStartParagraph = new AscWord.Paragraph(this.oLogicDocument);
 					aContent.splice(nStartPos, 0, oStartParagraph);
@@ -12969,7 +12969,7 @@ PasteProcessor.prototype =
 				}
 				if (nEndPos !== aContent.length - 1) {
 					oEndSectPr.Set_Type(c_oAscSectionBreakType.Continuous);
-					oSectPr = new CSectionPr(this.oLogicDocument);
+					oSectPr = new AscWord.SectPr(this.oLogicDocument);
 					oSectPr.Copy(oEndSectPr, false);
 					oEndParagraph.Set_SectionPr(oSectPr, true);
 					oSectPr.SetColumnProps(columnsProps);
@@ -12992,7 +12992,7 @@ PasteProcessor.prototype =
 	},
 
 	getMsoSectionPr: function (prefix, sectionName) {
-		var oSectPr = new CSectionPr(this.oLogicDocument);
+		var oSectPr = new AscWord.SectPr(this.oLogicDocument);
 		var msoWordSection = this._findElemFromMsoHeadStyle(prefix, sectionName);
 		if (msoWordSection && msoWordSection[0]) {
 			var sMsoColumns = msoWordSection[0]["mso-columns"];
