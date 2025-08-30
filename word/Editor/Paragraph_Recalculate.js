@@ -462,6 +462,8 @@ Paragraph.prototype.Recalculate_Page = function(CurPage, isStart, isFast)
 			RecalcResult = recalcresult_NextSection;
 	}
 	
+	this.Sections[this.Sections.length - 1].endPage = CurPage;
+	
 	return RecalcResult;
 };
 

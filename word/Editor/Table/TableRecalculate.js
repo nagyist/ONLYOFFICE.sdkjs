@@ -71,6 +71,8 @@ CTable.prototype.Recalculate_Page = function(PageIndex)
 
 	if (result & recalcresult_NextElement && window['AscCommon'].g_specialPasteHelper && window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph === this.GetId())
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();
+	
+	this.Sections[this.Sections.length - 1].endPage = PageIndex;
 
 	return result;
 };
@@ -245,7 +247,7 @@ CTable.prototype.private_RecalculateCheckPageColumnBreak = function(CurPage)
 
     return true;
 };
-CTable.prototype.private_RecalculateGrid = function()
+CTable.prototype.private_RecalculateGrid = function(pageFields)
 {
 	if (this.GetRowsCount() <= 0)
 		return;
@@ -474,12 +476,25 @@ CTable.prototype.private_RecalculateGrid = function()
 		}
 
 		// 3. Рассчитаем максимально допустимую ширину под всю таблицу
-
+		
 		var oPageFields;
-
-		if (!this.Parent)
+		if (pageFields)
 		{
-			oPageFields  = {X : 0, Y : 0, XLimit : 0, YLimit : 0};
+			oPageFields = {
+				X      : pageFields.X,
+				Y      : pageFields.Y,
+				XLimit : pageFields.XLimit,
+				YLimit : pageFields.YLimit
+			};
+		}
+		else if (!this.Parent)
+		{
+			oPageFields = {
+				X      : 0,
+				Y      : 0,
+				XLimit : 0,
+				YLimit : 0
+			};
 		}
 		else
 		{
@@ -490,6 +505,13 @@ CTable.prototype.private_RecalculateGrid = function()
 			if (!oPageFields)
 				oPageFields = this.Parent.GetColumnFields ? this.Parent.GetColumnFields(this.GetAbsolutePage(this.PageNum), this.GetAbsoluteColumn(this.PageNum), this.GetAbsoluteSection(this.PageNum)) : this.Parent.Get_PageFields(this.GetRelativePage(this.PageNum), this.Parent.IsHdrFtr());
 		}
+		
+		this.CalculatedPageFields = {
+			X      : oPageFields.X,
+			Y      : oPageFields.Y,
+			XLimit : oPageFields.XLimit,
+			YLimit : oPageFields.YLimit
+		};
 
 		var oFramePr = this.GetFramePr();
 		if (oFramePr && undefined !== oFramePr.GetW())

@@ -133,12 +133,13 @@ function CTable(DrawingDocument, Parent, Inline, Rows, Cols, TableGrid, bPresent
     this.TableSumGrid  = []; // данный массив будет заполнен после private_RecalculateGrid
     this.TableGrid     = TableGrid ? TableGrid : [];
     this.TableGridCalc = this.private_CopyTableGrid();
-
-    this.CalculatedMinWidth = -1;
-    this.CalculatedPctWidth = -1;
-    this.CalculatedTableW   = -1;
-    this.CalculatedX        = null;
-    this.CalculatedXLimit   = null;
+	
+	this.CalculatedPageFields = {X : 0, Y : 0, XLimit : 0, YLimit : 0};
+	this.CalculatedMinWidth   = -1;
+	this.CalculatedPctWidth   = -1;
+	this.CalculatedTableW     = -1;
+	this.CalculatedX          = null;
+	this.CalculatedXLimit     = null;
 
     this.TableWidthRange = 0;
 
@@ -16978,21 +16979,28 @@ CTable.prototype.private_GetPrevCell = function(RowIndex, CellIndex)
 {
     return this.Internal_Get_PrevCell({Cell : CellIndex, Row : RowIndex});
 };
-CTable.prototype.Check_ChangedTableGrid = function()
+CTable.prototype.IsChangedTableGrid = function()
 {
-    var TableGrid_old = this.Internal_Copy_Grid(this.TableGridCalc);
-    this.private_RecalculateGrid();
-    var TableGrid_new = this.TableGridCalc;
-    for (var CurCol = 0, ColsCount = this.TableGridCalc.length; CurCol < ColsCount; CurCol++)
-    {
-        if (Math.abs(TableGrid_old[CurCol] - TableGrid_new[CurCol]) > 0.001)
-        {
-            this.RecalcInfo.TableBorders = true;
-            return true;
-        }
-    }
-
-    return false;
+	let oldGrid = this.Internal_Copy_Grid(this.TableGridCalc);
+	
+	// Используем предыдущие границы, т.к. нового расчета еще могло не быть, и в какой мы колонке или
+	// странице определить невозможно, значит, корректно расчитать PageFields тоже нельзя
+	this.private_RecalculateGrid(this.CalculatedPageFields);
+	
+	let newGrid = this.TableGridCalc;
+	if (newGrid.length !== oldGrid.length)
+		return false;
+	
+	for (let colIndex = 0, colCount = newGrid.length; colIndex < colCount; ++colIndex)
+	{
+		if (Math.abs(oldGrid[colIndex] - newGrid[colIndex]) > 0.001)
+		{
+			this.RecalcInfo.TableBorders = true;
+			return true;
+		}
+	}
+	
+	return false;
 };
 CTable.prototype.GetContentPosition = function(bSelection, bStart, PosArray)
 {
