@@ -2203,9 +2203,13 @@ CDocumentContent.prototype.StartFromNewPage = function()
 {
 	this.Pages.length = 1;
 	this.Pages[0]     = new AscWord.DocumentPage();
+	
+	if (this.Content.length <= 0)
+		return;
 
-	var Element = this.Content[0];
-	Element.StartFromNewPage();
+	let firstElement = this.Content[0];
+	firstElement.Reset(this.X, this.Y, this.XLimit, this.YLimit, 0, 0, 1);
+	firstElement.StartFromNewPage();
 };
 CDocumentContent.prototype.Get_ParentTextTransform = function()
 {

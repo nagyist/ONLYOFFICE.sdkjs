@@ -16241,6 +16241,8 @@ CDocument.prototype.private_GetElementPageIndexByXY = function(ElementPos, X, Y,
 	let sectionNum = PageSection.GetIndex();
 	
 	let elementSection = Element.GetElementSectionBySectionNumber(sectionNum);
+	if (!elementSection)
+		return 0;
 
 	let elementStartPage   = elementSection.GetParentStartPage();
 	let elementStartColumn = elementSection.GetStartColumn();
