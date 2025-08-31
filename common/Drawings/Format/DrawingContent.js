@@ -221,7 +221,7 @@
 	};
 	
 	CDrawingDocContent.prototype.GetColumnContentFrame = function(page, column, sectPr){
-		return this._GetColumnContentFrame(columnAbs);
+		return this._GetColumnContentFrame(0);
 	};
 	
     CDrawingDocContent.prototype._GetColumnContentFrame = function(nColumnIndex){
