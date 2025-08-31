@@ -3685,6 +3685,8 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 						Index             : Index,
 						StartIndex        : StartIndex,
 						ColumnsCount      : ColumnsCount,
+						SectPr            : SectPr,
+						SectionIndexAbs   : sectionAbs,
 						ResetStartElement : bResetStartElement,
 						RecalcResult      : RecalcResult
 					};
@@ -4312,6 +4314,8 @@ CDocument.prototype.private_RecalculateFlowTable             = function(RecalcIn
     var StartIndex         = RecalcInfo.StartIndex;
     var ColumnsCount       = RecalcInfo.ColumnsCount;
     var bResetStartElement = RecalcInfo.ResetStartElement;
+	let SectPr             = RecalcInfo.SectPr;
+	let SectionIndexAbs    = RecalcInfo.SectionIndexAbs;
     var RecalcResult       = RecalcInfo.RecalcResult;
 
     // Когда у нас колонки мы не разбиваем плавающую таблицу на страницы.
@@ -4330,7 +4334,7 @@ CDocument.prototype.private_RecalculateFlowTable             = function(RecalcIn
 				Y = oPageSection.Y;
 
 			Element.Set_DocumentIndex(Index);
-            Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount);
+            Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
             ElementPageIndex = 0;
         }
         else
@@ -4375,7 +4379,7 @@ CDocument.prototype.private_RecalculateFlowTable             = function(RecalcIn
                 YLimit = this.RecalcInfo.AdditionalInfo.YLimit;
 
                 // Пересчет нужнен для обновления номеров колонок и страниц
-                Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, this.Pages[PageIndex].Sections[this.Pages[PageIndex].Sections.length - 1].Y);
+                Element.Reset(X, Y, XLimit, YLimit, PageIndex, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
                 RecalcResult = Element.Recalculate_Page(0);
                 this.RecalcInfo.FlowObjectPage++;
 
@@ -4424,6 +4428,8 @@ CDocument.prototype.private_RecalculateFlowParagraph         = function(RecalcIn
     var Index              = RecalcInfo.Index;
     var StartIndex         = RecalcInfo.StartIndex;
     var ColumnsCount       = RecalcInfo.ColumnsCount;
+	let SectPr             = RecalcInfo.SectPr;
+	let SectionIndexAbs    = RecalcInfo.SectionIndexAbs;
     var bResetStartElement = RecalcInfo.ResetStartElement;
     var RecalcResult       = RecalcInfo.RecalcResult;
 
@@ -4471,7 +4477,7 @@ CDocument.prototype.private_RecalculateFlowParagraph         = function(RecalcIn
 			var ElementPageIndex = 0;
 			if ((0 === TempIndex && 0 === PageIndex) || TempIndex != StartIndex || (TempIndex === StartIndex && true === bResetStartElement))
 			{
-				TempElement.Reset(0, FrameH, Frame_XLimit, Asc.NoYLimit, PageIndex, ColumnIndex, ColumnsCount);
+				TempElement.Reset(0, FrameH, Frame_XLimit, Asc.NoYLimit, PageIndex, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
 			}
 			else
 			{
@@ -4516,7 +4522,7 @@ CDocument.prototype.private_RecalculateFlowParagraph         = function(RecalcIn
             // с учетом того, что ширина буквицы должна быть FrameW
             if (align_Left != ParaPr.Jc)
             {
-                Element.Reset(0, 0, FrameW, Frame_YLimit, PageIndex, ColumnIndex, ColumnsCount);
+                Element.Reset(0, 0, FrameW, Frame_YLimit, PageIndex, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
                 Element.Recalculate_Page(0);
                 FrameH = TempElement.Get_PageBounds(0).Bottom;
             }
@@ -4794,7 +4800,7 @@ CDocument.prototype.private_RecalculateFlowParagraph         = function(RecalcIn
             for (var TempIndex = Index; TempIndex < Index + FlowCount; ++TempIndex)
             {
                 var TempElement = this.Content[TempIndex];
-                TempElement.Reset(TempElement.X, TempElement.Y, TempElement.XLimit, TempElement.YLimit, TempElement.PageNum, ColumnIndex, ColumnsCount);
+                TempElement.Reset(TempElement.X, TempElement.Y, TempElement.XLimit, TempElement.YLimit, TempElement.PageNum, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
             }
 
 
@@ -4811,7 +4817,7 @@ CDocument.prototype.private_RecalculateFlowParagraph         = function(RecalcIn
         for (var TempIndex = Index; TempIndex < Index + FlowCount; ++TempIndex)
         {
             var TempElement = this.Content[TempIndex];
-            TempElement.Reset(TempElement.X, TempElement.Y, TempElement.XLimit, TempElement.YLimit, PageIndex, ColumnIndex, ColumnsCount);
+            TempElement.Reset(TempElement.X, TempElement.Y, TempElement.XLimit, TempElement.YLimit, PageIndex, ColumnIndex, ColumnsCount, SectionIndexAbs, SectPr);
         }
 
 		Index += FlowCount - 1;

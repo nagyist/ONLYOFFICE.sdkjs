@@ -983,10 +983,7 @@ CDocumentContentElementBase.prototype.GetElementPageIndex = function(page, colum
 	else
 	{
 		if (undefined === sectionIndex)
-		{
 			sectionIndex = this.SectionNum;
-			console.log("Fix sectionIndex");
-		}
 		
 		let section = this.Sections[sectionIndex - this.SectionNum];
 		if (!section)
@@ -1012,6 +1009,9 @@ CDocumentContentElementBase.prototype.GetAbsoluteSection = function(curPage)
 	if (this.Parent instanceof AscWord.Document)
 	{
 		let elementSection = this.GetElementSectionByPage(curPage);
+		if (!elementSection)
+			return 0;
+		
 		return this.SectionNum + elementSection.GetIndex();
 	}
 	
@@ -1032,6 +1032,8 @@ CDocumentContentElementBase.prototype.GetRelativePage = function(curPage)
 	else
 	{
 		let elementSection = this.GetElementSectionByPage(curPage);
+		if (!elementSection)
+			return 0;
 		
 		let parentStartPage = elementSection.GetParentStartPage();
 		let columnCount     = elementSection.GetColumnCount();
@@ -1050,6 +1052,8 @@ CDocumentContentElementBase.prototype.GetAbsoluteColumn = function(curPage)
 	if (this.Parent instanceof AscWord.Document)
 	{
 		let elementSection = this.GetElementSectionByPage(curPage);
+		if (!elementSection)
+			return 0;
 		
 		let columnCount = elementSection.GetColumnCount();
 		let startColumn = elementSection.GetStartColumn();
