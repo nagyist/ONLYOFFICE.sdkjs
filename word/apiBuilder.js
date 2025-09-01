@@ -9057,7 +9057,7 @@
 	/**
 	 * Adds a math equation to the current document.
 	 * @param sText {string} - An equation written as a linear text string.
-	 * @param {"unicode" | "latex"} [sFormat="unicode"] - The format of the specified linear representation.
+	 * @param {"unicode" | "latex" | "mathml"} [sFormat="unicode"] - The format of the specified linear representation.
 	 * @memberof ApiDocument
 	 * @typeofeditors ["CDE"]
 	 * @returns {boolean}
@@ -9082,8 +9082,24 @@
 		let paraMath = info.GetMath();
 		if (!paraMath)
 			return false;
-		
-		paraMath.ConvertView(false, "latex" === format ? Asc.c_oAscMathInputType.LaTeX : Asc.c_oAscMathInputType.Unicode);
+
+		let mathformat = null;
+		switch (format) {
+			case 'latex':
+				mathformat = Asc.c_oAscMathInputType.LaTeX;
+				break;
+			case 'unicode':
+				mathformat = Asc.c_oAscMathInputType.Unicode;
+				break;
+			case 'mathml':
+				mathformat = Asc.c_oAscMathInputType.MathML;
+				break;
+			default:
+				mathformat = Asc.c_oAscMathInputType.LaTeX;
+				break;
+		}
+
+		paraMath.ConvertView(false, mathformat, text);
 		return true;
 	};
 
