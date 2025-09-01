@@ -2581,10 +2581,11 @@
 	 * @param {Page_Type} pageInfo
 	 * @param {Number} drawingPageScale
 	 * @param {CGroupShape?} currentGroupHandling
+	 * @param {number[]?} delMasterShapes - shapes with MasterShape included in array will not be converted
 	 * @return {CGroupShape | undefined}
 	 */
 	Shape_Type.prototype.convertGroup = function (visioDocument, pageInfo,
-												  drawingPageScale, currentGroupHandling) {
+												  drawingPageScale, currentGroupHandling, delMasterShapes) {
 		// if we need to create CGroupShape create CShape first then copy its properties to CGroupShape object
 		// so anyway create CShapes
 		let cShapeOrCGroupShape = this.convertShape(visioDocument, pageInfo, drawingPageScale, currentGroupHandling);
@@ -2658,9 +2659,41 @@
 
 				// handle sub-shapes
 				let subShapes = this.getSubshapes();
+
+				/**
+				 * see bug for Del attribute handle: https://bugzilla.onlyoffice.com/show_bug.cgi?id=76050
+				 * let's collect dels first and then traverse through all the group again in groupShape.deleteShapes().
+				 * Dels appear rarely so it is ok.
+				 * @type {number[]}
+				 */
+				let delMasterShapesCurrent = [];
 				for (let i = 0; i < subShapes.length; i++) {
 					const subShape = subShapes[i];
-					subShape.convertGroup(visioDocument, pageInfo, drawingPageScale, groupShape);
+					if (subShape.del && subShape.masterShape !== null) {
+						delMasterShapesCurrent.push(subShape.masterShape);
+					}
+				}
+				if (delMasterShapes === undefined) {
+					delMasterShapes = delMasterShapesCurrent;
+				} else {
+					delMasterShapes = delMasterShapes.concat(delMasterShapesCurrent);
+				}
+
+				for (let i = 0; i < subShapes.length; i++) {
+					const subShape = subShapes[i];
+					// if group - remove
+					// if shape and fully inherited - remove
+					// if shape/group is not inherited check for masterShape
+					// if shape/group is inherited check for id
+					// TODO Optimization: use Set() because has() is faster than includes()
+					// TODO try changing shape Del='1' IDs and see what happens
+					const delIdCheck = this.inheritedShapes.includes(subShape) && delMasterShapes.includes(subShape.id)
+							|| delMasterShapes.includes(subShape.masterShape);
+					const isDeleted = delIdCheck && (subShape.type === AscVisio.SHAPE_TYPES_GROUP
+							|| subShape.type === AscVisio.SHAPE_TYPES_SHAPE && this.inheritedShapes.includes(subShape))
+					if (!isDeleted) {
+						subShape.convertGroup(visioDocument, pageInfo, drawingPageScale, groupShape, delMasterShapes);
+					}
 				}
 
 				// if group geometry should be on the top layer
