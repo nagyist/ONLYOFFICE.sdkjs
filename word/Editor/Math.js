@@ -3403,7 +3403,7 @@ ParaMath.fromMathML = function(inputParaMath, xml, textPr)
 	}
 	return paraMath;
 };
-ParaMath.proceedDefaultAttributes = function(attributes, elements, el, name)
+ParaMath.proceedMathMLDefaultAttributes = function(attributes, elements, el, name)
 {
 	let keysAttributes = Object.keys(attributes);
 
@@ -3459,7 +3459,7 @@ ParaMath.proceedDefaultAttributes = function(attributes, elements, el, name)
 
 	elements.push(el);
 };
-ParaMath.proceedImplicitDelimiter = function(result, start, end)
+ParaMath.proceedMathMLImplicitDelimiter = function(result, start, end)
 {
 	let props			= new CMathDelimiterPr();
 	props.begChr		= start ? start.charCodeAt(0) : -1;
@@ -3636,11 +3636,11 @@ ParaMath.readMathMLNode = function(reader, parentMathContent)
 			{
 				let run = new AscWord.Run(null, true);
 				run.AddText(text);
-				this.proceedDefaultAttributes(attributes, elements, run, name);
+				this.proceedMathMLDefaultAttributes(attributes, elements, run, name);
 			}
 			break;
 		case 'menclose':
-			this.proceedDefaultAttributes(
+			this.proceedMathMLDefaultAttributes(
 				reader.GetAttributes(),
 				elements,
 				new AscMath.BorderBox.fromMathML(reader)
@@ -3726,7 +3726,7 @@ ParaMath.readMathMLNode = function(reader, parentMathContent)
 			elements.push(AscMath.Fraction.fromMathML(reader));
 			break;
 		case 'msqrt':
-			this.proceedDefaultAttributes(
+			this.proceedMathMLDefaultAttributes(
 				reader.GetAttributes(),
 				elements,
 				new AscMath.Radical.fromMathML(reader)
@@ -3833,13 +3833,13 @@ ParaMath.readMathMLMRow = function(reader)
 			
 			if (closeBracket)
 			{
-				processedResult.push(this.proceedImplicitDelimiter(bracketContent, openBracket, closeBracket)[0]);
+				processedResult.push(this.proceedMathMLImplicitDelimiter(bracketContent, openBracket, closeBracket)[0]);
 				i = j + 1;
 			}
 			else
 			{
 				let remainingContent = result.slice(i + 1);
-				processedResult.push(this.proceedImplicitDelimiter(remainingContent, openBracket, null)[0]);
+				processedResult.push(this.proceedMathMLImplicitDelimiter(remainingContent, openBracket, null)[0]);
 				break;
 			}
 		}
@@ -3861,7 +3861,7 @@ ParaMath.readMathMLMRow = function(reader)
 			
 			if (precedingContent.length > 0)
 			{
-				processedResult.push(this.proceedImplicitDelimiter(precedingContent, null, currentText)[0]);
+				processedResult.push(this.proceedMathMLImplicitDelimiter(precedingContent, null, currentText)[0]);
 			}
 			else
 			{
