@@ -27708,6 +27708,7 @@ CDocument.prototype.AddMathML = function(xml)
 	let paraMath = AscWord.ParaMath.fromMathML(xml, textPr);
 	
 	this.AddToParagraph(paraMath);
+	paraMath.applyMathMLGlobalAttributes();
 	
 	this.Recalculate();
 	this.UpdateInterface();

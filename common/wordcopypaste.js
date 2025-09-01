@@ -12181,7 +12181,7 @@ PasteProcessor.prototype =
 				}
 
 				if (sChildNodeName === "math") {
-					let paraMath = AscWord.ParaMath.fromMathML(child.outerHTML);
+					let paraMath = AscWord.ParaMath.fromMathML(undefined, child.outerHTML);
 					bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
 					let oAddedParaMath = paraMath;
 					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oThis.oCurPar);
