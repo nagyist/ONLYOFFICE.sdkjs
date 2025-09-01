@@ -3201,7 +3201,6 @@ ParaMath.prototype.CalculateTextToTable = function(oEngine)
 };
 ParaMath.prototype.ConvertfromMathML = function(xml)
 {
-	this.Root.Remove_Content(0, this.Root.Content.length);
 	ParaMath.fromMathML(this, xml ? xml : "");
 };
 ParaMath.prototype.ConvertFromLaTeX = function()
@@ -3211,7 +3210,6 @@ ParaMath.prototype.ConvertFromLaTeX = function()
 	this.Root.CurPos = 0;
 	AscMath.ConvertLaTeXToTokensList(oLaTeX, this.Root);
 	this.Root.Correct_Content(true);
-    this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToLaTeX = function()
 {
@@ -3226,7 +3224,6 @@ ParaMath.prototype.ConvertFromUnicodeMath = function()
 	this.Root.CurPos = 0;
 	AscMath.CUnicodeConverter(oUnicode, this.Root);
 	this.Root.Correct_Content(true);
-	this.Root.CurPos++;
 };
 ParaMath.prototype.ConvertToUnicodeMath = function()
 {
@@ -3247,7 +3244,7 @@ ParaMath.prototype._convertView = function(isToLinear, nInputType, inputData)
 		nInputType = oApi ? oApi.getMathInputType() : Asc.c_oAscMathInputType.Unicode;
 	}
 
-	if (this.IsEmpty())
+	if (this.IsEmpty() && nInputType !== Asc.c_oAscMathInputType.MathML)
 		return;
 
 	if (isToLinear)

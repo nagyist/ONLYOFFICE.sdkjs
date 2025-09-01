@@ -9075,13 +9075,7 @@
 		logicDocument.RemoveBeforePaste();
 		logicDocument.RemoveSelection();
 		let mathPr = new AscCommonWord.MathMenu(c_oAscMathType.Default_Text, logicDocument.GetDirectTextPr());
-		mathPr.SetText(text);
-		logicDocument.AddToParagraph(mathPr);
 		
-		let info = logicDocument.GetSelectedElementsInfo();
-		let paraMath = info.GetMath();
-		if (!paraMath)
-			return false;
 
 		let mathformat = null;
 		switch (format) {
@@ -9098,6 +9092,15 @@
 				mathformat = Asc.c_oAscMathInputType.LaTeX;
 				break;
 		}
+
+		mathPr.SetText(mathformat === Asc.c_oAscMathInputType.MathML ? "" : text);
+
+		logicDocument.AddToParagraph(mathPr);
+		
+		let info = logicDocument.GetSelectedElementsInfo();
+		let paraMath = info.GetMath();
+		if (!paraMath)
+			return false;
 
 		paraMath.ConvertView(false, mathformat, text);
 		return true;
