@@ -30122,7 +30122,7 @@ function isAllowPasteLink(pastedWb) {
 
 			const cPasteProps = Asc.c_oSpecialPasteProps;
 			const pasteProp = props && props.property;
-			if (cPasteProps.picture === pasteProp) {
+			if (cPasteProps.picture === pasteProp && specialPasteData.images) {
 				if (specialPasteData.htmlImage && false) {
 					pastingData1 = specialPasteData.htmlImage;
 					doPaste(true);
