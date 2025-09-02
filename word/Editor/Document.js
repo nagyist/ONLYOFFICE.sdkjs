@@ -1990,8 +1990,9 @@ CDocument.prototype.GetColorMap = function()
  * @param {number} nDescription
  * @param {object} [oSelectionState=null] - начальное состояние селекта, до начала действия
  * @param {number} [flags=null]
+ * @param {object} additional
  */
-CDocument.prototype.StartAction = function(nDescription, oSelectionState, flags)
+CDocument.prototype.StartAction = function(nDescription, oSelectionState, flags, additional)
 {
 	this.sendEvent("asc_onUserActionStart");
 	
@@ -2036,6 +2037,8 @@ CDocument.prototype.StartAction = function(nDescription, oSelectionState, flags)
 			this.Action.ScrollToTarget  = !!(flags & ACTION_FLAGS.SCROLL_TO_TARGET);
 		}
 	}
+	
+	this.Api.getMacroRecorder().onAction(nDescription, additional);
 };
 /**
  * В процессе ли какое-либо действие
@@ -9852,7 +9855,7 @@ CDocument.prototype.EnterText = function(value)
 	if (this.IsSelectionLocked(AscCommon.changestype_Paragraph_AddText, null, true, this.IsFormFieldEditing()))
 		return false;
 
-	this.StartAction(AscDFH.historydescription_Document_AddLetter);
+	this.StartAction(AscDFH.historydescription_Document_AddLetter, null, null, {codePoints : codePoints});
 
 	this.DrawingDocument.TargetStart();
 	this.DrawingDocument.TargetShow();

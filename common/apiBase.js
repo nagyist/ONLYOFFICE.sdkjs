@@ -207,6 +207,7 @@
 		this.macros = null;
 		this.vbaMacros = null;
 		this.vbaProject = null;
+		this.macroRecorder = new AscCommon.MacroRecorder(this);
 
         this.openFileCryptBinary = null;
 
@@ -5943,6 +5944,11 @@
 	{
 		return this.groupActionsCounter > 0;
 	};
+	
+	baseEditorsApi.prototype.getMacroRecorder = function()
+	{
+		return this.macroRecorder;
+	};
 
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
@@ -6069,5 +6075,7 @@
 
 	prot["callCommand"] = prot.callCommand;
 	prot["callMethod"] = prot.callMethod;
+	
+	prot["getMacroRecorder"] = prot.getMacroRecorder;
 
 })(window);
