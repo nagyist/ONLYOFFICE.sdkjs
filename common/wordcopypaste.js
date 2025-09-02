@@ -4478,7 +4478,7 @@ PasteProcessor.prototype =
 						window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 					}
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					this.pasteCallback && this.pasteCallback(oInsertResult.insert);
+					oThis.pasteCallback && oThis.pasteCallback(oInsertResult.insert);
 				}
 			};
 
