@@ -3383,6 +3383,7 @@ CDocument.prototype.Recalculate_Page = function()
 			
 			Page.Sections[0] = new AscWord.DocumentPageSection();
 			Page.Sections[0].Init(PageIndex, SectPr, this.Layout.GetSectionIndex(SectPr));
+			Page.Sections[0].ResetSectionStart = this.FullRecalc.ResetSectionStart;
 
             if (true === this.HdrFtr.Recalculate(PageIndex))
                 this.FullRecalc.MainStartPos = StartIndex;
@@ -3807,7 +3808,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 _StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
                 _bStart             = false;
                 _bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
-				_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
+				_bResetSectionStart = PageSection.ResetSectionStart;
 
                 this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
 
@@ -4016,7 +4017,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 							_StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
 							_bStart             = false;
 							_bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
-							_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
+							_bResetSectionStart = PageSection.ResetSectionStart;
 							_bEndnotesContinue  = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Endnotes === true;
 							
 							this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
@@ -4071,7 +4072,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 					_StartIndex         = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
 					_bStart             = false;
 					_bResetStartElement = 0 === SectionIndex ? Page.ResetStartElement : true;
-					_bResetSectionStart = 0 === SectionIndex ? false : PageSection.ResetSectionStart;
+					_bResetSectionStart = PageSection.ResetSectionStart;
 					
 					this.Pages[_PageIndex].Sections[_SectionIndex].Reset_Columns();
 					
