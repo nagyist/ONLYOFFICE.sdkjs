@@ -3702,7 +3702,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 			}
 			else
 			{
-				if ((0 === Index && 0 === PageIndex && 0 === ColumnIndex) || Index !== StartIndex || (Index === StartIndex && bResetStartElement))
+				if ((0 === Index && 0 === PageIndex && 0 === ColumnIndex) || Index !== StartIndex || (Index === StartIndex && (bResetStartElement || bResetSectionStart)))
 				{
 					Element.Set_DocumentIndex(Index);
 					if (Index === StartIndex && bResetSectionStart)
@@ -4111,7 +4111,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 				_ColumnIndex        = 0;
 				_StartIndex         = nextIndex;
 				_bStart             = true;
-				_bResetStartElement = true;
+				_bResetStartElement = nextIndex !== Index;
 				_bResetSectionStart = nextIndex === Index;
 				_sectPr             = nextSectPr;
 				
