@@ -7425,10 +7425,7 @@ CDocumentContent.prototype.Internal_GetContentPosByXY = function(X, Y, PageNum)
     }
 
     var StartPos = Math.min(this.Pages[PageNum].Pos, this.Content.length - 1);
-    var EndPos   = this.Content.length - 1;
-
-    if (PageNum < this.Pages.length - 1)
-        EndPos = Math.min(this.Pages[PageNum + 1].Pos, EndPos);
+    var EndPos   = Math.min(this.Pages[PageNum].EndPos, this.Content.length - 1);
 
     // Сохраним позиции всех Inline элементов на данной странице
     var InlineElements = [];
