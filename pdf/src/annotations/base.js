@@ -309,6 +309,13 @@
         this.SetUserId(Asc.editor.documentUserId);
         this.EditCommentData(oCurData);
     };
+    CAnnotationBase.prototype.SetRichContents = function(aRCInfo) {
+        AscCommon.History.Add(new CChangesPDFAnnotRC(this, this._richContents, aRCInfo));
+        this._richContents = aRCInfo;
+
+        this.SetWasChanged(true);
+        this.SetNeedRecalc(true);
+    };
     CAnnotationBase.prototype.GetRichContents = function() {
         return this._richContents;
     };

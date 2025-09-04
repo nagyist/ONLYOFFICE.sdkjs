@@ -4140,6 +4140,7 @@
 	AscDFH.historyitem_Pdf_Annot_Subject			= AscDFH.historyitem_type_Pdf_Annot | 28;
 	AscDFH.historyitem_Pdf_Annot_Line_Start			= AscDFH.historyitem_type_Pdf_Annot | 29;
 	AscDFH.historyitem_Pdf_Annot_Line_End			= AscDFH.historyitem_type_Pdf_Annot | 30;
+	AscDFH.historyitem_Pdf_Annot_RC					= AscDFH.historyitem_type_Pdf_Annot | 31;
 
 	// Comment
 	AscDFH.historyitem_Pdf_Comment_Data			= AscDFH.historyitem_type_Pdf_Comment | 1;
@@ -4152,9 +4153,8 @@
 
 	// FreeText
 	AscDFH.historyitem_type_Pdf_Annot_FreeText_CL			= AscDFH.historyitem_type_Pdf_Annot_FreeText | 1;
-	AscDFH.historyitem_type_Pdf_Annot_FreeText_RC			= AscDFH.historyitem_type_Pdf_Annot_FreeText | 2;
-	AscDFH.historyitem_type_Pdf_Annot_FreeText_Align		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 3;
-	AscDFH.historyitem_type_Pdf_Annot_FreeText_Rotate		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 4;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_Align		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 2;
+	AscDFH.historyitem_type_Pdf_Annot_FreeText_Rotate		= AscDFH.historyitem_type_Pdf_Annot_FreeText | 3;
 
 	// annot line
 	AscDFH.historyitem_Pdf_Line_Annot_Points		= AscDFH.historyitem_type_Pdf_Annot_Line | 1;

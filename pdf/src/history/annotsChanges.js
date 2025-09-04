@@ -67,8 +67,10 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Meta]			= CChangesPDFAnnotMet
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Subject]			= CChangesPDFAnnotSubject;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Line_Start]		= CChangesPDFAnnotLineStart;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Line_End]		= CChangesPDFAnnotLineEnd;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_RC]				= CChangesPDFAnnotRC;
+
+
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_CL]			= CChangesFreeTextCallout;
-AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_RC]			= CChangesPDFFreeTextRC;
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_Align]			= CChangesPDFFreeTextAlign;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_Type]						= CChangesPDFAnnotStampType;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Stamp_InRect]						= CChangesPDFAnnotStampInRect;
@@ -551,20 +553,20 @@ CChangesFreeTextCallout.prototype.private_SetValue = function(Value)
  * @constructor
  * @extends {AscDFH.CChangesBaseProperty}
  */
-function CChangesPDFFreeTextRC(Class, Old, New, Color)
+function CChangesPDFAnnotRC(Class, Old, New, Color)
 {
 	AscDFH.CChangesBaseProperty.call(this, Class, Old, New, Color);
 }
-CChangesPDFFreeTextRC.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
-CChangesPDFFreeTextRC.prototype.constructor = CChangesPDFFreeTextRC;
-CChangesPDFFreeTextRC.prototype.Type = AscDFH.historyitem_type_Pdf_Annot_FreeText_RC;
-CChangesPDFFreeTextRC.prototype.private_SetValue = function(Value)
+CChangesPDFAnnotRC.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
+CChangesPDFAnnotRC.prototype.constructor = CChangesPDFAnnotRC;
+CChangesPDFAnnotRC.prototype.Type = AscDFH.historyitem_Pdf_Annot_RC;
+CChangesPDFAnnotRC.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
 	oAnnot.SetRichContents(Value);
 };
 
-CChangesPDFFreeTextRC.prototype.WriteToBinary = function(Writer)
+CChangesPDFAnnotRC.prototype.WriteToBinary = function(Writer)
 {
 	let aRCNew = this.New;
 	let aRCOld = this.Old;
@@ -617,7 +619,7 @@ CChangesPDFFreeTextRC.prototype.WriteToBinary = function(Writer)
 	writeRC(aRCNew);
 	writeRC(aRCOld);
 };
-CChangesPDFFreeTextRC.prototype.ReadFromBinary = function(Reader) {
+CChangesPDFAnnotRC.prototype.ReadFromBinary = function(Reader) {
     function readRC() {
         let aRC = [];
         let length = Reader.GetLong();
