@@ -22495,7 +22495,47 @@ CDocument.prototype.TurnComboBoxFormValue = function(oForm, isNext)
 {
 	if (!(oForm instanceof CInlineLevelSdt) || (!oForm.IsComboBox() && !oForm.IsDropDownList()))
 		return;
+	
+	let rect = oForm.GetBoundingRect();
+	if (!rect || rect.Page < 0)
+		return;
+	
+	let x = rect.X;
+	let y = rect.Y;
+	let w = rect.W + this.DrawingDocument.GetMMPerDot(20);
+	let h = rect.H;
+	
+	let transform = rect.Transform;
+	if (transform)
+	{
+		let x0 = transform.TransformPointX(x, y);
+		let y0 = transform.TransformPointY(x, y);
+		let x1 = transform.TransformPointX(x + w, y);
+		let y1 = transform.TransformPointY(x + w, y);
+		let x2 = transform.TransformPointX(x + w, y + h);
+		let y2 = transform.TransformPointY(x + w, y + h);
+		let x3 = transform.TransformPointX(x, y + h);
+		let y3 = transform.TransformPointY(x, y + h);
+		
+		x = Math.min(x0, x1, x2, x3);
+		y = Math.min(y0, y1, y2, y3);
+		w = Math.max(x0, x1, x2, x3) - x;
+		h = Math.max(y0, y1, y2, y3) - y;
+	}
+	
+	let realCoords = this.GetDrawingDocument().ConvertCoordsToCursorWR(x + w, y + h, rect.Page);
+	let obj = new Asc.CButtonData( {
+		"obj" : oForm,
+		"type" : oForm.GetSpecificType(),
+		"button" : AscCommon.CCButtonType.Combo,
+		"isForm" : true,
+		"pr" : oForm.GetContentControlPr()
+	});
+	
+	this.Api.sendEvent("asc_onShowContentControlsActions", obj, realCoords.X, realCoords.Y);
+	return;
 
+	// Previously we changed the value directly in the form
 	var sValue = oForm.GetSelectedText(true, true);
 	var oComboBoxPr = oForm.IsComboBox() ? oForm.GetComboBoxPr() : oForm.GetDropDownListPr();
 
