@@ -1394,8 +1394,8 @@ RotateState.prototype =
                         }
                         if(false === this.drawingObjects.document.Document_Is_SelectionLocked(changestype_Drawing_Props, {Type : changestype_2_ElementsArray_and_Type , Elements : aCheckParagraphs, CheckType : AscCommon.changestype_Paragraph_Content}))
                         {
-                            this.drawingObjects.resetSelection();
                             this.drawingObjects.document.StartAction(AscDFH.historydescription_Document_RotateFlowDrawingCtrl);
+							this.drawingObjects.resetSelection();
                             var aDrawingsToAdd = [];
 							for(i = 0; i < aTracks.length; ++i)
                             {

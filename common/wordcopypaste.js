@@ -3178,6 +3178,14 @@ PasteProcessor.prototype =
 		{
 			oTable = null;
 			var paragraph = oDoc.GetCurrentParagraph();
+			if (!paragraph)
+			{
+				this.oLogicDocument.Document_Undo();
+				History.Clear_Redo();
+				this.pasteCallback && this.pasteCallback(false);
+				return;
+			}
+			
 			var NearPos = paragraph.GetCurrentAnchorPosition();
 			//делаем небольшой сдвиг по y, потому что сама точка TargetPos для двухстрочного параграфа определяется как верхняя
 			//var NearPos = oDoc.Get_NearestPos(this.oLogicDocument.TargetPos.PageNum, this.oLogicDocument.TargetPos.X, this.oLogicDocument.TargetPos.Y + 0.05);//0.05 == 2pix
