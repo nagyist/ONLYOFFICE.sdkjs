@@ -26687,7 +26687,7 @@ CDocument.prototype.private_ConvertTextToTable = function(oProps, oSelectedConte
 	var W;
 	if (oItem === this)
 	{
-		var SectPr = this.SectionsInfo.GetCurrentSectPr();
+		var SectPr = this.GetCurrentSectPr();
 		var PageFields = this.Get_PageFields(this.CurPage);
 		var nAdd = this.GetCompatibilityMode() <= AscCommon.document_compatibility_mode_Word14 ?  2 * 1.9 : 0;
 		W = (PageFields.XLimit - PageFields.X + nAdd);
