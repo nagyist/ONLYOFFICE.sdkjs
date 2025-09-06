@@ -7821,6 +7821,19 @@ CDocument.prototype.SelectAll = function()
 
 		return;
 	}
+	
+	if (this.IsFillingOFormMode())
+	{
+		let selectedInfo = this.GetSelectedElementsInfo();
+		let inlineSdt = selectedInfo.GetInlineLevelSdt();
+		if (inlineSdt && inlineSdt.IsForm())
+		{
+			inlineSdt.SelectContentControl();
+			this.UpdateSelection();
+			this.UpdateInterface();
+			return;
+		}
+	}
 
 	this.private_UpdateTargetForCollaboration();
 
