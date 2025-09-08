@@ -6867,7 +6867,7 @@
 		}
 
 		var oSectPr = new AscWord.SectPr(this.Document);
-		var oCurSectPr = this.Document.SectionsInfo.GetSectPrByElement(oParagraph.Paragraph).SectPr;
+		var oCurSectPr = this.Document.SectionsInfo.GetSectPrByElement(oParagraph.Paragraph);
 
 		oSectPr.Copy(oCurSectPr);
 		oCurSectPr.Set_Type(oSectPr.Type);
