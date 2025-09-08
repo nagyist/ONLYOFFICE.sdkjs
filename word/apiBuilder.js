@@ -9173,8 +9173,6 @@
 				break;
 		}
 
-		mathPr.SetText(mathformat === Asc.c_oAscMathInputType.MathML ? "" : text);
-
 		logicDocument.AddToParagraph(mathPr);
 		
 		let info = logicDocument.GetSelectedElementsInfo();
