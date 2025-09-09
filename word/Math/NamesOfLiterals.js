@@ -5603,6 +5603,9 @@
 
 		if (oContent)
 			this.SetAdditionalDataFromContent(oContent, isCtrPr);
+
+		if (!oContent)
+			this.style = new CTextPr();
 	}
 
 	MathTextAdditionalData.prototype.Copy = function()

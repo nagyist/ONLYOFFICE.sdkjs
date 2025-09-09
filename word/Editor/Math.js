@@ -3231,6 +3231,7 @@ ParaMath.prototype.ConvertfromMathML = function(xml)
 	}
 
 	this.Root.Correct_Content(true);
+    this.Root.Correct_ContentPos(1);
 };
 ParaMath.prototype.ConvertFromLaTeX = function(text)
 {
@@ -3244,7 +3245,9 @@ ParaMath.prototype.ConvertFromLaTeX = function(text)
 	}
 
 	AscMath.ConvertLaTeXToTokensList(text, math);
-	this.Root.Correct_Content(true);
+
+    this.Root.Correct_Content(true);
+    this.Root.Correct_ContentPos(1);
 };
 ParaMath.prototype.ConvertToLaTeX = function()
 {
@@ -3264,7 +3267,9 @@ ParaMath.prototype.ConvertFromUnicodeMath = function(text)
 	}
 
 	AscMath.CUnicodeConverter(text, math);
-	this.Root.Correct_Content(true);
+
+    this.Root.Correct_Content(true);
+    this.Root.Correct_ContentPos(1);
 };
 ParaMath.prototype.ConvertToUnicodeMath = function()
 {
