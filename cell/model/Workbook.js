@@ -10483,6 +10483,7 @@
 					}
 					oCellValue = new AscCommonExcel.CCellValue();
 					oCellValue.type = AscCommon.CellValueType.String;
+					const titleRangeValue = totalTitleRange[r + j].getValueWithFormatSkipToSpace();
 					if (r + j > valuesIndex) {
 						fieldIndex = fields[r + j].asc_getIndex();
 						field = pivotFields[fieldIndex];
@@ -10493,9 +10494,9 @@
 						});
 						if (AscCommonExcel.st_VALUES !== fieldIndex) {
 							if (field.subtotalCaption) {
-								oCellValue.text = field.subtotalCaption;
+								oCellValue.text = field.subtotalCaption.replace(/\?/g, titleRangeValue);
 							} else {
-								oCellValue.text = totalTitleRange[r + j].getValueWithFormatSkipToSpace();
+								oCellValue.text = titleRangeValue;
 								oCellValue.text += ' ' + AscCommon.translateManager.getValue(AscCommonExcel.ToName_ST_ItemType(item.t));
 								query.field = fieldIndex;
 								this._updatePivotTableCellsRowColLablesOffsets(pivotTable, rowFieldsOffset, isRowItems, i, j, query);
@@ -10514,7 +10515,7 @@
 							type: Asc.c_oAscItemType.Data
 						});
 						query.field = fieldIndex;
-						oCellValue.text = totalTitleRange[r + j].getValueWithFormatSkipToSpace();
+						oCellValue.text = titleRangeValue;
 						oCellValue.text += ' ' + pivotTable.getDataFieldName(item.i);
 						this._updatePivotTableCellsRowColLablesOffsets(pivotTable, rowFieldsOffset, isRowItems, i, j, query);
 					}
