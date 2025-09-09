@@ -8869,7 +8869,7 @@ CDocumentContent.prototype.GetMargins = function()
 };
 CDocumentContent.prototype.IsEmptyPage = function(nCurPage)
 {
-	if (nCurPage < 0 || nCurPage >= this.Pages.length)
+	if (!this.IsRecalculated() || nCurPage < 0 || nCurPage >= this.Pages.length)
 		return true;
 
 	var nStartPos = this.Pages[nCurPage].Pos;
