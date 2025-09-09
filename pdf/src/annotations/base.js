@@ -453,6 +453,8 @@
 	 * @typeofeditors ["PDF"]
 	 */
     CAnnotationBase.prototype.SetOriginPage = function(nPage) {
+        AscCommon.History.Add(new CChangesPDFAnnotOrigPage(this, this._origPage, nPage));
+
         this._origPage = nPage;
     };
     CAnnotationBase.prototype.GetOriginPage = function() {

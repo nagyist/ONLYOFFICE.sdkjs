@@ -68,6 +68,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Subject]			= CChangesPDFAnnot
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Line_Start]		= CChangesPDFAnnotLineStart;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Line_End]		= CChangesPDFAnnotLineEnd;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_RC]				= CChangesPDFAnnotRC;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Orig_Page]		= CChangesPDFAnnotOrigPage;
 
 
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_FreeText_CL]			= CChangesFreeTextCallout;
@@ -657,6 +658,23 @@ CChangesPDFAnnotRC.prototype.ReadFromBinary = function(Reader) {
 
     this.New = readRC();
     this.Old = readRC();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFAnnotOrigPage(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFAnnotOrigPage.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFAnnotOrigPage.prototype.constructor = CChangesPDFAnnotOrigPage;
+CChangesPDFAnnotOrigPage.prototype.Type = AscDFH.historyitem_Pdf_Annot_Orig_Page;
+CChangesPDFAnnotOrigPage.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._origPage = Value;
 };
 
 /**

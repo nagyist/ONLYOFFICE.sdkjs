@@ -4141,6 +4141,7 @@
 	AscDFH.historyitem_Pdf_Annot_Line_Start			= AscDFH.historyitem_type_Pdf_Annot | 29;
 	AscDFH.historyitem_Pdf_Annot_Line_End			= AscDFH.historyitem_type_Pdf_Annot | 30;
 	AscDFH.historyitem_Pdf_Annot_RC					= AscDFH.historyitem_type_Pdf_Annot | 31;
+	AscDFH.historyitem_Pdf_Annot_Orig_Page			= AscDFH.historyitem_type_Pdf_Annot | 32;
 
 	// Comment
 	AscDFH.historyitem_Pdf_Comment_Data			= AscDFH.historyitem_type_Pdf_Comment | 1;
