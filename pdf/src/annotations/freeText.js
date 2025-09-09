@@ -360,12 +360,10 @@
     CAnnotationFreeText.prototype.GetCallout = function(bScaled) {
         return this._callout;
     };
-	CAnnotationFreeText.prototype.SetWidth = function(nWidthPt) {
-		AscCommon.History.Add(new CChangesPDFAnnotStrokeWidth(this, this.GetWidth(), nWidthPt));
-		
-		this._width = nWidthPt;
-		
-		AscCommon.ExecuteNoHistory(function() {
+    CAnnotationFreeText.prototype.private_UpdateLn = function() {
+        let nWidthPt = this.GetWidth();
+        
+        AscCommon.ExecuteNoHistory(function() {
 			for (let i = 1; i < this.spTree.length; i++) {
 				let oLine = this.spTree[i].spPr.ln;
 				if (nWidthPt == 0 && this.spTree[i] != this.GetTextBoxShape()) {
@@ -383,7 +381,7 @@
 				}
 			}
 		}, undefined, this);
-	};
+    };
 	CAnnotationFreeText.prototype.SetStrokeColor = function(aColor) {
 		AscCommon.History.Add(new CChangesPDFAnnotStroke(this, this.GetStrokeColor(), aColor));
 		

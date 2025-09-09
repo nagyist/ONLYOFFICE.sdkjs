@@ -274,6 +274,12 @@
 
         this._width = nWidthPt;
 
+        this.SetWasChanged(true);
+        this.private_UpdateLn();
+    };
+    CAnnotationBase.prototype.private_UpdateLn = function() {
+        let nWidthPt = this.GetWidth();
+        
         if (this.IsShapeBased()) {
             let oLine = this.spPr.ln;
             oLine.setW(nWidthPt * g_dKoef_pt_to_mm * 36000.0);

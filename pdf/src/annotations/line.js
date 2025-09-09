@@ -526,14 +526,6 @@
     CAnnotationLine.prototype.GetDrawing = function() {
         return this.content.GetAllDrawingObjects()[0];
     };
-    CAnnotationLine.prototype.SetWidth = function(nWidthPt) {
-        this._width = nWidthPt; 
-
-        nWidthPt = nWidthPt > 0 ? nWidthPt : 0.5;
-        let oLine = this.spPr.ln;
-        oLine.setW(nWidthPt * g_dKoef_pt_to_mm * 36000.0);
-        this.handleUpdateLn();
-    };
     CAnnotationLine.prototype.GetLinePoints = function() {
         return this._points;
     };

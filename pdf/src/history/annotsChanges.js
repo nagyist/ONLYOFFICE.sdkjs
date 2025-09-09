@@ -491,7 +491,8 @@ CChangesPDFAnnotStrokeWidth.prototype.Type = AscDFH.historyitem_Pdf_Annot_Stroke
 CChangesPDFAnnotStrokeWidth.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetWidth(Value);
+	oAnnot._width = Value;
+	oAnnot.private_UpdateLn();
 };
 
 /**
