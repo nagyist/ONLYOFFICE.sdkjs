@@ -443,6 +443,11 @@ CDocumentRecalcInfo.prototype =
         this.RecalcResult            = RecalcResult;
         this.AdditionalInfo          = AdditionalInfo;
     },
+	
+	HaveFlowObject : function()
+	{
+		return (!!this.FlowObject);
+	},
 
     Set_ParaMath : function(Object)
     {
@@ -3479,7 +3484,9 @@ CDocument.prototype.Recalculate_Page = function()
         this.Pages[PageIndex].Sections[0].Pos    = StartIndex;
         this.Pages[PageIndex].Sections[0].EndPos = StartIndex;
     }
-
+	
+	this.Pages[PageIndex].Sections.length = SectionIndex + 1;
+	
 	this.Endnotes.Reset(PageIndex, SectionIndex, ColumnIndex);
 
     this.Recalculate_PageColumn();
@@ -3763,10 +3770,19 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
             }
             else
             {
+				// TODO: По верхней границе объекта можно расчитать более точно секцию, с которой следует начать пересчет
+				if (this.RecalcInfo.HaveFlowObject())
+					_SectionIndex = 0;
+				
                 _ColumnIndex = 0;
                 _StartIndex  = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[0].Pos;
             }
-
+			
+			_sectPr = this.Pages[_PageIndex].Sections[_SectionIndex].GetSectPr();
+			
+			if (_SectionIndex !== SectionIndex)
+				this.Pages[_PageIndex].Sections[_SectionIndex].Init(_PageIndex, _sectPr, this.Layout.GetSectionIndex(_sectPr));
+			
             break;
         }
         else if (RecalcResult & recalcresult_NextElement)
@@ -3965,18 +3981,24 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
             }
             else
             {
-                if (_SectionIndex > 0)
-                {
-                    // Сюда мы никогда не должны попадать
-                }
-
-                _PageIndex    = Math.max(PageIndex - 1, 0);
-                _SectionIndex = this.Pages[_PageIndex].Sections.length - 1;
-                _ColumnIndex  = 0;
+				_PageIndex   = Math.max(PageIndex - 1, 0);
+				_ColumnIndex = 0;
+				
+				// TODO: Если пересчет происходит из-за плавающей фигуры, то мы можем прикинуть с какой секции надо
+				//       начать по её положению, а еще лучше записать это при первом повтороном пересчете
+				//       recalcresult_CurPage, и начать с сохраненной секции
+				if (this.RecalcInfo.HaveFlowObject())
+					_SectionIndex = 0;
+				else
+					_SectionIndex = this.Pages[_PageIndex].Sections.length - 1;
             }
 
             _StartIndex = this.Pages[_PageIndex].Sections[_SectionIndex].Columns[_ColumnIndex].Pos;
+			_sectPr     = this.Pages[_PageIndex].Sections[_SectionIndex].GetSectPr();
             _bStart     = false;
+	
+			this.Pages[_PageIndex].Sections[_SectionIndex].Init(_PageIndex, _sectPr, this.Layout.GetSectionIndex(_sectPr));
+			
             break;
         }
 		else if ((RecalcResult & recalcresult_NextSection) || (RecalcResult & recalcresult_NextSection_Cur))
