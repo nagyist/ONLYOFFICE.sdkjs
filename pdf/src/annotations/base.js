@@ -1007,7 +1007,7 @@
         let oCurData = oCurAscCommData ? new AscCommon.CCommentData() : undefined;
 		oCurData && oCurData.Read_FromAscCommentData(oCurAscCommData);
 
-        AscCommon.History.Add(new CChangesPDFCommentData(this, oCurData, oCommentData));
+        AscCommon.History.Add(new CChangesPDFAnnotCommentData(this, oCurData, oCommentData));
 
         if (oCommentData == null) {
             this._replies.length = 0;

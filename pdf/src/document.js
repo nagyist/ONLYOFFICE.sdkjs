@@ -8151,6 +8151,8 @@ var CPresentation = CPresentation || function(){};
 
         if (annotJson["Icon"] != null)
             oAnnot.SetIconType(annotJson["Icon"]);
+        if (annotJson["State"] != null)
+            oAnnot.SetState(annotJson["State"]);
         if (annotJson["RefToReason"] != null)
             oAnnot.SetRefType(annotJson["RefToReason"]);
         if (annotJson["Popup"] != null)
