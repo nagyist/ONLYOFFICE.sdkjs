@@ -536,9 +536,6 @@ CChangesPDFAnnotRC.prototype.private_SetValue = function(Value)
 
 CChangesPDFAnnotRC.prototype.WriteToBinary = function(Writer)
 {
-	let aRCNew = this.New;
-	let aRCOld = this.Old;
-
 	function writeRC(aRC) {
 		Writer.WriteLong(aRC.length);
 		for (let i = 0; i < aRC.length; i++) {
@@ -584,8 +581,21 @@ CChangesPDFAnnotRC.prototype.WriteToBinary = function(Writer)
 		}
 	}
 	
-	writeRC(aRCNew);
-	writeRC(aRCOld);
+	let nFlags = 0;
+
+	if (undefined === this.New)
+		nFlags |= 1;
+
+	if (undefined === this.Old)
+		nFlags |= 2;
+
+	Writer.WriteLong(nFlags);
+
+	if (undefined != this.New)
+		writeRC(this.New);
+
+	if (undefined != this.Old)
+		writeRC(this.Old);
 };
 CChangesPDFAnnotRC.prototype.ReadFromBinary = function(Reader) {
     function readRC() {
@@ -622,8 +632,13 @@ CChangesPDFAnnotRC.prototype.ReadFromBinary = function(Reader) {
         return aRC;
     }
 
-    this.New = readRC();
-    this.Old = readRC();
+    let nFlags = Reader.GetLong();
+
+	if (!(nFlags & 1))
+    	this.New = readRC();
+
+	if (!(nFlags & 2))
+    	this.Old = readRC();
 };
 
 /**
@@ -1357,9 +1372,6 @@ CChangesPDFLineAnnotRC.prototype.private_SetValue = function(Value)
 
 CChangesPDFLineAnnotRC.prototype.WriteToBinary = function(Writer)
 {
-	let aRCNew = this.New;
-	let aRCOld = this.Old;
-
 	function writeRC(aRC) {
 		Writer.WriteLong(aRC.length);
 		for (let i = 0; i < aRC.length; i++) {
@@ -1405,8 +1417,21 @@ CChangesPDFLineAnnotRC.prototype.WriteToBinary = function(Writer)
 		}
 	}
 	
-	writeRC(aRCNew);
-	writeRC(aRCOld);
+	let nFlags = 0;
+
+	if (undefined === this.New)
+		nFlags |= 1;
+
+	if (undefined === this.Old)
+		nFlags |= 2;
+
+	Writer.WriteLong(nFlags);
+
+	if (undefined != this.New)
+		writeRC(this.New);
+
+	if (undefined != this.Old)
+		writeRC(this.Old);
 };
 CChangesPDFLineAnnotRC.prototype.ReadFromBinary = function(Reader) {
     function readRC() {
@@ -1443,6 +1468,11 @@ CChangesPDFLineAnnotRC.prototype.ReadFromBinary = function(Reader) {
         return aRC;
     }
 
-    this.New = readRC();
-    this.Old = readRC();
+	let nFlags = Reader.GetLong();
+
+	if (!(nFlags & 1))
+    	this.New = readRC();
+
+	if (!(nFlags & 2))
+    	this.Old = readRC();
 };
