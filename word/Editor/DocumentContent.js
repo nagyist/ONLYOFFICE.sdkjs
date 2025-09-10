@@ -7046,6 +7046,13 @@ CDocumentContent.prototype.SetSelectionToBeginEnd = function(isSelectionStart, i
 {
 	if (this.Content.length <= 0)
 		return;
+	
+	let startPos = Math.min(this.Selection.StartPos, this.Selection.EndPos);
+	let endPos   = Math.max(this.Selection.StartPos, this.Selection.EndPos);
+	for (let pos = startPos + 1; pos < endPos; ++pos)
+	{
+		this.Content[pos].RemoveSelection();
+	}
 
 	if (true === isElementStart)
 	{
@@ -7065,6 +7072,13 @@ CDocumentContent.prototype.SetSelectionToBeginEnd = function(isSelectionStart, i
 			this.Selection.StartPos = this.Content.length - 1;
 		else
 			this.Selection.EndPos = this.Content.length - 1;
+	}
+	
+	startPos = Math.min(this.Selection.StartPos, this.Selection.EndPos);
+	endPos   = Math.max(this.Selection.StartPos, this.Selection.EndPos);
+	for (let pos = startPos + 1; pos < endPos; ++pos)
+	{
+		this.Content[pos].SelectAll(1);
 	}
 };
 CDocumentContent.prototype.Select_DrawingObject      = function(Id)
