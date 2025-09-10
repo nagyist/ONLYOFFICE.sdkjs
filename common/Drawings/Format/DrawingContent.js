@@ -322,7 +322,7 @@
             oPage.Sections[0] = new AscWord.DocumentPageSection();
             for (var i = 0; i < nColumnsCount; ++i)
             {
-                oPage.Sections[0].Columns[i] = new CDocumentPageColumn();
+                oPage.Sections[0].Columns[i] = new AscWord.DocumentPageColumn();
             }
             this.Pages[nPageIndex] = oPage;
         }

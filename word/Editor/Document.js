@@ -188,61 +188,6 @@ function Document_Recalculate_HdrFtrPageCount()
 	LogicDocument.private_RecalculateHdrFtrPageCountUpdate();
 }
 
-function CDocumentPageColumn()
-{
-    this.Bounds = new CDocumentBounds(0, 0, 0, 0);
-    this.Pos    = 0;
-    this.EndPos = -1;
-    this.Empty  = true;
-
-    this.X      = 0;
-    this.Y      = 0;
-    this.XLimit = 0;
-    this.YLimit = 0;
-
-    this.SpaceBefore = 0;
-    this.SpaceAfter  = 0;
-}
-CDocumentPageColumn.prototype.Copy = function()
-{
-    var NewColumn = new CDocumentPageColumn();
-
-    NewColumn.Bounds.CopyFrom(this.Bounds);
-    NewColumn.Pos    = this.Pos;
-    NewColumn.EndPos = this.EndPos;
-    NewColumn.X      = this.X;
-    NewColumn.Y      = this.Y;
-    NewColumn.XLimit = this.XLimit;
-    NewColumn.YLimit = this.YLimit;
-
-    return NewColumn;
-};
-CDocumentPageColumn.prototype.Shift = function(Dx, Dy)
-{
-    this.X      += Dx;
-    this.XLimit += Dx;
-    this.Y      += Dy;
-    this.YLimit += Dy;
-
-    this.Bounds.Shift(Dx, Dy);
-};
-CDocumentPageColumn.prototype.Reset = function()
-{
-    this.Bounds.Reset();
-    this.Pos    = 0;
-    this.EndPos = -1;
-    this.Empty  = true;
-
-    this.X      = 0;
-    this.Y      = 0;
-    this.XLimit = 0;
-    this.YLimit = 0;
-};
-CDocumentPageColumn.prototype.IsEmpty = function()
-{
-	return this.Empty;
-};
-
 function CStatistics(LogicDocument)
 {
     this.LogicDocument = LogicDocument;
