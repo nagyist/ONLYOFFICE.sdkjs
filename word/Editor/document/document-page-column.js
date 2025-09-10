@@ -55,7 +55,7 @@
 	}
 	DocumentPageColumn.prototype.Copy = function()
 	{
-		var NewColumn = new CDocumentPageColumn();
+		var NewColumn = new DocumentPageColumn();
 		
 		NewColumn.Bounds.CopyFrom(this.Bounds);
 		NewColumn.Pos    = this.Pos;
