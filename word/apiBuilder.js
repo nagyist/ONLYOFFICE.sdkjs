@@ -11296,7 +11296,7 @@
 			return false;
 
 		let oSectPr = oSection.Section;
-		let oCurSectPr = oDoc.SectionsInfo.GetSectPrByElement(this.Paragraph).SectPr;
+		let oCurSectPr = oDoc.SectionsInfo.GetSectPrByElement(this.Paragraph);
 
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);
