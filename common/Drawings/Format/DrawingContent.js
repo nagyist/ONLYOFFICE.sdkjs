@@ -221,7 +221,7 @@
 	};
 	
 	CDrawingDocContent.prototype.GetColumnContentFrame = function(page, column, sectPr){
-		return this._GetColumnContentFrame(0);
+		return this._GetColumnContentFrame(column);
 	};
 	
     CDrawingDocContent.prototype._GetColumnContentFrame = function(nColumnIndex){
@@ -262,6 +262,7 @@
 
 
     CDrawingDocContent.prototype.RecalculateContent = function(fWidth, fHeight, nStartPage){
+		this.Recalculated = true;
         this.CalculateAllFields();
         if(this.GetColumnCount() === 1){
             CDocumentContent.prototype.RecalculateContent.call(this, fWidth, fHeight, nStartPage);
