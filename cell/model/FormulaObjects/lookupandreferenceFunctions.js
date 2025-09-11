@@ -2995,6 +2995,10 @@ function (window, undefined) {
 			}
 
 			if (arrayToSearch) {
+				let searchValue = arg0Val.getValue();
+				if (arg0Val.type === cElementType.string) {
+					searchValue = searchValue.toLowerCase();
+				}
 				if (arg3) {
 					// approximate(binary) search
 					res = _func.lookupBinarySearch(arg0Val, arrayToSearch, false);
@@ -3008,7 +3012,7 @@ function (window, undefined) {
 							elemValue = elemValue.toLowerCase();
 						}
 	
-						if ((elem.type === arg0ValType) && elemValue === arg0Val.getValue()) {
+						if ((elem.type === arg0ValType) && elemValue === searchValue) {
 							res = i;
 							break
 						}
