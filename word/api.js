@@ -3492,7 +3492,7 @@ background-repeat: no-repeat;\
 		{
 			if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontName);
+				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontName, null, null, {fontName : name});
 				this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 					FontFamily : {
 						Name  : name,
@@ -3510,7 +3510,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontSize);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontSize, null, null, {fontSize: size});
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize : Math.min(size, 300)}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -4809,7 +4809,7 @@ background-repeat: no-repeat;\
 			}
 			else
 			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextHighlightColor);
+				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextHighlightColor, null, null, {highlight : {r:r, g:g, b:b}});
 				this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 					HighLight : {
 						r : r,
@@ -4826,7 +4826,7 @@ background-repeat: no-repeat;\
 		var oLogicDocument = this.WordControl.m_oLogicDocument;
 		if (false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextColor);
+			oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextColor, null, null, {color: {r: color.r, g: color.g, b: color.b}});
 
 			if (true === color.Auto)
 			{

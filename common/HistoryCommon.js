@@ -472,13 +472,13 @@
 			case AscDFH.historydescription_Document_ShiftDeleteButton                  :
 				sString = "Document_ShiftDeleteButton";
 				break;
-			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading1:
+			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading1		   :
 				sString = "Document_Shortcut_SetStyleHeading1";
 				break;
-			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading2:
+			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading2          :
 				sString = "Document_Shortcut_SetStyleHeading2";
 				break;
-			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading3:
+			case AscDFH.historydescription_Document_Shortcut_SetStyleHeading3          :
 				sString = "Document_Shortcut_SetStyleHeading3";
 				break;
 			case AscDFH.historydescription_Document_SetTextStrikeoutHotKey             :
@@ -1327,6 +1327,9 @@
 				break;
 			case AscDFH.historydescription_Presentation_MergeSelectedShapes:
 				sString = "Presentation_MergeSelectedShapes";
+				break;
+			case AscDFH.historydescription_Document_SetStyleHeading:
+				sString = "Document_SetStyleHeading";
 				break;
 		}
 		return sString;
@@ -4673,6 +4676,9 @@
 	window['AscDFH'].historydescription_Spreadsheet_SwitchCheckbox                  = 0x01d0;
 	window['AscDFH'].historydescription_Spreadsheet_IncrementControl                = 0x01d1;
 	window['AscDFH'].historydescription_Spreadsheet_SelectListBox                   = 0x01d2;
+
+	window['AscDFH'].historydescription_Document_SetStyleHeading          			= 0x01d3;
+	
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;

@@ -744,7 +744,7 @@
 	 * @param {Asc.c_oAscAsyncActionType} id
 	 * @param {Asc.c_oAscRestrictionType} [actionRestriction]
 	 */
-	baseEditorsApi.prototype.sync_StartAction                = function(type, id, actionRestriction)
+	baseEditorsApi.prototype.sync_StartAction                = function(type, id, actionRestriction, additional)
 	{
 		if (type !== c_oAscAsyncActionType.Empty)
 			this.sendEvent('asc_onStartAction', type, id);
@@ -765,6 +765,8 @@
 			AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 			this.incrementCounterActionRestriction(actionRestriction);
 		}
+
+		this.getMacroRecorder().onAction(id, additional);
 	};
 	/**
 	 * @param type {Asc.c_oAscAsyncAction}

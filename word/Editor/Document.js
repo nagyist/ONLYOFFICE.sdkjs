@@ -6722,12 +6722,14 @@ CDocument.prototype.SetParagraphStyle = function(sName, isCheckLinkedStyle)
 			var oLinkedStyle = this.Styles.Get(oStyle.GetLink());
 			if (oLinkedStyle && styletype_Character === oLinkedStyle.GetType())
 			{
+				this.StartAction(AscDFH.historydescription_Document_SetStyleHeading, null, null, {name: sName});
 				var oTextPr = new CTextPr();
 				oTextPr.Set_FromObject({RStyle : oLinkedStyle.GetId()}, true);
 				arrCurrentParagraphs[0].ApplyTextPr(oTextPr);
 				this.Recalculate();
 				this.Document_UpdateSelectionState();
 				this.Document_UpdateInterfaceState();
+				this.FinalizeAction();
 				return;
 			}
 		}
@@ -6735,9 +6737,15 @@ CDocument.prototype.SetParagraphStyle = function(sName, isCheckLinkedStyle)
 
 	var oParaPr = this.GetCalculatedParaPr();
 	if (oParaPr.PStyle && this.Styles.Get(oParaPr.PStyle) && this.Styles.Get(oParaPr.PStyle).GetName() === sName)
+	{
 		this.Controller.ClearParagraphFormatting(false, true);
+	}
 	else
+	{
+		this.StartAction(AscDFH.historydescription_Document_SetStyleHeading, null, null, {name: sName});
 		this.Controller.SetParagraphStyle(sName);
+		this.FinalizeAction();
+	}
 
 	this.Recalculate();
 	this.Document_UpdateSelectionState();
@@ -9386,7 +9394,7 @@ CDocument.prototype.executeShortcut = function(type)
 		{
 			if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			{
-				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading1);
+				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading1, null, null, "Heading 1");
 				this.SetParagraphStyle("Heading 1");
 				this.UpdateInterface();
 				this.FinalizeAction();
@@ -9398,7 +9406,7 @@ CDocument.prototype.executeShortcut = function(type)
 		{
 			if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			{
-				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading2);
+				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading2, null, null, "Heading 2");
 				this.SetParagraphStyle("Heading 2");
 				this.UpdateInterface();
 				this.FinalizeAction();
@@ -9410,7 +9418,7 @@ CDocument.prototype.executeShortcut = function(type)
 		{
 			if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			{
-				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading3);
+				this.StartAction(AscDFH.historydescription_Document_Shortcut_SetStyleHeading3, null, null, "Heading 3");
 				this.SetParagraphStyle("Heading 3");
 				this.UpdateInterface();
 				this.FinalizeAction();
@@ -9715,8 +9723,12 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2);
-					this.AddToParagraph(new ParaTextPr({VertAlign : oTextPr.VertAlign === AscCommon.vertalign_SuperScript ? AscCommon.vertalign_Baseline : AscCommon.vertalign_SuperScript}));
+					let vertAlign = (oTextPr.VertAlign === AscCommon.vertalign_SuperScript)
+						? AscCommon.vertalign_Baseline
+						: AscCommon.vertalign_SuperScript;
+
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, null, null, {baseline: vertAlign === AscCommon.vertalign_Baseline});
+					this.AddToParagraph(new ParaTextPr({VertAlign : vertAlign}));
 					this.UpdateInterface();
 					this.FinalizeAction();
 				}
@@ -9758,8 +9770,12 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3);
-					this.AddToParagraph(new ParaTextPr({VertAlign : oTextPr.VertAlign === AscCommon.vertalign_SubScript ? AscCommon.vertalign_Baseline : AscCommon.vertalign_SubScript}));
+					let vertAlign = (oTextPr.VertAlign === AscCommon.vertalign_SuperScript)
+						? AscCommon.vertalign_Baseline
+						: AscCommon.vertalign_SuperScript;
+					
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, null, null, {baseline: vertAlign === AscCommon.vertalign_Baseline});
+					this.AddToParagraph(new ParaTextPr({VertAlign : vertAlign}));
 					this.UpdateInterface();
 					this.FinalizeAction();
 				}
@@ -26493,7 +26509,7 @@ CDocument.prototype.ChangeTextCase = function(nCaseType)
 
 	if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
 	{
-		this.StartAction(AscDFH.historydescription_Document_ChangeTextCase);
+		this.StartAction(AscDFH.historydescription_Document_ChangeTextCase, null, null, {changeType: nCaseType});
 
 		let oChangeEngine = new AscCommonWord.CChangeTextCaseEngine(nCaseType);
 		oChangeEngine.ProcessParagraphs(this.GetSelectedParagraphs());

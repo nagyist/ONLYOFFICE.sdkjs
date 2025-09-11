@@ -14788,6 +14788,9 @@
 		this.cleanText();
 		this.setFormulaInternal(null);
 
+		//for now. move in api.js in future
+		this.ws.workbook.oApi.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, AscDFH.historyitem_Cell_ChangeValue, undefined, {data: val});
+
 		if (newFP) {
 			this.setFormulaInternal(newFP);
 			if(byRef) {
@@ -14853,6 +14856,7 @@
 		if (!skipExternalCheck) {
 			this.checkRemoveExternalReferences(newFP, oldFP);
 		}
+		this.ws.workbook.oApi.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, AscDFH.historyitem_Cell_ChangeValue);
 	};
 
 	Cell.prototype.checkRemoveExternalReferences=function(fNew, fOld) {
