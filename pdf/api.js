@@ -1117,7 +1117,13 @@
 		}
 
 		Asc.editor.sendEvent("asc_onOpenLinkPdfForm", Url, function() {
-			window.open(Url, "_blank");
+			try {
+				window.open(Url, "_blank");
+			}
+			catch (err) {
+				console.warn(err);
+			}
+
 		}, function() {});
 	};
 	PDFEditorApi.prototype.add_Hyperlink = function(HyperProps) {
