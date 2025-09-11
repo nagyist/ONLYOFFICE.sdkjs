@@ -1836,8 +1836,6 @@ var editor;
 		if (this.wb.MobileTouchManager) {
 			this.wb.MobileTouchManager.Destroy();
 		}
-		this.wb = null;
-		this.wbModel = null;
 		this.sendEvent("asc_onCloseFile");
 	};
 
