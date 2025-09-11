@@ -2980,7 +2980,7 @@ function (window, undefined) {
 
 		let arg0ValType = arg0Val.type
 		if (cElementType.array === arg1.type && !opt_xlookup) {
-			let arrayToSearch, res = -1;
+			let arrayToSearch;
 			if (this.bHor) {
 				arrayToSearch = arg1.getRow(0);
 			} else {
@@ -2988,24 +2988,27 @@ function (window, undefined) {
 			}
 
 			if (arrayToSearch) {
-				let searchValue = arg0Val.getValue();
-				if (arg0Val.type === cElementType.string) {
-					searchValue = searchValue.toLowerCase();
-				}
 				if (arg3) {
 					// approximate(binary) search
 					res = _func.lookupBinarySearch(arg0Val, arrayToSearch, false);
 				} else {
+					let searchValue = arg0Val.getValue();
+					if (arg0Val.type === cElementType.string) {
+						searchValue = searchValue.toLowerCase();
+					}
 					// exact (simple) search
 					for (let i = 0; i < arrayToSearch.length; i++) {
 						let elem = arrayToSearch[i];
+						if (elem.type !== arg0ValType) {
+							continue;
+						}
 						let elemValue = elem.getValue();
 	
 						if (elem.type === cElementType.string) {
 							elemValue = elemValue.toLowerCase();
 						}
 	
-						if ((elem.type === arg0ValType) && elemValue === searchValue) {
+						if (elemValue === searchValue) {
 							res = i;
 							break
 						}
