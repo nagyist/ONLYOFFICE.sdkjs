@@ -679,9 +679,8 @@
 				 this.wb.Core.contentStatus = this.oldWorkbookCoreParameters.oldContentStatus;
 
 
-					var oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(this.wb, false);
-					oBinaryFileWriter.Write();
-					this.cachedWbBinaryData = oBinaryFileWriter.Memory.data.slice();
+					var oBinaryFileWriter = new AscCommonExcel.BinaryFileWriter(this.wb);
+					this.cachedWbBinaryData = oBinaryFileWriter.Write(true, false, true);
 
 					this.wb.Core.creator = newCreator;
 					this.wb.Core.identifier = newIdentifier;
