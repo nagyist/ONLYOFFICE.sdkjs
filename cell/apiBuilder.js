@@ -12666,6 +12666,23 @@
 		return nRad * 180 / Math.PI
 	};
 
+	/**
+	 * Selects the current graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
+	 */
+	ApiDrawing.prototype.Select = function() {
+		let oDrawing = this.Drawing;
+		if(!oDrawing) return;
+		let oController = oDrawing.getDrawingObjectsController();
+		if (!oController) return;
+		oController.selectObject(oDrawing, 0);
+		oController.updateSelectionState();
+		oController.updateOverlay();
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiImage
@@ -26447,6 +26464,7 @@
 	ApiDrawing.prototype["GetParentSheet"]             =  ApiDrawing.prototype.GetParentSheet;
 	ApiDrawing.prototype["SetRotation"]                =  ApiDrawing.prototype.SetRotation;
 	ApiDrawing.prototype["GetRotation"]                =  ApiDrawing.prototype.GetRotation;
+	ApiDrawing.prototype["Select"]                     =  ApiDrawing.prototype.Select;
 
 	ApiImage.prototype["GetClassType"]                 =  ApiImage.prototype.GetClassType;
 
