@@ -882,7 +882,7 @@
                 break;
             }
             case AscPDF.FIELD_TYPES.listbox: {
-                oCopy = new AscPDF.CListboxField(this.GetPartialName(), this.GetRect().slice());
+                oCopy = new AscPDF.CListBoxField(this.GetPartialName(), this.GetRect().slice());
                 break;
             }
             case AscPDF.FIELD_TYPES.button: {
