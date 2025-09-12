@@ -9740,7 +9740,8 @@ Paragraph.prototype.GetCalculatedParaPr = function()
  */
 Paragraph.prototype.Is_Empty = function(Props)
 {
-	var Pr = {SkipEnd : true};
+	let Pr = Props ? Props : {};
+	Pr.SkipEnd = true;
 
 	if (undefined !== Props)
 	{

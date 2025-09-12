@@ -783,6 +783,7 @@ ParaRun.prototype.MathAutoCorrection_DeleteLastSpace = function()
 ParaRun.prototype.Is_Empty = function(oProps)
 {
 	var SkipAnchor  = (undefined !== oProps ? oProps.SkipAnchor : false);
+	let SkipDrawing = (undefined !== oProps ? oProps.SkipDrawing : false);
 	var SkipEnd     = (undefined !== oProps ? oProps.SkipEnd : false);
 	var SkipPlcHldr = (undefined !== oProps ? oProps.SkipPlcHldr : false);
 	var SkipNewLine = (undefined !== oProps ? oProps.SkipNewLine : false);
@@ -812,6 +813,7 @@ ParaRun.prototype.Is_Empty = function(oProps)
 			var nType = oItem.Type;
 
 			if ((true !== SkipAnchor || para_Drawing !== nType || false !== oItem.Is_Inline())
+				&& (true !== SkipDrawing || para_Drawing !== nType)
 				&& (true !== SkipEnd || para_End !== nType)
 				&& (true !== SkipPlcHldr || true !== oItem.IsPlaceholder())
 				&& (true !== SkipNewLine || para_NewLine !== nType)
