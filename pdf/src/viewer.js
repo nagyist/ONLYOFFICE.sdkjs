@@ -4456,6 +4456,9 @@
 			if (oPageInfo.annots) {
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					oPageInfo.annots[nAnnot].IsChanged() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
+					oPageInfo.annots[nAnnot].GetReplies().forEach(function(reply) {
+						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
+					});
 				}
 			}
 
@@ -4854,7 +4857,7 @@
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					oPageInfo.annots[nAnnot].IsChanged() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
 					oPageInfo.annots[nAnnot].GetReplies().forEach(function(reply) {
-						reply.IsChanged() && reply.WriteToBinary(oMemory); 
+						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
 				}
 			}
