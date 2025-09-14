@@ -654,15 +654,40 @@
 		});
 	};
 	PDFEditorApi.prototype.asc_undoAllChanges = function() {};
-	PDFEditorApi.prototype.asc_addChartDrawingObject = function(chartBinary, Placeholder) {
+	PDFEditorApi.prototype.asc_addChartDrawingObject = function(nType, Placeholder) {
+		this.asc_onCloseFrameEditor();
+
 		let oDoc	= this.getPDFDoc();
 		let oViewer	= this.getDocumentRenderer();
 
 		oDoc.DoAction(function() {
 			AscFonts.IsCheckSymbols = true;
-			oDoc.AddChartByBinary(chartBinary, true, Placeholder, oViewer.currentPage);
+			oDoc.AddChart(nType, true, Placeholder, oViewer.currentPage);
 			AscFonts.IsCheckSymbols = false;
 		}, AscDFH.historydescription_Document_AddChart);
+	};
+	PDFEditorApi.prototype.ChartApply = function(obj) {
+		let oDoc = this.getPDFDoc();
+
+		this.asc_onCloseFrameEditor();
+		if (obj.ChartProperties && obj.ChartProperties.type === Asc.c_oAscChartTypeSettings.stock && oDoc.GetCurrentSlide()) {
+			if (!AscFormat.CheckStockChart(oDoc.GetCurrentSlide().graphicObjects, this)) {
+				return;
+			}
+		}
+		oDoc.ChartApply(obj);
+	};
+	
+	PDFEditorApi.prototype.asc_getChartSettings = function (bNoLock) {
+		let oDoc = this.getPDFDoc();
+		if (oDoc) {
+			if (bNoLock !== true) {
+				this.asc_onOpenFrameEditor();
+			}
+
+			let oController = oDoc.GetController();
+			return oController.getChartSettings();
+		}
 	};
 	PDFEditorApi.prototype.asc_correctEnterText = function(oldCodePoints, newCodePoints) {
 		
@@ -867,6 +892,21 @@
 	{
 		let oDoc = this.getPDFDoc();
 		oDoc.ConvertMathView(isToLinear, isAll);
+	};
+	PDFEditorApi.prototype.getImageSelectedObject  = function(imgProp) {
+		let type = imgProp.chartProps ? Asc.c_oAscTypeSelectElement.Chart : Asc.c_oAscTypeSelectElement.Image;
+		let objects;
+		if (type === Asc.c_oAscTypeSelectElement.Chart) {
+			objects = new Asc.CAscChartProp(imgProp);
+		}
+		else {
+			objects = new Asc.asc_CImgProperty(imgProp);
+		}
+
+		return new AscCommon.asc_CSelectedObject(type, objects);
+	};
+	PDFEditorApi.prototype.sync_ImgPropCallback  = function(imgProp) {
+		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = this.getImageSelectedObject(imgProp);
 	};
 	PDFEditorApi.prototype.sync_shapePropCallback = function(pr) {
 		let oDoc		= this.getPDFDoc();
@@ -1218,6 +1258,14 @@
 	PDFEditorApi.prototype.get_PageHeight = function(nPage) {
 		let oDoc = this.getPDFDoc();
 		return oDoc.GetPageHeightEMU();
+	};
+	PDFEditorApi.prototype.get_PageWidthMM  = function(nPage) {
+		let oDoc = this.getPDFDoc();
+		return oDoc.GetPageWidthMM();
+	};
+	PDFEditorApi.prototype.get_PageHeightMM = function(nPage) {
+		let oDoc = this.getPDFDoc();
+		return oDoc.GetPageHeightMM();
 	};
 	PDFEditorApi.prototype.asc_SetFastCollaborative = function(isOn)
 	{
@@ -4860,6 +4908,9 @@
 	PDFEditorApi.prototype['asc_CanPastePage']             = PDFEditorApi.prototype.asc_CanPastePage;
 	PDFEditorApi.prototype['asc_createSmartArt']		   = PDFEditorApi.prototype.asc_createSmartArt;
 	PDFEditorApi.prototype['asc_undoAllChanges']		   = PDFEditorApi.prototype.asc_undoAllChanges;
+	PDFEditorApi.prototype['asc_addChartDrawingObject']	   = PDFEditorApi.prototype.asc_addChartDrawingObject;
+	PDFEditorApi.prototype['ChartApply']		           = PDFEditorApi.prototype.ChartApply;
+	PDFEditorApi.prototype['asc_getChartSettings']		   = PDFEditorApi.prototype.asc_getChartSettings;
 
 	PDFEditorApi.prototype['asc_setSkin']                  = PDFEditorApi.prototype.asc_setSkin;
 	PDFEditorApi.prototype['asc_getAnchorPosition']        = PDFEditorApi.prototype.asc_getAnchorPosition;
@@ -4868,6 +4919,8 @@
 	PDFEditorApi.prototype['SetMarkerFormat']              = PDFEditorApi.prototype.SetMarkerFormat;
 	PDFEditorApi.prototype['get_PageWidth']                = PDFEditorApi.prototype.get_PageWidth;
 	PDFEditorApi.prototype['get_PageHeight']               = PDFEditorApi.prototype.get_PageHeight;
+	PDFEditorApi.prototype['get_PageWidthMM']              = PDFEditorApi.prototype.get_PageWidthMM;
+	PDFEditorApi.prototype['get_PageHeightMM']             = PDFEditorApi.prototype.get_PageHeightMM;
 	PDFEditorApi.prototype['asc_EditSelectAll']            = PDFEditorApi.prototype.asc_EditSelectAll;
 	PDFEditorApi.prototype['Undo']                         = PDFEditorApi.prototype.Undo;
 	PDFEditorApi.prototype['Redo']                         = PDFEditorApi.prototype.Redo;
