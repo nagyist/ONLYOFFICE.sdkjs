@@ -7752,7 +7752,13 @@ background-repeat: no-repeat;\
 			data["translations"]["highlighter"],
 			data["translations"]["inkColor"],
 			data["translations"]["eraser"],
-			data["translations"]["eraseScreen"]
+			data["translations"]["eraseScreen"],
+			data["translations"]["play"],
+			data["translations"]["pause"],
+			data["translations"]["prevSlide"],
+			data["translations"]["nextSlide"],
+			data["translations"]["pointer"],
+			data["translations"]["draw"]
 		];
 
         if (data["cryptoCurrentPassword"])
@@ -7781,13 +7787,17 @@ background-repeat: no-repeat;\
 
 		var _button1 = document.getElementById("dem_id_reset");
 		var _button2 = document.getElementById("dem_id_end");
+        var _btnPlay = document.getElementById("dem_id_play");
+        var _btnPrev = document.getElementById("dem_id_prev");
+        var _btnNext = document.getElementById("dem_id_next");
+        var _btnPointer = document.getElementById("dem_id_pointer");
+        var _btnDrawMenu = document.getElementById("dem_id_draw_menu_trigger");
 
 		var _miPen = document.querySelector("#dem_id_draw_menu a[data-tool=\"pen\"]");
 		var _miHighlighter = document.querySelector("#dem_id_draw_menu a[data-tool=\"highlighter\"]");
 		var _miInkColor = document.querySelector("#dem_id_draw_color_menu_trigger > a");
 		var _miEraser = document.querySelector("#dem_id_draw_menu a[data-tool=\"eraser\"]");
 		var _miEraseAll = document.querySelector("#dem_id_draw_menu a[data-tool=\"erase-all\"]");
-
 
 		if (_button1)
 			_button1.innerHTML = this.reporterTranslates[0];
@@ -7796,6 +7806,14 @@ background-repeat: no-repeat;\
 			_button2.innerHTML = this.reporterTranslates[2];
 			this.WordControl.OnResizeReporter();
 		}
+        if (_btnPlay) {
+            _btnPlay.setAttribute("data-play-tooltip", this.reporterTranslates[9]);
+            _btnPlay.setAttribute("data-pause-tooltip", this.reporterTranslates[10]);
+        }
+        if (_btnPrev) _btnPrev.setAttribute("data-tooltip", this.reporterTranslates[11]);
+        if (_btnNext) _btnNext.setAttribute("data-tooltip", this.reporterTranslates[12]);
+        if (_btnPointer) _btnPointer.setAttribute("data-tooltip", this.reporterTranslates[13]);
+        if (_btnDrawMenu) _btnDrawMenu.setAttribute("data-tooltip", this.reporterTranslates[14]);
 
 		if (_miPen) _miPen.childNodes[1].textContent = this.reporterTranslates[4];
 		if (_miHighlighter) _miHighlighter.childNodes[1].textContent = this.reporterTranslates[5];
