@@ -3109,7 +3109,15 @@ function (window, undefined) {
 				});
 			} else {
 				tmpArrays[i].sort(function (a, b) {
-					return a.v.localeCompare(b.v);
+					const valueA = a.v;
+					const valueB = b.v;
+					if (valueA > valueB) {
+						return 1;
+					}
+					if (valueB > valueA) {
+						return -1;
+					}
+					return 0;
 				});
 			}
 		}
