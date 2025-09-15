@@ -65,7 +65,18 @@
 		let macroData = "";
 		try
 		{
-			macroData = JSON.parse(this.editor.macros.GetData());
+			let data = this.editor.macros.GetData();
+			if (data && "" !== data)
+			{
+				macroData = JSON.parse(this.editor.macros.GetData());
+			}
+			else
+			{
+				macroData = {
+					macrosArray : [],
+					current     : -1
+				};
+			}
 		}
 		catch (e)
 		{
