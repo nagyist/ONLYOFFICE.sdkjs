@@ -22785,6 +22785,8 @@ CDocument.prototype.OnEndLoadScript = function()
 };
 CDocument.prototype.BeginViewModeInReview = function(nMode)
 {
+	this.Api.macroRecorder.stop();
+	
 	if (this.IsViewModeInReview())
 		this.EndViewModeInReview();
 

@@ -744,7 +744,7 @@
 	 * @param {Asc.c_oAscAsyncActionType} id
 	 * @param {Asc.c_oAscRestrictionType} [actionRestriction]
 	 */
-	baseEditorsApi.prototype.sync_StartAction                = function(type, id, actionRestriction, additional)
+	baseEditorsApi.prototype.sync_StartAction                = function(type, id, actionRestriction)
 	{
 		if (type !== c_oAscAsyncActionType.Empty)
 			this.sendEvent('asc_onStartAction', type, id);
@@ -765,8 +765,6 @@
 			AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 			this.incrementCounterActionRestriction(actionRestriction);
 		}
-
-		this.getMacroRecorder().onAction(id, additional);
 	};
 	/**
 	 * @param type {Asc.c_oAscAsyncAction}
@@ -802,6 +800,8 @@
 		// editor.removeRestriction(Asc.c_oAscRestrictionType.OnlySignatures)
 		if (this.restrictions & Asc.c_oAscRestrictionType.OnlySignatures)
 			return;
+		
+		this.macroRecorder.stop();
 
 		this.restrictions = val;
 		this.onUpdateRestrictions(additionalSettings);
@@ -814,6 +814,8 @@
 	};
 	baseEditorsApi.prototype.asc_addRestriction              = function(val)
 	{
+		this.macroRecorder.stop();
+		
 		this.restrictions |= val;
 		this.onUpdateRestrictions();
 		this.checkInputMode();

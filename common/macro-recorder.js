@@ -56,9 +56,14 @@
 		this.result = "";
 		this.paused = false;
 		this.inProgress = true;
+		
+		this.editor.sendEvent("asc_onMacroRecordingStart");
 	};
 	MacroRecorder.prototype.stop = function()
 	{
+		if (!this.inProgress)
+			return;
+		
 		this.inProgress = false;
 		this.paused = false;
 
@@ -93,6 +98,7 @@
 		});
 		
 		this.editor.asc_setMacros(JSON.stringify(macroData));
+		this.editor.sendEvent("asc_onMacroRecordingStop");
 	};
 	MacroRecorder.prototype.pause = function()
 	{
@@ -100,6 +106,7 @@
 			return;
 		
 		this.paused = true;
+		this.editor.sendEvent("asc_onMacroRecordingPause");
 	};
 	MacroRecorder.prototype.resume = function()
 	{
@@ -107,6 +114,7 @@
 			return;
 		
 		this.paused = false;
+		this.editor.sendEvent("asc_onMacroRecordingResume");
 	};
 	MacroRecorder.prototype.isInProgress = function()
 	{
