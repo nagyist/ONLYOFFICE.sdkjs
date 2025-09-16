@@ -9754,7 +9754,7 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_SetHighlightMailMergeFields = function(Value)
 	{
-		this.WordControl.m_oLogicDocument.Set_HightlighMailMergeFields(Value);
+		this.WordControl.m_oLogicDocument.Set_HighlightMailMergeFields(Value);
 	};
 	asc_docs_api.prototype.asc_PreviewMailMergeResult      = function(Index)
 	{

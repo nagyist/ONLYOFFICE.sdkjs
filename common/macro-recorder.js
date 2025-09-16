@@ -100,6 +100,15 @@
 		this.editor.asc_setMacros(JSON.stringify(macroData));
 		this.editor.sendEvent("asc_onMacroRecordingStop");
 	};
+	MacroRecorder.prototype.cancel = function()
+	{
+		if (!this.inProgress)
+			return;
+		
+		this.inProgress = false;
+		this.paused = false;
+		this.editor.sendEvent("asc_onMacroRecordingStop");
+	};
 	MacroRecorder.prototype.pause = function()
 	{
 		if (!this.inProgress || this.paused)
@@ -342,6 +351,7 @@
 	
 	MacroRecorder.prototype["start"]        = MacroRecorder.prototype.start;
 	MacroRecorder.prototype["stop"]         = MacroRecorder.prototype.stop;
+	MacroRecorder.prototype["cancel"]       = MacroRecorder.prototype.cancel;
 	MacroRecorder.prototype["pause"]        = MacroRecorder.prototype.pause;
 	MacroRecorder.prototype["resume"]       = MacroRecorder.prototype.resume;
 	MacroRecorder.prototype["isInProgress"] = MacroRecorder.prototype.isInProgress;

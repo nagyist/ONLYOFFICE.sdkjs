@@ -17306,6 +17306,8 @@ CDocument.prototype.Statistics_Stop = function()
 //----------------------------------------------------------------------------------------------------------------------
 CDocument.prototype.Start_MailMerge = function(MailMergeMap, arrFields)
 {
+	this.Api.macroRecorder.stop();
+	
 	this.EndPreview_MailMergeResult();
 
 	this.MailMergeMap    = MailMergeMap;
@@ -17352,7 +17354,7 @@ CDocument.prototype.Add_MailMergeField = function(Name)
 		this.FinalizeAction();
 	}
 };
-CDocument.prototype.Set_HightlighMailMergeFields = function(Value)
+CDocument.prototype.Set_HighlightMailMergeFields = function(Value)
 {
 	if (Value !== this.MailMergeFieldsHighlight)
 	{
@@ -17437,7 +17439,9 @@ CDocument.prototype.Get_MailMergedDocument = function(_nStartIndex, _nEndIndex)
 
 	if (null === this.MailMergeMap || nStartIndex > nEndIndex || nStartIndex >= this.MailMergeMap.length)
 		return null;
-
+	
+	this.Api.macroRecorder.stop();
+	
 	AscCommon.History.TurnOff();
 	AscCommon.g_oTableId.TurnOff();
 
