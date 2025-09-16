@@ -488,7 +488,7 @@
 	};
         
     CTextField.prototype.Draw = function(oGraphicsPDF, oGraphicsWord) {
-        if (this.IsHidden() && !this.IsEditMode())
+        if (this.IsHidden() && !Asc.editor.IsEditFieldsMode())
             return;
 
         let oDoc = this.GetDocument();
@@ -1389,7 +1389,7 @@
         this._scrollInfo = oInfo;
     };
     CTextField.prototype.UpdateScroll = function(bShow) {
-        if (bShow && this.IsEditMode()) {
+        if (bShow && Asc.editor.IsEditFieldsMode()) {
             return;
         }
 

@@ -1672,7 +1672,7 @@
 						if (bGetHidden) {
 							return oField;
 						}
-						else if (oField.IsHidden() == false || oField.IsEditMode()) {
+						else if (oField.IsHidden() == false || Asc.editor.IsEditFieldsMode()) {
 							return oField;
 						}
 					}

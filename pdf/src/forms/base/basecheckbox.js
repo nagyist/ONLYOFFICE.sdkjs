@@ -57,7 +57,7 @@
     CBaseCheckBoxField.prototype.constructor = CBaseCheckBoxField;
 
     CBaseCheckBoxField.prototype.Draw = function(oGraphicsPDF, oGraphicsWord) {
-        if (this.IsHidden() && !this.IsEditMode())
+        if (this.IsHidden() && !Asc.editor.IsEditFieldsMode())
             return;
 
         this.DrawBackground(oGraphicsPDF);

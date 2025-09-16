@@ -1052,7 +1052,7 @@
         return false;
     };
     CBaseField.prototype.DrawHighlight = function(oCtx) {
-        if (this.IsHidden() && !this.IsEditMode())
+        if (this.IsHidden() && !Asc.editor.IsEditFieldsMode())
             return;
 
         let oViewer     = Asc.editor.getDocumentRenderer();
@@ -2402,7 +2402,7 @@
     };
 	
 	CBaseField.prototype.DrawOnPage = function(pdfGraphics, textBoxGraphics, pageIndex) {
-		if (this.IsHidden() && !this.IsEditMode())
+		if (this.IsHidden() && !Asc.editor.IsEditFieldsMode())
 			return;
 		
         if (pdfGraphics.isThumbnails) {
@@ -2626,7 +2626,7 @@
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();
 
-        if (this.IsEditMode()) {
+        if (Asc.editor.IsEditFieldsMode()) {
             this.SetNeedUpdateEditShape(true);
         }
 
@@ -2979,9 +2979,6 @@
         AscCommon.History.EndNoHistoryMode();
         
         return true;
-    };
-    CBaseField.prototype.IsEditMode = function() {
-        return !!this.editShape;
     };
     CBaseField.prototype.GetEditShape = function() {
         return this.editShape;

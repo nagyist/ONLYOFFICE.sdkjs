@@ -1385,6 +1385,9 @@
 	/////////////////////////////////////////////////////////////
 	///////// For filed
 	////////////////////////////////////////////////////////////
+	PDFEditorApi.prototype.IsEditFieldsMode = function() {
+		return Asc.editor.canEdit();
+	};
 	PDFEditorApi.prototype.AddTextField = function(oParams) {
 		let oDoc = this.getPDFDoc();
 		
@@ -4990,6 +4993,7 @@
 	PDFEditorApi.prototype['AddFreeTextAnnot']	= PDFEditorApi.prototype.AddFreeTextAnnot;
 
 	// forms
+	PDFEditorApi.prototype['IsEditFieldsMode']			= PDFEditorApi.prototype.IsEditFieldsMode;
 	PDFEditorApi.prototype['AddTextField']				= PDFEditorApi.prototype.AddTextField;
 	PDFEditorApi.prototype['AddDateField']				= PDFEditorApi.prototype.AddDateField;
 	PDFEditorApi.prototype['AddImageField']				= PDFEditorApi.prototype.AddImageField;
