@@ -4838,7 +4838,7 @@ function CThumbnailsManager(editorPage)
 				bPreventDefault = true;
 				break;
 			}
-			case Asc.c_oAscPresentationShortcutType.Print:
+			case Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint:
 			{
 				oApi.onPrint();
 				bReturnValue = false;
@@ -4855,7 +4855,7 @@ function CThumbnailsManager(editorPage)
 				bPreventDefault = true;
 				break;
 			}
-			case Asc.c_oAscPresentationShortcutType.ShowContextMenu:
+			case Asc.c_oAscPresentationShortcutType.OpenContextMenu:
 			{
 				oThis.showContextMenu(true);
 				bReturnValue = false;

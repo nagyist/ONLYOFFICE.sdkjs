@@ -2624,7 +2624,7 @@ function (window, undefined) {
 				this._addChars(oDate.getDateString(oApi));
 				break;
 			}
-			case Asc.c_oAscSpreadsheetShortcutType.Print: {
+			case Asc.c_oAscSpreadsheetShortcutType.PrintPreviewAndPrint: {
 				break;
 			}
 			case Asc.c_oAscSpreadsheetShortcutType.EditOpenCellEditor: {

@@ -39,30 +39,30 @@
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EditUndo] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EditRedo] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Duplicate] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Print] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Save] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.ShowContextMenu] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.OpenContextMenu] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.ShowParaMarks] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Bold] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.CopyFormat] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.CenterAlign] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.CenterPara] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EuroSign] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Group] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.UnGroup] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Italic] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.JustifyAlign] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.AddHyperlink] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.JustifyPara] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.InsertHyperlink] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.BulletList] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.LeftAlign] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.RightAlign] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.LeftPara] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.RightPara] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Underline] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Strikethrough] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Strikeout] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.PasteFormat] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Superscript] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.Subscript] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.EnDash] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.DecreaseFont] = true;
-	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.IncreaseFont] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.DecreaseFontSize] = true;
+	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.IncreaseFontSize] = true;
 	c_oAscUnlockedShortcutActionTypes[Asc.c_oAscPresentationShortcutType.SpeechWorker] = true;
 
 	const c_oAscDefaultShortcuts = {};
@@ -72,10 +72,10 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenCommentField] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenCommentField, keyCodes.KeyH, false, false, true, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenChatPanel] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenChatPanel, keyCodes.KeyQ, false, false, true, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Save] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Save, keyCodes.KeyS, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Print] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Print, keyCodes.KeyP, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint, keyCodes.KeyP, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SaveAs] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.SaveAs, keyCodes.KeyS, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenHelpMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenHelpMenu, keyCodes.F1, false, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ShowContextMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.F10, false, true, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowContextMenu, keyCodes.ContextMenu, false, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenContextMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenContextMenu, keyCodes.F10, false, true, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenContextMenu, keyCodes.ContextMenu, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseMenu] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseMenu, keyCodes.Escape, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Zoom100] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Zoom100, keyCodes.Digit0, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.GoToFirstSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.GoToFirstSlide, keyCodes.Home, false, false, false, false)];
@@ -120,7 +120,7 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.KeepSourceFormat] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.KeepSourceFormat, keyCodes.KeyK, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PasteAsPicture] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.PasteAsPicture, keyCodes.KeyU, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.KeepTextOnly] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.KeepTextOnly, keyCodes.KeyT, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.AddHyperlink] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.AddHyperlink, keyCodes.KeyK, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.InsertHyperlink] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.InsertHyperlink, keyCodes.KeyK, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.VisitHyperlink] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.VisitHyperlink, keyCodes.Enter, false, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EditSelectAll] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.EditSelectAll, keyCodes.KeyA, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SelectNextSlide] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.SelectNextSlide, keyCodes.PageDown, false, true, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.SelectNextSlide, keyCodes.ArrowDown, false, true, false, false)];
@@ -138,17 +138,17 @@
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Bold] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Bold, keyCodes.KeyB, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Italic] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Italic, keyCodes.KeyI, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Underline] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Underline, keyCodes.KeyU, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Strikethrough] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Strikethrough, keyCodes.Digit5, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Strikeout] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Strikeout, keyCodes.Digit5, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Subscript] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Subscript, keyCodes.Period, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Superscript] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Superscript, keyCodes.Comma, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.BulletList] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.BulletList, keyCodes.KeyL, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ResetChar] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.ResetChar, keyCodes.Space, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.IncreaseFont] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.IncreaseFont, keyCodes.BracketRight, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DecreaseFont] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DecreaseFont, keyCodes.BracketLeft, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CenterAlign] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CenterAlign, keyCodes.KeyE, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.JustifyAlign] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.JustifyAlign, keyCodes.KeyJ, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.RightAlign] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.RightAlign, keyCodes.KeyR, true, false, false, false)];
-	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LeftAlign] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.LeftAlign, keyCodes.KeyL, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.IncreaseFontSize] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.IncreaseFontSize, keyCodes.BracketRight, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DecreaseFontSize] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DecreaseFontSize, keyCodes.BracketLeft, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CenterPara] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CenterPara, keyCodes.KeyE, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.JustifyPara] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.JustifyPara, keyCodes.KeyJ, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.RightPara] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.RightPara, keyCodes.KeyR, true, false, false, false)];
+	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LeftPara] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.LeftPara, keyCodes.KeyL, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Indent] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.Indent, keyCodes.KeyM, true, false, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.UnIndent] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.UnIndent, keyCodes.KeyM, true, true, false, false)];
 	c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DeleteLeftChar] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.DeleteLeftChar, keyCodes.Backspace, false, false, false, false)];
@@ -198,7 +198,7 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenCommentField].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenCommentField, keyCodes.KeyA, false, false, true, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenChatPanel].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenChatPanel, keyCodes.KeyQ, true, false, true, false));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Save].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Save, keyCodes.KeyS, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Print].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Print, keyCodes.KeyP, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint, keyCodes.KeyP, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.SaveAs].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.SaveAs, keyCodes.KeyS, false, true, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Zoom100].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Zoom100, keyCodes.Digit0, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ZoomIn].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.ZoomIn, keyCodes.KeyEqual, false, false, false, true));
@@ -213,23 +213,23 @@
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EditRedo].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.EditRedo, keyCodes.KeyY, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CopyFormat].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.CopyFormat, keyCodes.KeyC, false, false, true, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PasteFormat].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.PasteFormat, keyCodes.KeyV, false, false, true, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.AddHyperlink].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.AddHyperlink, keyCodes.KeyK, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.InsertHyperlink].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.InsertHyperlink, keyCodes.KeyK, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EditSelectAll].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.EditSelectAll, keyCodes.KeyA, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ShowParaMarks].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.ShowParaMarks, keyCodes.Digit8, false, true, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Bold].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Bold, keyCodes.KeyB, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Italic].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Italic, keyCodes.KeyI, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Underline].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Underline, keyCodes.KeyU, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Strikethrough].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Strikethrough, keyCodes.Digit5, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Strikeout].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Strikeout, keyCodes.Digit5, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Subscript].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Subscript, keyCodes.Period, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Superscript].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Superscript, keyCodes.Comma, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.BulletList].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.BulletList, keyCodes.KeyL, false, true, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.ResetChar].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.ResetChar, keyCodes.Space, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.IncreaseFont].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.IncreaseFont, keyCodes.BracketRight, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DecreaseFont].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.DecreaseFont, keyCodes.BracketLeft, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CenterAlign].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.CenterAlign, keyCodes.KeyE, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.JustifyAlign].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.JustifyAlign, keyCodes.KeyJ, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.RightAlign].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.RightAlign, keyCodes.KeyR, false, false, false, true));
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LeftAlign].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.LeftAlign, keyCodes.KeyL, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.IncreaseFontSize].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.IncreaseFontSize, keyCodes.BracketRight, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.DecreaseFontSize].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.DecreaseFontSize, keyCodes.BracketLeft, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CenterPara].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.CenterPara, keyCodes.KeyE, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.JustifyPara].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.JustifyPara, keyCodes.KeyJ, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.RightPara].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.RightPara, keyCodes.KeyR, false, false, false, true));
+		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.LeftPara].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.LeftPara, keyCodes.KeyL, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.Indent].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.Indent, keyCodes.KeyM, false, false, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.UnIndent].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.UnIndent, keyCodes.KeyM, false, true, false, true));
 		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.EuroSign].push(new AscShortcut(Asc.c_oAscPresentationShortcutType.EuroSign, keyCodes.KeyE, false, false, true, true));
@@ -285,8 +285,8 @@
 				return "OpenChatPanel";
 			case Asc.c_oAscPresentationShortcutType.Save:
 				return "Save";
-			case Asc.c_oAscPresentationShortcutType.Print:
-				return "Print";
+			case Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint:
+				return "PrintPreviewAndPrint";
 			case Asc.c_oAscPresentationShortcutType.SaveAs:
 				return "SaveAs";
 			case Asc.c_oAscPresentationShortcutType.OpenHelpMenu:
@@ -299,8 +299,8 @@
 				return "PreviousFileTab";
 			case Asc.c_oAscPresentationShortcutType.CloseFile:
 				return "CloseFile";
-			case Asc.c_oAscPresentationShortcutType.ShowContextMenu:
-				return "ShowContextMenu";
+			case Asc.c_oAscPresentationShortcutType.OpenContextMenu:
+				return "OpenContextMenu";
 			case Asc.c_oAscPresentationShortcutType.CloseMenu:
 				return "CloseMenu";
 			case Asc.c_oAscPresentationShortcutType.Zoom100:
@@ -411,8 +411,8 @@
 				return "PasteAsPicture";
 			case Asc.c_oAscPresentationShortcutType.KeepTextOnly:
 				return "KeepTextOnly";
-			case Asc.c_oAscPresentationShortcutType.AddHyperlink:
-				return "AddHyperlink";
+			case Asc.c_oAscPresentationShortcutType.InsertHyperlink:
+				return "InsertHyperlink";
 			case Asc.c_oAscPresentationShortcutType.VisitHyperlink:
 				return "VisitHyperlink";
 			case Asc.c_oAscPresentationShortcutType.EditSelectAll:
@@ -451,8 +451,8 @@
 				return "Italic";
 			case Asc.c_oAscPresentationShortcutType.Underline:
 				return "Underline";
-			case Asc.c_oAscPresentationShortcutType.Strikethrough:
-				return "Strikethrough";
+			case Asc.c_oAscPresentationShortcutType.Strikeout:
+				return "Strikeout";
 			case Asc.c_oAscPresentationShortcutType.Subscript:
 				return "Subscript";
 			case Asc.c_oAscPresentationShortcutType.Superscript:
@@ -461,18 +461,18 @@
 				return "BulletList";
 			case Asc.c_oAscPresentationShortcutType.ResetChar:
 				return "ResetChar";
-			case Asc.c_oAscPresentationShortcutType.IncreaseFont:
-				return "IncreaseFont";
-			case Asc.c_oAscPresentationShortcutType.DecreaseFont:
-				return "DecreaseFont";
-			case Asc.c_oAscPresentationShortcutType.CenterAlign:
-				return "CenterAlign";
-			case Asc.c_oAscPresentationShortcutType.JustifyAlign:
-				return "JustifyAlign";
-			case Asc.c_oAscPresentationShortcutType.RightAlign:
-				return "RightAlign";
-			case Asc.c_oAscPresentationShortcutType.LeftAlign:
-				return "LeftAlign";
+			case Asc.c_oAscPresentationShortcutType.IncreaseFontSize:
+				return "IncreaseFontSize";
+			case Asc.c_oAscPresentationShortcutType.DecreaseFontSize:
+				return "DecreaseFontSize";
+			case Asc.c_oAscPresentationShortcutType.CenterPara:
+				return "CenterPara";
+			case Asc.c_oAscPresentationShortcutType.JustifyPara:
+				return "JustifyPara";
+			case Asc.c_oAscPresentationShortcutType.RightPara:
+				return "RightPara";
+			case Asc.c_oAscPresentationShortcutType.LeftPara:
+				return "LeftPara";
 			case Asc.c_oAscPresentationShortcutType.Indent:
 				return "Indent";
 			case Asc.c_oAscPresentationShortcutType.UnIndent:
@@ -547,8 +547,8 @@
 				return Asc.c_oAscPresentationShortcutType.OpenChatPanel;
 			case "Save":
 				return Asc.c_oAscPresentationShortcutType.Save;
-			case "Print":
-				return Asc.c_oAscPresentationShortcutType.Print;
+			case "PrintPreviewAndPrint":
+				return Asc.c_oAscPresentationShortcutType.PrintPreviewAndPrint;
 			case "SaveAs":
 				return Asc.c_oAscPresentationShortcutType.SaveAs;
 			case "OpenHelpMenu":
@@ -561,8 +561,8 @@
 				return Asc.c_oAscPresentationShortcutType.PreviousFileTab;
 			case "CloseFile":
 				return Asc.c_oAscPresentationShortcutType.CloseFile;
-			case "ShowContextMenu":
-				return Asc.c_oAscPresentationShortcutType.ShowContextMenu;
+			case "OpenContextMenu":
+				return Asc.c_oAscPresentationShortcutType.OpenContextMenu;
 			case "CloseMenu":
 				return Asc.c_oAscPresentationShortcutType.CloseMenu;
 			case "Zoom100":
@@ -673,8 +673,8 @@
 				return Asc.c_oAscPresentationShortcutType.PasteAsPicture;
 			case "KeepTextOnly":
 				return Asc.c_oAscPresentationShortcutType.KeepTextOnly;
-			case "AddHyperlink":
-				return Asc.c_oAscPresentationShortcutType.AddHyperlink;
+			case "InsertHyperlink":
+				return Asc.c_oAscPresentationShortcutType.InsertHyperlink;
 			case "VisitHyperlink":
 				return Asc.c_oAscPresentationShortcutType.VisitHyperlink;
 			case "EditSelectAll":
@@ -713,8 +713,8 @@
 				return Asc.c_oAscPresentationShortcutType.Italic;
 			case "Underline":
 				return Asc.c_oAscPresentationShortcutType.Underline;
-			case "Strikethrough":
-				return Asc.c_oAscPresentationShortcutType.Strikethrough;
+			case "Strikeout":
+				return Asc.c_oAscPresentationShortcutType.Strikeout;
 			case "Subscript":
 				return Asc.c_oAscPresentationShortcutType.Subscript;
 			case "Superscript":
@@ -723,18 +723,18 @@
 				return Asc.c_oAscPresentationShortcutType.BulletList;
 			case "ResetChar":
 				return Asc.c_oAscPresentationShortcutType.ResetChar;
-			case "IncreaseFont":
-				return Asc.c_oAscPresentationShortcutType.IncreaseFont;
-			case "DecreaseFont":
-				return Asc.c_oAscPresentationShortcutType.DecreaseFont;
-			case "CenterAlign":
-				return Asc.c_oAscPresentationShortcutType.CenterAlign;
-			case "JustifyAlign":
-				return Asc.c_oAscPresentationShortcutType.JustifyAlign;
-			case "RightAlign":
-				return Asc.c_oAscPresentationShortcutType.RightAlign;
-			case "LeftAlign":
-				return Asc.c_oAscPresentationShortcutType.LeftAlign;
+			case "IncreaseFontSize":
+				return Asc.c_oAscPresentationShortcutType.IncreaseFontSize;
+			case "DecreaseFontSize":
+				return Asc.c_oAscPresentationShortcutType.DecreaseFontSize;
+			case "CenterPara":
+				return Asc.c_oAscPresentationShortcutType.CenterPara;
+			case "JustifyPara":
+				return Asc.c_oAscPresentationShortcutType.JustifyPara;
+			case "RightPara":
+				return Asc.c_oAscPresentationShortcutType.RightPara;
+			case "LeftPara":
+				return Asc.c_oAscPresentationShortcutType.LeftPara;
 			case "Indent":
 				return Asc.c_oAscPresentationShortcutType.Indent;
 			case "UnIndent":

@@ -644,21 +644,21 @@ var c_oAscPopUpSelectorType = {
 	const c_oAscSpreadsheetShortcutType = {
 		OpenFilePanel:              1,
 		OpenFindDialog:             2,
-		OpenFindReplaceMenu:        3,
+		OpenFindAndReplaceMenu:     3,
 		OpenCommentsPanel:          4,
 		OpenCommentField:           5,
 		OpenChatPanel:              6,
 		Save:                       7,
-		Print:                      8,
+		PrintPreviewAndPrint:       8,
 		DownloadAs:                 9,
-		HelpMenu:                   10,
+		OpenHelpMenu:               10,
 		OpenExistingFile:           11,
 		NextFileTab:                12,
 		PreviousFileTab:            13,
 		CloseFile:                  14,
-		ElementContextualMenu:      15,
-		CloseMenuModal:             16,
-		ResetZoom:                  17,
+		OpenContextMenu:            15,
+		CloseMenu:                  16,
+		Zoom100:                    17,
 		CellMoveUp:                 18,
 		CellMoveDown:               19,
 		CellMoveLeft:               20,
@@ -736,10 +736,10 @@ var c_oAscPopUpSelectorType = {
 		CompleteCellEntryStay:      92,
 		FillSelectedCellRange:      93,
 		CellStartNewLine:           94,
-		AddPlaceholderEquation:     95,
+		EquationAddPlaceholder:     95,
 		CellEntryCancel:            96,
-		RemoveCharLeft:             97,
-		RemoveCharRight:            98,
+		DeleteLeftChar:             97,
+		DeleteRightChar:            98,
 		ClearActiveCellContent:     99,
 		ClearSelectedCellsContent:  100,
 		OpenInsertCellsWindow:      101,
@@ -748,8 +748,8 @@ var c_oAscPopUpSelectorType = {
 		CellInsertTime:             104,
 		CellAddSeparator:           105,
 		AutoFill:                   106,
-		RemoveWordLeft:             107,
-		RemoveWordRight:            108,
+		DeleteLeftWord:             107,
+		DeleteRightWord:            108,
 		EditSelectAll:              109,
 		MoveCharacterLeft:          110,
 		MoveCharacterRight:         111,
@@ -803,20 +803,20 @@ var c_oAscPopUpSelectorType = {
 		MoveFocusNextObject:        159,
 		MoveFocusPreviousObject:    160,
 		DrawingAddTab:              161,
-		DrawingSubscript:           162,
-		DrawingSuperscript:         163,
+		Subscript:                  162,
+		Superscript:                163,
 		IncreaseFontSize:           164,
 		DecreaseFontSize:           165,
-		DrawingCenterPara:          166,
-		DrawingJustifyPara:         167,
-		DrawingRightPara:           168,
-		DrawingLeftPara:            169,
+		CenterPara:                 166,
+		JustifyPara:                167,
+		RightPara:                  168,
+		LeftPara:                   169,
 		EndParagraph:               170,
 		AddLineBreak:               171,
 		RemoveGraphicalObject:      172,
 		ExitAddingShapesMode:       173,
 		SpeechWorker:               174,
-		DrawingEnDash:              175
+		EnDash:                     175
 	};
 
   var c_oAscCalcMode = {
@@ -1285,21 +1285,21 @@ var c_oAscPopUpSelectorType = {
 	prot = c_oAscSpreadsheetShortcutType;
 	prot["OpenFilePanel"] = prot.OpenFilePanel;
 	prot["OpenFindDialog"] = prot.OpenFindDialog;
-	prot["OpenFindReplaceMenu"] = prot.OpenFindReplaceMenu;
+	prot["OpenFindAndReplaceMenu"] = prot.OpenFindAndReplaceMenu;
 	prot["OpenCommentsPanel"] = prot.OpenCommentsPanel;
 	prot["OpenCommentField"] = prot.OpenCommentField;
 	prot["OpenChatPanel"] = prot.OpenChatPanel;
 	prot["Save"] = prot.Save;
-	prot["Print"] = prot.Print;
+	prot["PrintPreviewAndPrint"] = prot.PrintPreviewAndPrint;
 	prot["DownloadAs"] = prot.DownloadAs;
-	prot["HelpMenu"] = prot.HelpMenu;
+	prot["OpenHelpMenu"] = prot.OpenHelpMenu;
 	prot["OpenExistingFile"] = prot.OpenExistingFile;
 	prot["NextFileTab"] = prot.NextFileTab;
 	prot["PreviousFileTab"] = prot.PreviousFileTab;
 	prot["CloseFile"] = prot.CloseFile;
-	prot["ElementContextualMenu"] = prot.ElementContextualMenu;
-	prot["CloseMenuModal"] = prot.CloseMenuModal;
-	prot["ResetZoom"] = prot.ResetZoom;
+	prot["OpenContextMenu"] = prot.OpenContextMenu;
+	prot["CloseMenu"] = prot.CloseMenu;
+	prot["Zoom100"] = prot.Zoom100;
 	prot["CellMoveUp"] = prot.CellMoveUp;
 	prot["CellMoveDown"] = prot.CellMoveDown;
 	prot["CellMoveLeft"] = prot.CellMoveLeft;
@@ -1377,10 +1377,10 @@ var c_oAscPopUpSelectorType = {
 	prot["CompleteCellEntryStay"] = prot.CompleteCellEntryStay;
 	prot["FillSelectedCellRange"] = prot.FillSelectedCellRange;
 	prot["CellStartNewLine"] = prot.CellStartNewLine;
-	prot["AddPlaceholderEquation"] = prot.AddPlaceholderEquation;
+	prot["EquationAddPlaceholder"] = prot.EquationAddPlaceholder;
 	prot["CellEntryCancel"] = prot.CellEntryCancel;
-	prot["RemoveCharLeft"] = prot.RemoveCharLeft;
-	prot["RemoveCharRight"] = prot.RemoveCharRight;
+	prot["DeleteLeftChar"] = prot.DeleteLeftChar;
+	prot["DeleteRightChar"] = prot.DeleteRightChar;
 	prot["ClearActiveCellContent"] = prot.ClearActiveCellContent;
 	prot["ClearSelectedCellsContent"] = prot.ClearSelectedCellsContent;
 	prot["OpenInsertCellsWindow"] = prot.OpenInsertCellsWindow;
@@ -1389,8 +1389,8 @@ var c_oAscPopUpSelectorType = {
 	prot["CellInsertTime"] = prot.CellInsertTime;
 	prot["CellAddSeparator"] = prot.CellAddSeparator;
 	prot["AutoFill"] = prot.AutoFill;
-	prot["RemoveWordLeft"] = prot.RemoveWordLeft;
-	prot["RemoveWordRight"] = prot.RemoveWordRight;
+	prot["DeleteLeftWord"] = prot.DeleteLeftWord;
+	prot["DeleteRightWord"] = prot.DeleteRightWord;
 	prot["EditSelectAll"] = prot.EditSelectAll;
 	prot["MoveCharacterLeft"] = prot.MoveCharacterLeft;
 	prot["MoveCharacterRight"] = prot.MoveCharacterRight;
@@ -1444,20 +1444,20 @@ var c_oAscPopUpSelectorType = {
 	prot["MoveFocusNextObject"] = prot.MoveFocusNextObject;
 	prot["MoveFocusPreviousObject"] = prot.MoveFocusPreviousObject;
 	prot["DrawingAddTab"] = prot.DrawingAddTab;
-	prot["DrawingSubscript"] = prot.DrawingSubscript;
-	prot["DrawingSuperscript"] = prot.DrawingSuperscript;
+	prot["Subscript"] = prot.Subscript;
+	prot["Superscript"] = prot.Superscript;
 	prot["IncreaseFontSize"] = prot.IncreaseFontSize;
 	prot["DecreaseFontSize"] = prot.DecreaseFontSize;
-	prot["DrawingCenterPara"] = prot.DrawingCenterPara;
-	prot["DrawingJustifyPara"] = prot.DrawingJustifyPara;
-	prot["DrawingRightPara"] = prot.DrawingRightPara;
-	prot["DrawingLeftPara"] = prot.DrawingLeftPara;
+	prot["CenterPara"] = prot.CenterPara;
+	prot["JustifyPara"] = prot.JustifyPara;
+	prot["RightPara"] = prot.RightPara;
+	prot["LeftPara"] = prot.LeftPara;
 	prot["EndParagraph"] = prot.EndParagraph;
 	prot["AddLineBreak"] = prot.AddLineBreak;
 	prot["RemoveGraphicalObject"] = prot.RemoveGraphicalObject;
 	prot["ExitAddingShapesMode"] = prot.ExitAddingShapesMode;
 	prot["SpeechWorker"] = prot.SpeechWorker;
-	prot["DrawingEnDash"] = prot.DrawingEnDash;
+	prot["EnDash"] = prot.EnDash;
 
   window['Asc']['c_oAscCalcMode'] = window['Asc'].c_oAscCalcMode = c_oAscCalcMode;
   prot = c_oAscCalcMode;

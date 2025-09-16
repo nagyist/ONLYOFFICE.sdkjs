@@ -480,14 +480,14 @@ var c_oAscPresentationShortcutType = {
 	OpenCommentField              : 5,
 	OpenChatPanel                 : 6,
 	Save                          : 7,
-	Print                         : 8,
+	PrintPreviewAndPrint          : 8,
 	SaveAs                        : 9,
 	OpenHelpMenu                  : 10,
 	OpenExistingFile              : 11,
 	NextFileTab                   : 12,
 	PreviousFileTab               : 13,
 	CloseFile                     : 14,
-	ShowContextMenu               : 15,
+	OpenContextMenu               : 15,
 	CloseMenu                     : 16,
 	Zoom100                       : 17,
 	GoToFirstSlide                : 18,
@@ -543,7 +543,7 @@ var c_oAscPresentationShortcutType = {
 	KeepSourceFormat              : 68,
 	PasteAsPicture                : 69,
 	KeepTextOnly                  : 70,
-	AddHyperlink                  : 71,
+	InsertHyperlink               : 71,
 	VisitHyperlink                : 72,
 	EditSelectAll                 : 73,
 	SelectNextSlide               : 74,
@@ -563,17 +563,17 @@ var c_oAscPresentationShortcutType = {
 	Bold                          : 88,
 	Italic                        : 89,
 	Underline                     : 90,
-	Strikethrough                 : 91,
+	Strikeout                     : 91,
 	Subscript                     : 92,
 	Superscript                   : 93,
 	BulletList                    : 94,
 	ResetChar                     : 95,
-	IncreaseFont                  : 96,
-	DecreaseFont                  : 97,
-	CenterAlign                   : 98,
-	JustifyAlign                  : 99,
-	RightAlign                    : 100,
-	LeftAlign                     : 101,
+	IncreaseFontSize              : 96,
+	DecreaseFontSize              : 97,
+	CenterPara                    : 98,
+	JustifyPara                   : 99,
+	RightPara                     : 100,
+	LeftPara                      : 101,
 	Indent                        : 102,
 	UnIndent                      : 103,
 	DeleteLeftChar                : 104,
@@ -692,14 +692,14 @@ prot["OpenCommentsPanel"] = prot.OpenCommentsPanel;
 prot["OpenCommentField"] = prot.OpenCommentField;
 prot["OpenChatPanel"] = prot.OpenChatPanel;
 prot["Save"] = prot.Save;
-prot["Print"] = prot.Print;
+prot["PrintPreviewAndPrint"] = prot.PrintPreviewAndPrint;
 prot["SaveAs"] = prot.SaveAs;
 prot["OpenHelpMenu"] = prot.OpenHelpMenu;
 prot["OpenExistingFile"] = prot.OpenExistingFile;
 prot["NextFileTab"] = prot.NextFileTab;
 prot["PreviousFileTab"] = prot.PreviousFileTab;
 prot["CloseFile"] = prot.CloseFile;
-prot["ShowContextMenu"] = prot.ShowContextMenu;
+prot["OpenContextMenu"] = prot.OpenContextMenu;
 prot["CloseMenu"] = prot.CloseMenu;
 prot["Zoom100"] = prot.Zoom100;
 prot["GoToFirstSlide"] = prot.GoToFirstSlide;
@@ -755,7 +755,7 @@ prot["UseDestinationTheme"] = prot.UseDestinationTheme;
 prot["KeepSourceFormat"] = prot.KeepSourceFormat;
 prot["PasteAsPicture"] = prot.PasteAsPicture;
 prot["KeepTextOnly"] = prot.KeepTextOnly;
-prot["AddHyperlink"] = prot.AddHyperlink;
+prot["InsertHyperlink"] = prot.InsertHyperlink;
 prot["VisitHyperlink"] = prot.VisitHyperlink;
 prot["EditSelectAll"] = prot.EditSelectAll;
 prot["SelectNextSlide"] = prot.SelectNextSlide;
@@ -775,17 +775,17 @@ prot["ShowParaMarks"] = prot.ShowParaMarks;
 prot["Bold"] = prot.Bold;
 prot["Italic"] = prot.Italic;
 prot["Underline"] = prot.Underline;
-prot["Strikethrough"] = prot.Strikethrough;
+prot["Strikeout"] = prot.Strikeout;
 prot["Subscript"] = prot.Subscript;
 prot["Superscript"] = prot.Superscript;
 prot["BulletList"] = prot.BulletList;
 prot["ResetChar"] = prot.ResetChar;
-prot["IncreaseFont"] = prot.IncreaseFont;
-prot["DecreaseFont"] = prot.DecreaseFont;
-prot["CenterAlign"] = prot.CenterAlign;
-prot["JustifyAlign"] = prot.JustifyAlign;
-prot["RightAlign"] = prot.RightAlign;
-prot["LeftAlign"] = prot.LeftAlign;
+prot["IncreaseFontSize"] = prot.IncreaseFontSize;
+prot["DecreaseFontSize"] = prot.DecreaseFontSize;
+prot["CenterPara"] = prot.CenterPara;
+prot["JustifyPara"] = prot.JustifyPara;
+prot["RightPara"] = prot.RightPara;
+prot["LeftPara"] = prot.LeftPara;
 prot["Indent"] = prot.Indent;
 prot["UnIndent"] = prot.UnIndent;
 prot["DeleteLeftChar"] = prot.DeleteLeftChar;
