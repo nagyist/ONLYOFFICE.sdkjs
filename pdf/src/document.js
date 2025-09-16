@@ -2805,12 +2805,12 @@ var CPresentation = CPresentation || function(){};
                 oParent = this.CreateField(sFieldName, oField.GetType(), []);
                 oParent.DrainLogicFrom(oExistsField);
 
+                oExistsField.SetPartialName(undefined);
+                oField.SetPartialName(undefined);
+
                 oParent.AddKid(oExistsField);
                 checkFieldParams();
                 oParent.AddKid(oField);
-
-                oExistsField.SetPartialName(undefined);
-                oField.SetPartialName(undefined);
             }
             else {
                 oParent = oExistsField;
