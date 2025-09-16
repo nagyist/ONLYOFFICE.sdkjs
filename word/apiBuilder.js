@@ -25650,9 +25650,9 @@
 	 * Adds a reply to a comment.
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE", "CPE"]
-	 * @param {String} sText - The comment reply text (required).
-	 * @param {String} sAuthorName - The name of the comment reply author (optional).
-	 * @param {String} sUserId - The user ID of the comment reply author (optional).
+	 * @param {String} sText - The comment reply text.
+	 * @param {String} [sAuthorName] - The name of the comment reply author.
+	 * @param {String} [sUserId] - The user ID of the comment reply author.
 	 * @param {Number} [nPos=-1] - The comment reply position. If nPos=-1 add to the end.
 	 * @returns {ApiComment?} - this
 	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/AddReply.js
