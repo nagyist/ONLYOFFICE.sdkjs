@@ -404,9 +404,6 @@
 		this.SetNeedRecalc(true);
 		content.RecalculateCurPos();
 	};
-    CPdfDrawingPrototype.prototype.getMainGroup = function() {
-
-    };
 	CPdfDrawingPrototype.prototype.EnterText = function(codePoints) {
 		let doc = this.GetDocument();
         let controller = doc.GetController();
