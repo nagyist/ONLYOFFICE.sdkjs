@@ -245,7 +245,7 @@ function (window, undefined) {
 
 			let res = 0;
 			if (cElementType.string === itemA.type && cElementType.string === itemB.type) {
-				res = (itemA.value.localeCompare(itemB.value)) * sortOrder;
+				res = AscCommonExcel.stringCompare(itemA.value, itemB.value) * sortOrder;
 			} else if (cElementType.number === itemA.type && cElementType.number === itemB.type) {
 				res = (itemA.value - itemB.value) * sortOrder;
 			} else if (cElementType.string === itemA.type) {
@@ -374,7 +374,7 @@ function (window, undefined) {
 					itemB = _b.item ? _b.item : _b;
 
 				if (cElementType.string === itemA.type && cElementType.string === itemB.type) {
-					res = (itemA.value.localeCompare(itemB.value)) * _sortOrder;
+					res = AscCommonExcel.stringCompare(itemA.value, itemB.value) * _sortOrder;
 				} else if (cElementType.number === itemA.type && cElementType.number === itemB.type) {
 					res = (itemA.value - itemB.value) * _sortOrder;
 				} else if (cElementType.string === itemA.type) {
@@ -3111,13 +3111,7 @@ function (window, undefined) {
 				tmpArrays[i].sort(function (a, b) {
 					const valueA = a.v;
 					const valueB = b.v;
-					if (valueA > valueB) {
-						return 1;
-					}
-					if (valueB > valueA) {
-						return -1;
-					}
-					return 0;
+					return AscCommonExcel.stringCompare(valueA, valueB);
 				});
 			}
 		}
@@ -4069,7 +4063,7 @@ function (window, undefined) {
 				moreEqualArr.sort(function(a, b) {
 					if (cElementType.number === a0Type) {
 						if (cElementType.string === a.v.type && cElementType.string === b.v.type) {
-							return a.v.getValue().localeCompare(b.v.getValue());
+							return AscCommonExcel.stringCompare(a.v.getValue(), b.v.getValue());
 						} else if (cElementType.number === a.v.type && cElementType.number === b.v.type) {
 							return a.v.getValue() - b.v.getValue();
 						} else if (cElementType.error === a.v.type || cElementType.error === b.v.type) {
@@ -4079,7 +4073,7 @@ function (window, undefined) {
 						}
 					} else if (cElementType.string === a0Type) {
 						if (cElementType.string === a.v.type && cElementType.string === b.v.type) {
-							return a.v.getValue().localeCompare(b.v.getValue());
+							return AscCommonExcel.stringCompare(a.v.getValue(), b.v.getValue());
 						} else if (cElementType.string === a.v.type || cElementType.string === b.v.type) {
 							return 1;
 						} else if (cElementType.bool === a.v.type && cElementType.bool === b.v.type) {
@@ -4174,7 +4168,7 @@ function (window, undefined) {
 							return b.v.getValue() - a.v.getValue();
 						} else if (cElementType.string === a0Type) {
 							if (cElementType.string === a.v.type && cElementType.string === b.v.type) {
-								return a.v.getValue().localeCompare(b.v.getValue());
+								return AscCommonExcel.stringCompare(a.v.getValue(), b.v.getValue());
 							} else if (cElementType.string === a.v.type || cElementType.string === b.v.type) {
 								return 1;
 							} else if (cElementType.number === a.v.type && cElementType.number === b.v.type) {
