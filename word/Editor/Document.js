@@ -3018,7 +3018,7 @@ CDocument.prototype.private_Recalculate = function(_RecalcData, isForceStrictRec
 	this.FullRecalc.StartIndex        = StartIndex;
 	this.FullRecalc.Start             = true;
 	this.FullRecalc.StartPage         = StartPage;
-	this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(StartPage);
+	this.FullRecalc.ResetStartElement = this.private_RecalculateIsResetStartElement(StartPage, StartIndex);
 	this.FullRecalc.ResetSectionStart = false;
 	this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(StartPage);
 	this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(StartPage);
@@ -4222,7 +4222,7 @@ CDocument.prototype.private_IsStartTimeoutOnRecalc = function(page)
 	// }
 	// return nRes;
 };
-CDocument.prototype.private_RecalculateIsNewSection = function(nPageAbs)
+CDocument.prototype.private_RecalculateIsResetStartElement = function(nPageAbs, startIndex)
 {
 	// Определим, является ли данная страница первой в новой секции
 	if (0 === nPageAbs)
@@ -4233,6 +4233,7 @@ CDocument.prototype.private_RecalculateIsNewSection = function(nPageAbs)
 	
 	return (curSectPr !== prevSectPr
 		&& (c_oAscSectionBreakType.Continuous !== curSectPr.GetType() || true !== curSectPr.Compare_PageSize(prevSectPr))
+		&& startIndex !== this.Pages[nPageAbs - 1].EndPos
 	);
 };
 CDocument.prototype.private_RecalculateGetStartSectPr = function(page)
@@ -4857,7 +4858,7 @@ CDocument.prototype.private_RecalculateHdrFtrPageCountUpdate = function()
 			this.FullRecalc.StartIndex        = this.Pages[nPageAbs].Pos;
 			this.FullRecalc.Start             = true;
 			this.FullRecalc.StartPage         = nPageAbs;
-			this.FullRecalc.ResetStartElement = this.private_RecalculateIsNewSection(nPageAbs);
+			this.FullRecalc.ResetStartElement = this.private_RecalculateIsResetStartElement(nPageAbs, this.Pages[nPageAbs].Pos);
 			this.FullRecalc.ResetSectionStart = false;
 			this.FullRecalc.SectPr            = this.private_RecalculateGetStartSectPr(nPageAbs);
 			this.FullRecalc.Endnotes          = this.Endnotes.IsContinueRecalculateFromPrevPage(nPageAbs);
