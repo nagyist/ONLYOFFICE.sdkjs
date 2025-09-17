@@ -6027,13 +6027,6 @@ PasteProcessor.prototype =
 
 			if (oAnnotInfo["RefTo"] == null || oAnnotInfo["type"] != AscPDF.ANNOTATIONS_TYPES.Text) {
 				let oAnnot = AscPDF.ReadAnnotFromJSON(oAnnotInfo, oDoc);
-				if (oAnnot.IsStamp()) {
-					let oMeta = oAnnot.GetMeta();
-					if (oMeta && oMeta["isOO"]) {
-						let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
-						oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
-					}
-				}
 				
 				if (oAnnotInfo["RefTo"] == null)
 					oAnnotsMap[oAnnotInfo["AP"]["i"]] = oAnnot;

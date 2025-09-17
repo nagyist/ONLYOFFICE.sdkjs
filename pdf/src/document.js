@@ -8272,6 +8272,13 @@ var CPresentation = CPresentation || function(){};
             oAnnot.SetQuads(aSepQuads);
         }
 
+        if (oAnnot.IsStamp()) {
+            if (annotJson["meta"] && annotJson["meta"]["isOO"]) {
+                let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
+                oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
+            }
+        }
+
         return oAnnot;
     }
 
