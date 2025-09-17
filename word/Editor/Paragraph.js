@@ -15673,23 +15673,6 @@ Paragraph.prototype.IsTrackRevisions = function()
     return false;
 };
 /**
- * Отличие данной функции от Get_SectionPr в том, что здесь возвращаются настройки секции, к которой
- * принадлежит данный параграф, а там конкретно настройки секции, которые лежат в данном параграфе.
- */
-Paragraph.prototype.Get_SectPr = function()
-{
-    if (this.Parent && this.Parent.Get_SectPr)
-    {
-        this.Parent.Update_ContentIndexing();
-		if(this.Index > -1)
-		{
-			return this.Parent.Get_SectPr(this.Index);
-		}
-    }
-
-    return null;
-};
-/**
  * Получаем секцию, в которой лежит заданный параграф
  * @returns  {?AscWord.SectPr}
  */
