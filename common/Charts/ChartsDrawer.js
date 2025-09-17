@@ -12111,6 +12111,18 @@ drawPieChart.prototype = {
 		var sumData = this.cChartDrawer._getSumArray(numCache.pts, true);
 
 		var radius = Math.min(trueHeight, trueWidth) / 2;
+
+		// if labels are given then shrink the radius to fit the labels
+		let _dLbls = this.chart.dLbls;
+		let _series = this.chart.series;
+		if ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
+			(_series && _series[0] && _series[0].dLbls && _series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr &&
+				_series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && (_series[0].dLbls.showVal ||
+					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent))) {
+			let radius_shrink_coeff = 0.15;
+			radius = radius * (1 - radius_shrink_coeff);
+		}
+
 		var xCenter = this.chartProp.chartGutter._left + trueWidth / 2;
 		var yCenter = this.chartProp.chartGutter._top + trueHeight / 2;
 
@@ -12124,7 +12136,7 @@ drawPieChart.prototype = {
 		let fExplosionLenght;
 		let maxExplosionValue;
 		// the parent explosion value spans all its children
-		let nParentExplosion = this.chart.series[0] && this.chart.series[0].explosion ? this.chart.series[0].explosion : 0;
+		let nParentExplosion = _series[0] && _series[0].explosion ? _series[0].explosion : 0;
 		if (nParentExplosion) {
 			radius = radius / (1 + nParentExplosion / 100);
 		}
@@ -12134,7 +12146,7 @@ drawPieChart.prototype = {
 			angle = Math.abs((parseFloat(val / sumData)) * (Math.PI * 2));;
 
 			// get the explosion value
-			nExplosion = getExplosion(this.chart.series[0].dPt && this.chart.series[0].dPt[i] && this.chart.series[0].dPt[i].explosion, nParentExplosion);
+			nExplosion = getExplosion(_series[0].dPt && _series[0].dPt[i] && _series[0].dPt[i].explosion, nParentExplosion);
 			// find the explosion value relative to the radius lenght
 			fExplosionLenght = nExplosion * radius / 100;
 
