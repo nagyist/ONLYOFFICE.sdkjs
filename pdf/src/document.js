@@ -5889,15 +5889,20 @@ var CPresentation = CPresentation || function(){};
 
         oController.resetSelection();
         oController.resetTrackState();
-        oController.selectObject(oChart, 0);
-
+        
+        function addChart() {
+            oThis.AddDrawing(oChart, nPage);
+            oThis.SetMouseDownObject(oChart);
+            oController.selectObject(oChart, nPage);
+        }
+        
         if (isFromInterface) {
             AscFonts.FontPickerByCharacter.checkText("", this, function () {
-                oThis.AddDrawing(oChart, nPage);
+                addChart();
             }, false, false, false);
         }
         else {
-            this.AddDrawing(oChart, nPage);
+            addChart();
         }
     };
     CPDFDoc.prototype.AddTable = function(nCol, nRow, sStyleId, nPage) {
@@ -7584,6 +7589,9 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.isShapeChild = function() {};
     CPDFDoc.prototype.Recalculate = function(){
         AscCommon.History.Get_RecalcData(null, AscCommon.History.GetChangesFromPoint(AscCommon.History.Index));
+    };
+    CPDFDoc.prototype.RecalculateWithParams = function() {
+        return this.Recalculate();
     };
     CPDFDoc.prototype.GetDocPosType = function() {};
     CPDFDoc.prototype.GetSelectedContent = function() {};

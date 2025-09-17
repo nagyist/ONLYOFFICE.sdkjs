@@ -158,7 +158,18 @@
 		}
 		copy.setDate1904(this.date1904);
 		if (this.externalData) {
-			copy.setExternalData(this.externalData.createDuplicate());
+			const oCopyExternalData = {};
+			if (this.externalData.m_autoUpdate)
+			{
+				oCopyExternalData.m_autoUpdate = {m_val: this.externalData.m_autoUpdate.m_val};
+			}
+			copy.setExternalData(oCopyExternalData);
+		}
+		if (this.XLSX) {
+			copy.setXLSX(this.XLSX.slice());
+		}
+		if (this.externalReference) {
+			copy.setExternalReference(this.externalReference.createDuplicate());
 		}
 		copy.setLang(this.lang);
 		if (this.pivotSource) {
@@ -179,7 +190,7 @@
 		if (this.txPr) {
 			copy.setTxPr(this.txPr.createDuplicate(oPr))
 		}
-		for (let i = 0; i < this.userShapes.length; ++i) {
+		for (var i = 0; i < this.userShapes.length; ++i) {
 			copy.addUserShape(undefined, this.userShapes[i].copy(oPr));
 		}
 		copy.setThemeOverride(this.themeOverride);

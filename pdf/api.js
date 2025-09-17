@@ -4757,6 +4757,9 @@
 			this.isApplyChangesOnOpen = true;
 		}
 		this.initBroadcastChannelListeners();
+
+		// Toggle chart elements (bug #67197)
+		Asc.editor.asc_registerCallback('asc_onFocusObject', this.toggleChartElementsCallback);
 	};
 	PDFEditorApi.prototype._canSyncCollaborativeChanges = function(isFirstLoad)
 	{

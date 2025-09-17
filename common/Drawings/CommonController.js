@@ -4491,11 +4491,18 @@
 						case AscCommon.c_oEditorId.Word: {
 							selectedObjects = Asc.editor.getSelectedElements();
 
-							isChart = function (object) {
-								const value = object.asc_getObjectValue && object.asc_getObjectValue();
-								return object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Image && value && value.asc_getChartProperties();
-							};
-
+							if (Asc.editor.isPdfEditor()) {
+								isChart = function (object) {
+									return object.asc_getObjectType && object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Chart;
+								};
+							}
+							else {
+								isChart = function (object) {
+									const value = object.asc_getObjectValue && object.asc_getObjectValue();
+									return object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Image && value && value.asc_getChartProperties();
+								};
+							}
+							
 							getRect = function (bounds) {
 								const logicDocument = Asc.editor.getLogicDocument();
 								if (!logicDocument) return null;
