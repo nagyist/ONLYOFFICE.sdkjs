@@ -1571,7 +1571,8 @@ CDocumentContentElementBase.prototype.Get_SectPr = function()
 	if (!logicDocument || !logicDocument.IsDocumentEditor())
 		return null;
 	
-	return logicDocument.GetSections().GetSectPrByElement(this);
+	let sectPr = logicDocument.GetSections().GetSectPrByElement(this);
+	return logicDocument.Layout.CheckSectPr(sectPr);
 };
 
 //--------------------------------------------------------export--------------------------------------------------------
