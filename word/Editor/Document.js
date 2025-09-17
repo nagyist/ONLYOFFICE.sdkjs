@@ -1632,7 +1632,7 @@ CDocument.prototype.On_EndLoad                     = function()
 	this.SectionsInfo.RemoveEmptyHdrFtrs();
 
     // Проверяем последний параграф на наличие секции
-    this.Check_SectionLastParagraph();
+    this.CheckSectionBreakInLastParagraph();
 
     this.Styles.OnEndDocumentLoad(this);
 
@@ -2341,6 +2341,7 @@ CDocument.prototype.private_CheckAdditionalOnFinalize = function()
 	
 	this.Comments.CheckMarks();
 	this.PermRangesManager.updateMarks();
+	this.CheckSectionBreakInLastParagraph();
 
 	if (this.Action.Additional.TrackMove)
 		this.private_FinalizeRemoveTrackMove();
@@ -3697,7 +3698,7 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 		}
 		
 		// Такого не должно быть, всегда должен быть в конце документа параграф без настроек секции (MSWord ведет себя также)
-		if (((RecalcResult & recalcresult_NextSection) || (RecalcResult & recalcresult_NextSection_Cur)) && Index >= Count - 1)
+		if ((RecalcResult & recalcresult_NextSection) && Index >= Count - 1)
 			RecalcResult = recalcresult_NextElement;
 
         if (RecalcResult & recalcresult_CurPage)
@@ -10952,9 +10953,6 @@ CDocument.prototype.Internal_Content_Add = function(Position, NewObject, isCorre
 	
 	if (false !== isCorrectContent)
 	{
-		// В последнем параграфе не должно быть разрыва секции
-		this.Check_SectionLastParagraph();
-
 		// Проверим, что последний элемент - параграф
 		if (!this.Content[this.Content.length - 1].IsParagraph())
 			this.Internal_Content_Add(this.Content.length, new AscWord.Paragraph(), false);
@@ -10999,9 +10997,6 @@ CDocument.prototype.Internal_Content_Remove = function(Position, Count, isCorrec
 
 	if (false !== isCorrectContent)
 	{
-		// Проверим последний параграф
-		this.Check_SectionLastParagraph();
-
 		// Проверим, что последний элемент - параграф
 		if (this.Content.length <= 0 || !this.Content[this.Content.length - 1].IsParagraph())
 			this.Internal_Content_Add(this.Content.length, new AscWord.Paragraph());
@@ -14069,15 +14064,13 @@ CDocument.prototype.UpdateAllSectionsInfo = function()
 {
 	this.SectionsInfo.Update();
 };
-CDocument.prototype.Check_SectionLastParagraph = function()
+CDocument.prototype.CheckSectionBreakInLastParagraph = function()
 {
-	var Count = this.Content.length;
-	if (Count <= 0)
+	let lastParagraph = this.GetLastParagraph();
+	if (!lastParagraph || !lastParagraph.Get_SectionPr())
 		return;
-
-	var Element = this.Content[Count - 1];
-	if (type_Paragraph === Element.GetType() && undefined !== Element.Get_SectionPr())
-		this.Internal_Content_Add(Count, new AscWord.Paragraph(), false);
+	
+	this.Internal_Content_Add(this.Content.length, new AscWord.Paragraph(), false);
 };
 CDocument.prototype.AddSectionBreak = function(sectionBreakType)
 {
@@ -22776,7 +22769,7 @@ CDocument.prototype.private_CheckCursorPosInFillingFormMode = function()
 CDocument.prototype.OnEndLoadScript = function()
 {
 	this.UpdateAllSectionsInfo();
-	this.Check_SectionLastParagraph();
+	this.CheckSectionBreakInLastParagraph();
 	this.Styles.Check_StyleNumberingOnLoad(this.Numbering);
 
 	var arrParagraphs = this.GetAllParagraphs({All : true});
