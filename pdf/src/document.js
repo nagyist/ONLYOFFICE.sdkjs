@@ -503,10 +503,6 @@ var CPresentation = CPresentation || function(){};
 
         oField.SetDocument(this);
 
-        if (Asc.editor.isRtlInterface) {
-            oField.SetMEOptions(0b001);
-        }
-
         return oField;
     };
     CPDFDoc.prototype.onUpdateRestrictions = function() {
@@ -608,7 +604,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.text);
         let oTextField = this.CreateField(sName, AscPDF.FIELD_TYPES.text, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oTextField.SetMEOptions(0b001);
+        }
+        
         if (bDateField) {
             oTextField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, [{
                 "S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -630,7 +629,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.button);
         let oButtonField = this.CreateField(sName, AscPDF.FIELD_TYPES.button, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oButtonField.SetMEOptions(0b001);
+        }
+
         if (bImage) {
             oButtonField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.MouseUp, [{
                 "S": AscPDF.ACTIONS_TYPES.JavaScript,
@@ -654,7 +656,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.checkbox);
         let oCheckboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.checkbox, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oCheckboxField.SetMEOptions(0b001);
+        }
+
         oCheckboxField.SetBorderColor([0]);
         oCheckboxField.SetBorderStyle(AscPDF.BORDER_TYPES.solid);
         oCheckboxField.SetBorderWidth(1);
@@ -668,7 +673,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.radiobutton);
         let oRadiobuttonField = this.CreateField(sName, AscPDF.FIELD_TYPES.radiobutton, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oRadiobuttonField.SetMEOptions(0b001);
+        }
+
         oRadiobuttonField.SetBorderColor([0]);
         oRadiobuttonField.SetBorderStyle(AscPDF.BORDER_TYPES.inset);
         oRadiobuttonField.SetBorderWidth(1);
@@ -682,7 +690,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.combobox);
         let oComboboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.combobox, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oComboboxField.SetMEOptions(0b001);
+        }
+
         return oComboboxField;
     };
     CPDFDoc.prototype.CreateListboxField = function() {
@@ -692,7 +703,10 @@ var CPresentation = CPresentation || function(){};
     
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.listbox);
         let oListboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.listbox, rect);
-    
+        if (Asc.editor.isRtlInterface) {
+            oListboxField.SetMEOptions(0b001);
+        }
+
         return oListboxField;
     };
     CPDFDoc.prototype.SetLocalHistory = function() {
