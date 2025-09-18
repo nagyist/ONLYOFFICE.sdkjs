@@ -511,10 +511,35 @@ NullState.prototype =
             let oViewer = Asc.editor.getDocumentRenderer();
             let oDoc    = Asc.editor.getPDFDoc();
 
-            let aDrawings = [];
+            let page = oViewer.pagesInfo.pages[pageIndex];
+            let lenA = page.drawings.length, lenB = page.annots.length;
+            let aDrawings = new Array(lenA + lenB);
+            for (let i = 0; i < lenA; i++) aDrawings[i] = page.drawings[i];
+            for (let j = 0; j < lenB; j++) aDrawings[lenA + j] = page.annots[j];
 
-            aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].drawings);
-            aDrawings = aDrawings.concat(oViewer.pagesInfo.pages[pageIndex].annots);
+            // Collect unique selected objects for the page
+            let uniqueSelected = [];
+            let selSet = [];
+            for (let k = 0; k < this.drawingObjects.selectedObjects.length; k++) {
+                let d = this.drawingObjects.selectedObjects[k];
+                if (d.GetPage() === pageIndex && selSet.indexOf(d) === -1) {
+                    selSet.push(d);
+                    uniqueSelected.push(d);
+                }
+            }
+
+            // In-place stable filtering: move non-selected forward
+            let w = 0;
+            for (let r = 0; r < aDrawings.length; r++) {
+                let dd = aDrawings[r];
+                if (selSet.indexOf(dd) === -1) aDrawings[w++] = dd;
+            }
+            aDrawings.length = w; // truncate array
+
+            // Append selected objects at the end
+            for (let m = 0; m < uniqueSelected.length; m++) {
+                aDrawings[w + m] = uniqueSelected[m];
+            }
 
             if (oDoc.IsEditFieldsMode()) {
                 oDoc.GetPageInfo(pageIndex).fields.forEach(function(field) {

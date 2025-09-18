@@ -1255,7 +1255,7 @@ var CPresentation = CPresentation || function(){};
 
         // оставляем текущий объет к селекте, если кликнули по нему же
         let isObjectSelected = (oCurObject && ([oMouseDownField, oMouseDownAnnot, oMouseDownDrawing, oMouseDownLink].includes(oCurObject)) || isFloatSelected);
-        if (null == oCurObject || !isObjectSelected || !isSameType)
+        if (null == oCurObject || !isObjectSelected)
             this.SetMouseDownObject(oMouseDownField || oMouseDownAnnot || oMouseDownDrawing || oMouseDownLink);
         else if (isSameType && oFloatObject != oCurObject) {
             this.SetMouseDownObject(oMouseDownField || oMouseDownAnnot || oMouseDownDrawing || oMouseDownLink, false);
@@ -1312,10 +1312,15 @@ var CPresentation = CPresentation || function(){};
         this.private_UpdateTargetForCollaboration();
     };
     CPDFDoc.prototype.BlurActiveObject = function() {
+        let oController = this.GetController();
         let oActiveObj = this.GetActiveObject();
-        if (!oActiveObj)
-            return;
         
+        if (!oActiveObj) {
+            oController.resetSelection();
+            oController.resetTrackState();
+            return;
+        }
+           
         if (false == oActiveObj.IsUseInDocument()) {
             this.activeForm = null;
             this.mouseDownAnnot = null;
@@ -1323,9 +1328,8 @@ var CPresentation = CPresentation || function(){};
             return;
         }
 
-        let oDrDoc      = this.GetDrawingDocument();
-        let oController = this.GetController();
-
+        let oDrDoc = this.GetDrawingDocument();
+        
         oController.resetSelection();
         oController.resetTrackState();
 
@@ -5854,15 +5858,16 @@ var CPresentation = CPresentation || function(){};
 		oController.checkChartTextSelection();
 		oController.resetSelection();
         oController.resetTrackState();
-		oSmartArt.select(oController, 0);
-		this.SetMouseDownObject(oSmartArt);
-
         oController.clearTrackObjects();
         oController.clearPreTrackObjects();
         oController.changeCurrentState(new AscFormat.NullState(oController));
         oController.updateSelectionState();
 
         this.AddDrawing(oSmartArt, nPage);
+        
+        this.SetMouseDownObject(oSmartArt);
+		oSmartArt.select(oController, 0);
+
         return oSmartArt;
     };
     CPDFDoc.prototype.AddChart = function(nType, isFromInterface, oPlaceholder, nPage) {
