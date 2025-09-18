@@ -3616,27 +3616,29 @@
 						oOptionObject.forEach(function(buttonField) {
 							buttonField.AddImage(oImage, buttonField.asc_curImageState);
 						});
+						return;
 					}
 					else if (oOptionObject.GetType && oOptionObject.GetType() === AscPDF.FIELD_TYPES.button) {
 						oOptionObject.AddImage(oImage, oOptionObject.asc_curImageState);
+						return;
 					}
 					else if (oOptionObject.isStamp) {
 						oDoc.AddStampAnnot(AscPDF.STAMP_TYPES.Image, oDoc.Viewer.currentPage, oImage);
+						return;
 					}
 				}
-				else {
-					const arrImages = [];
-					for (let i = 0; i < arrUrls.length; ++i) {
-						const oImage = oApi.ImageLoader.LoadImage(arrUrls[i], 1);
-						if (oImage.Image) {
-							arrImages.push(oImage);
-						}
+
+				const arrImages = [];
+				for (let i = 0; i < arrUrls.length; ++i) {
+					const oImage = oApi.ImageLoader.LoadImage(arrUrls[i], 1);
+					if (oImage.Image) {
+						arrImages.push(oImage);
 					}
-					if (arrImages.length) {
-						oDoc.DoAction(function() {
-							oDoc.AddImages(arrImages);
-						}, AscDFH.historydescription_Presentation_AddFlowImage)
-					}
+				}
+				if (arrImages.length) {
+					oDoc.DoAction(function() {
+						oDoc.AddImages(arrImages, oOptionObject);
+					}, AscDFH.historydescription_Presentation_AddFlowImage)
 				}
 			}, []);
 		}

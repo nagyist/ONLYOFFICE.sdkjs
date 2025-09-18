@@ -6253,7 +6253,7 @@ var CPresentation = CPresentation || function(){};
         oStamp.selectStartPage = nPage;
         oController.selectObject(oStamp, nPage);
     };
-    CPDFDoc.prototype.AddImages = function(arrImages) {
+    CPDFDoc.prototype.AddImages = function(arrImages, placeholder) {
         let oViewer     = this.Viewer;
         let nCurPage    = oViewer.currentPage;
         let nRotAngle   = this.Viewer.getPageRotate(nCurPage);
@@ -6261,6 +6261,26 @@ var CPresentation = CPresentation || function(){};
         let nPageW      = this.GetPageWidthMM(nCurPage);
         let nPageH      = this.GetPageHeightMM(nCurPage);
         
+        if (placeholder && undefined !== placeholder.id && arrImages.length === 1 && arrImages[0].Image) {
+			let oPh = AscCommon.g_oTableId.Get_ById(placeholder.id);
+			if (oPh) {
+				oController.resetSelection();
+				if (oPh.isObjectInSmartArt && oPh.isObjectInSmartArt() && !this.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props, undefined, undefined, [oPh.group.getMainGroup()])) {
+					const oMainGroup = oPh.group.getMainGroup();
+					oPh.applyImagePlaceholderCallback(arrImages, placeholder);
+					oController.selectObject(oMainGroup, 0);
+					oController.selection.groupSelection = oMainGroup;
+					oMainGroup.selectObject(oPh, 0);
+					oMainGroup.addToRecalculate();
+				}
+
+				return;
+			}
+            else {
+				return;
+			}
+		}
+
         this.BlurActiveObject();
 
         for (let i = 0; i < arrImages.length; i++) {
@@ -7093,6 +7113,21 @@ var CPresentation = CPresentation || function(){};
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Required extensions
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    CPDFDoc.prototype.private_UpdatePlaceholders = function() {
+        let ret = [];
+
+        this.Viewer.pagesInfo.pages.forEach(function(pageInfo) {
+            for (let i = 0; i < pageInfo.drawings.length; ++i) {
+                let oSp = pageInfo.drawings[i];
+                oSp.createPlaceholderControl(ret);
+            }
+        });
+
+        let oDrDoc = this.GetDrawingDocument();
+        oDrDoc.placeholders.update(ret);
+
+        return ret;
+    };
     CPDFDoc.prototype.UpdateChart = function (binary) {
         let oController = this.GetController();
         oController.updateChart(binary);
