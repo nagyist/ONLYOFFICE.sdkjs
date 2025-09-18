@@ -1157,6 +1157,10 @@
         if (this.IsNeedRecalc() == false)
             return;
 
+        if (!this.contentClipRect) {
+            this.RecalculateContentRect();
+        }
+
         if (this.IsPassword()) {
             AscWord.ParagraphTextShaper.SetMaskSymbol("*");
             this.private_NeedShapeText();
