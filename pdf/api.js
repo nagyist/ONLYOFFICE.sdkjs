@@ -339,7 +339,7 @@
 					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Text, sText);
 		
 				if (AscCommon.c_oAscClipboardDataFormat.Html & _formats)
-					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, `<div><p><span>${sText}</span></p></div>`);
+					_clipboard.pushData(AscCommon.c_oAscClipboardDataFormat.Html, "<div><p><span>" + sText + "</span></p></div>");
 			} else if (!oActiveAnnot.IsTextMarkup()) {
 				let oContent = oActiveAnnot.GetDocContent();
 				processClipboardData.call(this, oContent, _formats, _clipboard);

@@ -605,7 +605,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.text);
         let oTextField = this.CreateField(sName, AscPDF.FIELD_TYPES.text, rect);
         if (Asc.editor.isRtlInterface) {
-            oTextField.SetMEOptions(0b001);
+            oTextField.SetMEOptions(1);
         }
         
         if (bDateField) {
@@ -630,7 +630,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.button);
         let oButtonField = this.CreateField(sName, AscPDF.FIELD_TYPES.button, rect);
         if (Asc.editor.isRtlInterface) {
-            oButtonField.SetMEOptions(0b001);
+            oButtonField.SetMEOptions(1);
         }
 
         if (bImage) {
@@ -657,7 +657,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.checkbox);
         let oCheckboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.checkbox, rect);
         if (Asc.editor.isRtlInterface) {
-            oCheckboxField.SetMEOptions(0b001);
+            oCheckboxField.SetMEOptions(1);
         }
 
         oCheckboxField.SetBorderColor([0]);
@@ -674,7 +674,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.radiobutton);
         let oRadiobuttonField = this.CreateField(sName, AscPDF.FIELD_TYPES.radiobutton, rect);
         if (Asc.editor.isRtlInterface) {
-            oRadiobuttonField.SetMEOptions(0b001);
+            oRadiobuttonField.SetMEOptions(1);
         }
 
         oRadiobuttonField.SetBorderColor([0]);
@@ -691,7 +691,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.combobox);
         let oComboboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.combobox, rect);
         if (Asc.editor.isRtlInterface) {
-            oComboboxField.SetMEOptions(0b001);
+            oComboboxField.SetMEOptions(1);
         }
 
         return oComboboxField;
@@ -704,7 +704,7 @@ var CPresentation = CPresentation || function(){};
         let sName = this.CreateNewFieldName(AscPDF.FIELD_TYPES.listbox);
         let oListboxField = this.CreateField(sName, AscPDF.FIELD_TYPES.listbox, rect);
         if (Asc.editor.isRtlInterface) {
-            oListboxField.SetMEOptions(0b001);
+            oListboxField.SetMEOptions(1);
         }
 
         return oListboxField;

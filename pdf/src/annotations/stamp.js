@@ -110,7 +110,8 @@
             return;
         }
 
-        function calcScale(rectA, angleRad, bboxB, eps = 1e-3) {
+        function calcScale(rectA, angleRad, bboxB, eps) {
+            eps = undefined !== eps ? eps : 1e-3;
             const cosL = Math.cos(angleRad);
             const sinL = Math.sin(angleRad);
 

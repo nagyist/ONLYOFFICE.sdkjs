@@ -12240,7 +12240,7 @@ drawPieChart.prototype = {
 				miny = Math.min(miny, r*s);
 				maxy = Math.max(maxy, r*s);
 			}
-			return {minx, maxx, miny, maxy};
+			return {minx: minx,  maxx: maxx, miny: miny, maxy: maxy};
 		}
 
 		cy = rectHeight - cy; // flip Y to screen coords
@@ -14101,7 +14101,7 @@ drawDoughnutChart.prototype = {
 				miny = Math.min(miny, r*s);
 				maxy = Math.max(maxy, r*s);
 			}
-			return {minx, maxx, miny, maxy};
+			return {minx: minx,  maxx: maxx, miny: miny, maxy: maxy};
 		}
 
 		cy = rectHeight - cy; // flip Y to screen coords
