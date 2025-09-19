@@ -1565,6 +1565,7 @@
         this.SetReadOnly(oFieldToInherit.IsReadOnly());
         this.SetNoExport(oFieldToInherit.IsNoExport());
         this.SetRequired(oFieldToInherit.IsRequired());
+        this.SetTooltip(oFieldToInherit.GetTooltip());
         
         if (bClearFrom !== false) {
             oFieldToInherit.SetDefaultValue(undefined);
