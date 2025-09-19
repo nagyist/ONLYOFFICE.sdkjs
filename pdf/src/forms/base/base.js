@@ -928,6 +928,8 @@
 
         oCopy.private_SetValue(this.GetParentValue());
         oCopy.DrainViewPropsFrom(this);
+        oCopy.SetMeta(this.GetMeta());
+        
         return oCopy;
     };
     CBaseField.prototype.DrainViewPropsFrom = function(oField) {
