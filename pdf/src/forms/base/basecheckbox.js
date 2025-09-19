@@ -726,6 +726,11 @@
             }
         }
     };
+    CBaseCheckBoxField.prototype.DrainViewPropsFrom = function(oField) {
+        AscPDF.CBaseField.prototype.DrainViewPropsFrom.call(this, oField);
+
+        this.SetStyle(oField.GetStyle());
+    };
     CBaseCheckBoxField.prototype.WriteToBinary = function(memory) {
         memory.WriteByte(AscCommon.CommandType.ctAnnotField);
 
