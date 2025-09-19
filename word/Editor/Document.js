@@ -3390,15 +3390,8 @@ CDocument.prototype.Recalculate_Page = function()
                 this.FullRecalc.PageIndex         = PageIndex + 1;
                 this.FullRecalc.Start             = true;
                 this.FullRecalc.StartIndex        = this.Pages[PageIndex + 1].Pos;
-                this.FullRecalc.ResetStartElement = false;
-
-                let curSectPr  = this.Pages[PageIndex + 1].GetFirstSectPr();
-                let prevSectPr = this.Pages[PageIndex].GetLastSectPr();
-
-                if (prevSectPr !== curSectPr)
-                    this.FullRecalc.ResetStartElement = true;
-
-				this.FullRecalc.Continue = true;
+				this.FullRecalc.ResetStartElement = this.private_RecalculateIsResetStartElement(PageIndex + 1, this.Pages[PageIndex + 1].Pos);
+				this.FullRecalc.Continue          = true;
                 return;
             }
         }
@@ -4233,7 +4226,7 @@ CDocument.prototype.private_RecalculateIsResetStartElement = function(nPageAbs, 
 	let prevSectPr = this.Pages[nPageAbs - 1].GetFirstSectPr();
 	
 	return (curSectPr !== prevSectPr
-		&& (c_oAscSectionBreakType.Continuous !== curSectPr.GetType() || true !== curSectPr.Compare_PageSize(prevSectPr))
+		&& (c_oAscSectionBreakType.Continuous !== curSectPr.GetType() || true !== curSectPr.Compare_PageSize(prevSectPr) || !this.Footnotes.IsEmptyPage(nPageAbs - 1))
 		&& startIndex !== this.Pages[nPageAbs - 1].EndPos
 	);
 };
