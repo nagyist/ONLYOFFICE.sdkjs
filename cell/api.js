@@ -9454,7 +9454,10 @@ var editor;
 		if (!wb) {
 			return;
 		}
-		return wb.customFunctionEngine && wb.customFunctionEngine.clear();
+		if (wb.customFunctionEngine) {
+			return wb.customFunctionEngine.clear();
+		}
+		return AscCommonExcel.removeCustomFunctions();
 	};
 
 	spreadsheet_api.prototype.recalculateCustomFunctions = function(isNotUpdate) {
