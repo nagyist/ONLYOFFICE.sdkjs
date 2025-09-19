@@ -6277,22 +6277,25 @@ _func[cElementType.cell3D] = _func[cElementType.cell];
 		return res;
 	};
 
-	ParseResult.prototype.getActiveFunction = function(start, end) {
+	ParseResult.prototype.getActiveFunction = function(start, end, opt_get_arg_pos) {
 		var res = null;
 		if (this.allFunctionsPos) {
 			var startFuncs, endFuncs, i, j;
 			for (i = 0; i < this.allFunctionsPos.length; i++) {
-				if (this.allFunctionsPos[i].start + 1 <= start && this.allFunctionsPos[i].end + 1 >= start) {
+				var func = this.allFunctionsPos[i];
+				var endCheck = opt_get_arg_pos && func.isComplete ? func.end : func.end + 1;
+				
+				if (func.start + 1 <= start && endCheck >= start) {
 					if (!startFuncs) {
 						startFuncs = [];
 					}
-					startFuncs.push(this.allFunctionsPos[i]);
+					startFuncs.push(func);
 				}
-				if (start !== end && this.allFunctionsPos[i].start + 1 <= end && this.allFunctionsPos[i].end + 1 >= end) {
+				if (start !== end && func.start + 1 <= end && endCheck >= end) {
 					if (!endFuncs) {
 						endFuncs = [];
 					}
-					endFuncs.push(this.allFunctionsPos[i]);
+					endFuncs.push(func);
 				}
 			}
 
@@ -6323,9 +6326,56 @@ _func[cElementType.cell3D] = _func[cElementType.cell];
 							res = commonFuncs[i];
 						}
 					}
+					
+					if (opt_get_arg_pos && res.isComplete && start > res.end) {
+						var incompleteOuter = null;
+						for (i = 0; i < commonFuncs.length; i++) {
+							if (!commonFuncs[i].isComplete && commonFuncs[i].start < res.start) {
+								incompleteOuter = commonFuncs[i];
+								break;
+							}
+						}
+						if (incompleteOuter) {
+							res = incompleteOuter;
+						}
+					}
 				}
 			}
 
+			if (opt_get_arg_pos) {
+				if (res) {
+					let checkInside = function (pos, start, end, isComplete) {
+						if (pos >= start && pos <= end) {
+							return true;
+						}
+						if (!isComplete && pos === end + 1) {
+							return true;
+						}
+						return false;
+					};
+
+					let activeFunction = res, fCurrent, fPos, argPos;
+
+					let functionNameEnd = activeFunction.start + ((activeFunction.func && activeFunction.func.name) ? activeFunction.func.name.length : 0);
+
+					if (start <= functionNameEnd) {
+						argPos = null;
+					} else if (activeFunction.args && activeFunction.args.length > 0) {
+						for (let k = 0; k < activeFunction.args.length; k++) {
+							let arg = activeFunction.args[k];
+							if (checkInside(start, arg.start, arg.end, k === activeFunction.args.length - 1 ? activeFunction.isComplete : true)) {
+								argPos = k;
+								break;
+							}
+						}
+
+						if (argPos === null && !activeFunction.isComplete && activeFunction.args.length > 0) {
+							argPos = activeFunction.args.length - 1;
+						}
+					}
+					res.argPos = argPos;
+				}
+			}
 		}
 		return res;
 	};
@@ -7869,7 +7919,7 @@ function parserFormula( formula, parent, _ws ) {
 				if (!parseResult.allFunctionsPos) {
 					parseResult.allFunctionsPos = [];
 				}
-				parseResult.allFunctionsPos.push({func: levelFuncMap[currentFuncLevel].func, start: levelFuncMap[currentFuncLevel].startPos, end: ph.pCurrPos, args: _argPos});
+				parseResult.allFunctionsPos.push({func: levelFuncMap[currentFuncLevel].func, start: levelFuncMap[currentFuncLevel].startPos, end: ph.pCurrPos, args: _argPos, isComplete: true});
 
 				currentFuncLevel--;
 			}
@@ -8635,16 +8685,79 @@ function parserFormula( formula, parent, _ws ) {
 					1) {
 					parseResult.activeArgumentPos = argFuncMap[currentFuncLevel].count;
 				}
+
+				if (undefined === parseResult.argPos && currentFuncLevel >= 0 && levelFuncMap[currentFuncLevel]) {
+					var currentArgCount = 1;
+					
+					if (argFuncMap[currentFuncLevel] && argFuncMap[currentFuncLevel].count >= 0) {
+						currentArgCount = argFuncMap[currentFuncLevel].count + 1;
+					} else {
+						var foundParenthesesIndex = -1;
+						var functionCount = 0;
+						
+						for (var i = elemArr.length - 1; i >= 0; i--) {
+							if (elemArr[i].type === cElementType.operator && elemArr[i].name === '(') {
+								if (functionCount === 0) {
+									foundParenthesesIndex = i;
+									break;
+								}
+								functionCount--;
+							} else if (elemArr[i].type === cElementType.func) {
+								functionCount++;
+							}
+						}
+						
+						if (foundParenthesesIndex >= 0 && leftParentArgumentsCurrentArr[foundParenthesesIndex]) {
+							currentArgCount = leftParentArgumentsCurrentArr[foundParenthesesIndex];
+						}
+					}
+					
+					parseResult.argPos = currentArgCount;
+				}
 				var _argPos = argPosArrMap[currentFuncLevel];
 				var lastArgPos = _argPos && _argPos[_argPos.length - 1];
 				if (lastArgPos && undefined === lastArgPos.end) {
 					lastArgPos.end = lastArgPos.start > ph.pCurrPos ? lastArgPos.start : ph.pCurrPos;
 				}
-				if (levelFuncMap[currentFuncLevel]) {
+				/*if (levelFuncMap[currentFuncLevel]) {
 					if (!parseResult.allFunctionsPos) {
 						parseResult.allFunctionsPos = [];
 					}
 					parseResult.allFunctionsPos.push({func: levelFuncMap[currentFuncLevel].func, start: levelFuncMap[currentFuncLevel].startPos, end: ph.pCurrPos, args: _argPos});
+				}*/
+
+
+				if (!parseResult.allFunctionsPos) {
+					parseResult.allFunctionsPos = [];
+				}
+				
+				for (var level = 0; level <= currentFuncLevel; level++) {
+					if (levelFuncMap[level]) {
+						var _argPosForLevel = argPosArrMap[level];
+						var lastArgPosForLevel = _argPosForLevel && _argPosForLevel[_argPosForLevel.length - 1];
+						if (lastArgPosForLevel && undefined === lastArgPosForLevel.end) {
+							lastArgPosForLevel.end = lastArgPosForLevel.start > ph.pCurrPos ? lastArgPosForLevel.start : ph.pCurrPos;
+						}
+						
+						var alreadyExists = false;
+						for (let i = 0; i < parseResult.allFunctionsPos.length; i++) {
+							if (parseResult.allFunctionsPos[i].func === levelFuncMap[level].func && 
+								parseResult.allFunctionsPos[i].start === levelFuncMap[level].startPos) {
+								alreadyExists = true;
+								break;
+							}
+						}
+						
+						if (!alreadyExists) {
+							parseResult.allFunctionsPos.push({
+								func: levelFuncMap[level].func, 
+								start: levelFuncMap[level].startPos, 
+								end: ph.pCurrPos, 
+								args: _argPosForLevel,
+								isComplete: false
+							});
+						}
+					}
 				}
 			}
 		};
