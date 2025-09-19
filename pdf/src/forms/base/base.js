@@ -1568,7 +1568,8 @@
         this.SetNoExport(oFieldToInherit.IsNoExport());
         this.SetRequired(oFieldToInherit.IsRequired());
         this.SetTooltip(oFieldToInherit.GetTooltip());
-        
+        this.SetMEOptions(oFieldToInherit.GetMEOptions());
+
         if (bClearFrom !== false) {
             oFieldToInherit.SetDefaultValue(undefined);
             oFieldToInherit.SetParentValue(undefined);
