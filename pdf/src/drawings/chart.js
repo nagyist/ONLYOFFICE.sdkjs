@@ -36,22 +36,8 @@
 	 * Class representing a pdf text shape.
 	 * @constructor
     */
-    function CPdfChartSpace()
-    {
+    function CPdfChartSpace() {
         AscFormat.CChartSpace.call(this);
-                
-        this._page          = undefined;
-        this._apIdx         = undefined; // индекс объекта в файле
-        this._rect          = [];       // scaled rect
-        this._richContents  = [];
-
-        this._isFromScan = false; // флаг, что был прочитан из скана текста 
-
-        this._doc                   = undefined;
-        this._needRecalc            = true;
-        this._wasChanged            = false; // была ли изменена
-        this._bDrawFromStream       = false; // нужно ли рисовать из стрима
-        this._hasOriginView         = false; // имеет ли внешний вид из файла
     }
     
     CPdfChartSpace.prototype.constructor = CPdfChartSpace;

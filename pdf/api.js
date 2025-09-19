@@ -4514,6 +4514,8 @@
 		
 		this.DocumentRenderer = documentRenderer;
 		this.WordControl.m_oDrawingDocument.m_oDocumentRenderer = documentRenderer;
+
+		this.externalChartCollector.init(this);
 	};
 	PDFEditorApi.prototype.haveThumbnails = function() {
 		return !!(this.DocumentRenderer && this.DocumentRenderer.Thumbnails);
