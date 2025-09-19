@@ -498,6 +498,11 @@
         return this._noToggleToOff;
     };
     CBaseCheckBoxField.prototype.SetOptions = function(aOpt) {
+        let oParent = this.GetParent();
+        if (oParent && oParent.IsAllKidsWidgets()) {
+            oParent.SetOptions(aOpt);
+        }
+        
         AscCommon.History.Add(new CChangesPDFCheckOptions(this, this._options, aOpt));
 
         if (this._options == aOpt) {
@@ -511,9 +516,18 @@
             widget.SetExportValue(undefined, true);
         });
 
+        let sDefValue = this.GetDefaultValue();
+        if (sDefValue != undefined) {
+            this.SetDefaultValue(aOpt.indexOf(sDefValue));
+        }
+
         return true;
     };
-    CBaseCheckBoxField.prototype.GetOptions = function() {
+    CBaseCheckBoxField.prototype.GetOptions = function(bInherit) {
+        let oParent = this.GetParent();
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+            return oParent.GetOptions();
+
         return this._options;
     };
     CBaseCheckBoxField.prototype.GetOptionsIndex = function() {
