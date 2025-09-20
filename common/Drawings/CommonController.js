@@ -4578,7 +4578,7 @@
 								const logicDocument = Asc.editor.getLogicDocument();
 								if (!logicDocument) return null;
 
-								const slideIndex = logicDocument.GetCurrentSlide().getSlideIndex();
+								const slideIndex = logicDocument.GetSlideIndex();
 								const convertedPosTopLeft = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.l, bounds.t, slideIndex);
 								const convertedPosRightBottom = logicDocument.DrawingDocument.ConvertCoordsToCursorWR(bounds.r, bounds.b, slideIndex);
 
