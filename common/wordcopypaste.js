@@ -5591,6 +5591,9 @@ PasteProcessor.prototype =
 				oThis.api.pre_Paste(fonts, image_map, fPrepasteCallback);
 			}, true);
 		}
+		else {
+			window['AscCommon'].g_specialPasteHelper.Paste_Process_End(true);
+		}
 	},
 
 	//from PDF to PRESENTATION
@@ -5679,13 +5682,12 @@ PasteProcessor.prototype =
 
 			var paste_callback = function () {
 				if (false === oThis.bNested) {
-					var bPaste = presentation.InsertContent2(aContents, nIndex);
-
+					let res = presentation.InsertContent2(aContents, nIndex);
 
 					presentation.FinalizeAction();
 					presentation.UpdateInterface();
 
-					if (specialOptionsArr.length >= 1 && bPaste) {
+					if (specialOptionsArr.length >= 1 && res.insert) {
 						if (presentationSelectedContent && presentationSelectedContent.DocContent) {
 							specialOptionsArr.push(Asc.c_oSpecialPasteProps.keepTextOnly);
 						}
@@ -5696,7 +5698,7 @@ PasteProcessor.prototype =
 					}
 
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					oThis.pasteCallback && oThis.pasteCallback(bPaste);
+					oThis.pasteCallback && oThis.pasteCallback(res);
 				}
 			};
 
@@ -6016,7 +6018,11 @@ PasteProcessor.prototype =
 	ReadPDFAnnots: function (stream) {
 		let nCountAnnots = stream.GetULong();
 
-		let oDoc = Asc.editor.getPDFDoc();
+		let oDoc = Asc.editor.getPDFDoc && Asc.editor.getPDFDoc();
+		if (!oDoc) {
+			return {arrAnnots: []};
+		}
+		
 		let oNativeFile = Asc.editor.getDocumentRenderer().file.nativeFile;
 		let oAnnotsInfo = oNativeFile["readAnnotationsInfoFromBinary"](stream.data.slice(stream.cur));
 
@@ -6045,7 +6051,11 @@ PasteProcessor.prototype =
 	ReadPDFFields: function (stream) {
 		let nCountFields = stream.GetULong();
 
-		let oDoc = Asc.editor.getPDFDoc();
+		let oDoc = Asc.editor.getPDFDoc && Asc.editor.getPDFDoc();
+		if (!oDoc) {
+			return {arrFields: []};
+		}
+
 		let oViewer = Asc.editor.getDocumentRenderer();
 		let oNativeFile = oViewer.file.nativeFile;
 		let oFieldsInfo = oNativeFile["readAnnotationsInfoFromBinary"](stream.data.slice(stream.cur));
