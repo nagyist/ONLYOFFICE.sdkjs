@@ -3391,6 +3391,7 @@ CDocument.prototype.Recalculate_Page = function()
                 this.FullRecalc.Start             = true;
                 this.FullRecalc.StartIndex        = this.Pages[PageIndex + 1].Pos;
 				this.FullRecalc.ResetStartElement = this.private_RecalculateIsResetStartElement(PageIndex + 1, this.Pages[PageIndex + 1].Pos);
+				this.FullRecalc.SectPr            = this.Pages[PageIndex + 1].GetSectPr();
 				this.FullRecalc.Continue          = true;
                 return;
             }
