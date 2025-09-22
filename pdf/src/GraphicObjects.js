@@ -1841,8 +1841,13 @@
         if (bRedraw) {
             function redraw(oContent) {
                 let oObject = oContent.GetParent();
-                while (!oObject.AddToRedraw && oObject.GetParent) {
-                    oObject = oObject.GetParent();
+                while (!oObject.AddToRedraw) {
+                    if (oObject.GetParent) {
+                        oObject = oObject.GetParent();
+                    }
+                    else if (oObject.GetTable) {
+                        oObject = oObject.GetTable();
+                    }
                 }
                 
                 oObject.IsDrawing() && oObject.AddToRedraw();
