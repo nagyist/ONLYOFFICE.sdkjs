@@ -5357,8 +5357,9 @@ CDocument.prototype.Draw                                     = function(nPageInd
 		var nFooterY = this.Pages[nPageIndex].YLimit;
 		if (null !== oHdrFtrLine.Bottom && oHdrFtrLine.Bottom < nFooterY)
 			nFooterY = oHdrFtrLine.Bottom;
-
-		let sectIndex = this.SectionsInfo.Find(SectPr);
+	
+		let sectionCount = this.SectionsInfo.GetSectionsCount();
+		let sectIndex = sectionCount > 1 ? this.SectionsInfo.Find(SectPr) : -1;
         pGraphics.DrawHeaderEdit(nHeaderY, this.HdrFtr.Lock.Get_Type(), sectIndex, RepH, HeaderInfo);
         pGraphics.DrawFooterEdit(nFooterY, this.HdrFtr.Lock.Get_Type(), sectIndex, RepF, FooterInfo);
     }
