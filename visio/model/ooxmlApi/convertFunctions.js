@@ -188,6 +188,7 @@
 
 		if (layerColor) {
 			uniFillForegndWithPattern = layerFill;
+			uniFillForegndNoGradient = layerFill;
 			lineUniFillNoGradient = layerColor;
 			lineUniFill = layerColor;
 		} else {
