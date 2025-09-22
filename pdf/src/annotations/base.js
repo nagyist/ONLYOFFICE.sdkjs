@@ -165,6 +165,8 @@
         let aDash           = this.GetDash();
 
         oCopy.SetAuthor(AscCommon.UserInfoParser.getCurrentName());
+        oCopy.SetUserId(this.GetUserId());
+        oCopy.SetDisplay(this.GetDisplay());
         oCopy.SetModDate(sDate);
         oCopy.SetCreationDate(sDate);
         oCopy.SetContents(this.GetContents());
