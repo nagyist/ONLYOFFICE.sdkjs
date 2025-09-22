@@ -654,7 +654,7 @@
 		});
 	};
 	PDFEditorApi.prototype.asc_undoAllChanges = function() {};
-	PDFEditorApi.prototype.asc_addChartDrawingObject = function(nType, Placeholder) {
+	PDFEditorApi.prototype.asc_addChartDrawingObject = function(nType, Placeholder, bOpenChartEditor) {
 		this.asc_onCloseFrameEditor();
 
 		let oDoc	= this.getPDFDoc();
@@ -664,6 +664,9 @@
 			AscFonts.IsCheckSymbols = true;
 			oDoc.AddChart(nType, true, Placeholder, oViewer.currentPage);
 			AscFonts.IsCheckSymbols = false;
+			if (bOpenChartEditor) {
+				oDoc.OpenChartEditor();
+			}
 		}, AscDFH.historydescription_Document_AddChart);
 	};
 	PDFEditorApi.prototype.ChartApply = function(obj) {
