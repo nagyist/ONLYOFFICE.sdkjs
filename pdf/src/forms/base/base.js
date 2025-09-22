@@ -2662,7 +2662,7 @@
             this.SetNeedUpdateImage(true);
         }
 
-        this.CalculateContentClipRect();
+        this.contentClipRect = null;
     };
     CBaseField.prototype.CalculateContentClipRect = function() {};
     CBaseField.prototype.SetPosition = function(x, y) {
