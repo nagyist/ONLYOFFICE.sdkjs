@@ -161,7 +161,7 @@
 		let y_inch = rotatedCenter.y + turquoiseVector.y;
 
 		/**
-		 * fill without gradient used to handle handleQuickStyleVariation function
+		 * Fill without gradient used for handleQuickStyleVariation function and for handleTextQuickStyleVariation.
 		 * We need fill without pattern and gradient applied. Pattern applied can set NoSolidFill object without color,
 		 * so we will not be able to calculate handleVariationColor function result
 		 * @type CUniFill
