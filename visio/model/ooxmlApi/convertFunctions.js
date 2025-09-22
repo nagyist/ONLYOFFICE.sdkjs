@@ -202,6 +202,7 @@
 		if (layerColor) {
 			uniFillForegndWithPattern = layerFill;
 			lineUniFillNoGradient = layerColor;
+			lineUniFill = layerColor;
 		} else {
 			/**
 			 * Let's memorize what color properties used themeVal because quickStyleVariation can change only those
