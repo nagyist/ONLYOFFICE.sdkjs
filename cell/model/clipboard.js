@@ -341,6 +341,8 @@
 					}
 				}
 
+				wb.model.checkProtectedValue = true;
+
 				//ignore hidden rows
 				var activeCell = ws.model.selectionRange.activeCell.clone();
 				var activeRange, selectionRange;
@@ -403,6 +405,7 @@
 
 				ws.model.excludeHiddenRows(false);
 				ws.model.ignoreWriteFormulas(false);
+				wb.model.checkProtectedValue = false;
 			}
 
 			if (ws && ws.workbook && !ws.workbook.getCellEditMode()) {
