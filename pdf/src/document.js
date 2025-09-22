@@ -2601,6 +2601,7 @@ var CPresentation = CPresentation || function(){};
         let oViewer     = editor.getDocumentRenderer();
         let oFile       = oViewer.file;
         let oController = this.GetController();
+        let _t          = this;
 
         if (!oPage) {
             oPage = {
@@ -2664,6 +2665,10 @@ var CPresentation = CPresentation || function(){};
             oFile.pages[nPos].text = oFile.getText(nPos);
         }
 
+        oPageInfo.annots.forEach(function(annot) {
+            _t.CheckComment(annot);
+        });
+
         oViewer.paint();
     };
 
@@ -2678,7 +2683,8 @@ var CPresentation = CPresentation || function(){};
         let oViewer     = editor.getDocumentRenderer();
         let oFile       = oViewer.file;
         let oController = this.GetController();
-        
+        let _t          = this;
+
         this.BlurActiveObject();
 
         if (oFile.pages.length == 1)
@@ -2692,6 +2698,9 @@ var CPresentation = CPresentation || function(){};
         let aPages = oFile.removePage(nPos);
 		oViewer.drawingPages.splice(nPos, 1);
         let aPagesInfo = oViewer.pagesInfo.pages.splice(nPos, 1);
+        aPagesInfo[0].annots.forEach(function(annot) {
+            _t.CheckComment(annot);
+        });
         
         // to history
         aPages[0].Id = aPagesInfo[0].Id;
@@ -3596,6 +3605,9 @@ var CPresentation = CPresentation || function(){};
             if ((bUseContentsAsComment && oAnnot.GetContents() != null) || (bUseContentsAsComment == false && oAnnot.GetReply(0) instanceof AscPDF.CAnnotationText)) {
                 editor.sendEvent("asc_onAddComment", oAnnot.GetId(), oAnnot.GetAscCommentData());
             }
+        }
+        else {
+            Asc.editor.sync_RemoveComment(oAnnot.GetId());
         }
     };
     CPDFDoc.prototype.TurnOffHistory = function() {

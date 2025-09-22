@@ -781,7 +781,7 @@
     };
     CAnnotationBase.prototype.IsUseInDocument = function() {
         let oPage = this.GetParentPage();
-        if (oPage && oPage.annots.includes(this)) {
+        if (oPage && oPage.annots.includes(this) && oPage.GetIndex() !== -1) {
             return true;
         }
 
