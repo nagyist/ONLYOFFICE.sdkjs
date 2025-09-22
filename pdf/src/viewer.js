@@ -272,7 +272,7 @@
         AscCommon.History.Add(new CChangesPDFDocumentFieldsContent(this, nPos, [oField], true));
 		this.RedrawForms();
 	};
-	CPageInfo.prototype.RemoveField = function(sId) {
+	CPageInfo.prototype.RemoveField = function(sId, isOnMove) {
 		let oField = this.fields.find(function(field) {
             return field.GetId() === sId;
         });
@@ -287,7 +287,7 @@
 
 		// удаляем из родителя
         let oParent = oField.GetParent();
-        if (oParent) {
+        if (!isOnMove && oParent) {
             oParent.RemoveKid(oField);
         }
 

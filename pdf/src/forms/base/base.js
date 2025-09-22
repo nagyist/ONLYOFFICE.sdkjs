@@ -388,8 +388,13 @@
         
         if (oNewPage) {
             let sId = this.GetId();
-            oCurPage.RemoveField(sId);
+            oCurPage.RemoveField(sId, true);
             oNewPage.AddField(this);
+
+            let oEditShape = this.GetEditShape();
+            if (oEditShape) {
+                oEditShape.selectStartPage = nPage;
+            }
         }
     };
     CBaseField.prototype.GetPage = function() {
