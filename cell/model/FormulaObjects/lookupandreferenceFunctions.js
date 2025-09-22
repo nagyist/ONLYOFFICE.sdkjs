@@ -3695,7 +3695,6 @@ function (window, undefined) {
 			valueForSearching = new cString(valueForSearching.getValue().toLowerCase());
 		}
 
-		//TODO opt_arg5 - пока не обрабатываю результат == 2( A wildcard match where *, ?, and ~ have)
 		if (xlookup) {
 			if (Math.abs(opt_arg5) === 1) {
 				if (opt_array) {

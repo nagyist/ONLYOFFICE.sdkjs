@@ -19040,31 +19040,36 @@ $(function () {
 		ws.getRange2("C8").setValue("grapes");
 		ws.getRange2("D8").setValue("melons");
 
-
+		// Positive Cases:
+		// Case #1: Area, String. Find equal number in Area
 		oParser = new parserFormula("COUNTIF(A7:D7,\"=10\")", "A1", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #2: Area, String. Find numbers greater than value in Area
 		oParser = new parserFormula("COUNTIF(A7:D7,\">5\")", "B1", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
+		// Case #3: Area, String. Find numbers not equal to value in Area
 		oParser = new parserFormula("COUNTIF(A7:D7,\"<>10\")", "C1", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #4: Area, String. Find text ending with pattern using wildcard
 		oParser = new parserFormula("COUNTIF(A8:D8,\"*es\")", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
+		// Case #5: Area, String. Find text matching pattern with question marks and wildcard
 		oParser = new parserFormula("COUNTIF(A8:D8,\"??a*\")", "B2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #6: Area, String. Find text containing letter using wildcards
 		oParser = new parserFormula("COUNTIF(A8:D8,\"*l*\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
-
 
 		wb.dependencyFormulas.unlockRecal();
 
@@ -19081,67 +19086,76 @@ $(function () {
 		assert.ok( oParser.parse() );
 		assert.strictEqual( oParser.calculate().getValue(), 1 );*/
 
+		// Case #7: Area, Formula. Count TRUE values using TRUE() function
 		oParser = new parserFormula("COUNTIF(CC1:CC7, TRUE())", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
+		// Case #8: Area, Boolean. Count TRUE values using boolean literal
 		oParser = new parserFormula("COUNTIF(CC1:CC7, TRUE)", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
+		// Case #9: Area, Number. Count cells equal to 1
 		oParser = new parserFormula("COUNTIF(CC1:CC7, 1)", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #10: Area, Number. Count cells equal to 0
 		oParser = new parserFormula("COUNTIF(CC1:CC7, 0)", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
+		// Case #11: Cell, String. Count text criteria in single cell (no match)
 		ws.getRange2("CC8").setValue(">3");
 		oParser = new parserFormula("COUNTIF(CC8,\">3\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
+		// Case #12: Cell, String. Count text criteria in single cell with equals prefix
 		ws.getRange2("CC8").setValue(">3");
 		oParser = new parserFormula("COUNTIF(CC8,\"=>3\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
+		// Case #13: Area, String. Count error values using string representation
 		ws.getRange2("CC9").setValue("=NA()");
 		ws.getRange2("CC10").setValue("#N/A");
-
 		oParser = new parserFormula("COUNTIF(CC9:CC10,\"#N/A\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #14: Area, Formula. Count error values using NA() function
 		oParser = new parserFormula("COUNTIF(CC9:CC10, NA())", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #15: Area, String. Count formula text (no match for function call)
 		oParser = new parserFormula("COUNTIF(CC9:CC10,\"=NA()\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
-		oParser = new parserFormula("COUNTIF(#REF!, 1)", "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), "#REF!");
-
+		// Case #16: Area, String. Count numbers greater than or equal to 1
 		oParser = new parserFormula("COUNTIF(CC1:CC8,\">=1\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #17: Area, String. Count numbers equal to 1
 		oParser = new parserFormula("COUNTIF(CC1:CC8,\"=1\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #18: Area, String. Count numbers less than 1
 		oParser = new parserFormula("COUNTIF(CC1:CC8,\"<1\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
+		// Case #19: Area, String. Count numbers greater than 1
 		oParser = new parserFormula("COUNTIF(CC1:CC8,\">1\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
+		// Case #20: Area, String. Count using dynamic criteria with cell reference
 		oParser = new parserFormula("COUNTIF(CC1:CC8,\"=\"&CC8)", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
@@ -19155,54 +19169,63 @@ $(function () {
 		ws.getRange2("A26").setValue("");
 		ws.getRange2("A27").setValue("apples");
 
+		// Case #21: Area, String. Count text ending with pattern using wildcard
 		oParser = new parserFormula('COUNTIF(A22:A27,"*es")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 4);
 
+		// Case #22: Area, String. Count text with exact length ending with pattern
 		oParser = new parserFormula('COUNTIF(A22:A27,"?????es")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #23: Area, String. Count all non-empty text cells using wildcard
 		oParser = new parserFormula('COUNTIF(A22:A27,"*")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 4);
 
+		// Case #24: Area, String. Count cells not equal to literal asterisks
 		oParser = new parserFormula('COUNTIF(A22:A27,"<>"&"***")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #25: Area, String. Count cells not equal to single asterisk
 		oParser = new parserFormula('COUNTIF(A22:A27,"<>"&"*")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #26: Area, String. Count cells not equal to single question mark
 		oParser = new parserFormula('COUNTIF(A22:A27,"<>"&"?")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 6);
 
+		// Case #27: Area, String. Count exact date string match
 		ws.getRange2("A1").setValue("12/1");
 		ws.getRange2("A2").setValue("12/1");
-
 		oParser = new parserFormula('COUNTIF(A1:A2,"12/1")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #28: Area, String. Count date string with no match
 		oParser = new parserFormula('COUNTIF(A1:A2,"12/1/1")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
+		// Case #29: Array, String. Count values greater than 1 in horizontal array
 		oParser = new parserFormula('COUNTIF({1,2,3},">1")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);		// ms - doesn't work, gs - 2, lo - 2
 
+		// Case #30: Array, String. Count values greater than 1 in vertical array
 		oParser = new parserFormula('COUNTIF({1;2;3},">1")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);		// ms - doesn't work, gs - 2, lo - 2
 
+		// Case #31: Array, String. Count values greater than 1 in 2D array
 		oParser = new parserFormula('COUNTIF({1,2,3;4,5,6},">1")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 5);		// ms - doesn't work, gs - 5, lo - 5
 
-		// bug 62491
 		ws.getRange2("A100").setValue("Math");
 		ws.getRange2("A101").setValue("87");
 		ws.getRange2("A102").setValue("99");
@@ -19216,13 +19239,160 @@ $(function () {
 		ws.getRange2("B104").setValue("23");
 		ws.getRange2("B105").setValue("55");
 
+		// Case #32: Formula, String. Count values greater than 80 in XLOOKUP result (Math). For bug 62491
 		oParser = new parserFormula('COUNTIF(XLOOKUP(A100,A100:B100,A101:B105),">80")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
+		// Case #33: Formula, String. Count values greater than 80 in XLOOKUP result (Physics)
 		oParser = new parserFormula('COUNTIF(XLOOKUP(B100,A100:B100,A101:B105),">80")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #34: Array, String. Count exact matches in mixed array
+		oParser = new parserFormula('COUNTIF({10,20,10,30,10},"10")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #35: Array, String. Count text matches in string array
+		oParser = new parserFormula('COUNTIF({"apple","banana","apple","cherry"},"apple")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #36: Array, String. Count values less than threshold in numeric array
+		oParser = new parserFormula('COUNTIF({5,15,25,"0",45},"<20")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #37: Array, Boolean. Count TRUE values in boolean array
+		oParser = new parserFormula('COUNTIF({TRUE,1,TRUE,TRUE,FALSE},TRUE)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #38: Array, String. Count wildcard matches in text array
+		oParser = new parserFormula('COUNTIF({"test","testing","best","rest"},"*est")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #39: Array, String. Count not equal values in mixed array
+		oParser = new parserFormula('COUNTIF({"as",2,3,2,"4"},"<>2")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		ws.getRange2("A200").setValue("");
+		ws.getRange2("A201").setValue("123");
+		ws.getRange2("A202").setValue("");
+		ws.getRange2("A203").setValue("");
+		ws.getRange2("A204").setValue("#N/A");
+		ws.getRange2("A205").setValue("");
+		ws.getRange2("B200").setValue("");
+		ws.getRange2("B201").setValue(" ");
+		ws.getRange2("B202").setValue("");
+		ws.getRange2("B203").setValue("");
+		ws.getRange2("B204").setValue("");
+		ws.getRange2("B205").setValue("asd");
+		ws.getRange2("B206").setValue('123');
+		ws.getRange2("B207").setValue('ASD');
+
+		// Case #40: Area, String. Empty cells check
+		oParser = new parserFormula('COUNTIF(A200:B205,"<>"&"*")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 10);
+
+		// Case #41: Area, String. Find empty cells check
+		oParser = new parserFormula('COUNTIF(A200:B205,"")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 8);
+
+		// Case #42: Area, Cell. second arg as cell
+		oParser = new parserFormula('COUNTIF(A200:B205,B206)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #43: Area, Cell. second arg as cell, case-sens test
+		oParser = new parserFormula('COUNTIF(A200:B205,B207)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #44: Area, String. second arg as cell, case-sens test
+		oParser = new parserFormula('COUNTIF(A200:B205,"#n/A")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		ws.getRange2("A300").setValue("a*c");
+		ws.getRange2("A301").setValue("aac");
+		ws.getRange2("A302").setValue("a123c");
+		ws.getRange2("A303").setValue("a**c");
+		ws.getRange2("A304").setValue("");
+		ws.getRange2("A305").setValue("");
+
+		// Case #45: Area, String. wildcard test with ~
+		oParser = new parserFormula('COUNTIF(A300:A305,"a~*c")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Negative Cases:
+		// Case #1: Error, Number. Handle reference error in range
+		oParser = new parserFormula("COUNTIF(#REF!, 1)", "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#REF!");
+
+		// Bounded Cases:
+		// Case #1: Area, String. Count errors greater than #N/A
+		ws.getRange2("AB1").setValue("#N/A");
+		ws.getRange2("AB2").setValue("#DIV/0!");
+		ws.getRange2("AB3").setValue("#VALUE!");
+		ws.getRange2("AB4").setValue("5");
+		oParser = new parserFormula('COUNTIF(AB1:AB4,">#N/A")', "AC1", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0);
+
+		// Case #2: Area, String. Count errors less than #DIV/0!
+		oParser = new parserFormula('COUNTIF(AB1:AB4,"<#DIV/0!")', "AC2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0);
+
+		// Case #3: Area, String. Count errors not equal to #N/A
+		oParser = new parserFormula('COUNTIF(AB1:AB4,"<>#N/A")', "AC3", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #4: Area, String. Count errors greater than or equal to #VALUE!
+		oParser = new parserFormula('COUNTIF(AB1:AB4,">=#VALUE!")', "AC4", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #5: Array, String. Count errors in mixed error array
+		oParser = new parserFormula('COUNTIF({#N/A,#DIV/0!,#VALUE!,#REF!},"<#N/A")', "AC5", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #6: Area, String. Count values greater than error boundary
+		ws.getRange2("AD1").setValue("#N/A");
+		ws.getRange2("AD2").setValue("10");
+		ws.getRange2("AD3").setValue("20");
+		ws.getRange2("AD4").setValue("text");
+		oParser = new parserFormula('COUNTIF(AD1:AD4,"<#N/A")', "AC6", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 0);
+
+		// Case #7: Area, String. Count specific error type in mixed range
+		ws.getRange2("AE1").setValue("#N/A");
+		ws.getRange2("AE2").setValue("#DIV/0!");
+		ws.getRange2("AE3").setValue("#N/A");
+		ws.getRange2("AE4").setValue("42");
+		oParser = new parserFormula('COUNTIF(AE1:AE4,"=#N/A")', "AC7", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		// Case #8: Area, String. Count specific error type in mixed range
+		ws.getRange2("AF1").setValue("#VALUE!");
+		ws.getRange2("AF2").setValue("#DIV/0!");
+		ws.getRange2("AF3").setValue("#VALUE!");
+		ws.getRange2("AF4").setValue("42");
+		oParser = new parserFormula('COUNTIF(AF1:AF4,"<#N/A")', "AC7", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
 
 		// testArrayFormula2(assert, "COUNTIF", 2, 2)
 	});
@@ -19342,7 +19512,7 @@ $(function () {
 
 	QUnit.test("Test: \"CONCAT\"", function (assert) {
 
-		ws.getRange2("AA:AA").cleanAll();
+		ws.getRange2("AA:BB").cleanAll();
 		ws.getRange2("AA1").setValue("a1");
 		ws.getRange2("AA2").setValue("a2");
 		ws.getRange2("AA4").setValue("a4");

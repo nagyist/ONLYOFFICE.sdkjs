@@ -12036,8 +12036,49 @@ function (window, undefined) {
 		this.cacheId = {};
 		this.cacheRanges = {};
 	}
-
 	CountIfCache.prototype.constructor = CountIfCache;
+	CountIfCache.prototype._getUniversalArrayFromRange = function(range) {
+		const res = {};
+		const bbox = range.getBBox0();
+		let emptyCount = (Math.abs(bbox.c1 - bbox.c2) + 1) * (Math.abs(bbox.r1 - bbox.r2) + 1);
+		range.foreach2(function(cell) {
+			const type = cell.type;
+			if (type !== cElementType.empty) {
+				if (!res[type]) {
+					res[type] = [];
+				}
+				let value = cell;
+				if (type === cElementType.error) {
+					value = new AscCommonExcel.cNumber(cell.errorType);
+				}
+				res[type].push(value);
+			}
+		});
+		for (let i in res) {
+			emptyCount -= res[i].length;
+		}
+		res[cElementType.empty] = emptyCount
+		return res;
+	};
+	CountIfCache.prototype._getUniversalArrayFromArray = function(array) {
+		const res = {};
+		array.foreach(function(cell) {
+			const type = cell.type;
+			if (!res[type]) {
+				if (type === cElementType.empty) {
+					res[type] = 0;
+				} else {
+					res[type] = [];
+				}
+			}
+			let value = cell;
+			if (type === cElementType.error) {
+				value = new AscCommonExcel.cNumber(cell.errorType);
+			}
+			type === cElementType.empty ?  res[type] += 1 : res[type].push(value);
+		});
+		return res;
+	};
 	CountIfCache.prototype.calculate = function (arg, _arg1) {
 		let arg0 = arg[0], arg1 = arg[1];
 
@@ -12058,13 +12099,19 @@ function (window, undefined) {
 		}
 
 		if (cElementType.array === arg0.type) {
-			let arr = [];
-			arg0.foreach(function (_val) {
-				arr.push(_val);
-			});
-			return this._calculate(arr, arg1);
+			const uArray = this._getUniversalArrayFromArray(arg0)
+			return this._calculate(uArray, arg1);
 		} else if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
-			return this._calculate([arg0.getValue()], arg1);
+			const arr = {};
+			const value = arg0.getValue();
+			if (value.type === cElementType.empty) {
+				arr[value.type] = 1;
+			} else if (value.type === cElementType.error) {
+				arr[value.type] = [new cNumber(value.errorType)];
+			} else {
+				arr[value.type] = [value];
+			}
+			return this._calculate(arr, arg1);
 		} else if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
 			return this._get(arg0, arg1);
 		} else {
@@ -12077,16 +12124,7 @@ function (window, undefined) {
 			valueForSearching = arg1.getValue();
 
 		if (!cacheElem) {
-			cacheElem = {elements: [], results: {}};
-
-			if (cElementType.cellsRange3D === range.type) {
-				cacheElem.elements = range.getValue();
-			} else {
-				range.foreach2(function (cell) {
-					cacheElem.elements.push(cell);
-				});
-			}
-
+			cacheElem = {elements: this._getUniversalArrayFromRange(range), results: {}};
 			this.cacheId[sRangeName] = cacheElem;
 			let cacheRange = this.cacheRanges[wsId];
 			if (!cacheRange) {
@@ -12104,35 +12142,35 @@ function (window, undefined) {
 		return res;
 	};
 	CountIfCache.prototype._calculate = function (arr, arg1) {
-
-		let checkEmptyValue = function (res, tempVal, tempMatchingInfo) {
-			//TODO нужно протестировать на различных вариантах
-			//когда в ячейке пустое значение - сравниваем его только с пустым значением
-			//при matchingInfo отличным от пустого значения в данном случае возвращаем false
-
-			//ms excel при несовпадении типов возвращает всегда отрицательное значение
-			//в нашем случае сравниваемая величина(в tempMatchingInfo) не всегда приводится к нужному типу(например, error, empty)
-			//TODO рассмотреть добавление подобной правки, проверить все варианты + расскоментировать тесты
-			/*if ((tempVal.type === cElementType.string || tempVal.type === cElementType.number) && tempMatchingInfo.val && tempMatchingInfo.val.type !== tempVal.type) {
-				return false;
-			}*/
-
-			tempVal = undefined !== tempVal.value ? tempVal.value : tempVal;
-			let matchingValue = tempMatchingInfo.val && tempMatchingInfo.val.value.toString ? tempMatchingInfo.val.value.toString() : null;
-			if (tempVal === "" && matchingValue && "" !== matchingValue.replace(/\*|\?/g, '')) {
-				return false;
-			}
-			return res;
-		};
-
 		let _count = 0;
-		let val;
 		let matchingInfo = AscCommonExcel.matchingValue(arg1);
-
-		for (let i = 0; i < arr.length; i++) {
-			_count += checkEmptyValue(matching(arr[i], matchingInfo, true, true), arr[i], matchingInfo);
+		let type = matchingInfo.val.type;
+		if (matchingInfo.val.type === cElementType.string) {
+			const checkErr = new cError(matchingInfo.val.value.toUpperCase());
+			if (checkErr.errorType !== -1) {
+				type = cElementType.error;
+				matchingInfo.val = new cNumber(checkErr.errorType);
+			}
 		}
-
+		if (matchingInfo.op === "<>") {
+			for (let i in arr) {
+				if (i !== String(type)) {
+					_count += arr[i].length ? arr[i].length : arr[i];
+				}
+			}
+		}
+		const typedArr = arr[type];
+		if (matchingInfo.val.value === "" && matchingInfo.op !== "<>") {
+			if (arr[cElementType.empty]) {
+				return new cNumber(arr[cElementType.empty]);
+			}
+			return new cNumber(0);
+		}
+		if (typedArr) {
+			for (let i = 0; i < typedArr.length; i += 1) {
+				_count += matching(typedArr[i], matchingInfo, true, true);
+			}
+		}
 		return new cNumber(_count);
 	};
 	CountIfCache.prototype.remove = function (cell) {
