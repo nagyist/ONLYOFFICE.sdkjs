@@ -169,41 +169,42 @@
 		let uniFillForegndNoGradient = null;
 
 		/**
-		 * Fill without pattern applied. But with gradient applied.
-		 * @type CUniFill */
-		let uniFillForegnd = null;
-
-
-		/**
-		 * final uniFill with gradient and pattern applied
-		 * @type CUniFill */
-		let uniFillForegndWithPattern = null;
-
-		/** @type CUniFill */
-		let	uniFillBkgnd = null;
-
-		/**
+		 * Used for handleQuickStyleVariation function and for handleTextQuickStyleVariation.
 		 * @type CUniFill */
 		let lineUniFillNoGradient = null;
 
 		/**
+		 * Final uniFill with gradient and pattern applied.
+		 * Used for result shape fill.
+		 * @type CUniFill */
+		let uniFillForegndWithPattern = null;
+
+		/**
 		 * lineUniFill after gradient applied.
-		 * final line uniFill
+		 * Used for result shape stroke.
 		 * @type {CUniFill}
 		 */
 		let lineUniFill = null;
-
-
-		/**
-		 * @type boolean
-		 */
-		let fillGradientEnabled;
 
 		if (layerColor) {
 			uniFillForegndWithPattern = layerFill;
 			lineUniFillNoGradient = layerColor;
 			lineUniFill = layerColor;
 		} else {
+			/**
+			 * @type boolean
+			 */
+			let fillGradientEnabled;
+
+			/**
+			 * Fill without pattern applied. But with gradient applied.
+			 * @type CUniFill */
+			let uniFillForegnd = null;
+
+			/** @type CUniFill */
+			let	uniFillBkgnd = null;
+
+
 			/**
 			 * Let's memorize what color properties used themeVal because quickStyleVariation can change only those
 			 * color props that used themeVal function.
