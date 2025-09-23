@@ -6569,6 +6569,20 @@ var CPresentation = CPresentation || function(){};
         this.SetMouseDownObject(oDrawing);
         oDrawing.AddToRedraw();
     };
+
+    CPDFDoc.prototype.ReplaceDrawing = function(oOldDrawing, oNewDrawing) {
+        let oController = this.GetController();
+
+        let aDrawings   = oController.getDrawingObjects(oOldDrawing.GetPage());
+        let nPage       = oOldDrawing.GetPage();
+        let nPos     = aDrawings.indexOf(oOldDrawing);
+
+        this.RemoveDrawing(oOldDrawing.GetId());
+        this.AddDrawing(oNewDrawing, nPage, nPos);
+        oNewDrawing.select(oController, nPage);
+        this.SetMouseDownObject(oNewDrawing);
+        oNewDrawing.AddToRedraw();
+    };
     CPDFDoc.prototype.PutShapesAlign = function(nType, nAlignToType) {
         let oController = this.GetController();
         
@@ -7275,6 +7289,18 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.OpenChartEditor = function() {
         this.DrawingObjects.openChartEditor();
+    };
+    CPDFDoc.prototype.FinalizeEditChart = function(chartBinary) {
+        const oThis = this;
+        this.DrawingObjects.loadChartData(chartBinary['noHistory']);
+        if (!chartBinary['noHistory']) {
+            this.DrawingObjects.checkSelectedObjectsAndCallback(function () {
+                oThis.EditChart(chartBinary);
+            }, [], false, AscDFH.historydescription_Presentation_EditChart);
+        }
+    };
+    CPDFDoc.prototype.EditChart = function (binary) {
+        this.DrawingObjects.editChart(binary);
     };
     CPDFDoc.prototype.Is_Inline = function() {};
     CPDFDoc.prototype.OnChangeForm = function() {};
