@@ -149,6 +149,7 @@
 			locPinY_inch = shapeHeight_inch - locPinY_inch;
 		}
 
+		// to rotate around point we: 1) move shape to new cords 2) rotate shape around center using shape angle
 		let newCords = getCordsRotatedAroundPoint(pinX_inch,
 				pinY_inch, locPinX_inch,
 				locPinY_inch, shapeWidth_inch, shapeHeight_inch, shapeAngle);
