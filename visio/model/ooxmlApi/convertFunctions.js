@@ -149,16 +149,11 @@
 			locPinY_inch = shapeHeight_inch - locPinY_inch;
 		}
 
-		// to rotate around point we 1) add one more offset 2) rotate around center
-		// could be refactored maybe
-		// https://www.figma.com/design/SJSKMY5dGoAvRg75YnHpdX/newRotateScheme?node-id=0-1&node-type=canvas&t=UTtoZyLRItzaQvS9-0
-		let redVector = {x: -(locPinX_inch - shapeWidth_inch/2), y: -(locPinY_inch - shapeHeight_inch/2)};
-		// rotate antiClockWise by shapeAngle
-		let purpleVector = rotatePointAroundCordsStartClockWise(redVector.x, redVector.y, -shapeAngle);
-		let rotatedCenter = {x: pinX_inch + purpleVector.x, y: pinY_inch + purpleVector.y};
-		let turquoiseVector = {x: -shapeWidth_inch/2, y: -shapeHeight_inch/2};
-		let x_inch = rotatedCenter.x + turquoiseVector.x;
-		let y_inch = rotatedCenter.y + turquoiseVector.y;
+		let newCords = getCordsRotatedAroundPoint(pinX_inch,
+				pinY_inch, locPinX_inch,
+				locPinY_inch, shapeWidth_inch, shapeHeight_inch, shapeAngle);
+		let x_inch = newCords[0];
+		let y_inch = newCords[1];
 
 		/**
 		 * Fill without gradient used for handleQuickStyleVariation function and for handleTextQuickStyleVariation.
@@ -1304,13 +1299,38 @@
 
 		// Method end
 		// Used functions:
+		/**
+		 * Calculates coordinates after rotation using rotation point
+		 * @param {number} rotatePointX_global
+		 * @param {number} rotatePointY_global
+		 * @param {number} rotatePointX_local
+		 * @param {number} rotatePointY_local
+		 * @param {number} shapeWidth
+		 * @param {number} shapeHeight
+		 * @param {number} angle - radians rotate clockwise. E.g. 30 degrees goes down.
+		 * @return {[x: number, y: number]} returns left bottom corner coordinates.
+		 */
+		function getCordsRotatedAroundPoint(rotatePointX_global, rotatePointY_global,
+											rotatePointX_local, rotatePointY_local, shapeWidth, shapeHeight, angle) {
+			// to rotate around point we 1) add one more offset 2) rotate around center
+			// could be refactored maybe
+			// https://www.figma.com/design/SJSKMY5dGoAvRg75YnHpdX/newRotateScheme?node-id=0-1&node-type=canvas&t=UTtoZyLRItzaQvS9-0
+			let redVector = {x: -(rotatePointX_local - shapeWidth/2), y: -(rotatePointY_local - shapeHeight/2)};
+			// rotate antiClockWise by shapeAngle
+			let purpleVector = rotatePointAroundCordsStartClockWise(redVector.x, redVector.y, -angle);
+			let rotatedCenter = {x: rotatePointX_global + purpleVector.x, y: rotatePointY_global + purpleVector.y};
+			let turquoiseVector = {x: -shapeWidth/2, y: -shapeHeight/2};
+			let x = rotatedCenter.x + turquoiseVector.x;
+			let y = rotatedCenter.y + turquoiseVector.y;
+			return [x, y];
+		}
 
 		//TODO import
 		/**
 		 * afin rotate clockwise
 		 * @param {number} x
 		 * @param {number} y
-		 * @param {number} radiansRotateAngle radians Rotate AntiClockWise Angle. E.g. 30 degrees rotates does DOWN.
+		 * @param {number} radiansRotateAngle radians Rotate clockwise Angle. E.g. 30 degrees rotates does DOWN.
 		 * @returns {{x: number, y: number}} point
 		 */
 		function rotatePointAroundCordsStartClockWise(x, y, radiansRotateAngle) {
