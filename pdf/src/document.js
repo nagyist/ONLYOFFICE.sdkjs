@@ -6808,18 +6808,25 @@ var CPresentation = CPresentation || function(){};
         let oDoc = this;
 
         let aOriginIndexes = [];
-        let nNewPagesStartIdx = this.Viewer.file.originalPagesCount;
 
-        aIndexes.forEach(function(idx) {
-            let oFilePage = oDoc.Viewer.file.pages[idx];
-            if (oFilePage.originIndex != undefined) {
-                aOriginIndexes.push(oFilePage.originIndex);
+        // The logic is that we always copy original pages using their original indexes. New pages are numbered starting from the end of the original pages.
+        for (let i = 0, maxIdx = Math.max.apply(null, aIndexes); i <= maxIdx; i++) {
+            if (aIndexes.includes(i)) {
+                let oFilePage = oDoc.Viewer.file.pages[i];
+                if (oFilePage.originIndex != undefined) {
+                    aOriginIndexes.push(oFilePage.originIndex);
+                }
+                else {
+                    if (i < this.Viewer.file.originalPagesCount) {
+                        aOriginIndexes.push(i + this.Viewer.file.originalPagesCount);
+                    }
+                    else {
+                        aOriginIndexes.push(i);
+                    }
+                }
             }
-            else {
-                aOriginIndexes.push(nNewPagesStartIdx++);
-            }
-        });
-
+        }
+        
         aOriginIndexes.sort(function(a, b) {
             return a - b;
         });
