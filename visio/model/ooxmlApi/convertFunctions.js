@@ -891,76 +891,25 @@
 			}
 		}
 
-
-		let lineWidthEmu = null;
-		let lineWeightCell = this.getCell("LineWeight");
-		if (lineWeightCell) {
-			// to cell.v visio always saves inches
-			// let lineWeightInches = Number(lineWeightCell.v);
-			let lineWeightInches = lineWeightCell.calculateValue(this, pageInfo,
-				visioDocument.themes);
-			if (!isNaN(lineWeightInches)) {
-				lineWidthEmu = lineWeightInches * AscCommonWord.g_dKoef_in_to_mm * AscCommonWord.g_dKoef_mm_to_emu;
-			} else {
-				AscCommon.consoleLog("caught unknown error. line will be painted 9525 emus");
-				// 9255 emus = 0.01041666666666667 inches is document.xml StyleSheet ID=0 LineWeight e. g. default value
-				lineWidthEmu = 9525;
-			}
-		} else {
-			AscCommon.consoleLog("LineWeight cell was not calculated. line will be painted 9525 emus");
-			lineWidthEmu = 9525;
-		}
+		let lineWidthEmu = getLineWidth(this, pageInfo, visioDocument);
 
 		// not scaling lineWidth
 		/**	 * @type {CLn}	 */
 		let oStroke = AscFormat.builder_CreateLine(lineWidthEmu, {UniFill: lineUniFill});
 
 		// seems to be unsupported for now
-		let lineCapCell = this.getCell("LineCap");
-		let lineCapNumber;
-		if (lineCapCell) {
-			// see [MS-VSDX]-220215 (1) - 2.4.4.170	LineCap
-			lineCapNumber = lineCapCell.calculateValue(this, pageInfo, visioDocument.themes);
-			if (isNaN(lineCapNumber)) {
-				oStroke.setCap(2);
-			} else {
-				oStroke.setCap(lineCapNumber);
-			}
-		}
+		// see [MS-VSDX]-220215 (1) - 2.4.4.170	LineCap
+		let lineCap = getLineCap(this, pageInfo, visioDocument);
+		oStroke.setCap(lineCap);
 
-		let linePattern = this.getCell("LinePattern");
-		if (linePattern) {
-			// see ECMA-376-1 - L.4.8.5.2 Line Dash Properties and [MS-VSDX]-220215 (1) - 2.4.4.180	LinePattern
-			let linePatternNumber = linePattern.calculateValue(this, pageInfo, visioDocument.themes);
-			if (isNaN(linePatternNumber)) {
-				oStroke.setPrstDash(oStroke.GetDashCode("vsdxSolid"));
-			} else {
-				let shift = 11;
-				let dashTypeName = oStroke.GetDashByCode(linePatternNumber + shift);
-				if (dashTypeName !== null) {
-					if (lineCapNumber !== 2) {
-						AscCommon.consoleLog("linePattern may be wrong. Because visio cap is not square" +
-							"Now only flat cap is supported in sdkjs but Line patterns were made " +
-							"for visio cap square looks correct" +
-							"So when visio cap is not square line pattern will not fit."
-							)
-						if ("vsdxHalfHalfDash" === dashTypeName) {
-							// vsdxHalfHalfDash looks like solid on visio cap square but if cap is not square in visio
-							// vsdxHalfHalfDash should be dotted
-							linePatternNumber = 10;
-						}
-					}
-					if ("vsdxTransparent" === dashTypeName && oStroke.Fill) {
-						//todo реализовать прозрачный тип через отдельную настройку или разделить fill для линий и наконечников
-						//в vsdx может быть прозрачная линия с видимыми наконечниками
-						oStroke.Fill.fill = new AscFormat.CNoFill();
-					} else {
-						oStroke.setPrstDash(linePatternNumber + shift);
-					}
-				} else {
-					oStroke.setPrstDash(oStroke.GetDashCode("vsdxDash"));
-				}
-			}
+		let linePattern = getPresetDash(this, pageInfo, visioDocument, lineCap);
+		if (linePattern === 11 && oStroke.Fill) {
+			// 11 type is vsdx transparent
+			//todo реализовать прозрачный тип через отдельную настройку или разделить fill для линий и наконечников
+			//в vsdx может быть прозрачная линия с видимыми наконечниками
+			oStroke.Fill.fill = new AscFormat.CNoFill();
+		} else {
+			oStroke.setPrstDash(linePattern);
 		}
 
 		// Each geometry section may have arrows
@@ -2655,6 +2604,99 @@
 			emptyCShape.setParent2(visioDocument);
 
 			return emptyCShape;
+		}
+
+		/**
+		 * @param {Shape_Type} shape
+		 * @param {Page_Type} pageInfo
+		 * @param {CVisioDocument} visioDocument
+		 * @return {number} line width EMUs
+		 */
+		function getLineWidth(shape, pageInfo, visioDocument) {
+			let lineWidthEmu = null;
+			let lineWeightCell = shape.getCell("LineWeight");
+			if (lineWeightCell) {
+				// to cell.v visio always saves inches
+				// let lineWeightInches = Number(lineWeightCell.v);
+				let lineWeightInches = lineWeightCell.calculateValue(shape, pageInfo,
+						visioDocument.themes);
+				if (!isNaN(lineWeightInches)) {
+					lineWidthEmu = lineWeightInches * AscCommonWord.g_dKoef_in_to_mm * AscCommonWord.g_dKoef_mm_to_emu;
+				} else {
+					AscCommon.consoleLog("caught unknown error. line will be painted 9525 emus");
+					// 9255 emus = 0.01041666666666667 inches is document.xml StyleSheet ID=0 LineWeight e. g. default value
+					lineWidthEmu = 9525;
+				}
+			} else {
+				AscCommon.consoleLog("LineWeight cell was not calculated. line will be painted 9525 emus");
+				lineWidthEmu = 9525;
+			}
+			return lineWidthEmu;
+		}
+
+		/**
+		 * @param {Shape_Type} shape
+		 * @param {Page_Type} pageInfo
+		 * @param {CVisioDocument} visioDocument
+		 * @return {number} cap type
+		 */
+		function getLineCap(shape, pageInfo, visioDocument) {
+			let lineCapCell = shape.getCell("LineCap");
+			let lineCapNumber;
+			if (lineCapCell) {
+				lineCapNumber = lineCapCell.calculateValue(shape, pageInfo, visioDocument.themes);
+				if (isNaN(lineCapNumber)) {
+					lineCapNumber = 2;
+				}
+			} else {
+				lineCapNumber = 2;
+			}
+			return lineCapNumber;
+		}
+
+		/**
+		 * Calculate line pattern. See some issues inside.
+		 * @param {Shape_Type} shape
+		 * @param {Page_Type} pageInfo
+		 * @param {CVisioDocument} visioDocument
+		 * @param {number} lineCap
+		 * @return {number} cap type
+		 */
+		function getPresetDash(shape, pageInfo, visioDocument, lineCap) {
+			let linePattern = shape.getCell("LinePattern");
+			let prstDash;
+			if (linePattern) {
+				// see ECMA-376-1 - L.4.8.5.2 Line Dash Properties and [MS-VSDX]-220215 (1) - 2.4.4.180	LinePattern
+				let linePatternNumber = linePattern.calculateValue(shape, pageInfo, visioDocument.themes);
+				if (isNaN(linePatternNumber)) {
+					prstDash = AscFormat.CLn.prototype.GetDashCode("vsdxSolid");
+				} else {
+					const shift = 11;
+					const visioLineCode = linePatternNumber + shift;
+					let dashTypeName = AscFormat.CLn.prototype.GetDashByCode(visioLineCode);
+					if (dashTypeName !== null) {
+						if (lineCap !== 2) {
+							AscCommon.consoleLog("linePattern may be wrong. Because visio cap is not square" +
+									"Now only flat cap is supported in sdkjs but Line patterns were made " +
+									"for visio cap square looks correct" +
+									"So when visio cap is not square line pattern will not fit."
+							)
+							if ("vsdxHalfHalfDash" === dashTypeName) {
+								// vsdxHalfHalfDash looks like solid on visio cap square but if cap is not square in visio
+								// vsdxHalfHalfDash should be dotted
+								// set 10th visio pattern
+								return 10 + shift;
+							}
+						}
+						prstDash = visioLineCode;
+					} else {
+						prstDash = AscFormat.CLn.prototype.GetDashCode("vsdxDash");
+					}
+				}
+			} else {
+				prstDash = AscFormat.CLn.prototype.GetDashCode("vsdxSolid");
+			}
+			return prstDash;
 		}
 	}
 
