@@ -25487,10 +25487,14 @@
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sAuthorName - The comment author's name.
-	 * @returns {ApiComment} - this
+	 * @returns {?ApiComment} - this
 	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/SetAuthorName.js
 	 */
 	ApiComment.prototype.SetAuthorName = function (sAuthorName) {
+		sAuthorName = GetStringParameter(sAuthorName, null);
+		if (!sAuthorName)
+			return null;
+
 		this.Comment.GetData().Set_Name(sAuthorName);
 		this.private_OnChange();
 		return this;
@@ -25816,10 +25820,14 @@
 	 * @memberof ApiCommentReply
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sAuthorName - The comment reply author's name.
-	 * @returns {ApiCommentReply} - this
+	 * @returns {?ApiCommentReply} - this
 	 * @see office-js-api/Examples/{Editor}/ApiCommentReply/Methods/SetAuthorName.js
 	 */
 	ApiCommentReply.prototype.SetAuthorName = function (sAuthorName) {
+		sAuthorName = GetStringParameter(sAuthorName, null);
+		if (!sAuthorName)
+			return null;
+
 		this.Data.Set_Name(sAuthorName);
 		this.private_OnChange();
 		return this;
