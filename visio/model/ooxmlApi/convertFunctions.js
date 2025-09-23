@@ -937,6 +937,7 @@
 		}
 
 
+		// apply flip props consider flip point: locPinX_inch or locPinY_inch
 		let flipHorizontally = this.getCellNumberValue("FlipX") === 1;
 		if (flipHorizontally) {
 			x_inch = x_inch + 2 * (locPinX_inch - shapeWidth_inch / 2);
@@ -979,52 +980,7 @@
 		if (isShadowVisible) {
 			let shadow = new AscFormat.COuterShdw();
 
-			// get color for shadow
-			let shadowForegndCell = this.getCell("ShdwForegnd");
-			let shadowColor;
-			if (shadowForegndCell) {
-				// AscCommon.consoleLog("FillForegnd was found:", fillForegndCell);
-				shadowColor = shadowForegndCell.calculateValue(this, pageInfo,
-						visioDocument.themes);
-
-				let mainFillAlphaCoef = 1;
-				let fillForegndTransValue = this.getCellNumberValue("FillForegndTrans");
-				if (!isNaN(fillForegndTransValue)) {
-					mainFillAlphaCoef = 1 - fillForegndTransValue;
-				}
-
-				let shadowTransValue = 0;
-				let shadowTransCell = this.getCell("ShdwForegndTrans");
-				// if themed alpha is included in shadowColor already
-				if (shadowTransCell.getStringValue() !== "Themed") {
-					shadowTransValue = shadowTransCell.getNumberValue("ShdwForegndTrans");
-
-					let shadowAlpha = (1 - shadowTransValue) * mainFillAlphaCoef;
-					if (shadowAlpha !== 1) {
-						let oMod = new AscFormat.CColorMod("alpha", shadowAlpha  * 100 * 1000 + 0.5 >> 0);
-						shadowColor.addColorMod(oMod);
-					}
-				} else {
-					// check if alpha is set already
-					let alphaMod = shadowColor.Mods && shadowColor.Mods.Mods.find(function (mod) {
-						return mod.name === "alpha";
-					});
-					if (alphaMod) {
-						alphaMod.val = alphaMod.val * mainFillAlphaCoef;
-					} else {
-						let oMod = new AscFormat.CColorMod("alpha", mainFillAlphaCoef  * 100 * 1000 + 0.5 >> 0);
-						shadowColor.addColorMod(oMod);
-					}
-				}
-
-			} else {
-				// AscCommon.consoleLog("shadow foreground cell not found for", this);
-				shadowColor = AscFormat.CreateUniColorRGB(0,0,0);
-			}
-			// shadow.color = AscFormat.CreateUniColorRGB(100,100,100);
-			// shadow.color.color = new AscFormat.CPrstColor();
-			// shadow.color.color.id = "black";
-			// shadow.putTransparency(60);
+			let shadowColor = getShadowColor(this, pageInfo, visioDocument);
 			shadow.color = shadowColor;
 
 
@@ -1110,6 +1066,56 @@
 				shadowInner.rotWithShape = true;
 
 				cShape.spPr.effectProps.EffectLst.innerShdw = shadowInner;
+			}
+
+			/**
+			 * @param {Shape_Type} shape
+			 * @param {Page_Type} pageInfo
+			 * @param {CVisioDocument} visioDocument
+			 * @return {CUniColor} shadow color
+			 */
+			function getShadowColor(shape, pageInfo, visioDocument) {
+				let shadowForegndCell = shape.getCell("ShdwForegnd");
+				let shadowColor;
+				if (shadowForegndCell) {
+					// AscCommon.consoleLog("FillForegnd was found:", fillForegndCell);
+					shadowColor = shadowForegndCell.calculateValue(shape, pageInfo,
+							visioDocument.themes);
+
+					let mainFillAlphaCoef = 1;
+					let fillForegndTransValue = shape.getCellNumberValue("FillForegndTrans");
+					if (!isNaN(fillForegndTransValue)) {
+						mainFillAlphaCoef = 1 - fillForegndTransValue;
+					}
+
+					let shadowTransValue = 0;
+					let shadowTransCell = shape.getCell("ShdwForegndTrans");
+					// if themed alpha is included in shadowColor already
+					if (shadowTransCell.getStringValue() !== "Themed") {
+						shadowTransValue = shadowTransCell.getNumberValue("ShdwForegndTrans");
+
+						let shadowAlpha = (1 - shadowTransValue) * mainFillAlphaCoef;
+						if (shadowAlpha !== 1) {
+							let oMod = new AscFormat.CColorMod("alpha", shadowAlpha  * 100 * 1000 + 0.5 >> 0);
+							shadowColor.addColorMod(oMod);
+						}
+					} else {
+						// check if alpha is set already
+						let alphaMod = shadowColor.Mods && shadowColor.Mods.Mods.find(function (mod) {
+							return mod.name === "alpha";
+						});
+						if (alphaMod) {
+							alphaMod.val = alphaMod.val * mainFillAlphaCoef;
+						} else {
+							let oMod = new AscFormat.CColorMod("alpha", mainFillAlphaCoef  * 100 * 1000 + 0.5 >> 0);
+							shadowColor.addColorMod(oMod);
+						}
+					}
+				} else {
+					// AscCommon.consoleLog("shadow foreground cell not found for", this);
+					shadowColor = AscFormat.CreateUniColorRGB(0,0,0);
+				}
+				return shadowColor;
 			}
 		}
 
