@@ -144,7 +144,6 @@ var CPresentation = CPresentation || function(){};
         this.fieldsToCommit         = [];
         this.eventsStack            = [];
         this.event                  = {};
-        this.lastDatePickerInfo     = null;
         this.AutoCorrectSettings    = new AscCommon.CAutoCorrectSettings();
 
         this.pagesTransform = [];
