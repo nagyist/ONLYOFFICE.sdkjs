@@ -2630,7 +2630,7 @@
 
         let nNewExtX = this.GetWidth();
         let nNewExtY = this.GetHeight();
-        this.SetWasChanged(true, !(Math.abs(nOldExtX - nNewExtX) < 0.001 && Math.abs(nOldExtY == nNewExtY) < 0.001));
+        this.SetWasChanged(true, !(Math.abs(nOldExtX - nNewExtX) < 0.001 && Math.abs(nOldExtY - nNewExtY) < 0.001));
         
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();
