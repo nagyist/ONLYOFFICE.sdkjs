@@ -12063,10 +12063,16 @@ function (window, undefined) {
 		this.cacheRanges = {};
 	}
 	CountIfCache.prototype.constructor = CountIfCache;
+	/**
+	 * Extracts and categorizes all values from a range into a universal array structure
+	 * @private
+	 * @param {cArea} range - The range object to extract values from
+	 * @returns {Object.<cElementType, Array|number>} Object where keys are cElementType constants and values are arrays of cell values or count for empty cells
+	 */
 	CountIfCache.prototype._getUniversalArrayFromRange = function(range) {
 		const res = {};
 		const bbox = range.getBBox0();
-		let emptyCount = (Math.abs(bbox.c1 - bbox.c2) + 1) * (Math.abs(bbox.r1 - bbox.r2) + 1);
+		let emptyCount = (bbox.c2 - bbox.c1 + 1) * (bbox.r2 - bbox.r1 + 1);
 		range.foreach2(function(cell) {
 			const type = cell.type;
 			if (type !== cElementType.empty) {
@@ -12075,7 +12081,9 @@ function (window, undefined) {
 				}
 				let value = cell;
 				if (type === cElementType.error) {
-					value = new AscCommonExcel.cNumber(cell.errorType);
+					value = cell.errorType;
+				} else {
+					value = value.value;
 				}
 				res[type].push(value);
 			}
@@ -12083,26 +12091,7 @@ function (window, undefined) {
 		for (let i in res) {
 			emptyCount -= res[i].length;
 		}
-		res[cElementType.empty] = emptyCount
-		return res;
-	};
-	CountIfCache.prototype._getUniversalArrayFromArray = function(array) {
-		const res = {};
-		array.foreach(function(cell) {
-			const type = cell.type;
-			if (!res[type]) {
-				if (type === cElementType.empty) {
-					res[type] = 0;
-				} else {
-					res[type] = [];
-				}
-			}
-			let value = cell;
-			if (type === cElementType.error) {
-				value = new AscCommonExcel.cNumber(cell.errorType);
-			}
-			type === cElementType.empty ?  res[type] += 1 : res[type].push(value);
-		});
+		res[cElementType.empty] = emptyCount;
 		return res;
 	};
 	CountIfCache.prototype.calculate = function (arg, _arg1) {
@@ -12123,19 +12112,15 @@ function (window, undefined) {
 		} else if (cElementType.cell === arg1.type || cElementType.cell3D === arg1.type) {
 			arg1 = arg1.getValue();
 		}
-
-		if (cElementType.array === arg0.type) {
-			const uArray = this._getUniversalArrayFromArray(arg0)
-			return this._calculate(uArray, arg1);
-		} else if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
+		if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
 			const arr = {};
 			const value = arg0.getValue();
 			if (value.type === cElementType.empty) {
 				arr[value.type] = 1;
 			} else if (value.type === cElementType.error) {
-				arr[value.type] = [new cNumber(value.errorType)];
+				arr[value.type] = [value.errorType];
 			} else {
-				arr[value.type] = [value];
+				arr[value.type] = [value.value];
 			}
 			return this._calculate(arr, arg1);
 		} else if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
@@ -12167,15 +12152,86 @@ function (window, undefined) {
 		}
 		return res;
 	};
+	/**
+	 * @private
+	 * @param {cElementType} type
+	 * @param {string} op 
+	 * @returns {Function}
+	 */
+	CountIfCache.prototype._getMatchingFunction = function(type, op) {
+		if (type === cElementType.string) {
+			switch(op) {
+				case ">":
+					return function (a, b) {
+						return AscCommonExcel.stringCompare(a, b) > 0;
+					};
+				case "<":
+					return function (a, b) {
+						return AscCommonExcel.stringCompare(a, b) < 0;
+					};
+				case ">=":
+					return function (a, b) {
+						return AscCommonExcel.stringCompare(a, b) >= 0;
+					};
+				case "<=":
+					return function (a, b) {
+						return AscCommonExcel.stringCompare(a, b) <= 0;
+					};
+				case "<>":
+					return function (a, b) {
+						return !AscCommonExcel.searchRegExp2(a, b);
+					};
+				case "=":
+				default:
+				return function (a, b) {
+					return AscCommonExcel.searchRegExp2(a, b);
+				};
+			}
+		} else {
+			switch(op) {
+				case ">":
+					return function (a, b) {
+						return a > b;
+					};
+				case "<":
+					return function (a, b) {
+						return a < b;
+					};
+				case ">=":
+					return function (a, b) {
+						return a >= b;
+					};
+				case "<=":
+					return function (a, b) {
+						return a <= b;
+					};
+				case "<>":
+					return function (a, b) {
+						return a !== b;
+					};
+				case "=":
+				default:
+					return function (a, b) {
+						return a === b;
+					};
+			}
+		}
+	};
 	CountIfCache.prototype._calculate = function (arr, arg1) {
 		let _count = 0;
 		let matchingInfo = AscCommonExcel.matchingValue(arg1);
 		let type = matchingInfo.val.type;
-		if (matchingInfo.val.type === cElementType.string) {
+		let searchValue = matchingInfo.val;
+		if (type === cElementType.string) {
+			searchValue = searchValue.toString().toLowerCase();
+		} else {
+			searchValue = searchValue.value;
+		}
+		if (type === cElementType.string) {
 			const checkErr = new cError(matchingInfo.val.value.toUpperCase());
 			if (checkErr.errorType !== -1) {
 				type = cElementType.error;
-				matchingInfo.val = new cNumber(checkErr.errorType);
+				searchValue = checkErr.errorType;
 			}
 		}
 		if (matchingInfo.op === "<>") {
@@ -12186,15 +12242,16 @@ function (window, undefined) {
 			}
 		}
 		const typedArr = arr[type];
-		if (matchingInfo.val.value === "" && matchingInfo.op !== "<>") {
+		if (searchValue === "" && matchingInfo.op !== "<>") {
 			if (arr[cElementType.empty]) {
 				return new cNumber(arr[cElementType.empty]);
 			}
 			return new cNumber(0);
 		}
+		const matchingFunction = this._getMatchingFunction(type, matchingInfo.op);
 		if (typedArr) {
 			for (let i = 0; i < typedArr.length; i += 1) {
-				_count += matching(typedArr[i], matchingInfo, true, true);
+				_count += matchingFunction(typedArr[i], searchValue);
 			}
 		}
 		return new cNumber(_count);

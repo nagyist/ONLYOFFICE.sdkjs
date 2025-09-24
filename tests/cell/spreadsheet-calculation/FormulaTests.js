@@ -19221,21 +19221,6 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
-		// Case #29: Array, String. Count values greater than 1 in horizontal array
-		oParser = new parserFormula('COUNTIF({1,2,3},">1")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);		// ms - doesn't work, gs - 2, lo - 2
-
-		// Case #30: Array, String. Count values greater than 1 in vertical array
-		oParser = new parserFormula('COUNTIF({1;2;3},">1")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);		// ms - doesn't work, gs - 2, lo - 2
-
-		// Case #31: Array, String. Count values greater than 1 in 2D array
-		oParser = new parserFormula('COUNTIF({1,2,3;4,5,6},">1")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 5);		// ms - doesn't work, gs - 5, lo - 5
-
 		ws.getRange2("A100").setValue("Math");
 		ws.getRange2("A101").setValue("87");
 		ws.getRange2("A102").setValue("99");
@@ -19258,36 +19243,6 @@ $(function () {
 		oParser = new parserFormula('COUNTIF(XLOOKUP(B100,A100:B100,A101:B105),">80")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
-
-		// Case #34: Array, String. Count exact matches in mixed array
-		oParser = new parserFormula('COUNTIF({10,20,10,30,10},"10")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #35: Array, String. Count text matches in string array
-		oParser = new parserFormula('COUNTIF({"apple","banana","apple","cherry"},"apple")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Case #36: Array, String. Count values less than threshold in numeric array
-		oParser = new parserFormula('COUNTIF({5,15,25,"0",45},"<20")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 2);
-
-		// Case #37: Array, Boolean. Count TRUE values in boolean array
-		oParser = new parserFormula('COUNTIF({TRUE,1,TRUE,TRUE,FALSE},TRUE)', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #38: Array, String. Count wildcard matches in text array
-		oParser = new parserFormula('COUNTIF({"test","testing","best","rest"},"*est")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #39: Array, String. Count not equal values in mixed array
-		oParser = new parserFormula('COUNTIF({"as",2,3,2,"4"},"<>2")', "C2", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
 
 		ws.getRange2("A200").setValue("");
 		ws.getRange2("A201").setValue("123");
@@ -19372,12 +19327,7 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #5: Array, String. Count errors in mixed error array
-		oParser = new parserFormula('COUNTIF({#N/A,#DIV/0!,#VALUE!,#REF!},"<#N/A")', "AC5", ws);
-		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
-
-		// Case #6: Area, String. Count values greater than error boundary
+		// Case #5: Area, String. Count values greater than error boundary
 		ws.getRange2("AD1").setValue("#N/A");
 		ws.getRange2("AD2").setValue("10");
 		ws.getRange2("AD3").setValue("20");
@@ -19386,7 +19336,7 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
-		// Case #7: Area, String. Count specific error type in mixed range
+		// Case #6: Area, String. Count specific error type in mixed range
 		ws.getRange2("AE1").setValue("#N/A");
 		ws.getRange2("AE2").setValue("#DIV/0!");
 		ws.getRange2("AE3").setValue("#N/A");
@@ -19395,7 +19345,7 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #8: Area, String. Count specific error type in mixed range
+		// Case #7: Area, String. Count specific error type in mixed range
 		ws.getRange2("AF1").setValue("#VALUE!");
 		ws.getRange2("AF2").setValue("#DIV/0!");
 		ws.getRange2("AF3").setValue("#VALUE!");
