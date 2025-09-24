@@ -5382,13 +5382,13 @@ _func[cElementType.string][cElementType.string] = function ( arg0, arg1, what ) 
 
 	let _arg0, _arg1;
 	if (what === ">") {
-		res = arg0.getValue(true) > arg1.getValue(true);
+		res = AscCommonExcel.stringCompare(arg0.getValue(true), arg1.getValue(true)) > 0;
 	} else if (what === ">=") {
-		res = arg0.getValue(true) >= arg1.getValue(true);
+		res = AscCommonExcel.stringCompare(arg0.getValue(true), arg1.getValue(true)) >= 0;
 	} else if (what === "<") {
-		res = arg0.getValue(true) < arg1.getValue(true);
+		res = AscCommonExcel.stringCompare(arg0.getValue(true), arg1.getValue(true)) < 0;
 	} else if (what === "<=") {
-		res = arg0.getValue(true) <= arg1.getValue(true);
+		res = AscCommonExcel.stringCompare(arg0.getValue(true), arg1.getValue(true)) <= 0;
 	} else if (what === "=") {
 		res = isEqualStrings(arg0.getValue(true), arg1.getValue(true));
 	} else if (what === "<>") {

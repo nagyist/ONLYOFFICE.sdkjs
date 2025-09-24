@@ -882,7 +882,7 @@
                 break;
             }
             case AscPDF.FIELD_TYPES.listbox: {
-                oCopy = new AscPDF.CListboxField(this.GetPartialName(), this.GetRect().slice());
+                oCopy = new AscPDF.CListBoxField(this.GetPartialName(), this.GetRect().slice());
                 break;
             }
             case AscPDF.FIELD_TYPES.button: {
@@ -1761,7 +1761,7 @@
         function setRedrawPageOnRepaint() {
             if (oViewer.pagesInfo.pages[nPage]) {
                 oViewer.pagesInfo.pages[nPage].needRedrawForms = true;
-                // oViewer.thumbnails && oViewer.thumbnails._repaintPage(nPage);
+                oViewer.thumbnails && oViewer.thumbnails._repaintPage(nPage);
             }
         }
 
