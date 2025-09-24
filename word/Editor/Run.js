@@ -11007,17 +11007,17 @@ ParaRun.prototype.private_UpdateTrackRevisionOnChangeContent = function(bUpdateI
 };
 ParaRun.prototype.private_UpdateTrackRevisionOnChangeTextPr = function(bUpdateInfo)
 {
-    if (true === this.HavePrChange())
-    {
-        this.updateTrackRevisions();
-
-        if (true === bUpdateInfo && this.Paragraph && this.Paragraph.bFromDocument && this.Paragraph.LogicDocument && true === this.Paragraph.LogicDocument.IsTrackRevisions())
-        {
-            var OldReviewInfo = this.Pr.ReviewInfo.Copy();
-            this.Pr.ReviewInfo.Update();
-           AscCommon.History.Add(new CChangesRunPrReviewInfo(this, OldReviewInfo, this.Pr.ReviewInfo.Copy()));
-        }
-    }
+	if (true === this.HavePrChange())
+	{
+		this.updateTrackRevisions();
+		
+		if (true === bUpdateInfo && this.Paragraph && this.Paragraph.bFromDocument && this.Paragraph.LogicDocument && true === this.Paragraph.LogicDocument.IsTrackRevisions())
+		{
+			var OldReviewInfo = this.Pr.ReviewInfo.Copy();
+			this.Pr.ReviewInfo.Update();
+			AscCommon.History.Add(new CChangesRunPrReviewInfo(this, OldReviewInfo, this.Pr.ReviewInfo.Copy()));
+		}
+	}
 };
 ParaRun.prototype.AcceptRevisionChanges = function(nType, bAll)
 {
