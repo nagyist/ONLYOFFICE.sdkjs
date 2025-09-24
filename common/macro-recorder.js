@@ -251,21 +251,57 @@
 	const cellActions = {
 		setCellIncreaseFontSize	: function(){return "Api.GetSelection().FontIncrease();\n";},
 		setCellDecreaseFontSize	: function(){return "Api.GetSelection().FontDecrease();\n";},
-		setCellFontSize			: function(additional){ return (additional && additional.fontSize) ? "Api.GetSelection().SetFontSize(\"" + additional.fontSize + "\");\n" : "";},
-		setCellFontName			: function(additional){ return (additional && additional.fontName) ? "Api.GetSelection().SetFontName(\"" + additional.fontName + "\");\n" : "";},
-		setCellBold				: function(additional){ return (additional && additional.isBold !== undefined) ? "Api.GetSelection().SetBold(" + additional.isBold + ");\n" : "";},
-		setCellItalic			: function(additional){ return (additional && additional.isItalic !== undefined) ? "Api.GetSelection().SetItalic(" + additional.isItalic + ");\n" : "";},
-		setCellUnderline		: function(additional){ return (additional && additional.isUnderline !== undefined) ? "Api.GetSelection().SetUnderline(" + additional.isUnderline + ");\n" : "";},
-		setCellStrikeout		: function(additional){ return (additional && additional.isStrikeout !== undefined) ? "Api.GetSelection().SetStrikeout(" + additional.isStrikeout + ");\n" : "";},
-		setCellSubscript		: function(additional){ return (additional && additional.isSubscript !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSubscript(" + additional.isSubscript + ");\n" : "";},
-		setCellSuperscript		: function(additional){ return (additional && additional.isSuperscript !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSuperscript(" + additional.isSuperscript + ");\n" : "";},
+		setCellFontSize			: function(additional){ return (additional && additional.val) ? "Api.GetSelection().SetFontSize(\"" + additional.val + "\");\n" : "";},
+		setCellFontName			: function(additional){ return (additional && additional.val) ? "Api.GetSelection().SetFontName(\"" + additional.val + "\");\n" : "";},
+		setCellBold				: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetBold(" + additional.val + ");\n" : "";},
+		setCellItalic			: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetItalic(" + additional.val + ");\n" : "";},
+		setCellUnderline		: function(additional){
+			if (!(additional && additional.val !== undefined))
+				return "";
+
+			let underlineType = null;
+
+			switch (additional.val) {
+				case Asc.EUnderline.underlineSingle:				underlineType = 'single';				break;
+				case Asc.EUnderline.underlineSingleAccounting:		underlineType = 'singleAccounting';	break;
+				case Asc.EUnderline.underlineDouble:				underlineType = 'double';				break;
+				case Asc.EUnderline.underlineDoubleAccounting:		underlineType = 'doubleAccounting';	break;
+				case Asc.EUnderline.underlineNone:
+				default:											underlineType = 'none';					break;
+			}
+
+			return "Api.GetSelection().SetUnderline(\"" + underlineType + "\");\n";
+		},
+		setCellStrikeout		: function(additional){
+			if (!(additional && additional.val !== undefined))
+				return "";
+
+			return "Api.GetSelection().SetStrikeout(" + (!!additional.val) + ");\n";
+		},
+		setCellSubscript		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSubscript(" + additional.val + ");\n" : "";},
+		setCellSuperscript		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSuperscript(" + additional.val + ");\n" : "";},
+		setCellReadingOrder		: function(additional){
+			if (!(additional && additional.val !== undefined))
+				return "";
+
+			let direction = null;
+
+			switch (additional.val) {
+				case 0:		direction = 'context';	break;
+				case 1:		direction = 'ltr';		break;
+				case 2:		direction = 'rtl';		break;
+				default:	return "";
+			}
+
+			return "Api.GetSelection().SetReadingOrder(\"" + direction + "\");\n";
+		},
 		setCellAlign			: function(additional){
-			if ((additional && additional.align === undefined))
+			if ((additional && additional.val === undefined))
 				return "";
 	
 			let align = null;
 	
-			switch (additional.align) {
+			switch (additional.val) {
 				case AscCommon.align_Left:		align = 'left';		break;
 				case AscCommon.align_Right:		align = 'right';	break;
 				case AscCommon.align_Justify:	align = 'justify';	break;
@@ -276,12 +312,12 @@
 			return "Api.GetSelection().SetAlignHorizontal(\"" + align + "\");\n";
 		},
 		setCellVerticalAlign	: function(additional){
-			if ((additional && additional.align === undefined))
+			if ((additional && additional.val === undefined))
 				return "";
 	
 			let align = null;
 	
-			switch (additional.align) {
+			switch (additional.val) {
 				case Asc.c_oAscVAlign.Center:	align = 'center';		break;
 				case Asc.c_oAscVAlign.Bottom:	align = 'bottom';		break;
 				case Asc.c_oAscVAlign.Top:		align = 'top';			break;
@@ -293,18 +329,128 @@
 			return "Api.GetSelection().SetAlignVertical(\"" + align + "\");\n";
 		},
 		setCellTextColor		: function(additional){
-			if (!additional && !additional.color)
+			if (!additional && !additional.val)
 				return "";
 
-			let color = "Api.CreateColorFromRGB(" + additional.color.r + ", " + additional.color.g + ", " + additional.color.b + ")";
+			let color = "Api.CreateColorFromRGB(" + additional.val.getR() + ", " + additional.val.getG() + ", " + additional.val.getB() + ")";
 			return "Api.GetSelection().SetFontColor(" + color + ");\n"
 		},
 		setCellBackgroundColor	: function(additional){
-			if (!additional && !additional.color)
+			if (!additional && !additional.val)
 				return "";
 
-			let color = "Api.CreateColorFromRGB(" + additional.color.r + ", " + additional.color.g + ", " + additional.color.b + ")";
+			let color = "Api.CreateColorFromRGB(" + additional.val.getR() + ", " + additional.val.getG() + ", " + additional.val.getB() + ")";
 			return "Api.GetSelection().SetBackgroundColor(" + color + ");\n"
+		},
+		setCellWrap				: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetWrap(" + additional.val + ");\n" : "";},
+		//setCellShrinkToFit		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetShrinkToFit(" + additional.val + ");\n" : "";},
+		setCellValue			: function(additional){ 
+			if (!(additional && additional.val !== undefined))
+				return "";
+			
+			let value = additional.val;
+			if (typeof value === 'string') {
+				value = '"' + value.replace(/"/g, '\\"') + '"';
+			} else {
+				value = value.toString();
+			}
+			
+			return "Api.GetSelection().SetValue(" + value + ");\n";
+		},
+		setCellAngle			: function(additional){ 
+			if (!(additional && additional.val !== undefined))
+				return "";
+			
+			let angle = additional.val;
+			
+			switch (angle) {
+				case -90:	return "Api.GetSelection().SetOrientation('xlDownward');\n";
+				case 0:		return "Api.GetSelection().SetOrientation('xlHorizontal');\n";
+				case 90:	return "Api.GetSelection().SetOrientation('xlUpward');\n";
+				case 255:	return "Api.GetSelection().SetOrientation('xlVertical');\n";
+			}
+		},
+		setCellChangeTextCase	: function(additional){ 
+			if (!(additional && additional.val !== undefined))
+				return "";
+			
+			return "Api.GetSelection().ChangeTextCase(" + additional.val + ");\n";
+		},
+		setCellChangeFontSize	: function(additional){ 
+			if (!(additional && additional.val !== undefined))
+				return "";
+			
+			return additional.val ? "Api.asc_increaseFontSize();\n" : "Api.asc_decreaseFontSize();\n";
+		},
+		setCellBorder			: function(additional){
+			if (!(additional && additional.val !== undefined)) {
+				return "";
+			}
+				
+			let borderArray = additional.val;
+			if (!Array.isArray(borderArray) || borderArray.length === 0) {
+				return "";
+			}
+			
+			let result = "";
+			
+			for (let i = 0; i < borderArray.length; i++) {
+				let border = borderArray[i];
+				if (border && border.style !== undefined) {
+					
+					let positionStr = null;
+					switch (i) {
+						case 0: positionStr = 'Top'; break;
+						case 1: positionStr = 'Right'; break;
+						case 2: positionStr = 'Bottom'; break;
+						case 3: positionStr = 'Left'; break;
+						case 4: positionStr = 'DiagonalDown'; break;
+						case 5: positionStr = 'DiagonalUp'; break;
+						case 6: positionStr = 'InsideVertical'; break;
+						case 7: positionStr = 'InsideHorizontal'; break;
+						default: continue;
+					}
+					
+					let styleStr = null;
+					switch (border.style) {
+						case window['Asc'].c_oAscBorderStyles.None: styleStr = 'None'; break;
+						case window['Asc'].c_oAscBorderStyles.Double: styleStr = 'Double'; break;
+						case window['Asc'].c_oAscBorderStyles.Hair: styleStr = 'Hair'; break;
+						case window['Asc'].c_oAscBorderStyles.DashDotDot: styleStr = 'DashDotDot'; break;
+						case window['Asc'].c_oAscBorderStyles.DashDot: styleStr = 'DashDot'; break;
+						case window['Asc'].c_oAscBorderStyles.Dotted: styleStr = 'Dotted'; break;
+						case window['Asc'].c_oAscBorderStyles.Dashed: styleStr = 'Dashed'; break;
+						case window['Asc'].c_oAscBorderStyles.Thin: styleStr = 'Thin'; break;
+						case window['Asc'].c_oAscBorderStyles.MediumDashDotDot: styleStr = 'MediumDashDotDot'; break;
+						case window['Asc'].c_oAscBorderStyles.SlantDashDot: styleStr = 'SlantDashDot'; break;
+						case window['Asc'].c_oAscBorderStyles.MediumDashDot: styleStr = 'MediumDashDot'; break;
+						case window['Asc'].c_oAscBorderStyles.MediumDashed: styleStr = 'MediumDashed'; break;
+						case window['Asc'].c_oAscBorderStyles.Medium: styleStr = 'Medium'; break;
+						case window['Asc'].c_oAscBorderStyles.Thick: styleStr = 'Thick'; break;
+						default: continue;
+					}
+					
+					let colorStr = "Api.CreateColorFromRGB(0, 0, 0)";
+					if (border.color) {
+						if (typeof border.color === 'string') {
+							let hex = border.color.replace('#', '');
+							if (hex.length === 3) {
+								hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+							}
+							let r = parseInt(hex.substr(0, 2), 16) || 0;
+							let g = parseInt(hex.substr(2, 2), 16) || 0;
+							let b = parseInt(hex.substr(4, 2), 16) || 0;
+							colorStr = "Api.CreateColorFromRGB(" + r + ", " + g + ", " + b + ")";
+						} else if (typeof border.color === 'object') {
+							colorStr = "Api.CreateColorFromRGB(" + (border.color.r || 0) + ", " + (border.color.g || 0) + ", " + (border.color.b || 0) + ")";
+						}
+					}
+					
+					result += "Api.GetSelection().SetBorders(\"" + positionStr + "\", \"" + styleStr + "\", " + colorStr + ");\n";
+				}
+			}
+			
+			return result;
 		},
 		setCellHyperlinkAdd		: function(additional) {return (additional && additional.url) ? "" : ""},
 		setCellHyperlinkModify	: function(additional) {return (additional && additional.url) ? "" : ""},
@@ -329,15 +475,24 @@
 		[AscDFH.historydescription_Spreadsheet_SetCellStrikeout]			: cellActions.setCellStrikeout,
 		[AscDFH.historydescription_Spreadsheet_SetCellSubscript]			: cellActions.setCellSubscript,
 		[AscDFH.historydescription_Spreadsheet_SetCellSuperscript]			: cellActions.setCellSuperscript,
+		[AscDFH.historydescription_Spreadsheet_SetCellReadingOrder]			: cellActions.setCellReadingOrder,
 		[AscDFH.historydescription_Spreadsheet_SetCellAlign]				: cellActions.setCellAlign,
 		[AscDFH.historydescription_Spreadsheet_SetCellVertAlign]			: cellActions.setCellVerticalAlign,
 		[AscDFH.historydescription_Spreadsheet_SetCellTextColor]			: cellActions.setCellTextColor,
-		//[AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor]	: cellActions.setCellBackgroundColor,
+		[AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor]	    : cellActions.setCellBackgroundColor,
+		[AscDFH.historydescription_Spreadsheet_SetCellWrap]				    : cellActions.setCellWrap,
+		//[AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit]			: cellActions.setCellShrinkToFit,
+		[AscDFH.historydescription_Spreadsheet_SetCellBorder]				: cellActions.setCellBorder,
+		[AscDFH.historydescription_Spreadsheet_SetCellValue]				: cellActions.setCellValue,
+		[AscDFH.historydescription_Spreadsheet_SetCellAngle]				: cellActions.setCellAngle,
+		//[AscDFH.historydescription_Spreadsheet_SetCellMerge]				: cellActions.setCellMerge,
+		//[AscDFH.historydescription_Spreadsheet_SetCellStyle]				: cellActions.setCellStyle,
+		[AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase]		: cellActions.setCellChangeTextCase,
+		[AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize]		: cellActions.setCellChangeFontSize
 		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd]		: cellActions.setCellHyperlinkAdd,
 		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify]	: cellActions.setCellHyperlinkModify,
 		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove]	: cellActions.setCellHyperlinkRemove,
 		//[AscDFH.historydescription_Cut]										: cellActions.cut,
-		[AscDFH.historyitem_Cell_ChangeValue]								: cellActions.cellChangeValue,
 	};
 
 

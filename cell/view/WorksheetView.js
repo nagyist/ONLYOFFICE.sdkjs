@@ -16249,6 +16249,11 @@ function isAllowPasteLink(pastedWb) {
             History.Create_NewPoint();
             History.StartTransaction();
 
+			let oStartActionInfo = t.getStartActionForSelectionInfo(prop, val);
+			if (oStartActionInfo) {
+				t.workbook.StartAction(oStartActionInfo.nDescription, oStartActionInfo.additional);
+			}
+
             checkRange.forEach(function (item, i) {
 
                 var c, _align, _verticalText;
@@ -16679,6 +16684,8 @@ function isAllowPasteLink(pastedWb) {
 				}
 			}
 
+			t.workbook.FinalizeAction();
+
 			if (hasUpdates) {
 				t.draw();
 			}
@@ -16848,6 +16855,60 @@ function isAllowPasteLink(pastedWb) {
 		if (/*prop == "paste" ||*/ prop == "empty" || prop == "hyperlink" || prop == "sort")
 			this.workbook.Api.onWorksheetChange(checkRange);
 	};
+
+	WorksheetView.prototype.getStartActionForSelectionInfo = function(prop, val) {
+		const startActionMap = {
+			"fn": AscDFH.historydescription_Spreadsheet_SetCellFontName,//
+			"fs": AscDFH.historydescription_Spreadsheet_SetCellFontSize,//
+			"b": AscDFH.historydescription_Spreadsheet_SetCellBold,//
+			"i": AscDFH.historydescription_Spreadsheet_SetCellItalic,//
+			"u": AscDFH.historydescription_Spreadsheet_SetCellUnderline,//
+			"s": AscDFH.historydescription_Spreadsheet_SetCellStrikeout,//
+			"a": AscDFH.historydescription_Spreadsheet_SetCellAlign,//
+			"readingOrder": AscDFH.historydescription_Spreadsheet_SetCellReadingOrder,//
+			"va": AscDFH.historydescription_Spreadsheet_SetCellVertAlign,//
+			"c": AscDFH.historydescription_Spreadsheet_SetCellTextColor,//
+			"f": AscDFH.historydescription_Spreadsheet_SetCellFill,
+			"bc": AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor,//
+			"wrap": AscDFH.historydescription_Spreadsheet_SetCellWrap,//
+			//"shrink": AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit,
+			"value": AscDFH.historydescription_Spreadsheet_SetCellValue,
+			//"totalRowFunc": AscDFH.historydescription_Spreadsheet_SetTotalRowFunction,
+			//"format": AscDFH.historydescription_Spreadsheet_SetCellFormat,
+			"angle": AscDFH.historydescription_Spreadsheet_SetCellAngle,
+			//"indent": AscDFH.historydescription_Spreadsheet_SetCellIndent,
+			//"applyProtection": AscDFH.historydescription_Spreadsheet_SetCellApplyProtection,
+			//"locked": AscDFH.historydescription_Spreadsheet_SetCellLocked,
+			//"hiddenFormulas": AscDFH.historydescription_Spreadsheet_SetCellHiddenFormulas,
+			//"rh": AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove,
+			"border": AscDFH.historydescription_Spreadsheet_SetCellBorder,
+			//"merge": AscDFH.historydescription_Spreadsheet_SetCellMerge,
+			//"sort": AscDFH.historydescription_Spreadsheet_SetCellSort,
+			//"customSort": AscDFH.historydescription_Spreadsheet_SetCellCustomSort,
+			//"empty": AscDFH.historydescription_Spreadsheet_SetCellEmpty,
+			//"changeDigNum": AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum,
+			"changeFontSize": AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize,
+			//"style": AscDFH.historydescription_Spreadsheet_SetCellStyle,
+			//"paste": AscDFH.historydescription_Spreadsheet_SetCellPaste,
+			//"hyperlink": AscDFH.historydescription_Spreadsheet_SetCellHyperlink,
+			"changeTextCase": AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase
+		};
+
+		if (prop === "fa") {
+			switch (val) {
+				case 0:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: false}};
+				case 1:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSubscript, additional: {val: true}};
+				case 2:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: true}};
+				default:	return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: false}};
+			}
+		}
+		if (prop === "angle" && (val === 90 || val === - 90 || val === 0 || val === 255)) {
+			return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellAngle, additional: {val: val}};
+		}
+
+		return startActionMap[prop] ? {nDescription: startActionMap[prop], additional: {val: val}} : null;
+	};
+
 	WorksheetView.prototype.specialPaste = function (props) {
 		this.cellPasteHelper.specialPaste(props);
 	};

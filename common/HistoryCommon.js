@@ -4676,6 +4676,30 @@
 	window['AscDFH'].historydescription_Spreadsheet_SwitchCheckbox                  = 0x01d0;
 	window['AscDFH'].historydescription_Spreadsheet_IncrementControl                = 0x01d1;
 	window['AscDFH'].historydescription_Spreadsheet_SelectListBox                   = 0x01d2;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellFontAlign                = 0x01d4;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellReadingOrder             = 0x01d5;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellFill                     = 0x01d6;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellWrap                     = 0x01d7;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellShrinkToFit              = 0x01d8;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellValue                    = 0x01d9;
+	//window['AscDFH'].historydescription_Spreadsheet_SetTotalRowFunction             = 0x01da;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellFormat                   = 0x01db;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellAngle                    = 0x01dc;
+	/*window['AscDFH'].historydescription_Spreadsheet_SetCellIndent                   = 0x01dd;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellApplyProtection          = 0x01de;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellLocked                   = 0x01df;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellHiddenFormulas           = 0x01e0;*/
+	window['AscDFH'].historydescription_Spreadsheet_SetCellBorder                   = 0x01e1;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellMerge                    = 0x01e2;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellSort                     = 0x01e3;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellCustomSort               = 0x01e4;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellEmpty                    = 0x01e5;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellChangeDigNum             = 0x01e6;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeFontSize           = 0x01e7;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellStyle                    = 0x01e8;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellPaste                    = 0x01e9;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellHyperlink                = 0x01ea;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeTextCase           = 0x01eb;
 
 	window['AscDFH'].historydescription_Document_SetStyleHeading          			= 0x01d3;
 	

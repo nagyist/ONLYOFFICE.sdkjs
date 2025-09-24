@@ -6714,7 +6714,16 @@
 			}
 		}
 	};
+	WorkbookView.prototype.StartAction = function(nDescription, additional)
+	{
+		this.Api.sendEvent("asc_onUserActionStart");
+		this.Api.getMacroRecorder().onAction(nDescription, additional);
+	};
 
+	WorkbookView.prototype.FinalizeAction = function()
+	{
+		this.Api.sendEvent("asc_onUserActionEnd");
+	};
 
 
 	//временно добавляю сюда. в идеале - использовать общий класс из документов(или сделать базовый, от него наследоваться) - CDocumentSearch
