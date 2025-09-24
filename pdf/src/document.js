@@ -2090,7 +2090,12 @@ var CPresentation = CPresentation || function(){};
             // действия mouseEnter и mouseExit у полей
             if (oMouseMoveField != this.mouseMoveField && true !== this.IsEditFieldsMode()) {
                 if (this.mouseMoveField) {
-                    this.mouseMoveField.onMouseExit();
+                    if (!this.mouseMoveField.IsUseInDocument()) {
+                        this.mouseMoveField = null;
+                    }
+                    else {
+                        this.mouseMoveField.onMouseExit();
+                    }
                 }
 
                 this.mouseMoveField = oMouseMoveField;
