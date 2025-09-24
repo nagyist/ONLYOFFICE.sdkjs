@@ -12143,6 +12143,15 @@ ParaRun.prototype.CopyTextFormContent = function(oRun)
  */
 ParaRun.prototype.ConvertFootnoteType = function(isToFootnote, oStyles, oFootnote, oRef)
 {
+	let _t = this;
+	function replaceRef(pos, newRef)
+	{
+		AscCommon.executeNoPreDelete(function(){
+			_t.RemoveFromContent(pos, 1);
+			_t.AddToContent(pos, newRef);
+		}, _t.GetLogicDocument());
+	}
+	
 	var sRStyle = this.GetRStyle();
 	if (isToFootnote)
 	{
@@ -12151,21 +12160,15 @@ ParaRun.prototype.ConvertFootnoteType = function(isToFootnote, oStyles, oFootnot
 		else if (sRStyle === oStyles.GetDefaultEndnoteReference())
 			this.SetRStyle(oStyles.GetDefaultFootnoteReference());
 
-		for (var nCurPos = 0, nCount = this.Content.length; nCurPos < nCount; ++nCurPos)
+		for (let nCurPos = 0, nCount = this.Content.length; nCurPos < nCount; ++nCurPos)
 		{
-			var oElement = this.Content[nCurPos];
+			let oElement = this.Content[nCurPos];
 			if (!oRef || oRef === oElement)
 			{
 				if (para_EndnoteReference === oElement.Type)
-				{
-					this.RemoveFromContent(nCurPos, 1);
-					this.AddToContent(nCurPos, new AscWord.CRunFootnoteReference(oFootnote, oElement.CustomMark));
-				}
+					replaceRef(nCurPos, new AscWord.CRunFootnoteReference(oFootnote, oElement.CustomMark));
 				else if (para_EndnoteRef === oElement.Type)
-				{
-					this.RemoveFromContent(nCurPos, 1);
-					this.AddToContent(nCurPos, new AscWord.CRunFootnoteRef(oFootnote));
-				}
+					replaceRef(nCurPos, new AscWord.CRunFootnoteRef(oFootnote));
 			}
 		}
 	}
@@ -12176,21 +12179,15 @@ ParaRun.prototype.ConvertFootnoteType = function(isToFootnote, oStyles, oFootnot
 		else if (sRStyle === oStyles.GetDefaultFootnoteReference())
 			this.SetRStyle(oStyles.GetDefaultEndnoteReference());
 
-		for (var nCurPos = 0, nCount = this.Content.length; nCurPos < nCount; ++nCurPos)
+		for (let nCurPos = 0, nCount = this.Content.length; nCurPos < nCount; ++nCurPos)
 		{
-			var oElement = this.Content[nCurPos];
+			let oElement = this.Content[nCurPos];
 			if (!oRef || oRef === oElement)
 			{
 				if (para_FootnoteReference === oElement.Type)
-				{
-					this.RemoveFromContent(nCurPos, 1);
-					this.AddToContent(nCurPos, new AscWord.CRunEndnoteReference(oFootnote, oElement.CustomMark));
-				}
+					replaceRef(nCurPos, new AscWord.CRunEndnoteReference(oFootnote, oElement.CustomMark));
 				else if (para_FootnoteRef === oElement.Type)
-				{
-					this.RemoveFromContent(nCurPos, 1);
-					this.AddToContent(nCurPos, new AscWord.CRunEndnoteRef(oFootnote));
-				}
+					replaceRef(nCurPos, new AscWord.CRunEndnoteRef(oFootnote));
 			}
 		}
 	}
