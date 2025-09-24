@@ -17049,9 +17049,17 @@ CDocument.prototype.AddComplexForm = function(oPr, formPr)
 
 	oCC.SetComplexFormPr(oPr);
 	oCC.MoveCursorToStartPos();
-
-	let _formPr = formPr ? formPr : new AscWord.CSdtFormPr();
-	oCC.SetFormPr(_formPr);
+	
+	if (!formPr)
+	{
+		formPr = new AscWord.CSdtFormPr();
+		let oform = this.GetOFormDocument();
+		let defaultRole = oform ? oform.getDefaultRole() : null;
+		if (defaultRole)
+			formPr.SetRole(defaultRole.getRole());
+	}
+	
+	oCC.SetFormPr(formPr);
 
 	if (sText)
 	{
@@ -17062,7 +17070,7 @@ CDocument.prototype.AddComplexForm = function(oPr, formPr)
 		oCC.SelectContentControl();
 	}
 	
-	if (_formPr.GetFixed())
+	if (formPr.GetFixed())
 		oCC.ConvertFormToFixed();
 
 	this.UpdateSelection();
