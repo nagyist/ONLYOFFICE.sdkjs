@@ -978,70 +978,10 @@
 		let isShadowVisible = shadowPattern === 1;
 
 		if (isShadowVisible) {
-			let shadow = new AscFormat.COuterShdw();
+			let shadows = getShadows(this, pageInfo, visioDocument);
+			let outerShadow = shadows[0];
+			let innerShadow = shadows[1];
 
-			let shadowColor = getShadowColor(this, pageInfo, visioDocument);
-			shadow.color = shadowColor;
-
-
-			let shadowTypeCell = this.getCell("ShapeShdwType");
-			// TODO check themed type. shadowTypeCell.calculateValue return undefined on THEMEVAL
-			// because there is an issue with THEMEVAL it sometimes return 0 sometimes 1 on empty effectStyleLst
-			// where shadow data should be
-			// see files offsets shadow properties themeval type 1.vsdx and offsets shadow properties themeval type 0.vsdx
-			// in https://bugzilla.onlyoffice.com/show_bug.cgi?id=75884
-			let shadowType = shadowTypeCell && shadowTypeCell.calculateValue(this, pageInfo,visioDocument.themes);
-
-			let shadowOffsetX_inch;
-			let shadowOffsetY_inch;
-			let shadowScaleX;
-			let shadowScaleY;
-			if (shadowType !== undefined && shadowType === 0) {
-				shadowOffsetX_inch = 0.0625;
-				shadowOffsetY_inch = -0.0625;
-				shadowScaleX = 1;
-				shadowScaleY = 1;
-			} else {
-				let shapeShdwScaleFactorCell = this.getCell("ShapeShdwScaleFactor");
-				let shapeShdwScaleFactor = shapeShdwScaleFactorCell && shapeShdwScaleFactorCell.calculateValue(this, pageInfo,
-						visioDocument.themes);
-				shadowScaleX = shapeShdwScaleFactor;
-				shadowScaleY = shapeShdwScaleFactor;
-
-				// set offsets for shadow
-				let shadowOffsetXcell = this.getCell("ShapeShdwOffsetX");
-				if (shadowOffsetXcell) {
-					shadowOffsetX_inch = shadowOffsetXcell.calculateValue(this, pageInfo, visioDocument.themes);
-				} else {
-					shadowOffsetX_inch = 0.125;
-				}
-
-				let shadowOffsetYcell = this.getCell("ShapeShdwOffsetY");
-				if (shadowOffsetYcell) {
-					shadowOffsetY_inch = shadowOffsetYcell.calculateValue(this, pageInfo, visioDocument.themes);
-				} else {
-					shadowOffsetY_inch = -0.125;
-				}
-			}
-
-			let shadowSx = shadowScaleX * 100000;
-			let shadowSy = shadowScaleY * 100000;
-			shadow.sx = shadowSx;
-			shadow.sy = shadowSy;
-
-			let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
-			let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
-			let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
-			let emuDist =  Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
-			shadow.dist = emuDist;
-			// if true move to cord system where y goes down
-			if (isInvertCoords) {
-				atan = -atan;
-			}
-			let dirC = atan * AscFormat.radToDeg * AscFormat.degToC;
-			shadow.dir = dirC;
-
-			shadow.rotWithShape = true;
 			// cShape.spPr.changeShadow(shadow);
 			cShape.spPr.effectProps = new AscFormat.CEffectProperties();
 
@@ -1053,69 +993,149 @@
 			// cShape.spPr.effectProps.EffectDag.effectList.push(shadow);
 
 			cShape.spPr.effectProps.EffectLst = new AscFormat.CEffectLst();
-			cShape.spPr.effectProps.EffectLst.outerShdw = shadow;
-
-			// inner shadow
-			if (shadowType && shadowType === 3) {
-				let shadowInner = new AscFormat.CInnerShdw();
-				shadowInner.color = shadowColor;
-				shadowInner.sx = shadowSx;
-				shadowInner.sy = shadowSy;
-				shadowInner.dist = emuDist;
-				shadowInner.dir = dirC;
-				shadowInner.rotWithShape = true;
-
-				cShape.spPr.effectProps.EffectLst.innerShdw = shadowInner;
-			}
+			cShape.spPr.effectProps.EffectLst.outerShdw = outerShadow;
+			cShape.spPr.effectProps.EffectLst.innerShdw = innerShadow;
 
 			/**
 			 * @param {Shape_Type} shape
 			 * @param {Page_Type} pageInfo
 			 * @param {CVisioDocument} visioDocument
-			 * @return {CUniColor} shadow color
+			 * @return {[COuterShdw,CInnerShdw]} outer shadow and inner
 			 */
-			function getShadowColor(shape, pageInfo, visioDocument) {
-				let shadowForegndCell = shape.getCell("ShdwForegnd");
-				let shadowColor;
-				if (shadowForegndCell) {
-					// AscCommon.consoleLog("FillForegnd was found:", fillForegndCell);
-					shadowColor = shadowForegndCell.calculateValue(shape, pageInfo,
-							visioDocument.themes);
+			function getShadows(shape, pageInfo, visioDocument) {
+				/**
+				 * @type {COuterShdw}
+				 */
+				let shadow = new AscFormat.COuterShdw();
 
-					let mainFillAlphaCoef = 1;
-					let fillForegndTransValue = shape.getCellNumberValue("FillForegndTrans");
-					if (!isNaN(fillForegndTransValue)) {
-						mainFillAlphaCoef = 1 - fillForegndTransValue;
+				let shadowColor = getShadowColor(shape, pageInfo, visioDocument);
+				shadow.color = shadowColor;
+
+
+				let shadowTypeCell = shape.getCell("ShapeShdwType");
+				// TODO check themed type. shadowTypeCell.calculateValue return undefined on THEMEVAL
+				//  because there is an issue with visio THEMEVAL it sometimes return 0 sometimes 1 on empty effectStyleLst
+				//  where shadow data should be
+				//  see files: offsets shadow properties themeval type 1.vsdx and offsets shadow properties themeval type 0.vsdx
+				//  in https://bugzilla.onlyoffice.com/show_bug.cgi?id=75884
+				let shadowType = shadowTypeCell && shadowTypeCell.calculateValue(shape, pageInfo,visioDocument.themes);
+
+				let shadowOffsetX_inch;
+				let shadowOffsetY_inch;
+				let shadowScaleX;
+				let shadowScaleY;
+				if (shadowType !== undefined && shadowType === 0) {
+					shadowOffsetX_inch = 0.0625;
+					shadowOffsetY_inch = -0.0625;
+					shadowScaleX = 1;
+					shadowScaleY = 1;
+				} else {
+					let shapeShdwScaleFactorCell = shape.getCell("ShapeShdwScaleFactor");
+					let shapeShdwScaleFactor = shapeShdwScaleFactorCell && shapeShdwScaleFactorCell.calculateValue(shape, pageInfo,
+							visioDocument.themes);
+					shadowScaleX = shapeShdwScaleFactor;
+					shadowScaleY = shapeShdwScaleFactor;
+
+					// set offsets for shadow
+					let shadowOffsetXcell = shape.getCell("ShapeShdwOffsetX");
+					if (shadowOffsetXcell) {
+						shadowOffsetX_inch = shadowOffsetXcell.calculateValue(shape, pageInfo, visioDocument.themes);
+					} else {
+						shadowOffsetX_inch = 0.125;
 					}
 
-					let shadowTransValue = 0;
-					let shadowTransCell = shape.getCell("ShdwForegndTrans");
-					// if themed alpha is included in shadowColor already
-					if (shadowTransCell.getStringValue() !== "Themed") {
-						shadowTransValue = shadowTransCell.getNumberValue("ShdwForegndTrans");
+					let shadowOffsetYcell = shape.getCell("ShapeShdwOffsetY");
+					if (shadowOffsetYcell) {
+						shadowOffsetY_inch = shadowOffsetYcell.calculateValue(shape, pageInfo, visioDocument.themes);
+					} else {
+						shadowOffsetY_inch = -0.125;
+					}
+				}
 
-						let shadowAlpha = (1 - shadowTransValue) * mainFillAlphaCoef;
-						if (shadowAlpha !== 1) {
-							let oMod = new AscFormat.CColorMod("alpha", shadowAlpha  * 100 * 1000 + 0.5 >> 0);
-							shadowColor.addColorMod(oMod);
+				let shadowSx = shadowScaleX * 100000;
+				let shadowSy = shadowScaleY * 100000;
+				shadow.sx = shadowSx;
+				shadow.sy = shadowSy;
+
+				let shadowOffsetX = shadowOffsetX_inch === undefined ? 0 : shadowOffsetX_inch * g_dKoef_in_to_mm;
+				let shadowOffsetY = shadowOffsetY_inch === undefined ? 0 : shadowOffsetY_inch * g_dKoef_in_to_mm;
+				let atan = Math.atan2(shadowOffsetY, shadowOffsetX);
+				let emuDist =  Math.hypot(shadowOffsetX, shadowOffsetY) * g_dKoef_mm_to_emu;
+				shadow.dist = emuDist;
+				// if true move to cord system where y goes down
+				if (isInvertCoords) {
+					atan = -atan;
+				}
+				let dirC = atan * AscFormat.radToDeg * AscFormat.degToC;
+				shadow.dir = dirC;
+
+				shadow.rotWithShape = true;
+
+				/**
+				 * @type {CInnerShdw}
+				 */
+				let shadowInner = new AscFormat.CInnerShdw();
+				if (shadowType && shadowType === 3) {
+					shadowInner = new AscFormat.CInnerShdw();
+					shadowInner.color = shadowColor;
+					shadowInner.sx = shadowSx;
+					shadowInner.sy = shadowSy;
+					shadowInner.dist = emuDist;
+					shadowInner.dir = dirC;
+					shadowInner.rotWithShape = true;
+				}
+
+				return [shadow, shadowInner];
+
+				/**
+				 * @param {Shape_Type} shape
+				 * @param {Page_Type} pageInfo
+				 * @param {CVisioDocument} visioDocument
+				 * @return {CUniColor} shadow color
+				 */
+				function getShadowColor(shape, pageInfo, visioDocument) {
+					let shadowForegndCell = shape.getCell("ShdwForegnd");
+					let shadowColor;
+					if (shadowForegndCell) {
+						// AscCommon.consoleLog("FillForegnd was found:", fillForegndCell);
+						shadowColor = shadowForegndCell.calculateValue(shape, pageInfo,
+								visioDocument.themes);
+
+						let mainFillAlphaCoef = 1;
+						let fillForegndTransValue = shape.getCellNumberValue("FillForegndTrans");
+						if (!isNaN(fillForegndTransValue)) {
+							mainFillAlphaCoef = 1 - fillForegndTransValue;
+						}
+
+						let shadowTransValue = 0;
+						let shadowTransCell = shape.getCell("ShdwForegndTrans");
+						// if themed alpha is included in shadowColor already
+						if (shadowTransCell.getStringValue() !== "Themed") {
+							shadowTransValue = shadowTransCell.getNumberValue("ShdwForegndTrans");
+
+							let shadowAlpha = (1 - shadowTransValue) * mainFillAlphaCoef;
+							if (shadowAlpha !== 1) {
+								let oMod = new AscFormat.CColorMod("alpha", shadowAlpha  * 100 * 1000 + 0.5 >> 0);
+								shadowColor.addColorMod(oMod);
+							}
+						} else {
+							// check if alpha is set already
+							let alphaMod = shadowColor.Mods && shadowColor.Mods.Mods.find(function (mod) {
+								return mod.name === "alpha";
+							});
+							if (alphaMod) {
+								alphaMod.val = alphaMod.val * mainFillAlphaCoef;
+							} else {
+								let oMod = new AscFormat.CColorMod("alpha", mainFillAlphaCoef  * 100 * 1000 + 0.5 >> 0);
+								shadowColor.addColorMod(oMod);
+							}
 						}
 					} else {
-						// check if alpha is set already
-						let alphaMod = shadowColor.Mods && shadowColor.Mods.Mods.find(function (mod) {
-							return mod.name === "alpha";
-						});
-						if (alphaMod) {
-							alphaMod.val = alphaMod.val * mainFillAlphaCoef;
-						} else {
-							let oMod = new AscFormat.CColorMod("alpha", mainFillAlphaCoef  * 100 * 1000 + 0.5 >> 0);
-							shadowColor.addColorMod(oMod);
-						}
+						// AscCommon.consoleLog("shadow foreground cell not found for", this);
+						shadowColor = AscFormat.CreateUniColorRGB(0,0,0);
 					}
-				} else {
-					// AscCommon.consoleLog("shadow foreground cell not found for", this);
-					shadowColor = AscFormat.CreateUniColorRGB(0,0,0);
+					return shadowColor;
 				}
-				return shadowColor;
 			}
 		}
 
