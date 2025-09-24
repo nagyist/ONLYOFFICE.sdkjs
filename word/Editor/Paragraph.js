@@ -13723,37 +13723,42 @@ Paragraph.prototype.SplitContent = function(newParagraph, after, contentPos, isN
 			this.Content[nCurPos].RemoveSelection();
 			this.Content[nCurPos].Set_ParaContentPos(contentPos, 1);
 			
-			// Специальная заглушка для строгого редактирования. Т.е. мы даем добавлять параграф, когда курсор находится
-			// в начале параграфа, то не нужно делить текущий раз из-за текщих колизий в совместке. (Если проблема
-			// с обновлением изменений при разделении рана будет решена, то можно будет назад объединить этот код)
-			if (this.Content[nCurPos].IsCursorAtBegin())
+			// Отключаем preDelete, чтобы не чистилось внутреннее содержимое, т.к. мы переносим элементы, а не удаляем их
+			let _t = this;
+			AscCommon.executeNoPreDelete(function()
 			{
-				if (nCurPos > 0)
+				// Специальная заглушка для строгого редактирования. Т.е. мы даем добавлять параграф, когда курсор находится
+				// в начале параграфа, то не нужно делить текущий раз из-за текщих колизий в совместке. (Если проблема
+				// с обновлением изменений при разделении рана будет решена, то можно будет назад объединить этот код)
+				if (_t.Content[nCurPos].IsCursorAtBegin())
 				{
-					newContent = this.Content.slice(0, nCurPos);
-					this.Internal_Content_Remove2(0, nCurPos);
+					if (nCurPos > 0)
+					{
+						newContent = _t.Content.slice(0, nCurPos);
+						_t.Internal_Content_Remove2(0, nCurPos);
+					}
+					
+					let newElement = new AscWord.Run();
+					newElement.Set_Pr(TextPr.Copy());
+					newContent.push(newElement);
 				}
-				
-				let newElement = new AscWord.Run();
-				newElement.Set_Pr(TextPr.Copy());
-				newContent.push(newElement);
-			}
-			else
-			{
-				// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
-				// ее на пустой ран с заданными настройками).
-				var NewElement = this.Content[nCurPos].Split(contentPos, 1);
-				
-				if (null === NewElement)
+				else
 				{
-					NewElement = new AscWord.Run();
-					NewElement.Set_Pr(TextPr.Copy());
+					// Разделяем текущий элемент (возвращается правая, отделившаяся часть, если она null, тогда заменяем
+					// ее на пустой ран с заданными настройками).
+					var NewElement = _t.Content[nCurPos].Split(contentPos, 1);
+					
+					if (null === NewElement)
+					{
+						NewElement = new AscWord.Run();
+						NewElement.Set_Pr(TextPr.Copy());
+					}
+					
+					newContent = _t.Content.slice(0, nCurPos + 1);
+					_t.Internal_Content_Remove2(0, nCurPos + 1);
+					_t.Internal_Content_Add(0, NewElement);
 				}
-				
-				newContent = this.Content.slice(0, nCurPos + 1);
-				this.Internal_Content_Remove2(0, nCurPos + 1);
-				this.Internal_Content_Add(0, NewElement);
-			}
+			}, oLogicDocument, this);
 		}
 		
 		this.CheckParaEnd();
