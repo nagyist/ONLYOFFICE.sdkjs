@@ -5630,6 +5630,12 @@ var CPresentation = CPresentation || function(){};
             }
         }
 
+        // cant paste object when page is selected in thumbnails
+        let oThumbnails = this.Viewer.thumbnails;
+        if (!oTargetContent.MergePagesInfo.binaryData && oThumbnails.isInFocus) {
+            return false;
+        }
+
         let oThis = this;
 
         this.Viewer.IsOpenFormsInProgress = true;
