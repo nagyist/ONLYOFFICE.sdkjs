@@ -454,7 +454,7 @@ CInlineLevelSdt.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _C
 			Y            : Y0,
 			H            : Y1 - Y0,
 			TextLineH    : Y1 - Y0,
-			Page         : PRSA.Paragraph.Get_AbsolutePage(_CurPage),
+			Page         : PRSA.Paragraph.GetAbsolutePage(_CurPage),
 			PageInternal : _CurPage
 		};
 	}
@@ -1124,7 +1124,7 @@ CInlineLevelSdt.prototype.GetBoundingPolygon = function(shift)
 	var oHdrFtr     = this.Paragraph.Parent.IsHdrFtr(true);
 	var nHdrFtrPage = oHdrFtr ? oHdrFtr.GetContent().GetAbsolutePage(0) : null;
 
-	var StartPage = this.Paragraph.Get_StartPage_Absolute();
+	var StartPage = this.Paragraph.GetAbsoluteStartPage();
 	if (null === this.BoundsPaths || StartPage !== this.BoundsPathsStartPage || shift !== this.BoundsShift)
 	{
 		var arrBounds = [], arrRects = [], CurPage = -1, isAllEmpty = true;
@@ -1591,6 +1591,7 @@ CInlineLevelSdt.prototype.private_ReplacePlaceHolderWithContent = function(bMath
 	this.RemoveSelection();
 	this.MoveCursorToStartPos();
 
+	let annotationMarks = this.GetAllAnnotationMarks();
 	this.RemoveFromContent(0, this.GetElementsCount());
 
 	if (this.IsContentControlEquation())
@@ -1603,6 +1604,12 @@ CInlineLevelSdt.prototype.private_ReplacePlaceHolderWithContent = function(bMath
 		oRun.SetPr(this.Pr.TextPr.Copy());
 		this.AddToContent(0, oRun);
 	}
+	
+	for (let i = 0; i < annotationMarks.length; ++i)
+	{
+		this.AddToContentToEnd(annotationMarks[i]);
+	}
+	this.CorrectContent();
 
 	this.RemoveSelection();
 	this.MoveCursorToStartPos();
@@ -1655,6 +1662,8 @@ CInlineLevelSdt.prototype.private_ReplaceContentWithPlaceHolder = function(isSel
 CInlineLevelSdt.prototype.private_FillPlaceholderContent = function()
 {
 	var isSelection = this.IsSelectionUse();
+	
+	let annotationMarks = this.GetAllAnnotationMarks();
 
 	this.RemoveFromContent(0, this.GetElementsCount());
 	
@@ -1719,7 +1728,13 @@ CInlineLevelSdt.prototype.private_FillPlaceholderContent = function()
 				this.Content[nIndex].SetPr(this.Pr.TextPr.Copy());
 		}
 	}
-
+	
+	for (let i = 0; i < annotationMarks.length; ++i)
+	{
+		this.AddToContentToEnd(annotationMarks[i]);
+	}
+	this.CorrectContent();
+	
 	if (isSelection)
 		this.SelectAll(1);
 };
@@ -2389,6 +2404,7 @@ CInlineLevelSdt.prototype.SetComboBoxPr = function(oPr)
 		var _oPr = oPr ? oPr.Copy() : undefined;
 		History.Add(new CChangesSdtPrComboBox(this, this.Pr.ComboBox, _oPr));
 		this.Pr.ComboBox = _oPr;
+		this.OnChangePr();
 	}
 };
 /**
@@ -2408,6 +2424,7 @@ CInlineLevelSdt.prototype.SetDropDownListPr = function(oPr)
 		var _oPr = oPr ? oPr.Copy() : undefined;
 		History.Add(new CChangesSdtPrDropDownList(this, this.Pr.DropDown, _oPr));
 		this.Pr.DropDown = _oPr;
+		this.OnChangePr();
 	}
 };
 /**
@@ -2809,6 +2826,25 @@ CInlineLevelSdt.prototype.GetSpecificType = function()
 		return Asc.c_oAscContentControlSpecificType.DateTime;
 
 	return Asc.c_oAscContentControlSpecificType.None;
+};
+/**
+ * Sync form properties for current form and specified form
+ */
+CInlineLevelSdt.prototype.SyncFormPrWithSameKey = function(form)
+{
+	if (form.GetSpecificType() !== this.GetSpecificType())
+		return;
+	
+	this.SetFormRequired(form.IsFormRequired());
+	
+	if (Asc.c_oAscContentControlSpecificType.DropDownList === this.GetSpecificType())
+	{
+		this.SetDropDownListPr(form.GetDropDownListPr());
+	}
+	else if (Asc.c_oAscContentControlSpecificType.ComboBox === this.GetSpecificType())
+	{
+		this.SetComboBoxPr(form.GetComboBoxPr());
+	}
 };
 CInlineLevelSdt.prototype.Get_ParentTextTransform = function()
 {
@@ -3966,3 +4002,4 @@ CInlineLevelSdt.prototype.GetDataBinding = function()
 window['AscCommonWord'] = window['AscCommonWord'] || {};
 window['AscCommonWord'].CInlineLevelSdt = CInlineLevelSdt;
 window["AscWord"].CInlineLevelSdt = CInlineLevelSdt;
+window["AscWord"].InlineLevelSdt = CInlineLevelSdt;

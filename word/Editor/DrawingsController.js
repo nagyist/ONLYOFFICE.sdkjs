@@ -123,9 +123,33 @@ CDrawingsController.prototype.AddTextArt = function(nStyle)
 		this.LogicDocument.AddTextArt(nStyle);
 	}
 };
+CDrawingsController.prototype.LoadChartData = function(bNeedRecalculate)
+{
+	this.DrawingObjects.loadChartData(bNeedRecalculate);
+};
 CDrawingsController.prototype.EditChart = function(Chart)
 {
 	this.DrawingObjects.editChart(Chart);
+};
+CDrawingsController.prototype.UpdateChart = function(Chart)
+{
+	this.DrawingObjects.updateChart(Chart);
+};
+CDrawingsController.prototype.OpenChartEditor = function()
+{
+	this.DrawingObjects.openChartEditor();
+};
+CDrawingsController.prototype.ApplyChartSettings = function(oChartSettings)
+{
+	this.DrawingObjects.editChartDrawingObjects(oChartSettings);
+};
+CDrawingsController.prototype.GetChartSettings = function()
+{
+	return this.DrawingObjects.getChartSettings();
+};
+CDrawingsController.prototype.OpenOleEditor = function()
+{
+	this.DrawingObjects.openOleEditor();
 };
 CDrawingsController.prototype.AddInlineTable = function(nCols, nRows, nMode)
 {
@@ -562,7 +586,7 @@ CDrawingsController.prototype.UpdateRulersState = function()
 {
 	// Вызываем данную функцию, чтобы убрать рамку буквицы
 	this.DrawingDocument.Set_RulerState_Paragraph(null);
-	this.LogicDocument.Document_UpdateRulersStateBySection(this.LogicDocument.CurPos.ContentPos);
+	this.LogicDocument.Document_UpdateRulersStateBySection();
 	this.DrawingObjects.documentUpdateRulersState();
 };
 CDrawingsController.prototype.UpdateSelectionState = function()
@@ -737,4 +761,9 @@ CDrawingsController.prototype.CollectSelectedReviewChanges = function(oTrackMana
 	var oTargetDocContent = this.DrawingObjects.getTargetDocContent();
 	if (oTargetDocContent && oTargetDocContent.CollectSelectedReviewChanges)
 		oTargetDocContent.CollectSelectedReviewChanges(oTrackManager);
+};
+CDrawingsController.prototype.GetCurrentTopDocContent = function()
+{
+	let docContent = this.DrawingObjects.getTargetDocContent();
+	return docContent ? docContent : this.LogicDocument;
 };

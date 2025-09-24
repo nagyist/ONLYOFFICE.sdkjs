@@ -2708,7 +2708,13 @@
                 callback && callback();
             });
         };
-        AscCommon.sendImgUrls(oApi, oObjectsForDownload.aUrls, fCallback, true);
+        if (oApi.getViewMode()) {
+            //todo allow image upload in view mode or deny setRequestedDocument
+            //temp stub for bug 75266. Use images from converted document. downloadAs also relies on images from the converted document
+            fCallback(oObjectsForDownload.aUrls);
+        } else {
+            AscCommon.sendImgUrls(oApi, oObjectsForDownload.aUrls, fCallback, true);
+        }
         return null;
     };
 	CDocumentComparison.prototype.getNewParaPrWithDiff = function (oElementPr, oPartnerPr)
@@ -2881,7 +2887,7 @@
         {
             const oLogicDocument = this.originalDocument;
             const bCopyHdrFtr = true;
-            const SectPr = new CSectionPr(oLogicDocument);
+            const SectPr = new AscWord.SectPr(oLogicDocument);
             SectPr.Copy(oReviseSectPr, bCopyHdrFtr, this.copyPr);
             if(oElement.Set_SectionPr)
             {
