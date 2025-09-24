@@ -1276,6 +1276,7 @@
 			let oFormsInfo	= this.file.nativeFile["getInteractiveFormsInfo"]();
 			let nMaxIdx		= this.file.nativeFile["getStartID"]();
 
+			oDoc.UpdateMaxLoadApIdx(nMaxIdx);
 			oDoc.private_AddFormsByInfo(oFormsInfo);
 			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};

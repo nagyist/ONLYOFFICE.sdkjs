@@ -2999,6 +2999,8 @@ var CPresentation = CPresentation || function(){};
             }
 
             let oParent = _t.CreateField(widgets[0].GetFullName(), widgets[0].GetType(), []);
+            // force write information about new parent
+            oParent._wasChanged = true;
 
             widgets.forEach(function(widget) {
                 oParent.DrainLogicFrom(widget);
@@ -3007,6 +3009,8 @@ var CPresentation = CPresentation || function(){};
 
             widgets.forEach(function(widget) {
                 oParent.AddKid(widget);
+                // force write information about new parent
+                widget._wasChanged = true;
             });
         });
 
@@ -7367,6 +7371,9 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.UpdateMaxApIdx = function(nApIdx) {
         AscCommon.g_oIdCounter.m_nIdCounterEdit = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterEdit);
+    };
+    CPDFDoc.prototype.UpdateMaxLoadApIdx = function(nApIdx) {
+        AscCommon.g_oIdCounter.m_nIdCounterLoad = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterLoad);
     };
     CPDFDoc.prototype.Add_ContentChanges = function(Changes) {
         this.pagesContentChanges.Add(Changes);
