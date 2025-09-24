@@ -11053,6 +11053,15 @@ Paragraph.prototype.Internal_CompiledParaPrPresentation = function(Lvl, bNoMerge
 			Pr.TextPr.Merge(this.Pr.DefaultRunPr);
 	}
 	Pr.TextPr.Color.Auto = false;
+	
+	let logicDocument = this.GetLogicDocument();
+	if (logicDocument && logicDocument.IsDocumentEditor() && Pr.ParaPr.Bidi)
+	{
+		if (AscCommon.align_Left === Pr.ParaPr.Jc)
+			Pr.ParaPr.Jc = AscCommon.align_Right;
+		else if (AscCommon.align_Right === Pr.ParaPr.Jc)
+			Pr.ParaPr.Jc = AscCommon.align_Left;
+	}
 
 	return Pr;
 };
