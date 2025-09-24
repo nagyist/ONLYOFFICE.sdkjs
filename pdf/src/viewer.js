@@ -4718,6 +4718,10 @@
 			}
 		}
 
+		if (this.scheduledRepaintTimer == null) {
+			oDoc.UpdateInterface();
+		}
+
 		if (oMemory) {
 			let nStartPos = oMemory.GetCurPosition();
 			oMemory.Skip(4);
@@ -5063,6 +5067,10 @@
 			}
 		}
 
+		if (this.scheduledRepaintTimer == null) {
+			oDoc.UpdateInterface();
+		}
+		
 		if (oMemory) {
 			let nStartPos = oMemory.GetCurPosition();
 			oMemory.Skip(4);
