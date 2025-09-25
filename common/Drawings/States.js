@@ -290,7 +290,9 @@ StartAddNewShape.prototype =
             {
                 if(bLock)
                 {
-                    History.Create_NewPoint(AscDFH.historydescription_CommonStatesAddNewShape);
+                    let oApi = oThis.drawingObjects.getEditorApi();
+                    let oPresentation = oApi.WordControl && oApi.WordControl.m_oLogicDocument;
+                    oPresentation.StartAction(AscDFH.historydescription_CommonStatesAddNewShape, [{type: track.presetGeom, pos: {x: track.x, y: track.y}, extX: track.extX, extY: track.extY, fill: track.overlayObject.brush, border: track.overlayObject.pen}]);
                     var shape = track.getShape(false, oThis.drawingObjects.getDrawingDocument(), oThis.drawingObjects.drawingObjects, isClickMouseEvent);
 
                     if(!(oThis.drawingObjects.drawingObjects && oThis.drawingObjects.drawingObjects.cSld))
@@ -371,6 +373,7 @@ StartAddNewShape.prototype =
                         }
                     }
 
+                    oPresentation.FinalizeAction();
                 }
 	            oThis.drawingObjects.updateOverlay();
             };

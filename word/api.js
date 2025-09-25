@@ -3522,7 +3522,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextBold);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextBold, null, null, {isBold: value});
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Bold : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3533,7 +3533,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextItalic);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextItalic, null, null, {isItalic: value});
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Italic : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3544,7 +3544,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextUnderline);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextUnderline, null, null, {isUnderline: value});
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Underline : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3555,7 +3555,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextStrikeout);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextStrikeout, null, null, {isStrikeout: value});
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 				Strikeout  : value,
 				DStrikeout : false
@@ -3863,7 +3863,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Properties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphLineSpacing);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphLineSpacing, undefined, undefined, {lineSpacing: {type : Type, value : Value}});
 			this.WordControl.m_oLogicDocument.SetParagraphSpacing({LineRule : Type, Line : Value});
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -4299,7 +4299,7 @@ background-repeat: no-repeat;\
 		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			return;
 
-		logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphAlign);
+		logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphAlign, undefined, undefined, {align: value});
 		logicDocument.SetParagraphAlign(value);
 		logicDocument.UpdateInterface();
 		logicDocument.Recalculate();
@@ -4347,7 +4347,7 @@ background-repeat: no-repeat;\
 			let oRes = null;
 			if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			{
-				logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphNumbering);
+				logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphNumbering, undefined, undefined, {numbering: numInfo});
 				let numPr = logicDocument.SetParagraphNumbering(numInfo);
 				logicDocument.FinalizeAction();
 				
@@ -4610,7 +4610,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Properties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphStyle);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphStyle, null, null, {name: sName});
 			this.WordControl.m_oLogicDocument.SetParagraphStyle(sName, true);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -4867,7 +4867,7 @@ background-repeat: no-repeat;\
 			Types : [AscCommon.changestype_Paragraph_TextProperties]
 		}))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphShd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphShd, undefined, undefined, {color: color});
 
 			if (true === isOnlyPara)
 				this.WordControl.m_oLogicDocument.SetUseTextShd(false);

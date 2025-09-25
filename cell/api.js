@@ -981,10 +981,7 @@ var editor;
  };
 
   spreadsheet_api.prototype.asc_Cut = function() {
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Cut);
-	let cutData = AscCommon.g_clipboardBase.Button_Cut();
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Cut);
-	return cutData;
+	return AscCommon.g_clipboardBase.Button_Cut();
   };
 
   spreadsheet_api.prototype.asc_PasteData = function (_format, data1, data2, text_data, doNotShowButton, callback) {
@@ -5947,50 +5944,29 @@ var editor;
     fonts[fontName] = 1;
     t._loadFonts(fonts, function() {
       var ws = t.wb.getWorksheet();
-
-	  this.sync_StartAction(
-		c_oAscAsyncActionType.BlockInteraction,
-		AscDFH.historydescription_Spreadsheet_SetCellFontName,
-		undefined,
-		{fontName: fontName}
-	  );
-
       if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellFontName) {
         ws.objectRender.controller.setCellFontName(fontName);
       } else {
         t.wb.setFontAttributes("fn", fontName);
         t.wb.restoreFocus();
       }
-
-	  this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellFontName);
     });
   };
 
   spreadsheet_api.prototype.asc_setCellFontSize = function(fontSize) {
     var ws = this.wb.getWorksheet();
-	this.sync_StartAction(
-		c_oAscAsyncActionType.BlockInteraction,
-		AscDFH.historydescription_Spreadsheet_SetCellFontSize,
-		undefined,
-		{fontSize: fontSize}
-	);
-
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellFontSize) {
 		ws.objectRender.controller.setCellFontSize(fontSize);
     } else {
       this.wb.setFontAttributes("fs", fontSize);
       this.wb.restoreFocus();
     }
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellFontSize);
   };
 
   spreadsheet_api.prototype.asc_setCellBold = function(isBold) {
 	if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellBold, undefined, {isBold: isBold});
-
   	let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBold) {
       ws.objectRender.controller.setCellBold(isBold);
@@ -5998,8 +5974,6 @@ var editor;
       this.wb.setFontAttributes("b", isBold);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellBold);
   };
 
 
@@ -6008,9 +5982,6 @@ var editor;
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellItalic, undefined, {isItalic : isItalic});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellItalic) {
       ws.objectRender.controller.setCellItalic(isItalic);
@@ -6018,16 +5989,12 @@ var editor;
       this.wb.setFontAttributes("i", isItalic);
       this.wb.restoreFocus();
     }
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellItalic);
   };
 
   spreadsheet_api.prototype.asc_setCellUnderline = function(isUnderline) {
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellUnderline, undefined, {isUnderline : isUnderline});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellUnderline) {
       ws.objectRender.controller.setCellUnderline(isUnderline);
@@ -6035,17 +6002,12 @@ var editor;
       this.wb.setFontAttributes("u", isUnderline ? Asc.EUnderline.underlineSingle : Asc.EUnderline.underlineNone);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellUnderline);
   };
 
   spreadsheet_api.prototype.asc_setCellStrikeout = function(isStrikeout) {
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellStrikeout, undefined, {isStrikeout : isStrikeout});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellStrikeout) {
       ws.objectRender.controller.setCellStrikeout(isStrikeout);
@@ -6053,17 +6015,12 @@ var editor;
       this.wb.setFontAttributes("s", isStrikeout);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellStrikeout);
   };
 
   spreadsheet_api.prototype.asc_setCellSubscript = function(isSubscript) {
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellSubscript, undefined, {isSubscript : isSubscript});
-
 	let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellSubscript) {
       ws.objectRender.controller.setCellSubscript(isSubscript);
@@ -6071,17 +6028,12 @@ var editor;
       this.wb.setFontAttributes("fa", isSubscript ? AscCommon.vertalign_SubScript : null);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellSubscript);
   };
 
   spreadsheet_api.prototype.asc_setCellSuperscript = function(isSuperscript) {
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellSuperscript, undefined, {isSuperscript : isSuperscript});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellSuperscript) {
       ws.objectRender.controller.setCellSuperscript(isSuperscript);
@@ -6089,8 +6041,6 @@ var editor;
       this.wb.setFontAttributes("fa", isSuperscript ? AscCommon.vertalign_SuperScript : null);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellSuperscript);
   };
 
 
@@ -6119,9 +6069,6 @@ var editor;
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellAlign, undefined, {align : align});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellAlign) {
       ws.objectRender.controller.setCellAlign(align);
@@ -6129,17 +6076,12 @@ var editor;
       this.wb.getWorksheet().setSelectionInfo("a", align);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellAlign);
   };
 
   spreadsheet_api.prototype.asc_setCellVertAlign = function(align) {
     if (this.collaborativeEditing.getGlobalLock() || !this.canEdit()) {
       return;
     }
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellVertAlign, undefined, {align : align});
-
     let ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellVertAlign) {
       ws.objectRender.controller.setCellVertAlign(align);
@@ -6147,8 +6089,6 @@ var editor;
       this.wb.getWorksheet().setSelectionInfo("va", align);
       this.wb.restoreFocus();
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellVertAlign);
   };
 
   spreadsheet_api.prototype.asc_setCellTextWrap = function(isWrapped) {
@@ -6173,9 +6113,6 @@ var editor;
 
   spreadsheet_api.prototype.asc_setCellTextColor = function(color) {
     var ws = this.wb.getWorksheet();
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellTextColor, undefined, {color : color});
-
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellTextColor) {
       ws.objectRender.controller.setCellTextColor(color);
     } else {
@@ -6185,8 +6122,6 @@ var editor;
         this.wb.restoreFocus();
       }
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellTextColor);
   };
 
   spreadsheet_api.prototype.asc_setCellFill = function (fill) {
@@ -6201,9 +6136,6 @@ var editor;
 
   spreadsheet_api.prototype.asc_setCellBackgroundColor = function(color) {
     var ws = this.wb.getWorksheet();
-
-	this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor, undefined, {color : color});
-
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.setCellBackgroundColor) {
       ws.objectRender.controller.setCellBackgroundColor(color);
     } else {
@@ -6215,9 +6147,6 @@ var editor;
         this.wb.restoreFocus();
       }
     }
-
-	this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor);
-
   };
 
   spreadsheet_api.prototype.asc_setCellBorders = function(borders) {
@@ -6291,10 +6220,8 @@ var editor;
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.increaseFontSize) {
       ws.objectRender.controller.increaseFontSize();
     } else {
-	  this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize);
       this.wb.changeFontSize("changeFontSize", true);
       this.wb.restoreFocus();
-	  this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize);
     }
   };
 
@@ -6302,9 +6229,7 @@ var editor;
   spreadsheet_api.prototype.asc_decreaseFontSize = function() {
     var ws = this.wb.getWorksheet();
     if (ws.objectRender.selectedGraphicObjectsExists() && ws.objectRender.controller.decreaseFontSize) {
-		this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellDecreaseFontSize);
 		ws.objectRender.controller.decreaseFontSize();
-		this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellDecreaseFontSize);
     } else {
       this.wb.changeFontSize("changeFontSize", false);
       this.wb.restoreFocus();
@@ -6421,13 +6346,9 @@ var editor;
   };
 
 	spreadsheet_api.prototype.asc_insertHyperlink = function (options) {
-		this.sync_StartAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd, undefined, {url : options.hyperlinkModel.Hyperlink});
-
 		AscFonts.FontPickerByCharacter.checkText(options.text, this, function () {
 			this.wb.insertHyperlink(options);
 		});
-
-		this.sync_EndAction(c_oAscAsyncActionType.BlockInteraction, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd);
 	};
 
   spreadsheet_api.prototype.asc_removeHyperlink = function() {

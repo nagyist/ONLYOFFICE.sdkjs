@@ -45,6 +45,11 @@
 		this.paused = false;
 		this.macroName = "";
 		this.result = "";
+
+		this.prevChangeType = null;
+		this.prevData = [];
+		this.actionCount = 0;
+		this.isFirstAction = null;
 	}
 	
 	MacroRecorder.prototype.start = function(macroName)
@@ -56,7 +61,8 @@
 		this.result = "";
 		this.paused = false;
 		this.inProgress = true;
-		
+		this.isFirstAction = true;
+
 		this.editor.sendEvent("asc_onMacroRecordingStart");
 	};
 	MacroRecorder.prototype.stop = function()
@@ -66,6 +72,14 @@
 		
 		this.inProgress = false;
 		this.paused = false;
+
+		if (this.prevData && this.prevChangeType)
+		{
+			this.getResultByType(this.prevChangeType, this.prevData);
+			this.prevData = [];
+			this.prevChangeType = null;
+			CounterStore.reset();
+		}
 
 		let macroData = "";
 		try
@@ -133,13 +147,19 @@
 	{
 		return this.paused;
 	};
-	MacroRecorder.prototype.onAction = function(type, additional)
+	MacroRecorder.prototype.addDefualtVaribalesForEditor = function()
 	{
-		if (!this.isInProgress() || this.isPaused())
-			return;
-
+		if (this.editor.editorId === AscCommon.c_oEditorId.Word)
+			this.proceedDefualtVariablesForWord();
+		else if (this.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
+			this.proceedDefualtVariablesForSpreadsheet();
+		else if (this.editor.editorId === AscCommon.c_oEditorId.Presentation)
+			this.proceedDefualtVariablesForPresentation();
+	};
+	MacroRecorder.prototype.getMacrosListForEditor = function()
+	{
 		let actionsMacros = null;
-		
+
 		if (this.editor.editorId === AscCommon.c_oEditorId.Word)
 			actionsMacros = WordActionsMacroList;
 		else if (this.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
@@ -147,12 +167,110 @@
 		else if (this.editor.editorId === AscCommon.c_oEditorId.Presentation)
 			actionsMacros = PresentationActionMacroList;
 
-		if (!actionsMacros)
+		return actionsMacros;
+	}
+	MacroRecorder.prototype.onAction = function(type, additional)
+	{
+		if (!this.isInProgress() || this.isPaused())
 			return;
 
+		additional = this.proceedDataBefoeApply(additional);
+
+		if (this.prevChangeType === type)
+		{
+			this.prevData = this.joinDataForMacros(this.prevData, additional);
+		}
+		else
+		{
+			this.getResultByType(this.prevChangeType, this.prevData);
+			this.prevChangeType = type;
+			this.prevData = additional;
+		}
+
+		if (this.isFirstAction)
+		{
+			this.addDefualtVaribalesForEditor();
+			this.isFirstAction = false;
+		}
+	};
+	MacroRecorder.prototype.getResultByType = function(type, additional)
+	{
+		let actionsMacros = this.getMacrosListForEditor();
 		let actionMacroFunction = actionsMacros[type];
 		if (actionMacroFunction)
 			this.result += actionMacroFunction(additional, type);
+	};
+	MacroRecorder.prototype.joinDataForMacros = function(prevData, currentData) {
+		function isPlainObject(v) {
+		  return v !== null && typeof v === 'object' && !Array.isArray(v);
+		}
+		function toArrayPreserveOrder(a, b) {
+			var arrA = Array.isArray(a) ? a : [a];
+			var arrB = Array.isArray(b) ? b : [b];
+			return arrA.concat(arrB);
+		}
+		function mergeByRules(a, b) {
+			if (typeof a === 'string' && typeof b === 'string') {
+				return a + b;
+			}
+
+		  	if (isPlainObject(a) && isPlainObject(b)) {
+				var out = {};
+				var k;
+
+				for (k in a) {
+				if (Object.prototype.hasOwnProperty.call(a, k)) {
+					out[k] = a[k];
+				}
+				}
+
+				for (k in b)
+				{
+					if (Object.prototype.hasOwnProperty.call(b, k))
+					{
+						if (Object.prototype.hasOwnProperty.call(a, k))
+						{
+							var av = a[k];
+							var bv = b[k];
+							if (typeof av === 'string' && typeof bv === 'string')
+								out[k] = av + bv;
+							else
+								out[k] = toArrayPreserveOrder(av, bv);
+						} 
+						else
+						{
+							out[k] = b[k];
+						}
+					}
+				}
+			return out;
+		  }
+		  return toArrayPreserveOrder(a, b);
+		}
+
+		return mergeByRules(prevData, currentData);
+	};
+	MacroRecorder.prototype.proceedDataBefoeApply = function (data) {
+		if (!data || typeof data !== 'object')
+			return data;
+
+		var out = {};
+		for (var key in data)
+		{
+			if (!Object.prototype.hasOwnProperty.call(data, key))
+				continue;
+
+			var val = data[key];
+			var isArr = Array.isArray
+				? Array.isArray(val)
+				: Object.prototype.toString.call(val) === '[object Array]';
+
+			if (isArr)
+				out[key] = val;
+			else
+				out[key] = [val];
+		}
+		return out;
 	};
 	MacroRecorder.prototype.getNewName = function(macros)
 	{
@@ -171,233 +289,304 @@
 		
 		return "Macro " + (maxId + 1);
 	};
-
-	const wordActions = {
-		setTextBold				: function(){return "Api.GetDocument().GetRangeBySelect().SetBold(true);\n"},
-		setTextItalic			: function(){return "Api.GetDocument().GetRangeBySelect().SetItalic(true);\n"},
-		setTextUnderline		: function(){return "Api.GetDocument().GetRangeBySelect().SetUnderline(true);\n"},
-		setTextStrikeout		: function(){return "Api.GetDocument().GetRangeBySelect().SetStrikeout(true);\n"},
-		setTextFontName			: function(additional){ return (additional && additional.fontName) ? "Api.GetDocument().GetRangeBySelect().SetFontFamily(\"" + additional.fontName + "\");\n" : ""},
-		setTextFontSize			: function(additional){ return (additional && additional.fontSize) ? "Api.GetDocument().GetRangeBySelect().SetFontSize(\"" + additional.fontSize + "\");\n" : ""},
-		setTextHighlightColor	: function(additional){
-			if (!(additional && additional.highlight))
-				return "";
-	
-			let color = new CDocumentColor(highlight.r, highlight.g, highlight.b);
-			let highlightColor = color.ToHighlightColor();
-	
-			if (highlightColor === "")
-				highlightColor = 'none';
-	
-			return "Api.GetDocument().GetRangeBySelect().SetHighlight(\"" + highlightColor + "\");\n";
-		},
-		setTextHighlightNone	: function(){return "Api.GetDocument().GetRangeBySelect().SetHighlight(\"none\");\n"},
-		setTextVertAlign		: function(additional, type)
-		{
-			if (!(additional && additional.baseline))
-				return "";
-	
-			if (additional.baseline === true)
-				return "Api.GetDocument().GetRangeBySelect().SetVertAlign(\"baseline\");\n";
-			else if (AscDFH.historydescription_Document_SetTextVertAlignHotKey3 === type)
-				return "Api.GetDocument().GetRangeBySelect().SetVertAlign(\"subscript\");\n";
-			else if (AscDFH.historydescription_Document_SetTextVertAlignHotKey2 === type)
-				return "Api.GetDocument().GetRangeBySelect().SetVertAlign(\"superscript\");\n";
-		},
-		setTextColor			: function(additional){ return (additional && additional.color) ? "Api.GetDocument().GetRangeBySelect().SetColor(\"" + additional.color.r + "," + additional.color.g + "," + additional.color.b  + "\");\n" : ""},
-		setStyleHeading			: function(additional){ return (additional && additional.name) ? "Api.GetDocument().GetRangeBySelect().SetStyle(\"" + additional.name + "\");\n" : ""},
-		clearFormat				: function(){return "Api.GetDocument().GetRangeBySelect().ClearFormating()\n"},
-		cut						: function(){return "Api.GetDocument().GetRangeBySelect().Cut();\n"},
-		changeTextCase			: function(additional){ return (additional && additional.changeType) ? "Api.GetDocument().GetRangeBySelect().SetTextCase(\"" + additional.changeType + "\");\n" : ""},
-		incFontSize				: function(){ return "Api.GetDocument().GetRangeBySelect().Grow();\n"},
-		addLetter				: function(additional)
-		{
-			if (!(additional && additional.codePoints))
-				return "";
-	
-			let text = "";
-			for (let i = 0; i < additional.codePoints.length; ++i)
-				text += String.fromCodePoint(additional.codePoints[i]);
-	
-			return "Api.GetDocument().GetCurrentParagraph().AddText(\"" + text + "\");\n";
-		}
-	}
-
-	const WordActionsMacroList = {
-		[AscDFH.historydescription_Document_SetTextBold]					: wordActions.setTextBold,
-		[AscDFH.historydescription_Document_SetTextBoldHotKey]				: wordActions.setTextBold,
-		[AscDFH.historydescription_Document_SetTextItalic]					: wordActions.setTextItalic,
-		[AscDFH.historydescription_Document_SetTextItalicHotKey]			: wordActions.setTextItalic,
-		[AscDFH.historydescription_Document_SetTextUnderline]				: wordActions.setTextUnderline,
-		[AscDFH.historydescription_Document_SetTextUnderlineHotKey]			: wordActions.setTextUnderline,
-		[AscDFH.historydescription_Document_SetTextStrikeout]				: wordActions.setTextStrikeout,
-		[AscDFH.historydescription_Document_SetTextStrikeoutHotKey]			: wordActions.setTextStrikeout,
-		[AscDFH.historydescription_Document_SetTextFontName]				: wordActions.setTextFontName,
-		[AscDFH.historydescription_Document_SetTextFontSize]				: wordActions.setTextFontSize,
-		[AscDFH.historydescription_Document_SetTextHighlightColor]			: wordActions.setTextHighlightColor,
-		[AscDFH.historydescription_Document_SetTextHighlightNone]			: wordActions.setTextHighlightNone,
-		[AscDFH.historydescription_Document_SetTextVertAlignHotKey2]		: wordActions.setTextVertAlign,
-		[AscDFH.historydescription_Document_SetTextVertAlignHotKey3]		: wordActions.setTextVertAlign,
-		[AscDFH.historydescription_Document_SetTextColor]					: wordActions.setTextColor,
-		[AscDFH.historydescription_Document_SetStyleHeading]				: wordActions.setStyleHeading,
-		[AscDFH.historydescription_Document_Shortcut_ClearFormatting]		: wordActions.clearFormat,
-		[AscDFH.historydescription_Document_ClearFormatting]				: wordActions.clearFormat,
-		[AscDFH.historydescription_Cut]										: wordActions.cut,
-		[AscDFH.historydescription_Document_ChangeTextCase]					: wordActions.changeTextCase,
-		[AscDFH.historydescription_Document_AddLetter]						: wordActions.addLetter,
-		//[AscDFH.historydescription_Document_IncFontSize]					: wordActions.incFontSize,
+	MacroRecorder.prototype.proceedDefualtVariablesForWord = function()
+	{
+		this.result += "\tlet doc = Api.GetDocument();\n"
+			+ "";
+	};
+	MacroRecorder.prototype.proceedDefualtVariablesForSpreadsheet = function()
+	{
+		this.result += "\tlet worksheet = Api.GetActiveSheet();\n"
+			+ "";
+	};
+	MacroRecorder.prototype.proceedDefualtVariablesForPresentation = function()
+	{
+		this.result += "\tlet presentation = Api.GetPresentation();\n"
+			+ "";
 	};
 
-	const cellActions = {
-		setCellIncreaseFontSize	: function(){return "Api.GetSelection().FontIncrease();\n";},
-		setCellDecreaseFontSize	: function(){return "Api.GetSelection().FontDecrease();\n";},
-		setCellFontSize			: function(additional){ return (additional && additional.val) ? "Api.GetSelection().SetFontSize(\"" + additional.val + "\");\n" : "";},
-		setCellFontName			: function(additional){ return (additional && additional.val) ? "Api.GetSelection().SetFontName(\"" + additional.val + "\");\n" : "";},
-		setCellBold				: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetBold(" + additional.val + ");\n" : "";},
-		setCellItalic			: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetItalic(" + additional.val + ");\n" : "";},
-		setCellUnderline		: function(additional){
-			if (!(additional && additional.val !== undefined))
+	function CounterStoreFn()
+	{
+		this.store = {};
+		this.get = function(name)
+		{
+			this.create(name);
+			return name + (this.store[name] === 0 ? "" : this.store[name]);
+		};
+		this.inc = function(name) {
+			if (this.create(name))
+				return this.get(name);
+
+			this.store[name] = this.store[name] + 1;
+			return this.get(name);
+		};
+		this.create = function(name)
+		{
+			if (!this.store.hasOwnProperty(name)) {
+				this.store[name] = 1;
+				return true;
+			}
+
+			return false;
+		};
+		this.reset = function()
+		{
+			this.store = {};
+		};
+	}
+	let CounterStore = new CounterStoreFn();
+
+	function iterByDataFn(object, key, templateFn, type) {
+		if (!object && !Array.isArray(object[0]))
+			return "";
+
+		let out = "";
+		if (Array.isArray(object[0]))
+		{
+			for (let i = 0; i < object[0].length; i++) {
+				out += templateFn(object[0][i]);
+			}
+		}
+		else
+		{
+			if (!object[key])
 				return "";
 
+			let arr = object[key];
+			for (let i = 0; i < arr.length; i++) {
+				out += templateFn(arr[i], type);
+			}
+		}
+
+		return out;
+	};
+	function makeAction(key, templateFn) {
+		return function(additional, type) {
+		  return iterByDataFn(additional || {}, key, templateFn, type);
+		};
+	};
+	function connect(key, templateFn)
+	{
+		return function(additional){
+			if (!additional || !additional[key])
+				return "";
+
+			let text = "";
+			for (let i = 0; i < additional.codePoints.length; ++i)
+			{
+				text += String.fromCodePoint(additional.codePoints[i]);
+			}
+
+			return templateFn(text);
+		}
+	};
+
+	const wordActions = {
+		setTextBold				: makeAction("isBold",		function(bold){return "\tdoc.GetRangeBySelect().SetBold(" + bold + ");\n"}),
+		setTextItalic			: makeAction("isItalic",	function(italic){return "\tdoc.GetRangeBySelect().SetItalic(" + italic + ");\n"}),
+		setTextUnderline		: makeAction("isUnderline", function(underline){return "\tdoc.GetRangeBySelect().SetUnderline(" + underline + ");\n"}),
+		setTextStrikeout		: makeAction("isStrikeout", function(strikeout){return "\tdoc.GetRangeBySelect().SetStrikeout(" + strikeout + ");\n"}),
+		setTextFontName			: makeAction("fontName",	function(name){return "\tdoc.GetRangeBySelect().SetFontFamily(\"" + name + "\");\n"}),
+		setTextFontSize			: makeAction("fontSize",	function(size){return "\tdoc.GetRangeBySelect().SetFontSize(\"" + size + "\");\n"}),
+		setTextHighlightColor	: makeAction('highlight',	function(highlight){
+			let highlightColor = "";
+			if (highlight)
+			{
+				let color = new CDocumentColor(highlight.r, highlight.g, highlight.b);
+				highlightColor = color.ToHighlightColor();
+			}
+
+			if (highlightColor === "")
+				highlightColor = 'none';
+
+			return "\tdoc.GetRangeBySelect().SetHighlight(\"" + highlightColor + "\");\n";
+		}),
+		setTextHighlightNone	: makeAction("",			function(){return "\tdoc.GetRangeBySelect().SetHighlight(\"none\");\n"}),
+		setTextVertAlign		: makeAction('baseline',	function(baseline, type){
+			let align = "baseline";
+			if (baseline === true)
+				align = "baseline";
+			else if (AscDFH.historydescription_Document_SetTextVertAlignHotKey3 === type)
+				align = "subscript";
+			else if (AscDFH.historydescription_Document_SetTextVertAlignHotKey2 === type)
+				align = "superscript";
+
+			return "\tApi.GetDocument().GetRangeBySelect().SetVertAlign(\"" + align + "\");\n";
+		}),
+		setTextColor			: makeAction('color',		function(color){return "\tdoc.GetRangeBySelect().SetColor(" + color.r + "," + color.g + "," + color.b  + ");\n"}),
+		setStyleHeading			: makeAction('name',		function(name){return "\tdoc.GetRangeBySelect().SetStyle(\"" + name + "\");\n"}),
+		clearFormat				: makeAction("",			function(){return "\tdoc.GetRangeBySelect().ClearFormating()\n"}),
+		cut						: makeAction("",			function(){return "\tdoc.GetRangeBySelect().Cut();\n"}),
+		changeTextCase			: makeAction('changeType',	function(changeType){return "\tdoc.GetRangeBySelect().SetTextCase(\"" + changeType + "\");\n"}),
+		incFontSize				: makeAction("",			function(){return "\tdoc.GetRangeBySelect().Grow();\n"}),
+		addLetter				: connect('codePoints',		function(text){return "\tdoc.GetCurrentParagraph().AddText(\"" + text + "\");\n"}),
+		setAlign				: makeAction("align",		function(align){
+			switch (align) {
+				case AscCommon.align_Left:		align = 'left';		break;
+				case AscCommon.align_Right:		align = 'right';	break;
+				case AscCommon.align_Justify:	align = 'both';		break;
+				case AscCommon.align_Center:	align = 'center';	break;
+				default:						align = 'center';
+			}
+			return "\tdoc.GetCurrentParagraph().SetJc(\"" + align + "\");\n"
+		}),
+		setParagraphShd			: makeAction("color",		function(color){return "\tdoc.GetRangeBySelect().SetShd(\"clear\", "+ color.asc_getR() + " , " + color.asc_getG() +", "+ color.asc_getB() +", false);\n"}),
+		setLineSpacing			: makeAction("lineSpacing", function(lineSpacing){
+			let type = lineSpacing.type;
+			let value = lineSpacing.value;
+
+			switch(type)
+			{
+				case Asc.linerule_Auto		: type = "auto";	break;
+				case Asc.linerule_AtLeast	: type = "atLeast";	break;
+				case Asc.linerule_Exact		: type = "exact";	break;
+				default						: type = "auto";	break;
+			}
+
+			return "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => para.SetSpacingLine(" + value + " * 240, \"" + type + "\"));\n"
+		}),
+		// incIndentetLineSpacing	: makeAction("", function(){
+		// 	// for now we don't have relative increaee/decrease for api
+		// 	//"\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => para.SetIndFirstLine());\n"
+		// 	//paragraph.SetIndFirstLine(1440);
+		// })
+		setParagraphNumbering	: makeAction("numbering", function(num){
+			return "\t\nlet numbering = doc.CreateNumbering(\"" + num.Type + "\");\n"
+				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => para.SetNumbering(numbering.GetLevel(0)));\n"
+		})
+	};
+
+	const WordActionsMacroList = {};
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextBold]				= wordActions.setTextBold;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextBoldHotKey]			= wordActions.setTextBold;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextItalic]				= wordActions.setTextItalic;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextItalicHotKey]		= wordActions.setTextItalic;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextUnderline]			= wordActions.setTextUnderline;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextUnderlineHotKey]		= wordActions.setTextUnderline;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextStrikeout]			= wordActions.setTextStrikeout;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextStrikeoutHotKey]		= wordActions.setTextStrikeout;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextFontName]			= wordActions.setTextFontName;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextFontSize]			= wordActions.setTextFontSize;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextHighlightColor]		= wordActions.setTextHighlightNone;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextHighlightNone]		= wordActions.setTextHighlightColor;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextHighlight]			= wordActions.setTextHighlightColor;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey2]	= wordActions.setTextVertAlign;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey3]	= wordActions.setTextVertAlign;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextColor]				= wordActions.setTextColor;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetStyleHeading]			= wordActions.setStyleHeading;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphStyle]			= wordActions.setStyleHeading;
+	WordActionsMacroList[AscDFH.historydescription_Document_Shortcut_ClearFormatting]	= wordActions.clearFormat;
+	WordActionsMacroList[AscDFH.historydescription_Document_ClearFormatting]			= wordActions.clearFormat;
+	WordActionsMacroList[AscDFH.historydescription_Cut]									= wordActions.cut;
+	WordActionsMacroList[AscDFH.historydescription_Document_ChangeTextCase]				= wordActions.changeTextCase;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddLetter]					= wordActions.addLetter;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphAlign]			= wordActions.setAlign;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphShd]			= wordActions.setParagraphShd;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphLineSpacing]	= wordActions.setLineSpacing;
+	//WordActionsMacroList[AscDFH.historydescription_Document_IncParagraphIndent]		= wordActions.incIndentetLineSpacing;
+	//WordActionsMacroList[AscDFH.historydescription_Document_DecParagraphIndent]		= wordActions.decIndentetLineSpacing;
+	//WordActionsMacroList[AscDFH.historydescription_Document_IncFontSize]				= wordActions.incFontSize;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphNumbering]		= wordActions.setParagraphNumbering;
+
+	const cellActions = {
+		setCellIncreaseFontSize	: makeAction("",	function(){return "\tApi.GetSelection().FontIncrease();\n"}),
+		setCellDecreaseFontSize	: makeAction("",	function(){return "\tApi.GetSelection().FontDecrease();\n"}),
+		setCellFontSize			: makeAction("val",	function(fontSize){return "\tApi.GetSelection().SetFontSize(\"" + fontSize + "\");\n"}),
+		setCellFontName			: makeAction("val",	function(fontName){return "\tApi.GetSelection().SetFontName(\"" + fontName + "\");\n"}),
+		setCellBold				: makeAction("val",	function(bold){return "\tApi.GetSelection().SetBold(" + bold + ");\n"}),
+		setCellItalic			: makeAction("val",	function(italic){return "\tApi.GetSelection().SetItalic(" + italic + ");\n"}),
+		setCellUnderline		: makeAction("val",	function(underline){
 			let underlineType = null;
 
-			switch (additional.val) {
+			switch (underline) {
 				case Asc.EUnderline.underlineSingle:				underlineType = 'single';				break;
-				case Asc.EUnderline.underlineSingleAccounting:		underlineType = 'singleAccounting';	break;
+				case Asc.EUnderline.underlineSingleAccounting:		underlineType = 'singleAccounting';		break;
 				case Asc.EUnderline.underlineDouble:				underlineType = 'double';				break;
-				case Asc.EUnderline.underlineDoubleAccounting:		underlineType = 'doubleAccounting';	break;
+				case Asc.EUnderline.underlineDoubleAccounting:		underlineType = 'doubleAccounting';		break;
 				case Asc.EUnderline.underlineNone:
 				default:											underlineType = 'none';					break;
 			}
 
-			return "Api.GetSelection().SetUnderline(\"" + underlineType + "\");\n";
-		},
-		setCellStrikeout		: function(additional){
-			if (!(additional && additional.val !== undefined))
-				return "";
-
-			return "Api.GetSelection().SetStrikeout(" + (!!additional.val) + ");\n";
-		},
-		setCellSubscript		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSubscript(" + additional.val + ");\n" : "";},
-		setCellSuperscript		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().GetCharacters().GetFont().SetSuperscript(" + additional.val + ");\n" : "";},
-		setCellReadingOrder		: function(additional){
-			if (!(additional && additional.val !== undefined))
-				return "";
-
+			return "\tApi.GetSelection().SetUnderline(\"" + underlineType + "\");\n"
+		}),
+		setCellStrikeout		: makeAction("val",	function(strikeout){return "\tApi.GetSelection().SetStrikeout(" + (!!strikeout) + ");\n"}),
+		setCellSubscript		: makeAction("val",	function(subscript){return "\tApi.GetSelection().GetCharacters().GetFont().SetSubscript(" + subscript + ");\n"}),
+		setCellSuperscript		: makeAction("val",	function(supscript){return "\tApi.GetSelection().GetCharacters().GetFont().SetSuperscript(" + supscript + ");\n"}),
+		setCellReadingOrder		: makeAction("val",	function(dir){
 			let direction = null;
-
-			switch (additional.val) {
+			switch (dir) {
 				case 0:		direction = 'context';	break;
 				case 1:		direction = 'ltr';		break;
 				case 2:		direction = 'rtl';		break;
 				default:	return "";
 			}
-
-			return "Api.GetSelection().SetReadingOrder(\"" + direction + "\");\n";
-		},
-		setCellAlign			: function(additional){
-			if ((additional && additional.val === undefined))
-				return "";
-	
+			return "\tApi.GetSelection().SetReadingOrder(\"" + direction + "\");\n"
+		}),
+		setCellAlign			: makeAction("val",	function(al){
 			let align = null;
-	
-			switch (additional.val) {
+			switch (al) {
 				case AscCommon.align_Left:		align = 'left';		break;
 				case AscCommon.align_Right:		align = 'right';	break;
-				case AscCommon.align_Justify:	align = 'justify';	break;
+				case AscCommon.align_Justify:	align = 'both';		break;
 				case AscCommon.align_Center:	align = 'center';	break;
-				default:						return "";
+				default:						align = 'center';
 			}
-	
-			return "Api.GetSelection().SetAlignHorizontal(\"" + align + "\");\n";
-		},
-		setCellVerticalAlign	: function(additional){
-			if ((additional && additional.val === undefined))
-				return "";
-	
+			return "\tApi.GetSelection().SetAlignHorizontal(\"" + align + "\");\n"
+		}),
+		setCellVerticalAlign	: makeAction("val",	function(al){
 			let align = null;
-	
-			switch (additional.val) {
+			switch (al) {
 				case Asc.c_oAscVAlign.Center:	align = 'center';		break;
 				case Asc.c_oAscVAlign.Bottom:	align = 'bottom';		break;
 				case Asc.c_oAscVAlign.Top:		align = 'top';			break;
 				case Asc.c_oAscVAlign.Dist:		align = 'distributed';	break;
 				case Asc.c_oAscVAlign.Just:		align = 'justify';		break;
-				default:						return "";
+				default:						align = 'center';
 			}
-	
-			return "Api.GetSelection().SetAlignVertical(\"" + align + "\");\n";
-		},
-		setCellTextColor		: function(additional){
-			if (!additional && !additional.val)
-				return "";
-
-			let color = "Api.CreateColorFromRGB(" + additional.val.getR() + ", " + additional.val.getG() + ", " + additional.val.getB() + ")";
-			return "Api.GetSelection().SetFontColor(" + color + ");\n"
-		},
-		setCellBackgroundColor	: function(additional){
-			if (!additional && !additional.val)
-				return "";
-
-			let color = "Api.CreateColorFromRGB(" + additional.val.getR() + ", " + additional.val.getG() + ", " + additional.val.getB() + ")";
-			return "Api.GetSelection().SetBackgroundColor(" + color + ");\n"
-		},
-		setCellWrap				: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetWrap(" + additional.val + ");\n" : "";},
+			return "\tApi.GetSelection().SetAlignVertical(\"" + align + "\");\n"
+		}),
+		setCellTextColor		: makeAction("val",	function(clr){
+			let color = "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
+			return "\tApi.GetSelection().SetFontColor(" + color + ");\n"
+		}),
+		setCellBackgroundColor	: makeAction("val",	function(clr){
+			let color = "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
+			return "\tApi.GetSelection().SetBackgroundColor(" + color + ");\n"
+		}),
+		setCellWrap				: makeAction("val",	function(wrap){return "\tApi.GetSelection().SetWrap(" + wrap + ");\n"}),
 		//setCellShrinkToFit		: function(additional){ return (additional && additional.val !== undefined) ? "Api.GetSelection().SetShrinkToFit(" + additional.val + ");\n" : "";},
-		setCellValue			: function(additional){ 
-			if (!(additional && additional.val !== undefined))
-				return "";
-			
-			let value = additional.val;
-			if (typeof value === 'string') {
+		setCellValue			: makeAction("val",	function(value){
+			if (typeof value === 'string')
 				value = '"' + value.replace(/"/g, '\\"') + '"';
-			} else {
+			else
 				value = value.toString();
-			}
-			
-			return "Api.GetSelection().SetValue(" + value + ");\n";
-		},
-		setCellAngle			: function(additional){ 
-			if (!(additional && additional.val !== undefined))
-				return "";
-			
-			let angle = additional.val;
-			
+
+			return "\tApi.GetSelection().SetValue(" + value + ");\n"
+		}),
+		setCellAngle			: makeAction("val",	function(angle){
 			switch (angle) {
-				case -90:	return "Api.GetSelection().SetOrientation('xlDownward');\n";
-				case 0:		return "Api.GetSelection().SetOrientation('xlHorizontal');\n";
-				case 90:	return "Api.GetSelection().SetOrientation('xlUpward');\n";
-				case 255:	return "Api.GetSelection().SetOrientation('xlVertical');\n";
+				case -90:	return "\tApi.GetSelection().SetOrientation('xlDownward');\n";
+				case 0:		return "\tApi.GetSelection().SetOrientation('xlHorizontal');\n";
+				case 90:	return "\tApi.GetSelection().SetOrientation('xlUpward');\n";
+				case 255:	return "\tApi.GetSelection().SetOrientation('xlVertical');\n";
 			}
-		},
-		setCellChangeTextCase	: function(additional){ 
-			if (!(additional && additional.val !== undefined))
-				return "";
-			
-			return "Api.GetSelection().ChangeTextCase(" + additional.val + ");\n";
-		},
-		setCellChangeFontSize	: function(additional){ 
-			if (!(additional && additional.val !== undefined))
-				return "";
-			
-			return additional.val ? "Api.asc_increaseFontSize();\n" : "Api.asc_decreaseFontSize();\n";
-		},
-		setCellBorder			: function(additional){
-			if (!(additional && additional.val !== undefined)) {
-				return "";
-			}
-				
-			let borderArray = additional.val;
+		}),
+		setCellChangeTextCase	: makeAction("val",	function(textCase){return "\tApi.GetSelection().ChangeTextCase(" + textCase + ");\n"}),
+		setCellChangeFontSize	: makeAction("val",	function(isInc){
+			// todo create api
+			return isInc ? "\tApi.asc_increaseFontSize();\n" : "\tApi.asc_decreaseFontSize();\n";
+		}),
+		setCellBorder			: makeAction("val",	function(borderArray){
 			if (!Array.isArray(borderArray) || borderArray.length === 0) {
 				return "";
 			}
-			
+
 			let result = "";
-			
+
 			for (let i = 0; i < borderArray.length; i++) {
 				let border = borderArray[i];
 				if (border && border.style !== undefined) {
-					
+
 					let positionStr = null;
 					switch (i) {
 						case 0: positionStr = 'Top'; break;
@@ -410,7 +599,7 @@
 						case 7: positionStr = 'InsideHorizontal'; break;
 						default: continue;
 					}
-					
+
 					let styleStr = null;
 					switch (border.style) {
 						case window['Asc'].c_oAscBorderStyles.None: styleStr = 'None'; break;
@@ -429,7 +618,7 @@
 						case window['Asc'].c_oAscBorderStyles.Thick: styleStr = 'Thick'; break;
 						default: continue;
 					}
-					
+
 					let colorStr = "Api.CreateColorFromRGB(0, 0, 0)";
 					if (border.color) {
 						if (typeof border.color === 'string') {
@@ -445,61 +634,191 @@
 							colorStr = "Api.CreateColorFromRGB(" + (border.color.r || 0) + ", " + (border.color.g || 0) + ", " + (border.color.b || 0) + ")";
 						}
 					}
-					
-					result += "Api.GetSelection().SetBorders(\"" + positionStr + "\", \"" + styleStr + "\", " + colorStr + ");\n";
+
+					result += "\tApi.GetSelection().SetBorders(\"" + positionStr + "\", \"" + styleStr + "\", " + colorStr + ");\n";
 				}
 			}
-			
+
+			return result;
+		}),
+		// setCellHyperlinkAdd		: function(additional) {return (additional && additional.url) ? "" : ""},
+		// setCellHyperlinkModify	: function(additional) {return (additional && additional.url) ? "" : ""},
+		// setCellHyperlinkRemove	: function(additional) {return (additional && additional.url) ? "" : ""},
+		// cut						: function(){return "ApiApi.GetSelection().Cut();\n"},
+		cellChangeValue				: makeAction("val", function(value){return "\tApi.GetSelection().SetValue(\"" + value + "\");\n"})
+	};
+	const CellActionsMacroList = {};
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize]	= cellActions.setCellIncreaseFontSize,
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellDecreaseFontSize]	= cellActions.setCellDecreaseFontSize,
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellFontSize]				= cellActions.setCellFontSize;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellFontName]				= cellActions.setCellFontName;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellBold]					= cellActions.setCellBold;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellItalic]				= cellActions.setCellItalic;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellUnderline]			= cellActions.setCellUnderline;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellStrikeout]			= cellActions.setCellStrikeout;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellSubscript]			= cellActions.setCellSubscript;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellSuperscript]			= cellActions.setCellSuperscript;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellReadingOrder]			= cellActions.setCellReadingOrder;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellAlign]				= cellActions.setCellAlign;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellVertAlign]			= cellActions.setCellVerticalAlign;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellTextColor]			= cellActions.setCellTextColor;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor]	    = cellActions.setCellBackgroundColor;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellWrap]				    = cellActions.setCellWrap;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit]		= cellActions.setCellShrinkToFit;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellBorder]				= cellActions.setCellBorder;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellValue]				= cellActions.setCellValue;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellAngle]				= cellActions.setCellAngle;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellMerge]				= cellActions.setCellMerge;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellStyle]				= cellActions.setCellStyle;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase]		= cellActions.setCellChangeTextCase;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize]		= cellActions.setCellChangeFontSize;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd]		= cellActions.setCellHyperlinkAdd;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify]	= cellActions.setCellHyperlinkModify;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove]	= cellActions.setCellHyperlinkRemove;
+	//CellActionsMacroList[AscDFH.historydescription_Cut]									= cellActions.cut;
+	
+
+	const presActions = {
+		setParagraphAlign		: makeAction("", function(align){
+			switch (align) {
+				case AscCommon.align_Left:		align = 'left';		break;
+				case AscCommon.align_Right:		align = 'right';	break;
+				case AscCommon.align_Justify:	align = 'justify';	break;
+				case AscCommon.align_Center:	align = 'center';	break;
+				default:						align = 'center';
+			}
+			return "\tApi.GetSelection().GetShapes()[0].GetDocContent().GetElement(0).SetJc(\"" + align + "\");\n";
+		}),
+		paragraphAdd			: function(additional){
+			if (!additional || !additional[0].length)
+				return "";
+
+			let text = "";
+			for (let nChar = 0; nChar < additional[0].length; nChar++)
+				text += String.fromCodePoint(additional[0][nChar]);
+
+			let result = "\tApi.GetSelection().GetShapes()[0].GetDocContent().GetElement(0).AddText(\"" + text + "\");\n";
 			return result;
 		},
-		setCellHyperlinkAdd		: function(additional) {return (additional && additional.url) ? "" : ""},
-		setCellHyperlinkModify	: function(additional) {return (additional && additional.url) ? "" : ""},
-		setCellHyperlinkRemove	: function(additional) {return (additional && additional.url) ? "" : ""},
-		cut						: function(){return "ApiApi.GetSelection().Cut();\n"},
-		cellChangeValue			: function(additional){
-			if (!additional || !additional.data)
-				return "";
-			return "Api.GetSelection().SetValue(\"" + additional.data + "\");\n";
-		},
-		
+		putTextPrBold			: makeAction("", function(bold){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetBold(" + bold + "));\n\t})\n"}),
+		putTextPrItalic			: makeAction("", function(italic){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetItalic(" + italic + "));\n\t})\n"}),
+		putTextPrUnderline		: makeAction("", function(underline){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetUnderline(" + underline + "));\n\t})\n"}),
+		putTextPrStrikeout		: makeAction("", function(strikeout){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetStrikeout(" + strikeout + "));\n\t})\n"}),
+		putTextPrFontName		: makeAction("", function(fontName){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetFontName(" + fontName + "));\n\t})\n"}),
+		putTextPrFontSize		: makeAction("", function(fontsize){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetFontSize(" + fontsize + "));\n\t})\n"}),
+		//putTextPrIncreaseFontSize : makeAction("", function(){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetFontSize(" + fontsize + "));\n\t})\n"}),
+		//incDecFontSize			: makeAction("", function(){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetFontSize(" + fontsize + "));\n\t})\n"}),
+		setTextVertAlign		: makeAction("", function(vertalign){
+			let textOfVertAlign = "baseline";
+
+			if (AscCommon.vertalign_Baseline === vertalign)
+				textOfVertAlign = "baseline";
+			else if (AscCommon.vertalign_SubScript === vertalign)
+				textOfVertAlign = "subscript";
+			else if (AscCommon.vertalign_SuperScript === vertalign)
+				textOfVertAlign = "superscript";
+
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetVertAlign(" + textOfVertAlign + "));\n\t})\n"
+		}),
+		addNextSlide			: makeAction("", function(data){
+			if (data === undefined)
+			{
+				return "\tpresentation.AddSlide(Api.CreateSlide());\n"
+			}
+			else
+			{
+				return "\tlet " + CounterStore.inc('slide') +" = Api.CreateSlide();\n"
+					+ "\tlet " + CounterStore.inc('master') +" = presentation.GetMaster(0);\n"
+					+ "\tlet " + CounterStore.inc('layout') +" = " + CounterStore.get('master') + ".GetLayout(" + data + ");\n"
+					+ "\t" + CounterStore.get('slide') + ".ApplyLayout(" + CounterStore.get('layout') + ");\n"
+					+ "\tpresentation.AddSlide(" + CounterStore.get('slide') + ");\n";
+			}
+		}),
+		deleteSlides			: makeAction("", function(index){
+			return "\tlet " + CounterStore.inc('slide') +" = presentation.GetSlideByIndex(" + index + ");\n"
+				+ "\tif (" + CounterStore.get('slide') + ") " + CounterStore.get('slide') + ".Delete();\n";
+		}),
+		changeLayout			: makeAction("", function(changeObj) {
+			return "\t[" + changeObj.slides.toString() + "].forEach(index => {\n"
+				+ "\t\tlet " + CounterStore.inc('slide') +" = presentation.GetSlideByIndex(index);\n"
+				+ "\t\tlet " + CounterStore.inc('master') +" = presentation.GetMaster(0);\n"
+				+ "\t\tlet " + CounterStore.inc('layout') +" = " + CounterStore.get('master') + ".GetLayout(" + changeObj.layout + ");\n"
+				+ "\t\tif (" + CounterStore.get('slide') + ") " + CounterStore.get('slide') + ".ApplyLayout(" + CounterStore.get('layout') + ");\n"
+				+ "\t});\n";
+		}),
+		//showfrom				: makeAction("", function(){}),
+		setTextHighlight		: makeAction("", function(highlight){
+			let highlightColor = "";
+			if (highlight)
+			{
+				let color = new CDocumentColor(highlight.r, highlight.g, highlight.b);
+				highlightColor = color.ToHighlightColor();
+			}
+
+			if (highlightColor === "") highlightColor = 'none';
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetHighlight(\"" + highlightColor + "\"));\n\t})\n"
+		}),
+		putTextColor			: makeAction("", function(color){
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetColor(" + color.r + ", " + color.g + ", " + color.b + "));\n\t})\n"
+		}),
+		clearFormatting			: makeAction("", function(isClear){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.ClearFormating(" + isClear + "));\n\t})\n";}),
+		putTextPrLineSpacing	: makeAction("", function(lineSpacing){
+
+			let type = lineSpacing.type;
+			let value = lineSpacing.value;
+
+			switch(type)
+			{
+				case Asc.linerule_Auto		: type = "auto";	break;
+				case Asc.linerule_AtLeast	: type = "atLeast";	break;
+				case Asc.linerule_Exact		: type = "exact";	break;
+				default						: type = "auto";	break;
+			}
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetSpacingLine(" + value + " * 240, \"" + type + "\"));\n\t})\n"
+		}),
+		addNewShape				: makeAction("", function(shapeProps){
+			// fix height for text box
+			let fill = shapeProps.fill.getRGBAColor();
+			let border = shapeProps.border;
+			let borderwidth = border.w / 36000;
+			let borderColor = border.Fill.getRGBAColor();
+			return "\t(function () {\n"
+				+ "\t\tlet slide = presentation.GetCurrentSlide();\n"
+				+ "\t\tif (slide) {\n"+
+					"\t\t\tlet fill = Api.CreateSolidFill(Api.CreateRGBColor("+ fill.R +", " + fill.G + ", " + fill.B + "));\n" +
+					"\t\t\tlet stroke = Api.CreateStroke(" + borderwidth +"* 36000, Api.CreateSolidFill(Api.CreateRGBColor("+ borderColor.R +", " + borderColor.G + ", " + borderColor.B + ")));\n" +
+					"\t\t\tlet shape = Api.CreateShape(\"" + shapeProps.type + "\", " + shapeProps.extX + " * 36000, " + shapeProps.extY + " * 36000, fill, stroke);\n" +
+					"\t\t\tshape.SetPosition(" + shapeProps.pos.x + " * 36000.0, " + shapeProps.pos.y + " * 36000.0)\n" +
+					"\t\t\tslide.AddObject(shape)\n" +
+				"\t\t}\n" +
+				"\t}());\n";
+		}),
+		paragraphRemove			: makeAction("", function(args){
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.RemoveAllElements());\n\t})\n"
+		})
 	};
-
-	const CellActionsMacroList = {
-		//[AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize]	: cellActions.setCellIncreaseFontSize,
-		//[AscDFH.historydescription_Spreadsheet_SetCellDecreaseFontSize]	: cellActions.setCellDecreaseFontSize,
-		[AscDFH.historydescription_Spreadsheet_SetCellFontSize]				: cellActions.setCellFontSize,
-		[AscDFH.historydescription_Spreadsheet_SetCellFontName]				: cellActions.setCellFontName,
-		[AscDFH.historydescription_Spreadsheet_SetCellBold]					: cellActions.setCellBold,
-		[AscDFH.historydescription_Spreadsheet_SetCellItalic]				: cellActions.setCellItalic,
-		[AscDFH.historydescription_Spreadsheet_SetCellUnderline]			: cellActions.setCellUnderline,
-		[AscDFH.historydescription_Spreadsheet_SetCellStrikeout]			: cellActions.setCellStrikeout,
-		[AscDFH.historydescription_Spreadsheet_SetCellSubscript]			: cellActions.setCellSubscript,
-		[AscDFH.historydescription_Spreadsheet_SetCellSuperscript]			: cellActions.setCellSuperscript,
-		[AscDFH.historydescription_Spreadsheet_SetCellReadingOrder]			: cellActions.setCellReadingOrder,
-		[AscDFH.historydescription_Spreadsheet_SetCellAlign]				: cellActions.setCellAlign,
-		[AscDFH.historydescription_Spreadsheet_SetCellVertAlign]			: cellActions.setCellVerticalAlign,
-		[AscDFH.historydescription_Spreadsheet_SetCellTextColor]			: cellActions.setCellTextColor,
-		[AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor]	    : cellActions.setCellBackgroundColor,
-		[AscDFH.historydescription_Spreadsheet_SetCellWrap]				    : cellActions.setCellWrap,
-		//[AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit]			: cellActions.setCellShrinkToFit,
-		[AscDFH.historydescription_Spreadsheet_SetCellBorder]				: cellActions.setCellBorder,
-		[AscDFH.historydescription_Spreadsheet_SetCellValue]				: cellActions.setCellValue,
-		[AscDFH.historydescription_Spreadsheet_SetCellAngle]				: cellActions.setCellAngle,
-		//[AscDFH.historydescription_Spreadsheet_SetCellMerge]				: cellActions.setCellMerge,
-		//[AscDFH.historydescription_Spreadsheet_SetCellStyle]				: cellActions.setCellStyle,
-		[AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase]		: cellActions.setCellChangeTextCase,
-		[AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize]		: cellActions.setCellChangeFontSize
-		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd]		: cellActions.setCellHyperlinkAdd,
-		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify]	: cellActions.setCellHyperlinkModify,
-		//[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove]	: cellActions.setCellHyperlinkRemove,
-		//[AscDFH.historydescription_Cut]										: cellActions.cut,
-	};
-
-
-
-	const PresentationActionMacroList = {
-
-	};
+	const PresentationActionMacroList = {};
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphAlign]			= presActions.setParagraphAlign;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphAdd] 				= presActions.paragraphAdd;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrBold]				= presActions.putTextPrBold;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontName]			= presActions.putTextPrFontName;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontSize]			= presActions.putTextPrFontSize;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddNextSlide]				= presActions.addNextSlide;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_DeleteSlides]				= presActions.deleteSlides;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_ChangeLayout]				= presActions.changeLayout;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrItalic]				= presActions.putTextPrItalic;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrUnderline]			= presActions.putTextPrUnderline;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrStrikeout]			= presActions.putTextPrStrikeout;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextVertAlign]				= presActions.setTextVertAlign;
+	//PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrIncreaseFontSize]	= presActions.putTextPrIncreaseFontSize;
+	//PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphIncDecFontSize]	= presActions.incDecFontSize;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextHighlight]				= presActions.setTextHighlight;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextColor]				= presActions.putTextColor;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphClearFormatting]	= presActions.clearFormatting;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrLineSpacing]		= presActions.putTextPrLineSpacing;
+	PresentationActionMacroList[AscDFH.historydescription_CommonStatesAddNewShape]					= presActions.addNewShape;
+	PresentationActionMacroList[AscDFH.historydescription_Spreadsheet_Remove]						= presActions.paragraphRemove;
+	// show from start/n-slide ... when add api
 
 	//--------------------------------------------------------export----------------------------------------------------
 	AscCommon.MacroRecorder = MacroRecorder;

@@ -2921,7 +2921,7 @@ background-repeat: no-repeat;\
 		{
 			if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrFontName, [name]);
 				this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 					FontFamily : {
 						Name  : name,
@@ -2939,7 +2939,7 @@ background-repeat: no-repeat;\
 		}
 		if (this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrFontSize, [size]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize : Math.min(size, 300)}), false);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 			// для мобильной версии это важно
@@ -2966,7 +2966,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrBold, [value]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Bold : value}), false);
 			this.WordControl.m_oLogicDocument.FinalizeAction()
 		}
@@ -2975,7 +2975,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrItalic, [value]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Italic : value}), false);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -2984,7 +2984,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrUnderline, [value]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Underline : value}), false);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -2993,7 +2993,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrStrikeout, [value]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
                 Strikeout  : value,
                 DStrikeout : false
@@ -3003,7 +3003,9 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.put_PrLineSpacing          = function(Type, Value)
 	{
+		this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextPrLineSpacing, [{type: Type, value: Value}]);
 		this.WordControl.m_oLogicDocument.SetParagraphSpacing({LineRule : Type, Line : Value});
+		this.WordControl.m_oLogicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype.put_LineSpacingBeforeAfter = function(type, value)//"type == 0" means "Before", "type == 1" means "After"
 	{
@@ -3215,7 +3217,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextVertAlign, [value]);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({VertAlign : value}), false);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -3887,7 +3889,7 @@ background-repeat: no-repeat;\
 	{
 		if (editor.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Drawing_Props) === false)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Presentation_PutTextColor, [color]);
 			var _unifill        = new AscFormat.CUniFill();
 			_unifill.fill       = new AscFormat.CSolidFill();
 			_unifill.fill.color = AscFormat.CorrectUniColor(color, _unifill.fill.color, 0);

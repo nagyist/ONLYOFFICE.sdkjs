@@ -6722,14 +6722,12 @@ CDocument.prototype.SetParagraphStyle = function(sName, isCheckLinkedStyle)
 			var oLinkedStyle = this.Styles.Get(oStyle.GetLink());
 			if (oLinkedStyle && styletype_Character === oLinkedStyle.GetType())
 			{
-				this.StartAction(AscDFH.historydescription_Document_SetStyleHeading, null, null, {name: sName});
 				var oTextPr = new CTextPr();
 				oTextPr.Set_FromObject({RStyle : oLinkedStyle.GetId()}, true);
 				arrCurrentParagraphs[0].ApplyTextPr(oTextPr);
 				this.Recalculate();
 				this.Document_UpdateSelectionState();
 				this.Document_UpdateInterfaceState();
-				this.FinalizeAction();
 				return;
 			}
 		}
@@ -6742,9 +6740,7 @@ CDocument.prototype.SetParagraphStyle = function(sName, isCheckLinkedStyle)
 	}
 	else
 	{
-		this.StartAction(AscDFH.historydescription_Document_SetStyleHeading, null, null, {name: sName});
 		this.Controller.SetParagraphStyle(sName);
-		this.FinalizeAction();
 	}
 
 	this.Recalculate();
