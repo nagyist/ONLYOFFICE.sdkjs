@@ -106,7 +106,7 @@
 		this.LongActionCallbacksParams = [];
 		this.IsActionRestrictionCurrent  = 0;
 		this.IsActionRestrictionPrev  = null;
-		
+
 		this.groupActionsCounter = 0;
 
 		// AutoSave
@@ -365,7 +365,7 @@
 		}
 
 		this.initBroadcastChannel();
-		
+
 		this.asc_registerCallback("asc_onAddSignature", function(guid) {
 			t.sendEvent("asc_onUpdateSignatures", t.asc_getSignatures(), t.asc_getRequestSignatures());
 		});
@@ -3687,7 +3687,7 @@
 		let res = this.asc_canPaste();
 		if (!res)
 			this.executeGroupActionsEnd();
-		
+
 		return res;
 	};
 	baseEditorsApi.prototype.onEndBuilderScript = function(callback)
@@ -4851,18 +4851,57 @@
 			if (true === isRemoveBeforeAdd)
 				this.Shortcuts.RemoveByType(s[0]);
 
-			this.Shortcuts.Add(s[0], s[1], s[2], s[3], s[4]);
+			this.Shortcuts.Add(s[0], s[1], s[2], s[3], s[4], s[5]);
 		}
 	};
 	baseEditorsApi.prototype.initDefaultShortcuts = function()
 	{
+		if (!this.Shortcuts) {
+			return;
+		}
+		const mapShortcutActions = Asc.c_oAscUnlockedShortcutActionTypes;
+		for (let sShortcutAction in mapShortcutActions) {
+			const arrShortcuts = Asc.c_oAscDefaultShortcuts[sShortcutAction];
+			if (arrShortcuts) {
+				for (let i = 0; i < arrShortcuts.length; i += 1) {
+					this.Shortcuts.ApplyFromStorage(arrShortcuts[i]);
+				}
+			}
+		}
+	};
+	baseEditorsApi.prototype.asc_resetAllShortcutTypes = function() {
+		if (!this.Shortcuts) {
+			return;
+		}
+		this.Shortcuts.Reset();
+		this.initDefaultShortcuts();
+	};
+	baseEditorsApi.prototype.asc_resetShortcutType = function(nShortcutType) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		this.Shortcuts.RemoveByType(nShortcutType);
+		const arrDefaultShortcuts = Asc.c_oAscDefaultShortcuts[nShortcutType];
+		if (arrDefaultShortcuts) {
+			for (let i = 0; i < arrDefaultShortcuts.length; i += 1) {
+				this.Shortcuts.ApplyFromStorage(arrDefaultShortcuts[i]);
+			}
+		}
+	};
+	baseEditorsApi.prototype.asc_applyAscShortcuts = function(arrAscShortcuts) {
+		if (!this.Shortcuts) {
+			return;
+		}
+		for (let i = 0; i < arrAscShortcuts.length; i++) {
+			this.Shortcuts.ApplyFromStorage(arrAscShortcuts[i]);
+		}
 	};
 	baseEditorsApi.prototype.getShortcut = function(e)
 	{
 		if (e.GetKeyCode)
-			return this.Shortcuts.Get(e.GetKeyCode(), e.IsCtrl(), e.IsShift(), e.IsAlt());
+			return this.Shortcuts.Get(e.GetKeyCode(), e.IsShortcutCtrl(), e.IsShift(), e.IsAlt(), e.IsCmd());
 		else
-			return this.Shortcuts.Get(e.KeyCode, e.CtrlKey, e.ShiftKey, e.AltKey);
+			return this.Shortcuts.Get(e.KeyCode, e.CtrlKey, e.ShiftKey, e.AltKey, e.MacCmdKey);
 	};
 	baseEditorsApi.prototype.executeShortcut = function(type)
 	{
@@ -5076,7 +5115,7 @@
             callback.apply(t, [true]);
             t.detachEvent(name, listenerId);
         }, timeout);
-        
+
         const wrappedCallback = function() {
             if (called) return;
             called = true;
@@ -5874,16 +5913,16 @@
 	baseEditorsApi.prototype.updateSelection = function()
 	{
 	};
-	
+
 	baseEditorsApi.prototype.startGroupActions = function()
 	{
 		++this.groupActionsCounter;
-		
+
 		AscCommon.History.startGroupPoints();
-		
+
 		if (this.groupActionsCounter > 1)
 			return;
-		
+
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5891,7 +5930,7 @@
 	{
 		if (!this.isGroupActions())
 			return f.call();
-		
+
 		this.executeGroupActionsStart();
 		let res = f.call();
 		this.updateSelection();
@@ -5902,7 +5941,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-		
+
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -5910,7 +5949,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-		
+
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5918,13 +5957,13 @@
 	{
 		if (!this.isGroupActions())
 			return;
-		
+
 		--this.groupActionsCounter;
 		AscCommon.History.cancelGroupPoints();
-		
+
 		if (this.groupActionsCounter > 0)
 			return;
-		
+
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -5932,13 +5971,13 @@
 	{
 		if (!this.isGroupActions())
 			return;
-		
+
 		--this.groupActionsCounter;
 		AscCommon.History.endGroupPoints();
-		
+
 		if (this.groupActionsCounter > 0)
 			return;
-		
+
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -6034,6 +6073,9 @@
 	prot['asc_hideMediaControl'] = prot.asc_hideMediaControl;
 	prot['asc_getInputLanguage'] = prot.asc_getInputLanguage;
 	prot['asc_getUpdateLinks'] = prot.asc_getUpdateLinks;
+	prot['asc_resetAllShortcutTypes'] = prot.asc_resetAllShortcutTypes;
+	prot['asc_resetShortcutType'] = prot.asc_resetShortcutType;
+	prot['asc_applyAscShortcuts'] = prot.asc_applyAscShortcuts;
 
 	prot['setPluginsOptions'] = prot.setPluginsOptions;
 	prot['asc_pluginButtonDockChanged'] = prot.asc_pluginButtonDockChanged;
