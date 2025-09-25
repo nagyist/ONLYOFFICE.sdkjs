@@ -312,6 +312,7 @@
 			"word/Editor/document/document-page-column.js",
 			"word/Editor/document/document-page-section.js",
 			"word/Editor/document/element-section.js",
+			"word/Editor/custom-text-annotator.js",
 			"word/Editor/DocumentContentBase.js",
 			"word/Editor/Document.js",
 			"word/Editor/document-composite-input.js",
