@@ -12082,6 +12082,8 @@ function (window, undefined) {
 				let value = cell;
 				if (type === cElementType.error) {
 					value = cell.errorType;
+				} else if (type === cElementType.string) {
+					value = value.value.toLowerCase();
 				} else {
 					value = value.value;
 				}
