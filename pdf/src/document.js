@@ -2740,6 +2740,7 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.MovePages = function(aIndexes, nNewPos) {
         if (!Array.isArray(aIndexes) || aIndexes.length === 0) return;
+        if (Math.max.apply(null, aIndexes) >= this.GetPagesCount() || nNewPos >= this.GetPagesCount()) return;
 
         let nMinIdx = Infinity;
         let nMaxIdx = 0;
