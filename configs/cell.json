@@ -303,7 +303,6 @@
 			"word/Editor/Layout/Base.js",
 			"word/Editor/Layout/PrintView.js",
 			"word/Editor/Layout/ReadView.js",
-			"word/Editor/custom-text-annotator.js",
 			"word/Editor/DocumentContentBase.js",
 			"word/Editor/Document.js",
 			"word/Editor/document-composite-input.js",
@@ -415,6 +414,7 @@
 			"common/Native/native_graphics.js",
 			
 			"word/Editor/document-visitor.js",
+			"word/Editor/custom-text-annotator.js",
 			
 			"vendor/easysax.js",
 			"common/openxml.js"

@@ -53,17 +53,18 @@
 		this.waitingParagraphs  = {};
 		this.paragraphs         = {};
 		this.checkingParagraphs = {};
+		
+		this.textGetter = new ParagraphText();
 	}
 	
 	CustomTextAnnotator.prototype.isActive = function()
 	{
 		return true;
 	};
-	CustomTextAnnotator.prototype.checkParagraph = function(para)
+	CustomTextAnnotator.prototype.addParagraphToCheck = function(para)
 	{
 		this.checkingParagraphs[para.GetId()] = para;
 	};
-	
 	CustomTextAnnotator.prototype.continueProcessing = function()
 	{
 		if (!this.isActive())
@@ -75,7 +76,7 @@
 			if (performance.now() - startTime > MAX_ACTION_TIME)
 				break;
 			
-			let paragraph = this._popNextParagraph();
+			let paragraph = this.popNextParagraph();
 			if (!paragraph)
 				break;
 			
@@ -90,7 +91,7 @@
 		for (let paraId in this.checkingParagraphs)
 		{
 			let paragraph = this.checkingParagraphs[paraId];
-			delete this.paragraph[paraId];
+			delete this.checkingParagraphs[paraId];
 			
 			if (!paragraph.IsUseInDocument())
 				continue;
@@ -102,7 +103,30 @@
 	};
 	CustomTextAnnotator.prototype.handleParagraph = function(paragraph)
 	{
-		return null;
+		this.textGetter.check(paragraph);
+		console.log(`ParaId=${paragraph.GetId()}; ParaText=${this.textGetter.text}`);
+	};
+	
+	/**
+	 *
+	 * @constructor
+	 */
+	function ParagraphText()
+	{
+		AscWord.DocumentVisitor.call(this);
+		this.text = "";
+	}
+	ParagraphText.prototype = Object.create(AscWord.DocumentVisitor.prototype);
+	ParagraphText.prototype.constructor = ParagraphText;
+	ParagraphText.prototype.check = function(paragraph)
+	{
+		this.text = "";
+		this.traverseParagraph(paragraph);
+	};
+	ParagraphText.prototype.run = function(run)
+	{
+		this.text += run.GetText();
+		return true;
 	};
 	//-------------------------------------------------------------export-----------------------------------------------
 	AscWord.CustomTextAnnotator = CustomTextAnnotator;

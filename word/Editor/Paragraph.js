@@ -14757,6 +14757,10 @@ Paragraph.prototype.RequestSpellCheck = function()
 		{
 			oSpelling.AddParagraphToCheck(this);
 		}
+		
+		let textAnnotator = this.getCustomTextAnnotator();
+		if (textAnnotator)
+			textAnnotator.addParagraphToCheck(this);
 	}
 };
 /**

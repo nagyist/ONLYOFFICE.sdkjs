@@ -282,7 +282,6 @@
 			"word/Editor/document/document-page-column.js",
 			"word/Editor/document/document-page-section.js",
 			"word/Editor/document/element-section.js",
-			"word/Editor/custom-text-annotator.js",
 			"word/Editor/DocumentContentBase.js",
 			"word/Editor/Document.js",
 			"word/Editor/document-composite-input.js",
@@ -372,7 +371,8 @@
 			"visio/model/SerializeReader.js",
 			"visio/model/SerializeWriter.js",
 			
-			"word/Editor/document-visitor.js"
+			"word/Editor/document-visitor.js",
+			"word/Editor/custom-text-annotator.js"
 		],
 		"desktop": {
 			"min": [
