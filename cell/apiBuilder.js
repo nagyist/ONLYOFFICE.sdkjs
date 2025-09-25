@@ -19187,7 +19187,7 @@
 		}
 		dataValidation.ranges = ranges;
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -19222,7 +19222,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.dataValidations) {
 			return;
 		}
@@ -19252,7 +19252,7 @@
 			return null;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.dataValidations) {
 			return null;
 		}
@@ -20093,7 +20093,7 @@
 			return null;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20277,7 +20277,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddAboveAverage.js
 	 */
 	ApiFormatConditions.prototype.AddAboveAverage = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20321,7 +20321,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddColorScale.js
 	 */
 	ApiFormatConditions.prototype.AddColorScale = function(ColorScaleType) {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20425,7 +20425,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddDatabar.js
 	 */
 	ApiFormatConditions.prototype.AddDatabar = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20489,7 +20489,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddIconSetCondition.js
 	 */
 	ApiFormatConditions.prototype.AddIconSetCondition = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20563,7 +20563,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddTop10.js
 	 */
 	ApiFormatConditions.prototype.AddTop10 = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20609,7 +20609,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/AddUniqueValues.js
 	 */
 	ApiFormatConditions.prototype.AddUniqueValues = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -20649,7 +20649,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/Delete.js
 	 */
 	ApiFormatConditions.prototype.Delete = function() {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -20734,7 +20734,7 @@
 	};
 
 	ApiFormatConditions.prototype.private_setRule = function(rule) {
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		let arr = [rule];
 		/*if (worksheet.isConditionalFormattingRules()) {
 			worksheet.forEachConditionalFormattingRules(function (val) {
@@ -20792,7 +20792,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -20882,7 +20882,7 @@
 			}
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		worksheet.changeCFRule(oldRule, this.rule, true);
 
 		return this;
@@ -20900,7 +20900,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -20929,7 +20929,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -20961,7 +20961,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -21009,7 +21009,7 @@
 			return null;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return null;
 		}
@@ -21409,7 +21409,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
 			return;
 		}
@@ -21481,7 +21481,7 @@
 			return;
 		}
 
-		let worksheet = this.range && this.range.Worksheet && this.range.Worksheet.worksheet;
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (!worksheet) {
 			return;
 		}
