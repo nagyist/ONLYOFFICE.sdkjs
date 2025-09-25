@@ -3215,6 +3215,10 @@ var CPresentation = CPresentation || function(){};
         this.CheckComment(oAnnot);
     };
     CPDFDoc.prototype.AddComment = function(AscCommentData) {
+        if (null == AscCommentData.asc_getQuoteText()) {
+            AscCommentData.asc_putQuoteText("");
+        }
+
         let oCurHistory = AscCommon.History;
         AscCommon.History = this.History;
 
