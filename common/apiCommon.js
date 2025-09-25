@@ -3910,7 +3910,7 @@ function (window, undefined) {
 		if (this.subject !== pr.subject) {
 			this.subject = null;
 		}
-		if (this.type) {
+		if (this.type && this.annotProps) {
 			this.annotProps.compare(pr.annotProps);
 		}
 	};
