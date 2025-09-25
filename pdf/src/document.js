@@ -6834,8 +6834,8 @@ var CPresentation = CPresentation || function(){};
                     aOriginIndexes.push(oFilePage.originIndex);
                 }
                 else {
-                    if (i < this.Viewer.file.originalPagesCount) {
-                        aOriginIndexes.push(i + this.Viewer.file.originalPagesCount);
+                    if (i <= this.Viewer.file.originalPagesCount - 1) {
+                        aOriginIndexes.push(i + this.Viewer.file.originalPagesCount - 1);
                     }
                     else {
                         aOriginIndexes.push(i);
