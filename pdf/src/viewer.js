@@ -1859,10 +1859,11 @@
 			// down inside drawing (placeholders)
 			if (Asc.editor.canEdit()) {
 				let pos = oDrDoc.ConvertCoordsFromCursor2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
-				
-				let is_drawing = oDrDoc.checkMouseDown_Drawing(pos, e === undefined ? true : false);
-				if (is_drawing === true) {
-					return;
+				if (pos.Page !== -1) {
+					let is_drawing = oDrDoc.checkMouseDown_Drawing(pos, e === undefined ? true : false);
+					if (is_drawing === true) {
+						return;
+					}
 				}
 			}
 
@@ -1878,6 +1879,10 @@
 					if (oThis.overlay.m_oContext)
 					{
 						let pageCoords = oThis.getPageByCoords(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+						if (!pageCoords) {
+							return false;
+						}
+
 						let isSelectionUse = oThis.file.isSelectionUse();
 						let selection = oThis.file.getSelection();
 						let pageSelQuads = pageCoords ? selection.quads.find(function(pageQuads) {
@@ -1949,7 +1954,11 @@
 				return;
 			}
 
-			var pageObjectLogic = this.getPageByCoords2(oThis.mouseDownCoords.X, oThis.mouseDownCoords.Y);
+			let pageObjectLogic = this.getPageByCoords2(oThis.mouseDownCoords.X, oThis.mouseDownCoords.Y);
+			if (!pageObjectLogic) {
+				return false;
+			}
+
 			if (e.ShiftKey) {
 				this.file.Selection.IsSelection = true;
 				this.file.onMouseMove(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
@@ -2014,17 +2023,22 @@
 			// up inside drawing (placeholders)
 			if (Asc.editor.canEdit()) {
 				let pos = oDrDoc.ConvertCoordsFromCursor2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
-				
-				let is_drawing = oDrDoc.checkMouseUp_Drawing(pos);
-				if (is_drawing === true)
-					return;
+				if (pos.Page !== -1) {
+					let is_drawing = oDrDoc.checkMouseUp_Drawing(pos);
+					if (is_drawing === true)
+						return;
+				}
 			}
 
 			oDoc.OnMouseUp(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, AscCommon.global_mouseEvent);
 
 			if (oThis.canSelectPageText() && !oThis.MouseHandObject && !oDoc.mouseDownAnnot && !oDoc.mouseDownField)
 			{
-				var pageObjectLogic = oThis.getPageByCoords2(oThis.mouseDownCoords.X, oThis.mouseDownCoords.Y);
+				let pageObjectLogic = oThis.getPageByCoords2(oThis.mouseDownCoords.X, oThis.mouseDownCoords.Y);
+				if (!pageObjectLogic) {
+					return false;
+				}
+
 				if (global_mouseEvent.ClickCount == 2)
 					oThis.file.selectWholeWord(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 				else if (global_mouseEvent.ClickCount == 3)
@@ -2073,12 +2087,13 @@
 			// move inside drawing (placeholders)
 			if (Asc.editor.canEdit()) {
 				let pos = oDrDoc.ConvertCoordsFromCursor2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
-				
-				let is_drawing = oDrDoc.checkMouseMove_Drawing(pos, e === undefined ? true : false);
-				if (is_drawing === true) {
-					oDoc.UpdateCursorType(pos.X, pos.Y, pos.Page, global_mouseEvent);
-					oDrDoc.checkMouseMove_Drawing(pos, e === undefined);
-					return;
+				if (pos.Page !== -1) {
+					let is_drawing = oDrDoc.checkMouseMove_Drawing(pos, e === undefined ? true : false);
+					if (is_drawing === true) {
+						oDoc.UpdateCursorType(pos.X, pos.Y, pos.Page, global_mouseEvent);
+						oDrDoc.checkMouseMove_Drawing(pos, e === undefined);
+						return;
+					}
 				}
 			}
 
@@ -2140,7 +2155,11 @@
 						// нажатая мышка - курсор всегда default (так как за eps вышли)
 						oThis.setCursorType("default");
 
-						var pageObjectLogic = oThis.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+						let pageObjectLogic = oThis.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+						if (!pageObjectLogic) {
+							return false;
+						}
+
 						oThis.file.onMouseMove(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 					}
 					else
@@ -3144,7 +3163,11 @@
 		};
 		this.removeSelection = function()
 		{
-			var pageObjectLogic = this.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+			let pageObjectLogic = this.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
+			if (!pageObjectLogic) {
+				return false;
+			}
+
 			this.file.onMouseDown(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 			this.file.onMouseUp(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 		};
