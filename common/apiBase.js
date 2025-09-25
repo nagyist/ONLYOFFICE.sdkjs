@@ -5893,6 +5893,21 @@
 		return (0 !== results.length) ? true : false;
 	};
 
+	baseEditorsApi.prototype["checkAIActions"] = baseEditorsApi.prototype.checkAIActions = function(resolve)
+	{
+		if (this.checkAI())
+		{
+			resolve({
+				"error" : true
+			});
+			return;
+		}
+
+		this.AI({
+			"type" : "Actions"
+		}, resolve);
+	};
+
 	baseEditorsApi.prototype.onAttachPluginEvent = function(guid, name)
 	{
 	};
