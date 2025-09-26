@@ -472,11 +472,9 @@ CDocumentContent.prototype.GetStyles = function(nLvl)
 {
 	if (this.bPresentation && this.Parent)
 		return this.Parent.Get_Styles(nLvl);
-
-	if (this.LogicDocument && this.LogicDocument.GetStyles)
-		return this.LogicDocument.GetStyles();
-
-	return AscWord.DEFAULT_STYLES;
+	
+	let logicDocument = this.GetLogicDocument();
+	return logicDocument && logicDocument.GetStyles ? logicDocument.GetStyles() : AscWord.DEFAULT_STYLES;
 };
 CDocumentContent.prototype.Get_TableStyleForPara = function()
 {

@@ -7817,6 +7817,7 @@ ParaRun.prototype.Internal_Compile_Pr = function ()
 	// Одно исключение, когда задан стиль Hyperlink внутри класса Hyperlink внутри поля TOC, то стиль
 	// мержить не надо и, более того, цвет и подчеркивание из прямых настроек тоже не используется.
 	if (Styles
+		&& Styles instanceof AscWord.CStyles
 		&& this.Pr.RStyle
 		&& (!this.IsStyleHyperlink() || !this.IsInHyperlinkInTOC()))
 	{
