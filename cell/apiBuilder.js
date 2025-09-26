@@ -9615,6 +9615,44 @@
 		wsView.cellCommentator.deleteCommentsRange(bbox, null);
 	};
 
+    /**
+     * Sets the bold property to the text characters in the current cell or cell range.
+     * @memberof ApiRange
+     * @typeofeditors ["CSE"]
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/ClearFormats.js
+     */
+    ApiRange.prototype.ClearFormats = function () {
+        const range = this.range;
+        const bbox = range.bbox;
+        const ws = range.worksheet;
+		range.cleanFormat();
+        ws.clearConditionalFormattingRulesByRanges([bbox]);
+    };
+
+    /**
+     * Sets the bold property to the text characters in the current cell or cell range.
+     * @memberof ApiRange
+     * @typeofeditors ["CSE"]
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/ClearContents.js
+     */
+    ApiRange.prototype.ClearContents = function () {
+		const range = this.range;
+		const bbox = range.bbox;
+		const ws = range.worksheet;
+        this.range.cleanAll();
+		ws.deletePivotTables(bbox);
+    };
+
+    /**
+     * Sets the bold property to the text characters in the current cell or cell range.
+     * @memberof ApiRange
+     * @typeofeditors ["CSE"]
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/ClearHyperlinks.js
+     */
+    ApiRange.prototype.ClearHyperlinks = function () {
+        this.range.cleanHyperlinks();
+    };
+
 	/**
 	 * Returns a Range object that represents the rows in the specified range. If the specified row is outside the Range object, a new Range will be returned that represents the cells between the columns of the original range in the specified row.
 	 * @memberof ApiRange
@@ -9642,6 +9680,66 @@
 	Object.defineProperty(ApiRange.prototype, "Rows", {
 		get: function () {
 			return this.GetRows();
+		}
+	});
+
+	/**
+	 * Return a number of cells in the current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/GetCellsCount.js
+	 */
+	ApiRange.prototype.GetCellsCount = function() {
+		const bbox = this.range.bbox;
+		if (!bbox) {
+			return 0;
+		}
+		return bbox.getWidth() * bbox.getHeight();
+	};
+	Object.defineProperty(ApiRange.prototype, "CellsCount", {
+		get: function () {
+			return this.GetCellsCount();
+		}
+	});
+
+	/**
+	 * Return a number of columns in the current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/GetColumnsCount.js
+	 */
+	ApiRange.prototype.GetColumnsCount = function() {
+		const bbox = this.range.bbox;
+		if (!bbox) {
+			return 0;
+		}
+		return bbox.getWidth();
+	};
+	Object.defineProperty(ApiRange.prototype, "ColumnsCount", {
+		get: function () {
+			return this.GetColumnsCount();
+		}
+	});
+
+	/**
+	 * Return a number of rows in the current range.
+	 * @memberof ApiRange
+	 * @typeofeditors ["CSE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/GetRowsCount.js
+	 */
+	ApiRange.prototype.GetRowsCount = function() {
+		const bbox = this.range.bbox;
+		if (!bbox) {
+			return 0;
+		}
+		return bbox.getHeight();
+	};
+	Object.defineProperty(ApiRange.prototype, "RowsCount", {
+		get: function () {
+			return this.GetRowsCount();
 		}
 	});
 
@@ -26379,7 +26477,13 @@
 	ApiRange.prototype["GetClassType"] = ApiRange.prototype.GetClassType;
 	ApiRange.prototype["GetRow"] = ApiRange.prototype.GetRow;
 	ApiRange.prototype["GetCol"] = ApiRange.prototype.GetCol;
+	ApiRange.prototype["GetCellsCount"] = ApiRange.prototype.GetCellsCount;
+	ApiRange.prototype["GetRowsCount"] = ApiRange.prototype.GetRowsCount;
+	ApiRange.prototype["GetColumnsCount"] = ApiRange.prototype.GetColumnsCount;
 	ApiRange.prototype["Clear"] = ApiRange.prototype.Clear;
+    ApiRange.prototype["ClearFormats"] = ApiRange.prototype.ClearFormats;
+    ApiRange.prototype["ClearContents"] = ApiRange.prototype.ClearContents;
+    ApiRange.prototype["ClearHyperlinks"] = ApiRange.prototype.ClearHyperlinks;
 	ApiRange.prototype["GetRows"] = ApiRange.prototype.GetRows;
 	ApiRange.prototype["GetCols"] = ApiRange.prototype.GetCols;
 	ApiRange.prototype["End"] = ApiRange.prototype.End;
