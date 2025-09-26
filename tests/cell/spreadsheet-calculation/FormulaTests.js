@@ -19092,10 +19092,6 @@ $(function () {
 		ws.getRange2("CC7").setValue("'true'");
 		ws.getRange2("CC8").setValue("");
 
-		/*oParser = new parserFormula( "COUNTIF(CC1:CC8,\"<\"&\"F007\")", "C2", ws );
-		assert.ok( oParser.parse() );
-		assert.strictEqual( oParser.calculate().getValue(), 1 );*/
-
 		// Case #7: Area, Formula. Count TRUE values using TRUE() function
 		oParser = new parserFormula("COUNTIF(CC1:CC7, TRUE())", "C2", ws);
 		assert.ok(oParser.parse());
@@ -19116,13 +19112,13 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
-		// Case #11: Cell, String. Count text criteria in single cell (no match)
+		// Case #11: Ref, String. Count text criteria in single cell (no match)
 		ws.getRange2("CC8").setValue(">3");
 		oParser = new parserFormula("COUNTIF(CC8,\">3\")", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 0);
 
-		// Case #12: Cell, String. Count text criteria in single cell with equals prefix
+		// Case #12: Ref, String. Count text criteria in single cell with equals prefix
 		ws.getRange2("CC8").setValue(">3");
 		oParser = new parserFormula("COUNTIF(CC8,\"=>3\")", "C2", ws);
 		assert.ok(oParser.parse());
@@ -19269,12 +19265,12 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 8);
 
-		// Case #42: Area, Cell. second arg as cell
+		// Case #42: Area, Ref. second arg as cell
 		oParser = new parserFormula('COUNTIF(A200:B205,B206)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
-		// Case #43: Area, Cell. second arg as cell, case-sens test
+		// Case #43: Area, Ref. second arg as cell, case-sens test
 		oParser = new parserFormula('COUNTIF(A200:B205,B207)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
@@ -19296,11 +19292,102 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
+		ws.getRange2("A311").setValue("1");
+		ws.getRange2("A312").setValue("2");
+		ws.getRange2("A313").setValue("3");
+		ws.getRange2("A314").setValue("4");
+		ws.getRange2("A315").setValue(">3");
+
+		const currentSheet = ws.getName();
+		// Case #46: Area3D, Ref3D. Ref3D and Ared3D test
+		oParser = new parserFormula('COUNTIF(' + currentSheet + '!A311:A314,' + currentSheet + '!A315)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		ws.getRange2("A306").setValue("Á");
+		ws.getRange2("A307").setValue("a");
+		ws.getRange2("A308").setValue("A");
+		ws.getRange2("A309").setValue("b");
+		ws.getRange2("A310").setValue(">a");
+
+		// Case #47: Area, Ref. diactric signs tests
+		oParser = new parserFormula('COUNTIF(A306:A309,A310)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 2);
+
+		ws.getRange2("A316").setValue("a");
+		ws.getRange2("A317").setValue("a");
+		ws.getRange2("A318").setValue("a");
+		ws.getRange2("A319").setValue("あ");
+		ws.getRange2("A320").setValue(">a");
+
+		// Case #48: Area, Ref. Hieroglyphs test
+		oParser = new parserFormula('COUNTIF(A316:A319,A320)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		// Case #49: Area, Formula. Formula test
+		oParser = new parserFormula('COUNTIF(A311:A314,2+1)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		const defName3D = new Asc.asc_CDefName('COUNTIFTestName3D', ws.getName() + '!$A$315');
+		const defNameArea3D = new Asc.asc_CDefName('COUNTIFTestNameArea3D', ws.getName() + '!$A$311:$A$314');
+
+		wb.editDefinesNames(null, defName3D);
+		wb.editDefinesNames(null, defNameArea3D);
+
+		// Case #50: Name3D, Name3D. DefName test
+		oParser = new parserFormula('COUNTIF(COUNTIFTestNameArea3D,COUNTIFTestName3D)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 1);
+
+		wb.delDefinesNames(defName3D);
+		wb.delDefinesNames(defNameArea3D);
+
+		// Case #51: Area, Area. Different with MS. Should return array
+		// oParser = new parserFormula('COUNTIF(A311:A314,A311:A314)', "C2", ws);
+		// assert.ok(oParser.parse());
+		// array = oParser.calculate();
+		// assert.strictEqual(array.getElementRowCol(0,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,0]");
+		// assert.strictEqual(array.getElementRowCol(0,1).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,1]");
+		// assert.strictEqual(array.getElementRowCol(0,2).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,2]");
+
 		// Negative Cases:
 		// Case #1: Error, Number. Handle reference error in range
 		oParser = new parserFormula("COUNTIF(#REF!, 1)", "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#REF!");
+
+		// Case #2: Array, Number. 
+		oParser = new parserFormula("COUNTIF({1,2,3}, 1)", "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		// Case #3: Array, Number. 
+		oParser = new parserFormula('COUNTIF({"a","a","a"}, 1)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		// Case #4: String, Number. 
+		oParser = new parserFormula('COUNTIF("a", 1)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		// Case #5: String, String. 
+		oParser = new parserFormula('COUNTIF("a", "a")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		// Case #6: Number, String. 
+		oParser = new parserFormula('COUNTIF(1, "a")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
+
+		// Case #7: Number, Number. 
+		oParser = new parserFormula('COUNTIF(1, 1)', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!");
 
 		// Bounded Cases:
 		// Case #1: Area, String. Count errors greater than #N/A
