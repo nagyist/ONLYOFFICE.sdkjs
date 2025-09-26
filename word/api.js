@@ -13884,7 +13884,25 @@ background-repeat: no-repeat;\
 		if(!oLogicDocument) return;
 		return oLogicDocument.HaveInks();
 	};
-
+	
+	asc_docs_api.prototype.getRestrictionSettings = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (!oform)
+			return undefined;
+		
+		let settings = new AscCommon.CRestrictionSettings();
+		let userMaster = oform.getCurrentUserMaster();
+		if (userMaster)
+		{
+			if (userMaster.isNoRole())
+				settings.SetOFormNoRole(true);
+			else
+				settings.SetOFormRole(userMaster.getRole());
+		}
+		return settings;
+	};
 	asc_docs_api.prototype.onUpdateRestrictions = function(restrictionSettings)
 	{
 		if (this.WordControl)
@@ -13917,9 +13935,10 @@ background-repeat: no-repeat;\
 		{
 			let roleName = restrictionSettings ? restrictionSettings.GetOFormRole() : null;
 			
-			if (oLogicDocument.IsFillingFormMode() && restrictionSettings && restrictionSettings.IsOFormNoRole())
+			let canSetRole = oLogicDocument.IsFillingFormMode() || oLogicDocument.IsViewModeInEditor();
+			if (canSetRole && restrictionSettings && restrictionSettings.IsOFormNoRole())
 				oform.setCurrentNoRole();
-			else if (oLogicDocument.IsFillingFormMode() && roleName)
+			else if (canSetRole && roleName)
 				oform.setCurrentRole(roleName);
 			else
 				oform.clearCurrentRole();

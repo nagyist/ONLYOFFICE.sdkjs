@@ -1135,6 +1135,10 @@
 	{
 		return !!(this.restrictions & Asc.c_oAscRestrictionType.View);
 	};
+	baseEditorsApi.prototype.getRestrictionSettings = function()
+	{
+		return undefined;
+	};
 	baseEditorsApi.prototype.onUpdateRestrictions = function()
 	{
 	};
@@ -1180,7 +1184,7 @@
 		if (0 === this.IsActionRestrictionCurrent)
 		{
 			this.IsActionRestrictionPrev = this.restrictions;
-			this.asc_setRestriction(restrictions);
+			this.asc_setRestriction(restrictions, this.getRestrictionSettings());
 		}
 		++this.IsActionRestrictionCurrent;
 	};
@@ -1194,7 +1198,7 @@
 
 		if (0 === this.IsActionRestrictionCurrent && null !== this.IsActionRestrictionPrev)
 		{
-			this.asc_setRestriction(this.IsActionRestrictionPrev);
+			this.asc_setRestriction(this.IsActionRestrictionPrev, this.getRestrictionSettings());
 			this.IsActionRestrictionPrev = null;
 		}
 	};
