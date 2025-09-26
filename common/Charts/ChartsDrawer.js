@@ -12136,10 +12136,11 @@ drawPieChart.prototype = {
 		// if labels are given then shrink the radius to fit the labels
 		let _dLbls = this.chart.dLbls;
 		let _series = this.chart.series;
-		if ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
+		const affectedByLayout = this.cChartSpace.isLayoutSizes();
+		if (!affectedByLayout && ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
 			(_series && _series[0] && _series[0].dLbls && _series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr &&
 				_series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && (_series[0].dLbls.showVal ||
-					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent))) {
+					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent)))) {
 			let radius_shrink_coeff = 0.15;
 			radius = radius * (1 - radius_shrink_coeff);
 		}
