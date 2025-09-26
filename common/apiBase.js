@@ -6014,6 +6014,7 @@
 	prot['asc_setRestriction'] = prot.asc_setRestriction;
 	prot['asc_addRestriction'] = prot.asc_addRestriction;
 	prot['asc_removeRestriction'] = prot.asc_removeRestriction;
+	prot['asc_getRestrictionSettings'] = prot.asc_getRestrictionSettings = prot.getRestrictionSettings;
 	prot['asc_setCanSendChanges'] = prot.asc_setCanSendChanges;
 	prot['asc_selectSearchingResults'] = prot.asc_selectSearchingResults;
 	prot['asc_isSelectSearchingResults'] = prot.asc_isSelectSearchingResults;

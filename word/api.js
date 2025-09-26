@@ -15440,6 +15440,8 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype["asc_updateExternalReferences"] = asc_docs_api.prototype.asc_updateExternalReferences;
 	asc_docs_api.prototype["asc_removeExternalReferences"] = asc_docs_api.prototype.asc_removeExternalReferences;
 	asc_docs_api.prototype["asc_changeExternalReference"]  = asc_docs_api.prototype.asc_changeExternalReference;
+	
+	asc_docs_api.prototype['asc_getRestrictionSettings'] = asc_docs_api.prototype.asc_getRestrictionSettings = asc_docs_api.prototype.getRestrictionSettings;
 
 	CDocInfoProp.prototype['get_PageCount']             = CDocInfoProp.prototype.get_PageCount;
 	CDocInfoProp.prototype['put_PageCount']             = CDocInfoProp.prototype.put_PageCount;
