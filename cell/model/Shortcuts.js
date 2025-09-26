@@ -342,14 +342,14 @@
 	}
 
 	if (window["AscDesktopEditor"]) {
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
-		c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.NextFileTab] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.NextFileTab, keyCodes.Tab, true, false, false, false)];
+		c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.PreviousFileTab] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.PreviousFileTab, keyCodes.Tab, true, true, false, false)];
 		if (AscCommon.AscBrowser.isMacOs) {
-			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
-			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
+			c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.OpenExistingFile, keyCodes.KeyO, false, false, false, true)];
+			c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.CloseFile, keyCodes.KeyW, false, false, false, true)];
 		} else {
-			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
-			c_oAscDefaultShortcuts[Asc.c_oAscPresentationShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false), new AscShortcut(Asc.c_oAscPresentationShortcutType.CloseFile, keyCodes.F4, true, false, false, false)];
+			c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.OpenExistingFile] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.OpenExistingFile, keyCodes.KeyO, true, false, false, false)];
+			c_oAscDefaultShortcuts[Asc.c_oAscSpreadsheetShortcutType.CloseFile] = [new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.CloseFile, keyCodes.KeyW, true, false, false, false), new AscShortcut(Asc.c_oAscSpreadsheetShortcutType.CloseFile, keyCodes.F4, true, false, false, false)];
 		}
 	}
 
