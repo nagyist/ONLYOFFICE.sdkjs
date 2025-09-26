@@ -1267,7 +1267,7 @@
 			textCShape.spPr.xfrm.flipH = false;
 			textCShape.spPr.xfrm.flipV = false;
 
-			// In power point presentations on flipV text is position is flipped + text
+			// In power point presentations on flipV text position is flipped + text
 			// is mirrored horizontally and vertically (https://disk.yandex.ru/d/Hi8OCMITgb730Q)
 			// below we remove text mirror. In visio text is never mirrored. (https://disk.yandex.ru/d/JjbNzzZLDIAEuQ)
 			// (on flipH in power point presentation text is not mirrored)
