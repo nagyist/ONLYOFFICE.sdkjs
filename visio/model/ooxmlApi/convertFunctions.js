@@ -1158,56 +1158,68 @@
 			let foreignDataObject = this.getForeignDataObject();
 			if (foreignDataObject) {
 				if (this.cImageShape !== null) {
-					this.cImageShape.setLocks(0);
-					this.cImageShape.setBDeleted(false);
-					this.cImageShape.setSpPr(cShape.spPr.createDuplicate());
-					this.cImageShape.spPr.setParent(this.cImageShape);
-
-					let imgWidth_inch = this.getCellNumberValueWithScale("ImgWidth", drawingPageScale);
-					let imgHeight_inch = this.getCellNumberValueWithScale("ImgHeight", drawingPageScale);
-					let imgOffsetX_inch = this.getCellNumberValueWithScale("ImgOffsetX", drawingPageScale);
-					let imgOffsetY_inch = this.getCellNumberValueWithScale("ImgOffsetY", drawingPageScale);
-
-					let imgWidth_mm = imgWidth_inch * g_dKoef_in_to_mm;
-					let imgHeight_mm = imgHeight_inch * g_dKoef_in_to_mm;
-
-					this.cImageShape.blipFill.srcRect = new AscFormat.CSrcRect();
-					let rect = this.cImageShape.blipFill.srcRect;
-
-					if (imgWidth_inch !== undefined && imgHeight_inch !== undefined) {
-						let widthScale = imgWidth_mm / shapeWidth_mm;
-						let heightScale = imgHeight_mm / shapeHeight_mm;
-						// coords in our class CSrcRect is srcRect relative i.e. relative to original image size
-						// isInvertCoords check?
-						// add scale
-						rect.setLTRB(0, 100 - 1/heightScale * 100, 1/widthScale * 100, 100);
-					 }
-					if (imgOffsetX_inch !== undefined) {
-						let imgOffsetX_mm = imgOffsetX_inch * g_dKoef_in_to_mm;
-						let offsetX = imgOffsetX_mm / imgWidth_mm;
-						// add horizontal shift
-						rect.setLTRB(rect.l - offsetX * 100, rect.t, rect.r - offsetX * 100, rect.b);
-					}
-					if (imgOffsetY_inch !== undefined) {
-						let imgOffsetY_mm = imgOffsetY_inch * g_dKoef_in_to_mm;
-						let offsetY = imgOffsetY_mm / imgHeight_mm;
-						// add vertical shift
-						rect.setLTRB(rect.l, rect.t + offsetY * 100, rect.r, rect.b + offsetY * 100);
-					}
-
-
-					this.cImageShape.rot = cShape.rot;
-					// this.cImageShape.brush = cShape.brush;
-					this.cImageShape.bounds = cShape.bounds;
-					this.cImageShape.flipH = cShape.flipH;
-					this.cImageShape.flipV = cShape.flipV;
-					this.cImageShape.localTransform = cShape.localTransform;
-					// this.cImageShape.pen = cShape.pen;
-					this.cImageShape.Id = cShape.Id;
+					setCImageShapeParams(this.cImageShape, cShape, this, shapeWidth_mm, shapeHeight_mm);
 
 					this.cImageShape.setParent2(visioDocument);
-
 					cShape = this.cImageShape;
+
+					/**
+					 * changing cImageShape to set its size, position and other props from cShape
+					 * @param cImageShape
+					 * @param cShape
+					 * @param shapeType
+					 * @param shapeWidth_mm
+					 * @param shapeHeight_mm
+					 */
+					function setCImageShapeParams(cImageShape, cShape, shapeType, shapeWidth_mm, shapeHeight_mm) {
+						// move some properties from shape to image. Then we will return cImageShape instead of cShape
+						cImageShape.setLocks(0);
+						cImageShape.setBDeleted(false);
+						cImageShape.setSpPr(cShape.spPr.createDuplicate());
+						cImageShape.spPr.setParent(cImageShape);
+
+						let imgWidth_inch = shapeType.getCellNumberValueWithScale("ImgWidth", drawingPageScale);
+						let imgHeight_inch = shapeType.getCellNumberValueWithScale("ImgHeight", drawingPageScale);
+						let imgOffsetX_inch = shapeType.getCellNumberValueWithScale("ImgOffsetX", drawingPageScale);
+						let imgOffsetY_inch = shapeType.getCellNumberValueWithScale("ImgOffsetY", drawingPageScale);
+
+						let imgWidth_mm = imgWidth_inch * g_dKoef_in_to_mm;
+						let imgHeight_mm = imgHeight_inch * g_dKoef_in_to_mm;
+
+						cImageShape.blipFill.srcRect = new AscFormat.CSrcRect();
+						let rect = cImageShape.blipFill.srcRect;
+
+						// add scale
+						if (imgWidth_inch !== undefined && imgHeight_inch !== undefined) {
+							let widthScale = imgWidth_mm / shapeWidth_mm;
+							let heightScale = imgHeight_mm / shapeHeight_mm;
+							// coords in our class CSrcRect is srcRect relative i.e. relative to original image size
+							// isInvertCoords check?
+							rect.setLTRB(0, 100 - 1/heightScale * 100, 1/widthScale * 100, 100);
+						}
+						// add horizontal shift
+						if (imgOffsetX_inch !== undefined) {
+							let imgOffsetX_mm = imgOffsetX_inch * g_dKoef_in_to_mm;
+							let offsetX = imgOffsetX_mm / imgWidth_mm;
+							rect.setLTRB(rect.l - offsetX * 100, rect.t, rect.r - offsetX * 100, rect.b);
+						}
+						// add vertical shift
+						if (imgOffsetY_inch !== undefined) {
+							let imgOffsetY_mm = imgOffsetY_inch * g_dKoef_in_to_mm;
+							let offsetY = imgOffsetY_mm / imgHeight_mm;
+							rect.setLTRB(rect.l, rect.t + offsetY * 100, rect.r, rect.b + offsetY * 100);
+						}
+
+
+						cImageShape.rot = cShape.rot;
+						// cImageShape.brush = cShape.brush;
+						cImageShape.bounds = cShape.bounds;
+						cImageShape.flipH = cShape.flipH;
+						cImageShape.flipV = cShape.flipV;
+						cImageShape.localTransform = cShape.localTransform;
+						// cImageShape.pen = cShape.pen;
+						cImageShape.Id = cShape.Id;
+					}
 				} else {
 					AscCommon.consoleLog("Unknown error: cImageShape was not initialized on ooxml parse");
 				}
@@ -1275,6 +1287,7 @@
 
 		// Method end
 		// Used functions:
+		// TODO import
 		/**
 		 * Calculates coordinates after rotation using rotation point
 		 * @param {number} rotatePointX_global
