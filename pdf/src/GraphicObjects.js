@@ -1988,7 +1988,58 @@
             }
         }
         return null;
-    }
+    };
+
+    CGraphicObjects.prototype.checkSingleChartSelection = function () {
+        const controller = Asc.editor.getGraphicController();
+        if (!controller) return;
+
+        let selectedObjects = Asc.editor.getSelectedElements();
+
+        let isChart = function (object) {
+            return object.asc_getObjectType && object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Chart;
+        };
+        
+        let getRect = function (bounds, pageIndex) {
+            const oDoc = Asc.editor.getPDFDoc();
+            if (!oDoc) return null;
+
+            let oFirtsTr = oDoc.pagesTransform[pageIndex].invert;
+
+            let convertedPosTopLeft = oFirtsTr.TransformPoint(bounds.l * g_dKoef_mm_to_pt, bounds.t * g_dKoef_mm_to_pt);
+            let convertedPosRightBottom = oFirtsTr.TransformPoint(bounds.r * g_dKoef_mm_to_pt, bounds.b * g_dKoef_mm_to_pt);
+
+            let xMin = Math.min(convertedPosTopLeft.x, convertedPosRightBottom.x);
+            let yMin = Math.min(convertedPosTopLeft.y, convertedPosRightBottom.y);
+            let xMax = Math.max(convertedPosTopLeft.x, convertedPosRightBottom.x);
+            let yMax = Math.max(convertedPosTopLeft.y, convertedPosRightBottom.y);
+
+            return new AscCommon.asc_CRect(
+                xMin, yMin,
+                xMax - xMin, yMax - yMin
+            );
+        };
+
+        const chartObjects = selectedObjects.filter(isChart);
+        if (chartObjects.length !== 1) {
+            Asc.editor.sendEvent("asc_onSingleChartSelectionChanged", null);
+            return;
+        }
+
+        const chartObject = chartObjects[0];
+        const chartSpace = chartObject &&
+            chartObject.Value &&
+            chartObject.Value.ChartProperties &&
+            chartObject.Value.ChartProperties.chartSpace;
+
+        if (!chartSpace) {
+            Asc.editor.sendEvent("asc_onSingleChartSelectionChanged", null);
+            return;
+        }
+
+        const chartSpaceRect = getRect(chartSpace.getRectBounds(), chartSpace.GetPage());
+        Asc.editor.sendEvent("asc_onSingleChartSelectionChanged", chartSpaceRect || null);
+    };
 
     // import
     CGraphicObjects.prototype.setEquationTrack          = AscFormat.DrawingObjectsController.prototype.setEquationTrack;
