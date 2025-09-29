@@ -181,10 +181,40 @@
         aFillColor && oCopy.SetFillColor(aFillColor.slice());
         aDash && oCopy.SetDash(aDash.slice());
         aRD && oCopy.SetRectangleDiff(aRD.slice());
+        
+        // copy replies
+        let oAscCommData = this.GetAscCommentData();
+        if (oAscCommData) {
+            let oCommentData = new AscCommon.CCommentData();
+            oCommentData.Read_FromAscCommentData(oAscCommData);
+            if (false == this.IsFreeText()) {
+                oCommentData.SetUserData(oCopy.GetId());
+            }
+            oCopy.EditCommentData(oCommentData)
+        }
 
         return oCopy;
     };
 
+    CAnnotationBase.prototype.AddReply = function(CommentData, nPos) {
+        let oReply = new AscPDF.CAnnotationText(AscCommon.CreateGUID(), this.GetRect().slice(), this.GetDocument());
+
+        oReply.SetCreationDate(CommentData.m_sOOTime);
+        oReply.SetModDate(CommentData.m_sOOTime);
+        oReply.SetAuthor(CommentData.m_sUserName);
+        oReply.SetUserId(CommentData.m_sUserId);
+        oReply.SetDisplay(window["AscPDF"].Api.Types.display["visible"]);
+        oReply.SetReplyTo(this.GetReplyTo() || this);
+        CommentData.SetUserData(oReply.GetId());
+        oReply.SetContents(CommentData.m_sText);
+        oReply._wasChanged = true;
+        
+        if (!nPos) {
+            nPos = this._replies.length;
+        }
+
+        this._replies.splice(nPos, 0, oReply);
+    };
     CAnnotationBase.prototype.SetMeta = function(oMeta) {
         AscCommon.History.Add(new CChangesPDFAnnotMeta(this, this._meta, oMeta))
 
@@ -1028,7 +1058,7 @@
         
         AscCommon.History.StartNoHistoryMode();
         if (null == oFirstCommToEdit) {
-            AscPDF.CAnnotationText.prototype.AddReply.call(this, oCommentData);
+            this.AddReply(oCommentData);
             oFirstCommToEdit = this.GetReply(0);
             oDoc.CheckComment(this);
         }
@@ -1068,7 +1098,7 @@
             if (!this._replies.find(function(reply) {
                 return oReplyCommentData.m_sUserData == reply.GetId();
             })) {
-                AscPDF.CAnnotationText.prototype.AddReply.call(this, oReplyCommentData, i);
+               this.AddReply(oReplyCommentData, i);
             }
         }
         AscCommon.History.EndNoHistoryMode();

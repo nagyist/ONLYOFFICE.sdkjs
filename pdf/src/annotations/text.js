@@ -144,25 +144,6 @@
     CAnnotationText.prototype.ClearReplies = function() {
         this._replies = [];
     };
-    CAnnotationText.prototype.AddReply = function(CommentData, nPos) {
-        let oReply = new CAnnotationText(AscCommon.CreateGUID(), this.GetRect().slice(), this.GetDocument());
-
-        oReply.SetCreationDate(CommentData.m_sOOTime);
-        oReply.SetModDate(CommentData.m_sOOTime);
-        oReply.SetAuthor(CommentData.m_sUserName);
-        oReply.SetUserId(CommentData.m_sUserId);
-        oReply.SetDisplay(window["AscPDF"].Api.Types.display["visible"]);
-        oReply.SetReplyTo(this.GetReplyTo() || this);
-        CommentData.SetUserData(oReply.GetId());
-        oReply.SetContents(CommentData.m_sText);
-        oReply._wasChanged = true;
-        
-        if (!nPos) {
-            nPos = this._replies.length;
-        }
-
-        this._replies.splice(nPos, 0, oReply);
-    };
     CAnnotationText.prototype.GetAscCommentData = function() {
         let oAscCommData = new Asc.asc_CCommentDataWord(null);
         if (null == this.GetContents()) {
