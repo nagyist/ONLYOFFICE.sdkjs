@@ -1164,13 +1164,33 @@ CChangesPDFDocumentStartMergePages.prototype.Undo = function () {
 CChangesPDFDocumentStartMergePages.prototype.Redo = function () {
     this.Class.partsOfBinaryData = [];
 };
+CChangesPDFDocumentStartMergePages.prototype.Undo = function () {
+    delete this.Class.partsOfBinaryData;
+};
+CChangesPDFDocumentStartMergePages.prototype.Redo = function () {
+    this.Class.partsOfBinaryData = [];
+};
+CChangesPDFDocumentStartMergePages.prototype.WriteToBinary = function(Writer) {
+    Writer.WriteBool(this.IsReverted());
+};
+CChangesPDFDocumentStartMergePages.prototype.ReadFromBinary = function(Reader) {
+    this.SetReverted(Reader.GetBool());
+};
+CChangesPDFDocumentStartMergePages.prototype.Load = function() {
+    if (this.IsReverted()) {
+        this.Undo();
+    }
+    else {
+        this.Redo();
+    }
+};
 
 function CChangesPDFDocumentPartMergePages(Class, Old, New, Color) {
     AscDFH.CChangesBaseProperty.call(this, Class, Old, New, Color);
 }
 CChangesPDFDocumentPartMergePages.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
 CChangesPDFDocumentPartMergePages.prototype.constructor = CChangesPDFDocumentPartMergePages;
-CChangesPDFDocumentPartMergePages.prototype.Type = AscDFH.historyitem_ImageShapeSetPartBinaryData;
+CChangesPDFDocumentPartMergePages.prototype.Type = AscDFH.historyitem_Pdf_Document_Part_Merge_Pages;
 
 CChangesPDFDocumentPartMergePages.prototype.private_SetValue = function (aUint8Array) {
     if (aUint8Array.length) {
