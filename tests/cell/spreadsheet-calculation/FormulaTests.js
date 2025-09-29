@@ -19345,13 +19345,21 @@ $(function () {
 		wb.delDefinesNames(defName3D);
 		wb.delDefinesNames(defNameArea3D);
 
-		// Case #51: Area, Area. Different with MS. Should return array
-		// oParser = new parserFormula('COUNTIF(A311:A314,A311:A314)', "C2", ws);
-		// assert.ok(oParser.parse());
-		// array = oParser.calculate();
-		// assert.strictEqual(array.getElementRowCol(0,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,0]");
-		// assert.strictEqual(array.getElementRowCol(0,1).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,1]");
-		// assert.strictEqual(array.getElementRowCol(0,2).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,2]");
+		// Case #51: Area, Area.
+		oParser = new parserFormula('COUNTIF(A311:A314,A311:A314)', "C2", ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,0]");
+		assert.strictEqual(array.getElementRowCol(1,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[1,0]");
+		assert.strictEqual(array.getElementRowCol(1,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[1,0]");
+
+		// Case #52: Area, Array.
+		oParser = new parserFormula('COUNTIF(A311:A314,{1,2,3})', "C2", ws);
+		assert.ok(oParser.parse());
+		array = oParser.calculate();
+		assert.strictEqual(array.getElementRowCol(0,0).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,0]");
+		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,1]");
+		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,2]");
 
 		// Negative Cases:
 		// Case #1: Error, Number. Handle reference error in range

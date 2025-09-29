@@ -12103,33 +12103,60 @@ function (window, undefined) {
 			return arg0;
 		}
 		if (cElementType.cell !== arg0.type && cElementType.cell3D !== arg0.type &&
-			cElementType.cellsRange !== arg0.type && cElementType.cellsRange3D !== arg0.type && cElementType.array !== arg0.type) {
+			cElementType.cellsRange !== arg0.type && cElementType.cellsRange3D !== arg0.type) {
 			return new cError(cErrorType.wrong_value_type);
+		}
+		const t = this;
+		function calculateOne(rangeOrCell, condition) {
+			if (cElementType.cell === rangeOrCell.type || cElementType.cell3D === rangeOrCell.type) {
+				const arr = {};
+				const value = arg0.getValue();
+				if (value.type === cElementType.empty) {
+					arr[value.type] = 1;
+				} else if (value.type === cElementType.error) {
+					arr[value.type] = [value.errorType];
+				} else {
+					arr[value.type] = [value.value];
+				}
+				return t._calculate(arr, condition);
+			}
+			else if (cElementType.cellsRange === rangeOrCell.type || cElementType.cellsRange3D === rangeOrCell.type) {
+				return t._get(rangeOrCell, condition);
+			} else {
+				return new cError(cErrorType.wrong_value_type);
+			}
 		}
 
 		if (cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
-			arg1 = arg1.cross(_arg1);
+			const matrix = arg1.getMatrix();
+			const result = new cArray();
+			for (let row = 0; row < matrix.length; row += 1) {
+				result.addRow();
+				for (let col = 0; col < matrix[row].length; col += 1) {
+					const condition = matrix[row][col];
+					const calculateResult = calculateOne(arg0, condition);
+					result.addElementInRow(calculateResult, row);
+				}
+			}
+			return result;
 		} else if (cElementType.array === arg1.type) {
-			arg1 = arg1.getElementRowCol(0, 0);
+			const dimensions = arg1.getDimensions();
+			const colCount = dimensions.col;
+			const rowCount = dimensions.row;
+			const result = new cArray();
+			for (let row = 0; row < rowCount; row += 1) {
+				result.addRow();
+				for (let col = 0; col < colCount; col += 1) {
+					const condition = arg1.getElementRowCol(row, col);
+					const calculateResult = calculateOne(arg0, condition);
+					result.addElementInRow(calculateResult, row);
+				}
+			}
+			return result;
 		} else if (cElementType.cell === arg1.type || cElementType.cell3D === arg1.type) {
 			arg1 = arg1.getValue();
 		}
-		if (cElementType.cell === arg0.type || cElementType.cell3D === arg0.type) {
-			const arr = {};
-			const value = arg0.getValue();
-			if (value.type === cElementType.empty) {
-				arr[value.type] = 1;
-			} else if (value.type === cElementType.error) {
-				arr[value.type] = [value.errorType];
-			} else {
-				arr[value.type] = [value.value];
-			}
-			return this._calculate(arr, arg1);
-		} else if (cElementType.cellsRange === arg0.type || cElementType.cellsRange3D === arg0.type) {
-			return this._get(arg0, arg1);
-		} else {
-			return new cError(cErrorType.wrong_value_type);
-		}
+		return calculateOne(arg0, arg1);
 	};
 	CountIfCache.prototype._get = function (range, arg1) {
 		let res, wsId = range.getWS().getId(),
