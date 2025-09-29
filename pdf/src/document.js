@@ -5470,7 +5470,10 @@ var CPresentation = CPresentation || function(){};
             }
         }
 
+        const oLoadUrls = {};
+        let imgCount = 0;
         const aResetBuilderImages = [];
+        const oFontMap = {};
         if (isOOXML) {
             if (!aSpsXmls)
                 aSpsXmls = oFile.nativeFile["scanPage"](nOriginIndex, 1);
@@ -5525,6 +5528,7 @@ var CPresentation = CPresentation || function(){};
                     oDrawing.fromXml(oXmlReader);
                     configureDrawing(oDrawing);
                     aPageDrawings.push(oDrawing);
+                    oDrawing.getAllFonts(oFontMap);
                 }
             }
 
@@ -5557,6 +5561,7 @@ var CPresentation = CPresentation || function(){};
                 const oDrawing = loader.ReadGraphicObject();
                 configureDrawing(oDrawing);
                 aPageDrawings.push(oDrawing);
+                oDrawing.getAllFonts(oFontMap);
             }
 
             const aReaderImages = AscCommon.pptx_content_loader.Reader.End_UseFullUrl();
@@ -5564,25 +5569,29 @@ var CPresentation = CPresentation || function(){};
             loader.AssignConnectedObjects();
 
             const allBuilderImages = aReaderImages.concat(aLoaderImages);
-
             for (let imgIdx = 0; imgIdx < allBuilderImages.length; ++imgIdx) {
                 let embed = null;
                 const builderImage = allBuilderImages[imgIdx];
                 const blipFill = builderImage.BlipFill;
 
-                if (blipFill && blipFill.embed) {
-                    embed = blipFill.embed;
-                    const url = _this.Viewer.file.nativeFile["getImageBase64"](parseInt(embed.substring(3)));
-                    delete builderImage.BlipFill.embed;
+                if (blipFill) {
+                    if (blipFill.embed) {
+                        embed = blipFill.embed;
+                        const url = _this.Viewer.file.nativeFile["getImageBase64"](parseInt(embed.substring(3)));
+                        delete builderImage.BlipFill.embed;
 
-                    builderImage.BlipFill.RasterImageId = url;
-                    builderImage.Url = url;
-                    if(url.indexOf("data:") === 0) {
-                        aResetBuilderImages.push(builderImage);
-                        allImages.push(url);
+                        builderImage.BlipFill.RasterImageId = url;
+                        builderImage.Url = url;
+                        if(url.indexOf("data:") === 0) {
+                            aResetBuilderImages.push(builderImage);
+                            allImages.push(url);
+                        }
+                        else {
+                            builderImage.SetUrl(url);
+                        }
                     }
-                    else {
-                        builderImage.SetUrl(url);
+                    else if (blipFill.RasterImageId) {
+                        oLoadUrls[++imgCount] = blipFill.RasterImageId;
                     }
                 }
             }
@@ -5604,27 +5613,35 @@ var CPresentation = CPresentation || function(){};
             Asc.editor.canSave = true;
         };
 
+        const aFonts = [];
+        for (let sFont in oFontMap) {
+            if (oFontMap.hasOwnProperty(sFont)) {
+                aFonts.push(new AscFonts.CFont(sFont));
+            }
+        }
+
         if (allImages.length > 0) {
             AscCommon.sendImgUrls(Asc.editor, allImages, function(data) {
                 let oObjectsForDownload = AscCommon.GetObjectsForImageDownload(aResetBuilderImages);
                 AscCommon.ResetNewUrls(data, allImages, oObjectsForDownload.aBuilderImagesByUrl, oImageMap);
 
-                const aLoadUrls = [];
                 for (let nIdx = 0; nIdx < data.length; ++nIdx) {
                     if(data[nIdx].url) {
-                        aLoadUrls.push(data[nIdx].url);
+                        oLoadUrls[++imgCount] = data[nIdx].url;
                     }
                 }
-
-                Asc.editor.ImageLoader.LoadImagesWithCallback(aLoadUrls, fEndCallback, []);
 
                 let _file = _this.Viewer.file;
                 for (let nIdx = 0; nIdx < data.length; ++nIdx) {
                     _file.nativeFile["changeImageUrl"](allImages[nIdx], AscCommon.g_oDocumentUrls.imagePath2Local(data[nIdx].path));
                 }
+                Asc.editor.pre_Paste(aFonts, oLoadUrls, fEndCallback);
+
             });
-        } else {
-            fEndCallback();
+        }
+        else {
+
+            Asc.editor.pre_Paste(aFonts, oLoadUrls, fEndCallback);
         }
 
         return true;
