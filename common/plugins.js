@@ -659,6 +659,9 @@
 				if (guids && !guids[guid])
 					continue;
 
+				if (guid === this.currentPluginEvent)
+					continue;
+
 				let plugin = this.getPluginByGuid(guid);
 				let runObject = this.runnedPluginsMap[guid];
 
@@ -1774,7 +1777,11 @@
 						window.g_asc_plugins._internalEvents[value[0]](value[1]);
 
 					if (methodName === "SendEvent")
+					{
+						window.g_asc_plugins.currentPluginEvent = guid;
 						window.g_asc_plugins.onPluginEvent(value[0], value[1]);
+						delete window.g_asc_plugins.currentPluginEvent;
+					}
 					return;
 				}
 
