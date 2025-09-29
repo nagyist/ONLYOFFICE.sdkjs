@@ -307,6 +307,12 @@
     CPdfShape.prototype.canMove = function () {
 		var oApi = Asc.editor || editor;
 		var isDrawHandles = oApi ? oApi.isShowShapeAdjustments() : true;
+
+        let oEditField = this.GetEditField();
+        if (oEditField && oEditField.IsLocked()) {
+            return false;
+        }
+        
         if (oApi.getPDFDoc().IsViewerObject(this))
             return true;
 
@@ -317,6 +323,14 @@
 			return false;
 		}
 		return this.getNoMove() === false;
+	};
+    CPdfShape.prototype.canResize = function () {
+        let oEditField = this.GetEditField();
+        if (oEditField && oEditField.IsLocked()) {
+            return false;
+        }
+
+		return AscFormat.CGraphicObjectBase.prototype.canResize.call(this);
 	};
     CPdfShape.prototype.ConvertToAnnot = function() {
         let oDoc = Asc.editor.getPDFDoc();

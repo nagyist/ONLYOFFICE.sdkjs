@@ -945,6 +945,7 @@
         this.SetBackgroundColor(oField.GetBackgroundColor());
         this.SetBorderStyle(oField.GetBorderStyle());
         this.SetBorderWidth(oField.GetBorderWidth());
+        this.SetLocked(oField.IsLocked());
     };
     CBaseField.prototype.SetDocument = function(oDoc) {
         if (this._doc == oDoc) {
@@ -2759,7 +2760,7 @@
         let bPrint       = false;
         let bNoView      = false;
         let ToggleNoView = false;
-        let locked       = false;
+        let locked       = this.IsLocked();
         let lockedC      = false;
         let noZoom       = false;
         let noRotate     = false;
