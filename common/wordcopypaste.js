@@ -1485,7 +1485,7 @@ CopyProcessor.prototype =
 		};
 		let copyAnnots = function(){
 			if (oDomTarget) {
-				let oAnnots = new CopyElement("img");
+				let oAnnots = new CopyElement("div");
 				oDomTarget.addChild(oAnnots);
 			}
 
@@ -1505,7 +1505,7 @@ CopyProcessor.prototype =
 
 		let copyFields = function(){
 			if (oDomTarget) {
-				let oFields = new CopyElement("img");
+				let oFields = new CopyElement("div");
 				oDomTarget.addChild(oFields);
 			}
 
@@ -1526,7 +1526,7 @@ CopyProcessor.prototype =
 
 		let copyPages = function() {
 			if (oDomTarget) {
-				let oPages = new CopyElement("img");
+				let oPages = new CopyElement("div");
 				oDomTarget.addChild(oPages);
 			}
 
