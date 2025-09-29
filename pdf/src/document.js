@@ -7515,6 +7515,9 @@ var CPresentation = CPresentation || function(){};
                 if (oController.selection.groupSelection) {
                     selected_objects.push(oController.selection.groupSelection);
                 }
+                else if (oController.selection.chartSelection) {
+                    selected_objects.push(oController.selection.chartSelection);
+                }
 
                 // check selected drawing pages locked
                 if (selected_objects.find(function(obj) {
