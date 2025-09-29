@@ -3235,7 +3235,7 @@ ParaMath.prototype.ConvertfromMathML = function(xml)
 };
 ParaMath.prototype.ConvertFromLaTeX = function(text)
 {
-	let math = this.GetSelectdLevelOfContent();
+	let math = this.IsSelectionUse() ? this.GetSelectdLevelOfContent() : this.Root;
 
 	if (!text)
 	{
@@ -3257,7 +3257,7 @@ ParaMath.prototype.ConvertToLaTeX = function()
 };
 ParaMath.prototype.ConvertFromUnicodeMath = function(text)
 {
-	let math = this.GetSelectdLevelOfContent();
+	let math = this.IsSelectionUse() ? this.GetSelectdLevelOfContent() : this.Root;
 
 	if (!text)
 	{
