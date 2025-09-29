@@ -12328,20 +12328,22 @@ PasteProcessor.prototype =
 									sText = undefined;
 								}
 								bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
-								var oFootnote = oThis.oLogicDocument.Footnotes.CreateFootnote();
-								oFootnote.AddDefaultFootnoteContent(sText);
-								oAddedRun = new ParaRun(oThis.oCurPar, false);
-								oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultFootnoteReference());
-								if (sText) {
-									oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
-									oAddedRun.AddText(sText, 1);
-								}
-								else {
-									oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
-								}
-								oThis._CommitElemToParagraph(oAddedRun);
-								if (oThis.AddedFootEndNotes) {
-									oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oFootnote;
+								if (oThis.oLogicDocument && oThis.oLogicDocument.Footnotes) {
+									var oFootnote = oThis.oLogicDocument.Footnotes.CreateFootnote();
+									oFootnote.AddDefaultFootnoteContent(sText);
+									oAddedRun = new ParaRun(oThis.oCurPar, false);
+									oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultFootnoteReference());
+									if (sText) {
+										oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
+										oAddedRun.AddText(sText, 1);
+									}
+									else {
+										oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
+									}
+									oThis._CommitElemToParagraph(oAddedRun);
+									if (oThis.AddedFootEndNotes) {
+										oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oFootnote;
+									}
 								}
 							}
 							else if (sStr[1] && -1 !== sStr[1].indexOf("_ednref")) {
@@ -12354,20 +12356,22 @@ PasteProcessor.prototype =
 									sText = undefined;
 								}
 								bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
-								var oEndnote = oThis.oLogicDocument.Endnotes.CreateEndnote();
-								oEndnote.AddDefaultEndnoteContent(sText);
-								oAddedRun = new ParaRun(oThis.oCurPar, false);
-								oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultEndnoteReference());
-								if (sText) {
-									oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
-									oAddedRun.AddText(sText, 1);
-								}
-								else {
-									oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
-								}
-								oThis._CommitElemToParagraph(oAddedRun);
-								if (oThis.AddedFootEndNotes) {
-									oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oEndnote;
+								if (oThis.oLogicDocument && oThis.oLogicDocument.Endnotes) {
+									var oEndnote = oThis.oLogicDocument.Endnotes.CreateEndnote();
+									oEndnote.AddDefaultEndnoteContent(sText);
+									oAddedRun = new ParaRun(oThis.oCurPar, false);
+									oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultEndnoteReference());
+									if (sText) {
+										oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
+										oAddedRun.AddText(sText, 1);
+									}
+									else {
+										oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
+									}
+									oThis._CommitElemToParagraph(oAddedRun);
+									if (oThis.AddedFootEndNotes) {
+										oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oEndnote;
+									}
 								}
 							}
 							else {
