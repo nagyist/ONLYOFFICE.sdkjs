@@ -11896,17 +11896,17 @@
 	let toAscColor = function (_color) {
 		let res;
 		if (_color instanceof AscCommonExcel.RgbColor) {
-			res = new Asc.asc_CColor(_color.getR(), _color.getG(), _color.getB());
+			res = new window["Asc"]["asc_CColor"](_color.getR(), _color.getG(), _color.getB());
 		} else if (_color - 0) {
 			_color = _color - 0;
 			if (!isNaN(_color)) {
 				if (_color === 0) {
-					res = new Asc.asc_CColor(0,0,0);
+					res = new window["Asc"]["asc_CColor"](0,0,0);
 				} else {
-					res = new Asc.asc_CColor(1,1,1);
+					res = new window["Asc"]["asc_CColor"](1,1,1);
 				}
 			} else {
-				res = new Asc.asc_CColor(1,1,1);
+				res = new window["Asc"]["asc_CColor"](1,1,1);
 			}
 		}
 		return res;
@@ -14557,11 +14557,11 @@
 		} else if (this._object instanceof ApiFormatCondition) {
 			let currentStrike = this._object.rule.dxf && this._object.rule.dxf.font && this._object.rule.dxf.font.s;
 			let newStrike = isStrikethrough ? true : null;
-			
+
 			if (currentStrike === newStrike) {
 				return;
 			}
-			
+
 			this._object.private_changeStyle(function (_newRule) {
 				_newRule.dxf.font.s = newStrike;
 			});
@@ -14646,15 +14646,15 @@
 			}
 
 			 switch (underlineType) {
-				case Asc.EUnderline.underlineSingle: 
+				case Asc.EUnderline.underlineSingle:
 					return "xlUnderlineStyleSingle";
-				case Asc.EUnderline.underlineDouble: 
+				case Asc.EUnderline.underlineDouble:
 					return "xlUnderlineStyleDouble";
-				case Asc.EUnderline.underlineSingleAccounting: 
+				case Asc.EUnderline.underlineSingleAccounting:
 					return "xlUnderlineStyleSingleAccounting";
-				case Asc.EUnderline.underlineDoubleAccounting: 
+				case Asc.EUnderline.underlineDoubleAccounting:
 					return "xlUnderlineStyleDoubleAccounting";
-				default: 
+				default:
 					return "xlUnderlineStyleNone";
 			}
 		}
@@ -14823,11 +14823,11 @@
 		} else if (this._object instanceof ApiFormatCondition) {
 			let currentVertAlign = this._object.rule.dxf && this._object.rule.dxf.font && this._object.rule.dxf.font.va;
 			let newVertAlign = isSubscript ? AscCommon.vertalign_SubScript : null;
-			
+
 			if (currentVertAlign === newVertAlign) {
 				return;
 			}
-			
+
 			this._object.private_changeStyle(function (_newRule) {
 				_newRule.dxf.font.va = newVertAlign;
 			});
@@ -14923,11 +14923,11 @@
 		} else if (this._object instanceof ApiFormatCondition) {
 			let currentVertAlign = this._object.rule.dxf && this._object.rule.dxf.font && this._object.rule.dxf.font.va;
 			let newVertAlign = isSuperscript ? AscCommon.vertalign_SuperScript : null;
-			
+
 			if (currentVertAlign === newVertAlign) {
 				return;
 			}
-			
+
 			this._object.private_changeStyle(function (_newRule) {
 				_newRule.dxf.font.va = newVertAlign;
 			});
@@ -15023,11 +15023,11 @@
 			}
 		} else if (this._object instanceof ApiFormatCondition) {
 			let currentName = this._object.rule.dxf && this._object.rule.dxf.font && this._object.rule.dxf.font.fn;
-			
+
 			if (currentName === FontName) {
 				return;
 			}
-			
+
 			this._object.private_changeStyle(function (_newRule) {
 				_newRule.dxf.font.fn = FontName;
 			});
@@ -15124,11 +15124,11 @@
 		} else if (this._object instanceof ApiFormatCondition) {
 			let currentColor = this._object.rule.dxf && this._object.rule.dxf.font && this._object.rule.dxf.font.c;
 			let newColor = Color.color;
-			
+
 			if (currentColor === newColor) {
 				return;
 			}
-			
+
 			this._object.private_changeStyle(function (_newRule) {
 				_newRule.dxf.font.c = newColor;
 			});
@@ -18055,7 +18055,7 @@
 	});
 
 	/**
-	 * The layout subtotal location. 
+	 * The layout subtotal location.
 	 * @typedef { "Top" | "Bottom" } LayoutSubtotalLocationType
 	 */
 
@@ -18731,7 +18731,7 @@
 				private_MakeError('Filter type "' + filterType + '" requires a dataField parameter.');
 				return false;
 			}
-			
+
 			const isPercent = "xlTopPercent" === filterType || "xlBottomPercent" === filterType;
 			const isBottom = filterType.startsWith('xlBottom');
 			const isSum = "xlTopSum" === filterType || "xlBottomSum" === filterType;
@@ -18759,7 +18759,7 @@
 		const pivotToExcelFilterMap = {
 			// Simple date filters - map to Excel filter constants
 			'xlDateToday': 'xlFilterToday',
-			'xlDateYesterday': 'xlFilterYesterday', 
+			'xlDateYesterday': 'xlFilterYesterday',
 			'xlDateTomorrow': 'xlFilterTomorrow',
 			'xlDateThisWeek': 'xlFilterThisWeek',
 			'xlDateLastWeek': 'xlFilterLastWeek',
@@ -18815,7 +18815,7 @@
 			'xlDateBetween': true,
 			'xlDateNotBetween': false
 		};
-		
+
 		const res = addCaptionFilter(autoFilterOptions, captionFilters, betweenFilters, filterType, value1, value2);
 		if (res) {
 			autoFilterOptions.asc_setIsDateFilter(true);
@@ -20289,16 +20289,16 @@
 				break;
 
 			case Asc.ECfType.colorScale:
-				let scaleProps = new Asc.asc_CColorScale();
+				let scaleProps = new AscCommonExcel.CColorScale();
 				let colors = [
-					new Asc.asc_CColor(255, 99, 99), // red
-					new Asc.asc_CColor(255, 255, 99), // yellow
-					new Asc.asc_CColor(99, 255, 99)  // green
+					new window["Asc"]["asc_CColor"](255, 99, 99), // red
+					new window["Asc"]["asc_CColor"](255, 255, 99), // yellow
+					new window["Asc"]["asc_CColor"](99, 255, 99)  // green
 				];
 				let scales = [];
 				for (let i = 0; i < 3; i++) {
 					let scale = new window['AscCommonExcel'].CConditionalFormatValueObject();
-					scale.asc_setType(i === 0 ? Asc.c_oAscCfvoType.Min : (i === 2 ? Asc.c_oAscCfvoType.Max : Asc.c_oAscCfvoType.Percentile));
+					scale.asc_setType(i === 0 ? AscCommonExcel.ECfvoType.Min : (i === 2 ? AscCommonExcel.ECfvoType.Max : AscCommonExcel.ECfvoType.Percentile));
 					if (i === 1) {
 						scale.asc_setVal("50");
 					}
@@ -20315,7 +20315,7 @@
 				let bars = [];
 				for (let i = 0; i < 2; i++) {
 					let bar = new window['AscCommonExcel'].CConditionalFormatValueObject();
-					bar.asc_setType(i === 0 ? Asc.c_oAscCfvoType.AutoMin : Asc.c_oAscCfvoType.AutoMax);
+					bar.asc_setType(i === 0 ? AscCommonExcel.ECfvoType.AutoMin : AscCommonExcel.ECfvoType.AutoMax);
 					bars.push(bar);
 				}
 				barProps.asc_setCFVOs(bars);
@@ -20332,7 +20332,7 @@
 				let iconCount = 3;
 				for (let i = 0; i < iconCount - 1; i++) {
 					let value = new window['AscCommonExcel'].CConditionalFormatValueObject();
-					value.asc_setType(Asc.c_oAscCfvoType.Percent);
+					value.asc_setType(AscCommonExcel.ECfvoType.Percent);
 					value.asc_setVal(i === 0 ? "33" : "67");
 					value.asc_setGte(true);
 					values.push(value);
@@ -20440,7 +20440,7 @@
 		props.priority = worksheet.getNextCFPriority ? worksheet.getNextCFPriority() : 1;
 
 		// Create color scale properties
-		let scaleProps = new Asc.asc_CColorScale();
+		let scaleProps = new AscCommonExcel.CColorScale();
 
 		let colors = [];
 		let cfvos = [];
@@ -20450,38 +20450,38 @@
 			/*<color rgb="FFFF7128"/>
 			<color rgb="FFFFEF9C"/>*/
 			colors = [
-				new Asc.asc_CColor(248, 105, 107), // red
-				new Asc.asc_CColor(99, 190, 123)   // green
+				new window["Asc"]["asc_CColor"](248, 105, 107), // red
+				new window["Asc"]["asc_CColor"](99, 190, 123)   // green
 			];
 
 			// Create conditional format value objects for min and max
 			for (let i = 0; i < 2; i++) {
 				let cfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
 				if (i === 0) {
-					cfvo.asc_setType(Asc.c_oAscCfvoType.Minimum);
+					cfvo.asc_setType(AscCommonExcel.ECfvoType.Minimum);
 				} else {
-					cfvo.asc_setType(Asc.c_oAscCfvoType.Maximum);
+					cfvo.asc_setType(AscCommonExcel.ECfvoType.Maximum);
 				}
 				cfvos.push(cfvo);
 			}
 		} else {
 			// Three-color scale: red -> yellow -> green
 			colors = [
-				new Asc.asc_CColor(248, 105, 107), // red
-				new Asc.asc_CColor(255, 235, 132), // yellow
-				new Asc.asc_CColor(99, 190, 123)   // green
+				new window["Asc"]["asc_CColor"](248, 105, 107), // red
+				new window["Asc"]["asc_CColor"](255, 235, 132), // yellow
+				new window["Asc"]["asc_CColor"](99, 190, 123)   // green
 			];
 
 			// Create conditional format value objects for min, midpoint, max
 			for (let i = 0; i < 3; i++) {
 				let cfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
 				if (i === 0) {
-					cfvo.asc_setType(Asc.c_oAscCfvoType.Minimum);
+					cfvo.asc_setType(AscCommonExcel.ECfvoType.Minimum);
 				} else if (i === 1) {
-					cfvo.asc_setType(Asc.c_oAscCfvoType.Percentile);
+					cfvo.asc_setType(AscCommonExcel.ECfvoType.Percentile);
 					cfvo.asc_setVal("50");
 				} else {
-					cfvo.asc_setType(Asc.c_oAscCfvoType.Maximum);
+					cfvo.asc_setType(AscCommonExcel.ECfvoType.Maximum);
 				}
 				cfvos.push(cfvo);
 			}
@@ -20541,19 +20541,19 @@
 
 		// Minimum value (auto minimum)
 		let minCfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
-		minCfvo.asc_setType(Asc.c_oAscCfvoType.Minimum);
+		minCfvo.asc_setType(AscCommonExcel.ECfvoType.Minimum);
 		minCfvo.asc_setGte(true);
 		cfvos.push(minCfvo);
 
 		// Maximum value (auto maximum)
 		let maxCfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
-		maxCfvo.asc_setType(Asc.c_oAscCfvoType.Maximum);
+		maxCfvo.asc_setType(AscCommonExcel.ECfvoType.Maximum);
 		maxCfvo.asc_setGte(true);
 		cfvos.push(maxCfvo);
 
 		dataBarProps.asc_setCFVOs(cfvos);
 
-		dataBarProps.asc_setColor(new Asc.asc_CColor(99, 142, 198));
+		dataBarProps.asc_setColor(new window["Asc"]["asc_CColor"](99, 142, 198));
 
 		// Set the data bar rule to the conditional formatting rule
 		props.asc_setColorScaleOrDataBarOrIconSetRule(dataBarProps);
@@ -20608,21 +20608,21 @@
 
 		// First threshold (minimum) - no threshold needed, always starts from minimum
 		let minCfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
-		minCfvo.asc_setType(Asc.c_oAscCfvoType.Percent);
+		minCfvo.asc_setType(AscCommonExcel.ECfvoType.Percent);
 		minCfvo.asc_setVal("0");
 		minCfvo.asc_setGte(true);
 		cfvos.push(minCfvo);
 
 		// Second threshold (33rd percentile)
 		let midCfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
-		midCfvo.asc_setType(Asc.c_oAscCfvoType.Percent);
+		midCfvo.asc_setType(AscCommonExcel.ECfvoType.Percent);
 		midCfvo.asc_setVal("33");
 		midCfvo.asc_setGte(true);
 		cfvos.push(midCfvo);
 
 		// Third threshold (67th percentile)
 		let maxCfvo = new window['AscCommonExcel'].CConditionalFormatValueObject();
-		maxCfvo.asc_setType(Asc.c_oAscCfvoType.Percent);
+		maxCfvo.asc_setType(AscCommonExcel.ECfvoType.Percent);
 		maxCfvo.asc_setVal("67");
 		maxCfvo.asc_setGte(true);
 		cfvos.push(maxCfvo);
@@ -21463,7 +21463,7 @@
 		if (!this.rule) {
 			return null;
 		}
-		
+
 		if (this.rule.pivot) {
 			return this.rule.pivot;
 		}
@@ -23939,7 +23939,7 @@
 	ApiDatabar.prototype.SetLastPriority = ApiFormatCondition.prototype.SetLastPriority;
 
 	// Inherited methods for properties (with documentation for JSDoc)
-	
+
 	/**
 	 * Returns the range to which the conditional formatting rule applies.
 	 * @memberof ApiDatabar
@@ -24217,6 +24217,41 @@
 		return ToXlIconSetFrom(iconSetElement.IconSet || Asc.EIconSetType.Traffic3Lights2);
 	};
 
+	function getIconSetCount(iconSetType) {
+		switch (iconSetType) {
+			case Asc.EIconSetType.Traffic3Lights1:
+			case Asc.EIconSetType.Traffic3Lights2:
+			case Asc.EIconSetType.Arrows3:
+			case Asc.EIconSetType.Arrows3Gray:
+			case Asc.EIconSetType.Flags3:
+			case Asc.EIconSetType.Signs3:
+			case Asc.EIconSetType.Symbols3:
+			case Asc.EIconSetType.Symbols3_2:
+			case Asc.EIconSetType.Stars3:
+			case Asc.EIconSetType.Triangles3:
+				return 3;
+
+			// 4-icon sets
+			case Asc.EIconSetType.Arrows4:
+			case Asc.EIconSetType.Arrows4Gray:
+			case Asc.EIconSetType.RedToBlack4:
+			case Asc.EIconSetType.Rating4:
+			case Asc.EIconSetType.Traffic4Lights:
+				return 4;
+
+			// 5-icon sets
+			case Asc.EIconSetType.Arrows5:
+			case Asc.EIconSetType.Arrows5Gray:
+			case Asc.EIconSetType.Rating5:
+			case Asc.EIconSetType.Quarters5:
+			case Asc.EIconSetType.Boxes5:
+				return 5;
+
+			default:
+				return -1;
+		}
+	}
+
 	/**
 	 * Sets the icon set type for the conditional formatting rule.
 	 * @memberof ApiIconSetCondition
@@ -24241,7 +24276,7 @@
 			return false;
 		}
 
-		let newIconCount = this.getIconSetCount(internalIconSet);
+		let newIconCount = getIconSetCount(internalIconSet);
 		if (newIconCount === -1) {
 			return false;
 		}
@@ -24334,7 +24369,7 @@
 		// Check if all CFVOs (except the first one which is always the minimum) are set to percentile
 		for (let i = 1; i < iconSetElement.aCFVOs.length; i++) {
 			let cfvo = iconSetElement.aCFVOs[i];
-			if (!cfvo || cfvo.asc_getType() !== Asc.c_oAscCfvoType.Percentile) {
+			if (!cfvo || cfvo.asc_getType() !== AscCommonExcel.ECfvoType.Percentile) {
 				return false;
 			}
 		}
@@ -24375,7 +24410,7 @@
 				let cfvo = iconSetElement.aCFVOs[i];
 				if (cfvo) {
 					if (percentileValues) {
-						cfvo.asc_setType(Asc.c_oAscCfvoType.Percentile);
+						cfvo.asc_setType(AscCommonExcel.ECfvoType.Percentile);
 						// Set default percentile values if not already set
 						if (!cfvo.asc_getVal()) {
 							// For 3-icon set: 33%, 67%; for 4-icon set: 25%, 50%, 75%; for 5-icon set: 20%, 40%, 60%, 80%
@@ -24384,7 +24419,7 @@
 							cfvo.asc_setVal(percentileValue.toString());
 						}
 					} else {
-						cfvo.asc_setType(Asc.c_oAscCfvoType.Number);
+						cfvo.asc_setType(AscCommonExcel.ECfvoType.Number);
 						// Reset to default numeric values if needed
 						if (!cfvo.asc_getVal()) {
 							cfvo.asc_setVal("0");
@@ -24639,7 +24674,7 @@
 	ApiIconSetCondition.prototype.SetLastPriority = ApiFormatCondition.prototype.SetLastPriority;
 
 	// Inherited methods for properties (with documentation for JSDoc)
-	
+
 	/**
 	 * Returns the range to which the conditional formatting rule applies.
 	 * @memberof ApiIconSetCondition
@@ -24862,7 +24897,7 @@
 				newRule.aRuleElements[0].aCFVOs[index].asc_setType(internalType);
 
 				// Reset value when changing type
-				/*if (internalType === Asc.c_oAscCfvoType.Formula) {
+				/*if (internalType === AscCommonExcel.ECfvoType.Formula) {
 					newRule.aRuleElements[0].aCFVOs[index].asc_setVal("0");
 				} else {
 					newRule.aRuleElements[0].aCFVOs[index].asc_setVal("0");
@@ -24913,10 +24948,10 @@
 		// Check if the type allows setting a value
 		let currentType = this.cfvo.asc_getType();
 		let allowedTypes = [
-			Asc.c_oAscCfvoType.Number,        // xlConditionValueNumber
-			Asc.c_oAscCfvoType.Percent,       // xlConditionValuePercent
-			Asc.c_oAscCfvoType.Percentile,    // xlConditionValuePercentile
-			Asc.c_oAscCfvoType.Formula        // xlConditionValueFormula
+			AscCommonExcel.ECfvoType.Number,        // xlConditionValueNumber
+			AscCommonExcel.ECfvoType.Percent,       // xlConditionValuePercent
+			AscCommonExcel.ECfvoType.Percentile,    // xlConditionValuePercentile
+			AscCommonExcel.ECfvoType.Formula        // xlConditionValueFormula
 		];
 
 		if (allowedTypes.indexOf(currentType) === -1) {
@@ -25029,7 +25064,7 @@
 			let customIconIndex = this.iconSet.asc_getIndex();
 			return ToXlIconFrom(customIconSetType, customIconIndex);
 		}
-		
+
 		// Otherwise return the default icon for this criterion's position in the parent icon set
 		let iconSetType = this.iconSetElement.IconSet || Asc.EIconSetType.Traffic3Lights2;
 		return ToXlIconFrom(iconSetType, this.index);
@@ -25865,7 +25900,7 @@
 	ApiTop10.prototype.SetLastPriority = ApiFormatCondition.prototype.SetLastPriority;
 
 	// Inherited methods for properties (with documentation for JSDoc)
-	
+
 	/**
 	 * Returns the range to which the conditional formatting rule applies.
 	 * @memberof ApiTop10
@@ -26473,6 +26508,7 @@
 	ApiWorksheet.prototype["GetPivotByName"] = ApiWorksheet.prototype.GetPivotByName;
 	ApiWorksheet.prototype["GetAllPivotTables"] = ApiWorksheet.prototype.GetAllPivotTables;
 	ApiWorksheet.prototype["RefreshAllPivots"] = ApiWorksheet.prototype.RefreshAllPivots;
+	ApiWorksheet.prototype["GetCustomXmlParts"] = ApiWorksheet.prototype.GetCustomXmlParts;
 
 	ApiRange.prototype["GetClassType"] = ApiRange.prototype.GetClassType;
 	ApiRange.prototype["GetRow"] = ApiRange.prototype.GetRow;
@@ -27306,6 +27342,7 @@
 	ApiFormatConditions.prototype["Delete"] = ApiFormatConditions.prototype.Delete;
 	ApiFormatConditions.prototype["GetCount"] = ApiFormatConditions.prototype.GetCount;
 	ApiFormatConditions.prototype["GetItem"] = ApiFormatConditions.prototype.GetItem;
+	ApiFormatConditions.prototype["GetParent"] = ApiFormatConditions.prototype.GetParent;
 
 	ApiFormatCondition.prototype["Delete"] = ApiFormatCondition.prototype.Delete;
 	ApiFormatCondition.prototype["Modify"] = ApiFormatCondition.prototype.Modify;
@@ -27335,6 +27372,15 @@
 	ApiFormatCondition.prototype["SetBorders"] = ApiFormatCondition.prototype.SetBorders;
 	ApiFormatCondition.prototype["SetFillColor"] = ApiFormatCondition.prototype.SetFillColor;
 	ApiFormatCondition.prototype["GetFillColor"] = ApiFormatCondition.prototype.GetFillColor;
+	ApiFormatCondition.prototype["GetFont"] = ApiFormatCondition.prototype.GetFont;
+	ApiFormatCondition.prototype["SetNumberFormat"] = ApiFormatCondition.prototype.SetNumberFormat;
+	ApiFormatCondition.prototype["GetPTCondition"] = ApiFormatCondition.prototype.GetPTCondition;
+	ApiFormatCondition.prototype["GetScopeType"] = ApiFormatCondition.prototype.GetScopeType;
+	ApiFormatCondition.prototype["GetTextOperator"] = ApiFormatCondition.prototype.GetTextOperator;
+	ApiFormatCondition.prototype["GetNumberFormat"] = ApiFormatCondition.prototype.GetNumberFormat;
+	ApiFormatCondition.prototype["SetScopeType"] = ApiFormatCondition.prototype.SetScopeType;
+	ApiFormatCondition.prototype["SetTextOperator"] = ApiFormatCondition.prototype.SetTextOperator;
+	ApiFormatCondition.prototype["GetParent"] = ApiFormatCondition.prototype.GetParent;
 
 
 
