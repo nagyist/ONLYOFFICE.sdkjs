@@ -7636,7 +7636,7 @@ var CPresentation = CPresentation || function(){};
                         
                         oLocker.Lock.Check(oCheckData);
 
-                        if (oPage.deleteLock) {
+                        if (oLocker === oPage.deleteLock) {
                             let sPageId = oPage.GetId();
 
                             oPage.annots.forEach(function(annot) {
