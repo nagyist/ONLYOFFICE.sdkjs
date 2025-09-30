@@ -660,6 +660,10 @@ CDrawingsController.prototype.CanAddComment = function()
 CDrawingsController.prototype.GetSelectionAnchorPos = function()
 {
 	var ParaDrawing = this.DrawingObjects.getMajorParaDrawing();
+	if (!ParaDrawing)
+	{
+		let curParagraph = this.LogicDocument.GetCurrentParagraph(false, null, null);
+	}
 	return {
 		X0   : ParaDrawing.GraphicObj.x,
 		Y    : ParaDrawing.GraphicObj.y,
