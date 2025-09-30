@@ -5784,6 +5784,12 @@
 		plugins.internalCallbacks.push(callback);
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
+	
+	baseEditorsApi.prototype.markAsFinal = function() {
+	};
+	baseEditorsApi.prototype.isFinal = function() {
+		return false;
+	};
 
 	baseEditorsApi.prototype["native_callCommand"] = function(funcText, params)
 	{
@@ -6134,5 +6140,7 @@
 
 	prot["callCommand"] = prot.callCommand;
 	prot["callMethod"] = prot.callMethod;
+	prot['asc_markAsFinal'] = prot.asc_markAsFinal = prot.markAsFinal;
+	prot['asc_isFinal'] = prot.asc_isFinal = prot.isFinal;
 
 })(window);

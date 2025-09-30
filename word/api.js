@@ -8800,6 +8800,28 @@ background-repeat: no-repeat;\
 		}
 		logicDocument.FinalizeAction();
 	};
+	asc_docs_api.prototype.markAsFinal = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		
+		if (!oform || oform.isFinal())
+			return;
+		
+		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+			return;
+		
+		logicDocument.StartAction(AscDFH.historydescription_OForm_MarkAsFinal);
+		oform.setFinal(true);
+		logicDocument.FinalizeAction();
+	};
+	asc_docs_api.prototype.isFinal = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		
+		return oform ? oform.isFinal() : false;
+	};
 	asc_docs_api.prototype._sendForm = function()
 	{
 		var t = this;
@@ -15442,7 +15464,10 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype["asc_changeExternalReference"]  = asc_docs_api.prototype.asc_changeExternalReference;
 	
 	asc_docs_api.prototype['asc_getRestrictionSettings'] = asc_docs_api.prototype.asc_getRestrictionSettings = asc_docs_api.prototype.getRestrictionSettings;
-
+	asc_docs_api.prototype['asc_markAsFinal'] = asc_docs_api.prototype.asc_markAsFinal = asc_docs_api.prototype.markAsFinal;
+	asc_docs_api.prototype['asc_isFinal'] = asc_docs_api.prototype.asc_isFinal = asc_docs_api.prototype.isFinal;
+	
+	
 	CDocInfoProp.prototype['get_PageCount']             = CDocInfoProp.prototype.get_PageCount;
 	CDocInfoProp.prototype['put_PageCount']             = CDocInfoProp.prototype.put_PageCount;
 	CDocInfoProp.prototype['get_WordsCount']            = CDocInfoProp.prototype.get_WordsCount;
