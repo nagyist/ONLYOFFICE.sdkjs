@@ -68,7 +68,7 @@
     };
     History.prototype.EndNoHistoryMode = function() {
         this.TurnOn();
-        if (!this.IsOn()) {
+        if (!AscCommon.g_oTableId.IsOn()) {
             AscCommon.g_oTableId.TurnOn();
         }
     };
