@@ -489,7 +489,7 @@ CHistory.prototype =
 		if (!this.CollaborativeEditing || !_Class)
 			return;
 		
-		if (_Class.IsContentChange())
+		if (_Class.IsContentChange() && this.CollaborativeEditing.IsTrackingPositions())
 		{
 			var bAdd  = _Class.IsAdd();
 			var Count = _Class.GetItemsCount();
