@@ -1821,6 +1821,7 @@
 	window['AscDFH'].historyitem_type_Pdf_Radiobutton_Field	= 2236 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Signature_Field	= 2237 << 16;
 	window['AscDFH'].historyitem_type_Pdf_Text_Field		= 2238 << 16;
+	window['AscDFH'].historyitem_type_Pdf_Annot_Redact		= 2239 << 16;
 	
 	window['AscDFH'].historyitem_type_CustomProperties      = 2301 << 16;
 
@@ -4171,11 +4172,15 @@
 	AscDFH.historyitem_Pdf_Stamp_InRect			 = AscDFH.historyitem_type_Pdf_Annot_Stamp | 2;
 	AscDFH.historyitem_Pdf_Stamp_RenderStructure = AscDFH.historyitem_type_Pdf_Annot_Stamp | 3;
 
+	// annot redact
+	AscDFH.historyitem_Pdf_Redact_Annot_Redact_Id = AscDFH.historyitem_type_Pdf_Annot_Redact | 1;
+
 	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в PDF drawing prototype
 	//------------------------------------------------------------------------------------------------------------------
 
 	AscDFH.historyitem_type_Pdf_Drawing_Page		= AscDFH.historyitem_type_Pdf_Drawing | 1;
+	AscDFH.historyitem_type_Pdf_Drawing_Redacts		= AscDFH.historyitem_type_Pdf_Drawing | 2;
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Типы изменений в классе CPDFDoc
@@ -4194,6 +4199,9 @@
 	window['AscDFH'].historyitem_Pdf_Document_End_Merge_Pages	= window['AscDFH'].historyitem_type_PDF_Document | 12;
 	window['AscDFH'].historyitem_Pdf_Document_Calc_Order		= window['AscDFH'].historyitem_type_PDF_Document | 13;
 	window['AscDFH'].historyitem_PDF_Document_Locks				= window['AscDFH'].historyitem_type_PDF_Document | 14;
+	window['AscDFH'].historyitem_Pdf_Document_Start_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 15;
+	window['AscDFH'].historyitem_Pdf_Document_Part_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 16;
+	window['AscDFH'].historyitem_Pdf_Document_End_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 17;
 
 
 	AscDFH.historyitem_CustomPropertiesAddProperty = AscDFH.historyitem_type_CustomProperties | 0;
@@ -4701,7 +4709,7 @@
 	window['AscDFH'].historydescription_Pdf_AddField			= 0x2b5;
 	window['AscDFH'].historydescription_Pdf_ChangeField			= 0x2b6;
 	window['AscDFH'].historydescription_Pdf_ChangeAnnot			= 0x2b7;
-
+	window['AscDFH'].historydescription_Pdf_Apply_Redact		= 0x2b8;
 	// reserved
 	window['AscDFH'].historydescription_GroupPoints     = 0xFF01;
 	window['AscDFH'].historydescription_GroupPointsOpen = 0xFF02;

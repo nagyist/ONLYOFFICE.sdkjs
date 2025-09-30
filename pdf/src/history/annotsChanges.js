@@ -1476,3 +1476,21 @@ CChangesPDFLineAnnotRC.prototype.ReadFromBinary = function(Reader) {
 	if (!(nFlags & 2))
     	this.Old = readRC();
 };
+
+// redact
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseStringProperty}
+ */
+function CChangesPDFRedactAnnotRedactId(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFRedactAnnotRedactId.prototype = Object.create(AscDFH.CChangesBaseStringProperty.prototype);
+CChangesPDFRedactAnnotRedactId.prototype.constructor = CChangesPDFRedactAnnotRedactId;
+CChangesPDFRedactAnnotRedactId.prototype.Type = AscDFH.historyitem_Pdf_Redact_Annot_Redact_Id;
+CChangesPDFRedactAnnotRedactId.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._redactId = Value;
+};

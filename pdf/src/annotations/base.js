@@ -223,6 +223,8 @@
     CAnnotationBase.prototype.GetMeta = function() {
         return this._meta;
     };
+    CAnnotationBase.prototype.onMouseExit = function() {};
+    CAnnotationBase.prototype.onMouseEnter = function() {};
 
     CAnnotationBase.prototype.IsEditFieldShape = function() {
         return false;
@@ -736,6 +738,9 @@
         return this instanceof AscPDF.CPdfShape || this instanceof AscFormat.CGroupShape;
     };
     CAnnotationBase.prototype.IsHighlight = function() {
+        return false;
+    };
+    CAnnotationBase.prototype.IsRedact = function() {
         return false;
     };
     CAnnotationBase.prototype.IsTextMarkup = function() {
