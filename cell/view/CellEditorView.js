@@ -1323,6 +1323,8 @@ function (window, undefined) {
 			fPos = obj.fPos;
 			fName = obj.fName;
 			fCurrent = this._getEditableFunction(this._parseResult).func;
+		} else {
+			this._parseResult = null;
 		}
 
 		this.handlers.trigger("updated", s, this.cursorPos, fPos, fName);
