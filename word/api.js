@@ -8800,19 +8800,19 @@ background-repeat: no-repeat;\
 		}
 		logicDocument.FinalizeAction();
 	};
-	asc_docs_api.prototype.markAsFinal = function()
+	asc_docs_api.prototype.markAsFinal = function(isFinal)
 	{
 		let logicDocument = this.private_GetLogicDocument();
 		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
 		
-		if (!oform || oform.isFinal())
+		if (!oform || oform.isFinal() === isFinal)
 			return;
 		
 		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
 			return;
 		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_MarkAsFinal);
-		oform.setFinal(true);
+		oform.setFinal(isFinal);
 		logicDocument.FinalizeAction();
 	};
 	asc_docs_api.prototype.isFinal = function()

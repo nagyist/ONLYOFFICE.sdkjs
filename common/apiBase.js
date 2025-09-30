@@ -5785,7 +5785,7 @@
 		plugins.callMethod(plugins.internalGuid, name, params);
 	};
 	
-	baseEditorsApi.prototype.markAsFinal = function() {
+	baseEditorsApi.prototype.markAsFinal = function(isFinal) {
 	};
 	baseEditorsApi.prototype.isFinal = function() {
 		return false;
