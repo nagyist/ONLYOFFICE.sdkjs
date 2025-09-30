@@ -8306,6 +8306,7 @@
 				prevRow = row;
 
 				var oOldProps = row.getHeightProp();
+				let bOldCalcHeight = row.getCalcHeight();
 				row.setHeight(height);
 				if (isCustom) {
 					row.setCustomHeight(true);
@@ -8314,7 +8315,7 @@
 				row.setHidden(false);
 				var oNewProps = row.getHeightProp();
 				if (oOldProps.isEqual(oNewProps)) {
-					row.setChanged(false);
+					bOldCalcHeight === row.getCalcHeight() && row.setChanged(false);
 				} else {
 					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorksheet, AscCH.historyitem_Worksheet_RowProp, oThis.getId(), row._getUpdateRange(), new UndoRedoData_IndexSimpleProp(row.index, true, oOldProps, oNewProps));
 				}

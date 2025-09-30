@@ -4512,17 +4512,10 @@
 						case AscCommon.c_oEditorId.Word: {
 							selectedObjects = Asc.editor.getSelectedElements();
 
-							if (Asc.editor.isPdfEditor()) {
-								isChart = function (object) {
-									return object.asc_getObjectType && object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Chart;
-								};
-							}
-							else {
-								isChart = function (object) {
-									const value = object.asc_getObjectValue && object.asc_getObjectValue();
-									return object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Image && value && value.asc_getChartProperties();
-								};
-							}
+							isChart = function (object) {
+								const value = object.asc_getObjectValue && object.asc_getObjectValue();
+								return object.asc_getObjectType() === Asc.c_oAscTypeSelectElement.Image && value && value.asc_getChartProperties();
+							};
 							
 							getRect = function (bounds) {
 								const logicDocument = Asc.editor.getLogicDocument();
@@ -5855,7 +5848,7 @@
 							this.decreaseFontSize();
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingSubscript: {
+						case Asc.c_oAscSpreadsheetShortcutType.Subscript: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5865,7 +5858,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingSuperscript: {
+						case Asc.c_oAscSpreadsheetShortcutType.Superscript: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5875,7 +5868,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingCenterPara: {
+						case Asc.c_oAscSpreadsheetShortcutType.CenterPara: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5885,7 +5878,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingJustifyPara: {
+						case Asc.c_oAscSpreadsheetShortcutType.JustifyPara: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5895,7 +5888,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingLeftPara: {
+						case Asc.c_oAscSpreadsheetShortcutType.LeftPara: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5905,7 +5898,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingRightPara: {
+						case Asc.c_oAscSpreadsheetShortcutType.RightPara: {
 							if (!bCanEdit) {
 								break;
 							}
@@ -5915,7 +5908,7 @@
 							}
 							break;
 						}
-						case Asc.c_oAscSpreadsheetShortcutType.DrawingEnDash: {
+						case Asc.c_oAscSpreadsheetShortcutType.EnDash: {
 							if (!bCanEdit) {
 								break;
 							}

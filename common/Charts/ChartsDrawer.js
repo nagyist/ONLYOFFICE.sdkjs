@@ -2381,10 +2381,23 @@ CChartsDrawer.prototype =
 				var limit = limitArr[res.length - 1];
 				const num = (trueHeight / (res.length - 1));
 				var heightGrid = Math.round(num);
-				while (heightGrid <= limit) {
+				
+				var maxIterations = 1000;
+				var iterationCount = 0;
+				var previousStepValue = newStep;
+				
+				while (heightGrid <= limit && iterationCount < maxIterations) {
+					iterationCount++;
+					
 					var firstDegreeStep = this._getFirstDegree(newStep);
 					var tempStep = this._getNextStep(firstDegreeStep.val);
 					newStep = tempStep * firstDegreeStep.numPow;
+					
+					if (newStep === previousStepValue) {
+						newStep = newStep * 2;
+					}
+					previousStepValue = newStep;
+					
 					const newRes = this._getArrayDataValues(newStep, axisMin, axisMax, manualMin, manualMax);
 
 					//new array cannot be generated from broken data, example: step is NaN
@@ -2400,6 +2413,10 @@ CChartsDrawer.prototype =
 
 					limit = limitArr[res.length - 1];
 					heightGrid = Math.round((trueHeight / (res.length - 1)));
+					
+					if (limit === undefined) {
+						limit = limitArr[limitArr.length - 1];
+					}
 				}
 			}
 		}
@@ -2415,6 +2432,10 @@ CChartsDrawer.prototype =
 			step = 5;
 		} else if (step === 5) {
 			step = 10;
+		} else if (step < 10) {
+			step = 10;
+		} else {
+			step = step * 2;
 		}
 
 		return step;
@@ -12115,10 +12136,11 @@ drawPieChart.prototype = {
 		// if labels are given then shrink the radius to fit the labels
 		let _dLbls = this.chart.dLbls;
 		let _series = this.chart.series;
-		if ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
+		const affectedByLayout = this.cChartSpace.isLayoutSizes();
+		if (!affectedByLayout && ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
 			(_series && _series[0] && _series[0].dLbls && _series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr &&
 				_series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && (_series[0].dLbls.showVal ||
-					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent))) {
+					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent)))) {
 			let radius_shrink_coeff = 0.15;
 			radius = radius * (1 - radius_shrink_coeff);
 		}

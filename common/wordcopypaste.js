@@ -1485,7 +1485,7 @@ CopyProcessor.prototype =
 		};
 		let copyAnnots = function(){
 			if (oDomTarget) {
-				let oAnnots = new CopyElement("img");
+				let oAnnots = new CopyElement("div");
 				oDomTarget.addChild(oAnnots);
 			}
 
@@ -1505,7 +1505,7 @@ CopyProcessor.prototype =
 
 		let copyFields = function(){
 			if (oDomTarget) {
-				let oFields = new CopyElement("img");
+				let oFields = new CopyElement("div");
 				oDomTarget.addChild(oFields);
 			}
 
@@ -1526,7 +1526,7 @@ CopyProcessor.prototype =
 
 		let copyPages = function() {
 			if (oDomTarget) {
-				let oPages = new CopyElement("img");
+				let oPages = new CopyElement("div");
 				oDomTarget.addChild(oPages);
 			}
 
@@ -5591,6 +5591,9 @@ PasteProcessor.prototype =
 				oThis.api.pre_Paste(fonts, image_map, fPrepasteCallback);
 			}, true);
 		}
+		else {
+			window['AscCommon'].g_specialPasteHelper.Paste_Process_End(true);
+		}
 	},
 
 	//from PDF to PRESENTATION
@@ -5679,13 +5682,12 @@ PasteProcessor.prototype =
 
 			var paste_callback = function () {
 				if (false === oThis.bNested) {
-					var bPaste = presentation.InsertContent2(aContents, nIndex);
-
+					let res = presentation.InsertContent2(aContents, nIndex);
 
 					presentation.FinalizeAction();
 					presentation.UpdateInterface();
 
-					if (specialOptionsArr.length >= 1 && bPaste) {
+					if (specialOptionsArr.length >= 1 && res.insert) {
 						if (presentationSelectedContent && presentationSelectedContent.DocContent) {
 							specialOptionsArr.push(Asc.c_oSpecialPasteProps.keepTextOnly);
 						}
@@ -5696,7 +5698,7 @@ PasteProcessor.prototype =
 					}
 
 					window['AscCommon'].g_specialPasteHelper.Paste_Process_End();
-					oThis.pasteCallback && oThis.pasteCallback(bPaste);
+					oThis.pasteCallback && oThis.pasteCallback(res);
 				}
 			};
 
@@ -6016,7 +6018,11 @@ PasteProcessor.prototype =
 	ReadPDFAnnots: function (stream) {
 		let nCountAnnots = stream.GetULong();
 
-		let oDoc = Asc.editor.getPDFDoc();
+		let oDoc = Asc.editor.getPDFDoc && Asc.editor.getPDFDoc();
+		if (!oDoc) {
+			return {arrAnnots: []};
+		}
+		
 		let oNativeFile = Asc.editor.getDocumentRenderer().file.nativeFile;
 		let oAnnotsInfo = oNativeFile["readAnnotationsInfoFromBinary"](stream.data.slice(stream.cur));
 
@@ -6045,7 +6051,11 @@ PasteProcessor.prototype =
 	ReadPDFFields: function (stream) {
 		let nCountFields = stream.GetULong();
 
-		let oDoc = Asc.editor.getPDFDoc();
+		let oDoc = Asc.editor.getPDFDoc && Asc.editor.getPDFDoc();
+		if (!oDoc) {
+			return {arrFields: []};
+		}
+
 		let oViewer = Asc.editor.getDocumentRenderer();
 		let oNativeFile = oViewer.file.nativeFile;
 		let oFieldsInfo = oNativeFile["readAnnotationsInfoFromBinary"](stream.data.slice(stream.cur));
@@ -12318,20 +12328,22 @@ PasteProcessor.prototype =
 									sText = undefined;
 								}
 								bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
-								var oFootnote = oThis.oLogicDocument.Footnotes.CreateFootnote();
-								oFootnote.AddDefaultFootnoteContent(sText);
-								oAddedRun = new ParaRun(oThis.oCurPar, false);
-								oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultFootnoteReference());
-								if (sText) {
-									oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
-									oAddedRun.AddText(sText, 1);
-								}
-								else {
-									oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
-								}
-								oThis._CommitElemToParagraph(oAddedRun);
-								if (oThis.AddedFootEndNotes) {
-									oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oFootnote;
+								if (oThis.oLogicDocument && oThis.oLogicDocument.Footnotes) {
+									var oFootnote = oThis.oLogicDocument.Footnotes.CreateFootnote();
+									oFootnote.AddDefaultFootnoteContent(sText);
+									oAddedRun = new ParaRun(oThis.oCurPar, false);
+									oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultFootnoteReference());
+									if (sText) {
+										oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
+										oAddedRun.AddText(sText, 1);
+									}
+									else {
+										oAddedRun.AddToContent(0, new AscWord.CRunFootnoteReference(oFootnote));
+									}
+									oThis._CommitElemToParagraph(oAddedRun);
+									if (oThis.AddedFootEndNotes) {
+										oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oFootnote;
+									}
 								}
 							}
 							else if (sStr[1] && -1 !== sStr[1].indexOf("_ednref")) {
@@ -12344,20 +12356,22 @@ PasteProcessor.prototype =
 									sText = undefined;
 								}
 								bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
-								var oEndnote = oThis.oLogicDocument.Endnotes.CreateEndnote();
-								oEndnote.AddDefaultEndnoteContent(sText);
-								oAddedRun = new ParaRun(oThis.oCurPar, false);
-								oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultEndnoteReference());
-								if (sText) {
-									oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
-									oAddedRun.AddText(sText, 1);
-								}
-								else {
-									oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
-								}
-								oThis._CommitElemToParagraph(oAddedRun);
-								if (oThis.AddedFootEndNotes) {
-									oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oEndnote;
+								if (oThis.oLogicDocument && oThis.oLogicDocument.Endnotes) {
+									var oEndnote = oThis.oLogicDocument.Endnotes.CreateEndnote();
+									oEndnote.AddDefaultEndnoteContent(sText);
+									oAddedRun = new ParaRun(oThis.oCurPar, false);
+									oAddedRun.SetRStyle(oThis.oLogicDocument.GetStyles().GetDefaultEndnoteReference());
+									if (sText) {
+										oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
+										oAddedRun.AddText(sText, 1);
+									}
+									else {
+										oAddedRun.AddToContent(0, new AscWord.CRunEndnoteReference(oEndnote));
+									}
+									oThis._CommitElemToParagraph(oAddedRun);
+									if (oThis.AddedFootEndNotes) {
+										oThis.AddedFootEndNotes[sStr[1].replace("_", "")] = oEndnote;
+									}
 								}
 							}
 							else {

@@ -354,9 +354,7 @@
         oDoc.activeForm = this;
         
         if (oDoc.IsEditFieldsMode()) {
-            if (false == this.IsLocked()) {
-                this.editShape.onMouseDown(x, y, e)
-            }
+            this.editShape.onMouseDown(x, y, e);
             return;
         }
 
@@ -503,6 +501,8 @@
             oParent.SetOptions(aOpt);
         }
         
+        let hasOptions = !!this._options;
+        
         AscCommon.History.Add(new CChangesPDFCheckOptions(this, this._options, aOpt));
 
         if (this._options == aOpt) {
@@ -517,8 +517,17 @@
         });
 
         let sDefValue = this.GetDefaultValue();
-        if (sDefValue != undefined) {
-            this.SetDefaultValue(aOpt.indexOf(sDefValue));
+        let sCurExpValue;
+
+        if (sDefValue) {
+            if (!hasOptions) {
+                sCurExpValue = this.GetDefaultValue();
+            }
+            else {
+                sCurExpValue = aOpt[sDefValue];
+            }
+
+            this.SetDefaultValue(String(aOpt.indexOf(sCurExpValue)));
         }
 
         return true;

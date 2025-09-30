@@ -4925,7 +4925,11 @@ var g_oFontProperties = {
 		return this.getAlign2().getShrinkToFit();
 	};
 	CellXfs.prototype.asc_getReadingOrder = function () {
-		return this.getAlign2().getReadingOrder();
+		let readingOrder = this.getAlign2().getReadingOrder();
+		if (readingOrder === null || readingOrder === undefined) {
+			readingOrder = Asc.c_oReadingOrderTypes.Context;
+		}
+		return readingOrder;
 	};
 	CellXfs.prototype.asc_getPreview = function (api, text, width, height) {
 		return AscCommonExcel.generateXfsStyle(width, height, api.wb, this, text);
@@ -7187,6 +7191,11 @@ StyleManager.prototype =
 		}
 		stream.Seek2(end);
 	};
+	Row.prototype.isEqualForXLSB = function(row) {
+		return this.xfs === row.xfs && this.h === row.h && this.outlineLevel === row.outlineLevel &&
+			this.getCollapsed() === row.getCollapsed() && this.getHidden() === row.getHidden() &&
+			this.getCustomHeight() === row.getCustomHeight();
+	};
 	Row.prototype.toXLSB = function(stream, offsetIndex, stylesForWrite) {
 		stream.XlsbStartRecord(AscCommonExcel.XLSB.rt_ROW_HDR, 17);
 		stream.WriteULong((this.index + offsetIndex) & 0xFFFFF);
@@ -7221,6 +7230,7 @@ StyleManager.prototype =
 		stream.WriteByte(0);
 		stream.WriteULong(0);
 		stream.XlsbEndRecord();
+		return 0 === nS && 0 === nHt && 0 === byteExtra2;
 	};
 	Row.prototype.onStartNode = function(elem, attr, uq, tagend, getStrNode) {
 		var attrVals;

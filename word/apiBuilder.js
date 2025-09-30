@@ -25458,10 +25458,14 @@
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sText - The comment text.
-	 * @returns {ApiComment} - this
+	 * @returns {?ApiComment} - this
 	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/SetText.js
 	 */
 	ApiComment.prototype.SetText = function (sText) {
+		sText = GetStringParameter(sText, null);
+		if (!sText)
+			return null;
+
 		this.Comment.GetData().Set_Text(sText);
 		this.private_OnChange();
 		return this;
@@ -25483,10 +25487,14 @@
 	 * @memberof ApiComment
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sAuthorName - The comment author's name.
-	 * @returns {ApiComment} - this
+	 * @returns {?ApiComment} - this
 	 * @see office-js-api/Examples/{Editor}/ApiComment/Methods/SetAuthorName.js
 	 */
 	ApiComment.prototype.SetAuthorName = function (sAuthorName) {
+		sAuthorName = GetStringParameter(sAuthorName, null);
+		if (!sAuthorName)
+			return null;
+
 		this.Comment.GetData().Set_Name(sAuthorName);
 		this.private_OnChange();
 		return this;
@@ -25783,10 +25791,14 @@
 	 * @memberof ApiCommentReply
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sText - The comment reply text.
-	 * @returns {ApiCommentReply} - this
+	 * @returns {?ApiCommentReply} - this
 	 * @see office-js-api/Examples/{Editor}/ApiCommentReply/Methods/SetText.js
 	 */
 	ApiCommentReply.prototype.SetText = function (sText) {
+		sText = GetStringParameter(sText, null);
+		if (!sText)
+			return null;
+
 		this.Data.Set_Text(sText);
 		this.private_OnChange();
 		return this;
@@ -25808,10 +25820,14 @@
 	 * @memberof ApiCommentReply
 	 * @typeofeditors ["CDE", "CPE"]
 	 * @param {string} sAuthorName - The comment reply author's name.
-	 * @returns {ApiCommentReply} - this
+	 * @returns {?ApiCommentReply} - this
 	 * @see office-js-api/Examples/{Editor}/ApiCommentReply/Methods/SetAuthorName.js
 	 */
 	ApiCommentReply.prototype.SetAuthorName = function (sAuthorName) {
+		sAuthorName = GetStringParameter(sAuthorName, null);
+		if (!sAuthorName)
+			return null;
+
 		this.Data.Set_Name(sAuthorName);
 		this.private_OnChange();
 		return this;
@@ -25913,6 +25929,10 @@
 	 */
 	ApiWatermarkSettings.prototype.SetText = function (sText)
 	{
+		sText = GetStringParameter(sText, null);
+		if (!sText)
+			return false;
+
 		this.Settings.put_Text(sText);
 		return true;
 	};

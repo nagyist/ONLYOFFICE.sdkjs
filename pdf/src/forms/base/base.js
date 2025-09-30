@@ -388,8 +388,13 @@
         
         if (oNewPage) {
             let sId = this.GetId();
-            oCurPage.RemoveField(sId);
+            oCurPage.RemoveField(sId, true);
             oNewPage.AddField(this);
+
+            let oEditShape = this.GetEditShape();
+            if (oEditShape) {
+                oEditShape.selectStartPage = nPage;
+            }
         }
     };
     CBaseField.prototype.GetPage = function() {
@@ -596,7 +601,7 @@
             oNewTrigger.SetParentField(this);
         }
 
-        const aCurActionsInfo = this.GetActions();
+        const aCurActionsInfo = this.GetActions(nTriggerType);
         AscCommon.History.Add(new CChangesPDFFormActions(this, aCurActionsInfo, aActionsInfo, nTriggerType));
 
         switch (nTriggerType) {
@@ -940,6 +945,7 @@
         this.SetBackgroundColor(oField.GetBackgroundColor());
         this.SetBorderStyle(oField.GetBorderStyle());
         this.SetBorderWidth(oField.GetBorderWidth());
+        this.SetLocked(oField.IsLocked());
     };
     CBaseField.prototype.SetDocument = function(oDoc) {
         if (this._doc == oDoc) {
@@ -1047,7 +1053,7 @@
     };
     CBaseField.prototype.IsUseInDocument = function() {
         let oPage = this.GetParentPage();
-        if (oPage && oPage.fields.includes(this)) {
+        if (oPage && oPage.fields.includes(this) && oPage.GetIndex() !== -1) {
             return true;
         }
 
@@ -1678,6 +1684,8 @@
             oParentField.AddKid(this);
         }
 
+        this.Commit();
+        
         return true;
     };
     CBaseField.prototype.IsNeedRecalc = function() {
@@ -2625,7 +2633,7 @@
 
         let nNewExtX = this.GetWidth();
         let nNewExtY = this.GetHeight();
-        this.SetWasChanged(true, !(Math.abs(nOldExtX - nNewExtX) < 0.001 && Math.abs(nOldExtY == nNewExtY) < 0.001));
+        this.SetWasChanged(true, !(Math.abs(nOldExtX - nNewExtX) < 0.001 && Math.abs(nOldExtY - nNewExtY) < 0.001));
         
         this.SetNeedRecalc(true);
 		this.RecalcTextTransform();
@@ -2657,7 +2665,7 @@
             this.SetNeedUpdateImage(true);
         }
 
-        this.CalculateContentClipRect();
+        this.contentClipRect = null;
     };
     CBaseField.prototype.CalculateContentClipRect = function() {};
     CBaseField.prototype.SetPosition = function(x, y) {
@@ -2752,7 +2760,7 @@
         let bPrint       = false;
         let bNoView      = false;
         let ToggleNoView = false;
-        let locked       = false;
+        let locked       = this.IsLocked();
         let lockedC      = false;
         let noZoom       = false;
         let noRotate     = false;

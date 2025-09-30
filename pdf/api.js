@@ -654,7 +654,7 @@
 		});
 	};
 	PDFEditorApi.prototype.asc_undoAllChanges = function() {};
-	PDFEditorApi.prototype.asc_addChartDrawingObject = function(nType, Placeholder) {
+	PDFEditorApi.prototype.asc_addChartDrawingObject = function(nType, Placeholder, bOpenChartEditor) {
 		this.asc_onCloseFrameEditor();
 
 		let oDoc	= this.getPDFDoc();
@@ -662,8 +662,13 @@
 
 		oDoc.DoAction(function() {
 			AscFonts.IsCheckSymbols = true;
-			oDoc.AddChart(nType, true, Placeholder, oViewer.currentPage);
+			oDoc.AddChart(nType, true, Placeholder, oViewer.currentPage, bOpenChartEditor);
 			AscFonts.IsCheckSymbols = false;
+
+			oViewer.paint(null, function() {
+				oDoc.OpenChartEditor();
+			});
+			
 		}, AscDFH.historydescription_Document_AddChart);
 	};
 	PDFEditorApi.prototype.ChartApply = function(obj) {
@@ -1652,6 +1657,8 @@
 					return false;
 				}
 
+				let sDateFormat = oField.GetDateFormat();
+
 				oField.ClearFormat();
 				if (oField.IsMultiline && oField.IsMultiline()) {
 					return false;
@@ -1668,9 +1675,13 @@
 					"JS": 'AFDate_KeystrokeEx("' + sFormat + '");'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
+				oField.prevDateFormat = sDateFormat;
+
 				if (oField.IsCanCommit()) {
 					oField.Commit();
 				}
+
+				oField.prevDateFormat = undefined;
 
 				res = true;
 			});
@@ -3688,15 +3699,9 @@
 		oDate.setSeconds(oCurDate.getSeconds());
 		oDate.getMilliseconds(oCurDate.getMilliseconds());
 
-		oDoc.lastDatePickerInfo = {
-			value: AscPDF.FormatDateValue(oDate.getTime(), oActiveForm.GetDateFormat()),
-			form: oActiveForm
-		};
-
 		oActiveForm.content.SelectAll();
-		oActiveForm.EnterText(AscWord.CTextFormFormat.prototype.GetBuffer(oDoc.lastDatePickerInfo.value));
+		oActiveForm.EnterText(AscWord.CTextFormFormat.prototype.GetBuffer(AscPDF.FormatDateValue(oDate.getTime(), oActiveForm.GetDateFormat())));
 		oDoc.EnterDownActiveField();
-		oDoc.lastDatePickerInfo = null;
 	};
 	PDFEditorApi.prototype.asc_SelectPDFFormListItem = function(sId) {
 		let oViewer	= this.DocumentRenderer;
@@ -4324,10 +4329,7 @@
 
 		if (!pageObject) {
 			let oPos = AscPDF.GetGlobalCoordsByPageCoords(oBasePos.x, oBasePos.y, nPage);
-			oDoc.anchorPositionToAdd = {
-				x: oBasePos.x,
-				y: oBasePos.y
-			};
+			oDoc.anchorPositionToAdd = null;
 			return new AscCommon.asc_CRect(oPos["X"] + nCommentWidth, oPos["Y"] + nCommentHeight / 2, 0, 0);
 		}
 
