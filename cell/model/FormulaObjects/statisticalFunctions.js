@@ -61,6 +61,7 @@ function (window, undefined) {
 
 	var _func = AscCommonExcel._func;
 	var matching = AscCommonExcel.matching;
+	var getMatchingFunction = AscCommonExcel.getMatchingFunction;
 
 	var maxGammaArgument = 171.624376956302;
 
@@ -12181,71 +12182,6 @@ function (window, undefined) {
 		}
 		return res;
 	};
-	/**
-	 * @private
-	 * @param {cElementType} type
-	 * @param {string} op 
-	 * @returns {Function}
-	 */
-	CountIfCache.prototype._getMatchingFunction = function(type, op) {
-		if (type === cElementType.string) {
-			switch(op) {
-				case ">":
-					return function (a, b) {
-						return AscCommonExcel.stringCompare(a, b) > 0;
-					};
-				case "<":
-					return function (a, b) {
-						return AscCommonExcel.stringCompare(a, b) < 0;
-					};
-				case ">=":
-					return function (a, b) {
-						return AscCommonExcel.stringCompare(a, b) >= 0;
-					};
-				case "<=":
-					return function (a, b) {
-						return AscCommonExcel.stringCompare(a, b) <= 0;
-					};
-				case "<>":
-					return function (a, b) {
-						return !AscCommonExcel.searchRegExp2(a, b);
-					};
-				case "=":
-				default:
-				return function (a, b) {
-					return AscCommonExcel.searchRegExp2(a, b);
-				};
-			}
-		} else {
-			switch(op) {
-				case ">":
-					return function (a, b) {
-						return a > b;
-					};
-				case "<":
-					return function (a, b) {
-						return a < b;
-					};
-				case ">=":
-					return function (a, b) {
-						return a >= b;
-					};
-				case "<=":
-					return function (a, b) {
-						return a <= b;
-					};
-				case "<>":
-					return function (a, b) {
-						return a !== b;
-					};
-				case "=":
-				default:
-					return function (a, b) {
-						return a === b;
-					};
-			}
-		}
-	};
 	CountIfCache.prototype._calculate = function (arr, arg1) {
 		let _count = 0;
 		let matchingInfo = AscCommonExcel.matchingValue(arg1);
@@ -12277,7 +12213,8 @@ function (window, undefined) {
 			}
 			return new cNumber(0);
 		}
-		const matchingFunction = this._getMatchingFunction(type, matchingInfo.op);
+		const isWildcard = type === cElementType.string && (searchValue.indexOf('*') !== -1 || searchValue.indexOf('?') !== -1);
+		const matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
 		if (typedArr) {
 			for (let i = 0; i < typedArr.length; i += 1) {
 				_count += matchingFunction(typedArr[i], searchValue);

@@ -19451,6 +19451,14 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
+		// Case #8: Area, String. Count empty values. ' as Empty. Different with Ms
+		// ws.getRange2("A321").setValue("");
+		// ws.getRange2("A322").setValue("");
+		// ws.getRange2("A323").setValue("'");
+		// oParser = new parserFormula('COUNTIF(A321:A323,"")', "C2", ws);
+		// assert.ok(oParser.parse());
+		// assert.strictEqual(oParser.calculate().getValue(), 3);
+
 		// testArrayFormula2(assert, "COUNTIF", 2, 2)
 	});
 
