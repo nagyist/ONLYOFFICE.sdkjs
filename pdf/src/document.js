@@ -5663,9 +5663,8 @@ var CPresentation = CPresentation || function(){};
             }
         }
 
-        // cant paste object when page is selected in thumbnails
-        let oThumbnails = this.Viewer.thumbnails;
-        if (!oTargetContent.MergePagesInfo.binaryData && oThumbnails.isInFocus) {
+        // cant paste objects on paste page button
+        if (Asc.editor.pastePageBefore !== undefined && !oTargetContent.MergePagesInfo.binaryData) {
             return false;
         }
 

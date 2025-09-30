@@ -442,6 +442,7 @@
 			this.needPasteText = true;
 		}
 		
+		this.pastePageBefore = undefined;
 		if (!this.needPasteText || typeof(data) != "string")
 			return;
 
