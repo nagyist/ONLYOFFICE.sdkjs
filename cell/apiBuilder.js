@@ -20226,7 +20226,7 @@
 					let formula1String = (Formula1 instanceof ApiRange) ? Formula1.GetAddress() : Formula1.toString();
 					props.asc_setValue1(formula1String);
 				}
-				if (Formula2 !== undefined && (props.operator === AscCommonExcel.ECfOperator.between || props.operator === AscCommonExcel.ECfOperator.notBetween)) {
+				if (Formula2 !== undefined && (props.operator === AscCommonExcel.ECfOperator.Operator_between || props.operator === AscCommonExcel.ECfOperator.Operator_notBetween)) {
 					let formula2String = (Formula2 instanceof ApiRange) ? Formula2.GetAddress() : Formula2.toString();
 					props.asc_setValue2(formula2String);
 				}
