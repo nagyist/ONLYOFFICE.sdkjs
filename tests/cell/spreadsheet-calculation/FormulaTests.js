@@ -19361,6 +19361,8 @@ $(function () {
 		assert.strictEqual(array.getElementRowCol(0,1).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,1]");
 		assert.strictEqual(array.getElementRowCol(0,2).getValue(), 1, "Result of COUNTIF(A311:A314,A311:A314)[0,2]");
 
+		// TODO Tables
+
 		// Negative Cases:
 		// Case #1: Error, Number. Handle reference error in range
 		oParser = new parserFormula("COUNTIF(#REF!, 1)", "C2", ws);
