@@ -7635,6 +7635,41 @@ var CPresentation = CPresentation || function(){};
                         };
                         
                         oLocker.Lock.Check(oCheckData);
+
+                        if (oPage.deleteLock) {
+                            let sPageId = oPage.GetId();
+
+                            oPage.annots.forEach(function(annot) {
+                                let check_obj = {
+                                    "type":     AscLockTypeElemPDF.Object,
+                                    "pageId":   sPageId,
+                                    "objId":    annot.GetId(),
+                                    "guid":     annot.GetId()
+                                };
+
+                                annot.Lock.Check(check_obj);
+                            });
+                            oPage.drawings.forEach(function(drawing) {
+                                let check_obj = {
+                                    "type":     AscLockTypeElemPDF.Object,
+                                    "pageId":   sPageId,
+                                    "objId":    drawing.GetId(),
+                                    "guid":     drawing.GetId()
+                                };
+
+                                drawing.Lock.Check(check_obj);
+                            });
+                            oPage.fields.forEach(function(field) {
+                                let check_obj = {
+                                    "type":     AscLockTypeElemPDF.Object,
+                                    "pageId":   sPageId,
+                                    "objId":    field.GetId(),
+                                    "guid":     field.GetId()
+                                };
+
+                                field.Lock.Check(check_obj);
+                            });
+                        }
                     }
                 }
             }
