@@ -18923,6 +18923,8 @@
 	 */
 	ApiPath.prototype.SetStroke = function(bStroke)
 	{
+		if (bStroke !== true && bStroke !== false)
+			return;
 		this.path.setStroke(bStroke);
 	};
 
@@ -18945,8 +18947,14 @@
 	 * @see office-js-api/Examples/{Editor}/ApiPath/Methods/SetFill.js
 	 * @since 9.1.0
 	 */
+
 	ApiPath.prototype.SetFill = function(sFill)
 	{
+		const FILL_ALLOWED = ["none", "norm", "lighten", "lightenLess", "darken", "darkenLess"];
+		if (FILL_ALLOWED.indexOf(sFill) === -1)
+		{
+			return;
+		}
 		this.path.setFill(sFill);
 	};
 
@@ -18971,6 +18979,8 @@
 	 */
 	ApiPath.prototype.SetWidth = function(nWidth)
 	{
+		if (!AscFormat.isRealNumber(nWidth) || nWidth < 0)
+			return;
 		this.path.setPathW(nWidth);
 	};
 
@@ -18995,6 +19005,8 @@
 	 */
 	ApiPath.prototype.SetHeight = function(nHeight)
 	{
+		if (!AscFormat.isRealNumber(nHeight) || nHeight < 0)
+			return;
 		this.path.setPathH(nHeight);
 	};
 
