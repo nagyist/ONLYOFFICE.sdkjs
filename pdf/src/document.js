@@ -4758,7 +4758,12 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.CanAddHyperlink = function(bCheckInHyperlink) {
         let oController = this.GetController();
+        let oTargetTextObject = oController.getTargetTextObject();
+
         if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot()})) {
+            return false;
+        }
+        else if (oTargetTextObject instanceof AscFormat.CTitle) {
             return false;
         }
 
@@ -6259,9 +6264,6 @@ var CPresentation = CPresentation || function(){};
         let oXfrm   = oSmartArt.getXfrm();
         let oPos    = this.private_computeDrawingAddingPos(nPage, oXfrm.extX, oXfrm.extY);
 
-        if (nRotAngle != 0) {
-            oXfrm.setRot(-nRotAngle * Math.PI / 180);
-        }
         oXfrm.setOffX(oPos.x);
         oXfrm.setOffY(oPos.y);
 
