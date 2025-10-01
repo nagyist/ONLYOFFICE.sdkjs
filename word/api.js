@@ -11275,7 +11275,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_GetTextFormKeys = function()
 	{
 		let oManager = this.private_GetFormsManager();
-		return oManager ? oManager.GetAllKeys({Text : true, ComboBox : true, DropDownList : true}) : [];
+		return oManager ? oManager.GetAllKeys({Text : true}) : [];
 	};
 	asc_docs_api.prototype.asc_GetPictureFormKeys = function()
 	{
@@ -11316,10 +11316,14 @@ background-repeat: no-repeat;\
 			case Asc.c_oAscContentControlSpecificType.Signature:
 				pr.Signature = true;
 				break;
-			default:
-				pr.Text         = true;
-				pr.ComboBox     = true;
+			case Asc.c_oAscContentControlSpecificType.ComboBox:
+				pr.ComboBox = true;
+				break;
+			case Asc.c_oAscContentControlSpecificType.DropDownList:
 				pr.DropDownList = true;
+				break;
+			default:
+				pr.Text = true;
 				break;
 		}
 

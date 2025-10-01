@@ -580,6 +580,8 @@
 	{
 		let sKey          = oForm.GetFormKey();
 		let isPlaceHolder = oForm.IsPlaceHolder();
+		let isComboBox    = oForm.IsComboBox();
+		let isDropDown    = oForm.IsDropDownList();
 		let oSrcRun       = !isPlaceHolder ? oForm.MakeSingleRunElement(false) : null;
 		let userMaster    = this.GetUserMasterByForm(oForm);
 		let arrForms      = this.GetAllForms();
@@ -590,6 +592,8 @@
 			if (oTempForm.IsComplexForm()
 				|| oTempForm.IsPicture()
 				|| oTempForm.IsCheckBox()
+				|| oTempForm.IsComboBox() !== isComboBox
+				|| oTempForm.IsDropDownList() !== isDropDown
 				|| oTempForm === oForm
 				|| sKey !== oTempForm.GetFormKey()
 				|| userMaster !== this.GetUserMasterByForm(oTempForm))
