@@ -6112,8 +6112,11 @@ var CPresentation = CPresentation || function(){};
                         }
                         
                         oTargetTextObject && oTargetTextObject.checkExtentsByDocContent && oTargetTextObject.checkExtentsByDocContent();
-                        oTargetTextObject.SetNeedRecalc(true);
-                        AscCommon.History.SetSourceObjectsToPointPdf([oTargetTextObject]);
+                        
+                        if (oTargetTextObject.SetNeedRecalc) {
+                            oTargetTextObject.SetNeedRecalc(true)
+                            AscCommon.History.SetSourceObjectsToPointPdf([oTargetTextObject]);
+                        }
                     }
                     else {
                         this.CreateAndAddShapeFromSelectedContent(oSelContent.DocContent);
