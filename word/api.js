@@ -11583,14 +11583,24 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_CompletePreparingOForm = function(disconnect)
 	{
 		let logicDocument = this.private_GetLogicDocument();
-		if (!logicDocument)
+		let oform = logicDocument ? logicDocument.GetOFormDocument() : null;
+		if (!oform)
 			return false;
 		
-		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+		// Логика следующая:
+		// При начале заполнении по ролям мы выставляем флаг Final, чтобы при скачивании файла и открытии (без
+		// ролей) он открывался именно на заполнение формы, а не на редактирование.
+		// Синхронно выставляется флаг Final, интерфейс получит ивент и выставит рестрикшены на заполнение под
+		// всеми ролями, но заполнять нельзя, т.к. мы тут выставим глобальный лок.
+		// Здесь запускаем сохранение и ждем его. На самом сохранении присылаем ивент onCompletePreparingOForm, где
+		// интерфейс уже весь блокируется.
+		
+		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings, null, false, true, null))
 			return false;
 		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_CompletePreparation);
-		logicDocument.GetOFormDocument().setAllRolesNotFilled();
+		oform.setAllRolesNotFilled();
+		oform.setFinal(true);
 		if (disconnect)
 			logicDocument.GetHistory().Add(new AscDFH.CChangesDocumentDisconnectEveryone(logicDocument));
 		
