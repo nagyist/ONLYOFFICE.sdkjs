@@ -6264,9 +6264,6 @@ var CPresentation = CPresentation || function(){};
         let oXfrm   = oSmartArt.getXfrm();
         let oPos    = this.private_computeDrawingAddingPos(nPage, oXfrm.extX, oXfrm.extY);
 
-        if (nRotAngle != 0) {
-            oXfrm.setRot(-nRotAngle * Math.PI / 180);
-        }
         oXfrm.setOffX(oPos.x);
         oXfrm.setOffY(oPos.y);
 
