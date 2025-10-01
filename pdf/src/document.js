@@ -4758,7 +4758,12 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.CanAddHyperlink = function(bCheckInHyperlink) {
         let oController = this.GetController();
+        let oTargetTextObject = oController.getTargetTextObject();
+
         if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot()})) {
+            return false;
+        }
+        else if (oTargetTextObject instanceof AscFormat.CTitle) {
             return false;
         }
 
