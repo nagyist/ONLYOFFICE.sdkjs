@@ -7109,6 +7109,7 @@ var CPresentation = CPresentation || function(){};
 
         let aOriginIndexes = [];
 
+        let nNewPagesCount = 0;
         // The logic is that we always copy original pages using their original indexes. New pages are numbered starting from the end of the original pages.
         for (let i = 0, maxIdx = Math.max.apply(null, aIndexes); i <= maxIdx; i++) {
             if (aIndexes.includes(i)) {
@@ -7117,12 +7118,8 @@ var CPresentation = CPresentation || function(){};
                     aOriginIndexes.push(oFilePage.originIndex);
                 }
                 else {
-                    if (i <= this.Viewer.file.originalPagesCount - 1) {
-                        aOriginIndexes.push(i + this.Viewer.file.originalPagesCount - 1);
-                    }
-                    else {
-                        aOriginIndexes.push(i);
-                    }
+                    nNewPagesCount++;
+                    aOriginIndexes.push(nNewPagesCount + this.Viewer.file.originalPagesCount - 1);
                 }
             }
         }
