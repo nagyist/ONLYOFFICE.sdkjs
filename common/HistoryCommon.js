@@ -4672,18 +4672,15 @@
 	window['AscDFH'].historydescription_Presentation_SetPreserveSlideMaster         = 0x01c8;
 	window['AscDFH'].historydescription_Document_AddMathML                          = 0x01c9;
 	window['AscDFH'].historydescription_OForm_CancelFilling                         = 0x01ca;
-
 	window['AscDFH'].historydescription_Presentation_ShowChartPreview               = 0x01cb;
-
 	window['AscDFH'].historydescription_Document_UpdateCharts                       = 0x01cc;
 	window['AscDFH'].historydescription_Document_ChangeExternalChartReference       = 0x01cd;
 	window['AscDFH'].historydescription_Document_RemoveExternalChartReferences      = 0x01ce;
-
 	window['AscDFH'].historydescription_Presentation_RemoveDrawingObject            = 0x01cf;
-
 	window['AscDFH'].historydescription_Spreadsheet_SwitchCheckbox                  = 0x01d0;
 	window['AscDFH'].historydescription_Spreadsheet_IncrementControl                = 0x01d1;
 	window['AscDFH'].historydescription_Spreadsheet_SelectListBox                   = 0x01d2;
+	window['AscDFH'].historydescription_OForm_MarkAsFinal                           = 0x01d3;
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;
