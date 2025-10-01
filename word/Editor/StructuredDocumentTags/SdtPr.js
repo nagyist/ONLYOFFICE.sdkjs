@@ -651,6 +651,12 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 				this.FormPr.SetKey(choiceName);
 		}
 		
+		if (this.FormPr)
+		{
+			if (prevGroupKey !== this.CheckBoxPr.GroupKey)
+				this.OnSetGroupKeyToForm(this.CheckBoxPr.GroupKey, oContentControl);
+		}
+		
 		oContentControl.SetCheckBoxPr(this.CheckBoxPr);
 		oContentControl.private_UpdateCheckBoxContent();
 	}
@@ -760,11 +766,17 @@ CContentControlPr.prototype.SetFormPrToContentControl = function(contentControl)
 	let newKey = formPr.GetKey();
 	let oldKey = contentControl.GetFormKey();
 	
+	if (this.CheckBoxPr && this.CheckBoxPr.GetGroupKey())
+	{
+		newKey = this.CheckBoxPr.GetGroupKey();
+		oldKey = contentControl.GetRadioButtonGroupKey();
+	}
+	
 	let fieldMaster = contentControl.GetFieldMaster();
 	let userMaster  = fieldMaster ? fieldMaster.getFirstUser() : null;
 	let oldRole     = userMaster ? userMaster.getRole() : null;
 	
-	let isKeyChanged = newKey && newKey !== oldKey;
+	let isKeyChanged = newKey && newKey !== oldKey && !contentControl.IsRadioButton();
 	let isRoleChanged = newRole && newRole !== oldRole;
 	
 	if (isKeyChanged && isRoleChanged)
@@ -815,6 +827,38 @@ CContentControlPr.prototype.OnSetKeyToForm = function(newKey, form)
 		return;
 	
 	this.FormPr.SetRole(role);
+};
+CContentControlPr.prototype.OnSetGroupKeyToForm = function(newKey, form)
+{
+	let logicDocument = form.GetLogicDocument();
+	if (!logicDocument || !form.IsRadioButton())
+		return;
+	
+	let formManager = logicDocument.GetFormsManager();
+	let allForms = formManager.GetRadioButtons(newKey);
+	let firstForm = null;
+	for (let iForm = 0, nForms = allForms.length; iForm < nForms; ++iForm)
+	{
+		if (allForms[iForm] === form)
+			continue;
+		
+		firstForm = allForms[iForm];
+		
+		// Напрямую у formManager не вызываем, т.к. еще может быть не выставлен ключ у текущей формы
+		logicDocument.OnChangeForm(allForms[iForm]);
+		break;
+	}
+	
+	let role;
+	if (firstForm)
+	{
+		form.SyncFormPrWithSameKey(firstForm);
+		this.FormPr.SetRequired(firstForm.IsFormRequired());
+		role = firstForm.GetFormRole();
+	}
+	
+	if (role)
+		this.FormPr.SetRole(role);
 };
 CContentControlPr.prototype.OnSetRoleToForm = function(newRole, form)
 {

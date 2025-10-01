@@ -207,6 +207,15 @@
 		return arrResult;
 	};
 	/**
+	 * @param groupKey
+	 * @returns {boolean}
+	 */
+	CFormsManager.prototype.IsRadioGroupRequired = function(groupKey)
+	{
+		let forms = this.GetRadioButtons(groupKey);
+		return forms.length ? forms[0].IsFormRequired() : false;
+	};
+	/**
 	 * Все ли обязательные поля заполнены
 	 * @param {boolean} [checkAll=false]
 	 * @returns {boolean}
@@ -300,7 +309,12 @@
 	CFormsManager.prototype.OnChangeFormPr = function(form)
 	{
 		let userMaster = this.GetUserMasterByForm(form);
-		let allForms   = this.GetAllFormsByKey(form.GetFormKey(), form.GetSpecificType());
+		let allForms;
+		if (form.IsRadioButton())
+			allForms = this.GetRadioButtons(form.GetRadioButtonGroupKey());
+		else
+			allForms = this.GetAllFormsByKey(form.GetFormKey(), form.GetSpecificType());
+		
 		for (let i = 0, count = allForms.length; i < count; ++i)
 		{
 			let _form = allForms[i];
