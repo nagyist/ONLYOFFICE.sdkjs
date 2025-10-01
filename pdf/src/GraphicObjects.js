@@ -1131,6 +1131,10 @@
 
             return this.selection.groupSelection.selectedObjects;
         }
+        else if (this.selection.chartSelection) {
+            return [this.selection.chartSelection];
+        }
+        
         return this.selectedObjects;
     };
 
@@ -1906,8 +1910,14 @@
                     if (oObject.GetParent) {
                         oObject = oObject.GetParent();
                     }
+                    else if (oObject.parent) {
+                        oObject = oObject.parent;
+                    }
                     else if (oObject.GetTable) {
                         oObject = oObject.GetTable();
+                    }
+                    else {
+                        return;
                     }
                 }
                 
