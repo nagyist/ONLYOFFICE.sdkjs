@@ -7253,9 +7253,7 @@ var CPresentation = CPresentation || function(){};
         });
     };
     CPDFDoc.prototype.HasAppliedRedact = function() {
-		let oDoc = this.getPDFDoc();
-
-		return !!oDoc.annots.find(function(annot) {
+		return !!this.annots.find(function(annot) {
 			return annot.IsRedact() && annot.GetRedactId();
 		});
 	};
@@ -7304,16 +7302,18 @@ var CPresentation = CPresentation || function(){};
                     return;
                 });
 
-                let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
+                if (aRectsFlat.length != 0) {
+                    let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
 
-                // Apply redact to the page
-                oNativeFile["RedactPage"](
-                    nPage,
-                    aRectsFlat,
-                    oRender
-                );
+                    // Apply redact to the page
+                    oNativeFile["RedactPage"](
+                        nPage,
+                        aRectsFlat,
+                        oRender
+                    );
 
-                this.SetRedactData(sRedactId, nPage, aRectsFlat, oRender);
+                    this.SetRedactData(sRedactId, nPage, aRectsFlat, oRender);
+                }
             }
 
 			this.Viewer.onUpdatePages(Array.from(pagesSet));
