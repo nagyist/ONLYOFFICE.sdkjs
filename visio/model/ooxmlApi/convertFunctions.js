@@ -664,7 +664,7 @@
 				} else if (uniFillForegnd) {
 					res = uniFillForegnd;
 				} else {
-					AscCommon.consoleLog("FillForegnd not found for shape", this);
+					AscCommon.consoleLog("FillForegnd not found for shape", shape);
 					res = AscFormat.CreateNoFillUniFill();
 				}
 
