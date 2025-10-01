@@ -8707,6 +8707,10 @@
 			if (res && fAction) {
 				wb.loadCells.push(cell);
 			}
+			if (res && this.workbook.checkProtectedValue && this.isUserProtectedRangesIntersectionCell(res, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
+				res.cleanText();
+				res._hasChanged = false;
+			}
 			fAction(res);
 			cell.saveContent(true);
 			if (res) {
@@ -15614,9 +15618,6 @@
 		return sResult;
 	};
 	Cell.prototype.getValue = function() {
-		if (this.ws.workbook.checkProtectedValue && this.ws.isUserProtectedRangesIntersectionCell(this, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
-			return "";
-		}
 		this._checkDirty();
 		let aTextValue2 = this._getValue2(AscCommon.gc_nMaxDigCountView, function() {return true;},
 			undefined, undefined, true);
@@ -15629,9 +15630,6 @@
 		return AscCommonExcel.getStringFromMultiTextSkipToSpace(aTextValue2);
 	};
 	Cell.prototype.getValue2 = function(dDigitsCount, fIsFitMeasurer) {
-		if (this.ws.workbook.checkProtectedValue && this.ws.isUserProtectedRangesIntersectionCell(this, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
-			return this._getValue2Result("");
-		}
 		this._checkDirty();
 		if(null == fIsFitMeasurer)
 			fIsFitMeasurer = function(aText){return true;};
