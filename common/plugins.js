@@ -386,10 +386,10 @@
 
 		isWorked : function()
 		{
-			// запущен ли хоть один несистемный плагин
+			// check if at least one non-system or non-background plugin is running
 			for (let i in this.runnedPluginsMap)
 			{
-				if (this.pluginsMap[i] && !this.pluginsMap[i].isSystem())
+				if (this.pluginsMap[i] && !this.pluginsMap[i].isSystem() && !this.pluginsMap[i].isBackground())
 					return true;
 			}
 			return false;
