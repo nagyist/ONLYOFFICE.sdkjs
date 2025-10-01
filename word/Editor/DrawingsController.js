@@ -396,10 +396,13 @@ CDrawingsController.prototype.RemoveSelection = function(bNoCheckDrawing)
 	this.DrawingObjects.resetSelection(undefined, bNoCheckDrawing);
 	if (oParaDrawing)
 	{
-		var oInnerForm = null;
-		if (oParaDrawing.IsForm() && (oInnerForm = oParaDrawing.GetInnerForm()) && oInnerForm.IsPicture())
+		let innerForm = null;
+		if (oParaDrawing.IsForm()
+			&& (innerForm = oParaDrawing.GetInnerForm())
+			&& innerForm.IsPicture()
+			&& this.LogicDocument.IsFillingFormMode())
 		{
-			var arrDrawings = oInnerForm.GetAllDrawingObjects();
+			var arrDrawings = innerForm.GetAllDrawingObjects();
 			if (arrDrawings.length)
 				oParaDrawing = arrDrawings[0];
 		}
