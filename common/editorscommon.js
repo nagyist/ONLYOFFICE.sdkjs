@@ -15127,25 +15127,16 @@
 	function applyElementDirection(element) {
 		if (!element)
 			return;
-		if (AscCommon.AscBrowser.isIE) {
-			element.addEventListener('input', function () {
-				const text = element.textContent || element.innerText || '';
-				let dir = 'ltr';
-				for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {
-					let dir = AscCommon.getCharStrongDir(iter.value());
-					if (dir !== null) {
-						if (dir === AscBidi.TYPE.R) {
-							dir = 'rtl';
-						}
-						break;
-					}
-				}
-				element.dir = dir;
-			});
+		const text = element.value || '';
+		let dir = 'ltr';
+		for (let iter = text.getUnicodeIterator(); iter.check(); iter.next()) {
+			let charDir = AscCommon.getCharStrongDir(iter.value());
+			if (charDir === AscBidi.DIRECTION_FLAG.RTL) {
+				dir = 'rtl';
+				break;
+			}
 		}
-		else {
-			element.dir = 'auto';
-		}
+		element.dir = dir;
 	}
 
 
