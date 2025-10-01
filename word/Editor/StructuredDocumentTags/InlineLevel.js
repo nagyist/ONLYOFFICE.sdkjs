@@ -3867,6 +3867,7 @@ CInlineLevelSdt.prototype.MoveCursorOutsideForm = function(isBefore)
 	
 	let oShape;
 	if (this.IsForm()
+		&& this.IsMainForm()
 		&& this.Paragraph
 		&& (oShape = this.Paragraph.Parent ? this.Paragraph.Parent.Is_DrawingShape(true) : null)
 		&& oShape.isForm())
