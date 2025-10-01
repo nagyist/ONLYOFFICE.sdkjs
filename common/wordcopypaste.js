@@ -5315,17 +5315,7 @@ PasteProcessor.prototype =
 		function correctDrawingsForPdf(drawings, document) {
 			AscFormat.ExecuteNoHistory(function () {
 				for (var i = 0; i < drawings.length; i++) {
-					var drawing = drawings[i].Drawing;
-			
-					if (!(drawing instanceof AscFormat.CGraphicFrame)) {
-						
-						if (drawing.setBDeleted2) {
-							drawing.setBDeleted2(true);
-						} else {
-							drawing.setBDeleted(true);
-						}
-						
-					}
+					let drawing = drawings[i].Drawing;
 			
 					if (drawing.convertToPdf) {
 						drawings[i].Drawing = drawing.convertToPdf(document, undefined, true);
