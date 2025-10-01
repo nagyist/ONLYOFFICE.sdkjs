@@ -8808,7 +8808,7 @@ background-repeat: no-repeat;\
 		if (!oform || oform.isFinal() === isFinal)
 			return;
 		
-		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings))
+		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Document_Settings, null, false, true, null))
 			return;
 		
 		logicDocument.StartAction(AscDFH.historydescription_OForm_MarkAsFinal);
