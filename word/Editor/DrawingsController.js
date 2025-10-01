@@ -662,16 +662,22 @@ CDrawingsController.prototype.CanAddComment = function()
 };
 CDrawingsController.prototype.GetSelectionAnchorPos = function()
 {
-	var ParaDrawing = this.DrawingObjects.getMajorParaDrawing();
-	if (!ParaDrawing)
+	let paraDrawing = this.DrawingObjects.getMajorParaDrawing();
+	if (!paraDrawing)
 	{
-		let curParagraph = this.LogicDocument.GetCurrentParagraph(false, null, null);
+		return {
+			X0   : 0,
+			Y    : 0,
+			X1   : 0,
+			Page : -1
+		};
 	}
+	let drawing = paraDrawing.GraphicObj;
 	return {
-		X0   : ParaDrawing.GraphicObj.x,
-		Y    : ParaDrawing.GraphicObj.y,
-		X1   : ParaDrawing.GraphicObj.x + ParaDrawing.GraphicObj.extX,
-		Page : ParaDrawing.PageNum
+		X0   : drawing.x,
+		Y    : drawing.y,
+		X1   : drawing.x + drawing.extX,
+		Page : paraDrawing.PageNum
 	};
 };
 CDrawingsController.prototype.StartSelectionFromCurPos = function()
