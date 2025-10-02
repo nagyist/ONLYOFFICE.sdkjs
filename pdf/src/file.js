@@ -513,7 +513,7 @@ void main() {\n\
         return this.Selection;
     };
     CFile.prototype.onMouseDown = function(pageIndex, x, y) {
-        if (this.pages[pageIndex].isRecognized && !Asc.editor.isRedactTool())
+        if (this.pages[pageIndex].isRecognized && !Asc.editor.IsRedactTool())
             return;
         
         let ret = this.getNearestPos(pageIndex, x, y);
