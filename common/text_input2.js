@@ -849,7 +849,7 @@
 		this.clearAreaValue();
 
 		if (isFromFocus !== true)
-			focusHtmlElement(this.HtmlArea);
+			focusHtmlElement(this.Api.getFocusElement());
 
 		if (window.g_asc_plugins)
 			window.g_asc_plugins.onPluginEvent("onInputHelperClear");
@@ -902,7 +902,7 @@
 			}
 
 			if (!this.isGlobalDisableFocus)
-				focusHtmlElement(this.HtmlArea);
+				focusHtmlElement(this.Api.getFocusElement());
 		}
 	};
 	CTextInputPrototype.externalEndCompositeInput = function()
@@ -1146,8 +1146,8 @@
 	{
 		if (this.Api.asc_IsFocus() && !AscCommon.g_clipboardBase.IsFocus() && !AscCommon.g_clipboardBase.IsWorking())
 		{
-			if (document.activeElement != this.HtmlArea)
-				focusHtmlElement(this.HtmlArea);
+			if (document.activeElement != this.Api.getFocusElement())
+				focusHtmlElement(this.Api.getFocusElement());
 		}
 	};
 	CTextInputPrototype.moveAccurate = function(x, y)
@@ -1262,7 +1262,7 @@
 		if (!this.Api.asc_IsFocus())
 			this.Api.asc_enableKeyEvents(true);
 		else
-			focusHtmlElement(this.HtmlArea);
+			focusHtmlElement(this.Api.getFocusElement());
 	}
 
 	CTextInputPrototype.checkViewMode = function()
@@ -1467,14 +1467,14 @@
 
 			var _elem = t.nativeFocusElement;
 			t.nativeFocusElementNoRemoveOnElementFocus = true; // ie focus async
-			AscCommon.AscBrowser.isMozilla ? setTimeout(function(){ focusHtmlElement(t.HtmlArea); }, 0) : focusHtmlElement(t.HtmlArea);
+			AscCommon.AscBrowser.isMozilla ? setTimeout(function(){ focusHtmlElement(t.Api.getFocusElement()); }, 0) : focusHtmlElement(t.Api.getFocusElement());
 			t.nativeFocusElement = _elem;
 			t.Api.asc_enableKeyEvents(true, true);
 		}, true);
 
 		// send focus
 		if (!api.isMobileVersion && !api.isEmbedVersion)
-			focusHtmlElement(window['AscCommon'].g_inputContext.HtmlArea);
+			focusHtmlElement(api.getFocusElement());
 	};
 
 	function focusHtmlElement(element)

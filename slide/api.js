@@ -7456,7 +7456,6 @@ background-repeat: no-repeat;\
 		return this.StartDemonstration(divId, slideIndex, reporterStartObject);
 	};
 	asc_docs_api.prototype.StartDemonstration = function (div_id, slidestart_num, reporterStartObject) {
-		console.log(div_id, reporterStartObject)
 		if (window.g_asc_plugins)
 			window.g_asc_plugins.stopWorked();
 
@@ -7957,6 +7956,13 @@ background-repeat: no-repeat;\
 
 		if (this.reporterWindow)
 			this.sendToReporter("{ \"main_command\" : true, \"go_to_slide\" : " + slideNum + " }");
+	};
+
+
+	asc_docs_api.prototype.getFocusElement = function() {
+		if (!this.isSlideShow())
+			return window['AscCommon'].g_inputContext.HtmlArea;
+		return document.body;
 	};
 
 	asc_docs_api.prototype.SetDemonstrationModeOnly = function()
