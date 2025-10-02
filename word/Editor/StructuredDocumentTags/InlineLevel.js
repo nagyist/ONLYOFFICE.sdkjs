@@ -2837,13 +2837,19 @@ CInlineLevelSdt.prototype.SyncFormPrWithSameKey = function(form)
 	
 	this.SetFormRequired(form.IsFormRequired());
 	
-	if (Asc.c_oAscContentControlSpecificType.DropDownList === this.GetSpecificType())
+	let type = this.GetSpecificType();
+	if (Asc.c_oAscContentControlSpecificType.DropDownList === type)
 	{
 		this.SetDropDownListPr(form.GetDropDownListPr());
 	}
-	else if (Asc.c_oAscContentControlSpecificType.ComboBox === this.GetSpecificType())
+	else if (Asc.c_oAscContentControlSpecificType.ComboBox === type)
 	{
 		this.SetComboBoxPr(form.GetComboBoxPr());
+	}
+	else if (Asc.c_oAscContentControlSpecificType.CheckBox === type)
+	{
+		if (!form.IsRadioButton())
+			this.SetCheckBoxChecked(form.IsCheckBoxChecked());
 	}
 };
 CInlineLevelSdt.prototype.Get_ParentTextTransform = function()

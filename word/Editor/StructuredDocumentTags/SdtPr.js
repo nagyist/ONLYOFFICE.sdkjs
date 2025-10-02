@@ -766,12 +766,6 @@ CContentControlPr.prototype.SetFormPrToContentControl = function(contentControl)
 	let newKey = formPr.GetKey();
 	let oldKey = contentControl.GetFormKey();
 	
-	if (this.CheckBoxPr && this.CheckBoxPr.GetGroupKey())
-	{
-		newKey = this.CheckBoxPr.GetGroupKey();
-		oldKey = contentControl.GetRadioButtonGroupKey();
-	}
-	
 	let fieldMaster = contentControl.GetFieldMaster();
 	let userMaster  = fieldMaster ? fieldMaster.getFirstUser() : null;
 	let oldRole     = userMaster ? userMaster.getRole() : null;
