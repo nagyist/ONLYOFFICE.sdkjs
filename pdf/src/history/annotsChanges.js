@@ -92,6 +92,9 @@ AscDFH.drawingsChangesMap[AscDFH.historyitem_Pdf_Stamp_RenderStructure] = functi
 };
 AscDFH.drawingsConstructorsMap[AscDFH.historyitem_Pdf_Stamp_RenderStructure] = AscFormat.CShapeStructure;
 
+// redact
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Redact_Annot_Redact_Id] = CChangesPDFRedactAnnotRedactId;
+
 /**
  * @constructor
  * @extends {AscDFH.CChangesAnnotArrayOfDoubleProperty}
