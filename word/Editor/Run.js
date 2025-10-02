@@ -12128,11 +12128,11 @@ ParaRun.prototype.CopyTextFormContent = function(oRun)
 	}
 
 	if (this.Content.length - nStart - nEnd > 0)
-		this.RemoveFromContent(nStart, this.Content.length - nStart - nEnd);
+		this.RemoveFromContent(nStart, this.Content.length - nStart - nEnd, true);
 
 	for (var nPos = nStart, nEndPos = nRunLen - nEnd; nPos < nEndPos; ++nPos)
 	{
-		this.AddToContent(nPos, oRun.Content[nPos].Copy());
+		this.AddToContent(nPos, oRun.Content[nPos].Copy(), true);
 	}
 };
 /**
