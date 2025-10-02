@@ -160,6 +160,7 @@
 			"cell/model/CellInfo.js",
 			"cell/model/HeaderFooter.js",
 			"cell/view/DrawingObjectsController.js",
+		  "cell/view/HandlerList.js",
 			
 			"word/Editor/Paragraph/RunContent/Types.js",
 			"word/Math/mathTypes.js",

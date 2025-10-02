@@ -187,6 +187,9 @@ function (window, undefined) {
 
 								AscFormat.ExecuteNoHistory(function () {
 									const oBinaryFileReader = new AscCommonExcel.BinaryFileReader(true);
+									oBinaryFileReader.InitOpenManager.copyPasteObj = {
+										isCopyPaste: true, activeRange: null, selectAllSheet: true
+									};
 									AscCommon.pptx_content_loader.Start_UseFullUrl();
 									AscCommon.pptx_content_loader.Reader.ClearConnectedObjects();
 									oBinaryFileReader.Read(binaryData, wb);

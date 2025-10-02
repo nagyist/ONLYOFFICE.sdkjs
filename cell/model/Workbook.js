@@ -5529,8 +5529,7 @@
 			if (extarnalLink.SheetNames) {
 				for (var i = 0; i < extarnalLink.SheetNames.length; i++) {
 					if (extarnalLink.SheetNames[i] === sheet) {
-						extarnalLink.initWorksheetFromSheetDataSet(sheet);
-						return extarnalLink.worksheets && extarnalLink.worksheets[sheet];
+						return extarnalLink.initWorksheet(sheet);
 					}
 				}
 			}
@@ -18301,7 +18300,7 @@
 		}
 
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.onWorksheetChange();
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
 		AscCommon.History.Create_NewPoint();
@@ -18324,7 +18323,7 @@
 			// cell.Remove();
 		});
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.onWorksheetChange();
 	};
 	Range.prototype.setValueData = function(val){
 		AscCommon.History.Create_NewPoint();
@@ -22016,6 +22015,9 @@
 
 	Range.prototype.move = function (oBBoxTo, copyRange, wsTo) {
 		this.worksheet._moveRange(this.bbox, oBBoxTo, copyRange, wsTo);
+	};
+	Range.prototype.onWorksheetChange = function () {
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 
 	function SweepLineRowIterator() {

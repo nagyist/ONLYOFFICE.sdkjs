@@ -156,6 +156,7 @@
 			"common/intervalTree.js",
 
 			"cell/model/FormulaObjects/parserFormula.js",
+		  "cell/view/HandlerList.js",
 			"cell/model/SheetMemory.js",
 			"cell/model/WorkbookElems.js",
 			"cell/model/Workbook.js",
