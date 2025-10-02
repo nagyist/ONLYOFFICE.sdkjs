@@ -849,7 +849,7 @@
 		this.clearAreaValue();
 
 		if (isFromFocus !== true)
-			focusHtmlElement(this.Api.getFocusElement());
+			focusHtmlElement(this.getFocusElement());
 
 		if (window.g_asc_plugins)
 			window.g_asc_plugins.onPluginEvent("onInputHelperClear");
@@ -902,7 +902,7 @@
 			}
 
 			if (!this.isGlobalDisableFocus)
-				focusHtmlElement(this.Api.getFocusElement());
+				focusHtmlElement(this.getFocusElement());
 		}
 	};
 	CTextInputPrototype.externalEndCompositeInput = function()
@@ -1146,8 +1146,8 @@
 	{
 		if (this.Api.asc_IsFocus() && !AscCommon.g_clipboardBase.IsFocus() && !AscCommon.g_clipboardBase.IsWorking())
 		{
-			if (document.activeElement != this.Api.getFocusElement())
-				focusHtmlElement(this.Api.getFocusElement());
+			if (document.activeElement != this.getFocusElement())
+				focusHtmlElement(this.getFocusElement());
 		}
 	};
 	CTextInputPrototype.moveAccurate = function(x, y)
@@ -1262,7 +1262,7 @@
 		if (!this.Api.asc_IsFocus())
 			this.Api.asc_enableKeyEvents(true);
 		else
-			focusHtmlElement(this.Api.getFocusElement());
+			focusHtmlElement(this.getFocusElement());
 	}
 
 	CTextInputPrototype.checkViewMode = function()
@@ -1295,6 +1295,10 @@
 		{
 			this.setReadOnlyWrapper(false);
 		}
+	};
+	CTextInputPrototype.getFocusElement = function()
+	{
+		return this.Api.getFocusElement();
 	};
 
 	function _getAttirbute(_elem, _attr, _depth)
@@ -1391,7 +1395,7 @@
 				return;
 			}
 
-			if (t.nativeFocusElement && (t.nativeFocusElement.id == t.HtmlArea.id))
+			if (t.nativeFocusElement && (t.nativeFocusElement.id == t.getFocusElement().id))
 			{
 				t.Api.asc_enableKeyEvents(true, true);
 
@@ -1467,7 +1471,7 @@
 
 			var _elem = t.nativeFocusElement;
 			t.nativeFocusElementNoRemoveOnElementFocus = true; // ie focus async
-			AscCommon.AscBrowser.isMozilla ? setTimeout(function(){ focusHtmlElement(t.Api.getFocusElement()); }, 0) : focusHtmlElement(t.Api.getFocusElement());
+			AscCommon.AscBrowser.isMozilla ? setTimeout(function(){ focusHtmlElement(t.getFocusElement()); }, 0) : focusHtmlElement(t.getFocusElement());
 			t.nativeFocusElement = _elem;
 			t.Api.asc_enableKeyEvents(true, true);
 		}, true);
