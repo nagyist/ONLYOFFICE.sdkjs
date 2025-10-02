@@ -1199,7 +1199,7 @@ CInlineLevelSdt.prototype.GetBoundingRect = function()
 	}
 
 	if (-1 === nCurPage)
-		return {X: 0, Y : 0, W : 0, H : 0, Page : 0, Transform : null};
+		return {X: 0, Y : 0, W : 0, H : 0, Page : 0, Transform : null, Invalid : true};
 
 	var nPageAbs = this.Paragraph.GetAbsolutePage(nCurPage);
 	for (var Key in this.Bounds)
@@ -1221,7 +1221,7 @@ CInlineLevelSdt.prototype.GetBoundingRect = function()
 	}
 
 	if (null === nL || null === nT || null === nR || null === nB)
-		return {X: 0, Y : 0, W : 0, H : 0, Page : 0, Transform : null};
+		return {X: 0, Y : 0, W : 0, H : 0, Page : 0, Transform : null, Invalid : true};
 
 	return {
 		X : nL,
