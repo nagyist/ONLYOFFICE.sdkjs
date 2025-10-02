@@ -610,6 +610,7 @@
         return Asc.editor.getPDFDoc().GetDrawingDocument();
     };
     CPdfDrawingPrototype.prototype.handleUpdateRot = function() {
+        this.recalcTransformText && this.recalcTransformText();
         this.SetNeedRecalc(true);
     };
 
