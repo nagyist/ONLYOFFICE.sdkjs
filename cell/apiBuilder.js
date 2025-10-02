@@ -20213,7 +20213,19 @@
 					let formula1String = (Formula1 instanceof ApiRange) ? Formula1.GetAddress() : Formula1.toString();
 					props.asc_setContainsText(formula1String);
 				}
-				if (Operator !== undefined) {
+				let newType, newOperator;
+				if (props.operator === AscCommonExcel.ECfOperator.Operator_containsText) {
+					newType = Asc.ECfType.containsText;
+				} else if (props.operator === AscCommonExcel.ECfOperator.Operator_notContains) {
+					newType = Asc.ECfType.notContainsText;
+				} else if (props.operator === AscCommonExcel.ECfOperator.Operator_beginsWith) {
+					newType = Asc.ECfType.beginsWith;
+				} else if (props.operator === AscCommonExcel.ECfOperator.Operator_endsWith) {
+					newType = Asc.ECfType.endsWith;
+				}
+				if (newType != null) {
+					props.asc_setType(newType);
+				} else if (Operator !== undefined) {
 					let textOperatorType = FromXlFormatConditionOperatorTo(Operator);
 					if (textOperatorType !== -1) {
 						props.operator = textOperatorType;
