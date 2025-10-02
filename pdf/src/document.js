@@ -768,34 +768,26 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.MarkSearchElementForRedact = function(id) {
         this.DoAction(function() {
             let oPdfMatch = this.SearchEngine.Elements[id];
-
-            let aSelQuadsParts = [];
-            
-            oPdfMatch.forEach(function(pageMatch) {
-                let x1 = pageMatch.X * g_dKoef_mm_to_pt;
-                let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
-                let x2 = (pageMatch.X + pageMatch.W) * g_dKoef_mm_to_pt;
-                let y2 = (pageMatch.Y + pageMatch.H) * g_dKoef_mm_to_pt;
-
-                aSelQuadsParts.push({ page: pageMatch.PageNum, quads: [[
-                    x1, y1, // left up
-                    x2, y1, // right up
-                    x1, y2,	// left down
-                    x2, y2 	// right down
-                ]]});
-            });
-
-            this.AddRedactAnnot(aSelQuadsParts);
-        }, AscDFH.historydescription_Pdf_AddAnnot, this);
-    };
-    CPDFDoc.prototype.MarkAllSearchElementsForRedact = function() {
-        let _t = this;
-
-        this.DoAction(function() {
             let aSelQuadsParts = [];
 
-            Object.values(_t.SearchEngine.Elements).forEach(function(pdfMatch) {
-                pdfMatch.forEach(function(pageMatch) {
+            if (oPdfMatch instanceof AscWord.Paragraph) {
+                let oState = this.GetSelectionState();
+                let SearchElement = oPdfMatch.SearchResults[id];
+
+                oPdfMatch.Selection.Use   = true;
+                oPdfMatch.Selection.Start = false;
+
+                oPdfMatch.Set_SelectionContentPos(SearchElement.StartPos, SearchElement.EndPos);
+                oPdfMatch.Set_ParaContentPos(SearchElement.StartPos, false, -1, -1);
+                oPdfMatch.Document_SetThisElementCurrent();
+
+                let oTopParent = AscPDF.CPdfDrawingPrototype.prototype.GetTopParentObj.call(oPdfMatch);
+                aSelQuadsParts = oTopParent.GetSelectionQuads();
+
+                this.SetSelectionState(oState);
+            }
+            else {
+                oPdfMatch.forEach(function(pageMatch) {
                     let x1 = pageMatch.X * g_dKoef_mm_to_pt;
                     let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
                     let x2 = (pageMatch.X + pageMatch.W) * g_dKoef_mm_to_pt;
@@ -808,9 +800,52 @@ var CPresentation = CPresentation || function(){};
                         x2, y2 	// right down
                     ]]});
                 });
-            })
+            }
+
+            this.AddRedactAnnot(aSelQuadsParts);
+        }, AscDFH.historydescription_Pdf_AddAnnot, this);
+    };
+    CPDFDoc.prototype.MarkAllSearchElementsForRedact = function() {
+        let _t = this;
+
+        this.DoAction(function() {
+            let aSelQuadsParts = [];
+
+            let oState = this.GetSelectionState();
+
+            Object.values(_t.SearchEngine.Elements).forEach(function(pdfMatch) {
+                if (pdfMatch instanceof AscWord.Paragraph) {
+                    Object.values(pdfMatch.SearchResults).forEach(function(searchElement) {
+                        pdfMatch.Selection.Use   = true;
+                        pdfMatch.Selection.Start = false;
+
+                        pdfMatch.Set_SelectionContentPos(searchElement.StartPos, searchElement.EndPos);
+                        pdfMatch.Set_ParaContentPos(searchElement.StartPos, false, -1, -1);
+                        pdfMatch.Document_SetThisElementCurrent();
+
+                        let oTopParent = AscPDF.CPdfDrawingPrototype.prototype.GetTopParentObj.call(pdfMatch);
+                        aSelQuadsParts = aSelQuadsParts.concat(oTopParent.GetSelectionQuads());
+                    });
+                }
+                else {
+                    pdfMatch.forEach(function(pageMatch) {
+                        let x1 = pageMatch.X * g_dKoef_mm_to_pt;
+                        let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
+                        let x2 = (pageMatch.X + pageMatch.W) * g_dKoef_mm_to_pt;
+                        let y2 = (pageMatch.Y + pageMatch.H) * g_dKoef_mm_to_pt;
+
+                        aSelQuadsParts.push({ page: pageMatch.PageNum, quads: [[
+                            x1, y1, // left up
+                            x2, y1, // right up
+                            x1, y2,	// left down
+                            x2, y2 	// right down
+                        ]]});
+                    });
+                }
+            });
 
             _t.AddRedactAnnot(aSelQuadsParts);
+            this.SetSelectionState(oState);
         }, AscDFH.historydescription_Pdf_AddAnnot, this);
     };
     CPDFDoc.prototype.GetSearchRedactInfo = function(id) {
@@ -832,22 +867,106 @@ var CPresentation = CPresentation || function(){};
             return true;
         }
 
+        let oState = _t.GetSelectionState();
         // all
         Object.values(_t.SearchEngine.Elements).forEach(function(pdfMatch) {
-            pdfMatch.forEach(function(pageMatch) {
-                let x1 = pageMatch.X * g_dKoef_mm_to_pt;
-                let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
-                let x2 = (pageMatch.X + pageMatch.W) * g_dKoef_mm_to_pt;
-                let y2 = (pageMatch.Y + pageMatch.H) * g_dKoef_mm_to_pt;
+            if (pdfMatch instanceof AscWord.Paragraph) {
+                let oTopParent = AscPDF.CPdfDrawingPrototype.prototype.GetTopParentObj.call(pdfMatch);
+                Object.values(pdfMatch.SearchResults).forEach(function(searchElement) {
+                    pdfMatch.Selection.Use   = true;
+                    pdfMatch.Selection.Start = false;
 
-                let aQuads = [
-                    x1, y1, // left up
-                    x2, y1, // right up
-                    x1, y2,	// left down
-                    x2, y2 	// right down
-                ];
-                
-                let oPageInfo = _t.GetPageInfo(pageMatch.PageNum);
+                    pdfMatch.Set_SelectionContentPos(searchElement.StartPos, searchElement.EndPos);
+                    pdfMatch.Set_ParaContentPos(searchElement.StartPos, false, -1, -1);
+                    pdfMatch.Document_SetThisElementCurrent();
+
+                    let aQuadsInfo = oTopParent.GetSelectionQuads();
+                    aQuadsInfo[0].quads.forEach(function(selQuads) {
+                        let oPageInfo = _t.GetPageInfo(oTopParent.GetPage());
+                        let isFoundRedact = false;
+
+                        for (let i = 0, nCount = oPageInfo.annots.length; i < nCount; i ++) {
+                            let oAnnot = oPageInfo.annots[i];
+                            
+                            if (oAnnot.IsRedact()) {
+                                let aRedactQuadsParts = oAnnot.GetQuads();
+
+                                isFoundRedact = aRedactQuadsParts.find(function(quads) {
+                                    return arraysEqual(selQuads, quads);
+                                });
+
+                                if (isFoundRedact) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!isFoundRedact) {
+                            oUsedRedactInfo["all"] = false;
+                        }
+                    });
+                });
+            }
+            else {
+                pdfMatch.forEach(function(pageMatch) {
+                    let x1 = pageMatch.X * g_dKoef_mm_to_pt;
+                    let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
+                    let x2 = (pageMatch.X + pageMatch.W) * g_dKoef_mm_to_pt;
+                    let y2 = (pageMatch.Y + pageMatch.H) * g_dKoef_mm_to_pt;
+
+                    let aQuads = [
+                        x1, y1, // left up
+                        x2, y1, // right up
+                        x1, y2,	// left down
+                        x2, y2 	// right down
+                    ];
+                    
+                    let oPageInfo = _t.GetPageInfo(pageMatch.PageNum);
+                    let isFoundRedact = false;
+
+                    for (let i = 0, nCount = oPageInfo.annots.length; i < nCount; i ++) {
+                        let oAnnot = oPageInfo.annots[i];
+                        
+                        if (oAnnot.IsRedact()) {
+                            let aRedactQuadsParts = oAnnot.GetQuads();
+
+                            isFoundRedact = aRedactQuadsParts.find(function(quads) {
+                                return arraysEqual(aQuads, quads);
+                            });
+
+                            if (isFoundRedact) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!isFoundRedact) {
+                        oUsedRedactInfo["all"] = false;
+                    }
+                });
+            }
+        });
+
+        // current 
+        let oPdfMatch = this.SearchEngine.Elements[id];
+        if (!oPdfMatch) {
+            return oUsedRedactInfo;
+        }
+
+        if (oPdfMatch instanceof AscWord.Paragraph) {
+            let oTopParent = AscPDF.CPdfDrawingPrototype.prototype.GetTopParentObj.call(oPdfMatch);
+            let SearchElement = oPdfMatch.SearchResults[id];
+
+            oPdfMatch.Selection.Use   = true;
+            oPdfMatch.Selection.Start = false;
+
+            oPdfMatch.Set_SelectionContentPos(SearchElement.StartPos, SearchElement.EndPos);
+            oPdfMatch.Set_ParaContentPos(SearchElement.StartPos, false, -1, -1);
+            oPdfMatch.Document_SetThisElementCurrent();
+
+            let aQuadsInfo = oTopParent.GetSelectionQuads();
+            aQuadsInfo[0].quads.forEach(function(selQuads) {
+                let oPageInfo = _t.GetPageInfo(oTopParent.GetPage());
                 let isFoundRedact = false;
 
                 for (let i = 0, nCount = oPageInfo.annots.length; i < nCount; i ++) {
@@ -857,7 +976,7 @@ var CPresentation = CPresentation || function(){};
                         let aRedactQuadsParts = oAnnot.GetQuads();
 
                         isFoundRedact = aRedactQuadsParts.find(function(quads) {
-                            return arraysEqual(aQuads, quads);
+                            return arraysEqual(selQuads, quads);
                         });
 
                         if (isFoundRedact) {
@@ -867,14 +986,11 @@ var CPresentation = CPresentation || function(){};
                 }
 
                 if (!isFoundRedact) {
-                    oUsedRedactInfo["all"] = false;
+                    oUsedRedactInfo["current"] = false;
                 }
             });
-        });
-
-        // current 
-        let oPdfMatch = this.SearchEngine.Elements[id];
-        if (oPdfMatch) {
+        }
+        else {
             oPdfMatch.forEach(function(pageMatch) {
                 let x1 = pageMatch.X * g_dKoef_mm_to_pt;
                 let y1 = pageMatch.Y * g_dKoef_mm_to_pt;
@@ -913,6 +1029,7 @@ var CPresentation = CPresentation || function(){};
             });
         }
 
+        _t.SetSelectionState(oState);
         return oUsedRedactInfo;
     };
     CPDFDoc.prototype.GetSearchElementId = function(isNext) {
