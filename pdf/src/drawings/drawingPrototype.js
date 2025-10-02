@@ -482,7 +482,7 @@
                 ]
             };
 
-            unredactedPolygon = AscGeometry.PolyBool["difference"](unredactedPolygon, redactRect);
+            unredactedPolygon = AscGeometry.PolyBool.difference(unredactedPolygon, redactRect);
         }
 
         if (unredactedPolygon) {
