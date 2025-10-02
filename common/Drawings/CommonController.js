@@ -3361,6 +3361,11 @@
 				},
 
 				hyperlinkCanAdd: function (bCheckInHyperlink) {
+					const targetTextObject = getTargetTextObject(this);
+					if (targetTextObject instanceof AscFormat.CTitle) {
+						return false;
+					}
+
 					var content = this.getTargetDocContent();
 					if (content) {
 						if (this.document && content.Parent && content.Parent instanceof AscFormat.CTextBody)
