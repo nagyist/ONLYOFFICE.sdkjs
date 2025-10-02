@@ -8909,7 +8909,7 @@ background-repeat: no-repeat;\
 		{
             this.sync_TableEraseModeCallback(false);
         }
-
+		this.sync_HideComment();
 		this.stopInkDrawer();
 		this.cancelEyedropper();
 
