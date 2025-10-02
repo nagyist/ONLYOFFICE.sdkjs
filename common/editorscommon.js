@@ -13904,6 +13904,11 @@
 	{
 		this.started = true;
 		this.endCallback = fEndCallback;
+		let drawingDocument = Asc.editor.getDrawingDocument();
+		if (drawingDocument)
+		{
+			drawingDocument.LockCursorType("eyedropper");
+		}
 	};
 	CEyedropper.prototype.cancel = function()
 	{
@@ -13916,6 +13921,12 @@
 		this.api.sendEvent("asc_onHideEyedropper");
 		this.clearColor();
 		this.clearImageData();
+
+		let drawingDocument = Asc.editor.getDrawingDocument();
+		if (drawingDocument)
+		{
+			drawingDocument.UnlockCursorType();
+		}
 	};
 	CEyedropper.prototype.clearImageData = function()
 	{
