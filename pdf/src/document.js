@@ -8971,8 +8971,11 @@ var CPresentation = CPresentation || function(){};
             else
                 oAnnot.SetLineEnd(annotJson["LE"]);
         }
+        
+        let oMeta;
         if (annotJson["meta"] != null) {
-            oAnnot.SetMeta(JSON.parse(annotJson["meta"]));
+            oMeta = JSON.parse(annotJson["meta"]);
+            oAnnot.SetMeta(oMeta);
         }
 
         if (annotJson["Icon"] != null)
@@ -9060,7 +9063,7 @@ var CPresentation = CPresentation || function(){};
         }
 
         if (oAnnot.IsStamp()) {
-            if (annotJson["meta"] && annotJson["meta"]["isOO"]) {
+            if (oMeta && oMeta["isOO"]) {
                 let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
                 oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
             }
