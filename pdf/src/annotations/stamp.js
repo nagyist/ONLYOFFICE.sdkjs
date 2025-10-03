@@ -594,6 +594,9 @@
     CAnnotationStamp.prototype.getNoChangeAspect = function() {
         return true;
     };
+    CAnnotationStamp.prototype.hitInPath = function(x, y) {
+        return this.hitInInnerArea(x, y);
+    };
     CAnnotationStamp.prototype.Init = function() {
         let aOrigRect = this.GetRect();
         let aAnnotRectMM = aOrigRect ? aOrigRect.map(function(measure) {
