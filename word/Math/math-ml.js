@@ -818,7 +818,6 @@
         };
         this.handleMathContent = function(reader, paraMath, mathContent)
         {
-            debugger
             let depth = reader.GetDepth();
             this.getGlobalAttributes(reader.GetAttributes(), paraMath);
 
