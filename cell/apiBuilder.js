@@ -20916,20 +20916,18 @@
 			return null;
 		}
 
-		let oldRule = this.rule;
-		this.rule = this.rule.clone();
-
+		let newRule = this.rule.clone();
 		if (Type !== undefined) {
 			let internalType = FromXlFormatConditionTypeTo(Type);
 			if (internalType !== -1) {
-				this.rule.type = internalType;
+				newRule.type = internalType;
 			}
 		}
 
 		if (Operator !== undefined) {
 			let internalOperator = FromXlFormatConditionOperatorTo(Operator);
 			if (internalOperator !== -1) {
-				this.rule.operator = internalOperator;
+				newRule.operator = internalOperator;
 			}
 		}
 
@@ -20958,10 +20956,10 @@
 		if (Formula1 !== undefined) {
 			let formula = processFormula(Formula1);
 			if (formula) {
-				if (this.rule.aRuleElements.length > 0) {
-					this.rule.aRuleElements[0] = formula;
+				if (newRule.aRuleElements.length > 0) {
+					newRule.aRuleElements[0] = formula;
 				} else {
-					this.rule.aRuleElements.push(formula);
+					newRule.aRuleElements.push(formula);
 				}
 			}
 		}
@@ -20969,19 +20967,19 @@
 		if (Formula2 !== undefined) {
 			let formula = processFormula(Formula2);
 			if (formula) {
-				if (this.rule.aRuleElements.length > 1) {
-					this.rule.aRuleElements[1] = formula;
+				if (newRule.aRuleElements.length > 1) {
+					newRule.aRuleElements[1] = formula;
 				} else {
-					while (this.rule.aRuleElements.length < 2) {
-						this.rule.aRuleElements.push(null);
+					while (newRule.aRuleElements.length < 2) {
+						newRule.aRuleElements.push(null);
 					}
-					this.rule.aRuleElements[1] = formula;
+					newRule.aRuleElements[1] = formula;
 				}
 			}
 		}
 
 		let worksheet = this.range && this.range.range && this.range.range.worksheet;
-		worksheet.changeCFRule(oldRule, this.rule, true);
+		worksheet.changeCFRule(this.rule, newRule, true);
 
 		return this;
 	};
@@ -21003,8 +21001,7 @@
 			return;
 		}
 
-		let oldRule = this.rule;
-		this.rule = this.rule.clone();
+		let newRule = this.rule.clone()
 
 		let ranges = [];
 		if (Range.areas) {
@@ -21016,8 +21013,8 @@
 			ranges.push(new Asc.Range(Range.range.bbox.c1, Range.range.bbox.r1, Range.range.bbox.c2, Range.range.bbox.r2));
 		}
 
-		this.rule.ranges = ranges;
-		worksheet.changeCFRule(oldRule, this.rule, true);
+		newRule.ranges = ranges;
+		worksheet.changeCFRule(this.rule, newRule, true);
 
 		this.range = Range;
 	};
@@ -21037,9 +21034,8 @@
 			return;
 		}
 
-		let oldRule = this.rule;
-		this.rule = this.rule.clone();
-		this.rule.priority = 1;
+		let newRule = this.rule.clone();
+		newRule.priority = 1;
 
 		let t = this;
 		worksheet.forEachConditionalFormattingRules(function (rule) {
@@ -21051,7 +21047,7 @@
 			}
 		});
 
-		worksheet.changeCFRule(oldRule, this.rule, true);
+		worksheet.changeCFRule(this.rule, newRule, true);
 	};
 
 	ApiFormatCondition.prototype.SetLastPriority = function() {
@@ -21078,11 +21074,9 @@
 			return;
 		}
 
-		let oldRule = this.rule;
-		this.rule = this.rule.clone();
-		this.rule.priority = newPriority;
+		let newRule = this.rule.clone();
+		newRule.priority = newPriority;
 
-		let t = this;
 		/*worksheet.forEachConditionalFormattingRules(function (rule) {
 			if (rule.id !== t.rule.id && rule.priority && rule.priority > currentPriority) {
 				let oldOtherRule = rule;
@@ -21092,7 +21086,7 @@
 			}
 		});*/
 
-		worksheet.changeCFRule(oldRule, this.rule, true);
+		worksheet.changeCFRule(this.rule, newRule, true);
 	};
 
 	/**
