@@ -1481,9 +1481,14 @@
         if (oMeta != null) {
             Flags |= (1 << 9);
             if (memory.isForSplit || memory.isCopyPaste) {
-                if (this.IsStamp() && this.GetRenderStructure()) {
+                if (this.IsStamp()) {
+                    if (this.GetRenderStructure()) {
+                        oMeta["isOO"] = true;
+                    }
+                }
+                else if (this.GetOriginPage() == undefined) {
                     oMeta["isOO"] = true;
-                } 
+                }
             }
             
             memory.WriteString(JSON.stringify(oMeta));

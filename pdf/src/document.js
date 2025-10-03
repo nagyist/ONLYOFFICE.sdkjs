@@ -9062,13 +9062,15 @@ var CPresentation = CPresentation || function(){};
             oAnnot.SetQuads(aSepQuads);
         }
 
-        if (oAnnot.IsStamp()) {
-            if (oMeta && oMeta["isOO"]) {
+        if (oMeta && oMeta["isOO"]) {
+            if (oAnnot.IsStamp()) {
                 let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
                 oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
             }
+            
+            oAnnot._wasChanged = true;
         }
-
+        
         return oAnnot;
     }
 
