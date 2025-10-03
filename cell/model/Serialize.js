@@ -6492,6 +6492,11 @@
 					if (cell.isFormula() && !(oThis.isCopyPaste && cell.ws && cell.ws.bIgnoreWriteFormulas)) {
 						formulaToWrite = oThis.InitSaveManager.PrepareFormulaToWrite(cell);
                     }
+                    if (ws.workbook.checkProtectedValue && ws.isUserProtectedRangesIntersectionCell(cell, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
+                        cell.cleanText();
+                        cell._hasChanged = false;
+                        formulaToWrite = null;
+                    }
 					cell.toXLSB(oThis.memory, nXfsId, formulaToWrite, oThis.InitSaveManager.oSharedStrings);
 				}
             }, (ws.bExcludeHiddenRows && oThis.isCopyPaste));
