@@ -80,6 +80,7 @@ const allTests = [
 	'word/revisions/paragraph.html',
 	'word/merge-documents/mergeDocuments.html',
 	'word/math-autocorrection/math-autocorrection.html',
+	'word/math-ml/math-ml.html',
 	'word/change-case/change-case.html',
 	'word/js-api/js-api.html',
 
