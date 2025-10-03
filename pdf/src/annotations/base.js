@@ -90,6 +90,7 @@
         }
         this._wasChanged = false;
         this.Lock = new AscCommon.CLock();
+        this.repliesArrayChanges = new AscCommon.CContentChanges();
 
         this.uid = "";
 
@@ -196,7 +197,7 @@
         return oCopy;
     };
 
-    CAnnotationBase.prototype.AddReply = function(CommentData, nPos) {
+    CAnnotationBase.prototype.AddReplyByCommentData = function(CommentData, nPos) {
         let oReply = new AscPDF.CAnnotationText(AscCommon.CreateGUID(), this.GetRect().slice(), this.GetDocument());
 
         oReply.SetCreationDate(CommentData.m_sOOTime);
@@ -214,6 +215,24 @@
         }
 
         this._replies.splice(nPos, 0, oReply);
+    };
+    CAnnotationBase.prototype.AddReply = function(oReplyAnnot, nPos) {
+        if (!nPos) {
+            nPos = this._replies.length;
+        }
+
+        this._replies.splice(nPos, 0, oReplyAnnot);
+
+        AscCommon.History.Add(new CChangesPDFAnnotReply(this, nPos, [oReplyAnnot], true));
+    };
+    CAnnotationBase.prototype.Add_ContentChanges = function(Changes) {
+        this.repliesArrayChanges.Add(Changes);
+    };
+    CAnnotationBase.prototype.Refresh_ContentChanges = function() {
+        this.repliesArrayChanges.Refresh();
+    };
+    CAnnotationBase.prototype.Clear_ContentChanges = function() {
+        this.repliesArrayChanges.Clear();
     };
     CAnnotationBase.prototype.SetMeta = function(oMeta) {
         AscCommon.History.Add(new CChangesPDFAnnotMeta(this, this._meta, oMeta))
@@ -1063,7 +1082,7 @@
         
         AscCommon.History.StartNoHistoryMode();
         if (null == oFirstCommToEdit) {
-            this.AddReply(oCommentData);
+            this.AddReplyByCommentData(oCommentData);
             oFirstCommToEdit = this.GetReply(0);
             oDoc.CheckComment(this);
         }
@@ -1103,7 +1122,7 @@
             if (!this._replies.find(function(reply) {
                 return oReplyCommentData.m_sUserData == reply.GetId();
             })) {
-               this.AddReply(oReplyCommentData, i);
+               this.AddReplyByCommentData(oReplyCommentData, i);
             }
         }
         AscCommon.History.EndNoHistoryMode();
@@ -1145,7 +1164,10 @@
         oAscCommData.asc_putUserData(this.GetId());
 
         this._replies.forEach(function(reply) {
-            oAscCommData.m_aReplies.push(reply.GetAscCommentData());
+            let oReplyAscCommData = reply.GetAscCommentData();
+            if (oReplyAscCommData) {
+                oAscCommData.m_aReplies.push(oReplyAscCommData);
+            }
         });
 
         return oAscCommData;

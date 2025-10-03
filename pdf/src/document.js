@@ -3290,6 +3290,11 @@ var CPresentation = CPresentation || function(){};
         }
 
         this.Viewer.IsOpenAnnotsInProgress = false;
+
+        let _t = this;
+        Object.values(oAnnotsMap).forEach(function(annot) {
+            _t.CheckComment(annot);
+        });
     };
     CPDFDoc.prototype.private_AddFormsByInfo = function(oFormsInfo, pageOffset) {
         if (!pageOffset) {
@@ -4069,6 +4074,10 @@ var CPresentation = CPresentation || function(){};
         editor.sync_ChangeCommentData(Id, CommentData);
     };
     CPDFDoc.prototype.CheckComment = function(oAnnot) {
+        if (this.Viewer.IsOpenAnnotsInProgress) {
+            return;
+        }
+
         let bUseContentsAsComment = oAnnot.IsUseContentAsComment();
         
         if (oAnnot.IsUseInDocument()) {
@@ -9094,7 +9103,7 @@ var CPresentation = CPresentation || function(){};
 
         oReply.SetContents(replyJson["Contents"]);
         
-        oParentAnnot._replies.push(oReply);
+        oParentAnnot.AddReply(oReply);
     }
 
     function ReadFieldFromJSON(formJson, oDoc, isOnCopyPaste) {
