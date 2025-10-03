@@ -467,7 +467,7 @@
 	};
 	PDFEditorApi.prototype.getGraphicController = function () {
 		let oDoc = this.getPDFDoc();
-		return oDoc.GetController();
+		return oDoc ? oDoc.GetController() : null;
 	};
 	PDFEditorApi.prototype.can_CopyCut = function() {
 		if (!this.DocumentRenderer)
