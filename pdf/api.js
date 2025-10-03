@@ -1411,6 +1411,7 @@
 		oDoc.BlurActiveObject();
 		
 		this.isRedactTool = bUse;
+		this.sendEvent("asc_onRedactState", bUse);
 	};
 	PDFEditorApi.prototype.IsRedactTool = function() {
 		return this.isRedactTool;

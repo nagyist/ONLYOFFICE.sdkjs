@@ -58,7 +58,7 @@ $(function () {
 
 	function AddFromMathML(strMathMl)
 	{
-		return AscWord.ParaMath.fromMathML(undefined, strMathMl);
+		return AscWord.ParaMath.fromMathML(strMathMl);
 	}
 
 	QUnit.testStart(function (){

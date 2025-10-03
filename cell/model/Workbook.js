@@ -8715,6 +8715,10 @@
 			if (res && fAction) {
 				wb.loadCells.push(cell);
 			}
+			if (res && this.workbook.checkProtectedValue && this.isUserProtectedRangesIntersectionCell(res, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
+				res.cleanText();
+				res._hasChanged = false;
+			}
 			fAction(res);
 			cell.saveContent(true);
 			if (res) {

@@ -513,7 +513,7 @@ void main() {\n\
         return this.Selection;
     };
     CFile.prototype.onMouseDown = function(pageIndex, x, y) {
-        if (this.pages[pageIndex].isRecognized && !Asc.editor.isRedactTool())
+        if (this.pages[pageIndex].isRecognized && !Asc.editor.IsRedactTool())
             return;
         
         let ret = this.getNearestPos(pageIndex, x, y);
@@ -632,7 +632,9 @@ void main() {\n\
         }
         else if (oViewer.Api.isRedactTool) {
             oDoc.DoAction(function() {
-                let aSelQuads = _t.getSelectionQuads();
+                let oDrawing    = oDoc.activeDrawing;
+                let aSelQuads   = null == oDrawing ? _t.getSelectionQuads() : oDrawing.GetSelectionQuads();
+
                 oDoc.AddRedactAnnot(aSelQuads);
             }, AscDFH.historydescription_Pdf_AddAnnot);
         }

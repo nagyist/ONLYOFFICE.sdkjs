@@ -5525,6 +5525,10 @@
 		return null;
 	};
 
+	baseEditorsApi.prototype.getFocusElement = function() {
+		return window['AscCommon'].g_inputContext.HtmlArea;
+	};
+
 	// methods for desktop:
 	baseEditorsApi.prototype.isCloudSaveAsLocalToDrawingFormat = function(actionType, fileType) {
 		if (!window["AscDesktopEditor"])

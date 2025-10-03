@@ -118,11 +118,32 @@
     CPdfDrawingPrototype.prototype.GetParentPage = function() {
         return this.parent;
     };
+    CPdfDrawingPrototype.prototype.GetTopParentObj = function() {
+        let oParent = this;
+        while (!oParent.AddToRedraw) {
+            if (oParent.GetParent) {
+                oParent = oParent.GetParent();
+            }
+            else if (oParent.parent) {
+                oParent = oParent.parent;
+            }
+            else if (oParent.Parent) {
+                oParent = oParent.Parent;
+            }
+            else if (oParent.GetTable) {
+                oParent = oParent.GetTable();
+            }
+            else {
+                return null;
+            }
+        }
+
+        return oParent;
+    }
     
     CPdfDrawingPrototype.prototype.GetSelectionQuads = function() {
         let oDoc        = this.GetDocument();
         let oViewer     = oDoc.Viewer;
-        let oDrDoc      = oDoc.GetDrawingDocument();
         let oContent    = this.GetDocContent();
         let aInfo       = [];
         let nPage       = this.GetPage();
@@ -217,12 +238,12 @@
                     h = Math.min(h, Frame_Y_max - y);
                 }
                 
-                let isTextMatrixUse = ((null != oDrDoc.TextMatrix) && !global_MatrixTransformer.IsIdentity(oDrDoc.TextMatrix));
+                let isTextMatrixUse = ((null != this.transformText) && !global_MatrixTransformer.IsIdentity(this.transformText));
                 if (isTextMatrixUse) {
-                    let oPt1 = oDrDoc.TextMatrix.TransformPoint(x, y);            // левый верхний
-                    let oPt2 = oDrDoc.TextMatrix.TransformPoint(x + w, y);        // правый верхний
-                    let oPt3 = oDrDoc.TextMatrix.TransformPoint(x + w, y + h);    // правый нижний
-                    let oPt4 = oDrDoc.TextMatrix.TransformPoint(x, y + h);        // левый нижний
+                    let oPt1 = this.transformText.TransformPoint(x, y);            // левый верхний
+                    let oPt2 = this.transformText.TransformPoint(x + w, y);        // правый верхний
+                    let oPt3 = this.transformText.TransformPoint(x + w, y + h);    // правый нижний
+                    let oPt4 = this.transformText.TransformPoint(x, y + h);        // левый нижний
 
                     let nKoeff = oViewer.getDrawingPageScale(nPage) * g_dKoef_pix_to_mm;
 
@@ -482,7 +503,7 @@
                 ]
             };
 
-            unredactedPolygon = AscGeometry.PolyBool["difference"](unredactedPolygon, redactRect);
+            unredactedPolygon = AscGeometry.PolyBool.difference(unredactedPolygon, redactRect);
         }
 
         if (unredactedPolygon) {
@@ -589,6 +610,7 @@
         return Asc.editor.getPDFDoc().GetDrawingDocument();
     };
     CPdfDrawingPrototype.prototype.handleUpdateRot = function() {
+        this.recalcTransformText && this.recalcTransformText();
         this.SetNeedRecalc(true);
     };
 

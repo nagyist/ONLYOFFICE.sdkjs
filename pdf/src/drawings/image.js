@@ -39,6 +39,7 @@
     function CPdfImage()
     {
         AscFormat.CImageShape.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfImage.prototype.constructor = CPdfImage;

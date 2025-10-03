@@ -11901,6 +11901,25 @@ PasteProcessor.prototype =
 			return res;
 		};
 
+		let checkBlockNext = function (node) {
+			let nextSibling = node && node.nextSibling;
+			while (nextSibling) {
+				if (Node.TEXT_NODE === nextSibling.nodeType) {
+					let textContent = nextSibling.nodeValue;
+					if (textContent && textContent.trim().length > 0) {
+						return false;
+					}
+				} else if (Node.ELEMENT_NODE === nextSibling.nodeType &&
+						 nextSibling.nodeName.toLowerCase() === "br") {
+				} else if (Node.ELEMENT_NODE === nextSibling.nodeType) {
+					let nodeName = nextSibling.nodeName.toLowerCase();
+					return oThis._IsBlockElem(nodeName)
+				}
+				nextSibling = nextSibling.nextSibling;
+			}
+			return true;
+		};
+
 		var parseLineBreak = function () {
 			if (bPresentation) {
 				//Добавляем linebreak, если он не разделяет блочные элементы и до этого был блочный элемент
@@ -11980,7 +11999,7 @@ PasteProcessor.prototype =
 						bAddParagraph = oThis._Decide_AddParagraph(node.parentNode, pPr, bAddParagraph);
 
 						//exception - ignore 1 br tag
-						if (checkOnlyBr(node.parentNode.childNodes)) {
+						if (checkOnlyBr(node.parentNode.childNodes) || checkBlockNext(node)) {
 							return bAddParagraph;
 						}
 
@@ -12182,7 +12201,7 @@ PasteProcessor.prototype =
 				}
 
 				if (sChildNodeName === "math") {
-					let paraMath = AscWord.ParaMath.fromMathML(undefined, child.outerHTML);
+					let paraMath = ParaMath.fromMathML(child.outerHTML);
 					bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
 					let oAddedParaMath = paraMath;
 					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oThis.oCurPar);
@@ -12197,7 +12216,7 @@ PasteProcessor.prototype =
 				let isLatex = (latexFromStyle && latexFromStyle === "display") || (child.className && child.className.indexOf && -1 !== child.className.indexOf("oo-latex"));
 				let isLatexInline =  (latexFromStyle && latexFromStyle === "inline") || (child.className && child.className.indexOf && -1 !== child.className.indexOf("oo-latex-inline"));
 				if (isLatex|| isLatexInline) {
-					let paraMath = AscWord.ParaMath.fromLatex(latexFromStyle ? child.nodeValue : child.innerHTML);
+					let paraMath = ParaMath.fromLatex(latexFromStyle ? child.nodeValue : child.innerHTML);
 					bAddParagraph = oThis._Decide_AddParagraph(child, pPr, bAddParagraph);
 					let oAddedParaMath = paraMath;
 					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oThis.oCurPar);

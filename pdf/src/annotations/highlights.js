@@ -257,7 +257,9 @@
         }
 
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
         
     /**
@@ -341,7 +343,9 @@
         }
 
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
     
     /**
@@ -418,7 +422,9 @@
         }
 
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
 
     /**
@@ -475,7 +481,9 @@
         }
     
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
     
     function drawZigZagLine(oGraphicsPDF, X1, Y1, X2, Y2, nLineW) {
@@ -615,7 +623,9 @@
         }
 
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
     CAnnotationCaret.prototype.SetCaretSymbol = function(nType) {
         this._caretSymbol = nType;
@@ -756,7 +766,9 @@
         }
 
         let aUnitedRegion = this.GetUnitedRegion();
-        oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        if (aUnitedRegion) {
+            oGraphicsPDF.DrawLockObjectRect(this.Lock.Get_Type(), aUnitedRegion.regions);
+        }
     };
     CAnnotationRedact.prototype._DrawRect = function(oGraphicsPDF) {
         let oRGBStroke = this.GetRGBColor(this.GetStrokeColor());
@@ -770,6 +782,10 @@
         oGraphicsPDF.Stroke();
     };
     CAnnotationRedact.prototype.private_fillRegion = function(polygon, oGraphicsPDF) {
+        if (!polygon) {
+            return;
+        }
+
         for (let i = 0, countPolygons = polygon.regions.length; i < countPolygons; i++)
         {
             let region = polygon.regions[i];
@@ -839,6 +855,10 @@
 
     function fillRegion(polygon, overlay, pageIndex)
     {
+        if (!polygon) {
+            return;
+        }
+        
         let oCtx    = overlay.m_oContext;
         let oViewer = Asc.editor.getDocumentRenderer();
         let nScale  = oViewer.zoom * oViewer.getDrawingPageScale(pageIndex) * AscCommon.AscBrowser.retinaPixelRatio;

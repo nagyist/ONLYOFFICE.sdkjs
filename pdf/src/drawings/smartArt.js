@@ -38,6 +38,7 @@
     */
     function CPdfSmartArt() {
         AscFormat.SmartArt.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfSmartArt.prototype.constructor = CPdfSmartArt;

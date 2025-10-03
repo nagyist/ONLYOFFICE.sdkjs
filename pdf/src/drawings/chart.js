@@ -38,6 +38,7 @@
     */
     function CPdfChartSpace() {
         AscFormat.CChartSpace.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfChartSpace.prototype.constructor = CPdfChartSpace;
