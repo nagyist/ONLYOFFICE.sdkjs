@@ -2857,6 +2857,9 @@
 		// update media control position
 		this.m_oApi.onUpdateMediaPlayer();
 		AscCommon.g_specialPasteHelper.SpecialPasteButton_Update_Position();
+
+		// update position of toggle-chart-elements button
+		Asc.editor.toggleChartElementsCallback();
 	};
 
 	// Scrolls

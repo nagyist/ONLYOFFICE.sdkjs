@@ -1658,6 +1658,7 @@ function isAllowPasteLink(pastedWb) {
             this._prepareCellTextMetricsCache();
             this.cellCommentator.updateActiveComment();
 			window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
+			Asc.editor.toggleChartElementsCallback();
             this.handlers.trigger("toggleAutoCorrectOptions", null, true);
             this.handlers.trigger("onDocumentPlaceChanged");
             this._updateDrawingArea();
@@ -1681,6 +1682,7 @@ function isAllowPasteLink(pastedWb) {
         this._prepareCellTextMetricsCache();
         this.cellCommentator.updateActiveComment();
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
+		Asc.editor.toggleChartElementsCallback();
         this.handlers.trigger("onDocumentPlaceChanged");
 		this._updateDrawingArea();
 
@@ -11036,6 +11038,7 @@ function isAllowPasteLink(pastedWb) {
         this.cellCommentator.updateActiveComment();
         this.cellCommentator.drawCommentCells();
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
+		Asc.editor.toggleChartElementsCallback();
         this.handlers.trigger("toggleAutoCorrectOptions", true);
         //this.model.updateTopLeftCell(this.visibleRange);
         return this;
@@ -11381,6 +11384,7 @@ function isAllowPasteLink(pastedWb) {
         this.cellCommentator.updateActiveComment();
         this.cellCommentator.drawCommentCells();
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
+		Asc.editor.toggleChartElementsCallback();
         this.handlers.trigger("toggleAutoCorrectOptions", true);
 
 		//this.model.updateTopLeftCell(this.visibleRange);
