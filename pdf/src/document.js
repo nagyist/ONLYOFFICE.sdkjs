@@ -1501,8 +1501,10 @@ var CPresentation = CPresentation || function(){};
 
         if (IsOnRedact) {
             oViewer.isMouseMoveBetweenDownUp = true;
-            oViewer.onMouseDownEpsilon(e);
-            return;
+            if (null == oMouseDownDrawing) {
+                oViewer.onMouseDownEpsilon(e);
+                return;
+            }
         }
         // если ластик
         else if (IsOnEraser) {
@@ -1530,8 +1532,6 @@ var CPresentation = CPresentation || function(){};
         // если попали в фигуру, то селектим в ней (т.к. это типо текст на странице)
         else if (IsPageHighlight) {
             oViewer.isMouseMoveBetweenDownUp = true;
-            this.BlurActiveObject();
-            
             if (null == oMouseDownDrawing) {
                 oViewer.onMouseDownEpsilon(e);
                 return;
