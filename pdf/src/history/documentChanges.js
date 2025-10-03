@@ -1488,7 +1488,10 @@ CChangesPDFDocumentEndRedact.prototype.Redo = function()
 
     delete oDoc.partsOfBinaryData;
 
-    oFile.nativeFile["RedactPage"](this.Page, this.RectsFlat, oDoc.unitedBinary);
+    let oPageInfo = oDoc.GetPageInfo(this.Page);
+    let nOriginIndex = oPageInfo.GetOriginIndex();
+
+    oFile.nativeFile["RedactPage"](nOriginIndex, this.RectsFlat, oDoc.unitedBinary);
 
     oDoc.appliedRedactsData.push({
         page: this.Page,
@@ -1497,7 +1500,7 @@ CChangesPDFDocumentEndRedact.prototype.Redo = function()
         binary: oDoc.unitedBinary
     });
 
-    oFile.pages[this.Page].text = oFile.getText(this.Page);
+    oFile.pages[this.Page].text = oFile.getText(nOriginIndex);
     oDoc.Viewer.onUpdatePages([this.Page]);
 };
 CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)

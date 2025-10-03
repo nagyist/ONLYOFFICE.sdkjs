@@ -317,6 +317,16 @@
 
 		return oDocPages.pages.indexOf(this);
     };
+	CPageInfo.prototype.GetOriginIndex = function() {
+		let oFile = Asc.editor.getDocumentRenderer().file;
+
+		let nCurPageIdx = this.GetIndex();
+		if (nCurPageIdx == -1) {
+			return undefined;
+		}
+
+		return oFile.pages[nCurPageIdx].originIndex;
+	}
 	CPageInfo.prototype.SetRotate = function(nAngle) {
 		let oDoc		= this.GetDocument();
 		let oViewer     = oDoc.Viewer;

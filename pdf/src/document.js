@@ -3002,7 +3002,7 @@ var CPresentation = CPresentation || function(){};
         this.History.Add(new CChangesPDFDocumentPagesContent(this, nPos, [oPage], true));
 
         if (null != oFile.pages[nPos].originIndex && null == oFile.getPageTextStream(nPos)) {
-            oFile.pages[nPos].text = oFile.getText(nPos);
+            oFile.pages[nPos].text = oFile.getText(oFile.pages[nPos].originIndex);
         }
 
         oPageInfo.annots.forEach(function(annot) {
@@ -7383,12 +7383,15 @@ var CPresentation = CPresentation || function(){};
         this.DoAction(function() {
 			this.BlurActiveObject();
 
-            const pagesSet = new Set();
+            const pagesIdxMap = new Map();
 			let sRedactId = AscCommon.g_oIdCounter.GetNewIdForPdfRedact();
             
             for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
                 let oPageInfo = this.GetPageInfo(i);
-                let nPage = oPageInfo.GetIndex();
+                let nOrigPageIdx = oPageInfo.GetOriginIndex();
+                if (nOrigPageIdx == undefined) {
+                    continue;
+                }
 
                 // Prepare two forms: flat array for native call and list of rects for clipping
                 const aRectsFlat = [];
@@ -7413,7 +7416,7 @@ var CPresentation = CPresentation || function(){};
                     oMemory.WriteLong(oFillRGB.b);
 
                     annot.AddToRedraw();
-                    pagesSet.add(nPage);
+                    pagesIdxMap.set(i, nOrigPageIdx);
                 });
 
                 oPageInfo.drawings.forEach(function(drawing) {
@@ -7426,21 +7429,22 @@ var CPresentation = CPresentation || function(){};
 
                     // Apply redact to the page
                     oNativeFile["RedactPage"](
-                        nPage,
+                        nOrigPageIdx,
                         aRectsFlat,
                         oRender
                     );
 
-                    this.SetRedactData(sRedactId, nPage, aRectsFlat, oRender);
+                    this.SetRedactData(sRedactId, i, aRectsFlat, oRender);
                 }
             }
 
-			this.Viewer.onUpdatePages(Array.from(pagesSet));
+            let forUpdateIdxs = [];
+            pagesIdxMap.forEach(function(origIdx, curIdx) {
+                oFile.pages[curIdx].text = oFile.getText(origIdx);
+                forUpdateIdxs.push(curIdx);
+            });
 
-			// Update text layer after redactions
-			pagesSet.forEach(function(idx) {
-				oFile.pages[idx].text = oFile.getText(idx);
-			});
+            this.Viewer.onUpdatePages(forUpdateIdxs);
 
 		}, AscDFH.historydescription_Pdf_Apply_Redact, this);
     };
