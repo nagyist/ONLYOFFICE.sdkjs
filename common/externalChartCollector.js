@@ -213,6 +213,9 @@ function (window, undefined) {
 							wb.aWorksheets = updatedData;
 							wb._updateWorksheetIndexes();
 							wb.dependencyFormulas.initOpen();
+							wb.externalReferences.forEach(function(elem){
+								elem.initPostOpen();
+							});
 							if (updatedData) {
 								for (let j = 0; j < arrExternalChartReferences.length; j += 1) {
 									const oExternalReference = arrExternalChartReferences[j].externalReference;

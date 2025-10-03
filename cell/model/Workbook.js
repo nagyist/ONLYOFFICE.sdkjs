@@ -5841,6 +5841,10 @@
 				});
 			}
 
+			if (wbXml && wbPart) {
+				wbXml.readExternalReferences(this, wbPart, xmlParserContext);
+			}
+
 			//sharedString
 			var sharedStringPart = wbPart.getPartByRelationshipType(openXml.Types.sharedStringTable.relationType);
 			if (sharedStringPart) {

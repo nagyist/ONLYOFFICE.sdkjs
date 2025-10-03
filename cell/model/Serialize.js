@@ -15296,6 +15296,32 @@
         this.slicerCachesIds = [];
         this.newDefinedNames = [];
     }
+		CT_Workbook.prototype.readExternalReferences = function(wb, wbPart, xmlParserContext) {
+			this.externalReferences.forEach(function (externalReference) {
+				if (null !== externalReference) {
+					var externalWorkbookPart = wbPart.getPartById(externalReference);
+					if (externalWorkbookPart) {
+						var contentExternalWorkbook = externalWorkbookPart.getDocumentContent();
+						if (contentExternalWorkbook) {
+							var oExternalReference = new AscCommonExcel.CT_ExternalReference(wb);
+							var reader = new StaxParser(contentExternalWorkbook, externalWorkbookPart, xmlParserContext);
+							oExternalReference.fromXml(reader);
+
+							if (oExternalReference.val) {
+								if (oExternalReference.val.externalBook) {
+									var relationship = externalWorkbookPart.getRelationship(oExternalReference.val.externalBook.Id);
+									//подменяем id на target
+									if (relationship && relationship.targetFullName) {
+										oExternalReference.val.externalBook.Id = AscCommonExcel.decodeXmlPath(relationship.targetFullName);
+									}
+									wb.externalReferences.push(oExternalReference.val.externalBook);
+								}
+							}
+						}
+					}
+				}
+			});
+		};
 
     function CT_Sheets(wb) {
         this.wb = wb;
