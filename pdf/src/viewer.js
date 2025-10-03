@@ -3371,7 +3371,6 @@
 				}
 				else if (this.Api.isRedactTool) {
 					this.Api.SetRedactTool(false);
-					this.Api.sendEvent("asc_onRedactState", false);
 				}
 				else {
 					const oController = oDoc.GetController();
