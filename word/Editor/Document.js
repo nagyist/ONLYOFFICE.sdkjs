@@ -27803,7 +27803,7 @@ CDocument.prototype.AddMathML = function(xml)
 	this.StartAction(AscDFH.historydescription_Document_AddMathML);
 	
 	let textPr = this.GetDirectTextPr();
-	let paraMath = AscMath.MathMLCoverter.fromMathML(xml, textPr);
+	let paraMath = ParaMath.fromMathML(xml, textPr);
 	
 	this.AddToParagraph(paraMath);
 	paraMath.applyMathMLGlobalAttributes();

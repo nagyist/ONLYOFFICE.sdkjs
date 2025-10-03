@@ -3195,7 +3195,7 @@ ParaMath.prototype.IsParentEquationPlaceholder = function()
 
 	return false;
 };
-ParaMath.prototype.GetSelectdLevelOfContent = function()
+ParaMath.prototype.GetSelectedLevelOfContent = function()
 {
 	let content = this.GetSelectContent();
 	return content.Content;
@@ -3204,10 +3204,10 @@ ParaMath.prototype.CalculateTextToTable = function(oEngine)
 {
 	this.Root.CalculateTextToTable(oEngine);
 };
-ParaMath.prototype.ConvertfromMathML = function(xml)
+ParaMath.prototype.ConvertFromMathML = function(xml)
 {
-	let currentMath = this.GetSelectdLevelOfContent();
-	let math = AscMath.MathMLCoverter.fromMathML(null, xml ? xml : "");
+	let currentMath = this.GetSelectedLevelOfContent();
+	let math = ParaMath.fromMathML(xml);
 
 	let arrContentAfterConvert = [];
 	if (currentMath.Content[currentMath.CurPos] instanceof ParaRun)
@@ -3235,7 +3235,7 @@ ParaMath.prototype.ConvertfromMathML = function(xml)
 };
 ParaMath.prototype.ConvertFromLaTeX = function(text)
 {
-	let math = this.IsSelectionUse() ? this.GetSelectdLevelOfContent() : this.Root;
+	let math = this.IsSelectionUse() ? this.GetSelectedLevelOfContent() : this.Root;
 
 	if (!text)
 	{
@@ -3257,7 +3257,7 @@ ParaMath.prototype.ConvertToLaTeX = function()
 };
 ParaMath.prototype.ConvertFromUnicodeMath = function(text)
 {
-	let math = this.IsSelectionUse() ? this.GetSelectdLevelOfContent() : this.Root;
+	let math = this.IsSelectionUse() ? this.GetSelectedLevelOfContent() : this.Root;
 
 	if (!text)
 	{
@@ -3312,7 +3312,7 @@ ParaMath.prototype._convertView = function(isToLinear, nInputType, inputData)
 		}
 		else if (Asc.c_oAscMathInputType.MathML === nInputType)
 		{
-			this.ConvertfromMathML(inputData);
+			this.ConvertFromMathML(inputData);
 		}
 	}
 };
@@ -3392,6 +3392,35 @@ ParaMath.prototype.applyMathMLGlobalAttributes = function()
         this.ConvertToInlineMode();
     }
 };
+ParaMath.fromMathML = function(mathML, textPr)
+{
+	return AscMath.MathML.toParaMath(mathML, textPr);
+};
+ParaMath.fromLatex = function(latex, textPr)
+{
+	let paraMath = new ParaMath();
+	latex = latex.replaceAll('&amp;', '&');
+	latex = latex.replaceAll('&lt;', '<');
+	latex = latex.replaceAll('&gt;', '>');
+	
+	let run = new AscWord.Run(null, true);
+	run.AddText(latex);
+	
+	paraMath.Root.addElementToContent(run);
+	paraMath.Root.Correct_Content();
+	paraMath.SetParagraph(null);
+	
+	paraMath.ConvertView(false, Asc.c_oAscMathInputType.LaTeX);
+	
+	if (textPr)
+	{
+		textPr.RFonts.SetAll("Cambria Math");
+		paraMath.ApplyTextPr(textPr, undefined, true);
+	}
+	
+	return paraMath;
+};
+
 function MatGetKoeffArgSize(FontSize, ArgSize)
 {
     var FontKoef = 1;

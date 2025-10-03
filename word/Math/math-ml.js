@@ -34,38 +34,49 @@
 
 (function(window)
 {
-    function MathMLConverter(){
-        this.fromMathML = function(inputParaMath, xml, textPr) {
-            let paraMath = inputParaMath ? inputParaMath : new ParaMath();
-
-            this.mathMLData = {
-                'mo-linebreak-todo': [],
-                'mo-id': {}
-            };
-
-            let reader = new StaxParser(xml);
-            if (!reader.ReadNextNode() || "math" !== reader.GetNameNoNS())
-            {
-                paraMath.Root.Correct_Content();
-                return paraMath;
-            }
-
-            this.handleMathContent(reader, paraMath, paraMath.Root);
-            paraMath.Root.Correct_Content(true);
-
-            if (!inputParaMath)
-                paraMath.SetParagraph(null);
-
-            if (inputParaMath)
-                paraMath.applyMathMLGlobalAttributes();
-
-            if (textPr)
-            {
-                textPr.RFonts.SetAll("Cambria Math");
-                paraMath.ApplyTextPr(textPr, undefined, true);
-            }
-            return paraMath;
-        };
+	/**
+	 * Class to work with MathML
+	 * @constructor
+	 */
+	function MathML()
+	{
+		/**
+		 *
+		 * @param {string} xml
+		 * @param {AscWord.CTextPr} [textPr=undefined]
+		 * @returns {AscWord.ParaMath}
+		 */
+		this.toParaMath = function(xml, textPr)
+		{
+			xml = xml ? xml : "";
+			
+			let paraMath = new AscWord.ParaMath();
+			
+			this.mathMLData = {
+				'mo-linebreak-todo' : [],
+				'mo-id' : {}
+			};
+			
+			let reader = new StaxParser(xml);
+			if (!reader.ReadNextNode() || "math" !== reader.GetNameNoNS())
+			{
+				paraMath.Root.Correct_Content();
+				return paraMath;
+			}
+			
+			this.handleMathContent(reader, paraMath, paraMath.Root);
+			paraMath.Root.Correct_Content(true);
+			paraMath.SetParagraph(null);
+			
+			//paraMath.applyMathMLGlobalAttributes();
+			
+			if (textPr)
+			{
+				textPr.RFonts.SetAll("Cambria Math");
+				paraMath.ApplyTextPr(textPr, undefined, true);
+			}
+			return paraMath;
+		};
         this.proceedMathMLDefaultAttributes = function(attributes, elements, el, name)
         {
             let keysAttributes = Object.keys(attributes);
@@ -1039,7 +1050,7 @@
             }
             return new CRadical(props);
         };
-    };
-
-    AscMath.MathMLCoverter = new MathMLConverter();
-})()
+    }
+	//--------------------------------------------------------export----------------------------------------------------
+	AscMath.MathML = new MathML();
+})();

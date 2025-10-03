@@ -8213,33 +8213,6 @@
 	{
 		return IsAllowAutoConvertion;
 	}
-
-	function CreateFromLatex(latex, textPr)
-	{
-		let paraMath = new ParaMath();
-
-		latex = latex.replaceAll('&amp;', '&');
-		latex = latex.replaceAll('&lt;', '<');
-		latex = latex.replaceAll('&gt;', '>');
-		
-		let run = new AscWord.Run(null, true);
-		run.AddText(latex);
-		
-		paraMath.Root.addElementToContent(run);
-		paraMath.Root.Correct_Content();
-		paraMath.SetParagraph(null);
-		
-		paraMath.ConvertView(false, Asc.c_oAscMathInputType.LaTeX);
-		
-		if (textPr)
-		{
-			textPr.RFonts.SetAll("Cambria Math");
-			paraMath.ApplyTextPr(textPr, undefined, true);
-		}
-		
-		return paraMath;
-	};
-
 	//--------------------------------------------------------export----------------------------------------------------
 	window["AscMath"] = window["AscMath"] || {};
 	window["AscMath"].oNamesOfLiterals 				= oNamesOfLiterals;
@@ -8281,5 +8254,4 @@
 	window["AscMath"].SetIsAllowAutoCorrect			= SetIsAllowAutoCorrect;
 	window["AscMath"].GetIsAllowAutoCorrect			= GetIsAllowAutoCorrect;
 	window["AscMath"].MathMetaData					= MathMetaData;
-	window['AscMath'].CreateFromLatex				= CreateFromLatex;
 })(window);
