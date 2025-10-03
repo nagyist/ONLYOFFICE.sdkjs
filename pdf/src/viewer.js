@@ -4698,6 +4698,10 @@
 		}
 
 		function checkNeedRedactPage(oPageInfo) {
+			if (!oPageInfo) {
+				return false;
+			}
+			
 			if (oPageInfo.annots.find(function(annot) {
 				return annot.IsRedact() && annot.GetRedactId();
 			})) {
@@ -4964,6 +4968,10 @@
 		}
 
 		function checkNeedRedactPage(oPageInfo) {
+			if (!oPageInfo) {
+				return false;
+			}
+
 			if (oPageInfo.annots.find(function(annot) {
 				return annot.IsRedact() && annot.GetRedactId();
 			})) {
