@@ -5961,6 +5961,7 @@
         var oDoughnutChart = new AscFormat.CDoughnutChart();
         oDoughnutChart.mergeWithoutSeries(oOldChart);
         oDoughnutChart.setVaryColors(true);
+        oDoughnutChart.setHoleSize(75);
         for(var nSeries = 0; nSeries < aSeries.length; ++nSeries) {
             var oSeries = new AscFormat.CPieSeries();
             aSeries[nSeries].fillObject(oSeries);
