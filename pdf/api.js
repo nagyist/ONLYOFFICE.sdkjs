@@ -705,12 +705,15 @@
 	PDFEditorApi.prototype.asc_getChartSettings = function (bNoLock) {
 		let oDoc = this.getPDFDoc();
 		if (oDoc) {
-			if (bNoLock !== true) {
-				this.asc_onOpenFrameEditor();
-			}
-
 			let oController = oDoc.GetController();
-			return oController.getChartSettings();
+			const oChartSettings = oController.getChartSettings();
+			if (bNoLock) {
+				return oChartSettings;
+			}
+			if (oChartSettings && !oDoc.IsSelectionLocked(AscCommon.changestype_Drawing_Props)) {
+				this.asc_onOpenFrameEditor();
+				return oChartSettings;
+			}
 		}
 	};
 	PDFEditorApi.prototype.asc_correctEnterText = function(oldCodePoints, newCodePoints) {
