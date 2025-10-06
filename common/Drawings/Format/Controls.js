@@ -1965,14 +1965,23 @@ function getFlatPenColor() {
 			oThis.controller.checkNeedUpdate();
 		};
 	};
-	CListBox.prototype.updateListItems = function (oRange) {
+	CListBox.prototype.updateListItems = function () {
 		this.listItems = [];
-		if (oRange) {
-			const oThis = this;
-			oRange._foreach(function (oCell) {
-				const sItem = oCell && !oCell.isNullText() ? oCell.getValue() : "";
-				oThis.listItems.push(new CListBoxItem(oThis, sItem));
-			});
+		const oFormControlPr = this.controller.getFormControlPr();
+		if (oFormControlPr.itemLst.length) {
+			for (let i = 0; i < oFormControlPr.itemLst.length; i += 1) {
+				this.listItems.push(new CListBoxItem(this, oFormControlPr.itemLst[i]));
+			}
+		}
+		else {
+			const oRange = this.controller.getParsedFmlaRange();
+			if (oRange) {
+				const oThis = this;
+				oRange._foreach(function (oCell) {
+					const sItem = oCell && !oCell.isNullText() ? oCell.getValue() : "";
+					oThis.listItems.push(new CListBoxItem(oThis, sItem));
+				});
+			}
 		}
 	};
 
@@ -2002,11 +2011,6 @@ function getFlatPenColor() {
 			oItem.y = oItem.extY * nIndex;
 			oItem.recalculateTextPosition();
 			nIndex++;
-		});
-	};
-	CListBox.prototype.recalculateVisibleItemTextPositions = function () {
-		this.checkVisibleItems(function (oItem) {
-			oItem.recalculateTextPosition();
 		});
 	};
 	CListBox.prototype.resetSelectedIndices = function () {
@@ -2212,7 +2216,7 @@ function getFlatPenColor() {
 	};
 
 	CListBoxController.prototype.updateListItems = function () {
-		this.listBox.updateListItems(this.getParsedFmlaRange());
+		this.listBox.updateListItems();
 	};
 	CListBoxController.prototype.getFmlaLinkIndex = function () {
 		const oParsedLink = this.getParsedFmlaLink();
@@ -2298,7 +2302,6 @@ function getFlatPenColor() {
 	};
 
 	CListBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		const oControl = this.control;
 		if (e.button !== 0) {
 			return false;
 		}
@@ -2406,7 +2409,7 @@ function getFlatPenColor() {
 		oFormControlPr.setSel(nIndex ? nIndex : null);
 	};
 	CComboBoxController.prototype.updateListItems = function () {
-		this.listBox.updateListItems(this.getParsedFmlaRange());
+		this.listBox.updateListItems();
 	};
 
 	CComboBoxController.prototype.updateSelectedIndex = function () {
