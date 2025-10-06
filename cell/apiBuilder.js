@@ -20167,7 +20167,7 @@
 	function ApiFormatConditions(range) {
 		this.range = range;//parent
 		this.conditions = [];
-		//creator
+		this._updateExistingRules();
 	}
 
 	/**
@@ -20773,6 +20773,8 @@
 			ranges.push(this.range.range.bbox);
 		}
 
+		this._updateExistingRules();
+
 		for (let i = 0; i < this.conditions.length; i++) {
 			let condition = this.conditions[i];
 			if (condition.rule) {
@@ -20783,15 +20785,90 @@
 		this.conditions = [];
 	};
 
-	/**
-	 * Returns the count of format conditions.
-	 * @memberof ApiFormatConditions
-	 * @typeofeditors ["CSE"]
-	 * @returns {number}
-	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/GetCount.js
-	 */
+	function createApiConditionFromRule(rule, range, parent) {
+		switch (rule.type) {
+			case Asc.ECfType.aboveAverage:
+				return new ApiAboveAverage(rule, range, parent);
+			case Asc.ECfType.colorScale:
+				return new ApiColorScale(rule, range, parent);
+			case Asc.ECfType.dataBar:
+				return new ApiDatabar(rule, range, parent);
+			case Asc.ECfType.iconSet:
+				return new ApiIconSetCondition(rule, range, parent);
+			case Asc.ECfType.top10:
+				return new ApiTop10(rule, range, parent);
+			case Asc.ECfType.uniqueValues:
+				return new ApiUniqueValues(rule, range, parent);
+			default:
+				return new ApiFormatCondition(rule, range, parent);
+		}
+	}
+
+
 	ApiFormatConditions.prototype.GetCount = function() {
+		this._updateExistingRules();
 		return this.conditions.length;
+	};
+
+	ApiFormatConditions.prototype._updateExistingRules = function() {
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
+		if (!worksheet || !worksheet.aConditionalFormattingRules) {
+			this.conditions = [];
+			return;
+		}
+
+		let rangeRef = this.range.range.bbox;
+		let t = this;
+
+		let intersectingRuleIds = [];
+		worksheet.forEachConditionalFormattingRules(function(rule) {
+			if (rule.ranges) {
+				for (let i = 0; i < rule.ranges.length; i++) {
+					let ruleRange = rule.ranges[i];
+					if (rangeRef.intersectionSimple(ruleRange)) {
+						intersectingRuleIds.push(rule.id);
+
+						let existingCondition = null;
+						for (let j = 0; j < t.conditions.length; j++) {
+							if (t.conditions[j].rule && t.conditions[j].rule.id === rule.id) {
+								existingCondition = t.conditions[j];
+								break;
+							}
+						}
+
+						if (!existingCondition) {
+							let apiCondition = createApiConditionFromRule(rule, t.range, t);
+							if (apiCondition) {
+								t.conditions.push(apiCondition);
+							}
+						}
+						break;
+					}
+				}
+			}
+		});
+
+		let newConditions = [];
+		for (let i = 0; i < t.conditions.length; i++) {
+			let condition = t.conditions[i];
+			if (!condition.rule || !condition.rule.id) {
+				continue;
+			}
+
+			let found = false;
+			for (let j = 0; j < intersectingRuleIds.length; j++) {
+				if (intersectingRuleIds[j] === condition.rule.id) {
+					found = true;
+					break;
+				}
+			}
+
+			if (found) {
+				newConditions.push(condition);
+			}
+		}
+
+		t.conditions = newConditions;
 	};
 
 	/**
