@@ -1148,7 +1148,7 @@
 				if (this.file && this.file.isNeedPassword())
 				{
 					window["AscViewer"].setFilePassword(this.file, password);
-					this.Api.asc_setCurrentPassword(password);
+					this.Api.asc_setCurrentPassword(password, true);
 				}
 			}
 			else

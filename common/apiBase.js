@@ -4260,11 +4260,13 @@
 		this.asc_setViewMode(true);
 	};
 
-	baseEditorsApi.prototype.asc_setCurrentPassword = function(password)
+	baseEditorsApi.prototype.asc_setCurrentPassword = function(password, isOnOpen)
 	{
 		this.currentPasswordOld = this.currentPassword;
 		this.currentPassword = password;
-		this.asc_Save(false, undefined, true);
+
+		if (!isOnOpen)
+			this.asc_Save(false, undefined, true);
 		if (!(this.DocInfo && this.DocInfo.get_OfflineApp()) && !this.isViewMode && !this.isPdfViewer) {
 			var rData = {
 				"c": 'setpassword',
