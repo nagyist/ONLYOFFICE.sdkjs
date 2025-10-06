@@ -7265,16 +7265,19 @@ var CPresentation = CPresentation || function(){};
         let sMergeName = this.private_GetNextMergeName();
         let nNavigateTo = nInsertPos;
 
-        this.UpdateMaxApIdx(oFile.nativeFile["getStartID"]());
-        this.SetMergedBinaryData(aUint8Array, AscCommon.g_oIdCounter.m_nIdCounterEdit, sMergeName);
+        let sMaxApIdx = this.CalcMergeMaxApIdx();
+
+        this.SetMergedBinaryData(aUint8Array, sMaxApIdx, sMergeName);
 
         let aAnnotsInfoBefore = oFile.nativeFile["getAnnotationsInfo"]();
         let oFormsInfoBefore = oFile.nativeFile["getInteractiveFormsInfo"]();
 
-        let res = oFile.nativeFile["MergePages"](aUint8Array, AscCommon.g_oIdCounter.m_nIdCounterEdit, sMergeName);
+        let res = oFile.nativeFile["MergePages"](aUint8Array, sMaxApIdx, sMergeName);
 
         if (res) {
             let aPages = oFile.nativeFile["getPagesInfo"]();
+            this.UpdateCurMaxApIdx(oFile.nativeFile["getStartID"]());
+
             for (let i = oFile.originalPagesCount; i < aPages.length; i++) {
                 let page = aPages[i];
                 
@@ -7891,11 +7894,40 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.Clear_ContentChanges = function() {
 		this.pagesContentChanges.Clear();
     };
-    CPDFDoc.prototype.UpdateMaxApIdx = function(nApIdx) {
-        AscCommon.g_oIdCounter.m_nIdCounterEdit = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterEdit);
+    CPDFDoc.prototype.UpdateCurMaxApIdx = function(nApIdx) {
+        this.maxApIdx = nApIdx;
     };
-    CPDFDoc.prototype.UpdateMaxLoadApIdx = function(nApIdx) {
-        AscCommon.g_oIdCounter.m_nIdCounterLoad = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterLoad);
+    CPDFDoc.prototype.GetCurMaxApIdx = function() {
+        return this.maxApIdx;
+    };
+    // new - cause is we update this value only on merge or open file.
+    CPDFDoc.prototype.CalcMergeMaxApIdx = function() {
+        let nMax = 0;
+        
+        this.annots.forEach(function(annot) {
+            let nApIdx = annot.GetApIdx();
+            if (nApIdx > nMax) {
+                nMax = nApIdx;
+            }
+        });
+        this.widgets.forEach(function(widget) {
+            let nApIdx = widget.GetApIdx();
+            if (nApIdx > nMax) {
+                nMax = nApIdx;
+            }
+
+            let oParent = widget.GetParent();
+            while (oParent) {
+                nApIdx = oParent.GetApIdx();
+                if (nApIdx > nMax) {
+                    nMax = nApIdx;
+                }
+
+                oParent = oParent.GetParent();
+            }
+        });
+
+        return nMax;
     };
     CPDFDoc.prototype.Add_ContentChanges = function(Changes) {
         this.pagesContentChanges.Add(Changes);

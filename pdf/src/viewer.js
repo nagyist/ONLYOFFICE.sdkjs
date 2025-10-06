@@ -1227,8 +1227,12 @@
 			// TODO: Надо перенести в нормальное место
 			let isLoad = AscCommon.g_oIdCounter.IsLoad();
 			AscCommon.g_oIdCounter.Set_Load(true);
+
+			let nMaxIdx = this.file.nativeFile["getStartID"]();
 			this.openForms();
 			this.openAnnots();
+			oDoc.UpdateCurMaxApIdx(nMaxIdx);
+
 			AscCommon.g_oIdCounter.Set_Load(isLoad);
 		};
 
@@ -1284,19 +1288,13 @@
 			this.scrollCount = 0;
 
 			let oFormsInfo	= this.file.nativeFile["getInteractiveFormsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
-
-			oDoc.UpdateMaxLoadApIdx(nMaxIdx);
 			oDoc.private_AddFormsByInfo(oFormsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.openAnnots = function() {
 			let oDoc = this.getPDFDoc();
 			let aAnnotsInfo = this.file.nativeFile["getAnnotationsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
 
 			oDoc.private_AddAnnotsByInfo(aAnnotsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.setZoom = function(value, isDisablePaint)
 		{
