@@ -7402,9 +7402,7 @@ var CPresentation = CPresentation || function(){};
             for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
                 let oPageInfo = this.GetPageInfo(i);
                 let nOrigPageIdx = oPageInfo.GetOriginIndex();
-                if (nOrigPageIdx == undefined) {
-                    continue;
-                }
+                let isOrigPage = undefined !== nOrigPageIdx;
 
                 // Prepare two forms: flat array for native call and list of rects for clipping
                 const aRectsFlat = [];
@@ -7414,6 +7412,11 @@ var CPresentation = CPresentation || function(){};
                     if (!annot.IsRedact() || annot.GetRedactId()) return;
 
                     annot.SetRedactId(sRedactId);
+                    annot.AddToRedraw();
+
+                    if (!isOrigPage) {
+                        return;
+                    }
 
                     const aQuadsParts = annot.GetQuads();
                     aQuadsParts.forEach(function(quads) {
@@ -7428,7 +7431,6 @@ var CPresentation = CPresentation || function(){};
                     oMemory.WriteLong(oFillRGB.g);
                     oMemory.WriteLong(oFillRGB.b);
 
-                    annot.AddToRedraw();
                     pagesIdxMap.set(i, nOrigPageIdx);
                 });
 

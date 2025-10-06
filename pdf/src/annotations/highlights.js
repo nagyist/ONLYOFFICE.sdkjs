@@ -703,10 +703,18 @@
         return AscPDF.CAnnotationBase.prototype.IsHidden.call(this) || !!this.GetRedactId();
     };
     CAnnotationRedact.prototype.Draw = function(oGraphicsPDF) {
-        if (this.IsHidden() == true)
+        let oDoc = Asc.editor.getPDFDoc();
+        let oPageInfo = oDoc.GetPageInfo(this.GetPage());
+        
+        let isNeedDrawApplied = false;
+        if (this.GetRedactId() && (oPageInfo.IsRecognized() || undefined == oPageInfo.GetOriginIndex())) {
+            isNeedDrawApplied = true;
+        }
+        
+        if (this.IsHidden() == true && !isNeedDrawApplied)
             return;
 
-        if (this.IsHovered()) {
+        if (this.IsHovered() || isNeedDrawApplied) {
             this._DrawHovered(oGraphicsPDF);
         }
         else {
