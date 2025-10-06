@@ -16373,10 +16373,7 @@ function RangeDataManagerElem(bbox, data)
 			}
 
 			let cellType = cell.getType();
-			let newVal = noData ? "#REF!" : cell.getValue();
-			if (cellType === CellValueType.Number) {
-				newVal = cell.getNumberValue();
-			}
+			let newVal = noData ? "#REF!" : (cellType === CellValueType.Number ? cell.getNumberValue() : cell.getValue());
 			if (this.CellValue !== newVal) {
 				isChanged = true;
 				this.CellValue = newVal;
