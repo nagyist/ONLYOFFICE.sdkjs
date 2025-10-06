@@ -9076,7 +9076,7 @@ var CPresentation = CPresentation || function(){};
         }
 
         if (oMeta && oMeta["isOO"]) {
-            if (oAnnot.IsStamp()) {
+            if (oAnnot.IsStamp() && !oAnnot.IsNeedDrawFromStream()) {
                 let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
                 oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
             }
