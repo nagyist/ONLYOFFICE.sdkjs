@@ -838,18 +838,167 @@
                 }
             }
         };
-        this.handleMatrix = function(reader)
+        this.normalizeMtableStructure = function(reader)
         {
-            let props = new CMathMatrixPr();
-            props.mrs = [];
-
+            // Collect all rows, normalizing the structure mtable → mtr → mtd
+            let normalizedRows = [];
             let depth = reader.GetDepth();
+
             while (reader.ReadNextSiblingNode(depth))
             {
                 let name = reader.GetNameNoNS();
+
                 if (name === "mtr")
-                    props.mrs.push(this.readMathMLMRow(reader));
+                {
+                    // Normalize mtr content
+                    let nestedRows = [];
+                    let cells = this.normalizeMtrContent(reader, nestedRows);
+
+                    // If there are nested rows, add only them (parent row is empty)
+                    if (nestedRows.length > 0)
+                    {
+                        normalizedRows = normalizedRows.concat(nestedRows);
+                    }
+                    else
+                    {
+                        // No nested rows - add current row
+                        normalizedRows.push(cells);
+                    }
+                }
+                else if (name === "mtd")
+                {
+                    // mtd directly in mtable - check for nested mtd
+                    let nestedCells = this.checkForNestedMtd(reader);
+                    if (nestedCells.length > 0)
+                    {
+                        // Has nested mtd - create row from them
+                        normalizedRows.push(nestedCells);
+                    }
+                    else
+                    {
+                        // No nested mtd - process as regular cell
+                        let cellContent = this.handleMtd(reader);
+                        normalizedRows.push([cellContent]);
+                    }
+                }
+                else
+                {
+                    // Any other element - wrap in mtr → mtd
+                    let elements = this.readMathMLNode(reader);
+                    if (elements.length > 0)
+                    {
+                        let mathContent = new CMathContent();
+                        for (let i = 0; i < elements.length; i++)
+                        {
+                            mathContent.addElementToContent(elements[i]);
+                        }
+                        mathContent.Correct_Content(true);
+                        normalizedRows.push([mathContent]);
+                    }
+                }
             }
+
+            return normalizedRows;
+        };
+
+        this.checkForNestedMtd = function(reader)
+        {
+            // Check if mtd contains nested mtd elements
+            let cells = [];
+            let depth = reader.GetDepth();
+            let hasNestedMtd = false;
+
+            while (reader.ReadNextSiblingNode(depth))
+            {
+                let name = reader.GetNameNoNS();
+
+                if (name === "mtd")
+                {
+                    hasNestedMtd = true;
+                    let cellContent = this.handleMtd(reader);
+                    cells.push(cellContent);
+                }
+            }
+
+            // Return cells only if nested mtd were found
+            return hasNestedMtd ? cells : [];
+        };
+
+        this.normalizeMtrContent = function(reader, collectNestedRows)
+        {
+            // Process mtr content, ensuring all children are mtd
+            let cells = [];
+            let depth = reader.GetDepth();
+            let nonMtdElements = [];
+            let nestedRows = collectNestedRows || [];
+
+            while (reader.ReadNextSiblingNode(depth))
+            {
+                let name = reader.GetNameNoNS();
+
+                if (name === "mtr")
+                {
+                    // Nested mtr - incorrect structure
+                    // Collect nested rows to add at table level
+                    let nestedCells = this.normalizeMtrContent(reader, nestedRows);
+                    if (nestedCells.length > 0)
+                    {
+                        nestedRows.push(nestedCells);
+                    }
+                }
+                else if (name === "mtd")
+                {
+                    // Valid mtd
+                    let cellContent = this.handleMtd(reader);
+
+                    // If non-mtd elements accumulated, wrap them in mtd
+                    if (nonMtdElements.length > 0)
+                    {
+                        let mathContent = new CMathContent();
+                        for (let i = 0; i < nonMtdElements.length; i++)
+                        {
+                            mathContent.addElementToContent(nonMtdElements[i]);
+                        }
+                        mathContent.Correct_Content(true);
+                        cells.push(mathContent);
+                        nonMtdElements = [];
+                    }
+
+                    cells.push(cellContent);
+                }
+                else
+                {
+                    // Non-mtd element inside mtr - accumulate for wrapping
+                    let elements = this.readMathMLNode(reader);
+                    nonMtdElements = nonMtdElements.concat(elements);
+                }
+            }
+
+            // If non-mtd elements remain, wrap them in final cell
+            if (nonMtdElements.length > 0)
+            {
+                let mathContent = new CMathContent();
+                for (let i = 0; i < nonMtdElements.length; i++)
+                {
+                    mathContent.addElementToContent(nonMtdElements[i]);
+                }
+                mathContent.Correct_Content(true);
+                cells.push(mathContent);
+            }
+
+            // If no cells at all, create empty one
+            if (cells.length === 0)
+            {
+                cells.push(new CMathContent());
+            }
+
+            return cells;
+        };
+
+        this.handleMatrix = function(reader)
+        {
+            let props = new CMathMatrixPr();
+            props.mrs = this.normalizeMtableStructure(reader);
 
             return new CMathMatrix(props);
         };
