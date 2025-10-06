@@ -151,22 +151,27 @@
 		}
 	}
 	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
-		graphics.SaveGrState();
 		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm * AscCommon.AscBrowser.retinaPixelRatio, extX / 2, extY / 2);
+		function draw() {
+			graphics._s();
+			graphics._m(x, y + nRadius);
+			graphics._c2(x, y, x + nRadius, y);
+			graphics._l(x + extX - nRadius, y);
+			graphics._c2(x + extX, y, x + extX, y + nRadius);
+			graphics._l(x + extX, y + extY - nRadius);
+			graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
+			graphics._l(x + nRadius, y + extY);
+			graphics._c2(x, y + extY, x, y + extY - nRadius);
+			graphics._z();
+		}
+		graphics.SaveGrState();
 		graphics.p_color.apply(graphics, arrColor);
 		graphics.p_width(0);
-		graphics.StartClipPath();
-		graphics._s();
-		graphics._m(x, y + nRadius);
-		graphics._c2(x, y, x + nRadius, y);
-		graphics._l(x + extX - nRadius, y);
-		graphics._c2(x + extX, y, x + extX, y + nRadius);
-		graphics._l(x + extX, y + extY - nRadius);
-		graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
-		graphics._l(x + nRadius, y + extY);
-		graphics._c2(x, y + extY, x, y + extY - nRadius);
-		graphics._z();
+		draw();
 		graphics.ds();
+		graphics.AddClipRect(x, y, extX, extY);
+		graphics.StartClipPath();
+		draw();
 		graphics.EndClipPath();
 	}
 	function endRoundControl(graphics) {
