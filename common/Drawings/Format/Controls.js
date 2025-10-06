@@ -935,13 +935,7 @@ function getFlatPenColor() {
 			return true;
 		};
 		this.button._onMouseUp = function () {
-			const oControlPr = oThis.getControlPr();
-			const sMacro = oControlPr.getJSAMacroId();
-			if (sMacro === null) {
-				oThis.onMacroError();
-			} else {
-				oThis.runMacros(sMacro);
-			}
+			oThis.runMacros();
 			return true;
 		}
 	};
@@ -966,10 +960,10 @@ function getFlatPenColor() {
 		this.button.transform = oControl.transform.CreateDublicate();
 		this.button.invertTransform = oControl.invertTransform.CreateDublicate();
 	};
-	CButtonController.prototype.onMacroError = function () {
+	CButtonController.prototype.onMacroError = function (sMacro) {
 		const oApi = Asc.editor;
 		if (oApi) {
-			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical);
+			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical, sMacro);
 		}
 	};
 	CButtonController.prototype.getCursorInfo = function (e, nX, nY) {
@@ -993,6 +987,10 @@ function getFlatPenColor() {
 		if (e.CtrlKey) {
 			return false;
 		}
+		const oControlPr = this.getControlPr();
+		if (oControlPr.getMacroId() === null) {
+			return false;
+		}
 		return this.button.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	};
 	CButtonController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
@@ -1001,9 +999,19 @@ function getFlatPenColor() {
 	CButtonController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oController) {
 		return this.button.onMouseMove(e, nX, nY, nPageIndex, oController);
 	};
-	CButtonController.prototype.runMacros = function (sMacro) {
+	CButtonController.prototype.runMacros = function () {
+		const oControlPr = this.getControlPr();
+		const sMacro = oControlPr.getJSAMacroId();
+		if (sMacro === null) {
+			this.onMacroError(oControlPr.getMacroId());
+			return;
+		}
 		const oApi = Asc.editor;
 		if (oApi) {
+			const sMacroName = oApi.macros && oApi.macros.getNameByGuid(sMacro);
+			if (!sMacroName) {
+				this.onMacroError(sMacro);
+			}
 			oApi.asc_runMacros(sMacro);
 		}
 	};
@@ -2830,9 +2838,13 @@ function getFlatPenColor() {
 		oCopy.setRecalcAlways(this.recalcAlways);
 		oCopy.setUiObject(this.uiObject);
 	};
-	CControlPr.prototype.getJSAMacroId = function () {
+	CControlPr.prototype.getMacroId = function () {
 		const sMacro = this.macro;
-		if (typeof sMacro === "string" && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
+		return typeof sMacro === "string" ? sMacro : null;
+	};
+	CControlPr.prototype.getJSAMacroId = function () {
+		const sMacro = this.getMacroId();
+		if (sMacro !== null && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
 			return sMacro.slice(AscFormat.MACRO_PREFIX.length);
 		}
 		return null;
