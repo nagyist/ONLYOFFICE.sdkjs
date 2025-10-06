@@ -7333,6 +7333,10 @@ var CPresentation = CPresentation || function(){};
             this.private_AddFormsByInfo(oFormsInfoNew, nInsertPos - oFile.originalPagesCount);
         }
 
+        let standardFonts = oFile.nativeFile["getInteractiveFormsStandardFonts"]();
+        let embeddedFonts = oFile.nativeFile["getInteractiveFormsEmbeddedFonts"]();
+        AscFonts.initEmbeddedFonts(standardFonts.concat(embeddedFonts));
+
         this.Viewer.checkLoadCMap();
         this.Viewer.navigateToPage(nNavigateTo);
 
