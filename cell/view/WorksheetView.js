@@ -5414,6 +5414,10 @@ function isAllowPasteLink(pastedWb) {
 						return Asc.editor.getDrawingDocument();
 					},
 
+					IsVisioEditor: function() {
+						return false;
+					},
+
                     SearchEngine: {
                         Selection: []
                     }
