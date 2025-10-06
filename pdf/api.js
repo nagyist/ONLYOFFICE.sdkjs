@@ -1750,13 +1750,10 @@
 					"JS": 'AFDate_KeystrokeEx("' + sFormat + '");'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
-				oField.prevDateFormat = sDateFormat;
 
 				if (oField.IsCanCommit()) {
 					oField.Commit();
 				}
-
-				oField.prevDateFormat = undefined;
 
 				res = true;
 			});
