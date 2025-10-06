@@ -9377,10 +9377,16 @@ background-repeat: no-repeat;\
 		const oLogicDocument = this.private_GetLogicDocument();
 		if (oLogicDocument)
 		{
-			if(bNoLock !== true) {
-				this.asc_onOpenFrameEditor();
+			const oChartSettings = oLogicDocument.GetChartSettings();
+			if (bNoLock)
+			{
+				return oChartSettings;
 			}
-			return oLogicDocument.GetChartSettings();
+			if (oChartSettings && false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props))
+			{
+				this.asc_onOpenFrameEditor();
+				return oChartSettings;
+			}
 		}
 	};
 
