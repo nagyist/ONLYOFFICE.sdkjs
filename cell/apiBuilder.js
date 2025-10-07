@@ -22954,7 +22954,7 @@
 	 * Returns the index indicating which threshold the criteria represents.
 	 * @memberof ApiColorScaleCriterion
 	 * @typeofeditors ["CSE"]
-	 * @returns {number} Returns 1 for minimum threshold, 2 for midpoint (3-color scale) or maximum (2-color scale), and 3 for maximum threshold (3-color scale only).
+	 * @returns {number} Returns 0 for minimum threshold, 1 for midpoint (3-color scale) or maximum (2-color scale), and 2 for maximum threshold (3-color scale only).
 	 * @since 9.1.0
 	 */
 	ApiColorScaleCriterion.prototype.GetIndex = function() {
