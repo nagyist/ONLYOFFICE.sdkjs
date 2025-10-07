@@ -421,15 +421,6 @@
 			const y2 = Math.max(r[1], r[3]);
 			return [x1, y1, x2, y2];
 		}
-		function intersectRect(a, b) {
-			a = normRect(a);
-			b = normRect(b);
-			const x1 = Math.max(a[0], b[0]);
-			const y1 = Math.max(a[1], b[1]);
-			const x2 = Math.min(a[2], b[2]);
-			const y2 = Math.min(a[3], b[3]);
-			return (x1 < x2 && y1 < y2) ? [x1, y1, x2, y2] : null;
-		}
 
         this.Recalculate();
         if (this.IsEditFieldShape()) {
@@ -537,8 +528,8 @@
         this.draw(oGraphicsWord);
 
         if (unredactedPolygon) {
-            oGraphicsWord.m_oContext.restore();
-            oGraphicsWord.m_oContext.restore();
+            oGraphicsWord.restore();
+            oGraphicsWord.restore();
         }
     };
     CPdfDrawingPrototype.prototype.onMouseDown = function(x, y, e) {};
