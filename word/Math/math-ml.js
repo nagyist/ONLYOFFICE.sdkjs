@@ -59,7 +59,7 @@
 				'mo-linebreak-todo' : [],
 				'mo-id' : {}
 			};
-			
+
 			let reader = new StaxParser(xml);
 			if (!reader.ReadNextNode() || "math" !== reader.GetNameNoNS())
 			{
@@ -80,7 +80,7 @@
 			}
 			return paraMath;
 		};
-        this.safeAddToMathContent = function(mathContent, element)
+        this.addFlatToMathContent = function(mathContent, element)
 		{
 			// CMathContent cannot be nested inside another CMathContent
 			if (element instanceof AscCommonWord.CMathContent)
@@ -584,12 +584,12 @@
                                 nextElement instanceof AscMath.Radical ||
                                 nextElement instanceof AscMath.Matrix)
                             {
-                                this.safeAddToMathContent(naryContent, nextElement);
+                                this.addFlatToMathContent(naryContent, nextElement);
                                 j++;
                                 break;
                             }
 
-                            this.safeAddToMathContent(naryContent, nextElement);
+                            this.addFlatToMathContent(naryContent, nextElement);
                             j++;
                         }
 
@@ -672,7 +672,7 @@
             for (let i = 0; i < elements.length; ++i)
             {
                 let current = elements[i];
-                this.safeAddToMathContent(mathContent, current);
+                this.addFlatToMathContent(mathContent, current);
 
                 let breakPos = this.checkLinebreak(current)
                 if (breakPos !== null)
@@ -697,7 +697,7 @@
     
             for (let i = 0; i < content.length; i++)
             {
-                this.safeAddToMathContent(mathContent, content[i]);
+                this.addFlatToMathContent(mathContent, content[i]);
             }
     
             if (content.length === 0)
@@ -788,7 +788,7 @@
                 let elements = this.readMathMLNode(reader);
                 for (let i = 0; i < elements.length; i++)
                 {
-                    this.safeAddToMathContent(props.content[0], elements[i]);
+                    this.addFlatToMathContent(props.content[0], elements[i]);
                 }
             }
 
@@ -836,17 +836,17 @@
                 }
             }
 
+            let textOfBase = props.content[0].GetTextOfElement().GetText();
+            if (AscMath.MathLiterals.nary.SearchU(textOfBase))
+            {
+                return this.handleNaryFromSubSup(props, false, false);
+            }
+
             if (props.content.length === 3)
             {
                 let temp = props.content[1];
                 props.content[1] = props.content[2];
                 props.content[2] = temp;
-            }
-
-            let textOfBase = props.content[0].GetTextOfElement().GetText();
-            if (AscMath.MathLiterals.nary.SearchU(textOfBase))
-            {
-                return this.handleNaryFromSubSup(props, false, false);
             }
 
             return new AscMath.DegreeSubSup(props);
@@ -924,7 +924,7 @@
                     if (typeof current === 'string')
                         continue;
 
-                    this.safeAddToMathContent(mathContent, current);
+                    this.addFlatToMathContent(mathContent, current);
 
                     let breakPos = this.checkLinebreak(current);
                     if (breakPos !== null)
@@ -1054,7 +1054,7 @@
                         let mathContent = new CMathContent();
                         for (let i = 0; i < nonMtdElements.length; i++)
                         {
-                            this.safeAddToMathContent(mathContent, nonMtdElements[i]);
+                            this.addFlatToMathContent(mathContent, nonMtdElements[i]);
                         }
                         mathContent.Correct_Content(true);
                         cells.push(mathContent);
@@ -1078,7 +1078,7 @@
                 let mathContent = new CMathContent();
                 for (let i = 0; i < nonMtdElements.length; i++)
                 {
-                    this.safeAddToMathContent(mathContent, nonMtdElements[i]);
+                    this.addFlatToMathContent(mathContent, nonMtdElements[i]);
                 }
                 mathContent.Correct_Content(true);
                 cells.push(mathContent);
@@ -1272,7 +1272,7 @@
                         {
                             let curData = mContents
                         }
-                        this.safeAddToMathContent(mathContent, mContents[i]);
+                        this.addFlatToMathContent(mathContent, mContents[i]);
                     }
                     mathContent.Correct_Content(true);
                     props.content[1] = mathContent;
@@ -1287,7 +1287,7 @@
                     let arrData = this.readMathMLNode(reader);
                     for (let j = 0; j < arrData.length; j++)
                     {
-                        this.safeAddToMathContent(mathContent, arrData[j])
+                        this.addFlatToMathContent(mathContent, arrData[j])
                     }
                 }
                 mathContent.Correct_Content(true);
