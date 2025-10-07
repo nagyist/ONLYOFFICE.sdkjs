@@ -3362,7 +3362,9 @@ var editor;
 				if (cell.isFormula() && cell.getFormulaParsed().ca) {
 					const cellId = AscCommonExcel.getCellIndex(cell.nRow, cell.nCol);
 					const sheetId = cell.ws.getId();
-					delete dependencyFormulas.changedCell[sheetId][cellId];
+					if (dependencyFormulas.changedCell[sheetId]) {
+						delete dependencyFormulas.changedCell[sheetId][cellId];
+					}
 				}
 			});
 		}
