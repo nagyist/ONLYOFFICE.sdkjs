@@ -317,6 +317,10 @@
                 case 'ms':
                     let attributes = reader.GetAttributes();
                     let text = updateBaseText(reader.GetText());
+
+                    if (text.length === 0)
+                        break;
+
                     text = decodeHexEntities(text);
                     text = proceedAttributes(name, text, attributes);
                     text = text.replaceAll("&nbsp;", " ");
@@ -696,6 +700,9 @@
                 this.safeAddToMathContent(mathContent, content[i]);
             }
     
+            if (content.length === 0)
+                return;
+
             mathContent.Correct_Content(true);
             return mathContent;
         };
@@ -965,7 +972,8 @@
                     {
                         // No nested mtd - process as regular cell
                         let cellContent = this.handleMtd(reader);
-                        normalizedRows.push([cellContent]);
+                        if (cellContent)
+                            normalizedRows.push([cellContent]);
                     }
                 }
                 else
@@ -1003,7 +1011,9 @@
                 {
                     hasNestedMtd = true;
                     let cellContent = this.handleMtd(reader);
-                    cells.push(cellContent);
+
+                    if (cellContent)
+                        cells.push(cellContent);
                 }
             }
 
@@ -1051,7 +1061,8 @@
                         nonMtdElements = [];
                     }
 
-                    cells.push(cellContent);
+                    if (cellContent)
+                        cells.push(cellContent);
                 }
                 else
                 {
