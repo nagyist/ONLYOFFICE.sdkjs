@@ -12136,8 +12136,9 @@ drawPieChart.prototype = {
 		// if labels are given then shrink the radius to fit the labels
 		let _dLbls = this.chart.dLbls;
 		let _series = this.chart.series;
+		const isLabelsExist = this.cChartSpace.recalcInfo && this.cChartSpace.recalcInfo.dataLbls && Array.isArray(this.cChartSpace.recalcInfo.dataLbls) && this.cChartSpace.recalcInfo.dataLbls.length > 0;
 		const affectedByLayout = this.cChartSpace.isLayoutSizes();
-		if (!affectedByLayout && ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
+		if (isLabelsExist && !affectedByLayout && ((_dLbls && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr && _dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && _dLbls.showVal) ||
 			(_series && _series[0] && _series[0].dLbls && _series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.ctr &&
 				_series[0].dLbls.dLblPos !== c_oAscChartDataLabelsPos.inEnd && (_series[0].dLbls.showVal ||
 					_series[0].dLbls.showCatName || _series[0].dLbls.showSerName || _series[0].dLbls.showPercent)))) {
