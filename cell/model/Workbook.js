@@ -15806,19 +15806,19 @@
 					let oArgElem = aOutStack[j];
 					let oBbox = null;
 					let aRef = [cElementType.cell, cElementType.cell3D, cElementType.cellsRange, cElementType.cellsRange3D];
-					if (!aRef.includes(oArgElem.type)) {
-						continue;
-					}
+
 					if (oArgElem.type === cElementType.name || oArgElem.type === cElementType.name3D) {
 						const oElemValue = oArgElem.getValue();
 						if (!aRef.includes(oElemValue.type)) {
 							continue;
 						}
 						oBbox = oElemValue.getBBox0();
-					}  else {
+					} else if (oArgElem.type === cElementType.table) {
+						oBbox = oArgElem.getRange().getBBox0();
+					}  else if (aRef.includes(oArgElem.type)) {
 						oBbox = oArgElem.getBBox0();
 					}
-					bBelongToFormula = oAreaMap.bbox.isIntersect(oBbox);
+					bBelongToFormula = !!oBbox && oAreaMap.bbox.isIntersect(oBbox);
 					if (bBelongToFormula) {
 						return true;
 					}
