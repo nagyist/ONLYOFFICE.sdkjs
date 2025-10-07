@@ -10284,7 +10284,7 @@ function(window, undefined) {
 	CChartSpace.prototype.recalculateTrendlines = function () {
 		let aSeries = this.getAllSeries();
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
-			aSeries[nSer].recalculateTrendline();
+			aSeries[nSer].recalculateTrendlines();
 		}
 	};
 	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
