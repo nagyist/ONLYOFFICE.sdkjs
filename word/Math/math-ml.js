@@ -49,7 +49,10 @@
 		this.toParaMath = function(xml, textPr)
 		{
 			xml = xml ? xml : "";
-			
+
+			// Replace <br> tags (with any attributes) with nothing, as they're not valid MathML
+			xml = xml.replace(/<br[^>]*>/gi, '');
+
 			let paraMath = new AscWord.ParaMath();
 			
 			this.mathMLData = {
@@ -60,7 +63,7 @@
 			let reader = new StaxParser(xml);
 			if (!reader.ReadNextNode() || "math" !== reader.GetNameNoNS())
 			{
-				paraMath.Root.Correct_Content();
+				paraMath.Root.Correct_Content(true);
 				return paraMath;
 			}
 			
@@ -76,6 +79,21 @@
 				paraMath.ApplyTextPr(textPr, undefined, true);
 			}
 			return paraMath;
+		};
+        this.safeAddToMathContent = function(mathContent, element)
+		{
+			// CMathContent cannot be nested inside another CMathContent
+			if (element instanceof AscCommonWord.CMathContent)
+			{
+				for (let i = 0; i < element.Content.length; i++)
+				{
+					mathContent.addElementToContent(element.Content[i]);
+				}
+			}
+			else
+			{
+				mathContent.addElementToContent(element);
+			}
 		};
         this.proceedMathMLDefaultAttributes = function(attributes, elements, el, name)
         {
@@ -447,6 +465,7 @@
                 // 	elements.push(AscMath.EqArray.fromMathML(reader, true));
                 // 	break;
                 case 'mtr':
+                case 'mlabeledtr':
                     elements.push(this.handleMtr(reader));
                     break;
                 case 'mtd':
@@ -517,7 +536,7 @@
                 {
                     let precedingContent = [];
                     let k = processedResult.length - 1;
-                    
+
                     while (k >= 0)
                     {
                         let prevElement = processedResult[k];
@@ -528,7 +547,7 @@
                         precedingContent.unshift(processedResult.pop());
                         k--;
                     }
-                    
+
                     if (precedingContent.length > 0)
                     {
                         processedResult.push(this.proceedMathMLImplicitDelimiter(precedingContent, null, currentText)[0]);
@@ -539,13 +558,81 @@
                     }
                     i++;
                 }
+                else if (current instanceof AscMath.Nary)
+                {
+                    // N-ary operator found - check if it has empty content
+                    // If so, collect following inline elements as its argument
+                    let naryContent = current.getBase();
+                    let isEmpty = !naryContent || naryContent.Content.length === 0;
+
+                    if (isEmpty && i + 1 < result.length)
+                    {
+                        let argContent = new AscCommonWord.CMathContent();
+                        let j = i + 1;
+
+                        while (j < result.length)
+                        {
+                            let nextElement = result[j];
+
+                            if (nextElement instanceof AscMath.Nary ||
+                                nextElement instanceof AscMath.Delimiter ||
+                                nextElement instanceof AscMath.Fraction ||
+                                nextElement instanceof AscMath.Radical ||
+                                nextElement instanceof AscMath.Matrix)
+                            {
+                                this.safeAddToMathContent(naryContent, nextElement);
+                                j++;
+                                break;
+                            }
+
+                            this.safeAddToMathContent(naryContent, nextElement);
+                            j++;
+                        }
+
+                        argContent.Correct_Content(true);
+                        processedResult.push(current);
+                        i = j;
+                    }
+                    else
+                    {
+                        processedResult.push(current);
+                        i++;
+                    }
+                }
                 else
                 {
                     processedResult.push(current);
                     i++;
                 }
             }
-    
+
+            if (processedResult.length >= 3)
+            {
+                for (let j = processedResult.length; j >= 0; j--)
+                {
+                    let curent = processedResult[j-1];
+                    let funcapply = processedResult[j-2];
+                    let funcName = processedResult[j-3];
+
+                    if (curent 
+                        && funcName 
+                        && funcapply 
+                        && AscMath.MathLiterals.invisible.SearchU(funcapply.GetTextOfElement().GetText())
+                        && funcName instanceof ParaRun)
+                    {
+                        let MathFunc = new CMathFunc({});
+
+                        let MathContent = MathFunc.getFName();
+                        MathContent.Add_Text(funcName.GetTextOfElement().GetText());
+
+                        MathContent = MathFunc.getArgument();
+                        MathContent.Add_Element(curent);
+
+                        processedResult.splice(j-3, j, MathFunc);
+                        break;
+                    }
+                }
+            }
             return processedResult;
         };
         this.checkLinebreak = function (element)
@@ -581,8 +668,8 @@
             for (let i = 0; i < elements.length; ++i)
             {
                 let current = elements[i];
-                mathContent.addElementToContent(current);
-    
+                this.safeAddToMathContent(mathContent, current);
+
                 let breakPos = this.checkLinebreak(current)
                 if (breakPos !== null)
                 {
@@ -606,7 +693,7 @@
     
             for (let i = 0; i < content.length; i++)
             {
-                mathContent.addElementToContent(content[i]);
+                this.safeAddToMathContent(mathContent, content[i]);
             }
     
             mathContent.Correct_Content(true);
@@ -694,7 +781,7 @@
                 let elements = this.readMathMLNode(reader);
                 for (let i = 0; i < elements.length; i++)
                 {
-                    props.content[0].addElementToContent(elements[i]);
+                    this.safeAddToMathContent(props.content[0], elements[i]);
                 }
             }
 
@@ -830,7 +917,7 @@
                     if (typeof current === 'string')
                         continue;
 
-                    mathContent.addElementToContent(current);
+                    this.safeAddToMathContent(mathContent, current);
 
                     let breakPos = this.checkLinebreak(current);
                     if (breakPos !== null)
@@ -848,7 +935,7 @@
             {
                 let name = reader.GetNameNoNS();
 
-                if (name === "mtr")
+                if (name === "mtr" || name === "mlabeledtr")
                 {
                     // Normalize mtr content
                     let nestedRows = [];
@@ -936,7 +1023,7 @@
             {
                 let name = reader.GetNameNoNS();
 
-                if (name === "mtr")
+                if (name === "mtr" || name === "mlabeledtr")
                 {
                     // Nested mtr - incorrect structure
                     // Collect nested rows to add at table level
@@ -957,7 +1044,7 @@
                         let mathContent = new CMathContent();
                         for (let i = 0; i < nonMtdElements.length; i++)
                         {
-                            mathContent.addElementToContent(nonMtdElements[i]);
+                            this.safeAddToMathContent(mathContent, nonMtdElements[i]);
                         }
                         mathContent.Correct_Content(true);
                         cells.push(mathContent);
@@ -980,7 +1067,7 @@
                 let mathContent = new CMathContent();
                 for (let i = 0; i < nonMtdElements.length; i++)
                 {
-                    mathContent.addElementToContent(nonMtdElements[i]);
+                    this.safeAddToMathContent(mathContent, nonMtdElements[i]);
                 }
                 mathContent.Correct_Content(true);
                 cells.push(mathContent);
@@ -1174,7 +1261,7 @@
                         {
                             let curData = mContents
                         }
-                        mathContent.addElementToContent(mContents[i]);
+                        this.safeAddToMathContent(mathContent, mContents[i]);
                     }
                     mathContent.Correct_Content(true);
                     props.content[1] = mathContent;
@@ -1189,7 +1276,7 @@
                     let arrData = this.readMathMLNode(reader);
                     for (let j = 0; j < arrData.length; j++)
                     {
-                        mathContent.addElementToContent(arrData[j]);
+                        this.safeAddToMathContent(mathContent, arrData[j])
                     }
                 }
                 mathContent.Correct_Content(true);
