@@ -1503,6 +1503,7 @@
                 if (this.IsStamp()) {
                     if (this.GetRenderStructure()) {
                         oMeta["isOO"] = true;
+                        oMeta["InRect"] = this.GetInRect();
                     }
                 }
                 else if (this.GetOriginPage() == undefined) {

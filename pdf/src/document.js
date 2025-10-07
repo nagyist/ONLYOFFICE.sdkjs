@@ -9082,8 +9082,14 @@ var CPresentation = CPresentation || function(){};
 
         if (annotJson["Rotate"] != null)
             oAnnot.SetRotate(annotJson["Rotate"]);
-        if (annotJson["InRect"] != null)
-            oAnnot.SetInRect(annotJson["InRect"]);
+        if (annotJson["InRect"] != null) {
+            if (oMeta && oMeta["InRect"]) {
+                oAnnot.SetInRect(oMeta["InRect"]);
+            }
+            else {
+                oAnnot.SetInRect(annotJson["InRect"]);
+            }
+        }
         
         // border effect
         if (annotJson["BE"] != null) {
