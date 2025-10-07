@@ -24377,25 +24377,63 @@
 				return;
 			}
 
+			let currentIconSet = iconSetElement.IconSet;
+			let currentIconCount = getIconSetCount(currentIconSet);
+
 			iconSetElement.asc_setIconSet(internalIconSet);
 
 			let currentCFVOs = iconSetElement.aCFVOs || [];
-			let currentCount = currentCFVOs.length;
 
-			if (newIconCount < currentCount) {
-				iconSetElement.aCFVOs = currentCFVOs.slice(0, newIconCount);
-			} else if (newIconCount > currentCount) {
-				let lastCFVO = currentCFVOs[currentCount - 1];
+			if (newIconCount !== currentIconCount) {
+				let newCFVOs = [];
 
-				for (let i = currentCount; i < newIconCount; i++) {
+				if (currentCFVOs.length > 0 && currentCFVOs[0]) {
+					newCFVOs.push(currentCFVOs[0]);
+				} else {
+					let minCFVO = new window['AscCommonExcel'].CConditionalFormatValueObject();
+					minCFVO.asc_setGte(true);
+					minCFVO.asc_setType(window['AscCommonExcel'].ECfvoType.Minimum);
+					minCFVO.asc_setVal("");
+					newCFVOs.push(minCFVO);
+				}
+
+				let hasCustomValues = false;
+				for (let i = 1; i < currentCFVOs.length; i++) {
+					if (currentCFVOs[i] && !isDefaultCFVO(currentCFVOs[i], i, currentIconCount)) {
+						hasCustomValues = true;
+						break;
+					}
+				}
+
+				for (let i = 1; i < newIconCount; i++) {
 					let newCFVO = new window['AscCommonExcel'].CConditionalFormatValueObject();
 
-					if (lastCFVO) {
-						newCFVO.Gte = lastCFVO.Gte;
-						newCFVO.Type = lastCFVO.Type;
-						newCFVO.Val = lastCFVO.Val;
+					if (hasCustomValues && i < currentCFVOs.length && currentCFVOs[i]) {
+						newCFVO.asc_setGte(currentCFVOs[i].asc_getGte());
+						newCFVO.asc_setType(currentCFVOs[i].asc_getType());
+						newCFVO.asc_setVal(currentCFVOs[i].asc_getVal());
 
-						// Клонируем формулу если она есть
+						if (currentCFVOs[i].formula) {
+							newCFVO.formula = currentCFVOs[i].formula.clone();
+						}
+						if (currentCFVOs[i].formulaParent) {
+							newCFVO.formulaParent = currentCFVOs[i].formulaParent.clone();
+						}
+					} else if (hasCustomValues && i >= currentCFVOs.length && currentCFVOs.length > 1) {
+						let lastCFVO = currentCFVOs[currentCFVOs.length - 1];
+						newCFVO.asc_setGte(lastCFVO.asc_getGte());
+						newCFVO.asc_setType(lastCFVO.asc_getType());
+
+						if (lastCFVO.asc_getType() === window['AscCommonExcel'].ECfvoType.Percent ||
+							lastCFVO.asc_getType() === window['AscCommonExcel'].ECfvoType.Percentile) {
+							let baseValue = parseFloat(lastCFVO.asc_getVal()) || 0;
+							let step = (100 - baseValue) / (newIconCount - currentCFVOs.length + 1);
+							let newValue = Math.round(baseValue + step * (i - currentCFVOs.length + 1));
+							newCFVO.asc_setVal(newValue.toString());
+						} else {
+							newCFVO.asc_setVal(lastCFVO.asc_getVal());
+						}
+
 						if (lastCFVO.formula) {
 							newCFVO.formula = lastCFVO.formula.clone();
 						}
@@ -24403,29 +24441,27 @@
 							newCFVO.formulaParent = lastCFVO.formulaParent.clone();
 						}
 					} else {
-						newCFVO.Gte = true;
-						newCFVO.Type = window['AscCommonExcel'].ECfvoType.Percent;
-						newCFVO.Val = "67";
+						newCFVO.asc_setGte(true);
+						newCFVO.asc_setType(window['AscCommonExcel'].ECfvoType.Percent);
+						let percentileValue = Math.round((i * 100) / newIconCount);
+						newCFVO.asc_setVal(percentileValue.toString());
 					}
 
-					iconSetElement.aCFVOs.push(newCFVO);
+					newCFVOs.push(newCFVO);
 				}
+
+				iconSetElement.aCFVOs = newCFVOs;
 			}
 
-			let currentIconSets = iconSetElement.aIconSets || [];
-			let currentIconSetsCount = currentIconSets.length;
-
-			if (newIconCount < currentIconSetsCount) {
-				iconSetElement.aIconSets = currentIconSets.slice(0, newIconCount);
-			} else if (newIconCount > currentIconSetsCount) {
-				for (let i = currentIconSetsCount; i < newIconCount; i++) {
-					let newIconSet = new window['AscCommonExcel'].CConditionalFormatIconSet();
-					newIconSet.IconSet = internalIconSet;
-					newIconSet.IconId = i;
-
-					iconSetElement.aIconSets.push(newIconSet);
-				}
+			let newIconSets = [];
+			for (let i = 0; i < newIconCount; i++) {
+				let newIconSetItem = new window['AscCommonExcel'].CConditionalFormatIconSet();
+				newIconSetItem.IconSet = internalIconSet;
+				newIconSetItem.IconId = i;
+				newIconSets.push(newIconSetItem);
 			}
+
+			iconSetElement.aIconSets = newIconSets;
 		});
 	};
 
@@ -24437,6 +24473,31 @@
 			this.SetIconSet(value);
 		}
 	});
+
+	function isDefaultCFVO(cfvo, index, totalCount) {
+		if (!cfvo) {
+			return true;
+		}
+
+		if (index === 0) {
+			return cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Minimum;
+		}
+
+		if (cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Percent) {
+			let expectedPercent = Math.round((index * 100) / totalCount);
+			let actualValue = parseFloat(cfvo.asc_getVal());
+			return Math.abs(actualValue - expectedPercent) <= 1;
+		}
+
+		if (cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Percentile) {
+			let expectedPercentile = Math.round((index * 100) / totalCount);
+			let actualValue = parseFloat(cfvo.asc_getVal());
+			return Math.abs(actualValue - expectedPercentile) <= 1;
+		}
+
+		return cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Minimum ||
+			cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Maximum;
+	}
 
 	/**
 	 * Returns whether the thresholds for the icon set conditional format are determined by using percentiles.
@@ -24457,7 +24518,7 @@
 		}
 
 		// Check if all CFVOs (except the first one which is always the minimum) are set to percentile
-		for (let i = 1; i < iconSetElement.aCFVOs.length; i++) {
+		for (let i = 0; i < iconSetElement.aCFVOs.length; i++) {
 			let cfvo = iconSetElement.aCFVOs[i];
 			if (!cfvo || cfvo.asc_getType() !== AscCommonExcel.ECfvoType.Percentile) {
 				return false;
@@ -24496,7 +24557,7 @@
 			}
 
 			// Set type for all CFVOs (except the first one which is always the minimum)
-			for (let i = 1; i < iconSetElement.aCFVOs.length; i++) {
+			for (let i = 0; i < iconSetElement.aCFVOs.length; i++) {
 				let cfvo = iconSetElement.aCFVOs[i];
 				if (cfvo) {
 					if (percentileValues) {
@@ -24505,7 +24566,7 @@
 						if (!cfvo.asc_getVal()) {
 							// For 3-icon set: 33%, 67%; for 4-icon set: 25%, 50%, 75%; for 5-icon set: 20%, 40%, 60%, 80%
 							let totalCfvos = iconSetElement.aCFVOs.length;
-							let percentileValue = Math.round((i / (totalCfvos - 1)) * 100);
+							let percentileValue = Math.round((i / (totalCfvos)) * 100);
 							cfvo.asc_setVal(percentileValue.toString());
 						}
 					} else {
