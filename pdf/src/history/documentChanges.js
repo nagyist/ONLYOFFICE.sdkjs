@@ -1459,6 +1459,10 @@ CChangesPDFDocumentEndRedact.prototype.Undo = function() {
     let oRedactData = oDoc.appliedRedactsData.pop();
     oFile.nativeFile["UndoRedact"]();
 
+    let oPageInfo = oDoc.GetPageInfo(this.Page);
+    let nOriginIndex = oPageInfo.GetOriginIndex();
+
+    oFile.pages[this.Page].text = oFile.getText(nOriginIndex);
     oDoc.Viewer.onUpdatePages([oRedactData.page]);
 };
 CChangesPDFDocumentEndRedact.prototype.Redo = function()
