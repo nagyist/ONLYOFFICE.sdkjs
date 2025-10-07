@@ -20804,7 +20804,13 @@
 		}
 	}
 
-
+	/**
+	 * Returns the count of format conditions.
+	 * @memberof ApiFormatConditions
+	 * @typeofeditors ["CSE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/GetCount.js
+	 */
 	ApiFormatConditions.prototype.GetCount = function() {
 		this._updateExistingRules();
 		return this.conditions.length;
@@ -20880,6 +20886,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/GetItem.js
 	 */
 	ApiFormatConditions.prototype.GetItem = function(index) {
+		this._updateExistingRules();
 		if (index < 1 || index > this.conditions.length) {
 			return null;
 		}
