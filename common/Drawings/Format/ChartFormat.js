@@ -4715,14 +4715,33 @@
 		}
 		return null;
 	};
-	CSeriesBase.prototype.addTrendline = function (trendline) {
+	CSeriesBase.prototype.addTrendlines = function (trendlines) {
+		if (!Array.isArray(trendlines) || trendlines.length === 0)
+			return;
+
+		const allowedTypes = [AscFormat.CAreaSeries, AscFormat.CBarSeries, AscFormat.CBubbleSeries, AscFormat.CLineSeries, AscFormat.CScatterSeries];
+		const canAddTrendlines = allowedTypes.some(function (seriesType) { return this instanceof seriesType; }, this);
+		if (!canAddTrendlines)
+			return;
+
 		const canAddChanges = AscCommon.History.CanAddChanges();
 		if (canAddChanges) {
-			const changes = new CChangesDrawingsContent(this, AscDFH.historyitem_CommonSeries_AddTrendline, this.trendlines.length, [trendline], true);
+			const changes = new CChangesDrawingsContent(this, AscDFH.historyitem_CommonSeries_AddTrendline, this.trendlines.length, trendlines, true);
 			AscCommon.History.Add(changes);
 		}
-		this.setParentToChild(trendline);
-		this.trendlines.push(trendline);
+
+		trendlines.forEach(function (trendline) {
+			this.setParentToChild(trendline);
+			this.trendlines.push(trendline);
+		}, this);
+	};
+	CSeriesBase.prototype.addTrendline = function (trendline) {
+		this.addTrendlines([trendline]);
+	};
+	CSeriesBase.prototype.setTrendlines = function (trendlines) {
+		const removed = this.removeAllTrendlines();
+		this.addTrendlines(trendlines);
+		return removed;
 	};
 	CSeriesBase.prototype.removeTrendlines = function (index, count) {
 		const removed = this.trendlines.splice(index, count);
