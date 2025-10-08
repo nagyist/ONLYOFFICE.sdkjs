@@ -3699,7 +3699,15 @@
 		let _t = this;
 		this.loadBuilderFonts(function()
 		{
-			return _t._onEndBuilderScript(callback);
+			let result = _t._onEndBuilderScript(callback);
+			
+			if (_t.SaveAfterMacros)
+			{
+				_t.asc_Save();
+				_t.SaveAfterMacros = false;
+			}
+
+			return result;
 		});
 		
 		return true;
@@ -4507,13 +4515,7 @@
 						oLogicDocument.UnlockPanelStyles(true);
 						oLogicDocument.OnEndLoadScript();
 					}
-
-					if (oApi.SaveAfterMacros)
-					{
-						oApi.asc_Save();
-						oApi.SaveAfterMacros = false;
-					}
-
+					
 					endAction && endAction();
 				});
 				break;
@@ -4534,13 +4536,7 @@
 					{
 						wsView.objectRender.controller.recalculate2(undefined);
 					}
-
-					if (oApi.SaveAfterMacros)
-					{
-						oApi.asc_Save();
-						oApi.SaveAfterMacros = false;
-					}
-
+					
 					endAction && endAction();
 				});
 				
