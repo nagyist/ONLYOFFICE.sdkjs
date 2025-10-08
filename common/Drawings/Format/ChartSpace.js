@@ -10294,9 +10294,11 @@ function(window, undefined) {
 	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
 		const allSeries = this.getAllSeries();
 		allSeries.forEach(function (ser) {
-			bShow
-				? ser.setTrendline(createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward))
-				: ser.removeTrendline();
+			ser.removeAllTrendlines();
+			if (bShow) {
+				const newTrendline = createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward);
+				ser.addTrendline(newTrendline);
+			}
 		});
 		
 		function createTrendline(parent, trendlineType, nForecastForward, nForecastBackward) {

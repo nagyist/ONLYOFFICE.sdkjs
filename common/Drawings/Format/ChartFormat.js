@@ -4724,9 +4724,6 @@
 		this.setParentToChild(trendline);
 		this.trendlines.push(trendline);
 	};
-	CSeriesBase.prototype.removeTrendline = function (index) {
-		this.removeTrendlines(index, 1);
-	};
 	CSeriesBase.prototype.removeTrendlines = function (index, count) {
 		const removed = this.trendlines.splice(index, count);
 		const canAddChanges = AscCommon.History.CanAddChanges();
@@ -4734,6 +4731,16 @@
 			const changes = new CChangesDrawingsContent(this, AscDFH.historyitem_CommonSeries_RemoveTrendline, index, removed, false);
 			AscCommon.History.Add(changes);
 		}
+		return removed;
+	};
+	CSeriesBase.prototype.removeAllTrendlines = function () {
+		const index = 0;
+		const count = this.trendlines.length
+		return this.removeTrendlines(index, count);
+	};
+	CSeriesBase.prototype.removeTrendline = function (index) {
+		const count = 1;
+		return this.removeTrendlines(index, count);
 	};
     CSeriesBase.prototype.asc_getName = function() {
         var oThis = this;
