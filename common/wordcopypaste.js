@@ -3016,7 +3016,7 @@ PasteProcessor.prototype =
     let bCheckOneGraphicObjectSpecialProps = false;
 	    if (aNewContent.length === 1)
 	    {
-		    bCheckOneGraphicObjectSpecialProps = true;
+		    bCheckOneGraphicObjectSpecialProps = this._specialPasteGetElemType(aNewContent[0]) === para_Drawing;
 	    }
 		if (oTable && !aNewContent[0].IsTable() && oTable.IsCellSelection())
 		{
@@ -3156,7 +3156,7 @@ PasteProcessor.prototype =
 					this.pasteTypeContent = null;
 					bCheckOneGraphicObjectSpecialProps = false;
 				}
-				this.checkWordGraphicSpecialPasteProps(aNewContent[i], bCheckOneGraphicObjectSpecialProps);
+				this.checkWordGraphicSpecialPasteProps(NewElem, bCheckOneGraphicObjectSpecialProps);
 
 				oSelectedElement.SelectedAll = false;
 				oSelectedContent.Add(oSelectedElement);
@@ -3303,11 +3303,11 @@ PasteProcessor.prototype =
 
     },
 
-	checkWordGraphicSpecialPasteProps: function (oNewContent, bSkipGettingPasteProps)
+	checkWordGraphicSpecialPasteProps: function (oNewContent, bCheckGettingPasteProps)
 	{
 		const arrDrawings = [];
 		oNewContent.GetAllDrawingObjects(arrDrawings);
-		if (bSkipGettingPasteProps && (arrDrawings.length === 1))
+		if (bCheckGettingPasteProps && (arrDrawings.length === 1))
 		{
 			const oGraphicObj = arrDrawings[0].GraphicObj;
 			this.specificPasteProps = oGraphicObj.getSpecialPasteProps();
