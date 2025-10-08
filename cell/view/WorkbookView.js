@@ -2703,6 +2703,7 @@
       }
       this.drawWorksheet();
 	  this.checkScrollRtl(this.getWorksheet().getRightToLeft());
+	  Asc.editor.toggleChartElementsCallback();
     } else {
       // ToDo не должно происходить ничего, но нам приходит resize сверху, поэтому проверим отрисовывали ли мы
       if (-1 === this.wsActive || this.wsMustDraw) {
@@ -2871,6 +2872,8 @@
         //ToDo item.drawDepCells();
       }
     }
+
+	Asc.editor.toggleChartElementsCallback();
 
     this._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
     this.handlers.trigger("asc_onZoomChanged", this.getZoom());
