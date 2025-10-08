@@ -26967,7 +26967,6 @@
 	};
 	ApiDocumentVisitor.prototype["Paragraph"] = function(paragraph, isStart)
 	{
-		console.log(paragraph);
 		return false;
 	};
 	ApiDocumentVisitor.prototype["Table"] = function(table, isStart)
