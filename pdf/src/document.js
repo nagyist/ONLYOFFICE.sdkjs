@@ -7415,7 +7415,7 @@ var CPresentation = CPresentation || function(){};
                 let isOrigPage = undefined !== nOrigPageIdx;
 
                 // Prepare two forms: flat array for native call and list of rects for clipping
-                const aRectsFlat = [];
+                let aQuadsFlat = [];
                 let oMemory;
 
                 oPageInfo.annots.forEach(function(annot) {
@@ -7430,7 +7430,7 @@ var CPresentation = CPresentation || function(){};
 
                     const aQuadsParts = annot.GetQuads();
                     aQuadsParts.forEach(function(quads) {
-                        aRectsFlat.push(quads[0], quads[1], quads[6], quads[7]);
+                        aQuadsFlat = aQuadsFlat.concat(quads);
                     });
 
                     // Fill color
@@ -7449,17 +7449,17 @@ var CPresentation = CPresentation || function(){};
                     return;
                 });
 
-                if (aRectsFlat.length != 0) {
+                if (aQuadsFlat.length != 0) {
                     let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
 
                     // Apply redact to the page
                     oNativeFile["RedactPage"](
                         nOrigPageIdx,
-                        aRectsFlat,
+                        aQuadsFlat,
                         oRender
                     );
 
-                    this.SetRedactData(sRedactId, i, aRectsFlat, oRender);
+                    this.SetRedactData(sRedactId, i, aQuadsFlat, oRender);
                 }
             }
 
@@ -7474,7 +7474,7 @@ var CPresentation = CPresentation || function(){};
 		}, AscDFH.historydescription_Pdf_Apply_Redact, this);
     };
 
-    CPDFDoc.prototype.SetRedactData = function(sRedactId, nPage, aRectsFlat, oRenderMemory) {
+    CPDFDoc.prototype.SetRedactData = function(sRedactId, nPage, aQuadsFlat, oRenderMemory) {
         let aUint8Array = oRenderMemory;
 
         const BINARY_PART_HISTORY_LIMIT = 1048576;
@@ -7491,11 +7491,11 @@ var CPresentation = CPresentation || function(){};
             AscCommon.History.Add(new CChangesPDFDocumentPartRedact(this, [], binaryParts[i]));
         }
         
-        AscCommon.History.Add(new CChangesPDFDocumentEndRedact(this, sRedactId, nPage, aRectsFlat));
+        AscCommon.History.Add(new CChangesPDFDocumentEndRedact(this, sRedactId, nPage, aQuadsFlat));
 
         this.appliedRedactsData.push({
             page: nPage,
-            rects: aRectsFlat,
+            quads: aQuadsFlat,
             redactId: sRedactId,
             binary: aUint8Array
         });

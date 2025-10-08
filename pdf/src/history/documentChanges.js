@@ -1439,12 +1439,12 @@ CChangesPDFDocumentPartRedact.prototype.ReadFromBinary = function(Reader) {
  * @constructor
  * @extends {AscDFH.CChangesBaseProperty}
  */
-function CChangesPDFDocumentEndRedact(Class, sRedactId, nPage, aRectsFlat)
+function CChangesPDFDocumentEndRedact(Class, sRedactId, nPage, aQuadsFlat)
 {
 	AscDFH.CChangesBaseProperty.call(this, Class, undefined, undefined);
     this.RedactId = sRedactId;
     this.Page = nPage;
-    this.RectsFlat = aRectsFlat;
+    this.QuadsFlat = aQuadsFlat;
 }
 CChangesPDFDocumentEndRedact.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
 CChangesPDFDocumentEndRedact.prototype.constructor = CChangesPDFDocumentEndRedact;
@@ -1495,11 +1495,11 @@ CChangesPDFDocumentEndRedact.prototype.Redo = function()
     let oPageInfo = oDoc.GetPageInfo(this.Page);
     let nOriginIndex = oPageInfo.GetOriginIndex();
 
-    oFile.nativeFile["RedactPage"](nOriginIndex, this.RectsFlat, oDoc.unitedBinary);
+    oFile.nativeFile["RedactPage"](nOriginIndex, this.QuadsFlat, oDoc.unitedBinary);
 
     oDoc.appliedRedactsData.push({
         page: this.Page,
-        rects: this.RectsFlat,
+        quads: this.QuadsFlat,
         redactId: this.RedactId,
         binary: oDoc.unitedBinary
     });
@@ -1517,7 +1517,7 @@ CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)
 	if (undefined === this.Page)
 		nFlags |= 2;
 
-	if (undefined === this.RectsFlat)
+	if (undefined === this.QuadsFlat)
 		nFlags |= 4;
 
 	Writer.WriteLong(nFlags);
@@ -1528,12 +1528,12 @@ CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)
 	if (undefined !== this.Page)
 		Writer.WriteLong(this.Page);
 	
-    if (undefined !== this.RectsFlat) {
+    if (undefined !== this.QuadsFlat) {
         // write points array
-        let nCount = this.RectsFlat.length;
+        let nCount = this.QuadsFlat.length;
         Writer.WriteLong(nCount);
         for (let nIndex = 0; nIndex < nCount; ++nIndex)
-            Writer.WriteDouble(this.RectsFlat[nIndex]);
+            Writer.WriteDouble(this.QuadsFlat[nIndex]);
     }
 };
 CChangesPDFDocumentEndRedact.prototype.ReadFromBinary = function(Reader)
@@ -1553,12 +1553,12 @@ CChangesPDFDocumentEndRedact.prototype.ReadFromBinary = function(Reader)
 		this.Page = Reader.GetLong();
 
 	if (nFlags & 4)
-		this.RectsFlat = undefined;
+		this.QuadsFlat = undefined;
 	else {
         let nCount = Reader.GetLong();
-        this.RectsFlat = [];
+        this.QuadsFlat = [];
         for (var nIndex = 0; nIndex < nCount; ++nIndex)
-            this.RectsFlat[nIndex] = Reader.GetDouble();
+            this.QuadsFlat[nIndex] = Reader.GetDouble();
     }
 };
 

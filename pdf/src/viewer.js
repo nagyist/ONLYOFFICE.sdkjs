@@ -4672,8 +4672,8 @@
 				oMemory.WriteString(data.redactId);
 
 				// rects
-				oMemory.WriteLong(data.rects.length / 4);
-				data.rects.forEach(function(measure) {
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
 					oMemory.WriteDouble(measure);
 				});
 
@@ -5010,8 +5010,8 @@
 				oMemory.WriteString(data.redactId);
 
 				// rects
-				oMemory.WriteLong(data.rects.length / 4);
-				data.rects.forEach(function(measure) {
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
 					oMemory.WriteDouble(measure);
 				});
 
