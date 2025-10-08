@@ -3017,7 +3017,10 @@
 			{
 				if (null === this.file.pages[i].text)
 				{
-					this.file.pages[i].text = this.file.getText(i);
+					if (undefined !== this.file.pages[i].originIndex) {
+						this.file.pages[i].text = this.file.getText(this.file.pages[i].originIndex);
+					}
+					
 					isCommands = true;
 				}
 			}
@@ -3032,13 +3035,14 @@
 						this.pagesInfo.countTextPages++;
 						continue;
 					}
-					this.file.pages[this.pagesInfo.countTextPages].text = this.file.getText(this.pagesInfo.countTextPages);
-					if (null !== this.file.pages[this.pagesInfo.countTextPages].text)
-					{
-						this.pagesInfo.countTextPages++;
-						isCommands = true;
-					}
 
+					let page = this.file.pages[this.pagesInfo.countTextPages];
+					if (undefined !== page.originIndex) {
+						page.text = this.file.getText(this.pagesInfo.countTextPages);
+						isCommands = true;
+					} 
+					
+					this.pagesInfo.countTextPages++;
 					break;
 				}
 			}
