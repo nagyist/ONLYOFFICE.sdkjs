@@ -12518,48 +12518,6 @@
 	ApiRange.prototype.GetFormatConditions = function() {
 		if (!this._formatConditions) {
 			this._formatConditions = new ApiFormatConditions(this);
-			let rules = this.range.worksheet.workbook.getRulesByType(Asc.c_oAscSelectionForCFType.selection, null, null, this.worksheet, this.range.bbox);
-			if (rules) {
-				for (var i = 0; i < rules.length; i++) {
-					var rule = rules[i];
-
-					var oApiFormatCondition = null;
-
-					switch (rule.type) {
-						case Asc.ECfType.colorScale:
-							oApiFormatCondition = new ApiColorScale(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.dataBar:
-							oApiFormatCondition = new ApiDatabar(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.iconSet:
-							oApiFormatCondition = new ApiIconSetCondition(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.top10:
-							oApiFormatCondition = new ApiTop10(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.uniqueValues:
-							oApiFormatCondition = new ApiUniqueValues(rule, this, this._formatConditions);
-							break;
-						case Asc.ECfType.aboveAverage:
-							oApiFormatCondition = new ApiAboveAverage(rule, this, this._formatConditions);
-							break;
-
-						default:
-							oApiFormatCondition = new ApiFormatCondition(rule, this, this._formatConditions);
-							break;
-					}
-
-					if (oApiFormatCondition)
-					{
-						this._formatConditions.conditions.push(oApiFormatCondition);
-					}
-				}
-			}
 		}
 		return this._formatConditions;
 	};
