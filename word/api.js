@@ -14590,6 +14590,18 @@ background-repeat: no-repeat;\
 		logicDocument.RecalculateCurPos();
 		logicDocument.UpdateSelection();
 	};
+	
+	asc_docs_api.prototype._onEndGroupActions = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
+		let groupChanges = AscCommon.History.getGroupChanges();
+		AscCommon.History.resetGroupChanges()
+		if (groupChanges.length)
+			logicDocument.RecalculateByChanges(groupChanges);
+	};
 
 
 	//-------------------------------------------------------------export---------------------------------------------------

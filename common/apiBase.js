@@ -5968,7 +5968,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -5976,7 +5976,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5986,11 +5986,14 @@
 			return;
 
 		--this.groupActionsCounter;
+		
 		AscCommon.History.cancelGroupPoints();
-
+		
 		if (this.groupActionsCounter > 0)
 			return;
-
+		
+		this._onEndGroupActions();
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -6004,13 +6007,18 @@
 
 		if (this.groupActionsCounter > 0)
 			return;
-
+		
+		this._onEndGroupActions();
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
 	baseEditorsApi.prototype.isGroupActions = function()
 	{
 		return this.groupActionsCounter > 0;
+	};
+	baseEditorsApi.prototype._onEndGroupActions = function()
+	{
 	};
 
 	//----------------------------------------------------------export----------------------------------------------------
