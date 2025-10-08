@@ -7240,15 +7240,15 @@ var CPresentation = CPresentation || function(){};
         let nNewPagesCount = 0;
         // The logic is that we always copy original pages using their original indexes. New pages are numbered starting from the end of the original pages.
         for (let i = 0, maxIdx = Math.max.apply(null, aIndexes); i <= maxIdx; i++) {
-            if (aIndexes.includes(i)) {
-                let oFilePage = oDoc.Viewer.file.pages[i];
-                if (oFilePage.originIndex != undefined) {
-                    aOriginIndexes.push(oFilePage.originIndex);
-                }
-                else {
-                    nNewPagesCount++;
-                    aOriginIndexes.push(nNewPagesCount + this.Viewer.file.originalPagesCount - 1);
-                }
+            let isInOrder = aIndexes.includes(i);
+
+            let oFilePage = oDoc.Viewer.file.pages[i];
+            if (oFilePage.originIndex != undefined) {
+                isInOrder && aOriginIndexes.push(oFilePage.originIndex);
+            }
+            else {
+                nNewPagesCount++;
+                isInOrder && aOriginIndexes.push(nNewPagesCount + this.Viewer.file.originalPagesCount - 1);
             }
         }
         
