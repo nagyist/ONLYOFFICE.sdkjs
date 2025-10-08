@@ -5316,7 +5316,7 @@ function isAllowPasteLink(pastedWb) {
 				curHeader.parser = new AscCommonExcel.HeaderFooterParser();
 				curHeader.parser.parse(curHeader.str);
 			}
-			curHeader.parser.calculateTokens(this, indexPrintPage, countPrintPages);
+			curHeader.parser.calculateTokens(this, indexPrintPage, countPrintPages, true);
 
 			//get current tokens -> curHeader.parser -> getTokensByPosition(AscCommomExcel.c_oPortionPosition)
 			this._drawHeaderFooter(drawingCtx, printPagesData, curHeader, indexPrintPage, countPrintPages, false, opt_headerFooter);
@@ -5337,7 +5337,7 @@ function isAllowPasteLink(pastedWb) {
 				curFooter.parser = new AscCommonExcel.HeaderFooterParser();
 				curFooter.parser.parse(curFooter.str);
 			}
-			curFooter.parser.calculateTokens(this, indexPrintPage, countPrintPages);
+			curFooter.parser.calculateTokens(this, indexPrintPage, countPrintPages, true);
 			//get current tokens -> curHeader.parser -> getTokensByPosition(AscCommomExcel.c_oPortionPosition)
 			this._drawHeaderFooter(drawingCtx, printPagesData, curFooter, indexPrintPage, countPrintPages, true, opt_headerFooter);
 		}
