@@ -30,18 +30,25 @@
  *
  */
 
-$(function()
+$(function ()
 {
-	AscTest.Editor.GetDocument = AscCommon.DocumentEditorApi.prototype.GetDocument.bind(AscTest.Editor);
-	AscTest.Editor.ReplaceTextSmart = AscCommon.DocumentEditorApi.prototype.ReplaceTextSmart.bind(AscTest.Editor);
-	AscTest.Editor.CreateRun = AscCommon.DocumentEditorApi.prototype.CreateRun.bind(AscTest.Editor);
-	AscTest.Editor.CreateParagraph = AscCommon.DocumentEditorApi.prototype.CreateParagraph.bind(AscTest.Editor);
-	AscTest.Editor.CreateInlineLvlSdt = AscCommon.DocumentEditorApi.prototype.CreateInlineLvlSdt.bind(AscTest.Editor);
-	AscTest.Editor.CreateTextForm = AscCommon.DocumentEditorApi.prototype.CreateTextForm.bind(AscTest.Editor);
+	QUnit.module("Test the ApiTextForm methods");
 	
-	QUnit.testStart(function()
+	function createApiTextForm(pr)
 	{
-		AscCommon.History.Clear();
-		AscTest.ClearDocument();
+		return AscTest.Editor.CreateTextForm(pr);
+	}
+	
+	QUnit.test("Placeholder", function (assert)
+	{
+		let textForm = createApiTextForm({
+			"key": "Name",
+			"placeholder": "Enter your name"
+		});
+		
+		assert.strictEqual(textForm.GetPlaceholderText(), "Enter your name" , "Check text form placeholder after the creation");
+		
+		textForm.SetPlaceholderText("TEST");
+		assert.strictEqual(textForm.GetPlaceholderText(), "TEST" , "Check text form placeholder after reset placeholder text");
 	});
 });
