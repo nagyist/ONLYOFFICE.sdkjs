@@ -22367,16 +22367,6 @@
 	ApiAboveAverage.prototype.GetFont = ApiFormatCondition.prototype.GetFont;
 
 	/**
-	 * Returns the Interior object that represents the interior of the specified object.
-	 * @memberof ApiAboveAverage
-	 * @typeofeditors ["CSE"]
-	 * @returns {ApiInterior}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/GetInterior.js
-	 */
-	ApiAboveAverage.prototype.GetInterior = ApiFormatCondition.prototype.GetInterior;
-
-	/**
 	 * Returns the number format applied to a cell if the conditional formatting rule evaluates to True.
 	 * @memberof ApiAboveAverage
 	 * @typeofeditors ["CSE"]
@@ -22775,7 +22765,6 @@
 	ApiColorScale.prototype.SetNumStdDev = null;
 	//ApiColorScale.prototype.GetBorders = null;
 	ApiColorScale.prototype.GetFont = null;
-	ApiColorScale.prototype.GetInterior = null;
 	ApiColorScale.prototype.GetNumberFormat = null;
 	ApiColorScale.prototype.SetNumberFormat = null;
 	ApiColorScale.prototype.GetFillColor = null;
@@ -26474,16 +26463,6 @@
 	// ApiUniqueValues.prototype.GetBorders = ApiFormatCondition.prototype.GetBorders;
 
 	/**
-	 * Returns the interior (background) formatting for the unique values conditional formatting rule.
-	 * @memberof ApiUniqueValues
-	 * @typeofeditors ["CSE"]
-	 * @returns {ApiInterior}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiUniqueValues/Methods/GetInterior.js
-	 */
-	ApiUniqueValues.prototype.GetInterior = ApiFormatCondition.prototype.GetInterior;
-
-	/**
 	 * Returns the number format for the unique values conditional formatting rule.
 	 * @memberof ApiUniqueValues
 	 * @typeofeditors ["CSE"]
@@ -27553,7 +27532,6 @@
 	ApiAboveAverage.prototype["GetAppliesTo"] = ApiAboveAverage.prototype.GetAppliesTo;
 	//ApiAboveAverage.prototype["GetBorders"] = ApiAboveAverage.prototype.GetBorders;
 	ApiAboveAverage.prototype["GetFont"] = ApiAboveAverage.prototype.GetFont;
-	ApiAboveAverage.prototype["GetInterior"] = ApiAboveAverage.prototype.GetInterior;
 	ApiAboveAverage.prototype["GetNumberFormat"] = ApiAboveAverage.prototype.GetNumberFormat;
 	ApiAboveAverage.prototype["SetNumberFormat"] = ApiAboveAverage.prototype.SetNumberFormat;
 	ApiAboveAverage.prototype["GetParent"] = ApiAboveAverage.prototype.GetParent;
@@ -27583,7 +27561,6 @@
 	//ApiUniqueValues.prototype["SetStopIfTrue"] = ApiUniqueValues.prototype.SetStopIfTrue;
 	ApiUniqueValues.prototype["GetFont"] = ApiUniqueValues.prototype.GetFont;
 	//ApiUniqueValues.prototype["GetBorders"] = ApiUniqueValues.prototype.GetBorders;
-	ApiUniqueValues.prototype["GetInterior"] = ApiUniqueValues.prototype.GetInterior;
 	ApiUniqueValues.prototype["GetNumberFormat"] = ApiUniqueValues.prototype.GetNumberFormat;
 	ApiUniqueValues.prototype["SetNumberFormat"] = ApiUniqueValues.prototype.SetNumberFormat;
 	ApiUniqueValues.prototype["GetFillColor"] = ApiUniqueValues.prototype.GetFillColor;
