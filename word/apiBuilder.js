@@ -26842,37 +26842,33 @@
 	}
 	ApiDocumentVisitor.prototype = Object.create(AscWord.DocumentVisitor.prototype);
 	ApiDocumentVisitor.prototype.constructor = ApiDocumentVisitor;
-	ApiDocumentVisitor.prototype.isHandleEnd = function()
-	{
-		return false;
-	};
 	ApiDocumentVisitor.prototype.paragraph = function(paragraph, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["Paragraph"](new ApiParagraph(paragraph), isStart);
+		if (isStart)
+			return this["Paragraph"](new ApiParagraph(paragraph));
+		else
+			return this["ParagraphEnd"](new ApiParagraph(paragraph));
 	};
 	ApiDocumentVisitor.prototype.table = function(table, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["Table"](new ApiTable(table), isStart);
+		if (isStart)
+			return this["Table"](new ApiTable(table));
+		else
+			return this["TableEnd"](new ApiTable(table));
 	};
 	ApiDocumentVisitor.prototype.tableRow = function(tableRow, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["TableRow"](new ApiTableRow(tableRow), isStart);
+		if (isStart)
+			return this["TableRow"](new ApiTableRow(tableRow));
+		else
+			return this["TableRowEnd"](new ApiTableRow(tableRow));
 	};
 	ApiDocumentVisitor.prototype.tableCell = function(tableCell, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["TableCell"](new ApiTableCell(tableCell), isStart);
+		if (isStart)
+			return this["TableCell"](new ApiTableCell(tableCell));
+		else
+			return this["TableCellEnd"](new ApiTableCell(tableCell));
 	};
 	ApiDocumentVisitor.prototype.fldSimple = function(field, isStart)
 	{
@@ -26880,17 +26876,17 @@
 	};
 	ApiDocumentVisitor.prototype.blockLevelSdt = function(sdt, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["BlockLevelSdt"](new ApiBlockLvlSdt(sdt), isStart);
+		if (isStart)
+			return this["BlockLevelSdt"](new ApiBlockLvlSdt(sdt));
+		else
+			return this["BlockLevelSdtEnd"](new ApiBlockLvlSdt(sdt));
 	};
 	ApiDocumentVisitor.prototype.inlineLevelSdt = function(sdt, isStart)
 	{
-		if (!this.isHandleEnd() && !isStart)
-			return true;
-		
-		return this["InlineLevelSdt"](new ApiInlineLvlSdt(sdt), isStart);
+		if (isStart)
+			return this["InlineLevelSdt"](new ApiInlineLvlSdt(sdt));
+		else
+			return this["InlineLevelSdtEnd"](new ApiInlineLvlSdt(sdt));
 	};
 	ApiDocumentVisitor.prototype.oform = function(form, isStart)
 	{
@@ -26912,52 +26908,55 @@
 		{
 			return run && 1 === run.Content.length && run.Content[0].IsParaEnd();
 		}
+		if (isParaEndRun(run))
+			return;
 		
-		if ((!this.isHandleEnd() && !isStart) || isParaEndRun(run))
+		if (!isStart)
+			return this["RunEnd"](new ApiRun(run));
+		
+		if (this["Run"](new ApiRun(run)))
 			return true;
 		
-		if (isStart)
+		let text = "";
+		let _t = this;
+		function flushText()
 		{
-			if (this["Run"](new ApiRun(run), true))
-				return true;
+			if ("" === text)
+				return;
 			
-			let text = "";
-			let _t = this;
-			function flushText()
-			{
-				if ("" === text)
-					return;
-				
-				_t["Text"](text);
-				text = "";
-			}
-			
-			for (let i = 0; i < run.Content.length; ++i)
-			{
-				let runItem = run.Content[i];
-				if (runItem.IsText() || runItem.IsSpace())
-				{
-					text += String.fromCodePoint(runItem.GetCodePoint())
-				}
-				else if (runItem.IsDrawing() && runItem.IsForm())
-				{
-					flushText();
-					let form = runItem.GetInnerForm();
-					let apiForm = private_CheckForm(form);
-					if (apiForm && !(apiForm instanceof ApiUnsupported))
-						return this["Form"](apiForm);
-				}
-				else
-				{
-					flushText();
-				}
-			}
-			flushText();
+			_t["Text"](text);
+			text = "";
 		}
-		else
+		
+		for (let i = 0; i < run.Content.length; ++i)
 		{
-			return this["Run"](new ApiRun(run), false);
+			let runItem = run.Content[i];
+			if (runItem.IsText() || runItem.IsSpace())
+			{
+				text += String.fromCodePoint(runItem.GetCodePoint())
+			}
+			else if (runItem.IsBreak())
+			{
+				text += "\n";
+			}
+			else if (runItem.IsTab())
+			{
+				text += "\t";
+			}
+			else if (runItem.IsDrawing() && runItem.IsForm())
+			{
+				flushText();
+				let form = runItem.GetInnerForm();
+				let apiForm = private_CheckForm(form);
+				if (apiForm && !(apiForm instanceof ApiUnsupported))
+					return this["Form"](apiForm);
+			}
+			else
+			{
+				flushText();
+			}
 		}
+		flushText();
 	};
 	//------------------------------------------------------------------------------------------------------------------
 	ApiDocumentVisitor.prototype["Traverse"] = function(isSelection)
@@ -26977,27 +26976,51 @@
 			this.visitDocContent(docContent.Content);
 		}
 	};
-	ApiDocumentVisitor.prototype["Paragraph"] = function(paragraph, isStart)
+	ApiDocumentVisitor.prototype["Paragraph"] = function(paragraph)
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["Table"] = function(table, isStart)
+	ApiDocumentVisitor.prototype["ParagraphEnd"] = function(paragraph)
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["TableRow"] = function(tableRow, isStart)
+	ApiDocumentVisitor.prototype["Table"] = function(table)
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["TableCell"] = function(tableCell, isStart)
+	ApiDocumentVisitor.prototype["TableEnd"] = function(table)
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["BlockLevelSdt"] = function(sdt, isStart)
+	ApiDocumentVisitor.prototype["TableRow"] = function(tableRow)
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["InlineLevelSdt"] = function(sdt, isStart)
+	ApiDocumentVisitor.prototype["TableRowEnd"] = function(table)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["TableCell"] = function(tableCell)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["TableCellEnd"] = function(tableCell)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["BlockLevelSdt"] = function(sdt)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["BlockLevelSdtEnd"] = function(sdt)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["InlineLevelSdt"] = function(sdt)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["InlineLevelSdtEnd"] = function(sdt)
 	{
 		return false;
 	};
@@ -27005,7 +27028,11 @@
 	{
 		return false;
 	};
-	ApiDocumentVisitor.prototype["Run"] = function(run, isStart)
+	ApiDocumentVisitor.prototype["Run"] = function(run)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["RunEnd"] = function(run)
 	{
 		return false;
 	};
