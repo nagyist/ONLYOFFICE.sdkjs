@@ -21973,7 +21973,7 @@
 	ApiFormatCondition.prototype.private_changeStyle = function(callback, notInitFont) {
 		let worksheet = this._parent.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
-			return;
+			return false;
 		}
 
 		let oldRule = this.rule;
@@ -21989,6 +21989,7 @@
 
 		worksheet.changeCFRule(oldRule, newRule, true);
 		//this.rule = newRule;
+		return true;
 	};
 
 	/**
@@ -24484,6 +24485,7 @@
 	 * @memberof ApiIconSetCondition
 	 * @typeofeditors ["CSE"]
 	 * @param {boolean} percentileValues - True to set all thresholds to percentile, false otherwise.
+	 * @returns {boolean} True if the percentile values was successfully set, false otherwise.
 	 * @since 9.1.0
 	 * @see office-js-api/Examples/{Editor}/ApiIconSetCondition/Methods/SetPercentileValues.js
 	 */
@@ -24501,10 +24503,10 @@
 			return false;
 		}
 
-		this.private_changeStyle(function(newRule) {
+		return this.private_changeStyle(function(newRule) {
 			let iconSetElement = newRule.aRuleElements && newRule.aRuleElements[0];
 			if (!iconSetElement || !iconSetElement.aCFVOs) {
-				return;
+				return false;
 			}
 
 			// Set type for all CFVOs (except the first one which is always the minimum)
