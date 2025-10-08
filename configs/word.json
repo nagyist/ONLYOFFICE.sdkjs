@@ -443,9 +443,6 @@
 			"word/Editor/Styles/FixedFormDefaults.js",
 			"word/Editor/Styles/default-styles.js",
 			
-			"word/apiBuilder.js",
-
-			"word/fromToJSON.js",
 			"common/versionHistory.js",
 			"common/clipboard_base.js",
 			"common/text_input2.js",
@@ -457,6 +454,9 @@
 			"common/Native/native_graphics.js",
 
 			"word/Editor/document-visitor.js",
+			
+			"word/apiBuilder.js",
+			"word/fromToJSON.js",
 
 			"vendor/easysax.js",
 			"common/openxml.js"

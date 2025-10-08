@@ -383,7 +383,9 @@
 			"slide/Editor/Format/ChartSpacePrototype.js",
 			"common/Drawings/Format/LockedCanvas.js",
 			"slide/apiCommon.js",
-
+			
+			"word/Editor/document-visitor.js",
+			
 			"word/apiBuilder.js",
 			"slide/apiBuilder.js",
 			"word/fromToJSON.js",
@@ -399,8 +401,6 @@
 
 			"common/Native/native_graphics.js",
 			
-			"word/Editor/document-visitor.js",
-
 			"vendor/easysax.js",
 			"common/openxml.js"
 		],

@@ -6069,6 +6069,19 @@
 		let contentControl = this.Document.GetCurrentContentControl();
 		return contentControl ? ToApiContentControl(contentControl) : null;
 	};
+	
+	/**
+	 * Returns the currently selected content control.
+	 * @memberof ApiDocumentContent
+	 * @typeofeditors ["CDE"]
+	 * @since 9.1.0
+	 * @returns {ApiDocumentVisitor}
+	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetDocumentVisitor.js
+	 */
+	ApiDocumentContent.prototype.GetDocumentVisitor = function()
+	{
+		return new ApiDocumentVisitor(this);
+	};
 
 	/**
 	 * Class representing a custom XML manager, which provides methods to manage custom XML parts in the document.
@@ -26803,7 +26816,192 @@
 		});
 		return property ? property.asc_getValue() : null;
 	};
-
+	
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiDocumentVisitor
+	//
+	//------------------------------------------------------------------------------------------------------------------
+	function ApiDocumentVisitor(docContent)
+	{
+		AscWord.DocumentVisitor.call(this);
+		
+		this.docContent = docContent;
+	}
+	ApiDocumentVisitor.prototype = Object.create(AscWord.DocumentVisitor.prototype);
+	ApiDocumentVisitor.prototype.constructor = ApiDocumentVisitor;
+	ApiDocumentVisitor.prototype.isHandleEnd = function()
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype.paragraph = function(paragraph, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["Paragraph"](new ApiParagraph(paragraph), isStart);
+	};
+	ApiDocumentVisitor.prototype.table = function(table, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["Table"](new ApiTable(table), isStart);
+	};
+	ApiDocumentVisitor.prototype.tableRow = function(tableRow, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["TableRow"](new ApiTableRow(tableRow), isStart);
+	};
+	ApiDocumentVisitor.prototype.tableCell = function(tableCell, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["TableCell"](new ApiTableCell(tableCell), isStart);
+	};
+	ApiDocumentVisitor.prototype.fldSimple = function(field, isStart)
+	{
+		return true;
+	};
+	ApiDocumentVisitor.prototype.blockLevelSdt = function(sdt, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["BlockLevelSdt"](new ApiBlockLvlSdt(sdt), isStart);
+	};
+	ApiDocumentVisitor.prototype.inlineLevelSdt = function(sdt, isStart)
+	{
+		if (!this.isHandleEnd() && !isStart)
+			return true;
+		
+		return this["InlineLevelSdt"](new ApiInlineLvlSdt(sdt), isStart);
+	};
+	ApiDocumentVisitor.prototype.oform = function(form, isStart)
+	{
+		if (!isStart)
+			return true;
+		
+		let apiForm = private_CheckForm(form);
+		if (!apiForm || apiForm instanceof ApiUnsupported)
+			return true;
+		
+		this["Form"](apiForm);
+		
+		// Внутрь формы не даем заходить
+		return true;
+	};
+	ApiDocumentVisitor.prototype.run = function(run, isStart)
+	{
+		function isParaEndRun(run)
+		{
+			return run && 1 === run.Content.length && run.Content[0].IsParaEnd();
+		}
+		
+		if ((!this.isHandleEnd() && !isStart) || isParaEndRun(run))
+			return true;
+		
+		if (isStart)
+		{
+			if (this["Run"](new ApiRun(run), true))
+				return true;
+			
+			let text = "";
+			let _t = this;
+			function flushText()
+			{
+				if ("" === text)
+					return;
+				
+				_t["Text"](text);
+				text = "";
+			}
+			
+			for (let i = 0; i < run.Content.length; ++i)
+			{
+				let runItem = run.Content[i];
+				if (runItem.IsText() || runItem.IsSpace())
+				{
+					text += String.fromCodePoint(runItem.GetCodePoint())
+				}
+				else if (runItem.IsDrawing() && runItem.IsForm())
+				{
+					flushText();
+					let form = runItem.GetInnerForm();
+					let apiForm = private_CheckForm(form);
+					if (apiForm && !(apiForm instanceof ApiUnsupported))
+						return this["Form"](apiForm);
+				}
+				else
+				{
+					flushText();
+				}
+			}
+			flushText();
+		}
+		else
+		{
+			return this["Run"](new ApiRun(run), false);
+		}
+	};
+	//------------------------------------------------------------------------------------------------------------------
+	ApiDocumentVisitor.prototype["Traverse"] = function(isSelection)
+	{
+		let docContent = this.docContent.Document;
+		if (isSelection)
+		{
+			let _t = this;
+			AscCommon.ExecuteNoHistory(function()
+			{
+				let selectedContent = docContent.GetSelectedContent(false);
+				_t.traverseSelectedContent(selectedContent)
+			});
+		}
+		else
+		{
+			this.visitDocContent(docContent.Content);
+		}
+	};
+	ApiDocumentVisitor.prototype["Paragraph"] = function(paragraph, isStart)
+	{
+		console.log(paragraph);
+		return false;
+	};
+	ApiDocumentVisitor.prototype["Table"] = function(table, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["TableRow"] = function(tableRow, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["TableCell"] = function(tableCell, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["BlockLevelSdt"] = function(sdt, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["InlineLevelSdt"] = function(sdt, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["Form"] = function(form)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["Run"] = function(run, isStart)
+	{
+		return false;
+	};
+	ApiDocumentVisitor.prototype["Text"] = function(text)
+	{
+		return false;
+	};
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Export
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -26906,6 +27104,7 @@
 	ApiDocumentContent.prototype["GetCurrentParagraph"]      = ApiDocumentContent.prototype.GetCurrentParagraph;
 	ApiDocumentContent.prototype["GetCurrentRun"]            = ApiDocumentContent.prototype.GetCurrentRun;
 	ApiDocumentContent.prototype["GetCurrentContentControl"] = ApiDocumentContent.prototype.GetCurrentContentControl;
+	ApiDocumentContent.prototype["GetDocumentVisitor"]       = ApiDocumentContent.prototype.GetDocumentVisitor;
 
 	ApiRange.prototype["GetClassType"]               = ApiRange.prototype.GetClassType;
 	ApiRange.prototype["GetParagraph"]               = ApiRange.prototype.GetParagraph;
@@ -27048,6 +27247,7 @@
 	ApiDocument.prototype["MoveCursorToStart"]             = ApiDocument.prototype.MoveCursorToStart;
 	ApiDocument.prototype["MoveCursorToEnd"]               = ApiDocument.prototype.MoveCursorToEnd;
 	ApiDocument.prototype["GoToPage"]                      = ApiDocument.prototype.GoToPage;
+	ApiDocument.prototype["GetDocumentVisitor"]            = ApiDocument.prototype.GetDocumentVisitor;
 	
 	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
