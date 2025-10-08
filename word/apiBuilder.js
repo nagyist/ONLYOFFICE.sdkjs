@@ -4144,7 +4144,7 @@
 	/**
 	 * Form type.
 	 * The available form types.
-	 * @typedef {"textForm" | "comboBoxForm" | "dropDownForm" | "checkBoxForm" | "radioButtonForm" | "pictureForm" | "complexForm"} FormType
+	 * @typedef {"textForm" | "comboBoxForm" | "dropDownForm" | "checkBoxForm" | "radioButtonForm" | "pictureForm" | "complexForm" | "dateForm"} FormType
 	 * @see office-js-api/Examples/Enumerations/FormType.js
 	 */
 
@@ -23350,6 +23350,18 @@
 		}, this);
 	};
 	/**
+	 * Returns the placeholder text from the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.1.0
+	 * @returns {string}
+	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/GetPlaceholderText.js
+	 */
+	ApiFormBase.prototype.GetPlaceholderText = function()
+	{
+		return this.Sdt.GetPlaceholderText();
+	};
+	/**
 	 * Sets the text properties to the current form.
 	 * *Used if possible for this type of form*
 	 * @memberof ApiFormBase
@@ -27997,6 +28009,7 @@
 	ApiFormBase.prototype["Clear"]              = ApiFormBase.prototype.Clear;
 	ApiFormBase.prototype["GetWrapperShape"]    = ApiFormBase.prototype.GetWrapperShape;
 	ApiFormBase.prototype["SetPlaceholderText"] = ApiFormBase.prototype.SetPlaceholderText;
+	ApiFormBase.prototype["GetPlaceholderText"] = ApiFormBase.prototype.GetPlaceholderText;
 	ApiFormBase.prototype["SetTextPr"]          = ApiFormBase.prototype.SetTextPr;
 	ApiFormBase.prototype["GetTextPr"]          = ApiFormBase.prototype.GetTextPr;
 	ApiFormBase.prototype["MoveCursorOutside"]  = ApiFormBase.prototype.MoveCursorOutside;
