@@ -1750,6 +1750,15 @@ function CBinaryFileWriter()
                 break;
             }
         }
+
+        if (Asc.editor.isPdfEditor()) {
+            let aRedactIds = oSp.GetRedactIds();
+            
+            oThis.WriteULong(aRedactIds.length);
+            aRedactIds.forEach(function(id) {
+                oThis.WriteString2(id);
+            });
+        }
     };
     this.WriteAnnotTreeElem = function(oAnnot) {
         oThis.WriteByMemory(function(memory) {

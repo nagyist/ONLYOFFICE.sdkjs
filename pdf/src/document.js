@@ -1935,6 +1935,7 @@ var CPresentation = CPresentation || function(){};
                 let oPr = new AscFormat.CCopyObjectProperties();
                 oPr.idMap = oIdMap;
                 oPr.bSaveSourceFormatting = bSourceFormatting;
+                oPr.bSkipRedactsIds = true;
                 for (let i = 0; i < aSpTree.length; ++i) {
                     oSp = aSpTree[i];
                     if (oSp.selected) {
@@ -3302,6 +3303,8 @@ var CPresentation = CPresentation || function(){};
         Object.values(oAnnotsMap).forEach(function(annot) {
             _t.CheckComment(annot);
         });
+
+        return Object.values(oAnnotsMap);
     };
     CPDFDoc.prototype.private_AddFormsByInfo = function(oFormsInfo, pageOffset) {
         if (!pageOffset) {
@@ -4315,6 +4318,7 @@ var CPresentation = CPresentation || function(){};
 
         let oPage = oDrawing.GetParentPage();
         oPage.RemoveDrawing(Id);
+        oDrawing.ClearRedacts();
 
         if (bIsOnMove !== true) {
             oController.resetSelection(true);
@@ -5645,7 +5649,7 @@ var CPresentation = CPresentation || function(){};
 
             oAnnot.SetQuads(aQuads);
             oAnnot.SetFillColor([0, 0, 0]);
-            oAnnot.SetStrokeColor([255, 0, 0]);
+            oAnnot.SetStrokeColor([1, 0, 0]);
             oAnnot.SetOpacity(1);
         }
 
@@ -6278,6 +6282,7 @@ var CPresentation = CPresentation || function(){};
                 }
                 
                 this.MergePagesBinary(nInsertPos, oSelContent.MergePagesInfo.binaryData);
+                let sMergeName = this.mergedPagesData[this.mergedPagesData.length - 1].mergeName;
 
                 let aPagesDrawings = oSelContent.MergePagesInfo.pagesDrawings;
                 for (let i = 0; i < aPagesDrawings.length; i++) {
@@ -6285,14 +6290,36 @@ var CPresentation = CPresentation || function(){};
                         return pasteObj.Drawing;
                     });
 
+                    let oRedactIdsSet = new Set();
+                    
                     aDrawings.forEach(function(drawing, index) {
+                        let aRedactIds = drawing.GetRedactIds().map(function(id) {
+                            return sMergeName + "_" + id;
+                        });
+
+                        drawing.ClearRedacts();
+                        aRedactIds.forEach(function(id) {
+                            drawing.AddRedactId(id);
+                            oRedactIdsSet.add(id);
+                        });
+
                         oThis.AddDrawing(drawing, nInsertPos);
         
                         if (drawing.IsGraphicFrame()) {
                             oController.Check_GraphicFrameRowHeight(drawing);
                         }
                     });
+
+                    let aRedactIdsOrder = Array.from(oRedactIdsSet).sort((a, b) => {
+                        const ia = a.indexOf("_redact_") + 8;
+                        const ib = b.indexOf("_redact_") + 8;
+                        return parseInt(a.slice(ia)) - parseInt(b.slice(ib));
+                    });
         
+                    aRedactIdsOrder.forEach(function(id) {
+                        oThis.ApplyRedact(id, nInsertPos);
+                    });
+
                     nInsertPos++;
                 }
             }
@@ -7316,7 +7343,17 @@ var CPresentation = CPresentation || function(){};
                 }
             }
 
-            this.private_AddAnnotsByInfo(aAnnotsInfoNew, nInsertPos - oFile.originalPagesCount);
+            let aAnnots = this.private_AddAnnotsByInfo(aAnnotsInfoNew, nInsertPos - oFile.originalPagesCount);
+
+            // set info about redact (split case)
+            aAnnots.forEach(function(annot) {
+                if (annot.IsRedact()) {
+                    let oMeta = annot.GetMeta();
+                    if (oMeta["redactId"]) {
+                        annot.SetRedactId(sMergeName + "_" + oMeta["redactId"]);
+                    }
+                }
+            });
 
             // open new forms
             let oFormsInfoAfter = oFile.nativeFile["getInteractiveFormsInfo"]();
@@ -7399,7 +7436,7 @@ var CPresentation = CPresentation || function(){};
 			return annot.IsRedact() && annot.GetRedactId();
 		});
 	};
-    CPDFDoc.prototype.ApplyRedact = function() {
+    CPDFDoc.prototype.ApplyRedact = function(sRedactId, nPage) {
         let oFile = this.Viewer.file;
 		let oNativeFile = oFile.nativeFile;
 
@@ -7407,10 +7444,19 @@ var CPresentation = CPresentation || function(){};
 			this.BlurActiveObject();
 
             const pagesIdxMap = new Map();
-			let sRedactId = AscCommon.g_oIdCounter.GetNewIdForPdfRedact();
-            
-            for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
-                let oPageInfo = this.GetPageInfo(i);
+			
+            // we need to reapply redact on merge pages
+            let isOnMerge = false;
+            if (sRedactId && undefined !== nPage) {
+                isOnMerge = true;
+            }
+
+            function applyForPage(pageIdx) {
+                if (!isOnMerge) {
+                    sRedactId = AscCommon.g_oIdCounter.GetNewIdForPdfRedact();
+                }
+
+                let oPageInfo = this.GetPageInfo(pageIdx);
                 let nOrigPageIdx = oPageInfo.GetOriginIndex();
                 let isOrigPage = undefined !== nOrigPageIdx;
 
@@ -7419,9 +7465,20 @@ var CPresentation = CPresentation || function(){};
                 let oMemory;
 
                 oPageInfo.annots.forEach(function(annot) {
-                    if (!annot.IsRedact() || annot.GetRedactId()) return;
+                    if (!annot.IsRedact()) return;
+                    if (annot.GetRedactId() && !isOnMerge) {
+                        return;
+                    }
 
-                    annot.SetRedactId(sRedactId);
+                    if (isOnMerge) {
+                        if (annot.GetRedactId() != sRedactId) {
+                            return;
+                        }
+                    }
+                    else {
+                        annot.SetRedactId(sRedactId);
+                    }
+
                     annot.AddToRedraw();
 
                     if (!isOrigPage) {
@@ -7441,14 +7498,16 @@ var CPresentation = CPresentation || function(){};
                     oMemory.WriteLong(oFillRGB.g);
                     oMemory.WriteLong(oFillRGB.b);
 
-                    pagesIdxMap.set(i, nOrigPageIdx);
+                    pagesIdxMap.set(pageIdx, nOrigPageIdx);
                 });
 
-                oPageInfo.drawings.forEach(function(drawing) {
-                    drawing.AddRedactId(sRedactId);
-                    return;
-                });
-
+                if (!isOnMerge) {
+                    oPageInfo.drawings.forEach(function(drawing) {
+                        drawing.AddRedactId(sRedactId);
+                        return;
+                    });
+                }
+               
                 if (aQuadsFlat.length != 0) {
                     let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
 
@@ -7459,7 +7518,16 @@ var CPresentation = CPresentation || function(){};
                         oRender
                     );
 
-                    this.SetRedactData(sRedactId, i, aQuadsFlat, oRender);
+                    this.SetRedactData(sRedactId, pageIdx, aQuadsFlat, oRender);
+                }
+            }
+
+            if (nPage != undefined) {
+                applyForPage.call(this, nPage);
+            }
+            else {
+                for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
+                    applyForPage.call(this, i);
                 }
             }
 

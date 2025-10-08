@@ -82,7 +82,7 @@ CChangesPDFDrawingRedacts.prototype.WriteToBinary = function (writer) {
 CChangesPDFDrawingRedacts.prototype.Undo = function()
 {
     let oDrawing = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
 
     if (this.IsAdd()) {
         // Undo addition by removing items
@@ -102,7 +102,7 @@ CChangesPDFDrawingRedacts.prototype.Undo = function()
 CChangesPDFDrawingRedacts.prototype.Redo = function()
 {
     let oDrawing = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
 
     if (this.IsAdd()) {
         // Redo addition by adding items
@@ -133,7 +133,7 @@ CChangesPDFDrawingRedacts.prototype.private_InsertInArrayLoad = function()
         return;
 
     let oDrawing = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oContentChanges = this.private_GetContentChanges();
 
     for (let i = 0; i < this.Items.length; ++i) {
@@ -155,7 +155,7 @@ CChangesPDFDrawingRedacts.prototype.private_RemoveInArrayLoad = function()
         return;
 
     let oDrawing = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oContentChanges = this.private_GetContentChanges();
 
     // Remove items in reverse order to maintain indices

@@ -677,6 +677,12 @@
     CAnnotationRedact.prototype.constructor = CAnnotationRedact;
     AscFormat.InitClass(CAnnotationRedact, CAnnotationTextMarkup, AscDFH.historyitem_type_Pdf_Annot_Redact);
 
+    CAnnotationRedact.prototype.Copy = function() {
+        let oCopy = AscPDF.CAnnotationBase.prototype.Copy.call(this);
+
+        oCopy.SetRedactId(this.GetRedactId());
+        return oCopy;
+    };
     CAnnotationRedact.prototype.IsRedact = function() {
         return true;
     };
@@ -823,6 +829,61 @@
     };
     CAnnotationRedact.prototype.onMouseEnter = function() {
         this.SetHovered(true);
+    };
+    CAnnotationRedact.prototype.WriteToBinary = function(memory) {
+        memory.WriteByte(AscCommon.CommandType.ctAnnotField);
+
+        let nStartPos = memory.GetCurPosition();
+        memory.Skip(4);
+
+        this.WriteToBinaryBase(memory);
+        this.WriteToBinaryBase2(memory);
+        
+        // quads
+        let aQuads = this.GetQuads();
+        if (aQuads != null) {
+            memory.annotFlags |= (1 << 15);
+            
+            let nLen = 0;
+            for (let i = 0; i < aQuads.length; i++) {
+                nLen += aQuads[i].length;
+            }
+            memory.WriteLong(nLen);  
+            for (let i = 0; i < aQuads.length; i++) {
+                for (let j = 0; j < aQuads[i].length; j++) {
+                    memory.WriteDouble(aQuads[i][j]);
+                }
+            }
+        }
+
+        // fill
+        let aFill = this.GetFillColor();
+        if (aFill != null) {
+            memory.annotFlags |= (1 << 16);
+            memory.WriteLong(aFill.length);
+            for (let i = 0; i < aFill.length; i++)
+                memory.WriteDouble(aFill[i]);
+        }
+
+        // overlay text
+        //
+        //
+
+        // alignment
+        //
+        //
+
+        // font style
+        //
+        //
+
+        let nEndPos = memory.GetCurPosition();
+        memory.Seek(memory.posForFlags);
+        memory.WriteLong(memory.annotFlags);
+        
+        memory.Seek(nStartPos);
+        memory.WriteLong(nEndPos - nStartPos);
+        memory.Seek(nEndPos);
     };
 
     function findMaxSideWithRotation(x1, y1, x2, y2, x3, y3, x4, y4) {

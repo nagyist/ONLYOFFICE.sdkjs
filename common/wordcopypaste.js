@@ -4291,6 +4291,7 @@ PasteProcessor.prototype =
 				}
 			} else if (base64FromPDF)//вставка из pdf редактора
 			{
+				PasteElementsId.g_bIsPdfBinary = true;
 				if (PasteElementsId.g_bIsPDFCopyPaste) {
 					bInsertFromBinary = null !== this._pasteBinaryFromPDFToPDF(base64FromPDF);
 				} else if (PasteElementsId.g_bIsDocumentCopyPaste) {
@@ -4298,6 +4299,7 @@ PasteProcessor.prototype =
 				} else {
 					bInsertFromBinary = null !== this._pasteBinaryFromPDFToPresentation(base64FromPDF);
 				}
+				PasteElementsId.g_bIsPdfBinary = false;
 			}
 		}
 

@@ -5114,9 +5114,6 @@
 			if (oPageInfo.annots) {
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
-					if (oAnnot.IsRedact() && oAnnot.GetRedactId()) {
-						continue;
-					}
 
 					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {

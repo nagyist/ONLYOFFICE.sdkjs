@@ -1506,8 +1506,15 @@
                         oMeta["InRect"] = this.GetInRect();
                     }
                 }
-                else if (this.GetOriginPage() == undefined) {
+                if (this.GetOriginPage() == undefined) {
                     oMeta["isOO"] = true;
+
+                    if (this.IsRedact()) {
+                        let sRedactId = this.GetRedactId();
+                        if (sRedactId) {
+                            oMeta["redactId"] = sRedactId;
+                        }
+                    }
                 }
             }
             

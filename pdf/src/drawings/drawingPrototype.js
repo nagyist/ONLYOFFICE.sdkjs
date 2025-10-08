@@ -275,7 +275,20 @@
     };
     CPdfDrawingPrototype.prototype.GetRedactIds = function() {
         return this._redactIds;
-    }
+    };
+    CPdfDrawingPrototype.prototype.RemoveRedactId = function(nPos) {
+        let ids = this._redactIds.splice(nPos, 1);
+        AscCommon.History.Add(new CChangesPDFDrawingRedacts(this, nPos, ids, false));
+
+        return ids[0];
+    };
+    CPdfDrawingPrototype.prototype.ClearRedacts = function() {
+        let nCount = this._redactIds.length;
+        for (let i = 0; i < nCount; i++) {
+            this.RemoveRedactId(0);
+        }
+    };
+    
     CPdfDrawingPrototype.prototype.SetFromScan = function(bFromScan) {
         this._isFromScan = bFromScan;
     };
