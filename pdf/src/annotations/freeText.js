@@ -569,19 +569,11 @@
         this.EditCommentData(undefined);
     };
     CAnnotationFreeText.prototype.SetContents = function(contents) {
-        if (this.GetContents() == contents)
+        if (this._contents == contents)
             return;
 
-        let oViewer         = editor.getDocumentRenderer();
-        let sCurContents    = this.GetContents();
-        
+        AscCommon.History.Add(new CChangesPDFAnnotContents(this, this._contents, contents));
         this._contents = contents;
-        
-        if (oViewer.IsOpenAnnotsInProgress == false && contents != sCurContents) {
-            if (AscCommon.History.UndoRedoInProgress == false) {
-                AscCommon.History.Add(new CChangesPDFAnnotContents(this, sCurContents, contents));
-            }
-        }
 
         this.SetWasChanged(true);
     };
