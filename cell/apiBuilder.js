@@ -24566,7 +24566,7 @@
 						if (!cfvo.asc_getVal()) {
 							// For 3-icon set: 33%, 67%; for 4-icon set: 25%, 50%, 75%; for 5-icon set: 20%, 40%, 60%, 80%
 							let totalCfvos = iconSetElement.aCFVOs.length;
-							let percentileValue = Math.round((i / (totalCfvos)) * 100);
+							let percentileValue = Math.round((i / (totalCfvos - 1)) * 100);
 							cfvo.asc_setVal(percentileValue.toString());
 						}
 					} else {
