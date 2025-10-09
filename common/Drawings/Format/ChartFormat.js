@@ -15909,26 +15909,27 @@
             this.plotArea.updateReferences(bDisplayEmptyCellsAs, bDisplayHidden);
         }
     };
-    CChart.prototype.createLegend = function (legendPosition) {
-        const legend = new AscFormat.CLegend();
-        legend.setParent(this);
+	CChart.prototype.createLegend = function (legendPosition) {
+		const legend = new AscFormat.CLegend();
+		legend.setParent(this);
 
-        legend.setLegendPos(legendPosition != null ? legendPosition : Asc.c_oAscChartLegendShowSettings.right);
+		if (legendPosition === Asc.c_oAscChartLegendShowSettings.leftOverlay ||
+			legendPosition === Asc.c_oAscChartLegendShowSettings.rightOverlay) {
 
-        const chartSpace = legend.getChartSpace();
-        if (chartSpace.chartStyle && chartSpace.chartColors) {
-            legend.applyChartStyle(
-                chartSpace.chartStyle,
-                chartSpace.chartColors,
-                AscFormat.g_oChartStyleCache.getAdditionalData(chartSpace.getChartType(), chartSpace.chartStyle.id),
-                true
-            );
-        } else {
-            legend.resetFormatting();
-        }
+			legendPosition = legendPosition === Asc.c_oAscChartLegendShowSettings.leftOverlay
+				? Asc.c_oAscChartLegendShowSettings.left
+				: Asc.c_oAscChartLegendShowSettings.right;
+			legend.setOverlay(true);
+		}
+		legend.setLegendPos(legendPosition != null ? legendPosition : Asc.c_oAscChartLegendShowSettings.right);
 
-        this.setLegend(legend);
-    };
+		const chartSpace = legend.getChartSpace();
+		chartSpace && chartSpace.chartStyle && chartSpace.chartColors
+			? chartSpace.checkElementChartStyle(legend)
+			: legend.resetFormatting();
+
+		this.setLegend(legend);
+	};
 
     function CChartWall() {
         CBaseChartObject.call(this);

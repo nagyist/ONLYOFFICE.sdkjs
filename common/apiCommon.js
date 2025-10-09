@@ -1882,9 +1882,10 @@ function (window, undefined) {
 		}
 
 		AscCommon.History.Create_NewPoint(AscDFH.historyitem_type_ChartSpace);
-		bShow
-			? this.chartSpace.chart.createLegend(nLegendPosition)
-			: this.chartSpace.chart.setLegend(null);
+		const clearLegend = !bShow || nLegendPosition == null || nLegendPosition == Asc.c_oAscChartLegendShowSettings.none;
+		clearLegend
+			? this.chartSpace.chart.setLegend(null)
+			: this.chartSpace.chart.createLegend(nLegendPosition);
 
 		this.updateChart();
 		const oLogicDocument = Asc.editor.getLogicDocument();
