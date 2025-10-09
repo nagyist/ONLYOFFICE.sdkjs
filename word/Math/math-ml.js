@@ -144,6 +144,14 @@
                             el.SetFontSize(value);
                         }
                     }
+                    case 'stretchy': {
+                        if (attributes.stretchy === 'false')
+                        {
+                            if (!el.mathml_metadata)
+                                el.mathml_metadata = {};
+                            el.mathml_metadata.stretchy = false;
+                        }
+                    }
                     default: break;
                 }
             }
@@ -499,8 +507,9 @@
             {
                 let current = result[i];
                 let currentText = current instanceof ParaRun ? current.GetTextOfElement().GetText() : null;
-    
-                if (currentText && (AscMath.MathLiterals.lBrackets.SearchU(currentText) || AscMath.MathLiterals.lrBrackets.SearchU(currentText)))
+                let isStretchy = !(current instanceof ParaRun && current.mathml_metadata && current.mathml_metadata.stretchy === false);
+
+                if (currentText && isStretchy && (AscMath.MathLiterals.lBrackets.SearchU(currentText) || AscMath.MathLiterals.lrBrackets.SearchU(currentText)))
                 {
                     let openBracket = currentText;
                     let bracketContent = [];
@@ -511,8 +520,9 @@
                     {
                         let nextElement = result[j];
                         let nextText = nextElement instanceof ParaRun ? nextElement.GetTextOfElement().GetText() : null;
-                        
-                        if (nextText && (AscMath.MathLiterals.rBrackets.SearchU(nextText) || AscMath.MathLiterals.lrBrackets.SearchU(nextText)))
+                        let nextIsStretchy = !(nextElement instanceof ParaRun && nextElement.mathml_metadata && nextElement.mathml_metadata.stretchy === false);
+
+                        if (nextText && nextIsStretchy&& (AscMath.MathLiterals.rBrackets.SearchU(nextText) || AscMath.MathLiterals.lrBrackets.SearchU(nextText)))
                         {
                             closeBracket = nextText;
                             break;
@@ -536,7 +546,7 @@
                         break;
                     }
                 }
-                else if (currentText && AscMath.MathLiterals.rBrackets.SearchU(currentText))
+                else if (currentText && isStretchy && AscMath.MathLiterals.rBrackets.SearchU(currentText))
                 {
                     let precedingContent = [];
                     let k = processedResult.length - 1;
