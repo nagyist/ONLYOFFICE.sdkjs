@@ -15830,12 +15830,16 @@
 	CChart.prototype.createLegend = function (legendPosition) {
 		const legend = new AscFormat.CLegend();
 		legend.setParent(this);
-		legend.setLegendPos(legendPosition != null ? legendPosition : Asc.c_oAscChartLegendShowSettings.right);
 
 		if (legendPosition === Asc.c_oAscChartLegendShowSettings.leftOverlay ||
 			legendPosition === Asc.c_oAscChartLegendShowSettings.rightOverlay) {
+
+			legendPosition = legendPosition === Asc.c_oAscChartLegendShowSettings.leftOverlay
+				? Asc.c_oAscChartLegendShowSettings.left
+				: Asc.c_oAscChartLegendShowSettings.right;
 			legend.setOverlay(true);
 		}
+		legend.setLegendPos(legendPosition != null ? legendPosition : Asc.c_oAscChartLegendShowSettings.right);
 
 		const chartSpace = legend.getChartSpace();
 		chartSpace && chartSpace.chartStyle && chartSpace.chartColors
