@@ -2204,6 +2204,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype._saveCheck = function() {
 		return (!this.isLongAction()
 			&& !this.isGroupActions()
+			&& !this.isOpenedFrameEditor
 			&& !(this.isSlideShow())
 		);
 	};

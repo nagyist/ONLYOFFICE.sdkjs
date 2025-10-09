@@ -2759,6 +2759,7 @@ background-repeat: no-repeat;\
 	{
 		return (!this.isLongAction()
 			&& !this.isGroupActions()
+			&& !this.isOpenedFrameEditor
 			&& !(this.WordControl.m_oLogicDocument && this.WordControl.m_oLogicDocument.IsViewModeInReview())
 		);
 	};
