@@ -469,7 +469,8 @@
         });
 
         let unredactedPolygon = null;
-        let mm2px = AscCommon.AscBrowser.retinaPixelRatio * 96 / 25.4;
+        let zoom = AscCommon.AscBrowser.convertToRetinaValue(oGraphicsWord.m_lWidthPix) / (oDoc.GetPageWidthMM(nPage) * g_dKoef_mm_to_pix);
+        let mm2px = AscCommon.AscBrowser.retinaPixelRatio * g_dKoef_mm_to_pix * zoom;
 
         if (aRectsList.length) {
             let nPageW = oDoc.GetPageWidthMM(nPage) * mm2px;
