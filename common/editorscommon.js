@@ -10901,7 +10901,7 @@
 		{
 			AscCommon.History.TurnOff && AscCommon.History.TurnOff();
 
-			if (AscCommon.g_oTableId && !AscCommon.g_oTableId.IsOn())
+			if (AscCommon.g_oTableId && AscCommon.g_oTableId.IsOn())
 			{
 				AscCommon.g_oTableId.TurnOff();
 				isTableId = true;

@@ -14598,7 +14598,7 @@ background-repeat: no-repeat;\
 			return;
 		
 		let groupChanges = AscCommon.History.getGroupChanges();
-		AscCommon.History.resetGroupChanges()
+		AscCommon.History.resetGroupChanges();
 		if (groupChanges.length)
 			logicDocument.RecalculateByChanges(groupChanges);
 	};
