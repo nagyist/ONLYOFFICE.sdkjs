@@ -8974,10 +8974,7 @@ function(window, undefined) {
 
 		if (chart.dLbls) {
 			chart.dLbls.setShowVal(bDisplay);
-
-			if (bDisplay) {
-				chart.dLbls.setDLblPos(nDataLabelPos);
-			}
+			chart.dLbls.setDLblPos(bDisplay ? nDataLabelPos : undefined);
 		}
 
 		const series = chart.series;
@@ -8987,9 +8984,21 @@ function(window, undefined) {
 				return;
 			}
 
-			const dLbls = ser.dLbls || createDLbls(ser);
-			dLbls.setDLblPos(nDataLabelPos);
-			ser.setDLbls(dLbls);
+			if (ser.dLbls) {
+				ser.dLbls.setShowVal(true);
+				ser.dLbls.setDLblPos(nDataLabelPos);
+			} else {
+				const dLbls = createDLbls(ser);
+				dLbls.setDLblPos(nDataLabelPos);
+				ser.setDLbls(dLbls);
+			}
+
+			if (Array.isArray(ser.dLbls.dLbl)) {
+				ser.dLbls.dLbl.forEach(function (label) {
+					label.setDLblPos(undefined);
+					label.setShowVal(true);
+				});
+			}
 		});
 
 		function createDLbls(parent) {
