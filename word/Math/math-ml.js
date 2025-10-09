@@ -95,6 +95,26 @@
 				mathContent.addElementToContent(element);
 			}
 		};
+        this.GetAttributes = function(reader)
+        {
+            let attributes = reader.GetAttributes();
+
+            function valuesToLower(obj)
+            {
+                let out = {};
+                for (let k in obj) {
+                    if (Object.prototype.hasOwnProperty.call(obj, k))
+                    {
+                        let v = obj[k];
+                        out[k] = (typeof v === 'string')
+                            ? v.toLowerCase()
+                            : v;
+                    }
+                }
+                return out;
+            }
+            return valuesToLower(attributes);
+        };
         this.proceedMathMLDefaultAttributes = function(attributes, elements, el, name)
         {
             let keysAttributes = Object.keys(attributes);
@@ -323,7 +343,7 @@
                 case 'mspace':
                 case 'mtext':
                 case 'ms':
-                    let attributes = reader.GetAttributes();
+                    let attributes = this.GetAttributes(reader);
                     let text = updateBaseText(reader.GetText());
 
                     if (text.length === 0)
@@ -342,7 +362,7 @@
                     break;
                 case 'menclose':
                     this.proceedMathMLDefaultAttributes(
-                        reader.GetAttributes(),
+                        this.GetAttributes(reader),
                         elements,
                         this.handleBorderBox(reader)
                     );
@@ -428,7 +448,7 @@
                     break;
                 case 'msqrt':
                     this.proceedMathMLDefaultAttributes(
-                        reader.GetAttributes(),
+                        this.GetAttributes(reader),
                         elements,
                         this.handleRadical(reader)
                     );
@@ -445,7 +465,7 @@
                     break;
                 case 'munder':
                 {
-                    let attributes = reader.GetAttributes();
+                    let attributes = reader.GetAttributes(reader);
     
                     if (attributes['displaystyle'] === 'true')
                     {
@@ -462,7 +482,7 @@
                 }
                 case 'mover':
                 {
-                    let attributes = reader.GetAttributes();
+                    let attributes = this.GetAttributes(reader);
     
                     if (attributes['accent'] === 'true')
                         elements.push(this.handleAccent(reader, VJUST_BOT));
@@ -863,7 +883,7 @@
         };
         this.handleFraction = function (reader)
         {
-            let attributes = reader.GetAttributes();
+            let attributes = this.GetAttributes(reader);
             let props = new CMathFractionPr();
             props.content = [];
 
@@ -923,7 +943,7 @@
         this.handleMathContent = function(reader, paraMath, mathContent)
         {
             let depth = reader.GetDepth();
-            this.getGlobalAttributes(reader.GetAttributes(), paraMath);
+            this.getGlobalAttributes(this.GetAttributes(reader), paraMath);
 
             while (reader.ReadNextSiblingNode(depth))
             {
@@ -1190,7 +1210,7 @@
         {
             if (!props)
             {
-                let attributes = reader.GetAttributes();
+                let attributes = this.GetAttributes(reader);
                 let open = attributes['open'] || "(";
                 let close = attributes['close'] || ")";
                 let separator = attributes['separators'] || ",";
