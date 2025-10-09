@@ -4147,7 +4147,9 @@
       	this._calcPagesPrintSheet(i, printPagesData, false, adjustPrint);
       }
     } else if (printType === Asc.c_oAscPrintType.Selection) {
-      this._calcPagesPrintSheet(nActive, printPagesData, true, adjustPrint);
+		let _activeSheetsArray = adjustPrint && adjustPrint.asc_getActiveSheetsArray && adjustPrint.asc_getActiveSheetsArray();
+		let activeSheet = _activeSheetsArray && _activeSheetsArray[0] != null ? _activeSheetsArray[0] : null;
+		this._calcPagesPrintSheet(activeSheet != null ? activeSheet : nActive, printPagesData, true, adjustPrint);
     }
 
     if (this.printPreviewState.isNeedShowError(AscCommonExcel.c_kMaxPrintPages === printPagesData.arrPages.length)) {
