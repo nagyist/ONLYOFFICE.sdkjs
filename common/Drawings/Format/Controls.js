@@ -1661,63 +1661,66 @@ function getFlatPenColor() {
 		const nMinValue = this.getMinValue();
 		const nMaxValue = this.getMaxValue();
 		const nCurrentValue = this.getCurrentValue();
-		const nButtonSide = Math.min(this.extX, this.extY);
 		if (bIsVertical) {
-			const nTrackHeight = nScrollHeight - (nButtonSide * 2);
-
+			const nButtonWidth = this.extX;
+			const nButtonHeight = Math.min(this.extY / 2, nButtonWidth);
+			const nTrackHeight = nScrollHeight - (nButtonHeight * 2);
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
-			this.upButton.extX = nButtonSide;
-			this.upButton.extY = nButtonSide;
+			this.upButton.extX = nButtonWidth;
+			this.upButton.extY = nButtonHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_UP;
 
 			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonSide);
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonHeight);
 			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
 			this.downButton.x = this.x;
-			this.downButton.y = this.y + nScrollHeight - nButtonSide;
-			this.downButton.extX = nButtonSide;
-			this.downButton.extY = nButtonSide;
+			this.downButton.y = this.y + nScrollHeight - nButtonHeight;
+			this.downButton.extX = nButtonWidth;
+			this.downButton.extY = nButtonHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_DOWN;
 
 			this.trackArea.x = this.x;
-			this.trackArea.y = this.y + nButtonSide;
+			this.trackArea.y = this.y + nButtonHeight;
 			this.trackArea.extX = nScrollWidth;
 			this.trackArea.extY = nTrackHeight;
 			const oTrackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonSide);
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonHeight);
 			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
 		} else {
-			const nTrackWidth = nScrollWidth - (nButtonSide * 2);
+			const nButtonHeight = this.extY;
+			const nButtonWidth = Math.min(nButtonHeight, this.extX / 2);
+
+			const nTrackWidth = nScrollWidth - (nButtonWidth * 2);
 
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
-			this.upButton.extX = nButtonSide;
-			this.upButton.extY = nButtonSide;
+			this.upButton.extX = nButtonWidth;
+			this.upButton.extY = nButtonHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_LEFT;
 
 			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, nScrollWidth - nButtonSide, 0);
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, nScrollWidth - nButtonWidth, 0);
 			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
-			this.downButton.x = this.x + nScrollWidth - nButtonSide;
+			this.downButton.x = this.x + nScrollWidth - nButtonWidth;
 			this.downButton.y = this.y;
-			this.downButton.extX = nButtonSide;
-			this.downButton.extY = nButtonSide;
+			this.downButton.extX = nButtonWidth;
+			this.downButton.extY = nButtonHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_RIGHT;
 
-			this.trackArea.x = this.x + nButtonSide;
+			this.trackArea.x = this.x + nButtonWidth;
 			this.trackArea.y = this.y;
 			this.trackArea.extX = nTrackWidth;
 			this.trackArea.extY = nScrollHeight;
 			const oTrackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oTrackMatrix, nButtonSide, 0);
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, nButtonWidth, 0);
 			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
 		}
@@ -1972,6 +1975,9 @@ function getFlatPenColor() {
 			oThis.recalculateTransform();
 			oThis.controller.checkNeedUpdate();
 		};
+		this.scrollContainer.isVertical = function () {
+			return true;
+		}
 	};
 	CListBox.prototype.updateListItems = function () {
 		this.listItems = [];
@@ -2067,6 +2073,8 @@ function getFlatPenColor() {
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
 		startRoundControl(graphics, 0, 0, this.extX, this.extY, 2, getFlatPenColor());
+		graphics.b_color1(255, 255, 255, 255);
+		graphics.TableRect(0, 0, this.extX, this.extY);
 		this.checkVisibleItems(function (oItem) {
 			oItem.draw(graphics);
 		});
@@ -2126,10 +2134,29 @@ function getFlatPenColor() {
 		}
 		return false;
 	};
-
+	CListBox.prototype.resetHoverEffect = function () {
+		let bUpdate = false;
+		this.checkVisibleItems(function (oItem) {
+			if (oItem.isHovered) {
+				bUpdate = true;
+				oItem.setHovered(false);
+			}
+			return bUpdate;
+		});
+		if (bUpdate) {
+			this.controller.checkNeedUpdate();
+		}
+	};
 	CListBox.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isShowScroll() && this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
-			return true;
+		if (this.isShowScroll()) {
+			const bIsScrollMove = this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+			const bIsHitScroll = this.scrollContainer.hit(nX, nY);
+			if (bIsHitScroll || bIsScrollMove) {
+				if (bIsHitScroll) {
+					this.resetHoverEffect();
+				}
+				return bIsScrollMove;
+			}
 		}
 
 			const nLocalX = this.invertTransform.TransformPointX(nX, nY);
