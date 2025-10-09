@@ -8002,7 +8002,7 @@ var CPresentation = CPresentation || function(){};
             }
         });
 
-        return nMax;
+        return Math.max(nMax, this.GetCurMaxApIdx());
     };
     CPDFDoc.prototype.Add_ContentChanges = function(Changes) {
         this.pagesContentChanges.Add(Changes);
