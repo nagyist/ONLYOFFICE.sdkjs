@@ -186,19 +186,17 @@
         this._apIdx = nIdx;
     };
     CBaseField.prototype.GetApIdx = function() {
-        if (undefined == this._apIdx) {
-            if (undefined == this.GetId()) {
-                return -1;
-            }
-            else {
-                let nApIdx = Number(this.GetId().replace("_", ""));
-                if (!isNaN(nApIdx)) {
-                    return nApIdx;
-                }
-            }
+        if (undefined !== this._apIdx) {
+            return this._apIdx;
         }
-
-        return this._apIdx;
+        else {
+            let nPos = Object.keys(AscCommon.g_oTableId.m_aPairs).indexOf(this.GetId());
+            if (-1 !== nPos) {
+                return Asc.editor.getPDFDoc().GetCurMaxApIdx() + nPos;
+            }
+            
+            return undefined;
+        }
     };
     CBaseField.prototype.SetMEOptions = function(nFlags) {
         let oParent = this.GetParent();
@@ -1694,7 +1692,7 @@
     CBaseField.prototype.Refresh_RecalcData = function(){};
     CBaseField.prototype.SetWasChanged = function(isChanged, viewSync) {
         let oViewer   = Asc.editor.getDocumentRenderer();
-        let canChange = !oViewer.IsOpenAnnotsInProgress && AscCommon.History.CanAddChanges();
+        let canChange = !oViewer.IsOpenFormsInProgress && AscCommon.History.CanAddChanges();
 
         let changed = this._wasChanged !== isChanged && canChange;
         if (changed) {

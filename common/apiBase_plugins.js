@@ -352,22 +352,28 @@
 		let b_old_save_format = AscCommon.g_clipboardBase.bSaveFormat;
 		AscCommon.g_clipboardBase.bSaveFormat = false;
 		let _t = this;
-
-		this.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, _elem, undefined, undefined, undefined,
-			function () {
-				_t.decrementCounterLongAction();
-
-				let fCallback = function () {
-					document.body.removeChild(_elem);
-					_elem = null;
-					AscCommon.g_clipboardBase.bSaveFormat = b_old_save_format;
-				};
-				if (_t.checkLongActionCallback(fCallback, null)) {
-					fCallback();
+		
+		this.executeGroupActions(function()
+		{
+			_t.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, _elem, undefined, undefined, undefined,
+				function()
+				{
+					_t.decrementCounterLongAction();
+					
+					let fCallback = function()
+					{
+						document.body.removeChild(_elem);
+						_elem                                 = null;
+						AscCommon.g_clipboardBase.bSaveFormat = b_old_save_format;
+					};
+					if (_t.checkLongActionCallback(fCallback, null))
+					{
+						fCallback();
+					}
+					window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
 				}
-				window.g_asc_plugins &&	window.g_asc_plugins.onPluginMethodReturn(true);
-			}
-		);
+			);
+		});
 	};
 
     /**

@@ -4989,7 +4989,8 @@ function(window, undefined) {
 							pts[j].compiledDlb.updatePosition(posX, posY);
 						}
 					}
-					let oTrendlineLbl = ser.trendline && ser.trendline.trendlineLbl;
+					const trendline = ser.getLastTrendline();
+					let oTrendlineLbl = trendline && trendline.trendlineLbl;
 					if(oTrendlineLbl) {
 						oTrendlineLbl.updatePosition(posX, posY);
 					}
@@ -5846,9 +5847,10 @@ function(window, undefined) {
 		let aSeries = this.getAllSeries();
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
 			let oSer = aSeries[nSer];
-			if(oSer.trendline) {
-				let oLbl = oSer.trendline.trendlineLbl;
-				let oDrawerData = oSer.trendline.drawerData;
+			const trendline = oSer.getLastTrendline();
+			if (trendline) {
+				let oLbl = trendline.trendlineLbl;
+				let oDrawerData = trendline.drawerData;
 				if(oLbl && oDrawerData && oDrawerData.coordinate) {
 					pos = {x: oDrawerData.coordinate.catVal, y: oDrawerData.coordinate.valVal};
 					if (oLbl.layout) {
@@ -6026,7 +6028,8 @@ function(window, undefined) {
 								oCurPts = oSeries.val.numLit;
 							}
 							if (oCurPts) {
-								const forward = oSeries.trendline && oSeries.trendline.forward ? oSeries.trendline.forward : 0;
+								const trendline = oSeries.getLastTrendline();
+								const forward = trendline && trendline.forward ? trendline.forward : 0;
 								const newNPtsLength = oCurPts.ptCount + forward;
 								nPtsLength = Math.max(nPtsLength, newNPtsLength);
 							}
@@ -8971,10 +8974,7 @@ function(window, undefined) {
 
 		if (chart.dLbls) {
 			chart.dLbls.setShowVal(bDisplay);
-
-			if (bDisplay) {
-				chart.dLbls.setDLblPos(nDataLabelPos);
-			}
+			chart.dLbls.setDLblPos(bDisplay ? nDataLabelPos : undefined);
 		}
 
 		const series = chart.series;
@@ -8984,9 +8984,21 @@ function(window, undefined) {
 				return;
 			}
 
-			const dLbls = ser.dLbls || createDLbls(ser);
-			dLbls.setDLblPos(nDataLabelPos);
-			ser.setDLbls(dLbls);
+			if (ser.dLbls) {
+				ser.dLbls.setShowVal(true);
+				ser.dLbls.setDLblPos(nDataLabelPos);
+			} else {
+				const dLbls = createDLbls(ser);
+				dLbls.setDLblPos(nDataLabelPos);
+				ser.setDLbls(dLbls);
+			}
+
+			if (Array.isArray(ser.dLbls.dLbl)) {
+				ser.dLbls.dLbl.forEach(function (label) {
+					label.setDLblPos(undefined);
+					label.setShowVal(true);
+				});
+			}
 		});
 
 		function createDLbls(parent) {
@@ -10186,7 +10198,8 @@ function(window, undefined) {
 							pts[j].compiledDlb.draw(graphics);
 						}
 					}
-					let oTrendlineLbl = ser.trendline && ser.trendline.trendlineLbl;
+					const trendline = ser.getLastTrendline();
+					let oTrendlineLbl = trendline && trendline.trendlineLbl;
 					if(oTrendlineLbl) {
 						oTrendlineLbl.draw(graphics);
 					}
@@ -10284,15 +10297,17 @@ function(window, undefined) {
 	CChartSpace.prototype.recalculateTrendlines = function () {
 		let aSeries = this.getAllSeries();
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
-			aSeries[nSer].recalculateTrendline();
+			aSeries[nSer].recalculateTrendlines();
 		}
 	};
 	CChartSpace.prototype.showTrendlines = function (bShow, nTrendlineType, nForecastForward, nForecastBackward) {
 		const allSeries = this.getAllSeries();
 		allSeries.forEach(function (ser) {
-			bShow
-				? ser.setTrendline(createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward))
-				: ser.removeTrendline();
+			ser.removeAllTrendlines();
+			if (bShow) {
+				const newTrendline = createTrendline(ser, nTrendlineType, nForecastForward, nForecastBackward);
+				ser.addTrendline(newTrendline);
+			}
 		});
 		
 		function createTrendline(parent, trendlineType, nForecastForward, nForecastBackward) {
@@ -10551,7 +10566,8 @@ function(window, undefined) {
 		let aAllTrendlines = [];
 		let oTrendline;
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
-			oTrendline = aSeries[nSer].trendline;
+			const seria = aSeries[nSer];
+			oTrendline = seria.getLastTrendline();
 			if(oTrendline) {
 				aAllTrendlines.push(oTrendline);
 			}
@@ -10584,7 +10600,8 @@ function(window, undefined) {
 		let aAllTrendlines = [];
 		let oTrendline;
 		for(let nSer = 0; nSer < aSeries.length; ++nSer) {
-			oTrendline = aSeries[nSer].trendline;
+			const seria = aSeries[nSer];
+			oTrendline = seria.getLastTrendline();
 			if(oTrendline) {
 				aAllTrendlines.push(oTrendline);
 			}

@@ -3699,7 +3699,15 @@
 		let _t = this;
 		this.loadBuilderFonts(function()
 		{
-			return _t._onEndBuilderScript(callback);
+			let result = _t._onEndBuilderScript(callback);
+			
+			if (_t.SaveAfterMacros)
+			{
+				_t.asc_Save();
+				_t.SaveAfterMacros = false;
+			}
+
+			return result;
 		});
 		
 		return true;
@@ -4260,11 +4268,13 @@
 		this.asc_setViewMode(true);
 	};
 
-	baseEditorsApi.prototype.asc_setCurrentPassword = function(password)
+	baseEditorsApi.prototype.asc_setCurrentPassword = function(password, isOnOpen)
 	{
 		this.currentPasswordOld = this.currentPassword;
 		this.currentPassword = password;
-		this.asc_Save(false, undefined, true);
+
+		if (!isOnOpen)
+			this.asc_Save(false, undefined, true);
 		if (!(this.DocInfo && this.DocInfo.get_OfflineApp()) && !this.isViewMode && !this.isPdfViewer) {
 			var rData = {
 				"c": 'setpassword',
@@ -4505,13 +4515,7 @@
 						oLogicDocument.UnlockPanelStyles(true);
 						oLogicDocument.OnEndLoadScript();
 					}
-
-					if (oApi.SaveAfterMacros)
-					{
-						oApi.asc_Save();
-						oApi.SaveAfterMacros = false;
-					}
-
+					
 					endAction && endAction();
 				});
 				break;
@@ -4532,13 +4536,7 @@
 					{
 						wsView.objectRender.controller.recalculate2(undefined);
 					}
-
-					if (oApi.SaveAfterMacros)
-					{
-						oApi.asc_Save();
-						oApi.SaveAfterMacros = false;
-					}
-
+					
 					endAction && endAction();
 				});
 				
@@ -5970,7 +5968,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -5978,7 +5976,7 @@
 	{
 		if (!this.isGroupActions())
 			return;
-
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
 	};
@@ -5988,11 +5986,14 @@
 			return;
 
 		--this.groupActionsCounter;
+		
 		AscCommon.History.cancelGroupPoints();
-
+		
 		if (this.groupActionsCounter > 0)
 			return;
-
+		
+		this._onEndGroupActions();
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
@@ -6006,13 +6007,18 @@
 
 		if (this.groupActionsCounter > 0)
 			return;
-
+		
+		this._onEndGroupActions();
+		
 		AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(false);
 	};
 	baseEditorsApi.prototype.isGroupActions = function()
 	{
 		return this.groupActionsCounter > 0;
+	};
+	baseEditorsApi.prototype._onEndGroupActions = function()
+	{
 	};
 
 	//----------------------------------------------------------export----------------------------------------------------

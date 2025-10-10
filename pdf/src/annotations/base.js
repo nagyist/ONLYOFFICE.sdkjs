@@ -46,7 +46,7 @@
 			}
         }
 
-        this._apIdx = -1;
+        this._apIdx = undefined;
         this.type = nType;
 
         this._author                = undefined;
@@ -589,7 +589,7 @@
      * @returns {canvas}
 	 */
     CAnnotationBase.prototype.GetOriginView = function(nPageW, nPageH) {
-        if (this.GetApIdx() == -1)
+        if (this.GetApIdx() == undefined)
             return null;
 
         nPageW = Math.round(nPageW);
@@ -1237,22 +1237,19 @@
     };
     CAnnotationBase.prototype.SetApIdx = function(nIdx) {
         this._apIdx = nIdx;
-        AscCommon.History.Add(new CChangesPDFAnnotApIdx(this, undefined, nIdx));
     };
     CAnnotationBase.prototype.GetApIdx = function() {
-        if (-1 == this._apIdx) {
-            if (undefined == this.GetId()) {
-                return -1;
-            }
-            else {
-                let sId = this.GetId();
-
-                let nApIdx = Number(sId.replace("_", "").replace("off", ""));
-                return nApIdx;
-            }
+        if (undefined !== this._apIdx) {
+            return this._apIdx;
         }
-
-        return this._apIdx;
+        else {
+            let nPos = Object.keys(AscCommon.g_oTableId.m_aPairs).indexOf(this.GetId());
+            if (-1 !== nPos) {
+                return Asc.editor.getPDFDoc().GetCurMaxApIdx() + nPos;
+            }
+            
+            return undefined;
+        }
     };
     CAnnotationBase.prototype.AddToRedraw = function() {
         let oViewer = editor.getDocumentRenderer();
@@ -1506,10 +1503,18 @@
                 if (this.IsStamp()) {
                     if (this.GetRenderStructure()) {
                         oMeta["isOO"] = true;
+                        oMeta["InRect"] = this.GetInRect();
                     }
                 }
-                else if (this.GetOriginPage() == undefined) {
+                if (this.GetOriginPage() == undefined) {
                     oMeta["isOO"] = true;
+
+                    if (this.IsRedact()) {
+                        let sRedactId = this.GetRedactId();
+                        if (sRedactId) {
+                            oMeta["redactId"] = sRedactId;
+                        }
+                    }
                 }
             }
             

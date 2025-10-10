@@ -4788,6 +4788,7 @@ CGraphicObjects.prototype =
     },
     endTrackNewShape: DrawingObjectsController.prototype.endTrackNewShape
 };
+CGraphicObjects.prototype.constructor = CGraphicObjects;
 CGraphicObjects.prototype.saveDocumentState = function() {
 	this.startDocState = null;
 	if(!this.document) {

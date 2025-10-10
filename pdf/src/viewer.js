@@ -1148,7 +1148,7 @@
 				if (this.file && this.file.isNeedPassword())
 				{
 					window["AscViewer"].setFilePassword(this.file, password);
-					this.Api.asc_setCurrentPassword(password);
+					this.Api.asc_setCurrentPassword(password, true);
 				}
 			}
 			else
@@ -1227,8 +1227,12 @@
 			// TODO: Надо перенести в нормальное место
 			let isLoad = AscCommon.g_oIdCounter.IsLoad();
 			AscCommon.g_oIdCounter.Set_Load(true);
+
+			let nMaxIdx = this.file.nativeFile["getStartID"]();
 			this.openForms();
 			this.openAnnots();
+			oDoc.UpdateCurMaxApIdx(nMaxIdx);
+
 			AscCommon.g_oIdCounter.Set_Load(isLoad);
 		};
 
@@ -1284,19 +1288,13 @@
 			this.scrollCount = 0;
 
 			let oFormsInfo	= this.file.nativeFile["getInteractiveFormsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
-
-			oDoc.UpdateMaxLoadApIdx(nMaxIdx);
 			oDoc.private_AddFormsByInfo(oFormsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.openAnnots = function() {
 			let oDoc = this.getPDFDoc();
 			let aAnnotsInfo = this.file.nativeFile["getAnnotationsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
 
 			oDoc.private_AddAnnotsByInfo(aAnnotsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.setZoom = function(value, isDisablePaint)
 		{
@@ -3019,7 +3017,10 @@
 			{
 				if (null === this.file.pages[i].text)
 				{
-					this.file.pages[i].text = this.file.getText(i);
+					if (undefined !== this.file.pages[i].originIndex) {
+						this.file.pages[i].text = this.file.getText(this.file.pages[i].originIndex);
+					}
+					
 					isCommands = true;
 				}
 			}
@@ -3034,13 +3035,14 @@
 						this.pagesInfo.countTextPages++;
 						continue;
 					}
-					this.file.pages[this.pagesInfo.countTextPages].text = this.file.getText(this.pagesInfo.countTextPages);
-					if (null !== this.file.pages[this.pagesInfo.countTextPages].text)
-					{
-						this.pagesInfo.countTextPages++;
-						isCommands = true;
-					}
 
+					let page = this.file.pages[this.pagesInfo.countTextPages];
+					if (undefined !== page.originIndex) {
+						page.text = this.file.getText(this.pagesInfo.countTextPages);
+						isCommands = true;
+					} 
+					
+					this.pagesInfo.countTextPages++;
 					break;
 				}
 			}
@@ -4670,8 +4672,8 @@
 				oMemory.WriteString(data.redactId);
 
 				// rects
-				oMemory.WriteLong(data.rects.length / 4);
-				data.rects.forEach(function(measure) {
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
 					oMemory.WriteDouble(measure);
 				});
 
@@ -5008,8 +5010,8 @@
 				oMemory.WriteString(data.redactId);
 
 				// rects
-				oMemory.WriteLong(data.rects.length / 4);
-				data.rects.forEach(function(measure) {
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
 					oMemory.WriteDouble(measure);
 				});
 
@@ -5112,9 +5114,6 @@
 			if (oPageInfo.annots) {
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
-					if (oAnnot.IsRedact() && oAnnot.GetRedactId()) {
-						continue;
-					}
 
 					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {

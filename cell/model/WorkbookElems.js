@@ -16372,7 +16372,18 @@ function RangeDataManagerElem(bbox, data)
 				});
 			}
 
-			let newVal = noData ? "#REF!" : cell.getValue();
+			let cellType = cell.getType();
+			let newVal;
+			if (noData) {
+				newVal = "#REF!";
+			} else {
+				if (cellType === CellValueType.Number) {
+					let _numVal = cell.getNumberValue();
+					newVal = _numVal == null ? cell.getValue() : _numVal + "";
+				} else {
+					newVal = cell.getValue();
+				}
+			}
 			if (this.CellValue !== newVal) {
 				isChanged = true;
 				this.CellValue = newVal;
@@ -16380,12 +16391,21 @@ function RangeDataManagerElem(bbox, data)
 
 
 			var cellValueType = null;
-			switch (cell.getType()) {
+			switch (cellType) {
 				case CellValueType.String:
 					cellValueType = Asc.ECellTypeType.celltypeStr;
 					break;
 				case CellValueType.Bool:
 					cellValueType = Asc.ECellTypeType.celltypeBool;
+					break;
+				case CellValueType.Number:
+					let cellFormat = cell.getNumFormat();
+					let isDateTimeFormat = cellFormat && cellFormat.isDateTimeFormat() && cellFormat.getType() !== Asc.c_oAscNumFormatType.Time;
+					if (isDateTimeFormat) {
+						cellValueType = Asc.ECellTypeType.celltypeDate;
+					} else {
+						cellValueType = Asc.ECellTypeType.celltypeNumber;
+					}
 					break;
 				case CellValueType.Error:
 					cellValueType = Asc.ECellTypeType.celltypeError;

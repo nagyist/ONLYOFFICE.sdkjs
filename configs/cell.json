@@ -399,6 +399,8 @@
 			"word/Editor/api/document-columns-props.js",
 			"word/Editor/api/document-section-props.js",
 			
+			"word/Editor/document-visitor.js",
+			
 			"word/apiBuilder.js",
 			"slide/apiBuilder.js",
 			"cell/apiBuilder.js",
@@ -414,8 +416,6 @@
 			"common/plugins.js",
 
 			"common/Native/native_graphics.js",
-			
-			"word/Editor/document-visitor.js",
 			
 			"vendor/easysax.js",
 			"common/openxml.js"

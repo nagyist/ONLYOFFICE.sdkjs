@@ -1935,6 +1935,7 @@ var CPresentation = CPresentation || function(){};
                 let oPr = new AscFormat.CCopyObjectProperties();
                 oPr.idMap = oIdMap;
                 oPr.bSaveSourceFormatting = bSourceFormatting;
+                oPr.bSkipRedactsIds = true;
                 for (let i = 0; i < aSpTree.length; ++i) {
                     oSp = aSpTree[i];
                     if (oSp.selected) {
@@ -3278,6 +3279,13 @@ var CPresentation = CPresentation || function(){};
 
             if (oAnnotInfo["RefTo"] == null || oAnnotInfo["type"] != AscPDF.ANNOTATIONS_TYPES.Text) {
                 let oAnnot = AscPDF.ReadAnnotFromJSON(oAnnotInfo, this);
+                let oMeta = oAnnot.GetMeta();
+                if (oMeta && oMeta["isOO"] && !oAnnot.IsNeedDrawFromStream()) {
+                    this.Viewer.IsOpenAnnotsInProgress = false;
+                    oAnnot.SetWasChanged(true);
+                    this.Viewer.IsOpenAnnotsInProgress = true;
+                }
+
                 this.AddAnnot(oAnnot, pageOffset + oAnnotInfo["page"]);
 
                 if (oAnnotInfo["RefTo"] == null)
@@ -3295,6 +3303,8 @@ var CPresentation = CPresentation || function(){};
         Object.values(oAnnotsMap).forEach(function(annot) {
             _t.CheckComment(annot);
         });
+
+        return Object.values(oAnnotsMap);
     };
     CPDFDoc.prototype.private_AddFormsByInfo = function(oFormsInfo, pageOffset) {
         if (!pageOffset) {
@@ -4308,6 +4318,7 @@ var CPresentation = CPresentation || function(){};
 
         let oPage = oDrawing.GetParentPage();
         oPage.RemoveDrawing(Id);
+        oDrawing.ClearRedacts();
 
         if (bIsOnMove !== true) {
             oController.resetSelection(true);
@@ -5638,7 +5649,7 @@ var CPresentation = CPresentation || function(){};
 
             oAnnot.SetQuads(aQuads);
             oAnnot.SetFillColor([0, 0, 0]);
-            oAnnot.SetStrokeColor([255, 0, 0]);
+            oAnnot.SetStrokeColor([1, 0, 0]);
             oAnnot.SetOpacity(1);
         }
 
@@ -6271,6 +6282,7 @@ var CPresentation = CPresentation || function(){};
                 }
                 
                 this.MergePagesBinary(nInsertPos, oSelContent.MergePagesInfo.binaryData);
+                let sMergeName = this.mergedPagesData[this.mergedPagesData.length - 1].mergeName;
 
                 let aPagesDrawings = oSelContent.MergePagesInfo.pagesDrawings;
                 for (let i = 0; i < aPagesDrawings.length; i++) {
@@ -6278,14 +6290,36 @@ var CPresentation = CPresentation || function(){};
                         return pasteObj.Drawing;
                     });
 
+                    let oRedactIdsSet = new Set();
+                    
                     aDrawings.forEach(function(drawing, index) {
+                        let aRedactIds = drawing.GetRedactIds().map(function(id) {
+                            return sMergeName + "_" + id;
+                        });
+
+                        drawing.ClearRedacts();
+                        aRedactIds.forEach(function(id) {
+                            drawing.AddRedactId(id);
+                            oRedactIdsSet.add(id);
+                        });
+
                         oThis.AddDrawing(drawing, nInsertPos);
         
                         if (drawing.IsGraphicFrame()) {
                             oController.Check_GraphicFrameRowHeight(drawing);
                         }
                     });
+
+                    let aRedactIdsOrder = Array.from(oRedactIdsSet).sort((a, b) => {
+                        const ia = a.indexOf("_redact_") + 8;
+                        const ib = b.indexOf("_redact_") + 8;
+                        return parseInt(a.slice(ia)) - parseInt(b.slice(ib));
+                    });
         
+                    aRedactIdsOrder.forEach(function(id) {
+                        oThis.ApplyRedact(id, nInsertPos);
+                    });
+
                     nInsertPos++;
                 }
             }
@@ -7240,15 +7274,15 @@ var CPresentation = CPresentation || function(){};
         let nNewPagesCount = 0;
         // The logic is that we always copy original pages using their original indexes. New pages are numbered starting from the end of the original pages.
         for (let i = 0, maxIdx = Math.max.apply(null, aIndexes); i <= maxIdx; i++) {
-            if (aIndexes.includes(i)) {
-                let oFilePage = oDoc.Viewer.file.pages[i];
-                if (oFilePage.originIndex != undefined) {
-                    aOriginIndexes.push(oFilePage.originIndex);
-                }
-                else {
-                    nNewPagesCount++;
-                    aOriginIndexes.push(nNewPagesCount + this.Viewer.file.originalPagesCount - 1);
-                }
+            let isInOrder = aIndexes.includes(i);
+
+            let oFilePage = oDoc.Viewer.file.pages[i];
+            if (oFilePage.originIndex != undefined) {
+                isInOrder && aOriginIndexes.push(oFilePage.originIndex);
+            }
+            else {
+                nNewPagesCount++;
+                isInOrder && aOriginIndexes.push(nNewPagesCount + this.Viewer.file.originalPagesCount - 1);
             }
         }
         
@@ -7265,16 +7299,19 @@ var CPresentation = CPresentation || function(){};
         let sMergeName = this.private_GetNextMergeName();
         let nNavigateTo = nInsertPos;
 
-        this.UpdateMaxApIdx(oFile.nativeFile["getStartID"]());
-        this.SetMergedBinaryData(aUint8Array, AscCommon.g_oIdCounter.m_nIdCounterEdit, sMergeName);
+        let sMaxApIdx = this.CalcMergeMaxApIdx();
+
+        this.SetMergedBinaryData(aUint8Array, sMaxApIdx, sMergeName);
 
         let aAnnotsInfoBefore = oFile.nativeFile["getAnnotationsInfo"]();
         let oFormsInfoBefore = oFile.nativeFile["getInteractiveFormsInfo"]();
 
-        let res = oFile.nativeFile["MergePages"](aUint8Array, AscCommon.g_oIdCounter.m_nIdCounterEdit, sMergeName);
+        let res = oFile.nativeFile["MergePages"](aUint8Array, sMaxApIdx, sMergeName);
 
         if (res) {
             let aPages = oFile.nativeFile["getPagesInfo"]();
+            this.UpdateCurMaxApIdx(oFile.nativeFile["getStartID"]());
+
             for (let i = oFile.originalPagesCount; i < aPages.length; i++) {
                 let page = aPages[i];
                 
@@ -7306,7 +7343,17 @@ var CPresentation = CPresentation || function(){};
                 }
             }
 
-            this.private_AddAnnotsByInfo(aAnnotsInfoNew, nInsertPos - oFile.originalPagesCount);
+            let aAnnots = this.private_AddAnnotsByInfo(aAnnotsInfoNew, nInsertPos - oFile.originalPagesCount);
+
+            // set info about redact (split case)
+            aAnnots.forEach(function(annot) {
+                if (annot.IsRedact()) {
+                    let oMeta = annot.GetMeta();
+                    if (oMeta["redactId"]) {
+                        annot.SetRedactId(sMergeName + "_" + oMeta["redactId"]);
+                    }
+                }
+            });
 
             // open new forms
             let oFormsInfoAfter = oFile.nativeFile["getInteractiveFormsInfo"]();
@@ -7332,6 +7379,10 @@ var CPresentation = CPresentation || function(){};
 
             this.private_AddFormsByInfo(oFormsInfoNew, nInsertPos - oFile.originalPagesCount);
         }
+
+        let standardFonts = oFile.nativeFile["getInteractiveFormsStandardFonts"]();
+        let embeddedFonts = oFile.nativeFile["getInteractiveFormsEmbeddedFonts"]();
+        AscFonts.initEmbeddedFonts(standardFonts.concat(embeddedFonts));
 
         this.Viewer.checkLoadCMap();
         this.Viewer.navigateToPage(nNavigateTo);
@@ -7385,7 +7436,7 @@ var CPresentation = CPresentation || function(){};
 			return annot.IsRedact() && annot.GetRedactId();
 		});
 	};
-    CPDFDoc.prototype.ApplyRedact = function() {
+    CPDFDoc.prototype.ApplyRedact = function(sRedactId, nPage) {
         let oFile = this.Viewer.file;
 		let oNativeFile = oFile.nativeFile;
 
@@ -7393,27 +7444,50 @@ var CPresentation = CPresentation || function(){};
 			this.BlurActiveObject();
 
             const pagesIdxMap = new Map();
-			let sRedactId = AscCommon.g_oIdCounter.GetNewIdForPdfRedact();
-            
-            for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
-                let oPageInfo = this.GetPageInfo(i);
-                let nOrigPageIdx = oPageInfo.GetOriginIndex();
-                if (nOrigPageIdx == undefined) {
-                    continue;
+			
+            // we need to reapply redact on merge pages
+            let isOnMerge = false;
+            if (sRedactId && undefined !== nPage) {
+                isOnMerge = true;
+            }
+
+            function applyForPage(pageIdx) {
+                if (!isOnMerge) {
+                    sRedactId = AscCommon.g_oIdCounter.GetNewIdForPdfRedact();
                 }
 
+                let oPageInfo = this.GetPageInfo(pageIdx);
+                let nOrigPageIdx = oPageInfo.GetOriginIndex();
+                let isOrigPage = undefined !== nOrigPageIdx;
+
                 // Prepare two forms: flat array for native call and list of rects for clipping
-                const aRectsFlat = [];
+                let aQuadsFlat = [];
                 let oMemory;
 
                 oPageInfo.annots.forEach(function(annot) {
-                    if (!annot.IsRedact() || annot.GetRedactId()) return;
+                    if (!annot.IsRedact()) return;
+                    if (annot.GetRedactId() && !isOnMerge) {
+                        return;
+                    }
 
-                    annot.SetRedactId(sRedactId);
+                    if (isOnMerge) {
+                        if (annot.GetRedactId() != sRedactId) {
+                            return;
+                        }
+                    }
+                    else {
+                        annot.SetRedactId(sRedactId);
+                    }
+
+                    annot.AddToRedraw();
+
+                    if (!isOrigPage) {
+                        return;
+                    }
 
                     const aQuadsParts = annot.GetQuads();
                     aQuadsParts.forEach(function(quads) {
-                        aRectsFlat.push(quads[0], quads[1], quads[6], quads[7]);
+                        aQuadsFlat = aQuadsFlat.concat(quads);
                     });
 
                     // Fill color
@@ -7424,26 +7498,36 @@ var CPresentation = CPresentation || function(){};
                     oMemory.WriteLong(oFillRGB.g);
                     oMemory.WriteLong(oFillRGB.b);
 
-                    annot.AddToRedraw();
-                    pagesIdxMap.set(i, nOrigPageIdx);
+                    pagesIdxMap.set(pageIdx, nOrigPageIdx);
                 });
 
-                oPageInfo.drawings.forEach(function(drawing) {
-                    drawing.AddRedactId(sRedactId);
-                    return;
-                });
-
-                if (aRectsFlat.length != 0) {
+                if (!isOnMerge) {
+                    oPageInfo.drawings.forEach(function(drawing) {
+                        drawing.AddRedactId(sRedactId);
+                        return;
+                    });
+                }
+               
+                if (aQuadsFlat.length != 0) {
                     let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
 
                     // Apply redact to the page
                     oNativeFile["RedactPage"](
                         nOrigPageIdx,
-                        aRectsFlat,
+                        aQuadsFlat,
                         oRender
                     );
 
-                    this.SetRedactData(sRedactId, i, aRectsFlat, oRender);
+                    this.SetRedactData(sRedactId, pageIdx, aQuadsFlat, oRender);
+                }
+            }
+
+            if (nPage != undefined) {
+                applyForPage.call(this, nPage);
+            }
+            else {
+                for (let i = 0, nCount = this.GetPagesCount(); i < nCount; i++) {
+                    applyForPage.call(this, i);
                 }
             }
 
@@ -7458,7 +7542,7 @@ var CPresentation = CPresentation || function(){};
 		}, AscDFH.historydescription_Pdf_Apply_Redact, this);
     };
 
-    CPDFDoc.prototype.SetRedactData = function(sRedactId, nPage, aRectsFlat, oRenderMemory) {
+    CPDFDoc.prototype.SetRedactData = function(sRedactId, nPage, aQuadsFlat, oRenderMemory) {
         let aUint8Array = oRenderMemory;
 
         const BINARY_PART_HISTORY_LIMIT = 1048576;
@@ -7475,11 +7559,11 @@ var CPresentation = CPresentation || function(){};
             AscCommon.History.Add(new CChangesPDFDocumentPartRedact(this, [], binaryParts[i]));
         }
         
-        AscCommon.History.Add(new CChangesPDFDocumentEndRedact(this, sRedactId, nPage, aRectsFlat));
+        AscCommon.History.Add(new CChangesPDFDocumentEndRedact(this, sRedactId, nPage, aQuadsFlat));
 
         this.appliedRedactsData.push({
             page: nPage,
-            rects: aRectsFlat,
+            quads: aQuadsFlat,
             redactId: sRedactId,
             binary: aUint8Array
         });
@@ -7885,11 +7969,40 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.Clear_ContentChanges = function() {
 		this.pagesContentChanges.Clear();
     };
-    CPDFDoc.prototype.UpdateMaxApIdx = function(nApIdx) {
-        AscCommon.g_oIdCounter.m_nIdCounterEdit = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterEdit);
+    CPDFDoc.prototype.UpdateCurMaxApIdx = function(nApIdx) {
+        this.maxApIdx = nApIdx;
     };
-    CPDFDoc.prototype.UpdateMaxLoadApIdx = function(nApIdx) {
-        AscCommon.g_oIdCounter.m_nIdCounterLoad = Math.max(nApIdx, AscCommon.g_oIdCounter.m_nIdCounterLoad);
+    CPDFDoc.prototype.GetCurMaxApIdx = function() {
+        return this.maxApIdx;
+    };
+    // new - cause is we update this value only on merge or open file.
+    CPDFDoc.prototype.CalcMergeMaxApIdx = function() {
+        let nMax = 0;
+        
+        this.annots.forEach(function(annot) {
+            let nApIdx = annot.GetApIdx();
+            if (nApIdx > nMax) {
+                nMax = nApIdx;
+            }
+        });
+        this.widgets.forEach(function(widget) {
+            let nApIdx = widget.GetApIdx();
+            if (nApIdx > nMax) {
+                nMax = nApIdx;
+            }
+
+            let oParent = widget.GetParent();
+            while (oParent) {
+                nApIdx = oParent.GetApIdx();
+                if (nApIdx > nMax) {
+                    nMax = nApIdx;
+                }
+
+                oParent = oParent.GetParent();
+            }
+        });
+
+        return Math.max(nMax, this.GetCurMaxApIdx());
     };
     CPDFDoc.prototype.Add_ContentChanges = function(Changes) {
         this.pagesContentChanges.Add(Changes);
@@ -9044,8 +9157,14 @@ var CPresentation = CPresentation || function(){};
 
         if (annotJson["Rotate"] != null)
             oAnnot.SetRotate(annotJson["Rotate"]);
-        if (annotJson["InRect"] != null)
-            oAnnot.SetInRect(annotJson["InRect"]);
+        if (annotJson["InRect"] != null) {
+            if (oMeta && oMeta["InRect"]) {
+                oAnnot.SetInRect(oMeta["InRect"]);
+            }
+            else {
+                oAnnot.SetInRect(annotJson["InRect"]);
+            }
+        }
         
         // border effect
         if (annotJson["BE"] != null) {
@@ -9076,12 +9195,10 @@ var CPresentation = CPresentation || function(){};
         }
 
         if (oMeta && oMeta["isOO"]) {
-            if (oAnnot.IsStamp()) {
+            if (oAnnot.IsStamp() && !oAnnot.IsNeedDrawFromStream()) {
                 let oStampRender = oDoc.CreateStampRender(oAnnot.GetIconType(), oAnnot.GetAuthor(), oAnnot.GetCreationDate());
                 oAnnot.SetRenderStructure(oStampRender.m_aStack[0]);
             }
-            
-            oAnnot._wasChanged = true;
         }
         
         return oAnnot;

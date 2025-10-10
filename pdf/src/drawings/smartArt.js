@@ -359,6 +359,12 @@
             copy.generateDrawingPart();
         }
 
+        if (!oPr || !oPr.bSkipRedactsIds) {
+            this.GetRedactIds().forEach(function(id) {
+                copy.AddRedactId(id);
+            });
+        }
+
         return copy;
     };
 

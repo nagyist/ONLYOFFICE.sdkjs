@@ -2759,6 +2759,7 @@ background-repeat: no-repeat;\
 	{
 		return (!this.isLongAction()
 			&& !this.isGroupActions()
+			&& !this.isOpenedFrameEditor
 			&& !(this.WordControl.m_oLogicDocument && this.WordControl.m_oLogicDocument.IsViewModeInReview())
 		);
 	};
@@ -9377,10 +9378,16 @@ background-repeat: no-repeat;\
 		const oLogicDocument = this.private_GetLogicDocument();
 		if (oLogicDocument)
 		{
-			if(bNoLock !== true) {
-				this.asc_onOpenFrameEditor();
+			const oChartSettings = oLogicDocument.GetChartSettings();
+			if (bNoLock)
+			{
+				return oChartSettings;
 			}
-			return oLogicDocument.GetChartSettings();
+			if (oChartSettings && false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Drawing_Props))
+			{
+				this.asc_onOpenFrameEditor();
+				return oChartSettings;
+			}
 		}
 	};
 
@@ -14583,6 +14590,18 @@ background-repeat: no-repeat;\
 		this.WordControl.m_oDrawingDocument.UpdateTargetFromPaint = true;
 		logicDocument.RecalculateCurPos();
 		logicDocument.UpdateSelection();
+	};
+	
+	asc_docs_api.prototype._onEndGroupActions = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
+		let groupChanges = AscCommon.History.getGroupChanges();
+		AscCommon.History.resetGroupChanges();
+		if (groupChanges.length)
+			logicDocument.RecalculateByChanges(groupChanges);
 	};
 
 

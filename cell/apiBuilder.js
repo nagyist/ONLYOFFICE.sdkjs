@@ -12518,48 +12518,6 @@
 	ApiRange.prototype.GetFormatConditions = function() {
 		if (!this._formatConditions) {
 			this._formatConditions = new ApiFormatConditions(this);
-			let rules = this.range.worksheet.workbook.getRulesByType(Asc.c_oAscSelectionForCFType.selection, null, null, this.worksheet, this.range.bbox);
-			if (rules) {
-				for (var i = 0; i < rules.length; i++) {
-					var rule = rules[i];
-
-					var oApiFormatCondition = null;
-
-					switch (rule.type) {
-						case Asc.ECfType.colorScale:
-							oApiFormatCondition = new ApiColorScale(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.dataBar:
-							oApiFormatCondition = new ApiDatabar(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.iconSet:
-							oApiFormatCondition = new ApiIconSetCondition(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.top10:
-							oApiFormatCondition = new ApiTop10(rule, this, this._formatConditions);
-							break;
-
-						case Asc.ECfType.uniqueValues:
-							oApiFormatCondition = new ApiUniqueValues(rule, this, this._formatConditions);
-							break;
-						case Asc.ECfType.aboveAverage:
-							oApiFormatCondition = new ApiAboveAverage(rule, this, this._formatConditions);
-							break;
-
-						default:
-							oApiFormatCondition = new ApiFormatCondition(rule, this, this._formatConditions);
-							break;
-					}
-
-					if (oApiFormatCondition)
-					{
-						this._formatConditions.conditions.push(oApiFormatCondition);
-					}
-				}
-			}
 		}
 		return this._formatConditions;
 	};
@@ -20167,7 +20125,7 @@
 	function ApiFormatConditions(range) {
 		this.range = range;//parent
 		this.conditions = [];
-		//creator
+		this._updateExistingRules();
 	}
 
 	/**
@@ -20773,6 +20731,8 @@
 			ranges.push(this.range.range.bbox);
 		}
 
+		this._updateExistingRules();
+
 		for (let i = 0; i < this.conditions.length; i++) {
 			let condition = this.conditions[i];
 			if (condition.rule) {
@@ -20783,6 +20743,25 @@
 		this.conditions = [];
 	};
 
+	function createApiConditionFromRule(rule, range, parent) {
+		switch (rule.type) {
+			case Asc.ECfType.aboveAverage:
+				return new ApiAboveAverage(rule, range, parent);
+			case Asc.ECfType.colorScale:
+				return new ApiColorScale(rule, range, parent);
+			case Asc.ECfType.dataBar:
+				return new ApiDatabar(rule, range, parent);
+			case Asc.ECfType.iconSet:
+				return new ApiIconSetCondition(rule, range, parent);
+			case Asc.ECfType.top10:
+				return new ApiTop10(rule, range, parent);
+			case Asc.ECfType.uniqueValues:
+				return new ApiUniqueValues(rule, range, parent);
+			default:
+				return new ApiFormatCondition(rule, range, parent);
+		}
+	}
+
 	/**
 	 * Returns the count of format conditions.
 	 * @memberof ApiFormatConditions
@@ -20791,7 +20770,69 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/GetCount.js
 	 */
 	ApiFormatConditions.prototype.GetCount = function() {
+		this._updateExistingRules();
 		return this.conditions.length;
+	};
+
+	ApiFormatConditions.prototype._updateExistingRules = function() {
+		let worksheet = this.range && this.range.range && this.range.range.worksheet;
+		if (!worksheet || !worksheet.aConditionalFormattingRules) {
+			this.conditions = [];
+			return;
+		}
+
+		let rangeRef = this.range.range.bbox;
+		let t = this;
+
+		let intersectingRuleIds = [];
+		worksheet.forEachConditionalFormattingRules(function(rule) {
+			if (rule.ranges) {
+				for (let i = 0; i < rule.ranges.length; i++) {
+					let ruleRange = rule.ranges[i];
+					if (rangeRef.intersectionSimple(ruleRange)) {
+						intersectingRuleIds.push(rule.id);
+
+						let existingCondition = null;
+						for (let j = 0; j < t.conditions.length; j++) {
+							if (t.conditions[j].rule && t.conditions[j].rule.id === rule.id) {
+								existingCondition = t.conditions[j];
+								break;
+							}
+						}
+
+						if (!existingCondition) {
+							let apiCondition = createApiConditionFromRule(rule, t.range, t);
+							if (apiCondition) {
+								t.conditions.push(apiCondition);
+							}
+						}
+						break;
+					}
+				}
+			}
+		});
+
+		let newConditions = [];
+		for (let i = 0; i < t.conditions.length; i++) {
+			let condition = t.conditions[i];
+			if (!condition.rule || !condition.rule.id) {
+				continue;
+			}
+
+			let found = false;
+			for (let j = 0; j < intersectingRuleIds.length; j++) {
+				if (intersectingRuleIds[j] === condition.rule.id) {
+					found = true;
+					break;
+				}
+			}
+
+			if (found) {
+				newConditions.push(condition);
+			}
+		}
+
+		t.conditions = newConditions;
 	};
 
 	/**
@@ -20803,6 +20844,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiFormatConditions/Methods/GetItem.js
 	 */
 	ApiFormatConditions.prototype.GetItem = function(index) {
+		this._updateExistingRules();
 		if (index < 1 || index > this.conditions.length) {
 			return null;
 		}
@@ -21931,7 +21973,7 @@
 	ApiFormatCondition.prototype.private_changeStyle = function(callback, notInitFont) {
 		let worksheet = this._parent.range.range.worksheet;
 		if (!worksheet || !worksheet.aConditionalFormattingRules) {
-			return;
+			return false;
 		}
 
 		let oldRule = this.rule;
@@ -21947,6 +21989,7 @@
 
 		worksheet.changeCFRule(oldRule, newRule, true);
 		//this.rule = newRule;
+		return true;
 	};
 
 	/**
@@ -22281,16 +22324,6 @@
 	 * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/GetFont.js
 	 */
 	ApiAboveAverage.prototype.GetFont = ApiFormatCondition.prototype.GetFont;
-
-	/**
-	 * Returns the Interior object that represents the interior of the specified object.
-	 * @memberof ApiAboveAverage
-	 * @typeofeditors ["CSE"]
-	 * @returns {ApiInterior}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/GetInterior.js
-	 */
-	ApiAboveAverage.prototype.GetInterior = ApiFormatCondition.prototype.GetInterior;
 
 	/**
 	 * Returns the number format applied to a cell if the conditional formatting rule evaluates to True.
@@ -22691,7 +22724,6 @@
 	ApiColorScale.prototype.SetNumStdDev = null;
 	//ApiColorScale.prototype.GetBorders = null;
 	ApiColorScale.prototype.GetFont = null;
-	ApiColorScale.prototype.GetInterior = null;
 	ApiColorScale.prototype.GetNumberFormat = null;
 	ApiColorScale.prototype.SetNumberFormat = null;
 	ApiColorScale.prototype.GetFillColor = null;
@@ -22806,6 +22838,8 @@
 				this.parent.private_changeStyle(function (newRule) {
 					let index = t.GetIndex();
 					newRule.aRuleElements[0].aCFVOs[index].asc_setType(internalType);
+					newRule.aRuleElements[0].aCFVOs[index].formula = null;
+					newRule.aRuleElements[0].aCFVOs[index].formulaParent = null;
 					t.cfvo.asc_setType(internalType);
 
 				}, true);
@@ -22852,6 +22886,8 @@
 			this.parent.private_changeStyle(function (newRule) {
 				let index = t.GetIndex();
 				newRule.aRuleElements[0].aCFVOs[index].asc_setVal(value);
+				newRule.aRuleElements[0].aCFVOs[index].formula = null;
+				newRule.aRuleElements[0].aCFVOs[index].formulaParent = null;
 				t.cfvo.asc_setVal(value);
 			}, true);
 		}
@@ -22870,7 +22906,7 @@
 	 * Returns the index indicating which threshold the criteria represents.
 	 * @memberof ApiColorScaleCriterion
 	 * @typeofeditors ["CSE"]
-	 * @returns {number} Returns 1 for minimum threshold, 2 for midpoint (3-color scale) or maximum (2-color scale), and 3 for maximum threshold (3-color scale only).
+	 * @returns {number} Returns 0 for minimum threshold, 1 for midpoint (3-color scale) or maximum (2-color scale), and 2 for maximum threshold (3-color scale only).
 	 * @since 9.1.0
 	 */
 	ApiColorScaleCriterion.prototype.GetIndex = function() {
@@ -24293,25 +24329,63 @@
 				return;
 			}
 
+			let currentIconSet = iconSetElement.IconSet;
+			let currentIconCount = getIconSetCount(currentIconSet);
+
 			iconSetElement.asc_setIconSet(internalIconSet);
 
 			let currentCFVOs = iconSetElement.aCFVOs || [];
-			let currentCount = currentCFVOs.length;
 
-			if (newIconCount < currentCount) {
-				iconSetElement.aCFVOs = currentCFVOs.slice(0, newIconCount);
-			} else if (newIconCount > currentCount) {
-				let lastCFVO = currentCFVOs[currentCount - 1];
+			if (newIconCount !== currentIconCount) {
+				let newCFVOs = [];
 
-				for (let i = currentCount; i < newIconCount; i++) {
+				if (currentCFVOs.length > 0 && currentCFVOs[0]) {
+					newCFVOs.push(currentCFVOs[0]);
+				} else {
+					let minCFVO = new window['AscCommonExcel'].CConditionalFormatValueObject();
+					minCFVO.asc_setGte(true);
+					minCFVO.asc_setType(window['AscCommonExcel'].ECfvoType.Minimum);
+					minCFVO.asc_setVal("");
+					newCFVOs.push(minCFVO);
+				}
+
+				let hasCustomValues = false;
+				for (let i = 1; i < currentCFVOs.length; i++) {
+					if (currentCFVOs[i] && !isDefaultCFVO(currentCFVOs[i], i, currentIconCount)) {
+						hasCustomValues = true;
+						break;
+					}
+				}
+
+				for (let i = 1; i < newIconCount; i++) {
 					let newCFVO = new window['AscCommonExcel'].CConditionalFormatValueObject();
 
-					if (lastCFVO) {
-						newCFVO.Gte = lastCFVO.Gte;
-						newCFVO.Type = lastCFVO.Type;
-						newCFVO.Val = lastCFVO.Val;
+					if (hasCustomValues && i < currentCFVOs.length && currentCFVOs[i]) {
+						newCFVO.asc_setGte(currentCFVOs[i].asc_getGte());
+						newCFVO.asc_setType(currentCFVOs[i].asc_getType());
+						newCFVO.asc_setVal(currentCFVOs[i].asc_getVal());
 
-						// Клонируем формулу если она есть
+						if (currentCFVOs[i].formula) {
+							newCFVO.formula = currentCFVOs[i].formula.clone();
+						}
+						if (currentCFVOs[i].formulaParent) {
+							newCFVO.formulaParent = currentCFVOs[i].formulaParent.clone();
+						}
+					} else if (hasCustomValues && i >= currentCFVOs.length && currentCFVOs.length > 1) {
+						let lastCFVO = currentCFVOs[currentCFVOs.length - 1];
+						newCFVO.asc_setGte(lastCFVO.asc_getGte());
+						newCFVO.asc_setType(lastCFVO.asc_getType());
+
+						if (lastCFVO.asc_getType() === window['AscCommonExcel'].ECfvoType.Percent ||
+							lastCFVO.asc_getType() === window['AscCommonExcel'].ECfvoType.Percentile) {
+							let baseValue = parseFloat(lastCFVO.asc_getVal()) || 0;
+							let step = (100 - baseValue) / (newIconCount - currentCFVOs.length + 1);
+							let newValue = Math.round(baseValue + step * (i - currentCFVOs.length + 1));
+							newCFVO.asc_setVal(newValue.toString());
+						} else {
+							newCFVO.asc_setVal(lastCFVO.asc_getVal());
+						}
+
 						if (lastCFVO.formula) {
 							newCFVO.formula = lastCFVO.formula.clone();
 						}
@@ -24319,29 +24393,27 @@
 							newCFVO.formulaParent = lastCFVO.formulaParent.clone();
 						}
 					} else {
-						newCFVO.Gte = true;
-						newCFVO.Type = window['AscCommonExcel'].ECfvoType.Percent;
-						newCFVO.Val = "67";
+						newCFVO.asc_setGte(true);
+						newCFVO.asc_setType(window['AscCommonExcel'].ECfvoType.Percent);
+						let percentileValue = Math.round((i * 100) / newIconCount);
+						newCFVO.asc_setVal(percentileValue.toString());
 					}
 
-					iconSetElement.aCFVOs.push(newCFVO);
+					newCFVOs.push(newCFVO);
 				}
+
+				iconSetElement.aCFVOs = newCFVOs;
 			}
 
-			let currentIconSets = iconSetElement.aIconSets || [];
-			let currentIconSetsCount = currentIconSets.length;
-
-			if (newIconCount < currentIconSetsCount) {
-				iconSetElement.aIconSets = currentIconSets.slice(0, newIconCount);
-			} else if (newIconCount > currentIconSetsCount) {
-				for (let i = currentIconSetsCount; i < newIconCount; i++) {
-					let newIconSet = new window['AscCommonExcel'].CConditionalFormatIconSet();
-					newIconSet.IconSet = internalIconSet;
-					newIconSet.IconId = i;
-
-					iconSetElement.aIconSets.push(newIconSet);
-				}
+			let newIconSets = [];
+			for (let i = 0; i < newIconCount; i++) {
+				let newIconSetItem = new window['AscCommonExcel'].CConditionalFormatIconSet();
+				newIconSetItem.IconSet = internalIconSet;
+				newIconSetItem.IconId = i;
+				newIconSets.push(newIconSetItem);
 			}
+
+			iconSetElement.aIconSets = newIconSets;
 		});
 	};
 
@@ -24353,6 +24425,31 @@
 			this.SetIconSet(value);
 		}
 	});
+
+	function isDefaultCFVO(cfvo, index, totalCount) {
+		if (!cfvo) {
+			return true;
+		}
+
+		if (index === 0) {
+			return cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Minimum;
+		}
+
+		if (cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Percent) {
+			let expectedPercent = Math.round((index * 100) / totalCount);
+			let actualValue = parseFloat(cfvo.asc_getVal());
+			return Math.abs(actualValue - expectedPercent) <= 1;
+		}
+
+		if (cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Percentile) {
+			let expectedPercentile = Math.round((index * 100) / totalCount);
+			let actualValue = parseFloat(cfvo.asc_getVal());
+			return Math.abs(actualValue - expectedPercentile) <= 1;
+		}
+
+		return cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Minimum ||
+			cfvo.asc_getType() === window['AscCommonExcel'].ECfvoType.Maximum;
+	}
 
 	/**
 	 * Returns whether the thresholds for the icon set conditional format are determined by using percentiles.
@@ -24373,7 +24470,7 @@
 		}
 
 		// Check if all CFVOs (except the first one which is always the minimum) are set to percentile
-		for (let i = 1; i < iconSetElement.aCFVOs.length; i++) {
+		for (let i = 0; i < iconSetElement.aCFVOs.length; i++) {
 			let cfvo = iconSetElement.aCFVOs[i];
 			if (!cfvo || cfvo.asc_getType() !== AscCommonExcel.ECfvoType.Percentile) {
 				return false;
@@ -24388,6 +24485,7 @@
 	 * @memberof ApiIconSetCondition
 	 * @typeofeditors ["CSE"]
 	 * @param {boolean} percentileValues - True to set all thresholds to percentile, false otherwise.
+	 * @returns {boolean} True if the percentile values was successfully set, false otherwise.
 	 * @since 9.1.0
 	 * @see office-js-api/Examples/{Editor}/ApiIconSetCondition/Methods/SetPercentileValues.js
 	 */
@@ -24405,14 +24503,14 @@
 			return false;
 		}
 
-		this.private_changeStyle(function(newRule) {
+		return this.private_changeStyle(function(newRule) {
 			let iconSetElement = newRule.aRuleElements && newRule.aRuleElements[0];
 			if (!iconSetElement || !iconSetElement.aCFVOs) {
-				return;
+				return false;
 			}
 
 			// Set type for all CFVOs (except the first one which is always the minimum)
-			for (let i = 1; i < iconSetElement.aCFVOs.length; i++) {
+			for (let i = 0; i < iconSetElement.aCFVOs.length; i++) {
 				let cfvo = iconSetElement.aCFVOs[i];
 				if (cfvo) {
 					if (percentileValues) {
@@ -26325,16 +26423,6 @@
 	// ApiUniqueValues.prototype.GetBorders = ApiFormatCondition.prototype.GetBorders;
 
 	/**
-	 * Returns the interior (background) formatting for the unique values conditional formatting rule.
-	 * @memberof ApiUniqueValues
-	 * @typeofeditors ["CSE"]
-	 * @returns {ApiInterior}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiUniqueValues/Methods/GetInterior.js
-	 */
-	ApiUniqueValues.prototype.GetInterior = ApiFormatCondition.prototype.GetInterior;
-
-	/**
 	 * Returns the number format for the unique values conditional formatting rule.
 	 * @memberof ApiUniqueValues
 	 * @typeofeditors ["CSE"]
@@ -27404,7 +27492,6 @@
 	ApiAboveAverage.prototype["GetAppliesTo"] = ApiAboveAverage.prototype.GetAppliesTo;
 	//ApiAboveAverage.prototype["GetBorders"] = ApiAboveAverage.prototype.GetBorders;
 	ApiAboveAverage.prototype["GetFont"] = ApiAboveAverage.prototype.GetFont;
-	ApiAboveAverage.prototype["GetInterior"] = ApiAboveAverage.prototype.GetInterior;
 	ApiAboveAverage.prototype["GetNumberFormat"] = ApiAboveAverage.prototype.GetNumberFormat;
 	ApiAboveAverage.prototype["SetNumberFormat"] = ApiAboveAverage.prototype.SetNumberFormat;
 	ApiAboveAverage.prototype["GetParent"] = ApiAboveAverage.prototype.GetParent;
@@ -27434,7 +27521,6 @@
 	//ApiUniqueValues.prototype["SetStopIfTrue"] = ApiUniqueValues.prototype.SetStopIfTrue;
 	ApiUniqueValues.prototype["GetFont"] = ApiUniqueValues.prototype.GetFont;
 	//ApiUniqueValues.prototype["GetBorders"] = ApiUniqueValues.prototype.GetBorders;
-	ApiUniqueValues.prototype["GetInterior"] = ApiUniqueValues.prototype.GetInterior;
 	ApiUniqueValues.prototype["GetNumberFormat"] = ApiUniqueValues.prototype.GetNumberFormat;
 	ApiUniqueValues.prototype["SetNumberFormat"] = ApiUniqueValues.prototype.SetNumberFormat;
 	ApiUniqueValues.prototype["GetFillColor"] = ApiUniqueValues.prototype.GetFillColor;
