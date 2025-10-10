@@ -13559,7 +13559,7 @@
         this.dPt = [];
         this.marker = null;
         this.smooth = null;
-        this.trendlines = null;
+        this.trendlines = [];
         this.xVal = null;
         this.yVal = null;
     }
