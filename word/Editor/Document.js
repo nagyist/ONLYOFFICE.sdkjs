@@ -2629,38 +2629,38 @@ CDocument.prototype.private_FinalizeContentControlChange = function()
 };
 CDocument.prototype.private_FinalizeDeletingAnnotationsMarks = function()
 {
-	let docState = this.SaveDocumentState();
-	
-	let permMarks = this.Action.Additional.DeletedAnnotationMarks.perm;
-	for (let rangeId in permMarks)
+	let _t = this;
+	function updateMarkPosition(mark, docPos, isEnd)
 	{
-		let info = permMarks[rangeId];
-		if (info.start && info.end)
-		{
-			this.CollaborativeEditing.Remove_DocumentPosition(info.start.docPos);
-			this.CollaborativeEditing.Remove_DocumentPosition(info.end.docPos);
-			this.PermRangesManager.checkRange(rangeId);
-			continue;
-		}
+		_t.RefreshDocumentPositions2([docPos]);
 		
-		let docPos = info.start ? info.start.docPos : info.end.docPos;
-		let mark   = info.start ? info.start.mark : info.end.mark;
+		// Удалим метку из её родительского класса, если по какой-то причине она не была удалена
+		mark.removeMark();
 		
-		let actualMark = info.start ? this.PermRangesManager.getStartMark(rangeId) : this.PermRangesManager.getEndMark(rangeId);
-		if ((actualMark && actualMark !== mark) || mark.isUseInDocument())
-		{
-			this.CollaborativeEditing.Remove_DocumentPosition(docPos);
-			this.PermRangesManager.checkRange(rangeId);
-			continue;
-		}
-		
-		this.CollaborativeEditing.Update_DocumentPosition(docPos);
 		let lastClass = docPos[docPos.length - 1].Class;
+		if (lastClass instanceof AscWord.Run && docPos.length > 1)
+		{
+			// Если мы не в начале рана, то позицию выставляем за раном
+			let lastPos = docPos[docPos.length - 1].Position;
+			
+			if ((!isEnd && lastPos === lastClass.GetElementsCount()) || (isEnd && 0 !== lastPos))
+				++docPos[docPos.length - 2].Position;
+			
+			docPos.pop();
+			
+			lastClass = docPos.length ? docPos[docPos.length - 1].Class : null;
+		}
 		
 		if (lastClass instanceof AscWord.Paragraph || lastClass instanceof AscWord.ParagraphContentWithParagraphLikeContent)
 		{
+			// Сначала удали метку из старого места, если она не была удалена
 			let newPosition = Math.min(lastClass.GetElementsCount(), Math.max(docPos[docPos.length - 1].Position, 0));
 			lastClass.AddToContent(newPosition, mark);
+			
+			// На случай, когда удалились обе метки и мы их восстанавливаем в одном и том же месте, добавляем пустой ран
+			// перед концевой меткой
+			if (isEnd)
+				lastClass.AddToContent(newPosition, new AscWord.Run());
 		}
 		else
 		{
@@ -2668,7 +2668,41 @@ CDocument.prototype.private_FinalizeDeletingAnnotationsMarks = function()
 			// Ничего не делаем, отрезок должен удалиться на PermRangesManager.checkRange
 		}
 		
-		this.CollaborativeEditing.Remove_DocumentPosition(docPos);
+		_t.CollaborativeEditing.Remove_DocumentPosition(docPos);
+	}
+	
+	let docState = this.SaveDocumentState();
+	let permMarks = this.Action.Additional.DeletedAnnotationMarks.perm;
+	for (let rangeId in permMarks)
+	{
+		let info = permMarks[rangeId];
+		if (info.start && info.end)
+		{
+			let actualEndMark   = this.PermRangesManager.getEndMark(rangeId);
+			let actualStartMark = this.PermRangesManager.getStartMark(rangeId);
+			if (this.CheckRestrictionsForPermEditing()
+				&& (!actualEndMark || (actualEndMark === info.end.mark && !actualEndMark.IsUseInDocument()))
+				&& (!actualStartMark || (actualStartMark === info.start.mark && !actualStartMark.IsUseInDocument())))
+			{
+				updateMarkPosition(info.start.mark, info.start.docPos, false);
+				updateMarkPosition(info.end.mark, info.end.docPos, true);
+			}
+		}
+		else
+		{
+			let docPos = info.start ? info.start.docPos : info.end.docPos;
+			let mark   = info.start ? info.start.mark : info.end.mark;
+			
+			let actualMark = info.start ? this.PermRangesManager.getStartMark(rangeId) : this.PermRangesManager.getEndMark(rangeId);
+			if (!actualMark || (actualMark === mark && !mark.IsUseInDocument()))
+				updateMarkPosition(mark, docPos, !info.start);
+		}
+		
+		if (info.start)
+			this.CollaborativeEditing.Remove_DocumentPosition(info.start.docPos);
+		if (info.end)
+			this.CollaborativeEditing.Remove_DocumentPosition(info.end.docPos);
+		
 		this.PermRangesManager.checkRange(rangeId);
 	}
 	
@@ -13067,6 +13101,17 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
 	return (isPermRange || this.CanEdit() || isIgnoreCanEditFlag);
 };
 /**
+ * Проверяем по ограничениям, что мы можем редактировать зазрешенные области (и только их)
+ * @returns {boolean}
+ */
+CDocument.prototype.CheckRestrictionsForPermEditing = function()
+{
+	return (!this.Api.isViewMode
+		&& !this.Api.isRestrictionSignatures()
+		&& (this.Api.isRestrictionComments() || this.Api.isRestrictionView())
+	);
+};
+/**
  * Проверяем, что действие с заданным типом произойдет в разрешенной области
  * @param changesType
  * @param additionalData
@@ -13075,6 +13120,7 @@ CDocument.prototype.CanPerformAction = function(isIgnoreCanEditFlag, checkType, 
  */
 CDocument.prototype.IsPermRangeEditing = function(changesType, additionalData, actionDescription)
 {
+	// TODO: Replace with CheckRestrictionsForPermEditing
 	if (this.Api.isViewMode || this.Api.isRestrictionSignatures())
 		return false;
 	
@@ -25797,6 +25843,36 @@ CDocument.prototype.RefreshDocumentPositions = function(arrPositions)
 	{
 		this.CollaborativeEditing.Update_DocumentPosition(arrPositions[nIndex]);
 	}
+};
+/**
+ * В данном методе мы не только обновляем позиции по изменениям, но и прогоняем их через содержимое, чтобы посмотреть,
+ * где реально находится новая позиция (по логике всегда нужно использовать именно этот метод)
+ * @param docPositions
+ */
+CDocument.prototype.RefreshDocumentPositions2 = function(docPositions)
+{
+	let state = this.SaveDocumentState();
+	this.RemoveSelection();
+	
+	for (let i = 0; i < docPositions.length; ++i)
+	{
+		let docPos = docPositions[i];
+		this.CollaborativeEditing.Update_DocumentPosition(docPos);
+		
+		let topObject = docPos[0].Class;
+		if (!topObject || !topObject.SetContentPosition)
+			continue;
+		
+		topObject.SetContentPosition(docPos, 0, 0);
+		docPositions[i].length = 0;
+		
+		topObject.GetContentPosition(false, false).forEach(function(info){
+			docPositions[i].push(info);
+		});
+		
+	}
+	
+	this.LoadDocumentState(state);
 };
 CDocument.prototype.UntrackDocumentPositions = function(docPositions)
 {
