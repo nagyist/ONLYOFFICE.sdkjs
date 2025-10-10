@@ -9437,7 +9437,16 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype.asc_editChartDrawingObject = function(chartBinary)
 	{
 		this.asc_onCloseFrameEditor();
-		this.WordControl.m_oLogicDocument.FinalizeEditChart(chartBinary);
+		const oLogicDocument = this.WordControl.m_oLogicDocument;
+		if (oLogicDocument)
+		{
+			if (AscCommon.isRealObject(chartBinary))
+			{
+				oLogicDocument.FinalizeEditChart(chartBinary);
+			}
+			oLogicDocument.Document_UpdateUndoRedoState();
+		}
+
 	};
 
 	asc_docs_api.prototype.sync_closeChartEditor = function()
