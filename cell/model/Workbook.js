@@ -14007,15 +14007,13 @@
 		}
 		if (!userId) {
 			let oApi = Asc.editor;
-			userId = oApi.DocInfo && oApi.DocInfo.get_UserId();
+			userId = oApi && oApi.DocInfo && oApi.DocInfo.get_UserId();
 		}
-
-		oCell = {col: oCell.nCol, row: oCell.nRow};
 
 		if (this.userProtectedRanges && userId) {
 			for (let i = 0; i < this.userProtectedRanges.length; i++) {
 				let curUserProtectedRange = this.userProtectedRanges[i];
-				if (curUserProtectedRange.contains2(oCell) && (notCheckUser || !curUserProtectedRange.isUserCanDoByType(userId, type))) {
+				if (curUserProtectedRange.contains(oCell.nCol, oCell.nRow) && (notCheckUser || !curUserProtectedRange.isUserCanDoByType(userId, type))) {
 					return true;
 				}
 			}
@@ -18288,6 +18286,9 @@
 			}
 		}
 		this._foreach(function(cell){
+			if (cell.ws.isUserProtectedRangesIntersectionCell(cell)) {
+				return;
+			}
 			var _val = val;
 			if (_formula) {
 				_formula.isParsed = false;
