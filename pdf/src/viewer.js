@@ -4454,6 +4454,9 @@
 				oMemory.WriteByte("P".charCodeAt(0));
 				oMemory.WriteByte("D".charCodeAt(0));
 				oMemory.WriteByte("F".charCodeAt(0));
+
+				oMemory.isForSplit = false;
+				oMemory.isCopyPaste = false;
 			}
 		}
 
@@ -4975,6 +4978,7 @@
 				oMemory.WriteByte("F".charCodeAt(0));
 
 				oMemory.isForSplit = true;
+				oMemory.isCopyPaste = false;
 			}
 		}
 
