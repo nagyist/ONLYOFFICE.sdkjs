@@ -4593,6 +4593,10 @@
             let nDPtCount = nColorsCount;
             let nDPt, oDPt;
             if(bReset) {
+                let aOldDpt = [];
+                if(Array.isArray(this.dPt)) {
+                    aOldDpt = aOldDpt.concat(this.dPt);
+                }
                 this.removeAllDPts();
                 for(nDPt = 0; nDPt < nDPtCount; ++nDPt) {
                     oDPt = new CDPt();
@@ -4604,6 +4608,14 @@
                         oMarker.applyChartStyle(oChartStyle, oColors, oAdditionalData, bReset);
                     }
                     oDPt.applyStyleEntry(oDataStyleEntry, aColors, nDPt, bReset);
+                    for (let oldPtIdx = 0; oldPtIdx < aOldDpt.length; ++oldPtIdx) {
+                        if (aOldDpt[oldPtIdx].idx === nDPt) {
+                            if (aOldDpt[oldPtIdx].explosion !== null) {
+                                oDPt.setExplosion(aOldDpt[oldPtIdx].explosion);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
             else {
@@ -6016,6 +6028,7 @@
         var oDoughnutChart = new AscFormat.CDoughnutChart();
         oDoughnutChart.mergeWithoutSeries(oOldChart);
         oDoughnutChart.setVaryColors(true);
+        oDoughnutChart.setHoleSize(75);
         for(var nSeries = 0; nSeries < aSeries.length; ++nSeries) {
             var oSeries = new AscFormat.CPieSeries();
             aSeries[nSeries].fillObject(oSeries);
