@@ -1987,12 +1987,15 @@ function(window, undefined) {
 		const oLayout = oPlotArea.layout;
 		return oLayout ? ((oLayout.h === null && oLayout.w === null && oLayout.x === null && oLayout.y === null) ? false : true): false;
 	};
-	CChartSpace.prototype.fromOther = function(oChartSpace) {
-		if(oChartSpace.nvGraphicFramePr) {
-			this.setNvSpPr(oChartSpace.nvGraphicFramePr.createDuplicate());
-		}
-		else {
-			this.setNvSpPr(null);
+	CChartSpace.prototype.fromOther = function(oChartSpace, bSaveNvPr) {
+
+		if (!bSaveNvPr) {
+			if(oChartSpace.nvGraphicFramePr) {
+				this.setNvSpPr(oChartSpace.nvGraphicFramePr.createDuplicate());
+			}
+			else {
+				this.setNvSpPr(null);
+			}
 		}
 		if(oChartSpace.chart) {
 			this.setChart(oChartSpace.chart.createDuplicate());
