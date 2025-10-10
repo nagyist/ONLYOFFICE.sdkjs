@@ -124,7 +124,7 @@
                 {
                     case 'mathcolor':
                     {
-                        let rgb = AscFormat.mapPrstColor[attributes.mathcolor];
+                        let rgb = AscFormat.mapPrstColor[attributes['mathcolor']];
                         if (rgb) {
                             let color = new AscWord.CDocumentColor((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
                             el.Set_Color(color);
@@ -133,7 +133,7 @@
                     }
                     case 'mathbackground':
                     {
-                        let rgb = AscFormat.mapPrstColor[attributes.mathbackground];
+                        let rgb = AscFormat.mapPrstColor[attributes['mathbackground']];
                         if (rgb)
                         {
                             let color = new AscWord.CDocumentColor((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
@@ -144,28 +144,28 @@
                     case 'mathsize':
                     {
                         //default size if 16px or 1em
-                        if (attributes.mathsize === 'normal')
+                        if (attributes['mathsize'] === 'normal')
                         {
                             el.SetFontSize(16);
                         }
-                        else if (attributes.mathsize === 'small')
+                        else if (attributes['mathsize'] === 'small')
                         {
                             el.SetFontSize(12);
                         }
-                        else if (attributes.mathsize === 'big')
+                        else if (attributes['mathsize'] === 'big')
                         {
                             el.SetFontSize(20);
                         }
-                        else if (attributes.mathsize.slice(-1) === "%" && Number(attributes.mathsize.slice(0, -1)))
+                        else if (attributes['mathsize'].slice(-1) === "%" && Number(attributes['mathsize'].slice(0, -1)))
                         {
-                            let percentage		= Number(attributes.mathsize.slice(0, -1));
+                            let percentage		= Number(attributes['mathsize'].slice(0, -1));
                             let defaultvalue	= 16;
                             let value			= defaultvalue * (percentage / 100);
                             el.SetFontSize(value);
                         }
                     }
                     case 'stretchy': {
-                        if (attributes.stretchy === 'false')
+                        if (attributes['stretchy'] === 'false')
                         {
                             if (!el.mathml_metadata)
                                 el.mathml_metadata = {};
