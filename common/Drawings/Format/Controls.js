@@ -151,26 +151,31 @@
 		}
 	}
 	function startRoundControl(graphics, x, y, extX, extY, nRadiusPx, arrColor) {
-		graphics.save();
 		const nRadius = Math.min(nRadiusPx * AscCommon.g_dKoef_pix_to_mm * AscCommon.AscBrowser.retinaPixelRatio, extX / 2, extY / 2);
+		function draw() {
+			graphics._s();
+			graphics._m(x, y + nRadius);
+			graphics._c2(x, y, x + nRadius, y);
+			graphics._l(x + extX - nRadius, y);
+			graphics._c2(x + extX, y, x + extX, y + nRadius);
+			graphics._l(x + extX, y + extY - nRadius);
+			graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
+			graphics._l(x + nRadius, y + extY);
+			graphics._c2(x, y + extY, x, y + extY - nRadius);
+			graphics._z();
+		}
+		graphics.SaveGrState();
 		graphics.p_color.apply(graphics, arrColor);
 		graphics.p_width(0);
-		graphics.StartClipPath();
-		graphics._s();
-		graphics._m(x, y + nRadius);
-		graphics._c2(x, y, x + nRadius, y);
-		graphics._l(x + extX - nRadius, y);
-		graphics._c2(x + extX, y, x + extX, y + nRadius);
-		graphics._l(x + extX, y + extY - nRadius);
-		graphics._c2(x + extX, y + extY, x + extX - nRadius, y + extY);
-		graphics._l(x + nRadius, y + extY);
-		graphics._c2(x, y + extY, x, y + extY - nRadius);
-		graphics._z();
+		draw();
 		graphics.ds();
+		graphics.AddClipRect(x, y, extX, extY);
+		graphics.StartClipPath();
+		draw();
 		graphics.EndClipPath();
 	}
 	function endRoundControl(graphics) {
-		graphics.restore();
+		graphics.RestoreGrState();
 	}
 	function CStepManager() {
 		this.timeoutId = null;
@@ -671,6 +676,7 @@ function getFlatPenColor() {
 		}
 		graphics._e();
 		endRoundControl(graphics);
+		graphics.RestoreGrState();
 	};
 
 	function CCheckBoxController(oControl) {
@@ -929,13 +935,7 @@ function getFlatPenColor() {
 			return true;
 		};
 		this.button._onMouseUp = function () {
-			const oControlPr = oThis.getControlPr();
-			const sMacro = oControlPr.getJSAMacroId();
-			if (sMacro === null) {
-				oThis.onMacroError();
-			} else {
-				oThis.runMacros(sMacro);
-			}
+			oThis.runMacros();
 			return true;
 		}
 	};
@@ -960,10 +960,10 @@ function getFlatPenColor() {
 		this.button.transform = oControl.transform.CreateDublicate();
 		this.button.invertTransform = oControl.invertTransform.CreateDublicate();
 	};
-	CButtonController.prototype.onMacroError = function () {
+	CButtonController.prototype.onMacroError = function (sMacro) {
 		const oApi = Asc.editor;
 		if (oApi) {
-			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical);
+			oApi.sendEvent("asc_onError", Asc.c_oAscError.ID.MacroUnavailableWarning, c_oAscError.Level.NoCritical, sMacro);
 		}
 	};
 	CButtonController.prototype.getCursorInfo = function (e, nX, nY) {
@@ -987,6 +987,10 @@ function getFlatPenColor() {
 		if (e.CtrlKey) {
 			return false;
 		}
+		const oControlPr = this.getControlPr();
+		if (oControlPr.getMacroId() === null) {
+			return false;
+		}
 		return this.button.onMouseDown(e, nX, nY, nPageIndex, oDrawingController);
 	};
 	CButtonController.prototype.onMouseUp = function (e, nX, nY, nPageIndex, oController) {
@@ -995,9 +999,19 @@ function getFlatPenColor() {
 	CButtonController.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oController) {
 		return this.button.onMouseMove(e, nX, nY, nPageIndex, oController);
 	};
-	CButtonController.prototype.runMacros = function (sMacro) {
+	CButtonController.prototype.runMacros = function () {
+		const oControlPr = this.getControlPr();
+		const sMacro = oControlPr.getJSAMacroId();
+		if (sMacro === null) {
+			this.onMacroError(oControlPr.getMacroId());
+			return;
+		}
 		const oApi = Asc.editor;
 		if (oApi) {
+			const sMacroName = oApi.macros && oApi.macros.getNameByGuid(sMacro);
+			if (!sMacroName) {
+				this.onMacroError(sMacro);
+			}
 			oApi.asc_runMacros(sMacro);
 		}
 	};
@@ -1131,7 +1145,7 @@ function getFlatPenColor() {
 		};
 	};
 	CSpinController.prototype.draw = function (graphics, transform, transformText, pageIndex, opt) {
-		graphics.SaveGrState()
+		graphics.SaveGrState();
 		transform = transform || this.control.transform;
 		graphics.transform3(transform);
 		startRoundControl(graphics, 0, 0, this.control.extX, this.control.extY, 2, getFlatPenColor());
@@ -1647,63 +1661,66 @@ function getFlatPenColor() {
 		const nMinValue = this.getMinValue();
 		const nMaxValue = this.getMaxValue();
 		const nCurrentValue = this.getCurrentValue();
-		const nButtonSide = Math.min(this.extX, this.extY);
 		if (bIsVertical) {
-			const nTrackHeight = nScrollHeight - (nButtonSide * 2);
-
+			const nButtonWidth = this.extX;
+			const nButtonHeight = Math.min(this.extY / 2, nButtonWidth);
+			const nTrackHeight = nScrollHeight - (nButtonHeight * 2);
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
-			this.upButton.extX = nButtonSide;
-			this.upButton.extY = nButtonSide;
+			this.upButton.extX = nButtonWidth;
+			this.upButton.extY = nButtonHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_UP;
 
 			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonSide);
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, 0, nScrollHeight - nButtonHeight);
 			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
 			this.downButton.x = this.x;
-			this.downButton.y = this.y + nScrollHeight - nButtonSide;
-			this.downButton.extX = nButtonSide;
-			this.downButton.extY = nButtonSide;
+			this.downButton.y = this.y + nScrollHeight - nButtonHeight;
+			this.downButton.extX = nButtonWidth;
+			this.downButton.extY = nButtonHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_DOWN;
 
 			this.trackArea.x = this.x;
-			this.trackArea.y = this.y + nButtonSide;
+			this.trackArea.y = this.y + nButtonHeight;
 			this.trackArea.extX = nScrollWidth;
 			this.trackArea.extY = nTrackHeight;
 			const oTrackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonSide);
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, 0, nButtonHeight);
 			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
 		} else {
-			const nTrackWidth = nScrollWidth - (nButtonSide * 2);
+			const nButtonHeight = this.extY;
+			const nButtonWidth = Math.min(nButtonHeight, this.extX / 2);
+
+			const nTrackWidth = nScrollWidth - (nButtonWidth * 2);
 
 			this.upButton.x = this.x;
 			this.upButton.y = this.y;
-			this.upButton.extX = nButtonSide;
-			this.upButton.extY = nButtonSide;
+			this.upButton.extX = nButtonWidth;
+			this.upButton.extY = nButtonHeight;
 			this.upButton.transform = oControlMatrix.CreateDublicate();
 			this.upButton.invertTransform = global_MatrixTransformer.Invert(this.upButton.transform);
 			this.upButton.direction = SPINBUTTON_DIRECTION_LEFT;
 
 			const oDownButtonMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, nScrollWidth - nButtonSide, 0);
+			global_MatrixTransformer.TranslateAppend(oDownButtonMatrix, nScrollWidth - nButtonWidth, 0);
 			this.downButton.transform = oDownButtonMatrix;
 			this.downButton.invertTransform = global_MatrixTransformer.Invert(this.downButton.transform);
-			this.downButton.x = this.x + nScrollWidth - nButtonSide;
+			this.downButton.x = this.x + nScrollWidth - nButtonWidth;
 			this.downButton.y = this.y;
-			this.downButton.extX = nButtonSide;
-			this.downButton.extY = nButtonSide;
+			this.downButton.extX = nButtonWidth;
+			this.downButton.extY = nButtonHeight;
 			this.downButton.direction = SPINBUTTON_DIRECTION_RIGHT;
 
-			this.trackArea.x = this.x + nButtonSide;
+			this.trackArea.x = this.x + nButtonWidth;
 			this.trackArea.y = this.y;
 			this.trackArea.extX = nTrackWidth;
 			this.trackArea.extY = nScrollHeight;
 			const oTrackMatrix = oControlMatrix.CreateDublicate();
-			global_MatrixTransformer.TranslateAppend(oTrackMatrix, nButtonSide, 0);
+			global_MatrixTransformer.TranslateAppend(oTrackMatrix, nButtonWidth, 0);
 			this.trackArea.transform = oTrackMatrix;
 			this.trackArea.invertTransform = global_MatrixTransformer.Invert(this.trackArea.transform);
 		}
@@ -1958,15 +1975,27 @@ function getFlatPenColor() {
 			oThis.recalculateTransform();
 			oThis.controller.checkNeedUpdate();
 		};
+		this.scrollContainer.isVertical = function () {
+			return true;
+		}
 	};
-	CListBox.prototype.updateListItems = function (oRange) {
+	CListBox.prototype.updateListItems = function () {
 		this.listItems = [];
-		if (oRange) {
-			const oThis = this;
-			oRange._foreach(function (oCell) {
-				const sItem = oCell && !oCell.isNullText() ? oCell.getValue() : "";
-				oThis.listItems.push(new CListBoxItem(oThis, sItem));
-			});
+		const oFormControlPr = this.controller.getFormControlPr();
+		if (oFormControlPr.itemLst.length) {
+			for (let i = 0; i < oFormControlPr.itemLst.length; i += 1) {
+				this.listItems.push(new CListBoxItem(this, oFormControlPr.itemLst[i]));
+			}
+		}
+		else {
+			const oRange = this.controller.getParsedFmlaRange();
+			if (oRange) {
+				const oThis = this;
+				oRange._foreach(function (oCell) {
+					const sItem = oCell && !oCell.isNullText() ? oCell.getValue() : "";
+					oThis.listItems.push(new CListBoxItem(oThis, sItem));
+				});
+			}
 		}
 	};
 
@@ -1996,11 +2025,6 @@ function getFlatPenColor() {
 			oItem.y = oItem.extY * nIndex;
 			oItem.recalculateTextPosition();
 			nIndex++;
-		});
-	};
-	CListBox.prototype.recalculateVisibleItemTextPositions = function () {
-		this.checkVisibleItems(function (oItem) {
-			oItem.recalculateTextPosition();
 		});
 	};
 	CListBox.prototype.resetSelectedIndices = function () {
@@ -2049,6 +2073,8 @@ function getFlatPenColor() {
 		graphics.SaveGrState();
 		graphics.transform3(oTransform);
 		startRoundControl(graphics, 0, 0, this.extX, this.extY, 2, getFlatPenColor());
+		graphics.b_color1(255, 255, 255, 255);
+		graphics.TableRect(0, 0, this.extX, this.extY);
 		this.checkVisibleItems(function (oItem) {
 			oItem.draw(graphics);
 		});
@@ -2108,10 +2134,29 @@ function getFlatPenColor() {
 		}
 		return false;
 	};
-
+	CListBox.prototype.resetHoverEffect = function () {
+		let bUpdate = false;
+		this.checkVisibleItems(function (oItem) {
+			if (oItem.isHovered) {
+				bUpdate = true;
+				oItem.setHovered(false);
+			}
+			return bUpdate;
+		});
+		if (bUpdate) {
+			this.controller.checkNeedUpdate();
+		}
+	};
 	CListBox.prototype.onMouseMove = function (e, nX, nY, nPageIndex, oDrawingController) {
-		if (this.isShowScroll() && this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController)) {
-			return true;
+		if (this.isShowScroll()) {
+			const bIsScrollMove = this.scrollContainer.onMouseMove(e, nX, nY, nPageIndex, oDrawingController);
+			const bIsHitScroll = this.scrollContainer.hit(nX, nY);
+			if (bIsHitScroll || bIsScrollMove) {
+				if (bIsHitScroll) {
+					this.resetHoverEffect();
+				}
+				return bIsScrollMove;
+			}
 		}
 
 			const nLocalX = this.invertTransform.TransformPointX(nX, nY);
@@ -2206,7 +2251,7 @@ function getFlatPenColor() {
 	};
 
 	CListBoxController.prototype.updateListItems = function () {
-		this.listBox.updateListItems(this.getParsedFmlaRange());
+		this.listBox.updateListItems();
 	};
 	CListBoxController.prototype.getFmlaLinkIndex = function () {
 		const oParsedLink = this.getParsedFmlaLink();
@@ -2292,7 +2337,6 @@ function getFlatPenColor() {
 	};
 
 	CListBoxController.prototype.onMouseDown = function (e, nX, nY, nPageIndex, oDrawingController) {
-		const oControl = this.control;
 		if (e.button !== 0) {
 			return false;
 		}
@@ -2400,7 +2444,7 @@ function getFlatPenColor() {
 		oFormControlPr.setSel(nIndex ? nIndex : null);
 	};
 	CComboBoxController.prototype.updateListItems = function () {
-		this.listBox.updateListItems(this.getParsedFmlaRange());
+		this.listBox.updateListItems();
 	};
 
 	CComboBoxController.prototype.updateSelectedIndex = function () {
@@ -2821,9 +2865,13 @@ function getFlatPenColor() {
 		oCopy.setRecalcAlways(this.recalcAlways);
 		oCopy.setUiObject(this.uiObject);
 	};
-	CControlPr.prototype.getJSAMacroId = function () {
+	CControlPr.prototype.getMacroId = function () {
 		const sMacro = this.macro;
-		if (typeof sMacro === "string" && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
+		return typeof sMacro === "string" ? sMacro : null;
+	};
+	CControlPr.prototype.getJSAMacroId = function () {
+		const sMacro = this.getMacroId();
+		if (sMacro !== null && sMacro.indexOf(AscFormat.MACRO_PREFIX) === 0) {
 			return sMacro.slice(AscFormat.MACRO_PREFIX.length);
 		}
 		return null;

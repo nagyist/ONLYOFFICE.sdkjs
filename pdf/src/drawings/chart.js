@@ -38,6 +38,7 @@
     */
     function CPdfChartSpace() {
         AscFormat.CChartSpace.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfChartSpace.prototype.constructor = CPdfChartSpace;
@@ -213,6 +214,13 @@
 			copy.cachedPixH = this.cachedPixH;
 			copy.cachedPixW = this.cachedPixW;
 		}
+
+		if (!oPr || !oPr.bSkipRedactsIds) {
+            this.GetRedactIds().forEach(function(id) {
+                copy.AddRedactId(id);
+            });
+        }
+		
 		return copy;
 	};
 

@@ -39,6 +39,7 @@
     function CPdfGraphicFrame()
     {
         AscFormat.CGraphicFrame.call(this);
+        AscPDF.CPdfDrawingPrototype.call(this);
     }
     
     CPdfGraphicFrame.prototype.constructor = CPdfGraphicFrame;
@@ -79,7 +80,12 @@
             }
         }
 
-        ret._page = this._page; 
+        if (!oPr || !oPr.bSkipRedactsIds) {
+            this.GetRedactIds().forEach(function(id) {
+                ret.AddRedactId(id);
+            });
+        }
+
         return ret;
     };
     CPdfGraphicFrame.prototype.GetPageContentFrame = function(page, sectPr) {

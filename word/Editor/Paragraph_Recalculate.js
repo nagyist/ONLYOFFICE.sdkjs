@@ -3625,7 +3625,7 @@ CParagraphRecalculateStateWrap.prototype.getDocumentSettings = function()
 CParagraphRecalculateStateWrap.prototype.isDocumentEditor = function()
 {
 	let logicDocument = this.Paragraph.GetLogicDocument();
-	return (!logicDocument || logicDocument.IsDocumentEditor());
+	return (logicDocument && logicDocument.IsDocumentEditor());
 };
 CParagraphRecalculateStateWrap.prototype.getCompatibilityMode = function()
 {
