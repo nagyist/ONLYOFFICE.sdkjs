@@ -7908,13 +7908,6 @@ background-repeat: no-repeat;\
 			this.sendToReporter("{ \"main_command\" : true, \"go_to_slide\" : " + slideNum + " }");
 	};
 
-
-	asc_docs_api.prototype.getFocusElement = function() {
-		if (!this.isSlideShow())
-			return window['AscCommon'].g_inputContext.HtmlArea;
-		return document.body;
-	};
-
 	asc_docs_api.prototype.SetDemonstrationModeOnly = function()
 	{
 		this.isOnlyDemonstration = true;
