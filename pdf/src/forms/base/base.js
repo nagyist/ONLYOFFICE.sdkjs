@@ -160,8 +160,8 @@
 		this.compositeReplaceCount = 0;
         this.Lock = new AscCommon.CLock();
         this._meta = {};
-        this.SetPartialName(sName);
-        this.SetRect(aRect);
+        sName && this.SetPartialName(sName);
+        aRect && this.SetRect(aRect);
 
         this.kidsContentChanges = new AscCommon.CContentChanges();
         this.textMatrix = new AscCommon.CMatrix();
@@ -183,6 +183,12 @@
         return true;
     };
     CBaseField.prototype.SetApIdx = function(nIdx) {
+        if (undefined != this._apIdx) {
+            return;
+        }
+
+        AscCommon.History.Add(new CChangesPDFFormApIdx(this, this._apIdx, nIdx));
+
         this._apIdx = nIdx;
     };
     CBaseField.prototype.GetApIdx = function() {
@@ -346,6 +352,8 @@
 	 * @typeofeditors ["PDF"]
 	 */
     CBaseField.prototype.SetOriginPage = function(nPage) {
+        AscCommon.History.Add(new CChangesPDFAnnotOrigPage(this, this._origPage, nPage));
+
         this._origPage = nPage;
     };
     CBaseField.prototype.GetOriginPage = function() {
@@ -510,6 +518,10 @@
         return this._partialName ? this._partialName : "";
     };
     CBaseField.prototype.SetPartialName = function(sName) {
+        if (this._partialName == sName) {
+            return;
+        }
+
         AscCommon.History.Add(new CChangesPDFFormPartialName(this, this._partialName, sName));
 
         this._partialName = sName;
@@ -1692,7 +1704,7 @@
     CBaseField.prototype.Refresh_RecalcData = function(){};
     CBaseField.prototype.SetWasChanged = function(isChanged, viewSync) {
         let oViewer   = Asc.editor.getDocumentRenderer();
-        let canChange = !oViewer.IsOpenFormsInProgress && AscCommon.History.CanAddChanges();
+        let canChange = !oViewer.IsOpenFormsInProgress && AscCommon.History.CanAddChanges() && !AscCommon.g_oIdCounter.IsLoad();
 
         let changed = this._wasChanged !== isChanged && canChange;
         if (changed) {
@@ -1737,10 +1749,17 @@
         return this._bDrawFromStream;
     };
     CBaseField.prototype.SetDrawFromStream = function(bFromStream) {
-        if (bFromStream && this.HasOriginView())
-            this._bDrawFromStream = true;
-        else
-            this._bDrawFromStream = false;
+        let valueToSet;
+        if (bFromStream && this.HasOriginView()) {
+            valueToSet = true;
+        }
+        else {
+            valueToSet = false;
+        }
+
+        AscCommon.History.Add(new CChangesPDFFormChangedView(this, this._bDrawFromStream, valueToSet));
+
+        this._bDrawFromStream = valueToSet;
     };
     CBaseField.prototype.SetDrawHighlight = function(bDraw) {
         this._needDrawHighlight = bDraw;
@@ -2622,6 +2641,10 @@
         return this._textSize;
     };
     CBaseField.prototype.SetRect = function(aOrigRect) {
+        if (this._rect == aOrigRect) {
+            return;
+        }
+
         let nOldExtX = this.GetWidth();
         let nOldExtY = this.GetHeight();
 

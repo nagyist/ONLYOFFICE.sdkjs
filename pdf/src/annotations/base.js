@@ -1236,6 +1236,12 @@
         return false;
     };
     CAnnotationBase.prototype.SetApIdx = function(nIdx) {
+        if (undefined != this._apIdx) {
+            return;
+        }
+
+        AscCommon.History.Add(new CChangesPDFAnnotApIdx(this, this._apIdx, nIdx));
+        
         this._apIdx = nIdx;
     };
     CAnnotationBase.prototype.GetApIdx = function() {

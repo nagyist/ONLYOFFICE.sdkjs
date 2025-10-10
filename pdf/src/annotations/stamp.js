@@ -568,6 +568,7 @@
     CAnnotationStamp.prototype.SetDrawFromStream = function(bDraw, bForce) {
         let oViewer = editor.getDocumentRenderer();
         if (oViewer.IsOpenAnnotsInProgress || bForce) {
+            AscCommon.History.Add(new CChangesPDFAnnotChangedView(this, this._bDrawFromStream, bDraw));
             this._bDrawFromStream = bDraw;
         }
     };
