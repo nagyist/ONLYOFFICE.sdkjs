@@ -633,6 +633,16 @@
             memory.WriteXmlString(writer.GetBase64Memory());
         }
     };
+    CPdfDrawingPrototype.prototype.WriteRedactIds = function(oWriter) {
+        let aRedactIds = this.GetRedactIds();
+
+        oWriter.StartRecord(0xFF);
+        oWriter.WriteULong(aRedactIds.length);
+        aRedactIds.forEach(function(id) {
+            oWriter.WriteString2(id);
+        });
+        oWriter.EndRecord();
+    };
 
     window["AscPDF"].CPdfDrawingPrototype = CPdfDrawingPrototype;
 })();

@@ -6624,17 +6624,6 @@ function BinaryPPTYLoader()
             }
         }
 
-        if (AscCommon.PasteElementsId.g_bIsPdfBinary) {
-            let nRedacts = s.GetULong();
-            for (let i = 0; i < nRedacts; i++) {
-                let sId = s.GetString2();
-
-                if (Asc.editor.isPdfEditor()) {
-                    _object.AddRedactId(sId);
-                }
-            }
-        }
-
         return _object;
     };
 
@@ -6746,6 +6735,11 @@ function BinaryPPTYLoader()
                     let lenRec = s.GetULong();
                     let rIdOverride = s.GetString2();
                     this.ResetImageId(shape, rIdOverride);
+                    break;
+                }
+                case 0xFF:
+                {
+                    shape.ReadRedactIds(s);
                     break;
                 }
                 default:
@@ -6905,6 +6899,11 @@ function BinaryPPTYLoader()
                             }
                         }
                     }
+                    break;
+                }
+                case 0xFF:
+                {
+                    shape.ReadRedactIds(s);
                     break;
                 }
                 default:
@@ -7198,6 +7197,11 @@ function BinaryPPTYLoader()
                     this.ResetImageId(pic, rIdOverride);
                     break;
                 }
+                case 0xFF:
+                {
+                    pic.ReadRedactIds(s);
+                    break;
+                }
                 default:
                 {
                     this.stream.SkipRecord();
@@ -7259,6 +7263,11 @@ function BinaryPPTYLoader()
                 case 0xA1:
                 {
                     shape.readMacro(s);
+                    break;
+                }
+                case 0xFF:
+                {
+                    shape.ReadRedactIds(s);
                     break;
                 }
                 default:
@@ -7513,7 +7522,7 @@ function BinaryPPTYLoader()
                 case 8://smartArt
                 {
                     _smartArt = this.ReadSmartArt();
-										this.smartarts.push(_smartArt);
+                    this.smartarts.push(_smartArt);
                     break;
                 }
                 case 9:
@@ -7532,6 +7541,17 @@ function BinaryPPTYLoader()
                 case 0xA1:
                 {
                     _graphic_frame.readMacro(s);
+                    break;
+                }
+                case 0xFF:
+                {
+                    if (_table) {
+                        _graphic_frame.ReadRedactIds(s);
+                    }
+                    else if (_chart) {
+                        _chart.ReadRedactIds(s);
+                    }
+                    
                     break;
                 }
                 default:

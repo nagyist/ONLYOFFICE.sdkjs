@@ -368,6 +368,11 @@
         return copy;
     };
 
+    CPdfSmartArt.prototype.writeChildren = function(pWriter) {
+        AscFormat.SmartArt.prototype.writeChildren.call(this, pWriter);
+        this.WriteRedactIds(pWriter);
+    };
+
     window["AscPDF"].CPdfSmartArt = CPdfSmartArt;
 })();
 
