@@ -2657,10 +2657,8 @@ CDocument.prototype.private_FinalizeDeletingAnnotationsMarks = function()
 			let newPosition = Math.min(lastClass.GetElementsCount(), Math.max(docPos[docPos.length - 1].Position, 0));
 			lastClass.AddToContent(newPosition, mark);
 			
-			// На случай, когда удалились обе метки и мы их восстанавливаем в одном и том же месте, добавляем пустой ран
-			// перед концевой меткой
-			if (isEnd)
-				lastClass.AddToContent(newPosition, new AscWord.Run());
+			// Чтобы между метками всегда был Run, ставим пустой ран перед концевой меткой и поле начальной
+			lastClass.AddToContent(isEnd ? newPosition : newPosition + 1 , new AscWord.Run());
 		}
 		else
 		{
