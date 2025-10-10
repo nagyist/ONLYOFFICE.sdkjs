@@ -8079,9 +8079,14 @@ background-repeat: no-repeat;\
 	{
 		this.asc_onCloseFrameEditor();
 		// Находим выделенную диаграмму и накатываем бинарник
-		if (AscCommon.isRealObject(chartBinary))
+		const oLogicDocument = this.WordControl.m_oLogicDocument;
+		if (oLogicDocument)
 		{
-			this.WordControl.m_oLogicDocument.FinalizeEditChart(chartBinary);
+			if (AscCommon.isRealObject(chartBinary))
+			{
+				oLogicDocument.FinalizeEditChart(chartBinary);
+			}
+			oLogicDocument.Document_UpdateUndoRedoState();
 		}
 	};
 
