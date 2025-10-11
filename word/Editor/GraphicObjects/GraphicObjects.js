@@ -790,6 +790,7 @@ CGraphicObjects.prototype =
 		getChartSettings: DrawingObjectsController.prototype.getChartSettings,
 		editChartDrawingObjects: DrawingObjectsController.prototype.editChartDrawingObjects,
 		editChartCallback: DrawingObjectsController.prototype.editChartCallback,
+	getSelectedSingleChart: DrawingObjectsController.prototype.getSelectedSingleChart,
 
 
     getPageSizesByDrawingObjects: function()

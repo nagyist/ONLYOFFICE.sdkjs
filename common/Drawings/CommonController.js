@@ -4506,6 +4506,20 @@
 					return finish_dlbl_pos;
 				},
 
+
+				getSelectedSingleChart: function() {
+					let selectedObjects = this.getSelectedArray();
+					let singleChart = null;
+					for (let drawing = 0; drawing < selectedObjects.length; ++drawing) {
+						if (selectedObjects[drawing].getObjectType() === AscDFH.historyitem_type_ChartSpace) {
+							if (singleChart) {
+								return null;
+							}
+							singleChart = selectedObjects[drawing];
+						}
+					}
+					return singleChart;
+				},
 				checkSingleChartSelection: function () {
 					const controller = Asc.editor.getGraphicController();
 					if (!controller) return;
@@ -4593,6 +4607,13 @@
 					}
 
 					const chartObjects = selectedObjects.filter(isChart);
+					let singleChart = this.getSelectedSingleChart();
+					if (singleChart && chartObjects.length !== 1) {
+						return;
+					}
+					if (chartObjects.length === 1 && !singleChart) {
+						return;
+					}
 					if (chartObjects.length !== 1) {
 						Asc.editor.sendEvent("asc_onSingleChartSelectionChanged", null);
 						return;
