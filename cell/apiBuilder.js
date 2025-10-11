@@ -22836,7 +22836,7 @@
 			if (internalType !== -1) {
 				let t = this;
 				this.parent.private_changeStyle(function (newRule) {
-					let index = t.GetIndex();
+					let index = t.GetIndex() - 1;
 					newRule.aRuleElements[0].aCFVOs[index].asc_setType(internalType);
 					newRule.aRuleElements[0].aCFVOs[index].formula = null;
 					newRule.aRuleElements[0].aCFVOs[index].formulaParent = null;
@@ -22884,7 +22884,7 @@
 		if (this.cfvo) {
 			let t = this;
 			this.parent.private_changeStyle(function (newRule) {
-				let index = t.GetIndex();
+				let index = t.GetIndex() - 1;
 				newRule.aRuleElements[0].aCFVOs[index].asc_setVal(value);
 				newRule.aRuleElements[0].aCFVOs[index].formula = null;
 				newRule.aRuleElements[0].aCFVOs[index].formulaParent = null;
@@ -22906,12 +22906,12 @@
 	 * Returns the index indicating which threshold the criteria represents.
 	 * @memberof ApiColorScaleCriterion
 	 * @typeofeditors ["CSE"]
-	 * @returns {number} Returns 0 for minimum threshold, 1 for midpoint (3-color scale) or maximum (2-color scale), and 2 for maximum threshold (3-color scale only).
+	 * @returns {number} Returns 1 for minimum threshold, 2 for midpoint (3-color scale) or maximum (2-color scale), and 3 for maximum threshold (3-color scale only).
 	 * @since 9.1.0
 	 */
 	ApiColorScaleCriterion.prototype.GetIndex = function() {
 		//starts with 0
-		return this.index;
+		return this.index + 1;
 		/*if (!this.colorScaleElement || !this.colorScaleElement.aCFVOs) {
 			return 1;
 		}
@@ -22962,7 +22962,7 @@
 		if (this.color) {
 			let t = this;
 			this.parent.private_changeStyle(function (newRule) {
-				let index = t.GetIndex();
+				let index = t.GetIndex() - 1;
 				if (newRule.aRuleElements && newRule.aRuleElements[0] &&
 					newRule.aRuleElements[0].aColors &&
 					newRule.aRuleElements[0].aColors[index]) {
@@ -24990,13 +24990,13 @@
 		}
 
 		// MS Excel doesn't allow changing the type of the first criterion (minimum)
-		if (this.GetIndex() === 0) {
+		if (this.GetIndex() === 1) {
 			return;
 		}
 
 		let t = this;
 		this.parent.private_changeStyle(function (newRule) {
-			let index = t.GetIndex(); // Convert to 0-based index
+			let index = t.GetIndex() - 1; // Convert to 0-based index
 			if (newRule.aRuleElements[0].aCFVOs && newRule.aRuleElements[0].aCFVOs[index]) {
 				newRule.aRuleElements[0].aCFVOs[index].asc_setType(internalType);
 
@@ -25064,7 +25064,7 @@
 
 		let t = this;
 		this.parent.private_changeStyle(function (newRule) {
-			let index = t.GetIndex();
+			let index = t.GetIndex() - 1;
 			newRule.aRuleElements[0].aCFVOs[index].asc_setVal(value);
 		}, true);
 	};
@@ -25105,7 +25105,7 @@
 		if (this.cfvo && typeof operator === "string") {
 			let t = this;
 			this.parent.private_changeStyle(function (newRule) {
-				let index = t.GetIndex();
+				let index = t.GetIndex() - 1;
 				newRule.aRuleElements[0].aCFVOs[index].asc_setGte(operator === "xlGreaterEqual");
 			}, true);
 		}
@@ -25129,7 +25129,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiIconCriterion/Methods/GetIndex.js
 	 */
 	ApiIconCriterion.prototype.GetIndex = function() {
-		return this.index;
+		return this.index + 1;
 		// if (!this.iconSetElement || !this.iconSetElement.aCFVOs) {
 		// 	return 1;
 		// }
