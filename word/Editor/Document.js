@@ -389,6 +389,11 @@ CDocumentRecalcInfo.prototype =
 	{
 		return this.PageSection && this.PageSection.GetSectPr() === pageSection.GetSectPr();
 	},
+	
+	ResetPageSection : function()
+	{
+		this.PageSection = null;
+	},
 
     Can_RecalcWidowControl : function()
     {
@@ -4067,8 +4072,10 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 			
 			if (c_oAscSectionBreakType.Continuous === nextSectPr.Get_Type() && true === curSectPr.Compare_PageSize(nextSectPr) && this.Footnotes.IsEmptyPage(PageIndex))
 			{
+				// Запрещаем начинать пересчет нового объекта, если расчитываем нижний край секции, но если какой-то
+				// объект был добавлен до начала пересчета (т.е. логически он шел после), тогда его не сбрасываем
 				if (this.RecalcInfo.CheckPageSection(PageSection))
-					this.RecalcInfo.Reset();
+					this.RecalcInfo.ResetPageSection();
 				
 				// Новая секция начинается на данной странице. Нам надо получить новые поля данной секции, но
 				// на данной странице мы будем использовать только новые горизонтальные поля, а поля по вертикали
