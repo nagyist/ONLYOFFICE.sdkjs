@@ -152,6 +152,8 @@
             return aInfo;
         }
 
+        let oTextTr = oContent.Get_ParentTextTransform();
+
         let nStart = oContent.Selection.StartPos;
         let nEnd   = oContent.Selection.EndPos;
         if (nStart > nEnd) {
@@ -238,12 +240,12 @@
                     h = Math.min(h, Frame_Y_max - y);
                 }
                 
-                let isTextMatrixUse = ((null != this.transformText) && !global_MatrixTransformer.IsIdentity(this.transformText));
+                let isTextMatrixUse = ((null != oTextTr) && !global_MatrixTransformer.IsIdentity(oTextTr));
                 if (isTextMatrixUse) {
-                    let oPt1 = this.transformText.TransformPoint(x, y);            // левый верхний
-                    let oPt2 = this.transformText.TransformPoint(x + w, y);        // правый верхний
-                    let oPt3 = this.transformText.TransformPoint(x + w, y + h);    // правый нижний
-                    let oPt4 = this.transformText.TransformPoint(x, y + h);        // левый нижний
+                    let oPt1 = oTextTr.TransformPoint(x, y);            // левый верхний
+                    let oPt2 = oTextTr.TransformPoint(x + w, y);        // правый верхний
+                    let oPt3 = oTextTr.TransformPoint(x + w, y + h);    // правый нижний
+                    let oPt4 = oTextTr.TransformPoint(x, y + h);        // левый нижний
 
                     let nKoeff = oViewer.getDrawingPageScale(nPage) * g_dKoef_pix_to_mm;
 

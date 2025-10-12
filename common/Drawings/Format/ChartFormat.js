@@ -14376,6 +14376,9 @@
                 bDocument = true;
                 drawing_objects = editor.WordControl.m_oLogicDocument.DrawingObjects;
             }
+            else if(editor.WordControl.m_oLogicDocument instanceof AscPDF.CPDFDoc) {
+               drawing_objects = editor.WordControl.m_oLogicDocument.DrawingObjects;
+            }
             else if(editor.WordControl.m_oLogicDocument instanceof CPresentation) {
                 if(chart.parent) {
                     drawing_objects = chart.parent.graphicObject;
