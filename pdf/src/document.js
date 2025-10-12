@@ -9158,7 +9158,7 @@ var CPresentation = CPresentation || function(){};
         if (annotJson["Rotate"] != null)
             oAnnot.SetRotate(annotJson["Rotate"]);
         if (annotJson["InRect"] != null) {
-            if (oMeta && oMeta["InRect"]) {
+            if (oMeta && oMeta["InRect"] && !oAnnot.IsNeedDrawFromStream()) {
                 oAnnot.SetInRect(oMeta["InRect"]);
             }
             else {

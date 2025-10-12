@@ -1421,11 +1421,13 @@
         // rect
         let aOrigRect = this.GetRect();
         if (this.IsStamp() && memory.docRenderer) {
+            let nScale = this.GetOriginViewScale();
+
             // for not clipping by half border width
-            memory.WriteDouble(aOrigRect[0] - nBorderW / 2); // x1
-            memory.WriteDouble(aOrigRect[1] - nBorderW / 2); // y1
-            memory.WriteDouble(aOrigRect[2] + nBorderW / 2); // x2
-            memory.WriteDouble(aOrigRect[3] + nBorderW / 2); // y2
+            memory.WriteDouble(aOrigRect[0] - (nBorderW / 2) * nScale); // x1
+            memory.WriteDouble(aOrigRect[1] - (nBorderW / 2) * nScale); // y1
+            memory.WriteDouble(aOrigRect[2] + (nBorderW / 2) * nScale); // x2
+            memory.WriteDouble(aOrigRect[3] + (nBorderW / 2) * nScale); // y2
         }
         else {
             memory.WriteDouble(aOrigRect[0]); // x1
