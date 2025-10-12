@@ -4510,11 +4510,12 @@
 			oMemory.WriteLong(originIndex != undefined ? originIndex : curIndex);
 			
 			let oPageInfo = aPagesInfo[curIndex];
-			if (checkNeedRedactPage(oPageInfo)) {
-				writePageRedactsInfo(oPageInfo);
-			}
 
 			if ([AscPDF.CommandType.editPage, AscPDF.CommandType.addPage].includes(nCommandType)) {
+				if (checkNeedRedactPage(oPageInfo)) {
+					writePageRedactsInfo(oPageInfo);
+				}
+
 				let nRotAngle = this.getPageRotate(curIndex);
 				let bClearPage = !!oFile.pages[curIndex].isRecognized;
 				
@@ -5066,11 +5067,12 @@
 			oMemory.WriteLong(originIndex != undefined ? originIndex : curIndex);
 			
 			let oPageInfo = aPagesInfo[curIndex];
-			if (checkNeedRedactPage(oPageInfo)) {
-				writePageRedactsInfo(oPageInfo);
-			}
-
+			
 			if ([AscPDF.CommandType.editPage, AscPDF.CommandType.addPage].includes(nCommandType)) {
+				if (checkNeedRedactPage(oPageInfo)) {
+					writePageRedactsInfo(oPageInfo);
+				}
+
 				let nRotAngle = this.getPageRotate(curIndex);
 				let bClearPage = !!oFile.pages[curIndex].isRecognized;
 				
