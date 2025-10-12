@@ -22149,52 +22149,52 @@
 		}
 	});
 
-	/**
-	 * Returns the calculation scope for the above average condition in pivot tables.
-	 * @memberof ApiAboveAverage
-	 * @typeofeditors ["CSE"]
-	 * @returns {number}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/GetCalcFor.js
-	 */
-	ApiAboveAverage.prototype.GetCalcFor = function() {
-		if (!this.rule || !this.rule.pivot) {
-			return 0; // xlAllValues
-		}
+	// /**
+	//  * Returns the calculation scope for the above average condition in pivot tables.
+	//  * @memberof ApiAboveAverage
+	//  * @typeofeditors ["CSE"]
+	//  * @returns {number}
+	//  * @since 9.1.0
+	//  * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/GetCalcFor.js
+	//  */
+	// ApiAboveAverage.prototype.GetCalcFor = function() {
+	// 	if (!this.rule || !this.rule.pivot) {
+	// 		return 0; // xlAllValues
+	// 	}
+	//
+	// 	// Возвращаем значение области расчета для сводных таблиц
+	// 	return this.rule.pivot.calcFor || 0;
+	// };
 
-		// Возвращаем значение области расчета для сводных таблиц
-		return this.rule.pivot.calcFor || 0;
-	};
-
-	/**
-	 * Sets the calculation scope for the above average condition in pivot tables.
-	 * @memberof ApiAboveAverage
-	 * @typeofeditors ["CSE"]
-	 * @param {number} calcFor - The calculation scope (0 = xlAllValues, 1 = xlColItems, 2 = xlRowItems)
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/SetCalcFor.js
-	 */
-	ApiAboveAverage.prototype.SetCalcFor = function(calcFor) {
-		if (!this.rule || typeof calcFor !== "number") {
-			return;
-		}
-
-		this.private_changeStyle(function (newRule) {
-			if (!newRule.pivot) {
-				newRule.pivot = {};
-			}
-			newRule.pivot.calcFor = calcFor;
-		}, true);
-	};
-
-	Object.defineProperty(ApiAboveAverage.prototype, "CalcFor", {
-		get: function() {
-			return this.GetCalcFor();
-		},
-		set: function(value) {
-			this.SetCalcFor(value);
-		}
-	});
+	// /**
+	//  * Sets the calculation scope for the above average condition in pivot tables.
+	//  * @memberof ApiAboveAverage
+	//  * @typeofeditors ["CSE"]
+	//  * @param {number} calcFor - The calculation scope (0 = xlAllValues, 1 = xlColItems, 2 = xlRowItems)
+	//  * @since 9.1.0
+	//  * @see office-js-api/Examples/{Editor}/ApiAboveAverage/Methods/SetCalcFor.js
+	//  */
+	// ApiAboveAverage.prototype.SetCalcFor = function(calcFor) {
+	// 	if (!this.rule || typeof calcFor !== "number") {
+	// 		return;
+	// 	}
+	//
+	// 	this.private_changeStyle(function (newRule) {
+	// 		if (!newRule.pivot) {
+	// 			newRule.pivot = {};
+	// 		}
+	// 		newRule.pivot.calcFor = calcFor;
+	// 	}, true);
+	// };
+	//
+	// Object.defineProperty(ApiAboveAverage.prototype, "CalcFor", {
+	// 	get: function() {
+	// 		return this.GetCalcFor();
+	// 	},
+	// 	set: function(value) {
+	// 		this.SetCalcFor(value);
+	// 	}
+	// });
 
 	/**
 	 * Returns the number of standard deviations from the average.
@@ -22718,8 +22718,8 @@
 	ApiColorScale.prototype.SetStdDev = null;
 	ApiColorScale.prototype.GetAboveBelow = null;
 	ApiColorScale.prototype.SetAboveBelow = null;
-	ApiColorScale.prototype.GetCalcFor = null;
-	ApiColorScale.prototype.SetCalcFor = null;
+	//ApiColorScale.prototype.GetCalcFor = null;
+	//ApiColorScale.prototype.SetCalcFor = null;
 	ApiColorScale.prototype.GetNumStdDev = null;
 	ApiColorScale.prototype.SetNumStdDev = null;
 	//ApiColorScale.prototype.GetBorders = null;
@@ -25739,55 +25739,55 @@
 		return sCalcFor;
 	}
 
-	/**
-	 * Returns the calculation scope for the top 10 condition in pivot tables.
-	 * @memberof ApiTop10
-	 * @typeofeditors ["CSE"]
-	 * @returns {XlCalcFor}
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiTop10/Methods/GetCalcFor.js
-	 */
-	ApiTop10.prototype.GetCalcFor = function() {
-		if (!this.rule || !this.rule.pivot) {
-			return "xlAllValues";
-		}
-		return ToXlCalcForFrom(this.rule.pivot.calcFor || 0);
-	};
+	// /**
+	//  * Returns the calculation scope for the top 10 condition in pivot tables.
+	//  * @memberof ApiTop10
+	//  * @typeofeditors ["CSE"]
+	//  * @returns {XlCalcFor}
+	//  * @since 9.1.0
+	//  * @see office-js-api/Examples/{Editor}/ApiTop10/Methods/GetCalcFor.js
+	//  */
+	// ApiTop10.prototype.GetCalcFor = function() {
+	// 	if (!this.rule || !this.rule.pivot) {
+	// 		return "xlAllValues";
+	// 	}
+	// 	return ToXlCalcForFrom(this.rule.pivot.calcFor || 0);
+	// };
 
-	/**
-	 * Sets the calculation scope for the top 10 condition in pivot tables.
-	 * @memberof ApiTop10
-	 * @typeofeditors ["CSE"]
-	 * @param {XlCalcFor} calcFor - The calculation scope
-	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiTop10/Methods/SetCalcFor.js
-	 */
-	ApiTop10.prototype.SetCalcFor = function(calcFor) {
-		if (!this.rule || typeof calcFor !== "string") {
-			return;
-		}
-
-		let internalCalcFor = FromXlCalcForTo(calcFor);
-		if (internalCalcFor === -1) {
-			return;
-		}
-
-		this.private_changeStyle(function (newRule) {
-			if (!newRule.pivot) {
-				newRule.pivot = {};
-			}
-			newRule.pivot.calcFor = internalCalcFor;
-		}, true);
-	};
-
-	Object.defineProperty(ApiTop10.prototype, "CalcFor", {
-		get: function() {
-			return this.GetCalcFor();
-		},
-		set: function(value) {
-			this.SetCalcFor(value);
-		}
-	});
+	// /**
+	//  * Sets the calculation scope for the top 10 condition in pivot tables.
+	//  * @memberof ApiTop10
+	//  * @typeofeditors ["CSE"]
+	//  * @param {XlCalcFor} calcFor - The calculation scope
+	//  * @since 9.1.0
+	//  * @see office-js-api/Examples/{Editor}/ApiTop10/Methods/SetCalcFor.js
+	//  */
+	// ApiTop10.prototype.SetCalcFor = function(calcFor) {
+	// 	if (!this.rule || typeof calcFor !== "string") {
+	// 		return;
+	// 	}
+	//
+	// 	let internalCalcFor = FromXlCalcForTo(calcFor);
+	// 	if (internalCalcFor === -1) {
+	// 		return;
+	// 	}
+	//
+	// 	this.private_changeStyle(function (newRule) {
+	// 		if (!newRule.pivot) {
+	// 			newRule.pivot = {};
+	// 		}
+	// 		newRule.pivot.calcFor = internalCalcFor;
+	// 	}, true);
+	// };
+	//
+	// Object.defineProperty(ApiTop10.prototype, "CalcFor", {
+	// 	get: function() {
+	// 		return this.GetCalcFor();
+	// 	},
+	// 	set: function(value) {
+	// 		this.SetCalcFor(value);
+	// 	}
+	// });
 
 	function FromXlTopBottomTo(sTopBottom) {
 		switch (sTopBottom) {
@@ -26482,8 +26482,8 @@
 	ApiUniqueValues.prototype.SetPercent = null;
 	ApiUniqueValues.prototype.GetRank = null;
 	ApiUniqueValues.prototype.SetRank = null;
-	ApiUniqueValues.prototype.GetCalcFor = null;
-	ApiUniqueValues.prototype.SetCalcFor = null;
+	//ApiUniqueValues.prototype.GetCalcFor = null;
+	//ApiUniqueValues.prototype.SetCalcFor = null;
 
 
 	Api.prototype["Format"]                = Api.prototype.Format;
@@ -27483,8 +27483,8 @@
 	ApiAboveAverage.prototype["GetNumStdDev"] = ApiAboveAverage.prototype.GetNumStdDev;
 	ApiAboveAverage.prototype["SetNumStdDev"] = ApiAboveAverage.prototype.SetNumStdDev;
 	ApiAboveAverage.prototype["GetType"] = ApiAboveAverage.prototype.GetType;
-	ApiAboveAverage.prototype["GetCalcFor"] = ApiAboveAverage.prototype.GetCalcFor;
-	ApiAboveAverage.prototype["SetCalcFor"] = ApiAboveAverage.prototype.SetCalcFor;
+	//ApiAboveAverage.prototype["GetCalcFor"] = ApiAboveAverage.prototype.GetCalcFor;
+	//ApiAboveAverage.prototype["SetCalcFor"] = ApiAboveAverage.prototype.SetCalcFor;
 	ApiAboveAverage.prototype["Delete"] = ApiAboveAverage.prototype.Delete;
 	ApiAboveAverage.prototype["ModifyAppliesToRange"] = ApiAboveAverage.prototype.ModifyAppliesToRange;
 	ApiAboveAverage.prototype["SetFirstPriority"] = ApiAboveAverage.prototype.SetFirstPriority;
@@ -27526,8 +27526,8 @@
 	ApiUniqueValues.prototype["GetFillColor"] = ApiUniqueValues.prototype.GetFillColor;
 	ApiUniqueValues.prototype["SetFillColor"] = ApiUniqueValues.prototype.SetFillColor;
 
-	ApiTop10.prototype["GetCalcFor"] = ApiTop10.prototype.GetCalcFor;
-	ApiTop10.prototype["SetCalcFor"] = ApiTop10.prototype.SetCalcFor;
+	//ApiTop10.prototype["GetCalcFor"] = ApiTop10.prototype.GetCalcFor;
+	//ApiTop10.prototype["SetCalcFor"] = ApiTop10.prototype.SetCalcFor;
 	ApiTop10.prototype["GetTopBottom"] = ApiTop10.prototype.GetTopBottom;
 	ApiTop10.prototype["SetTopBottom"] = ApiTop10.prototype.SetTopBottom;
 	ApiTop10.prototype["GetPercent"] = ApiTop10.prototype.GetPercent;
