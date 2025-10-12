@@ -3038,7 +3038,7 @@
 
 					let page = this.file.pages[this.pagesInfo.countTextPages];
 					if (undefined !== page.originIndex) {
-						page.text = this.file.getText(this.pagesInfo.countTextPages);
+						page.text = this.file.getText(page.originIndex);
 						isCommands = true;
 					} 
 					
