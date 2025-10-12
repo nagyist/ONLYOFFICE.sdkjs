@@ -23008,7 +23008,7 @@
 		var oColor;
 		if (this.rule.aRuleElements && this.rule.aRuleElements[0]) {
 			// Update the axis color in the data bar rule
-			oColor = this.rule.aRuleElements[0].asc_getAxisColor();
+			oColor = this.rule.aRuleElements[0].AxisColor;
 		}
 		if (oColor) {
 			return new ApiColor(oColor);
