@@ -1270,6 +1270,8 @@ CChangesPDFDocumentEndMergePages.prototype.Redo = function()
 
     oFile.nativeFile["MergePages"](oDoc.unitedBinary, this.MaxIdx, this.MergeName);
     let aPages = oFile.nativeFile["getPagesInfo"]();
+    oDoc.UpdateCurMaxApIdx(oFile.nativeFile["getStartID"]());
+
     oFile.originalPagesCount = aPages.length;
 
     oDoc.mergedPagesData.push({
