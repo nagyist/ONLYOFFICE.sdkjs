@@ -1959,6 +1959,8 @@
 				oThis.MouseHandObject.Active = true;
 				oThis.MouseHandObject.ScrollX = oThis.scrollX;
 				oThis.MouseHandObject.ScrollY = oThis.scrollY;
+
+				this.file.removeSelection();
 				return;
 			}
 
