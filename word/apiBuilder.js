@@ -6073,11 +6073,11 @@
 	};
 	
 	/**
-	 * Returns the currently selected content control.
+	 * Returns a visitor object for traversing the elements of the current document.
 	 * @memberof ApiDocumentContent
 	 * @typeofeditors ["CDE"]
 	 * @since 9.1.0
-	 * @returns {ApiDocumentVisitor}
+	 * @returns {ApiDocumentVisitor} A document visitor that can be used to inspect or process the document structure.
 	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetDocumentVisitor.js
 	 */
 	ApiDocumentContent.prototype.GetDocumentVisitor = function()
