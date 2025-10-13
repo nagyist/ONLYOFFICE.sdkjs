@@ -180,7 +180,7 @@
 		{
 			this.prevData = this.joinDataForMacros(this.prevData, additional);
 		}
-		else
+		else if (type !== AscDFH.historydescription_Document_AutoCorrectMath)
 		{
 			this.getResultByType(this.prevChangeType, this.prevData);
 			this.prevChangeType = type;
@@ -451,8 +451,17 @@
 		// 	//paragraph.SetIndFirstLine(1440);
 		// })
 		setParagraphNumbering	: makeAction("numbering", function(num){
-			return "\t\nlet numbering = doc.CreateNumbering(\"" + num.Type + "\");\n"
+			return "\tlet numbering = doc.CreateNumbering(\"" + num.Type + "\");\n"
 				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => para.SetNumbering(numbering.GetLevel(0)));\n"
+		}),
+		addMath					: makeAction("math", function(obj){
+			let type = 'unicode';
+			if (obj.type === 1)
+				type === "latex";
+			else if (obj.type === 2)
+				type === "mathml"
+
+			return "\tdoc.AddMathEquation(\"" + obj.math + "\", \"" + type + "\");\n";
 		})
 	};
 
@@ -472,6 +481,7 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextHighlight]			= wordActions.setTextHighlightColor;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey2]	= wordActions.setTextVertAlign;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey3]	= wordActions.setTextVertAlign;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey]		= wordActions.setTextVertAlign;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextColor]				= wordActions.setTextColor;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetStyleHeading]			= wordActions.setStyleHeading;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphStyle]			= wordActions.setStyleHeading;
@@ -481,12 +491,21 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_ChangeTextCase]				= wordActions.changeTextCase;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddLetter]					= wordActions.addLetter;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphAlign]			= wordActions.setAlign;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphAlignHotKey]	= wordActions.setAlign;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphShd]			= wordActions.setParagraphShd;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphLineSpacing]	= wordActions.setLineSpacing;
 	//WordActionsMacroList[AscDFH.historydescription_Document_IncParagraphIndent]		= wordActions.incIndentetLineSpacing;
 	//WordActionsMacroList[AscDFH.historydescription_Document_DecParagraphIndent]		= wordActions.decIndentetLineSpacing;
 	//WordActionsMacroList[AscDFH.historydescription_Document_IncFontSize]				= wordActions.incFontSize;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphNumbering]		= wordActions.setParagraphNumbering;
+	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphNumberingHotKey]= wordActions.setParagraphNumbering;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddMathHotKey]				= wordActions.addMath;
+	//WordActionsMacroList[AscDFH.historydescription_Document_AddPageNumHotKey]			= wordActions.addPageNum;
+
+	// WordActionsMacroList[AscDFH.historydescription_Document_FormatPasteHotKey]		= wordActions;
+	// WordActionsMacroList[AscDFH.historydescription_Document_PasteHotKey]				= wordActions;
+	// WordActionsMacroList[AscDFH.historydescription_Document_PasteSafariHotKey]		= wordActions;
+	// WordActionsMacroList[AscDFH.historydescription_Document_CutHotKey]				= wordActions;
 
 	const cellActions = {
 		setCellIncreaseFontSize	: makeAction("",	function(){return "\tApi.GetSelection().FontIncrease();\n"}),

@@ -9429,7 +9429,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey);
+					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, null, null, {isStrikeout: oTextPr.Strikeout !== true});
 					this.AddToParagraph(new ParaTextPr({Strikeout : oTextPr.Strikeout !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9463,7 +9463,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextBoldHotKey);
+					this.StartAction(AscDFH.historydescription_Document_SetTextBoldHotKey, null, null, {isBold: oTextPr.Bold !== true});
 					this.AddToParagraph(new ParaTextPr({Bold : oTextPr.Bold !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9515,7 +9515,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextItalicHotKey);
+					this.StartAction(AscDFH.historydescription_Document_SetTextItalicHotKey, null, null, {isItalic: oTextPr.Italic !== true});
 					this.AddToParagraph(new ParaTextPr({Italic : oTextPr.Italic !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9542,9 +9542,8 @@ CDocument.prototype.executeShortcut = function(type)
 		{
 			if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
 			{
-				this.StartAction(AscDFH.historydescription_Document_SetParagraphNumberingHotKey);
-				
 				let numObject = AscWord.GetNumberingObjectByDeprecatedTypes(0, 1);
+				this.StartAction(AscDFH.historydescription_Document_SetParagraphNumberingHotKey, undefined, undefined, {numbering : numObject});
 				if (numObject)
 					this.SetParagraphNumbering(numObject);
 				
@@ -9622,7 +9621,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey);
+					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, null, null, {isUnderline: oTextPr.Underline !== true});
 					this.AddToParagraph(new ParaTextPr({Underline : oTextPr.Underline !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -16162,7 +16161,7 @@ CDocument.prototype.private_ToggleParagraphAlignByHotkey = function(align)
 		{
 			if (false === this.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 			{
-				this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey);
+				this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, {align: align});
 				Math.Set_Align(align);
 				this.Recalculate();
 				this.UpdateInterface();
@@ -16189,8 +16188,8 @@ CDocument.prototype.private_ToggleParagraphAlignByHotkey = function(align)
 				let currAlign = paraPr.Jc;
 				align = currAlign === align ? (align === AscCommon.align_Left ? AscCommon.align_Justify : AscCommon.align_Left) : align;
 			}
-			
-			this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey);
+
+			this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, {align: align});
 			this.SetParagraphAlign(align);
 			this.UpdateInterface();
 			this.FinalizeAction();
