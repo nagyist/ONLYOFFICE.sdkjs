@@ -34,93 +34,10 @@
 
 (function(window)
 {
-	const MAX_ACTION_TIME = 20;
-	
 	/**
-	 * CustomTextAnnotator manages external text annotation workflows for document paragraphs.
-	 *
-	 * This class handles the process of sending paragraph text to external applications/plugins
-	 * for analysis and receives back highlight positions that can be rendered and made interactive.
-	 * It maintains state for paragraphs at different stages of the annotation pipeline.
-	 
-	 * @param {AscWord.Document} logicDocument
+	 * @param editor
 	 * @constructor
 	 */
-	function CustomTextAnnotator(logicDocument)
-	{
-		this.logicDocument = logicDocument;
-		
-		this.waitingParagraphs  = {};
-		this.paragraphs         = {};
-		this.checkingParagraphs = {};
-		
-		this.textGetter = new ParagraphText();
-		
-		
-		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
-	}
-	
-	CustomTextAnnotator.prototype.isActive = function()
-	{
-		return true;
-	};
-	CustomTextAnnotator.prototype.addParagraphToCheck = function(para)
-	{
-		this.checkingParagraphs[para.GetId()] = para;
-	};
-	CustomTextAnnotator.prototype.continueProcessing = function()
-	{
-		if (!this.isActive())
-			return;
-		
-		let startTime = performance.now();
-		while (true)
-		{
-			if (performance.now() - startTime > MAX_ACTION_TIME)
-				break;
-			
-			let paragraph = this.popNextParagraph();
-			if (!paragraph)
-				break;
-			
-			this.handleParagraph(paragraph);
-		}
-	};
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Private area
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	CustomTextAnnotator.prototype.popNextParagraph = function()
-	{
-		for (let paraId in this.checkingParagraphs)
-		{
-			let paragraph = this.checkingParagraphs[paraId];
-			delete this.checkingParagraphs[paraId];
-			
-			if (!paragraph.IsUseInDocument())
-				continue;
-			
-			return paragraph;
-		}
-		
-		return null;
-	};
-	CustomTextAnnotator.prototype.handleParagraph = function(paragraph)
-	{
-		this.textGetter.check(paragraph);
-		console.log(`ParaId=${paragraph.GetId()}; ParaText=${this.textGetter.text}`);
-		
-		this.eventManager.send({
-			"paragraphId" : paragraph.GetId(),
-			"text"        : this.textGetter.text
-		});
-	};
-	CustomTextAnnotator.prototype.highlightTextResponse = function(handlerId, paraId, ranges)
-	{
-		let _ranges = [];
-		ranges.forEach(r => _ranges.push([r.start, r.length, r.id]))
-		console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
-	};
-	
 	function TextAnnotatorEventManager(editor)
 	{
 		this.editor = editor;
@@ -227,28 +144,6 @@
 			id : obj["id"]
 		};
 	};
-	AscCommon.TextAnnotatorEventManager = TextAnnotatorEventManager;
-	/**
-	 *
-	 * @constructor
-	 */
-	function ParagraphText()
-	{
-		AscWord.DocumentVisitor.call(this);
-		this.text = "";
-	}
-	ParagraphText.prototype = Object.create(AscWord.DocumentVisitor.prototype);
-	ParagraphText.prototype.constructor = ParagraphText;
-	ParagraphText.prototype.check = function(paragraph)
-	{
-		this.text = "";
-		this.traverseParagraph(paragraph);
-	};
-	ParagraphText.prototype.run = function(run)
-	{
-		this.text += run.GetText();
-		return true;
-	};
 	//-------------------------------------------------------------export-----------------------------------------------
-	AscWord.CustomTextAnnotator = CustomTextAnnotator;
+	AscCommon.TextAnnotatorEventManager = TextAnnotatorEventManager;
 })(window);
