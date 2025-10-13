@@ -7382,7 +7382,7 @@ var CPresentation = CPresentation || function(){};
 
         let standardFonts = oFile.nativeFile["getInteractiveFormsStandardFonts"]();
         let embeddedFonts = oFile.nativeFile["getInteractiveFormsEmbeddedFonts"]();
-        AscFonts.initEmbeddedFonts(standardFonts.concat(embeddedFonts));
+        AscFonts.initEmbeddedFonts(standardFonts.concat(embeddedFonts), true);
 
         this.Viewer.checkLoadCMap();
         this.Viewer.navigateToPage(nNavigateTo);
