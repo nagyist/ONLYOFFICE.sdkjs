@@ -251,6 +251,8 @@
 		this._correctEmbeddedWork();
 
 		this.broadcastChannel = null;
+		
+		this.textAnnotatorEventManager = new AscCommon.TextAnnotatorEventManager(this);
 
 		return this;
 	}
@@ -5663,11 +5665,11 @@
 	};
 
 	// for native editors
-	baseEditorsApi.prototype.wrapFunction = function(name, types) 
+	baseEditorsApi.prototype.wrapFunction = function(name, types)
 	{
-		this["native_" + name] = function() 
+		this["native_" + name] = function()
 		{
-			for (let i = 0, len = arguments.length; i < len; i++) 
+			for (let i = 0, len = arguments.length; i < len; i++)
 			{
 				if (types && types[i] && types[i].prototype && types[i].prototype.fromCValue)
 					arguments[i] = types[i].prototype.fromCValue(arguments[i]);
@@ -6020,7 +6022,11 @@
 	baseEditorsApi.prototype._onEndGroupActions = function()
 	{
 	};
-
+	
+	baseEditorsApi.prototype.getTextAnnotatorEventManager = function()
+	{
+		return this.textAnnotatorEventManager;
+	};
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};
 	window['AscCommon'].baseEditorsApi = baseEditorsApi;

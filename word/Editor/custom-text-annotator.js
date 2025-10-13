@@ -32,7 +32,7 @@
 
 "use strict";
 
-(function()
+(function(window)
 {
 	const MAX_ACTION_TIME = 20;
 	
@@ -55,6 +55,9 @@
 		this.checkingParagraphs = {};
 		
 		this.textGetter = new ParagraphText();
+		
+		
+		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
 	}
 	
 	CustomTextAnnotator.prototype.isActive = function()
@@ -105,8 +108,126 @@
 	{
 		this.textGetter.check(paragraph);
 		console.log(`ParaId=${paragraph.GetId()}; ParaText=${this.textGetter.text}`);
+		
+		this.eventManager.send({
+			"paragraphId" : paragraph.GetId(),
+			"text"        : this.textGetter.text
+		});
+	};
+	CustomTextAnnotator.prototype.highlightTextResponse = function(handlerId, paraId, ranges)
+	{
+		let _ranges = [];
+		ranges.forEach(r => _ranges.push([r.start, r.length, r.id]))
+		console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
 	};
 	
+	function TextAnnotatorEventManager(editor)
+	{
+		this.editor = editor;
+		
+		this.logicDocument = null;
+		this.textAnnotator = null;
+		
+		this.paragraphs = {};
+	}
+	TextAnnotatorEventManager.prototype.init = function()
+	{
+		if (this.logicDocument)
+			return;
+		
+		this.logicDocument = this.editor.private_GetLogicDocument();
+		this.textAnnotator = this.logicDocument.CustomTextAnnotator;
+	};
+	TextAnnotatorEventManager.prototype.send = function(obj)
+	{
+		this.init();
+		
+		let recalcId = this.logicDocument.GetRecalcId();
+		obj["recalcId"] = recalcId;
+		this.paragraphs[obj["paragraphId"]] = recalcId;
+		
+		let text = obj["text"];
+		let len  = text.length;
+		
+		let _t = this;
+		setTimeout(function(){
+			let _start = Math.floor(Math.random() * (len - 1));
+			let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
+			_t.onResponse({
+				"guid" : "guid-1",
+				"type" : "highlightText",
+				"paragraphId" : obj["paragraphId"],
+				"recalcId" : recalcId,
+				"ranges" : [{
+					"start" : _start,
+					"length" : _len,
+					"id" : "1"
+				}]
+			});
+			
+			_start = Math.floor(Math.random() * (len - 1));
+			_len   = Math.min(Math.floor(Math.random() * 10), len - _start);
+			_t.onResponse({
+				"guid" : "guid-2",
+				"type" : "highlightText",
+				"paragraphId" : obj["paragraphId"],
+				"recalcId" : recalcId,
+				"ranges" : [{
+					"start" : _start,
+					"length" : _len,
+					"id" : "1"
+				}]
+			});
+		}, 2000);
+		//window.g_asc_plugins.onPluginEvent("onParagraphText", obj);
+	};
+	TextAnnotatorEventManager.prototype.onResponse = function(obj)
+	{
+		this.init();
+		
+		if (!obj)
+			return;
+		
+		switch (obj["type"])
+		{
+			case "highlightText":
+			{
+				let guid     = obj["guid"];
+				let paraId   = obj["paragraphId"];
+				let recalcId = obj["recalcId"];
+				let ranges   = obj["ranges"];
+				
+				if (undefined === guid
+					|| this.paragraphs[paraId] !== recalcId
+					|| !ranges
+					|| !Array.isArray(ranges))
+					return;
+				
+				let _ranges = [];
+				for (let i = 0; i < ranges.length; ++i)
+				{
+					let _r = this.parseHighlightTextRange(ranges[i]);
+					if (_r)
+						_ranges.push(_r);
+				}
+				
+				this.logicDocument.CustomTextAnnotator.highlightTextResponse(guid, paraId, _ranges);
+				break;
+			}
+		}
+	};
+	TextAnnotatorEventManager.prototype.parseHighlightTextRange = function(obj)
+	{
+		if (!obj || undefined === obj["start"] || undefined === obj["length"] || undefined === obj["id"])
+			return null;
+		
+		return {
+			start : obj["start"],
+			length : obj["length"],
+			id : obj["id"]
+		};
+	};
+	AscCommon.TextAnnotatorEventManager = TextAnnotatorEventManager;
 	/**
 	 *
 	 * @constructor
@@ -130,4 +251,4 @@
 	};
 	//-------------------------------------------------------------export-----------------------------------------------
 	AscWord.CustomTextAnnotator = CustomTextAnnotator;
-})();
+})(window);
