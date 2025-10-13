@@ -624,6 +624,13 @@
     CPdfShape.prototype.copy = function (oPr) {
         let copy = new CPdfShape();
         this.fillObject(copy, oPr);
+
+        if ((!oPr || !oPr.bSkipRedactsIds) && this.GetRedactIds) {
+            this.GetRedactIds().forEach(function(id) {
+                copy.AddRedactId(id);
+            });
+        }
+        
         return copy;
     };
     window["AscPDF"].CPdfShape = CPdfShape;

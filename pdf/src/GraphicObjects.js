@@ -1261,10 +1261,10 @@
     };
     CGraphicObjects.prototype.selectObject = function (object, pageIndex) {
         let oDoc = this.document;
-        object.select(this, pageIndex);
-        if (this.selectedObjects.length == 1 && !oDoc.GetActiveObject()) {
+        if (this.selectedObjects.length == 0 && !oDoc.GetActiveObject()) {
             oDoc.SetMouseDownObject(object);
         }
+        object.select(this, pageIndex);
 
         if (AscFormat.MoveAnimationDrawObject) {
             if (object instanceof AscFormat.MoveAnimationDrawObject) {

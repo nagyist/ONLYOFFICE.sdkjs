@@ -214,6 +214,13 @@
 			copy.cachedPixH = this.cachedPixH;
 			copy.cachedPixW = this.cachedPixW;
 		}
+
+		if ((!oPr || !oPr.bSkipRedactsIds) && this.GetRedactIds) {
+            this.GetRedactIds().forEach(function(id) {
+                copy.AddRedactId(id);
+            });
+        }
+		
 		return copy;
 	};
 

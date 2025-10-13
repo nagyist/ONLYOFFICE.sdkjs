@@ -6492,6 +6492,11 @@
 					if (cell.isFormula() && !(oThis.isCopyPaste && cell.ws && cell.ws.bIgnoreWriteFormulas)) {
 						formulaToWrite = oThis.InitSaveManager.PrepareFormulaToWrite(cell);
                     }
+                    if (ws.workbook.checkProtectedValue && ws.isUserProtectedRangesIntersectionCell(cell, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
+                        cell.cleanText();
+                        cell._hasChanged = false;
+                        formulaToWrite = null;
+                    }
 					cell.toXLSB(oThis.memory, nXfsId, formulaToWrite, oThis.InitSaveManager.oSharedStrings);
 				}
             }, (ws.bExcludeHiddenRows && oThis.isCopyPaste));
@@ -10443,6 +10448,12 @@
             var oThis = this;
             if ( c_oSerWorksheetsTypes.Worksheet === type )
             {
+                // Shift by deterministic pseudo-random offset to make document changes unique
+                if (AscCommon.g_oIdCounter.IsLoad()) {
+                    for (let i = 0; i < length % 100; i++) {
+                        AscCommon.g_oIdCounter.Get_NewId();
+                    }
+                }
                 this.aMerged = [];
                 this.aHyperlinks = [];
                 var oNewWorksheet = new AscCommonExcel.Worksheet(this.wb, wb.aWorksheets.length);
@@ -15296,6 +15307,32 @@
         this.slicerCachesIds = [];
         this.newDefinedNames = [];
     }
+		CT_Workbook.prototype.readExternalReferences = function(wb, wbPart, xmlParserContext) {
+			this.externalReferences.forEach(function (externalReference) {
+				if (null !== externalReference) {
+					var externalWorkbookPart = wbPart.getPartById(externalReference);
+					if (externalWorkbookPart) {
+						var contentExternalWorkbook = externalWorkbookPart.getDocumentContent();
+						if (contentExternalWorkbook) {
+							var oExternalReference = new AscCommonExcel.CT_ExternalReference(wb);
+							var reader = new StaxParser(contentExternalWorkbook, externalWorkbookPart, xmlParserContext);
+							oExternalReference.fromXml(reader);
+
+							if (oExternalReference.val) {
+								if (oExternalReference.val.externalBook) {
+									var relationship = externalWorkbookPart.getRelationship(oExternalReference.val.externalBook.Id);
+									//подменяем id на target
+									if (relationship && relationship.targetFullName) {
+										oExternalReference.val.externalBook.Id = AscCommonExcel.decodeXmlPath(relationship.targetFullName);
+									}
+									wb.externalReferences.push(oExternalReference.val.externalBook);
+								}
+							}
+						}
+					}
+				}
+			});
+		};
 
     function CT_Sheets(wb) {
         this.wb = wb;

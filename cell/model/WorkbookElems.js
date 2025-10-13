@@ -15718,17 +15718,21 @@ function RangeDataManagerElem(bbox, data)
 	};
 
 	ExternalReference.prototype.initWorksheet = function (sheetName) {
-		var ws = this.worksheets[sheetName];
-		if (!this.worksheets[sheetName]) {
+		let ws = this.worksheets[sheetName];
+		if (!ws) {
 			var wb = this.getWb();
 			if (!wb) {
 				wb = new AscCommonExcel.Workbook(null, window["Asc"]["editor"], false);
+				wb.dependencyFormulas.lockRecal();
 			}
 			ws = new AscCommonExcel.Worksheet(wb);
 			ws.sName = sheetName;
+			wb.aWorksheets.push(ws);
+			ws._setIndex(wb.aWorksheets.length - 1);
 
 			this.worksheets[sheetName] = ws;
 		}
+		return ws;
 	};
 
 	ExternalReference.prototype.initWorksheetFromSheetDataSet = function (sheetName) {
@@ -15736,21 +15740,7 @@ function RangeDataManagerElem(bbox, data)
 		if (null !== sheetDataSetIndex) {
 
 			var sheetDataSet = this.SheetDataSet[sheetDataSetIndex];
-			var ws = this.worksheets[sheetName];
-			if (!this.worksheets[sheetName]) {
-				var wb = this.getWb();
-				if (!wb) {
-					wb = new AscCommonExcel.Workbook(null, window["Asc"]["editor"], false);
-					wb.dependencyFormulas.lockRecal();
-				}
-				ws = new AscCommonExcel.Worksheet(wb);
-				ws.sName = sheetName;
-				wb.aWorksheets.push(ws);
-				ws._setIndex(wb.aWorksheets.length - 1);
-
-				this.worksheets[sheetName] = ws;
-			}
-
+			var ws = this.initWorksheet(sheetName);
 
 			//клонируем все данные из SheetDataSet в данный темповый Worksheet
 			if (!sheetDataSet || !sheetDataSet.Row) {
@@ -16382,7 +16372,18 @@ function RangeDataManagerElem(bbox, data)
 				});
 			}
 
-			let newVal = noData ? "#REF!" : cell.getValue();
+			let cellType = cell.getType();
+			let newVal;
+			if (noData) {
+				newVal = "#REF!";
+			} else {
+				if (cellType === CellValueType.Number) {
+					let _numVal = cell.getNumberValue();
+					newVal = _numVal == null ? cell.getValue() : _numVal + "";
+				} else {
+					newVal = cell.getValue();
+				}
+			}
 			if (this.CellValue !== newVal) {
 				isChanged = true;
 				this.CellValue = newVal;
@@ -16390,12 +16391,21 @@ function RangeDataManagerElem(bbox, data)
 
 
 			var cellValueType = null;
-			switch (cell.getType()) {
+			switch (cellType) {
 				case CellValueType.String:
 					cellValueType = Asc.ECellTypeType.celltypeStr;
 					break;
 				case CellValueType.Bool:
 					cellValueType = Asc.ECellTypeType.celltypeBool;
+					break;
+				case CellValueType.Number:
+					let cellFormat = cell.getNumFormat();
+					let isDateTimeFormat = cellFormat && cellFormat.isDateTimeFormat() && cellFormat.getType() !== Asc.c_oAscNumFormatType.Time;
+					if (isDateTimeFormat) {
+						cellValueType = Asc.ECellTypeType.celltypeDate;
+					} else {
+						cellValueType = Asc.ECellTypeType.celltypeNumber;
+					}
 					break;
 				case CellValueType.Error:
 					cellValueType = Asc.ECellTypeType.celltypeError;

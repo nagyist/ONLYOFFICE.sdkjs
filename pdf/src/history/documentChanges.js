@@ -209,7 +209,7 @@ CChangesPDFDocumentAnnotsContent.prototype.WriteToBinary = function (writer) {
 CChangesPDFDocumentAnnotsContent.prototype.Undo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
 
     if (this.IsAdd()) {
@@ -252,7 +252,7 @@ CChangesPDFDocumentAnnotsContent.prototype.Undo = function()
 CChangesPDFDocumentAnnotsContent.prototype.Redo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
 
     if (this.IsAdd()) {
@@ -306,7 +306,7 @@ CChangesPDFDocumentAnnotsContent.prototype.private_InsertInArrayLoad = function(
         return;
 
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
     let oContentChanges = this.private_GetContentChanges();
 
@@ -341,7 +341,7 @@ CChangesPDFDocumentAnnotsContent.prototype.private_RemoveInArrayLoad = function(
         return;
 
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
     let oContentChanges = this.private_GetContentChanges();
 
@@ -432,7 +432,7 @@ CChangesPDFDocumentFieldsContent.prototype.WriteToBinary = function (writer) {
 CChangesPDFDocumentFieldsContent.prototype.Undo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
 
     if (this.IsAdd()) {
         // Undo addition by removing items
@@ -468,7 +468,7 @@ CChangesPDFDocumentFieldsContent.prototype.Undo = function()
 CChangesPDFDocumentFieldsContent.prototype.Redo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
 
     if (this.IsAdd()) {
         // Redo addition by adding items
@@ -628,7 +628,7 @@ CChangesPDFDocumentDrawingsContent.prototype.WriteToBinary = function (writer) {
 CChangesPDFDocumentDrawingsContent.prototype.Undo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
 
     if (this.IsAdd()) {
@@ -666,7 +666,7 @@ CChangesPDFDocumentDrawingsContent.prototype.Undo = function()
 CChangesPDFDocumentDrawingsContent.prototype.Redo = function()
 {
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
 
     if (this.IsAdd()) {
@@ -717,7 +717,7 @@ CChangesPDFDocumentDrawingsContent.prototype.private_InsertInArrayLoad = functio
         return;
 
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
     let oContentChanges = this.private_GetContentChanges();
 
@@ -747,7 +747,7 @@ CChangesPDFDocumentDrawingsContent.prototype.private_RemoveInArrayLoad = functio
         return;
 
     let oPage = this.Class;
-    let oDocument = this.Class.GetDocument();
+    let oDocument = Asc.editor.getPDFDoc();
     let oViewer = Asc.editor.getDocumentRenderer();
     let oContentChanges = this.private_GetContentChanges();
 
@@ -1270,6 +1270,8 @@ CChangesPDFDocumentEndMergePages.prototype.Redo = function()
 
     oFile.nativeFile["MergePages"](oDoc.unitedBinary, this.MaxIdx, this.MergeName);
     let aPages = oFile.nativeFile["getPagesInfo"]();
+    oDoc.UpdateCurMaxApIdx(oFile.nativeFile["getStartID"]());
+
     oFile.originalPagesCount = aPages.length;
 
     oDoc.mergedPagesData.push({
@@ -1439,12 +1441,12 @@ CChangesPDFDocumentPartRedact.prototype.ReadFromBinary = function(Reader) {
  * @constructor
  * @extends {AscDFH.CChangesBaseProperty}
  */
-function CChangesPDFDocumentEndRedact(Class, sRedactId, nPage, aRectsFlat)
+function CChangesPDFDocumentEndRedact(Class, sRedactId, nPage, aQuadsFlat)
 {
 	AscDFH.CChangesBaseProperty.call(this, Class, undefined, undefined);
     this.RedactId = sRedactId;
     this.Page = nPage;
-    this.RectsFlat = aRectsFlat;
+    this.QuadsFlat = aQuadsFlat;
 }
 CChangesPDFDocumentEndRedact.prototype = Object.create(AscDFH.CChangesBaseProperty.prototype);
 CChangesPDFDocumentEndRedact.prototype.constructor = CChangesPDFDocumentEndRedact;
@@ -1459,6 +1461,10 @@ CChangesPDFDocumentEndRedact.prototype.Undo = function() {
     let oRedactData = oDoc.appliedRedactsData.pop();
     oFile.nativeFile["UndoRedact"]();
 
+    let oPageInfo = oDoc.GetPageInfo(this.Page);
+    let nOriginIndex = oPageInfo.GetOriginIndex();
+
+    oFile.pages[this.Page].text = oFile.getText(nOriginIndex);
     oDoc.Viewer.onUpdatePages([oRedactData.page]);
 };
 CChangesPDFDocumentEndRedact.prototype.Redo = function()
@@ -1488,16 +1494,26 @@ CChangesPDFDocumentEndRedact.prototype.Redo = function()
 
     delete oDoc.partsOfBinaryData;
 
-    oFile.nativeFile["RedactPage"](this.Page, this.RectsFlat, oDoc.unitedBinary);
+    let oPageInfo = oDoc.GetPageInfo(this.Page);
+    let nOriginIndex = oPageInfo.GetOriginIndex();
+
+    oFile.nativeFile["RedactPage"](nOriginIndex, this.QuadsFlat, oDoc.unitedBinary);
 
     oDoc.appliedRedactsData.push({
         page: this.Page,
-        rects: this.RectsFlat,
+        quads: this.QuadsFlat,
         redactId: this.RedactId,
         binary: oDoc.unitedBinary
     });
 
-    oFile.pages[this.Page].text = oFile.getText(this.Page);
+    let aSplittedId = this.RedactId.split('_redact_');
+    let nRedactIdx = Number(aSplittedId)[1];
+
+    if (nRedactIdx > AscCommon.g_oIdCounter.m_nPdfRedactCounter) {
+        AscCommon.g_oIdCounter.m_nPdfRedactCounter = nRedactIdx;
+    }
+
+    oFile.pages[this.Page].text = oFile.getText(nOriginIndex);
     oDoc.Viewer.onUpdatePages([this.Page]);
 };
 CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)
@@ -1510,7 +1526,7 @@ CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)
 	if (undefined === this.Page)
 		nFlags |= 2;
 
-	if (undefined === this.RectsFlat)
+	if (undefined === this.QuadsFlat)
 		nFlags |= 4;
 
 	Writer.WriteLong(nFlags);
@@ -1521,12 +1537,12 @@ CChangesPDFDocumentEndRedact.prototype.WriteToBinary = function(Writer)
 	if (undefined !== this.Page)
 		Writer.WriteLong(this.Page);
 	
-    if (undefined !== this.RectsFlat) {
+    if (undefined !== this.QuadsFlat) {
         // write points array
-        let nCount = this.RectsFlat.length;
+        let nCount = this.QuadsFlat.length;
         Writer.WriteLong(nCount);
         for (let nIndex = 0; nIndex < nCount; ++nIndex)
-            Writer.WriteDouble(this.RectsFlat[nIndex]);
+            Writer.WriteDouble(this.QuadsFlat[nIndex]);
     }
 };
 CChangesPDFDocumentEndRedact.prototype.ReadFromBinary = function(Reader)
@@ -1546,12 +1562,12 @@ CChangesPDFDocumentEndRedact.prototype.ReadFromBinary = function(Reader)
 		this.Page = Reader.GetLong();
 
 	if (nFlags & 4)
-		this.RectsFlat = undefined;
+		this.QuadsFlat = undefined;
 	else {
         let nCount = Reader.GetLong();
-        this.RectsFlat = [];
+        this.QuadsFlat = [];
         for (var nIndex = 0; nIndex < nCount; ++nIndex)
-            this.RectsFlat[nIndex] = Reader.GetDouble();
+            this.QuadsFlat[nIndex] = Reader.GetDouble();
     }
 };
 

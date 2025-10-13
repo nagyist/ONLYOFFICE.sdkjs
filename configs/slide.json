@@ -160,6 +160,7 @@
 			"cell/model/CellInfo.js",
 			"cell/model/HeaderFooter.js",
 			"cell/view/DrawingObjectsController.js",
+		  "cell/view/HandlerList.js",
 			
 			"word/Editor/Paragraph/RunContent/Types.js",
 			"word/Math/mathTypes.js",
@@ -295,6 +296,7 @@
 			"word/Math/operators.js",
 			"word/Math/accent.js",
 			"word/Math/borderBox.js",
+			"word/Math/math-ml.js",
 			"word/Math/mathTrackHandler.js",
 			"word/Editor/FlowObjects.js",
 			"word/Editor/Paragraph.js",
@@ -381,7 +383,9 @@
 			"slide/Editor/Format/ChartSpacePrototype.js",
 			"common/Drawings/Format/LockedCanvas.js",
 			"slide/apiCommon.js",
-
+			
+			"word/Editor/document-visitor.js",
+			
 			"word/apiBuilder.js",
 			"slide/apiBuilder.js",
 			"word/fromToJSON.js",
@@ -397,8 +401,6 @@
 
 			"common/Native/native_graphics.js",
 			
-			"word/Editor/document-visitor.js",
-
 			"vendor/easysax.js",
 			"common/openxml.js"
 		],

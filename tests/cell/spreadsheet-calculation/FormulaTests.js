@@ -2195,6 +2195,17 @@ $(function () {
 		assert.strictEqual(bCellHasRecursion, false, "Test: Formula INDIRECT Ref3D isn't recursive cell with disabled setting. Bug-76318. A1134 - false");
 		bCellHasRecursion = null;
 		wb.removeWorksheet(0);
+		// - Case: Formula SHEET isn't recursive cell with disabled setting. Bug-77330
+		ws2 = wb.createWorksheet(0, "Sheet2");
+		let oDefNameSHEET = new Asc.asc_CDefName("TestSHEET", ws2.getName() + "!$A$2:$E$5");
+		wb.editDefinesNames(null, oDefNameSHEET);
+		ws.getRange2("A1135").setValue('=SHEET(TestSHEET)');
+		oCell = selectCell("A1135");
+		bCellHasRecursion = !!getStartCellForIterCalc(oCell);
+		assert.strictEqual(bCellHasRecursion, false, "Test: Formula SHEET isn't recursive cell with disabled setting. Bug-77330. A1135 - false");
+		bCellHasRecursion = null;
+		wb.delDefinesNames(oDefNameSHEET);
+		wb.removeWorksheet(0);
 		// -- Test changeLinkedCell method.
 		oCell = selectCell("A1000");
 		let oCellNeedEnableRecalc = selectCell("B1000");

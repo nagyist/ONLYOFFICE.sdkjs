@@ -632,7 +632,9 @@ void main() {\n\
         }
         else if (oViewer.Api.isRedactTool) {
             oDoc.DoAction(function() {
-                let aSelQuads = _t.getSelectionQuads();
+                let oDrawing    = oDoc.activeDrawing;
+                let aSelQuads   = null == oDrawing ? _t.getSelectionQuads() : oDrawing.GetSelectionQuads();
+
                 oDoc.AddRedactAnnot(aSelQuads);
             }, AscDFH.historydescription_Pdf_AddAnnot);
         }

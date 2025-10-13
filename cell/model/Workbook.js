@@ -5529,8 +5529,7 @@
 			if (extarnalLink.SheetNames) {
 				for (var i = 0; i < extarnalLink.SheetNames.length; i++) {
 					if (extarnalLink.SheetNames[i] === sheet) {
-						extarnalLink.initWorksheetFromSheetDataSet(sheet);
-						return extarnalLink.worksheets && extarnalLink.worksheets[sheet];
+						return extarnalLink.initWorksheet(sheet);
 					}
 				}
 			}
@@ -5840,6 +5839,10 @@
 					var reader = new StaxParser(contentWorkbook, wbPart, xmlParserContext);
 					wbXml.fromXml(reader, {"sheets" : 1});
 				});
+			}
+
+			if (wbXml && wbPart) {
+				wbXml.readExternalReferences(this, wbPart, xmlParserContext);
 			}
 
 			//sharedString
@@ -8714,6 +8717,10 @@
 			var res = cell.loadContent(row, col) ? cell : null;
 			if (res && fAction) {
 				wb.loadCells.push(cell);
+			}
+			if (res && this.workbook.checkProtectedValue && this.isUserProtectedRangesIntersectionCell(res, null, null, Asc.c_oSerUserProtectedRangeType.View)) {
+				res.cleanText();
+				res._hasChanged = false;
 			}
 			fAction(res);
 			cell.saveContent(true);
@@ -14000,15 +14007,13 @@
 		}
 		if (!userId) {
 			let oApi = Asc.editor;
-			userId = oApi.DocInfo && oApi.DocInfo.get_UserId();
+			userId = oApi && oApi.DocInfo && oApi.DocInfo.get_UserId();
 		}
-
-		oCell = {col: oCell.nCol, row: oCell.nRow};
 
 		if (this.userProtectedRanges && userId) {
 			for (let i = 0; i < this.userProtectedRanges.length; i++) {
 				let curUserProtectedRange = this.userProtectedRanges[i];
-				if (curUserProtectedRange.contains2(oCell) && (notCheckUser || !curUserProtectedRange.isUserCanDoByType(userId, type))) {
+				if (curUserProtectedRange.contains(oCell.nCol, oCell.nRow) && (notCheckUser || !curUserProtectedRange.isUserCanDoByType(userId, type))) {
 					return true;
 				}
 			}
@@ -15814,19 +15819,19 @@
 					let oArgElem = aOutStack[j];
 					let oBbox = null;
 					let aRef = [cElementType.cell, cElementType.cell3D, cElementType.cellsRange, cElementType.cellsRange3D];
-					if (!aRef.includes(oArgElem.type)) {
-						continue;
-					}
+
 					if (oArgElem.type === cElementType.name || oArgElem.type === cElementType.name3D) {
 						const oElemValue = oArgElem.getValue();
 						if (!aRef.includes(oElemValue.type)) {
 							continue;
 						}
 						oBbox = oElemValue.getBBox0();
-					}  else {
+					} else if (oArgElem.type === cElementType.table) {
+						oBbox = oArgElem.getRange().getBBox0();
+					}  else if (aRef.includes(oArgElem.type)) {
 						oBbox = oArgElem.getBBox0();
 					}
-					bBelongToFormula = oAreaMap.bbox.isIntersect(oBbox);
+					bBelongToFormula = !!oBbox && oAreaMap.bbox.isIntersect(oBbox);
 					if (bBelongToFormula) {
 						return true;
 					}
@@ -18281,6 +18286,9 @@
 			}
 		}
 		this._foreach(function(cell){
+			if (cell.ws.isUserProtectedRangesIntersectionCell(cell)) {
+				return;
+			}
 			var _val = val;
 			if (_formula) {
 				_formula.isParsed = false;
@@ -18301,7 +18309,7 @@
 		}
 
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.onWorksheetChange();
 	};
 	Range.prototype.setValue2=function(array, pushOnlyFirstMergedCell){
 		AscCommon.History.Create_NewPoint();
@@ -18324,7 +18332,7 @@
 			// cell.Remove();
 		});
 		AscCommon.History.EndTransaction();
-		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
+		this.onWorksheetChange();
 	};
 	Range.prototype.setValueData = function(val){
 		AscCommon.History.Create_NewPoint();
@@ -22016,6 +22024,9 @@
 
 	Range.prototype.move = function (oBBoxTo, copyRange, wsTo) {
 		this.worksheet._moveRange(this.bbox, oBBoxTo, copyRange, wsTo);
+	};
+	Range.prototype.onWorksheetChange = function () {
+		this.worksheet.workbook && this.worksheet.workbook.oApi && this.worksheet.workbook.oApi.onWorksheetChange && this.worksheet.workbook.oApi.onWorksheetChange(this.bbox);
 	};
 
 	function SweepLineRowIterator() {

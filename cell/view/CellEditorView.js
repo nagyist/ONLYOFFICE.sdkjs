@@ -2653,7 +2653,7 @@ function (window, undefined) {
 			}
 			case Asc.c_oAscSpreadsheetShortcutType.CellInsertDate: {
 				const oDate = new Asc.cDate();
-				this._addChars(oDate.getDateString(oApi));
+				this._addChars(oDate.getDateString(oApi, true));
 				break;
 			}
 			case Asc.c_oAscSpreadsheetShortcutType.PrintPreviewAndPrint: {

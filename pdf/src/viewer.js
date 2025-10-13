@@ -317,6 +317,16 @@
 
 		return oDocPages.pages.indexOf(this);
     };
+	CPageInfo.prototype.GetOriginIndex = function() {
+		let oFile = Asc.editor.getDocumentRenderer().file;
+
+		let nCurPageIdx = this.GetIndex();
+		if (nCurPageIdx == -1) {
+			return undefined;
+		}
+
+		return oFile.pages[nCurPageIdx].originIndex;
+	}
 	CPageInfo.prototype.SetRotate = function(nAngle) {
 		let oDoc		= this.GetDocument();
 		let oViewer     = oDoc.Viewer;
@@ -1138,7 +1148,7 @@
 				if (this.file && this.file.isNeedPassword())
 				{
 					window["AscViewer"].setFilePassword(this.file, password);
-					this.Api.asc_setCurrentPassword(password);
+					this.Api.asc_setCurrentPassword(password, true);
 				}
 			}
 			else
@@ -1217,8 +1227,12 @@
 			// TODO: Надо перенести в нормальное место
 			let isLoad = AscCommon.g_oIdCounter.IsLoad();
 			AscCommon.g_oIdCounter.Set_Load(true);
+
+			let nMaxIdx = this.file.nativeFile["getStartID"]();
 			this.openForms();
 			this.openAnnots();
+			oDoc.UpdateCurMaxApIdx(nMaxIdx);
+
 			AscCommon.g_oIdCounter.Set_Load(isLoad);
 		};
 
@@ -1274,19 +1288,13 @@
 			this.scrollCount = 0;
 
 			let oFormsInfo	= this.file.nativeFile["getInteractiveFormsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
-
-			oDoc.UpdateMaxLoadApIdx(nMaxIdx);
 			oDoc.private_AddFormsByInfo(oFormsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.openAnnots = function() {
 			let oDoc = this.getPDFDoc();
 			let aAnnotsInfo = this.file.nativeFile["getAnnotationsInfo"]();
-			let nMaxIdx		= this.file.nativeFile["getStartID"]();
 
 			oDoc.private_AddAnnotsByInfo(aAnnotsInfo);
-			oDoc.UpdateMaxApIdx(nMaxIdx);
 		};
 		this.setZoom = function(value, isDisablePaint)
 		{
@@ -1951,6 +1959,8 @@
 				oThis.MouseHandObject.Active = true;
 				oThis.MouseHandObject.ScrollX = oThis.scrollX;
 				oThis.MouseHandObject.ScrollY = oThis.scrollY;
+
+				this.file.removeSelection();
 				return;
 			}
 
@@ -3009,7 +3019,10 @@
 			{
 				if (null === this.file.pages[i].text)
 				{
-					this.file.pages[i].text = this.file.getText(i);
+					if (undefined !== this.file.pages[i].originIndex) {
+						this.file.pages[i].text = this.file.getText(this.file.pages[i].originIndex);
+					}
+					
 					isCommands = true;
 				}
 			}
@@ -3024,13 +3037,14 @@
 						this.pagesInfo.countTextPages++;
 						continue;
 					}
-					this.file.pages[this.pagesInfo.countTextPages].text = this.file.getText(this.pagesInfo.countTextPages);
-					if (null !== this.file.pages[this.pagesInfo.countTextPages].text)
-					{
-						this.pagesInfo.countTextPages++;
-						isCommands = true;
-					}
 
+					let page = this.file.pages[this.pagesInfo.countTextPages];
+					if (undefined !== page.originIndex) {
+						page.text = this.file.getText(page.originIndex);
+						isCommands = true;
+					} 
+					
+					this.pagesInfo.countTextPages++;
 					break;
 				}
 			}
@@ -3361,7 +3375,6 @@
 				}
 				else if (this.Api.isRedactTool) {
 					this.Api.SetRedactTool(false);
-					this.Api.sendEvent("asc_onRedactState", false);
 				}
 				else {
 					const oController = oDoc.GetController();
@@ -4443,6 +4456,9 @@
 				oMemory.WriteByte("P".charCodeAt(0));
 				oMemory.WriteByte("D".charCodeAt(0));
 				oMemory.WriteByte("F".charCodeAt(0));
+
+				oMemory.isForSplit = false;
+				oMemory.isCopyPaste = false;
 			}
 		}
 
@@ -4496,11 +4512,12 @@
 			oMemory.WriteLong(originIndex != undefined ? originIndex : curIndex);
 			
 			let oPageInfo = aPagesInfo[curIndex];
-			if (checkNeedRedactPage(oPageInfo)) {
-				writePageRedactsInfo(oPageInfo);
-			}
 
 			if ([AscPDF.CommandType.editPage, AscPDF.CommandType.addPage].includes(nCommandType)) {
+				if (checkNeedRedactPage(oPageInfo)) {
+					writePageRedactsInfo(oPageInfo);
+				}
+
 				let nRotAngle = this.getPageRotate(curIndex);
 				let bClearPage = !!oFile.pages[curIndex].isRecognized;
 				
@@ -4661,8 +4678,8 @@
 				oMemory.WriteString(data.redactId);
 
 				// rects
-				oMemory.WriteLong(data.rects.length / 4);
-				data.rects.forEach(function(measure) {
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
 					oMemory.WriteDouble(measure);
 				});
 
@@ -4698,6 +4715,10 @@
 		}
 
 		function checkNeedRedactPage(oPageInfo) {
+			if (!oPageInfo) {
+				return false;
+			}
+			
 			if (oPageInfo.annots.find(function(annot) {
 				return annot.IsRedact() && annot.GetRedactId();
 			})) {
@@ -4960,7 +4981,76 @@
 				oMemory.WriteByte("F".charCodeAt(0));
 
 				oMemory.isForSplit = true;
+				oMemory.isCopyPaste = false;
 			}
+		}
+
+		function checkNeedRedactPage(oPageInfo) {
+			if (!oPageInfo) {
+				return false;
+			}
+
+			if (oPageInfo.annots.find(function(annot) {
+				return annot.IsRedact() && annot.GetRedactId();
+			})) {
+				return true;
+			}
+
+			return false;
+		}
+
+		function writePageRedactsInfo(oPageInfo) {
+			oMemory.WriteByte(AscCommon.CommandType.ctRedact);
+
+			let nStartPos = oMemory.GetCurPosition();
+			oMemory.Skip(4);
+			
+			let nPage = oPageInfo.GetIndex();
+			let aPageRedactsData = oDoc.appliedRedactsData.filter(function(data) {
+				return nPage == data.page;
+			});
+
+			oMemory.WriteLong(aPageRedactsData.length);
+			
+			aPageRedactsData.forEach(function(data) {
+				// id
+				oMemory.WriteString(data.redactId);
+
+				// rects
+				oMemory.WriteLong(data.quads.length / 8);
+				data.quads.forEach(function(measure) {
+					oMemory.WriteDouble(measure);
+				});
+
+				// reserved flags
+				let nFlagsPos = oMemory.GetCurPosition();
+				let nFlags = 0;
+				oMemory.Skip(4);
+
+				// render
+				nFlags |= (1 << 0);
+				let nRenderLengthPos = oMemory.GetCurPosition();
+				oMemory.Skip(4);
+				oMemory.WriteBuffer(data.binary, oMemory.GetCurPosition(), data.binary.length);
+
+				let nEndPos = oMemory.GetCurPosition();
+
+				// flags
+				oMemory.Seek(nFlagsPos);
+				oMemory.WriteLong(nFlags);
+				oMemory.Seek(nEndPos);
+
+				// render length
+				oMemory.Seek(nRenderLengthPos);
+				oMemory.WriteLong(nEndPos - nRenderLengthPos);
+				oMemory.Seek(nEndPos);
+			});
+			
+			// total command size
+			let nEndPos = oMemory.GetCurPosition();
+			oMemory.Seek(nStartPos);
+			oMemory.WriteLong(nEndPos - nStartPos);
+			oMemory.Seek(nEndPos);
 		}
 
 		// edit		- 0
@@ -4978,7 +5068,13 @@
 			oMemory.WriteByte(nCommandType);
 			oMemory.WriteLong(originIndex != undefined ? originIndex : curIndex);
 			
+			let oPageInfo = aPagesInfo[curIndex];
+			
 			if ([AscPDF.CommandType.editPage, AscPDF.CommandType.addPage].includes(nCommandType)) {
+				if (checkNeedRedactPage(oPageInfo)) {
+					writePageRedactsInfo(oPageInfo);
+				}
+
 				let nRotAngle = this.getPageRotate(curIndex);
 				let bClearPage = !!oFile.pages[curIndex].isRecognized;
 				
@@ -5022,15 +5118,10 @@
 				return;
 			}
 			
-			let oPageInfo = aPagesInfo[curIndex];
-			
 			// annots
 			if (oPageInfo.annots) {
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
-					if (oAnnot.IsRedact() && oAnnot.GetRedactId()) {
-						continue;
-					}
 
 					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {

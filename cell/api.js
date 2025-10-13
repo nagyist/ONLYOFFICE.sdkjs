@@ -1938,32 +1938,8 @@ var editor;
 			//TODO oMediaArray
 
 			//external reference
-			if (wbXml && wbXml.externalReferences) {
-				wbXml.externalReferences.forEach(function (externalReference) {
-					if (null !== externalReference) {
-						var externalWorkbookPart = wbPart.getPartById(externalReference);
-						if (externalWorkbookPart) {
-							var contentExternalWorkbook = externalWorkbookPart.getDocumentContent();
-							if (contentExternalWorkbook) {
-								var oExternalReference = new AscCommonExcel.CT_ExternalReference(wb);
-								var reader = new StaxParser(contentExternalWorkbook, externalWorkbookPart, xmlParserContext);
-								oExternalReference.fromXml(reader);
-
-								if (oExternalReference.val) {
-									if (oExternalReference.val.externalBook) {
-										var relationship = externalWorkbookPart.getRelationship(oExternalReference.val.externalBook.Id);
-										//подменяем id на target
-										if (relationship && relationship.targetFullName) {
-											oExternalReference.val.externalBook.Id = AscCommonExcel.decodeXmlPath(relationship.targetFullName);
-										}
-										wb.externalReferences.push(oExternalReference.val.externalBook);
-
-									}
-								}
-							}
-						}
-					}
-				});
+			if (wbXml && wbPart) {
+				wbXml.readExternalReferences(wb, wbPart, xmlParserContext);
 			}
 
 			//extLxt(slicercache inside)
@@ -3386,7 +3362,9 @@ var editor;
 				if (cell.isFormula() && cell.getFormulaParsed().ca) {
 					const cellId = AscCommonExcel.getCellIndex(cell.nRow, cell.nCol);
 					const sheetId = cell.ws.getId();
-					delete dependencyFormulas.changedCell[sheetId][cellId];
+					if (dependencyFormulas.changedCell[sheetId]) {
+						delete dependencyFormulas.changedCell[sheetId][cellId];
+					}
 				}
 			});
 		}

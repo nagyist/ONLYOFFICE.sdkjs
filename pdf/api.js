@@ -467,7 +467,7 @@
 	};
 	PDFEditorApi.prototype.getGraphicController = function () {
 		let oDoc = this.getPDFDoc();
-		return oDoc.GetController();
+		return oDoc ? oDoc.GetController() : null;
 	};
 	PDFEditorApi.prototype.can_CopyCut = function() {
 		if (!this.DocumentRenderer)
@@ -705,12 +705,15 @@
 	PDFEditorApi.prototype.asc_getChartSettings = function (bNoLock) {
 		let oDoc = this.getPDFDoc();
 		if (oDoc) {
-			if (bNoLock !== true) {
-				this.asc_onOpenFrameEditor();
-			}
-
 			let oController = oDoc.GetController();
-			return oController.getChartSettings();
+			const oChartSettings = oController.getChartSettings();
+			if (bNoLock) {
+				return oChartSettings;
+			}
+			if (oChartSettings && !oDoc.IsSelectionLocked(AscCommon.changestype_Drawing_Props)) {
+				this.asc_onOpenFrameEditor();
+				return oChartSettings;
+			}
 		}
 	};
 	PDFEditorApi.prototype.asc_correctEnterText = function(oldCodePoints, newCodePoints) {
@@ -1411,6 +1414,7 @@
 		oDoc.BlurActiveObject();
 		
 		this.isRedactTool = bUse;
+		this.sendEvent("asc_onRedactState", bUse);
 	};
 	PDFEditorApi.prototype.IsRedactTool = function() {
 		return this.isRedactTool;
@@ -1749,13 +1753,10 @@
 					"JS": 'AFDate_KeystrokeEx("' + sFormat + '");'
 				}];
 				oField.SetActions(AscPDF.FORMS_TRIGGERS_TYPES.Keystroke, aActionsKeystroke);
-				oField.prevDateFormat = sDateFormat;
 
 				if (oField.IsCanCommit()) {
 					oField.Commit();
 				}
-
-				oField.prevDateFormat = undefined;
 
 				res = true;
 			});
