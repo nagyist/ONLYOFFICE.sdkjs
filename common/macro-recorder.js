@@ -254,6 +254,9 @@
 		if (!data || typeof data !== 'object')
 			return data;
 
+		if (this.editor.editorId === AscCommon.c_oEditorId.Presentation && Array.isArray(data) && data.length === 0)
+			return [[undefined]];
+
 		var out = {};
 		for (var key in data)
 		{
@@ -737,7 +740,7 @@
 			else if (AscCommon.vertalign_SuperScript === vertalign)
 				textOfVertAlign = "superscript";
 
-			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetVertAlign(" + textOfVertAlign + "));\n\t})\n"
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetVertAlign(\"" + textOfVertAlign + "\"));\n\t})\n"
 		}),
 		addNextSlide			: makeAction("", function(data){
 			if (data === undefined)
@@ -814,26 +817,93 @@
 		}),
 		paragraphRemove			: makeAction("", function(args){
 			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.RemoveAllElements());\n\t})\n"
+		}),
+		setVerticalAlign		: makeAction("", function(align){
+			let typeOfVertAlign = "";
+			switch(align.verticalTextAlign)
+            {
+                case 4:
+                {
+                    typeOfVertAlign = "top";
+                    break;
+                }
+                case 1:
+                {
+					typeOfVertAlign = "center";
+                    break;
+                }
+                case 0:
+                {
+					typeOfVertAlign = "bottom";
+                    break;
+                }
+            }
+
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.SetVerticalTextAlign(\"" + typeOfVertAlign + "\");\n\t})\n";
+		}),
+		bringForward			: makeAction("", function(){
+			// no api
+		}),
+		bringToFront			: makeAction("", function(){
+			// no api
+		}),
+		bringBackward			: makeAction("", function(){
+			// no api
+		}),
+		sendToBack				: makeAction("", function(){
+			// no api
+		}),
+		createGroup				: makeAction("", function(){
+			return "\tpresentation.GetCurrentSlide().GroupDrawings(Api.GetSelection().GetShapes());\n";
+		}),
+		unGroup					: makeAction("", function(){
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {shape.Ungroup()});\n"
 		})
+		
 	};
 	const PresentationActionMacroList = {};
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphAlign]			= presActions.setParagraphAlign;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphAdd] 				= presActions.paragraphAdd;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrBold]				= presActions.putTextPrBold;
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontName]			= presActions.putTextPrFontName;
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontSize]			= presActions.putTextPrFontSize;
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddNextSlide]				= presActions.addNextSlide;
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_DeleteSlides]				= presActions.deleteSlides;
-	PresentationActionMacroList[AscDFH.historydescription_Presentation_ChangeLayout]				= presActions.changeLayout;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextBoldHotKey]				= presActions.putTextPrBold;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrItalic]				= presActions.putTextPrItalic;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextItalicHotKey]				= presActions.putTextPrItalic;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrUnderline]			= presActions.putTextPrUnderline;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextUnderlineHotKey]			= presActions.putTextPrUnderline;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrStrikeout]			= presActions.putTextPrStrikeout;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextStrikeoutHotKey]			= presActions.putTextPrStrikeout;
 	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextVertAlign]				= presActions.setTextVertAlign;
-	//PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrIncreaseFontSize]	= presActions.putTextPrIncreaseFontSize;
-	//PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphIncDecFontSize]	= presActions.incDecFontSize;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey3]			= presActions.setTextVertAlign;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextVertAlignHotKey2]			= presActions.setTextVertAlign;
 	PresentationActionMacroList[AscDFH.historydescription_Document_SetTextHighlight]				= presActions.setTextHighlight;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextColor]				= presActions.putTextColor;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphClearFormatting]	= presActions.clearFormatting;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontName]			= presActions.putTextPrFontName;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontSize]			= presActions.putTextPrFontSize;
+
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphAlign]			= presActions.setParagraphAlign;
+	PresentationActionMacroList[AscDFH.historydescription_Document_SetParagraphAlignHotKey]			= presActions.setParagraphAlign;
+
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddNextSlide]				= presActions.addNextSlide;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_DeleteSlides]				= presActions.deleteSlides;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_ChangeLayout]				= presActions.changeLayout;
+	
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetVerticalAlign]			= presActions.setVerticalAlign;
+	
+	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringForward]				= presActions.bringForward;
+	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringToFront]				= presActions.bringToFront;
+	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringBackward]			= presActions.bringBackward;
+	// PresentationActionMacroList[AscDFH.historydescription_Presentation_SendToBack]				= presActions.sendToBack;
+	
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_CreateGroup]					= presActions.createGroup;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_UnGroup]						= presActions.unGroup;
+
+	//PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrIncreaseFontSize]	= presActions.putTextPrIncreaseFontSize;
+	//PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphIncDecFontSize]	= presActions.incDecFontSize;
+	//PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphNumbering]		= presActions.setNumbering;
+
+	// alignTo no api
+	// merge shapes no api
+	
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrLineSpacing]		= presActions.putTextPrLineSpacing;
 	PresentationActionMacroList[AscDFH.historydescription_CommonStatesAddNewShape]					= presActions.addNewShape;
 	PresentationActionMacroList[AscDFH.historydescription_Spreadsheet_Remove]						= presActions.paragraphRemove;

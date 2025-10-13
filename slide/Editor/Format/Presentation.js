@@ -5144,8 +5144,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr && this.CanEdit()) {
 				if (this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextBoldHotKey, [TextPr.Bold === true ? false : true]);
 					this.AddToParagraph(new ParaTextPr({Bold: TextPr.Bold === true ? false : true}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
@@ -5159,9 +5160,10 @@ CPresentation.prototype.OnKeyDown = function (e) {
 		case Asc.c_oAscPresentationShortcutType.CenterAlign: {
 			var ParaPr = this.GetCalculatedParaPr();
 			if (null != ParaPr && ParaPr.Jc !== AscCommon.align_Center) {
-				this.Create_NewHistoryPoint(AscDFH.historydescription_Document_SetParagraphAlignHotKey);
+				this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, [AscCommon.align_Center])
 				this.SetParagraphAlign(AscCommon.align_Center);
 				this.Document_UpdateInterfaceState();
+				this.FinalizeAction();
 			}
 			bRetValue = keydownresult_PreventAll;
 			break;
@@ -5192,8 +5194,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextItalicHotKey, [TextPr.Italic === true ? false : true]);
 					this.AddToParagraph(new ParaTextPr({Italic: TextPr.Italic === true ? false : true}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
@@ -5260,8 +5263,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, [TextPr.Underline === true ? false : true]);
 					this.AddToParagraph(new ParaTextPr({Underline: TextPr.Underline === true ? false : true}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
@@ -5271,8 +5275,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, [TextPr.Strikeout !== true]);
 					this.AddToParagraph(new ParaTextPr({Strikeout: TextPr.Strikeout !== true}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
@@ -5289,8 +5294,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, [TextPr.VertAlign === AscCommon.vertalign_SuperScript ? vertalign_Baseline : AscCommon.vertalign_SuperScript]);
 					this.AddToParagraph(new ParaTextPr({VertAlign: TextPr.VertAlign === AscCommon.vertalign_SuperScript ? vertalign_Baseline : AscCommon.vertalign_SuperScript}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
@@ -5300,8 +5306,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					History.Create_NewPoint(AscDFH.historydescription_Presentation_ParagraphAdd);
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, [TextPr.VertAlign === AscCommon.vertalign_SubScript ? vertalign_Baseline : AscCommon.vertalign_SubScript]);
 					this.AddToParagraph(new ParaTextPr({VertAlign: TextPr.VertAlign === AscCommon.vertalign_SubScript ? vertalign_Baseline : AscCommon.vertalign_SubScript}));
+					this.FinalizeAction();
 				}
 				bRetValue = keydownresult_PreventAll;
 			}
