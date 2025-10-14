@@ -854,6 +854,8 @@ void main() {\n\
             return;
         }
 
+        let oDoc = this.viewer.getPDFDoc();
+
         stream.pos = ret.LinePos;
 
         let _lineText = "";
@@ -914,10 +916,13 @@ void main() {\n\
             }
         }
 
+        oDoc.TextSelectTrackHandler.Update(true);
+        this.onUpdateSelection();
         this.onUpdateOverlay();
     };
     CFile.prototype.selectWholeRow = function(pageIndex, x, y) {
         let ret = this.getNearestPos(pageIndex, x, y);
+        let oDoc = this.viewer.getPDFDoc();
 
         let sel = this.Selection;
         sel.Glyph1 = -2;
@@ -929,6 +934,8 @@ void main() {\n\
         sel.Page2 = pageIndex;
         sel.quads = [];
         
+        oDoc.TextSelectTrackHandler.Update(true);
+        this.onUpdateSelection();
         this.onUpdateOverlay();
     };
     CFile.prototype.selectWholePage = function(pageIndex) {
@@ -937,6 +944,9 @@ void main() {\n\
         if (!stream) {
             return;
         }
+
+        let oDoc = this.viewer.getPDFDoc();
+
         while (stream.pos < stream.size)
         {
             _numLine++;
@@ -957,6 +967,8 @@ void main() {\n\
         sel.Page2 = pageIndex;
         sel.quads = [];
         
+        oDoc.TextSelectTrackHandler.Update(true);
+        this.onUpdateSelection();
         this.onUpdateOverlay();
     };
     CFile.prototype.selectAll = function() {

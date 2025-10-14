@@ -2048,12 +2048,19 @@
 				if (!pageObjectLogic) {
 					return false;
 				}
-				if (global_mouseEvent.ClickCount == 2)
+				
+				if (global_mouseEvent.ClickCount == 2) {
 					oThis.file.selectWholeWord(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
-				else if (global_mouseEvent.ClickCount == 3)
+					return;
+				}
+				else if (global_mouseEvent.ClickCount == 3) {
 					oThis.file.selectWholeRow(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
-				else if (global_mouseEvent.ClickCount == 4)
+					return;
+				}
+				else if (global_mouseEvent.ClickCount == 4) {
 					oThis.file.selectWholePage(pageObjectLogic.index);
+					return;
+				}
 			}
 
 			// если было нажатие - то отжимаем
