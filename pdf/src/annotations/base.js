@@ -1281,14 +1281,14 @@
      * @returns {object}
 	 */
     CAnnotationBase.prototype.GetRGBColor = function(aInternalColor) {
-        let oColor = {};
+        let oColor = {
+            r: 255,
+            g: 255,
+            b: 255
+        };
 
         if (!aInternalColor || aInternalColor.length == 0) {
-            return {
-                r: 255,
-                g: 255,
-                b: 255
-            }
+            return oColor;
         }
         
         if (aInternalColor.length == 1) {
@@ -1315,6 +1315,9 @@
             }
 
             oColor = cmykToRgb(aInternalColor[0], aInternalColor[1], aInternalColor[2], aInternalColor[3]);
+        }
+        else if (aInternalColor.length > 4) {
+            return this.GetRGBColor(aInternalColor.slice(0, 3));
         }
 
         return oColor;
