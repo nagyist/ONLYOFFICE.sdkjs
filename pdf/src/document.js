@@ -3185,8 +3185,9 @@ var CPresentation = CPresentation || function(){};
                 oParent = oExistsField;
 
                 checkFieldParams();
-                oParent.AddKid(oField);
+                
                 oField.SetPartialName(undefined);
+                oParent.AddKid(oField);
             }
 
             function checkFieldParams() {
