@@ -1977,7 +1977,9 @@ ParaRun.prototype.Add_ToContent = function(Pos, Item, UpdatePosition)
 	{
 		this.SpellingMarks[iMark].onAdd(Pos);
 	}
-
+	
+	this.private_UpdateCustomMarksOnAdd(Pos);
+	
 	this.private_UpdateDocumentOutline();
     this.private_UpdateTrackRevisionOnChangeContent(true);
 
@@ -2048,6 +2050,7 @@ ParaRun.prototype.Remove_FromContent = function(Pos, Count, UpdatePosition)
 	{
 		this.SpellingMarks[iMark].onRemove(Pos, Count);
 	}
+	this.private_UpdateCustomMarksOnRemove(Pos, Count);
 
 	this.private_UpdateDocumentOutline();
 	this.private_UpdateTrackRevisionOnChangeContent(true);
@@ -2759,6 +2762,7 @@ ParaRun.prototype.Split2 = function(CurPos, Parent, ParentPos)
 			--iMark;
 		}
 	}
+	this.private_UpdateCustomMarksOnSplit(CurPos, NewRun);
 
 	this.RemoveFromContent(CurPos, this.Content.length - CurPos, true);
 
@@ -6605,6 +6609,8 @@ ParaRun.prototype.Draw_Lines = function(lineDrawState)
 		else
 			SpellData[markPos] -= 1;
 	}
+	
+	
 	
 	for (let pos = startPos; pos < endPos; ++pos)
 	{
@@ -12775,6 +12781,27 @@ ParaRun.prototype.SetIsRecalculated = function(isRecalculated)
 {
 	if (!isRecalculated && this.Paragraph)
 		this.Paragraph.SetIsRecalculated(false);
+};
+ParaRun.prototype.private_UpdateCustomMarksOnAdd = function(pos)
+{
+	let logicDocument = this.GetLogicDocument();
+	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
+	if (customMarks)
+		customMarks.onAddToRun(this.GetId(), pos);
+};
+ParaRun.prototype.private_UpdateCustomMarksOnRemove = function(pos, count)
+{
+	let logicDocument = this.GetLogicDocument();
+	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
+	if (customMarks)
+		customMarks.onRemoveFromRun(this.GetId(), pos, count);
+};
+ParaRun.prototype.private_UpdateCustomMarksOnSplit = function(pos, nextRun)
+{
+	let logicDocument = this.GetLogicDocument();
+	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
+	if (customMarks)
+		customMarks.onSplitRun(this.GetId(), pos, nextRun.GetId());
 };
 
 function CParaRunStartState(Run)

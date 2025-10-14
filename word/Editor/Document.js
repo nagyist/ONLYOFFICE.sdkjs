@@ -27900,6 +27900,20 @@ CDocument.prototype.IsFirstOnDocumentPage = function(curPage)
 {
 	return true;
 };
+/**
+ * @returns {AscWord.CustomTextAnnotator}
+ */
+CDocument.prototype.GetCustomTextAnnotator = function()
+{
+	return this.CustomTextAnnotator;
+};
+/**
+ * @returns {AscWord.CustomMarks}
+ */
+CDocument.prototype.GetCustomMarks = function()
+{
+	return this.CustomTextAnnotator.getMarks();
+};
 
 function CDocumentSelectionState()
 {

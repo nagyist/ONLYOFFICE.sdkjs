@@ -56,10 +56,14 @@
 		
 		this.textGetter = new ParagraphText();
 		
-		
 		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
+		this.marks        = new AscWord.CustomMarks();
 	}
 	
+	CustomTextAnnotator.prototype.getMarks = function()
+	{
+		return this.marks;
+	};
 	CustomTextAnnotator.prototype.isActive = function()
 	{
 		return true;
