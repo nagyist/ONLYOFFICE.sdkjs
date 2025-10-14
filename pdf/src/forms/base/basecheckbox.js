@@ -57,7 +57,7 @@
     CBaseCheckBoxField.prototype.constructor = CBaseCheckBoxField;
 
     CBaseCheckBoxField.prototype.Draw = function(oGraphicsPDF, oGraphicsWord) {
-        if (this.IsHidden() && !this.IsEditMode())
+        if (this.IsHidden() && !Asc.editor.IsEditFieldsMode())
             return;
 
         this.DrawBackground(oGraphicsPDF);
@@ -115,7 +115,7 @@
         this._hovered = bValue;
     };
     CBaseCheckBoxField.prototype.DrawCheckedSymbol = function(oGraphicsPDF) {
-        let aOrigRect = this.GetOrigRect();
+        let aOrigRect = this.GetRect();
         let nRotAngle = this.GetRotate();
 
         let X       = aOrigRect[0];
@@ -354,11 +354,7 @@
         oDoc.activeForm = this;
         
         if (oDoc.IsEditFieldsMode()) {
-            let oController = oDoc.GetController();
-            this.editShape.select(oController, this.GetPage());
-            if (false == this.IsLocked()) {
-                this.editShape.onMouseDown(x, y, e)
-            }
+            this.editShape.onMouseDown(x, y, e);
             return;
         }
 
@@ -500,6 +496,13 @@
         return this._noToggleToOff;
     };
     CBaseCheckBoxField.prototype.SetOptions = function(aOpt) {
+        let oParent = this.GetParent();
+        if (oParent && oParent.IsAllKidsWidgets()) {
+            oParent.SetOptions(aOpt);
+        }
+        
+        let hasOptions = !!this._options;
+        
         AscCommon.History.Add(new CChangesPDFCheckOptions(this, this._options, aOpt));
 
         if (this._options == aOpt) {
@@ -513,9 +516,27 @@
             widget.SetExportValue(undefined, true);
         });
 
+        let sDefValue = this.GetDefaultValue();
+        let sCurExpValue;
+
+        if (sDefValue) {
+            if (!hasOptions) {
+                sCurExpValue = this.GetDefaultValue();
+            }
+            else {
+                sCurExpValue = aOpt[sDefValue];
+            }
+
+            this.SetDefaultValue(String(aOpt.indexOf(sCurExpValue)));
+        }
+
         return true;
     };
-    CBaseCheckBoxField.prototype.GetOptions = function() {
+    CBaseCheckBoxField.prototype.GetOptions = function(bInherit) {
+        let oParent = this.GetParent();
+        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+            return oParent.GetOptions();
+
         return this._options;
     };
     CBaseCheckBoxField.prototype.GetOptionsIndex = function() {
@@ -688,13 +709,12 @@
         this.SetWasChanged(true);
         this.AddToRedraw();
 
-        let oDoc = this.GetDocument();
         if (bChecked) {
-            oDoc.History.Add(new CChangesPDFFormValue(this, this.GetValue(), this.GetExportValue()));
+            AscCommon.History.Add(new CChangesPDFFormValue(this, this.GetValue(), this.GetExportValue()));
             this._checked = true;
         }
         else {
-            oDoc.History.Add(new CChangesPDFFormValue(this, this.GetValue(), "Off"));
+            AscCommon.History.Add(new CChangesPDFFormValue(this, this.GetValue(), "Off"));
             this._checked = false;
         }
     };
@@ -729,6 +749,11 @@
             }
         }
     };
+    CBaseCheckBoxField.prototype.DrainViewPropsFrom = function(oField) {
+        AscPDF.CBaseField.prototype.DrainViewPropsFrom.call(this, oField);
+
+        this.SetStyle(oField.GetStyle());
+    };
     CBaseCheckBoxField.prototype.WriteToBinary = function(memory) {
         memory.WriteByte(AscCommon.CommandType.ctAnnotField);
 
@@ -756,18 +781,18 @@
         // check symbol
         memory.WriteByte(this.GetStyle());
 
-        let sExportValue = this.GetExportValue(false);
+        let sExportValue = this.GetExportValue(memory.isCopyPaste);
         if (sExportValue != null) {
             memory.fieldDataFlags |= (1 << 14);
             memory.WriteString(sExportValue);
         }
 
-        if (this.IsNoToggleToOff(false)) {
+        if (this.IsNoToggleToOff(memory.isCopyPaste)) {
             memory.widgetFlags |= (1 << 14);
         }
 
         if (this.GetType() == AscPDF.FIELD_TYPES.radiobutton) {
-            if (this.IsRadiosInUnison(false)) {
+            if (this.IsRadiosInUnison(memory.isCopyPaste)) {
                 memory.widgetFlags |= (1 << 25);
             }
         }

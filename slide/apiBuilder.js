@@ -79,29 +79,34 @@
     function ApiTheme(oThemeInfo){
         this.ThemeInfo = oThemeInfo;
     }
-    
+
+
     /**
      * Class representing a theme color scheme.
      * @constructor
      */
-    function ApiThemeColorScheme(oClrScheme){
+    function ApiThemeColorScheme(oClrScheme, theme){
         this.ColorScheme = oClrScheme;
+
+		this.Theme = theme;
     }
 
     /**
      * Class representing a theme format scheme.
      * @constructor
      */
-    function ApiThemeFormatScheme(ofmtScheme){
+    function ApiThemeFormatScheme(ofmtScheme, theme){
         this.FormatScheme = ofmtScheme;
+		this.Theme = theme;
     }
 
     /**
      * Class representing a theme font scheme.
      * @constructor
      */
-    function ApiThemeFontScheme(ofontScheme){
+    function ApiThemeFontScheme(ofontScheme, theme){
         this.FontScheme = ofontScheme;
+		this.Theme = theme;
     }
 
     /**
@@ -361,11 +366,13 @@
 	 */
 
     /**
-     * @typedef {("body" | "chart" | "clipArt" | "ctrTitle" | "diagram" | "date" | "footer" | "header" | "media" | "object" | "picture" | "sldImage" | "sldNumber" | "subTitle" | "table" | "title")} PlaceholderType - Available placeholder types.
+     * Available placeholder types.
+     * @typedef {("body" | "chart" | "clipArt" | "ctrTitle" | "diagram" | "date" | "footer" | "header" | "media" | "object" | "picture" | "sldImage" | "sldNumber" | "subTitle" | "table" | "title")} PlaceholderType
      */
 
     /**
-	 * @typedef {("blank" | "chart" | "chartAndTx" | "clipArtAndTx" | "clipArtAndVertTx" | "cust" | "dgm" | "fourObj" | "mediaAndTx" | "obj" | "objAndTwoObj" | "objAndTx" | "objOnly" | "objOverTx" | "objTx" | "picTx" | "secHead" | "tbl" | "title" | "titleOnly" | "twoColTx" | "twoObj" | "twoObjAndObj" | "twoObjAndTx" | "twoObjOverTx" | "twoTxTwoObj" | "tx" | "txAndChart" | "txAndClipArt" | "txAndMedia" | "txAndObj" | "txAndTwoObj" | "txOverObj" | "vertTitleAndTx" | "vertTitleAndTxOverChart" | "vertTx")} LayoutType - Available layout types.
+	 * Available layout types.
+     * @typedef {("blank" | "chart" | "chartAndTx" | "clipArtAndTx" | "clipArtAndVertTx" | "cust" | "dgm" | "fourObj" | "mediaAndTx" | "obj" | "objAndTwoObj" | "objAndTx" | "objOnly" | "objOverTx" | "objTx" | "picTx" | "secHead" | "tbl" | "title" | "titleOnly" | "twoColTx" | "twoObj" | "twoObjAndObj" | "twoObjAndTx" | "twoObjOverTx" | "twoTxTwoObj" | "tx" | "txAndChart" | "txAndClipArt" | "txAndMedia" | "txAndObj" | "txAndTwoObj" | "txOverObj" | "vertTitleAndTx" | "vertTitleAndTxOverChart" | "vertTx")} LayoutType
      */
 
     /**
@@ -433,20 +440,33 @@
      * @returns {?ApiMaster} - returns null if presentation theme doesn't exist.
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateMaster.js
 	 */
-    Api.prototype.CreateMaster = function(oTheme){
-        if (!oTheme || !oTheme.GetClassType || oTheme.GetClassType() !== "theme")
-        {
-            if (editor.GetPresentation().GetMaster(0))
-                oTheme = editor.GetPresentation().GetMaster(0).GetTheme();
+    Api.prototype.CreateMaster = function(oTheme)
+	{
+		const rawMaster = new AscCommonSlide.MasterSlide();
+
+		const isThemeValid = oTheme && oTheme.GetClassType && oTheme.GetClassType() === "theme";
+        if (!isThemeValid) {
+			
+			const zeroMaster = editor.GetPresentation().GetMaster(0);
+            if (zeroMaster) {
+				oTheme = zeroMaster.GetTheme();
+			} else {
+				const currentTheme = Asc.editor.getCurrentTheme();
+				const themeLoadInfo = new AscCommonSlide.CThemeLoadInfo();
+				themeLoadInfo.Master = rawMaster;
+				themeLoadInfo.Layouts = rawMaster.sldLayoutLst;
+				themeLoadInfo.Theme = currentTheme;
+				oTheme = new ApiTheme(themeLoadInfo);
+			}
         }
         
         if (!oTheme)
             return null;
 
         var oThemeCopy = oTheme.ThemeInfo.Theme.createDuplicate();
-        var oMaster = new ApiMaster(new AscCommonSlide.MasterSlide());
+        const oMaster = new ApiMaster(rawMaster);
         oMaster.Master.setTheme(oThemeCopy);
-				oMaster.Master.setPreserve(true);
+		oMaster.Master.setPreserve(true);
 
         return oMaster;
     };
@@ -507,7 +527,7 @@
         oFormatScheme.GetClassType() !== "themeFormatScheme" || oFontScheme.GetClassType() !== "themeFontScheme")
             return null;
 
-        var oPresentation      = editor.GetPresentation().Presentation;
+        var oPresentation      = private_GetPresentation();
         var oThemeLoadInfo     = new AscCommonSlide.CThemeLoadInfo();
         oThemeLoadInfo.Master  = oMaster.Master;
         oThemeLoadInfo.Layouts = oMaster.Master.sldLayoutLst;
@@ -1323,11 +1343,12 @@
     {
         if (oApiMaster && oApiMaster.GetClassType && oApiMaster.GetClassType() === "master")
         {
-            if (!nPos || nPos < 0 || nPos > this.Presentation.slideMasters.length)
-                nPos = this.Presentation.slideMasters.length;
+			let master = oApiMaster.Master;
+			let position = getArrayAddIndex(nPos, master, this.Presentation.slideMasters);
+			if (position === null)
+				return false;
 
-            this.Presentation.addSlideMaster(nPos, oApiMaster.Master)
-
+            this.Presentation.addSlideMaster(position, master)
             return true;
         }
 
@@ -1510,6 +1531,19 @@
 	};
 
 	/**
+	 * Returns an array with all tables from the current presentation (including slide masters and slide layouts).
+	 *
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]} An array with all tables from the current presentation.
+     * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetAllTables.js
+	 */
+	ApiPresentation.prototype.GetAllTables = function () {
+		return this._collectAllObjects('GetAllTables');
+	};
+
+	/**
 	 * Returns an array with all the chart objects from the current presentation.
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
@@ -1671,7 +1705,7 @@
 	* @memberof ApiPresentation
 	* @typeofeditors ["CPE"]
 	* @param {string} sText - The math equation text.
-	* @param {string} sFormat - The math equation format. Possible values are "unicode" and "latex".
+	* @param {string} sFormat - The math equation format. Possible values are "unicode", "latex", and "mathml".
 	* @returns {boolean}
 	* @since 9.0.0
 	* @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/AddMathEquation.js
@@ -1693,7 +1727,22 @@
 			logicDocument.RemoveSelection();
 
 			const mathPr = new AscCommonWord.MathMenu(c_oAscMathType.Default_Text, logicDocument.GetDirectTextPr());
-			mathPr.SetText(text);
+
+            let mathformat = null;
+            switch (format) {
+                case 'latex':
+                    mathformat = Asc.c_oAscMathInputType.LaTeX;
+                    break;
+                case 'unicode':
+                    mathformat = Asc.c_oAscMathInputType.Unicode;
+                    break;
+                case 'mathml':
+                    mathformat = Asc.c_oAscMathInputType.MathML;
+                    break;
+                default:
+                    mathformat = Asc.c_oAscMathInputType.LaTeX;
+                    break;
+            }
 
 			logicDocument.AddToParagraph(mathPr);
 
@@ -1706,13 +1755,27 @@
 				return;
 			}
 
-			paraMath.ConvertView(false, 'latex' === format ? Asc.c_oAscMathInputType.LaTeX : Asc.c_oAscMathInputType.Unicode);
+            paraMath.ConvertView(false, mathformat, text);
 
 			const graphicController = Asc.editor.getGraphicController();
 			graphicController.startRecalculate();
 		}
 
 		return true;
+	};
+
+    /**
+	 * Retrieves the custom XML manager associated with the presentation.
+	 * This manager allows manipulation and access to custom XML parts within the presentation.
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 * @since 9.1.0
+	 * @returns {ApiCustomXmlParts|null} Returns an instance of ApiCustomXmlParts if the custom XML manager exists, otherwise returns null.
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetCustomXmlParts.js
+	 */
+	ApiPresentation.prototype.GetCustomXmlParts = function()
+	{
+		return new AscBuilder.ApiCustomXmlParts(this.Presentation);
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -1764,10 +1827,10 @@
     };
 
     /**
-     * Returns a layout of the specified slide master by its position.
+     * Returns the layout corresponding to the specified layout type of the slide master.
      * @typeofeditors ["CPE"]
-     * @param {LayoutType} sType - Layout position.
-     * @returns {ApiLayout | null} - returns null if position is invalid.
+     * @param {LayoutType} sType - The layout type.
+     * @returns {ApiLayout | null} - The layout at the specified position, or null if the position is invalid.
      * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetLayoutByType.js
 	 */
     ApiMaster.prototype.GetLayoutByType = function(sType)
@@ -1952,15 +2015,11 @@
         if (!this.Master)
             return null;
         
-        var oPresentation       = editor.GetPresentation().Presentation;
-        var oMasterCopy         = this.Master.createDuplicate();
-        
-        if (!nPos || nPos < 0 || nPos > oPresentation.Slides.length)
-            nPos = oPresentation.slideMasters.length;
-
-        oPresentation.addSlideMaster(nPos, oMasterCopy);
-
-        return new ApiMaster(oMasterCopy);
+        let presentation = private_GetPresentation();
+        let masterCopy = this.Master.createDuplicate();
+        let position = getAddIndex(nPos, presentation.slideMasters.length);
+		presentation.addSlideMaster(position, masterCopy);
+        return new ApiMaster(masterCopy);
     };
 
     /**
@@ -2089,6 +2148,26 @@
 		return private_GetAllDrawingsWithType(this.Master.cSld.spTree, AscDFH.historyitem_type_OleObject,
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
+
+	/**
+	 * Returns an array with all tables from the slide master.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]} An array with all tables from the slide master.
+     * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiMaster/Methods/GetAllTables.js
+	 */
+	ApiMaster.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Master) {
+			this.Master.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
+
     /**
 	 * Converts the ApiMaster object into the JSON object.
 	 * @memberof ApiMaster
@@ -2147,7 +2226,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -2201,9 +2280,9 @@
     };
 
     /**
-     * Returns a type if the current layout.
+     * Returns the type of the current layout.
      * @typeofeditors ["CPE"]
-     * @returns {boolean}
+     * @returns {LayoutType} The layout type.
      * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GetLayoutType.js
 	 */
     ApiLayout.prototype.GetLayoutType = function()
@@ -2378,18 +2457,15 @@
      * Returns null if slide layout doesn't exist or is not in the slide master.
      * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/Duplicate.js
 	 */
-    ApiLayout.prototype.Duplicate = function(nPos){
+    ApiLayout.prototype.Duplicate = function(nPos)
+	{
         if (this.Layout && this.Layout.Master)
         {
-            var oMaster     = this.Layout.Master;
-            var oLayoutCopy = this.Layout.createDuplicate();
-            
-            if (nPos < 0 || nPos > this.Layout.Master.sldLayoutLst.length || !nPos)
-                nPos = oMaster.sldLayoutLst.length;
-    
-            oMaster.addToSldLayoutLstToPos(nPos, oLayoutCopy);
-    
-            return new ApiLayout(oLayoutCopy);
+            let master     = this.Layout.Master;
+            let layoutCopy = this.Layout.createDuplicate();
+            let position = getAddIndex(nPos, master.sldLayoutLst.length);
+			master.addToSldLayoutLstToPos(position, layoutCopy);
+            return new ApiLayout(layoutCopy);
         }
         return null;
     };
@@ -2486,6 +2562,25 @@
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
 
+	/**
+	 * Returns an array with all tables from the current slide layout.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]} An array with all tables from the current slide layout.
+     * @sine 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiLayout/Methods/GetAllTables.js
+	 */
+	ApiLayout.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Layout) {
+			this.Layout.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
+
     /**
      * Returns the parent slide master of the current layout.
      * @typeofeditors ["CPE"]
@@ -2557,7 +2652,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -2724,7 +2819,7 @@
     {
         if (this.ThemeInfo && this.ThemeInfo.Theme && this.ThemeInfo.Theme.themeElements)
         {
-            return new ApiThemeColorScheme(this.ThemeInfo.Theme.themeElements.clrScheme);
+            return new ApiThemeColorScheme(this.ThemeInfo.Theme.themeElements.clrScheme, this.ThemeInfo.Theme);
         }
 
         return null;
@@ -2758,7 +2853,7 @@
     {
         if (this.ThemeInfo && this.ThemeInfo.Theme && this.ThemeInfo.Theme.themeElements)
         {
-            return new ApiThemeFormatScheme(this.ThemeInfo.Theme.themeElements.fmtScheme);
+            return new ApiThemeFormatScheme(this.ThemeInfo.Theme.themeElements.fmtScheme, this.ThemeInfo.Theme);
         }
 
         return null;
@@ -2792,7 +2887,7 @@
     {
         if (this.ThemeInfo && this.ThemeInfo.Theme && this.ThemeInfo.Theme.themeElements)
         {
-            return new ApiThemeFontScheme(this.ThemeInfo.Theme.themeElements.fontScheme);
+            return new ApiThemeFontScheme(this.ThemeInfo.Theme.themeElements.fontScheme, this.ThemeInfo.Theme);
         }
 
         return null;
@@ -2803,6 +2898,23 @@
     // ApiThemeColorScheme
     //
     //------------------------------------------------------------------------------------------------------------------
+
+
+	ApiThemeColorScheme.prototype.checkThemeElement = function(fCallback)
+	{
+		let bUpdateTheme = false;
+		if(this.Theme && this.Theme.themeElements && this.Theme.themeElements.clrScheme === this.ColorScheme)
+		{
+			let oldScheme = this.ColorScheme;
+			this.ColorScheme = oldScheme.createDuplicate();
+			bUpdateTheme = true;
+		}
+		fCallback(this.ColorScheme);
+		if (bUpdateTheme)
+		{
+			this.Theme.setColorScheme(this.ColorScheme);
+		}
+	};
 
     /**
      * Returns the type of the ApiThemeColorScheme class.
@@ -2827,7 +2939,10 @@
         if (typeof(sName) !== "string")
             sName = "";
 
-        this.ColorScheme.setName(sName);
+		this.checkThemeElement(function (colorScheme) {
+			colorScheme.setName(sName);
+		});
+		return true;
     };
 
     /**
@@ -2843,10 +2958,12 @@
         if (nPos < 0 || nPos > 12 || (oColor.GetClassType() !== "rgbColor" && oColor.GetClassType() !== "uniColor"))
             return false;
 
-        if (nPos <= 5)
-            this.ColorScheme.addColor(nPos, oColor.Unicolor);
-        else if (nPos > 5)
-            this.ColorScheme.addColor(nPos + 2, oColor.Unicolor)
+		this.checkThemeElement(function (colorScheme) {
+			if (nPos <= 5)
+				colorScheme.addColor(nPos, oColor.Unicolor);
+			else if (nPos > 5)
+				colorScheme.addColor(nPos + 2, oColor.Unicolor)
+		});
 
         return true;
     };
@@ -2859,7 +2976,7 @@
 	 */
     ApiThemeColorScheme.prototype.Copy = function()
     {
-        return new ApiThemeColorScheme(this.ColorScheme.createDuplicate());
+        return new ApiThemeColorScheme(this.ColorScheme.createDuplicate(), null);
     };
 
     /**
@@ -2879,6 +2996,22 @@
     // ApiThemeFormatScheme
     //
     //------------------------------------------------------------------------------------------------------------------
+
+	ApiThemeFormatScheme.prototype.checkThemeElement = function(fCallback)
+	{
+		let bUpdateTheme = false;
+		if(this.Theme && this.Theme.themeElements && this.Theme.themeElements.fmtScheme === this.FormatScheme)
+		{
+			let oldScheme = this.FormatScheme;
+			this.FormatScheme = oldScheme.createDuplicate();
+			bUpdateTheme = true;
+		}
+		fCallback(this.FormatScheme);
+		if (bUpdateTheme)
+		{
+			this.Theme.setFormatScheme(this.FormatScheme);
+		}
+	};
 
     /**
      * Returns the type of the ApiThemeFormatScheme class.
@@ -2903,7 +3036,10 @@
         if (typeof(sName) !== "string")
             sName = "";
 
-        this.FormatScheme.setName(sName);
+		this.checkThemeElement(function (formatScheme) {
+			formatScheme.setName(sName);
+		});
+		return true;
     };
 
     /**
@@ -2918,21 +3054,23 @@
         if (!arrFill)
             arrFill = [];
 
-        this.FormatScheme.fillStyleLst = [];
-
-        for (var nFill = 0; nFill < 3; nFill++)
-        {
-            if (arrFill[nFill] && arrFill[nFill].GetClassType() === "fill")
-                this.FormatScheme.addFillToStyleLst(arrFill[nFill].UniFill);
-            else 
-                this.FormatScheme.addFillToStyleLst(editor.CreateNoFill().UniFill);
-        }
+		this.checkThemeElement(function (formatScheme) {
+			formatScheme.fillStyleLst = [];
+			for (let nFill = 0; nFill < 3; nFill++)
+			{
+				if (arrFill[nFill] && arrFill[nFill].GetClassType() === "fill")
+					formatScheme.addFillToStyleLst(arrFill[nFill].UniFill);
+				else
+					formatScheme.addFillToStyleLst(editor.CreateNoFill().UniFill);
+			}
+		});
+		return true;
     };
 
     /**
      * Sets the background fill styles to the current theme format scheme.
      * @typeofeditors ["CPE"]
-     * @param {ApiFill[]} arrBgFill - The array of background fill styles must contains 3 elements - subtle, moderate and intense fills.
+     * @param {ApiFill[]} arrBgFill - The array of background fill styles must contain 3 elements - subtle, moderate and intense fills.
      * If an array is empty or NoFill elements are in the array, it will be filled with the Api.CreateNoFill() elements.
      * @see office-js-api/Examples/{Editor}/ApiThemeFormatScheme/Methods/ChangeBgFillStyles.js
 	 */
@@ -2941,15 +3079,18 @@
         if (!arrBgFill)
             arrBgFill = [];
 
-        this.FormatScheme.bgFillStyleLst = [];
+		this.checkThemeElement(function (formatScheme) {
 
-        for (var nFill = 0; nFill < 3; nFill++)
-        {
-            if (arrBgFill[nFill] && arrBgFill[nFill].GetClassType() === "fill")
-                this.FormatScheme.addBgFillToStyleLst(arrBgFill[nFill].UniFill);
-            else 
-                this.FormatScheme.addBgFillToStyleLst(editor.CreateNoFill().UniFill);
-        }
+			formatScheme.bgFillStyleLst = [];
+			for (let nFill = 0; nFill < 3; nFill++)
+			{
+				if (arrBgFill[nFill] && arrBgFill[nFill].GetClassType() === "fill")
+					formatScheme.addBgFillToStyleLst(arrBgFill[nFill].UniFill);
+				else
+					formatScheme.addBgFillToStyleLst(editor.CreateNoFill().UniFill);
+			}
+		});
+		return true;
     };
 
     /**
@@ -2964,15 +3105,18 @@
         if (!arrLine)
             arrLine = [];
 
-        this.FormatScheme.lnStyleLst = [];
 
-        for (var nLine = 0; nLine < 3; nLine++)
-        {
-            if (arrLine[nLine] && arrLine[nLine].GetClassType() === "stroke")
-                this.FormatScheme.addLnToStyleLst(arrLine[nLine].Ln);
-            else 
-                this.FormatScheme.addLnToStyleLst(editor.CreateStroke(0, editor.CreateNoFill()).Ln);
-        }
+		this.checkThemeElement(function (formatScheme) {
+			formatScheme.lnStyleLst = [];
+			for (let nLine = 0; nLine < 3; nLine++)
+			{
+				if (arrLine[nLine] && arrLine[nLine].GetClassType() === "stroke")
+					formatScheme.addLnToStyleLst(arrLine[nLine].Ln);
+				else
+					formatScheme.addLnToStyleLst(editor.CreateStroke(0, editor.CreateNoFill()).Ln);
+			}
+		});
+		return true;
     };
 
     // /**
@@ -3031,6 +3175,23 @@
     //
     //------------------------------------------------------------------------------------------------------------------
 
+	ApiThemeFontScheme.prototype.checkThemeElement = function(fCallback)
+	{
+		let bUpdateTheme = false;
+		if(this.Theme && this.Theme.themeElements && this.Theme.themeElements.fontScheme === this.FontScheme)
+		{
+			let oldScheme = this.FontScheme;
+			this.FontScheme = oldScheme.createDuplicate();
+			bUpdateTheme = true;
+		}
+		let bRet = fCallback(this.FontScheme);
+		if (bUpdateTheme)
+		{
+			this.Theme.setFontScheme(this.FontScheme);
+		}
+		return bRet;
+	};
+
     /**
      * Returns the type of the ApiThemeFontScheme class.
      * @typeofeditors ["CPE"]
@@ -3054,13 +3215,17 @@
         if (typeof(sName) !== "string")
             sName = "";
 
-        if (this.FontScheme)
-        {
-            this.FontScheme.setName(sName);
-            return true;
-        }
-        else 
-            return false;
+
+		return this.checkThemeElement(function (fontScheme) {
+			if (fontScheme)
+			{
+				fontScheme.setName(sName);
+				return true;
+			}
+			else
+				return false;
+
+		});
     };
 
     /**
@@ -3076,23 +3241,25 @@
      * @see office-js-api/Examples/{Editor}/ApiThemeFontScheme/Methods/SetFonts.js
 	 */
     ApiThemeFontScheme.prototype.SetFonts = function(mjLatin, mjEa, mjCs, mnLatin, mnEa, mnCs){
-        
-        var oMajorFontCollection = this.FontScheme.majorFont;
-        var oMinorFontCollection = this.FontScheme.minorFont;
 
-        if (typeof(mjLatin) === "string")
-            oMajorFontCollection.setLatin(mjLatin);
-        if (typeof(mjEa) === "string")
-            oMajorFontCollection.setEA(mjEa);
-        if (typeof(mjCs) === "string")
-            oMajorFontCollection.setCS(mjCs);
+		this.checkThemeElement(function (fontScheme) {
+			var oMajorFontCollection = fontScheme.majorFont;
+			var oMinorFontCollection = fontScheme.minorFont;
 
-        if (typeof(mnLatin) === "string")
-            oMinorFontCollection.setLatin(mnLatin);
-        if (typeof(mnEa) === "string")
-            oMinorFontCollection.setEA(mnEa);
-        if (typeof(mnCs) === "string")
-            oMinorFontCollection.setCS(mnCs);
+			if (typeof(mjLatin) === "string")
+				oMajorFontCollection.setLatin(mjLatin);
+			if (typeof(mjEa) === "string")
+				oMajorFontCollection.setEA(mjEa);
+			if (typeof(mjCs) === "string")
+				oMajorFontCollection.setCS(mjCs);
+
+			if (typeof(mnLatin) === "string")
+				oMinorFontCollection.setLatin(mnLatin);
+			if (typeof(mnEa) === "string")
+				oMinorFontCollection.setEA(mnEa);
+			if (typeof(mnCs) === "string")
+				oMinorFontCollection.setCS(mnCs);
+		});
     };
 
     /**
@@ -3341,8 +3508,8 @@
         if (!this.Slide)
             return false;
         
-        var oPresentation = editor.GetPresentation().Presentation;
-        var nPosToDelete  = this.GetSlideIndex();
+        let oPresentation = private_GetPresentation();
+        let nPosToDelete  = this.GetSlideIndex();
 
         if (nPosToDelete > -1)
         {
@@ -3376,19 +3543,16 @@
      * Returns null if slide doesn't exist or is not in the presentation.
      * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/Duplicate.js
 	 */
-    ApiSlide.prototype.Duplicate = function(nPos){
+    ApiSlide.prototype.Duplicate = function(nPos)
+	{
         if (!this.Slide)
             return null;
         
-        var oPresentation = editor.GetPresentation().Presentation;
-        var oSlideCopy    = this.Slide.createDuplicate();
-        
-        if (nPos < 0 || nPos > oPresentation.Slides.length || !nPos)
-            nPos = oPresentation.Slides.length;
-
-        oPresentation.insertSlide(nPos, oSlideCopy);
-
-        return new ApiSlide(oSlideCopy);
+        let presentation = private_GetPresentation();
+        let slideCopy = this.Slide.createDuplicate();
+        let position = getAddIndex(nPos, presentation.Slides.length);
+		presentation.insertSlide(position, slideCopy);
+        return new ApiSlide(slideCopy);
     };
 
     /**
@@ -3399,7 +3563,7 @@
      * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/MoveTo.js
 	 */
     ApiSlide.prototype.MoveTo = function(nPos){
-        var oPresentation = editor.GetPresentation().Presentation;
+        var oPresentation = private_GetPresentation();
 
         if (!this.Slide || nPos < 0 || nPos > oPresentation.Slides.length)
             return false;
@@ -3426,7 +3590,7 @@
         if (!this.Slide)
             return -1;
         
-        var oPresentation = editor.GetPresentation().Presentation;
+        var oPresentation = private_GetPresentation();
 
         for (var Index = 0; Index < oPresentation.Slides.length; Index++)
         {
@@ -3715,6 +3879,25 @@
 			function (oDrawing) {return new ApiOleObject(oDrawing);});
     };
 
+	/**
+	 * Returns an array with all tables from the current slide.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiTable[]} An array with all tables from the current slide.
+     * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GetAllTables.js
+	 */
+	ApiSlide.prototype.GetAllTables = function () {
+		const tables = [];
+		if (this.Slide) {
+			this.Slide.cSld.spTree.forEach(function (obj) {
+				const isTable = obj.getObjectType() === AscDFH.historyitem_type_GraphicFrame && obj.isTable();
+				if (isTable) tables.push(new ApiTable(obj));
+			})
+		}
+		return tables;
+	};
+
     /**
 	 * Converts the ApiSlide object into the JSON object.
 	 * @memberof ApiSlide
@@ -3795,7 +3978,7 @@
         oGraphicObjects.resetSelection();
 
         aDrawings.forEach(function(drawing) {
-            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.Get_AbsolutePage());
+            oGraphicObjects.selectObject(drawing.Drawing, drawing.Drawing.GetAbsolutePage());
         });
         
         let canGroup = oGraphicObjects.canGroup();
@@ -3920,7 +4103,7 @@
 		const oBodyShape = this.GetBodyShape();
 		if (oBodyShape) {
 
-			const oDocContent = oBodyShape.GetDocContent();
+			const oDocContent = oBodyShape.GetContent();
 			if (oDocContent) {
 
 				const oParagraph = oDocContent.GetElement(0);
@@ -3933,6 +4116,26 @@
 		}
 
 		return false;
+	};
+
+	/**
+	 * Returns the text from the body shape of the current notes page.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @memberof ApiNotesPage
+	 * @returns {string} The text from the body shape.
+     * @since 9.1.0
+	 * @see office-js-api/Examples/{Editor}/ApiNotesPage/Methods/GetBodyShapeText.js
+	 */
+	ApiNotesPage.prototype.GetBodyShapeText = function () {
+		const oBodyShape = this.GetBodyShape();
+		if (oBodyShape) {
+			const oDocContent = oBodyShape.GetContent();
+			if (oDocContent) {
+				return oDocContent.GetText();
+			}
+		}
+		return '';
 	};
 
     //------------------------------------------------------------------------------------------------------------------
@@ -4371,7 +4574,7 @@
         let oGraphicObjects = oSlide.graphicObjects;
 
         oGraphicObjects.resetSelection();
-        oGraphicObjects.selectObject(this.Drawing, this.Drawing.Get_AbsolutePage())
+        oGraphicObjects.selectObject(this.Drawing, this.Drawing.GetAbsolutePage())
         
         let canUngroup = oGraphicObjects.canUnGroup();
         if (!canUngroup) {
@@ -4481,7 +4684,46 @@
         }
     };
 
-    //------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Returns the geometry object from the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiGeometry}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetGeometry.js
+	 * @since 9.1.0
+	 */
+
+	ApiShape.prototype.GetGeometry = function()
+	{
+		if (this.Shape && this.Shape.spPr && this.Shape.spPr.geometry)
+		{
+			return Api.prototype.private_CreateGeometry(this.Shape.spPr.geometry);
+		}
+		return null;
+	};
+
+	/**
+	 * Sets a custom geometry for the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @param {ApiGeometry} oGeometry - The geometry to set.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/SetGeometry.js
+	 * @since 9.1.0
+	 */
+	ApiShape.prototype.SetGeometry = function(oGeometry)
+	{
+		if (this.Shape && this.Shape.spPr && oGeometry && oGeometry.geometry)
+		{
+			this.Shape.spPr.setGeometry(oGeometry.geometry);
+			return true;
+		}
+		return false;
+	};
+
+
+	//------------------------------------------------------------------------------------------------------------------
     //
     // ApiChart
     //
@@ -5291,12 +5533,14 @@
     ApiPresentation.prototype["SlidesToJSON"]             = ApiPresentation.prototype.SlidesToJSON;
     ApiPresentation.prototype["ToJSON"]                   = ApiPresentation.prototype.ToJSON;
     ApiPresentation.prototype["GetAllOleObjects"]         = ApiPresentation.prototype.GetAllOleObjects;
+    ApiPresentation.prototype["GetAllTables"]             = ApiPresentation.prototype.GetAllTables;
     ApiPresentation.prototype["GetAllCharts"]             = ApiPresentation.prototype.GetAllCharts;
     ApiPresentation.prototype["GetAllShapes"]             = ApiPresentation.prototype.GetAllShapes;
     ApiPresentation.prototype["GetAllImages"]             = ApiPresentation.prototype.GetAllImages;
     ApiPresentation.prototype["GetAllDrawings"]           = ApiPresentation.prototype.GetAllDrawings;
     ApiPresentation.prototype["GetCore"]                  = ApiPresentation.prototype.GetCore;
     ApiPresentation.prototype["GetCustomProperties"]      = ApiPresentation.prototype.GetCustomProperties;
+    ApiPresentation.prototype["GetCustomXmlParts"]        = ApiPresentation.prototype.GetCustomXmlParts;
 
     ApiMaster.prototype["GetClassType"]                   = ApiMaster.prototype.GetClassType;
     ApiMaster.prototype["GetAllLayouts"]                  = ApiMaster.prototype.GetAllLayouts;
@@ -5319,6 +5563,7 @@
     ApiMaster.prototype["GetAllImages"]                   = ApiMaster.prototype.GetAllImages;
     ApiMaster.prototype["GetAllCharts"]                   = ApiMaster.prototype.GetAllCharts;
     ApiMaster.prototype["GetAllOleObjects"]               = ApiMaster.prototype.GetAllOleObjects;
+    ApiMaster.prototype["GetAllTables"]                   = ApiMaster.prototype.GetAllTables;
     ApiMaster.prototype["ToJSON"]                         = ApiMaster.prototype.ToJSON;
     ApiMaster.prototype["GetDrawingsByPlaceholderType"]   = ApiMaster.prototype.GetDrawingsByPlaceholderType;
     ApiMaster.prototype["GroupDrawings"]                  = ApiMaster.prototype.GroupDrawings;
@@ -5342,6 +5587,7 @@
     ApiLayout.prototype["GetAllImages"]                   = ApiLayout.prototype.GetAllImages;
     ApiLayout.prototype["GetAllCharts"]                   = ApiLayout.prototype.GetAllCharts;
     ApiLayout.prototype["GetAllOleObjects"]               = ApiLayout.prototype.GetAllOleObjects;
+    ApiLayout.prototype["GetAllTables"]                   = ApiLayout.prototype.GetAllTables;
     ApiLayout.prototype["GetMaster"]                      = ApiLayout.prototype.GetMaster;
     ApiLayout.prototype["ToJSON"]                         = ApiLayout.prototype.ToJSON;
     ApiLayout.prototype["GetDrawingsByPlaceholderType"]   = ApiLayout.prototype.GetDrawingsByPlaceholderType;
@@ -5409,6 +5655,7 @@
     ApiSlide.prototype["GetAllImages"]                    = ApiSlide.prototype.GetAllImages;
     ApiSlide.prototype["GetAllCharts"]                    = ApiSlide.prototype.GetAllCharts;
     ApiSlide.prototype["GetAllOleObjects"]                = ApiSlide.prototype.GetAllOleObjects;
+    ApiSlide.prototype["GetAllTables"]                    = ApiSlide.prototype.GetAllTables;
     ApiSlide.prototype["ToJSON"]                          = ApiSlide.prototype.ToJSON;
     ApiSlide.prototype["GetDrawingsByPlaceholderType"]    = ApiSlide.prototype.GetDrawingsByPlaceholderType;
     ApiSlide.prototype["Select"]                          = ApiSlide.prototype.Select;
@@ -5466,7 +5713,8 @@
     ApiShape.prototype["GetDocContent"]                   = ApiShape.prototype.GetDocContent;
     ApiShape.prototype["GetContent"]                      = ApiShape.prototype.GetContent;
     ApiShape.prototype["SetVerticalTextAlign"]            = ApiShape.prototype.SetVerticalTextAlign;
-
+	ApiShape.prototype["GetGeometry"]                     = ApiShape.prototype.GetGeometry;
+	ApiShape.prototype["SetGeometry"]                     = ApiShape.prototype.SetGeometry;
 
     ApiOleObject.prototype["GetClassType"]                = ApiOleObject.prototype.GetClassType;
 	ApiOleObject.prototype["SetData"]                     = ApiOleObject.prototype.SetData;
@@ -5638,7 +5886,7 @@
     }
 
     function private_GetPresentation(){
-        return editor.WordControl.m_oLogicDocument;
+        return Asc.editor.WordControl.m_oLogicDocument;
     }
 
     function private_EMU2MM(EMU)
@@ -5647,7 +5895,7 @@
     }
 
     function private_GetApi(){
-        return editor;
+        return Asc.editor;
     }
 
 
@@ -5892,6 +6140,24 @@
 		}
 		return aWrappers;
 	}
+	function getArrayAddIndex(position, element, aArray) {
+		if(!element) return null;
+		let arrayLength = aArray.length;
+		for(let idx = 0; idx < arrayLength; ++idx) {
+			if(aArray[idx] === element) {
+				return null;
+			}
+		}
+		return getAddIndex(position, arrayLength);
+	}
+
+	function getAddIndex(position, arrayLength) {
+		if(!AscFormat.isRealNumber(position) || position < 0 || position > arrayLength) {
+			return arrayLength;
+		}
+		return position;
+	}
+
 	window['AscBuilder'] = window['AscBuilder'] || {};
 	window['AscBuilder'].ApiShape = ApiShape;
 	window['AscBuilder'].ApiImage = ApiImage;
