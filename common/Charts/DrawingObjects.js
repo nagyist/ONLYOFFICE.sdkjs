@@ -2941,8 +2941,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                             function()
                             {
                                 oNewChartSpace.getWorksheetsFromCache(Asc['editor'].wbModel, true);
-                                worksheet._updateRange(oAllRange);
-                                worksheet.draw();
+
                                 aImagesSync.length = 0;
                                 oNewChartSpace.getAllRasterImages(aImagesSync);
                                 oNewChartSpace.setBDeleted(false);
@@ -2978,6 +2977,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                                 _this.controller.selectObject(oNewChartSpace, 0);
                                 _this.controller.updateSelectionState();
                                 _this.sendGraphicObjectProps();
+                                worksheet._updateRange(oAllRange);
+                                worksheet.draw();
                                 if(aImagesSync.length > 0)
                                 {
                                     window["Asc"]["editor"].ImageLoader.LoadDocumentImages(aImagesSync);
