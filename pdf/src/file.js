@@ -426,13 +426,21 @@ void main() {\n\
 			IsSelection : false
 		}
 
+        let oDoc            = Asc.editor.getPDFDoc();
+        let oAcitveDrawing  = oDoc.activeDrawing;
+        let oDocContent     = oAcitveDrawing && oAcitveDrawing.GetDocContent();
+        oDocContent && oDocContent.RemoveSelection();
+
         this.cacheSelectionQuads([]);
-        this.viewer.getPDFDoc().TextSelectTrackHandler.Update();
+        oDoc.TextSelectTrackHandler.Update();
     };
     CFile.prototype.isSelectionUse = function() {
-        // return !(this.Selection.Page1 == this.Selection.Page2 && this.Selection.Glyph1 == this.Selection.Glyph2 && this.Selection.Line1 == this.Selection.Line2) ||
-        //     !(this.Selection.startPoint.x == this.Selection.endPoint.x && this.Selection.startPoint.y == this.Selection.endPoint.y);
-        return this.Selection.IsSelection;
+        let oDoc            = Asc.editor.getPDFDoc();
+        let oAcitveDrawing  = oDoc.activeDrawing;
+        let oDocContent     = oAcitveDrawing && oAcitveDrawing.GetDocContent();
+        let isSelectionUse  = !!(oDocContent && oDocContent.IsSelectionUse());
+
+        return this.Selection.IsSelection || isSelectionUse;
     };
     CFile.prototype.sortSelection = function() {
         let sel = this.Selection;
@@ -632,8 +640,7 @@ void main() {\n\
         }
         else if (oViewer.Api.isRedactTool) {
             oDoc.DoAction(function() {
-                let oDrawing    = oDoc.activeDrawing;
-                let aSelQuads   = null == oDrawing ? _t.getSelectionQuads() : oDrawing.GetSelectionQuads();
+                let aSelQuads = _t.getSelectionQuads();
 
                 oDoc.AddRedactAnnot(aSelQuads);
             }, AscDFH.historydescription_Pdf_AddAnnot);
@@ -1008,6 +1015,12 @@ void main() {\n\
         this.Selection.quads = aQuads;
     };
     CFile.prototype.getSelectionQuads = function() {
+        let oDoc = Asc.editor.getPDFDoc();
+        let oDrawing = oDoc.activeDrawing;
+        if (oDrawing) {
+            return oDrawing.GetSelectionQuads();
+        }
+
         let aInfo = [];
         
         if (!this.isSelectionUse()) {

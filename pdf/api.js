@@ -1230,7 +1230,7 @@
 		let oDrDoc			= oDoc.GetDrawingDocument();
 		
 		if (value == true) {
-			if (oActiveObj) {
+			if (oActiveObj && !oActiveObj.IsDrawing()) {
 				oDoc.BlurActiveObject();
 				oDoc.UpdateInterface();
 			}

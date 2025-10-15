@@ -2636,6 +2636,7 @@ var CPresentation = CPresentation || function(){};
         }
         
         this.UpdateInterface();
+        this.UpdateSelectionTrackPos();
         this.AnnotSelectTrackHandler.Update(true);
         oViewer.onUpdateOverlay();
         oViewer.file.onUpdateSelection();
@@ -5449,7 +5450,7 @@ var CPresentation = CPresentation || function(){};
         let oDrawing        = this.activeDrawing;
         let oViewer         = editor.getDocumentRenderer();
         let oFile           = oViewer.file;
-        let aSelQuads       = null == oDrawing ? oFile.getSelectionQuads() : oDrawing.GetSelectionQuads();
+        let aSelQuads       = oFile.getSelectionQuads();
 
         if (oDrawing && false == this.Api.IsCommentMarker()) {
             this.SetParagraphHighlight(AscCommon.isNumber(r) && AscCommon.isNumber(g) && AscCommon.isNumber(b), r, g, b);
@@ -5519,10 +5520,9 @@ var CPresentation = CPresentation || function(){};
             a: opacity
         };
 
-        let oDrawing        = this.activeDrawing;
-        let oViewer         = editor.getDocumentRenderer();
+        let oViewer         = Asc.editor.getDocumentRenderer();
         let oFile           = oViewer.file;
-        let aSelQuads       = null == oDrawing ? oFile.getSelectionQuads() : oDrawing.GetSelectionQuads();
+        let aSelQuads       = oFile.getSelectionQuads();
         
         if (aSelQuads.length == 0)
             return;
@@ -5572,10 +5572,9 @@ var CPresentation = CPresentation || function(){};
             a: opacity
         };
 
-        let oDrawing        = this.activeDrawing;
-        let oViewer         = editor.getDocumentRenderer();
+        let oViewer         = Asc.editor.getDocumentRenderer();
         let oFile           = oViewer.file;
-        let aSelQuads       = null == oDrawing ? oFile.getSelectionQuads() : oDrawing.GetSelectionQuads();
+        let aSelQuads       = oFile.getSelectionQuads();
 
         if (aSelQuads.length == 0) return;
 
