@@ -2159,6 +2159,19 @@
 		if (!Asc.editor.isViewMode)
 			this.drawHorLine(0, y0, x0, x1, w );
 	};
+	
+	CGraphics.prototype.drawCustomRange = function(handlerId, rangeId, x0, y0, w, h, baseLine)
+	{
+		if (Asc.editor.isViewMode)
+			return;
+		
+		let color = AscCommon.getUserColorById(handlerId, null, false);
+		
+		this.p_color(color.r, color.g, color.b, 255);
+		this.p_width(0.5 * 1000);
+		this.rect(x0, y0, w, h);
+		this.ds();
+	};
 
 	// smart methods for horizontal / vertical lines
 	CGraphics.prototype.drawHorLine = function(align, y, x, r, penW)

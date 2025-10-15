@@ -6610,8 +6610,7 @@ ParaRun.prototype.Draw_Lines = function(lineDrawState)
 			SpellData[markPos] -= 1;
 	}
 	
-	
-	
+	lineDrawState.initCustomMarks(this);
 	for (let pos = startPos; pos < endPos; ++pos)
 	{
 		if (SpellData[pos])

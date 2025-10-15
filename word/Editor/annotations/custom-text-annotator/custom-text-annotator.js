@@ -131,6 +131,9 @@
 		let _ranges = [];
 		ranges.forEach(r => _ranges.push([r.start, r.length, r.id]))
 		console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
+		
+		// TODO: Надо проверить ситуацию, когда меток не было, и они не появились
+		paragraph.ReDraw();
 	};
 	/**
 	 *

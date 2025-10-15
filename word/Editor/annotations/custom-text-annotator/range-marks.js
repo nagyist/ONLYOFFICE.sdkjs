@@ -40,8 +40,6 @@
 	 */
 	function CustomMarks()
 	{
-		//this.marks = {}; // handlerId -> rangeId -> {start, end}
-		
 		this.runs = {}; // runId -> markId
 		this.paragraphs = {}; // paraId -> handlerId -> rangeId -> {start, end}
 	}
@@ -112,27 +110,43 @@
 		let marks = this.paragraphs[paraId];
 		
 		let result = [];
-		for (let id in marks)
+		for (let handlerId in marks)
 		{
-			let mark = marks[id];
-			
-			let startMark = this.marks[runId][handlerId][markId].start;
-			let endMark   = this.marks[runId][handlerId][markId].end;
-			if (!startMark || !endMark)
-				continue;
-			
-			let run = startMark.getRun();
-			if (!run || run.GetParagraph() !== paragraph)
-				continue;
-			
-			let startPos = startMark.getParaPos();
-			let endPos   = endMark.getParaPos();
-			if (!startPos || !endPos)
-				continue;
-			
-			if (paraContentPos.Compare(startPos) >= 0 && paraContentPos.Compare(endPos) <= 0)
-				result.push([handlerId, markId]);
+			for (let rangeId in marks[handlerId])
+			{
+				let startMark = marks[handlerId][rangeId].start;
+				let endMark   = marks[handlerId][rangeId].end;
+				if (!startMark || !endMark)
+					continue;
+				
+				let startPos = startMark.getParaPos();
+				let endPos   = endMark.getParaPos();
+				if (!startPos || !endPos)
+					continue;
+				
+				if (paraContentPos.Compare(startPos) >= 0 && paraContentPos.Compare(endPos) <= 0)
+					result.push(startMark);
+			}
 		}
+		return result;
+	};
+	CustomMarks.prototype.flatRunMarks = function(runId)
+	{
+		if (!this.runs[runId])
+			return null;
+		
+		let result = [];
+		this.forEachInRun(runId, function(mark){
+			result.push(mark);
+		});
+		result.sort(function(a, b){
+			let aPos = a.getPos();
+			let bPos = b.getPos();
+			if (aPos === bPos && a.isStart() !== b.isStart())
+				return a.isStart() ? -1 : 1;
+			
+			return aPos - bPos;
+		});
 		return result;
 	};
 	CustomMarks.prototype.onAddToRun = function(runId, pos)
