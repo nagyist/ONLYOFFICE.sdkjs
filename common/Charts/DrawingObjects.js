@@ -459,7 +459,7 @@ function asc_CChartBinary(chart) {
             this["documentImageUrls"] = AscCommon.g_oDocumentUrls.urls;
         }
 
-        if (window['IS_NATIVE_EDITOR'] || true) {
+        if (window['IS_NATIVE_EDITOR']) {
             if(chart.theme) {
                 let pptx_writer = new AscCommon.CBinaryFileWriter();
                 pptx_writer.WriteTheme(chart.theme);
@@ -2887,7 +2887,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 			_this.controller.addChartDrawingObject(chart);
 		} else if (isObject(chart) && chart["binary"])
 		{
-            if (window["IS_NATIVE_EDITOR"] || true)
+            if (window["IS_NATIVE_EDITOR"])
             {
                 var model = worksheet.model;
                 History.Clear();
