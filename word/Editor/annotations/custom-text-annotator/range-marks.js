@@ -40,39 +40,63 @@
 	 */
 	function CustomMarks()
 	{
-		this.marks = {};
+		//this.marks = {}; // handlerId -> rangeId -> {start, end}
+		
+		this.runs = {}; // runId -> markId
+		this.paragraphs = {}; // paraId -> handlerId -> rangeId -> {start, end}
 	}
 	
-	CustomMarks.prototype.addMark = function(mark)
+	CustomMarks.prototype.add = function(mark)
 	{
-		let run = mark.getRun();
-		if (!run)
+		let rangeId   = mark.getRangeId();
+		let runId     = mark.getRun().GetId();
+		let paraId    = mark.getParagraph().GetId();
+		let handlerId = mark.getHandlerId();
+		
+		if (!this.runs[runId])
+			this.runs[runId] = {};
+		
+		this.runs[runId][mark.getId()] = mark;
+		
+		if (!this.paragraphs[paraId])
+			this.paragraphs[paraId] = {};
+		
+		if (!this.paragraphs[paraId][handlerId])
+			this.paragraphs[paraId][handlerId] = {};
+		
+		if (!this.paragraphs[paraId][handlerId][rangeId])
+			this.paragraphs[paraId][handlerId][rangeId] = {start : null, end : null};
+		
+		if (mark.isStart())
+			this.paragraphs[paraId][handlerId][rangeId].start = mark;
+		else
+			this.paragraphs[paraId][handlerId][rangeId].end = mark;
+	};
+	CustomMarks.prototype.clear = function(paragraph, handlerId)
+	{
+		let paraId = paragraph.GetId();
+		if (!this.paragraphs[paraId] || !this.paragraphs[paraId][handlerId])
 			return;
 		
-		let runId = run.GetId();
-		if (!this.marks[runId])
-			this.marks[runId] = {};
-		
-		let handlerId = mark.getHandlerId();
-		let markId    = mark.getMarkId();
-		
-		if (!this.marks[runId][handlerId])
-			this.marks[runId][handlerId] = {};
-		
-		if (!this.marks[runId][handlerId][markId])
-			this.marks[runId][handlerId][markId] = {start : null, end : null};
-		
-		if (markId.isStart())
-			this.marks[runId][handlerId][markId].start = mark;
-		else
-			this.marks[runId][handlerId][markId].end = mark;
-	};
-	CustomMarks.prototype.clearMarks = function(handlerId)
-	{
-		for (let runId in this.marks)
+		for (let rangeId in this.paragraphs[paraId][handlerId])
 		{
-			delete this.marks[runId][handlerId];
+			this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].start);
+			this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].end);
 		}
+		
+		delete this.paragraphs[paraId][handlerId];
+	};
+	CustomMarks.prototype.removeMarkFromRun = function(mark)
+	{
+		if (!mark)
+			return;
+		
+		let runId = mark.getRun().GetId();
+		if (!this.runs[runId])
+			return;
+		
+		if (this.runs[runId] && this.runs[runId][mark.getId()])
+			delete this.runs[runId][mark.getId()];
 	};
 	/**
 	 * @param {AscWord.Paragraph} paragraph
@@ -81,31 +105,33 @@
 	 */
 	CustomMarks.prototype.getStartedMarks = function(paragraph, paraContentPos)
 	{
+		let paraId = paragraph.GetId();
+		if (!this.paragraphs[paraId])
+			return [];
+		
+		let marks = this.paragraphs[paraId];
+		
 		let result = [];
-		for (let runId in this.marks)
+		for (let id in marks)
 		{
-			let run = AscCommon.g_oTableId.GetById(runId);
+			let mark = marks[id];
+			
+			let startMark = this.marks[runId][handlerId][markId].start;
+			let endMark   = this.marks[runId][handlerId][markId].end;
+			if (!startMark || !endMark)
+				continue;
+			
+			let run = startMark.getRun();
 			if (!run || run.GetParagraph() !== paragraph)
 				continue;
 			
-			for (let handlerId in this.marks[runId])
-			{
-				for (let markId in this.marks[runId][handlerId])
-				{
-					let startMark = this.marks[runId][handlerId][markId].start;
-					let endMark   = this.marks[runId][handlerId][markId].end;
-					if (!startMark || !endMark)
-						continue;
-					
-					let startPos = startMark.getParaPos();
-					let endPos   = endMark.getParaPos();
-					if (!startPos || !endPos)
-						continue;
-					
-					if (paraContentPos.Compare(startPos) >= 0 && paraContentPos.Compare(endPos) <= 0)
-						result.push([handlerId, markId]);
-				}
-			}
+			let startPos = startMark.getParaPos();
+			let endPos   = endMark.getParaPos();
+			if (!startPos || !endPos)
+				continue;
+			
+			if (paraContentPos.Compare(startPos) >= 0 && paraContentPos.Compare(endPos) <= 0)
+				result.push([handlerId, markId]);
 		}
 		return result;
 	};
@@ -123,48 +149,61 @@
 	};
 	CustomMarks.prototype.onSplitRun = function(runId, pos, nextRunId)
 	{
+		let _t = this;
 		let nextRun = AscCommon.g_oTableId.GetById(nextRunId);
 		this.forEachInRun(runId, function(mark){
 			mark.onSplit(pos, nextRun);
+			
+			if (mark.getRun().GetId() === nextRunId)
+			{
+				if (_t.run[runId])
+					delete _t.run[runId][mark.getId()];
+				
+				if (_t.run[nextRunId])
+					_t.run[nextRunId] = {};
+				
+				_t.run[nextRunId][mark.getId()] = mark;
+			}
 		});
 	};
 	CustomMarks.prototype.forEachInRun = function(runId, f)
 	{
-		if (!this.marks[runId])
-			return;
-		
-		for (let handlerId in this.marks[runId])
+		for (let id in this.runs[runId])
 		{
-			for (let markId in this.marks[runId][handlerId])
-			{
-				let start = this.marks[runId][handlerId][markId].start;
-				let end = this.marks[runId][handlerId][markId].end;
-				if (start)
-					f.call(start);
-				
-				if (end)
-					f.call(end);
-			}
+			f.call(this, this.runs[runId][id]);
 		}
 	};
+	
+	let idCounter = 0;
+	function getNextId()
+	{
+		return ++idCounter;
+	}
 	
 	/**
 	 * @param run {AscWord.Run}
 	 * @param pos {number}
+	 * @param paragraph {AscWord.Paragraph}
 	 * @param handlerId {string}
-	 * @param markId {string}
+	 * @param rangeId {string}
 	 * @constructor
 	 */
-	function CustomMark(run, pos, handlerId, markId)
+	function CustomMark(run, pos, paragraph, handlerId, rangeId)
 	{
+		this.id        = getNextId();
 		this.run       = run;
-		this.pos       = 0;
-		this.handlerId = null;
-		this.markId    = null;
+		this.paragraph = paragraph;
+		this.pos       = pos;
+		this.handlerId = handlerId;
+		this.rangeId   = rangeId;
 	}
-	CustomMark.prototype.getMarkId = function()
+	CustomMark.prototype.getId = function()
 	{
-		return this.markId;
+		return this.id;
+	};
+	CustomMark.prototype.getRangeId = function()
+	{
+		return this.rangeId;
 	};
 	CustomMark.prototype.getHandlerId = function()
 	{
@@ -223,7 +262,7 @@
 	 */
 	function CustomMarkStart()
 	{
-		CustomMark.call(this, arguments);
+		CustomMark.apply(this, arguments);
 	}
 	CustomMarkStart.prototype = Object.create(CustomMark.prototype);
 	CustomMarkStart.prototype.constructor = CustomMarkStart;
@@ -242,7 +281,7 @@
 	 */
 	function CustomMarkEnd()
 	{
-		CustomMark.call(this, arguments);
+		CustomMark.apply(this, arguments);
 	}
 	CustomMarkEnd.prototype = Object.create(CustomMark.prototype);
 	CustomMarkEnd.prototype.constructor = CustomMarkEnd;

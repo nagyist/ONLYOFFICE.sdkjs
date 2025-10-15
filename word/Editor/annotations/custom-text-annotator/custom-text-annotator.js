@@ -54,10 +54,12 @@
 		this.paragraphs         = {};
 		this.checkingParagraphs = {};
 		
-		this.textGetter = new ParagraphText();
-		
+	
 		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
 		this.marks        = new AscWord.CustomMarks();
+		
+		this.textGetter = new TextGetter();
+		this.markSetter = new MarkSetter(this.marks);
 	}
 	
 	CustomTextAnnotator.prototype.getMarks = function()
@@ -120,6 +122,12 @@
 	};
 	CustomTextAnnotator.prototype.highlightTextResponse = function(handlerId, paraId, ranges)
 	{
+		ranges.sort(function(a, b){
+			return a.start - b.start;
+		});
+		let paragraph = AscCommon.g_oTableId.GetById(paraId);
+		this.markSetter.placeMarks(paragraph, ranges, handlerId);
+		
 		let _ranges = [];
 		ranges.forEach(r => _ranges.push([r.start, r.length, r.id]))
 		console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
@@ -128,22 +136,118 @@
 	 *
 	 * @constructor
 	 */
-	function ParagraphText()
+	function TextGetter()
 	{
 		AscWord.DocumentVisitor.call(this);
 		this.text = "";
 	}
-	ParagraphText.prototype = Object.create(AscWord.DocumentVisitor.prototype);
-	ParagraphText.prototype.constructor = ParagraphText;
-	ParagraphText.prototype.check = function(paragraph)
+	TextGetter.prototype = Object.create(AscWord.DocumentVisitor.prototype);
+	TextGetter.prototype.constructor = TextGetter;
+	TextGetter.prototype.check = function(paragraph)
 	{
 		this.text = "";
 		this.traverseParagraph(paragraph);
 	};
-	ParagraphText.prototype.run = function(run)
+	TextGetter.prototype.run = function(run)
 	{
-		this.text += run.GetText();
+		for (let pos = 0, len = run.GetElementsCount(); pos < len; ++pos)
+		{
+			let item = run.GetElement(pos);
+			if (item.IsText())
+				this.text += String.fromCodePoint(item.GetCodePoint());
+			else if (item.IsSpace())
+				this.text += String.fromCodePoint(0x20);
+			else if (item.IsTab())
+				this.text += String.fromCodePoint(0x09);
+			else if (item.IsBreak())
+				this.text += "\n";
+		}
 		return true;
+	};
+	/**
+	 * @param customMarks {AscWord.CustomMarks}
+	 * @constructor
+	 */
+	function MarkSetter(customMarks)
+	{
+		AscWord.DocumentVisitor.call(this);
+		
+		this.para      = null;
+		this.pos       = -1;
+		this.firstPos  = true;
+		this.ranges    = [];
+		this.rangePos  = 0;
+		this.endMarks  = {};
+		this.handlerId = null;
+		
+		this.customMarks = customMarks;
+	}
+	MarkSetter.prototype = Object.create(AscWord.DocumentVisitor.prototype);
+	MarkSetter.prototype.constructor = MarkSetter;
+	MarkSetter.prototype.placeMarks = function(paragraph, ranges, handlerId)
+	{
+		this.para      = paragraph;
+		this.pos       = -1;
+		this.firstPos  = true;
+		this.ranges    = ranges;
+		this.rangePos  = 0;
+		this.endMarks  = {};
+		this.handlerId = handlerId;
+		
+		this.customMarks.clear(paragraph, handlerId);
+		
+		this.traverseParagraph(paragraph);
+	};
+	MarkSetter.prototype.run = function(run)
+	{
+		this.checkStartPosition(run);
+		
+		for (let pos = 0, len = run.GetElementsCount(); pos < len; ++pos)
+		{
+			let item = run.GetElement(pos);
+			if (item.IsText() || item.IsSpace() || item.IsTab() || item.IsBreak())
+				this.handleNextPosition(run, pos);
+		}
+		return true;
+	};
+	MarkSetter.prototype.handleNextPosition = function(run, pos)
+	{
+		++this.pos;
+		
+		while (this.rangePos < this.ranges.length && this.ranges[this.rangePos].start <= this.pos)
+		{
+			let range = this.ranges[this.rangePos];
+			let endPos = range.start + range.length;
+			let markId = range.id;
+			
+			let mark = new AscWord.CustomMarkStart(run, pos, this.para, this.handlerId, markId);
+			this.customMarks.add(mark);
+			
+			if (!this.endMarks[endPos])
+				this.endMarks[endPos] = [];
+			
+			this.endMarks[endPos].push(markId);
+			
+			++this.rangePos;
+		}
+		
+		if (this.endMarks[this.pos])
+		{
+			for (let i = 0, count = this.endMarks[this.pos].length; i < count; ++i)
+			{
+				let markId = this.endMarks[this.pos][i];
+				let mark = new AscWord.CustomMarkEnd(run, pos, this.para, this.handlerId, markId);
+				this.customMarks.add(mark);
+			}
+		}
+	};
+	MarkSetter.prototype.checkStartPosition = function(run)
+	{
+		if (!this.firstPos)
+			return;
+		
+		this.firstPos = false;
+		this.handleNextPosition(run, 0);
 	};
 	//-------------------------------------------------------------export-----------------------------------------------
 	AscWord.CustomTextAnnotator = CustomTextAnnotator;
