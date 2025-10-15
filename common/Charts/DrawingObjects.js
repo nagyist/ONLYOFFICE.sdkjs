@@ -2988,6 +2988,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                             });
                     }
                 );
+                return;
             }
 			const oApi = Asc.editor;
 			oApi.frameManager.preObtain(chart);
