@@ -458,26 +458,27 @@ function asc_CChartBinary(chart) {
             this["binary"] = chartWriter.memory.GetBase64Memory();
             this["documentImageUrls"] = AscCommon.g_oDocumentUrls.urls;
         }
-    }
-    if (window['IS_NATIVE_EDITOR']) {
-        if(chart.theme) {
-            let pptx_writer = new AscCommon.CBinaryFileWriter();
-            pptx_writer.WriteTheme(chart.theme);
-            this["themeBinary"] = pptx_writer.pos + ";" + pptx_writer.GetBase64Memory();
-        }
-        if(chart.colorMapOverride) {
-            let pptx_writer = new AscCommon.CBinaryFileWriter();
-            pptx_writer.WriteRecord1(1, chart.colorMapOverride, pptx_writer.WriteClrMap);
-            this["colorMapBinary"] = pptx_writer.pos + ";" + pptx_writer.GetBase64Memory();
-        }
-        this["urls"] = JSON.stringify(AscCommon.g_oDocumentUrls.getUrls());
-        if(chart.parent && chart.parent.docPr){
-            this["cTitle"] = chart.parent.docPr.title;
-            this["cDescription"] = chart.parent.docPr.descr;
-        }
-        else{
-            this["cTitle"] = chart.getTitle();
-            this["cDescription"] = chart.getDescription();
+
+        if (window['IS_NATIVE_EDITOR'] || true) {
+            if(chart.theme) {
+                let pptx_writer = new AscCommon.CBinaryFileWriter();
+                pptx_writer.WriteTheme(chart.theme);
+                this["themeBinary"] = pptx_writer.pos + ";" + pptx_writer.GetBase64Memory();
+            }
+            if(chart.colorMapOverride) {
+                let pptx_writer = new AscCommon.CBinaryFileWriter();
+                pptx_writer.WriteRecord1(1, chart.colorMapOverride, pptx_writer.WriteClrMap);
+                this["colorMapBinary"] = pptx_writer.pos + ";" + pptx_writer.GetBase64Memory();
+            }
+            this["urls"] = JSON.stringify(AscCommon.g_oDocumentUrls.getUrls());
+            if(chart.parent && chart.parent.docPr){
+                this["cTitle"] = chart.parent.docPr.title;
+                this["cDescription"] = chart.parent.docPr.descr;
+            }
+            else{
+                this["cTitle"] = chart.getTitle();
+                this["cDescription"] = chart.getDescription();
+            }
         }
     }
 }
@@ -2886,7 +2887,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 			_this.controller.addChartDrawingObject(chart);
 		} else if (isObject(chart) && chart["binary"])
 		{
-            if (window["IS_NATIVE_EDITOR"])
+            if (window["IS_NATIVE_EDITOR"] || true)
             {
                 var model = worksheet.model;
                 History.Clear();
@@ -2895,7 +2896,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                 }
                 aObjects.length = 0;
 
-                var oAllRange = model.getRange3(0, 0, model.getRowsCount(), model.getColsCount());
+                var oAllRange = model.getRange3(0, 0, gc_nMaxRow, gc_nMaxCol);
                 oAllRange.cleanAll();
 
                 worksheet.endEditChart();
@@ -2940,9 +2941,6 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                             function()
                             {
                                 oNewChartSpace.getWorksheetsFromCache(Asc['editor'].wbModel, true);
-                                oAllRange = oAllRange.bbox;
-                                oAllRange.r2 = Math.max(oAllRange.r2, max_r);
-                                oAllRange.c2 = Math.max(oAllRange.c2, max_c);
                                 worksheet._updateRange(oAllRange);
                                 worksheet.draw();
                                 aImagesSync.length = 0;
