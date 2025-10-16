@@ -2896,8 +2896,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                 }
                 aObjects.length = 0;
 
-                var oAllRange = model.getRange3(0, 0, gc_nMaxRow, gc_nMaxCol);
-                oAllRange.cleanAll();
+                var oAllRange = new Asc.Range(0, 0, gc_nMaxCol, gc_nMaxRow);
 
                 worksheet.endEditChart();
 
