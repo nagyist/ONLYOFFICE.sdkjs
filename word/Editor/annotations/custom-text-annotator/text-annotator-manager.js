@@ -34,6 +34,8 @@
 
 (function(window)
 {
+	const EVENT_TIMEOUT = 1000;
+	
 	/**
 	 * @param editor
 	 * @constructor
@@ -45,7 +47,8 @@
 		this.logicDocument = null;
 		this.textAnnotator = null;
 		
-		this.paragraphs = {};
+		this.sendPara = {};
+		this.waitPara = {};
 	}
 	TextAnnotatorEventManager.prototype.init = function()
 	{
@@ -55,16 +58,38 @@
 		this.logicDocument = this.editor.private_GetLogicDocument();
 		this.textAnnotator = this.logicDocument.CustomTextAnnotator;
 	};
-	TextAnnotatorEventManager.prototype.send = function(obj)
+	/**
+	 * @param {AscWord.Paragraph} paragraph
+	 */
+	TextAnnotatorEventManager.prototype.onChangeParagraph = function(paragraph)
 	{
 		this.init();
 		
-		let recalcId = this.logicDocument.GetRecalcId();
+		let paraId = paragraph.GetId();
+		
+		this.sendPara[paraId] = this.logicDocument.GetRecalcId();
+		
+		// Не посылаем сразу сообщение, чтобы не посылать их на каждое действие при быстром наборе
+		if (this.waitPara[paraId])
+			clearTimeout(this.waitPara[paraId]);
+		
+		let _t = this;
+		this.waitPara[paraId] = setTimeout(function(){
+			_t.send(paragraph);
+			_t.waitPara[paraId] = null;
+		}, EVENT_TIMEOUT);
+	};
+	TextAnnotatorEventManager.prototype.send = function(paragraph)
+	{
+		let obj = this.textAnnotator.getEventObject(paragraph);
+		let paraId = paragraph.GetId();
+		let recalcId = this.sendPara[paraId];
 		obj["recalcId"] = recalcId;
-		this.paragraphs[obj["paragraphId"]] = recalcId;
 		
 		let text = obj["text"];
 		let len  = text.length;
+		
+		console.log(`Request ParaId=${paragraph.GetId()}; ParaText=${text}`);
 		
 		let _t = this;
 		setTimeout(function(){
@@ -73,21 +98,7 @@
 			_t.onResponse({
 				"guid" : "guid-1",
 				"type" : "highlightText",
-				"paragraphId" : obj["paragraphId"],
-				"recalcId" : recalcId,
-				"ranges" : [{
-					"start" : _start,
-					"length" : _len,
-					"id" : "1"
-				}]
-			});
-			
-			_start = Math.floor(Math.random() * (len - 1));
-			_len   = Math.min(Math.floor(Math.random() * 10), len - _start);
-			_t.onResponse({
-				"guid" : "guid-2",
-				"type" : "highlightText",
-				"paragraphId" : obj["paragraphId"],
+				"paragraphId" : paraId,
 				"recalcId" : recalcId,
 				"ranges" : [{
 					"start" : _start,
@@ -96,6 +107,21 @@
 				}]
 			});
 		}, 2000);
+		setTimeout(function() {
+			let _start = Math.floor(Math.random() * (len - 1));
+			let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
+			_t.onResponse({
+				"guid"        : "guid-2",
+				"type"        : "highlightText",
+				"paragraphId" : paraId,
+				"recalcId"    : recalcId,
+				"ranges"      : [{
+					"start"  : _start,
+					"length" : _len,
+					"id"     : "1"
+				}]
+			});
+		}, 3000);
 		//window.g_asc_plugins.onPluginEvent("onParagraphText", obj);
 		
 		// TODO: Чтобы не было моргания при быстром изменении параграфа, мы не должны чистить метки сразу при изменении
@@ -119,7 +145,7 @@
 				let ranges   = obj["ranges"];
 				
 				if (undefined === guid
-					|| this.paragraphs[paraId] !== recalcId
+					|| this.sendPara[paraId] !== recalcId
 					|| !ranges
 					|| !Array.isArray(ranges))
 					return;

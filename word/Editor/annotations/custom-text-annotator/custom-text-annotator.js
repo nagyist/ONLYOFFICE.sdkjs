@@ -112,13 +112,15 @@
 	};
 	CustomTextAnnotator.prototype.handleParagraph = function(paragraph)
 	{
+		this.eventManager.onChangeParagraph(paragraph);
+	};
+	CustomTextAnnotator.prototype.getEventObject = function(paragraph)
+	{
 		this.textGetter.check(paragraph);
-		console.log(`ParaId=${paragraph.GetId()}; ParaText=${this.textGetter.text}`);
-		
-		this.eventManager.send({
+		return {
 			"paragraphId" : paragraph.GetId(),
 			"text"        : this.textGetter.text
-		});
+		};
 	};
 	CustomTextAnnotator.prototype.highlightTextResponse = function(handlerId, paraId, ranges)
 	{
