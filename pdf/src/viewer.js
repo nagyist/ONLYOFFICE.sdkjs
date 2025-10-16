@@ -2485,17 +2485,9 @@
 				this.drawCurrentSearchHighlight(ctx, oDoc, oDrDoc);
 			}
 			
-			oDrDoc.private_StartDrawSelection(this.overlay);
 			this.drawSelection(ctx, oDoc, oDrDoc);
-			
 	        this.drawPlaceholders();
 
-			if (oDoc.activeForm && oDoc.activeForm.content && oDoc.activeForm.content.IsSelectionUse() && !oDoc.activeForm.content.IsSelectionEmpty()) {
-				ctx.beginPath();
-				oDoc.activeForm.content.DrawSelectionOnPage(0);
-				oDrDoc.private_EndDrawSelection();
-			}
-			
 			if (oDrDoc.MathTrack.IsActive()) {
 				const prevAlpha = ctx.globalAlpha;
 				ctx.globalAlpha = 1.0;
@@ -2551,6 +2543,8 @@
 		};
 		
 		this.drawSelection = function(ctx, oDoc, oDrDoc) {
+			oDrDoc.private_StartDrawSelection(this.overlay);
+
 			ctx.fillStyle = "rgba(51,102,204,255)";
 			ctx.beginPath();
 			if (this.file.isSelectionUse()) {
@@ -2594,6 +2588,11 @@
 				oDrDoc.private_EndDrawSelection();
 				oDrDoc.AutoShapesTrack.PageIndex = nPage;
 				this.DrawingObjects.drawSelect(nPage);
+			}
+			else if (oDoc.activeForm && oDoc.activeForm.content && oDoc.activeForm.content.IsSelectionUse() && !oDoc.activeForm.content.IsSelectionEmpty()) {
+				ctx.beginPath();
+				oDoc.activeForm.content.DrawSelectionOnPage(0);
+				oDrDoc.private_EndDrawSelection();
 			}
 		};
 		

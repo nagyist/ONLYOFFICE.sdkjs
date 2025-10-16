@@ -1156,7 +1156,7 @@ var CPresentation = CPresentation || function(){};
         let aWidgetForms    = this.widgets;
         let oActionsQueue   = this.GetActionsQueue();
 		
-		if (aWidgetForms.length == 0)
+		if (this.IsEditFieldsMode() || aWidgetForms.length == 0)
             return;
 
         let nCurIdx = this.widgets.indexOf(this.activeForm);
@@ -1242,7 +1242,7 @@ var CPresentation = CPresentation || function(){};
         let aWidgetForms    = this.widgets;
         let oActionsQueue   = this.GetActionsQueue();
 		
-		if (aWidgetForms.length == 0)
+		if (this.IsEditFieldsMode() || aWidgetForms.length == 0)
             return;
 
         let nCurIdx = this.widgets.indexOf(this.activeForm);
