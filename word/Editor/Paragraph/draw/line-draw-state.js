@@ -330,7 +330,7 @@
 		
 		return this.customMarks.getStartedMarks(this.Paragraph, this.CurPos);
 	};
-	ParagraphLineDrawState.prototype.initCustomMarks = function(run)
+	ParagraphLineDrawState.prototype.initCustomMarks = function(run, startPos)
 	{
 		if (!this.customMarks)
 			return [];
@@ -338,6 +338,14 @@
 		this.currentCustomMarks = this.customMarks.getStartedMarks(this.Paragraph, this.CurPos);
 		this.customMarkInRun = this.customMarks.flatRunMarks(run.GetId());
 		this.customMarkPos = 0;
+		
+		if (this.customMarkInRun)
+		{
+			while (this.customMarkPos < this.customMarkInRun.length && startPos > this.customMarkInRun[this.customMarkPos].getPos())
+			{
+				++this.customMarkPos;
+			}
+		}
 	};
 	ParagraphLineDrawState.prototype.checkCustomMarks = function(pos)
 	{

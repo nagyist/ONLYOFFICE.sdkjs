@@ -1959,26 +1959,8 @@ ParaRun.prototype.Add_ToContent = function(Pos, Item, UpdatePosition)
         if ( ContentPos.Data[Depth] >= Pos )
             ContentPos.Data[Depth]++;
     }
-
-	// Обновляем позиции в поиске
-	var SearchMarksCount = this.SearchMarks.length;
-	for (var Index = 0; Index < SearchMarksCount; Index++)
-	{
-		var Mark       = this.SearchMarks[Index];
-		var ContentPos = ( true === Mark.Start ? Mark.SearchResult.StartPos : Mark.SearchResult.EndPos );
-		var Depth      = Mark.Depth;
-
-		if (ContentPos.Data[Depth] > Pos || (ContentPos.Data[Depth] === Pos && true === Mark.Start))
-			ContentPos.Data[Depth]++;
-	}
-
-    // Обновляем позиции для орфографии
-	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
-	{
-		this.SpellingMarks[iMark].onAdd(Pos);
-	}
 	
-	this.private_UpdateCustomMarksOnAdd(Pos);
+	this.private_UpdateMarksOnAdd(Pos, 1);
 	
 	this.private_UpdateDocumentOutline();
     this.private_UpdateTrackRevisionOnChangeContent(true);
@@ -2031,26 +2013,7 @@ ParaRun.prototype.Remove_FromContent = function(Pos, Count, UpdatePosition)
             ContentPos.Data[Depth] = Math.max( 0 , Pos );
     }
 
-    // Обновляем позиции в поиске
-    var SearchMarksCount = this.SearchMarks.length;
-    for ( var Index = 0; Index < SearchMarksCount; Index++ )
-    {
-        var Mark       = this.SearchMarks[Index];
-        var ContentPos = ( true === Mark.Start ? Mark.SearchResult.StartPos : Mark.SearchResult.EndPos );
-        var Depth      = Mark.Depth;
-
-        if ( ContentPos.Data[Depth] > Pos + Count )
-            ContentPos.Data[Depth] -= Count;
-        else if ( ContentPos.Data[Depth] > Pos )
-            ContentPos.Data[Depth] = Math.max( 0 , Pos );
-    }
-	
-	// Обновляем позиции для орфографии
-	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
-	{
-		this.SpellingMarks[iMark].onRemove(Pos, Count);
-	}
-	this.private_UpdateCustomMarksOnRemove(Pos, Count);
+	this.private_UpdateMarksOnRemove(Pos, Count);
 
 	this.private_UpdateDocumentOutline();
 	this.private_UpdateTrackRevisionOnChangeContent(true);
@@ -2606,9 +2569,6 @@ ParaRun.prototype.Split2 = function(CurPos, Parent, ParentPos)
 	// 2 Переносим все метки, попадающие после точки разделения, в новый ран
 	// 3 Удаляем из текущего рана элементы после точки разделения
 
-   AscCommon.History.Add(new CChangesRunOnStartSplit(this, CurPos));
-    AscCommon.CollaborativeEditing.OnStart_SplitRun(this, CurPos);
-
     // Если задается Parent и ParentPos, тогда ран автоматически добавляется в родительский класс
     var UpdateParent    = (undefined !== Parent && undefined !== ParentPos && this === Parent.Content[ParentPos] ? true : false);
     var UpdateSelection = (true === UpdateParent && true === Parent.IsSelectionUse() && true === this.IsSelectionUse() ? true : false);
@@ -2616,7 +2576,10 @@ ParaRun.prototype.Split2 = function(CurPos, Parent, ParentPos)
     // Создаем новый ран
     var bMathRun = this.Type == para_Math_Run;
     var NewRun = new ParaRun(this.Paragraph, bMathRun);
-
+	
+	AscCommon.History.Add(new CChangesRunOnStartSplit(this, CurPos, NewRun));
+	AscCommon.CollaborativeEditing.OnStart_SplitRun(this, CurPos);
+	
     // Копируем настройки
     NewRun.SetPr(this.Pr.Copy(true));
 
@@ -2749,21 +2712,8 @@ ParaRun.prototype.Split2 = function(CurPos, Parent, ParentPos)
 		}
 	}
 
-	// Если были точки орфографии, тогда переместим их в новый ран
-	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
-	{
-		let mark = this.SpellingMarks[iMark];
-		if (mark.getPos() >= CurPos)
-		{
-			mark.movePos(-CurPos);
-			NewRun.SpellingMarks.push(mark);
-			this.SpellingMarks.splice(iMark, 1);
-			--nMarks;
-			--iMark;
-		}
-	}
-	this.private_UpdateCustomMarksOnSplit(CurPos, NewRun);
-
+	this.private_UpdateMarksOnSplit(CurPos, NewRun);
+	
 	this.RemoveFromContent(CurPos, this.Content.length - CurPos, true);
 
     if (true === UpdateSelection)
@@ -2788,10 +2738,10 @@ ParaRun.prototype.Split2 = function(CurPos, Parent, ParentPos)
             NewRun.Selection.StartPos = OldSelectionStartPos - CurPos;
         }
     }
-
-   AscCommon.History.Add(new CChangesRunOnEndSplit(this, NewRun));
-    AscCommon.CollaborativeEditing.OnEnd_SplitRun(NewRun);
-    return NewRun;
+	
+	AscCommon.History.Add(new CChangesRunOnEndSplit(this, CurPos, NewRun));
+	AscCommon.CollaborativeEditing.OnEnd_SplitRun(NewRun);
+	return NewRun;
 };
 ParaRun.prototype.SplitNoDuplicate = function(oContentPos, nDepth, oNewParagraph)
 {
@@ -2810,11 +2760,12 @@ ParaRun.prototype.SplitNoDuplicate = function(oContentPos, nDepth, oNewParagraph
 };
 ParaRun.prototype.SplitForSpreadCollaborativeMark = function(CurPos) // переносим сами объекты, а не копии
 {
-	AscCommon.History.Add(new CChangesRunOnStartSplit(this, CurPos));
-	AscCommon.CollaborativeEditing.OnStart_SplitRun(this, CurPos);
-
 	var bMathRun = this.Type == para_Math_Run;
 	var NewRun = new ParaRun(this.Paragraph, false);
+	
+	AscCommon.History.Add(new CChangesRunOnStartSplit(this, CurPos, NewRun));
+	AscCommon.CollaborativeEditing.OnStart_SplitRun(this, CurPos);
+	
 	NewRun.SetReviewTypeWithInfo(this.GetReviewType(), this.ReviewInfo ? this.ReviewInfo.Copy() : undefined);
 	if(bMathRun)
 		NewRun.Set_MathPr(this.MathPrp.Copy());
@@ -2836,7 +2787,7 @@ ParaRun.prototype.SplitForSpreadCollaborativeMark = function(CurPos) // пере
 
 	this.RemoveFromContent(CurPos, this.Content.length - CurPos, true);
 
-	AscCommon.History.Add(new CChangesRunOnEndSplit(this, NewRun));
+	AscCommon.History.Add(new CChangesRunOnEndSplit(this, CurPos, NewRun));
 	AscCommon.CollaborativeEditing.OnEnd_SplitRun(NewRun);
 
 	return NewRun;
@@ -6610,7 +6561,7 @@ ParaRun.prototype.Draw_Lines = function(lineDrawState)
 			SpellData[markPos] -= 1;
 	}
 	
-	lineDrawState.initCustomMarks(this);
+	lineDrawState.initCustomMarks(this, startPos);
 	for (let pos = startPos; pos < endPos; ++pos)
 	{
 		if (SpellData[pos])
@@ -8242,13 +8193,13 @@ ParaRun.prototype.Apply_TextPr = function(TextPr, IncFontSize, ApplyToAll)
 
 ParaRun.prototype.Split_Run = function(Pos)
 {
-   AscCommon.History.Add(new CChangesRunOnStartSplit(this, Pos));
-    AscCommon.CollaborativeEditing.OnStart_SplitRun(this, Pos);
-
     // Создаем новый ран
     var bMathRun = this.Type == para_Math_Run;
     var NewRun = new ParaRun(this.Paragraph, bMathRun);
-
+	
+	AscCommon.History.Add(new CChangesRunOnStartSplit(this, Pos, NewRun));
+	AscCommon.CollaborativeEditing.OnStart_SplitRun(this, Pos);
+	
     // Копируем настройки
     NewRun.Set_Pr(this.Pr.Copy(true));
 
@@ -8262,6 +8213,22 @@ ParaRun.prototype.Split_Run = function(Pos)
 
     // Разделяем содержимое по ранам
     NewRun.ConcatToContent( this.Content.slice(Pos) );
+	
+	// Если были точки орфографии, тогда переместим их в новый ран
+	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
+	{
+		let mark = this.SpellingMarks[iMark];
+		if (mark.getPos() >= Pos)
+		{
+			mark.movePos(-Pos);
+			NewRun.SpellingMarks.push(mark);
+			this.SpellingMarks.splice(iMark, 1);
+			--nMarks;
+			--iMark;
+		}
+	}
+	this.private_UpdateCustomMarksOnSplit(Pos, NewRun);
+	
     this.Remove_FromContent( Pos, this.Content.length - Pos, true );
 
     // Подправим точки селекта и текущей позиции
@@ -8295,23 +8262,9 @@ ParaRun.prototype.Split_Run = function(Pos)
         NewRun.State.Selection.EndPos = 0;
     }
 	
-	// Если были точки орфографии, тогда переместим их в новый ран
-	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
-	{
-		let mark = this.SpellingMarks[iMark];
-		if (mark.getPos() >= Pos)
-		{
-			mark.movePos(-Pos);
-			NewRun.SpellingMarks.push(mark);
-			this.SpellingMarks.splice(iMark, 1);
-			--nMarks;
-			--iMark;
-		}
-	}
-
-   AscCommon.History.Add(new CChangesRunOnEndSplit(this, NewRun));
-    AscCommon.CollaborativeEditing.OnEnd_SplitRun(NewRun);
-    return NewRun;
+	AscCommon.History.Add(new CChangesRunOnEndSplit(this, Pos, NewRun));
+	AscCommon.CollaborativeEditing.OnEnd_SplitRun(NewRun);
+	return NewRun;
 };
 
 ParaRun.prototype.Clear_TextPr = function()
@@ -12781,12 +12734,67 @@ ParaRun.prototype.SetIsRecalculated = function(isRecalculated)
 	if (!isRecalculated && this.Paragraph)
 		this.Paragraph.SetIsRecalculated(false);
 };
-ParaRun.prototype.private_UpdateCustomMarksOnAdd = function(pos)
+ParaRun.prototype.private_UpdateMarksOnAdd = function(pos, count)
+{
+	for (let iMark = 0, nMarks = this.SearchMarks.length; iMark < nMarks; ++iMark)
+	{
+		var Mark       = this.SearchMarks[iMark];
+		var ContentPos = ( true === Mark.Start ? Mark.SearchResult.StartPos : Mark.SearchResult.EndPos );
+		var Depth      = Mark.Depth;
+		
+		if (ContentPos.Data[Depth] > pos || (ContentPos.Data[Depth] === pos && true === Mark.Start))
+			ContentPos.Data[Depth] += count;
+	}
+	
+	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
+	{
+		this.SpellingMarks[iMark].onAdd(pos, count);
+	}
+	
+	this.private_UpdateCustomMarksOnAdd(pos, count);
+};
+ParaRun.prototype.private_UpdateMarksOnRemove = function(pos, count)
+{
+	for (let iMark = 0, nMarks = this.SearchMarks.length; iMark < nMarks; ++iMark)
+	{
+		var Mark       = this.SearchMarks[iMark];
+		var ContentPos = (true === Mark.Start ? Mark.SearchResult.StartPos : Mark.SearchResult.EndPos);
+		var Depth      = Mark.Depth;
+		
+		if (ContentPos.Data[Depth] > pos + count)
+			ContentPos.Data[Depth] -= count;
+		else if (ContentPos.Data[Depth] > pos)
+			ContentPos.Data[Depth] = Math.max(0, pos);
+	}
+	
+	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
+	{
+		this.SpellingMarks[iMark].onRemove(pos, count);
+	}
+	this.private_UpdateCustomMarksOnRemove(pos, count);
+};
+ParaRun.prototype.private_UpdateMarksOnSplit = function(pos, nextRun)
+{
+	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
+	{
+		let mark = this.SpellingMarks[iMark];
+		if (mark.getPos() >= pos)
+		{
+			mark.movePos(-pos);
+			nextRun.SpellingMarks.push(mark);
+			this.SpellingMarks.splice(iMark, 1);
+			--nMarks;
+			--iMark;
+		}
+	}
+	this.private_UpdateCustomMarksOnSplit(pos, nextRun);
+};
+ParaRun.prototype.private_UpdateCustomMarksOnAdd = function(pos, count)
 {
 	let logicDocument = this.GetLogicDocument();
 	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
 	if (customMarks)
-		customMarks.onAddToRun(this.GetId(), pos);
+		customMarks.onAddToRun(this.GetId(), pos, count);
 };
 ParaRun.prototype.private_UpdateCustomMarksOnRemove = function(pos, count)
 {

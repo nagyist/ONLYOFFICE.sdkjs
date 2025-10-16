@@ -124,7 +124,7 @@
 				if (!startPos || !endPos)
 					continue;
 				
-				if (paraContentPos.Compare(startPos) >= 0 && paraContentPos.Compare(endPos) <= 0)
+				if (paraContentPos.Compare(startPos) > 0 && paraContentPos.Compare(endPos) < 0)
 					result.push(startMark);
 			}
 		}
@@ -149,10 +149,10 @@
 		});
 		return result;
 	};
-	CustomMarks.prototype.onAddToRun = function(runId, pos)
+	CustomMarks.prototype.onAddToRun = function(runId, pos, count)
 	{
 		this.forEachInRun(runId, function(mark){
-			mark.onAdd(pos);
+			mark.onAdd(pos, count);
 		});
 	};
 	CustomMarks.prototype.onRemoveFromRun = function(runId, pos, count)
@@ -170,13 +170,13 @@
 			
 			if (mark.getRun().GetId() === nextRunId)
 			{
-				if (_t.run[runId])
-					delete _t.run[runId][mark.getId()];
+				if (_t.runs[runId])
+					delete _t.runs[runId][mark.getId()];
 				
-				if (_t.run[nextRunId])
-					_t.run[nextRunId] = {};
+				if (!_t.runs[nextRunId])
+					_t.runs[nextRunId] = {};
 				
-				_t.run[nextRunId][mark.getId()] = mark;
+				_t.runs[nextRunId][mark.getId()] = mark;
 			}
 		});
 	};
@@ -227,10 +227,10 @@
 	{
 		return true;
 	};
-	CustomMark.prototype.onAdd = function(pos)
+	CustomMark.prototype.onAdd = function(pos, count)
 	{
 		if (this.pos >= pos)
-			++this.pos;
+			this.pos += count;
 	};
 	CustomMark.prototype.onRemove = function(pos, count)
 	{
