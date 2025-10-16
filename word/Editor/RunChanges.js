@@ -2281,9 +2281,12 @@ CChangesRunOnStartSplit.prototype.constructor = CChangesRunOnStartSplit;
 CChangesRunOnStartSplit.prototype.Type = AscDFH.historyitem_ParaRun_OnStartSplit;
 CChangesRunOnStartSplit.prototype.Undo = function()
 {
+	AscCommon.CollaborativeEditing.OnEndConcatRun();
+	this.Class.private_UpdateMarksOnConcat(this.Pos, this.NextRun);
 };
 CChangesRunOnStartSplit.prototype.Redo = function()
 {
+	AscCommon.CollaborativeEditing.OnStart_SplitRun(this.Class, this.Pos);
 };
 CChangesRunOnStartSplit.prototype.WriteToBinary = function(writer)
 {
@@ -2323,9 +2326,12 @@ CChangesRunOnEndSplit.prototype.constructor = CChangesRunOnEndSplit;
 CChangesRunOnEndSplit.prototype.Type = AscDFH.historyitem_ParaRun_OnEndSplit;
 CChangesRunOnEndSplit.prototype.Undo = function()
 {
+	AscCommon.CollaborativeEditing.OnStartConcatRun();
 };
 CChangesRunOnEndSplit.prototype.Redo = function()
 {
+	AscCommon.CollaborativeEditing.OnEnd_SplitRun(this.NextRun);
+	this.Class.private_UpdateMarksOnSplit(this.Pos, this.NextRun);
 };
 CChangesRunOnEndSplit.prototype.WriteToBinary = function(writer)
 {
@@ -2341,6 +2347,12 @@ CChangesRunOnEndSplit.prototype.Load = function()
 {
 	if (AscCommon.CollaborativeEditing)
 		AscCommon.CollaborativeEditing.OnEnd_SplitRun(this.NextRun);
+	
+	// TODO: На самом деле метки могут обновиться неправильно, если ран, который разделил другой пользователь
+	//       был изменен текущим пользователем. Для правильной работы нужно при прогоне этого изменения через
+	//       CChangesRunAddItem/CChangesRunRemoveItem обновлялась позиция тут. Пока оставляем так, потому что
+	//       ситуация крайне редкая, да и метки после любого изменения должны через время обновится сами.
+	this.Class.private_UpdateMarksOnSplit(this.Pos, this.NextRun);
 };
 CChangesRunOnEndSplit.prototype.CreateReverseChange = function()
 {

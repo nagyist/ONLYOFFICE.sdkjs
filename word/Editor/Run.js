@@ -12736,6 +12736,9 @@ ParaRun.prototype.SetIsRecalculated = function(isRecalculated)
 };
 ParaRun.prototype.private_UpdateMarksOnAdd = function(pos, count)
 {
+	if (AscCommon.CollaborativeEditing.IsSplitConcatRun())
+		return;
+	
 	for (let iMark = 0, nMarks = this.SearchMarks.length; iMark < nMarks; ++iMark)
 	{
 		var Mark       = this.SearchMarks[iMark];
@@ -12755,6 +12758,9 @@ ParaRun.prototype.private_UpdateMarksOnAdd = function(pos, count)
 };
 ParaRun.prototype.private_UpdateMarksOnRemove = function(pos, count)
 {
+	if (AscCommon.CollaborativeEditing.IsSplitConcatRun())
+		return;
+	
 	for (let iMark = 0, nMarks = this.SearchMarks.length; iMark < nMarks; ++iMark)
 	{
 		var Mark       = this.SearchMarks[iMark];
@@ -12775,6 +12781,9 @@ ParaRun.prototype.private_UpdateMarksOnRemove = function(pos, count)
 };
 ParaRun.prototype.private_UpdateMarksOnSplit = function(pos, nextRun)
 {
+	if (!nextRun)
+		return;
+	
 	for (let iMark = 0, nMarks = this.SpellingMarks.length; iMark < nMarks; ++iMark)
 	{
 		let mark = this.SpellingMarks[iMark];
@@ -12788,6 +12797,22 @@ ParaRun.prototype.private_UpdateMarksOnSplit = function(pos, nextRun)
 		}
 	}
 	this.private_UpdateCustomMarksOnSplit(pos, nextRun);
+};
+ParaRun.prototype.private_UpdateMarksOnConcat = function(pos, run)
+{
+	if (!run)
+		return;
+	
+	// Присылаем сюда позицию pos не потому что в любой позции соединяем, а чтобы данный вызов не контролировать
+	// относительно времени соединения ранов (т.е. на данный момент соединение уже может быть, а может и не быть)
+	// Мы, в любом случае считаем, что когда раны соединялись, то длина первого рана равнялась pos
+	for (let iMark = 0, nMarks = run.SpellingMarks.length; iMark < nMarks; ++iMark)
+	{
+		let mark = run.SpellingMarks[iMark];
+		mark.movePos(pos);
+		this.SpellingMarks.push(mark);
+	}
+	this.private_UpdateCustomMarksOnConcat(pos, run);
 };
 ParaRun.prototype.private_UpdateCustomMarksOnAdd = function(pos, count)
 {
@@ -12809,6 +12834,13 @@ ParaRun.prototype.private_UpdateCustomMarksOnSplit = function(pos, nextRun)
 	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
 	if (customMarks)
 		customMarks.onSplitRun(this.GetId(), pos, nextRun.GetId());
+};
+ParaRun.prototype.private_UpdateCustomMarksOnConcat = function(pos, run)
+{
+	let logicDocument = this.GetLogicDocument();
+	let customMarks   = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCustomMarks() : null;
+	if (customMarks)
+		customMarks.onConcatRun(this.GetId(), pos, run.GetId());
 };
 
 function CParaRunStartState(Run)

@@ -180,6 +180,24 @@
 			}
 		});
 	};
+	CustomMarks.prototype.onConcatRun = function(runId, runLen, nextRunId)
+	{
+		let _t = this;
+		let prevRun = AscCommon.g_oTableId.GetById(runId);
+		this.forEachInRun(nextRunId, function(mark){
+			mark.onConcat(runLen, prevRun);
+			
+			if (_t.runs[nextRunId])
+				delete _t.runs[nextRunId][mark.getId()];
+			
+			if (!_t.runs[runId])
+				_t.runs[runId] = {};
+				
+			_t.runs[runId][mark.getId()] = mark;
+		});
+		
+		delete this.runs[nextRunId];
+	};
 	CustomMarks.prototype.forEachInRun = function(runId, f)
 	{
 		for (let id in this.runs[runId])
@@ -246,6 +264,11 @@
 		
 		this.pos -= pos;
 		this.run = nextRun;
+	};
+	CustomMark.prototype.onConcat = function(pos, prevRun)
+	{
+		this.pos += pos;
+		this.run = prevRun;
 	};
 	CustomMark.prototype.getPos = function()
 	{
