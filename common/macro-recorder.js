@@ -667,7 +667,36 @@
 		// setCellHyperlinkModify	: function(additional) {return (additional && additional.url) ? "" : ""},
 		// setCellHyperlinkRemove	: function(additional) {return (additional && additional.url) ? "" : ""},
 		// cut						: function(){return "ApiApi.GetSelection().Cut();\n"},
-		cellChangeValue				: makeAction("val", function(value){return "\tApi.GetSelection().SetValue(\"" + value + "\");\n"})
+		cellChangeValue			: makeAction("val", function(value){return "\tApi.GetSelection().SetValue(\"" + value + "\");\n"}),
+		setCellStyle			: makeAction("val", function(style){}),
+		setCellFormat			: makeAction("val", function(format){
+			return "\tlet " + CounterStore.inc('format') + " = Api.Format(worksheet.GetActiveCell().GetValue(), \'" + format + "\')\n"
+			+ "\tworksheet.GetActiveCell().SetValue(" + CounterStore.get('format') + ");\n";
+		}),
+		setCellHyperlinkRemove	: makeAction("val", function(data){console.log(data)}),
+		setCellMerge			: makeAction("val", function(data){
+			if (data === Asc.c_oAscMergeOptions.MergeCenter)
+				return "\tApi.GetSelection().Merge(false);\n"; // + set shrink / indent
+			else if (data === Asc.c_oAscMergeOptions.None)
+				return "\tApi.GetSelection().UnMerge();\n";
+			else if (data === Asc.c_oAscMergeOptions.MergeAcross)
+				return "\tApi.GetSelection().Merge(true);\n";
+			else if (data === Asc.c_oAscMergeOptions.Merge)
+				return "\tApi.GetSelection().Merge(false);\n";
+		}),
+		setCellSort				: makeAction("val", function(obj){
+			let range = "\tlet " + CounterStore.inc('range') + " = Api.GetSelection().GetAddress(true, true);\n";
+
+			if (obj.type === Asc.c_oAscSortOptions.Ascending)
+				range += "\tApi.GetSelection().SetSort(" + CounterStore.get('range') + " , \"xlAscending\", undefined, undefined, undefined, undefined, \"xlYes\");\n";
+			else if (obj.type === Asc.c_oAscSortOptions.Descending)
+				range += "\tApi.GetSelection().SetSort(" + CounterStore.get('range') + " , \"xlDescending\", undefined, undefined, undefined, undefined, \"xlYes\");\n";
+
+			return range;
+		}),
+		setCellEmpty			: makeAction("val", function(){ return "\tApi.GetSelection().Clear();\n";}),
+		setNumberFormat			: makeAction("val", function(format){ return "\tApi.GetSelection().SetNumberFormat(\"" + format + "\");\n";}),
+		setCellPaste			: makeAction("val", function(){return "\tApi.GetSelection().Paste();\n";})
 	};
 	const CellActionsMacroList = {};
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize]	= cellActions.setCellIncreaseFontSize,
@@ -690,7 +719,7 @@
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellBorder]				= cellActions.setCellBorder;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellValue]				= cellActions.setCellValue;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellAngle]				= cellActions.setCellAngle;
-	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellMerge]				= cellActions.setCellMerge;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellMerge]				= cellActions.setCellMerge;
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellStyle]				= cellActions.setCellStyle;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase]		= cellActions.setCellChangeTextCase;
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize]		= cellActions.setCellChangeFontSize;
@@ -698,7 +727,11 @@
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify]	= cellActions.setCellHyperlinkModify;
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove]	= cellActions.setCellHyperlinkRemove;
 	//CellActionsMacroList[AscDFH.historydescription_Cut]									= cellActions.cut;
-	
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellFormat]				= cellActions.setCellFormat;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellSort]					= cellActions.setCellSort;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellEmpty]				= cellActions.setCellEmpty;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum]			= cellActions.setNumberFormat;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellPaste]				= cellActions.setCellPaste;
 
 	const presActions = {
 		setParagraphAlign		: makeAction("", function(align){

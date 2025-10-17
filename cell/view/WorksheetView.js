@@ -16874,7 +16874,7 @@ function isAllowPasteLink(pastedWb) {
 			//"shrink": AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit,
 			"value": AscDFH.historydescription_Spreadsheet_SetCellValue,
 			//"totalRowFunc": AscDFH.historydescription_Spreadsheet_SetTotalRowFunction,
-			//"format": AscDFH.historydescription_Spreadsheet_SetCellFormat,
+			"format": AscDFH.historydescription_Spreadsheet_SetCellFormat,
 			"angle": AscDFH.historydescription_Spreadsheet_SetCellAngle,
 			//"indent": AscDFH.historydescription_Spreadsheet_SetCellIndent,
 			//"applyProtection": AscDFH.historydescription_Spreadsheet_SetCellApplyProtection,
@@ -16882,17 +16882,26 @@ function isAllowPasteLink(pastedWb) {
 			//"hiddenFormulas": AscDFH.historydescription_Spreadsheet_SetCellHiddenFormulas,
 			//"rh": AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove,
 			"border": AscDFH.historydescription_Spreadsheet_SetCellBorder,
-			//"merge": AscDFH.historydescription_Spreadsheet_SetCellMerge,
-			//"sort": AscDFH.historydescription_Spreadsheet_SetCellSort,
+			"merge": AscDFH.historydescription_Spreadsheet_SetCellMerge,
+			"sort": AscDFH.historydescription_Spreadsheet_SetCellSort,
 			//"customSort": AscDFH.historydescription_Spreadsheet_SetCellCustomSort,
-			//"empty": AscDFH.historydescription_Spreadsheet_SetCellEmpty,
-			//"changeDigNum": AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum,
+			"empty": AscDFH.historydescription_Spreadsheet_SetCellEmpty,
+			"changeDigNum": AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum,
 			"changeFontSize": AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize,
 			//"style": AscDFH.historydescription_Spreadsheet_SetCellStyle,
 			//"paste": AscDFH.historydescription_Spreadsheet_SetCellPaste,
 			//"hyperlink": AscDFH.historydescription_Spreadsheet_SetCellHyperlink,
 			"changeTextCase": AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase
 		};
+
+		if (prop === "changeDigNum")
+		{
+			let activeCell = this.model.selectionRange.activeCell.clone();
+			let colWidth = this.getColumnWidthInSymbols(activeCell.col);
+			let cell = this.model.getRange3(activeCell.row, activeCell.col, activeCell.row, activeCell.col);
+			let changeDigNumFormat = cell.getShiftedNumFormat(val, colWidth);
+			val = changeDigNumFormat;
+		}
 
 		if (prop === "fa") {
 			switch (val) {
