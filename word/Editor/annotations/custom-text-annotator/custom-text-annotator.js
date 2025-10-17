@@ -132,7 +132,7 @@
 		
 		let _ranges = [];
 		ranges.forEach(r => _ranges.push([r.start, r.length, r.id]))
-		console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
+		//console.log(`Response from handlerId=${handlerId} ParaId=${paraId}; Ranges=${_ranges}`);
 		
 		// TODO: Надо проверить ситуацию, когда меток не было, и они не появились
 		paragraph.ReDraw();
@@ -211,7 +211,7 @@
 		{
 			let item = run.GetElement(pos);
 			if (item.IsText() || item.IsSpace() || item.IsTab() || item.IsBreak())
-				this.handleNextPosition(run, pos);
+				this.handleNextPosition(run, pos + 1);
 		}
 		return true;
 	};

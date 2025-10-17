@@ -1300,6 +1300,15 @@
 		let docPos = topDocument && topDocument.GetContentPosition ? topDocument.GetContentPosition(false) : null;
 		return bookmarks.GetBookmarkByDocPos(docPos);
 	};
+	
+	Api.prototype["pluginMethod_AnnotateParagraph"] = function(obj)
+	{
+		if (!obj)
+			return;
+		
+		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
+		this.getTextAnnotatorEventManager().onResponse(obj);
+	};
 
 	function private_ReadContentControlCommonPr(commonPr)
 	{
