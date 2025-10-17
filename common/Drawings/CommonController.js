@@ -4567,11 +4567,12 @@
 
 								const ppi = ws._getPPIX();
 								const mmToPx = Asc.getCvtRatio(3, 0, ppi);
+								const freezeOffset = ws.getFrozenPaneOffset(false, false);
 
-								const left = AscCommon.AscBrowser.convertToRetinaValue(bounds.l * mmToPx - ws._getOffsetX() + ws.cellsLeft);
-								const top = AscCommon.AscBrowser.convertToRetinaValue(bounds.t * mmToPx - ws._getOffsetY() + ws.cellsTop);
-								const right = AscCommon.AscBrowser.convertToRetinaValue(bounds.r * mmToPx - ws._getOffsetX() + ws.cellsLeft);
-								const bottom = AscCommon.AscBrowser.convertToRetinaValue(bounds.b * mmToPx - ws._getOffsetY() + ws.cellsTop);
+								const left = AscCommon.AscBrowser.convertToRetinaValue(bounds.l * mmToPx - ws._getOffsetX() + ws.cellsLeft + freezeOffset.offsetX);
+								const top = AscCommon.AscBrowser.convertToRetinaValue(bounds.t * mmToPx - ws._getOffsetY() + ws.cellsTop + freezeOffset.offsetY);
+								const right = AscCommon.AscBrowser.convertToRetinaValue(bounds.r * mmToPx - ws._getOffsetX() + ws.cellsLeft + freezeOffset.offsetX);
+								const bottom = AscCommon.AscBrowser.convertToRetinaValue(bounds.b * mmToPx - ws._getOffsetY() + ws.cellsTop + freezeOffset.offsetY);
 
 								return new AscCommon.asc_CRect(left, top, right - left, bottom - top);
 							};
