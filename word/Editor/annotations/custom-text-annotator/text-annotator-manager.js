@@ -92,38 +92,38 @@
 		//console.log(`Request ParaId=${paragraph.GetId()}; ParaText=${text}`);
 		
 		let _t = this;
-		// setTimeout(function(){
-		// 	let _start = Math.floor(Math.random() * (len - 1));
-		// 	let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
-		// 	_t.onResponse({
-		// 		"guid" : "guid-1",
-		// 		"type" : "highlightText",
-		// 		"paragraphId" : paraId,
-		// 		"recalcId" : recalcId,
-		// 		"ranges" : [{
-		// 			"start" : _start,
-		// 			"length" : _len,
-		// 			"id" : "1"
-		// 		}]
-		// 	});
-		// }, 2000);
-		// setTimeout(function() {
-		// 	let _start = Math.floor(Math.random() * (len - 1));
-		// 	let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
-		// 	_t.onResponse({
-		// 		"guid"        : "guid-2",
-		// 		"type"        : "highlightText",
-		// 		"paragraphId" : paraId,
-		// 		"recalcId"    : recalcId,
-		// 		"ranges"      : [{
-		// 			"start"  : _start,
-		// 			"length" : _len,
-		// 			"id"     : "1"
-		// 		}]
-		// 	});
-		// }, 3000);
+		setTimeout(function(){
+			let _start = Math.floor(Math.random() * (len - 1));
+			let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
+			_t.onResponse({
+				"guid" : "guid-1",
+				"type" : "highlightText",
+				"paragraphId" : paraId,
+				"recalcId" : recalcId,
+				"ranges" : [{
+					"start" : _start,
+					"length" : _len,
+					"id" : "1"
+				}]
+			});
+		}, 2000);
+		setTimeout(function() {
+			let _start = Math.floor(Math.random() * (len - 1));
+			let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
+			_t.onResponse({
+				"guid"        : "guid-2",
+				"type"        : "highlightText",
+				"paragraphId" : paraId,
+				"recalcId"    : recalcId,
+				"ranges"      : [{
+					"start"  : _start,
+					"length" : _len,
+					"id"     : "1"
+				}]
+			});
+		}, 3000);
 		
-		window.g_asc_plugins.onPluginEvent("onAnnotateText", obj);
+		//window.g_asc_plugins.onPluginEvent("onAnnotateText", obj);
 		
 		// TODO: Чтобы не было моргания при быстром изменении параграфа, мы не должны чистить метки сразу при изменении
 		//       Поэтому, до получения ответа мы оставляем метки в прежних местах. Далее либо обновляем их с ответом,

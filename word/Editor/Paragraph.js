@@ -3461,7 +3461,7 @@ Paragraph.prototype.drawRunContentLines = function(CurPage, pGraphics, drawState
 			}
 		}
 		
-		PDSL.drawCustomMarks(pGraphics, Page.Y + Line.Y - Line.Metrics.TextAscent, Line.Metrics.TextDescent + Line.Metrics.TextAscent + Line.Metrics.LineGap);
+		PDSL.drawCustomMarks(pGraphics, Page.Y + Line.Y - Line.Metrics.TextAscent, Line.Metrics.TextDescent + Line.Metrics.TextAscent + Line.Metrics.LineGap, Page.Y + Line.Y);
 		
 		pGraphics.End_Command();
 	}

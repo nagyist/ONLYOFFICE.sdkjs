@@ -2169,7 +2169,12 @@
 		
 		this.p_color(color.r, color.g, color.b, 255);
 		this.p_width(0.5 * 1000);
-		this.rect(x0, y0, w, h);
+		
+		let underlineY = 0.15 * (baseLine - y0) + baseLine;
+		this._m(x0, underlineY);
+		this._l(x0 + w, underlineY);
+		
+		//this.rect(x0, y0, w, h);
 		this.ds();
 	};
 

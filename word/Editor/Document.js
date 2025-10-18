@@ -736,6 +736,7 @@ function CSelectedElementsInfo(oPr)
 	this.m_arrMoveMarks       = [];
 	this.m_arrFootEndNoteRefs = [];
 	this.m_bFixedFormShape    = false; // Специальная ситуация, когда выделена автофигура вокруг fixed-form, но при этом мы в m_oInlineLevelSdt мы возвращаем эту форму (хотя в ней не находимся по факту)
+	this.m_arrCustomMarks     = [];
 }
 CSelectedElementsInfo.prototype.Reset = function()
 {
@@ -1104,6 +1105,18 @@ CSelectedElementsInfo.prototype.IsFixedFormShape = function()
 {
 	return this.FixedFormShape;
 };
+CSelectedElementsInfo.prototype.IsCheckCustomMarks = function()
+{
+	return true;
+};
+CSelectedElementsInfo.prototype.SetCustomMarks = function(marks)
+{
+	this.m_arrCustomMarks = marks;
+};
+CSelectedElementsInfo.prototype.GetCustomMarks = function()
+{
+	return this.m_arrCustomMarks;
+};
 
 let ACTION_FLAGS = {
 	RECALCULATE      : 0x0001,
@@ -1230,6 +1243,9 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 
 	// TODO: Пока временно так сделаем, в будущем надо переделать в общий класс позиции документа
 	this.FocusCC = null;
+	
+	this.CurrentCustomRanges = {};
+	this.CurrentCustomRangePara = null;
 	
 	let _t = this;
 	this.HoverCC = {
@@ -12067,6 +12083,9 @@ CDocument.prototype.private_UpdateTracks = function(bSelection, bEmptySelection)
 	this.DrawingDocument.endCollectContentControlTracks();
 
 	this.UpdateContentControlFocusState(oInlineLevelSdt ? oInlineLevelSdt : (oBlockLevelSdt ? oBlockLevelSdt : null));
+	
+	if (true)
+		this.UpdateCurrentCustomRanges();
 
 	if (this.private_SetCurrentSpecialForm(oCurrentForm))
 	{
@@ -12115,6 +12134,66 @@ CDocument.prototype.UpdateContentControlFocusState = function(oCC)
 		this.Api.asc_OnFocusContentControl(oCC);
 
 	this.FocusCC = oCC;
+};
+CDocument.prototype.UpdateCurrentCustomRanges = function()
+{
+	let prevRanges = this.CurrentCustomRanges;
+	let prevPara   = this.CurrentCustomRangePara;
+	
+	let currPara   = this.GetCurrentParagraph();
+	let currRanges = this.GetCurrentCustomRanges(currPara);
+	
+	let changePara = currPara !== prevPara;
+	
+	for (let handlerId in prevRanges)
+	{
+		let noHandler = !currRanges[handlerId];
+		for (let rangeId in prevRanges[handlerId])
+		{
+			if (changePara || noHandler || !currRanges[handlerId][rangeId])
+			{
+				//this.Api.asc_OnFocusContentControl(oCC);
+				console.log(`Blur handler=${handlerId} paragraph=${prevPara.GetId()} range=${rangeId}`);
+			}
+		}
+	}
+	
+	for (let handlerId in currRanges)
+	{
+		let noHandler = !prevRanges[handlerId];
+		for (let rangeId in currRanges[handlerId])
+		{
+			if (changePara || noHandler || !prevRanges[handlerId][rangeId])
+			{
+				//this.Api.asc_OnFocusContentControl(oCC);
+				console.log(`Focus handler=${handlerId} paragraph=${currPara.GetId()} range=${rangeId}`);
+			}
+		}
+	}
+	
+	this.CurrentCustomRangePara = currPara;
+	this.CurrentCustomRanges    = currRanges;
+};
+CDocument.prototype.GetCurrentCustomRanges = function(paragraph)
+{
+	if (!paragraph)
+		return {};
+	
+	let paraPos = paragraph.GetParaContentPos(false, false);
+	let marks = this.GetCustomMarks().getStartedMarks(paragraph, paraPos);
+	let ranges = {};
+	for (let i = 0; i < marks.length; ++i)
+	{
+		let mark      = marks[i];
+		let handlerId = mark.getHandlerId();
+		let rangeId   = mark.getRangeId();
+		if (!ranges[handlerId])
+			ranges[handlerId] = {};
+		
+		if (!ranges[handlerId][rangeId])
+			ranges[handlerId][rangeId] = mark;
+	}
+	return ranges;
 };
 CDocument.prototype.CheckTextFormFormatOnBlur = function(oForm)
 {

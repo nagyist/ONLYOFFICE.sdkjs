@@ -715,7 +715,7 @@
 			this.CustomLines[handlerId][rangeId].Add(startX, endX, {r : 0, g : 0, b : 0});
 		}
 	};
-	ParagraphLineDrawState.prototype.drawCustomMarks = function(graphics, y, h)
+	ParagraphLineDrawState.prototype.drawCustomMarks = function(graphics, y, h, baseLineY)
 	{
 		for (let handlerId in this.CustomLines)
 		{
@@ -725,7 +725,7 @@
 				let element = lines.getNext();
 				while (element)
 				{
-					graphics.drawCustomRange(handlerId, rangeId, element.x0, y, element.x1 - element.x0, h);
+					graphics.drawCustomRange(handlerId, rangeId, element.x0, y, element.x1 - element.x0, h, baseLineY);
 					element = lines.getNext();
 				}
 			}
