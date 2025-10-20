@@ -2171,11 +2171,12 @@
 		this.p_width(0.5 * 1000);
 		
 		let underlineY = 0.15 * (baseLine - y0) + baseLine;
+		this._s();
 		this._m(x0, underlineY);
 		this._l(x0 + w, underlineY);
 		
-		//this.rect(x0, y0, w, h);
 		this.ds();
+		this._s();
 	};
 
 	// smart methods for horizontal / vertical lines

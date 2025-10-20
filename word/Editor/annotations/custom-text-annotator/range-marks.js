@@ -36,10 +36,12 @@
 {
 	/**
 	 * Class for handling a collection of custom annotation range marks
+	 * @param {AscWord.Document} logicDocument
 	 * @constructor
 	 */
-	function CustomMarks()
+	function CustomMarks(logicDocument)
 	{
+		this.logicDocument = logicDocument;
 		this.runs = {}; // runId -> markId
 		this.paragraphs = {}; // paraId -> handlerId -> rangeId -> {start, end}
 	}
@@ -129,6 +131,28 @@
 			}
 		}
 		return result;
+	};
+	CustomMarks.prototype.selectRange = function(paraId, handlerId, rangeId)
+	{
+		let paragraph = AscCommon.g_oTableId.GetById(paraId);
+		if (!this.paragraphs[paraId]
+			|| !this.paragraphs[paraId][handlerId]
+			|| !this.paragraphs[paraId][handlerId][rangeId])
+			return;
+		
+		let start = this.paragraphs[paraId][handlerId][rangeId].start;
+		let end   = this.paragraphs[paraId][handlerId][rangeId].end;
+		
+		let startPos = start.getParaPos();
+		let endPos   = end.getParaPos();
+		
+		this.logicDocument.RemoveSelection();
+		paragraph.SetSelectionUse(true);
+		paragraph.SetSelectionContentPos(startPos, endPos, false);
+		paragraph.SetThisElementCurrent();
+		this.logicDocument.UpdateSelection();
+		this.logicDocument.UpdateInterface();
+		this.logicDocument.UpdateTracks();
 	};
 	CustomMarks.prototype.flatRunMarks = function(runId)
 	{

@@ -54,9 +54,8 @@
 		this.paragraphs         = {};
 		this.checkingParagraphs = {};
 		
-	
 		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
-		this.marks        = new AscWord.CustomMarks();
+		this.marks        = new AscWord.CustomMarks(logicDocument);
 		
 		this.textGetter = new TextGetter();
 		this.markSetter = new MarkSetter(this.marks);
@@ -91,6 +90,10 @@
 			
 			this.handleParagraph(paragraph);
 		}
+	};
+	CustomTextAnnotator.prototype.onCurrentParagraph = function(paragraph)
+	{
+		this.eventManager.onCurrentRanges(paragraph, this.getCurrentRanges(paragraph));
 	};
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Private area
@@ -136,6 +139,27 @@
 		
 		// TODO: Надо проверить ситуацию, когда меток не было, и они не появились
 		paragraph.ReDraw();
+	};
+	CustomTextAnnotator.prototype.getCurrentRanges = function(paragraph)
+	{
+		if (!paragraph)
+			return {};
+		
+		let paraPos = paragraph.GetParaContentPos(false, false);
+		let marks = this.marks.getStartedMarks(paragraph, paraPos);
+		let ranges = {};
+		for (let i = 0; i < marks.length; ++i)
+		{
+			let mark      = marks[i];
+			let handlerId = mark.getHandlerId();
+			let rangeId   = mark.getRangeId();
+			if (!ranges[handlerId])
+				ranges[handlerId] = {};
+			
+			if (!ranges[handlerId][rangeId])
+				ranges[handlerId][rangeId] = mark;
+		}
+		return ranges;
 	};
 	/**
 	 *
