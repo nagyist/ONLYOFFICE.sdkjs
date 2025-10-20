@@ -242,16 +242,21 @@ AscFormat.InitClass(Slide, AscFormat.CBaseFormatObject, AscDFH.historyitem_type_
 	    this.cSld.forEachSp(function(oSp) {
 		    oSp.Reassign_ImageUrls(images_rename);
 	    });
-        if(this.cSld.Bg &&
-            this.cSld.Bg.bgPr &&
-            this.cSld.Bg.bgPr.Fill &&
-            this.cSld.Bg.bgPr.Fill.fill instanceof AscFormat.CBlipFill &&
-            typeof this.cSld.Bg.bgPr.Fill.fill.RasterImageId === "string" &&
-            images_rename[this.cSld.Bg.bgPr.Fill.fill.RasterImageId])
+        let bg = this.cSld && this.cSld.Bg;
+        let bgPr = bg && bg.bgPr;
+        let fill = bgPr && bgPr.Fill && bgPr.Fill.fill;
+
+        if (fill instanceof AscFormat.CBlipFill &&
+            typeof fill.RasterImageId === "string" &&
+            images_rename[fill.RasterImageId])
         {
-            let oBg = this.cSld.Bg.createFullCopy();
+            let oBg = bg.createFullCopy();
             oBg.bgPr.Fill.fill.RasterImageId = images_rename[oBg.bgPr.Fill.fill.RasterImageId];
             this.changeBackground(oBg);
+
+            if (this.recalculateBackground) {
+                this.recalculateBackground();
+            }
         }
     };
     Slide.prototype.Clear_CollaborativeMarks = function()

@@ -1223,6 +1223,9 @@
 	CGraphicFrame.prototype.Get_ShapeStyleForPara = function () {
 		return null;
 	};
+	CGraphicFrame.prototype.IsAllowSectionBreak = function () {
+		return false;
+	};
 
 	CGraphicFrame.prototype.compareForMorph = function(oDrawingToCheck, oCurCandidate, oMapPaired) {
 		if(!oDrawingToCheck) {

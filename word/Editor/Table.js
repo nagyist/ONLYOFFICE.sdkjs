@@ -2378,24 +2378,38 @@ CTable.prototype.GetAllFields = function(isSelection, arrFields)
 {
 	if (!arrFields)
 		arrFields = [];
-
-	if (isSelection && this.IsCellSelection())
+	
+	if (isSelection)
 	{
-		var arrCellsArray = this.GetSelectionArray();
-		for (var nPos = 0, nCount = arrCellsArray.length; nPos < nCount; ++nPos)
+		if (this.IsCellSelection())
 		{
-			var oCellPos     = arrCellsArray[nPos];
-			var oCurCell     = this.GetRow(oCellPos.Row).GetCell(oCellPos.Cell);
-			var oCellContent = oCurCell.GetContent();
-
-			oCellContent.SelectAll();
-			oCellContent.GetAllFields(true, arrFields);
-			oCellContent.RemoveSelection();
+			var arrCellsArray = this.GetSelectionArray();
+			for (var nPos = 0, nCount = arrCellsArray.length; nPos < nCount; ++nPos)
+			{
+				var oCellPos     = arrCellsArray[nPos];
+				var oCurCell     = this.GetRow(oCellPos.Row).GetCell(oCellPos.Cell);
+				var oCellContent = oCurCell.GetContent();
+				
+				oCellContent.SelectAll();
+				oCellContent.GetAllFields(true, arrFields);
+				oCellContent.RemoveSelection();
+			}
+		}
+		else
+		{
+			this.CurCell.Content.GetAllFields(isSelection, arrFields);
 		}
 	}
 	else
 	{
-		this.CurCell.Content.GetAllFields(isSelection, arrFields);
+		for (let iRow = 0, rowCount = this.GetRowsCount(); iRow < rowCount; ++iRow)
+		{
+			let row = this.GetRow(iRow);
+			for (let iCell = 0, cellCount = row.GetCellsCount(); iCell < cellCount; ++iCell)
+			{
+				row.GetCell(iCell).GetContent().GetAllFields(false, arrFields);
+			}
+		}
 	}
 
 	return arrFields;
@@ -16609,16 +16623,6 @@ CTable.prototype.GetReviewType = function()
 {
     return reviewtype_Common;
 };
-CTable.prototype.Get_SectPr = function()
-{
-    if (this.Parent && this.Parent.Get_SectPr)
-    {
-        this.Parent.Update_ContentIndexing();
-        return this.Parent.Get_SectPr(this.Index);
-    }
-
-    return null;
-};
 CTable.prototype.IsSelectedAll = function()
 {
 	if (!this.IsCellSelection())
@@ -19364,8 +19368,20 @@ CTable.prototype.private_CheckCurCell = function()
 			if (oRow.GetCellsCount() > 0)
 			{
 				this.CurCell = oRow.GetCell(0);
-				return;
+				break;
 			}
+		}
+	}
+	
+	// TODO: SelectionData переделать с индексов на массив самих ячеек, и при изменениях мы будем проверять сами ячейки
+	if (this.Selection.Use && this.Selection.Data && this.Selection.Data.length)
+	{
+		for (let i = this.Selection.Data.length - 1; i >= 0; --i)
+		{
+			let row  = this.Selection.Data[i].Row;
+			let cell = this.Selection.Data[i].Cell;
+			if (row >= this.Content.length || row < 0 || cell >= this.GetRow(row).GetCellsCount() || cell < 0)
+				this.Selection.Data.splice(i, 1);
 		}
 	}
 };

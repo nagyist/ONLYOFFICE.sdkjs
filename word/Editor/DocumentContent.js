@@ -472,11 +472,9 @@ CDocumentContent.prototype.GetStyles = function(nLvl)
 {
 	if (this.bPresentation && this.Parent)
 		return this.Parent.Get_Styles(nLvl);
-
-	if (this.LogicDocument && this.LogicDocument.GetStyles)
-		return this.LogicDocument.GetStyles();
-
-	return AscWord.DEFAULT_STYLES;
+	
+	let logicDocument = this.GetLogicDocument();
+	return logicDocument && logicDocument.GetStyles ? logicDocument.GetStyles() : AscWord.DEFAULT_STYLES;
 };
 CDocumentContent.prototype.Get_TableStyleForPara = function()
 {
@@ -5910,7 +5908,7 @@ CDocumentContent.prototype.SetImageProps = function(Props)
 	if (docpostype_DrawingObjects === this.CurPos.Type)
 	{
 		this.LogicDocument.DrawingObjects.setProps(Props);
-		this.Document_UpdateInterfaceState();
+		this.LogicDocument.Document_UpdateInterfaceState();
 	}
 	else if (docpostype_Content == this.CurPos.Type && ( ( true === this.Selection.Use && this.Selection.StartPos == this.Selection.EndPos && type_Table == this.Content[this.Selection.StartPos].GetType() ) || ( false == this.Selection.Use && type_Table == this.Content[this.CurPos.ContentPos].GetType() ) ))
 	{
@@ -7046,6 +7044,13 @@ CDocumentContent.prototype.SetSelectionToBeginEnd = function(isSelectionStart, i
 {
 	if (this.Content.length <= 0)
 		return;
+	
+	let startPos = Math.min(this.Selection.StartPos, this.Selection.EndPos);
+	let endPos   = Math.max(this.Selection.StartPos, this.Selection.EndPos);
+	for (let pos = startPos + 1; pos < endPos; ++pos)
+	{
+		this.Content[pos].RemoveSelection();
+	}
 
 	if (true === isElementStart)
 	{
@@ -7065,6 +7070,13 @@ CDocumentContent.prototype.SetSelectionToBeginEnd = function(isSelectionStart, i
 			this.Selection.StartPos = this.Content.length - 1;
 		else
 			this.Selection.EndPos = this.Content.length - 1;
+	}
+	
+	startPos = Math.min(this.Selection.StartPos, this.Selection.EndPos);
+	endPos   = Math.max(this.Selection.StartPos, this.Selection.EndPos);
+	for (let pos = startPos + 1; pos < endPos; ++pos)
+	{
+		this.Content[pos].SelectAll(1);
 	}
 };
 CDocumentContent.prototype.Select_DrawingObject      = function(Id)
@@ -7425,10 +7437,7 @@ CDocumentContent.prototype.Internal_GetContentPosByXY = function(X, Y, PageNum)
     }
 
     var StartPos = Math.min(this.Pages[PageNum].Pos, this.Content.length - 1);
-    var EndPos   = this.Content.length - 1;
-
-    if (PageNum < this.Pages.length - 1)
-        EndPos = Math.min(this.Pages[PageNum + 1].Pos, EndPos);
+    var EndPos   = Math.min(this.Pages[PageNum].EndPos, this.Content.length - 1);
 
     // Сохраним позиции всех Inline элементов на данной странице
     var InlineElements = [];
@@ -7670,6 +7679,18 @@ CDocumentContent.prototype.GetAbsoluteSection = function(curPage)
 		return 0;
 	
 	return this.Parent.GetAbsoluteSection(this.GetRelativePage(curPage));
+};
+CDocumentContent.prototype.IsFirstOnDocumentPage = function(curPage)
+{
+	if (0 === curPage || undefined === curPage)
+	{
+		if (!this.Parent || !this.Parent.IsFirstOnDocumentPage)
+			return true;
+		
+		return this.Parent.IsFirstOnDocumentPage();
+	}
+	
+	return this.GetAbsolutePage(curPage) !== this.GetAbsolutePage(curPage - 1);
 };
 //-----------------------------------------------------------------------------------
 // Undo/Redo функции
@@ -8872,7 +8893,7 @@ CDocumentContent.prototype.GetMargins = function()
 };
 CDocumentContent.prototype.IsEmptyPage = function(nCurPage)
 {
-	if (nCurPage < 0 || nCurPage >= this.Pages.length)
+	if (!this.IsRecalculated() || nCurPage < 0 || nCurPage >= this.Pages.length)
 		return true;
 
 	var nStartPos = this.Pages[nCurPage].Pos;
