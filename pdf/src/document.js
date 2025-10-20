@@ -4997,24 +4997,33 @@ var CPresentation = CPresentation || function(){};
             Asc.editor.UpdateParagraphProp(oParaPr);
             Asc.editor.sync_PrPropCallback(oParaPr);
         }
-        else if (oAcitveObj && oAcitveObj.IsForm()) {
-            let oController = this.GetController();
-            let nAlignType = oAcitveObj.GetAlign();
-            let isRTL = oAcitveObj.IsRTL();
+        else if (oAcitveObj) {
+            if (oAcitveObj.IsForm()) {
+                let oController = this.GetController();
+                let nAlignType = oAcitveObj.GetAlign();
+                let isRTL = oAcitveObj.IsRTL();
 
-            oController.selectedObjects.forEach(function(shape) {
-                let oField = shape.GetEditField();
-                
-                if (nAlignType != oField.GetAlign()) {
-                    nAlignType = undefined;
-                }
-                if (isRTL != oField.IsRTL()) {
-                    isRTL = false;
-                }
-            });
+                oController.selectedObjects.forEach(function(shape) {
+                    let oField = shape.GetEditField();
+                    
+                    if (nAlignType != oField.GetAlign()) {
+                        nAlignType = undefined;
+                    }
+                    if (isRTL != oField.IsRTL()) {
+                        isRTL = false;
+                    }
+                });
 
-            Asc.editor.sync_PrAlignCallBack(AscPDF.getInternalAlignByPdfType(nAlignType));
-            Asc.editor.sendEvent("asc_onTextDirection", isRTL);
+                Asc.editor.sync_PrAlignCallBack(AscPDF.getInternalAlignByPdfType(nAlignType));
+                Asc.editor.sendEvent("asc_onTextDirection", isRTL);
+            }
+            else if (oAcitveObj.IsAnnot() && oAcitveObj.IsFreeText() && oAcitveObj.IsInTextBox()) {
+                let oContent = oAcitveObj.GetDocContent();
+                let oParaPr = oContent.GetCalculatedParaPr();
+
+                Asc.editor.sync_PrAlignCallBack(oParaPr.GetJc());
+                Asc.editor.sendEvent("asc_onTextDirection", oParaPr.GetBidi());
+            }
         }
     };
     CPDFDoc.prototype.UpdateTextProps = function() {
@@ -5679,7 +5688,7 @@ var CPresentation = CPresentation || function(){};
     };
     CPDFDoc.prototype.SetParagraphAlign = function(Align) {
         let oController = this.GetController();
-        if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot()})) {
+        if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot() && !obj.IsFreeText()})) {
             return false;
         }
 
@@ -5687,7 +5696,7 @@ var CPresentation = CPresentation || function(){};
     };
 	CPDFDoc.prototype.SetParagraphBidi = function(isRtl) {
 		let oController = this.GetController();
-		if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot()})) {
+		if (oController.getSelectedArray().find(function(obj) { return obj.IsAnnot() && !obj.IsFreeText()})) {
 			return false;
 		}
 		

@@ -58,7 +58,8 @@
     let ALIGN_TYPE = {
         left:   0,
         center: 1,
-        right:  2
+        right:  2,
+        justify:3
     };
 
     // For Span attributes (start)

@@ -1693,6 +1693,9 @@
                         nStyle |= (1 << 6);
                         memory.WriteString(aRC[i]["actual"]);
                     }
+                    if (aRC[i]["rtl"]) {
+                        nStyle |= (1 << 7);
+                    }
                     // запись флагов настроек шрифта
                     let nEndPos = memory.GetCurPosition();
                     memory.Seek(nFontStylePos);
