@@ -139,6 +139,10 @@
 		if (!obj)
 			return;
 		
+		let name = obj["name"];
+		if (name)
+			obj["guid"] += "AnnotationName:" + name;
+		
 		switch (obj["type"])
 		{
 			case "highlightText":
@@ -183,7 +187,8 @@
 		if (!obj || !obj["paragraphId"] || !obj["guid"] || !obj["rangeId"])
 			return;
 		
-		this.textAnnotator.getMarks().selectRange(obj["paragraphId"], obj["guid"], obj["rangeId"]);
+		let handlerId = this.getHandlerId(obj);
+		this.textAnnotator.getMarks().selectRange(obj["paragraphId"], handlerId, obj["rangeId"]);
 	};
 	TextAnnotatorEventManager.prototype.onCurrentRanges = function(paragraph, ranges)
 	{
@@ -201,7 +206,14 @@
 			for (let rangeId in prevRanges[handlerId])
 			{
 				if (changePara || noHandler || !currRanges[handlerId][rangeId])
-					window.g_asc_plugins.onPluginEvent("onBlurAnnotation", {"paragraphId" : prevPara.GetId(), "rangeId" : rangeId}, handlerId);
+				{
+					let obj = {
+						"paragraphId" : prevPara.GetId(),
+						"rangeId"     : rangeId
+					};
+					this.addNameFromHandlerId(handlerId, obj);
+					window.g_asc_plugins.onPluginEvent("onBlurAnnotation", obj, this.getGuid(handlerId));
+				}
 			}
 		}
 		
@@ -211,12 +223,40 @@
 			for (let rangeId in currRanges[handlerId])
 			{
 				if (changePara || noHandler || !prevRanges[handlerId][rangeId])
-					window.g_asc_plugins.onPluginEvent("onFocusAnnotation", {"paragraphId" : currPara.GetId(), "rangeId" : rangeId}, handlerId);
+				{
+					let obj = {
+						"paragraphId" : currPara.GetId(),
+						"rangeId"     : rangeId
+					};
+					this.addNameFromHandlerId(handlerId, obj);
+					window.g_asc_plugins.onPluginEvent("onFocusAnnotation", obj, this.getGuid(handlerId));
+				}
 			}
 		}
 		
 		this.curParagraph = currPara;
 		this.curRanges    = currRanges;
+	};
+	TextAnnotatorEventManager.prototype.getHandlerId = function(obj)
+	{
+		return (obj["name"] ? obj["guid"] + "AnnotationName:" + obj["name"] : obj["guid"]);
+	};
+	TextAnnotatorEventManager.prototype.addNameFromHandlerId = function(handlerId, obj)
+	{
+		if (!obj)
+			return;
+		
+		let pos = handlerId.indexOf("AnnotationName:");
+		if (-1 !== pos)
+			obj["name"] = handlerId.substr(pos + 15);
+	};
+	TextAnnotatorEventManager.prototype.getGuid = function(handlerId)
+	{
+		let pos = handlerId.indexOf("AnnotationName:");
+		if (-1 !== pos)
+			return handlerId.substr(0, pos);
+		else
+			return handlerId;
 	};
 	//-------------------------------------------------------------export-----------------------------------------------
 	AscCommon.TextAnnotatorEventManager = TextAnnotatorEventManager;
