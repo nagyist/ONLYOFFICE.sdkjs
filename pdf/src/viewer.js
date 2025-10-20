@@ -1960,7 +1960,6 @@
 				oThis.MouseHandObject.ScrollX = oThis.scrollX;
 				oThis.MouseHandObject.ScrollY = oThis.scrollY;
 
-				this.file.removeSelection();
 				return;
 			}
 
@@ -2069,8 +2068,16 @@
 				oThis.file.onMouseUp(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 			}
 				
-			if (oThis.MouseHandObject)
+			if (oThis.MouseHandObject) {
 				oThis.MouseHandObject.Active = false;
+
+				if (oThis.MouseHandObject.X == AscCommon.global_mouseEvent.X && oThis.MouseHandObject.Y == AscCommon.global_mouseEvent.Y) {
+					oThis.file.removeSelection();
+					oThis.file.onUpdateSelection();
+					oThis.file.onUpdateOverlay();
+				}
+			}
+				
 			oThis.isMouseMoveBetweenDownUp = false;
 
 			if (-1 !== oThis.timerScrollSelect)

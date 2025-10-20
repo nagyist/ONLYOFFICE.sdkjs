@@ -593,6 +593,10 @@ void main() {\n\
         }
     };
     CFile.prototype.onMouseUp = function(pageIndex, x, y) {
+        if (this.viewer.MouseHandObject) {
+            return;
+        }
+        
         let _t      = this;
         let oDoc    = this.viewer.getPDFDoc();
         let oViewer = this.viewer;
