@@ -1411,7 +1411,9 @@
 
 	PDFEditorApi.prototype.SetRedactTool = function(bUse) {
 		let oDoc = this.getPDFDoc();
-		oDoc.BlurActiveObject();
+		if (bUse) {
+			oDoc.BlurActiveObject();
+		}
 		
 		this.isRedactTool = bUse;
 		this.sendEvent("asc_onRedactState", bUse);
