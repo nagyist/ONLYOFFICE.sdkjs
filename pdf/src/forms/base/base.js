@@ -205,8 +205,8 @@
         }
     };
     CBaseField.prototype.SetMEOptions = function(nFlags) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent)
             return oParent.SetMEOptions(nFlags);
 
         if (this._meOptions === nFlags) {
@@ -276,8 +276,8 @@
         }
     };
     CBaseField.prototype.GetMEOptions = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.GetMEOptions();
 
         return this._meOptions;
@@ -465,8 +465,8 @@
 	 * @returns {Array}
 	 */
     CBaseField.prototype.GetAllWidgets = function() {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             return oParent.GetAllWidgets()
         }
 
@@ -556,8 +556,8 @@
             case AscPDF.FORMS_TRIGGERS_TYPES.Validate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Calculate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Format: {
-                let oParent = this.GetParent();
-                if (oParent && oParent.IsAllKidsWidgets())
+                let oParent = this.GetParent(true);
+                if (oParent)
                     return oParent.SetActions(nTriggerType, aActionsInfo);
             }
         }
@@ -655,8 +655,8 @@
             case AscPDF.FORMS_TRIGGERS_TYPES.Validate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Calculate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Format: {
-                let oParent = this.GetParent();
-                if (oParent && oParent.IsAllKidsWidgets())
+                let oParent = this.GetParent(true);
+                if (oParent)
                     return oParent.GetActions(nTriggerType);
             }
         }
@@ -798,8 +798,8 @@
             case AscPDF.FORMS_TRIGGERS_TYPES.Validate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Calculate:
             case AscPDF.FORMS_TRIGGERS_TYPES.Format: {
-                let oParent = this.GetParent();
-                if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+                let oParent = this.GetParent(true);
+                if (bInherit !== false && oParent)
                     return oParent.GetTrigger(nType);
             }
         }
@@ -917,8 +917,8 @@
             }
         }
 
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             oCopy.DrainLogicFrom(oParent, false);
             oCopy.SetPartialName(oParent.GetPartialName());
         }
@@ -969,8 +969,16 @@
         return this._doc;
     };
 
-    CBaseField.prototype.GetParent = function() {
-        return this._parent;
+    CBaseField.prototype.GetParent = function(bLogicParent) {
+        if (!bLogicParent) {
+            return this._parent;
+        }
+
+        if (this._parent && this._parent.IsAllKidsWidgets()) {
+            return this._parent;
+        }
+        
+        return null;
     };
 
     /**
@@ -979,7 +987,7 @@
 	 * @typeofeditors ["PDF"]
 	 */
     CBaseField.prototype.GetParentValue = function(bInherit) {
-        let oParent = this.GetParent();
+        let oParent = this.GetParent(true);
         if (oParent == null && this._value == null)
             return undefined;
         else if (bInherit === false || (this._value != null && this.GetPartialName() != null)) {
@@ -999,8 +1007,8 @@
             value = value.toString();
         }
 
-        let oParent = this.GetParent();
-        if (oParent && this.IsWidget() && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent && this.IsWidget())
             oParent.SetParentValue(value);
         else {
             if (this._value === value) {
@@ -1660,14 +1668,27 @@
             let bParentInherit = !oParentField;
             if (!oParentField) {
                 if (oExistsField) {
+                    let sFullName = aPartNames[0];
+
                     for (let i = 0; i < aPartNames.length; i++) {
-                        let oNewParent = oDoc.CreateField(aPartNames[i], nFieldType, []);
-    
-                        if (oParentField) {
-                            oParentField.AddKid(oNewParent);
+                        if (i !== 0) {
+                            sFullName += "." + aPartNames[i];
+                        }
+
+                        let oField = oDoc.GetField(sFullName);
+                        if (oField && !oField.IsWidget()) {
+                            oParentField = oField;
                         }
                         
-                        oParentField = oNewParent;
+                        if (!oField || oField.IsWidget()) {
+                            let oNewParent = oDoc.CreateField(aPartNames[i], nFieldType, []);
+    
+                            if (oParentField) {
+                                oParentField.AddKid(oNewParent);
+                            }
+                            
+                            oParentField = oNewParent;
+                        }
                     }
                 }
                 // will be field-widget
@@ -1822,8 +1843,8 @@
     };
 
     CBaseField.prototype.SetReadOnly = function(bReadOnly) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent)
             return oParent.SetReadOnly(bReadOnly);
 
         if (this._readOnly === bReadOnly) {
@@ -1843,16 +1864,16 @@
         return true;
     };
     CBaseField.prototype.IsReadOnly = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.IsReadOnly();
 
         return this._readOnly;
     };
 
     CBaseField.prototype.SetNoExport = function(bNoExport) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             return oParent.SetNoExport(bNoExport);
         }
     
@@ -1869,16 +1890,16 @@
         return true;
     };
     CBaseField.prototype.IsNoExport = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.IsNoExport();
 
         return this._noExport;
     };
     
     CBaseField.prototype.SetRequired = function(bRequired) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent)
             return oParent.SetRequired(bRequired);
 
         if (this._required === bRequired) {
@@ -1902,15 +1923,15 @@
         return true;
     };
     CBaseField.prototype.IsRequired = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.IsRequired();
 
         return this._required;
     };
     CBaseField.prototype.SetTooltip = function(sTooltip) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent)
             return oParent.SetTooltip(sTooltip);
 
         if (this._tooltip === sTooltip) {
@@ -1925,8 +1946,8 @@
         return true;
     };
     CBaseField.prototype.GetTooltip = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.GetTooltip();
 
         return this._tooltip;
@@ -2003,15 +2024,15 @@
         return this._display;
     };
     CBaseField.prototype.GetDefaultValue = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.GetDefaultValue();
         
         return this._defaultValue;
     };
     CBaseField.prototype.SetDefaultValue = function(value) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (oParent)
             return oParent.SetDefaultValue(value);
 
         let sOldDefValue = this.GetDefaultValue();
@@ -2497,9 +2518,6 @@
 	CBaseField.prototype.DrawFromTextBox = function(pdfGraphics, textBoxGraphics, pageIndex) {
 		this.Draw(pdfGraphics, textBoxGraphics);
 	};
-    CBaseField.prototype.GetParent = function() {
-        return this._parent;
-    };
     CBaseField.prototype.GetTopParent = function() {
         if (this._parent) 
         {
@@ -2865,8 +2883,8 @@
         memory.Seek(nEndPos);
     };
     CBaseField.prototype.CheckWidgetFlags = function(memory) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             let nCurPos = memory.GetCurPosition();
             memory.Seek(memory.posForWidgetFlags);
             memory.WriteLong(-1);
@@ -3169,11 +3187,10 @@
             memory.widgetFlags |= (1 << 2);
         }
 
-        let oParent = this.GetParent();
+        let oParent = this.GetParent(true);
         let nFieldType = this.GetType();
-        let bWriteType = !oParent || !oParent.IsAllKidsWidgets();
 
-        if (bWriteType) {
+        if (!oParent) {
             switch (nFieldType) {
                 case AscPDF.FIELD_TYPES.radiobutton: {
                     memory.widgetFlags |= (1 << 15);

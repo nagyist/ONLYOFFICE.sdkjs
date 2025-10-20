@@ -9656,7 +9656,8 @@ var CPresentation = CPresentation || function(){};
                 let nOptIdx = field.GetOptionsIndex();
 
                 if (nOptIdx !== -1) {
-                    let aOptions = field.GetParent().GetOptions();
+                    let oParent = field.GetParent(true);
+                    let aOptions = oParent ? oParent.GetOptions() : field.GetOptions();
                     if (aOptions[nOptIdx] == aOptions[sDefValue]) {
                         sExpValue = sDefValue;
                     }
@@ -9680,7 +9681,8 @@ var CPresentation = CPresentation || function(){};
                 let nOptIdx = field.GetOptionsIndex();
 
                 if (nOptIdx !== -1) {
-                    let aOptions = field.GetParent().GetOptions();
+                    let oParent = field.GetParent(true);
+                    let aOptions = oParent ? oParent.GetOptions() : field.GetOptions();
                     if (field.IsRadiosInUnison() && aOptions[nOptIdx] == aOptions[sDefValue]) {
                         sExpValue = sDefValue;
                     }

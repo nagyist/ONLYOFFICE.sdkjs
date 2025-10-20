@@ -70,10 +70,8 @@
         this.DrawEdit(oGraphicsWord);
     };
     CBaseCheckBoxField.prototype.SetDefaultValue = function(value) {
-        let oParent = this.GetParent();
-        let hasSameKids = oParent && oParent.IsAllKidsWidgets();
-
-        if (hasSameKids || this.IsWidget()) {
+        let oParent = this.GetParent(true);
+        if (oParent || this.IsWidget()) {
             const shouldUpdate = value && !this.GetParentValue() || this.GetParentValue() !== value;
 
             if (shouldUpdate) {
@@ -81,7 +79,7 @@
                 this.Commit();
             }
 
-            if (hasSameKids) {
+            if (oParent) {
                 return oParent.SetDefaultValue(value);
             }
         }
@@ -450,7 +448,7 @@
     CBaseCheckBoxField.prototype.Commit = function() {
         this.SetNeedCommit(false);
 
-        let oParent = this.GetParent();
+        let oParent = this.GetParent(true);
         let aOpt    = oParent ? oParent.GetOptions() : undefined;
         let aKids   = oParent ? oParent.GetKids() : undefined;
         if (this.IsChecked()) {
@@ -473,8 +471,8 @@
         this.Commit2();
     };
     CBaseCheckBoxField.prototype.SetNoToggleToOff = function(bValue) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             return oParent.SetNoToggleToOff(bValue);
         }
 
@@ -490,15 +488,15 @@
         return true;
     };
     CBaseCheckBoxField.prototype.IsNoToggleToOff = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.IsNoToggleToOff();
 
         return this._noToggleToOff;
     };
     CBaseCheckBoxField.prototype.SetOptions = function(aOpt) {
-        let oParent = this.GetParent();
-        if (oParent && oParent.IsAllKidsWidgets()) {
+        let oParent = this.GetParent(true);
+        if (oParent) {
             oParent.SetOptions(aOpt);
         }
         
@@ -534,14 +532,14 @@
         return true;
     };
     CBaseCheckBoxField.prototype.GetOptions = function(bInherit) {
-        let oParent = this.GetParent();
-        if (bInherit !== false && oParent && oParent.IsAllKidsWidgets())
+        let oParent = this.GetParent(true);
+        if (bInherit !== false && oParent)
             return oParent.GetOptions();
 
         return this._options;
     };
     CBaseCheckBoxField.prototype.GetOptionsIndex = function() {
-        let oParent = this.GetParent();
+        let oParent = this.GetParent(true);
         let aOptions = oParent ? oParent.GetOptions() : null;
         if (aOptions) {
             let aKids = oParent.GetKids();
@@ -618,7 +616,7 @@
         return false;
     };
     CBaseCheckBoxField.prototype.SetExportValue = function(sValue) {
-        let oParent = this.GetParent();
+        let oParent = this.GetParent(true);
     
         if (oParent && sValue !== undefined) {
             let aWidgets        = oParent.GetAllWidgets();
@@ -645,7 +643,7 @@
     };
     CBaseCheckBoxField.prototype.GetExportValue = function(bInherit) {
         if (bInherit !== false) {
-            let oParent = this.GetParent();
+            let oParent = this.GetParent(true);
             let aParentOpt = oParent ? oParent.GetOptions() : null;
 
             if (aParentOpt) {
@@ -672,7 +670,7 @@
         return this._chStyle;
     };
     CBaseCheckBoxField.prototype.SetValue = function(value) {
-        let oParent     = this.GetParent();
+        let oParent     = this.GetParent(true);
         let aParentOpt  = oParent ? oParent.GetOptions() : undefined;
 
         let sExportValue;
@@ -688,7 +686,7 @@
         else
             this.SetChecked(false);
         
-        if (editor.getDocumentRenderer().IsOpenFormsInProgress && this.GetParent() == null)
+        if (Asc.editor.getDocumentRenderer().IsOpenFormsInProgress && oParent == null)
             this.SetParentValue(value);
     };
     CBaseCheckBoxField.prototype.private_SetValue = CBaseCheckBoxField.prototype.SetValue;
@@ -769,8 +767,8 @@
         let isChecked = this.IsChecked();
         // не пишем значение, если есть родитель с такими же видджет полями,
         // т.к. значение будет хранить родитель
-        let oParent = this.GetParent();
-        if (oParent == null || oParent.IsAllKidsWidgets() == false) {
+        let oParent = this.GetParent(true);
+        if (oParent == null) {
             memory.fieldDataFlags |= (1 << 9);
             if (isChecked) {
                 memory.WriteString("Yes");
