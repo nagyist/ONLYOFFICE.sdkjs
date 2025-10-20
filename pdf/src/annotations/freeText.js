@@ -460,18 +460,7 @@
         }
         
         if (this.IsNeedRecalcSizes()) {
-            let oXfrm = this.getXfrm();
-            if (oXfrm) {
-                let aRect = this.GetRect();
-                AscCommon.ExecuteNoHistory(function() {
-                    this.spPr.xfrm.extX = (aRect[2] - aRect[0]) * g_dKoef_pt_to_mm;
-                    this.spPr.xfrm.extY = (aRect[3] - aRect[1]) * g_dKoef_pt_to_mm;
-                    this.spPr.xfrm.offX = aRect[0] * g_dKoef_pt_to_mm;
-                    this.spPr.xfrm.offY = aRect[1] * g_dKoef_pt_to_mm;
-                    this.updateTransformMatrix();
-                    this.recalcGeometry();
-                }, undefined, this);
-            }
+            this.RecalcSizes();
         }
 
         if (this.recalcInfo.recalculateGeometry)
@@ -488,6 +477,22 @@
         
         this.SetNeedRecalc(false);
     };
+    CAnnotationFreeText.prototype.RecalcSizes = function() {
+        let oXfrm = this.getXfrm();
+        if (oXfrm) {
+            let aRect = this.GetRect();
+            AscCommon.ExecuteNoHistory(function() {
+                this.spPr.xfrm.extX = (aRect[2] - aRect[0]) * g_dKoef_pt_to_mm;
+                this.spPr.xfrm.extY = (aRect[3] - aRect[1]) * g_dKoef_pt_to_mm;
+                this.spPr.xfrm.offX = aRect[0] * g_dKoef_pt_to_mm;
+                this.spPr.xfrm.offY = aRect[1] * g_dKoef_pt_to_mm;
+                this.updateTransformMatrix();
+                this.recalcGeometry();
+            }, undefined, this);
+        }
+
+        this.SetNeedRecalcSizes(false);
+    }
     CAnnotationFreeText.prototype.RefillGeometry = function() {
         let aOrigRect   = this.GetRect();
         let aCallout    = this.GetCallout(); // координаты выходящей стрелки
@@ -1279,6 +1284,7 @@
                     this.SetInTextBox(true);
                 }
                 else {
+                    this.selection.textSelection = this.GetTextBoxShape();
                     oContent.SelectAll();
                     if (oContent.IsSelectionEmpty() == false)
                         oViewer.Api.WordControl.m_oDrawingDocument.TargetEnd();
