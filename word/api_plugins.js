@@ -341,16 +341,19 @@
 	 */
     Api.prototype["pluginMethod_RemoveSelectedContent"] = function()
     {
-        var oLogicDocument = this.private_GetLogicDocument();
-        if (!oLogicDocument || !oLogicDocument.IsSelectionUse())
-            return;
-
-        if (false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Remove, null, true, oLogicDocument.IsFormFieldEditing()))
-        {
-            oLogicDocument.StartAction(AscDFH.historydescription_Document_BackSpaceButton);
-            oLogicDocument.Remove(-1, true);
-            oLogicDocument.FinalizeAction();
-        }
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument || !logicDocument.IsSelectionUse())
+			return;
+		
+		this.executeGroupActions(function()
+		{
+			if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Remove, null, true, logicDocument.IsFormFieldEditing()))
+			{
+				logicDocument.StartAction(AscDFH.historydescription_Document_BackSpaceButton);
+				logicDocument.Remove(-1, true);
+				logicDocument.FinalizeAction();
+			}
+		});
     };
 
 	/**
@@ -1308,6 +1311,14 @@
 		
 		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
 		this.getTextAnnotatorEventManager().onResponse(obj);
+	};
+	Api.prototype["pluginMethod_SelectAnnotationRange"] = function(obj)
+	{
+		if (!obj)
+			return;
+		
+		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
+		this.getTextAnnotatorEventManager().selectRange(obj);
 	};
 
 	function private_ReadContentControlCommonPr(commonPr)
