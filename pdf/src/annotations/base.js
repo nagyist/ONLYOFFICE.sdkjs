@@ -514,8 +514,9 @@
         return this._origPage;
     };
     CAnnotationBase.prototype.SetWasChanged = function(isChanged, viewSync) {
-        let oViewer   = Asc.editor.getDocumentRenderer();
-        let canChange = !oViewer.IsOpenAnnotsInProgress && AscCommon.History.CanAddChanges();
+        let oDoc        = Asc.editor.getPDFDoc();
+        let oViewer     = Asc.editor.getDocumentRenderer();
+        let canChange   = !oViewer.IsOpenAnnotsInProgress && oDoc.LocalHistory !== AscCommon.History && AscCommon.History.CanAddChanges();
 
         let prev    = this._wasChanged;
         let changed = prev !== isChanged && canChange;
