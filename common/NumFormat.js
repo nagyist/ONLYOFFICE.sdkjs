@@ -1318,6 +1318,10 @@ NumFormat.prototype =
                         break;
                     }
                 }
+                if(this.aRawFormat[i].bElapsed)  
+                {
+                    bRightCond = true
+                }
                 var bLeftCond = false;
                 if(false == bRightCond)
                 {
@@ -2727,8 +2731,14 @@ NumFormat.prototype =
             }
             else if(numFormat_Minute == item.type)
             {
+                if (item.bElapsed) {
+                    res += "[";
+                }
                 for(var j = 0; j < item.val; ++j)
                     res += minute;
+                if (item.bElapsed) {
+                    res += "]";
+                }
             }
             else if(numFormat_Second == item.type)
             {
@@ -2777,6 +2787,7 @@ NumFormatCache.prototype =
 	},
     get : function(format, formatType)
     {
+    //return new CellFormat(format, formatType, false);
 		var key = format + String.fromCharCode(5) + formatType;
         var res = this.oNumFormats[key];
         if(null == res)
