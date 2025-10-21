@@ -95,6 +95,15 @@
 	{
 		this.eventManager.onCurrentRanges(paragraph, this.getCurrentRanges(paragraph));
 	};
+	CustomTextAnnotator.prototype.onClick = function(x, y, page)
+	{
+		let anchorPos = this.logicDocument.Get_NearestPos(page, x, y);
+		if (!anchorPos || !anchorPos.Paragraph || !anchorPos.ContentPos)
+			return;
+		
+		let ranges = this.getRangesByParaContentPos(anchorPos.Paragraph, anchorPos.ContentPos);
+		this.eventManager.onClick(anchorPos.Paragraph, ranges);
+	};
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Private area
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -146,6 +155,13 @@
 			return {};
 		
 		let paraPos = paragraph.GetParaContentPos(false, false);
+		return this.getRangesByParaContentPos(paragraph, paraPos);
+	};
+	CustomTextAnnotator.prototype.getRangesByParaContentPos = function(paragraph, paraPos)
+	{
+		if (!paraPos || !paragraph)
+			return {};
+		
 		let marks = this.marks.getStartedMarks(paragraph, paraPos);
 		let ranges = {};
 		for (let i = 0; i < marks.length; ++i)
@@ -182,10 +198,10 @@
 		for (let pos = 0, len = run.GetElementsCount(); pos < len; ++pos)
 		{
 			let item = run.GetElement(pos);
-			if (item.IsText())
-				this.text += String.fromCodePoint(item.GetCodePoint());
-			else if (item.IsSpace())
+			if (item.IsSpace() || (item.IsText() && item.IsNBSP()))
 				this.text += String.fromCodePoint(0x20);
+			else if (item.IsText())
+				this.text += String.fromCodePoint(item.GetCodePoint());
 			else if (item.IsTab())
 				this.text += String.fromCodePoint(0x09);
 			else if (item.IsBreak())

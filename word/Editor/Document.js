@@ -7689,6 +7689,8 @@ CDocument.prototype.Selection_SetEnd = function(X, Y, MouseEvent)
 							oBookmark[0].GoToBookmark();
 					}
 				}
+				
+				this.CustomTextAnnotator.onClick(X, Y, this.CurPage);
 			}
         }
         else

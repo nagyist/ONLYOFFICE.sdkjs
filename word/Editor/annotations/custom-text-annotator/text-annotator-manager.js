@@ -237,6 +237,24 @@
 		this.curParagraph = currPara;
 		this.curRanges    = currRanges;
 	};
+	TextAnnotatorEventManager.prototype.onClick = function(paragraph, ranges)
+	{
+		let paraId = paragraph.GetId();
+		for (let handlerId in ranges)
+		{
+			let _ranges = [];
+			let obj = {
+				"paragraphId" : paraId,
+				"ranges"      : _ranges
+			};
+			this.addNameFromHandlerId(handlerId, obj);
+			for (let rangeId in ranges[handlerId])
+			{
+				_ranges.push(rangeId);
+			}
+			window.g_asc_plugins.onPluginEvent("onClickAnnotation", obj, this.getGuid(handlerId));
+		}
+	};
 	TextAnnotatorEventManager.prototype.getHandlerId = function(obj)
 	{
 		return (obj["name"] ? obj["guid"] + "AnnotationName:" + obj["name"] : obj["guid"]);
