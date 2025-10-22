@@ -190,6 +190,14 @@
 		let handlerId = this.getHandlerId(obj);
 		this.textAnnotator.getMarks().selectRange(obj["paragraphId"], handlerId, obj["rangeId"]);
 	};
+	TextAnnotatorEventManager.prototype.removeRange = function(obj)
+	{
+		if (!obj || !obj["paragraphId"] || !obj["guid"] || !obj["rangeId"])
+			return;
+		
+		let handlerId = this.getHandlerId(obj);
+		this.textAnnotator.getMarks().removeRange(obj["paragraphId"], handlerId, obj["rangeId"]);
+	};
 	TextAnnotatorEventManager.prototype.onCurrentRanges = function(paragraph, ranges)
 	{
 		let prevRanges = this.curRanges;

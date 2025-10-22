@@ -1320,6 +1320,14 @@
 		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
 		this.getTextAnnotatorEventManager().selectRange(obj);
 	};
+	Api.prototype["pluginMethod_RemoveAnnotationRange"] = function(obj)
+	{
+		if (!obj)
+			return;
+		
+		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
+		this.getTextAnnotatorEventManager().removeRange(obj);
+	};
 
 	function private_ReadContentControlCommonPr(commonPr)
 	{

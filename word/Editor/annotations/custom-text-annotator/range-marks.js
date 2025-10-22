@@ -154,6 +154,21 @@
 		this.logicDocument.UpdateInterface();
 		this.logicDocument.UpdateTracks();
 	};
+	CustomMarks.prototype.removeRange = function(paraId, handlerId, rangeId)
+	{
+		let paragraph = AscCommon.g_oTableId.GetById(paraId);
+		if (!this.paragraphs[paraId]
+			|| !this.paragraphs[paraId][handlerId]
+			|| !this.paragraphs[paraId][handlerId][rangeId])
+			return;
+		
+		this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].start);
+		this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].end);
+		delete this.paragraphs[paraId][handlerId][rangeId];
+		
+		if (paragraph)
+			paragraph.ReDraw();
+	};
 	CustomMarks.prototype.flatRunMarks = function(runId)
 	{
 		if (!this.runs[runId])
