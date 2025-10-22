@@ -2877,7 +2877,7 @@ PasteProcessor.prototype =
 		const grid = table.TableGrid;
 
 		let nGridBefore = 0;
-		if (row.Pr !== null && row.Pr.GridBefore !== null) {
+		if (row.Pr != null && row.Pr.GridBefore != null) {
 			nGridBefore = row.Pr.GridBefore;
 		}
 
@@ -10534,10 +10534,10 @@ PasteProcessor.prototype =
 		if (nRowCount > 0 && nMaxColCount > 0) {
 			var bUseScaleKoef = this.bUseScaleKoef;
 			var dScaleKoef = this.dScaleKoef;
-			/*if (dMaxSum * dScaleKoef > this.dMaxWidth) {
+			if (dMaxSum * dScaleKoef > this.dMaxWidth) {
 				dScaleKoef = dScaleKoef * this.dMaxWidth / dMaxSum;
 				bUseScaleKoef = true;
-			}*/
+			}
 			//строим Grid
 			var aGrid = [];
 			var nPrevIndex = null;
@@ -11179,6 +11179,7 @@ PasteProcessor.prototype =
 					row.Set_After(nColSpan);
 				else {
 					var oCurCell = row.Add_Cell(row.Get_CellsCount(), row, null, false);
+					oCurCell.SetIndex(row.Get_CellsCount() - 1);
 					if (nColSpan > 1)
 						oCurCell.Set_GridSpan(nColSpan);
 					if (Shd) {
