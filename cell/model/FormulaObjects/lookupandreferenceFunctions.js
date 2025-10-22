@@ -2910,7 +2910,7 @@ function (window, undefined) {
 		this.cacheId = {};
 		this.cacheRanges = {};
 		this.bHor = bHor;
-		this.sortedCache = new TypedCache();
+		this.sortedCache = {data: {}};
 		this.typedCache = new TypedCache();
 		this.typedCacheValuesMap = new TypedCache();
 	}
@@ -3342,7 +3342,7 @@ function (window, undefined) {
 	 * Traversal of a pre-saved and sorted typed array using binary search.
 	 * Used only for exact match lookups in VLOOKUP, HLOOKUP, or XLOOKUP when opt_arg4 is set to 0.
 	 * @private
-	 * @param {Uint32Array} array
+	 * @param {Map} map
 	 * @param {LookUpElement} valueForSearching
 	 * @param {boolean} revert
 	 * @param {Worksheet} ws
@@ -3351,31 +3351,38 @@ function (window, undefined) {
 	 * @param {number} endIndex
 	 * @return {number}
 	 */
-	VHLOOKUPCache.prototype._indexedBinarySearch = function (array, valueForSearching, revert, ws, rowCol, startIndex, endIndex) {
-		const t = this;
-		const getValue = function (index) {
-			const cell = ws.getCell3(t.bHor ? rowCol : index, t.bHor ? index : rowCol);
-			return checkTypeCell(cell, true);
+	VHLOOKUPCache.prototype._indexedBinarySearch = function (map, valueForSearching, revert, ws, rowCol, startIndex, endIndex) {
+		const searchValue = valueForSearching.value;
+		if (!map.has(searchValue)) {
+			return -1;
 		}
-		let i = 0;
-		let j = array.length - 1;
+		const arr = map.get(searchValue);
+		let left = 0;
+		let right = arr.length - 1;
 		let resultIndex = -1;
-		while (i <= j) {
-			const k = Math.floor((i + j) / 2);
-			let val = getValue(array[k]);
-			if (this._compareValues(valueForSearching, val, "=")) {
-				if (array[k] >= startIndex && array[k] <= endIndex) {
-					resultIndex = array[k];
-					revert ? (i = k + 1) : (j = k - 1);
-				} else if (array[k] < startIndex) {
-					i = k + 1
+		if (revert) {
+			while (left <= right) {
+				const mid = Math.floor((left + right) / 2);
+				if (arr[mid] < startIndex) {
+					left = mid + 1;
+				} else if (arr[mid] > endIndex) {
+					right = mid - 1;
 				} else {
-					j = k - 1;
+					resultIndex = arr[mid];
+					left = mid + 1;
 				}
-			} else if (this._compareValues(val, valueForSearching, ">")) {
-				j = k - 1;
-			} else {
-				i = k + 1;
+			}
+		} else {
+			while (left <= right) {
+				const mid = Math.floor((left + right) / 2);
+				if (arr[mid] < startIndex) {
+					left = mid + 1;
+				} else if (arr[mid] > endIndex) {
+					right = mid - 1;
+				} else {
+					resultIndex = arr[mid];
+					right = mid - 1;
+				}
 			}
 		}
 		return resultIndex;
@@ -3619,16 +3626,81 @@ function (window, undefined) {
 	 * @param {cElementType} type - Data type to filter and cache
 	 * @return {Uint32Array} Sorted array of worksheet indices for the specified data type
 	 */
-	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type) {
-		return this.sortedCache.getCache(ws, this.bHor, rowCol, type, function(value, index) {
-			if (value.type === cElementType.number) {
-				return {v: value.value, i: index};
-			} else {
-				return {v: String(value.value).toLowerCase(), i: index};
+	VHLOOKUPCache.prototype._getSortedCache = function(ws, rowCol, type, startIndex, endIndex, bHor) {
+		const wsId = ws.Get_Id();
+		const sortedCacheData = this.sortedCache.data;
+		if (!sortedCacheData[wsId]) {
+			sortedCacheData[wsId] = {horizontal: {}, vertical: {}};
+		}
+		/** @type {TypedCacheAxis} */
+		const axisData = bHor ? sortedCacheData[wsId].horizontal : sortedCacheData[wsId].vertical;
+		if (!axisData[rowCol]) {
+			axisData[rowCol] = {start: startIndex, end: endIndex, data: {}};
+			const c1 = bHor ? startIndex : rowCol;
+			const r1 = bHor ? rowCol : startIndex;
+			const c2 = bHor ? endIndex : rowCol;
+			const r2 = bHor ? rowCol : endIndex;
+			const fullRange = ws.getRange3(r1, c1, r2, c2);
+			fullRange._foreachNoEmpty(function (cell, r, c) {
+				const value = checkTypeCell(cell, true);
+				const index = bHor ? c : r;
+				if (!axisData[rowCol].data[value.type]) {
+					axisData[rowCol].data[value.type] = new Map();
+				}
+				const map = axisData[rowCol].data[value.type];
+				if (!map.has(value.value)) {
+					map.set(value.value, []);
+				}
+				const arr = axisData[rowCol].data[value.type].get(value.value);
+				arr.push(index);
+			});
+			axisData[rowCol].start = startIndex;
+			axisData[rowCol].end = endIndex;
+		} else {
+			if (startIndex < axisData[rowCol].start) {
+				const c1 = bHor ? startIndex : rowCol;
+				const r1 = bHor ? rowCol : startIndex;
+				const c2 = bHor ? axisData[rowCol].start : rowCol;
+				const r2 = bHor ? rowCol : axisData[rowCol].start;
+				const fullRange = ws.getRange3(r1, c1, r2, c2);
+				fullRange._foreachNoEmpty(function (cell, r, c) {
+					const value = checkTypeCell(cell, true);
+					const index = bHor ? c : r;
+					if (!axisData[rowCol].data[value.type]) {
+						axisData[rowCol].data[value.type] = new Map();
+					}
+					const map = axisData[rowCol].data[value.type];
+					if (!map.has(value.value)) {
+						map.set(value.value, []);
+					}
+					const arr = axisData[rowCol].data[value.type].get(value.value);
+					arr.unshift(index);
+				});
+				axisData[rowCol].start = startIndex;
 			}
-		}, function (value) {
-			return value.i
-		}, TypedCache.prototype.sortValues);
+			if (endIndex > axisData[rowCol].end) {
+				const c1 = bHor ? axisData[rowCol].end : rowCol;
+				const r1 = bHor ? rowCol : axisData[rowCol].end;
+				const c2 = bHor ? endIndex : rowCol;
+				const r2 = bHor ? rowCol : endIndex;
+				const fullRange = ws.getRange3(r1, c1, r2, c2);
+				fullRange._foreachNoEmpty(function (cell, r, c) {
+					const value = checkTypeCell(cell, true);
+					const index = bHor ? c : r;
+					if (!axisData[rowCol].data[value.type]) {
+						axisData[rowCol].data[value.type] = new Map();
+					}
+					const map = axisData[rowCol].data[value.type];
+					if (!map.has(value.value)) {
+						map.set(value.value, []);
+					}
+					const arr = axisData[rowCol].data[value.type].get(value.value);
+					arr.push(index);
+				});
+				axisData[rowCol].end = endIndex;
+			}
+		}
+		return axisData[rowCol].data[type];
 	};
 	/**
 	 * Retrieves or generates a typed cache containing worksheet indices for approximate match lookups.
@@ -3705,7 +3777,7 @@ function (window, undefined) {
 				if (opt_array) {
 					res = this._simpleSearch(valueForSearching,  revert, ws, startIndex, endIndex, rowCol,opt_arg4, opt_array);
 				} else if (opt_arg4 === 0) {
-					const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
+					const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type, startIndex, endIndex, this.bHor);
 					if (sorted) {
 						res = this._indexedBinarySearch(sorted, valueForSearching, revert, ws, rowCol, startIndex, endIndex);
 					}
@@ -3725,7 +3797,7 @@ function (window, undefined) {
 			if (opt_array) {
 				res = this._simpleSearch(valueForSearching, false, ws, startIndex, endIndex, rowCol,opt_arg4, opt_array);
 			} else {
-				const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type);
+				const sorted = this._getSortedCache(ws, rowCol, valueForSearching.type, startIndex, endIndex, this.bHor);
 				if (sorted) {
 					res = this._indexedBinarySearch(sorted, valueForSearching, false, ws, rowCol, startIndex, endIndex);
 				}
@@ -3747,7 +3819,7 @@ function (window, undefined) {
 	VHLOOKUPCache.prototype.clean = function () {
 		this.cacheId = {};
 		this.cacheRanges = {};
-		this.sortedCache.clean();
+		this.sortedCache = {data: {}};
 		this.typedCache.clean();
 		this.typedCacheValuesMap.clean();
 	};
