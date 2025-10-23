@@ -3805,7 +3805,7 @@ function (window, undefined) {
 		}
 		return res;
 	};
-	VHLOOKUPCache.prototype.remove = function (cell) {
+	VHLOOKUPCache.prototype.remove = function (cell, dataOld, dataNew) {
 		var wsId = cell.ws.getId();
 		var cacheRange = this.cacheRanges[wsId];
 		if (cacheRange) {
@@ -3813,6 +3813,74 @@ function (window, undefined) {
 			for (var i = 0, length = oGetRes.all.length; i < length; ++i) {
 				var elem = oGetRes.all[i];
 				elem.data.results = {};
+			}
+		}
+		const sortedCacheData = this.sortedCache.data
+		const data = sortedCacheData[wsId];
+		if (data) {
+			const verticalData = data.vertical;
+			const horizontalData = data.horizontal;
+			const colData = verticalData[cell.nCol];
+			if (colData && cell.nRow >= colData.start && cell.nRow <= colData.end) {
+				if (dataOld) {
+					const oldCellValue = dataOld.value;
+					const oldType = oldCellValue.type;
+					if (colData.data[oldType]) {
+						let oldValue = oldType === cElementType.number ? oldCellValue.number : oldCellValue.text;
+						if (oldType.type === cElementType.string) {
+							oldValue = oldValue.toLowerCase();
+						}
+						const mapOldType = colData.data[oldType];
+						if (mapOldType.has(oldValue)) {
+							const arr = mapOldType.get(oldValue);
+							if (arr.length === 1) {
+								mapOldType.delete(oldValue);
+							} else {
+								const newArr = [];
+								for (let i = 0; i < arr.length; i += 1) {
+									if (arr[i] !== cell.nRow) {
+										newArr.push(arr[i]);
+									}
+								}
+							}
+						}
+					}
+				}
+				const newType = dataNew.type;
+				let newValue = dataNew.value;
+				if (newType === cElementType.string) {
+					newValue = newValue.toLowerCase();
+				}
+				const mapNewType = colData.data[newType];
+				if (mapNewType) {
+					if (mapNewType.has(newValue)) {
+						const arr = mapNewType.get(newValue);
+						const newArr = [];
+						if (arr.length === 1) {
+							newArr.push(arr[0]);
+							cell.nRow > arr[0] ? newArr.push(cell.nRow) : newArr.unshift(cell.nRow);
+						} else {
+							if (arr[0] < cell.nRow) {
+								newArr.push(cell.nRow);
+							}
+							for(let i = 1; i < arr.length; i += 1) {
+								if (arr[i] < cell.nRow && arr[i - 1] > cell.nRow) {
+									newArr.push(cell.nRow);
+								}
+								newArr.push(arr[i]);
+							}
+							if (arr[arr.length - 1] < cell.nRow) {
+								newArr.push(cell.nRow);
+							}
+						}
+						mapNewType.set(newValue, newArr);
+					} else {
+						mapNewType.set(newValue, [cell.nRow]);
+					}
+				} else {
+					colData.data[newType] = new Map();
+					colData.data[newType].set(newValue, [cell.nRow])
+				}
 			}
 		}
 	};
