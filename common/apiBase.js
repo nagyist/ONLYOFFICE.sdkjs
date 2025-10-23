@@ -5663,23 +5663,36 @@
 	};
 
 	// for native editors
-	baseEditorsApi.prototype.wrapFunction = function(name, types) 
-	{
-		this["native_" + name] = function() 
-		{
-			for (let i = 0, len = arguments.length; i < len; i++) 
-			{
-				if (types && types[i] && types[i].prototype && types[i].prototype.fromCValue)
-					arguments[i] = types[i].prototype.fromCValue(arguments[i]);
-			}
-			if (!this[name])
-				console.log("Wrap unexisted function: " + name);
-			let result = this[name].apply(this, arguments);
-			if (result && result.toCValue)
-				result = result.toCValue();
-			return result;
-		}
-	};
+baseEditorsApi.prototype.wrapFunction = function(name, types) 
+  {
+    this["native_" + name] = function() 
+    {
+      for (let i = 0, len = arguments.length; i < len; i++) 
+      {
+        if (types && types[i] && types[i].prototype && types[i].prototype.fromCValue)
+          arguments[i] = types[i].prototype.fromCValue(arguments[i]);
+      }
+      if (!this[name])
+        console.log("Wrap unexisted function: " + name);
+      let result = this[name].apply(this, arguments);
+      if (result && result.toCValue)
+        result = result.toCValue();
+      else if (Array.isArray(result))
+      {
+        let arrayResult = new Array(result.length);
+        for (let i = 0, len = result.length; i < len; i++)
+        {
+          arrayResult[i] = result[i];
+          if (!result[i])
+            continue;
+          if (result[i].toCValue)
+            arrayResult[i] = result[i].toCValue();
+        }
+        result = arrayResult;
+      }
+      return result;
+    }
+  };
 
 	baseEditorsApi.prototype.wrapEvent = function(name)
 	{
