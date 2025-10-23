@@ -5050,8 +5050,9 @@ var CPresentation = CPresentation || function(){};
         if (oActiveForm) {
             oContent = oActiveForm.GetDocContent();
         }
-        else if (oActiveAnnot && oActiveAnnot.IsFreeText() && oActiveAnnot.IsInTextBox()) {
-            oContent = oActiveAnnot.GetDocContent();
+        else if (oActiveAnnot) {
+            isCanCopy = true;
+            isCanCut = true;
         }
         else if (oActiveDrawing) {
             oContent = oActiveDrawing.GetDocContent();
