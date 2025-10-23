@@ -5679,16 +5679,11 @@
 				result = result.toCValue();
 			else if (Array.isArray(result))
 			{
-				let arrayResult = new Array(result.length);
 				for (let i = 0, len = result.length; i < len; i++)
 				{
-					arrayResult[i] = result[i];
-					if (!result[i])
-						continue;
-					if (result[i].toCValue)
-						arrayResult[i] = result[i].toCValue();
+					if (result[i] && result[i].toCValue)
+						result[i] = result[i].toCValue();
 				}
-				result = arrayResult;
 			}
 			return result;
 		}
