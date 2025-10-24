@@ -163,6 +163,7 @@
 		this.isLoadingChartEditor = false;
 	};
 	CMainEditorFrameManager.prototype.openLocalDesktopFileLink = function(sLocalFileLink) {
+		const api = this.api;
 		window["AscDesktopEditor"]["openExternalReference"](sLocalFileLink, function(error) {
 			let internalError = Asc.c_oAscError.ID.No;
 			switch (error) {
@@ -171,7 +172,7 @@
 			}
 
 			if (Asc.c_oAscError.ID.No !== internalError) {
-				t.sendEvent("asc_onError", internalError, c_oAscError.Level.NoCritical);
+				api.sendEvent("asc_onError", internalError, c_oAscError.Level.NoCritical);
 			}
 		});
 	};

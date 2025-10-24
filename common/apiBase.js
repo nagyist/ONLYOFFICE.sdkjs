@@ -5642,7 +5642,6 @@
 	};
 
 	baseEditorsApi.prototype.asc_openExternalReference = function(externalReference) {
-		let t = this;
 		let isLocalDesktop = window["AscDesktopEditor"] && window["AscDesktopEditor"]["IsLocalFile"]();
 		if (isLocalDesktop) {
 			const sLocalLink = AscCommon.getLocalFileLink(externalReference.externalReference.Id);
