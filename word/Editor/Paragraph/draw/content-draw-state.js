@@ -352,7 +352,10 @@
 		let sectPr = this.Paragraph.Get_SectionPr();
 		let logicDocument = this.Paragraph.GetLogicDocument();
 		if (!logicDocument)
+		{
+			this.X += paraMark.GetWidthVisible();
 			return;
+		}
 		
 		if (logicDocument !== this.Paragraph.GetParent())
 			sectPr = undefined;
@@ -457,13 +460,20 @@
 			{
 				var oNumbering = para.Parent.GetNumbering();
 				
-				var oNumLvl = null;
+				let oNumLvl  = null;
+				let nNumSuff = Asc.c_oAscNumberingSuff.None;
 				if (numPr)
-					oNumLvl = oNumbering.GetNum(numPr.NumId).GetLvl(numPr.Lvl);
+				{
+					oNumLvl  = oNumbering.GetNum(numPr.NumId).GetLvl(numPr.Lvl);
+					nNumSuff = oNumLvl.GetSuff();
+				}
 				else if (prevNumPr)
-					oNumLvl = oNumbering.GetNum(prevNumPr.NumId).GetLvl(prevNumPr.Lvl);
+				{
+					// MSWord uses tab instead of suff from PrevNum (74525)
+					oNumLvl  = oNumbering.GetNum(prevNumPr.NumId).GetLvl(prevNumPr.Lvl);
+					nNumSuff = Asc.c_oAscNumberingSuff.Tab;
+				}
 				
-				var nNumSuff   = oNumLvl.GetSuff();
 				var nNumJc     = oNumLvl.GetJc();
 				var oNumTextPr = para.GetNumberingTextPr();
 				
@@ -687,7 +697,7 @@
 		else if (para_PresentationNumbering === numItem.Type)
 		{
 			var bIsEmpty = para.IsEmpty();
-			if (!bIsEmpty ||
+			if ((para.LogicDocument && para.LogicDocument.IsVisioEditor()) || !bIsEmpty ||
 				para.IsThisElementCurrent() ||
 				para.Parent.IsSelectionUse() && para.Parent.IsSelectionEmpty() && para.Parent.Selection.StartPos === para.GetIndex())
 			{

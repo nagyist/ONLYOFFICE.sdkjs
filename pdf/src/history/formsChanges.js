@@ -55,10 +55,17 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Read_Only]		= CChangesPDFFormR
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_No_Export]		= CChangesPDFFormNoExport;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Border_Width]		= CChangesPDFFormBorderWidth;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Locked]			= CChangesPDFFormLocked;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Rotate]			= CChangesPDFFormRotate;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Tooltip]			= CChangesPDFFormTooltip;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_ME_Options]		= CChangesPDFFormMEOptions;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Align]			= CChangesPDFFormAlign;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Ap_Idx]			= CChangesPDFFormApIdx;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Changed_View]		= CChangesPDFFormChangedView;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Form_Orig_Page]		= CChangesPDFFormOrigPage;
+
 
 // text
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Multiline]			= CChangesPDFTextFormMultiline;
-AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Align]				= CChangesPDFTextFormAlign;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Char_Limit]			= CChangesPDFTextCharLimit;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_Comb]				= CChangesPDFTextComb;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Form_DoNot_Scroll]		= CChangesPDFTextFormDoNotScroll;
@@ -74,6 +81,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Cur_Idxs]			= CChangesPDF
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Parent_Cur_Idxs]		= CChangesPDFListFormParentCurIdxs;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Top_Idx]				= CChangesPDFListTopIndex;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Option]				= CChangesPDFListOption;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Content_Option]		= CChangesPDFListContentOption;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Commit_On_Sel_Change]= CChangesPDFListCommitOnSelChange;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_List_Form_Multiple_Selection]	= CChangesPDFListMultipleSelection;
 
@@ -228,7 +236,6 @@ CChangesPDFFormChanged.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
 	oForm._wasChanged = Value;
-	oForm.IsWidget() && oForm.SetDrawFromStream(!Value);
 };
 
 
@@ -367,8 +374,9 @@ CChangesPDFFormDisplay.prototype.constructor = CChangesPDFFormDisplay;
 CChangesPDFFormDisplay.prototype.Type = AscDFH.historyitem_Pdf_Form_Change_Display;
 CChangesPDFFormDisplay.prototype.private_SetValue = function(Value)
 {
-	let oField = this.Class;
-	oField.SetDisplay(Value);
+	let oForm = this.Class;
+	oForm._display = Value;
+	oForm.AddToRedraw();
 };
 
 /**
@@ -385,7 +393,8 @@ CChangesPDFFormBorderColor.prototype.Type = AscDFH.historyitem_Pdf_Form_Border_C
 CChangesPDFFormBorderColor.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetBorderColor(Value);
+	oForm._strokeColor = Value;
+	oForm.AddToRedraw();
 };
 
 /**
@@ -402,7 +411,8 @@ CChangesPDFFormBGrColor.prototype.Type = AscDFH.historyitem_Pdf_Form_BG_Color;
 CChangesPDFFormBGrColor.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetBackgroundColor(Value);
+	oForm._fillColor = Value;
+	oForm.AddToRedraw();
 };
 
 /**
@@ -418,8 +428,9 @@ CChangesPDFFormBorderStyle.prototype.constructor = CChangesPDFFormBorderStyle;
 CChangesPDFFormBorderStyle.prototype.Type = AscDFH.historyitem_Pdf_Form_Border_Style;
 CChangesPDFFormBorderStyle.prototype.private_SetValue = function(Value)
 {
-	let oField = this.Class;
-	oField.SetBorderStyle(Value);
+	let oForm = this.Class;
+	oForm._borderStyle = Value;
+	oForm.AddToRedraw();
 };
 
 /**
@@ -437,7 +448,10 @@ CChangesPDFFormRequired.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
 	oForm._required = Value;
-	oForm.AddToRedraw();
+
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.AddToRedraw();
+	});
 };
 
 /**
@@ -454,7 +468,23 @@ CChangesPDFFormTextColor.prototype.Type = AscDFH.historyitem_Pdf_Form_Text_Color
 CChangesPDFFormTextColor.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetTextColor(Value);
+	oForm._textColor = Value;
+
+	function applyColorToContent(content, color) {
+		if (content) {
+			content.SetApplyToAll(true);
+			content.AddToParagraph(new ParaTextPr({Color: color}));
+			content.SetApplyToAll(false);
+		}
+	}
+
+	let oRGB = oForm.GetRGBColor(Value);
+	let oColor = new AscCommonWord.CDocumentColor(oRGB.r, oRGB.g, oRGB.b, false);
+
+	applyColorToContent(oForm.content, oColor);
+	applyColorToContent(oForm.contentFormat, oColor);
+	
+	oForm.SetNeedRecalc(true);
 };
 
 /**
@@ -488,7 +518,22 @@ CChangesPDFFormTextSize.prototype.Type = AscDFH.historyitem_Pdf_Form_Text_Size;
 CChangesPDFFormTextSize.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
-	oField.SetTextSize(Value);
+	oField._textSize = Value;
+
+	if (Value != 0) {
+		if (oField.content) {
+			oField.content.SetFontSize(Value);
+		}
+		if (oField.contentFormat) {
+			oField.contentFormat.SetFontSize(Value);
+		}
+	}
+	
+	if (oField.GetType() == AscPDF.FIELD_TYPES.button) {
+		oField.SetNeedUpdateImage(true);
+	}
+
+	oField.SetNeedRecalc(true);
 };
 
 /**
@@ -522,7 +567,37 @@ CChangesPDFFormRect.prototype.Type = AscDFH.historyitem_Pdf_Form_Rect;
 CChangesPDFFormRect.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
-	oField.SetRect(Value);
+	oField._rect = Value;
+
+	oField.SetNeedRecalc(true);
+	oField.RecalcTextTransform();
+	if (Asc.editor.IsEditFieldsMode()) {
+		oField.SetNeedUpdateEditShape(true);
+	}
+
+	if (oField.GetType() == AscPDF.FIELD_TYPES.text && oField.IsComb()) {
+		function updateMeasure(widget) {
+			widget.content.GetElement(0).Content.forEach(function(run) {
+				run.RecalcInfo.Measure = true;
+			});
+			widget.contentFormat.GetElement(0).Content.forEach(function(run) {
+				run.RecalcInfo.Measure = true;
+			});
+
+			widget.SetNeedRecalc(true);
+		};
+	
+		if (oField.IsWidget()) {
+			updateMeasure(oField);
+		} else {
+			oField.GetAllWidgets().forEach(updateMeasure);
+		}
+	}
+	else if (oField.GetType() == AscPDF.FIELD_TYPES.button) {
+		oField.SetNeedUpdateImage(true);
+	}
+
+	oField.contentClipRect = null;
 };
 
 /**
@@ -624,6 +699,7 @@ CChangesPDFFormPartialName.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
 	oField._partialName = Value;
+	oField.SetNeedUpdateEditShape(true);
 };
 
 /**
@@ -640,7 +716,7 @@ CChangesPDFFormMeta.prototype.Type = AscDFH.historyitem_Pdf_Form_Meta;
 CChangesPDFFormMeta.prototype.private_SetValue = function(Value)
 {
 	var oField = this.Class;
-	oField.SetMeta(Value);
+	oField._meta = Value;
 };
 
 CChangesPDFFormMeta.prototype.WriteToBinary = function(Writer)
@@ -715,7 +791,10 @@ CChangesPDFFormReadOnly.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
 	oForm._readOnly = Value;
-	oForm.AddToRedraw();
+
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.AddToRedraw();
+	});
 };
 
 /**
@@ -750,7 +829,11 @@ CChangesPDFFormBorderWidth.prototype.Type = AscDFH.historyitem_Pdf_Form_Border_W
 CChangesPDFFormBorderWidth.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
-	oField.SetBorderWidth(Value);
+
+	oField._borderWidth = Value;
+	oField._lineWidth = Value;
+
+	oField.SetNeedRecalc(true);
 };
 
 /**
@@ -785,7 +868,50 @@ CChangesPDFFormRotate.prototype.Type = AscDFH.historyitem_Pdf_Form_Rotate;
 CChangesPDFFormRotate.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetRotate(Value);
+	oForm._rotate = Value;
+
+	oForm.SetNeedRecalc(true);
+	if (oForm.GetType() == AscPDF.FIELD_TYPES.button) {
+		oForm.SetNeedUpdateImage(true);
+	}
+	oForm.RecalcTextTransform();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseStringProperty}
+ */
+function CChangesPDFFormTooltip(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormTooltip.prototype = Object.create(AscDFH.CChangesBaseStringProperty.prototype);
+CChangesPDFFormTooltip.prototype.constructor = CChangesPDFFormTooltip;
+CChangesPDFFormTooltip.prototype.Type = AscDFH.historyitem_Pdf_Form_Tooltip;
+CChangesPDFFormTooltip.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._tooltip = Value;
+	oForm.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormMEOptions(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormMEOptions.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormMEOptions.prototype.constructor = CChangesPDFFormMEOptions;
+CChangesPDFFormMEOptions.prototype.Type = AscDFH.historyitem_Pdf_Form_ME_Options;
+CChangesPDFFormMEOptions.prototype.private_SetValue = function(Value)
+{
+	let oField = this.Class;
+	oField._meOptions = Value;
+	oField.SetNeedRecalc(true);
+	oField.UpdateMEOptions();
 };
 
 
@@ -816,17 +942,71 @@ CChangesPDFTextFormMultiline.prototype.private_SetValue = function(Value)
  * @constructor
  * @extends {AscDFH.CChangesBaseLongProperty}
  */
-function CChangesPDFTextFormAlign(Class, Old, New, Color)
+function CChangesPDFFormAlign(Class, Old, New, Color)
 {
 	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
 }
-CChangesPDFTextFormAlign.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
-CChangesPDFTextFormAlign.prototype.constructor = CChangesPDFTextFormAlign;
-CChangesPDFTextFormAlign.prototype.Type = AscDFH.historyitem_Pdf_Text_Form_Align;
-CChangesPDFTextFormAlign.prototype.private_SetValue = function(Value)
+CChangesPDFFormAlign.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormAlign.prototype.constructor = CChangesPDFFormAlign;
+CChangesPDFFormAlign.prototype.Type = AscDFH.historyitem_Pdf_Form_Align;
+CChangesPDFFormAlign.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetAlign(Value);
+	oForm._alignment = Value;
+	oForm.SetNeedCheckAlign && oForm.SetNeedCheckAlign(true);
+	oForm.SetNeedRecalc(true);
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormApIdx(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormApIdx.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormApIdx.prototype.constructor = CChangesPDFFormApIdx;
+CChangesPDFFormApIdx.prototype.Type = AscDFH.historyitem_Pdf_Form_Ap_Idx;
+CChangesPDFFormApIdx.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._apIdx = Value;
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseBoolProperty}
+ */
+function CChangesPDFFormChangedView(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseBoolProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormChangedView.prototype = Object.create(AscDFH.CChangesBaseBoolProperty.prototype);
+CChangesPDFFormChangedView.prototype.constructor = CChangesPDFFormChangedView;
+CChangesPDFFormChangedView.prototype.Type = AscDFH.historyitem_Pdf_Form_Changed_View;
+CChangesPDFFormChangedView.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._bDrawFromStream = Value;
+	oForm.AddToRedraw();
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseLongProperty}
+ */
+function CChangesPDFFormOrigPage(Class, Old, New, Color)
+{
+	AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New, Color);
+}
+CChangesPDFFormOrigPage.prototype = Object.create(AscDFH.CChangesBaseLongProperty.prototype);
+CChangesPDFFormOrigPage.prototype.constructor = CChangesPDFFormOrigPage;
+CChangesPDFFormOrigPage.prototype.Type = AscDFH.historyitem_Pdf_Form_Orig_Page;
+CChangesPDFFormOrigPage.prototype.private_SetValue = function(Value)
+{
+	let oForm = this.Class;
+	oForm._origPage = Value;
 };
 
 /**
@@ -894,7 +1074,11 @@ CChangesPDFTextFormPassword.prototype.Type = AscDFH.historyitem_Pdf_Text_Form_Pa
 CChangesPDFTextFormPassword.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetPassword(Value);
+	oForm._password = Value;
+	oForm.GetAllWidgets().forEach(function(widget) {
+		widget.private_NeedShapeText();
+		widget.SetNeedRecalc(true);
+	});
 };
 
 /**
@@ -1248,6 +1432,125 @@ CChangesPDFListOption.prototype.ConvertToSimpleChanges = function()
 	return arrChanges;
 };
 CChangesPDFListOption.prototype.CreateReverseChange = function(){
+	var oRet = this.private_CreateReverseChange(this.constructor);
+	oRet.Type = this.Type;
+	oRet.Pos = this.Pos;
+	return oRet;
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseContentChange}
+ */
+function CChangesPDFListContentOption(Class, Pos, Items, isAdd) {
+	AscDFH.CChangesBaseContentChange.call(this, Class, Pos, Items, isAdd);
+}
+
+CChangesPDFListContentOption.prototype = Object.create(AscDFH.CChangesBaseContentChange.prototype);
+CChangesPDFListContentOption.prototype.constructor = CChangesPDFListContentOption;
+CChangesPDFListContentOption.prototype.Type = AscDFH.historyitem_Pdf_List_Form_Content_Option;
+
+CChangesPDFListContentOption.prototype.WriteToBinary = function (writer) {
+	writer.WriteBool(this.IsAdd());
+	writer.WriteLong(this.Pos);
+	writer.WriteString2(JSON.stringify(this.Items));
+};
+CChangesPDFListContentOption.prototype.ReadFromBinary = function (reader) {
+	reader.Seek2(reader.GetCurPos() - 4);
+	this.Type = reader.GetLong();
+	this.Add = reader.GetBool();
+	this.Pos = reader.GetLong();
+	
+	this.Items = JSON.parse(reader.GetString2());
+};
+CChangesPDFListContentOption.prototype.private_GetChangedArray = function () {
+	return this.Class._options;
+};
+CChangesPDFListContentOption.prototype.private_InsertInArrayLoad = function () {
+	if (this.Items.length <= 0)
+		return;
+
+	let aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		for (let i = this.Items.length - 1; i >= 0; i--) {
+			this.Class.private_AddOptionToContent(this.Items[i], this.Pos);
+		}
+	}
+};
+CChangesPDFListContentOption.prototype.private_RemoveInArrayLoad = function () {
+
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		this.Class.private_RemoveOptionFromContent(this.Pos);
+	}
+};
+CChangesPDFListContentOption.prototype.private_InsertInArrayUndoRedo = function () {
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		for (let i = this.Items.length - 1; i >= 0; i--) {
+			this.Class.private_AddOptionToContent(this.Items[i], this.Pos);
+		}
+	}
+};
+CChangesPDFListContentOption.prototype.private_RemoveInArrayUndoRedo = function () {
+
+	var aChangedArray = this.private_GetChangedArray();
+	if (null !== aChangedArray) {
+		this.Class.private_RemoveOptionFromContent(this.Pos);
+	}
+};
+CChangesPDFListContentOption.prototype.Load = function () {
+	if (this.IsAdd()) {
+		this.private_InsertInArrayLoad();
+	}
+	else {
+		this.private_RemoveInArrayLoad();
+	}
+	this.RefreshRecalcData();
+};
+CChangesPDFListContentOption.prototype.Undo = function () {
+	if (this.IsAdd()) {
+		this.private_RemoveInArrayUndoRedo();
+	}
+	else {
+		this.private_InsertInArrayUndoRedo();
+	}
+};
+CChangesPDFListContentOption.prototype.Redo = function () {
+	if (this.IsAdd()) {
+		this.private_InsertInArrayUndoRedo();
+	}
+	else {
+		this.private_RemoveInArrayUndoRedo();
+	}
+};
+CChangesPDFListContentOption.prototype.IsContentChange = function () {
+	return false;
+};
+CChangesPDFListContentOption.prototype.Copy = function()
+{
+	var oChanges = new this.constructor(this.Class, this.Type, this.Pos, this.Items, this.Add);
+
+	oChanges.UseArray = this.UseArray;
+
+	for (var nIndex = 0, nCount = this.PosArray.length; nIndex < nCount; ++nIndex)
+		oChanges.PosArray[nIndex] = this.PosArray[nIndex];
+
+	return oChanges;
+};
+CChangesPDFListContentOption.prototype.ConvertToSimpleChanges = function()
+{
+	let arrSimpleActions = this.ConvertToSimpleActions();
+	let arrChanges       = [];
+	for (let nIndex = 0, nCount = arrSimpleActions.length; nIndex < nCount; ++nIndex)
+	{
+		let oAction = arrSimpleActions[nIndex];
+		let oChange = new this.constructor(this.Class, this.Type, oAction.Pos, [oAction.Item], oAction.Add);
+		arrChanges.push(oChange);
+	}
+	return arrChanges;
+};
+CChangesPDFListContentOption.prototype.CreateReverseChange = function(){
 	var oRet = this.private_CreateReverseChange(this.constructor);
 	oRet.Type = this.Type;
 	oRet.Pos = this.Pos;
@@ -1627,7 +1930,7 @@ CChangesPDFCheckboxExpValue.prototype.Type = AscDFH.historyitem_Pdf_Checkbox_Exp
 CChangesPDFCheckboxExpValue.prototype.private_SetValue = function(Value)
 {
 	let oField = this.Class;
-	oField.SetExportValue(Value);
+	oField._exportValue = Value;
 };
 
 
@@ -1662,5 +1965,5 @@ CChangesPDFCheckOptions.prototype.Type = AscDFH.historyitem_Pdf_Checkbox_Options
 CChangesPDFCheckOptions.prototype.private_SetValue = function(Value)
 {
 	let oForm = this.Class;
-	oForm.SetOptions(Value);
+	oForm._options = Value;
 };
