@@ -729,6 +729,15 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 	
 	if (this.BorderColor)
 		oContentControl.setBorderColor(AscWord.CDocumentColorA.fromObjectRgba(this.BorderColor));
+	
+	if (oContentControl.IsCheckBox() && this.CheckBoxPr && this.CheckBoxPr.GetLabel())
+	{
+		oContentControl.ConvertToLabeledCheckBox(this.CheckBoxPr.GetLabel());
+	}
+	else if (oContentControl.IsLabeledCheckBox() && this.CheckBoxPr && !this.CheckBoxPr.GetLabel())
+	{
+		// TODO: Конвертируем в обычный чекбокс
+	}
 };
 CContentControlPr.prototype.SetFormPrToContentControl = function(contentControl)
 {

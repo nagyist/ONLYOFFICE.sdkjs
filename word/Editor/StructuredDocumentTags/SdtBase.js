@@ -323,6 +323,10 @@ CSdtBase.prototype.IsComplexForm = function()
 {
 	return (undefined !== this.Pr.ComplexFormPr);
 };
+CSdtBase.prototype.IsSpecialComplexForm = function()
+{
+	return this.IsComplexForm() && this.Pr.ComplexFormPr.IsLabeledCheckBox();
+};
 /**
  * @returns {boolean}
  */
@@ -389,6 +393,14 @@ CSdtBase.prototype.SetFormKey = function(key)
 CSdtBase.prototype.IsCheckBox = function()
 {
 	return false;
+};
+/**
+ * Чекбокс с текстом
+ * @returns {boolean}
+ */
+CSdtBase.prototype.IsLabeledCheckBox = function()
+{
+	return this.IsComplexForm() && this.Pr.ComplexFormPr.IsLabeledCheckBox();
 };
 /**
  * Проверяем, является ли заданный контрол радио-кнопкой

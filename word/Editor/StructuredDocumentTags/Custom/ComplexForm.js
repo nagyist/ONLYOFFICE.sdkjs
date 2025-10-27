@@ -35,18 +35,19 @@
 (function(window)
 {
 	const ComplexFormType = {
-		Custom    : 0,
-		Telephone : 1,
-		Email     : 2,
+		Custom          : 0,
+		Telephone       : 1,
+		Email           : 2,
+		LabeledCheckBox : 3
 	};
 
 	/**
 	 *
 	 * @constructor
 	 */
-	function CSdtComplexFormPr()
+	function CSdtComplexFormPr(type)
 	{
-		this.Type = ComplexFormType.Custom;
+		this.Type = undefined !== type ? type : ComplexFormType.Custom;
 	}
 	CSdtComplexFormPr.prototype.Copy = function()
 	{
@@ -71,13 +72,18 @@
 	{
 		this.Type = oReader.GetLong();
 	};
+	CSdtComplexFormPr.prototype.IsLabeledCheckBox = function()
+	{
+		return this.Type === ComplexFormType.LabeledCheckBox;
+	};
 	//--------------------------------------------------------export----------------------------------------------------
 	window['AscWord'] = window['AscWord'] || {};
 	window['AscWord'].CSdtComplexFormPr = CSdtComplexFormPr
 
 	let exportPrototype          = window['Asc']['ComplexFormType'] = window['Asc'].ComplexFormType = ComplexFormType;
-	exportPrototype['Custom']    = exportPrototype.Custom;
-	exportPrototype['Telephone'] = exportPrototype.Telephone;
-	exportPrototype['Email']     = exportPrototype.Email;
+	exportPrototype['Custom']          = exportPrototype.Custom;
+	exportPrototype['Telephone']       = exportPrototype.Telephone;
+	exportPrototype['Email']           = exportPrototype.Email;
+	exportPrototype['LabeledCheckBox'] = exportPrototype.LabeledCheckBox;
 
 })(window);

@@ -1790,12 +1790,45 @@ CInlineLevelSdt.prototype.CorrectContent = function()
 	{
 		this.MakeSingleRunElement(false);
 	}
+	else if (this.IsSpecialComplexForm())
+	{
+		this.CorrectSpecialComplexFormContent();
+	}
 	else
 	{
 		CParagraphContentWithParagraphLikeContent.prototype.CorrectContent.apply(this, arguments);
 	}
 	
 	AscCommon.History.skipFormFillingLockCheck(false);
+};
+CInlineLevelSdt.prototype.CorrectSpecialComplexFormContent = function()
+{
+	// TODO: Проверяем, что есть чекбокс, если нет, то добавляем в начало, либо перемещаем в начало, если в начале
+	//       его нет
+	
+};
+CInlineLevelSdt.prototype.ConvertToLabeledCheckBox = function(label)
+{
+	let logicDocument = this.GetLogicDocument();
+	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;
+	if (!this.IsCheckBox() || !formManager)
+		return;
+	
+	let checkBox = this.Copy();
+	
+	this.ClearContent();
+	this.AddToContent(0, checkBox);
+	let run = new AscWord.Run();
+	run.AddText(label);
+	this.AddToContent(1, run);
+	
+	this.SetCheckBoxPr(undefined);
+	
+	let complexPr = new AscWord.CSdtComplexFormPr(Asc.ComplexFormType.LabeledCheckBox);
+	this.SetComplexFormPr(complexPr);
+	
+	let keyGen = formManager.GetKeyGenerator();
+	this.SetFormKey(keyGen.GenerateKey(this));
 };
 //----------------------------------------------------------------------------------------------------------------------
 // Выставление настроек
@@ -2154,6 +2187,15 @@ CInlineLevelSdt.prototype.GetCheckBoxPr = function()
  */
 CInlineLevelSdt.prototype.ToggleCheckBox = function(isChecked)
 {
+	if (this.IsLabeledCheckBox())
+	{
+		let innerForm = this.GetAllSubForms();
+		if (!innerForm.length || !innerForm[0].IsCheckBox())
+			return;
+		
+		return innerForm[0].ToggleCheckBox(isChecked);
+	}
+	
 	if (!this.IsCheckBox())
 		return;
 
