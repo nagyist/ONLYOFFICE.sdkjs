@@ -1306,21 +1306,24 @@ NumFormat.prototype =
             {
                 //Разрешаем конфликты numFormat_MonthMinute
                 var bRightCond = false;
-                //ищем вперед первый элемент с типом datetime 
-                for(var j = i + 1; j < nFormatLength; ++j)
+                if (item.bElapsed)
                 {
-                    var subItem = this.aRawFormat[j];
-                    if(numFormat_Year == subItem.type || numFormat_Month == subItem.type || numFormat_Day == subItem.type || numFormat_MonthMinute == subItem.type ||
-                    numFormat_Hour == subItem.type || numFormat_Minute == subItem.type || numFormat_Second == subItem.type || numFormat_Milliseconds == subItem.type)
-                    {
-                        if(numFormat_Second == subItem.type)
-                            bRightCond = true;
-                        break;
-                    }
+                    bRightCond = true;
                 }
-                if(this.aRawFormat[i].bElapsed)  
+                else
                 {
-                    bRightCond = true
+                    //ищем вперед первый элемент с типом datetime 
+                    for(var j = i + 1; j < nFormatLength; ++j)
+                    {
+                        var subItem = this.aRawFormat[j];
+                        if(numFormat_Year == subItem.type || numFormat_Month == subItem.type || numFormat_Day == subItem.type || numFormat_MonthMinute == subItem.type ||
+                        numFormat_Hour == subItem.type || numFormat_Minute == subItem.type || numFormat_Second == subItem.type || numFormat_Milliseconds == subItem.type)
+                        {
+                            if(numFormat_Second == subItem.type)
+                                bRightCond = true;
+                            break;
+                        }
+                    }
                 }
                 var bLeftCond = false;
                 if(false == bRightCond)
@@ -2742,8 +2745,14 @@ NumFormat.prototype =
             }
             else if(numFormat_Second == item.type)
             {
+                if (item.bElapsed) {
+                    res += "[";
+                }
                 for(var j = 0; j < item.val; ++j)
                     res += second;
+                if (item.bElapsed) {
+                    res += "]";
+                }
             }
 			else if(numFormat_DayOfWeek == item.type)
 			{
@@ -2787,7 +2796,6 @@ NumFormatCache.prototype =
 	},
     get : function(format, formatType)
     {
-    //return new CellFormat(format, formatType, false);
 		var key = format + String.fromCharCode(5) + formatType;
         var res = this.oNumFormats[key];
         if(null == res)
