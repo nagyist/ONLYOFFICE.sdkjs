@@ -630,6 +630,9 @@
 	};
 	CFormsManager.prototype.OnChangeComplexForm = function(oForm)
 	{
+		if (oForm.IsLabeledCheckBox())
+			oForm.CorrectContent();
+		
 		let sKey          = oForm.GetFormKey();
 		let isPlaceholder = oForm.IsPlaceHolder();
 		let userMaster    = this.GetUserMasterByForm(oForm);

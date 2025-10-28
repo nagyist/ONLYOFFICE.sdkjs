@@ -403,6 +403,49 @@ CSdtBase.prototype.IsLabeledCheckBox = function()
 	return this.IsComplexForm() && this.Pr.ComplexFormPr.IsLabeledCheckBox();
 };
 /**
+ * @returns {?CSdtBase}
+ */
+CSdtBase.prototype.GetInnerCheckBox = function()
+{
+	if (!this.IsLabeledCheckBox())
+		return null;
+	
+	let subForms = this.GetAllSubForms();
+	if (!subForms || !subForms.length || !subForms[0].IsCheckBox())
+		return null;
+	
+	return subForms[0];
+};
+CSdtBase.prototype.GetCheckBoxLabel = function()
+{
+	if (!this.IsLabeledCheckBox())
+		return "";
+	
+	let _t = this;
+	function Visitor()
+	{
+		AscWord.DocumentVisitor.call(this);
+		this._text = "";
+	}
+	Visitor.prototype = Object.create(AscWord.DocumentVisitor.prototype);
+	Visitor.prototype.superclass = Visitor;
+	Visitor.prototype.oform = function(contentControl, isStart)
+	{
+		return _t !== contentControl;
+	};
+	Visitor.prototype.run = function(run, isStart)
+	{
+		if (!isStart)
+			return;
+		
+		this._text += run.GetText();
+	};
+	
+	let visitor = new Visitor();
+	this.visit(visitor);
+	return visitor._text;
+};
+/**
  * Проверяем, является ли заданный контрол радио-кнопкой
  * @returns {boolean}
  */

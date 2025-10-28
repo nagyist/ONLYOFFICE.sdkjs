@@ -553,6 +553,10 @@ CContentControlPr.prototype.FillFromContentControl = function(oContentControl)
 		this.CheckBoxPr = oContentControl.GetCheckBoxPr().Copy();
 		if (oContentControl.IsRadioButton())
 			this.CheckBoxPr.SetChoiceName(oContentControl.GetFormKey());
+		
+		let mainForm = oContentControl.GetMainForm();
+		if (mainForm && mainForm.IsLabeledCheckBox())
+			this.CheckBoxPr.SetLabel(mainForm.GetCheckBoxLabel());
 	}
 	else if (oContentControl.IsComboBox())
 		this.ComboBoxPr = oContentControl.GetComboBoxPr().Copy();
@@ -730,13 +734,13 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 	if (this.BorderColor)
 		oContentControl.setBorderColor(AscWord.CDocumentColorA.fromObjectRgba(this.BorderColor));
 	
-	if (oContentControl.IsCheckBox() && this.CheckBoxPr && this.CheckBoxPr.GetLabel())
+	if (this.CheckBoxPr && undefined !== this.CheckBoxPr.GetLabel())
 	{
-		oContentControl.ConvertToLabeledCheckBox(this.CheckBoxPr.GetLabel());
-	}
-	else if (oContentControl.IsLabeledCheckBox() && this.CheckBoxPr && !this.CheckBoxPr.GetLabel())
-	{
-		// TODO: Конвертируем в обычный чекбокс
+		let mainForm = oContentControl.GetMainForm();
+		if (mainForm && mainForm !== oContentControl && mainForm.IsLabeledCheckBox())
+			mainForm.SetCheckBoxLabel(this.CheckBoxPr.GetLabel());
+		else
+			oContentControl.SetCheckBoxLabel(this.CheckBoxPr.GetLabel());
 	}
 };
 CContentControlPr.prototype.SetFormPrToContentControl = function(contentControl)

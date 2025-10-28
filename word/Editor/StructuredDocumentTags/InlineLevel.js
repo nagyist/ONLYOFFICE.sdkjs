@@ -1505,8 +1505,19 @@ CInlineLevelSdt.prototype.GetAllContentControls = function(arrContentControls)
 };
 CInlineLevelSdt.prototype.Document_UpdateInterfaceState = function()
 {
-	if (this.Paragraph && this.Paragraph.LogicDocument)
-		this.Paragraph.LogicDocument.Api.sync_ContentControlCallback(this.GetContentControlPr());
+	let logicDocument = this.GetLogicDocument();
+	if (logicDocument)
+	{
+		let contentControlPr = this.GetContentControlPr();
+		if (this.IsLabeledCheckBox())
+		{
+			let checkBox = this.GetInnerCheckBox();
+			if (checkBox)
+				contentControlPr = checkBox.GetContentControlPr();
+		}
+		
+		logicDocument.Api.sync_ContentControlCallback(contentControlPr);
+	}
 
 	CParagraphContentWithParagraphLikeContent.prototype.Document_UpdateInterfaceState.apply(this, arguments);
 };
@@ -1803,33 +1814,114 @@ CInlineLevelSdt.prototype.CorrectContent = function()
 };
 CInlineLevelSdt.prototype.CorrectSpecialComplexFormContent = function()
 {
+	let logicDocument = this.GetLogicDocument();
+	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;
+	if (this.IsLabeledCheckBox())
+	{
+		let subForms = this.GetAllSubForms();
+		let checkBox = null;
+		for (let i = 0; i < subForms.length; ++i)
+		{
+			if (subForms[i].IsCheckBox())
+			{
+				checkBox = subForms[i];
+				break;
+			}
+		}
+		
+		if (!checkBox)
+		{
+			checkBox = new CInlineLevelSdt();
+			checkBox.SetFormPr(new AscWord.CSdtFormPr());
+			checkBox.SetCheckBoxPr(new AscWord.CSdtCheckBoxPr());
+			checkBox.private_UpdateCheckBoxContent();
+		}
+		
+		let lastPos = 0;
+		if (checkBox === this.Content[0])
+			lastPos = 1;
+		
+		for (let i = this.Content.length - 1; i >= lastPos; --i)
+		{
+			if (this.Content[i] instanceof CInlineLevelSdt && this.Content[i].IsForm())
+				this.RemoveFromContent(i, 1);
+		}
+		
+		if (0 === lastPos)
+			this.AddToContent(0, checkBox);
+	}
 	// TODO: Проверяем, что есть чекбокс, если нет, то добавляем в начало, либо перемещаем в начало, если в начале
 	//       его нет
 	
 };
-CInlineLevelSdt.prototype.ConvertToLabeledCheckBox = function(label)
+CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label)
 {
 	let logicDocument = this.GetLogicDocument();
 	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;
-	if (!this.IsCheckBox() || !formManager)
+	if (!formManager)
 		return;
 	
-	let checkBox = this.Copy();
-	
-	this.ClearContent();
-	this.AddToContent(0, checkBox);
-	let run = new AscWord.Run();
-	run.AddText(label);
-	this.AddToContent(1, run);
-	
-	this.SetCheckBoxPr(undefined);
-	
-	let complexPr = new AscWord.CSdtComplexFormPr(Asc.ComplexFormType.LabeledCheckBox);
-	this.SetComplexFormPr(complexPr);
-	
-	let keyGen = formManager.GetKeyGenerator();
-	this.SetFormKey(keyGen.GenerateKey(this));
+	if (label)
+	{
+		if (this.IsCheckBox())
+		{
+			let checkBox = this.Copy();
+			
+			this.ClearContent();
+			this.AddToContent(0, checkBox);
+			let run = new AscWord.Run();
+			run.AddText(label);
+			this.AddToContent(1, run);
+			
+			this.SetCheckBoxPr(undefined);
+			
+			let complexPr = new AscWord.CSdtComplexFormPr(Asc.ComplexFormType.LabeledCheckBox);
+			this.SetComplexFormPr(complexPr);
+			
+			let keyGen = formManager.GetKeyGenerator();
+			this.SetFormKey(keyGen.GenerateKey(this));
+		}
+		else if (this.IsLabeledCheckBox() && this.GetCheckBoxLabel() !== label)
+		{
+			let checkBox = this.GetInnerCheckBox();
+			if (!checkBox)
+				return;
+			
+			this.ClearContent();
+			this.AddToContent(0, checkBox);
+			let run = new AscWord.Run();
+			run.AddText(label);
+			this.AddToContent(1, run);
+		}
+	}
+	else if (this.IsLabeledCheckBox())
+	{
+		let checkBox = this.GetInnerCheckBox();
+		if (!checkBox)
+			return;
+		
+		this.SetFormPr(checkBox.GetFormPr());
+		this.SetComplexFormPr(undefined);
+		this.SetCheckBoxPr(checkBox.GetCheckBoxPr());
+		this.private_UpdateCheckBoxContent();
+	}
 };
+CInlineLevelSdt.prototype.RemoveLabelFromCheckBox = function()
+{
+	let logicDocument = this.GetLogicDocument();
+	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;
+	if (!this.IsLabeledCheckBox() || !formManager)
+		return;
+	
+	let checkBox = this.GetInnerCheckBox();
+	if (!checkBox)
+		return;
+	
+	this.SetFormPr(checkBox.GetFormPr());
+	this.SetComplexFormPr(undefined);
+	this.SetCheckBoxPr(checkBox.GetCheckBoxPr());
+	this.private_UpdateCheckBoxContent();
+}
 //----------------------------------------------------------------------------------------------------------------------
 // Выставление настроек
 //----------------------------------------------------------------------------------------------------------------------
