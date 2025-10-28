@@ -177,7 +177,9 @@
 
 		return boundsChecker.Bounds;
 	};
-
+	OverlayObject.prototype.getFullRotate = function () {
+		return AscCommon.deg2rad(this.TransformMatrix.GetRotation());
+	};
 	function ObjectToDraw(brush, pen, extX, extY, geometry, transform, x, y, oComment, TextElement, oLineStructure, nId, bIsBulletSymbol) {
 		this.extX = extX;
 		this.extY = extY;
