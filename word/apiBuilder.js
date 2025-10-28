@@ -25274,7 +25274,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PixelsToEmu.js
 	 */
 	Api.prototype.PixelsToEmus = function Px2Emu(px) {
-		return private_MM2EMU(AscCommon.g_dKoef_pix_to_mm * px);
+		return Math.round(private_MM2EMU(AscCommon.g_dKoef_pix_to_mm * px));
 	};
 
 	/**
@@ -25311,8 +25311,8 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToEmus.js
 	 */
 	Api.prototype.PointsToEmus = function PointsToEmus(pt) {
-		const ptToEm = g_dKoef_pt_to_mm * g_dKoef_mm_to_emu;
-		return pt * ptToEm;
+		const ptToEmu = g_dKoef_pt_to_mm * g_dKoef_mm_to_emu;
+		return Math.round(pt * ptToEmu);
 	};
 
 	/**
@@ -25490,6 +25490,32 @@
 	 */
 	Api.prototype.TwipsToPoints = function TwipsToPoints(twips) {
 		return twips * g_dKoef_twips_to_pt;
+	};
+
+	/**
+	 * Converts millimeters to English Metric Units (EMUs).
+	 * The result is an integer value.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CDE", CSE", "CPE"]
+	 * @param {mm} mm
+	 * @returns {EMU} - The value in English Metric Units (EMUs), as an integer.
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToEmus.js
+	 */
+	Api.prototype.MillimetersToEmus = function MillimetersToEmus(mm) {
+		return Math.round(mm * AscCommonWord.g_dKoef_mm_to_emu);
+	};
+
+	/**
+	 * Converts English measure units (EMU) to millimeters.
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @param {EMU} emu
+	 * @returns {mm}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/EmusToMillimeters.js
+	 */
+	Api.prototype.EmusToMillimeters = function EmusToMillimeters(emu) {
+		return emu * AscCommonWord.g_dKoef_emu_to_mm;
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -27163,6 +27189,8 @@
 	Api.prototype["PicasToPoints"]                   = Api.prototype.PicasToPoints;
 	Api.prototype["PixelsToPoints"]                  = Api.prototype.PixelsToPoints;
 	Api.prototype["TwipsToPoints"]                   = Api.prototype.TwipsToPoints;
+	Api.prototype["MillimetersToEmus"]               = Api.prototype.MillimetersToEmus;
+	Api.prototype["EmusToMillimeters"]               = Api.prototype.EmusToMillimeters;
 	Api.prototype["CreateCustomGeometry"]            = Api.prototype.CreateCustomGeometry;
 	Api.prototype["CreatePresetGeometry"]            = Api.prototype.CreatePresetGeometry;
 
