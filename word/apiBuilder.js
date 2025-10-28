@@ -23987,6 +23987,10 @@
 	 */
 	ApiPictureForm.prototype.SetImage = function(sImageSrc, nWidth, nHeight)
 	{
+		if (!AscFormat.isRealNumber(nWidth) || !AscFormat.isRealNumber(nHeight)) {
+			return false;
+		}
+
 		return executeNoFormLockCheck(function(){
 			if (typeof(sImageSrc) !== "string" || sImageSrc === "")
 				return false;
