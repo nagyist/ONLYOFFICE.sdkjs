@@ -64,13 +64,21 @@
 	{
 		return this.Type;
 	};
-	CSdtComplexFormPr.prototype.WriteToBinary = function(oWriter)
+	CSdtComplexFormPr.prototype.Write_ToBinary = function(writer)
 	{
-		oWriter.WriteLong(this.Type);
+		this.WriteToBinary(writer);
 	};
-	CSdtComplexFormPr.prototype.ReadFromBinary = function(oReader)
+	CSdtComplexFormPr.prototype.Read_FromBinary = function(reader)
 	{
-		this.Type = oReader.GetLong();
+		this.ReadFromBinary(reader);
+	};
+	CSdtComplexFormPr.prototype.WriteToBinary = function(writer)
+	{
+		writer.WriteLong(this.Type);
+	};
+	CSdtComplexFormPr.prototype.ReadFromBinary = function(reader)
+	{
+		this.Type = reader.GetLong();
 	};
 	CSdtComplexFormPr.prototype.IsLabeledCheckBox = function()
 	{
