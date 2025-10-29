@@ -2171,7 +2171,7 @@ CDocument.prototype.private_Redraw = function(nStartPage, nEndPage)
  * @param {boolean} [checkEmptyAction=true] Нужно ли проверять, что действие ничего не делало
  * @returns {boolean} Выполнилось ли действие
  */
-CDocument.prototype.FinalizeAction = function(checkEmptyAction)
+CDocument.prototype.FinalizeAction = function(checkEmptyAction, additional)
 {
 	if (!this.IsActionStarted())
 		return true;
@@ -2284,6 +2284,7 @@ CDocument.prototype.FinalizeAction = function(checkEmptyAction)
 	this.Action.UpdateStates = false;
 	
 	this.sendEvent("asc_onUserActionEnd");
+	this.Api.getMacroRecorder().onAction(this.Action.Description, additional);
 	return actionCompleted;
 };
 /**
@@ -7096,7 +7097,7 @@ CDocument.prototype.RemoveHdrFtr = function(nPageAbs, isHeader)
 
 	if (!this.IsSelectionLocked(AscCommon.changestype_HdrFtr))
 	{
-		this.StartAction(AscDFH.historydescription_Document_RemoveHdrFtr);
+		this.StartAction(AscDFH.historydescription_Document_RemoveHdrFtr, undefined, undefined, {props: {type: oHeader.Type, isHeader: isHeader}});
 
 		let nSectPos = this.SectionsInfo.Find_ByHdrFtr(oHeader);
 		if (0 === nSectPos)
@@ -8641,11 +8642,10 @@ CDocument.prototype.OnKeyDown = function(e)
 
 				if (bCanPerform && false === this.Document_Is_SelectionLocked(CheckType, null, false, this.IsFormFieldEditing()))
 				{
-					this.StartAction(AscDFH.historydescription_Document_EnterButton);
-
 					let oMath = oSelectedInfo.GetMath();
 					if (oMath)
 					{
+						this.StartAction(AscDFH.historydescription_Document_MathAddLine);
 						if (oMath.Is_InInnerContent())
 						{
 							oMath.Handle_AddNewLine();
@@ -8659,6 +8659,7 @@ CDocument.prototype.OnKeyDown = function(e)
 					}
 					else
 					{
+						this.StartAction(AscDFH.historydescription_Document_AddParagraph, null, null, true);
 						this.AddNewParagraph();
 					}
 					this.Recalculate();
@@ -24929,7 +24930,7 @@ CDocument.prototype.AddBlankPage = function()
 	{
 		if (!this.Document_Is_SelectionLocked(AscCommon.changestype_Document_Content))
 		{
-			this.StartAction(AscDFH.historydescription_Document_AddBlankPage);
+			this.StartAction(AscDFH.historydescription_Document_AddBlankPage, undefined, undefined, true);
 
 			if (this.IsSelectionUse())
 			{

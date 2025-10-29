@@ -4709,13 +4709,23 @@
 	//window['AscDFH'].historydescription_Spreadsheet_SetCellCustomSort               = 0x01e4;
 	window['AscDFH'].historydescription_Spreadsheet_SetCellEmpty                    = 0x01e5;
 	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeDigNum             = 0x01e6;
-	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeFontSize           = 0x01e7;
-	//window['AscDFH'].historydescription_Spreadsheet_SetCellStyle                    = 0x01e8;
-	//window['AscDFH'].historydescription_Spreadsheet_SetCellPaste                    = 0x01e9;
-	//window['AscDFH'].historydescription_Spreadsheet_SetCellHyperlink                = 0x01ea;
-	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeTextCase           = 0x01eb;
-
-	window['AscDFH'].historydescription_Document_SetStyleHeading          			= 0x02d3; // todo number
+	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeFontSize			= 0x01e7;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellStyle					= 0x01e8;
+	//window['AscDFH'].historydescription_Spreadsheet_SetCellPaste					= 0x01e9;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellHyperlink				= 0x01ea;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellChangeTextCase			= 0x01eb;
+	window['AscDFH'].historydescription_Spreadsheet_AddComment						= 0x01ec;
+	window['AscDFH'].historydescription_Spreadsheet_AddChart						= 0x01ed;
+	window['AscDFH'].historydescription_Spreadsheet_AddShape						= 0x01ee;
+	window['AscDFH'].historydescription_Presentation_AddShape						= 0x01ef;
+	window['AscDFH'].historydescription_Document_AddParagraph						= 0x01f0;
+	window['AscDFH'].historydescription_Document_MathAddLine						= 0x01f1;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellSumFunc					= 0x01f2;
+	window['AscDFH'].historydescription_Spreadsheet_AddImageUrls					= 0x01f3;
+	window['AscDFH'].historydescription_Document_SetStyleHeading					= 0x01f4;
+	window['AscDFH'].historydescription_Document_AddImages							= 0x01f5;
+	window['AscDFH'].historydescription_Document_MoveCursorLeft						= 0x01f6;
+	window['AscDFH'].historydescription_Document_MoveCursorRight					= 0x01f7;
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;

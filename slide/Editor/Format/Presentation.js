@@ -3848,8 +3848,8 @@ CPresentation.prototype.addImages = function (aImages, placeholder) {
 				return;
 			}
 		}
-		History.Create_NewPoint(AscDFH.historydescription_Presentation_AddFlowImage);
 		oController.resetSelection();
+		this.StartAction(AscDFH.historydescription_Presentation_AddFlowImage);
 		for (let i = 0; i < aImages.length; ++i) {
 			let _image = aImages[i];
 			if (_image.Image) {
@@ -3857,6 +3857,7 @@ CPresentation.prototype.addImages = function (aImages, placeholder) {
 			}
 		}
 		this.Recalculate();
+		this.FinalizeAction(undefined, undefined, {image: {src: aImages, data: oController.getSelectedArray()}});
 		this.Document_UpdateInterfaceState();
 		this.CheckEmptyPlaceholderNotes();
 	}
@@ -3980,7 +3981,10 @@ CPresentation.prototype.addChart = function (nTypeChart, isFromInterface, Placeh
 	AscFonts.IsCheckSymbols = true;
 	const oChart = this.GetChartObject(nTypeChart, true);
 	AscFonts.IsCheckSymbols = false;
-	return this.finalizeAddChart(oSlide, oChart, isFromInterface, Placeholder);
+	this.StartAction(AscDFH.historydescription_Presentation_AddChart);
+	let chart = this.finalizeAddChart(oSlide, oChart, isFromInterface, Placeholder);
+	this.FinalizeAction(undefined, undefined, {chart: chart});
+	return chart;
 };
 CPresentation.prototype.addChartObject = function (oChart, isFromInterface, Placeholder) {
 	let oSlide = this.prepareAddChart();
@@ -4087,7 +4091,7 @@ CPresentation.prototype.Add_FlowTable = function (Cols, Rows, Placeholder, sStyl
 		}
 	}
 	this.Api.inkDrawer.startSilentMode();
-	History.Create_NewPoint(AscDFH.historydescription_Presentation_AddFlowTable);
+	this.StartAction(AscDFH.historydescription_Presentation_AddFlowTable, {table: {col: Cols, row: Rows, ph: Placeholder, style: sStyleId}});
 	var graphic_frame = this.Create_TableGraphicFrame(Cols, Rows, oSlide, sStyleId || this.DefaultTableStyleId, Width, Height, X, Y);
 
 	this.SetThumbnailsFocusElement(FOCUS_OBJECT_MAIN);
@@ -4103,6 +4107,7 @@ CPresentation.prototype.Add_FlowTable = function (Cols, Rows, Placeholder, sStyl
 	this.Recalculate();
 	this.Document_UpdateInterfaceState();
 	this.Api.inkDrawer.endSilentMode();
+	this.FinalizeAction();
 	return graphic_frame;
 };
 
@@ -10366,7 +10371,7 @@ CPresentation.prototype.AddComment = function (CommentData, bAll) {
 	let oCurSlide = this.GetCurrentSlide();
 	var oSlideComments = bAll ? this.comments : (oCurSlide ? oCurSlide.slideComments : null);
 	if (oSlideComments) {
-		History.Create_NewPoint(AscDFH.historydescription_Presentation_AddComment);
+		this.StartAction(AscDFH.historydescription_Presentation_AddComment)
 		var Comment = new AscCommon.CComment(oSlideComments, CommentData);
 		if (this.Document_Is_SelectionLocked(AscCommon.changestype_AddComment, Comment, this.IsEditCommentsMode()) === false) {
 			if (!bAll) {
@@ -10428,6 +10433,7 @@ CPresentation.prototype.AddComment = function (CommentData, bAll) {
 				this.Api.sync_ShowComment(Comment.Id, Coords.X, Coords.Y);
 			}
 
+			this.FinalizeAction(undefined, undefined, {comment: Comment});
 			this.Document_UpdateInterfaceState();
 			return Comment;
 		} else {
@@ -11179,9 +11185,9 @@ CPresentation.prototype.StartAction = function (nDescription, additional) {
 	this.Create_NewHistoryPoint(nDescription);
 	this.StopAnimationPreview();
 	this.Api.sendEvent("asc_onUserActionStart");
-	this.Api.getMacroRecorder().onAction(nDescription, additional);
+	this.Api.getMacroRecorder().onAction(nDescription, additional, true);
 };
-CPresentation.prototype.FinalizeAction = function (isCheckEmptyAction, isCheckLockedAction) {
+CPresentation.prototype.FinalizeAction = function (isCheckEmptyAction, isCheckLockedAction, additional) {
 	this.Recalculate();
 	this.Api.checkChangesSize();
 	if (false !== isCheckEmptyAction && AscCommon.History.Is_LastPointEmpty()) {
@@ -11191,6 +11197,7 @@ CPresentation.prototype.FinalizeAction = function (isCheckEmptyAction, isCheckLo
 		this.Recalculate(this.History.Get_RecalcData(null, arrChanges));
 	}
 	this.Api.sendEvent("asc_onUserActionEnd");
+	this.Api.getMacroRecorder().onAction(null, additional, false);
 };
 
 CPresentation.prototype.IsSplitPageBreakAndParaMark = function () {

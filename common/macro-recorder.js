@@ -47,9 +47,10 @@
 		this.result = "";
 
 		this.prevChangeType = null;
-		this.prevData = [];
+		this.prevData = undefined;
 		this.actionCount = 0;
 		this.isFirstAction = null;
+		this.currentDescription = null;
 	}
 	
 	MacroRecorder.prototype.start = function(macroName)
@@ -73,7 +74,7 @@
 		this.inProgress = false;
 		this.paused = false;
 
-		if (this.prevData && this.prevChangeType)
+		if (this.prevData !== undefined && this.prevChangeType)
 		{
 			this.getResultByType(this.prevChangeType, this.prevData);
 			this.prevData = [];
@@ -169,12 +170,18 @@
 
 		return actionsMacros;
 	}
-	MacroRecorder.prototype.onAction = function(type, additional)
+	MacroRecorder.prototype.onAction = function(type, additional, isStart)
 	{
-		if (!this.isInProgress() || this.isPaused())
+		if (isStart === true)
+			this.currentDescription = type;
+
+		if (!this.isInProgress() || this.isPaused() || undefined === additional)
 			return;
 
-		additional = this.proceedDataBefoeApply(additional);
+		if (isStart === false)
+			type = this.currentDescription;
+
+		//additional = this.proceedDataBefoeApply(additional);
 
 		if (this.prevChangeType === type)
 		{
@@ -198,7 +205,19 @@
 		let actionsMacros = this.getMacrosListForEditor();
 		let actionMacroFunction = actionsMacros[type];
 		if (actionMacroFunction)
-			this.result += actionMacroFunction(additional, type);
+		{
+			if (Array.isArray(additional))
+			{
+				for (let i = 0; i < additional.length; i++)
+				{
+					this.result += actionMacroFunction(additional[i], type);
+				}
+			}
+			else
+			{
+				this.result += actionMacroFunction(additional, type);
+			}
+		}
 	};
 	MacroRecorder.prototype.joinDataForMacros = function(prevData, currentData) {
 		function isPlainObject(v) {
@@ -384,6 +403,108 @@
 		}
 	};
 
+	function private_ChartInternalTypeToBuilder(sType) {
+		switch (sType) {
+			case Asc.c_oAscChartTypeSettings.unknown: {
+				return "unknown";
+			}
+			case Asc.c_oAscChartTypeSettings.barNormal: {
+				return "bar";
+			}
+			case Asc.c_oAscChartTypeSettings.barStacked: {
+				return "barStacked";
+			}
+			case Asc.c_oAscChartTypeSettings.barStackedPer: {
+				return "barStackedPercent";
+			}
+			case Asc.c_oAscChartTypeSettings.barNormal3d: {
+				return "bar3D";
+			}
+			case Asc.c_oAscChartTypeSettings.barStacked3d: {
+				return "barStacked3D";
+			}
+			case Asc.c_oAscChartTypeSettings.barStackedPer3d: {
+				return "barStackedPercent3D";
+			}
+			case Asc.c_oAscChartTypeSettings.barNormal3dPerspective: {
+				return "barStackedPercent3DPerspective";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarNormal: {
+				return "horizontalBar";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarStacked: {
+				return "horizontalBarStacked";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarStackedPer: {
+				return "horizontalBarStackedPercent";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarNormal3d: {
+				return "horizontalBar3D";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarStacked3d: {
+				return "horizontalBarStacked3D";
+			}
+			case Asc.c_oAscChartTypeSettings.hBarStackedPer3d: {
+				return "horizontalBarStackedPercent3D";
+			}
+			case Asc.c_oAscChartTypeSettings.lineNormal: {
+				return "lineNormal";
+			}
+			case Asc.c_oAscChartTypeSettings.lineStacked: {
+				return "lineStacked";
+			}
+			case Asc.c_oAscChartTypeSettings.lineStackedPer: {
+				return "lineStackedPercent";
+			}
+			case Asc.c_oAscChartTypeSettings.line3d: {
+				return "line3D";
+			}
+			case Asc.c_oAscChartTypeSettings.pie: {
+				return "pie";
+			}
+			case Asc.c_oAscChartTypeSettings.pie3d: {
+				return "pie3D";
+			}
+			case Asc.c_oAscChartTypeSettings.doughnut: {
+				return "doughnut";
+			}
+			case Asc.c_oAscChartTypeSettings.scatter: {
+				return "scatter";
+			}
+			case Asc.c_oAscChartTypeSettings.stock: {
+				return "stock";
+			}
+			case Asc.c_oAscChartTypeSettings.areaNormal: {
+				return "area";
+			}
+			case Asc.c_oAscChartTypeSettings.areaStacked: {
+				return "areaStacked";
+			}
+			case Asc.c_oAscChartTypeSettings.areaStackedPer: {
+				return "areaStackedPercent";
+			}
+			case Asc.c_oAscChartTypeSettings.comboBarLine: {
+				return "comboBarLine";
+			}
+			case Asc.c_oAscChartTypeSettings.comboBarLineSecondary: {
+				return "comboBarLineSecondary";
+			}
+			case Asc.c_oAscChartTypeSettings.comboCustom: {
+				return "comboCustom";
+			}
+			case Asc.c_oAscChartTypeSettings.radar: {
+				return "radar";
+			}
+			case Asc.c_oAscChartTypeSettings.radarMarker: {
+				return "radarMarker";
+			}
+			case Asc.c_oAscChartTypeSettings.radarFilled: {
+				return "radarFilled";
+			}
+		}
+		return "unknown";
+	}
+
 	const wordActions = {
 		setTextBold				: makeAction("isBold",		function(bold){return "\tdoc.GetRangeBySelect().SetBold(" + bold + ");\n"}),
 		setTextItalic			: makeAction("isItalic",	function(italic){return "\tdoc.GetRangeBySelect().SetItalic(" + italic + ");\n"}),
@@ -454,10 +575,143 @@
 		// 	//paragraph.SetIndFirstLine(1440);
 		// })
 		setParagraphNumbering	: makeAction("numbering", function(num){
-			return "\tlet numbering = doc.CreateNumbering(\"" + num.Type + "\");\n"
-				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => para.SetNumbering(numbering.GetLevel(0)));\n"
+			return "\tlet " + CounterStore.inc('numbering') + " = doc.CreateNumbering(\"" + num.Type + "\");\n"
+				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => {\n\t\tpara.SetNumbering(" + CounterStore.get('numbering') + ".GetLevel(0));\n\t\tpara.SetContextualSpacing(true)\n\t});\n"
 		}),
-		addMath					: makeAction("math", function(obj){
+		addParagraph			: function(){return "\tdoc.Push(Api.CreateParagraph());\n"},
+		addBlankPage			: function(){return "\tdoc.InsertBlankPage();\n"},
+		addPageBreak			: function(type){
+			if (type === AscWord.break_Page)
+				return "\tdoc.GetCurrentParagraph().AddPageBreak();\n" // to api selection
+			else if (type === AscWord.break_Column)
+				return "\tdoc.GetCurrentParagraph().AddColumnBreak();\n" // to api selection
+		},
+		addSectionBreak			: function(type){ //todo check
+			if (type === c_oAscSectionBreakType.NextPage)
+				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"nextPage\");\n";
+			else if (type === c_oAscSectionBreakType.Column)
+				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"nextColumn\");\n";
+			else if (type === c_oAscSectionBreakType.Continuous)
+				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"continuous\");\n";
+			else if (type === c_oAscSectionBreakType.EvenPage)
+				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"evenPage\");\n";
+			else if (type === c_oAscSectionBreakType.OddPage)
+				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"oddPage\");\n";
+		},
+		addTable			: makeAction("tableProp", function(prop){
+			 // todo check style
+			return "\t(function () {\n"
+			+ "\t\tlet tableStyle = doc.GetStyle(" + (prop.style ? prop.style : "") + ");\n"
+			+ "\t\tlet table = Api.CreateTable(" + prop.col + ", " + prop.row + ");\n"
+			+ "\t\tif (tableStyle) {\n"
+			+	"\t\t\ttable.SetStyle(tableStyle);\n"
+			+ "\t\t}\n"
+			+ "\t\tdoc.Push(table);\n"
+			+ "\t}());\n";
+		}),
+		addImage			: makeAction("images", function(image){
+			function PxToEMU96(px){ return px * 9525; }
+			function CmToPx96(cm){ return Math.round(cm * 96 / 2.54); }
+			function CmToEMU(cm){ return Math.round(cm * 360000); }
+
+			function SizeByWidthThreshold(origWpx, origHpx, targetWidthCm){
+				const thresholdPx = CmToPx96(targetWidthCm);
+				if (origWpx < thresholdPx){
+				  return { wEMU: PxToEMU96(origWpx), hEMU: PxToEMU96(origHpx), scaled: false };
+				} else {
+				  const aspect = origHpx / origWpx;
+				  return {
+					wEMU: CmToEMU(targetWidthCm),
+					hEMU: CmToEMU(targetWidthCm * aspect),
+					scaled: true
+				  };
+				}
+			}
+
+			let size = SizeByWidthThreshold(image.Image.naturalWidth, image.Image.naturalHeight, 16.5);
+			let text = "";
+
+			if (image instanceof AscFonts.CImage)
+			{
+				text += "\tlet " + CounterStore.inc('image') + " = Api.CreateImage(\"" + image.src + "\", " + size.wEMU + ", " + size.hEMU + ");\n"
+				text += "\tdoc.GetCurrentParagraph().AddDrawing("+ CounterStore.get('image') + ");\n"
+			}
+			return text;
+		}),
+		addChart			: makeAction("chart", function(chart){ //todo title
+			let series = chart.getAllSeries();
+			let seriesNames = [];
+			let seriesData = [];
+			let numformat	= [];
+			for (let i = 0; i < series.length; i++)
+			{
+				let currSer = series[i];
+				let name = currSer.asc_getSeriesName();
+				let value = currSer.asc_getValuesArr();
+				let format = currSer.getCatSourceNumFormat();
+				seriesNames.push(name);
+				seriesData.push(value);
+				numformat.push(format);
+			}
+
+			let categories	= chart.getCatValues();
+			let chartType	= private_ChartInternalTypeToBuilder(chart.getChartType());
+			let width		= chart.GetWidth() * 36000.0;		//mm2emu
+			let height		= chart.GetHeight() * 36000.0;		//mm2emu
+			let style		= chart.getChartStyleIdx();
+			let title		= chart.getChartTitle().getDocContent().GetText();
+			title = title ? title.replace(/[\r\n\t]+/g, '') : "";
+			
+			let value = "\tlet " + CounterStore.inc('chart') + " = Api.CreateChart(\n"
+			+ "\t\t\"" + chartType + "\",\n"
+			+ "\t\t" + JSON.stringify(seriesData) + ",\n"
+			+ "\t\t" + JSON.stringify(seriesNames) + ",\n"
+			+ "\t\t" + JSON.stringify(categories) + ",\n"
+			+ "\t\t" + width + ",\n"
+			+ "\t\t" + height + ",\n"
+			+ "\t\t" + style + "\n"
+			+ "\t);\n"
+			//+ "\t" + CounterStore.get('chart') + ".SetTitle(\"" + title + "\", " + 14 + ");\n"
+			+ "\tdoc.GetCurrentParagraph().AddDrawing(" + CounterStore.get('chart') + ");\n"
+			return value;
+		}),
+		addHyperlink		: makeAction("hyperlink", function(hl){
+			// create hyperlink text
+			return "\tdoc.GetRangeBySelect().AddHyperlink(\"" + (hl.Value ? hl.Value : hl.Text) + "\", \"" + hl.ToolTip + "\");\n"
+		}),
+		addShape				: makeAction("shape", function(shapeProps){
+			// for now we don't have api for move shape in exact position
+			let fill = shapeProps.fill.getRGBAColor();
+			let border = shapeProps.border;
+			let borderwidth = border.w / 36000;
+			let borderColor = border.Fill.getRGBAColor();
+			return "\t(function () {\n" +
+					"\t\tlet fill = Api.CreateSolidFill(Api.CreateRGBColor("+ fill.R +", " + fill.G + ", " + fill.B + "));\n" +
+					"\t\tlet stroke = Api.CreateStroke(" + borderwidth +"* 36000, Api.CreateSolidFill(Api.CreateRGBColor("+ borderColor.R +", " + borderColor.G + ", " + borderColor.B + ")));\n" +
+					"\t\tlet shape = Api.CreateShape(\"" + shapeProps.type + "\", " + shapeProps.extX + " * 36000, " + shapeProps.extY + " * 36000, fill, stroke);\n" +
+					//"\t\tshape.SetPosition(" + shapeProps.pos.x + " * 36000.0, " + shapeProps.pos.y + " * 36000.0)\n" +
+					"\t\tdoc.GetCurrentParagraph().AddDrawing(shape);\n" +
+				"\t}());\n";
+		}),
+		removeHdr			: makeAction("props", function(hdr){
+			if (hdr.isHeader)
+				return "\tdoc.GetFinalSection().RemoveHeader(\"default\");\n";
+			else
+				return "\tdoc.GetFinalSection().RemoveFooter(\"default\");\n";
+		}),
+		addComment			: makeAction("data", function(data){
+			return "\tdoc.AddComment(\"" + data.commentData.m_sText + "\", \"" + data.commentData.m_sUserName + "\", \"" + data.commentData.m_sUserId + "\");\n";
+			// todo add time
+			//comment.SetTime(data.time)
+		}),
+		addMath				: function(type){
+			let paraMath = new AscCommonWord.ParaMath();
+			paraMath.Root.Load_FromMenu(type);
+			paraMath.Root.Correct_Content(true);
+
+			return "\tdoc.AddMathEquation(\"" + paraMath.GetTextOfElement().GetText() + "\", \"unicode\");\n"
+		},
+		addMathHotkey					: makeAction("math", function(obj){
 			let type = 'unicode';
 			if (obj.type === 1)
 				type === "latex";
@@ -465,10 +719,33 @@
 				type === "mathml"
 
 			return "\tdoc.AddMathEquation(\"" + obj.math + "\", \"" + type + "\");\n";
-		})
+		}),
+		addBlockContentControl			: function(){
+			return "\tdoc.Push(Api.CreateBlockLvlSdt());\n";
+		},
+		addInlineContentControl			: function(){
+			return "\tdoc.GetCurrentParagraph().AddInlineLvlSdt((Api.CreateInlineLvlSdt()));\n";
+		},
+		addContentControlList			: function(props){
+			if (props === true)
+				return "\tdoc.AddComboBoxContentControl();\n";
+			else if (props === false)
+				return "\tdoc.AddDropDownListContentControl();\n"
+		},
+		addContentControlCheckBox		: function(){
+			return "\tdoc.AddCheckBoxContentControl({checked : false});\n";
+		},
+		addContentControlDatePicker		: function(){
+			return "\tdoc.AddDatePickerContentControl();\n"
+		},
+		addContentControlPicture		: function(){
+			return "\tdoc.AddPictureContentControl(180 * 10000, 180 * 10000);\n";
+		}
+		
 	};
 
 	const WordActionsMacroList = {};
+	// home tab and general changes
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextBold]				= wordActions.setTextBold;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextBoldHotKey]			= wordActions.setTextBold;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetTextItalic]				= wordActions.setTextItalic;
@@ -502,13 +779,42 @@
 	//WordActionsMacroList[AscDFH.historydescription_Document_IncFontSize]				= wordActions.incFontSize;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphNumbering]		= wordActions.setParagraphNumbering;
 	WordActionsMacroList[AscDFH.historydescription_Document_SetParagraphNumberingHotKey]= wordActions.setParagraphNumbering;
-	WordActionsMacroList[AscDFH.historydescription_Document_AddMathHotKey]				= wordActions.addMath;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddParagraph]				= wordActions.addParagraph;
 	//WordActionsMacroList[AscDFH.historydescription_Document_AddPageNumHotKey]			= wordActions.addPageNum;
-
 	// WordActionsMacroList[AscDFH.historydescription_Document_FormatPasteHotKey]		= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteHotKey]				= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteSafariHotKey]		= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_CutHotKey]				= wordActions;
+	
+	// input tab
+	WordActionsMacroList[AscDFH.historydescription_Document_AddBlankPage]				= wordActions.addBlankPage;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddPageBreak]				= wordActions.addPageBreak;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddSectionBreak]			= wordActions.addSectionBreak;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddTable]					= wordActions.addTable;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddChart]					= wordActions.addChart;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddImages]					= wordActions.addImage;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddHyperlink]				= wordActions.addHyperlink;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddNewShape]				= wordActions.addShape;
+	WordActionsMacroList[AscDFH.historydescription_Document_RemoveHdrFtr]				= wordActions.removeHdr;
+	//WordActionsMacroList[moveLeft]													= wordActions.moveLeft;
+	//WordActionsMacroList[moveRight]													= wordActions.moveRight;
+	//WordActionsMacroList[moveUp]														= wordActions.moveUp;
+	//WordActionsMacroList[moveDown]													= wordActions.moveDown;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddComment]					= wordActions.addComment;
+	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddTextArt]		= wordActions.addTextArt;
+	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddDropCap]		= wordActions.addDropCap;
+	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddDateTimeField]	= wordActions.addDateTimeField;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddMath]					= wordActions.addMath;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddMathHotKey]				= wordActions.addMathHotkey;
+	//WordActionsMacroList[AscDFH.historydescription_Document_AddTextWithProperties]	= wordActions.addMathHotkey;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddBlockLevelContentControl]= wordActions.addBlockContentControl;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddInlineLevelContentControl]= wordActions.addInlineContentControl;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddContentControlList]		= wordActions.addContentControlList;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddContentControlCheckBox]	= wordActions.addContentControlCheckBox;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddContentControlDatePicker]= wordActions.addContentControlDatePicker;
+	WordActionsMacroList[AscDFH.historydescription_Document_AddContentControlPicture]	= wordActions.addContentControlPicture;
+
+	// content controls
 
 	const cellActions = {
 		setCellIncreaseFontSize	: makeAction("",	function(){return "\tApi.GetSelection().FontIncrease();\n"}),
@@ -831,23 +1137,6 @@
 			}
 			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetSpacingLine(" + value + " * 240, \"" + type + "\"));\n\t})\n"
 		}),
-		addNewShape				: makeAction("", function(shapeProps){
-			// fix height for text box
-			let fill = shapeProps.fill.getRGBAColor();
-			let border = shapeProps.border;
-			let borderwidth = border.w / 36000;
-			let borderColor = border.Fill.getRGBAColor();
-			return "\t(function () {\n"
-				+ "\t\tlet slide = presentation.GetCurrentSlide();\n"
-				+ "\t\tif (slide) {\n"+
-					"\t\t\tlet fill = Api.CreateSolidFill(Api.CreateRGBColor("+ fill.R +", " + fill.G + ", " + fill.B + "));\n" +
-					"\t\t\tlet stroke = Api.CreateStroke(" + borderwidth +"* 36000, Api.CreateSolidFill(Api.CreateRGBColor("+ borderColor.R +", " + borderColor.G + ", " + borderColor.B + ")));\n" +
-					"\t\t\tlet shape = Api.CreateShape(\"" + shapeProps.type + "\", " + shapeProps.extX + " * 36000, " + shapeProps.extY + " * 36000, fill, stroke);\n" +
-					"\t\t\tshape.SetPosition(" + shapeProps.pos.x + " * 36000.0, " + shapeProps.pos.y + " * 36000.0)\n" +
-					"\t\t\tslide.AddObject(shape)\n" +
-				"\t\t}\n" +
-				"\t}());\n";
-		}),
 		paragraphRemove			: makeAction("", function(args){
 			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.RemoveAllElements());\n\t})\n"
 		}),
@@ -891,9 +1180,103 @@
 		}),
 		unGroup					: makeAction("", function(){
 			return "\tApi.GetSelection().GetShapes().forEach(shape => {shape.Ungroup()});\n"
+		}),
+		addFlowTable			: makeAction("table", function(table){
+			return "\tconst table = Api.CreateTable(" + table.col + ", " + table.row + ");\n" +
+				"\tpresentation.GetCurrentSlide().AddObject(table);\n";
+		}),
+		addFlowImage			: makeAction("image",  function(image){
+			let text = "";
+			for (let i = 0; i < image.src.length; i++)
+			{
+				let curImageUrl = image.src[i].src;
+				let size = image.data[i];
+				let xfrm = size.getXfrm();
+
+				let width = xfrm.extX;
+				let height = xfrm.extY;
+
+				let posX = xfrm.offX;
+				let posY = xfrm.offY;
+
+				text += "\tlet " + CounterStore.inc('image') + " = Api.CreateImage(\"" + curImageUrl + "\", " + width + " * 36000, " + height + " * 36000);\n" +
+					"\t" + CounterStore.get('image') + ".SetPosition(" + posX + " * 36000, " + posY + " * 36000);\n" +
+					"\tpresentation.GetCurrentSlide().AddObject(" + CounterStore.get('image') + ");\n"
+			}
+			return text;
+		}),
+		addShape				: makeAction("", function(shapeProps){
+			let fill = shapeProps.fill.getRGBAColor();
+			let border = shapeProps.border;
+			let borderwidth = border.w / 36000;
+			let borderColor = border.Fill.getRGBAColor();
+			return "\t(function () {\n" +
+					"\t\tlet fill = Api.CreateSolidFill(Api.CreateRGBColor("+ fill.R +", " + fill.G + ", " + fill.B + "));\n" +
+					"\t\tlet stroke = Api.CreateStroke(" + borderwidth +"* 36000, Api.CreateSolidFill(Api.CreateRGBColor("+ borderColor.R +", " + borderColor.G + ", " + borderColor.B + ")));\n" +
+					"\t\tlet shape = Api.CreateShape(\"" + shapeProps.type + "\", " + shapeProps.extX + " * 36000, " + shapeProps.extY + " * 36000, fill, stroke);\n" +
+					"\t\tshape.SetPosition(" + shapeProps.pos.x + " * 36000 , " + shapeProps.pos.y + " * 36000 );\n" +
+					"\t\tpresentation.GetCurrentSlide().AddObject(shape);\n" +
+				"\t}());\n";
+		}),
+		addChart			: makeAction("chart", function(chart){ //todo title
+			let series = chart.getAllSeries();
+			let seriesNames = [];
+			let seriesData = [];
+			let numformat	= [];
+			for (let i = 0; i < series.length; i++)
+			{
+				let currSer = series[i];
+				let name = currSer.asc_getSeriesName();
+				let value = currSer.asc_getValuesArr();
+				let format = currSer.getCatSourceNumFormat();
+				seriesNames.push(name);
+				seriesData.push(value);
+				numformat.push(format);
+			}
+
+			let categories	= chart.getCatValues();
+			let chartType	= private_ChartInternalTypeToBuilder(chart.getChartType());
+			let width		= chart.GetWidth() * 36000.0;		//mm2emu
+			let height		= chart.GetHeight() * 36000.0;		//mm2emu
+			let style		= chart.getChartStyleIdx();
+			let title		= chart.getChartTitle().getDocContent().GetText();
+			title = title ? title.replace(/[\r\n\t]+/g, '') : "";
+
+			let value = "\tlet " + CounterStore.inc('chart') + " = Api.CreateChart(\n"
+			+ "\t\t\"" + chartType + "\",\n"
+			+ "\t\t" + JSON.stringify(seriesData) + ",\n"
+			+ "\t\t" + JSON.stringify(seriesNames) + ",\n"
+			+ "\t\t" + JSON.stringify(categories) + ",\n"
+			+ "\t\t" + width + ",\n"
+			+ "\t\t" + height + ",\n"
+			+ "\t\t" + style + "\n"
+			+ "\t);\n"
+			+ "\t" + CounterStore.get('chart') + ".SetTitle(\"" + title + "\", " + 14 + ");\n"
+			+ "\t" + CounterStore.get('chart') + ".SetPosition("+ chart.x + " * 36000, " + chart.y +" * 36000);\n"
+			+ "\tpresentation.GetCurrentSlide().AddObject(" + CounterStore.get('chart') + ");\n"
+			return value;
+		}),
+		addComment				: makeAction("comment", function(comment){
+			return "\tpresentation.GetCurrentSlide().AddComment("
+				+ comment.x + " * 36000, "
+				+ comment.y + " * 36000, "
+				+ "\"" + comment.Data.m_sText + "\", "
+				+ "\"" + comment.Data.m_sUserName + "\", "
+				+ "\"" + comment.Data.m_sUserId + "\""
+			+ ")\n";
+
+			// api set time
+		}),
+		addHyperlink			: makeAction("", function(hp){
+			// no api
+			return ""
 		})
-		
 	};
+
+	// alignTo no api
+	// merge shapes no api
+	// show from start/n-slide ... when add api
+
 	const PresentationActionMacroList = {};
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphAdd] 				= presActions.paragraphAdd;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrBold]				= presActions.putTextPrBold;
@@ -912,35 +1295,29 @@
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphClearFormatting]	= presActions.clearFormatting;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontName]			= presActions.putTextPrFontName;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrFontSize]			= presActions.putTextPrFontSize;
-
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphAlign]			= presActions.setParagraphAlign;
 	PresentationActionMacroList[AscDFH.historydescription_Document_SetParagraphAlignHotKey]			= presActions.setParagraphAlign;
-
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddNextSlide]				= presActions.addNextSlide;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_DeleteSlides]				= presActions.deleteSlides;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_ChangeLayout]				= presActions.changeLayout;
-	
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_SetVerticalAlign]			= presActions.setVerticalAlign;
-	
 	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringForward]				= presActions.bringForward;
 	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringToFront]				= presActions.bringToFront;
 	// PresentationActionMacroList[AscDFH.historydescription_Presentation_BringBackward]			= presActions.bringBackward;
 	// PresentationActionMacroList[AscDFH.historydescription_Presentation_SendToBack]				= presActions.sendToBack;
-	
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_CreateGroup]					= presActions.createGroup;
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_UnGroup]						= presActions.unGroup;
-
 	//PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrIncreaseFontSize]	= presActions.putTextPrIncreaseFontSize;
 	//PresentationActionMacroList[AscDFH.historydescription_Presentation_ParagraphIncDecFontSize]	= presActions.incDecFontSize;
 	//PresentationActionMacroList[AscDFH.historydescription_Presentation_SetParagraphNumbering]		= presActions.setNumbering;
-
-	// alignTo no api
-	// merge shapes no api
-	
 	PresentationActionMacroList[AscDFH.historydescription_Presentation_PutTextPrLineSpacing]		= presActions.putTextPrLineSpacing;
-	PresentationActionMacroList[AscDFH.historydescription_CommonStatesAddNewShape]					= presActions.addNewShape;
-	PresentationActionMacroList[AscDFH.historydescription_Spreadsheet_Remove]						= presActions.paragraphRemove;
-	// show from start/n-slide ... when add api
+	//PresentationActionMacroList[AscDFH.historydescription_Spreadsheet_Remove]						= presActions.paragraphRemove; // stange
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddFlowTable]				= presActions.addFlowTable;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddFlowImage]				= presActions.addFlowImage;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddShape]					= presActions.addShape;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddChart]					= presActions.addChart;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_AddComment]					= presActions.addComment;
+	PresentationActionMacroList[AscDFH.historydescription_Presentation_HyperlinkAdd]				= presActions.addHyperlink;
 
 	//--------------------------------------------------------export----------------------------------------------------
 	AscCommon.MacroRecorder = MacroRecorder;

@@ -2643,6 +2643,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 
         History.Create_NewPoint();
         worksheet.setSelectionShape(true);
+        worksheet.workbook.StartAction(AscDFH.historydescription_Document_AddChart)
+
         let oCSForAdd = oChartSpace.copy();
         let w, h, chartLeft, chartTop;
         w = this.convertMetric(AscCommon.AscBrowser.convertToRetinaValue(AscCommon.c_oAscChartDefines.defaultChartWidth, true), 0, 3);
@@ -2669,6 +2671,7 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         _this.controller.startRecalculate();
         this.sendGraphicObjectProps();
 
+        worksheet.workbook.FinalizeAction(AscDFH.historydescription_Document_AddChart, [oCSForAdd.chart])
     };
 
     _this.addSlicers = function(aNames) {

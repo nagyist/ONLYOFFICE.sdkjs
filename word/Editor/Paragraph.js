@@ -4722,16 +4722,10 @@ Paragraph.prototype.Add = function(Item)
 
 				if (paraMath)
 				{
-					let logicDocument = this.GetLogicDocument();
-					if (Item instanceof AscCommonWord.MathMenu)
-						logicDocument.StartAction(AscDFH.historydescription_Document_AddMathHotKey, null, null, {math: {math: paraMath.GetTextOfElement().GetText(), type: logicDocument.Api.getMathInputType()}});
-
 					this.AddToContent(CurPos + 1, paraMath);
 					this.CurPos.ContentPos = CurPos + 1;
 					this.Content[this.CurPos.ContentPos].MoveCursorToEndPos(false);
 
-					if (Item instanceof AscCommonWord.MathMenu)
-						logicDocument.FinalizeAction();
 				}
 			}
 			else
