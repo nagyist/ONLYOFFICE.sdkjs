@@ -2983,7 +2983,14 @@ CDocumentContentBase.prototype.GetCurrentContentControl = function()
 	
 	let inlineSdt = selectedInfo.GetInlineLevelSdt();
 	if (inlineSdt)
+	{
+		if (inlineSdt.IsLabeledCheckBox())
+		{
+			let checkBox = inlineSdt.GetInnerCheckBox();
+			inlineSdt = checkBox ? checkBox : inlineSdt;
+		}
 		return inlineSdt;
+	}
 	
 	let blockSdt = selectedInfo.GetBlockLevelSdt();
 	return blockSdt ? blockSdt : null;

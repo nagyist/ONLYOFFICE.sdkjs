@@ -24323,6 +24323,43 @@
 			return true;
 		}, this);
 	};
+	/**
+	 * Sets the label for the current check box.
+	 * @memberof ApiCheckBoxForm
+	 * @param {string} label - The label.
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.2.0
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiCheckBoxForm/Methods/SetLabel.js
+	 */
+	ApiCheckBoxForm.prototype.SetLabel = function(label)
+	{
+		return executeNoFormLockCheck(function() {
+			let mainForm = this.Sdt.GetMainForm();
+			if (mainForm && mainForm !== this.Sdt && mainForm.IsLabeledCheckBox())
+				mainForm.SetCheckBoxLabel(label);
+			else
+				this.Sdt.SetCheckBoxLabel(label);
+			
+			return true;
+		}, this);
+	};
+	/**
+	 * Returns the label of the current check box.
+	 * @memberof ApiCheckBoxForm
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.2.0
+	 * @returns {string}
+	 * @see office-js-api/Examples/{Editor}/ApiCheckBoxForm/Methods/GetLabel.js
+	 */
+	ApiCheckBoxForm.prototype.GetLabel = function()
+	{
+		let mainForm = this.Sdt.GetMainForm();
+		if (mainForm && mainForm !== this.Sdt && mainForm.IsLabeledCheckBox())
+			return mainForm.GetCheckBoxLabel();
+		else
+			return this.Sdt.GetCheckBoxLabel();
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiDateForm
@@ -28183,6 +28220,8 @@
 	ApiCheckBoxForm.prototype["SetRadioGroup"] = ApiCheckBoxForm.prototype.SetRadioGroup;
 	ApiCheckBoxForm.prototype["GetChoiceName"] = ApiCheckBoxForm.prototype.GetChoiceName;
 	ApiCheckBoxForm.prototype["SetChoiceName"] = ApiCheckBoxForm.prototype.SetChoiceName;
+	ApiCheckBoxForm.prototype["GetLabel"]      = ApiCheckBoxForm.prototype.GetLabel;
+	ApiCheckBoxForm.prototype["SetLabel"]      = ApiCheckBoxForm.prototype.SetLabel;
 	ApiCheckBoxForm.prototype["Copy"]          = ApiCheckBoxForm.prototype.Copy;
 
 	ApiComment.prototype["GetClassType"]	= ApiComment.prototype.GetClassType;
@@ -28471,7 +28510,9 @@
 		if (!oForm)
 			return null;
 
-		if (oForm.IsComplexForm())
+		if (oForm.IsLabeledCheckBox())
+			return new ApiCheckBoxForm(oForm.GetInnerCheckBox());
+		else if (oForm.IsComplexForm())
 			return new ApiComplexForm(oForm);
 		else if (oForm.IsTextForm())
 			return new ApiTextForm(oForm);
