@@ -291,8 +291,19 @@ StartAddNewShape.prototype =
                 if(bLock)
                 {
                     let oApi = oThis.drawingObjects.getEditorApi();
-                    let oPresentation = oApi.WordControl && oApi.WordControl.m_oLogicDocument;
-                    oPresentation.StartAction(AscDFH.historydescription_CommonStatesAddNewShape, [{type: track.presetGeom, pos: {x: track.x, y: track.y}, extX: track.extX, extY: track.extY, fill: track.overlayObject.brush, border: track.overlayObject.pen}]);
+                    let oDoc = null;
+
+                    if (oAPI.editorId === AscCommon.c_oEditorId.Presentation)
+                    {
+                        oDoc = oApi.WordControl && oApi.WordControl.m_oLogicDocument;
+                        oDoc.StartAction(AscDFH.historydescription_Presentation_AddShape);
+                    }
+                    else if (oApi.wb)
+                    {
+                        oDoc = oApi.wb;
+                        oDoc.StartAction(AscDFH.historydescription_Spreadsheet_AddShape);
+                    }
+
                     var shape = track.getShape(false, oThis.drawingObjects.getDrawingDocument(), oThis.drawingObjects.drawingObjects, isClickMouseEvent);
 
                     if(!(oThis.drawingObjects.drawingObjects && oThis.drawingObjects.drawingObjects.cSld))
@@ -373,7 +384,24 @@ StartAddNewShape.prototype =
                         }
                     }
 
-                    oPresentation.FinalizeAction();
+                    let pos = (oAPI.editorId === AscCommon.c_oEditorId.Presentation)
+                        ? {x: shape.x, y: shape.y}
+                        : {x: track.x, y: track.y};
+
+                    let data = {
+                        type: track.presetGeom,
+                        pos: pos,
+                        extX: track.extX,
+                        extY: track.extY,
+                        fill: track.overlayObject.brush,
+                        border: track.overlayObject.pen,
+                        base: shape.drawingBase ? shape.drawingBase : null
+                    };
+
+                    if (oAPI.editorId === AscCommon.c_oEditorId.Presentation)
+                        oDoc.FinalizeAction(AscDFH.historydescription_Presentation_AddShape, undefined, [data]);
+                    else
+                        oDoc.FinalizeAction(AscDFH.historydescription_Spreadsheet_AddShape, [data]);
                 }
 	            oThis.drawingObjects.updateOverlay();
             };

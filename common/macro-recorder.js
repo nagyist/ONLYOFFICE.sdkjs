@@ -1002,7 +1002,57 @@
 		}),
 		setCellEmpty			: makeAction("val", function(){ return "\tApi.GetSelection().Clear();\n";}),
 		setNumberFormat			: makeAction("val", function(format){ return "\tApi.GetSelection().SetNumberFormat(\"" + format + "\");\n";}),
-		setCellPaste			: makeAction("val", function(){return "\tApi.GetSelection().Paste();\n";})
+		setCellPaste			: makeAction("val", function(){return "\tApi.GetSelection().Paste();\n";}),
+		addShape				: makeAction("val", function(shapeProps){
+			let fill = shapeProps.fill.getRGBAColor();
+			let border = shapeProps.border;
+			let borderwidth = border.w / 36000;
+			let borderColor = border.Fill.getRGBAColor();
+			let from = shapeProps.base.from;
+			return "\t(function () {\n" +
+					"\t\tlet fill = Api.CreateSolidFill(Api.CreateRGBColor("+ fill.R +", " + fill.G + ", " + fill.B + "));\n" +
+					"\t\tlet stroke = Api.CreateStroke(" + borderwidth +"* 36000, Api.CreateSolidFill(Api.CreateRGBColor("+ borderColor.R +", " + borderColor.G + ", " + borderColor.B + ")));\n" +
+					"\t\tworksheet.AddShape(\"" + shapeProps.type + "\", " + shapeProps.extX + " * 36000, " + shapeProps.extY + " * 36000, fill, stroke, " + from.col + ", " + from.colOff * 36000 + ", " + from.row + ", " + from.rowOff * 36000 + ");\n" +
+				"\t}());\n";
+		}),
+		addChart				: makeAction("chartProps", function(chart){ //todo title
+			let range = chart.parent.dataRefs.getRange();
+			let type = private_ChartInternalTypeToBuilder(chart.getChartType());
+			let nStyle = chart.getChartSpace().style;
+			let from = chart.parent.drawingBase.from;
+			let x = chart.parent.extX;
+			let y = chart.parent.extY;
+
+			return "\tworksheet.AddChart(\""+ range + "\", true, \"" + type + "\", " + nStyle + ", " + x + " * 36000, " + y + " * 36000, " + from.col + ", " + from.colOff + " * 36000, " + from.row + ", " + from.rowOff + " * 36000);\n"
+		}),
+		addComment				: makeAction("val", function(comment){
+			let col		= comment.coords.nCol;
+			let row		= comment.coords.nRow;
+			let time	= comment.sTime;
+
+			return "\tlet range = worksheet.GetRangeByNumber(" + row + ", " + col + ");\n" +
+				"\tlet comment = range.AddComment(\""+ comment.sText + "\");\n" +
+				"\tcomment.SetAuthorName(\"" + comment.sUserName +"\");\n" +
+				"\tcomment.SetUserId(\"" + comment.sUserId +"\");\n" +
+				"\tcomment.SetTime(" + time +");\n"
+		}),
+		addHyperlink			: makeAction("val", function(hp){
+			let box		= hp.hyperlinkModel.Ref.bbox;
+			let name = box.getName().split(":")[0];
+			let loc = hp.hyperlinkModel.LocationSheet + "!" + hp.hyperlinkModel.LocationRangeBbox.getAbsName();
+			if (hp.hyperlinkModel.Location)
+			{
+				return "\tworksheet.SetHyperlink(\"" + name + "\", \"" + loc + "\", \"" + loc +"\", \"" + (hp.hyperlinkModel.Tooltip ? hp.hyperlinkModel.Tooltip : "") + "\", \"" + (hp.text ? hp.text : "") + "\");\n"
+			}
+			else if (hp.hyperlinkModel.Hyperlink)
+			{
+				return "\tworksheet.SetHyperlink(\"" + name + "\", \"" + hp.hyperlinkModel.Hyperlink + "\", \"\", \"" + (hp.hyperlinkModel.Tooltip ? hp.hyperlinkModel.Tooltip : "") + "\", \"" + (hp.text ? hp.text : "") + "\");\n"
+			}
+		}),
+		addImageUrls			: makeAction("image", function(image){
+			let from = image.from;
+			return "\tworksheet.AddImage(\"" + image.src + "\", " + image.width + " * 36000, " + image.height + " * 36000, "+ from.col + ", " + from.colOff + " * 36000, " + from.row + ", " + from.rowOff + " * 36000);\n"
+		})
 	};
 	const CellActionsMacroList = {};
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellIncreaseFontSize]	= cellActions.setCellIncreaseFontSize,
@@ -1038,6 +1088,11 @@
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellEmpty]				= cellActions.setCellEmpty;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum]			= cellActions.setNumberFormat;
 	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellPaste]				= cellActions.setCellPaste;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddShape]					= cellActions.addShape;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddChart]					= cellActions.addChart;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddComment]					= cellActions.addComment;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellHyperlink]			= cellActions.addHyperlink;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddImageUrls]				= cellActions.addImageUrls;
 
 	const presActions = {
 		setParagraphAlign		: makeAction("", function(align){

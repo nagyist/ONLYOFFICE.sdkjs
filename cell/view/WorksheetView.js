@@ -16845,40 +16845,41 @@ function isAllowPasteLink(pastedWb) {
 
 	WorksheetView.prototype.getStartActionForSelectionInfo = function(prop, val) {
 		const startActionMap = {
-			"fn": AscDFH.historydescription_Spreadsheet_SetCellFontName,//
-			"fs": AscDFH.historydescription_Spreadsheet_SetCellFontSize,//
-			"b": AscDFH.historydescription_Spreadsheet_SetCellBold,//
-			"i": AscDFH.historydescription_Spreadsheet_SetCellItalic,//
-			"u": AscDFH.historydescription_Spreadsheet_SetCellUnderline,//
-			"s": AscDFH.historydescription_Spreadsheet_SetCellStrikeout,//
-			"a": AscDFH.historydescription_Spreadsheet_SetCellAlign,//
-			"readingOrder": AscDFH.historydescription_Spreadsheet_SetCellReadingOrder,//
-			"va": AscDFH.historydescription_Spreadsheet_SetCellVertAlign,//
-			"c": AscDFH.historydescription_Spreadsheet_SetCellTextColor,//
-			"f": AscDFH.historydescription_Spreadsheet_SetCellFill,
-			"bc": AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor,//
-			"wrap": AscDFH.historydescription_Spreadsheet_SetCellWrap,//
-			//"shrink": AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit,
-			"value": AscDFH.historydescription_Spreadsheet_SetCellValue,
-			//"totalRowFunc": AscDFH.historydescription_Spreadsheet_SetTotalRowFunction,
-			"format": AscDFH.historydescription_Spreadsheet_SetCellFormat,
-			"angle": AscDFH.historydescription_Spreadsheet_SetCellAngle,
-			//"indent": AscDFH.historydescription_Spreadsheet_SetCellIndent,
-			//"applyProtection": AscDFH.historydescription_Spreadsheet_SetCellApplyProtection,
-			//"locked": AscDFH.historydescription_Spreadsheet_SetCellLocked,
-			//"hiddenFormulas": AscDFH.historydescription_Spreadsheet_SetCellHiddenFormulas,
-			//"rh": AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove,
-			"border": AscDFH.historydescription_Spreadsheet_SetCellBorder,
-			"merge": AscDFH.historydescription_Spreadsheet_SetCellMerge,
-			"sort": AscDFH.historydescription_Spreadsheet_SetCellSort,
-			//"customSort": AscDFH.historydescription_Spreadsheet_SetCellCustomSort,
-			"empty": AscDFH.historydescription_Spreadsheet_SetCellEmpty,
-			"changeDigNum": AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum,
-			"changeFontSize": AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize,
-			//"style": AscDFH.historydescription_Spreadsheet_SetCellStyle,
-			//"paste": AscDFH.historydescription_Spreadsheet_SetCellPaste,
-			//"hyperlink": AscDFH.historydescription_Spreadsheet_SetCellHyperlink,
-			"changeTextCase": AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase
+			"fn":					AscDFH.historydescription_Spreadsheet_SetCellFontName,//
+			"fs":					AscDFH.historydescription_Spreadsheet_SetCellFontSize,//
+			"b":					AscDFH.historydescription_Spreadsheet_SetCellBold,//
+			"i":					AscDFH.historydescription_Spreadsheet_SetCellItalic,//
+			"u":					AscDFH.historydescription_Spreadsheet_SetCellUnderline,//
+			"s":					AscDFH.historydescription_Spreadsheet_SetCellStrikeout,//
+			"a":					AscDFH.historydescription_Spreadsheet_SetCellAlign,//
+			"readingOrder":			AscDFH.historydescription_Spreadsheet_SetCellReadingOrder,//
+			"va":					AscDFH.historydescription_Spreadsheet_SetCellVertAlign,//
+			"c":					AscDFH.historydescription_Spreadsheet_SetCellTextColor,//
+			"f":					AscDFH.historydescription_Spreadsheet_SetCellFill,
+			"bc":					AscDFH.historydescription_Spreadsheet_SetCellBackgroundColor,//
+			"wrap":					AscDFH.historydescription_Spreadsheet_SetCellWrap,//
+			//"shrink":				AscDFH.historydescription_Spreadsheet_SetCellShrinkToFit,
+			"value":				AscDFH.historydescription_Spreadsheet_SetCellValue,
+			//"totalRowFunc":		AscDFH.historydescription_Spreadsheet_SetTotalRowFunction,
+			"format":				AscDFH.historydescription_Spreadsheet_SetCellFormat,
+			"angle":				AscDFH.historydescription_Spreadsheet_SetCellAngle,
+			//"indent":				AscDFH.historydescription_Spreadsheet_SetCellIndent,
+			//"applyProtection":	AscDFH.historydescription_Spreadsheet_SetCellApplyProtection,
+			//"locked":				AscDFH.historydescription_Spreadsheet_SetCellLocked,
+			//"hiddenFormulas":		AscDFH.historydescription_Spreadsheet_SetCellHiddenFormulas,
+			//"rh":					AscDFH.historydescription_Spreadsheet_SetCellHyperlinkRemove,
+			"border":				AscDFH.historydescription_Spreadsheet_SetCellBorder,
+			"merge":				AscDFH.historydescription_Spreadsheet_SetCellMerge,
+			"sort":					AscDFH.historydescription_Spreadsheet_SetCellSort,
+			//"customSort":			AscDFH.historydescription_Spreadsheet_SetCellCustomSort,
+			"empty":				AscDFH.historydescription_Spreadsheet_SetCellEmpty,
+			"changeDigNum":			AscDFH.historydescription_Spreadsheet_SetCellChangeDigNum,
+			"changeFontSize":		AscDFH.historydescription_Spreadsheet_SetCellChangeFontSize,
+			//"style":				AscDFH.historydescription_Spreadsheet_SetCellStyle,
+			//"paste":				AscDFH.historydescription_Spreadsheet_SetCellPaste,
+			"hyperlink":			AscDFH.historydescription_Spreadsheet_SetCellHyperlink,
+			"changeTextCase":		AscDFH.historydescription_Spreadsheet_SetCellChangeTextCase,
+			"addComment":			AscDFH.historydescription_Spreadsheet_AddComment,
 		};
 
 		if (prop === "changeDigNum")
