@@ -809,13 +809,12 @@ CInlineLevelSdt.prototype.Get_LeftPos = function(SearchPos, ContentPos, Depth, U
 			{
 				let oSubForm = this.GetSubFormFromCurrentPosition(false);
 				let oParaPos = oParagraph.GetPosByElement(oSubForm);
-				if (oSubForm && oParaPos)
-				{
-					let oNewPos = oParaPos.Copy();
-					oSubForm.Get_EndPos(false, oNewPos, oNewPos.GetDepth() + 1);
-					SearchPos.Pos = oNewPos;
-				}
-
+				if (!oSubForm || !oParaPos)
+					return false;
+				
+				let oNewPos = oParaPos.Copy();
+				oSubForm.Get_EndPos(false, oNewPos, oNewPos.GetDepth() + 1);
+				SearchPos.Pos   = oNewPos;
 				SearchPos.Found = true;
 				return true;
 			}
@@ -915,13 +914,12 @@ CInlineLevelSdt.prototype.Get_RightPos = function(SearchPos, ContentPos, Depth, 
 			{
 				let oSubForm = this.GetSubFormFromCurrentPosition(true);
 				let oParaPos = oParagraph.GetPosByElement(oSubForm);
-				if (oSubForm && oParaPos)
-				{
-					let oNewPos = oParaPos.Copy();
-					oSubForm.Get_StartPos(oNewPos, oNewPos.GetDepth() + 1);
-					SearchPos.Pos = oNewPos;
-				}
-
+				if (!oSubForm || !oParaPos)
+					return false;
+				
+				let oNewPos = oParaPos.Copy();
+				oSubForm.Get_StartPos(oNewPos, oNewPos.GetDepth() + 1);
+				SearchPos.Pos = oNewPos;
 				SearchPos.Found = true;
 				return true;
 			}
@@ -1892,11 +1890,19 @@ CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label)
 			
 			this.SetCheckBoxPr(undefined);
 			
+			let formPr = this.GetFormPr();
+			
 			let complexPr = new AscWord.CSdtComplexFormPr(Asc.ComplexFormType.LabeledCheckBox);
 			this.SetComplexFormPr(complexPr);
 			
 			let keyGen = formManager.GetKeyGenerator();
 			this.SetFormKey(keyGen.GenerateKey(this));
+			
+			if (formPr)
+			{
+				checkBox.SetFormPr(formPr.Copy());
+				this.SetFormPr(formPr.Copy());
+			}
 		}
 		else if (this.IsLabeledCheckBox() && this.GetCheckBoxLabel() !== label)
 		{

@@ -646,17 +646,21 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 	
 	if (undefined !== this.Temporary)
 		oContentControl.SetContentControlTemporary(this.Temporary);
-
-	if (undefined !== this.CheckBoxPr)
+	
+	let checkBox = oContentControl;
+	if (oContentControl.IsLabeledCheckBox())
+		checkBox = oContentControl.GetInnerCheckBox();
+	
+	if (undefined !== this.CheckBoxPr && checkBox)
 	{
-		let prevGroupKey = oContentControl.GetCheckBoxPr() ? oContentControl.GetCheckBoxPr().GetGroupKey() : undefined;
+		let prevGroupKey = checkBox.GetCheckBoxPr() ? checkBox.GetCheckBoxPr().GetGroupKey() : undefined;
 		if (prevGroupKey !== this.CheckBoxPr.GroupKey && undefined !== this.CheckBoxPr.Checked)
 			this.CheckBoxPr.Checked = false;
 		
 		let choiceName = this.CheckBoxPr.GetChoiceName(true);
 		if (undefined !== choiceName)
 		{
-			oContentControl.SetFormKey(choiceName);
+			checkBox.SetFormKey(choiceName);
 			if (this.FormPr)
 				this.FormPr.SetKey(choiceName);
 		}
@@ -664,11 +668,11 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 		if (this.FormPr)
 		{
 			if (prevGroupKey !== this.CheckBoxPr.GroupKey)
-				this.OnSetGroupKeyToForm(this.CheckBoxPr.GroupKey, oContentControl);
+				this.OnSetGroupKeyToForm(this.CheckBoxPr.GroupKey, checkBox);
 		}
 		
-		oContentControl.SetCheckBoxPr(this.CheckBoxPr);
-		oContentControl.private_UpdateCheckBoxContent();
+		checkBox.SetCheckBoxPr(this.CheckBoxPr);
+		checkBox.private_UpdateCheckBoxContent();
 	}
 
 	if (undefined !== this.ComboBoxPr)
@@ -722,8 +726,17 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 
 	if (undefined !== this.PlaceholderText)
 		oContentControl.SetPlaceholderText(this.PlaceholderText);
-
-	this.SetFormPrToContentControl(oContentControl);
+	
+	let mainForm = oContentControl.GetMainForm();
+	if (mainForm && mainForm.IsLabeledCheckBox())
+	{
+		this.SetFormPrToContentControl(mainForm.GetInnerCheckBox());
+		this.SetFormPrToContentControl(mainForm);
+	}
+	else
+	{
+		this.SetFormPrToContentControl(oContentControl);
+	}
 
 	if (undefined !== this.PictureFormPr && oContentControl.IsInlineLevel())
 	{
@@ -751,13 +764,17 @@ CContentControlPr.prototype.SetToContentControl = function(oContentControl)
 };
 CContentControlPr.prototype.SetFormPrToContentControl = function(contentControl)
 {
-	if (!this.FormPr)
+	if (!this.FormPr || !contentControl)
 		return;
 	
 	let formPr = this.FormPr;
 	
 	let newRole = formPr.GetRole();
-	if (contentControl.IsForm() && !contentControl.IsMainForm())
+	let mainForm = contentControl.GetMainForm();
+	if (contentControl.IsForm()
+		&& mainForm
+		&& !contentControl.IsMainForm()
+		&& !mainForm.IsLabeledCheckBox())
 	{
 		// Ключ у подформы должен сохраняться
 		let oldKey    = contentControl.GetFormKey();

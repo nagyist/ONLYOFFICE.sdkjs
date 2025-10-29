@@ -140,6 +140,11 @@
 		for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 		{
 			let oForm = arrForms[nIndex];
+			if (oForm.IsLabeledCheckBox())
+				oForm = oForm.GetInnerCheckBox();
+			
+			if (!oForm)
+				continue;
 
 			let sKey = null;
 
@@ -182,6 +187,12 @@
 		for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 		{
 			let oForm = arrForms[nIndex];
+			if (oForm.IsLabeledCheckBox())
+				oForm = oForm.GetInnerCheckBox();
+			
+			if (!oForm)
+				continue;
+			
 			if (sKey === oForm.GetFormKey() && (undefined === formType || formType === oForm.GetSpecificType()))
 				arrResult.push(oForm);
 		}
