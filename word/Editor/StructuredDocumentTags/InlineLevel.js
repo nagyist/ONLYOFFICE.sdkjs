@@ -1022,6 +1022,29 @@ CInlineLevelSdt.prototype.Remove = function(nDirection, bOnAddText)
 		return true;
 	}
 	
+	if (this.IsLabeledCheckBox())
+	{
+		let checkBox = this.GetInnerCheckBox();
+		if (checkBox && checkBox.IsSelectedOnlyThis())
+			return false;
+		
+		if (this.IsSelectedAll() && this.IsSelectedOnlyThis())
+		{
+			this.RemoveThisFromParent(true);
+			return true;
+		}
+		
+		if (this.Selection.Use && checkBox)
+		{
+			let checkBoxPos = checkBox.GetPosInParent();
+			if (-1 !== checkBoxPos)
+			{
+				this.Selection.StartPos = Math.max(this.Selection.StartPos, checkBoxPos + 1);
+				this.Selection.EndPos   = Math.max(this.Selection.EndPos, checkBoxPos + 1);
+			}
+		}
+	}
+	
 	if ((this.IsCheckBox() || this.IsDropDownList() || this.IsPicture())
 		&& this.IsSelectedOnlyThis()
 		&& !bOnAddText)
@@ -1276,6 +1299,9 @@ CInlineLevelSdt.prototype.DrawContentControlsTrack = function(nType, X, Y, nCurP
 	let oMainForm;
 	if (this.IsForm() && (oMainForm = this.GetMainForm()) && oMainForm !== this)
 	{
+		if (oMainForm.IsLabeledCheckBox())
+			return false;
+		
 		if (AscCommon.ContentControlTrack.Hover === nType)
 			return oMainForm.DrawContentControlsTrack(AscCommon.ContentControlTrack.Hover, X, Y, nCurPage, isCheckHit);
 		else if (logicDocument.IsFillingFormMode() && (this.IsTextForm() || this.IsCheckBox()))
@@ -1814,26 +1840,20 @@ CInlineLevelSdt.prototype.CorrectContent = function()
 };
 CInlineLevelSdt.prototype.CorrectSpecialComplexFormContent = function()
 {
-	let logicDocument = this.GetLogicDocument();
-	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;
 	if (this.IsLabeledCheckBox())
 	{
-		let subForms = this.GetAllSubForms();
-		let checkBox = null;
-		for (let i = 0; i < subForms.length; ++i)
-		{
-			if (subForms[i].IsCheckBox())
-			{
-				checkBox = subForms[i];
-				break;
-			}
-		}
-		
+		let checkBox = this.GetInnerCheckBox();
 		if (!checkBox)
 		{
+			let checkBoxPr = new AscWord.CSdtCheckBoxPr();
+			checkBoxPr.SetCheckedSymbol(0x2611);
+			checkBoxPr.SetUncheckedSymbol(0x2610);
+			checkBoxPr.SetCheckedFont("Segoe UI Symbol");
+			checkBoxPr.SetUncheckedFont("Segoe UI Symbol");
+			
 			checkBox = new CInlineLevelSdt();
 			checkBox.SetFormPr(new AscWord.CSdtFormPr());
-			checkBox.SetCheckBoxPr(new AscWord.CSdtCheckBoxPr());
+			checkBox.SetCheckBoxPr(checkBoxPr);
 			checkBox.private_UpdateCheckBoxContent();
 		}
 		
@@ -1850,9 +1870,6 @@ CInlineLevelSdt.prototype.CorrectSpecialComplexFormContent = function()
 		if (0 === lastPos)
 			this.AddToContent(0, checkBox);
 	}
-	// TODO: Проверяем, что есть чекбокс, если нет, то добавляем в начало, либо перемещаем в начало, если в начале
-	//       его нет
-	
 };
 CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label)
 {

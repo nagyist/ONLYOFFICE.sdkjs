@@ -12402,6 +12402,7 @@ Paragraph.prototype.Get_ParentTextInvertTransform = function()
 };
 Paragraph.prototype.UpdateCursorType = function(X, Y, CurPage)
 {
+	let logicDocument   = this.GetLogicDocument();
 	let drawingDocument = this.getDrawingDocument();
 	if (!this.IsRecalculated() || !drawingDocument)
 		return;
@@ -12440,7 +12441,8 @@ Paragraph.prototype.UpdateCursorType = function(X, Y, CurPage)
 	if (oContentControl)
 	{
 		oContentControl.DrawContentControlsTrack(AscCommon.ContentControlTrack.Hover, X, Y, CurPage);
-		isCheckBox = oContentControl.IsCheckBox() && oContentControl.CheckHitInContentControlByXY(X, Y, this.GetAbsolutePage(CurPage), false);
+		isCheckBox = (oContentControl.CheckHitInContentControlByXY(X, Y, this.GetAbsolutePage(CurPage), false)
+			&& (oContentControl.IsCheckBox() || (logicDocument && oContentControl.IsLabeledCheckBox() && logicDocument.IsFillingOFormMode())));
 	}
 
 	var Footnote      = this.CheckFootnote(X, Y, CurPage);

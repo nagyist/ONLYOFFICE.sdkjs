@@ -581,6 +581,12 @@ CContentControlPr.prototype.FillFromContentControl = function(oContentControl)
 	{
 		let mainForm = oContentControl.IsMainForm() ? oContentControl : oContentControl.GetMainForm();
 		
+		if (mainForm.IsLabeledCheckBox())
+			mainForm = mainForm.GetInnerCheckBox();
+		
+		if (!mainForm)
+			mainForm = oContentControl;
+		
 		this.FormPr = mainForm.GetFormPr().Copy();
 		this.FormPr.SetFixed(mainForm.IsFixedForm());
 		
