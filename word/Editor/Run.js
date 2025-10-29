@@ -4816,7 +4816,7 @@ ParaRun.prototype.Recalculate_Range = function(PRS, ParaPr, Depth)
 							}
 							isVisualFieldChar = true;
 						}
-						else if (oInstruction && AscWord.fieldtype_FORMCHECKBOX === oInstruction.GetType())
+						else if (oComplexField && oComplexField.IsFormCheckBox())
 						{
 							isVisualFieldChar = true;
 							Item.SetFormCheckBox(true);
@@ -5594,6 +5594,8 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                     ColumnStartX = PageFieldsOrigin.X;
                     ColumnEndX   = PageFieldsOrigin.XLimit;
                 }
+				
+				let isInTable = isTableCellContent && isLayoutInCell;
 
                 if (!isUseWrap)
                 {
@@ -5618,7 +5620,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
 					else
 						Item.SetVerticalClip(null, null);
 
-                    Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
+                    Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine, isInTable);
                     Item.Reset_SavedPosition();
 
                     PRSA.X    += Item.WidthVisible;
@@ -5639,7 +5641,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                     {
                         // Тут мы должны сравнить положение картинок
                         var oRecalcObj = Item.SaveRecalculateObject();
-                        Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
+                        Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine, isInTable);
 
                         if (Math.abs(Item.X - oRecalcObj.X) > 0.001 || Math.abs(Item.Y - oRecalcObj.Y) > 0.001 || Item.PageNum !== oRecalcObj.PageNum)
                         {
@@ -5674,7 +5676,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                         if ( true === LDRecalcInfo.Can_RecalcObject() )
                         {
 							// Обновляем позицию объекта
-							Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[_CurLine].Y - Para.Lines[_CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
+							Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y , PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[_CurLine].Y - Para.Lines[_CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine, isInTable);
 							
 							// For headers we do not check for exceeding lower bound in this case
 							if (!isInHdrFtr
@@ -5723,7 +5725,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
                                 // мы пересчитываем заново текущую страницу, а не предыдущую
 
                                 // Обновляем позицию объекта
-                                Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y, PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine);
+                                Item.Update_Position(PRSA.Paragraph, new CParagraphLayout( PRSA.X, PRSA.Y, PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, Para.Pages[CurPage].Y + Para.Lines[CurLine].Y - Para.Lines[CurLine].Metrics.Ascent, Para.Pages[_CurPage].Y), PageLimits, PageLimitsOrigin, _CurLine, isInTable);
 
                                 LDRecalcInfo.Set_FlowObject( Item, 0, recalcresult_NextElement, -1 );
                                 LDRecalcInfo.Set_PageBreakBefore( false );
@@ -5771,7 +5773,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
 						}
 						
 						// Картинка ложится на или под текст, в данном случае пересчет можно спокойно продолжать
-						Item.Update_Position(PRSA.Paragraph, new CParagraphLayout(PRSA.X, PRSA.Y, PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, nLineTop, nParaTop), PageLimits, PageLimitsOrigin, _CurLine);
+						Item.Update_Position(PRSA.Paragraph, new CParagraphLayout(PRSA.X, PRSA.Y, PageAbs, PRSA.LastW, ColumnStartX, ColumnEndX, X_Left_Margin, X_Right_Margin, Page_Width, Top_Margin, Bottom_Margin, Page_H, PageFields.X, PageFields.Y, nLineTop, nParaTop), PageLimits, PageLimitsOrigin, _CurLine, isInTable);
 						Item.Reset_SavedPosition();
 					}
                 }

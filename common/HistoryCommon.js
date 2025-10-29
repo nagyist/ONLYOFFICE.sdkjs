@@ -4064,6 +4064,9 @@
 	AscDFH.historyitem_Pdf_Form_Tooltip			= AscDFH.historyitem_type_Pdf_Form | 25;
 	AscDFH.historyitem_Pdf_Form_ME_Options		= AscDFH.historyitem_type_Pdf_Form | 26;
 	AscDFH.historyitem_Pdf_Form_Align			= AscDFH.historyitem_type_Pdf_Form | 27;
+	AscDFH.historyitem_Pdf_Form_Ap_Idx			= AscDFH.historyitem_type_Pdf_Form | 28;
+	AscDFH.historyitem_Pdf_Form_Changed_View	= AscDFH.historyitem_type_Pdf_Form | 29;
+	AscDFH.historyitem_Pdf_Form_Orig_Page		= AscDFH.historyitem_type_Pdf_Form | 30;
 
 
 
@@ -4146,6 +4149,7 @@
 	AscDFH.historyitem_Pdf_Annot_Orig_Page			= AscDFH.historyitem_type_Pdf_Annot | 31;
 	AscDFH.historyitem_Pdf_Annot_Comment_Data		= AscDFH.historyitem_type_Pdf_Annot | 32;
 	AscDFH.historyitem_type_Pdf_Annot_Reply			= AscDFH.historyitem_type_Pdf_Annot | 33;
+	AscDFH.historyitem_Pdf_Annot_Ap_Idx				= AscDFH.historyitem_type_Pdf_Annot | 34;
 
 	// Sticky
 	AscDFH.historyitem_Pdf_Text_Annot_Icon			= AscDFH.historyitem_type_Pdf_Comment | 1;

@@ -7909,13 +7909,6 @@ background-repeat: no-repeat;\
 			this.sendToReporter("{ \"main_command\" : true, \"go_to_slide\" : " + slideNum + " }");
 	};
 
-
-	asc_docs_api.prototype.getFocusElement = function() {
-		if (!this.isSlideShow())
-			return window['AscCommon'].g_inputContext.HtmlArea;
-		return document.body;
-	};
-
 	asc_docs_api.prototype.SetDemonstrationModeOnly = function()
 	{
 		this.isOnlyDemonstration = true;
@@ -8086,9 +8079,14 @@ background-repeat: no-repeat;\
 	{
 		this.asc_onCloseFrameEditor();
 		// Находим выделенную диаграмму и накатываем бинарник
-		if (AscCommon.isRealObject(chartBinary))
+		const oLogicDocument = this.WordControl.m_oLogicDocument;
+		if (oLogicDocument)
 		{
-			this.WordControl.m_oLogicDocument.FinalizeEditChart(chartBinary);
+			if (AscCommon.isRealObject(chartBinary))
+			{
+				oLogicDocument.FinalizeEditChart(chartBinary);
+			}
+			oLogicDocument.Document_UpdateUndoRedoState();
 		}
 	};
 
