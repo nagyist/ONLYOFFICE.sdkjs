@@ -525,7 +525,11 @@
 			for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 			{
 				let oTempForm = arrForms[nIndex];
-				if (oTempForm.IsComplexForm()
+				if (oTempForm.IsLabeledCheckBox())
+					oTempForm = oTempForm.GetInnerCheckBox();
+				
+				if (!oTempForm
+					|| oTempForm.IsComplexForm()
 					|| oTempForm === oForm
 					|| !oTempForm.IsRadioButton()
 					|| sKey !== oTempForm.GetCheckBoxPr().GetGroupKey()
@@ -542,6 +546,9 @@
 			for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 			{
 				let oTempForm = arrForms[nIndex];
+				if (oTempForm.IsLabeledCheckBox())
+					oTempForm = oTempForm.GetInnerCheckBox();
+				
 				if (oTempForm.IsComplexForm()
 					|| oTempForm === oForm
 					|| !oTempForm.IsCheckBox()
@@ -631,7 +638,14 @@
 	CFormsManager.prototype.OnChangeComplexForm = function(oForm)
 	{
 		if (oForm.IsLabeledCheckBox())
+		{
 			oForm.CorrectContent();
+			let checkBox = oForm.GetInnerCheckBox();
+			if (checkBox)
+				this.OnChangeCheckBox(checkBox);
+			
+			return;
+		}
 		
 		let sKey          = oForm.GetFormKey();
 		let isPlaceholder = oForm.IsPlaceHolder();
