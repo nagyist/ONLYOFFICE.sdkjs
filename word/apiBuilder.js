@@ -23546,7 +23546,23 @@
 		this.Sdt.SetFormRole(role);
 		return true;
 	};
-
+	
+	/**
+	 * Removes a form and its content. If keepContent is true, the content is not deleted.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.2.0
+	 * @param {boolean} keepContent - Specifies if the content will be deleted or not.
+	 * @returns {boolean} - returns false if form wasn't added to the document.
+	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/Delete.js
+	 */
+	ApiFormBase.prototype.Delete = function(keepContent)
+	{
+		return executeNoFormLockCheck(function(){
+			return ApiInlineLvlSdt.prototype.Delete.call(this, keepContent);
+		}, this);
+	};
+	
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiTextForm
@@ -28160,6 +28176,7 @@
 	ApiFormBase.prototype["SetTag"]             = ApiFormBase.prototype.SetTag;
 	ApiFormBase.prototype["GetRole"]            = ApiFormBase.prototype.GetRole;
 	ApiFormBase.prototype["SetRole"]            = ApiFormBase.prototype.SetRole;
+	ApiFormBase.prototype["Delete"]             = ApiFormBase.prototype.Delete;
 	
 	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
@@ -28531,10 +28548,10 @@
 	{
 		if (!oControl)
 			return null;
-
+		
 		if (oControl instanceof CBlockLevelSdt)
 			return (new ApiBlockLvlSdt(oControl));
-		else if (oControl instanceof CInlineLevelSdt)
+		else if (oControl instanceof CInlineLevelSdt && !oControl.IsForm())
 			return (new ApiInlineLvlSdt(oControl));
 
 		return null;
@@ -29662,6 +29679,8 @@
 	};
 	ApiBlockLvlSdt.prototype._canBeEdited = ApiInlineLvlSdt.prototype._canBeEdited;
 	ApiBlockLvlSdt.prototype._canBeDeleted = ApiInlineLvlSdt.prototype._canBeDeleted;
+	ApiFormBase.prototype._canBeEdited = ApiInlineLvlSdt.prototype._canBeEdited;
+	ApiFormBase.prototype._canBeDeleted = ApiInlineLvlSdt.prototype._canBeDeleted;
 	ApiContentControlList.prototype.GetListPr = function()
 	{
 		if (this.Sdt.IsComboBox())
