@@ -293,7 +293,7 @@ StartAddNewShape.prototype =
                     let oApi = oThis.drawingObjects.getEditorApi();
                     let oDoc = null;
 
-                    if (oAPI.editorId === AscCommon.c_oEditorId.Presentation)
+                    if (oApi.editorId === AscCommon.c_oEditorId.Presentation)
                     {
                         oDoc = oApi.WordControl && oApi.WordControl.m_oLogicDocument;
                         oDoc.StartAction(AscDFH.historydescription_Presentation_AddShape);
