@@ -456,7 +456,9 @@ var c_oSerParType = {
 	DocParts: 27,
 	PermStart: 28,
 	PermEnd: 29,
-	JsaProjectExternal: 30
+	JsaProjectExternal: 30,
+	ParaID: 31,
+	TextID: 32
 };
 var c_oSerGlossary = {
 	DocPart: 0,
@@ -5414,6 +5416,38 @@ function BinaryDocumentTableWriter(memory, doc, oMapCommentId, oNumIdMap, copyPa
             this.memory.WriteByte(c_oSerParType.Content);
             this.bs.WriteItemWithLength(function(){oThis.WriteParagraphContent(par, bUseSelection ,true, selectedAll);});
         }
+		
+		function getHexVal(id)
+		{
+			let val = 0;
+			for (let i = 0; i < 4; ++i)
+			{
+				let _v = parseInt(id.substring(i << 1, (i + 1) << 1), 16);
+				_v = (isNaN(_v) ? 0 : _v);
+				val |= _v << (8 * (3 - i));
+			}
+			return val;
+		}
+		
+		let paraId = par.GetParaId();
+		if (paraId)
+		{
+			this.memory.WriteByte(c_oSerParType.ParaID);
+			this.bs.WriteItemWithLength(function(){
+				oThis.memory.WriteLong(getHexVal(paraId));
+				oThis.memory.WriteLong(0);
+			});
+		}
+		
+		let textId = par.GetTextId();
+		if (textId)
+		{
+			this.memory.WriteByte(c_oSerParType.TextID);
+			this.bs.WriteItemWithLength(function(){
+				oThis.memory.WriteLong(getHexVal(textId));
+				oThis.memory.WriteLong(0);
+			});
+		}
     };
     this.WriteParagraphContent = function (par, bUseSelection, bLastRun, selectedAll)
     {
@@ -11554,6 +11588,20 @@ function Binary_DocumentTableReader(doc, oReadResult, openParams, stream, curNot
                 return oThis.ReadParagraphContent(t, l, paragraph);
             });
         }
+		else if (c_oSerParType.ParaID === type)
+		{
+			let v1 = oThis.stream.GetLong();
+			let v2 = oThis.stream.GetLong();
+			let paraId = (v2 ? v2.toString(16) : "") + v1.toString(16);
+			paragraph.SetParaId(paraId);
+		}
+		else if (c_oSerParType.TextID === type)
+		{
+			let v1 = oThis.stream.GetLong();
+			let v2 = oThis.stream.GetLong();
+			let textId = (v2 ? v2.toString(16) : "") + v1.toString(16);
+			paragraph.SetTextId(textId);
+		}
         else
             res = c_oSerConstants.ReadUnknown;
         return res;
