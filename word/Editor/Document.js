@@ -9897,7 +9897,7 @@ CDocument.prototype.EnterText = function(value)
 		return false;
 
 	this.StartAction(AscDFH.historydescription_Document_AddLetter);
-
+	
 	this.DrawingDocument.TargetStart();
 	this.DrawingDocument.TargetShow();
 
@@ -10653,8 +10653,27 @@ CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function()
 
 	if (!isFormFieldEditing && oCheckBox)
 	{
-		this.RemoveSelection();
-		oCheckBox.MoveCursorOutsideForm(!oCheckBox.IsForm() && oCheckBox.IsCursorAtBegin());
+		if (oCheckBox.IsForm() && oCheckBox.GetMainForm() === oCheckBox)
+		{
+			if (this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, false))
+			{
+				this.StartAction(AscDFH.historydescription_Document_AddCheckBoxLabel);
+				oCheckBox.SetCheckBoxLabel("", true);
+				
+				let innerCheckBox = oCheckBox.GetInnerCheckBox();
+				this.RemoveSelection();
+				innerCheckBox.MoveCursorOutsideForm(false);
+				
+				this.UpdateSelection();
+				this.Recalculate();
+				this.FinalizeAction();
+			}
+		}
+		else
+		{
+			this.RemoveSelection();
+			oCheckBox.MoveCursorOutsideForm(!oCheckBox.IsForm() && oCheckBox.IsCursorAtBegin());
+		}
 	}
 };
 /**

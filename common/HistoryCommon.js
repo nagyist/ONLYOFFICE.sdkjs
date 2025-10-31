@@ -1325,8 +1325,77 @@
 			case AscDFH.historydescription_Collaborative_DeletedTextRecovery:
 				sString = "Collaborative_DeletedTextRecovery";
 				break;
+			case AscDFH.historydescription_Document_AutoCorrectMath:
+				sString = "Document_AutoCorrectMath";
+				break;
+			case AscDFH.historydescription_CustomProperties_Add:
+				sString = "CustomProperties_Add";
+				break;
+			case AscDFH.historydescription_CustomProperties_Remove:
+				sString = "CustomProperties_Remove";
+				break;
+			case AscDFH.historydescription_CustomProperties_Modify:
+				sString = "CustomProperties_Modify";
+				break;
 			case AscDFH.historydescription_Presentation_MergeSelectedShapes:
 				sString = "Presentation_MergeSelectedShapes";
+				break;
+			case AscDFH.historydescription_Presentation_SaveAnnotations:
+				sString = "Presentation_SaveAnnotations";
+				break;
+			case AscDFH.historydescription_Document_SetParagraphBidi:
+				sString = "Document_SetParagraphBidi";
+				break;
+			case AscDFH.historydescription_RemoveAllInks:
+				sString = "RemoveAllInks";
+				break;
+			case AscDFH.historydescription_DisconnectEveryone:
+				sString = "DisconnectEveryone";
+				break;
+			case AscDFH.historydescription_OForm_RoleFilled:
+				sString = "OForm_RoleFilled";
+				break;
+			case AscDFH.historydescription_OForm_CompletePreparation:
+				sString = "OForm_CompletePreparation";
+				break;
+			case AscDFH.historydescription_Presentation_SetPreserveSlideMaster:
+				sString = "Presentation_SetPreserveSlideMaster";
+				break;
+			case AscDFH.historydescription_Document_AddMathML:
+				sString = "Document_AddMathML";
+				break;
+			case AscDFH.historydescription_OForm_CancelFilling:
+				sString = "OForm_CancelFilling";
+				break;
+			case AscDFH.historydescription_Presentation_ShowChartPreview:
+				sString = "Presentation_ShowChartPreview";
+				break;
+			case AscDFH.historydescription_Document_UpdateCharts:
+				sString = "Document_UpdateCharts";
+				break;
+			case AscDFH.historydescription_Document_ChangeExternalChartReference:
+				sString = "Document_ChangeExternalChartReference";
+				break;
+			case AscDFH.historydescription_Document_RemoveExternalChartReferences:
+				sString = "Document_RemoveExternalChartReferences";
+				break;
+			case AscDFH.historydescription_Presentation_RemoveDrawingObject:
+				sString = "Presentation_RemoveDrawingObject";
+				break;
+			case AscDFH.historydescription_Spreadsheet_SwitchCheckbox:
+				sString = "Spreadsheet_SwitchCheckbox";
+				break;
+			case AscDFH.historydescription_Spreadsheet_IncrementControl:
+				sString = "Spreadsheet_IncrementControl";
+				break;
+			case AscDFH.historydescription_Spreadsheet_SelectListBox:
+				sString = "Spreadsheet_SelectListBox";
+				break;
+			case AscDFH.historydescription_OForm_MarkAsFinal:
+				sString = "OForm_MarkAsFinal";
+				break;
+			case AscDFH.historydescription_Document_AddCheckBoxLabel:
+				sString = "Document_AddCheckBoxLabel";
 				break;
 		}
 		return sString;
@@ -4689,6 +4758,7 @@
 	window['AscDFH'].historydescription_Spreadsheet_IncrementControl                = 0x01d1;
 	window['AscDFH'].historydescription_Spreadsheet_SelectListBox                   = 0x01d2;
 	window['AscDFH'].historydescription_OForm_MarkAsFinal                           = 0x01d3;
+	window['AscDFH'].historydescription_Document_AddCheckBoxLabel                   = 0x01d4;
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;
