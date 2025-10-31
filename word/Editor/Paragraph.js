@@ -14273,7 +14273,7 @@ Paragraph.prototype.Write_ToBinary2 = function(Writer)
 	// String2   : Id TextPr
 	// Long      : количество элементов
 	// Array of String2 : массив с Id элементами
-	// Flags     : 0 - bFromDocument, 1 - paraId -> String2, 2 - textId -> String2
+	// Flags     : 0 - bFromDocument, 1 - paraId -> Long, 2 - textId -> Long
 
 	Writer.WriteString2("" + this.Id);
 
@@ -14312,13 +14312,13 @@ Paragraph.prototype.Write_ToBinary2 = function(Writer)
 	
 	if (this.ParaId)
 	{
-		Writer.WriteString2("" + this.ParaId);
+		Writer.WriteLong(this.ParaId);
 		flags |= 2;
 	}
 	
 	if (this.TextId)
 	{
-		Writer.WriteString2("" + this.TextId);
+		Writer.WriteLong(this.TextId);
 		flags |= 4;
 	}
 	
@@ -14335,7 +14335,7 @@ Paragraph.prototype.Read_FromBinary2 = function(Reader)
 	// String2   : Id TextPr
 	// Long      : количество элементов
 	// Array of String2 : массив с Id элементами
-	// Flags     : 0 - bFromDocument, 1 - paraId -> String2, 2 - textId -> String2
+	// Flags     : 0 - bFromDocument, 1 - paraId -> Long, 2 - textId -> Long
 
 	this.Id = Reader.GetString2();
 
@@ -14364,8 +14364,8 @@ Paragraph.prototype.Read_FromBinary2 = function(Reader)
 	
 	this.bFromDocument = !!(flags & 1);
 	
-	this.ParaId = (flags & 2 ? Reader.GetString2() : undefined);
-	this.TextId = (flags & 4 ? Reader.GetString2() : undefined);
+	this.ParaId = (flags & 2 ? Reader.GetLong() : undefined);
+	this.TextId = (flags & 4 ? Reader.GetLong() : undefined);
 	
 	if (!this.bFromDocument)
 		this.Numbering = new ParaPresentationNumbering();
