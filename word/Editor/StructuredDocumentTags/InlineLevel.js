@@ -1876,7 +1876,7 @@ CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label)
 	if (!formManager)
 		return;
 	
-	if (label || ("" === label && forceAdd))
+	if (label)
 	{
 		if (this.IsCheckBox())
 		{
