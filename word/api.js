@@ -3402,7 +3402,7 @@ background-repeat: no-repeat;\
 		{
 			if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontName, null, null, {fontName : name});
+				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontName, null, null, name);
 				this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 					FontFamily : {
 						Name  : name,
@@ -3420,7 +3420,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontSize, null, null, {fontSize: size});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontSize, null, null, size);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize : Math.min(size, 300)}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3432,7 +3432,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextBold, null, null, {isBold: value});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextBold, null, null, value);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Bold : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3443,7 +3443,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextItalic, null, null, {isItalic: value});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextItalic, null, null, value);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Italic : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3454,7 +3454,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextUnderline, null, null, {isUnderline: value});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextUnderline, null, null, value);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({Underline : value}));
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -3465,7 +3465,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextStrikeout, null, null, {isStrikeout: value});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextStrikeout, null, null, value);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 				Strikeout  : value,
 				DStrikeout : false
@@ -3773,7 +3773,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Properties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphLineSpacing, undefined, undefined, {lineSpacing: {type : Type, value : Value}});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphLineSpacing, undefined, undefined, {type : Type, value : Value});
 			this.WordControl.m_oLogicDocument.SetParagraphSpacing({LineRule : Type, Line : Value});
 			this.WordControl.m_oLogicDocument.Recalculate();
 			this.WordControl.m_oLogicDocument.UpdateInterface();
@@ -4209,7 +4209,7 @@ background-repeat: no-repeat;\
 		if (logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			return;
 
-		logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphAlign, undefined, undefined, {align: value});
+		logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphAlign, undefined, undefined, value);
 		logicDocument.SetParagraphAlign(value);
 		logicDocument.UpdateInterface();
 		logicDocument.Recalculate();
@@ -4257,7 +4257,7 @@ background-repeat: no-repeat;\
 			let oRes = null;
 			if (!logicDocument.IsSelectionLocked(AscCommon.changestype_Paragraph_Properties))
 			{
-				logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphNumbering, undefined, undefined, {numbering: numInfo});
+				logicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphNumbering, undefined, undefined, numInfo);
 				let numPr = logicDocument.SetParagraphNumbering(numInfo);
 				logicDocument.FinalizeAction();
 				
@@ -4520,7 +4520,7 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(changestype_Paragraph_Properties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphStyle, null, null, {name: sName});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphStyle, null, null, sName);
 			this.WordControl.m_oLogicDocument.SetParagraphStyle(sName, true);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
@@ -4719,7 +4719,7 @@ background-repeat: no-repeat;\
 			}
 			else
 			{
-				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextHighlightColor, null, null, {highlight : {r:r, g:g, b:b}});
+				this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextHighlightColor, null, null, {r:r, g:g, b:b});
 				this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 					HighLight : {
 						r : r,
@@ -4736,7 +4736,7 @@ background-repeat: no-repeat;\
 		var oLogicDocument = this.WordControl.m_oLogicDocument;
 		if (false === oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextColor, null, null, {color: {r: color.r, g: color.g, b: color.b}});
+			oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextColor, null, null, {r: color.r, g: color.g, b: color.b});
 
 			if (true === color.Auto)
 			{
@@ -4777,7 +4777,7 @@ background-repeat: no-repeat;\
 			Types : [AscCommon.changestype_Paragraph_TextProperties]
 		}))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphShd, undefined, undefined, {color: color});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetParagraphShd, undefined, undefined, color);
 
 			if (true === isOnlyPara)
 				this.WordControl.m_oLogicDocument.SetUseTextShd(false);
@@ -5560,13 +5560,17 @@ background-repeat: no-repeat;\
 	{
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Document_Content_Add))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddTable, undefined, undefined, {tableProp: {col: col, row: row, style: sStyleId}});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddTable);
 			var oTable = this.WordControl.m_oLogicDocument.AddInlineTable(col, row);
 			if(oTable && sStyleId)
 			{
 				oTable.Set_TableStyle(sStyleId);
 			}
-			this.WordControl.m_oLogicDocument.FinalizeAction();
+			let tableStyle = oTable.Get_TableStyle();
+			let tableStyleName = this.WordControl.m_oLogicDocument.Styles.GetName(tableStyle);
+			let tableGrid = oTable.TableGrid;
+
+			this.WordControl.m_oLogicDocument.FinalizeAction(undefined, {col: col, row: row, style: tableStyleName, tableGrid: tableGrid});
 		}
 	};
 	asc_docs_api.prototype.addRowAbove             = function(nCount)
@@ -5966,7 +5970,7 @@ background-repeat: no-repeat;\
 					}
 					if(arrImages.length)
 					{
-						oApi.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddImages, undefined, undefined, {images: arrImages});
+						oApi.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddImages, undefined, undefined, arrImages);
 						oApi.WordControl.m_oLogicDocument.AddImages(arrImages);
 						oApi.WordControl.m_oLogicDocument.FinalizeAction();
 					}
@@ -6783,7 +6787,7 @@ background-repeat: no-repeat;\
 
 		if (!isLocked)
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddHyperlink, undefined, undefined, {hyperlink: oHyperProps});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddHyperlink, undefined, undefined, oHyperProps);
 
 			if (sBookmarkName && oHyperProps.get_Heading())
 				oHyperProps.get_Heading().AddBookmarkAtBegin(sBookmarkName);
@@ -7266,7 +7270,7 @@ background-repeat: no-repeat;\
 			if ("" === CommentData.m_sOOTime)
 				CommentData.m_sOOTime = ((new Date()).getTime()).toString();
 
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddComment, undefined, undefined, {data: {commentData: AscCommentData}});
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddComment, undefined, undefined, AscCommentData);
 			var oComment = this.WordControl.m_oLogicDocument.AddComment(CommentData, AscCommentData.asc_getDocumentFlag());
 			if (oComment)
 				this.sync_AddComment(oComment.GetId(), CommentData);
@@ -9408,7 +9412,7 @@ background-repeat: no-repeat;\
 
 			AscFonts.FontPickerByCharacter.checkText("", this, function(oChart) {
 				this.asc_SetSilentMode(false, true);
-				oLogicDocument.FinalizeAction(undefined, {chart: oChart});
+				oLogicDocument.FinalizeAction(undefined, oChart);
 			}.bind(this, oChart), false, false, false);
 			if (bOpenChartEditor) {
 				oLogicDocument.OpenChartEditor();

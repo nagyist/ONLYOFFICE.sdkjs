@@ -4726,6 +4726,10 @@
 	window['AscDFH'].historydescription_Document_AddImages							= 0x01f5;
 	window['AscDFH'].historydescription_Document_MoveCursorLeft						= 0x01f6;
 	window['AscDFH'].historydescription_Document_MoveCursorRight					= 0x01f7;
+	window['AscDFH'].historydescription_Spreadsheet_AddAutoFilter					= 0x01f8;
+	window['AscDFH'].historydescription_Spreadsheet_RemoveAutoFilter				= 0x01f9;
+	window['AscDFH'].historydescription_Spreadsheet_SelectRange						= 0x01fa;
+
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
 	window['AscDFH'].historydescription_Pdf_FreeTextGeom		= 0x29b;

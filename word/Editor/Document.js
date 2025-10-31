@@ -6435,7 +6435,8 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 		let curPara = this.GetCurrentParagraph(true);
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
-	
+
+	this.StartAction(AscDFH.historydescription_Document_MoveCursorLeft, {isRtl: isRtl, isAddSelect: AddToSelect, isWord: Word});
 	if (isRtl)
 		this.Controller.MoveCursorRight(AddToSelect, Word);
 	else
@@ -6445,6 +6446,7 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 	this.Document_UpdateInterfaceState();
 	this.Document_UpdateRulersState();
 	this.private_UpdateCursorXY(true, true);
+	this.FinalizeAction();
 };
 CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 {
@@ -6463,7 +6465,8 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 		let curPara = this.GetCurrentParagraph(true);
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
-	
+
+	this.StartAction(AscDFH.historydescription_Document_MoveCursorRight, {isRtl: isRtl, isAddSelect: AddToSelect, isWord: Word});
 	if (isRtl)
 		this.Controller.MoveCursorLeft(AddToSelect, Word);
 	else
@@ -6473,6 +6476,7 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 	this.Document_UpdateInterfaceState();
 	this.Document_UpdateSelectionState();
 	this.private_UpdateCursorXY(true, true);
+	this.FinalizeAction();
 };
 CDocument.prototype.MoveCursorUp = function(AddToSelect, CtrlKey)
 {
@@ -6843,7 +6847,7 @@ CDocument.prototype.SetParagraphHighlight = function(IsColor, r, g, b)
 	{
 		if (false === this.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.StartAction(AscDFH.historydescription_Document_SetTextHighlight);
+			this.StartAction(AscDFH.historydescription_Document_SetTextHighlight, undefined, undefined, {r:r, g:g, b:b});
 
 			if (false === IsColor)
 				this.AddToParagraph(new ParaTextPr({HighLight : highlight_None}));
@@ -7097,7 +7101,7 @@ CDocument.prototype.RemoveHdrFtr = function(nPageAbs, isHeader)
 
 	if (!this.IsSelectionLocked(AscCommon.changestype_HdrFtr))
 	{
-		this.StartAction(AscDFH.historydescription_Document_RemoveHdrFtr, undefined, undefined, {props: {type: oHeader.Type, isHeader: isHeader}});
+		this.StartAction(AscDFH.historydescription_Document_RemoveHdrFtr, undefined, undefined, {type: oHeader.Type, isHeader: isHeader});
 
 		let nSectPos = this.SectionsInfo.Find_ByHdrFtr(oHeader);
 		if (0 === nSectPos)
@@ -9474,7 +9478,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, null, null, {isStrikeout: oTextPr.Strikeout !== true});
+					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, null, null, oTextPr.Strikeout !== true);
 					this.AddToParagraph(new ParaTextPr({Strikeout : oTextPr.Strikeout !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9508,7 +9512,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextBoldHotKey, null, null, {isBold: oTextPr.Bold !== true});
+					this.StartAction(AscDFH.historydescription_Document_SetTextBoldHotKey, null, null, oTextPr.Bold !== true);
 					this.AddToParagraph(new ParaTextPr({Bold : oTextPr.Bold !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9560,7 +9564,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextItalicHotKey, null, null, {isItalic: oTextPr.Italic !== true});
+					this.StartAction(AscDFH.historydescription_Document_SetTextItalicHotKey, null, null, oTextPr.Italic !== true);
 					this.AddToParagraph(new ParaTextPr({Italic : oTextPr.Italic !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9588,7 +9592,7 @@ CDocument.prototype.executeShortcut = function(type)
 			if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
 			{
 				let numObject = AscWord.GetNumberingObjectByDeprecatedTypes(0, 1);
-				this.StartAction(AscDFH.historydescription_Document_SetParagraphNumberingHotKey, undefined, undefined, {numbering : numObject});
+				this.StartAction(AscDFH.historydescription_Document_SetParagraphNumberingHotKey, undefined, undefined, numObject);
 				if (numObject)
 					this.SetParagraphNumbering(numObject);
 				
@@ -9666,7 +9670,7 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, null, null, {isUnderline: oTextPr.Underline !== true});
+					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, null, null, oTextPr.Underline !== true);
 					this.AddToParagraph(new ParaTextPr({Underline : oTextPr.Underline !== true}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9767,7 +9771,7 @@ CDocument.prototype.executeShortcut = function(type)
 						? AscCommon.vertalign_Baseline
 						: AscCommon.vertalign_SuperScript;
 
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, null, null, {baseline: vertAlign === AscCommon.vertalign_Baseline});
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, null, null, vertAlign === AscCommon.vertalign_Baseline);
 					this.AddToParagraph(new ParaTextPr({VertAlign : vertAlign}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9814,7 +9818,7 @@ CDocument.prototype.executeShortcut = function(type)
 						? AscCommon.vertalign_Baseline
 						: AscCommon.vertalign_SuperScript;
 					
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, null, null, {baseline: vertAlign === AscCommon.vertalign_Baseline});
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, null, null, vertAlign === AscCommon.vertalign_Baseline);
 					this.AddToParagraph(new ParaTextPr({VertAlign : vertAlign}));
 					this.UpdateInterface();
 					this.FinalizeAction();
@@ -9911,7 +9915,7 @@ CDocument.prototype.EnterText = function(value)
 	if (this.IsSelectionLocked(AscCommon.changestype_Paragraph_AddText, null, true, this.IsFormFieldEditing()))
 		return false;
 
-	this.StartAction(AscDFH.historydescription_Document_AddLetter, null, null, {codePoints : codePoints});
+	this.StartAction(AscDFH.historydescription_Document_AddLetter, null, null, codePoints);
 
 	this.DrawingDocument.TargetStart();
 	this.DrawingDocument.TargetShow();
@@ -16210,7 +16214,7 @@ CDocument.prototype.private_ToggleParagraphAlignByHotkey = function(align)
 		{
 			if (false === this.Document_Is_SelectionLocked(changestype_Paragraph_Content))
 			{
-				this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, {align: align});
+				this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, align);
 				Math.Set_Align(align);
 				this.Recalculate();
 				this.UpdateInterface();
@@ -16238,7 +16242,7 @@ CDocument.prototype.private_ToggleParagraphAlignByHotkey = function(align)
 				align = currAlign === align ? (align === AscCommon.align_Left ? AscCommon.align_Justify : AscCommon.align_Left) : align;
 			}
 
-			this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, {align: align});
+			this.StartAction(AscDFH.historydescription_Document_SetParagraphAlignHotKey, undefined, undefined, align);
 			this.SetParagraphAlign(align);
 			this.UpdateInterface();
 			this.FinalizeAction();
@@ -26711,7 +26715,7 @@ CDocument.prototype.ChangeTextCase = function(nCaseType)
 
 	if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content))
 	{
-		this.StartAction(AscDFH.historydescription_Document_ChangeTextCase, null, null, {changeType: nCaseType});
+		this.StartAction(AscDFH.historydescription_Document_ChangeTextCase, null, null, nCaseType);
 
 		let oChangeEngine = new AscCommonWord.CChangeTextCaseEngine(nCaseType);
 		oChangeEngine.ProcessParagraphs(this.GetSelectedParagraphs());

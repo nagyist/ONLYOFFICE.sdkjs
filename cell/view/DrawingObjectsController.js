@@ -463,7 +463,7 @@ DrawingObjectsController.prototype.addChartDrawingObject = function(options)
         this.startRecalculate();
         this.drawingObjects.sendGraphicObjectProps();
     }
-    Asc.editor.wb.FinalizeAction(AscDFH.historydescription_Spreadsheet_AddChart, {chartProps: chart.chart});
+    Asc.editor.wb.FinalizeAction(AscDFH.historydescription_Spreadsheet_AddChart, chart.chart);
 	return chart;
 };
 

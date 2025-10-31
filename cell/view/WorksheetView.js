@@ -16893,17 +16893,17 @@ function isAllowPasteLink(pastedWb) {
 
 		if (prop === "fa") {
 			switch (val) {
-				case 0:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: false}};
-				case 1:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSubscript, additional: {val: true}};
-				case 2:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: true}};
-				default:	return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: {val: false}};
+				case 0:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: false};
+				case 1:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSubscript, additional: true};
+				case 2:		return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: true};
+				default:	return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellSuperscript, additional: false};
 			}
 		}
 		if (prop === "angle" && (val === 90 || val === - 90 || val === 0 || val === 255)) {
-			return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellAngle, additional: {val: val}};
+			return {nDescription: AscDFH.historydescription_Spreadsheet_SetCellAngle, additional: val};
 		}
 
-		return startActionMap[prop] ? {nDescription: startActionMap[prop], additional: {val: val}} : null;
+		return startActionMap[prop] ? {nDescription: startActionMap[prop], additional: val} : null;
 	};
 
 	WorksheetView.prototype.specialPaste = function (props) {
@@ -19837,6 +19837,7 @@ function isAllowPasteLink(pastedWb) {
 
 					History.Create_NewPoint();
 					History.StartTransaction();
+					t.workbook.StartAction(AscDFH.historydescription_Spreadsheet_AddAutoFilter, {style: styleName, range: ar, info: filterInfo});
 
 
 					var type = ar.getType();
@@ -19881,9 +19882,11 @@ function isAllowPasteLink(pastedWb) {
 					if(isSlowOperation) {
 						window.setTimeout(function() {
 							slowOperationCallback();
+							t.workbook.FinalizeAction();
 						}, 0);
 					} else {
 						slowOperationCallback();
+						t.workbook.FinalizeAction();
 					}
 				};
 

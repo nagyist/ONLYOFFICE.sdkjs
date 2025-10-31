@@ -399,9 +399,9 @@ StartAddNewShape.prototype =
                     };
 
                     if (oAPI.editorId === AscCommon.c_oEditorId.Presentation)
-                        oDoc.FinalizeAction(AscDFH.historydescription_Presentation_AddShape, undefined, [data]);
+                        oDoc.FinalizeAction(AscDFH.historydescription_Presentation_AddShape, undefined, data);
                     else
-                        oDoc.FinalizeAction(AscDFH.historydescription_Spreadsheet_AddShape, [data]);
+                        oDoc.FinalizeAction(AscDFH.historydescription_Spreadsheet_AddShape, data);
                 }
 	            oThis.drawingObjects.updateOverlay();
             };

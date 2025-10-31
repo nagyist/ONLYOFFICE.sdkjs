@@ -3857,7 +3857,7 @@ CPresentation.prototype.addImages = function (aImages, placeholder) {
 			}
 		}
 		this.Recalculate();
-		this.FinalizeAction(undefined, undefined, {image: {src: aImages, data: oController.getSelectedArray()}});
+		this.FinalizeAction(undefined, undefined, {src: aImages, data: oController.getSelectedArray()});
 		this.Document_UpdateInterfaceState();
 		this.CheckEmptyPlaceholderNotes();
 	}
@@ -3983,7 +3983,7 @@ CPresentation.prototype.addChart = function (nTypeChart, isFromInterface, Placeh
 	AscFonts.IsCheckSymbols = false;
 	this.StartAction(AscDFH.historydescription_Presentation_AddChart);
 	let chart = this.finalizeAddChart(oSlide, oChart, isFromInterface, Placeholder);
-	this.FinalizeAction(undefined, undefined, {chart: chart});
+	this.FinalizeAction(undefined, undefined, chart);
 	return chart;
 };
 CPresentation.prototype.addChartObject = function (oChart, isFromInterface, Placeholder) {
@@ -4091,7 +4091,7 @@ CPresentation.prototype.Add_FlowTable = function (Cols, Rows, Placeholder, sStyl
 		}
 	}
 	this.Api.inkDrawer.startSilentMode();
-	this.StartAction(AscDFH.historydescription_Presentation_AddFlowTable, {table: {col: Cols, row: Rows, ph: Placeholder, style: sStyleId}});
+	this.StartAction(AscDFH.historydescription_Presentation_AddFlowTable, {col: Cols, row: Rows, ph: Placeholder, style: sStyleId});
 	var graphic_frame = this.Create_TableGraphicFrame(Cols, Rows, oSlide, sStyleId || this.DefaultTableStyleId, Width, Height, X, Y);
 
 	this.SetThumbnailsFocusElement(FOCUS_OBJECT_MAIN);
@@ -5284,7 +5284,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, [TextPr.Underline === true ? false : true]);
+					this.StartAction(AscDFH.historydescription_Document_SetTextUnderlineHotKey, TextPr.Underline === true ? false : true);
 					this.AddToParagraph(new ParaTextPr({Underline: TextPr.Underline === true ? false : true}));
 					this.FinalizeAction();
 				}
@@ -5296,7 +5296,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, [TextPr.Strikeout !== true]);
+					this.StartAction(AscDFH.historydescription_Document_SetTextStrikeoutHotKey, TextPr.Strikeout !== true);
 					this.AddToParagraph(new ParaTextPr({Strikeout: TextPr.Strikeout !== true}));
 					this.FinalizeAction();
 				}
@@ -5315,7 +5315,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, [TextPr.VertAlign === AscCommon.vertalign_SuperScript ? vertalign_Baseline : AscCommon.vertalign_SuperScript]);
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey2, TextPr.VertAlign === AscCommon.vertalign_SuperScript ? vertalign_Baseline : AscCommon.vertalign_SuperScript);
 					this.AddToParagraph(new ParaTextPr({VertAlign: TextPr.VertAlign === AscCommon.vertalign_SuperScript ? vertalign_Baseline : AscCommon.vertalign_SuperScript}));
 					this.FinalizeAction();
 				}
@@ -5327,7 +5327,7 @@ CPresentation.prototype.OnKeyDown = function (e) {
 			var TextPr = this.GetCalculatedTextPr();
 			if (null != TextPr) {
 				if (this.CanEdit() && this.Document_Is_SelectionLocked(changestype_Drawing_Props) === false) {
-					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, [TextPr.VertAlign === AscCommon.vertalign_SubScript ? vertalign_Baseline : AscCommon.vertalign_SubScript]);
+					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, TextPr.VertAlign === AscCommon.vertalign_SubScript ? vertalign_Baseline : AscCommon.vertalign_SubScript);
 					this.AddToParagraph(new ParaTextPr({VertAlign: TextPr.VertAlign === AscCommon.vertalign_SubScript ? vertalign_Baseline : AscCommon.vertalign_SubScript}));
 					this.FinalizeAction();
 				}
@@ -5941,7 +5941,7 @@ CPresentation.prototype.EnterText = function (value) {
 	let oDocContent1, oDocContent2, bUpdateInterface = false;
 	let nCode;
 	if (this.CollaborativeEditing.Is_Fast() || !this.Document_Is_SelectionLocked(changestype_Drawing_Props)) {
-		this.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd, [codePoints]);
+		this.StartAction(AscDFH.historydescription_Presentation_ParagraphAdd, codePoints);
 		let oController = this.GetCurrentController();
 		if (oController) {
 			oDocContent1 = oController.getTargetDocContent();
@@ -9064,7 +9064,7 @@ CPresentation.prototype.addNextSlide = function (layoutIndex) {
 		return;
 	}
 	this.Api.inkDrawer.startSilentMode();
-	this.StartAction(AscDFH.historydescription_Presentation_AddNextSlide, [layoutIndex]);
+	this.StartAction(AscDFH.historydescription_Presentation_AddNextSlide, layoutIndex);
 	this.addNextSlideAction(layoutIndex);
 	this.Recalculate();
 	this.DrawingDocument.m_oWordControl.GoToPage(this.CurPage + 1);
@@ -9382,7 +9382,7 @@ CPresentation.prototype.deleteMaster = function() {
 		}
 	}
 	let nIdx = this.GetSlideIndex(oMaster);
-	this.StartAction(AscDFH.historydescription_Presentation_DeleteSlides, [nIdx]);
+	this.StartAction(AscDFH.historydescription_Presentation_DeleteSlides, nIdx);
 	this.removeSlide(nIdx);
 	let nNewIdx = this.GetSlideIndex(oMaster);
 	if(nNewIdx === -1) {
@@ -9411,7 +9411,7 @@ CPresentation.prototype.deleteSlides = function (arrSlides) {
 			}
 			slideIndexes.push(nSlideIndex);
 		}
-		this.StartAction(AscDFH.historydescription_Presentation_DeleteSlides, [slideIndexes]);
+		this.StartAction(AscDFH.historydescription_Presentation_DeleteSlides, slideIndexes);
 
 		for (var i = checkArray.length - 1; i > -1; --i) {
 			this.removeSlideByObject(checkArray[i]);
@@ -9465,7 +9465,7 @@ CPresentation.prototype.changeLayout = function (_array, layout_index) {
 	let oApplyLayout = aLayouts[layout_index];
 	let layout;
 	if (this.Document_Is_SelectionLocked(AscCommon.changestype_Layout) === false) {
-		this.StartAction(AscDFH.historydescription_Presentation_ChangeLayout, [{slides: _array, layout: layout_index}]);
+		this.StartAction(AscDFH.historydescription_Presentation_ChangeLayout, {slides: _array, layout: layout_index});
 		var oSelectionStateState = null;
 		let oController = this.GetCurrentSlideController()
 		if (oController) {
@@ -10433,7 +10433,7 @@ CPresentation.prototype.AddComment = function (CommentData, bAll) {
 				this.Api.sync_ShowComment(Comment.Id, Coords.X, Coords.Y);
 			}
 
-			this.FinalizeAction(undefined, undefined, {comment: Comment});
+			this.FinalizeAction(undefined, undefined, Comment);
 			this.Document_UpdateInterfaceState();
 			return Comment;
 		} else {
