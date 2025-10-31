@@ -30097,7 +30097,7 @@ function isAllowPasteLink(pastedWb) {
 			let pastingData1 = specialPasteData.data1;
 			let pastingData2 = specialPasteData.data2;
 
-			let doPaste = function (isSuccess) {
+			let doPaste = function (isSuccess, _format) {
 				if (!isSuccess) {
 					return;
 				}
@@ -30109,7 +30109,7 @@ function isAllowPasteLink(pastedWb) {
 				specialPasteHelper.specialPasteProps = props;
 				//TODO пока для закрытия транзации выставляю флаг. пересмотреть!
 				window['AscCommon'].g_specialPasteHelper.bIsEndTransaction = true;
-				AscCommonExcel.g_clipboardExcel.pasteData(ws, specialPasteData._format, pastingData1, pastingData2, specialPasteData.text_data, true);
+				AscCommonExcel.g_clipboardExcel.pasteData(ws, _format != null ? _format : specialPasteData._format, pastingData1, pastingData2, specialPasteData.text_data, true);
 
 				if (cPasteProps.none !== pasteProp && cPasteProps.link !== pasteProp && cPasteProps.picture !== pasteProp && cPasteProps.linkedPicture !== pasteProp) {
 					ws.traceDependentsManager && ws.traceDependentsManager.clearAll(true);
@@ -30132,7 +30132,7 @@ function isAllowPasteLink(pastedWb) {
 							if (oHtmlElem) {
 								pastingData1 = oHtmlElem;
 								specialPasteData.htmlImage = oHtmlElem;
-								doPaste(true);
+								doPaste(true, AscCommon.c_oAscClipboardDataFormat.HtmlElement);
 							}
 						});
 					};
