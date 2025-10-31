@@ -1869,7 +1869,7 @@ CInlineLevelSdt.prototype.CorrectSpecialComplexFormContent = function()
 			this.AddToContent(0, checkBox);
 	}
 };
-CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label, forceAdd)
+CInlineLevelSdt.prototype.SetCheckBoxLabel = function(label)
 {
 	let logicDocument = this.GetLogicDocument();
 	let formManager   = logicDocument ? logicDocument.GetFormsManager() : null;

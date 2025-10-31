@@ -8732,31 +8732,32 @@ CDocument.prototype.OnKeyDown = function(e)
 		}
 		else if (e.KeyCode === 32) // Space
 		{
-			this.private_CheckForbiddenPlaceOnTextAdd();
-
-			var oSelectedInfo = this.GetSelectedElementsInfo();
-			var oMath         = oSelectedInfo.GetMath();
-
-			let isFormFieldEditing = this.IsFormFieldEditing();
-			if (!this.CheckEnterSpaceAction() && !this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, isFormFieldEditing))
+			if (!this.private_CheckForbiddenPlaceOnTextAdd(0x20))
 			{
-				this.StartAction(AscDFH.historydescription_Document_SpaceButton);
+				var oSelectedInfo = this.GetSelectedElementsInfo();
+				var oMath         = oSelectedInfo.GetMath();
 				
-				// Если мы находимся в формуле, тогда пытаемся выполнить автозамену
-				if (null !== oMath && true === oMath.Make_AutoCorrect())
+				let isFormFieldEditing = this.IsFormFieldEditing();
+				if (!this.CheckEnterSpaceAction() && !this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, isFormFieldEditing))
 				{
-					// Ничего тут не делаем. Все делается в автозамене
-				}
-				else
-				{
-					this.DrawingDocument.TargetStart();
-					this.DrawingDocument.TargetShow();
+					this.StartAction(AscDFH.historydescription_Document_SpaceButton);
 					
-					this.CheckLanguageOnTextAdd = true;
-					this.AddToParagraph(new AscWord.CRunSpace());
-					this.CheckLanguageOnTextAdd = false;
+					// Если мы находимся в формуле, тогда пытаемся выполнить автозамену
+					if (null !== oMath && true === oMath.Make_AutoCorrect())
+					{
+						// Ничего тут не делаем. Все делается в автозамене
+					}
+					else
+					{
+						this.DrawingDocument.TargetStart();
+						this.DrawingDocument.TargetShow();
+						
+						this.CheckLanguageOnTextAdd = true;
+						this.AddToParagraph(new AscWord.CRunSpace());
+						this.CheckLanguageOnTextAdd = false;
+					}
+					this.FinalizeAction();
 				}
-				this.FinalizeAction();
 			}
 
 			bRetValue = keydownresult_PreventNothing;
@@ -9333,7 +9334,8 @@ CDocument.prototype.OnKeyDown = function(e)
 };
 CDocument.prototype.private_AddSymbolByShortcut = function(nCode)
 {
-	this.private_CheckForbiddenPlaceOnTextAdd();
+	if (!this.private_CheckForbiddenPlaceOnTextAdd(nCode))
+		return;
 
 	if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, this.IsFormFieldEditing()))
 	{
@@ -9886,7 +9888,8 @@ CDocument.prototype.EnterText = function(value)
 
 	let codePoints = typeof(value) === "string" ? value.codePointsArray() : value;
 
-	this.private_CheckForbiddenPlaceOnTextAdd();
+	if (!this.private_CheckForbiddenPlaceOnTextAdd(codePoints))
+		return true;
 	
 	if (1 === codePoints.length
 		&& AscCommon.IsSpace(codePoints[0])
@@ -10637,7 +10640,7 @@ CDocument.prototype.private_IsHitInHdrFtr = function(nY, nCurPage)
 	let pageFrame = this.GetPageContentFrame(nCurPage);
 	return (nY <= pageFrame.Y || nY > pageFrame.YLimit);
 };
-CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function()
+CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function(codePoints)
 {
 	let isFormFieldEditing = this.IsFormFieldEditing();
 	let oSelectedInfo      = this.GetSelectedElementsInfo();
@@ -10658,15 +10661,28 @@ CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function()
 			if (this.IsSelectionLocked(AscCommon.changestype_Paragraph_Content, null, true, false))
 			{
 				this.StartAction(AscDFH.historydescription_Document_AddCheckBoxLabel);
-				oCheckBox.SetCheckBoxLabel("", true);
 				
-				let innerCheckBox = oCheckBox.GetInnerCheckBox();
+				let text = "";
+				if (Array.isArray(codePoints))
+				{
+					for (let index = 0, count = codePoints.length; index < count; ++index)
+					{
+						text += String.fromCodePoint(codePoints);
+					}
+				}
+				else
+				{
+					text = String.fromCodePoint(codePoints);
+				}
+				
+				oCheckBox.SetCheckBoxLabel(text);
 				this.RemoveSelection();
-				innerCheckBox.MoveCursorOutsideForm(false);
+				oCheckBox.MoveCursorToContentControl(false);
 				
 				this.UpdateSelection();
 				this.Recalculate();
 				this.FinalizeAction();
+				return false;
 			}
 		}
 		else
@@ -10675,6 +10691,8 @@ CDocument.prototype.private_CheckForbiddenPlaceOnTextAdd = function()
 			oCheckBox.MoveCursorOutsideForm(!oCheckBox.IsForm() && oCheckBox.IsCursorAtBegin());
 		}
 	}
+	
+	return true;
 };
 /**
  * Проверяем будет ли добавление текста на ивенте KeyDown
