@@ -9459,6 +9459,40 @@
 		return "paragraph";
 	};
 	/**
+	 * Specifies a unique ID for the current paragraph.
+	 * @memberof ApiParagraph
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @since 9.2.0
+	 * @param {number} paraId - The numerical ID which will be specified for the current paragraph. Value MUST be greater than 0 and less than 0x80000000.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/SetParaId.js
+	 */
+	ApiParagraph.prototype.SetParaId = function(paraId)
+	{
+		paraId = GetIntParameter(paraId, null);
+		if (null === paraId)
+			throwException(new Error("ParaId must be a numerical"));
+		if (paraId <= 0 || paraId >= 0x80000000)
+			throwException(new Error("ParaId must be greater than 0 and less than 0x80000000"));
+		
+		this.Paragraph.SetParaId(paraId);
+		return true;
+	};
+	/**
+	 * Returns a unique ID for the current paragraph.
+	 * @memberof ApiParagraph
+	 * @returns {number} 0 if no identifier is specified for the current paragraph.
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetParaId.js
+	 */
+	ApiParagraph.prototype.GetParaId = function()
+	{
+		let paraId = this.Paragraph.GetParaId();
+		return paraId ? paraId : 0;
+	};
+	
+	/**
 	 * Adds some text to the current paragraph.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
@@ -27421,6 +27455,8 @@
 	
 	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
+	ApiParagraph.prototype["SetParaId"]              = ApiParagraph.prototype.SetParaId;
+	ApiParagraph.prototype["GetParaId"]              = ApiParagraph.prototype.GetParaId;
 	ApiParagraph.prototype["AddText"]                = ApiParagraph.prototype.AddText;
 	ApiParagraph.prototype["AddPageBreak"]           = ApiParagraph.prototype.AddPageBreak;
 	ApiParagraph.prototype["AddLineBreak"]           = ApiParagraph.prototype.AddLineBreak;

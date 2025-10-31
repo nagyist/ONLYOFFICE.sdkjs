@@ -168,7 +168,7 @@ function Paragraph(Parent, bFromPresentation)
     this.CollPrChange = false;
 
 	// На загрузке мы не должны генерить ID, иначе они будут разные у разных пользователей
-	this.ParaId = !AscCommon.g_oIdCounter.IsLoad() ? AscCommon.CreateUUID(true) : undefined;
+	this.ParaId = !AscCommon.g_oIdCounter.IsLoad() ? AscCommon.CreateDurableId() : undefined;
 	this.TextId = undefined;
 
     // Добавляем данный класс в таблицу Id (обязательно в конце конструктора)

@@ -2088,16 +2088,16 @@ CChangesParagraphBidi.prototype.CheckLock = private_ParagraphContentChangesCheck
 {
 	/**
 	 * @constructor
-	 * @extends {AscDFH.CChangesBaseStringProperty}
+	 * @extends {AscDFH.CChangesBaseLongProperty}
 	 */
 	function CChangesParagraphParaId(Class, Old, New)
 	{
-		AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New);
+		AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New);
 	}
 	
 	AscDFH.InheritPropertyChange(
 		CChangesParagraphParaId,
-		AscDFH.CChangesBaseStringProperty,
+		AscDFH.CChangesBaseLongProperty,
 		AscDFH.historyitem_Paragraph_ParaId,
 		function(value)
 		{
@@ -2108,16 +2108,16 @@ CChangesParagraphBidi.prototype.CheckLock = private_ParagraphContentChangesCheck
 	
 	/**
 	 * @constructor
-	 * @extends {AscDFH.CChangesBaseStringProperty}
+	 * @extends {AscDFH.CChangesBaseLongProperty}
 	 */
 	function CChangesParagraphTextId(Class, Old, New)
 	{
-		AscDFH.CChangesBaseStringProperty.call(this, Class, Old, New);
+		AscDFH.CChangesBaseLongProperty.call(this, Class, Old, New);
 	}
 	
 	AscDFH.InheritPropertyChange(
 		CChangesParagraphTextId,
-		AscDFH.CChangesBaseStringProperty,
+		AscDFH.CChangesBaseLongProperty,
 		AscDFH.historyitem_Paragraph_TextId,
 		function(value)
 		{
