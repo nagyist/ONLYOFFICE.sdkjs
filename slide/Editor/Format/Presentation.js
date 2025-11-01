@@ -5516,7 +5516,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 													this.Recalculate();
 												}
 											} else {
+												this.StartAction(AscDFH.historydescription_Presentation_AddNewParagraph, true);
 												this.AddToParagraph(new AscWord.CRunBreak(AscWord.break_Line), false, true);
+												this.FinalizeAction();
 											}
 										}
 									} else {
@@ -5535,8 +5537,9 @@ CPresentation.prototype.OnKeyDown = function (e) {
 												}
 											}
 										} else {
+											this.StartAction(AscDFH.historydescription_Presentation_AddNewParagraph, true);
 											this.AddNewParagraph();
-
+											this.FinalizeAction();
 										}
 									}
 

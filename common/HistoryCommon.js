@@ -4729,6 +4729,7 @@
 	window['AscDFH'].historydescription_Spreadsheet_AddAutoFilter					= 0x01f8;
 	window['AscDFH'].historydescription_Spreadsheet_RemoveAutoFilter				= 0x01f9;
 	window['AscDFH'].historydescription_Spreadsheet_SelectRange						= 0x01fa;
+	window['AscDFH'].historydescription_Spreadsheet_SetCellFormula					= 0x01fb;
 
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;

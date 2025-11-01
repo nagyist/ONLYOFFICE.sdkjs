@@ -1507,7 +1507,7 @@
     // Проверим, нужно ли отсылать информацию о ячейке
     var ar = ws.model.selectionRange.getLast();
     var isSelectOnShape = ws.getSelectionShape();
-	this.StartAction(AscDFH.historydescription_Spreadsheet_SelectRange, ar);
+	//this.StartAction(AscDFH.historydescription_Spreadsheet_SelectRange, [ar]);
 
     if (!this._isEqualRange(ws.model.selectionRange, isSelectOnShape)) {
       this._onWSSelectionChanged();
@@ -1595,7 +1595,7 @@
             }
         }
     }
-	this.FinalizeAction();
+	//this.FinalizeAction();
     this.timerEnd = false;
   };
 

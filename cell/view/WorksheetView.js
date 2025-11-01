@@ -19140,11 +19140,17 @@ function isAllowPasteLink(pastedWb) {
 				ws.clearChangedArrayList();
 			}
 
+			if (applyByArray)
+				this.workbook.StartAction(AscDFH.historydescription_Spreadsheet_SetCellFormula, AscCommonExcel.getFragmentsText(val));
+			else
+				this.workbook.StartAction(AscDFH.historydescription_Spreadsheet_SetCellValue, AscCommonExcel.getFragmentsText(val));
+			
 			// set the value to the selected range
 			c.setValue(AscCommonExcel.getFragmentsText(val), function (r) {
 				ret = r;
 			}, null, applyByArray ? bbox : ((!applyByArray && ctrlKey) ? null : undefined), null, AscCommonExcel.bIsSupportDynamicArrays ? dynamicSelectionRange : null);
 
+			this.workbook.FinalizeAction();
 			// recalc all volatile arrays on page
 			t.model.recalculateVolatileArrays();
 

@@ -206,90 +206,45 @@
 		let actionMacroFunction = actionsMacros[type];
 		if (actionMacroFunction)
 		{
-			this.result += actionMacroFunction(additional, type);
+			if (Array.isArray(additional) 
+				&& type !== AscDFH.historydescription_Document_AddLetter
+				&& type !== AscDFH.historydescription_Presentation_ParagraphAdd)
+			{
+				for (let i = 0; i < additional.length; i++)
+				{
+					this.result += actionMacroFunction(additional[i], type);
+				}
+			}
+			else
+				this.result += actionMacroFunction(additional, type);
 		}
 	};
 	MacroRecorder.prototype.joinDataForMacros = function(prevData, currentData) {
-		function isPlainObject(v) {
-			return v !== null && typeof v === 'object' && !Array.isArray(v);
-		}
-		function toArrayPreserveOrder(a, b) {
-			var arrA = Array.isArray(a) ? a : [a];
-			var arrB = Array.isArray(b) ? b : [b];
-			return arrA.concat(arrB);
-		}
-		function mergeByRules(a, b) {
-			if (typeof a === 'string' && typeof b === 'string') {
-				return a + b;
-			}
-
-			if (isPlainObject(a) && isPlainObject(b)) {
-				var out = {};
-				var k;
-
-				for (k in a) {
-				if (Object.prototype.hasOwnProperty.call(a, k)) {
-					out[k] = a[k];
-				}
-				}
-
-				for (k in b)
-				{
-					if (Object.prototype.hasOwnProperty.call(b, k))
-					{
-						if (Object.prototype.hasOwnProperty.call(a, k))
-						{
-							var av = a[k];
-							var bv = b[k];
-							if (typeof av === 'string' && typeof bv === 'string')
-								out[k] = av + bv;
-							else
-								out[k] = toArrayPreserveOrder(av, bv);
-						} 
-						else
-						{
-							out[k] = b[k];
-						}
-					}
-				}
-			  return out;
-			}
-			return toArrayPreserveOrder(a, b);
-		}
-
-		if (this.editor.editorId === AscCommon.c_oEditorId.Word || this.editor.editorId === AscCommon.c_oEditorId.Presentation)
+		if (Array.isArray(prevData))
 		{
-			if (Array.isArray(prevData))
+			if (Array.isArray(currentData))
 			{
-				if (Array.isArray(currentData))
+				for (let i = 0; i < currentData.length; i++)
 				{
-					for (let i = 0; i < currentData.length; i++)
-					{
-						prevData.push(currentData[i]);
-					}
-					return prevData;
-				}
-				else
-				{
-					return prevData.push(currentData);
+					prevData.push(currentData[i]);
 				}
 			}
 			else
 			{
-				if (prevData === undefined || prevData === null)
-				{
-					return [currentData];
-				}
-				else
-				{
-					return [prevData, currentData];
-				}
-				
+				prevData.push(currentData);
 			}
+			return prevData
 		}
-		else if (this.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
+		else
 		{
-			return mergeByRules(prevData, currentData);
+			if (prevData === undefined || prevData === null)
+			{
+				return [currentData];
+			}
+			else
+			{
+				return [prevData, currentData];
+			}
 		}
 	};
 	MacroRecorder.prototype.proceedDataBefoeApply = function (data) {
@@ -557,7 +512,7 @@
 			return "\tApi.GetDocument().GetRangeBySelect().SetVertAlign(\"" + align + "\");\n";
 		},
 		setTextColor			: function(color){return "\tdoc.GetRangeBySelect().SetColor(" + color.r + "," + color.g + "," + color.b  + ");\n"},
-		setStyleHeading			: function(name){return "\tdoc.GetRangeBySelect().SetStyle(\"" + name + "\");\n"},
+		setStyleHeading			: function(name){return "\tdoc.GetRangeBySelect().SetStyle(doc.GetStyle(\"" + name + "\"));\n"},
 		clearFormat				: function(){return "\tdoc.GetRangeBySelect().ClearFormating()\n"},
 		cut						: function(){return "\tdoc.GetRangeBySelect().Cut();\n"},
 		changeTextCase			: function(changeType){return "\tdoc.GetRangeBySelect().SetTextCase(\"" + changeType + "\");\n"},
@@ -935,11 +890,15 @@
 			return "\tApi.GetSelection().SetAlignVertical(\"" + align + "\");\n"
 		},
 		setCellTextColor		: function(clr){
-			let color = "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
+			let color = clr === null
+				? "Api.CreateColorFromRGB( 255, 255, 255)"
+				: "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
 			return "\tApi.GetSelection().SetFontColor(" + color + ");\n"
 		},
 		setCellBackgroundColor	: function(clr){
-			let color = "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
+			let color = clr === null
+				? "Api.CreateColorFromRGB( 255, 255, 255)"
+				: "Api.CreateColorFromRGB(" + clr.getR() + ", " + clr.getG() + ", " + clr.getB() + ")";
 			return "\tApi.GetSelection().SetBackgroundColor(" + color + ");\n"
 		},
 		setCellWrap				: function(wrap){return "\tApi.GetSelection().SetWrap(" + wrap + ");\n"},
@@ -952,6 +911,14 @@
 
 			return "\tApi.GetSelection().SetValue(" + value + ");\n"
 		},
+		setCellFormula 			: function(value){
+			if (typeof value === 'string')
+				value = '"' + value.replace(/"/g, '\\"') + '"';
+			else
+				value = value.toString();
+
+			return "\tApi.GetSelection().SetFormulaArray(" + value + ");\n"
+		},
 		setCellAngle			: function(angle){
 			switch (angle) {
 				case -90:	return "\tApi.GetSelection().SetOrientation('xlDownward');\n";
@@ -959,6 +926,8 @@
 				case 90:	return "\tApi.GetSelection().SetOrientation('xlUpward');\n";
 				case 255:	return "\tApi.GetSelection().SetOrientation('xlVertical');\n";
 			}
+
+			return "";
 		},
 		setCellChangeTextCase	: function(textCase){return "\tApi.GetSelection().ChangeTextCase(" + textCase + ");\n"},
 		setCellChangeFontSize	: function(isInc){
@@ -1162,7 +1131,8 @@
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddImageUrls]				= cellActions.addImageUrls;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_AddAutoFilter]				= cellActions.addAutoFilter;
 	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_RemoveAutoFilter]			= cellActions.removeAutoFilter;
-	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SelectRange]					= cellActions.selectRange;
+	//CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SelectRange]					= cellActions.selectRange;
+	CellActionsMacroList[AscDFH.historydescription_Spreadsheet_SetCellFormula]				= cellActions.setCellFormula;
 
 	const presActions = {
 		setParagraphAlign		: function(align){
@@ -1173,7 +1143,7 @@
 				case AscCommon.align_Center:	align = 'center';	break;
 				default:						align = 'center';
 			}
-			return "\tApi.GetSelection().GetShapes()[0].GetDocContent().GetElement(0).SetJc(\"" + align + "\");\n";
+			return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.SetJc(\"" + align + "\"));\n\t})\n";
 		},
 		paragraphAdd			: function(additional){
 			if (!additional.length)
@@ -1185,8 +1155,10 @@
 
 			return "\t(function () {\n"
 				+ "\t\tlet shapes = Api.GetSelection().GetShapes();\n"
-				+ "\t\tif (shapes.length)\n"
-				+	"\t\t\tshapes[0].GetDocContent().GetElement(0).AddText(\"" + text + "\");\n"
+				+ "\t\tif (shapes.length) {\n"
+				+	"\t\t\tlet content = shapes[0].GetDocContent();\n"
+				+	"\t\t\tlet len = content.GetElementsCount();\n"
+				+	"\t\t\tcontent.GetElement(len - 1).AddText(\"" + text + "\")\n"
 				+ "\t\t}\n"
 				+ "\t}());\n";
 		},
@@ -1404,9 +1376,8 @@
 		{
 			return "\t(function () {\n"
 			+ "\t\tlet shapes = Api.GetSelection().GetShapes();\n"
-			+ "\t\tif (shapes.length) {\n"
+			+ "\t\tif (shapes.length)\n"
 			+	"\t\t\tshapes[0].GetDocContent().Push(Api.CreateParagraph());\n"
-			+ "\t\t}\n"
 			+ "\t}());\n";
 		}
 	};
