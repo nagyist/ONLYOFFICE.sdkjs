@@ -9797,12 +9797,6 @@ CDocument.prototype.executeShortcut = function(type)
 			result = true;
 			break;
 		}
-		case Asc.c_oAscDocumentShortcutType.SoftHyphen:
-		{
-			// TODO: Реализовать
-			result = true;
-			break;
-		}
 		case Asc.c_oAscDocumentShortcutType.HorizontalEllipsis:
 		{
 			this.private_AddSymbolByShortcut(0x2026);
