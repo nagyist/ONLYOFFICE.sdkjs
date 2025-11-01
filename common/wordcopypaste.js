@@ -2877,7 +2877,7 @@ PasteProcessor.prototype =
 		const grid = table.TableGrid;
 
 		let nGridBefore = 0;
-		if (row.Pr !== null && row.Pr.GridBefore !== null) {
+		if (row.Pr != null && row.Pr.GridBefore != null) {
 			nGridBefore = row.Pr.GridBefore;
 		}
 
@@ -3394,23 +3394,25 @@ PasteProcessor.prototype =
 		//для формул параметры как и при обычной вставке. но нужно уметь их преобразовывать в текст при вставке только текста
 		//особые параметры при вставке таблиц из EXCEL
 
+		let specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
 
 		//если вставляются только изображения, пока не показываем параметры специальной
-		if(para_Drawing === this.pasteTypeContent && !(this.aContent.length === 1 && this.specificPasteProps))
+		if(para_Drawing === this.pasteTypeContent && !(this.aContent.length === 1 && this.specificPasteProps) && !specialPasteHelper.specialPasteStart)
 		{
-			window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide();
-			if(window['AscCommon'].g_specialPasteHelper.buttonInfo)
+			specialPasteHelper.SpecialPasteButton_Hide();
+			if(specialPasteHelper.buttonInfo)
 			{
-				window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph = null;
-				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
+				specialPasteHelper.showButtonIdParagraph = null;
+				specialPasteHelper.CleanButtonInfo();
 			}
 			return;
 		}
 
-		var specialPasteShowOptions = !window['AscCommon'].g_specialPasteHelper.buttonInfo.isClean() ? window['AscCommon'].g_specialPasteHelper.buttonInfo : null;
-		if(!window['AscCommon'].g_specialPasteHelper.specialPasteStart)
+
+		var specialPasteShowOptions = !specialPasteHelper.buttonInfo.isClean() ? specialPasteHelper.buttonInfo : null;
+		if(!specialPasteHelper.specialPasteStart)
 		{
-			specialPasteShowOptions = window['AscCommon'].g_specialPasteHelper.buttonInfo;
+			specialPasteShowOptions = specialPasteHelper.buttonInfo;
 
 			var sProps = Asc.c_oSpecialPasteProps;
 			var aContent = this.aContent;
@@ -3443,14 +3445,21 @@ PasteProcessor.prototype =
 				props = [sProps.sourceformatting/*, sProps.mergeFormatting*/, sProps.keepTextOnly];
 			}
 
+			if (specialPasteHelper.specialPasteData && specialPasteHelper.specialPasteData.images && specialPasteHelper.specialPasteData.images.length && !(window["Asc"]["editor"] && window["Asc"]["editor"].isChartEditor)) {
+				if (!props) {
+					props = [];
+				}
+				props.push(sProps.picture);
+			}
+
 			if(null !== props)
 			{
 				specialPasteShowOptions.asc_setOptions(props);
 			}
 			else
 			{
-				window['AscCommon'].g_specialPasteHelper.showButtonIdParagraph = null;
-				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
+				specialPasteHelper.showButtonIdParagraph = null;
+				specialPasteHelper.CleanButtonInfo();
 			}
 		}
 
@@ -3458,8 +3467,8 @@ PasteProcessor.prototype =
 		{
 			//SpecialPasteButtonById_Show вызываю здесь, если пересчет документа завершился раньше, чем мы попали сюда и сгенерировали параметры вставки
 			//в противном случае вызываю SpecialPasteButtonById_Show в drawingDocument->OnEndRecalculate
-			if (window['AscCommon'].g_specialPasteHelper.endRecalcDocument) {
-				window['AscCommon'].g_specialPasteHelper.SpecialPasteButtonById_Show();
+			if (specialPasteHelper.endRecalcDocument) {
+				specialPasteHelper.SpecialPasteButtonById_Show();
 			}
 		}
 	},
@@ -10525,10 +10534,10 @@ PasteProcessor.prototype =
 		if (nRowCount > 0 && nMaxColCount > 0) {
 			var bUseScaleKoef = this.bUseScaleKoef;
 			var dScaleKoef = this.dScaleKoef;
-			/*if (dMaxSum * dScaleKoef > this.dMaxWidth) {
+			if (dMaxSum * dScaleKoef > this.dMaxWidth) {
 				dScaleKoef = dScaleKoef * this.dMaxWidth / dMaxSum;
 				bUseScaleKoef = true;
-			}*/
+			}
 			//строим Grid
 			var aGrid = [];
 			var nPrevIndex = null;
@@ -10686,6 +10695,123 @@ PasteProcessor.prototype =
 
 
 
+		//form examples:
+		//1.DropDown
+		// <html>
+		// 	<head/>
+		// 	<body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// 	<!--StartFragment-->
+		// 	<p style=''>
+		// 		<w:Sdt ShowingPlcHdr="t" DocPart="8522AE221F8D4E7AB041C6FBDCFFDADA" DropDown="t" Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ID="-1395741881">
+		// 			<w:ListItem ListValue="ListValue1" DataValue="DataValue1"/></w:ListItem>
+		// 			<w:ListItem ListValue="ListValue2" DataValue="DataValue2"/></w:ListItem>DropDown_example
+		// 		</w:Sdt>
+		// 	</p>
+		// 	<!--EndFragment-->
+		// </body>
+		// </html>
+
+		//2.CheckBox
+		// <html>
+		// 	<head/>
+		// 	<body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// 	<!--StartFragment-->
+		// 	<p style=''>
+		// 		<w:Sdt ShowingPlcHdr="t" CheckBox="t" CheckBoxIsChecked="f" CheckBoxValueChecked="☑‘" CheckBoxValueUnchecked="☐" CheckBoxFontChecked="Segoe UI Symbol" CheckBoxFontUnchecked="Segoe UI Symbol"  Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ID="-1395741881"/>
+		// 		<span style='font-family:"Segoe UI Symbol",sans-serif'>☐</span>
+		// 	</w:Sdt>
+		// 	</p>
+		// 	<!--EndFragment-->
+		// 	</body>
+		// </html>
+
+		//3.ComboBox
+		// <html>
+		// <head/>
+		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// <span>
+		// 	<w:Sdt Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ComboBox="t" ID="1837335014">
+		// 		<w:ListItem ListValue="Choose an item1" DataValue="Choose an item1"/>test
+		// 	</w:Sdt>
+		// </span>
+		// </body>
+		// </html>
+
+		//4.TextInline
+		// <html>
+		// <head/>
+		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// <span>
+		// 	<w:Sdt Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ID="1837335014">
+		// 		inline
+		// 	</w:Sdt>
+		// </span>
+		// </body>
+		// </html>
+
+		//4. TextFixed - TODO see add from api
+
+		//5. RadioButton - while script error
+
+		//6. Signature - fixed form (TODO see add from api)
+
+		//7. Email address - TextInline + properties. TODO symbols!
+		// <html>
+		// <head/>
+		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// <span>
+   		//  <w:Sdt Title="Email Address" Form="t" Key="EmailAddress1" Border="red" Shd="blue" HelpText="Enter your email" Required="t" RoleName="Recipient" RoleColor="#7FB5B5" sdttag="EmailTag" Label="Email" ID="1837335015">
+        // <w:TextForm MaxCharacters="-1" Comb="f" WidthRule="1" MultiLine="f" AutoFit="f" FormatType="regexp" RegExp="\S+@\S+\.\S+" Symbols="49,50,51"/>
+        // user111@example.com
+   		//  </w:Sdt>
+		// </span>
+		// </body>
+		// </html>
+
+		//8. date
+		// <html>
+		// <head/>
+		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// <span>
+		// <w:Sdt DocPart="0D4FD865761947FCBA0D9229E17016DB" Calendar="t" MapToDateTime="t" CalendarType="Gregorian" Date="2022-10-24" DateFormat="dd.MM.yyyy" Lang="EN-US" Title="Date Picker" Form="t" Key="DatePicker1" Border="blue" Shd="yellow" HelpText="Select a date" Required="t" RoleName="DateRole" RoleColor="#FF5733" sdttag="DateTag" Label="DateLabel" ID="-291673853">24.10.2022</w:Sdt>
+		// </span>
+		// </body>
+		// </html>
+
+		//9. zipcode TODO need test
+		// <html>
+		// <head/>
+		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
+		// <span>
+		//   <w:Sdt Title="Zip Code" Form="t" Key="ZipCode1" Border="blue" Shd="yellow" HelpText="Enter zip code" Required="t" RoleName="User" RoleColor="#7FB5B5" sdttag="ZipCodeTag" Label="ZipCodeLabel" ID="1837335020">
+		// 	<w:TextForm MaxCharacters="10" Comb="t" Width="202" WidthRule="1" MultiLine="f" AutoFit="f" FormatType="mask" Mask="99999-9999" Symbols="57"/>
+		// 	12345-6789
+		//   </w:Sdt>
+		// </span>
+		// </body>
+		// </html>
+
+		let checkBoolAttr = function (attr) {
+			return attr && attr.value && attr.value === "t";
+		};
+		let getType = function (attrs) {
+			let res = null;
+			if (checkBoolAttr(attrs["checkbox"])) {
+				res = "checkbox";
+			} else if (checkBoolAttr(attrs["dropdown"])) {
+				res = "dropdown";
+			} else if (checkBoolAttr(attrs["combobox"])) {
+				res = "combobox";
+			} else if (checkBoolAttr(attrs["radiobox"])) {
+				res = "radiobox";
+			} else if (checkBoolAttr(attrs["maptodatetime"])) {
+				res = "datetime";
+			} else {
+				res = "text";
+			}
+
+			return res;
+		};
 
 		//w:Sdt -> ориентируемся по первому внутреннему тегу
 		//если параграф - то оборачиваем в CBlockLevelSdt, если текст с настройками - в CInlineLevelSdt
@@ -10694,7 +10820,9 @@ PasteProcessor.prototype =
 
 		//ms в буфер записывает только lock контента
 		let checkBox, dropdown, comboBox;
+		let isContentAdded = false;
 		if (node && node.attributes) {
+			let _type = getType(node.attributes);
 			let contentLocked = node.attributes["contentlocked"];
 			if (contentLocked /*&& contentLocked.value === "t"*/) {
 				levelSdt.SetContentControlLock(c_oAscSdtLockType.SdtContentLocked);
@@ -10717,6 +10845,100 @@ PasteProcessor.prototype =
 			if (placeHolder && placeHolder.value === "t") {
 				levelSdt.SetPlaceholder(c_oAscDefaultPlaceholderName.Text);
 			}
+
+			//form settings
+			if (AscCommon.IsSupportOFormFeature() && checkBoolAttr(node.attributes["form"])) {
+				let formPr = new AscWord.CSdtFormPr();
+				let key = node.attributes["key"];
+				if (key && key.value) {
+					formPr.SetKey(key.value);
+				}
+				let label = node.attributes["label"];
+				if (label && label.value) {
+					formPr.SetLabel(label.value);
+				}
+				let helpText = node.attributes["helptext"];
+				if (helpText && helpText.value) {
+					formPr.SetHelpText(helpText.value);
+				}
+				let required = node.attributes["required"];
+				if (required && required.value) {
+					formPr.SetRequired(required.value === "t");
+				}
+				let fixed = node.attributes["fixed"];
+				if (fixed && fixed.value) {
+					formPr.SetFixed(fixed.value === "t");
+				}
+				let border = node.attributes["border"];
+				if (border && border.value) {
+					let brd = new Asc.asc_CTextBorder();
+					brd.put_Value(1);
+					let borderColor = this._ParseColor(border.value);
+					if (borderColor) {
+						let ascColor = new Asc.asc_CColor();
+						ascColor.asc_putR(borderColor.r);
+						ascColor.asc_putG(borderColor.g);
+						ascColor.asc_putB(borderColor.b);
+						brd.put_Color(ascColor);
+					}
+					formPr.put_Border(brd);
+				}
+
+				let shd = node.attributes["shd"];
+				if (shd && shd.value) {
+					// Parse shading value
+					let shdColor = this._ParseColor(shd.value);
+					if (shdColor) {
+						let ascColor = new Asc.asc_CColor();
+						ascColor.asc_putR(shdColor.r);
+						ascColor.asc_putG(shdColor.g);
+						ascColor.asc_putB(shdColor.b);
+						formPr.SetAscShd(true, ascColor);
+					}
+				}
+
+				let field = node.attributes["field"];
+				let roleName = node.attributes["rolename"];
+				/*if (field && field.value) {
+					let fieldMaster = AscCommon.g_oTableId.GetById(field.value);
+					if (fieldMaster) {
+						formPr.SetFieldMaster(fieldMaster);
+					} else if (roleName && roleName.value) {
+						formPr.SetRole(roleName.value);
+					}
+				} else*/ if (roleName && roleName.value) {
+					let oform = this.oLogicDocument ? this.oLogicDocument.GetOFormDocument() : null;
+					if (oform && oform.haveRole(roleName.value)) {
+						formPr.SetRole(roleName.value);
+					} else {
+						//ADD new role
+						const role = new AscCommon.CRoleSettings();
+						role.asc_putName(roleName.value);
+						let roleColor = node.attributes["rolecolor"];
+						roleColor = roleColor && roleColor.value && this._ParseColor(roleColor.value);
+						let ascRoleColor;
+						if (roleColor) {
+							ascRoleColor = new Asc.asc_CColor();
+							ascRoleColor.asc_putR(roleColor.r);
+							ascRoleColor.asc_putG(roleColor.g);
+							ascRoleColor.asc_putB(roleColor.b);
+						} else {
+							ascRoleColor = new Asc.asc_CColor();
+							ascRoleColor.asc_putR(228);
+							ascRoleColor.asc_putG(205);
+							ascRoleColor.asc_putB(219);
+						}
+						role.asc_putColor(ascRoleColor);
+						oform.asc_addRole(role);
+						formPr.SetRole(roleName.value);
+					}
+				}
+
+				levelSdt.SetFormPr(formPr);
+			}
+
+
+
 
 			//TODO поддержать Picture CC
 			/*let aspicture = node.attributes["displayaspicture"];
@@ -10749,8 +10971,8 @@ PasteProcessor.prototype =
 			};
 
 			let oPr;
-			checkBox = node.attributes["checkbox"];
-			if (checkBox && checkBox.value === "t") {
+			checkBox = _type === "checkbox";
+			if (checkBox) {
 				oPr = new AscWord.CSdtCheckBoxPr();
 				let checked = node.attributes["checkboxischecked"];
 				if (checked) {
@@ -10781,28 +11003,203 @@ PasteProcessor.prototype =
 				levelSdt.Pr.Id = id;
 			}
 
-			comboBox = node.attributes["combobox"];
-			if (comboBox && comboBox.value === "t") {
+			comboBox = _type === "combobox";
+			if (comboBox) {
 				oPr = new AscWord.CSdtComboBoxPr();
 			}
 
-			dropdown = node.attributes["dropdown"];
-			if (dropdown && dropdown.value === "t") {
+			dropdown = _type === "dropdown";
+			if (dropdown) {
 				oPr = new AscWord.CSdtComboBoxPr();
 			}
 
 			if (comboBox || dropdown) {
-				//TODO по грамотному нужно пропарсить всё содержимое и отдать все свойства
-				//пока только для listitem делаю
 				setListItems(function (sDisplay, sValue) {
 					oPr.AddItem(sDisplay, sValue);
 				});
 				levelSdt.ApplyComboBoxPr(oPr);
 			}
+
+			if (_type === "text" && AscCommon.IsSupportOFormFeature()) {
+				let textFormNode = null;
+				for (let i = 0; i < node.childNodes.length; i++) {
+					let childNode = node.childNodes[i];
+					if (childNode.nodeName && childNode.nodeName.toLowerCase() === "w:textform") {
+						textFormNode = childNode;
+						break;
+					}
+				}
+
+				if (textFormNode) {
+					let textFormPr = new AscWord.CSdtTextFormPr();
+
+					let maxCharacters = textFormNode.attributes["maxcharacters"];
+					if (maxCharacters && maxCharacters.value) {
+						textFormPr.SetMaxCharacters(parseInt(maxCharacters.value));
+					}
+
+					let comb = textFormNode.attributes["comb"];
+					if (comb && comb.value) {
+						textFormPr.SetComb(comb.value === "t");
+					}
+
+					let width = textFormNode.attributes["width"];
+					if (width && width.value) {
+						textFormPr.SetWidth(parseInt(width.value));
+					}
+
+					let widthRule = textFormNode.attributes["widthrule"];
+					if (widthRule && widthRule.value) {
+						textFormPr.SetWidthRule(parseInt(widthRule.value));
+					}
+
+					let placeholderSymbol = textFormNode.attributes["placeholdersymbol"];
+					if (placeholderSymbol && placeholderSymbol.value) {
+						textFormPr.SetPlaceHolderSymbol(parseInt(placeholderSymbol.value));
+					}
+
+					let placeholderFont = textFormNode.attributes["placeholderfont"];
+					if (placeholderFont && placeholderFont.value) {
+						textFormPr.SetPlaceHolderFont(placeholderFont.value);
+					}
+
+					let combBorder = textFormNode.attributes["combborder"];
+					if (combBorder && combBorder.value) {
+						let borderColor = this._ParseColor(combBorder.value);
+						if (borderColor) {
+							let brd = new Asc.asc_CTextBorder();
+							brd.put_Value(1);
+							let ascColor = new Asc.asc_CColor();
+							ascColor.asc_putR(borderColor.r);
+							ascColor.asc_putG(borderColor.g);
+							ascColor.asc_putB(borderColor.b);
+							brd.put_Color(ascColor);
+							textFormPr.SetAscCombBorder(brd);
+						}
+					}
+
+					let multiLine = textFormNode.attributes["multiline"];
+					if (multiLine && multiLine.value) {
+						textFormPr.SetMultiLine(multiLine.value === "t");
+					}
+
+					let autoFit = textFormNode.attributes["autofit"];
+					if (autoFit && autoFit.value) {
+						textFormPr.SetAutoFit(autoFit.value === "t");
+					}
+
+					let formatType = textFormNode.attributes["formattype"];
+					if (formatType && formatType.value) {
+						switch(formatType.value) {
+							case "none":
+								textFormPr.SetNoneFormat();
+								break;
+							case "digit":
+								textFormPr.SetDigitFormat();
+								break;
+							case "letter":
+								textFormPr.SetLetterFormat();
+								break;
+							case "mask":
+								let mask = textFormNode.attributes["mask"];
+								if (mask && mask.value) {
+									textFormPr.SetMaskFormat(mask.value);
+								}
+								break;
+							case "regexp":
+								let regexp = textFormNode.attributes["regexp"];
+								if (regexp && regexp.value) {
+									textFormPr.SetRegExpFormat(regexp.value);
+								}
+								break;
+						}
+					}
+
+					//TODO form don't paste if added symbols
+					/*let symbols = textFormNode.attributes["symbols"];
+					if (symbols && symbols.value) {
+						let arrSymbols = symbols.value.split(",").map(s => parseInt(s));
+						textFormPr.SetFormatSymbols(arrSymbols);
+					}*/
+
+					levelSdt.ApplyTextFormPr(textFormPr);
+				}
+			}
+
+			if (_type === "datetime" && AscCommon.IsSupportOFormFeature()) {
+				let datePickerPr = new AscWord.CSdtDatePickerPr();
+
+				let date = node.attributes["date"];
+				if (date && date.value) {
+					isContentAdded = true;
+					datePickerPr.SetFullDate(date.value);
+				} else {
+					datePickerPr.SetNullFullDate(true);
+				}
+
+				let dateFormat = node.attributes["dateformat"];
+				if (dateFormat && dateFormat.value) {
+					datePickerPr.SetDateFormat(dateFormat.value);
+				}
+
+				let lang = node.attributes["lang"];
+				if (lang && lang.value) {
+					let langId = Asc.g_oLcidNameToIdMap[lang.value];
+					if (langId) {
+						datePickerPr.SetLangId(langId);
+					}
+				}
+
+				let calendarType = node.attributes["calendartype"];
+				if (calendarType && calendarType.value) {
+					let calendar = Asc.c_oAscCalendarType.Gregorian;
+					switch(calendarType.value.toLowerCase()) {
+						case "gregorian":
+							calendar = Asc.c_oAscCalendarType.Gregorian;
+							break;
+						case "gregorianme":
+							calendar = Asc.c_oAscCalendarType.GregorianMeFrench;
+							break;
+						case "gregorianarabic":
+							calendar = Asc.c_oAscCalendarType.GregorianArabic;
+							break;
+						case "hijri":
+							calendar = Asc.c_oAscCalendarType.Hijri;
+							break;
+						case "hebrew":
+							calendar = Asc.c_oAscCalendarType.Hebrew;
+							break;
+						case "taiwan":
+							calendar = Asc.c_oAscCalendarType.Taiwan;
+							break;
+						case "japan":
+							calendar = Asc.c_oAscCalendarType.Japan;
+							break;
+						case "thai":
+							calendar = Asc.c_oAscCalendarType.Thai;
+							break;
+						case "korea":
+							calendar = Asc.c_oAscCalendarType.Korea;
+							break;
+						case "saka":
+							calendar = Asc.c_oAscCalendarType.Saka;
+							break;
+						case "gregorianusfr":
+							calendar = Asc.c_oAscCalendarType.GregorianXlitEnglish;
+							break;
+						case "gregorianusfrench":
+							calendar = Asc.c_oAscCalendarType.GregorianXlitFrench;
+							break;
+					}
+					datePickerPr.SetCalendar(calendar);
+				}
+
+				levelSdt.ApplyDatePickerPr(datePickerPr);
+			}
 		}
 
 		//content
-		if (!checkBox && !comboBox && !dropdown) {
+		if (/*!checkBox && !comboBox && !dropdown*/!isContentAdded) {
 			let oPasteProcessor = new PasteProcessor(this.api, false, false, true);
 			oPasteProcessor.AddedFootEndNotes = this.AddedFootEndNotes;
 			oPasteProcessor.msoComments = this.msoComments;
@@ -10815,9 +11212,15 @@ PasteProcessor.prototype =
 			oPasteProcessor.oMsoHeadStylesListMap = this.oMsoHeadStylesListMap;
 			oPasteProcessor.msoListMap = this.msoListMap;
 			oPasteProcessor.pasteInExcel = this.pasteInExcel;
+
 			oPasteProcessor._Execute(node, pPr, true, true, false);
+
 			oPasteProcessor._PrepareContent();
 			oPasteProcessor._AddNextPrevToContent(levelSdt.Content);
+
+			if ((checkBox || comboBox || dropdown) && oPasteProcessor.aContent.length) {
+				levelSdt.Content = [];
+			}
 
 			//добавляем новый параграфы
 			let i, j, length, length2;
@@ -11170,6 +11573,7 @@ PasteProcessor.prototype =
 					row.Set_After(nColSpan);
 				else {
 					var oCurCell = row.Add_Cell(row.Get_CellsCount(), row, null, false);
+					oCurCell.SetIndex(row.Get_CellsCount() - 1);
 					if (nColSpan > 1)
 						oCurCell.Set_GridSpan(nColSpan);
 					if (Shd) {
@@ -12108,6 +12512,18 @@ PasteProcessor.prototype =
 					}
 					return;
 				}
+
+				if (sChildNodeName === "math") {
+					let paraMath = ParaMath.fromMathML(child.outerHTML);
+					let oAddedParaMath = paraMath;
+					let oCurPar = oShapeContent.GetLastParagraph();
+					oAddedParaMath.SetParagraph && oAddedParaMath.SetParagraph(oCurPar);
+					oCurPar.Internal_Content_Add(oCurPar.Content.length - 1, oAddedParaMath, false);
+					oCurPar.CorrectContent();
+					oCurPar.CheckParaEnd();
+					return;
+				}
+
 				//попускам элеметы состоящие только из \t,\n,\r
 				if (Node.TEXT_NODE === child.nodeType) {
 					value = child.nodeValue;
