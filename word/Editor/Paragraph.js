@@ -4751,6 +4751,7 @@ Paragraph.prototype.Add = function(Item)
 					this.AddToContent(CurPos + 1, paraMath);
 					this.CurPos.ContentPos = CurPos + 1;
 					this.Content[this.CurPos.ContentPos].MoveCursorToEndPos(false);
+
 				}
 			}
 			else
