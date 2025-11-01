@@ -9816,9 +9816,9 @@ CDocument.prototype.executeShortcut = function(type)
 			{
 				if (!this.IsSelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 				{
-					let vertAlign = (oTextPr.VertAlign === AscCommon.vertalign_SuperScript)
+					let vertAlign = (oTextPr.VertAlign === AscCommon.vertalign_SubScript)
 						? AscCommon.vertalign_Baseline
-						: AscCommon.vertalign_SuperScript;
+						: AscCommon.vertalign_SubScript;
 					
 					this.StartAction(AscDFH.historydescription_Document_SetTextVertAlignHotKey3, null, null, vertAlign === AscCommon.vertalign_Baseline);
 					this.AddToParagraph(new ParaTextPr({VertAlign : vertAlign}));
