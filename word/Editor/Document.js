@@ -8732,7 +8732,7 @@ CDocument.prototype.OnKeyDown = function(e)
 		}
 		else if (e.KeyCode === 32) // Space
 		{
-			if (!this.private_CheckForbiddenPlaceOnTextAdd(0x20))
+			if (this.private_CheckForbiddenPlaceOnTextAdd(0x20))
 			{
 				var oSelectedInfo = this.GetSelectedElementsInfo();
 				var oMath         = oSelectedInfo.GetMath();
