@@ -12285,6 +12285,7 @@
 
 	Worksheet.prototype.setActiveNamedSheetView = function (id) {
 		this.activeNamedSheetViewId = id;
+		this.workbook.handlers && this.workbook.handlers.trigger("asc_onChangeActiveNamedSheetView");
 	};
 
 	Worksheet.prototype.getNvsFilterByTableName = function (val, opt_name, viewId) {
