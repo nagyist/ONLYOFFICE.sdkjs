@@ -93,8 +93,8 @@
 			else
 			{
 				macroData = {
-					macrosArray : [],
-					current     : -1
+					"macrosArray" : [],
+					"current"     : -1
 				};
 			}
 		}
@@ -103,13 +103,13 @@
 			return;
 		}
 		
-		let name = this.macroName ? this.macroName : this.getNewName(macroData.macrosArray);
+		let name = this.macroName ? this.macroName : this.getNewName(macroData["macrosArray"]);
 		let value = "(function()\n{\n" + this.result + "})();"
-		macroData.macrosArray.push({
-			guid : AscCommon.CreateUUID(true),
-			name : name,
-			autostart : false,
-			value : value
+		macroData["macrosArray"].push({
+			"guid" : AscCommon.CreateUUID(true),
+			"name" : name,
+			"autostart" : false,
+			"value" : value
 		});
 		
 		this.editor.asc_setMacros(JSON.stringify(macroData));
