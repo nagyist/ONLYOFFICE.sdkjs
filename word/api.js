@@ -2956,6 +2956,7 @@ background-repeat: no-repeat;\
 					"c"             : "reopen",
 					"title"         : this.documentTitle,
 					"codepage"      : option.asc_getCodePageOrDefault(),
+					"lcid"			: this.asc_getLocaleLCID(),
 					"nobase64"      : true
 				};
 				sendCommand(this, null, rData);
@@ -2969,6 +2970,7 @@ background-repeat: no-repeat;\
 					"c": "reopen",
 					"title": this.documentTitle,
 					"password": option.asc_getPassword(),
+					"lcid": this.asc_getLocaleLCID(),
 					"nobase64": true
 				};
 				sendCommand(this, null, v);
