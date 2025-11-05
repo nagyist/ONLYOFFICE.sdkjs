@@ -14501,11 +14501,14 @@
 	 * @memberof ApiStyle
 	 * @typeofeditors ["CDE"]
 	 * @param {ApiTextPr} oTextPr - The text properties that will be set.
-	 * @returns {ApiStyle} - this
+	 * @returns {?ApiStyle} - this
 	 * @see office-js-api/Examples/{Editor}/ApiStyle/Methods/SetTextPr.js
 	 */
 	ApiStyle.prototype.SetTextPr = function(oTextPr)
 	{
+		if (!oTextPr || !(oTextPr instanceof ApiTextPr))
+			return throwException("The oTextPr parameter must be an instance of ApiTextPr");
+
 		this.OnChangeTextPr(oTextPr);
 		return this;
 	};
@@ -14525,11 +14528,14 @@
 	 * @memberof ApiStyle
 	 * @typeofeditors ["CDE"]
 	 * @param {ApiParaPr} oParaPr - The paragraph properties that will be set.
-	 * @returns {ApiStyle} - this
+	 * @returns {?ApiStyle} - this
 	 * @see office-js-api/Examples/{Editor}/ApiStyle/Methods/SetParaPr.js
 	 */
 	ApiStyle.prototype.SetParaPr = function(oParaPr)
 	{
+		if (!oParaPr || !(oParaPr instanceof ApiParaPr))
+			return throwException("The oParaPr parameter must be an instance of ApiParaPr");
+
 		this.OnChangeParaPr(oParaPr);
 		return this;
 	};
@@ -14553,11 +14559,14 @@
 	 * @memberof ApiStyle
 	 * @typeofeditors ["CDE"]
 	 * @param {ApiTablePr} oTablePr - The table properties that will be set.
-	 * @returns {ApiStyle} - this
+	 * @returns {?ApiStyle} - this
 	 * @see office-js-api/Examples/{Editor}/ApiStyle/Methods/SetTablePr.js
 	 */
 	ApiStyle.prototype.SetTablePr = function(oTablePr)
 	{
+		if (!oTablePr || !(oTablePr instanceof ApiTablePr))
+			return throwException("The oTablePr parameter must be an instance of ApiTablePr");
+
 		this.OnChangeTablePr(oTablePr);
 		return this;
 	};
@@ -14581,11 +14590,14 @@
 	 * @memberof ApiStyle
 	 * @typeofeditors ["CDE"]
 	 * @param {ApiTableRowPr} oTableRowPr - The table row properties that will be set.
-	 * @returns {ApiStyle} - this
+	 * @returns {?ApiStyle} - this
 	 * @see office-js-api/Examples/{Editor}/ApiStyle/Methods/SetTableRowPr.js
 	 */
 	ApiStyle.prototype.SetTableRowPr = function(oTableRowPr)
 	{
+		if (!oTableRowPr || !(oTableRowPr instanceof ApiTableRowPr))
+			return throwException("The oTableRowPr parameter must be an instance of ApiTableRowPr");
+
 		this.OnChangeTableRowPr(oTableRowPr);
 		return this;
 	};
@@ -14608,11 +14620,14 @@
 	 * @memberof ApiStyle
 	 * @typeofeditors ["CDE"]
 	 * @param {ApiTableCellPr} oTableCellPr - The table cell properties that will be set.
-	 * @returns {ApiStyle} - this
+	 * @returns {?ApiStyle} - this
 	 * @see office-js-api/Examples/{Editor}/ApiStyle/Methods/SetTableCellPr.js
 	 */
 	ApiStyle.prototype.SetTableCellPr = function(oTableCellPr)
 	{
+		if (!oTableCellPr || !(oTableCellPr instanceof ApiTableCellPr))
+			return throwException("The oTableCellPr parameter must be an instance of ApiTableCellPr");
+
 		this.OnChangeTableCellPr(oTableCellPr);
 		return this;
 	};
