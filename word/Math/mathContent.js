@@ -6285,12 +6285,13 @@ CMathContent.prototype.GetTextOfElement = function(oMathText, isDefaultText)
 			if (!isNotOperatorOrBracket)
 				return false;
 		}
+
+        return isNotOperatorOrBracket;
 	}
 	// refactor this to normal methods
 	for (let i = 0; i < this.Content.length; i++)
 	{
 		oMathText.Add(this.Content[i], false);
-
 		if (!oMathText.IsLaTeX())
 		{
 			if (!(this.Content[i] instanceof ParaRun)) // если текущий элемент математический объект
@@ -6305,7 +6306,10 @@ CMathContent.prototype.GetTextOfElement = function(oMathText, isDefaultText)
 					if (checkIsNotOperatorOrBracket(strText[0]))
 						oMathText.AddText(new AscMath.MathText(" ", this.Content[i]));
 				}
-				else if (this.Content[i + 1] && this.Content[i + 1] instanceof ParaRun) // если след элемент текстовый блок
+				else if (this.Content[i + 1]
+                    && this.Content[i + 1] instanceof ParaRun
+                    && !(this.Content[i] instanceof CDelimiter)
+                ) // если след элемент текстовый блок
 				{
 					let strText = this.Content[i + 1].GetTextOfElement().GetText();
 					if (!this.Content[i + 1].Is_Empty() && checkIsNotOperatorOrBracket(strText[0]))
@@ -6314,8 +6318,9 @@ CMathContent.prototype.GetTextOfElement = function(oMathText, isDefaultText)
 			}
 			else if (this.Content[i] instanceof ParaRun)
 			{
-				if (this.Content[i + 1] && !(this.Content[i+1] instanceof ParaRun)
-					&& !(this.Content[i+1] instanceof CDelimiter || this.Content[i+1] instanceof CMathFunc))
+				if (this.Content[i + 1] 
+                    && !(this.Content[i+1] instanceof ParaRun)
+					&& !(this.Content[i+1] instanceof CDelimiter || this.Content[i+1] instanceof CMathFunc || this.Content[i+1] instanceof CEqArray))
 				{
 					let strText = this.Content[i].GetTextOfElement().GetText();
 					if (checkIsNotOperatorOrBracket(strText) && !this.Content[i].Is_Empty())
