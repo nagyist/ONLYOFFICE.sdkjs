@@ -1182,6 +1182,7 @@ var CPresentation = CPresentation || function(){};
         }
 
         this.SetNeedUpdateSearch(false);
+        this.SearchEngine.StartTextAround();
 
         Asc.editor.sendEvent("asc_onUpdateRedactState");
     };
@@ -7648,6 +7649,7 @@ var CPresentation = CPresentation || function(){};
                 forUpdateIdxs.push(curIdx);
             });
 
+            this.SetNeedUpdateSearch(true);
             this.Viewer.onUpdatePages(forUpdateIdxs);
 
 		}, AscDFH.historydescription_Pdf_Apply_Redact, this);
