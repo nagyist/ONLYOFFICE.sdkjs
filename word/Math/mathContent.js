@@ -6277,10 +6277,11 @@ CMathContent.prototype.GetTextOfElement = function(oMathText, isDefaultText)
 
 		for (let i = 0; i < symbol.length; i++)
 		{
-			isNotOperatorOrBracket = !AscMath.MathLiterals.operator.SearchU(symbol[i]) // если не содержит оператор, скобки
+			isNotOperatorOrBracket = !AscMath.MathLiterals.operator.SearchU(symbol[i])
 				&& !AscMath.MathLiterals.lrBrackets.SearchU(symbol[i])
 				&& !AscMath.MathLiterals.rBrackets.SearchU(symbol[i])
 				&& !AscMath.MathLiterals.lBrackets.SearchU(symbol[i])
+                && !AscMath.MathLiterals.space.SearchU(symbol[i])
 
 			if (!isNotOperatorOrBracket)
 				return false;
