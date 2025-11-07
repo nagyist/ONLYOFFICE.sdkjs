@@ -300,6 +300,7 @@ StartAddNewShape.prototype =
                     }
                     else if (oApi.wb)
                     {
+                        History.Create_NewPoint(AscDFH.historydescription_CommonStatesAddNewShape);
                         oDoc = oApi.wb;
                         oDoc.StartAction(AscDFH.historydescription_Spreadsheet_AddShape);
                     }
