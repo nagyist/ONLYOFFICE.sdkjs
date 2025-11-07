@@ -14625,7 +14625,7 @@
 	 */
 	ApiStyle.prototype.SetTableCellPr = function(tableCellPr)
 	{
-		if (!tableCellPr || !(oTableCellPr instanceof ApiTableCellPr))
+		if (!tableCellPr || !(tableCellPr instanceof ApiTableCellPr))
 			throwException("The tableCellPr parameter must be an instance of ApiTableCellPr");
 
 		this.OnChangeTableCellPr(tableCellPr);
