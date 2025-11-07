@@ -2731,7 +2731,7 @@ var CPresentation = CPresentation || function(){};
             oController.updateCursorType(pageObject.index, X, Y, e, false);
             oDrDoc.UnlockCursorType();
         }
-        else if (this.mouseDownLinkObject && this.mouseDownLinkObject == oMouseUpLink) {
+        else if (e.Button !== 2 && this.mouseDownLinkObject && this.mouseDownLinkObject == oMouseUpLink) {
             oViewer.navigateToLink(oMouseUpLink);
         }
         
