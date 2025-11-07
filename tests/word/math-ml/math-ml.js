@@ -555,7 +555,7 @@ $(function () {
 						</math>
 					`);
 
-					// without rules for Unicode and Latext linear form
+					// without rules for Unicode and LaTeX linear form
 					let str = "";
 					math.Root.Content.forEach((content) => {
 						str += content.GetTextOfElement().GetText();
