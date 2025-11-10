@@ -548,31 +548,31 @@ var CPresentation = CPresentation || function(){};
         let sFormType = "";
         switch (nFieldType) {
             case AscPDF.FIELD_TYPES.button: {
-                sFormType += "Button";
+                sFormType += AscCommon.translateManager.getValue("Button");
                 break;
             }
             case AscPDF.FIELD_TYPES.radiobutton: {
-                sFormType += "Group";
+                sFormType += AscCommon.translateManager.getValue("Group");
                 break;
             }
             case AscPDF.FIELD_TYPES.checkbox: {
-                sFormType += "Checkbox";
+                sFormType += AscCommon.translateManager.getValue("Checkbox");
                 break;
             }
             case AscPDF.FIELD_TYPES.text: {
-                sFormType += "Text";
+                sFormType += AscCommon.translateManager.getValue("Text");
                 break;
             }
             case AscPDF.FIELD_TYPES.combobox: {
-                sFormType += "Dropdown";
+                sFormType += AscCommon.translateManager.getValue("Dropdown");
                 break;
             }
             case AscPDF.FIELD_TYPES.listbox: {
-                sFormType += "Listbox";
+                sFormType += AscCommon.translateManager.getValue("Listbox");
                 break;
             }
             case AscPDF.FIELD_TYPES.signature: {
-                sFormType += "Signature";
+                sFormType += AscCommon.translateManager.getValue("Signature");
                 break;
             }
         }
