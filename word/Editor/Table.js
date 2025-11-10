@@ -5731,6 +5731,9 @@ CTable.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent)
 		&& this.Selection.StartPos.Pos.Row === this.Selection.EndPos.Pos.Row
 		&& this.Selection.StartPos.Pos.Cell === this.Selection.EndPos.Pos.Cell)
 	{
+		if (!(MouseEvent instanceof AscCommon.CMouseEventHandler))
+			LogicDocument.StartAction(AscDFH.historydescription_Document_SelectTableCell, undefined, undefined, {row: Pos.Row, col: Pos.Cell, sizecol: this.GetColsCount()});
+		
 		this.private_SetSelectionData(null);
 
 		this.CurCell.Content_Selection_SetStart(this.Selection.StartPos.X, this.Selection.StartPos.Y, this.Selection.StartPos.PageIndex - this.CurCell.Content.GetRelativeStartPage(), this.Selection.StartPos.MouseEvent);
@@ -5741,6 +5744,9 @@ CTable.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent)
 
 		if (AscCommon.g_mouse_event_type_up == MouseEvent.Type)
 			this.Selection.Start = false;
+
+		if (!(MouseEvent instanceof AscCommon.CMouseEventHandler))
+			LogicDocument.FinalizeAction();
 
 		if (false === this.CurCell.Content.Selection.Use)
 		{

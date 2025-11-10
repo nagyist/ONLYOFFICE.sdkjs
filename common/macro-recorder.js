@@ -589,15 +589,39 @@
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"oddPage\");\n";
 		},
 		addTable				: function(prop){
-			 // todo check style
 			return "\t(function () {\n"
-			+ "\t\tlet tableStyle = doc.GetStyle(\"" + (prop.style ? prop.style : "") + "\");\n"
-			+ "\t\tlet table = Api.CreateTable(" + prop.col + ", " + prop.row + ");\n"
-			+ "\t\tif (tableStyle) {\n"
-			+	"\t\t\ttable.SetStyle(tableStyle);\n"
-			+ "\t\t}\n"
-			+ "\t\ttable.SetWidth(\"percent\", 100);\n"
-			+ "\t\tdoc.Push(table);\n"
+				+ "\t\tlet tableStyle = doc.GetStyle(\"" + (prop.style ? prop.style : "") + "\");\n"
+				+ "\t\tlet table = Api.CreateTable(" + prop.col + ", " + prop.row + ");\n"
+				+ "\t\tif (tableStyle)\n"
+				+	"\t\t\ttable.SetStyle(tableStyle);\n"
+				+ "\t\ttable.SetWidth(\"percent\", 100);\n"
+				+ "\t\tdoc.Push(table);\n"
+				+ "\t\ttable.GetRange(0, 0).Select();\n"
+			+ "\t}());\n";
+		},
+		applyTablePr			: function(style)
+		{
+			return "\t(function () {\n"
+					+ "\t\tlet table = doc.GetCurrentParagraph().GetParentTable();\n"
+					+ "\t\tlet tableStyle = doc.GetStyle(\"" + style + "\");\n"
+					+ "\t\t(table && tableStyle) && table.SetStyle(tableStyle);\n"
+				+ "\t}());\n";
+		},
+		selectTableCell		: function(prop){
+			let colsCount = prop.sizecol;
+			let numberOfCell = (prop.row * colsCount) + prop.col;
+			return "\t(function () {\n"
+				+ "\t\tlet table = doc.GetCurrentParagraph().GetParentTable();\n"
+				+ "\t\tif (table){\n"
+				+ "\t\t\tlet cell = table.GetCell(" + prop.row + ", " + prop.col + ");\n"
+				+ "\t\t\tlet content = cell.GetContent();\n"
+				+ "\t\t\tif (content){\n"
+				+ "\t\t\t\tlet arrContent = content.GetContent();\n"
+				+ "\t\t\t\tlet last = arrContent.length ? arrContent[arrContent.length - 1] : null;\n"
+				+ "\t\t\t\tif (last)\n"
+				+ "\t\t\t\t\tlast.Select();\n"
+				+ "\t\t\t}\n"
+				+ "\t\t}\n"
 			+ "\t}());\n";
 		},
 		addImage				: function(image){
@@ -809,6 +833,8 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_AddPageBreak]				= wordActions.addPageBreak;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddSectionBreak]			= wordActions.addSectionBreak;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddTable]					= wordActions.addTable;
+	WordActionsMacroList[AscDFH.historydescription_Document_ApplyTablePr]				= wordActions.applyTablePr;
+	WordActionsMacroList[AscDFH.historydescription_Document_SelectTableCell]			= wordActions.selectTableCell;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddChart]					= wordActions.addChart;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddImages]					= wordActions.addImage;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddHyperlink]				= wordActions.addHyperlink;

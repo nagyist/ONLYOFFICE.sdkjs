@@ -5896,7 +5896,7 @@ background-repeat: no-repeat;\
 				obj.CellsBackground.Unifill = AscFormat.CreateUnifillFromAscColor(obj.CellsBackground.Color, 1);
 			}
 
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_ApplyTablePr);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_ApplyTablePr, undefined, undefined, this.WordControl.m_oLogicDocument.Styles.GetName(obj.TableStyle));
 			this.WordControl.m_oLogicDocument.SetTableProps(obj);
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 		}
