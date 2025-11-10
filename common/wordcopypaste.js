@@ -9853,7 +9853,6 @@ PasteProcessor.prototype =
 				var sType = curNumbering["mso-level-number-format"];
 
 				var nType = Asc.c_oAscNumberingFormat.None;
-				var nType = Asc.c_oAscNumberingFormat.None;
 				if ("none" === sType) {
 					nType = Asc.c_oAscNumberingFormat.None;
 				} else if ("bullet" === sType || "image" === sType) {
