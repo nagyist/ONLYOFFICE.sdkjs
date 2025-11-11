@@ -2517,6 +2517,24 @@ var CPresentation = CPresentation || function(){};
                 if (oMouseMoveAnnot)
                     oMouseMoveAnnot.onMouseEnter();
             }
+
+            if (oMouseMoveLink && !oMouseMoveField && !oMouseMoveAnnot && !oMouseMoveDrawing) {
+                if (oMouseMoveLink["link"]) {
+                    let oMMData   = new AscCommon.CMouseMoveData();
+                    let oCoords   = AscPDF.GetGlobalCoordsByPageCoords(pageObjectOrig.x, pageObjectOrig.y, pageObjectOrig.index);
+                    oMMData.X_abs = oCoords.X - 5;
+                    oMMData.Y_abs = oCoords.Y;
+                    oMMData.Type = Asc.c_oAscMouseMoveDataTypes.Hyperlink;
+                    oMMData.Hyperlink = new Asc.CHyperlinkProperty({
+                        Text: null,
+                        Value: oMouseMoveLink["link"],
+                        ToolTip: oMouseMoveLink["link"],
+                        Class: null,
+                        NoCtrl: true
+                    });
+                    Asc.editor.sync_MouseMoveCallback(oMMData);
+                }
+            }
         }
 
         this.Api.sync_MouseMoveEndCallback();
