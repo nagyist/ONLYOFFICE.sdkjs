@@ -1290,19 +1290,20 @@ var CPresentation = CPresentation || function(){};
         oNextForm.Recalculate();
         oNextForm.SetDrawHighlight(false);
         
-        if (oNextForm.IsNeedDrawFromStream() == true && oNextForm.GetType() != AscPDF.FIELD_TYPES.button) {
+        let nFieldType = oNextForm.GetType();
+        if (oNextForm.IsNeedDrawFromStream() == true && nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
             oNextForm.SetDrawFromStream(false);
         }
         
         oNextForm.onFocus();
-        if (oNextForm.GetType() != AscPDF.FIELD_TYPES.button) {
+        if (nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
             oNextForm.AddToRedraw();
         }
 
         let callbackAfterFocus = function() {
             oNextForm.SetInForm(true);
 
-            switch (oNextForm.GetType()) {
+            switch (nFieldType) {
                 case AscPDF.FIELD_TYPES.text:
                 case AscPDF.FIELD_TYPES.combobox:
                     this.SetLocalHistory();
@@ -1376,19 +1377,20 @@ var CPresentation = CPresentation || function(){};
         oNextForm.Recalculate();
         oNextForm.SetDrawHighlight(false);
         
-        if (oNextForm.IsNeedDrawFromStream() == true && oNextForm.GetType() != AscPDF.FIELD_TYPES.button) {
+        let nFieldType = oNextForm.GetType();
+        if (oNextForm.IsNeedDrawFromStream() == true && nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
             oNextForm.SetDrawFromStream(false);
         }
         
         oNextForm.onFocus();
-        if (oNextForm.GetType() != AscPDF.FIELD_TYPES.button) {
+        if (nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
             oNextForm.AddToRedraw();
         }
 
         let callbackAfterFocus = function() {
             oNextForm.SetInForm(true);
 
-            switch (oNextForm.GetType()) {
+            switch (nFieldType) {
                 case AscPDF.FIELD_TYPES.text:
                 case AscPDF.FIELD_TYPES.combobox:
                     this.SetLocalHistory();
