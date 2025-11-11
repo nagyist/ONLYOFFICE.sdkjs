@@ -9522,6 +9522,9 @@ var CPresentation = CPresentation || function(){};
         if (formJson["display"]) {
             oForm.SetDisplay(formJson["display"]);
         }
+        if (formJson["tooltip"]) {
+            oForm.SetTooltip(formJson["tooltip"]);
+        }
         
         if (formJson["sort"] != null) {
             // to do sort
