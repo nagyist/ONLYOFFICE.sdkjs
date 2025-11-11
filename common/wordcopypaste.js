@@ -11307,7 +11307,7 @@ PasteProcessor.prototype =
 		oPasteProcessor._Execute(node, pPr, true, true, false);
 
 		oPasteProcessor._PrepareContent();
-		oPasteProcessor._AddNextPrevToContent(levelSdt.Content);
+		oPasteProcessor._AddNextPrevToContent(oPasteProcessor.oDocument);
 
 		if (oPasteProcessor.aContent.length && !isBlockLevelSdt) {
 			levelSdt.Content = [];
