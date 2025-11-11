@@ -170,6 +170,13 @@
 
 		return actionsMacros;
 	}
+	MacroRecorder.prototype.onFinalizeAction = function()
+	{
+		// todo implement onFinalizeAction
+		this.getResultByType(this.prevChangeType, this.prevData);
+		this.prevChangeType	= null;
+		this.prevData		= undefined;
+	};
 	MacroRecorder.prototype.onAction = function(type, additional, isStart)
 	{
 		if (isStart === true)
@@ -200,15 +207,42 @@
 			this.isFirstAction = false;
 		}
 	};
+	// for now duplicate, leter we delete onAction
+	MacroRecorder.prototype.addStepData = function(type, additional)
+	{
+		if (!this.isInProgress() || this.isPaused() || undefined === additional)
+			return;
+
+		if (this.prevChangeType === type)
+		{
+			this.prevData = this.joinDataForMacros(this.prevData, additional);
+		}
+		else if (additional !== undefined)
+		{
+			this.getResultByType(this.prevChangeType, this.prevData);
+			this.prevChangeType	= type;
+			this.prevData		= additional;
+		}
+
+		if (this.isFirstAction)
+		{
+			this.addDefualtVaribalesForEditor();
+			this.isFirstAction = false;
+		}
+	};
 	MacroRecorder.prototype.getResultByType = function(type, additional)
 	{
 		let actionsMacros = this.getMacrosListForEditor();
 		let actionMacroFunction = actionsMacros[type];
 		if (actionMacroFunction)
 		{
-			if (Array.isArray(additional) 
+			if (Array.isArray(additional)
 				&& type !== AscDFH.historydescription_Document_AddLetter
-				&& type !== AscDFH.historydescription_Presentation_ParagraphAdd)
+				&& type !== AscDFH.historydescription_Presentation_ParagraphAdd
+				&& type !== AscDFH.historydescription_Document_MoveCursorLeft
+				&& type !== AscDFH.historydescription_Document_MoveCursorRight
+				&& type !== AscDFH.historydescription_Document_MoveCursorUp
+				&& type !== AscDFH.historydescription_Document_MoveCursorDown)
 			{
 				for (let i = 0; i < additional.length; i++)
 				{
@@ -479,6 +513,53 @@
 		return "unknown";
 	}
 
+	function sameConditional(a, b, ignoreRtl) {
+		if (a.isAddSelect !== b.isAddSelect) return false;
+		if (a.isWord !== b.isWord) return false;
+
+		if (!ignoreRtl) {
+			var aHas = a.hasOwnProperty('isRtl');
+			var bHas = b.hasOwnProperty('isRtl');
+			if (aHas && bHas && a.isRtl !== b.isRtl) return false;
+		}
+		return true;
+	}
+
+	function pickPattern(obj, ignoreRtl) {
+		var p = {
+			isAddSelect: obj.isAddSelect,
+			isWord: obj.isWord
+		};
+		if (!ignoreRtl && obj.hasOwnProperty('isRtl')) p.isRtl = obj.isRtl;
+		return p;
+	}
+
+	function groupDataForCursor(arr, ignoreRtl) {
+		if (!arr || arr.length === 0) return [];
+		var ignoreRtl = !!ignoreRtl;
+
+		var runs = [];
+		var current = pickPattern(arr[0], ignoreRtl);
+		var count = 1;
+
+		for (var i = 1; i < arr.length; i++) {
+			var item = arr[i];
+			var view = pickPattern(item, ignoreRtl);
+
+			if (sameConditional(view, current, ignoreRtl)) {
+				count++;
+			} else {
+				runs.push({ pattern: current, count: count });
+				current = view;
+				count = 1;
+			}
+		}
+		runs.push({ pattern: current, count: count });
+
+		return runs;
+	}
+
+
 	const wordActions = {
 		setTextBold				: function(bold){return "\tdoc.GetRangeBySelect().SetBold(" + bold + ");\n"},
 		setTextItalic			: function(italic){return "\tdoc.GetRangeBySelect().SetItalic(" + italic + ");\n"},
@@ -524,7 +605,7 @@
 				textStr += String.fromCodePoint(textArr[i]);
 			}
 
-			return "\tdoc.GetCurrentParagraph().AddText(\"" + textStr + "\");\n"
+			return "\tdoc.EnterText(\"" + textStr + "\");\n"
 		},
 		setAlign				: function(align){
 			switch (align) {
@@ -561,13 +642,7 @@
 				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => {\n\t\tpara.SetNumbering(" + CounterStore.get('numbering') + ".GetLevel(0));\n\t\tpara.SetContextualSpacing(true)\n\t});\n"
 		},
 		addParagraph			: function(){
-			return "\t(function () {\n"
-				+ "\t\tlet para = Api.CreateParagraph();\n"
-				+ "\t\tdoc.Push(para);\n"
-				+ "\t\tlet range = para.GetRange();\n"
-				+ "\t\tlet endpos = range.GetEndPos();\n"
-				+ "\t\tdoc.MoveCursorToPos(endpos);\n"
-			+ "\t}());\n";
+			return "\tdoc.EnterParagraph();\n";
 		},
 		addBlankPage			: function(){return "\tdoc.InsertBlankPage();\n"},
 		addPageBreak			: function(type){
@@ -758,21 +833,69 @@
 		addContentControlPicture: function(){
 			return "\tdoc.AddPictureContentControl(180 * 10000, 180 * 10000);\n";
 		},
-		moveCursorLeft			: function(isRtl, isSelect){
-			return "";
-			return isRtl ? "Selection.MoveRight()" : "Selection.MoveLeft()";
+		moveCursorLeft			: function(arrData){
+			let data = groupDataForCursor(arrData);
+			let text = "";
+
+			for (let i = 0; i < data.length; i++)
+			{
+				let currentChange = data[i];
+				let nCount = currentChange.count;
+				let pattern = currentChange.pattern;
+
+				if (pattern.isRtl)
+					text += "\tdoc.MoveCursorRight(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+				else
+					text += "\tdoc.MoveCursorLeft(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+			}
+
+			return text;
 		},
-		moveCursorRight			: function(isRtl, isSelect){
-			return "";
-			return isRtl ? "Selection.MoveLeft()" : "Selection.MoveRight()";
+		moveCursorRight			: function(arrData){
+			let data = groupDataForCursor(arrData);
+			let text = "";
+
+			for (let i = 0; i < data.length; i++)
+			{
+				let currentChange	= data[i];
+				let nCount			= currentChange.count;
+				let pattern			= currentChange.pattern;
+
+				if (pattern.isRtl)
+					text += "\tdoc.MoveCursorLeft(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+				else
+					text += "\tdoc.MoveCursorRight(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+			}
+
+			return text;
 		},
-		moveCursorUp			: function(isSelect){
-			return "";
-			return "Selection.MoveUp()"
+		moveCursorUp			: function(arrData){
+			let data = groupDataForCursor(arrData, true);
+			let text = "";
+
+			for (let i = 0; i < data.length; i++)
+			{
+				let currentChange	= data[i];
+				let nCount			= currentChange.count;
+				let pattern			= currentChange.pattern;
+
+				text += "\tdoc.MoveCursorUp(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+			}
+			return text;
 		},
-		moveCursorDown			: function(isSelect){
-			return "";
-			return "Selection.MoveDownt()"
+		moveCursorDown			: function(arrData){
+			let data = groupDataForCursor(arrData, true);
+			let text = "";
+
+			for (let i = 0; i < data.length; i++)
+			{
+				let currentChange	= data[i];
+				let nCount			= currentChange.count;
+				let pattern			= currentChange.pattern;
+
+				text += "\tdoc.MoveCursorDown(" + nCount + ", " + pattern.isAddSelect + ", " + pattern.isWord + ");\n";
+			}
+			return text;
 		},
 		backSpaceButton			: function(){
 			return "";
@@ -823,9 +946,12 @@
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteHotKey]				= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteSafariHotKey]		= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_CutHotKey]				= wordActions;
-	// WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorLeft]			= wordActions.moveCursorLeft;
-	// WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorRight]			= wordActions.moveCursorRight;
-	// WordActionsMacroList[AscDFH.historydescription_Document_BackSpaceButton]			= wordActions.backSpaceButton;
+	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorLeft]				= wordActions.moveCursorLeft;
+	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorRight]			= wordActions.moveCursorRight;
+	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorUp]				= wordActions.moveCursorUp;
+	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorDown]				= wordActions.moveCursorDown;
+
+	//WordActionsMacroList[AscDFH.historydescription_Document_BackSpaceButton]			= wordActions.backSpaceButton;
 	// WordActionsMacroList[AscDFH.historydescription_Document_DeleteButton]			= wordActions.deleteButton;
 	
 	// input tab
@@ -840,10 +966,6 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_AddHyperlink]				= wordActions.addHyperlink;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddNewShape]				= wordActions.addShape;
 	WordActionsMacroList[AscDFH.historydescription_Document_RemoveHdrFtr]				= wordActions.removeHdr;
-	//WordActionsMacroList[moveLeft]													= wordActions.moveLeft;
-	//WordActionsMacroList[moveRight]													= wordActions.moveRight;
-	//WordActionsMacroList[moveUp]														= wordActions.moveUp;
-	//WordActionsMacroList[moveDown]													= wordActions.moveDown;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddComment]					= wordActions.addComment;
 	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddTextArt]		= wordActions.addTextArt;
 	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddDropCap]		= wordActions.addDropCap;

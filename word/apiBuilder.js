@@ -9422,6 +9422,115 @@
 		this.Document.MoveCursorToEndPos();
 		return true;
 	};
+
+	/**
+	 * Add text to the document on the cursor position.
+	 * @memberof ApiDocument
+	 * @param {string} sText - The text to add to document.
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/EnterText.js
+	 */
+	ApiDocument.prototype.EnterText = function(sText)
+	{
+		this.Document.EnterText(sText);
+		return true;
+	}
+
+	/**
+	 * Add paragraph to the document on the cursor position.
+	 * @memberof ApiDocument
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/EnterParagraph.js
+	 */
+	ApiDocument.prototype.EnterParagraph = function()
+	{
+		this.Document.AddNewParagraph();
+		return true;
+	}
+
+	/**
+	 * Moves a cursor to the left.
+	 * @memberof ApiDocument
+	 * @param {number} nCount - The number of characters to move left.
+	 * @param {boolean} isShift - Specifies whether to select text during the move.
+	 * @param {boolean} isCtl - Specifies whether to move by word instead of by character.
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorLeft.js
+	 */
+	ApiDocument.prototype.MoveCursorLeft = function(nCount, isShift, isCtl)
+	{
+		for(let i = 0; i < nCount; i++)
+		{
+			this.Document.MoveCursorLeft(!!isShift, !!isCtl);
+		}
+		return true;
+	};
+	/**
+	 * Moves a cursor to the right.
+	 * @memberof ApiDocument
+	 * @param {number} nCount - The number of characters to move right.
+	 * @param {boolean} isShift - Specifies whether to select text during the move.
+	 * @param {boolean} isCtl - Specifies whether to move by word instead of by character.
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorRight.js
+	 */
+	ApiDocument.prototype.MoveCursorRight = function(nCount, isShift, isCtl)
+	{
+		for(let i = 0; i < nCount; i++)
+		{
+			this.Document.MoveCursorRight(!!isShift, !!isCtl);
+		}
+		return true;
+	};
+
+	/**
+	 * Moves a cursor up.
+	 * @memberof ApiDocument
+	 * @param {number} nCount - The number of lines to move up.
+	 * @param {boolean} isShift - Specifies whether to select text during the move.
+	 * @param {boolean} isCtl - Specifies whether to move by paragraph instead of by line.
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorUp.js
+	 */
+	ApiDocument.prototype.MoveCursorUp = function(nCount, isShift, isCtl)
+	{
+		for(let i = 0; i < nCount; i++)
+		{
+			this.Document.MoveCursorUp(!!isShift, !!isCtl);
+		}
+		return true;
+	};
+
+	/**
+	 * Moves a cursor down.
+	 * @memberof ApiDocument
+	 * @param {number} nCount - The number of lines to move down.
+	 * @param {boolean} isShift - Specifies whether to select text during the move.
+	 * @param {boolean} isCtl - Specifies whether to move by paragraph instead of by line.
+	 * @returns {boolean}
+	 * @typeofeditors ["CDE"]
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/MoveCursorDown.js
+	 */
+	ApiDocument.prototype.MoveCursorDown = function(nCount, isShift, isCtl)
+	{
+		for(let i = 0; i < nCount; i++)
+		{
+			this.Document.MoveCursorDown(!!isShift, !!isCtl);
+		}
+		return true;
+	};
+
 	/**
 	 * Moves a cursor to the start of the specified page in the document.
 	 * @memberof ApiDocument
