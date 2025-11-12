@@ -1161,7 +1161,7 @@
      * @param {string} [prop.TableCellSeparator='\t'] - Defines how the table cell separator will be specified in the resulting string. Any symbol can be used. The default separator is "\t".
      * @param {string} [prop.TableRowSeparator='\r\n'] - Defines how the table row separator will be specified in the resulting string. Any symbol can be used. The default separator is "\r\n".
      * @param {string} [prop.ParaSeparator='\r\n'] - Defines how the paragraph separator will be specified in the resulting string. Any symbol can be used. The default separator is "\r\n".
-     * @param {string} [prop.TabSymbol='\t'] - Defines how the tab will be specified in the resulting string. Any symbol can be used. The default symbol is "\t".
+     * @param {string} [prop.TabSymbol=' '] - Defines how the tab will be specified in the resulting string. Any symbol can be used. The default symbol is " ".
      * @param {string} [prop.NewLineSeparator='\r'] - Defines how the line separator will be specified in the resulting string. Any symbol can be used. The default separator is "\r".
 	 * @return {string} - Selected text.
      * @since 7.1.0
