@@ -14649,7 +14649,7 @@ background-repeat: no-repeat;\
 		logicDocument.UpdateSelection();
 	};
 	
-	asc_docs_api.prototype._onEndGroupActions = function()
+	asc_docs_api.prototype._onEndGroupActions = function(isFullEnd)
 	{
 		let logicDocument = this.private_GetLogicDocument();
 		if (!logicDocument)
@@ -14659,6 +14659,12 @@ background-repeat: no-repeat;\
 		AscCommon.History.resetGroupChanges();
 		if (groupChanges.length)
 			logicDocument.RecalculateByChanges(groupChanges);
+		
+		if (isFullEnd)
+		{
+			logicDocument.UpdateInterface();
+			logicDocument.UpdateSelection();
+		}
 	};
 
 

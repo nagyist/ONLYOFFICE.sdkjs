@@ -304,30 +304,33 @@
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/PasteHtml.js
 	 */
 	Api.prototype["pluginMethod_PasteHtml"] = function (htmlText) {
-		if (!AscCommon.g_clipboardBase)
+		return this._pluginMethod_PasteHtml(htmlText);
+	};
+	Api.prototype._pluginMethod_PasteHtml = function(htmlText, callback) {
+		if (!AscCommon.g_clipboardBase
+			|| !this.canEdit()
+			|| document.getElementById("pmpastehtml"))
+		{
+			if (callback)
+				callback();
+			
 			return null;
-
-		if (!this.canEdit())
-			return null;
-
-		let _elem = document.getElementById("pmpastehtml");
-		if (_elem)
-			return;
-
+		}
+		
 		window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
-		_elem = document.createElement("div");
+		let _elem = document.createElement("div");
 		_elem.id = "pmpastehtml";
 		_elem.style.color = "rgb(0,0,0)";
-
+		
 		if (this.editorId === AscCommon.c_oEditorId.Word || this.editorId === AscCommon.c_oEditorId.Presentation) {
 			let textPr = this.get_TextProps();
 			if (textPr && textPr.TextPr) {
 				if (undefined !== textPr.TextPr.FontSize)
 					_elem.style.fontSize = textPr.TextPr.FontSize + "pt";
-
+				
 				_elem.style.fontWeight = (true === textPr.TextPr.Bold) ? "bold" : "normal";
 				_elem.style.fontStyle = (true === textPr.TextPr.Italic) ? "italic" : "normal";
-
+				
 				let _color = textPr.TextPr.Color;
 				if (_color)
 					_elem.style.color = "rgb(" + _color.r + "," + _color.g + "," + _color.b + ")";
@@ -336,15 +339,17 @@
 			}
 		} else if (this.editorId === AscCommon.c_oEditorId.Spreadsheet) {
 			let props = this.asc_getCellInfo();
-
+			
 			if (props && props.font) {
 				if (undefined != props.font.size)
 					_elem.style.fontSize = props.font.size + "pt";
-
+				
 				_elem.style.fontWeight = (true === props.font.bold) ? "bold" : "normal";
 				_elem.style.fontStyle = (true === props.font.italic) ? "italic" : "normal";
 			}
 		}
+		
+		this.executeGroupActionsStart();
 
 		_elem.innerHTML = htmlText;
 		document.body.appendChild(_elem);
@@ -352,28 +357,31 @@
 		let b_old_save_format = AscCommon.g_clipboardBase.bSaveFormat;
 		AscCommon.g_clipboardBase.bSaveFormat = false;
 		let _t = this;
-		
-		this.executeGroupActions(function()
-		{
-			_t.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, _elem, undefined, undefined, undefined,
-				function()
+		_t.asc_PasteData(AscCommon.c_oAscClipboardDataFormat.HtmlElement, _elem, undefined, undefined, undefined,
+			function()
+			{
+				_t.decrementCounterLongAction();
+				
+				let fCallback = function()
 				{
-					_t.decrementCounterLongAction();
+					document.body.removeChild(_elem);
+					_elem = null;
 					
-					let fCallback = function()
-					{
-						document.body.removeChild(_elem);
-						_elem                                 = null;
-						AscCommon.g_clipboardBase.bSaveFormat = b_old_save_format;
-					};
-					if (_t.checkLongActionCallback(fCallback, null))
-					{
-						fCallback();
-					}
+					AscCommon.g_clipboardBase.bSaveFormat = b_old_save_format;
+					
+					_t.executeGroupActionsEnd();
+					
 					window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
+					
+					if (callback)
+						callback();
+				};
+				if (_t.checkLongActionCallback(fCallback, null))
+				{
+					fCallback();
 				}
-			);
-		});
+			}
+		);
 	};
 
     /**
