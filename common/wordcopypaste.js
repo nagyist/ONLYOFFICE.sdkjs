@@ -11307,7 +11307,7 @@ PasteProcessor.prototype =
 		oPasteProcessor._Execute(node, pPr, true, true, false);
 
 		oPasteProcessor._PrepareContent();
-		oPasteProcessor._AddNextPrevToContent(levelSdt.Content);
+		oPasteProcessor._AddNextPrevToContent(oPasteProcessor.oDocument);
 
 		if (oPasteProcessor.aContent.length && !isBlockLevelSdt) {
 			levelSdt.Content = [];
@@ -13126,6 +13126,7 @@ PasteProcessor.prototype =
 				//CBlockLevelSdt
 				bAddParagraph = this._Decide_AddParagraph(node, pPr, bAddParagraph);
 				this._ExecuteBlockLevelStd(node, pPr);
+				this._Set_Run_Pr(this.oCurRun.Pr.Copy());
 				return bAddParagraph;
 			}
 
