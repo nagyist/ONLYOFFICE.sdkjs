@@ -192,11 +192,15 @@
 	};
 	TextAnnotatorEventManager.prototype.removeRange = function(obj)
 	{
-		if (!obj || !obj["paragraphId"] || !obj["guid"] || !obj["rangeId"])
+		if (!obj || !obj["paragraphId"] || !obj["guid"] || (!obj["rangeId"] && true !== obj["all"]))
 			return;
 		
 		let handlerId = this.getHandlerId(obj);
-		this.textAnnotator.getMarks().removeRange(obj["paragraphId"], handlerId, obj["rangeId"]);
+		
+		if (true === obj["all"])
+			this.textAnnotator.getMarks().removeAllRanges(obj["paragraphId"], handlerId);
+		else
+			this.textAnnotator.getMarks().removeRange(obj["paragraphId"], handlerId, obj["rangeId"]);
 	};
 	TextAnnotatorEventManager.prototype.onCurrentRanges = function(paragraph, ranges)
 	{

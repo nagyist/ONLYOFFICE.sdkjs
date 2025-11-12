@@ -166,6 +166,29 @@
 		this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].end);
 		delete this.paragraphs[paraId][handlerId][rangeId];
 		
+		this._checkEmptyParaHandler(paraId, handlerId);
+		this._checkEmptyPara(paraId);
+		
+		if (paragraph)
+			paragraph.ReDraw();
+	};
+	CustomMarks.prototype.removeAllRanges = function(paraId, handlerId)
+	{
+		let paragraph = AscCommon.g_oTableId.GetById(paraId);
+		if (!this.paragraphs[paraId]
+			|| !this.paragraphs[paraId][handlerId]
+			|| !this.paragraphs[paraId][handlerId])
+			return;
+		
+		for (let rangeId in this.paragraphs[paraId][handlerId])
+		{
+			this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].start);
+			this.removeMarkFromRun(this.paragraphs[paraId][handlerId][rangeId].end);
+		}
+		
+		delete this.paragraphs[paraId][handlerId];
+		this._checkEmptyPara(paraId);
+		
 		if (paragraph)
 			paragraph.ReDraw();
 	};
@@ -243,6 +266,30 @@
 		{
 			f.call(this, this.runs[runId][id]);
 		}
+	};
+	CustomMarks.prototype._checkEmptyParaHandler = function(paraId, handlerId)
+	{
+		if (!this.paragraphs[paraId] || !this.paragraphs[paraId][handlerId])
+			return;
+		
+		for (let rangeId in this.paragraphs[paraId][handlerId])
+		{
+			return;
+		}
+		
+		delete this.paragraphs[paraId][handlerId];
+	};
+	CustomMarks.prototype._checkEmptyPara = function(paraId)
+	{
+		if (!this.paragraphs[paraId])
+			return;
+		
+		for (let handlerId in this.paragraphs[paraId])
+		{
+			return;
+		}
+		
+		delete this.paragraphs[paraId];
 	};
 	
 	let idCounter = 0;
