@@ -1190,7 +1190,7 @@
         return null;
     };
 	CTimeNodeBase.prototype.isInterractiveSeq = function () {
-		if (this.getObectType() !== AscDFH.historyitem_type_Seq) {
+		if (this.getObjectType() !== AscDFH.historyitem_type_Seq) {
 			return false;
 		}
 		return this.getNodeType() === AscFormat.NODE_TYPE_INTERACTIVESEQ;
