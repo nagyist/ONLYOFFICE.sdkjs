@@ -14649,6 +14649,14 @@ background-repeat: no-repeat;\
 		logicDocument.UpdateSelection();
 	};
 	
+	asc_docs_api.prototype._onStartGroupActions = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+		
+		logicDocument.GetSpellCheckManager().TurnOff();
+	};
 	asc_docs_api.prototype._onEndGroupActions = function(isFullEnd)
 	{
 		let logicDocument = this.private_GetLogicDocument();
@@ -14664,6 +14672,7 @@ background-repeat: no-repeat;\
 		{
 			logicDocument.UpdateInterface();
 			logicDocument.UpdateSelection();
+			logicDocument.GetSpellCheckManager().TurnOn();
 		}
 	};
 

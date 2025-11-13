@@ -375,6 +375,19 @@
 					
 					if (callback)
 						callback();
+					
+					// Update target position after paste
+					if (AscCommon.c_oEditorId.Word === _t.getEditorId())
+					{
+						let logicDocument = _t.private_GetLogicDocument();
+						if (logicDocument)
+						{
+							logicDocument.GetDrawingDocument().UpdateTargetFromPaint = true;
+							logicDocument.private_UpdateCursorXY(true, true, true);
+							logicDocument.RecalculateCurPos();
+							logicDocument.UpdateSelection();
+						}
+					}
 				};
 				if (_t.checkLongActionCallback(fCallback, null))
 				{

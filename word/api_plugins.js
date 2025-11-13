@@ -1397,11 +1397,6 @@
 			logicDocument.TurnOn_InterfaceEvents();
 			
 			logicDocument.Recalculate();
-			logicDocument.GetDrawingDocument().UpdateTargetFromPaint = true;
-			logicDocument.private_UpdateCursorXY(true, true, true);
-			logicDocument.RecalculateCurPos();
-			logicDocument.UpdateSelection();
-			
 			window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
 		}
 		

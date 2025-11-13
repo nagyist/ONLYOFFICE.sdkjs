@@ -6024,6 +6024,8 @@
 
 		if (this.groupActionsCounter > 1)
 			return;
+		
+		this._onStartGroupActions();
 
 		AscCommon.CollaborativeEditing.Set_GlobalLock(true);
 		AscCommon.CollaborativeEditing.Set_GlobalLockSelection(true);
@@ -6091,6 +6093,9 @@
 	baseEditorsApi.prototype.isGroupActions = function()
 	{
 		return this.groupActionsCounter > 0;
+	};
+	baseEditorsApi.prototype._onStartGroupActions = function()
+	{
 	};
 	baseEditorsApi.prototype._onEndGroupActions = function(isFullEnd)
 	{
