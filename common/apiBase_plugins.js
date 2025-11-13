@@ -304,7 +304,10 @@
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/PasteHtml.js
 	 */
 	Api.prototype["pluginMethod_PasteHtml"] = function (htmlText) {
-		return this._pluginMethod_PasteHtml(htmlText);
+		window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
+		return this._pluginMethod_PasteHtml(htmlText, function(){
+			window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
+		});
 	};
 	Api.prototype._pluginMethod_PasteHtml = function(htmlText, callback) {
 		if (!AscCommon.g_clipboardBase
@@ -317,7 +320,6 @@
 			return null;
 		}
 		
-		window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
 		let _elem = document.createElement("div");
 		_elem.id = "pmpastehtml";
 		_elem.style.color = "rgb(0,0,0)";
@@ -370,8 +372,6 @@
 					AscCommon.g_clipboardBase.bSaveFormat = b_old_save_format;
 					
 					_t.executeGroupActionsEnd();
-					
-					window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
 					
 					if (callback)
 						callback();

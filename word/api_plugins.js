@@ -1385,6 +1385,8 @@
 		let _t = this;
 		function startSilentMode()
 		{
+			window.g_asc_plugins && window.g_asc_plugins.setPluginMethodReturnAsync();
+			
 			logicDocument.TurnOff_Recalculate();
 			logicDocument.TurnOff_InterfaceEvents();
 		}
@@ -1399,6 +1401,8 @@
 			logicDocument.private_UpdateCursorXY(true, true, true);
 			logicDocument.RecalculateCurPos();
 			logicDocument.UpdateSelection();
+			
+			window.g_asc_plugins && window.g_asc_plugins.onPluginMethodReturn(true);
 		}
 		
 		function pasteTail()
