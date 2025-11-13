@@ -2726,7 +2726,9 @@ background-repeat: no-repeat;\
 			this.forceSaveSendFormRequest = false;
 			this.setCurrentRoleFilled();
 			sendChanges();
-			this._sendForm();
+			onSaveEnd.push(function(){
+				t._sendForm();
+			});
 		}
 		else if (this.forceSaveOformRequest)
 		{
