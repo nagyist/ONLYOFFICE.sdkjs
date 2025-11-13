@@ -12721,28 +12721,14 @@ PasteProcessor.prototype =
 					oThis.bInBlock = true;
 				}
 
-				var bHyperlink = false;
 				var isPasteHyperlink = null;
 				if ("a" === sChildNodeName) {
 					href = child.href;
 					if (null != href) {
-						/*var sDecoded;
-						//decodeURI может выдавать malformed exception, потому что наш сайт в utf8, а некоторые сайты могут кодировать url в своей кодировке(например windows-1251)
-						try {
-							sDecoded = decodeURI(href);
-						} catch (e) {
-							sDecoded = href;
-						}
-						href = sDecoded;*/
-						bHyperlink = true;
 						title = child.getAttribute("title");
 
-						oThis.oDocument = shape.txBody.content;
 
-						var Pos = (true === oThis.oDocument.Selection.Use ? oThis.oDocument.Selection.StartPos :
-							oThis.oDocument.CurPos.ContentPos);
 						isPasteHyperlink = node.getElementsByTagName('img');
-
 						var text = null;
 						if (isPasteHyperlink && isPasteHyperlink.length) {
 							isPasteHyperlink = null;
@@ -12754,8 +12740,10 @@ PasteProcessor.prototype =
 							isPasteHyperlink = false;
 						}
 						if (isPasteHyperlink) {
-							var HyperProps = new Asc.CHyperlinkProperty({Text: text, Value: href, ToolTip: title});
-							oThis.oDocument.Content[Pos].AddHyperlink(HyperProps);
+							let HyperProps = new Asc.CHyperlinkProperty({Text: text, Value: href, ToolTip: title});
+							let oCurPar = oShapeContent.GetLastParagraph();
+							oCurPar.MoveCursorToEndPos();
+							oCurPar.AddHyperlink(HyperProps);
 						}
 					}
 				}
