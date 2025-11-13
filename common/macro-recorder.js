@@ -490,7 +490,7 @@
 			let highlightColor = "";
 			if (highlight)
 			{
-				let color = new CDocumentColor(highlight.r, highlight.g, highlight.b);
+				let color = new AscCommonWord.CDocumentColor(highlight.r, highlight.g, highlight.b);
 				highlightColor = color.ToHighlightColor();
 			}
 
@@ -1213,7 +1213,7 @@
 			let highlightColor = "";
 			if (highlight)
 			{
-				let color = new CDocumentColor(highlight.r, highlight.g, highlight.b);
+				let color = new AscCommonWord.CDocumentColor(highlight.r, highlight.g, highlight.b);
 				highlightColor = color.ToHighlightColor();
 			}
 
