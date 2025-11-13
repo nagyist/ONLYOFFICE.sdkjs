@@ -9444,9 +9444,9 @@
 	 * @returns {boolean}
 	 * @typeofeditors ["CDE"]
 	 * @since 9.2.0
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/EnterParagraph.js
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertParagraphAtCursor.js
 	 */
-	ApiDocument.prototype.EnterParagraph = function()
+	ApiDocument.prototype.InsertParagraphAtCursor = function()
 	{
 		this.Document.AddNewParagraph();
 		return true;

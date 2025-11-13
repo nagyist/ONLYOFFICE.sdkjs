@@ -6495,10 +6495,6 @@ CDocument.prototype.MoveCursorUp = function(AddToSelect, CtrlKey)
 	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
 		return;
 
-	this.AddMacroData(AscDFH.historydescription_Document_MoveCursorUp, [{
-		isWord:			CtrlKey,
-		isAddSelect:	AddToSelect
-	}]);
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorUp(AddToSelect, CtrlKey);
@@ -6508,10 +6504,6 @@ CDocument.prototype.MoveCursorDown = function(AddToSelect, CtrlKey)
 	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
 		return;
 
-	this.AddMacroData(AscDFH.historydescription_Document_MoveCursorDown, [{
-		isWord:			CtrlKey,
-		isAddSelect:	AddToSelect
-	}]);
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorDown(AddToSelect, CtrlKey);
@@ -20106,6 +20098,12 @@ CDocument.prototype.controller_MoveCursorUp = function(AddToSelect)
 	this.private_UpdateCursorXY(false, true);
 	var Result = this.private_MoveCursorUp(this.CurPos.RealX, this.CurPos.RealY, AddToSelect);
 
+	if (Result)
+		this.AddMacroData(AscDFH.historydescription_Document_MoveCursorUp, [{
+			isWord:			false,
+			isAddSelect:	AddToSelect
+		}]);
+
 	// TODO: Вообще Word селектит до начала данной колонки в таком случае, а не до начала документа
 	if (true === AddToSelect && true !== Result)
 		this.MoveCursorToStartPos(true);
@@ -20135,6 +20133,12 @@ CDocument.prototype.controller_MoveCursorDown = function(AddToSelect)
 
 	this.private_UpdateCursorXY(false, true);
 	var Result = this.private_MoveCursorDown(this.CurPos.RealX, this.CurPos.RealY, AddToSelect);
+
+	if (Result)
+		this.AddMacroData(AscDFH.historydescription_Document_MoveCursorDown, [{
+			isWord:			false,
+			isAddSelect:	AddToSelect
+		}]);
 
 	if (true === AddToSelect && true !== Result)
 		this.MoveCursorToEndPos(true);

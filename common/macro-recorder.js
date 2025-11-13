@@ -642,7 +642,7 @@
 				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => {\n\t\tpara.SetNumbering(" + CounterStore.get('numbering') + ".GetLevel(0));\n\t\tpara.SetContextualSpacing(true)\n\t});\n"
 		},
 		addParagraph			: function(){
-			return "\tdoc.EnterParagraph();\n";
+			return "\tdoc.InsertParagraphAtCursor();\n";
 		},
 		addBlankPage			: function(){return "\tdoc.InsertBlankPage();\n"},
 		addPageBreak			: function(type){
