@@ -2296,7 +2296,7 @@ function (window, undefined) {
 		}
 
 		const commands = this.ArrPathCommand;
-		if (commands.length <= 0) {
+		if (commands.length <= 1) {
 			return null;
 		}
 
@@ -2323,7 +2323,7 @@ function (window, undefined) {
 		}
 
 		const commands = this.ArrPathCommand;
-		if (commands.length <= 0) {
+		if (commands.length <= 1) {
 			return null;
 		}
 
