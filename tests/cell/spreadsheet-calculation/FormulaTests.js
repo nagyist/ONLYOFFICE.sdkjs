@@ -25139,6 +25139,31 @@ $(function () {
 		oCalcSettings.asc_setIterativeCalc(false);
 		wb.dependencyFormulas.lockRecal();
 
+		//Case #67: Test for TypedMapCache
+		ws.getRange2("A901").setValue("a");
+		ws.getRange2("A902").setValue("a");
+		ws.getRange2("A903").setValue("a");
+		ws.getRange2("A904").setValue("a");
+		ws.getRange2("A905").setValue("a");
+
+		ws.getRange2("B901").setValue("1");
+		ws.getRange2("B902").setValue("2");
+		ws.getRange2("B903").setValue("3");
+		ws.getRange2("B904").setValue("4");
+		ws.getRange2("B905").setValue("5");
+
+		ws.getRange2("C901").setValue('=VLOOKUP(C903,A903:B905,2,FALSE');
+		ws.getRange2("C902").setValue('=VLOOKUP(C903,A901:B903,2,FALSE');
+
+		wb.dependencyFormulas.unlockRecal();
+
+		ws.getRange2("C903").setValue('a')
+
+		assert.strictEqual(ws.getRange2("C901").getValue(), "3");
+		assert.strictEqual(ws.getRange2("C902").getValue(), "1");
+
+		wb.dependencyFormulas.lockRecal();
+
 		// Negative Cases:
 		// Case #1: Array, Array, Array with wrong data
 		oParser = new parserFormula("VLOOKUP({2,3,4},{1,2,3;2,3,4},{4,5,6})", "A2", ws);
