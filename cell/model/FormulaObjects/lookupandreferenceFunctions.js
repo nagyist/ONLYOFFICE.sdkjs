@@ -2932,8 +2932,8 @@ function (window, undefined) {
 				}
 				const arr = axisData[rowCol].data[value.type].get(value.value);
 				arr.push(index);
-				axisData[rowCol].end += 1;
 			});
+			axisData[rowCol].end = endIndex;
 		} else {
 			if (startIndex < axisData[rowCol].start) {
 				const c1 = bHor ? startIndex : rowCol;
@@ -2991,8 +2991,8 @@ function (window, undefined) {
 					}
 					const arr = axisData[rowCol].data[value.type].get(value.value);
 					arr.push(index);
-					axisData[rowCol].end += 1;
 				});
+				axisData[rowCol].end = endIndex;
 			}
 		}
 		return axisData[rowCol].data[type];
