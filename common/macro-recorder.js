@@ -576,16 +576,16 @@
 			else if (type === AscWord.break_Column)
 				return "\tdoc.GetCurrentParagraph().AddColumnBreak();\n" // to api selection
 		},
-		addSectionBreak			: function(type){ //todo check
-			if (type === c_oAscSectionBreakType.NextPage)
+		addSectionBreak			: function(type){
+			if (type === Asc.c_oAscSectionBreakType.NextPage)
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"nextPage\");\n";
-			else if (type === c_oAscSectionBreakType.Column)
+			else if (type === Asc.c_oAscSectionBreakType.Column)
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"nextColumn\");\n";
-			else if (type === c_oAscSectionBreakType.Continuous)
+			else if (type === Asc.c_oAscSectionBreakType.Continuous)
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"continuous\");\n";
-			else if (type === c_oAscSectionBreakType.EvenPage)
+			else if (type === Asc.c_oAscSectionBreakType.EvenPage)
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"evenPage\");\n";
-			else if (type === c_oAscSectionBreakType.OddPage)
+			else if (type === Asc.c_oAscSectionBreakType.OddPage)
 				return "\tdoc.CreateSection(doc.GetCurrentParagraph()).SetType(\"oddPage\");\n";
 		},
 		addTable				: function(prop){
