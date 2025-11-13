@@ -11387,11 +11387,6 @@ PasteProcessor.prototype =
 		oPasteProcessor._Execute(node, pPr, true, true, false);
 
 		oPasteProcessor._PrepareContent();
-		oPasteProcessor._AddNextPrevToContent(oPasteProcessor.oDocument);
-
-		if (oPasteProcessor.aContent.length && !isBlockLevelSdt) {
-			levelSdt.Content = [];
-		}
 
 		let i, j, length, length2;
 		if (isBlockLevelSdt) {
@@ -11404,21 +11399,20 @@ PasteProcessor.prototype =
 			}
 			levelSdt.Content.Internal_Content_Remove(0, 1);
 		} else {
+			if (oPasteProcessor.aContent.length) {
+				levelSdt.RemoveAll();
+			}
 			for (i = 0, length = oPasteProcessor.aContent.length; i < length; ++i) {
 				if (oPasteProcessor.aContent[i] && oPasteProcessor.aContent[i].Content) {
 					for (j = 0, length2 = oPasteProcessor.aContent[i].Content.length - 1; j < length2; ++j) {
-						levelSdt.AddToContent(j, oPasteProcessor.aContent[i].Content[j]);
+						levelSdt.AddToContentToEnd(oPasteProcessor.aContent[i].Content[j]);
 					}
 				}
 			}
-		}
-
-		if (!isBlockLevelSdt && !levelSdt.Content.length) {
-			let oRun = new ParaRun(levelSdt.GetParagraph(), false);
-			if (plcHdrText) {
-				oRun.AddText(plcHdrText);
+			
+			if (levelSdt.IsEmpty()) {
+				levelSdt.ReplaceContentWithPlaceHolder(false, true);
 			}
-			levelSdt.AddToContent(levelSdt.GetContentLength(), oRun);
 		}
 	},
 
@@ -11946,7 +11940,6 @@ PasteProcessor.prototype =
 			}
 			oPasteProcessor._Execute(node, {}, true, true, false);
 			oPasteProcessor._PrepareContent(indent);
-			oPasteProcessor._AddNextPrevToContent(cell.Content);
 			if (0 === oPasteProcessor.aContent.length) {
 				var oDocContent = cell.Content;
 				var oNewPar = new AscWord.Paragraph(oDocContent);
