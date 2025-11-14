@@ -29066,6 +29066,53 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#NUM!");
 
+		// for bug 78419
+		const defName = new Asc.asc_CDefName('TestName', ws.getName() + '!$A$200:$B$200');
+		wb.editDefinesNames(null, defName);
+
+		ws.getRange2("B100").setValue("-123");
+		ws.getRange2("C100:E100").setValue("123");
+		ws.getRange2("A200").setValue("-123"); // TestName
+		ws.getRange2("B200").setValue("1234"); // TestName
+
+		let wsName = ws.getName();
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR(SheetName!B100:E100) - area3D check");
+
+		oParser = new parserFormula("IRR({-1,2,3,4}, "+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '2.2842779', "Result of IRR({-1,2,3,4},SheetName!B100:E100) - array,area3D check");
+
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100, "+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR(SheetName!B100:E100, SheetName!B100:E100) - area3D,area3D check");
+
+		oParser = new parserFormula("IRR(TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName) - defname check");
+
+		oParser = new parserFormula("IRR({-1,2,3,4},TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '2.2842779', "Result of IRR({-1,2,3,4},TestName) - array,defname check");
+
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100,TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR("+ wsName +"!B100:E100,TestName) - area3D,defname check");
+
+		oParser = new parserFormula("IRR(TestName,"+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName,"+ wsName +"!B100:E100) - defname,area3d check");
+
+		oParser = new parserFormula("IRR(TestName, TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName, TestName) - defname check");
+
+		ws.getRange2("B100:E100").cleanAll();
+		ws.getRange2("A200:B200").cleanAll();
+
+		wb.delDefinesNames(defName);
+
 		//TODO пересмотреть тест для этой функции
 		//testArrayFormula2(assert, "IRR", 1, 2, true)
 	});
