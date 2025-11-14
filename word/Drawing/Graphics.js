@@ -148,8 +148,6 @@
 
 		this.m_oBaseTransform   = null;
 
-		this.ArrayPoints = null;
-
 		this.m_oCurFont =
 		{
 			Name        : "",
@@ -458,9 +456,6 @@
 		if (false === this.m_bIntegerGrid)
 		{
 			this.m_oContext.moveTo(x,y);
-
-			if (this.ArrayPoints != null)
-				this.ArrayPoints[this.ArrayPoints.length] = {x: x, y: y};
 		}
 		else
 		{
@@ -474,9 +469,6 @@
 		if (false === this.m_bIntegerGrid)
 		{
 			this.m_oContext.lineTo(x,y);
-
-			if (this.ArrayPoints != null)
-				this.ArrayPoints[this.ArrayPoints.length] = {x: x, y: y};
 		}
 		else
 		{
@@ -490,13 +482,6 @@
 		if (false === this.m_bIntegerGrid)
 		{
 			this.m_oContext.bezierCurveTo(x1,y1,x2,y2,x3,y3);
-
-			if (this.ArrayPoints != null)
-			{
-				this.ArrayPoints[this.ArrayPoints.length] = {x: x1, y: y1};
-				this.ArrayPoints[this.ArrayPoints.length] = {x: x2, y: y2};
-				this.ArrayPoints[this.ArrayPoints.length] = {x: x3, y: y3};
-			}
 		}
 		else
 		{
@@ -516,12 +501,6 @@
 		 if (false === this.m_bIntegerGrid)
 		 {
 			 this.m_oContext.quadraticCurveTo(x1,y1,x2,y2);
-
-			 if (this.ArrayPoints != null)
-			 {
-				 this.ArrayPoints[this.ArrayPoints.length] = {x: x1, y: y1};
-				 this.ArrayPoints[this.ArrayPoints.length] = {x: x2, y: y2};
-			 }
 		 }
 		else
 		{
