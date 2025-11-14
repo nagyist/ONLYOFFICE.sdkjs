@@ -9492,7 +9492,7 @@
 	 * Returns a unique ID for the current paragraph.
 	 * @memberof ApiParagraph
 	 * @returns {number} 0 if no identifier is specified for the current paragraph.
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 * @since 9.2.0
 	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/GetParaId.js
 	 */
