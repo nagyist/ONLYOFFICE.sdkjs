@@ -84,53 +84,73 @@
 	};
 	TextAnnotatorEventManager.prototype.send = function(paragraph)
 	{
+		// TODO: Надо проверить, нужно ли вообще ивент отправлять
+		
+		// Чтобы не было моргания при быстром изменении параграфа, мы не чистим метки сразу при изменении.
+		// Поэтому, отправляем в плагин новые позиции меток, чтобы плагин сам решал обновить всю разметку или
+		// просто удалить какие-то метки
+		
 		let obj = this.textAnnotator.getEventObject(paragraph);
 		let paraId = paragraph.GetId();
 		let recalcId = this.sendPara[paraId];
-		obj["recalcId"] = recalcId;
 		
-		let text = obj["text"];
-		let len  = text.length;
+		let text = obj.text;
 		
-		//console.log(`Request ParaId=${paragraph.GetId()}; ParaText=${text}`);
+		let objByGuid = {};
+		for (let handlerId in obj.ranges)
+		{
+			let _ranges = obj.ranges[handlerId];
+			
+			let guid = this.getGuid(handlerId);
+			if (!objByGuid[guid])
+			{
+				objByGuid[guid] = {
+					"paragraphId" : paraId,
+					"recalcId"    : recalcId,
+					"text"        : text,
+					"ranges"      : []
+				};
+			}
+			
+			let handlerName = this.getHandlerName(handlerId);
+			
+			for (let rangeId in _ranges)
+			{
+				let start = _ranges[rangeId].start;
+				let end   = _ranges[rangeId].end;
+				
+				if (undefined === start || undefined === end)
+					continue;
+				
+				let range = {
+					"id" : rangeId,
+					"start" : start,
+					"length" : end - start
+				};
+				if (handlerName)
+					range["name"] = handlerName;
+				
+				objByGuid[guid]["ranges"].push(range);
+			}
+		}
 		
-		let _t = this;
-		// setTimeout(function(){
-		// 	let _start = Math.floor(Math.random() * (len - 1));
-		// 	let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
-		// 	_t.onResponse({
-		// 		"guid" : "guid-1",
-		// 		"type" : "highlightText",
-		// 		"paragraphId" : paraId,
-		// 		"recalcId" : recalcId,
-		// 		"ranges" : [{
-		// 			"start" : _start,
-		// 			"length" : _len,
-		// 			"id" : "1"
-		// 		}]
-		// 	});
-		// }, 2000);
-		// setTimeout(function() {
-		// 	let _start = Math.floor(Math.random() * (len - 1));
-		// 	let _len   = Math.min(Math.floor(Math.random() * 10), len - _start);
-		// 	_t.onResponse({
-		// 		"guid"        : "guid-2",
-		// 		"type"        : "highlightText",
-		// 		"paragraphId" : paraId,
-		// 		"recalcId"    : recalcId,
-		// 		"ranges"      : [{
-		// 			"start"  : _start,
-		// 			"length" : _len,
-		// 			"id"     : "1"
-		// 		}]
-		// 	});
-		// }, 3000);
+		let excludeGuids = {};
+		for (let guid in objByGuid)
+		{
+			let guids = {};
+			guids[guid] = true;
+			window.g_asc_plugins.onPluginEvent2("onAnnotateText", objByGuid[guid], guids);
+			
+			excludeGuids[guid] = 1;
+		}
 		
-		window.g_asc_plugins.onPluginEvent("onAnnotateText", obj);
+		let _obj = {
+			"paragraphId" : paraId,
+			"recalcId"    : recalcId,
+			"text"        : text
+		};
 		
-		// TODO: Чтобы не было моргания при быстром изменении параграфа, мы не должны чистить метки сразу при изменении
-		//       Поэтому, до получения ответа мы оставляем метки в прежних местах. Далее либо обновляем их с ответом,
-		//       либо на определенном таймере чистим их (если ответ не приходит)
+		window.g_asc_plugins.onPluginEvent2("onAnnotateText", _obj, null, false, false, excludeGuids);
 	};
 	TextAnnotatorEventManager.prototype.onResponse = function(obj)
 	{
@@ -273,12 +293,17 @@
 	};
 	TextAnnotatorEventManager.prototype.addNameFromHandlerId = function(handlerId, obj)
 	{
-		if (!obj)
-			return;
-		
+		let name = this.getHandlerName(handlerId);
+		if (name)
+			obj["name"] = name;
+	};
+	TextAnnotatorEventManager.prototype.getHandlerName = function(handlerId)
+	{
 		let pos = handlerId.indexOf("AnnotationName:");
 		if (-1 !== pos)
-			obj["name"] = handlerId.substr(pos + 15);
+			return handlerId.substr(pos + 15);
+		
+		return null;
 	};
 	TextAnnotatorEventManager.prototype.getGuid = function(handlerId)
 	{

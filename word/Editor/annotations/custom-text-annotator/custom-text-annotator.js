@@ -57,7 +57,7 @@
 		this.eventManager = this.logicDocument.GetApi().getTextAnnotatorEventManager();
 		this.marks        = new AscWord.CustomMarks(logicDocument);
 		
-		this.textGetter = new TextGetter();
+		this.textGetter = new TextGetter(this.marks);
 		this.markSetter = new MarkSetter(this.marks);
 	}
 	
@@ -130,8 +130,8 @@
 	{
 		this.textGetter.check(paragraph);
 		return {
-			"paragraphId" : paragraph.GetId(),
-			"text"        : this.textGetter.text
+			text   : this.textGetter.text,
+			ranges : this.textGetter.ranges
 		};
 	};
 	CustomTextAnnotator.prototype.highlightTextResponse = function(handlerId, paraId, ranges)
@@ -178,23 +178,29 @@
 		return ranges;
 	};
 	/**
-	 *
+	 * @param customMarks {AscWord.CustomMarks}
 	 * @constructor
 	 */
-	function TextGetter()
+	function TextGetter(customMarks)
 	{
 		AscWord.DocumentVisitor.call(this);
-		this.text = "";
+		this.marks  = customMarks;
+		this.text   = "";
+		this.pos    = 0;
+		this.ranges = {};
 	}
 	TextGetter.prototype = Object.create(AscWord.DocumentVisitor.prototype);
 	TextGetter.prototype.constructor = TextGetter;
 	TextGetter.prototype.check = function(paragraph)
 	{
-		this.text = "";
+		this.pos    = 0
+		this.text   = "";
+		this.ranges = {};
 		this.traverseParagraph(paragraph);
 	};
 	TextGetter.prototype.run = function(run)
 	{
+		this.handleMarks(run);
 		for (let pos = 0, len = run.GetElementsCount(); pos < len; ++pos)
 		{
 			let item = run.GetElement(pos);
@@ -206,8 +212,32 @@
 				this.text += String.fromCodePoint(0x09);
 			else if (item.IsBreak())
 				this.text += "\n";
+			else
+				continue;
+			
+			++this.pos;
 		}
 		return true;
+	};
+	TextGetter.prototype.handleMarks = function(run)
+	{
+		let _t = this;
+		this.marks.forEachInRun(run.GetId(), function(mark){
+			let rangeId = mark.getRangeId();
+			let handlerId = mark.getHandlerId();
+			let pos = mark.getPos() + _t.pos;
+			
+			if (!_t.ranges[handlerId])
+				_t.ranges[handlerId] = {};
+			
+			if (!_t.ranges[handlerId][rangeId])
+				_t.ranges[handlerId][rangeId] = {};
+			
+			if (mark.isStart())
+				_t.ranges[handlerId][rangeId].start = pos;
+			else
+				_t.ranges[handlerId][rangeId].end = pos;
+		});
 	};
 	/**
 	 * @param customMarks {AscWord.CustomMarks}
