@@ -1925,7 +1925,7 @@ function (window, undefined) {
 					break;
 				}
 				case close: {
-					if (!bConvertCurvesOnly & oLastMoveTo) {
+					if (!bConvertCurvesOnly && oLastMoveTo) {
 						let dXM = oTransform.TransformPointX(oLastMoveTo.X, oLastMoveTo.Y);
 						let dYM = oTransform.TransformPointY(oLastMoveTo.X, oLastMoveTo.Y);
 						let dLastXM = oTransform.TransformPointX(dLastX, dLastY);
@@ -1941,6 +1941,93 @@ function (window, undefined) {
 					oPath.close();
 					break;
 				}
+
+
+				case ellipticalArcTo: {
+					let oPathAccumulator = new AscFormat.PathAccumulator();
+					ArcToCurvers(oPathAccumulator, oCmd.stX, oCmd.stY, oCmd.wR, oCmd.hR, oCmd.stAng, oCmd.swAng, oCmd.ellipseRotation);
+					let aArcToCommands = oPathAccumulator.pathCommand;
+					for (let nArcCmd = 0; nArcCmd < aArcToCommands.length; ++nArcCmd) {
+						let oArcToCmd = aArcToCommands[nArcCmd];
+						switch (oArcToCmd.id) {
+							case AscFormat.moveTo: {
+								break;
+							}
+							case AscFormat.bezier4: {
+								dX0 = oTransform.TransformPointX(oArcToCmd.X0, oArcToCmd.Y0) * 36000 >> 0;
+								dY0 = oTransform.TransformPointY(oArcToCmd.X0, oArcToCmd.Y0) * 36000 >> 0;
+								dX1 = oTransform.TransformPointX(oArcToCmd.X1, oArcToCmd.Y1) * 36000 >> 0;
+								dY1 = oTransform.TransformPointY(oArcToCmd.X1, oArcToCmd.Y1) * 36000 >> 0;
+								dX2 = oTransform.TransformPointX(oArcToCmd.X2, oArcToCmd.Y2) * 36000 >> 0;
+								dY2 = oTransform.TransformPointY(oArcToCmd.X2, oArcToCmd.Y2) * 36000 >> 0;
+								oPath.cubicBezTo(dX0, dY0, dX1, dY1, dX2, dY2);
+
+								dLastX = oArcToCmd.X2;
+								dLastY = oArcToCmd.Y2;
+								break;
+							}
+						}
+					}
+					break;
+				}
+				case nurbsTo: {
+					oCmd.bezierArray.forEach(function (bezier) {
+							if (oCmd.degree === 2) {
+								let cp1x = bezier.controlPoints[0].x;
+								let cp1y = bezier.controlPoints[0].y;
+								let endx = bezier.endPoint.x;
+								let endy = bezier.endPoint.y;
+
+								dX0 = oTransform.TransformPointX(cp1x, cp1y) * 36000 >> 0;
+								dY0 = oTransform.TransformPointY(cp1x, cp1y) * 36000 >> 0;
+								dX1 = oTransform.TransformPointX(endx, endy) * 36000 >> 0;
+								dY1 = oTransform.TransformPointY(endx, endy) * 36000 >> 0;
+								oPath.cubicBezTo(dX0, dY0, dX1, dY1, dX1, dY1);
+								dLastX = endx;
+								dLastY = endy;
+							}
+							else if (oCmd.degree === 3) {
+								let cp1x = bezier.controlPoints[0].x;
+								let cp1y = bezier.controlPoints[0].y;
+								let cp2x = bezier.controlPoints[1].x;
+								let cp2y = bezier.controlPoints[1].y;
+								let endx = bezier.endPoint.x;
+								let endy = bezier.endPoint.y;
+
+
+								dX0 = oTransform.TransformPointX(cp1x, cp1y) * 36000 >> 0;
+								dY0 = oTransform.TransformPointY(cp1x, cp1y) * 36000 >> 0;
+								dX1 = oTransform.TransformPointX(cp2x, cp2y) * 36000 >> 0;
+								dY1 = oTransform.TransformPointY(cp2x, cp2y) * 36000 >> 0;
+								dX2 = oTransform.TransformPointX(endx, endy) * 36000 >> 0;
+								dY2 = oTransform.TransformPointY(endx, endy) * 36000 >> 0;
+								oPath.cubicBezTo(dX0, dY0, dX1, dY1, dX2, dY2);
+								dLastX = endx;
+								dLastY = endy;
+							}
+							else {
+								let startPoint = bezier.startPoint;
+								let controlPoints = bezier.controlPoints;
+								let endPoint = bezier.endPoint;
+								let pointsToCheck = controlPoints.concat(endPoint);
+								pointsToCheck = pointsToCheck.concat(startPoint);
+								for (let pt = 0; pt < pointsToCheck.length; ++pt) {
+									let oPt = pointsToCheck[pt];
+									dX0 = oTransform.TransformPointX(dLastX + (oPt.x - dLastX) * (1 / 3), dLastY + (oPt.y - dLastY) * (1 / 3)) * 36000 >> 0;
+									dY0 = oTransform.TransformPointY(dLastX + (oPt.x - dLastX) * (1 / 3), dLastY + (oPt.y - dLastY) * (1 / 3)) * 36000 >> 0;
+									dX1 = oTransform.TransformPointX(dLastX + (oPt.x - dLastX) * (2 / 3), dLastY + (oPt.y - dLastY) * (2 / 3)) * 36000 >> 0;
+									dY1 = oTransform.TransformPointY(dLastX + (oPt.x - dLastX) * (2 / 3), dLastY + (oPt.y - dLastY) * (2 / 3)) * 36000 >> 0;
+									dX2 = oTransform.TransformPointX(oPt.x, oPt.y) * 36000 >> 0;
+									dY2 = oTransform.TransformPointY(oPt.x, oPt.y) * 36000 >> 0;
+									(bConvertCurvesOnly) ? oPath.lnTo(dX2, dY2) : oPath.cubicBezTo(dX0, dY0, dX1, dY1, dX2, dY2);
+									dLastX = oPt.x;
+									dLastY = oPt.y;
+								}
+							}
+						});
+					break;
+				}
+
 			}
 		}
 		oPath.recalculate({}, true);
