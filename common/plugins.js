@@ -399,12 +399,14 @@
 		{
 			for (let i in this.runnedPluginsMap)
 			{
-				let oPlugin = this.pluginsMap[i];
+				let pluginInfo = this.runnedPluginsMap[i];
+				let plugin = this.pluginsMap[i];
+				let pluginVariation = plugin.variations[pluginInfo.currentVariation];
 
-				let pluginType = oPlugin ? oPlugin.type : -1;
+				let pluginType = pluginVariation ? pluginVariation.type : -1;
 				if (pluginType !== Asc.PluginType.System &&
 					pluginType !== Asc.PluginType.Background &&
-					!(oPlugin && oPlugin.isConnector))
+					!(plugin && plugin.isConnector))
 				{
 					this.close(i);
 				}
