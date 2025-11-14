@@ -3020,6 +3020,22 @@
 			this.Memory.Seek(nStartPos);
 			this.Memory.WriteLong(nEndPos - nStartPos);
 			this.Memory.Seek(nEndPos);
+		},
+
+		ClearLastFont : function()
+		{
+			this.m_oFont =
+			{
+				Name     : "",
+				FontSize : -1,
+				Style    : -1
+			};
+
+			this.m_oTextPr  = null;
+			this.m_oGrFonts = new CGrRFonts();
+
+			this.m_oFontSlotFont    = new CFontSetup();
+			this.LastFontOriginInfo = {Name : "", Replace : null};
 		}
 	};
 
@@ -3569,6 +3585,12 @@
 			this.Memory.WriteLong(nFlag);
 			this.Memory.Seek(nEndPos);
 		}
+	};
+
+	CDocumentRenderer.prototype.ClearLastFont = function()
+	{
+		if (0 !== this.m_lPagesCount)
+			this.m_arrayPages[this.m_lPagesCount - 1].ClearLastFont();
 	};
 
 	function WriteHeadings(memory, headings)
