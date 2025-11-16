@@ -253,7 +253,7 @@
 
 		this.broadcastChannel = null;
 		
-		this.textAnnotatorEventManager = new AscCommon.TextAnnotatorEventManager(this);
+		this.textAnnotatorEventManager = null;
 
 		return this;
 	}
@@ -6105,6 +6105,9 @@
 	
 	baseEditorsApi.prototype.getTextAnnotatorEventManager = function()
 	{
+		if (!this.textAnnotatorEventManager)
+			this.textAnnotatorEventManager = new AscCommon.TextAnnotatorEventManager(this);
+		
 		return this.textAnnotatorEventManager;
 	};
 	baseEditorsApi.prototype.getMacroRecorder = function()
