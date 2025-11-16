@@ -1303,7 +1303,23 @@
 		let docPos = topDocument && topDocument.GetContentPosition ? topDocument.GetContentPosition(false) : null;
 		return bookmarks.GetBookmarkByDocPos(docPos);
 	};
-	
+	/**
+	 * Annotate the specified paragraph.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias AnnotateParagraph
+	 * @param {Object} obj - The response object containing annotation data
+	 * @param {string} obj.type - The type of annotation operation (e.g., "highlightText")
+	 * @param {string} [obj.name] - Optional name of the annotation
+	 * @param {string} obj.paragraphId - ID of the paragraph being annotated (for highlightText type)
+	 * @param {string} obj.recalcId - Recalculation ID for validation (for highlightText type)
+	 * @param {Array<{start: number, length: number, id: string}>} [obj.ranges] - Array of text ranges to highlight (for highlightText type)
+	 * @param {number} obj.ranges[].start - Starting index of the text range
+	 * @param {number} obj.ranges[].length - Length of the text range
+	 * @param {string} obj.ranges[].id - Unique identifier for the range
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/AnnotateParagraph.js
+	 */
 	Api.prototype["pluginMethod_AnnotateParagraph"] = function(obj)
 	{
 		if (!obj)
@@ -1312,6 +1328,18 @@
 		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
 		this.getTextAnnotatorEventManager().onResponse(obj);
 	};
+	/**
+	 * Selects a specific annotation range in the document.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias AnnotateParagraph
+	 * @param {Object} obj - The range selection object
+	 * @param {string} obj.paragraphId - ID of the paragraph containing the annotation
+	 * @param {string} obj.rangeId - ID of the specific range to select
+	 * @param {string} [obj.name] - Optional name/type of the annotation (e.g., "grammar", "spelling", etc.)
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/SelectAnnotationRange.js
+	 */
 	Api.prototype["pluginMethod_SelectAnnotationRange"] = function(obj)
 	{
 		if (!obj)
@@ -1320,6 +1348,18 @@
 		obj["guid"] = window.g_asc_plugins.getCurrentPluginGuid();
 		this.getTextAnnotatorEventManager().selectRange(obj);
 	};
+	/**
+	 * Remove a specific annotation range from the document.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias RemoveAnnotationRange
+	 * @param {Object} obj - The range removing object
+	 * @param {string} obj.paragraphId - ID of the paragraph containing the annotation
+	 * @param {string} obj.rangeId - ID of the specific range to remove
+	 * @param {string} [obj.name] - Optional name/type of the annotation (e.g., "grammar", "spelling", etc.)
+	 * @since 9.2.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/RemoveAnnotationRange.js
+	 */
 	Api.prototype["pluginMethod_RemoveAnnotationRange"] = function(obj)
 	{
 		if (!obj)

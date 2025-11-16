@@ -108,7 +108,7 @@
 					"paragraphId" : paraId,
 					"recalcId"    : recalcId,
 					"text"        : text,
-					"ranges"      : []
+					"annotations" : []
 				};
 			}
 			
@@ -130,7 +130,7 @@
 				if (handlerName)
 					range["name"] = handlerName;
 				
-				objByGuid[guid]["ranges"].push(range);
+				objByGuid[guid]["annotations"].push(range);
 			}
 		}
 		
@@ -139,7 +139,7 @@
 		{
 			let guids = {};
 			guids[guid] = true;
-			window.g_asc_plugins.onPluginEvent2("onAnnotateText", objByGuid[guid], guids);
+			window.g_asc_plugins.onPluginEvent2("onParagraphText", objByGuid[guid], guids);
 			
 			excludeGuids[guid] = 1;
 		}
@@ -150,7 +150,7 @@
 			"text"        : text
 		};
 		
-		window.g_asc_plugins.onPluginEvent2("onAnnotateText", _obj, null, false, false, excludeGuids);
+		window.g_asc_plugins.onPluginEvent2("onParagraphText", _obj, null, false, false, excludeGuids);
 	};
 	TextAnnotatorEventManager.prototype.onResponse = function(obj)
 	{
@@ -244,7 +244,8 @@
 						"rangeId"     : rangeId
 					};
 					this.addNameFromHandlerId(handlerId, obj);
-					window.g_asc_plugins.onPluginEvent("onBlurAnnotation", obj, this.getGuid(handlerId));
+					let guids = {}; guids[this.getGuid(handlerId)] = true;
+					window.g_asc_plugins.onPluginEvent2("onBlurAnnotation", obj, guids);
 				}
 			}
 		}
@@ -261,7 +262,8 @@
 						"rangeId"     : rangeId
 					};
 					this.addNameFromHandlerId(handlerId, obj);
-					window.g_asc_plugins.onPluginEvent("onFocusAnnotation", obj, this.getGuid(handlerId));
+					let guids = {}; guids[this.getGuid(handlerId)] = true;
+					window.g_asc_plugins.onPluginEvent2("onFocusAnnotation", obj, guids);
 				}
 			}
 		}
@@ -284,7 +286,8 @@
 			{
 				_ranges.push(rangeId);
 			}
-			window.g_asc_plugins.onPluginEvent("onClickAnnotation", obj, this.getGuid(handlerId));
+			let guids = {}; guids[this.getGuid(handlerId)] = true;
+			window.g_asc_plugins.onPluginEvent2("onClickAnnotation", obj, guids);
 		}
 	};
 	TextAnnotatorEventManager.prototype.getHandlerId = function(obj)
