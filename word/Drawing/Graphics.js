@@ -2149,11 +2149,11 @@
 		
 		if (-1 !== handlerId.indexOf("spelling"))
 		{
-			color = new CColor(239, 68, 68, 255);
+			color = new AscCommon.CColor(239, 68, 68, 255);
 		}
 		else if (-1 !== handlerId.indexOf("grammar"))
 		{
-			color = new CColor(59, 130, 246, 255);
+			color = new AscCommon.CColor(59, 130, 246, 255);
 			underlineY = 0.2 * (baseLine - y0) + baseLine;
 		}
 		

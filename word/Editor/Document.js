@@ -1198,7 +1198,10 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 	};
 
 	this.Layout = this.Layouts.Print;
-
+	
+	this.CustomTextAnnotator = new AscWord.CustomTextAnnotator(this);
+	
+	
 	this.Content[0] = new AscWord.Paragraph(this);
     this.Content[0].Set_DocumentNext(null);
     this.Content[0].Set_DocumentPrev(null);
@@ -1418,8 +1421,6 @@ function CDocument(DrawingDocument, isMainLogicDocument)
     // Параграфы, в которых есть ошибки в орфографии (объект с ключом - Id параграфа)
     this.Spelling = new AscWord.CDocumentSpellChecker();
 	
-	this.CustomTextAnnotator = new AscWord.CustomTextAnnotator(this);
-
     // Дополнительные настройки
 	this.ForceHideCCTrack          = false; // Насильно запрещаем отрисовку рамок у ContentControl
     this.UseTextShd                = true;  // Использовать ли заливку текста
