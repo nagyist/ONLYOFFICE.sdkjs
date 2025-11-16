@@ -652,8 +652,8 @@
 
 			return this.onPluginEvent2(name, data, undefined, isExclusive);
 		},
-
-		onPluginEvent2 : function(name, data, guids, isExclusive, isOnlyCheck)
+		
+		onPluginEvent2 : function(name, data, guids, isExclusive, isOnlyCheck, excludedGuids)
 		{
 			let needsGuids = [];
 			for (let guid in this.runnedPluginsMap)
@@ -661,6 +661,9 @@
 				if (guids && !guids[guid])
 					continue;
 
+				if (excludedGuids && excludedGuids[guid])
+					continue;
+				
 				if (guid === this.currentPluginEvent)
 					continue;
 

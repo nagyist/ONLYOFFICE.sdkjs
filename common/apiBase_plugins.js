@@ -280,20 +280,23 @@
 	 * @param {string} textReplace - A string value that specifies the text to be replaced with a new text.
      * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/InputText.js
 	 */
-    Api.prototype["pluginMethod_InputText"] = function(text, textReplace)
-    {
-        if (!this.canEdit() || this.isPdfEditor() || !AscCommon.g_inputContext)
-            return;
-
-        if (textReplace)
-        {
-            for (var i = 0; i < textReplace.length; i++)
-                AscCommon.g_inputContext.emulateKeyDownApi(8);
-        }
-
-        AscCommon.g_inputContext.addText(text);
-        AscCommon.g_inputContext.keyPressInput = "";
-    };
+	Api.prototype["pluginMethod_InputText"] = function(text, textReplace)
+	{
+		if (!this.canEdit() || this.isPdfEditor() || !AscCommon.g_inputContext)
+			return;
+	
+		this.executeGroupActions(function()
+		{
+			if (textReplace)
+			{
+				for (var i = 0; i < textReplace.length; i++)
+					AscCommon.g_inputContext.emulateKeyDownApi(8);
+			}
+		
+			AscCommon.g_inputContext.addText(text);
+			AscCommon.g_inputContext.keyPressInput = "";
+		});
+	};
 
 	/**
 	 * Pastes text in the HTML format into the document.

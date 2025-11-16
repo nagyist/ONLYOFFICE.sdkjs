@@ -252,6 +252,8 @@
 		this._correctEmbeddedWork();
 
 		this.broadcastChannel = null;
+		
+		this.textAnnotatorEventManager = new AscCommon.TextAnnotatorEventManager(this);
 
 		return this;
 	}
@@ -6100,7 +6102,11 @@
 	baseEditorsApi.prototype._onEndGroupActions = function(isFullEnd)
 	{
 	};
-
+	
+	baseEditorsApi.prototype.getTextAnnotatorEventManager = function()
+	{
+		return this.textAnnotatorEventManager;
+	};
 	baseEditorsApi.prototype.getMacroRecorder = function()
 	{
 		return this.macroRecorder;

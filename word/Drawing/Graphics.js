@@ -2138,6 +2138,29 @@
 		if (!Asc.editor.isViewMode)
 			this.drawHorLine(0, y0, x0, x1, w );
 	};
+	
+	CGraphics.prototype.drawCustomRange = function(handlerId, rangeId, x0, y0, w, h, baseLine)
+	{
+		if (Asc.editor.isViewMode)
+			return;
+		
+		let color = AscCommon.getUserColorById(handlerId, null, false);
+		let underlineY = 0.1 * (baseLine - y0) + baseLine;
+		
+		if (-1 !== handlerId.indexOf("spelling"))
+		{
+			color = new CColor(239, 68, 68, 255);
+		}
+		else if (-1 !== handlerId.indexOf("grammar"))
+		{
+			color = new CColor(59, 130, 246, 255);
+			underlineY = 0.2 * (baseLine - y0) + baseLine;
+		}
+		
+		this.p_color(color.r, color.g, color.b, 255);
+		this.p_width(0.25 * 1000);
+		this.drawHorLine(0, underlineY, x0, x0 + w, 0.25 );
+	};
 
 	// smart methods for horizontal / vertical lines
 	CGraphics.prototype.drawHorLine = function(align, y, x, r, penW)
