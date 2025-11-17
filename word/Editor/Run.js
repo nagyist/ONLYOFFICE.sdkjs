@@ -5682,6 +5682,7 @@ ParaRun.prototype.Recalculate_Range_Spaces = function(PRSA, _CurLine, _CurRange,
 							if (!isInHdrFtr
 								&& PRSA.getCompatibilityMode() >= AscCommon.document_compatibility_mode_Word15
 								&& 0 === CurPage
+								&& !PRSA.isParagraphStartFromNewPage()
 								&& Item.Get_Bounds().Bottom >= Y_Bottom_Field
 								&& Item.IsMoveWithTextVertically())
 							{
