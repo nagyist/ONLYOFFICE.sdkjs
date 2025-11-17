@@ -112,7 +112,10 @@
 		
 		this.annotationMarks = [];
 		
-		this.customMarks = null;
+		this.customMarks        = null;
+		this.currentCustomMarks = [];
+		this.customMarkInRun    = null;
+		this.customMarkPos      = 0;
 		
 		this.bidiFlow = new AscWord.BidiFlow(this);
 	}
@@ -333,7 +336,7 @@
 	ParagraphLineDrawState.prototype.initCustomMarks = function(run, startPos)
 	{
 		if (!this.customMarks)
-			return [];
+			return;
 		
 		this.currentCustomMarks = this.customMarks.getStartedMarks(this.Paragraph, this.CurPos);
 		this.customMarkInRun = this.customMarks.flatRunMarks(run.GetId());
