@@ -25139,6 +25139,30 @@ $(function () {
 		oCalcSettings.asc_setIterativeCalc(false);
 		wb.dependencyFormulas.lockRecal();
 
+		//Case #67: Test for TypedMapCache
+		ws.getRange2("AR901").setValue("a");
+		ws.getRange2("AR902").setValue("a");
+		ws.getRange2("AR903").setValue("a");
+		ws.getRange2("AR904").setValue("a");
+		ws.getRange2("AR905").setValue("a");
+
+		ws.getRange2("AS901").setValue("1");
+		ws.getRange2("AS902").setValue("2");
+		ws.getRange2("AS903").setValue("3");
+		ws.getRange2("AS904").setValue("4");
+		ws.getRange2("AS905").setValue("5");
+
+		wb.dependencyFormulas.unlockRecal();
+
+		ws.getRange2("AT902").setValue('=VLOOKUP(AT903,AR901:AS903,2,FALSE');
+		ws.getRange2("AT901").setValue('=VLOOKUP(AT903,AR903:AS905,2,FALSE');
+		ws.getRange2("AT903").setValue('a')
+
+		wb.dependencyFormulas.lockRecal();
+
+		assert.strictEqual(ws.getRange2("AT901").getValue(), "3");
+		assert.strictEqual(ws.getRange2("AT902").getValue(), "1");
+
 		// Negative Cases:
 		// Case #1: Array, Array, Array with wrong data
 		oParser = new parserFormula("VLOOKUP({2,3,4},{1,2,3;2,3,4},{4,5,6})", "A2", ws);
@@ -29041,6 +29065,53 @@ $(function () {
 		oParser = new parserFormula("IRR({-70000},-0.1)", "A2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), "#NUM!");
+
+		// for bug 78419
+		const defName = new Asc.asc_CDefName('TestName', ws.getName() + '!$A$200:$B$200');
+		wb.editDefinesNames(null, defName);
+
+		ws.getRange2("B100").setValue("-123");
+		ws.getRange2("C100:E100").setValue("123");
+		ws.getRange2("A200").setValue("-123"); // TestName
+		ws.getRange2("B200").setValue("1234"); // TestName
+
+		let wsName = ws.getName();
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR(SheetName!B100:E100) - area3D check");
+
+		oParser = new parserFormula("IRR({-1,2,3,4}, "+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '2.2842779', "Result of IRR({-1,2,3,4},SheetName!B100:E100) - array,area3D check");
+
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100, "+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR(SheetName!B100:E100, SheetName!B100:E100) - area3D,area3D check");
+
+		oParser = new parserFormula("IRR(TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName) - defname check");
+
+		oParser = new parserFormula("IRR({-1,2,3,4},TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '2.2842779', "Result of IRR({-1,2,3,4},TestName) - array,defname check");
+
+		oParser = new parserFormula("IRR("+ wsName +"!B100:E100,TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '0.8392868', "Result of IRR("+ wsName +"!B100:E100,TestName) - area3D,defname check");
+
+		oParser = new parserFormula("IRR(TestName,"+ wsName +"!B100:E100)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName,"+ wsName +"!B100:E100) - defname,area3d check");
+
+		oParser = new parserFormula("IRR(TestName, TestName)", "A2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue().toFixed(7), '9.0325203', "Result of IRR(TestName, TestName) - defname check");
+
+		ws.getRange2("B100:E100").cleanAll();
+		ws.getRange2("A200:B200").cleanAll();
+
+		wb.delDefinesNames(defName);
 
 		//TODO пересмотреть тест для этой функции
 		//testArrayFormula2(assert, "IRR", 1, 2, true)
