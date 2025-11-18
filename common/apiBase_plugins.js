@@ -2208,22 +2208,30 @@
 		{
 			let w = 300;
 			let h = 100;
+
+			let addH = 0;
 			if (variation["size"])
 			{
 				w = variation["size"][0];
 				h = variation["size"][1];
+
+				if (!variation["isCustomWindow"]) {
+					addH += 35;
+					if (variation["buttons"] && variation["buttons"].length)
+						addH += 55;
+				}
 			}
 
 			let offsets = this.getTargetOnBodyCoords();
 			if (w > offsets.W)
 				w = offsets.W;
-			if (h > offsets.H)
-				h = offsets.H;
+			if ((h + addH) > offsets.H)
+				h = Math.max(offsets.H - addH, 10);
 
 			let offsetToFrame = 10;
 			let r = offsets.X + offsetToFrame + w;
-			let t = offsets.Y - offsetToFrame - h;
-			let b = offsets.Y + offsets.TargetH + offsetToFrame + h;
+			let t = offsets.Y - offsetToFrame - h - addH;
+			let b = offsets.Y + offsets.TargetH + offsetToFrame + h + addH;
 
 			let x = offsets.X + offsetToFrame;
 			if (r > offsets.W)
@@ -2242,6 +2250,8 @@
 			{
 				y = offsets.Y + offsets.TargetH + offsetToFrame;
 				h += (offsets.H - b);
+
+				if (h < 10) h = 10;
 			}
 
 			if (y > offsets.H)
@@ -2251,7 +2261,9 @@
 			if (x < offsets.editorX)
 				x = offsets.editorX;
 
-			variation["size"] = [w, h];
+			if (!variation["fixedSize"])
+				variation["size"] = [w, h];
+
 			variation["positionX"] = x;
 			variation["positionY"] = y;
 		}
