@@ -7527,7 +7527,7 @@
 			return "arrow";
 		};
 		EndArrow.prototype.isPresent = function () {
-			return AscFormat.isRealNumber(this.type) && this.type !== LineEndType.None;
+			return AscFormat.isRealNumber(this.type) && this.type !== LineEndType.None && this.type !== LineEndType.vsdxNone;
 		};
 
 
