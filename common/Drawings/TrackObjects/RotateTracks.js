@@ -631,6 +631,9 @@
 	};
 
 	RotateTrackShapeImage.prototype.draw = function (overlay) {
+		if(AscFormat.isRealNumber(this.originalObject.selectStartPage) && overlay.SetCurrentPage) {
+			overlay.SetCurrentPage(this.originalObject.selectStartPage);
+		}
 		this.overlayObject.draw(overlay);
 	};
 
