@@ -432,364 +432,395 @@
 		return new AscFormat.CGraphicBounds(0, 0, 0, 0);
 	}
 
-	function RotateTrackShapeImageInGroup(originalObject) {
-		AscFormat.ExecuteNoHistory(function () {
 
-			this.originalObject = originalObject;
-			this.transform = this.originalObject.transform.CreateDublicate();
-			this.x = this.originalObject.x;
-			this.y = this.originalObject.y;
-			this.extX = this.originalObject.extX;
-			this.extY = this.originalObject.extY;
-			this.rot = this.originalObject.rot;
-			this.flipH = this.originalObject.flipH;
-			this.flipV = this.originalObject.flipV;
-			this.bounds = this.originalObject.bounds;
-			this.overlayObject = new OverlayObject(this.originalObject.getGeometry(), this.originalObject.extX, this.originalObject.extY, this.originalObject.brush, this.originalObject.pen, this.transform);
-			this.angle = 0;
-		}, this, []);
-	}
+	function RotateTrackShapeImage(originalObject)
+	{
+		this.bIsTracked = false;
+		this.originalObject = originalObject;
+		this.transform = new CMatrix();
 
-	RotateTrackShapeImageInGroup.prototype.getBounds = function () {
-		var boundsChecker = new AscFormat.CSlideBoundsChecker();
-		this.draw(boundsChecker);
-		var tr = this.transform;
-		var arr_p_x = [];
-		var arr_p_y = [];
-		arr_p_x.push(tr.TransformPointX(0, 0));
-		arr_p_y.push(tr.TransformPointY(0, 0));
-		arr_p_x.push(tr.TransformPointX(this.originalObject.extX, 0));
-		arr_p_y.push(tr.TransformPointY(this.originalObject.extX, 0));
-		arr_p_x.push(tr.TransformPointX(this.originalObject.extX, this.originalObject.extY));
-		arr_p_y.push(tr.TransformPointY(this.originalObject.extX, this.originalObject.extY));
-		arr_p_x.push(tr.TransformPointX(0, this.originalObject.extY));
-		arr_p_y.push(tr.TransformPointY(0, this.originalObject.extY));
-
-		arr_p_x.push(boundsChecker.Bounds.min_x);
-		arr_p_x.push(boundsChecker.Bounds.max_x);
-		arr_p_y.push(boundsChecker.Bounds.min_y);
-		arr_p_y.push(boundsChecker.Bounds.max_y);
-
-		boundsChecker.Bounds.min_x = Math.min.apply(Math, arr_p_x);
-		boundsChecker.Bounds.max_x = Math.max.apply(Math, arr_p_x);
-		boundsChecker.Bounds.min_y = Math.min.apply(Math, arr_p_y);
-		boundsChecker.Bounds.max_y = Math.max.apply(Math, arr_p_y);
-		boundsChecker.Bounds.posX = this.originalObject.x;
-		boundsChecker.Bounds.posY = this.originalObject.y;
-		boundsChecker.Bounds.extX = this.originalObject.extX;
-		boundsChecker.Bounds.extY = this.originalObject.extY;
-		return boundsChecker.Bounds;
-	};
-
-	RotateTrackShapeImageInGroup.prototype.track = function (angle, e) {
-		this.bIsTracked = true;
-		this.angle = angle;
-		var hc = this.extX * 0.5;
-		var vc = this.extY * 0.5;
-		var ctrlKey = e.CtrlKey;
-		if (!ctrlKey) {
-			this.transform.Reset();
-			global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
-			if (this.flipH) {
-				global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
-			}
-			if (this.flipV) {
-				global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
-			}
-			global_MatrixTransformer.RotateRadAppend(this.transform, -angle);
-			global_MatrixTransformer.TranslateAppend(this.transform, this.x + hc, this.y + vc);
+		this.smartArtParent = this.originalObject.isObjectInSmartArt() ? this.originalObject.group.group.parent : null;
+		var brush;
+		if(originalObject.blipFill)
+		{
+			brush = new AscFormat.CUniFill();
+			brush.fill = originalObject.blipFill;
 		}
-		else {
-			var a = Math.PI / 8;
-			if (angle < 0) {
-				while (angle < 0) {
-					angle += 2 * Math.PI;
-				}
-			}
-			angle = (Math.round(angle / a) * a);
-			this.transform.Reset();
-			global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
-			if (this.flipH) {
-				global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
-			}
-			if (this.flipV) {
-				global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
-			}
-			global_MatrixTransformer.RotateRadAppend(this.transform, -angle);
-			global_MatrixTransformer.TranslateAppend(this.transform, this.x + hc, this.y + vc);
+		else
+		{
+			brush = originalObject.brush;
 		}
-		this.overlayObject.updateTransformMatrix(this.transform);
-	};
+		this.overlayObject = new OverlayObject(originalObject.getTrackGeometry(), originalObject.extX, originalObject.extY, brush, originalObject.pen, this.transform);
 
-	RotateTrackShapeImageInGroup.prototype.draw = function (overlay) {
-		this.overlayObject.draw(overlay);
-	};
-
-	RotateTrackShapeImageInGroup.prototype.trackEnd = function (bNotSelectSelf) {
-		if (!this.bIsTracked) {
-			return false;
-		}
-		if (Math.abs(this.angle - this.rot) < MIN_ANGLE) {
-			return false;
-		}
-		return this.angle;
-	};
-
-	RotateTrackShapeImageInGroup.prototype.getGeometry = function () {
-		return this.overlayObject.getGeometry();
-	};
-
-
-	function RotateTrackShapeImage(originalObject) {
-		AscFormat.ExecuteNoHistory(function () {
-
-			this.originalObject = originalObject;
-			this.transform = this.originalObject.transform.CreateDuplicate();
-			this.x = this.originalObject.x;
-			this.y = this.originalObject.y;
-			this.extX = this.originalObject.extX;
-			this.extY = this.originalObject.extY;
-			this.rot = this.originalObject.rot;
-			this.flipH = this.originalObject.flipH;
-			this.flipV = this.originalObject.flipV;
-			this.overlayObject = new OverlayObject(this.originalObject.getGeometry(), this.originalObject.extX, this.originalObject.extY, this.originalObject.brush, this.originalObject.pen, this.transform);
-			this.angle = 0;
-
-		}, this, []);
+		this.angle = originalObject.rot;
+		var full_flip_h = this.originalObject.getFullFlipH();
+		var full_flip_v = this.originalObject.getFullFlipV();
+		this.signum = !full_flip_h && !full_flip_v || full_flip_h && full_flip_v ? 1 : -1;
 
 	}
 
-	RotateTrackShapeImage.prototype.getBounds = function () {
-		var boundsChecker = new AscFormat.CSlideBoundsChecker();
-		this.draw(boundsChecker);
-		var tr = this.transform;
-		var arr_p_x = [];
-		var arr_p_y = [];
-		arr_p_x.push(tr.TransformPointX(0, 0));
-		arr_p_y.push(tr.TransformPointY(0, 0));
-		arr_p_x.push(tr.TransformPointX(this.originalObject.extX, 0));
-		arr_p_y.push(tr.TransformPointY(this.originalObject.extX, 0));
-		arr_p_x.push(tr.TransformPointX(this.originalObject.extX, this.originalObject.extY));
-		arr_p_y.push(tr.TransformPointY(this.originalObject.extX, this.originalObject.extY));
-		arr_p_x.push(tr.TransformPointX(0, this.originalObject.extY));
-		arr_p_y.push(tr.TransformPointY(0, this.originalObject.extY));
-
-		arr_p_x.push(boundsChecker.Bounds.min_x);
-		arr_p_x.push(boundsChecker.Bounds.max_x);
-		arr_p_y.push(boundsChecker.Bounds.min_y);
-		arr_p_y.push(boundsChecker.Bounds.max_y);
-
-		boundsChecker.Bounds.min_x = Math.min.apply(Math, arr_p_x);
-		boundsChecker.Bounds.max_x = Math.max.apply(Math, arr_p_x);
-		boundsChecker.Bounds.min_y = Math.min.apply(Math, arr_p_y);
-		boundsChecker.Bounds.max_y = Math.max.apply(Math, arr_p_y);
-		boundsChecker.Bounds.posX = this.originalObject.x;
-		boundsChecker.Bounds.posY = this.originalObject.y;
-		boundsChecker.Bounds.extX = this.originalObject.extX;
-		boundsChecker.Bounds.extY = this.originalObject.extY;
-		return boundsChecker.Bounds;
+	RotateTrackShapeImage.prototype.draw = function(overlay, transform)
+	{
+		if(AscFormat.isRealNumber(this.originalObject.selectStartPage) && overlay.SetCurrentPage)
+		{
+			overlay.SetCurrentPage(this.originalObject.selectStartPage);
+		}
+		this.overlayObject.draw(overlay, transform);
 	};
 
-	RotateTrackShapeImage.prototype.track = function (angle, e) {
+	RotateTrackShapeImage.prototype.track = function(angle, e)
+	{
 		this.bIsTracked = true;
-		this.angle = angle;
-		var hc = this.extX * 0.5;
-		var vc = this.extY * 0.5;
-		var ctrlKey = e.CtrlKey;
-		if (!ctrlKey) {
-			this.transform.Reset();
-			global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
-			if (this.flipH) {
-				global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
-			}
-			if (this.flipV) {
-				global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
-			}
-			global_MatrixTransformer.RotateRadAppend(this.transform, -angle);
-			global_MatrixTransformer.TranslateAppend(this.transform, this.x + hc, this.y + vc);
+		var new_rot = angle + this.originalObject.rot;
+		while(new_rot < 0)
+			new_rot += 2*Math.PI;
+		while(new_rot >= 2*Math.PI)
+			new_rot -= 2*Math.PI;
+
+		if(new_rot < MIN_ANGLE || new_rot > 2*Math.PI - MIN_ANGLE)
+			new_rot = 0;
+
+		if(Math.abs(new_rot-Math.PI*0.5) < MIN_ANGLE)
+			new_rot = Math.PI*0.5;
+
+		if(Math.abs(new_rot-Math.PI) < MIN_ANGLE)
+			new_rot = Math.PI;
+
+		if(Math.abs(new_rot-1.5*Math.PI) < MIN_ANGLE)
+			new_rot = 1.5*Math.PI;
+
+		if(e.ShiftKey)
+			new_rot = (Math.PI/12)*Math.floor(12*new_rot/(Math.PI));
+		this.angle = new_rot;
+
+		var hc, vc;
+		hc = this.originalObject.extX*0.5;
+		vc = this.originalObject.extY*0.5;
+		this.transform.Reset();
+		global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
+		if(this.originalObject.flipH)
+			global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
+		if(this.originalObject.flipV)
+			global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
+		global_MatrixTransformer.RotateRadAppend(this.transform, -this.angle);
+		global_MatrixTransformer.TranslateAppend(this.transform, this.originalObject.x + hc, this.originalObject.y + vc);
+		if(this.originalObject.group)
+		{
+			global_MatrixTransformer.MultiplyAppend(this.transform, this.originalObject.group.transform);
 		}
-		else {
-			var a = Math.PI / 8;
-			if (angle < 0) {
-				while (angle < 0) {
-					angle += 2 * Math.PI;
-				}
-			}
-			angle = (Math.round(angle / a) * a);
-			this.transform.Reset();
-			global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
-			if (this.flipH) {
-				global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
-			}
-			if (this.flipV) {
-				global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
-			}
-			global_MatrixTransformer.RotateRadAppend(this.transform, -angle);
-			global_MatrixTransformer.TranslateAppend(this.transform, this.x + hc, this.y + vc);
-		}
-		this.overlayObject.updateTransformMatrix(this.transform);
-	};
-
-	RotateTrackShapeImage.prototype.draw = function (overlay) {
-		this.overlayObject.draw(overlay);
-	};
-
-	RotateTrackShapeImage.prototype.trackEnd = function (bNotSelectSelf) {
-		if (!this.bIsTracked) {
-			return false;
-		}
-		this.originalObject.setRotate(this.angle, bNotSelectSelf);
-		return true;
-	};
-
-	RotateTrackShapeImage.prototype.getGeometry = function () {
-		return this.overlayObject.getGeometry();
-	};
-
-
-	function RotateTrackGroup(originalObject) {
-		AscFormat.ExecuteNoHistory(function () {
-			this.arrTrack = [];
-			for (var i = 0; i < originalObject.arrGraphicObjects.length; ++i) {
-				this.arrTrack[i] = new RotateTrackShapeImageInGroup(originalObject.arrGraphicObjects[i]);
-			}
-			this.originalObject = originalObject;
-			this.transform = this.originalObject.transform.CreateDuplicate();
-			this.x = this.originalObject.x;
-			this.y = this.originalObject.y;
-			this.extX = this.originalObject.extX;
-			this.extY = this.originalObject.extY;
-			this.rot = this.originalObject.rot;
-			this.flipH = this.originalObject.flipH;
-			this.flipV = this.originalObject.flipV;
-			this.angle = 0;
-		}, this, []);
-	}
-
-	RotateTrackGroup.prototype.getBounds = function () {
-
-		var bounds = this.arrTrack[0].getBounds();
-		var boundsChecker = new AscFormat.CSlideBoundsChecker();
-		boundsChecker.init(bounds.min_x, bounds.max_x, bounds.min_y, bounds.max_y, bounds.max_x - bounds.min_x, bounds.max_y - bounds.min_y);
-		for (var i = 1; i < this.arrTrack.length; ++i) {
-			this.arrTrack[i].draw(boundsChecker);
-		}
-		boundsChecker.Bounds.posX = this.originalObject.x;
-		boundsChecker.Bounds.posY = this.originalObject.y;
-		boundsChecker.Bounds.extX = this.originalObject.extX;
-		boundsChecker.Bounds.extY = this.originalObject.extY;
-		return boundsChecker.Bounds;
-	};
-
-	RotateTrackGroup.prototype.track = function (angle, e) {
-		this.bIsTracked = true;
-		this.angle = angle;
-		var hc = this.extX * 0.5;
-		var vc = this.extY * 0.5;
-		var ctrlKey = e.CtrlKey;
-		if (!ctrlKey) {
-			for (var i = 0; i < this.arrTrack.length; ++i) {
-				this.arrTrack[i].track(angle, e);
+		if (this.smartArtParent)
+		{
+			var parent_transform = this.smartArtParent.Get_ParentTextTransform && this.smartArtParent.Get_ParentTextTransform();
+			if(parent_transform)
+			{
+				global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
 			}
 		}
-		else {
-			var a = Math.PI / 8;
-			if (angle < 0) {
-				while (angle < 0) {
-					angle += 2 * Math.PI;
-				}
-			}
-			angle = (Math.round(angle / a) * a);
-			for (var i = 0; i < this.arrTrack.length; ++i) {
-				this.arrTrack[i].track(angle, e);
+		if(this.originalObject.parent)
+		{
+			var parent_transform = this.originalObject.parent.Get_ParentTextTransform && this.originalObject.parent.Get_ParentTextTransform();
+			if(parent_transform)
+			{
+				global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
 			}
 		}
+
 	};
 
-	RotateTrackGroup.prototype.draw = function (overlay) {
-		for (var i = 0; i < this.arrTrack.length; ++i) {
-			this.arrTrack[i].draw(overlay);
-		}
-	};
-
-	RotateTrackGroup.prototype.trackEnd = function (bNotSelectSelf) {
-		if (!this.bIsTracked) {
-			return false;
-		}
-		this.originalObject.setRotate(this.angle, bNotSelectSelf);
-		return true;
-	};
-
-	function Chart3dAdjustTrack(oChartSpace) {
-		if (!oChartSpace) {
+	RotateTrackShapeImage.prototype.trackEnd = function(bWord)
+	{
+		if(!this.bIsTracked)
+		{
 			return;
 		}
+		if(this.originalObject.animMotionTrack)
+		{
+			this.originalObject.updateAnimation(this.originalObject.x, this.originalObject.y,
+				this.originalObject.extX, this.originalObject.extY, this.angle);
+			return;
+		}
+		AscFormat.CheckSpPrXfrm(this.originalObject);
+		this.originalObject.changeRot(this.angle, bWord);
+	};
+
+	RotateTrackShapeImage.prototype.getBounds = function()
+	{
+		var boundsChecker = new  AscFormat.CSlideBoundsChecker();
+		var tr = null;
+		if(this.originalObject && this.originalObject.parent)
+		{
+			var parent_transform = this.originalObject.parent.Get_ParentTextTransform && this.originalObject.parent.Get_ParentTextTransform();
+			if(parent_transform)
+			{
+				tr = this.transform.CreateDublicate();
+				global_MatrixTransformer.MultiplyAppend(tr, global_MatrixTransformer.Invert(parent_transform));
+			}
+
+		}
+		this.draw(boundsChecker, tr ? tr : null);
+		tr = this.transform;
+		var arr_p_x = [];
+		var arr_p_y = [];
+		arr_p_x.push(tr.TransformPointX(0,0));
+		arr_p_y.push(tr.TransformPointY(0,0));
+		arr_p_x.push(tr.TransformPointX(this.originalObject.extX,0));
+		arr_p_y.push(tr.TransformPointY(this.originalObject.extX,0));
+		arr_p_x.push(tr.TransformPointX(this.originalObject.extX,this.originalObject.extY));
+		arr_p_y.push(tr.TransformPointY(this.originalObject.extX,this.originalObject.extY));
+		arr_p_x.push(tr.TransformPointX(0,this.originalObject.extY));
+		arr_p_y.push(tr.TransformPointY(0,this.originalObject.extY));
+
+		arr_p_x.push(boundsChecker.Bounds.min_x);
+		arr_p_x.push(boundsChecker.Bounds.max_x);
+		arr_p_y.push(boundsChecker.Bounds.min_y);
+		arr_p_y.push(boundsChecker.Bounds.max_y);
+
+		boundsChecker.Bounds.min_x = Math.min.apply(Math, arr_p_x);
+		boundsChecker.Bounds.max_x = Math.max.apply(Math, arr_p_x);
+		boundsChecker.Bounds.min_y = Math.min.apply(Math, arr_p_y);
+		boundsChecker.Bounds.max_y = Math.max.apply(Math, arr_p_y);
+
+		boundsChecker.Bounds.posX = this.originalObject.x;
+		boundsChecker.Bounds.posY = this.originalObject.y;
+		boundsChecker.Bounds.extX = this.originalObject.extX;
+		boundsChecker.Bounds.extY = this.originalObject.extY;
+		return boundsChecker.Bounds;
+	}
+	RotateTrackShapeImage.prototype.checkDrawingPartWithHistory = function () {
+		if (this.originalObject.checkDrawingPartWithHistory) {
+			const newObject = this.originalObject.checkDrawingPartWithHistory();
+			if (newObject) {
+				this.originalObject = newObject;
+			}
+		}
+	};
+
+	function RotateTrackGroup(originalObject)
+	{
+		this.bIsTracked = false;
+		this.originalObject = originalObject;
+		this.transform = new CMatrix();
+
+		this.overlayObjects = [];
 
 
+		this.arrTransforms = [];
+		this.arrTransforms2 = [];
+		var arr_graphic_objects = originalObject.getArrGraphicObjects();
+		var group_invert_transform = originalObject.getInvertTransform();
+		if(group_invert_transform)
+		{
+			for(var i = 0; i < arr_graphic_objects.length; ++i)
+			{
+				var gr_obj_transform_copy = arr_graphic_objects[i].getTransformMatrix().CreateDublicate();
+				global_MatrixTransformer.MultiplyAppend(gr_obj_transform_copy, group_invert_transform);
+				this.arrTransforms2[i] = gr_obj_transform_copy;
+				this.overlayObjects[i] = new OverlayObject(arr_graphic_objects[i].getTrackGeometry(), arr_graphic_objects[i].extX, arr_graphic_objects[i].extY,
+					arr_graphic_objects[i].brush,  arr_graphic_objects[i].pen, new CMatrix());
+			}
+		}
+
+
+		this.angle = originalObject.rot;
+
+
+	}
+
+	RotateTrackGroup.prototype.draw = function(overlay)
+	{
+		if(AscFormat.isRealNumber(this.originalObject.selectStartPage) && overlay.SetCurrentPage)
+		{
+			overlay.SetCurrentPage(this.originalObject.selectStartPage);
+		}
+		for(var i = 0; i < this.overlayObjects.length; ++i)
+		{
+			this.overlayObjects[i].draw(overlay);
+		}
+	};
+
+	RotateTrackGroup.prototype.getBounds = function()
+	{
+		var boundsChecker = new  AscFormat.CSlideBoundsChecker();
+		this.draw(boundsChecker);
+		var tr = this.transform;
+		var arr_p_x = [];
+		var arr_p_y = [];
+		arr_p_x.push(tr.TransformPointX(0,0));
+		arr_p_y.push(tr.TransformPointY(0,0));
+		arr_p_x.push(tr.TransformPointX(this.originalObject.extX,0));
+		arr_p_y.push(tr.TransformPointY(this.originalObject.extX,0));
+		arr_p_x.push(tr.TransformPointX(this.originalObject.extX,this.originalObject.extY));
+		arr_p_y.push(tr.TransformPointY(this.originalObject.extX,this.originalObject.extY));
+		arr_p_x.push(tr.TransformPointX(0,this.originalObject.extY));
+		arr_p_y.push(tr.TransformPointY(0,this.originalObject.extY));
+
+		arr_p_x.push(boundsChecker.Bounds.min_x);
+		arr_p_x.push(boundsChecker.Bounds.max_x);
+		arr_p_y.push(boundsChecker.Bounds.min_y);
+		arr_p_y.push(boundsChecker.Bounds.max_y);
+
+		boundsChecker.Bounds.min_x = Math.min.apply(Math, arr_p_x);
+		boundsChecker.Bounds.max_x = Math.max.apply(Math, arr_p_x);
+		boundsChecker.Bounds.min_y = Math.min.apply(Math, arr_p_y);
+		boundsChecker.Bounds.max_y = Math.max.apply(Math, arr_p_y);
+		boundsChecker.Bounds.posX = this.originalObject.x;
+		boundsChecker.Bounds.posY = this.originalObject.y;
+		boundsChecker.Bounds.extX = this.originalObject.extX;
+		boundsChecker.Bounds.extY = this.originalObject.extY;
+		return boundsChecker.Bounds;
+	};
+
+	RotateTrackGroup.prototype.track = function(angle, e)
+	{
+		this.bIsTracked = true;
+		var new_rot = angle + this.originalObject.rot;
+		while(new_rot < 0)
+			new_rot += 2*Math.PI;
+		while(new_rot >= 2*Math.PI)
+			new_rot -= 2*Math.PI;
+
+		if(new_rot < MIN_ANGLE || new_rot > 2*Math.PI - MIN_ANGLE)
+			new_rot = 0;
+
+		if(Math.abs(new_rot-Math.PI*0.5) < MIN_ANGLE)
+			new_rot = Math.PI*0.5;
+
+		if(Math.abs(new_rot-Math.PI) < MIN_ANGLE)
+			new_rot = Math.PI;
+
+		if(Math.abs(new_rot-1.5*Math.PI) < MIN_ANGLE)
+			new_rot = 1.5*Math.PI;
+
+		if(e.ShiftKey)
+			new_rot = (Math.PI/12)*Math.floor(12*new_rot/(Math.PI));
+		this.angle = new_rot;
+
+		var hc, vc;
+		hc = this.originalObject.extX*0.5;
+		vc = this.originalObject.extY*0.5;
+		this.transform.Reset();
+		global_MatrixTransformer.TranslateAppend(this.transform, -hc, -vc);
+		if(this.originalObject.flipH)
+			global_MatrixTransformer.ScaleAppend(this.transform, -1, 1);
+		if(this.originalObject.flipV)
+			global_MatrixTransformer.ScaleAppend(this.transform, 1, -1);
+		global_MatrixTransformer.RotateRadAppend(this.transform, -this.angle);
+		global_MatrixTransformer.TranslateAppend(this.transform, this.originalObject.x + hc, this.originalObject.y + vc);
+		if(this.originalObject.parent)
+		{
+			var parent_transform = this.originalObject.parent.Get_ParentTextTransform && this.originalObject.parent.Get_ParentTextTransform();
+			if(parent_transform)
+			{
+				global_MatrixTransformer.MultiplyAppend(this.transform, parent_transform);
+			}
+		}
+		for(var i = 0; i < this.overlayObjects.length; ++i)
+		{
+			var new_transform = this.arrTransforms2[i].CreateDublicate();
+			global_MatrixTransformer.MultiplyAppend(new_transform, this.transform);
+			this.overlayObjects[i].updateTransformMatrix(new_transform);
+		}
+	};
+
+	RotateTrackGroup.prototype.trackEnd = function(bWord)
+	{
+		if(!this.bIsTracked){
+			return;
+		}
+		var x = this.originalObject.x;
+		var y = this.originalObject.y;
+		if(bWord){
+			this.originalObject.x = 0;
+			this.originalObject.y = 0;
+		}
+		AscFormat.CheckSpPrXfrm3(this.originalObject);
+		if(bWord){
+			this.originalObject.x = x;
+			this.originalObject.y = y;
+		}
+		this.originalObject.spPr.xfrm.setRot(this.angle);
+	}
+	RotateTrackGroup.prototype.checkDrawingPartWithHistory = function () {
+		if (this.originalObject.checkDrawingPartWithHistory) {
+			this.originalObject.checkDrawingPartWithHistory()
+		}
+	};
+
+	function Chart3dAdjustTrack(oChartSpace, numHandle, startX, startY)
+	{
+		this.bIsTracked = false;
 		this.chartSpace = oChartSpace;
-		this.view3D = oChartSpace.chart && oChartSpace.chart.getView3d();
-		if (this.view3D) {
-			this.view3D = this.view3D.createDuplicate();
-		}
-		else {
-			this.view3D = new AscFormat.CView3d();
-		}
-		this.startX = 0;
-		this.startY = 0;
-		var oChartSizes = oChartSpace.getChartSizes(true);
-		this.chartSizes = oChartSizes;
-		var oProcessor3D = oChartSpace.chartObj.processor3D;
-		this.processor3D = oProcessor3D;
-		if (!oProcessor3D) {
-			return;
-		}
-		var point3D = oProcessor3D.convertAndTurnPoint((oChartSizes.startX + oChartSizes.w / 2) * oProcessor3D.calcProp.pxToMm, (oChartSizes.startY + oChartSizes.h / 2) * oProcessor3D.calcProp.pxToMm, oProcessor3D.processor3DCalc.calculateZPositionCatAxis()[1]);
 
-		this.depthPerspective = oProcessor3D.processor3DCalc.calculateZPositionCatAxis()[1];
 
-		this.centerPoint = point3D;
+
 		this.originalObject = oChartSpace;
-		this.geometry = AscFormat.ExecuteNoHistory(function () {
-			var oGeometry = new AscFormat.Geometry();
-			return oGeometry;
-		}, this, []);
-		this.bChartTrack = AscCommon.c_oAscChartTypeSettings.pie !== oChartSpace.getChartType();
-		if (!this.bChartTrack) {
-			this.objectToDraw = new OverlayObject(null, this.chartSpace.extX, this.chartSpace.extY, null, null, this.chartSpace.transform);
-			var oApi = Asc.editor || editor;
-			var oBrPen = AscFormat.CreatePenBrushForChartTrack();
-			this.objectToDraw2 = new OverlayObject(this.geometry, this.chartSpace.extX, this.chartSpace.extY, null, oBrPen.pen, this.chartSpace.transform);
-			this.calculateGeometry();
+		this.originalShape = oChartSpace;
+
+		this.transform = this.originalObject.transform;
+		this.processor3D = oChartSpace.chartObj.processor3D;
+		this.depthPerspective = oChartSpace.chartObj.processor3D.depthPerspective;
+
+		this.startX = oChartSpace.invertTransform.TransformPointX(startX, startY);
+		this.startY = oChartSpace.invertTransform.TransformPointY(startX, startY);
+
+		this.bChartTrack = false;
+		var oChartObj = oChartSpace.chart.plotArea.charts[0];
+		if(oChartObj){
+			var nPointsCount = 0;
+			if(oChartObj.getObjectType() === AscDFH.historyitem_type_PieChart || oChartObj.getObjectType() === AscDFH.historyitem_type_PieChart){
+				if(oChartObj.series[0]){
+					nPointsCount = oChartObj.series[0].getNumPts().length;
+				}
+			}
+			else{
+				for(var i = 0; i < oChartObj.series.length; ++i){
+					nPointsCount += oChartObj.series[i].getNumPts().length;
+				}
+			}
+
+
+			if(nPointsCount < 30){
+				this.bChartTrack = true;
+			}
 		}
 
-		/*this.draw = function(overlay, transform){
 
-		 if(AscFormat.isRealNumber(this.chartSpace.selectStartPage) && overlay.SetCurrentPage)
-		 {
-			 overlay.SetCurrentPage(this.chartSpace.selectStartPage);
-		 }
-		 var dOldAlpha = null;
-		 var oGraphics = overlay.Graphics ? overlay.Graphics : overlay;
-		 if(AscFormat.isRealNumber(oGraphics.globalAlpha) && oGraphics.put_GlobalAlpha){
+		AscFormat.ExecuteNoHistory(function(){
+			this.view3D = oChartSpace.chart.getView3d();
+			this.chartSizes = this.chartSpace.getChartSizes();
 
-			 var graphics = oGraphics;
-			 graphics.SaveGrState();
-			 graphics.SetIntegerGrid(false);
-			 graphics.transform3(oChartSpace.transform, false);
-			 oChartSpace.chartObj.draw(oChartSpace, graphics);
-			 graphics.RestoreGrState();
-		 }
-	 };*/
+			this.cX = this.chartSizes.startX + this.chartSizes.w/2;
+			this.cY = this.chartSizes.startY + this.chartSizes.h/2;
+			this.geometry = new AscFormat.Geometry();
+			var oPen = new AscFormat.CLn();
+			oPen.w = 15000;
+			oPen.Fill = AscFormat.CreateSolidFillRGBA(255, 255, 255, 255);
+			this.objectToDraw = new OverlayObject(this.geometry, oChartSpace.extX, oChartSpace.extY, null, oPen, oChartSpace.transform );
 
-		this.draw = function (overlay, transform) {
+			var oPen2 = new AscFormat.CLn();
+			oPen2.w = 15000;
+			oPen2.Fill = AscFormat.CreateSolidFillRGBA(0x61, 0x9e, 0xde, 255);
+			oPen2.prstDash = 0;
+			this.objectToDraw2 = new OverlayObject(this.geometry, oChartSpace.extX, oChartSpace.extY, null, oPen2, oChartSpace.transform );
 
-			if (this.bChartTrack) {
-				if (AscFormat.isRealNumber(this.chartSpace.selectStartPage) && overlay.SetCurrentPage) {
+
+			var pxToMM = this.chartSpace.chartObj.calcProp.pxToMM;
+			var oChSz = this.chartSizes;
+			this.centerPoint = this.processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w/2)*pxToMM, (oChSz.startY + oChSz.h/2)*pxToMM, this.depthPerspective/2);
+		}, this, []);
+
+		
+		this.draw = function(overlay, transform)
+		{
+
+			if(this.bChartTrack){
+				if(AscFormat.isRealNumber(this.chartSpace.selectStartPage) && overlay.SetCurrentPage)
+				{
 					overlay.SetCurrentPage(this.chartSpace.selectStartPage);
 				}
 				var dOldAlpha = null;
 				var oGraphics = overlay.Graphics ? overlay.Graphics : overlay;
-				if (AscFormat.isRealNumber(oGraphics.globalAlpha) && oGraphics.put_GlobalAlpha) {
+				if(AscFormat.isRealNumber(oGraphics.globalAlpha) && oGraphics.put_GlobalAlpha){
 
 					var graphics = oGraphics;
 					graphics.SaveGrState();
@@ -799,19 +830,20 @@
 					graphics.RestoreGrState();
 				}
 			}
-			else {
-				if (AscFormat.isRealNumber(this.chartSpace.selectStartPage) && overlay.SetCurrentPage) {
+			else{
+				if(AscFormat.isRealNumber(this.chartSpace.selectStartPage) && overlay.SetCurrentPage)
+				{
 					overlay.SetCurrentPage(this.chartSpace.selectStartPage);
 				}
 				var dOldAlpha = null;
 				var oGraphics = overlay.Graphics ? overlay.Graphics : overlay;
-				if (AscFormat.isRealNumber(oGraphics.globalAlpha) && oGraphics.put_GlobalAlpha) {
+				if(AscFormat.isRealNumber(oGraphics.globalAlpha) && oGraphics.put_GlobalAlpha){
 					dOldAlpha = oGraphics.globalAlpha;
 					oGraphics.put_GlobalAlpha(false, 1);
 				}
 				this.objectToDraw.draw(overlay, transform);
 				this.objectToDraw2.draw(overlay, transform);
-				if (AscFormat.isRealNumber(dOldAlpha) && oGraphics.put_GlobalAlpha) {
+				if(AscFormat.isRealNumber(dOldAlpha) && oGraphics.put_GlobalAlpha){
 					oGraphics.put_GlobalAlpha(true, dOldAlpha);
 				}
 			}
@@ -819,73 +851,76 @@
 		};
 
 
-		this.calculateGeometry = function () {
-			AscFormat.ExecuteNoHistory(function () {
+		this.calculateGeometry = function()
+		{
+			AscFormat.ExecuteNoHistory(function(){
 
 				this.geometry.pathLst.length = 0;
 				var path = new AscFormat.Path();
 				path.pathW = this.chartSpace.extX;
 				path.pathH = this.chartSpace.extY;
-				path.stroke = true;
+				path.stroke  = true;
 				var pxToMM = this.chartSpace.chartObj.calcProp.pxToMM;
 				this.geometry.pathLst.push(path);
 				var oChSz = this.chartSizes;
 				var processor3D = this.chartSpace.chartObj.processor3D;
 
 
-				var centerPoint2 = this.processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w / 2) * pxToMM, (oChSz.startY + oChSz.h / 2) * pxToMM, this.depthPerspective / 2);
 
-				var deltaX = (this.centerPoint.x - centerPoint2.x) / pxToMM;
-				var deltaY = (this.centerPoint.y - centerPoint2.y) / pxToMM;
+				var centerPoint2 = this.processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w/2)*pxToMM, (oChSz.startY + oChSz.h/2)*pxToMM, this.depthPerspective/2);
 
-				var point1 = processor3D.convertAndTurnPoint(oChSz.startX * pxToMM, oChSz.startY * pxToMM, 0);
-				path.moveTo(point1.x / pxToMM + deltaX, point1.y / pxToMM + deltaY);
-				var point2 = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) * pxToMM, oChSz.startY * pxToMM, 0);
-				path.lnTo(point2.x / pxToMM + deltaX, point2.y / pxToMM + deltaY);
-				var point3 = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) * pxToMM, (oChSz.startY + oChSz.h) * pxToMM, 0);
-				path.lnTo(point3.x / pxToMM + deltaX, point3.y / pxToMM + deltaY);
-				var point4 = processor3D.convertAndTurnPoint((oChSz.startX) * pxToMM, (oChSz.startY + oChSz.h) * pxToMM, 0);
-				path.lnTo(point4.x / pxToMM + deltaX, point4.y / pxToMM + deltaY);
+				var deltaX = (this.centerPoint.x - centerPoint2.x)/pxToMM;
+				var deltaY = (this.centerPoint.y - centerPoint2.y)/pxToMM;
+
+				var point1 = processor3D.convertAndTurnPoint(oChSz.startX*pxToMM, oChSz.startY*pxToMM, 0);
+				path.moveTo(point1.x/pxToMM + deltaX, point1.y/pxToMM + deltaY);
+				var point2 = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) *pxToMM, oChSz.startY*pxToMM, 0);
+				path.lnTo(point2.x/pxToMM + deltaX, point2.y/pxToMM + deltaY);
+				var point3 = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w)*pxToMM, (oChSz.startY + oChSz.h)*pxToMM, 0);
+				path.lnTo(point3.x/pxToMM + deltaX, point3.y/pxToMM + deltaY);
+				var point4 = processor3D.convertAndTurnPoint((oChSz.startX)*pxToMM, (oChSz.startY + oChSz.h)*pxToMM, 0);
+				path.lnTo(point4.x/pxToMM + deltaX, point4.y/pxToMM + deltaY);
 				path.close();
 
-				var point1d = processor3D.convertAndTurnPoint(oChSz.startX * pxToMM, oChSz.startY * pxToMM, this.depthPerspective);
-				path.moveTo(point1d.x / pxToMM + deltaX, point1d.y / pxToMM + deltaY);
-				var point2d = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) * pxToMM, oChSz.startY * pxToMM, this.depthPerspective);
-				path.lnTo(point2d.x / pxToMM + deltaX, point2d.y / pxToMM + deltaY);
-				var point3d = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) * pxToMM, (oChSz.startY + oChSz.h) * pxToMM, this.depthPerspective);
-				path.lnTo(point3d.x / pxToMM + deltaX, point3d.y / pxToMM + deltaY);
-				var point4d = processor3D.convertAndTurnPoint((oChSz.startX) * pxToMM, (oChSz.startY + oChSz.h) * pxToMM, this.depthPerspective);
-				path.lnTo(point4d.x / pxToMM + deltaX, point4d.y / pxToMM + deltaY);
+				var point1d = processor3D.convertAndTurnPoint(oChSz.startX*pxToMM, oChSz.startY*pxToMM, this.depthPerspective);
+				path.moveTo(point1d.x/pxToMM + deltaX, point1d.y/pxToMM + deltaY);
+				var point2d = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w) *pxToMM, oChSz.startY*pxToMM, this.depthPerspective);
+				path.lnTo(point2d.x/pxToMM + deltaX, point2d.y/pxToMM + deltaY);
+				var point3d = processor3D.convertAndTurnPoint((oChSz.startX + oChSz.w)*pxToMM, (oChSz.startY + oChSz.h)*pxToMM, this.depthPerspective);
+				path.lnTo(point3d.x/pxToMM + deltaX, point3d.y/pxToMM + deltaY);
+				var point4d = processor3D.convertAndTurnPoint((oChSz.startX)*pxToMM, (oChSz.startY + oChSz.h)*pxToMM, this.depthPerspective);
+				path.lnTo(point4d.x/pxToMM + deltaX, point4d.y/pxToMM + deltaY);
 				path.close();
 
-				path.moveTo(point1.x / pxToMM + deltaX, point1.y / pxToMM + deltaY);
-				path.lnTo(point1d.x / pxToMM + deltaX, point1d.y / pxToMM + deltaY);
-				path.moveTo(point2.x / pxToMM + deltaX, point2.y / pxToMM + deltaY);
-				path.lnTo(point2d.x / pxToMM + deltaX, point2d.y / pxToMM + deltaY);
-				path.moveTo(point3.x / pxToMM + deltaX, point3.y / pxToMM + deltaY);
-				path.lnTo(point3d.x / pxToMM + deltaX, point3d.y / pxToMM + deltaY);
-				path.moveTo(point4.x / pxToMM + deltaX, point4.y / pxToMM + deltaY);
-				path.lnTo(point4d.x / pxToMM + deltaX, point4d.y / pxToMM + deltaY);
+				path.moveTo(point1.x/pxToMM + deltaX, point1.y/pxToMM + deltaY);
+				path.lnTo(point1d.x/pxToMM + deltaX, point1d.y/pxToMM + deltaY);
+				path.moveTo(point2.x/pxToMM + deltaX, point2.y/pxToMM + deltaY);
+				path.lnTo(point2d.x/pxToMM + deltaX, point2d.y/pxToMM + deltaY);
+				path.moveTo(point3.x/pxToMM + deltaX, point3.y/pxToMM + deltaY);
+				path.lnTo(point3d.x/pxToMM + deltaX, point3d.y/pxToMM + deltaY);
+				path.moveTo(point4.x/pxToMM + deltaX, point4.y/pxToMM + deltaY);
+				path.lnTo(point4d.x/pxToMM + deltaX, point4d.y/pxToMM + deltaY);
 
 				this.geometry.Recalculate(this.chartSpace.extX, this.chartSpace.extY);
 			}, this, []);
 
 		};
 
-		this.getBounds = function () {
-			var boundsChecker = new AscFormat.CSlideBoundsChecker();
+		this.getBounds = function()
+		{
+			var boundsChecker = new  AscFormat.CSlideBoundsChecker();
 			//this.draw(boundsChecker);
 			var tr = this.transform;
 			var arr_p_x = [];
 			var arr_p_y = [];
-			arr_p_x.push(tr.TransformPointX(0, 0));
-			arr_p_y.push(tr.TransformPointY(0, 0));
-			arr_p_x.push(tr.TransformPointX(this.originalObject.extX, 0));
-			arr_p_y.push(tr.TransformPointY(this.originalObject.extX, 0));
-			arr_p_x.push(tr.TransformPointX(this.originalObject.extX, this.originalObject.extY));
-			arr_p_y.push(tr.TransformPointY(this.originalObject.extX, this.originalObject.extY));
-			arr_p_x.push(tr.TransformPointX(0, this.originalObject.extY));
-			arr_p_y.push(tr.TransformPointY(0, this.originalObject.extY));
+			arr_p_x.push(tr.TransformPointX(0,0));
+			arr_p_y.push(tr.TransformPointY(0,0));
+			arr_p_x.push(tr.TransformPointX(this.originalObject.extX,0));
+			arr_p_y.push(tr.TransformPointY(this.originalObject.extX,0));
+			arr_p_x.push(tr.TransformPointX(this.originalObject.extX,this.originalObject.extY));
+			arr_p_y.push(tr.TransformPointY(this.originalObject.extX,this.originalObject.extY));
+			arr_p_x.push(tr.TransformPointX(0,this.originalObject.extY));
+			arr_p_y.push(tr.TransformPointY(0,this.originalObject.extY));
 
 			arr_p_x.push(boundsChecker.Bounds.min_x);
 			arr_p_x.push(boundsChecker.Bounds.max_x);
@@ -903,7 +938,8 @@
 			return boundsChecker.Bounds;
 		};
 
-		this.track = function (x, y) {
+		this.track = function(x, y)
+		{
 			this.bIsTracked = true;
 
 			var tx = this.chartSpace.invertTransform.TransformPointX(x, y);
@@ -911,51 +947,51 @@
 
 			var _view3d = oChartSpace.chart.getView3d();
 			var StratRotY = _view3d && _view3d.rotY ? _view3d.rotY : 0;
-			var deltaAng = -90 * (tx - this.startX) / (this.chartSizes.w / 2);
+			var deltaAng = -90*(tx - this.startX)/(this.chartSizes.w/2);
 			this.view3D.rotY = StratRotY + deltaAng;
 
-			if (_view3d.getRAngAx()) {
-				if (this.view3D.rotY < 0) {
+			if(_view3d.getRAngAx()){
+				if(this.view3D.rotY < 0){
 					this.view3D.rotY = 0;
 				}
-				if (this.view3D.rotY > 90) {
+				if(this.view3D.rotY > 90){
 					this.view3D.rotY = 90;
 				}
 			}
-			while (this.view3D.rotY < 0) {
+			while(this.view3D.rotY < 0){
 				this.view3D.rotY += 360;
 			}
-			while (this.view3D.rotY >= 360) {
+			while(this.view3D.rotY >= 360){
 				this.view3D.rotY -= 360;
 			}
 
 			var StratRotX = _view3d && _view3d.rotX ? _view3d.rotX : 0;
-			deltaAng = 90 * (ty - this.startY) / (this.chartSizes.h / 2);
+			deltaAng = 90*(ty - this.startY)/(this.chartSizes.h/2);
 			this.view3D.rotX = StratRotX + deltaAng;
 
-			if (oChartSpace.chart.plotArea && oChartSpace.chart.plotArea.charts[0] && oChartSpace.chart.plotArea.charts[0].getObjectType() === AscDFH.historyitem_type_PieChart) {
-				if (this.view3D.rotX < 0) {
+			if(oChartSpace.chart.plotArea && oChartSpace.chart.plotArea.charts[0] && oChartSpace.chart.plotArea.charts[0].getObjectType() === AscDFH.historyitem_type_PieChart){
+				if(this.view3D.rotX < 0){
 					this.view3D.rotX = 0;
 				}
 			}
 
-			if (this.view3D.rotX < -90) {
+			if(this.view3D.rotX < -90){
 				this.view3D.rotX = -90;
 			}
 
-			if (this.view3D.rotX > 90) {
+			if(this.view3D.rotX > 90){
 				this.view3D.rotX = 90;
 			}
 
 
 			var OldView = oChartSpace.chart.view3D;
-			if (this.bChartTrack) {
+			if(this.bChartTrack){
 				oChartSpace.chart.view3D = this.view3D;
 				oChartSpace.recalcInfo.recalculateChart = true;
 				oChartSpace.recalculate();
 				oChartSpace.chart.view3D = OldView;
 			}
-			else {
+			else{
 				oChartSpace.chart.view3D = this.view3D;
 				oChartSpace.chartObj.recalculateOnly3dProps(oChartSpace);
 				oChartSpace.chart.view3D = OldView;
@@ -963,16 +999,15 @@
 			}
 		};
 
-		this.trackEnd = function () {
-			if (!this.bIsTracked) {
+		this.trackEnd = function()
+		{
+			if(!this.bIsTracked){
 				return;
 			}
 			oChartSpace.changeView3d(this.view3D.createDuplicate());
 		}
-		this.checkDrawingPartWithHistory = function () {
-		};
+		this.checkDrawingPartWithHistory = function () {};
 	}
-
 	//--------------------------------------------------------export----------------------------------------------------
 	window['AscFormat'] = window['AscFormat'] || {};
 	window['AscFormat'].OverlayObject = OverlayObject;

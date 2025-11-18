@@ -265,6 +265,7 @@ AscCommon.CShapeDrawer.prototype.ds = function(saveToPdfMode) {
 	}
 	this.Graphics.p_color(R, G, B, alpha);
 
+
 	if (this.IsRectShape && this.Graphics.AddSmartRect !== undefined) {
 		if (this.Shape.extX != null) {
 			this.Graphics.AddSmartRect(0, 0, this.Shape.extX, this.Shape.extY, this.StrokeWidth);
@@ -279,7 +280,7 @@ AscCommon.CShapeDrawer.prototype.ds = function(saveToPdfMode) {
 		this.Graphics.m_oContext.lineJoin = this.OldLineJoin;
 	}
 
-	if (this.IsCurrentPathCanArrows === true) {
+	if (this.isArrowPresent()) {
 		this.drawArrows(false);
 	}
 };
