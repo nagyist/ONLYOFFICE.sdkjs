@@ -23695,6 +23695,17 @@
 	ApiFormBase.prototype.Delete = function(keepContent)
 	{
 		return executeNoFormLockCheck(function(){
+			
+			if (keepContent && (this instanceof ApiComplexForm))
+			{
+				if (!this._canBeDeleted())
+					return false;
+				
+				this.Sdt.GetAllContentControls().forEach(function(cc){
+					cc.RemoveContentControlWrapper();
+				});
+			}
+			
 			return ApiInlineLvlSdt.prototype.Delete.call(this, keepContent);
 		}, this);
 	};
