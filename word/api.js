@@ -7318,8 +7318,6 @@ background-repeat: no-repeat;\
 
 			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_AddComment, undefined, undefined, AscCommentData);
 			var oComment = this.WordControl.m_oLogicDocument.AddComment(CommentData, AscCommentData.asc_getDocumentFlag());
-			if (oComment)
-				this.sync_AddComment(oComment.GetId(), CommentData);
 
 			this.WordControl.m_oLogicDocument.FinalizeAction();
 

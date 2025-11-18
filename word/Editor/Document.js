@@ -13894,6 +13894,9 @@ CDocument.prototype.AddComment = function(CommentData, isForceGlobal)
 		this.UpdateInterface();
 		this.UpdateSelection();
 	}
+	
+	if (Comment)
+		this.Api.sync_AddComment(Comment.GetId(), CommentData);
 
 	return Comment;
 };
