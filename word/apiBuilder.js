@@ -23696,17 +23696,26 @@
 	{
 		return executeNoFormLockCheck(function(){
 			
-			if (keepContent && (this instanceof ApiComplexForm))
+			let form = this.Sdt;
+			let mainForm = form.GetMainForm();
+			if (mainForm && mainForm.IsLabeledCheckBox())
+				form = mainForm;
+			
+			if (keepContent && form.IsComplexForm())
 			{
 				if (!this._canBeDeleted())
 					return false;
 				
-				this.Sdt.GetAllContentControls().forEach(function(cc){
+				form.GetAllContentControls().forEach(function(cc){
 					cc.RemoveContentControlWrapper();
 				});
+				
+				form.RemoveContentControlWrapper();
 			}
-			
-			return ApiInlineLvlSdt.prototype.Delete.call(this, keepContent);
+			else
+			{
+				return ApiInlineLvlSdt.prototype.Delete.call(this, keepContent);
+			}
 		}, this);
 	};
 	
