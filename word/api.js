@@ -11117,61 +11117,64 @@ background-repeat: no-repeat;\
 	};
 	asc_docs_api.prototype.asc_SelectContentControlListItem = function(sValue, sId)
 	{
-		var oLogicDocument = this.private_GetLogicDocument();
-		if (!oLogicDocument)
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
 			return;
-
-		var oContentControl = oLogicDocument.GetContentControl(sId);
-		if (!oContentControl || (!oContentControl.IsComboBox() && !oContentControl.IsDropDownList()))
-			return;
-
-		oContentControl.SkipSpecialContentControlLock(true);
-
-		if (!oContentControl.CanBeEdited())
+		
+		AscFonts.FontPickerByCharacter.checkText(sValue, this, function()
 		{
-			oContentControl.SkipSpecialContentControlLock(false);
-			return;
-		}
-
-		var isLocked = false;
-		if (c_oAscSdtLevelType.Block === oContentControl.GetContentControlType())
-		{
-			isLocked = oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {
-				Type      : AscCommon.changestype_2_ElementsArray_and_Type,
-				Elements  : [oContentControl],
-				CheckType : AscCommon.changestype_Paragraph_AddText
-			}, false, oLogicDocument.IsFormFieldEditing());
-		}
-		else if (c_oAscSdtLevelType.Inline === oContentControl.GetContentControlType())
-		{
-			var oParagraph = oContentControl.GetParagraph();
-			if (oParagraph)
+			var oContentControl = logicDocument.GetContentControl(sId);
+			if (!oContentControl || (!oContentControl.IsComboBox() && !oContentControl.IsDropDownList()))
+				return;
+			
+			oContentControl.SkipSpecialContentControlLock(true);
+			
+			if (!oContentControl.CanBeEdited())
 			{
-				var oState = oLogicDocument.SaveDocumentState();
-				oContentControl.SelectContentControl();
-
-				isLocked = oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {
-					Type      : AscCommon.changestype_2_ElementsArray_and_Type,
-					Elements  : [oParagraph],
-					CheckType : AscCommon.changestype_Paragraph_AddText
-				}, false, oLogicDocument.IsFormFieldEditing());
-
-				oLogicDocument.LoadDocumentState(oState);
+				oContentControl.SkipSpecialContentControlLock(false);
+				return;
 			}
-		}
-		oContentControl.SkipSpecialContentControlLock(false);
-
-		if (!isLocked)
-		{
-			oLogicDocument.StartAction(AscDFH.historydescription_Document_SelectContentControlListItem);
-			oContentControl.SelectListItem(sValue);
-			oLogicDocument.RemoveSelection();
-			oContentControl.MoveCursorToContentControl(true);
-			oLogicDocument.Recalculate();
-			oLogicDocument.UpdateInterface();
-			oLogicDocument.UpdateTracks();
-			oLogicDocument.FinalizeAction();
-		}
+			
+			var isLocked = false;
+			if (c_oAscSdtLevelType.Block === oContentControl.GetContentControlType())
+			{
+				isLocked = logicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {
+					Type      : AscCommon.changestype_2_ElementsArray_and_Type,
+					Elements  : [oContentControl],
+					CheckType : AscCommon.changestype_Paragraph_AddText
+				}, false, logicDocument.IsFormFieldEditing());
+			}
+			else if (c_oAscSdtLevelType.Inline === oContentControl.GetContentControlType())
+			{
+				var oParagraph = oContentControl.GetParagraph();
+				if (oParagraph)
+				{
+					var oState = logicDocument.SaveDocumentState();
+					oContentControl.SelectContentControl();
+					
+					isLocked = logicDocument.Document_Is_SelectionLocked(AscCommon.changestype_None, {
+						Type      : AscCommon.changestype_2_ElementsArray_and_Type,
+						Elements  : [oParagraph],
+						CheckType : AscCommon.changestype_Paragraph_AddText
+					}, false, logicDocument.IsFormFieldEditing());
+					
+					logicDocument.LoadDocumentState(oState);
+				}
+			}
+			oContentControl.SkipSpecialContentControlLock(false);
+			
+			if (!isLocked)
+			{
+				logicDocument.StartAction(AscDFH.historydescription_Document_SelectContentControlListItem);
+				oContentControl.SelectListItem(sValue);
+				logicDocument.RemoveSelection();
+				oContentControl.MoveCursorToContentControl(true);
+				logicDocument.Recalculate();
+				logicDocument.UpdateInterface();
+				logicDocument.UpdateTracks();
+				logicDocument.FinalizeAction();
+			}
+		});
 	};
 	asc_docs_api.prototype.asc_GetContentControlListCurrentValue = function(sId)
 	{
