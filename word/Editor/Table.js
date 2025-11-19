@@ -5731,9 +5731,6 @@ CTable.prototype.Selection_SetEnd = function(X, Y, CurPage, MouseEvent)
 		&& this.Selection.StartPos.Pos.Row === this.Selection.EndPos.Pos.Row
 		&& this.Selection.StartPos.Pos.Cell === this.Selection.EndPos.Pos.Cell)
 	{
-		if (!(MouseEvent instanceof AscCommon.CMouseEventHandler))
-			LogicDocument.AddMacroData(AscDFH.historydescription_Document_SelectTableCell, {row: Pos.Row, col: Pos.Cell, sizecol: this.GetColsCount()});
-
 		this.private_SetSelectionData(null);
 
 		this.CurCell.Content_Selection_SetStart(this.Selection.StartPos.X, this.Selection.StartPos.Y, this.Selection.StartPos.PageIndex - this.CurCell.Content.GetRelativeStartPage(), this.Selection.StartPos.MouseEvent);

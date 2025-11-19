@@ -777,23 +777,6 @@
 					+ "\t\t(table && tableStyle) && table.SetStyle(tableStyle);\n"
 				+ "\t}());\n";
 		},
-		selectTableCell		: function(prop){
-			let colsCount = prop.sizecol;
-			let numberOfCell = (prop.row * colsCount) + prop.col;
-			return "\t(function () {\n"
-				+ "\t\tlet table = doc.GetCurrentParagraph().GetParentTable();\n"
-				+ "\t\tif (table){\n"
-				+ "\t\t\tlet cell = table.GetCell(" + prop.row + ", " + prop.col + ");\n"
-				+ "\t\t\tlet content = cell.GetContent();\n"
-				+ "\t\t\tif (content){\n"
-				+ "\t\t\t\tlet arrContent = content.GetContent();\n"
-				+ "\t\t\t\tlet last = arrContent.length ? arrContent[arrContent.length - 1] : null;\n"
-				+ "\t\t\t\tif (last)\n"
-				+ "\t\t\t\t\tlast.Select();\n"
-				+ "\t\t\t}\n"
-				+ "\t\t}\n"
-			+ "\t}());\n";
-		},
 		addImage				: function(image){
 			function PxToEMU96(px){ return px * 9525; }
 			function CmToPx96(cm){ return Math.round(cm * 96 / 2.54); }
@@ -1055,7 +1038,6 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_AddSectionBreak]			= wordActions.addSectionBreak;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddTable]					= wordActions.addTable;
 	WordActionsMacroList[AscDFH.historydescription_Document_ApplyTablePr]				= wordActions.applyTablePr;
-	WordActionsMacroList[AscDFH.historydescription_Document_SelectTableCell]			= wordActions.selectTableCell;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddChart]					= wordActions.addChart;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddImages]					= wordActions.addImage;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddHyperlink]				= wordActions.addHyperlink;

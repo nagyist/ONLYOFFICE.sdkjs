@@ -4799,7 +4799,6 @@
 	window['AscDFH'].historydescription_Spreadsheet_SelectRange						= 0x01fa;
 	window['AscDFH'].historydescription_Spreadsheet_SetCellFormula					= 0x01fb;
 	window['AscDFH'].historydescription_Document_AddCheckBoxLabel                   = 0x01fc;
-	window['AscDFH'].historydescription_Document_SelectTableCell					= 0x01fd;
 
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;
