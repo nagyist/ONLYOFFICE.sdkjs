@@ -9459,9 +9459,9 @@
 	 * @returns {boolean}
 	 * @typeofeditors ["CDE"]
 	 * @since 9.2.0
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertParagraphAtCursor.js
+	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/InsertParagraphBreak.js
 	 */
-	ApiDocument.prototype.InsertParagraphAtCursor = function()
+	ApiDocument.prototype.InsertParagraphBreak = function()
 	{
 		this.Document.AddNewParagraph();
 		return true;

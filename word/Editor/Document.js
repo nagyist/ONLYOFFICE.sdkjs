@@ -6456,12 +6456,6 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
 
-	this.AddMacroData(AscDFH.historydescription_Document_MoveCursorLeft, [{
-		isRtl:			isRtl,
-		isAddSelect:	AddToSelect,
-		isWord:			Word
-	}]);
-
 	if (isRtl)
 		this.Controller.MoveCursorRight(AddToSelect, Word);
 	else
@@ -6489,12 +6483,6 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 		let curPara = this.GetCurrentParagraph(true);
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
-
-	this.AddMacroData(AscDFH.historydescription_Document_MoveCursorRight, [{
-		isRtl:			isRtl,
-		isAddSelect:	AddToSelect,
-		isWord:			Word
-	}]);
 
 	if (isRtl)
 		this.Controller.MoveCursorLeft(AddToSelect, Word);
@@ -20119,12 +20107,6 @@ CDocument.prototype.controller_MoveCursorUp = function(AddToSelect)
 	this.private_UpdateCursorXY(false, true);
 	var Result = this.private_MoveCursorUp(this.CurPos.RealX, this.CurPos.RealY, AddToSelect);
 
-	if (Result)
-		this.AddMacroData(AscDFH.historydescription_Document_MoveCursorUp, [{
-			isWord:			false,
-			isAddSelect:	AddToSelect
-		}]);
-
 	// TODO: Вообще Word селектит до начала данной колонки в таком случае, а не до начала документа
 	if (true === AddToSelect && true !== Result)
 		this.MoveCursorToStartPos(true);
@@ -20154,12 +20136,6 @@ CDocument.prototype.controller_MoveCursorDown = function(AddToSelect)
 
 	this.private_UpdateCursorXY(false, true);
 	var Result = this.private_MoveCursorDown(this.CurPos.RealX, this.CurPos.RealY, AddToSelect);
-
-	if (Result)
-		this.AddMacroData(AscDFH.historydescription_Document_MoveCursorDown, [{
-			isWord:			false,
-			isAddSelect:	AddToSelect
-		}]);
 
 	if (true === AddToSelect && true !== Result)
 		this.MoveCursorToEndPos(true);

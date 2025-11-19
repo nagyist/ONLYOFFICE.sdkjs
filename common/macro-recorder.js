@@ -64,13 +64,108 @@
 		this.inProgress = true;
 		this.isFirstAction = true;
 
+		this.initEvents();
+		this.editor.asc_registerCallback('asc_onKeyDown', this.onKeyDown);
+
 		this.editor.sendEvent("asc_onMacroRecordingStart");
+	};
+	MacroRecorder.prototype.initEvents = function()
+	{
+		let _t = this;
+
+		_t.onKeyDown = function(e)
+		{
+			if (e.KeyCode === 8) // BackSpace
+			{
+			}
+			else if (e.KeyCode === 9) // Tab
+			{
+			}
+			else if (e.KeyCode === 13) // Enter
+			{
+			}
+			else if (e.KeyCode === 27) // Esc
+			{
+			}
+			else if (e.KeyCode === 32) // Space
+			{
+			}
+			else if (e.KeyCode === 33) // PgUp
+			{
+			}
+			else if (e.KeyCode === 34) // PgDn
+			{
+			}
+			else if (e.KeyCode === 35) // End
+			{
+			}
+			else if (e.KeyCode === 36) // Home
+			{
+			}
+			else if (e.KeyCode === 37) // Left Arrow
+			{
+				let doc = _t.editor.getLogicDocument();
+				let curPara = doc.GetCurrentParagraph(true);
+				let isRtl = (curPara ? curPara.isRtlDirection() : false);
+
+				let type = isRtl
+					? AscDFH.historydescription_Document_MoveCursorRight
+					: AscDFH.historydescription_Document_MoveCursorLeft;
+
+				_t.addStepData(type, [{
+					isRtl:			isRtl,
+					isAddSelect:	e.IsShift(),
+					isWord:			e.IsCtrl()
+				}]);
+			}
+			else if (e.KeyCode === 38) // Top Arrow
+			{
+				_t.addStepData(AscDFH.historydescription_Document_MoveCursorUp, [{
+					isAddSelect:	e.IsShift(),
+					isWord:			e.IsCtrl()
+				}]);
+			}
+			else if (e.KeyCode === 39) // Right Arrow
+			{
+				let doc = _t.editor.getLogicDocument();
+				let curPara = doc.GetCurrentParagraph(true);
+				let isRtl = (curPara ? curPara.isRtlDirection() : false);
+
+				let type = isRtl
+					? AscDFH.historydescription_Document_MoveCursorLeft
+					: AscDFH.historydescription_Document_MoveCursorRight;
+
+				_t.addStepData(type, [{
+					isRtl:			isRtl,
+					isAddSelect:	e.IsShift(),
+					isWord:			e.IsCtrl()
+				}]);
+			}
+			else if (e.KeyCode === 40) // Bottom Arrow
+			{
+				_t.addStepData(AscDFH.historydescription_Document_MoveCursorDown, [{
+					isAddSelect:	e.IsShift(),
+					isWord:			e.IsCtrl()
+				}]);
+			}
+			else if (e.KeyCode === 46) // Delete
+			{
+			}
+			else if (e.KeyCode === 144) // Num Lock
+			{
+			}
+			else if (e.KeyCode === 145) // Scroll Lock
+			{
+			}
+		};
 	};
 	MacroRecorder.prototype.stop = function()
 	{
 		if (!this.inProgress)
 			return;
-		
+
+		this.editor.asc_unregisterCallback('asc_onKeyDown', this.onKeyDown);
+
 		this.inProgress = false;
 		this.paused = false;
 
@@ -596,8 +691,8 @@
 		setStyleHeading			: function(name){return "\tdoc.GetRangeBySelect().SetStyle(doc.GetStyle(\"" + name + "\"));\n"},
 		clearFormat				: function(){return "\tdoc.GetRangeBySelect().ClearFormating()\n"},
 		cut						: function(){return "\tdoc.GetRangeBySelect().Cut();\n"},
-		changeTextCase			: function(changeType){return "\tdoc.GetRangeBySelect().SetTextCase(\"" + changeType + "\");\n"},
-		incFontSize				: function(){return "\tdoc.GetRangeBySelect().Grow();\n"},
+		changeTextCase			: function(changeType){return ""; return "\tdoc.GetRangeBySelect().SetTextCase(\"" + changeType + "\");\n"},
+		incFontSize				: function(){return ""; return "\tdoc.GetRangeBySelect().Grow();\n"},
 		addLetter				: function(textArr){
 			let textStr = "";
 			for (let i = 0; i < textArr.length; ++i)
@@ -642,7 +737,7 @@
 				+ "\tdoc.GetRangeBySelect().GetAllParagraphs().forEach(para => {\n\t\tpara.SetNumbering(" + CounterStore.get('numbering') + ".GetLevel(0));\n\t\tpara.SetContextualSpacing(true)\n\t});\n"
 		},
 		addParagraph			: function(){
-			return "\tdoc.InsertParagraphAtCursor();\n";
+			return "\tdoc.InsertParagraphBreak();\n";
 		},
 		addBlankPage			: function(){return "\tdoc.InsertBlankPage();\n"},
 		addPageBreak			: function(type){
@@ -1080,6 +1175,7 @@
 		setCellChangeTextCase	: function(textCase){return "\tApi.GetSelection().ChangeTextCase(" + textCase + ");\n"},
 		setCellChangeFontSize	: function(isInc){
 			// todo create api
+			return "";
 			return isInc ? "\tApi.asc_increaseFontSize();\n" : "\tApi.asc_decreaseFontSize();\n";
 		},
 		setCellBorder			: function(borderArray){
@@ -1152,12 +1248,12 @@
 		// setCellHyperlinkRemove	: function(additional) {return (additional && additional.url) ? "" : ""},
 		// cut						: function(){return "ApiApi.GetSelection().Cut();\n"},
 		cellChangeValue			: function(value){return "\tApi.GetSelection().SetValue(\"" + value + "\");\n"},
-		setCellStyle			: function(style){},
+		setCellStyle			: function(style){return ""},
 		setCellFormat			: function(format){
 			return "\tlet " + CounterStore.inc('format') + " = Api.Format(worksheet.GetActiveCell().GetValue(), \'" + format + "\')\n"
 			+ "\tworksheet.GetActiveCell().SetValue(" + CounterStore.get('format') + ");\n";
 		},
-		setCellHyperlinkRemove	: function(data){console.log(data)},
+		setCellHyperlinkRemove	: function(data){return ""},
 		setCellMerge			: function(data){
 			if (data === Asc.c_oAscMergeOptions.MergeCenter)
 				return "\tApi.GetSelection().Merge(false);\n"; // + set shrink / indent
@@ -1373,7 +1469,6 @@
 		},
 		clearFormatting			: function(isClear){return "\tApi.GetSelection().GetShapes().forEach(shape => {\n\t\tshape.GetDocContent().GetContent().forEach(para => para.ClearFormating(" + isClear + "));\n\t})\n";},
 		putTextPrLineSpacing	: function(lineSpacing){
-
 			let type = lineSpacing.type;
 			let value = lineSpacing.value;
 
