@@ -1614,7 +1614,7 @@ CBlockLevelSdt.prototype.SetLabel = function(sLabel)
 };
 CBlockLevelSdt.prototype.GetLabel = function()
 {
-	return (undefined !== this.Pr.Label ? this.Pr.Label : "");
+	return this.Pr.Label;
 };
 CBlockLevelSdt.prototype.SetAppearance = function(nType)
 {

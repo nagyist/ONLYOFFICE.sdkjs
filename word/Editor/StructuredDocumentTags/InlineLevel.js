@@ -2090,7 +2090,7 @@ CInlineLevelSdt.prototype.SetLabel = function(sLabel)
 };
 CInlineLevelSdt.prototype.GetLabel = function()
 {
-	return (undefined !== this.Pr.Label ? this.Pr.Label : "");
+	return this.Pr.Label;
 };
 CInlineLevelSdt.prototype.SetDocPartObj = function(sCategory, sGallery, isUnique)
 {

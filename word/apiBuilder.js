@@ -20682,13 +20682,19 @@
 	 * Adds a string label to the current inline text content control.
 	 * @memberof ApiInlineLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @param {string} sLabel - The label which will be added to the current inline text content control. Can be a positive or negative integer from <b>-2147483647</b> to <b>2147483647</b>.
+	 * @param {number} label - The label which will be added to the current inline text content control. Can be a positive or negative integer from <b>-2147483647</b> to <b>2147483647</b>.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiInlineLvlSdt/Methods/SetLabel.js
 	 */
-	ApiInlineLvlSdt.prototype.SetLabel = function(sLabel)
+	ApiInlineLvlSdt.prototype.SetLabel = function(label)
 	{
-		this.Sdt.SetLabel(sLabel);
+		label = AscBuilder.GetNumberParameter(label, null);
+		if (null === label)
+			throwException(new Error("Label must be a number"));
+		else if (label < -2147483647 || label > 2147483647)
+			throwException(new Error("Label must be in range from -2147483647 to 2147483647"));
+		
+		this.Sdt.SetLabel(label);
 		return true;
 	};
 
@@ -20696,7 +20702,7 @@
 	 * Returns the label attribute for the current container.
 	 * @memberof ApiInlineLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @returns {string}
+	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiInlineLvlSdt/Methods/GetLabel.js
 	 */
 	ApiInlineLvlSdt.prototype.GetLabel = function()
