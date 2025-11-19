@@ -2768,6 +2768,7 @@ function PasteProcessor(api, bUploadImage, bUploadFonts, bNested, pasteInExcel, 
     this.oCurHyperlink = null;
     this.oCurHyperlinkContentPos = 0;
     this.oCur_rPr = new CTextPr();
+    this._lastCommitedRunId = null;
 
 	//Br копятся потомы что есть случаи когда не надо вывобить br, хотя он и присутствует.
     this.nBrCount = 0;
@@ -10405,8 +10406,10 @@ PasteProcessor.prototype =
 
 				this.oCurRun.Add_ToContent(this.oCurRunContentPos, elem, false);
 				this.oCurRunContentPos++;
-				if (1 === this.oCurRun.Content.length)
+				if (1 === this.oCurRun.Content.length) {
 					this._CommitElemToParagraph(this.oCurRun);
+					this._lastCommitedRunId =  this.oCurRun && this.oCurRun.Id;
+				}
 			}
 		}
 	},
@@ -12411,7 +12414,9 @@ PasteProcessor.prototype =
 							if (oTargetDocument && oDrawingDocument) {
 								//если добавляем изображение в гиперссылку, то кладём его в отдельный ран и делаем не подчёркнутым
 								if (oThis.oCurHyperlink) {
-									oThis._CommitElemToParagraph(oThis.oCurRun);
+									if (!(oThis._lastCommitedRunId && oThis.oCurRun && oThis._lastCommitedRunId && oThis.oCurRun.Id === oThis._lastCommitedRunId)) {
+										oThis._CommitElemToParagraph(oThis.oCurRun);
+									}
 									oThis.oCurRun = new ParaRun(oThis.oCurPar);
 									oThis.oCurRun.Pr.Underline = false;
 								}
