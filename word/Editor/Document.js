@@ -318,6 +318,7 @@ function CDocumentRecalcInfo()
     this.FlowObjectPageBreakBefore = false;  // Нужно ли перед float-объектом поставить pagebreak
     this.FlowObjectPage            = 0;      // Количество обработанных страниц
     this.FlowObjectElementsCount   = 0;      // Количество элементов подряд идущих в рамке (только для рамок)
+	this.FlowObjectNoWrap          = false;  // Для случая, когда у плавающего объекта отключаем обтекание
     this.RecalcResult              = recalcresult_NextElement;
 
     this.WidowControlParagraph     = null;   // Параграф, который мы пересчитываем из-за висячих строк
@@ -351,6 +352,7 @@ CDocumentRecalcInfo.prototype =
         this.FlowObjectPageBreakBefore = false;
         this.FlowObjectPage            = 0;
         this.FlowObjectElementsCount   = 0;
+		this.FlowObjectNoWrap          = false;
         this.RecalcResult              = recalcresult_NextElement;
 
         this.WidowControlParagraph     = null;
@@ -446,6 +448,16 @@ CDocumentRecalcInfo.prototype =
     {
         return this.FlowObjectPageBreakBefore;
     },
+	
+	SetForceNoWrap : function(noWrap)
+	{
+		this.FlowObjectNoWrap = noWrap;
+	},
+	
+	IsForceNoWrap : function()
+	{
+		return this.FlowObjectNoWrap;
+	},
 
     Set_KeepNext : function(Paragraph, EndParagraph)
     {
@@ -521,6 +533,7 @@ CDocumentRecalcInfo.prototype =
 		this.FootnotePage              = 0;
 		this.FootnoteColumn            = 0;
 		this.FlowObjectPageBreakBefore = false;
+		this.FlowObjectNoWrap          = false;
     },
 
 	Set_NeedRecalculateFromStart : function(isNeedRecalculate)
@@ -3500,6 +3513,10 @@ CDocument.prototype.Recalculate_Page = function()
     }
 	
 	this.Pages[PageIndex].Sections.length = SectionIndex + 1;
+	
+	let mainStartPos = this.FullRecalc.MainStartPos;
+	if (-1 !== mainStartPos && mainStartPos <= StartIndex)
+		this.Pages.length = PageIndex + 1;
 	
 	this.Endnotes.Reset(PageIndex, SectionIndex, ColumnIndex);
 
