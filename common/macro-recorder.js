@@ -109,8 +109,8 @@
 				let isRtl = (curPara ? curPara.isRtlDirection() : false);
 
 				let type = isRtl
-					? AscDFH.historydescription_Document_MoveCursorRight
-					: AscDFH.historydescription_Document_MoveCursorLeft;
+					? "moveCursorRight"
+					: "moveCursorLeft"
 
 				_t.addStepData(type, [{
 					isRtl:			isRtl,
@@ -120,7 +120,7 @@
 			}
 			else if (e.KeyCode === 38) // Top Arrow
 			{
-				_t.addStepData(AscDFH.historydescription_Document_MoveCursorUp, [{
+				_t.addStepData('moveCursorUp', [{
 					isAddSelect:	e.IsShift(),
 					isWord:			e.IsCtrl()
 				}]);
@@ -132,8 +132,8 @@
 				let isRtl = (curPara ? curPara.isRtlDirection() : false);
 
 				let type = isRtl
-					? AscDFH.historydescription_Document_MoveCursorLeft
-					: AscDFH.historydescription_Document_MoveCursorRight;
+					? "moveCursorLeft"
+					: "moveCursorRight"
 
 				_t.addStepData(type, [{
 					isRtl:			isRtl,
@@ -143,7 +143,7 @@
 			}
 			else if (e.KeyCode === 40) // Bottom Arrow
 			{
-				_t.addStepData(AscDFH.historydescription_Document_MoveCursorDown, [{
+				_t.addStepData('moveCursorDown', [{
 					isAddSelect:	e.IsShift(),
 					isWord:			e.IsCtrl()
 				}]);
@@ -1041,10 +1041,10 @@
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteHotKey]				= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_PasteSafariHotKey]		= wordActions;
 	// WordActionsMacroList[AscDFH.historydescription_Document_CutHotKey]				= wordActions;
-	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorLeft]				= wordActions.moveCursorLeft;
-	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorRight]			= wordActions.moveCursorRight;
-	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorUp]				= wordActions.moveCursorUp;
-	WordActionsMacroList[AscDFH.historydescription_Document_MoveCursorDown]				= wordActions.moveCursorDown;
+	WordActionsMacroList['moveCursorLeft']												= wordActions.moveCursorLeft;
+	WordActionsMacroList['moveCursorRight']												= wordActions.moveCursorRight;
+	WordActionsMacroList['moveCursorUp']												= wordActions.moveCursorUp;
+	WordActionsMacroList['moveCursorDown']												= wordActions.moveCursorDown;
 
 	//WordActionsMacroList[AscDFH.historydescription_Document_BackSpaceButton]			= wordActions.backSpaceButton;
 	// WordActionsMacroList[AscDFH.historydescription_Document_DeleteButton]			= wordActions.deleteButton;
