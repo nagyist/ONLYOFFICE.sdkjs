@@ -22357,12 +22357,18 @@
 	 * Sets the label attribute to the current container.
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @param {string} label - The label which will be added to the current container. Can be a positive or negative integer from <b>-2147483647</b> to <b>2147483647</b>.
+	 * @param {number} label - The label which will be added to the current container. Can be a positive or negative integer from <b>-2147483647</b> to <b>2147483647</b>.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetLabel.js
 	 */
 	ApiBlockLvlSdt.prototype.SetLabel = function(label)
 	{
+		label = AscBuilder.GetNumberParameter(label, null);
+		if (null === label)
+			throwException(new Error("Label must be a number"));
+		else if (label < -2147483647 || label > 2147483647)
+			throwException(new Error("Label must be in range from -2147483647 to 2147483647"));
+		
 		this.Sdt.SetLabel(label);
 		return true;
 	};
@@ -22371,7 +22377,7 @@
 	 * Returns the label attribute for the current container.
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
-	 * @returns {string}
+	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/GetLabel.js
 	 */
 	ApiBlockLvlSdt.prototype.GetLabel = function()
