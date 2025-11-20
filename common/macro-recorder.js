@@ -334,10 +334,11 @@
 			if (Array.isArray(additional)
 				&& type !== AscDFH.historydescription_Document_AddLetter
 				&& type !== AscDFH.historydescription_Presentation_ParagraphAdd
-				&& type !== AscDFH.historydescription_Document_MoveCursorLeft
-				&& type !== AscDFH.historydescription_Document_MoveCursorRight
-				&& type !== AscDFH.historydescription_Document_MoveCursorUp
-				&& type !== AscDFH.historydescription_Document_MoveCursorDown)
+				&& type !== 'moveCursorLeft'
+				&& type !== 'moveCursorRight'
+				&& type !== 'moveCursorUp'
+				&& type !== 'moveCursorDown'
+			)
 			{
 				for (let i = 0; i < additional.length; i++)
 				{
