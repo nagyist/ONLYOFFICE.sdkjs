@@ -2316,6 +2316,10 @@ CDocument.prototype.FinalizeAction = function(checkEmptyAction, additional)
 	this.Api.getMacroRecorder().onAction(this.Action.Description, additional);
 	return actionCompleted;
 };
+CDocument.prototype.AddMacroData = function(type, additional)
+{
+	this.Api.getMacroRecorder().addStepData(type, additional);
+};
 /**
  * Сообщаем, что нужно отменить начатое действие
  */
@@ -6469,7 +6473,6 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
 
-	this.StartAction(AscDFH.historydescription_Document_MoveCursorLeft, {isRtl: isRtl, isAddSelect: AddToSelect, isWord: Word});
 	if (isRtl)
 		this.Controller.MoveCursorRight(AddToSelect, Word);
 	else
@@ -6479,7 +6482,6 @@ CDocument.prototype.MoveCursorLeft = function(AddToSelect, Word)
 	this.Document_UpdateInterfaceState();
 	this.Document_UpdateRulersState();
 	this.private_UpdateCursorXY(true, true);
-	this.FinalizeAction();
 };
 CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 {
@@ -6499,7 +6501,6 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 		isRtl = (curPara ? curPara.isRtlDirection() : false);
 	}
 
-	this.StartAction(AscDFH.historydescription_Document_MoveCursorRight, {isRtl: isRtl, isAddSelect: AddToSelect, isWord: Word});
 	if (isRtl)
 		this.Controller.MoveCursorLeft(AddToSelect, Word);
 	else
@@ -6509,13 +6510,12 @@ CDocument.prototype.MoveCursorRight = function(AddToSelect, Word, FromPaste)
 	this.Document_UpdateInterfaceState();
 	this.Document_UpdateSelectionState();
 	this.private_UpdateCursorXY(true, true);
-	this.FinalizeAction();
 };
 CDocument.prototype.MoveCursorUp = function(AddToSelect, CtrlKey)
 {
 	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
 		return;
-	
+
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorUp(AddToSelect, CtrlKey);
@@ -6524,7 +6524,7 @@ CDocument.prototype.MoveCursorDown = function(AddToSelect, CtrlKey)
 {
 	if (true === AscCommon.CollaborativeEditing.Get_GlobalLockSelection())
 		return;
-	
+
 	this.ResetWordSelection();
 	this.private_UpdateTargetForCollaboration();
 	this.Controller.MoveCursorDown(AddToSelect, CtrlKey);
