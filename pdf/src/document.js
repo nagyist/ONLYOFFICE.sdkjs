@@ -3131,6 +3131,7 @@ var CPresentation = CPresentation || function(){};
             _t.CheckComment(annot);
         });
 
+        this.SetNeedUpdateSearch(true);
         oViewer.paint();
     };
 
@@ -3183,6 +3184,7 @@ var CPresentation = CPresentation || function(){};
 
         this.History.Add(new CChangesPDFDocumentPagesContent(this, nPos, aPages, false));
 
+        this.SetNeedUpdateSearch(true);
         oViewer.paint();
 
         return aPages[0];
