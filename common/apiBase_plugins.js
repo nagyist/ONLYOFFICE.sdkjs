@@ -383,7 +383,7 @@
 					if (AscCommon.c_oEditorId.Word === _t.getEditorId())
 					{
 						let logicDocument = _t.private_GetLogicDocument();
-						if (logicDocument)
+						if (logicDocument && logicDocument.IsDocumentEditor())
 						{
 							logicDocument.GetDrawingDocument().UpdateTargetFromPaint = true;
 							logicDocument.private_UpdateCursorXY(true, true, true);
