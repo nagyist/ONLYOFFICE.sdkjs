@@ -7631,8 +7631,11 @@ var CPresentation = CPresentation || function(){};
 
                     // Fill color
                     const oFillRGB = annot.GetRGBColor(annot.GetFillColor());
-                    oMemory = new AscCommon.CMemory(true);
-                    oMemory.Init(24);
+                    if (!oMemory) {
+                        oMemory = new AscCommon.CMemory(true);
+                        oMemory.Init(24);
+                    }
+                   
                     oMemory.WriteLong(oFillRGB.r);
                     oMemory.WriteLong(oFillRGB.g);
                     oMemory.WriteLong(oFillRGB.b);
