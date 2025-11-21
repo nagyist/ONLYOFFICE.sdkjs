@@ -95,8 +95,11 @@
 	{
 		this.eventManager.onCurrentRanges(paragraph, this.getCurrentRanges(paragraph));
 	};
-	CustomTextAnnotator.prototype.onClick = function(x, y, page)
+	CustomTextAnnotator.prototype.onClick = function(x, y, page, e)
 	{
+		if (!e || AscCommon.g_mouse_button_left !== e.Button)
+			return;
+		
 		let anchorPos = this.logicDocument.Get_NearestPos(page, x, y);
 		if (!anchorPos || !anchorPos.Paragraph || !anchorPos.ContentPos)
 			return;
