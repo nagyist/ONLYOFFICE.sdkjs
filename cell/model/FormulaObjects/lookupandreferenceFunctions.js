@@ -2942,6 +2942,7 @@ function (window, undefined) {
 				const r2 = bHor ? rowCol : axisData[rowCol].start - 1;
 				const fullRange = ws.getRange3(r1, c1, r2, c2);
 				const unshiftMaps = {};
+				axisData[rowCol].start = startIndex;
 				fullRange._foreachNoEmpty(function (cell, r, c) {
 					const value = checkTypeCell(cell, true);
 					const index = bHor ? c : r;
@@ -2971,7 +2972,6 @@ function (window, undefined) {
 						map.set(key, value.concat(prevArr));
 					})
 				}
-				axisData[rowCol].start = startIndex;
 			}
 			if (endIndex > axisData[rowCol].end) {
 				const c1 = bHor ? axisData[rowCol].end + 1: rowCol;
