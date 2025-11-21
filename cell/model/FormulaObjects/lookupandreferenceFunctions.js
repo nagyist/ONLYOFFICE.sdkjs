@@ -2914,7 +2914,7 @@ function (window, undefined) {
 		}
 		const axisData = bHor ? this.data[wsId].horizontal : this.data[wsId].vertical;
 		if (!axisData[rowCol]) {
-			axisData[rowCol] = {start: startIndex, end: startIndex, data: {}};
+			axisData[rowCol] = {start: startIndex, end: startIndex - 1, data: {}};
 			const c1 = bHor ? startIndex : rowCol;
 			const r1 = bHor ? rowCol : startIndex;
 			const c2 = bHor ? endIndex : rowCol;
@@ -2923,15 +2923,18 @@ function (window, undefined) {
 			fullRange._foreachNoEmpty(function (cell, r, c) {
 				const value = checkTypeCell(cell, true);
 				const index = bHor ? c : r;
-				if (!axisData[rowCol].data[value.type]) {
-					axisData[rowCol].data[value.type] = new Map();
+				if (index > axisData[rowCol].end) {
+					if (!axisData[rowCol].data[value.type]) {
+						axisData[rowCol].data[value.type] = new Map();
+					}
+					const map = axisData[rowCol].data[value.type];
+					if (!map.has(value.value)) {
+						map.set(value.value, []);
+					}
+					const arr = axisData[rowCol].data[value.type].get(value.value);
+					arr.push(index);
+					axisData[rowCol].end = index;
 				}
-				const map = axisData[rowCol].data[value.type];
-				if (!map.has(value.value)) {
-					map.set(value.value, []);
-				}
-				const arr = axisData[rowCol].data[value.type].get(value.value);
-				arr.push(index);
 			});
 			axisData[rowCol].end = endIndex;
 		} else {
