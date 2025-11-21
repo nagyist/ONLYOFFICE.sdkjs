@@ -27698,6 +27698,12 @@
 	ApiDocument.prototype["MoveCursorToEnd"]               = ApiDocument.prototype.MoveCursorToEnd;
 	ApiDocument.prototype["GoToPage"]                      = ApiDocument.prototype.GoToPage;
 	ApiDocument.prototype["GetDocumentVisitor"]            = ApiDocument.prototype.GetDocumentVisitor;
+	ApiDocument.prototype["EnterText"]                     = ApiDocument.prototype.EnterText;
+	ApiDocument.prototype["InsertParagraphBreak"]          = ApiDocument.prototype.InsertParagraphBreak;
+	ApiDocument.prototype["MoveCursorLeft"]                = ApiDocument.prototype.MoveCursorLeft;
+	ApiDocument.prototype["MoveCursorRight"]               = ApiDocument.prototype.MoveCursorRight;
+	ApiDocument.prototype["MoveCursorUp"]                  = ApiDocument.prototype.MoveCursorUp;
+	ApiDocument.prototype["MoveCursorDown"]                = ApiDocument.prototype.MoveCursorDown;
 	
 	
 	ApiParagraph.prototype["GetClassType"]           = ApiParagraph.prototype.GetClassType;
