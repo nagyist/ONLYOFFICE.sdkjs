@@ -1212,7 +1212,7 @@ function CDocument(DrawingDocument, isMainLogicDocument)
 
 	this.Layout = this.Layouts.Print;
 	
-	this.CustomTextAnnotator = new AscWord.CustomTextAnnotator(this);
+	this.CustomTextAnnotator = false !== isMainLogicDocument ? new AscWord.CustomTextAnnotator(this) : null;
 	
 	
 	this.Content[0] = new AscWord.Paragraph(this);
@@ -7758,8 +7758,6 @@ CDocument.prototype.Selection_SetEnd = function(X, Y, MouseEvent)
 							oBookmark[0].GoToBookmark();
 					}
 				}
-				
-				this.CustomTextAnnotator.onClick(X, Y, this.CurPage, MouseEvent);
 			}
         }
         else
@@ -10472,6 +10470,11 @@ CDocument.prototype.OnMouseUp = function(e, X, Y, PageIndex)
 				this.Api.sync_MarkerFormatCallback(true);
 			}
 		}
+	}
+	
+	if (!this.IsTextSelectionUse() && (this.IsInText(X, Y, this.CurPage) || -1 !== this.DrawingObjects.IsInDrawingObject(X, Y, this.CurPage, this)))
+	{
+		this.CustomTextAnnotator.onClick(X, Y, this.CurPage, e);
 	}
 
 	this.private_CheckCursorPosInFillingFormMode();
