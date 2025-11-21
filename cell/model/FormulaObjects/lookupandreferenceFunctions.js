@@ -2914,7 +2914,7 @@ function (window, undefined) {
 		}
 		const axisData = bHor ? this.data[wsId].horizontal : this.data[wsId].vertical;
 		if (!axisData[rowCol]) {
-			axisData[rowCol] = {start: startIndex, end: startIndex, data: {}};
+			axisData[rowCol] = {start: startIndex, end: startIndex - 1, data: {}};
 			const c1 = bHor ? startIndex : rowCol;
 			const r1 = bHor ? rowCol : startIndex;
 			const c2 = bHor ? endIndex : rowCol;
@@ -2923,15 +2923,18 @@ function (window, undefined) {
 			fullRange._foreachNoEmpty(function (cell, r, c) {
 				const value = checkTypeCell(cell, true);
 				const index = bHor ? c : r;
-				if (!axisData[rowCol].data[value.type]) {
-					axisData[rowCol].data[value.type] = new Map();
+				if (index > axisData[rowCol].end) {
+					if (!axisData[rowCol].data[value.type]) {
+						axisData[rowCol].data[value.type] = new Map();
+					}
+					const map = axisData[rowCol].data[value.type];
+					if (!map.has(value.value)) {
+						map.set(value.value, []);
+					}
+					const arr = axisData[rowCol].data[value.type].get(value.value);
+					arr.push(index);
+					axisData[rowCol].end = index;
 				}
-				const map = axisData[rowCol].data[value.type];
-				if (!map.has(value.value)) {
-					map.set(value.value, []);
-				}
-				const arr = axisData[rowCol].data[value.type].get(value.value);
-				arr.push(index);
 			});
 			axisData[rowCol].end = endIndex;
 		} else {
@@ -2942,6 +2945,7 @@ function (window, undefined) {
 				const r2 = bHor ? rowCol : axisData[rowCol].start - 1;
 				const fullRange = ws.getRange3(r1, c1, r2, c2);
 				const unshiftMaps = {};
+				axisData[rowCol].start = startIndex;
 				fullRange._foreachNoEmpty(function (cell, r, c) {
 					const value = checkTypeCell(cell, true);
 					const index = bHor ? c : r;
@@ -2971,7 +2975,6 @@ function (window, undefined) {
 						map.set(key, value.concat(prevArr));
 					})
 				}
-				axisData[rowCol].start = startIndex;
 			}
 			if (endIndex > axisData[rowCol].end) {
 				const c1 = bHor ? axisData[rowCol].end + 1: rowCol;
@@ -2982,15 +2985,18 @@ function (window, undefined) {
 				fullRange._foreachNoEmpty(function (cell, r, c) {
 					const value = checkTypeCell(cell, true);
 					const index = bHor ? c : r;
-					if (!axisData[rowCol].data[value.type]) {
-						axisData[rowCol].data[value.type] = new Map();
+					if (index > axisData[rowCol].end) {
+						if (!axisData[rowCol].data[value.type]) {
+							axisData[rowCol].data[value.type] = new Map();
+						}
+						const map = axisData[rowCol].data[value.type];
+						if (!map.has(value.value)) {
+							map.set(value.value, []);
+						}
+						const arr = axisData[rowCol].data[value.type].get(value.value);
+						arr.push(index);
+						axisData[rowCol].end = index;
 					}
-					const map = axisData[rowCol].data[value.type];
-					if (!map.has(value.value)) {
-						map.set(value.value, []);
-					}
-					const arr = axisData[rowCol].data[value.type].get(value.value);
-					arr.push(index);
 				});
 				axisData[rowCol].end = endIndex;
 			}
@@ -3016,7 +3022,7 @@ function (window, undefined) {
 									newArr.push(arr[i]);
 								}
 							}
-							mapOldType.set(newArr);
+							mapOldType.set(oldValue, newArr);
 						}
 					}
 				}
@@ -3026,21 +3032,19 @@ function (window, undefined) {
 				if (mapNewType) {
 					if (mapNewType.has(newValue)) {
 						const arr = mapNewType.get(newValue);
-						const newArr = [];
+						let newArr = [];
 						if (arr.length === 1) {
-							newArr.push(arr[0]);
-							changedIndex > arr[0] ? newArr.push(changedIndex) : newArr.unshift(changedIndex);
+							newArr = changedIndex > arr[0] ? [arr[0], changedIndex] :[changedIndex, arr[0]];
 						} else {
-							if (arr[0] < changedIndex) {
-								newArr.push(changedIndex);
-							}
-							for(let i = 1; i < arr.length; i += 1) {
-								if (arr[i] < changedIndex && arr[i - 1] > changedIndex) {
+							let isAdded = false;
+							for (let i = 0; i < arr.length; i += 1) {
+								if (changedIndex < arr[i] && !isAdded) {
+									isAdded = true;
 									newArr.push(changedIndex);
 								}
 								newArr.push(arr[i]);
 							}
-							if (arr[arr.length - 1] < changedIndex) {
+							if (changedIndex > arr[arr.length - 1]) {
 								newArr.push(changedIndex);
 							}
 						}
