@@ -28081,18 +28081,18 @@ CDocument.prototype.IsFirstOnDocumentPage = function(curPage)
 	return true;
 };
 /**
- * @returns {AscWord.CustomTextAnnotator}
+ * @returns {?AscWord.CustomTextAnnotator}
  */
 CDocument.prototype.GetCustomTextAnnotator = function()
 {
 	return this.CustomTextAnnotator;
 };
 /**
- * @returns {AscWord.CustomMarks}
+ * @returns {?AscWord.CustomMarks}
  */
 CDocument.prototype.GetCustomMarks = function()
 {
-	return this.CustomTextAnnotator.getMarks();
+	return this.CustomTextAnnotator ? this.CustomTextAnnotator.getMarks() : null;
 };
 
 function CDocumentSelectionState()
