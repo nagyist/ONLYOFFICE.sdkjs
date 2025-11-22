@@ -15035,8 +15035,6 @@ function RangeDataManagerElem(bbox, data)
 
 		//temp for update
 		this.sKey = null;
-
-		this._id = AscCommon.g_oIdCounter.Get_NewId();
 	}
 	ExternalReferenceBase.prototype.getKey = function() {
 		return this.sKey;
@@ -15247,6 +15245,8 @@ function RangeDataManagerElem(bbox, data)
 		this.SheetNames = [];
 
 		this.worksheets = {};
+
+		this._id = AscCommon.g_oIdCounter.Get_NewId();
 	}
 	AscFormat.InitClassWithoutType(ExternalReference, ExternalReferenceBase);
 

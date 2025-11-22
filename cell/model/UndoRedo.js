@@ -3090,9 +3090,6 @@ function (window, undefined) {
 				externalReferenceIndex = wb.getExternalReferenceByReferenceData(to.referenceData, true);
 				if (!externalReferenceIndex) {
 					externalReferenceIndex = wb.getExternalLinkIndexById(to._id);
-					wb.getWorksheet(0)._getCell(0, 0, function (cell) {
-						cell.setValue("123");
-					});
 				}
 
 				if (externalReferenceIndex !== null) {
