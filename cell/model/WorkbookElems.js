@@ -15036,6 +15036,7 @@ function RangeDataManagerElem(bbox, data)
 		//temp for update
 		this.sKey = null;
 
+		this._id = AscCommon.g_oIdCounter.Get_NewId();
 	}
 	ExternalReferenceBase.prototype.getKey = function() {
 		return this.sKey;
@@ -15303,6 +15304,10 @@ function RangeDataManagerElem(bbox, data)
 				this.referenceData["instanceId"] = r.GetString2();
 			}
 		}
+
+		if (r.GetBool()) {
+			this._id = r.GetString2();
+		}
 	};
 	ExternalReference.prototype.Write_ToBinary2 = function(w) {
 		var i;
@@ -15355,6 +15360,13 @@ function RangeDataManagerElem(bbox, data)
 			} else {
 				w.WriteBool(false);
 			}
+		} else {
+			w.WriteBool(false);
+		}
+
+		if (null != this._id) {
+			w.WriteBool(true);
+			w.WriteString2(this._id);
 		} else {
 			w.WriteBool(false);
 		}
