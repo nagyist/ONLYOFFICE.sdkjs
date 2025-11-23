@@ -15407,6 +15407,8 @@ function RangeDataManagerElem(bbox, data)
 			}
 		}
 
+		newObj._id = this._id;
+
 		return newObj;
 	};
 
