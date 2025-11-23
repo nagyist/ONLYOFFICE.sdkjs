@@ -165,7 +165,7 @@
 		if (!paraPos || !paragraph)
 			return {};
 		
-		let marks = this.marks.getStartedMarks(paragraph, paraPos);
+		let marks = this.marks.getMarksByPos(paragraph, paraPos);
 		let ranges = {};
 		for (let i = 0; i < marks.length; ++i)
 		{
