@@ -172,7 +172,12 @@
 		
 		let name = obj["name"];
 		if (name)
+		{
+			if (this.plugins[obj["guid"]])
+				this.plugins[obj["guid"]][name] = true;
+			
 			obj["guid"] += "AnnotationName:" + name;
+		}
 		
 		switch (obj["type"])
 		{
@@ -329,15 +334,20 @@
 	};
 	TextAnnotatorEventManager.prototype.addPluginListener = function(guid)
 	{
-		this.plugins[guid] = true;
+		this.plugins[guid] = {};
 		
 		this.startedPlugins[guid] = new PluginStartupNotifier(this.textAnnotator, this, guid, this.sendPara);
 		this.startedPlugins[guid].Begin();
 	};
 	TextAnnotatorEventManager.prototype.removePluginListener = function(guid)
 	{
+		for (let name in this.plugins[guid])
+		{
+			let handleId = this.getHandlerId({"name" : name, "guid" : guid});
+			this.textAnnotator.getMarks().removeAllMarks(handleId);
+		}
+		
 		delete this.plugins[guid];
-		// TODO: Remove all marks for this plugin
 	};
 	TextAnnotatorEventManager.prototype.hasPluginListeners = function()
 	{

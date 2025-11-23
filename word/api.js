@@ -14571,6 +14571,10 @@ background-repeat: no-repeat;\
 		AscCommon.baseEditorsApi.prototype.onPluginClose.call(this, guid);
 		if (this.WordControl && this.WordControl.m_oLogicDocument && this.WordControl.m_oLogicDocument.DrawingDocument)
 			this.WordControl.m_oLogicDocument.DrawingDocument.contentControls.removePluginButtons(guid);
+		
+		let logicDocument = this.private_GetLogicDocument();
+		if (logicDocument && logicDocument.IsDocumentEditor())
+			this.getTextAnnotatorEventManager().removePluginListener(guid);
 	};
 	asc_docs_api.prototype.onAttachPluginEvent = function(guid, name)
 	{

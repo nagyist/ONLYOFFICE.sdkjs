@@ -226,6 +226,13 @@
 		if (paragraph)
 			paragraph.ReDraw();
 	};
+	CustomMarks.prototype.removeAllMarks = function(handlerId)
+	{
+		for (let paraId in this.paragraphs)
+		{
+			this.removeAllRanges(paraId, handlerId);
+		}
+	};
 	CustomMarks.prototype.flatRunMarks = function(runId)
 	{
 		if (!this.runs[runId])
