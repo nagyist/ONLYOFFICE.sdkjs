@@ -341,6 +341,9 @@
 	};
 	TextAnnotatorEventManager.prototype.removePluginListener = function(guid)
 	{
+		if (!this.plugins[guid])
+			return;
+		
 		for (let name in this.plugins[guid])
 		{
 			let handleId = this.getHandlerId({"name" : name, "guid" : guid});
