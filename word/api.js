@@ -14580,6 +14580,10 @@ background-repeat: no-repeat;\
 			&& this.WordControl
 			&& this.WordControl.m_oDrawingDocument)
 			this.WordControl.m_oDrawingDocument.contentControls.onAttachPluginEvent(guid);
+		
+		let logicDocument = this.private_GetLogicDocument();
+		if ("onParagraphText" === name && logicDocument && logicDocument.IsDocumentEditor())
+			this.getTextAnnotatorEventManager().addPluginListener(guid);
 	};
 	asc_docs_api.prototype.initBroadcastChannelListeners = function() {
 		let oThis = this;
