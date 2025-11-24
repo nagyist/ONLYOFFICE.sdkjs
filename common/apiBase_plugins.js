@@ -2268,6 +2268,7 @@
 			variation["positionY"] = y;
 		}
 
+		window.g_asc_plugins.addPluginWindow(frameId);
 		this.sendEvent("asc_onPluginWindowShow", frameId, variation);
 	};
 
@@ -2306,6 +2307,7 @@
 	 */
 	Api.prototype["pluginMethod_CloseWindow"] = function(frameId)
 	{
+		window.g_asc_plugins.removePluginWindow(frameId);
 		this.sendEvent("asc_onPluginWindowClose", frameId);
 	};
 
