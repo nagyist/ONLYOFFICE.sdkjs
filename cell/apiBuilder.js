@@ -9030,7 +9030,7 @@
 	ApiWorksheet.prototype.AddChart =
 		function (sDataRange, bInRows, sType, nStyleIndex, nExtX, nExtY, nFromCol, nColOffset, nFromRow, nRowOffset) {
 			if (this.worksheet && this.worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.objects)) {
-				logError(new Error('Сannot modify protected sheet'));
+				logError(new Error('Cannot modify protected sheet'));
 				return null;
 			}
 			const settings = new Asc.asc_ChartSettings();
@@ -9184,7 +9184,7 @@
 		let oWorksheet = Asc['editor'].wb.getWorksheet();
 		if (oWorksheet && oWorksheet.objectRender && oWorksheet.objectRender.controller) {
 			if (oWorksheet.model && oWorksheet.model.getSheetProtection(Asc.c_oAscSheetProtectType.objects)) {
-				logError(new Error('Сannot modify protected sheet'));
+				logError(new Error('Cannot modify protected sheet'));
 				return null;
 			}
 			let oController = oWorksheet.objectRender.controller;
@@ -10058,7 +10058,7 @@
 		let worksheet = this.range.worksheet;
 
 		if (worksheet.getSheetProtection() && worksheet.isIntersectLockedRanges([this.range.bbox])) {
-			//logError(new Error('Сannot modify protected sheet'));
+			//logError(new Error('Cannot modify protected sheet'));
 			return false;
 		}
 
@@ -11030,7 +11030,7 @@
 		var range = this.range.bbox;
 
 		if (!this._checkProtection()) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20246,7 +20246,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20448,7 +20448,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20498,7 +20498,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20608,7 +20608,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20678,7 +20678,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20758,7 +20758,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20810,7 +20810,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
@@ -20856,7 +20856,7 @@
 		}
 
 		if (worksheet.getSheetProtection(Asc.c_oAscSheetProtectType.formatCells)) {
-			logError(new Error('Сannot modify protected sheet'));
+			logError(new Error('Cannot modify protected sheet'));
 			return null;
 		}
 
