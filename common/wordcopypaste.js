@@ -8437,6 +8437,27 @@ PasteProcessor.prototype =
 						Index: -1
 					};
 				}
+			} else if ("w:sdt" === nodeName && node.getAttribute && node.getAttribute("checkbox")) {
+				
+				let checkedFont = node.getAttribute("checkboxfontchecked");
+				if (!checkedFont) {
+					checkedFont = Asc.c_oAscSdtCheckBoxDefaults.CheckedFont;
+				}
+				
+				this.oFonts[checkedFont] = {
+					Name: g_fontApplication.GetFontNameDictionary(checkedFont, true),
+					Index: -1
+				};
+				
+				let uncheckedFont = node.getAttribute("checkboxfontunchecked");
+				if (!uncheckedFont) {
+					uncheckedFont = Asc.c_oAscSdtCheckBoxDefaults.UncheckedFont;
+				}
+				
+				this.oFonts[uncheckedFont] = {
+					Name: g_fontApplication.GetFontNameDictionary(uncheckedFont, true),
+					Index: -1
+				};
 			} else {
 				var src = node.getAttribute("src");
 				if (src && !this._checkSkipMath(node))
@@ -10800,9 +10821,8 @@ PasteProcessor.prototype =
 		// 	<body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
 		// 	<!--StartFragment-->
 		// 	<p style=''>
-		// 		<w:Sdt ShowingPlcHdr="t" CheckBox="t" CheckBoxIsChecked="f" CheckBoxValueChecked="☑‘" CheckBoxValueUnchecked="☐" CheckBoxFontChecked="Segoe UI Symbol" CheckBoxFontUnchecked="Segoe UI Symbol"  Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ID="-1395741881"/>
-		// 		<span style='font-family:"Segoe UI Symbol",sans-serif'>☐</span>
-		// 	</w:Sdt>
+		// 		<w:Sdt ShowingPlcHdr="t" CheckBox="t" CheckBoxIsChecked="f" CheckBoxValueChecked="☑‘" CheckBoxValueUnchecked="☐" CheckBoxFontChecked="Segoe UI Symbol" CheckBoxFontUnchecked="Segoe UI Symbol"  Title="Title" Form="t" Key="DropDown1" Border="red" Shd="blue" HelpText="HelpText" Required="t" RoleName="RoleName" RoleColor="#7FB5B5" sdttag="Tag" Label="Label" ID="-1395741881" Text="Checkbox label"/>
+		// 		</w:Sdt>
 		// 	</p>
 		// 	<!--EndFragment-->
 		// 	</body>
@@ -10850,7 +10870,7 @@ PasteProcessor.prototype =
 		// <body lang=EN-US style='tab-interval:.5in;word-wrap:break-word'>
 		// <!--StartFragment-->
 		// <p style=''>
-		// 	<w:Sdt CheckBox="t" CheckBoxIsChecked="f" CheckBoxValueChecked="◙" CheckBoxValueUnchecked="○" CheckBoxFontChecked="Segoe UI Symbol" CheckBoxFontUnchecked="Segoe UI Symbol" GroupKey="Group 1" Form="t" Key="Choice1" ContentLocked="t" ID="123456789">Choice 1</w:Sdt>
+		// 	<w:Sdt CheckBox="t" CheckBoxIsChecked="f" CheckBoxValueChecked="◙" CheckBoxValueUnchecked="○" CheckBoxFontChecked="Segoe UI Symbol" CheckBoxFontUnchecked="Segoe UI Symbol" GroupKey="Group 1" Form="t" Key="Choice1" ContentLocked="t" ID="123456789" Text="Choice 1"></w:Sdt>
 		// </p>
 		// <!--EndFragment-->
 		// </body>
@@ -10969,14 +10989,15 @@ PasteProcessor.prototype =
 			}
 		};
 
+		let isForm = node && node.attributes && checkBoolAttr(node.attributes["form"]);
 		let isBlockLevelSdt = node.getElementsByTagName("p").length > 0;
-		let levelSdt = isBlockLevelSdt ?
+		let levelSdt = isBlockLevelSdt && !isForm ?
 			new CBlockLevelSdt(this.oLogicDocument, this.oDocument) :
 			new CInlineLevelSdt();
 
 		let checkBox, dropdown, comboBox;
 		let isContentAdded = false;
-		let plcHdrText, isForm;
+		let plcHdrText;
 
 		if (node && node.attributes) {
 			let _type = getType(node.attributes);
@@ -11009,7 +11030,6 @@ PasteProcessor.prototype =
 				levelSdt.SetShowingPlcHdr(true);
 			}
 
-			isForm = checkBoolAttr(node.attributes["form"]);
 			if (AscCommon.IsSupportOFormFeature() && isForm) {
 				this._applyFormProperties(node, levelSdt);
 			}
@@ -11019,11 +11039,15 @@ PasteProcessor.prototype =
 			if (checkBox) {
 				oPr = this._createCheckBoxPr(node, getCharCode);
 				levelSdt.ApplyCheckBoxPr(oPr);
+				isContentAdded = true;
+				if (node.attributes["text"]) {
+					levelSdt.SetCheckBoxLabel(node.attributes["text"].value);
+				}
 			}
 
 			let id = node.attributes["id"];
 			if (id && id.value) {
-				levelSdt.Pr.Id = id.value;
+				levelSdt.SetContentControlId(id.value);
 			}
 
 			comboBox = _type === "combobox";

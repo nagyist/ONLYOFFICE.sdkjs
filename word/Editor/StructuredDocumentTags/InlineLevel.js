@@ -2300,6 +2300,12 @@ CInlineLevelSdt.prototype.SetCheckBoxPr = function(oCheckBoxPr)
 {
 	if (undefined === this.Pr.CheckBox || !this.Pr.CheckBox.IsEqual(oCheckBoxPr))
 	{
+		if (oCheckBoxPr && AscFonts.IsCheckSymbols)
+		{
+			AscFonts.FontPickerByCharacter.getFontBySymbol(oCheckBoxPr.GetCheckedSymbol());
+			AscFonts.FontPickerByCharacter.getFontBySymbol(oCheckBoxPr.GetUncheckedSymbol());
+		}
+		
 		var _oCheckBox = oCheckBoxPr ? oCheckBoxPr.Copy() : undefined;
 		History.Add(new CChangesSdtPrCheckBox(this, this.Pr.CheckBox, _oCheckBox));
 		this.Pr.CheckBox = _oCheckBox;
