@@ -25414,25 +25414,32 @@
 		else 
 		{
 			let oDocument = this.GetDocument();
+			let logicDocument = oDocument.Document;
+			let docState = logicDocument.SaveDocumentState(false);
+			
 			isTrackRevisions = oDocument && oDocument.IsTrackRevisions();
-			arrSelectedParas = oDocument.Document.GetSelectedParagraphs();
+			arrSelectedParas = logicDocument.GetSelectedParagraphs();
 			if(arrSelectedParas.length <= 0 )
 			{
 				return false;
 			}
+			
 			ReplaceInParas(arrSelectedParas);
 			
 			if (arrSelectedParas[0] && arrSelectedParas[0].Parent)
 				arrSelectedParas[0].Parent.RemoveSelection();
-			else 
-				oDocument.Document.RemoveSelection();
+			else
+				logicDocument.RemoveSelection();
 
 			// вставка оставшихся параграфов из textStrings
 			var oParaParent   = arrSelectedParas[0].Parent;
 			var nIndexToPaste = arrSelectedParas[arrSelectedParas.length - 1].Index + 1;
 			var isPres        = !arrSelectedParas[0].bFromDocument;
 			if (!oParaParent)
+			{
+				logicDocument.LoadDocumentState(docState);
 				return true;
+			}
 
 			for (var nPara = arrSelectedParas.length; nPara < textStrings.length; nPara++)
 			{
@@ -25444,6 +25451,8 @@
 
 				nIndexToPaste++;
 			}
+			
+			logicDocument.LoadDocumentState(docState, true);
 		}
 
 		return true;
