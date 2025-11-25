@@ -100,7 +100,30 @@
 		if (!e || AscCommon.g_mouse_button_left !== e.Button)
 			return;
 		
-		let anchorPos = this.logicDocument.Get_NearestPos(page, x, y);
+		let anchorPos = null;
+		let drawingObjects = this.logicDocument.GetDrawingObjects();
+		if (-1 !== drawingObjects.IsInDrawingObject(x, y, page, this.logicDocument))
+		{
+			let paragraph = drawingObjects.getParagraphByXY(x, y, page);
+			if (paragraph)
+			{
+				let transform = paragraph.Get_ParentTextTransform();
+				if (transform)
+				{
+					let inverted = transform.CreateDublicate().Invert();
+					let _x = inverted.TransformPointX(x, y);
+					let _y = inverted.TransformPointX(x, y);
+					x = _x;
+					y = _y;
+				}
+				anchorPos = paragraph.Get_NearestPos(0, x, y, false);
+			}
+		}
+		else
+		{
+			anchorPos = this.logicDocument.Get_NearestPos(page, x, y);
+		}
+		
 		if (!anchorPos || !anchorPos.Paragraph || !anchorPos.ContentPos)
 			return;
 		

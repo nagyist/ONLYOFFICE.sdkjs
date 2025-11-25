@@ -1710,7 +1710,7 @@
 		let oDoc			= private_GetLogicDocument();
 		let oldSelectionInfo	= oDoc.SaveDocumentState();
 
-		this.Select(false);
+		this.Select(true);
 		private_TrackRangesPositions();
 
 		let SelectedContent = oDoc.GetSelectedElementsInfo({CheckAllSelection : true});
@@ -1747,14 +1747,28 @@
 		
 		if (bUpdate === undefined)
 			bUpdate = true;
+		
+		if (bUpdate)
+		{
+			for (let i = this.StartPos.length - 1; i >= 0; --i)
+			{
+				let obj = this.StartPos[i].Class;
+				if ((obj instanceof AscWord.CDocument) || (obj instanceof AscWord.CDocumentContent))
+				{
+					obj.SetThisElementCurrent(true);
+					bUpdate = false;
+					break;
+				}
+			}
+		}
 
 		this.StartPos[0].Class.SetContentPosition(this.StartPos, 0, 0);
 		this.StartPos[0].Class.SetSelectionByContentPositions(this.StartPos, this.EndPos);
-
+		
 		if (bUpdate)
 		{
 			var controllerType;
-
+			
 			if (this.StartPos[0].Class.IsHdrFtr())
 			{
 				controllerType = docpostype_HdrFtr;
@@ -1767,7 +1781,7 @@
 			{
 				controllerType = docpostype_DrawingObjects;
 			}
-			else 
+			else
 			{
 				controllerType = docpostype_Content;
 			}
@@ -7680,6 +7694,10 @@
 		}
 
 		this.Document.LoadDocumentState(documentState);
+		
+		if (!StartPos || !EndPos || !StartPos.length || !EndPos.length)
+			return null;
+		
 		return new ApiRange(StartPos[0].Class, StartPos, EndPos);
 	};
 	/**
