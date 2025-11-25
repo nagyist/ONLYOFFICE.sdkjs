@@ -7624,21 +7624,22 @@ var CPresentation = CPresentation || function(){};
                         return;
                     }
 
-                    const aQuadsParts = annot.GetQuads();
-                    aQuadsParts.forEach(function(quads) {
-                        aQuadsFlat = aQuadsFlat.concat(quads);
-                    });
-
-                    // Fill color
-                    const oFillRGB = annot.GetRGBColor(annot.GetFillColor());
                     if (!oMemory) {
                         oMemory = new AscCommon.CMemory(true);
                         oMemory.Init(24);
                     }
-                   
-                    oMemory.WriteLong(oFillRGB.r);
-                    oMemory.WriteLong(oFillRGB.g);
-                    oMemory.WriteLong(oFillRGB.b);
+
+                    // Fill color
+                    const oFillRGB = annot.GetRGBColor(annot.GetFillColor());
+
+                    const aQuadsParts = annot.GetQuads();
+                    aQuadsParts.forEach(function(quads) {
+                        aQuadsFlat = aQuadsFlat.concat(quads);
+                        
+                        oMemory.WriteLong(oFillRGB.r);
+                        oMemory.WriteLong(oFillRGB.g);
+                        oMemory.WriteLong(oFillRGB.b);
+                    });
 
                     pagesIdxMap.set(pageIdx, nOrigPageIdx);
                 });
