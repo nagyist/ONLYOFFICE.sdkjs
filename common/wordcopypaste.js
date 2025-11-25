@@ -8438,10 +8438,11 @@ PasteProcessor.prototype =
 					};
 				}
 			} else if ("w:sdt" === nodeName && node.getAttribute && node.getAttribute("checkbox")) {
+				let isForm = node && node.attributes && "t" === node.getAttribute("form");
 				
 				let checkedFont = node.getAttribute("checkboxfontchecked");
 				if (!checkedFont) {
-					checkedFont = Asc.c_oAscSdtCheckBoxDefaults.CheckedFont;
+					checkedFont = isForm ? Asc.c_oAscSdtCheckBoxDefaults.FormCheckedFont : Asc.c_oAscSdtCheckBoxDefaults.CheckedFont;
 				}
 				
 				this.oFonts[checkedFont] = {
@@ -8451,7 +8452,7 @@ PasteProcessor.prototype =
 				
 				let uncheckedFont = node.getAttribute("checkboxfontunchecked");
 				if (!uncheckedFont) {
-					uncheckedFont = Asc.c_oAscSdtCheckBoxDefaults.UncheckedFont;
+					uncheckedFont = isForm ? Asc.c_oAscSdtCheckBoxDefaults.FormUncheckedFont : Asc.c_oAscSdtCheckBoxDefaults.UncheckedFont;
 				}
 				
 				this.oFonts[uncheckedFont] = {
@@ -11037,7 +11038,7 @@ PasteProcessor.prototype =
 			let oPr;
 			checkBox = _type === "checkbox";
 			if (checkBox) {
-				oPr = this._createCheckBoxPr(node, getCharCode);
+				oPr = this._createCheckBoxPr(node, getCharCode, isForm);
 				levelSdt.ApplyCheckBoxPr(oPr);
 				isContentAdded = true;
 				if (node.attributes["text"]) {
@@ -11184,37 +11185,45 @@ PasteProcessor.prototype =
 		levelSdt.SetFormPr(formPr);
 	},
 
-	_createCheckBoxPr: function (node, getCharCode) {
+	_createCheckBoxPr: function (node, getCharCode, isForm) {
 		let oPr = new AscWord.CSdtCheckBoxPr();
 
 		let checked = node.attributes["checkboxischecked"];
 		if (checked) {
 			oPr.Checked = checked.value === "t";
 		}
-
+		
+		let groupKey = node.attributes["groupkey"];
+		if (groupKey && groupKey.value) {
+			oPr.GroupKey = groupKey.value;
+		}
+		
 		let checkedFont = node.attributes["checkboxfontchecked"];
 		if (checkedFont) {
 			oPr.CheckedFont = checkedFont.value;
+		} else if (isForm) {
+			oPr.CheckedFont = Asc.c_oAscSdtCheckBoxDefaults.FormCheckedFont;
 		}
 
 		let checkedSymbol = node.attributes["checkboxvaluechecked"];
 		if (checkedSymbol) {
 			oPr.CheckedSymbol = getCharCode(checkedSymbol.value);
+		} else if (isForm) {
+			oPr.CheckedSymbol = oPr.GroupKey ? Asc.c_oAscSdtCheckBoxDefaults.FormCheckedRadioSymbol : Asc.c_oAscSdtCheckBoxDefaults.FormCheckedSymbol;
 		}
 
 		let uncheckedFont = node.attributes["checkboxfontunchecked"];
 		if (uncheckedFont) {
 			oPr.UncheckedFont = uncheckedFont.value;
+		} else if (isForm) {
+			oPr.UncheckedFont = Asc.c_oAscSdtCheckBoxDefaults.FormUncheckedFont;
 		}
 
 		let uncheckedSymbol = node.attributes["checkboxvalueunchecked"];
 		if (uncheckedSymbol) {
 			oPr.UncheckedSymbol = getCharCode(uncheckedSymbol.value);
-		}
-
-		let groupKey = node.attributes["groupkey"];
-		if (groupKey && groupKey.value) {
-			oPr.GroupKey = groupKey.value;
+		} else if (isForm) {
+			oPr.UncheckedSymbol = oPr.GroupKey ? Asc.c_oAscSdtCheckBoxDefaults.FormUncheckedRadioSymbol : Asc.c_oAscSdtCheckBoxDefaults.FormUncheckedSymbol;
 		}
 
 		return oPr;
