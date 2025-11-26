@@ -112,7 +112,7 @@
 				{
 					let inverted = transform.CreateDublicate().Invert();
 					let _x = inverted.TransformPointX(x, y);
-					let _y = inverted.TransformPointX(x, y);
+					let _y = inverted.TransformPointY(x, y);
 					x = _x;
 					y = _y;
 				}
