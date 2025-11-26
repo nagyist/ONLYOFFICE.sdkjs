@@ -34,6 +34,8 @@
 
 (function (window)
 {
+	let oMacroRecorderContext = {};
+
 	/**
 	 * @param editor
 	 * @constructor
@@ -51,6 +53,8 @@
 		this.actionCount = 0;
 		this.isFirstAction = null;
 		this.currentDescription = null;
+
+		oMacroRecorderContext = this;
 	}
 	
 	MacroRecorder.prototype.start = function(macroName)
@@ -77,6 +81,10 @@
 		{
 			if (e.KeyCode === 8) // BackSpace
 			{
+				_t.addStepData("remove", 1);
+				// TODO when we have:
+				// * Selection.Delete
+				// * Selection.TypeBackspace
 			}
 			else if (e.KeyCode === 9) // Tab
 			{
@@ -319,6 +327,13 @@
 	{
 		if (!this.isInProgress() || this.isPaused() || undefined === additional)
 			return;
+
+		// for meta action
+		if (type === 'remove')
+		{
+			this.getResultByType(type, additional);
+			return;
+		}
 
 		if (this.prevChangeType === type)
 		{
@@ -993,6 +1008,11 @@
 		},
 		deleteButton			: function(){
 			return "";
+		},
+		remove					: function(){
+			if (oMacroRecorderContext.prevChangeType === AscDFH.historydescription_Document_AddLetter && oMacroRecorderContext.prevData.length)
+				oMacroRecorderContext.prevData.pop();
+			return "";
 		}
 	};
 
@@ -1041,6 +1061,7 @@
 	WordActionsMacroList['moveCursorRight']												= wordActions.moveCursorRight;
 	WordActionsMacroList['moveCursorUp']												= wordActions.moveCursorUp;
 	WordActionsMacroList['moveCursorDown']												= wordActions.moveCursorDown;
+	WordActionsMacroList['remove']														= wordActions.remove;
 
 	//WordActionsMacroList[AscDFH.historydescription_Document_BackSpaceButton]			= wordActions.backSpaceButton;
 	// WordActionsMacroList[AscDFH.historydescription_Document_DeleteButton]			= wordActions.deleteButton;
