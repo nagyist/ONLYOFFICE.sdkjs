@@ -1274,12 +1274,10 @@ CSdtBase.prototype.checkDataBinding = function()
 	if (content.attribute)
 		content = content.content.attributes[content.attribute]
 	else
-	{
 		content = content.getText();
-		if (content === "")
-			return false;
-	}
 
+	if (content === "")
+		return false;
 
 	if (this.IsPicture())
 	{
