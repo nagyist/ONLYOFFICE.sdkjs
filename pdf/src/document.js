@@ -7620,10 +7620,6 @@ var CPresentation = CPresentation || function(){};
 
                     annot.AddToRedraw();
 
-                    if (!isOrigPage) {
-                        return;
-                    }
-
                     if (!oMemory) {
                         oMemory = new AscCommon.CMemory(true);
                         oMemory.Init(24);
@@ -7654,12 +7650,14 @@ var CPresentation = CPresentation || function(){};
                 if (aQuadsFlat.length != 0) {
                     let oRender = new Uint8Array(oMemory.data.buffer, 0, oMemory.GetCurPosition());
 
-                    // Apply redact to the page
-                    oNativeFile["RedactPage"](
-                        nOrigPageIdx,
-                        aQuadsFlat,
-                        oRender
-                    );
+                    if (isOrigPage) {
+                        // Apply redact to the page
+                        oNativeFile["RedactPage"](
+                            nOrigPageIdx,
+                            aQuadsFlat,
+                            oRender
+                        );
+                    }
 
                     this.SetRedactData(sRedactId, pageIdx, aQuadsFlat, oRender);
                 }
