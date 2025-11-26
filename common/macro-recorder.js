@@ -104,6 +104,9 @@
 			}
 			else if (e.KeyCode === 37) // Left Arrow
 			{
+				if (_t.editor.editorId !== AscCommon.c_oEditorId.Word)
+					return;
+
 				let doc = _t.editor.getLogicDocument();
 				let curPara = doc.GetCurrentParagraph(true);
 				let isRtl = (curPara ? curPara.isRtlDirection() : false);
@@ -120,6 +123,9 @@
 			}
 			else if (e.KeyCode === 38) // Top Arrow
 			{
+				if (_t.editor.editorId !== AscCommon.c_oEditorId.Word)
+					return;
+
 				_t.addStepData('moveCursorUp', [{
 					isAddSelect:	e.IsShift(),
 					isWord:			e.IsCtrl()
@@ -127,6 +133,9 @@
 			}
 			else if (e.KeyCode === 39) // Right Arrow
 			{
+				if (_t.editor.editorId !== AscCommon.c_oEditorId.Word)
+					return;
+
 				let doc = _t.editor.getLogicDocument();
 				let curPara = doc.GetCurrentParagraph(true);
 				let isRtl = (curPara ? curPara.isRtlDirection() : false);
@@ -143,6 +152,9 @@
 			}
 			else if (e.KeyCode === 40) // Bottom Arrow
 			{
+				if (_t.editor.editorId !== AscCommon.c_oEditorId.Word)
+					return;
+
 				_t.addStepData('moveCursorDown', [{
 					isAddSelect:	e.IsShift(),
 					isWord:			e.IsCtrl()
