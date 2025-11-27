@@ -24648,9 +24648,16 @@
 		return executeNoFormLockCheck(function() {
 			let mainForm = this.Sdt.GetMainForm();
 			if (mainForm && mainForm !== this.Sdt && mainForm.IsLabeledCheckBox())
+			{
 				mainForm.SetCheckBoxLabel(label);
+			}
 			else
+			{
 				this.Sdt.SetCheckBoxLabel(label);
+				let innerCheckBox = this.Sdt.IsLabeledCheckBox() ? this.Sdt.GetInnerCheckBox() : null;
+				if (innerCheckBox)
+					this.Sdt = innerCheckBox;
+			}
 			
 			return true;
 		}, this);
