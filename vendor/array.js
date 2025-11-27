@@ -200,4 +200,34 @@
 			writable: true
 		});
 	}
+
+	// ONLY FOR OLD CHROMIUM/V8
+	if (window &&
+		window.AscCommon &&
+		window.AscCommon.AscBrowser &&
+		window.AscCommon.AscBrowser.isChrome &&
+		typeof SharedArrayBuffer === "undefined")
+	{
+		(function() {
+			var _sort = Array.prototype.sort;
+			Array.prototype.sort = function(compareFn) {
+				var cmp = compareFn || function(a, b) {
+					var sa = String(a);
+					var sb = String(b);
+					return sa < sb ? -1 : sa > sb ? 1 : 0;
+				};
+				var indexed = this.map(function(v, i) {
+					return { v: v, i: i };
+				});
+				_sort.call(indexed, function(a, b) {
+					var r = cmp(a.v, b.v);
+					return r !== 0 ? r : a.i - b.i;
+				});
+				for (var i = 0; i < indexed.length; i++) {
+					this[i] = indexed[i].v;
+				}
+				return this;
+			};
+		})();
+	}
 })();
