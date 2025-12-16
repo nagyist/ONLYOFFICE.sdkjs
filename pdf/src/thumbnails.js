@@ -673,7 +673,7 @@
 
     // rendering
     CDocument.prototype._paint= function() {
-        if (!this.canvas || !this.viewer.canInteract()) return;
+        if (!this.canvas) return;
         if (this.isNeedResize()) {
             this.resize();
         }
