@@ -5570,15 +5570,15 @@ var CPresentation = CPresentation || function(){};
                     page:           nPage,
                     name:           AscCommon.CreateGUID(),
                     type:           AscPDF.ANNOTATIONS_TYPES.Highlight,
-                    creationDate:   (new Date().getTime()).toString(),
-                    modDate:        (new Date().getTime()).toString(),
+                    creationDate:   new Date().getTime(),
+                    modDate:        new Date().getTime(),
                     hidden:         false
                 }
 
                 let oAnnot = this.AddAnnotByProps(oProps);
 
                 oAnnot.SetQuads(aQuads);
-                oAnnot.SetStrokeColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
+                oAnnot.SetBorderColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
                 oAnnot.SetOpacity(typeof(opacity) != "boolean" ? opacity / 100 : 1);
             }
         }
@@ -5636,15 +5636,15 @@ var CPresentation = CPresentation || function(){};
                 page:           nPage,
                 name:           AscCommon.CreateGUID(),
                 type:           AscPDF.ANNOTATIONS_TYPES.Underline,
-                creationDate:   (new Date().getTime()).toString(),
-                modDate:        (new Date().getTime()).toString(),
+                creationDate:   new Date().getTime(),
+                modDate:        new Date().getTime(),
                 hidden:         false
             }
 
             let oAnnot = this.AddAnnotByProps(oProps);
 
             oAnnot.SetQuads(aQuads);
-            oAnnot.SetStrokeColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
+            oAnnot.SetBorderColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
             oAnnot.SetOpacity(opacity / 100);
         }
 
@@ -5687,15 +5687,15 @@ var CPresentation = CPresentation || function(){};
                 page:           nPage,
                 name:           AscCommon.CreateGUID(),
                 type:           AscPDF.ANNOTATIONS_TYPES.Strikeout,
-                creationDate:   (new Date().getTime()).toString(),
-                modDate:        (new Date().getTime()).toString(),
+                creationDate:   new Date().getTime(),
+                modDate:        new Date().getTime(),
                 hidden:         false
             }
 
             let oAnnot = this.AddAnnotByProps(oProps);
 
             oAnnot.SetQuads(aQuads);
-            oAnnot.SetStrokeColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
+            oAnnot.SetBorderColor([private_correctRGBColorComponent(r)/255, private_correctRGBColorComponent(g)/255, private_correctRGBColorComponent(b)/255]);
             oAnnot.SetOpacity(opacity / 100);
         }
 
@@ -5729,8 +5729,8 @@ var CPresentation = CPresentation || function(){};
                 page:           nPage,
                 name:           AscCommon.CreateGUID(),
                 type:           AscPDF.ANNOTATIONS_TYPES.Redact,
-                creationDate:   (new Date().getTime()).toString(),
-                modDate:        (new Date().getTime()).toString(),
+                creationDate:   new Date().getTime(),
+                modDate:        new Date().getTime(),
                 hidden:         false
             }
 
@@ -5738,7 +5738,7 @@ var CPresentation = CPresentation || function(){};
 
             oAnnot.SetQuads(aQuads);
             oAnnot.SetFillColor([0, 0, 0]);
-            oAnnot.SetStrokeColor([1, 0, 0]);
+            oAnnot.SetBorderColor([1, 0, 0]);
             oAnnot.SetOpacity(1);
         }
 
@@ -5770,14 +5770,14 @@ var CPresentation = CPresentation || function(){};
                     page:           nPage,
                     name:           AscCommon.CreateGUID(),
                     type:           AscPDF.ANNOTATIONS_TYPES.Link,
-                    creationDate:   (new Date().getTime()).toString(),
-                    modDate:        (new Date().getTime()).toString(),
+                    creationDate:   new Date().getTime(),
+                    modDate:        new Date().getTime(),
                     hidden:         false
                 }
 
                 let oAnnot = _t.AddAnnotByProps(oProps);
 
-                oAnnot.SetStrokeColor([0, 0, 1]);
+                oAnnot.SetBorderColor([0, 0, 1]);
                 oAnnot.SetOpacity(1);
                 oAnnot.SetBorderWidth(1);
 
@@ -6804,7 +6804,7 @@ var CPresentation = CPresentation || function(){};
         oFreeText.SetRotate(nRotAngle);
         
         oFreeText.SetFillColor([1, 1, 1]);
-        oFreeText.SetStrokeColor([0, 0, 0]);
+        oFreeText.SetBorderColor([0, 0, 0]);
         oFreeText.SetBorderWidth(1);
         oFreeText.SetAlign(AscPDF.ALIGN_TYPE.left);
         oFreeText.SetIntent(nType);
@@ -9377,7 +9377,7 @@ var CPresentation = CPresentation || function(){};
                 oAnnot.SetBorderEffectStyle(annotJson["BE"]["S"]);
         }
         
-        oAnnot.SetStrokeColor(annotJson["C"]);
+        oAnnot.SetBorderColor(annotJson["C"]);
         
         if (annotJson["CA"] != null) {
             oAnnot.SetOpacity(annotJson["CA"]);
