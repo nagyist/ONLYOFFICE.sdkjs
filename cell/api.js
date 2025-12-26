@@ -2440,6 +2440,7 @@ var editor;
 
 			function readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, startAction) {
 				if (startAction && t.asc_checkNeedCallback("asc_onStartAction")) {
+					t.wb.setStartPartialReading(true);
 					startAction = false;
 					t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				}
@@ -2452,6 +2453,7 @@ var editor;
 					// console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
 					t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
 					sheetDataElem.ws.updateSlicersByRange(updateRigion, true);
+					t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 					// t.wb.getWorksheet(sheetDataElem.ws.getIndex()).updateRanges([updateRigion], true);
 					t.handlers.trigger("drawWS");
 				} else {
@@ -2459,6 +2461,7 @@ var editor;
 						return !!item.state;
 					});
 					if (!sheetDataElem) {
+						t.wb.setStartPartialReading(false);
 						//restore state
 						AscCommon.CollaborativeEditing.Set_GlobalLock(false);
 						t.wbModel.dependencyFormulas.unlockRecal();
@@ -2469,6 +2472,7 @@ var editor;
 						t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
 						sheetDataElem.ws.updateSlicersByRange(updateRigion);
 						// t.wb.getWorksheet(sheetDataElem.ws.getIndex()).updateRanges([updateRigion], true);
+						t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 						t.handlers.trigger("drawWS");
 						t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 						AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReady2", performance.now(), AscCommon.getMemoryInfo()), t);

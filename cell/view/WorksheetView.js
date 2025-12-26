@@ -1208,7 +1208,7 @@ function isAllowPasteLink(pastedWb) {
 	WorksheetView.prototype.getVerticalSmoothScrollRange = function (bCheckEqual) {
 		var offsetFrozen = this.getFrozenPaneOffset(true, false);
 		var ctxH = this.drawingCtx.getHeight() - offsetFrozen.offsetY - this.cellsTop;
-		for (var h = 0, i = this.nRowsCount - 1; i >= 0; --i) {
+		for (var h = 0, i = this.getCurrentRowsCount() - 1; i >= 0; --i) {
 			h += this._getRowHeight(i);
 			if (h >= ctxH) {
 				if (bCheckEqual && h > ctxH) {
@@ -1320,7 +1320,7 @@ function isAllowPasteLink(pastedWb) {
 		}
         var offsetFrozen = this.getFrozenPaneOffset(true, false);
         var ctxH = this.drawingCtx.getHeight() - offsetFrozen.offsetY - this.cellsTop;
-        for (var h = 0, i = this.nRowsCount - 1; i >= 0; --i) {
+        for (var h = 0, i = this.getCurrentRowsCount() - 1; i >= 0; --i) {
             h += this._getRowHeight(i);
             if (h >= ctxH) {
                 if (bCheckEqual && h > ctxH) {
@@ -1333,7 +1333,7 @@ function isAllowPasteLink(pastedWb) {
 		if (this.topLeftFrozenCell) {
 			tmp = this.topLeftFrozenCell.getRow0();
 		}
-		if (gc_nMaxRow === this.nRowsCount || this.model.isDefaultHeightHidden()) {
+		if (gc_nMaxRow === this.getCurrentRowsCount() || this.model.isDefaultHeightHidden()) {
 			tmp -= 1;
 		}
 		return Math.max(0, i - tmp); // Диапазон скрола должен быть меньше количества строк, чтобы не было прибавления строк при перетаскивании бегунка
@@ -1352,7 +1352,11 @@ function isAllowPasteLink(pastedWb) {
 		if (this.topLeftFrozenCell) {
 			tmp = this.topLeftFrozenCell.getRow0();
 		}
-		return (this.model.isDefaultHeightHidden() ? this.nRowsCount : gc_nMaxRow) - tmp - 1;
+		return (this.model.isDefaultHeightHidden() ? this.getCurrentRowsCount() : gc_nMaxRow) - tmp - 1;
+	};
+
+	WorksheetView.prototype.getCurrentRowsCount = function () {
+		return this.workbook.getIsPartialReading() ? this.model.getCurrentRowsCount() : this.nRowsCount;
 	};
 
     WorksheetView.prototype.getCellsOffset = function (units) {

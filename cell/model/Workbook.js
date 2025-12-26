@@ -14471,6 +14471,9 @@
 		});
 		return arrControls;
 	};
+	Worksheet.prototype.getCurrentRowsCount = function () {
+		return this.rowsData && this.rowsData.indexB;
+	};
 
 
 //-------------------------------------------------------------------------------------------------
