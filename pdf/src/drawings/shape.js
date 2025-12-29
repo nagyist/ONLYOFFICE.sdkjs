@@ -130,10 +130,10 @@
         this.recalculateShdw();
         this.SetNeedRecalc(false);
     };
-    CPdfShape.prototype.recalculateBounds = function(bLine) {
+    CPdfShape.prototype.recalculateBounds = function(bNoLine) {
         let boundsChecker = new AscFormat.CSlideBoundsChecker();
         
-        bLine && boundsChecker.CheckLineWidth(this);
+        !bNoLine && boundsChecker.CheckLineWidth(this);
         boundsChecker.DO_NOT_DRAW_ANIM_LABEL = true;
         this.draw(boundsChecker);
         boundsChecker.CorrectBounds();

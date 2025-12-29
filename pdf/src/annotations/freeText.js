@@ -287,7 +287,7 @@
         let nOpacity = this.GetOpacity();
 
 		AscCommon.ExecuteNoHistory(function() {
-			let aStrokeColor = this.GetStrokeColor();
+			let aStrokeColor = this.GetBorderColor();
 			if (!aStrokeColor || aStrokeColor.length == 0) {
 				aStrokeColor = [0, 0, 0];
 			}
@@ -380,7 +380,7 @@
 						oLine.setFill(AscFormat.CreateNoFillUniFill());
 					}
 					else {
-						this.SetBorderColor(this.GetStrokeColor());
+						this.SetBorderColor(this.GetBorderColor());
 					}
 					
 					oLine.setW(nWidthPt * g_dKoef_pt_to_mm * 36000.0);
@@ -389,7 +389,7 @@
 		}, undefined, this);
     };
 	CAnnotationFreeText.prototype.SetBorderColor = function(aColor) {
-		AscCommon.History.Add(new CChangesPDFAnnotStroke(this, this.GetStrokeColor(), aColor));
+		AscCommon.History.Add(new CChangesPDFAnnotStroke(this, this.GetBorderColor(), aColor));
 		
 		this._strokeColor = aColor;
 		

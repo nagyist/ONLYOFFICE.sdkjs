@@ -49,15 +49,6 @@
 	 */
 
 	/**
-	 * @typedef {number[]} WidgetRect
-	 * @property {number} 0 - x1
-	 * @property {number} 1 - y1
-	 * @property {number} 2 - x2
-	 * @property {number} 3 - y2
-	 */
-
-	
-	/**
 	 * @typedef {Object} ListOptionTuple
 	 * @property {string} 0 - displayed value
 	 * @property {string} 1 - exported value
@@ -160,7 +151,7 @@
 
 	/**
 	 * The available annotation border styles.
-	 * @typedef {("solid" |"dashed")} AnnotBorderStyle
+	 * @typedef {("solid" | "dashed")} AnnotBorderStyle
 	 */
 
 	/**
@@ -169,11 +160,11 @@
 	 *  - rect[0] < rect[2] (x1 < x2)
 	 *  - rect[1] < rect[3] (y1 < y2)
 	 *
-	 * @typedef {[number, number, number, number]} Rect
-	 * @property {number} 0 - x1 (left)
-	 * @property {number} 1 - y1 (top)
-	 * @property {number} 2 - x2 (right)
-	 * @property {number} 3 - y2 (bottom)
+	 * @typedef {[pt, pt, pt, pt]} Rect
+	 * @property {pt} 0 - x1 (left)
+	 * @property {pt} 1 - y1 (top)
+	 * @property {pt} 2 - x2 (right)
+	 * @property {pt} 3 - y2 (bottom)
 	 */
 
 	/**
@@ -194,8 +185,8 @@
 	/**
 	 * Axis-aligned point.
 	 * @typedef {object} Point
-	 * @property {number} x
-	 * @property {number} y
+	 * @property {pt} x
+	 * @property {pt} y
 	 */
 
 	/**
@@ -229,15 +220,15 @@
 	 *  · y1 <= y3 (left edge goes top → bottom)
 	 *  · y2 <= y4 (right edge goes top → bottom)
 	 *
-	 * @typedef {[number, number, number, number, number, number, number, number]} Quad
-	 * @property {number} 0 - x1 (left top)
-	 * @property {number} 1 - y1 (left top)
-	 * @property {number} 2 - x2 (right top)
-	 * @property {number} 3 - y2 (right top)
-	 * @property {number} 4 - x3 (left bottom)
-	 * @property {number} 5 - y3 (left bottom)
-	 * @property {number} 6 - x4 (right bottom)
-	 * @property {number} 7 - y4 (right bottom)
+	 * @typedef {[pt, pt, pt, pt, pt, pt, pt, pt]} Quad
+	 * @property {pt} 0 - x1 (left top)
+	 * @property {pt} 1 - y1 (left top)
+	 * @property {pt} 2 - x2 (right top)
+	 * @property {pt} 3 - y2 (right top)
+	 * @property {pt} 4 - x3 (left bottom)
+	 * @property {pt} 5 - y3 (left bottom)
+	 * @property {pt} 6 - x4 (right bottom)
+	 * @property {pt} 7 - y4 (right bottom)
 	 */
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -324,7 +315,6 @@
 		}
 
 		let oProps = {
-			rect:           rect,
 			name:           AscCommon.CreateGUID(),
 			type:           AscPDF.ANNOTATIONS_TYPES.Circle,
 			creationDate:   new Date().getTime(),
@@ -337,7 +327,10 @@
 		oAnnot.SetBorderStyle(AscPDF.BORDER_TYPES.solid);
 		oAnnot.SetBorderColor([0, 0, 0]);
 
-		return new ApiCircleAnnotation(oAnnot);
+		let oApiAnnot = new ApiCircleAnnotation(oAnnot);
+		oApiAnnot.private_UpdateRect(rect);
+
+		return oApiAnnot;
 	};
 	
 	/**
@@ -356,7 +349,6 @@
 		}
 
 		let oProps = {
-			rect:           rect,
 			name:           AscCommon.CreateGUID(),
 			type:           AscPDF.ANNOTATIONS_TYPES.Square,
 			creationDate:   new Date().getTime(),
@@ -369,7 +361,10 @@
 		oAnnot.SetBorderStyle(AscPDF.BORDER_TYPES.solid);
 		oAnnot.SetBorderColor([0, 0, 0]);
 
-		return new ApiSquareAnnotation(oAnnot);
+		let oApiAnnot = new ApiSquareAnnotation(oAnnot);
+		oApiAnnot.private_UpdateRect(rect);
+
+		return oApiAnnot;
 	};
 
 	/**
@@ -687,12 +682,12 @@
 			aQuads = [private_ConvertRectToQuad(rect)];
 			_rect = rect;
 		}
-		else if (private_IsValidQuad(rect)) {
+		else {
 			let minX = Infinity, maxX = -Infinity;
 			let minY = Infinity, maxY = -Infinity;
 
 			for (let i = 0; i < rect.length; i++) {
-				for (let j = 0; j < rect.length; j += 2) {
+				for (let j = 0; j < rect[i].length; j += 2) {
 					let x = rect[i][j];
 					let y = rect[i][j + 1];
 
@@ -718,7 +713,7 @@
 
 		let oAnnot = AscPDF.CreateAnnotByProps(oProps, oDoc);
 
-		oAnnot.SetBorderColor([255, 255, 255]);
+		oAnnot.SetBorderColor([1, 0, 0]);
 		oAnnot.SetQuads(aQuads);
 
 		return new ApiHighlightAnnotation(oAnnot);
@@ -746,12 +741,12 @@
 			aQuads = [private_ConvertRectToQuad(rect)];
 			_rect = rect;
 		}
-		else if (private_IsValidQuad(rect)) {
+		else {
 			let minX = Infinity, maxX = -Infinity;
 			let minY = Infinity, maxY = -Infinity;
 
 			for (let i = 0; i < rect.length; i++) {
-				for (let j = 0; j < rect.length; j += 2) {
+				for (let j = 0; j < rect[i].length; j += 2) {
 					let x = rect[i][j];
 					let y = rect[i][j + 1];
 
@@ -777,7 +772,7 @@
 
 		let oAnnot = AscPDF.CreateAnnotByProps(oProps, oDoc);
 
-		oAnnot.SetBorderColor([255, 255, 255]);
+		oAnnot.SetBorderColor([1, 0, 0]);
 		oAnnot.SetQuads(aQuads);
 
 		return new ApiStrikeoutAnnotation(oAnnot);
@@ -805,12 +800,12 @@
 			aQuads = [private_ConvertRectToQuad(rect)];
 			_rect = rect;
 		}
-		else if (private_IsValidQuad(rect)) {
+		else {
 			let minX = Infinity, maxX = -Infinity;
 			let minY = Infinity, maxY = -Infinity;
 
 			for (let i = 0; i < rect.length; i++) {
-				for (let j = 0; j < rect.length; j += 2) {
+				for (let j = 0; j < rect[i].length; j += 2) {
 					let x = rect[i][j];
 					let y = rect[i][j + 1];
 
@@ -836,7 +831,7 @@
 
 		let oAnnot = AscPDF.CreateAnnotByProps(oProps, oDoc);
 
-		oAnnot.SetBorderColor([255, 255, 255]);
+		oAnnot.SetBorderColor([1, 0, 0]);
 		oAnnot.SetQuads(aQuads);
 
 		return new ApiUnderlineAnnotation(oAnnot);
@@ -864,12 +859,12 @@
 			aQuads = [private_ConvertRectToQuad(rect)];
 			_rect = rect;
 		}
-		else if (private_IsValidQuad(rect)) {
+		else {
 			let minX = Infinity, maxX = -Infinity;
 			let minY = Infinity, maxY = -Infinity;
 
 			for (let i = 0; i < rect.length; i++) {
-				for (let j = 0; j < rect.length; j += 2) {
+				for (let j = 0; j < rect[i].length; j += 2) {
 					let x = rect[i][j];
 					let y = rect[i][j + 1];
 
@@ -895,7 +890,7 @@
 
 		let oAnnot = AscPDF.CreateAnnotByProps(oProps, oDoc);
 
-		oAnnot.SetBorderColor([255, 255, 255]);
+		oAnnot.SetBorderColor([1, 0, 0]);
 		oAnnot.SetQuads(aQuads);
 
 		return new ApiCaretAnnotation(oAnnot);
@@ -923,12 +918,12 @@
 			aQuads = [private_ConvertRectToQuad(rect)];
 			_rect = rect;
 		}
-		else if (private_IsValidQuad(rect)) {
+		else {
 			let minX = Infinity, maxX = -Infinity;
 			let minY = Infinity, maxY = -Infinity;
 
 			for (let i = 0; i < rect.length; i++) {
-				for (let j = 0; j < rect.length; j += 2) {
+				for (let j = 0; j < rect[i].length; j += 2) {
 					let x = rect[i][j];
 					let y = rect[i][j + 1];
 
@@ -1065,7 +1060,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddTextField.js
 	 */
@@ -1082,7 +1077,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddDateField.js
 	 */
@@ -1099,7 +1094,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddImageField.js
 	 */
@@ -1116,7 +1111,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddImageField.js
 	 */
@@ -1133,7 +1128,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddRadiobuttonField.js
 	 */
@@ -1150,7 +1145,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddComboboxField.js
 	 */
@@ -1167,7 +1162,7 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
-	 * @param {WidgetRect} aRect - widget rect
+	 * @param {Rect} aRect - widget rect
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/AddListboxField.js
 	 */
@@ -1549,7 +1544,7 @@
 	 * Adds new widget - visual representation for field
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page to add widget
-	 * @param {WidgetRect} aRect - field rect
+	 * @param {Rect} aRect - field rect
 	 * @returns {?ApiWidget}
 	 * @see office-js-api/Examples/PDF/ApiBaseField/Methods/AddWidget.js
 	 */
@@ -2766,7 +2761,7 @@
 	 * @memberof ApiCheckboxField
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page to add option
-	 * @param {WidgetRect} - rect of new option
+	 * @param {Rect} - rect of new option
 	 * @param {string} [sExportValue] - option checked value
 	 * @returns {ApiCheckboxWidget}
 	 * @see office-js-api/Examples/PDF/ApiCheckboxField/Methods/AddOption.js
@@ -3344,6 +3339,13 @@
 		this.Color = AscFormat.CreateUniColorRGB(r, g, b);
 	}
 
+	ApiRGBColor.prototype.toJSON = function () {
+		return { "r": this.R, "g": this.G, "b": this.B };
+	};
+	ApiRGBColor.prototype.toString = function () {
+		return `r: ${this.R}, g: ${this.G}, b: ${this.B}`;
+	};
+
 	/**
 	 * Returns a type of the ApiRGBColor class.
 	 * @memberof ApiRGBColor
@@ -3441,6 +3443,10 @@
 		return this.Annot;
 	};
 
+	ApiBaseAnnotation.prototype.private_UpdateRect = function(rect) {
+		this.Annot.SetRect(rect);
+	};
+
 	/**
 	 * Sets annotation rect.
 	 * @typeofeditors ["PDFE"]
@@ -3453,7 +3459,7 @@
 			AscBuilder.throwException("The rect parameter must be a valid rect");
 		}
 
-		this.Annot.SetRect(rect);
+		this.private_UpdateRect(rect);
 		return true;
 	};
 
@@ -3464,7 +3470,10 @@
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/GetRect.js
 	 */
 	ApiBaseAnnotation.prototype.GetRect = function() {
-		return this.Annot.GetRect();
+		let aRD = this.Annot.GetRectangleDiff() || [0, 0, 0, 0];
+		let aRect = this.Annot.GetRect();
+
+		return [aRect[0] + aRD[0], aRect[1] + aRD[1], aRect[2] - aRD[2], aRect[3] - aRD[3]];
 	};
 
 	/**
@@ -3490,7 +3499,7 @@
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/GetBorderColor.js
 	 */
 	ApiBaseAnnotation.prototype.GetBorderColor = function() {
-		let aInnerColor = this.Annot.GetStrokeColor();
+		let aInnerColor = this.Annot.GetBorderColor();
 		if (!aInnerColor) {
 			return null;
 		}
@@ -3699,10 +3708,8 @@
 			AscBuilder.throwException("The name parameter must be a non empty string");
 		}
 
-		if (Object.values(AscCommon.g_oTableId.m_aPairs).find(function(obj) {obj.IsAnnot && obj.IsAnnot() && obj.GetName() == name})) {
-			if (!name) {
-				AscBuilder.throwException("This name is busy");
-			}
+		if (Object.values(AscCommon.g_oTableId.m_aPairs).find(function(obj) {return obj.IsAnnot && obj.IsAnnot() && obj.GetName() == name})) {
+			AscBuilder.throwException("This unique name is busy");
 		}
 
 		this.Annot.SetName(name);
@@ -3743,7 +3750,7 @@
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/GetOpacity.js
 	 */
 	ApiBaseAnnotation.prototype.GetOpacity = function() {
-		return this.Annot.GetOpacity();
+		return this.Annot.GetOpacity() * 100;
 	};
 
 	/**
@@ -3827,7 +3834,7 @@
 			AscBuilder.throwException("The pattern parameter must be an array with numbers");
 		}
 
-		this.Annot.SetDash(pattern);
+		this.Annot.SetDashPattern(pattern);
 		return true;
 	};
 
@@ -3850,11 +3857,13 @@
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/SetBorderEffectStyle.js
 	 */
 	ApiBaseAnnotation.prototype.SetBorderEffectStyle = function(style) {
-		if (!AscPDF.BORDER_EFFECT_STYLES[style]) {
+		if (undefined == AscPDF.BORDER_EFFECT_STYLES[style]) {
 			AscBuilder.throwException("The style parameter must be one of available");
 		}
 
-		this.Annot.SetBorderEffectStyle(style);
+		this.Annot.SetBorderEffectStyle(AscPDF.BORDER_EFFECT_STYLES[style]);
+		this.private_UpdateRect();
+
 		return true;
 	};
 
@@ -3868,10 +3877,10 @@
 		let nBorderEffectStyle = this.Annot.GetBorderEffectStyle();
 
 		switch (nBorderEffectStyle) {
-			case AscBuilder.BORDER_EFFECT_STYLES.none: {
+			case AscPDF.BORDER_EFFECT_STYLES.none: {
 				return "none";
 			}
-			case AscBuilder.BORDER_EFFECT_STYLES.cloud: {
+			case AscPDF.BORDER_EFFECT_STYLES.cloud: {
 				return "cloud";
 			}
 		}
@@ -3893,6 +3902,8 @@
 		}
 
 		this.Annot.SetBorderEffectIntensity(value);
+		this.private_UpdateRect();
+
 		return true;
 	};
 
@@ -3917,6 +3928,10 @@
 	ApiBaseAnnotation.prototype.AddReply = function(textAnnot) {
 		if (!(textAnnot instanceof ApiTextAnnotation)) {
 			AscBuilder.throwException("The textAnnot parameter must be an ApiTextAnnotation class object");
+		}
+
+		if (this.Annot.IsUseContentAsComment() && this.Annot.GetContents() == null) {
+			AscBuilder.throwException("Before add reply you need to set the contents property");
 		}
 
 		this.Annot.AddReply(textAnnot.private_GetImpl());
@@ -3972,11 +3987,11 @@
 	 * @see office-js-api/Examples/PDF/ApiTextAnnotation/Methods/SetIconType.js
 	 */
 	ApiTextAnnotation.prototype.SetIconType = function(iconType) {
-		if (!AscPDF.TEXT_ICONS_TYPES[iconType]) {
+		if (undefined == AscPDF.TEXT_ICONS_TYPES[iconType]) {
 			AscBuilder.throwException("The iconType parameter must be one of available");
 		}
 
-		this.Annot.SetIconType(iconType);
+		this.Annot.SetIconType(AscPDF.TEXT_ICONS_TYPES[iconType]);
 		return true;
 	};
 
@@ -4062,6 +4077,43 @@
 	ApiCircleAnnotation.prototype = Object.create(ApiBaseAnnotation.prototype);
 	ApiCircleAnnotation.prototype.constructor = ApiCircleAnnotation;
 
+	ApiCircleAnnotation.prototype.private_UpdateRect = function(rect) {
+		if (!rect) {
+			rect = this.Annot.GetRect();
+		}
+
+		AscCommon.History.StartNoHistoryMode();
+		let aCurRect = this.Annot.GetRect();
+		let aCurRD = this.Annot.GetRectangleDiff().slice();
+		let nLineW = this.Annot.GetBorderWidth() * g_dKoef_pt_to_mm;
+		this.Annot.SetRect(rect);
+		this.Annot.SetRectangleDiff([0, 0, 0, 0]);
+		this.Annot.recalcBounds();
+		this.Annot.recalcGeometry();
+		this.Annot.Recalculate(true);
+		
+		AscCommon.History.EndNoHistoryMode();
+		
+		let oGrBounds = this.Annot.bounds;
+		let oShapeBounds = this.Annot.getRectBounds();
+
+		rect[0] = (oGrBounds.l - nLineW) * g_dKoef_mm_to_pt;
+		rect[1] = (oGrBounds.t - nLineW) * g_dKoef_mm_to_pt;
+		rect[2] = (oGrBounds.r + nLineW) * g_dKoef_mm_to_pt;
+		rect[3] = (oGrBounds.b + nLineW) * g_dKoef_mm_to_pt;
+
+		this.Annot._rect = aCurRect;
+		this.Annot._rectDiff = aCurRD;
+
+		this.Annot.SetRect(rect);
+		this.Annot.SetRectangleDiff([
+			(oShapeBounds.l - oGrBounds.l + nLineW) * g_dKoef_mm_to_pt,
+			(oShapeBounds.t - oGrBounds.t + nLineW) * g_dKoef_mm_to_pt,
+			(oGrBounds.r - oShapeBounds.r + nLineW) * g_dKoef_mm_to_pt,
+			(oGrBounds.b - oShapeBounds.b + nLineW) * g_dKoef_mm_to_pt
+		]);
+	};
+
 	/**
 	 * Returns a type of the ApiCircleAnnotation class.
 	 * @memberof ApiCircleAnnotation
@@ -4091,6 +4143,43 @@
 
 	ApiSquareAnnotation.prototype = Object.create(ApiBaseAnnotation.prototype);
 	ApiSquareAnnotation.prototype.constructor = ApiSquareAnnotation;
+
+	ApiSquareAnnotation.prototype.private_UpdateRect = function(rect) {
+		if (!rect) {
+			rect = this.Annot.GetRect();
+		}
+
+		AscCommon.History.StartNoHistoryMode();
+		let aCurRect = this.Annot.GetRect();
+		let aCurRD = this.Annot.GetRectangleDiff().slice();
+		let nLineW = this.Annot.GetBorderWidth() * g_dKoef_pt_to_mm;
+		this.Annot.SetRect(rect);
+		this.Annot.SetRectangleDiff([0, 0, 0, 0]);
+		this.Annot.recalcBounds();
+		this.Annot.recalcGeometry();
+		this.Annot.Recalculate(true);
+		
+		AscCommon.History.EndNoHistoryMode();
+		
+		let oGrBounds = this.Annot.bounds;
+		let oShapeBounds = this.Annot.getRectBounds();
+
+		rect[0] = (oGrBounds.l - nLineW) * g_dKoef_mm_to_pt;
+		rect[1] = (oGrBounds.t - nLineW) * g_dKoef_mm_to_pt;
+		rect[2] = (oGrBounds.r + nLineW) * g_dKoef_mm_to_pt;
+		rect[3] = (oGrBounds.b + nLineW) * g_dKoef_mm_to_pt;
+
+		this.Annot._rect = aCurRect;
+		this.Annot._rectDiff = aCurRD;
+
+		this.Annot.SetRect(rect);
+		this.Annot.SetRectangleDiff([
+			(oShapeBounds.l - oGrBounds.l + nLineW) * g_dKoef_mm_to_pt,
+			(oShapeBounds.t - oGrBounds.t + nLineW) * g_dKoef_mm_to_pt,
+			(oGrBounds.r - oShapeBounds.r + nLineW) * g_dKoef_mm_to_pt,
+			(oGrBounds.b - oShapeBounds.b + nLineW) * g_dKoef_mm_to_pt
+		]);
+	};
 
 	/**
 	 * Returns a type of the ApiSquareAnnotation class.
@@ -4606,7 +4695,7 @@
 		let nOrigExtY = maxY - minY;
 
 		AscCommon.History.StartNoHistoryMode();
-		let aCurRect = this.Annot.GetRect().slice();
+		let aCurRect = this.Annot.GetRect();
 		let oCurXfrm = this.Annot.getXfrm();
 
 		let nCurExtX = this.Annot.getXfrmExtX();

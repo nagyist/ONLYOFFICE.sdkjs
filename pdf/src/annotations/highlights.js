@@ -216,7 +216,7 @@
         if (this.IsHidden() == true)
             return;
 
-        let oRGBFill = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBFill = this.GetRGBColor(this.GetBorderColor());
 
         let aQuads = this.GetQuads();
         for (let i = 0; i < aQuads.length; i++) {
@@ -291,7 +291,7 @@
             return;
 
         let aQuads      = this.GetQuads();
-        let oRGBFill    = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBFill    = this.GetRGBColor(this.GetBorderColor());
         
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints     = aQuads[i];
@@ -377,7 +377,7 @@
             return;
 
         let aQuads      = this.GetQuads();
-        let oRGBFill    = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBFill    = this.GetRGBColor(this.GetBorderColor());
 
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints = aQuads[i];
@@ -456,7 +456,7 @@
             return;
     
         let aQuads   = this.GetQuads();
-        let oRGBFill = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBFill = this.GetRGBColor(this.GetBorderColor());
     
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints = aQuads[i];
@@ -571,7 +571,7 @@
             return;
 
         let aQuads      = this.GetQuads();
-        let oRGBFill    = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBFill    = this.GetRGBColor(this.GetBorderColor());
         
         for (let i = 0; i < aQuads.length; i++) {
             let aPoints     = aQuads[i];
@@ -798,7 +798,7 @@
         }
     };
     CAnnotationRedact.prototype._DrawRect = function(oGraphicsPDF) {
-        let oRGBStroke = this.GetRGBColor(this.GetStrokeColor());
+        let oRGBStroke = this.GetRGBColor(this.GetBorderColor());
 
         oGraphicsPDF.SetLineWidth(1);
         oGraphicsPDF.SetGlobalAlpha(1);

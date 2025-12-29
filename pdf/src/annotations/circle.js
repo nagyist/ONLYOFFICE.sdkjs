@@ -117,6 +117,10 @@
     };
     
     function generateCloudyGeometry(arrPoints, aBounds, oGeometry, nIntensity) {
+		if (nIntensity == undefined) {
+			return;
+		}
+		
         let xMin = aBounds[0];
         let yMin = aBounds[1];
         let xMax = aBounds[2];

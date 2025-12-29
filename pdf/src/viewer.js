@@ -246,6 +246,9 @@
 
         AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], true));
 		this.RedrawAnnots();
+
+		let oDoc = Asc.editor.getPDFDoc();
+		oDoc.CheckComment(oAnnot);
 	};
 	CPageInfo.prototype.RemoveAnnot = function(sId) {
 		let oAnnot = this.annots.find(function(annot) {

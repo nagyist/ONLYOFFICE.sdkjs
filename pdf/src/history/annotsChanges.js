@@ -70,6 +70,7 @@ AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Comment_Data]	= CChangesPDFAn
 AscDFH.changesFactory[AscDFH.historyitem_type_Pdf_Annot_Reply]		= CChangesPDFAnnotReply;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Ap_Idx]			= CChangesPDFAnnotApIdx;
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_Actions]			= CChangesPDFAnnotActions;
+AscDFH.changesFactory[AscDFH.historyitem_Pdf_Annot_In_Reply_To]		= CChangesPDFAnnotInReplyTo;
 
 // text annot
 AscDFH.changesFactory[AscDFH.historyitem_Pdf_Text_Annot_Icon]		= CChangesPDFTextAnnotIcon;
@@ -950,7 +951,30 @@ CChangesPDFAnnotActions.prototype.ReadFromBinary = function(Reader)
 		this.Old = undefined;
 	else
 		this.Old = Reader.GetString2();
-};// text annot
+};
+
+/**
+ * @constructor
+ * @extends {AscDFH.CChangesBaseObjectProperty}
+ */
+function CChangesPDFAnnotInReplyTo(Class, oOldPage, oNewPage)
+{
+	AscDFH.CChangesBaseObjectProperty.call(this, Class, oOldPage, oNewPage);
+}
+CChangesPDFAnnotInReplyTo.prototype = Object.create(AscDFH.CChangesBaseObjectProperty.prototype);
+CChangesPDFAnnotInReplyTo.prototype.constructor = CChangesPDFAnnotInReplyTo;
+CChangesPDFAnnotInReplyTo.prototype.Type = AscDFH.historyitem_Pdf_Annot_In_Reply_To;
+CChangesPDFAnnotInReplyTo.prototype.CreateReverseChange = function() {
+	return new this.constructor(this.Class, this.New, this.Old);
+};
+
+CChangesPDFAnnotInReplyTo.prototype.private_SetValue = function(Value)
+{
+	let oAnnot = this.Class;
+	oAnnot._inReplyTo = Value;
+};
+
+// text annot
 
 /**
  * @constructor
