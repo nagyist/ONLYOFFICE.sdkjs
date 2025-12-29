@@ -19773,7 +19773,8 @@
 		if (!validation) {
 			return;
 		}
-		return validation.getPromptTitle();
+        const promptTitle = validation.getPromptTitle();
+        return promptTitle === null ? "" : promptTitle;
 	};
 
 	/**
@@ -19803,7 +19804,8 @@
 		if (!validation) {
 			return;
 		}
-		return validation.getPrompt();
+        const promptMessage = validation.getPrompt();
+        return promptMessage === null ? "" : promptMessage;
 	};
 
 	/**
@@ -19833,7 +19835,9 @@
 		if (!validation) {
 			return;
 		}
-		return validation.getErrorTitle();
+
+        const errorTitle = validation.getErrorTitle();
+        return errorTitle === null ? "" : errorTitle;
 	};
 
 	/**
@@ -19863,7 +19867,9 @@
 		if (!validation) {
 			return;
 		}
-		return validation.getError();
+
+        const errorMessage= validation.getError();
+        return errorMessage === null ? "" : errorMessage;
 	};
 
 	/**
