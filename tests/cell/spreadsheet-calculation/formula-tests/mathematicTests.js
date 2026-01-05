@@ -442,7 +442,7 @@ $(function () {
 		// Case #11: String. Non-standard case.  Number with separator for date.
 		oParser = new parserFormula("ABS(\"5/5\")", "A1", ws);
 		assert.ok(oParser.parse(), 'Formula is parsed');
-		assert.strictEqual(oParser.calculate().getValue(), 45782, 'Test: Positive case: String. Non-standard case.  Number with separator for date. Result: 45782');
+		assert.strictEqual(oParser.calculate().getValue(), 46147, 'Test: Positive case: String. Non-standard case.  Number with separator for date. Result: 46147');
 		// Case #12: String. Non-standard case. Date.
 		oParser = new parserFormula("ABS(\"12/12/2000\")", "A1", ws);
 		assert.ok(oParser.parse(), 'Formula is parsed');
@@ -916,7 +916,7 @@ $(function () {
 		// Case #17: String. Short Date in string. 1 argument used.
 		oParser = new parserFormula('ACOSH("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula ACOSH("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue().toFixed(8) - 0, 11.42960907, 'Test: Positive case: String. Short Date in string. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue().toFixed(8) - 0, 11.43751203, 'Test: Positive case: String. Short Date in string. 1 argument used.');
 		// Case #18: Array. Multi-element array. 1 argument used.
 		oParser = new parserFormula('ACOSH({1, 2})', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula ACOSH({1, 2}) is parsed.');
@@ -2591,7 +2591,7 @@ $(function () {
 		// Case #25: String. Short date in string.
 		oParser = new parserFormula('ASINH("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula ASINH("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue().toFixed(8) - 0, 11.42960907, 'Test: Positive case: String. Short date in string.');
+		assert.strictEqual(oParser.calculate().getValue().toFixed(8) - 0, 11.43751203, 'Test: Positive case: String. Short date in string.');
 		// Case #26: Formula. Nested IF formula returning 2.
 		oParser = new parserFormula('ASINH(IF(TRUE,2,0.5))', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula ASINH(IF(TRUE,2,0.5)) is parsed.');
@@ -5456,7 +5456,7 @@ $(function () {
 		// Case #23: String. Date string converted to number. 1 argument used.
 		oParser = new parserFormula('COS("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula COS("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue().toFixed(9) - 0, -0.790743634, 'Test: Positive case: String. Date string converted to number. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue().toFixed(9) - 0, -0.330440882, 'Test: Positive case: String. Date string converted to number. 1 argument used.');
 		// Case #24: Formula. Conversion from radians to degrees. 1 argument used.
 		oParser = new parserFormula('COS(DEGREES(1))', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula COS(DEGREES(1)) is parsed.');
@@ -11066,7 +11066,7 @@ $(function () {
 		// Case #19: String. Date string converted to number. 1 argument used.
 		oParser = new parserFormula('LOG("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: LOG("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue().toFixed(9), "4.662786154", 'Test: Positive case: String. Date string converted to number. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue().toFixed(9), "4.666218364", 'Test: Positive case: String. Date string converted to number. 1 argument used.');
 		// Case #20: Number. Large valid number. 1 argument used.
 		oParser = new parserFormula('LOG(1E+307)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: LOG(1E+307) is parsed.');
@@ -11306,7 +11306,7 @@ $(function () {
 		// Case #19: String. Date string converted to number. 1 argument used.
 		oParser = new parserFormula('LOG10("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: LOG10("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue().toFixed(9), "4.662786154", 'Test: Positive case: String. Date string converted to number. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue().toFixed(9), "4.666218364", 'Test: Positive case: String. Date string converted to number. 1 argument used.');
 		// Case #20: Number. Large valid number. 1 argument used.
 		oParser = new parserFormula('LOG10(1E+307)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: LOG10(1E+307) is parsed.');

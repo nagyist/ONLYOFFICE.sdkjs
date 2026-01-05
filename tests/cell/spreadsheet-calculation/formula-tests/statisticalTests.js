@@ -9643,8 +9643,8 @@ $(function () {
 		ws.getRange2("CC11").setValue("#N/A");
 		ws.getRange2("CC12").setValue("#N/A");
 
-		ws.getRange2("A1001").setValue("12/1/2025");
-		ws.getRange2("A1002").setValue("12/1/2025");
+		ws.getRange2("A1001").setValue("12/1");
+		ws.getRange2("A1002").setValue("12/1");
 
 		ws.getRange2("A2002").setValue("apples");
 		ws.getRange2("A2004").setValue("oranges");
@@ -18821,7 +18821,7 @@ $(function () {
 		// Case #17: String. Short date string convertible to number. 1 argument used.
 		oParser = new parserFormula('GAMMALN("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 447902.0070689264, 'Test: Positive case: String. Short date string convertible to number. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue(), 451822.25589645095, 'Test: Positive case: String. Short date string convertible to number. 1 argument used.');
 		// Case #18: Array. Array with single valid element (duplicate for coverage). 1 argument used.
 		oParser = new parserFormula('GAMMALN({2.5})', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN({2.5}) is parsed.');
@@ -19066,7 +19066,7 @@ $(function () {
 		// Case #17: String. Short date string convertible to number. 1 argument used.
 		oParser = new parserFormula('GAMMALN.PRECISE("12/12")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE("12/12") is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 447902.0070689264, 'Test: Positive case: String. Short date string convertible to number. 1 argument used.');
+		assert.strictEqual(oParser.calculate().getValue(), 451822.25589645095, 'Test: Positive case: String. Short date string convertible to number. 1 argument used.');
 		// Case #18: Array. Array with single valid element (duplicate for coverage). 1 argument used.
 		oParser = new parserFormula('GAMMALN.PRECISE({2.5})', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE({2.5}) is parsed.');
