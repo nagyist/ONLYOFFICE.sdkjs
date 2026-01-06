@@ -8429,11 +8429,11 @@
 	};
 
     /**
-     * Returns the ApiRange object that represents all the cells on the columns range.
+     * Returns the instante of ApiAutoFilter object that represents the worksheet AutoFilter.
      * @memberof ApiWorksheet
      * @typeofeditors ["CSE"]
-     * @returns {number}
-     * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetCols.js
+     * @returns {ApiAutoFilter}
+     * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetAutoFilter.js
      */
     ApiWorksheet.prototype.GetAutoFilter = function () {
 		return new ApiAutoFilter(this);
