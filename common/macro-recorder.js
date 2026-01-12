@@ -1150,24 +1150,21 @@
 
 			return strStrokeShape;
 		},
-		setShapeRotation		: function(nRot)
+		setDrawingRotation		: function(nRot)
 		{
 			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 				+ "\t\t.forEach(shape => {shape.SetRotation(" + nRot * 180 / Math.PI + ")});\n";
 
 		},
-		setShapeFlipH			: function(isFlip)
+		setDrawingFlipH			: function(isFlip)
 		{
 			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 				+ "\t\t.forEach(shape => {shape.SetHorFlip(" + isFlip +")});\n";
 
 		},
-		setShapeFlipV			: function(isFlip)
+		setDrawingFlipV			: function(isFlip)
 		{
 			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 				+ "\t\t.forEach(shape => {shape.SetVertFlip(" + isFlip + ")});\n";
 		},
 		setDrawingWrapping		: function(props)
@@ -1328,24 +1325,6 @@
 				+ "\t\t.forEach(draw => {\n"
 					+ "\t\t\tdraw.SetGeometry(Api.CreatePresetGeometry(\""+ type +"\"))\n"
 				+ "\t\t});\n"
-		},
-		setImageRotation	: function(nRot)
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
-				+ "\t\t.forEach(image => {image.SetRotation(" + nRot * 180 / Math.PI + ")});\n";
-		},
-		setImageFlipH		: function(isFlip)
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
-				+ "\t\t.forEach(image => {image.SetHorFlip(" + isFlip +")});\n";
-		},
-		setImageFlipV			: function(isFlip)
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
-				+ "\t\t.forEach(image => {image.SetVertFlip(" + isFlip + ")});\n";
 		}
 	};
 
@@ -1412,9 +1391,9 @@
 	WordActionsMacroList['SelectShape']													= wordActions.selectShape;
 	WordActionsMacroList['SetDrawingFill']												= wordActions.setDrawingFill;
 	WordActionsMacroList['SetDrawingLine']												= wordActions.setDrawingLine;
-	WordActionsMacroList['SetShapeRotation']											= wordActions.setShapeRotation;
-	WordActionsMacroList['SetShapeFlipH']												= wordActions.setShapeFlipH;
-	WordActionsMacroList['SetShapeFlipV']												= wordActions.setShapeFlipV;
+	WordActionsMacroList['SetDrawingRotation']											= wordActions.setDrawingRotation;
+	WordActionsMacroList['SetDrawingFlipH']												= wordActions.setDrawingFlipH;
+	WordActionsMacroList['SetDrawingFlipV']												= wordActions.setDrawingFlipV;
 	WordActionsMacroList['SetDrawingWrapping']											= wordActions.setDrawingWrapping;
 	WordActionsMacroList['SetPositionH']												= wordActions.setPositionH;
 	WordActionsMacroList['SetPositionV']												= wordActions.setPositionV;
@@ -1424,9 +1403,6 @@
 	WordActionsMacroList['SetRelSizeH']													= wordActions.setShapeRelSizeH;
 	WordActionsMacroList['SetRelSizeV']													= wordActions.setShapeRelSizeV;
 	WordActionsMacroList['SetGeometry']													= wordActions.setGeometry;
-	WordActionsMacroList['SetImageRotation']											= wordActions.setImageRotation;
-	WordActionsMacroList['SetImageFlipH']												= wordActions.setImageFlipH;
-	WordActionsMacroList['SetImageFlipV']												= wordActions.setImageFlipV;
 	WordActionsMacroList[AscDFH.historydescription_Document_RemoveHdrFtr]				= wordActions.removeHdr;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddComment]					= wordActions.addComment;
 	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddTextArt]		= wordActions.addTextArt;
