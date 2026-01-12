@@ -12953,6 +12953,63 @@
 		return true;
 	};
 	/**
+	 * Returns number of columns in this section.
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetColumnsCount.js
+	 */
+	ApiSection.prototype.GetColumnsCount = function()
+	{
+		return this.Section.GetColumnCount();
+	};
+	/**
+	 * Returns an array of column width values measured in twentieths of a point (1/1440 of an inch).
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips[]}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetColumnsWidths.js
+	 */
+	ApiSection.prototype.GetColumnsWidths = function()
+	{
+		if (this.Section.IsEqualColumnWidth()) {
+			return [private_MM2Twips(this.Section.GetColumnWidth())];
+		}
+		else
+		{
+			let nCols = this.GetColumnsCount();
+			let aRes = [];
+
+			for (let i = 0; i < nCols; i++)
+				aRes.push(private_MM2Twips(this.Section.GetColumnWidth(i)));
+
+			return aRes;
+		}
+	};
+	/**
+	 * Returns an array of distance values between the columns measured in twentieths of a point (1/1440 of an inch).
+	 * @memberof ApiSection
+	 * @typeofeditors ["CDE"]
+	 * @returns {twips[]}
+	 * @see office-js-api/Examples/{Editor}/ApiSection/Methods/GetColumnsSpaces.js
+	 */
+	ApiSection.prototype.GetColumnsSpaces = function()
+	{
+		if (this.Section.IsEqualColumnWidth()) {
+			return [private_MM2Twips(this.Section.GetColumnSpace())];
+		}
+		else
+		{
+			let nCols = this.GetColumnsCount();
+			let aRes = [];
+
+			for (let i = 0; i < nCols - 1; i++)
+				aRes.push(private_MM2Twips(this.Section.GetColumnSpace(i)));
+
+			return aRes;
+		}
+	};
+	/**
 	 * Specifies the properties (size and orientation) for all the pages in the current section.
 	 * @memberof ApiSection
 	 * @typeofeditors ["CDE"]
