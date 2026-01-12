@@ -4334,35 +4334,6 @@
 						}
 					}
 
-					if (AscFormat.isRealBool(props.flipH))
-					{
-						Asc.editor.addMacroStepData('SetShapeFlipH', props.flipH);
-					}
-					if (AscFormat.isRealBool(props.flipV))
-					{
-						Asc.editor.addMacroStepData('SetShapeFlipV', props.flipV);
-					}
-					if (props.rotAdd)
-					{
-						Asc.editor.addMacroStepData('SetShapeAddRotation', props.rotAdd);
-					}
-					if (props.rot)
-					{
-						Asc.editor.addMacroStepData('SetShapeRotation', props.rot)
-					}
-
-					if (props.flipHInvert)
-					{
-						Asc.editor.addMacroStepData('SetShapeFlipHInvert', null);
-					}
-					if (props.flipVInvert)
-					{
-						Asc.editor.addMacroStepData('SetShapeFlipVInvert', null);
-					}
-					if (props.rotAdd)
-					{
-						Asc.editor.addMacroStepData('SetShapeAddRotation', props.rotAdd);
-					}
 					if (bCheckConnectors) {
 						this.updateConnectors(bMoveFlag);
 					}

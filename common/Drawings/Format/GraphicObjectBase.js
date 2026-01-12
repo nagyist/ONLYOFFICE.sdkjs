@@ -3582,6 +3582,9 @@
 				var posY = this.spPr.xfrm.offY;
 				this.changePositionInSmartArt(posX, posY);
 			}
+
+			if (this.isShape())
+				Asc.editor.addMacroStepData('SetShapeRotation', dAngle);
 		}
 	};
 	CGraphicObjectBase.prototype.changeFlipH = function (bFlipH) {
@@ -3592,6 +3595,9 @@
 				var point = this.getSmartArtShapePoint();
 				point && point.changeFlipH(bFlipH);
 			}
+
+			if (this.isShape())
+				Asc.editor.addMacroStepData('SetShapeFlipH', bFlipH);
 		}
 	};
 	CGraphicObjectBase.prototype.changeFlipV = function (bFlipV) {
@@ -3602,6 +3608,9 @@
 				var point = this.getSmartArtShapePoint();
 				point && point.changeFlipV(bFlipV);
 			}
+
+			if (this.isShape())
+				Asc.editor.addMacroStepData('SetShapeFlipV', bFlipV);
 		}
 	};
 	CGraphicObjectBase.prototype.compareForMorph = function(oDrawingToCheck, oCandidate, oMapPaired) {
