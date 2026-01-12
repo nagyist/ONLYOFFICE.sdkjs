@@ -18695,7 +18695,7 @@
 	 *
 	 * @since 9.3.0
 	 * @param {RelFromH} sRelativeFrom - The document element which will be taken as a countdown point for the object horizontal alignment.
-	 * @param {EMU} nDistance - The distance from the right side of the document element to the floating object measured in English measure units.
+	 * @param {EMU|number} nDistance - The distance from the right side of the document element to the floating object. Use EMU for absolute distance or a number for percent (1 = 1%) when bPercent=true.
 	 * @param {boolean} [bPercent=false] - The option defining whether the vertical alignment offset is specified in percent.
 	 * @returns {boolean}
 	 *
@@ -18729,7 +18729,7 @@
 	 *
 	 * @since 9.3.0
 	 * @param {RelFromV} sRelativeFrom - The document element which will be taken as a countdown point for the object vertical alignment.
-	 * @param {EMU} nDistance - The distance from the bottom part of the document element to the floating object measured in English measure units.
+	 * @param {EMU|number} nDistance - The distance from the bottom part of the document element to the floating object. Use EMU for absolute units or a number (1 = 1%) when bPercent=true for percent relative positioning.
 	 * @param {boolean} [bPercent=false] - The option defining whether the vertical alignment offset is specified in percent.
 	 * @returns {boolean}
 	 *

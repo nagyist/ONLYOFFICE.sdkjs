@@ -1071,7 +1071,7 @@
 		{
 			return "";
 		},
-		setShapeFill			: function(unifill)
+		setDrawingFill			: function(unifill)
 		{
 			//TODO add transparent when add api
 			if (unifill.fill.type === Asc.c_oAscFill.FILL_TYPE_SOLID)
@@ -1080,7 +1080,6 @@
 				//let transparent = unifill.transparent;
 
 				return "\tdoc.GetSelectedDrawings()\n"
-						+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 						+ "\t\t.forEach(shape => shape.Fill(Api.CreateSolidFill(Api.CreateRGBColor(" + color.R + ", " + color.G + ", " + color.B + "))));\n";
 			}
 			else if (unifill.fill instanceof AscFormat.CGradFill)
@@ -1105,7 +1104,6 @@
 					gradient = "\n\t\t\tApi.CreateRadialGradientFill([" + strColor + "\n\t\t\t])";
 
 				return "\tdoc.GetSelectedDrawings()\n"
-						+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 						+ "\t\t.forEach(shape => shape.Fill(" + gradient + ")\n\t\t);\n";
 
 			}
@@ -1114,7 +1112,6 @@
 				let base64data = unifill.fill.getBase64RasterImageId()
 				let blipFill = "\n\t\t\tApi.CreateBlipFill(\"" + base64data + "\", \"" + (unifill.fill.tile ? "tile" : "stretch") + "\")";
 				return "\tdoc.GetSelectedDrawings()\n"
-						+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 						+ "\t\t.forEach(shape => shape.Fill(" + blipFill + ")\n\t\t);\n";
 
 			}
@@ -1127,22 +1124,19 @@
 
 				let blipFill = "\n\t\t\tApi.CreatePatternFill(\n\t\t\t\t\"" + type + "\",\n\t\t\t\t" + "Api.CreateRGBColor(" + bgClr.R + ", " + bgClr.G + ", " + bgClr.B + "),\n\t\t\t\tApi.CreateRGBColor(" + fgClr.R + ", " + fgClr.G + ", " + fgClr.B + ")";
 				return "\tdoc.GetSelectedDrawings()\n"
-						+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 						+ "\t\t.forEach(shape => shape.Fill(" + blipFill + ")\n\t\t\t)\n\t\t);\n";
 			}
 			else if (unifill.fill instanceof AscFormat.CNoFill)
 			{
 				return "\tdoc.GetSelectedDrawings()\n"
-						+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 						+ "\t\t.forEach(shape => shape.Fill(Api.CreateNoFill()));\n";
 			}
 		},
-		setShapeLine			: function(line)
+		setDrawingLine			: function(line)
 		{
 			let strStrokeShape = "\t(function () {\n";
 			let type = AscFormat.CLn.prototype.GetDashByCode(line.prstDash);
 			let color = line.Fill.fill.color.color.RGBA;
-
 			strStrokeShape += "\t\tlet stroke = Api.CreateStroke(\n" +
 					"\t\t\t" + line.w / 12700.0 + " * 12700.0,\n" +
 					"\t\t\t" + "Api.CreateSolidFill(Api.CreateRGBColor(" + color.R + ", " + color.G + ", " + color.B + ")),\n" +
@@ -1150,8 +1144,7 @@
 				"\t\t);\n";
 
 			strStrokeShape += "\t\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t\t.filter(item => item.GetClassType() === \"shape\")\n"
-				+ "\t\t\t.forEach(shape => shape.SetOutLine(stroke));\n";
+				+ "\t\t\t.forEach(draw => draw.SetOutLine(stroke));\n";
 
 			strStrokeShape += "\t}());\n";
 
@@ -1163,24 +1156,6 @@
 				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 				+ "\t\t.forEach(shape => {shape.SetRotation(" + nRot * 180 / Math.PI + ")});\n";
 
-		},
-		setShapeAddRot			: function(nAddRot)
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-					+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
-					+ "\t\t.forEach(shape => {shape.SetRotation(shape.GetRotation() + " + nAddRot * 180 / Math.PI + ")});\n";
-		},
-		setShapeFlipHInvert		: function()
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
-				+ "\t\t.forEach(shape => {shape.SetHorFlip(!shape.GetFlipH())});\n";
-		},
-		setShapeFlipVInvert		: function()
-		{
-			return "\tdoc.GetSelectedDrawings()\n"
-				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
-				+ "\t\t.forEach(shape => {shape.SetVertFlip(!shape.GetFlipV())});\n";
 		},
 		setShapeFlipH			: function(isFlip)
 		{
@@ -1194,7 +1169,6 @@
 			return "\tdoc.GetSelectedDrawings()\n"
 				+ "\t\t.filter(item => item.GetClassType() === \"shape\")\n"
 				+ "\t\t.forEach(shape => {shape.SetVertFlip(" + isFlip + ")});\n";
-
 		},
 		setDrawingWrapping		: function(props)
 		{
@@ -1236,9 +1210,18 @@
 				"});\n"
 			}
 
-			return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
-				"draw.SetHorPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ")" +
-			"});\n"
+			if (data.percent)
+			{
+				return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
+					"draw.SetHorPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ")" +
+				"});\n"
+			}
+			else
+			{
+				return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
+					"draw.SetHorPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ")" +
+				"});\n"
+			}
 		},
 		setPositionV			: function(data)
 		{
@@ -1269,9 +1252,18 @@
 				"});\n"
 			}
 
-			return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
-				"draw.SetVerPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ")" +
-			"});\n"
+			if (data.percent)
+			{
+				return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
+					"draw.SetVerPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ")" +
+				"});\n"
+			}
+			else
+			{
+				return "\tdoc.GetSelectedDrawings().forEach(draw => {" +
+					"draw.SetVerPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ")" +
+				"});\n"
+			}
 		},
 		setShapeSize			: function(oSize)
 		{
@@ -1336,6 +1328,24 @@
 				+ "\t\t.forEach(draw => {\n"
 					+ "\t\t\tdraw.SetGeometry(Api.CreatePresetGeometry(\""+ type +"\"))\n"
 				+ "\t\t});\n"
+		},
+		setImageRotation	: function(nRot)
+		{
+			return "\tdoc.GetSelectedDrawings()\n"
+				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
+				+ "\t\t.forEach(image => {image.SetRotation(" + nRot * 180 / Math.PI + ")});\n";
+		},
+		setImageFlipH		: function(isFlip)
+		{
+			return "\tdoc.GetSelectedDrawings()\n"
+				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
+				+ "\t\t.forEach(image => {image.SetHorFlip(" + isFlip +")});\n";
+		},
+		setImageFlipV			: function(isFlip)
+		{
+			return "\tdoc.GetSelectedDrawings()\n"
+				+ "\t\t.filter(item => item.GetClassType() === \"image\")\n"
+				+ "\t\t.forEach(image => {image.SetVertFlip(" + isFlip + ")});\n";
 		}
 	};
 
@@ -1400,12 +1410,9 @@
 	WordActionsMacroList[AscDFH.historydescription_Document_AddHyperlink]				= wordActions.addHyperlink;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddNewShape]				= wordActions.addShape;
 	WordActionsMacroList['SelectShape']													= wordActions.selectShape;
-	WordActionsMacroList['SetShapeFill']												= wordActions.setShapeFill;
-	WordActionsMacroList['SetShapeLine']												= wordActions.setShapeLine;
-	WordActionsMacroList['SetShapeAddRotation']											= wordActions.setShapeAddRot;
+	WordActionsMacroList['SetDrawingFill']												= wordActions.setDrawingFill;
+	WordActionsMacroList['SetDrawingLine']												= wordActions.setDrawingLine;
 	WordActionsMacroList['SetShapeRotation']											= wordActions.setShapeRotation;
-	WordActionsMacroList['SetShapeFlipHInvert']											= wordActions.setShapeFlipHInvert;
-	WordActionsMacroList['SetShapeFlipVInvert']											= wordActions.setShapeFlipVInvert;
 	WordActionsMacroList['SetShapeFlipH']												= wordActions.setShapeFlipH;
 	WordActionsMacroList['SetShapeFlipV']												= wordActions.setShapeFlipV;
 	WordActionsMacroList['SetDrawingWrapping']											= wordActions.setDrawingWrapping;
@@ -1417,6 +1424,9 @@
 	WordActionsMacroList['SetRelSizeH']													= wordActions.setShapeRelSizeH;
 	WordActionsMacroList['SetRelSizeV']													= wordActions.setShapeRelSizeV;
 	WordActionsMacroList['SetGeometry']													= wordActions.setGeometry;
+	WordActionsMacroList['SetImageRotation']											= wordActions.setImageRotation;
+	WordActionsMacroList['SetImageFlipH']												= wordActions.setImageFlipH;
+	WordActionsMacroList['SetImageFlipV']												= wordActions.setImageFlipV;
 	WordActionsMacroList[AscDFH.historydescription_Document_RemoveHdrFtr]				= wordActions.removeHdr;
 	WordActionsMacroList[AscDFH.historydescription_Document_AddComment]					= wordActions.addComment;
 	//WordActionsMacroList[AscDFH.AscDFH.historydescription_Document_AddTextArt]		= wordActions.addTextArt;

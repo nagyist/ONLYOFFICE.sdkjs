@@ -3585,6 +3585,8 @@
 
 			if (this.isShape())
 				Asc.editor.addMacroStepData('SetShapeRotation', dAngle);
+			if (this.isImage())
+				Asc.editor.addMacroStepData('SetImageRotation', dAngle);
 		}
 	};
 	CGraphicObjectBase.prototype.changeFlipH = function (bFlipH) {
@@ -3598,6 +3600,8 @@
 
 			if (this.isShape())
 				Asc.editor.addMacroStepData('SetShapeFlipH', bFlipH);
+			if (this.isImage())
+				Asc.editor.addMacroStepData('SetImageFlipH', bFlipH);
 		}
 	};
 	CGraphicObjectBase.prototype.changeFlipV = function (bFlipV) {
@@ -3611,6 +3615,8 @@
 
 			if (this.isShape())
 				Asc.editor.addMacroStepData('SetShapeFlipV', bFlipV);
+			if (this.isImage())
+				Asc.editor.addMacroStepData('SetImageFlipV', bFlipV);
 		}
 	};
 	CGraphicObjectBase.prototype.compareForMorph = function(oDrawingToCheck, oCandidate, oMapPaired) {
