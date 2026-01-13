@@ -155,16 +155,20 @@
 	 */
 
 	/**
-	 * Axis-aligned rectangle represented as a tuple.
-	 * Invariants:
-	 *  - rect[0] < rect[2] (x1 < x2)
-	 *  - rect[1] < rect[3] (y1 < y2)
+	 * Axis-aligned rectangle difference represented as a tuple.
+	 * Describes coordinate-wise deltas between two rectangles (B - A).
 	 *
-	 * @typedef {[pt, pt, pt, pt]} Rect
-	 * @property {pt} 0 - x1 (left)
-	 * @property {pt} 1 - y1 (top)
-	 * @property {pt} 2 - x2 (right)
-	 * @property {pt} 3 - y2 (bottom)
+	 * Invariants:
+	 *  - diff[0] = x1B - x1A
+	 *  - diff[1] = y1B - y1A
+	 *  - diff[2] = x2B - x2A
+	 *  - diff[3] = y2B - y2A
+	 *
+	 * @typedef {[pt, pt, pt, pt]} RectDiff
+	 * @property {pt} 0 - dx1 (left delta)
+	 * @property {pt} 1 - dy1 (top delta)
+	 * @property {pt} 2 - dx2 (right delta)
+	 * @property {pt} 3 - dy2 (bottom delta)
 	 */
 
 	/**
@@ -4125,6 +4129,34 @@
 		return "circleAnnot";
 	};
 
+	/**
+	 * Sets annotation rect difference.
+	 * @memberof ApiCircleAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {RectDiff} rectDiff - A set of four numbers that shall describe the numerical differences between two rectangles.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiCircleAnnotation/Methods/SetRectDiff.js
+	 */
+	ApiCircleAnnotation.prototype.SetRectDiff = function(rectDiff) {
+		if (!private_IsValidRectDiff(rectDiff)) {
+			AscBuilder.throwException("The rectDiff parameter must be a valid rect diff");
+		}
+
+		this.Annot.SetRectangleDiff(rectDiff);
+		return true;
+	};
+
+	/**
+	 * Gets annotation rect difference.
+	 * @memberof ApiCircleAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {Rect}
+	 * @see office-js-api/Examples/PDF/ApiCircleAnnotation/Methods/GetRectDiff.js
+	 */
+	ApiCircleAnnotation.prototype.GetRectDiff = function() {
+		return this.Annot.GetRectangleDiff();
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiSquareAnnotation
@@ -4190,6 +4222,34 @@
 	 */
 	ApiSquareAnnotation.prototype.GetClassType = function() {
 		return "squareAnnot";
+	};
+
+	/**
+	 * Sets annotation rect difference.
+	 * @memberof ApiSquareAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {RectDiff} rectDiff - A set of four numbers that shall describe the numerical differences between two rectangles.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiSquareAnnotation/Methods/SetRectDiff.js
+	 */
+	ApiSquareAnnotation.prototype.SetRectDiff = function(rectDiff) {
+		if (!private_IsValidRectDiff(rectDiff)) {
+			AscBuilder.throwException("The rectDiff parameter must be a valid rect diff");
+		}
+
+		this.Annot.SetRectangleDiff(rectDiff);
+		return true;
+	};
+
+	/**
+	 * Gets annotation rect difference.
+	 * @memberof ApiSquareAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {Rect}
+	 * @see office-js-api/Examples/PDF/ApiSquareAnnotation/Methods/GetRectDiff.js
+	 */
+	ApiSquareAnnotation.prototype.GetRectDiff = function() {
+		return this.Annot.GetRectangleDiff();
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -5395,6 +5455,14 @@
 		);
 	}
 
+	function private_IsValidRectDiff(value) {
+		return (
+			Array.isArray(value) &&
+			value.length === 4 &&
+			value.every(Number.isFinite)
+		);
+	}
+
 	function private_CheckPoint(point) {
 		if (!point) {
 			AscBuilder.throwException("The point must be an object");
@@ -5748,9 +5816,13 @@
 	
 	// ApiCircleAnnotation
 	ApiCircleAnnotation.prototype["GetClassType"]			= ApiCircleAnnotation.prototype.GetClassType;
+	ApiCircleAnnotation.prototype["SetRectDiff"]			= ApiCircleAnnotation.prototype.SetRectDiff;
+	ApiCircleAnnotation.prototype["GetRectDiff"]			= ApiCircleAnnotation.prototype.GetRectDiff;
 
 	// ApiSquareAnnotation
 	ApiSquareAnnotation.prototype["GetClassType"]			= ApiSquareAnnotation.prototype.GetClassType;
+	ApiSquareAnnotation.prototype["SetRectDiff"]			= ApiSquareAnnotation.prototype.SetRectDiff;
+	ApiSquareAnnotation.prototype["GetRectDiff"]			= ApiSquareAnnotation.prototype.GetRectDiff;
 
 	// ApiFreeTextAnnotation
 	ApiFreeTextAnnotation.prototype["GetClassType"]			= ApiFreeTextAnnotation.prototype.GetClassType;
