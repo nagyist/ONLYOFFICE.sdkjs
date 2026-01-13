@@ -19087,13 +19087,20 @@
 	 */
 	ApiDrawing.prototype.SetRotation = function(nRotAngle)
 	{
-		if (!this.Drawing.canRotate()) {
+		if (!this.Drawing.canRotate())
+		{
 			return false;
 		}
 
 		let oXfrm = this.Drawing.getXfrm();
 		oXfrm.setRot(nRotAngle * Math.PI / 180);
 
+
+		let paraDrawing  = this.getParaDrawing();
+		if (paraDrawing)
+		{
+			paraDrawing.CheckWH();
+		}
 		return true;
 	};
 	/**
