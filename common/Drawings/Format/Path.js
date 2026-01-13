@@ -2144,9 +2144,15 @@ function (window, undefined) {
 		}
 
 		if (AscFormat.isRealNumber(epsilon)) {
-			const firstPointCommand = this.ArrPathCommand.find(function (command) {
-				return command.id === AscFormat.moveTo || command.id === AscFormat.lineTo;
-			});
+			let firstPointCommand = null;
+			for (let i = 0; i < this.ArrPathCommand.length; i++) {
+				const command = this.ArrPathCommand[i];
+				if (command.id === AscFormat.moveTo || command.id === AscFormat.lineTo) {
+					firstPointCommand = command;
+					break;
+				}
+			}
+
 			const firstPoint = firstPointCommand ? { x: firstPointCommand.X, y: firstPointCommand.Y } : null;
 			const lastPoint = getPathEndPoint(this.ArrPathCommand);
 
