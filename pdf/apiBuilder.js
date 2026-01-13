@@ -4393,11 +4393,12 @@
 	 * @see office-js-api/Examples/PDF/ApiLineAnnotation/Methods/SetStartStyle.js
 	 */
 	ApiLineAnnotation.prototype.SetStartStyle = function(style) {
-		if (!private_GetInnerLineEndType(style)) {
+		if (undefined == private_GetInnerLineEndType(style)) {
 			AscBuilder.throwException("The style parameter must be one of available");
 		}
 
 		this.Annot.SetLineStart(private_GetInnerLineEndType(style));
+		this.Annot.SetRect(this.Annot.private_CalcBoundingRect());
 		return true;
 	};
 
@@ -4422,11 +4423,12 @@
 	 * @see office-js-api/Examples/PDF/ApiLineAnnotation/Methods/SetEndStyle.js
 	 */
 	ApiLineAnnotation.prototype.SetEndStyle = function(style) {
-		if (!private_GetInnerLineEndType(style)) {
+		if (undefined == private_GetInnerLineEndType(style)) {
 			AscBuilder.throwException("The style parameter must be one of available");
 		}
 
 		this.Annot.SetLineEnd(private_GetInnerLineEndType(style));
+		this.Annot.SetRect(this.Annot.private_CalcBoundingRect());
 		return true;
 	};
 
@@ -4594,7 +4596,7 @@
 	 * @see office-js-api/Examples/PDF/ApiPolygonAnnotation/Methods/GetVertices.js
 	 */
 	ApiPolygonAnnotation.prototype.GetVertices = function() {
-		let aVertices = this.Annot.GetInkPoints();
+		let aVertices = this.Annot.GetVertices();
 
 		let aPath = [];
 		for (let i = 0; i < aVertices.length - 1; i+= 2) {
@@ -4671,7 +4673,7 @@
 	 * @see office-js-api/Examples/PDF/ApiPolyLineAnnotation/Methods/GetVertices.js
 	 */
 	ApiPolyLineAnnotation.prototype.GetVertices = function() {
-		let aVertices = this.Annot.GetInkPoints();
+		let aVertices = this.Annot.GetVertices();
 
 		let aPath = [];
 		for (let i = 0; i < aVertices.length - 1; i+= 2) {
@@ -4682,6 +4684,66 @@
 		}
 
 		return aPath;
+	};
+
+	/**
+	 * Sets a line start style.
+	 * @memberof ApiPolyLineAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {LineEndStyle} style
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiPolyLineAnnotation/Methods/SetStartStyle.js
+	 */
+	ApiPolyLineAnnotation.prototype.SetStartStyle = function(style) {
+		if (undefined == private_GetInnerLineEndType(style)) {
+			AscBuilder.throwException("The style parameter must be one of available");
+		}
+
+		this.Annot.SetLineStart(private_GetInnerLineEndType(style));
+		this.Annot.SetRect(this.Annot.private_CalcBoundingRect());
+		return true;
+	};
+
+	/**
+	 * Gets a line start style.
+	 * @memberof ApiPolyLineAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {LineEndStyle}
+	 * @see office-js-api/Examples/PDF/ApiPolyLineAnnotation/Methods/GetStartStyle.js
+	 */
+	ApiPolyLineAnnotation.prototype.GetStartStyle = function() {
+		let nStyle = this.Annot.GetLineStart();
+		return private_GetStrLineEndType(nStyle);
+	};
+
+	/**
+	 * Sets a line end style.
+	 * @memberof ApiPolyLineAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {LineEndStyle} style
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiPolyLineAnnotation/Methods/SetEndStyle.js
+	 */
+	ApiPolyLineAnnotation.prototype.SetEndStyle = function(style) {
+		if (undefined == private_GetInnerLineEndType(style)) {
+			AscBuilder.throwException("The style parameter must be one of available");
+		}
+
+		this.Annot.SetLineEnd(private_GetInnerLineEndType(style));
+		this.Annot.SetRect(this.Annot.private_CalcBoundingRect());
+		return true;
+	};
+
+	/**
+	 * Gets a line end style.
+	 * @memberof ApiPolyLineAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {LineEndStyle}
+	 * @see office-js-api/Examples/PDF/ApiPolyLineAnnotation/Methods/GetEndStyle.js
+	 */
+	ApiPolyLineAnnotation.prototype.GetEndStyle = function() {
+		let nStyle = this.Annot.GetLineEnd();
+		return private_GetStrLineEndType(nStyle);
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -5852,6 +5914,10 @@
 	ApiPolyLineAnnotation.prototype["GetClassType"]			= ApiPolyLineAnnotation.prototype.GetClassType;
 	ApiPolyLineAnnotation.prototype["SetVertices"]			= ApiPolyLineAnnotation.prototype.SetVertices;
 	ApiPolyLineAnnotation.prototype["GetVertices"]			= ApiPolyLineAnnotation.prototype.GetVertices;
+	ApiPolyLineAnnotation.prototype["SetStartStyle"]		= ApiPolyLineAnnotation.prototype.SetStartStyle;
+	ApiPolyLineAnnotation.prototype["GetStartStyle"]		= ApiPolyLineAnnotation.prototype.GetStartStyle;
+	ApiPolyLineAnnotation.prototype["SetEndStyle"]			= ApiPolyLineAnnotation.prototype.SetEndStyle;
+	ApiPolyLineAnnotation.prototype["GetEndStyle"]			= ApiPolyLineAnnotation.prototype.GetEndStyle;
 
 	// ApiStampAnnotation
 	ApiStampAnnotation.prototype["GetClassType"]			= ApiStampAnnotation.prototype.GetClassType;
