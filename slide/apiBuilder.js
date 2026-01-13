@@ -1161,7 +1161,7 @@
 	 */
 	Api.prototype.CreateHyperlink = function (link, tooltip) {
 		const apiHyperlink = new ApiHyperlink(link, tooltip);
-		return apiHyperlink ? apiHyperlink : null;
+		return apiHyperlink;
 	};
 
     /**
@@ -4768,28 +4768,15 @@
 			return false;
 		}
 
-		const presentation = private_GetPresentation();
-		const selectionState = presentation.GetSelectionState();
-
-		this.Select();
-
-		const oNvPr = this.Drawing.getCNvProps();
-		const hasHyperlink = oNvPr && oNvPr.hlinkClick && oNvPr.hlinkClick.id;
-
-		const props = new Asc.CHyperlinkProperty({
-			Text: null,
-			Value: hyperlink.link,
-			ToolTip: hyperlink.tooltip
-		});
-
-		hasHyperlink
-			? Asc.editor.change_Hyperlink(props)
-			: Asc.editor.add_Hyperlink(props);
-
-		presentation.SetSelectionState(selectionState);
 		const controller = this.Drawing.getDrawingObjectsController();
-		controller.updateSelectionState();
-		controller.updateOverlay();
+		const nonVisualProperties = controller.hyperlinkCollectNonVisualProperties(this.Drawing);
+
+		nonVisualProperties.forEach(function (oNvPr) {
+			const oHyperlink = new AscFormat.CT_Hyperlink();
+			oHyperlink.id = hyperlink.link;
+			oHyperlink.tooltip = hyperlink.tooltip;
+			oNvPr.setHlinkClick(oHyperlink);
+		});
 
 		return true;
 	};
