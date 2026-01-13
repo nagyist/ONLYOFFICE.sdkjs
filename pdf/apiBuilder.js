@@ -235,6 +235,13 @@
 	 * @property {pt} 7 - y4 (right bottom)
 	 */
 
+	/**
+	 * Degree defines an angle in degrees.
+	 * Can be any finite number (positive or negative).
+	 *
+	 * @typedef {number} Degree
+	 */
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// Api
@@ -607,7 +614,7 @@
 	Api.prototype.CreateStampAnnot = function(rect, type, author, creationDate) {
 		let oDoc = private_GetLogicDocument();
 
-		if (!private_IsValidRect(rect)) {
+		if (!private_IsValidRect(rect, true)) {
 			AscBuilder.throwException("The rect parameter must be a valid rect");
 		}
 
@@ -4849,6 +4856,7 @@
 		oCurXfrm.offY = nCurOffY;
 
 		this.Annot.SetRect(aNewRect);
+		this.Annot.Recalculate();
 
 		return true;
 	};
@@ -4862,6 +4870,35 @@
 	 */
 	ApiStampAnnotation.prototype.GetScale = function() {
 		return this.Annot.GetOriginViewScale();
+	};
+
+	/**
+	 * Sets stamp rotate.
+	 * @memberof ApiStampAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {Degree} angle
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiStampAnnotation/Methods/SetRotate.js
+	 */
+	ApiStampAnnotation.prototype.SetRotate = function(angle) {
+		angle = AscBuilder.GetNumberParameter(angle, 0);
+		angle = private_NormalizeDegree(angle);
+
+		let oXfrm = this.Annot.getXfrm();
+		oXfrm.setRot(-angle * (Math.PI / 180));
+
+		return true;
+	};
+
+	/**
+	 * Gets stamp rotate.
+	 * @memberof ApiStampAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {Degree}
+	 * @see office-js-api/Examples/PDF/ApiStampAnnotation/Methods/GetRotate.js
+	 */
+	ApiStampAnnotation.prototype.GetRotate = function() {
+		return this.Annot.GetRotate();
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -5507,13 +5544,13 @@
 		}
 	}
 
-	function private_IsValidRect(value) {
+	function private_IsValidRect(value, isForStamp) {
 		return (
 			Array.isArray(value) &&
 			value.length === 4 &&
 			value.every(Number.isFinite) &&
-			value[0] < value[2] &&
-			value[1] < value[3]
+			isForStamp !== true ? value[0] < value[2] &&
+			value[1] < value[3] : true
 		);
 	}
 
@@ -5649,6 +5686,10 @@
 
 			proto = Object.getPrototypeOf(proto);
 		}
+	}
+
+	function private_NormalizeDegree(angle) {
+		return ((angle % 360) + 360) % 360;
 	}
 
 	// Api
@@ -5924,6 +5965,8 @@
 	ApiStampAnnotation.prototype["GetType"]					= ApiStampAnnotation.prototype.GetType;
 	ApiStampAnnotation.prototype["SetScale"]				= ApiStampAnnotation.prototype.SetScale;
 	ApiStampAnnotation.prototype["GetScale"]				= ApiStampAnnotation.prototype.GetScale;
+	ApiStampAnnotation.prototype["SetRotate"]				= ApiStampAnnotation.prototype.SetRotate;
+	ApiStampAnnotation.prototype["GetRotate"]				= ApiStampAnnotation.prototype.GetRotate;
 
 	// ApiBaseMarkupAnnotation
 	ApiBaseMarkupAnnotation.prototype["GetClassType"]		= ApiBaseMarkupAnnotation.prototype.GetClassType;
