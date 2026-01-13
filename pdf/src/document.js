@@ -1171,31 +1171,10 @@ var CPresentation = CPresentation || function(){};
             clearTimeout(this.SearchEngine.TextAroundTimer);
             this.SearchEngine.TextAroundTimer = null;
         }
-    };
-    CPDFDoc.prototype.IsNeedUpdateSearch = function() {
-        return this.needUpdateSearch;
-    };
-    CPDFDoc.prototype.UpdateSearch = function() {
-        if (!this.IsNeedUpdateSearch()) {
-            return;
-        }
 
-        if (this.SearchEngine.Text) {
-            let oSearchProps = new AscCommon.CSearchSettings();
-
-            oSearchProps.put_MatchCase(this.SearchEngine.IsMatchCase());
-            oSearchProps.put_Text(this.SearchEngine.Text);
-            oSearchProps.put_WholeWords(this.SearchEngine.IsWholeWords());
-
-            this.SearchEngine.Clear();
-            this.SearchEngine.Set(oSearchProps);
-            this.SearchEngine.Search();
-        }
-
-        this.SetNeedUpdateSearch(false);
-        this.SearchEngine.StartTextAround();
-
-        Asc.editor.sendEvent("asc_onUpdateRedactState");
+		this.SearchEngine.Clear();
+		
+		Asc.editor.sync_SearchEndCallback();
     };
 
     CPDFDoc.prototype.GetId = function() {

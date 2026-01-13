@@ -528,6 +528,8 @@
 		
 		oViewer.IsSearch = true;
 
+		oDoc.RecalculateAll();
+		
 		let isAsync	= (true === oViewer.findText(props, isNext));
 		let result	= oSearchEngine.Count;
 		
