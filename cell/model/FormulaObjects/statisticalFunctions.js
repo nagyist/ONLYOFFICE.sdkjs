@@ -12584,7 +12584,9 @@ function (window, undefined) {
 				const bbox = range.getBBox0();
 				const cellsCount = (bbox.c2 - bbox.c1 + 1) * (bbox.r2 - bbox.r1 + 1);
 				const elemsCount = this.typedCache.getElemsCount(range);
-				const emptyCount = cellsCount - elemsCount;
+				let emptyCount = cellsCount - elemsCount;
+				let matchingFunction = getMatchingFunction(cElementType.string, '=', false);
+				emptyCount += this.typedCache.forEachInTyped(range, cElementType.string, matchingFunction, searchValue);
 				return new cNumber(emptyCount);
 			}
 			if (matchingInfo.op === "<>") {
