@@ -1443,7 +1443,10 @@
 	};
 	PDFEditorApi.prototype.ApplyRedact = function() {
 		let oDoc = this.getPDFDoc();
-		return oDoc.ApplyRedact();
+		
+		return oDoc.DoAction(function() {
+			oDoc.ApplyRedact()
+		}, AscDFH.historydescription_Pdf_Apply_Redact);
 	};
 
 	PDFEditorApi.prototype.HasRedact = function() {

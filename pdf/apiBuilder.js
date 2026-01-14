@@ -242,6 +242,13 @@
 	 * @typedef {number} Degree
 	 */
 
+	/**
+	 * @typedef {Object} SearchProps
+	 * @property {string} text - The text to search for.
+	 * @property {boolean} matchCase - Whether the search is case-sensitive.
+	 * @property {boolean} wholeWords - Whether to match whole words only.
+	 */
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// Api
@@ -1024,6 +1031,7 @@
 
 	/**
 	 * Gets page by index from document.
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPos - page position
 	 * @returns {ApiPage}
@@ -1040,6 +1048,7 @@
 
 	/**
 	 * Removes page by index from document
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPos - page position
 	 * @returns {boolean}
@@ -1057,6 +1066,7 @@
 
 	/**
 	 * Gets document pages count
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @returns {number}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/GetPagesCount.js
@@ -1068,7 +1078,7 @@
 
 	/**
 	 * Creates a text field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1085,7 +1095,7 @@
 
 	/**
 	 * Creates a text date field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1102,7 +1112,7 @@
 
 	/**
 	 * Creates a image field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1119,7 +1129,7 @@
 
 	/**
 	 * Creates a checkbox field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1136,7 +1146,7 @@
 
 	/**
 	 * Creates a radiobutton field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1153,7 +1163,7 @@
 
 	/**
 	 * Creates a combobox field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1170,7 +1180,7 @@
 
 	/**
 	 * Creates a listbox field.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nPage - page index
 	 * @param {Rect} aRect - widget rect
@@ -1187,7 +1197,7 @@
 
 	/**
 	 * Gets list of all fields in document.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @returns {ApiField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/GetAllFields.js
@@ -1221,7 +1231,7 @@
 
 	/**
 	 * Gets field by it's name.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @returns {?ApiField}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/GetFieldByName.js
@@ -1237,8 +1247,38 @@
 	};
 
 	/**
+	 * Searchs words and adds redact to it.
+	 * @memberof ApiDocument
+	 * @typeofeditors ["PDFE"]
+	 * @param {SearchProps} props
+	 * @returns {ApiRedactAnnotation[]}
+	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/SearchAndRedact.js
+	 */
+	ApiDocument.prototype.SearchAndRedact = function(props) {
+		if (!props || typeof(props) !== "object" || Array.isArray(props)) {
+			AscBuilder.throwException("The props parameter must be a SearchProps object");
+		}
+
+		let text = AscBuilder.GetStringParameter(props['text'], null);
+		if (!text) {
+			AscBuilder.throwException("The text property must be a valid string");
+		}
+
+		let matchCase = AscBuilder.GetBoolParameter(props['matchCase'], false);
+		let wholeWords = AscBuilder.GetBoolParameter(props['wholeWords'], false);
+
+		let searchSettings = new AscCommon.CSearchSettings();
+		searchSettings.put_Text(text);
+		searchSettings.put_MatchCase(matchCase);
+		searchSettings.put_WholeWords(wholeWords);
+
+		this.Document.Search(searchSettings);
+		return this.Document.MarkAllSearchElementsForRedact().map(private_GetAnnotApi);
+	};
+
+	/**
 	 * Applies added redact.
-	 * @memberof Api
+	 * @memberof ApiDocument
 	 * @typeofeditors ["PDFE"]
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiDocument/Methods/ApplyRedact.js
@@ -1284,6 +1324,7 @@
 
 	/**
 	 * Sets page rotation angle
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @param {number} nAngle
 	 * @returns {boolean}
@@ -1301,6 +1342,7 @@
 
 	/**
 	 * Gets page rotation angle
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @returns {number}
 	 * @see office-js-api/Examples/PDF/ApiPage/Methods/GetRotate.js
@@ -1311,6 +1353,7 @@
 
 	/**
 	 * Gets page index
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @returns {number}
 	 * @see office-js-api/Examples/PDF/ApiPage/Methods/GetIndex.js
@@ -1321,6 +1364,7 @@
 
 	/**
 	 * Gets page widgets
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @returns {number}
 	 * @see office-js-api/Examples/PDF/ApiPage/Methods/GetAllWidgets.js
@@ -1331,6 +1375,7 @@
 
 	/**
 	 * Adds annot to page
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @param {ApiBaseAnnotation} annot
 	 * @returns {ApiBaseAnnotation}
@@ -1351,6 +1396,7 @@
 
 	/**
 	 * Gets all annots on page
+	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @returns {ApiBaseAnnotation}
 	 * @see office-js-api/Examples/PDF/ApiPage/Methods/GetAnnots.js
@@ -1368,6 +1414,84 @@
 		}
 		
 		return aResult;
+	};
+
+	/**
+	 * Search words and returns their quads.
+	 * @memberof ApiPage
+	 * @typeofeditors ["PDFE"]
+	 * @param {SearchProps} props
+	 * @returns {Quads[]}
+	 * @see office-js-api/Examples/PDF/ApiPage/Methods/Search.js
+	 */
+	ApiPage.prototype.Search = function(props) {
+		if (!props || typeof(props) !== "object" || Array.isArray(props)) {
+			AscBuilder.throwException("The props parameter must be a SearchProps object");
+		}
+
+		let text = AscBuilder.GetStringParameter(props['text'], null);
+		if (!text) {
+			AscBuilder.throwException("The text property must be a valid string");
+		}
+
+		let matchCase = AscBuilder.GetBoolParameter(props['matchCase'], false);
+		let wholeWords = AscBuilder.GetBoolParameter(props['wholeWords'], false);
+
+		let searchSettings = new AscCommon.CSearchSettings();
+		searchSettings.put_Text(text);
+		searchSettings.put_MatchCase(matchCase);
+		searchSettings.put_WholeWords(wholeWords);
+
+		let nPageIdx = this.GetIndex();
+
+		let oDoc = private_GetLogicDocument();
+		let oSearchEngine = oDoc.Search(searchSettings);
+		let aResult = [];
+
+		Object.values(oSearchEngine.Elements).forEach(function(pdfMatch, idx) {
+			if (pdfMatch.GetAbsolutePage() == nPageIdx) {
+				let aPageSelQuads = oDoc.GetSearchElementSelectionQuads(idx);
+				aResult = aResult.concat(aPageSelQuads[0].quads);
+			}
+		});
+		
+		return aResult;
+	};
+
+	/**
+	 * Gets page selection quads
+	 * @typeofeditors ["PDFE"]
+	 * @param {Point} startPoint
+	 * @param {Point} endPoint
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiPage/Methods/SetSelection.js
+	 */
+	ApiPage.prototype.SetSelection = function(startPoint, endPoint) {
+		private_CheckPoint(startPoint);
+		private_CheckPoint(endPoint);
+
+		let oDoc = private_GetLogicDocument();
+		let oFile = oDoc.GetFile();
+		let nPageIdx = this.GetIndex();
+
+		oDoc.BlurActiveObject();
+
+		let startNearestPos = oFile.getNearestPos(nPageIdx, startPoint['x'], startPoint['y']);
+		let endNearestPos = oFile.getNearestPos(nPageIdx, endPoint['x'], endPoint['y']);
+
+		oFile.Selection.IsSelection = true;
+
+		oFile.Selection.Page1  = nPageIdx;
+		oFile.Selection.Line1  = startNearestPos.Line;
+		oFile.Selection.Glyph1 = startNearestPos.Glyph;
+
+		oFile.Selection.Page2  = nPageIdx;
+		oFile.Selection.Line2  = endNearestPos.Line;
+		oFile.Selection.Glyph2 = endNearestPos.Glyph;
+
+		oDoc.Action.UpdateSelection = true;
+
+		return true;
 	};
 
 	/**
@@ -1391,6 +1515,12 @@
 
 		return aPageQuads;
 	};
+
+	private_WrapClassMethods(ApiPage, function(method, args) {
+		if (this.Page.GetIndex() == -1) {
+			AscBuilder.throwException("You can't change deleted page");
+		}
+	});
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -4940,7 +5070,23 @@
 			}
 		});
 
+		let minX = Infinity, maxX = -Infinity;
+		let minY = Infinity, maxY = -Infinity;
+
+		for (let i = 0; i < quads.length; i++) {
+			for (let j = 0; j < quads[i].length; j += 2) {
+				let x = quads[i][j];
+				let y = quads[i][j + 1];
+
+				if (x < minX) minX = x;
+				if (x > maxX) maxX = x;
+				if (y < minY) minY = y;
+				if (y > maxY) maxY = y;
+			}
+		}
+
 		this.Annot.SetQuads(quads);
+		this.Annot.SetRect([minX - 1, minY - 1, maxX + 1, maxY + 1]);
 		return true;
 	};
 
@@ -4952,7 +5098,7 @@
 	 * @see office-js-api/Examples/PDF/ApiBaseMarkupAnnotation/Methods/GetQuads.js
 	 */
 	ApiBaseMarkupAnnotation.prototype.GetQuads = function() {
-		return this.Annot.GetQuads(quads);
+		return this.Annot.GetQuads();
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -5549,8 +5695,8 @@
 			Array.isArray(value) &&
 			value.length === 4 &&
 			value.every(Number.isFinite) &&
-			isForStamp !== true ? value[0] < value[2] &&
-			value[1] < value[3] : true
+			(isForStamp !== true ? value[0] < value[2] &&
+			value[1] < value[3] : true)
 		);
 	}
 
@@ -5725,6 +5871,7 @@
 	ApiDocument.prototype["AddListboxField"]				= ApiDocument.prototype.AddListboxField;
 	ApiDocument.prototype["GetAllFields"]					= ApiDocument.prototype.GetAllFields;
 	ApiDocument.prototype["GetFieldByName"]					= ApiDocument.prototype.GetFieldByName;
+	ApiDocument.prototype["SearchAndRedact"]				= ApiDocument.prototype.SearchAndRedact;
 	ApiDocument.prototype["ApplyRedact"]					= ApiDocument.prototype.ApplyRedact;
 
 	// ApiPage
@@ -5735,6 +5882,8 @@
 	ApiPage.prototype["GetAllWidgets"]						= ApiPage.prototype.GetAllWidgets;
 	ApiPage.prototype["AddAnnot"]							= ApiPage.prototype.AddAnnot;
 	ApiPage.prototype["GetAnnots"]							= ApiPage.prototype.GetAnnots;
+	ApiPage.prototype["Search"]								= ApiPage.prototype.Search;
+	ApiPage.prototype["SetSelection"]						= ApiPage.prototype.SetSelection;
 	ApiPage.prototype["GetSelectionQuads"]					= ApiPage.prototype.GetSelectionQuads;
 
 	// ApiBaseField
