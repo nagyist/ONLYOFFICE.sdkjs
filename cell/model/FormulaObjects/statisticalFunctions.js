@@ -12306,7 +12306,7 @@ function (window, undefined) {
 				const lastIndex = this.findHigherIndexInTyped(bbox.r2, typedIndexes);
 				if (convertToNumber) {
 					for (let j = firstIndex; j < lastIndex; j += 1) {
-						let value = Number(typedData[j]);
+						let value = AscCommon.g_oFormatParser.parseLocaleNumber(typedData[j]);
 						if (!isNaN(value)) {
 							count += matchingFunction(value, searchValue);
 						}
@@ -12420,42 +12420,6 @@ function (window, undefined) {
 	}
 	CountIfCache.prototype.constructor = CountIfCache;
 
-	CountIfCache.prototype.calculateSingeValue = function(value, arg1) {
-		let matchingInfo = AscCommonExcel.matchingValue(arg1);
-		let type = matchingInfo.val.type;
-		let searchValue = matchingInfo.val;
-		if (type === cElementType.string) {
-			searchValue = searchValue.toString().toLowerCase();
-		} else {
-			searchValue = searchValue.value;
-		}
-		if (type === cElementType.string) {
-			const checkErr = new cError(matchingInfo.val.value.toUpperCase());
-			if (checkErr.errorType !== -1) {
-				type = cElementType.error;
-				searchValue = checkErr.errorType;
-			}
-		}
-		if (searchValue === "") {
-			if  (matchingInfo.op === null || matchingInfo.op === '=') {
-				return value.type === cElementType.empty ? new cNumber(1) : new cNumber(0);
-			}
-			if (matchingInfo.op === "<>") {
-				return value.type === cElementType.empty ? new cNumber(0) : new cNumber(1);
-			}
-			return new cNumber(0);
-		}
-		if (type !== value.type) {
-			return matchingInfo.op === "<>" ? new cNumber(1) : new cNumber(0);
-		}
-		const isWildcard = type === cElementType.string && (searchValue.indexOf('*') !== -1 || searchValue.indexOf('?') !== -1);
-		const matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
-		if (matchingFunction(value.value, searchValue)) {
-			return new cNumber(1);
-		}
-		return new cNumber(0);
-	};
-
 	CountIfCache.prototype.calculate = function (arg, _arg1) {
 		let arg0 = arg[0], arg1 = arg[1];
 
@@ -12566,10 +12530,20 @@ function (window, undefined) {
 			}
 		}
 		const isWildcard = type === cElementType.string && (searchValue.indexOf('*') !== -1 || searchValue.indexOf('?') !== -1);
-		if ((matchingInfo.op === '=' || matchingInfo.op === null) && type === cElementType.number) {
-			const matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
+		if ((matchingInfo.op === '=' || matchingInfo.op === null) && !isWildcard) {
+			if (type === cElementType.string) {
+				const convertedToNumber = AscCommon.g_oFormatParser.parseLocaleNumber(searchValue);
+				if (!isNaN(convertedToNumber)) {
+					searchValue = convertedToNumber;
+					type = cElementType.number;
+				}
+			}
+			let matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
 			_count = this.typedCache.forEachInTyped(range, type, matchingFunction, searchValue);
-			_count += this.typedCache.forEachInTyped(range, cElementType.string, matchingFunction, searchValue, true);
+			if (type === cElementType.number) {
+				matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
+				_count += this.typedCache.forEachInTyped(range, cElementType.string, matchingFunction, searchValue, true);
+			}
 		} else if (matchingInfo.op === '<>') {
 			const bbox = range.getBBox0();
 			const cellsCount = (bbox.c2 - bbox.c1 + 1) * (bbox.r2 - bbox.r1 + 1);
