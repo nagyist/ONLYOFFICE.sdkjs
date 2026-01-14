@@ -26863,11 +26863,6 @@
      */
     function ApiAutoFilter(ws) {
         this.ws = ws;
-        this.filters = ws && ws.worksheet &&
-        ws.worksheet.AutoFilter &&
-        ws.worksheet.AutoFilter.FilterColumns
-            ? createAutoFilterArray(this, ws.worksheet.AutoFilter.FilterColumns)
-            : [];
     }
 
     /**
@@ -26926,7 +26921,15 @@
      * @see office-js-api/Examples/{Editor}/ApiAutoFilter/Methods/GetFilters.js
      */
     ApiAutoFilter.prototype.GetFilters = function () {
-        return this.filters;
+        const cols =
+            this.ws &&
+            this.ws.worksheet &&
+            this.ws.worksheet.AutoFilter &&
+            this.ws.worksheet.AutoFilter.FilterColumns
+                ? this.ws.worksheet.AutoFilter.FilterColumns
+                : [];
+
+        return createAutoFilterArray(this, cols);
     };
 
     Object.defineProperty(ApiAutoFilter.prototype, "Filters", {
@@ -28407,14 +28410,15 @@
 
 
     function createAutoFilterArray(parent, filters) {
-        let result = [];
-        if (!Array.isArray(filters)) {
-            return result;
+        if (!Array.isArray(filters)) return [];
+
+        const res = [];
+        for (let i = 0; i < filters.length; i++) {
+            const col = filters[i];
+            let wrapper = new ApiFilter(parent, col);
+            res.push(wrapper);
         }
-        for (let i = 0; i< filters.length; i++) {
-            result.push(new ApiFilter(parent, filters[i]));
-        }
-        return result;
+        return res;
     }
 
 	function private_SetCoords(oDrawing, oWorksheet, nExtX, nExtY, nFromCol, nColOffset, nFromRow, nRowOffset, pos) {
