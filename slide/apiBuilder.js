@@ -213,6 +213,13 @@
         this.Cell = oCell;
     }
 
+	/**
+	 * Class representing a slide show transition.
+	 * @constructor
+	 */
+	function ApiSlideShowTransition(transition) {
+		this.Transition = transition;
+	}
 
     /**
      * Twentieths of a point (equivalent to 1/1440th of an inch).
@@ -409,9 +416,25 @@
 	 * Represents the type of objects in a selection.
 	 * @typedef {("none" | "shapes" | "slides" | "text")} SelectionType - Available selection types.
      * @see office-js-api/Examples/Enumerations/SelectionType.js
-	 *
 	 */
-	
+
+	/**
+	 * The available slide transition types.
+	 * @typedef TransitionTypeName
+	 * @type {"none" | "fade" | "push" | "wipe" | "split" | "uncover" | "cover" | "clock" | "zoom" | "morph" | "random"}
+	 */
+
+	/**
+	 * The available slide transition option/direction names.
+	 * @typedef TransitionOptionName
+	 * @type {"fadeSmoothly" | "fadeThroughBlack" | "left" | "top" | "right" | "bottom" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight" | "splitVerticalIn" | "splitVerticalOut" | "splitHorizontalIn" | "splitHorizontalOut" | "clockClockwise" | "clockCounterclockwise" | "clockWedge" | "zoomIn" | "zoomOut" | "zoomAndRotate" | "morphObjects" | "morphWords" | "morphLetters"}
+	 */
+
+	/**
+	 * The available slide transition speed values (similar to PowerPoint VBA ppTransitionSpeed).
+	 * @typedef TransitionSpeed
+	 * @type {"slow" | "medium" | "fast"}
+	 */
 
     //------------------------------------------------------------------------------------------------------------------
     //
@@ -979,6 +1002,19 @@
         oArt.spPr.xfrm.setOffY(nIndTop);
 
 		return new ApiDrawing(oArt);
+	};
+
+	/**
+	 * Creates a new slide show transition object.
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {ApiSlideShowTransition}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSlideShowTransition.js
+	 */
+	Api.prototype.CreateSlideShowTransition = function () {
+		return new ApiSlideShowTransition(new Asc.CAscSlideTransition());
 	};
 
     /**
@@ -4156,7 +4192,41 @@
 			}
 		}
 		return false;
-	}
+	};
+
+	/**
+	 * Returns the slide show transition of the current slide.
+	 *
+	 * @memberof ApiSlide
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {ApiSlideShowTransition | null}
+	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GetSlideShowTransition.js
+	 */
+	ApiSlide.prototype.GetSlideShowTransition = function () {
+		if (this.Slide && this.Slide.transition) {
+			return new ApiSlideShowTransition(this.Slide.transition);
+		}
+		return null;
+	};
+
+	/**
+	 * Sets the slide show transition to the current slide.
+	 *
+	 * @memberof ApiSlide
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {ApiSlideShowTransition} transition
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/SetSlideShowTransition.js
+	 */
+	ApiSlide.prototype.SetSlideShowTransition = function (transition) {
+		if (this.Slide && transition && transition.Transition) {
+			this.Slide.applyTransition(transition.Transition);
+			return true;
+		}
+		return false;
+	};
 	
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -4245,20 +4315,482 @@
 		return '';
 	};
 
-    ApiNotesPage.prototype.GetTheme = function(){
-            if (this.NotesPage && this.NotesPage.Master && this.NotesPage.Master.Theme)
-            {
-                var oThemeLoadInfo     = new AscCommonSlide.CThemeLoadInfo();
-                oThemeLoadInfo.Master  = this.NotesPage.Master;
-                oThemeLoadInfo.Layouts = [];
-                oThemeLoadInfo.Theme   = this.NotesPage.Master.Theme;
+	ApiNotesPage.prototype.GetTheme = function () {
+		if (this.NotesPage && this.NotesPage.Master && this.NotesPage.Master.Theme) {
+			const oThemeLoadInfo = new AscCommonSlide.CThemeLoadInfo();
+			oThemeLoadInfo.Master = this.NotesPage.Master;
+			oThemeLoadInfo.Layouts = [];
+			oThemeLoadInfo.Theme = this.NotesPage.Master.Theme;
+			return new ApiTheme(oThemeLoadInfo);
+		}
+		return null;
+	};
 
-                return new ApiTheme(oThemeLoadInfo);
-            }
-            
-            return null;
-        };
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiSlideShowTransition
+	//
+	//------------------------------------------------------------------------------------------------------------------
 
+	/**
+	 * Returns the type of the ApiSlideShowTransition class.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {"slideShowTransition"}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetClassType.js
+	 */
+	ApiSlideShowTransition.prototype.GetClassType = function () {
+		return 'slideShowTransition';
+	};
+
+	ApiSlideShowTransition._getTransitionTypeName = function (type) {
+		switch (type) {
+			case Asc.c_oAscSlideTransitionTypes.None: return 'none';
+			case Asc.c_oAscSlideTransitionTypes.Fade: return 'fade';
+			case Asc.c_oAscSlideTransitionTypes.Push: return 'push';
+			case Asc.c_oAscSlideTransitionTypes.Wipe: return 'wipe';
+			case Asc.c_oAscSlideTransitionTypes.Split: return 'split';
+			case Asc.c_oAscSlideTransitionTypes.UnCover: return 'uncover';
+			case Asc.c_oAscSlideTransitionTypes.Cover: return 'cover';
+			case Asc.c_oAscSlideTransitionTypes.Clock: return 'clock';
+			case Asc.c_oAscSlideTransitionTypes.Zoom: return 'zoom';
+			case Asc.c_oAscSlideTransitionTypes.Morph: return 'morph';
+			case Asc.c_oAscSlideTransitionTypes.Random: return 'random';
+			default: return undefined;
+		}
+	};
+
+	ApiSlideShowTransition._getTransitionTypeValue = function (typeName) {
+		switch (typeName) {
+			case 'none': return Asc.c_oAscSlideTransitionTypes.None;
+			case 'fade': return Asc.c_oAscSlideTransitionTypes.Fade;
+			case 'push': return Asc.c_oAscSlideTransitionTypes.Push;
+			case 'wipe': return Asc.c_oAscSlideTransitionTypes.Wipe;
+			case 'split': return Asc.c_oAscSlideTransitionTypes.Split;
+			case 'uncover': return Asc.c_oAscSlideTransitionTypes.UnCover;
+			case 'cover': return Asc.c_oAscSlideTransitionTypes.Cover;
+			case 'clock': return Asc.c_oAscSlideTransitionTypes.Clock;
+			case 'zoom': return Asc.c_oAscSlideTransitionTypes.Zoom;
+			case 'morph': return Asc.c_oAscSlideTransitionTypes.Morph;
+			case 'random': return Asc.c_oAscSlideTransitionTypes.Random;
+			default: return undefined;
+		}
+	};
+
+	/**
+	 * Returns the transition type for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {TransitionTypeName | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetType.js
+	 */
+	ApiSlideShowTransition.prototype.GetType = function () {
+		if (this.Transition) {
+			const type = this.Transition.get_TransitionType();
+			return ApiSlideShowTransition._getTransitionTypeName(type);
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets the transition type for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {TransitionTypeName} typeName
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetType.js
+	 */
+	ApiSlideShowTransition.prototype.SetType = function (typeName) {
+		if (this.Transition) {
+			const type = ApiSlideShowTransition._getTransitionTypeValue(typeName);
+			if (type !== undefined) {
+				this.Transition.put_TransitionType(type);
+				return true;
+			}
+		}
+		return false;
+	};
+
+	ApiSlideShowTransition._getTransitionOptionName = function (option) {
+		switch (option) {
+			case Asc.c_oAscSlideTransitionParams.Fade_Smoothly: return 'fadeSmoothly';
+			case Asc.c_oAscSlideTransitionParams.Fade_Through_Black: return 'fadeThroughBlack';
+			case Asc.c_oAscSlideTransitionParams.Param_Left: return 'left';
+			case Asc.c_oAscSlideTransitionParams.Param_Top: return 'top';
+			case Asc.c_oAscSlideTransitionParams.Param_Right: return 'right';
+			case Asc.c_oAscSlideTransitionParams.Param_Bottom: return 'bottom';
+			case Asc.c_oAscSlideTransitionParams.Param_TopLeft: return 'topLeft';
+			case Asc.c_oAscSlideTransitionParams.Param_TopRight: return 'topRight';
+			case Asc.c_oAscSlideTransitionParams.Param_BottomLeft: return 'bottomLeft';
+			case Asc.c_oAscSlideTransitionParams.Param_BottomRight: return 'bottomRight';
+			case Asc.c_oAscSlideTransitionParams.Split_VerticalIn: return 'splitVerticalIn';
+			case Asc.c_oAscSlideTransitionParams.Split_VerticalOut: return 'splitVerticalOut';
+			case Asc.c_oAscSlideTransitionParams.Split_HorizontalIn: return 'splitHorizontalIn';
+			case Asc.c_oAscSlideTransitionParams.Split_HorizontalOut: return 'splitHorizontalOut';
+			case Asc.c_oAscSlideTransitionParams.Clock_Clockwise: return 'clockClockwise';
+			case Asc.c_oAscSlideTransitionParams.Clock_Counterclockwise: return 'clockCounterclockwise';
+			case Asc.c_oAscSlideTransitionParams.Clock_Wedge: return 'clockWedge';
+			case Asc.c_oAscSlideTransitionParams.Zoom_In: return 'zoomIn';
+			case Asc.c_oAscSlideTransitionParams.Zoom_Out: return 'zoomOut';
+			case Asc.c_oAscSlideTransitionParams.Zoom_AndRotate: return 'zoomAndRotate';
+			case Asc.c_oAscSlideTransitionParams.Morph_Objects: return 'morphObjects';
+			case Asc.c_oAscSlideTransitionParams.Morph_Words: return 'morphWords';
+			case Asc.c_oAscSlideTransitionParams.Morph_Letters: return 'morphLetters';
+			default: return undefined;
+		}
+	};
+
+	ApiSlideShowTransition._getTransitionOptionValue = function (optionName) {
+		switch (optionName) {
+			case 'fadeSmoothly': return Asc.c_oAscSlideTransitionParams.Fade_Smoothly;
+			case 'fadeThroughBlack': return Asc.c_oAscSlideTransitionParams.Fade_Through_Black;
+			case 'left': return Asc.c_oAscSlideTransitionParams.Param_Left;
+			case 'top': return Asc.c_oAscSlideTransitionParams.Param_Top;
+			case 'right': return Asc.c_oAscSlideTransitionParams.Param_Right;
+			case 'bottom': return Asc.c_oAscSlideTransitionParams.Param_Bottom;
+			case 'topLeft': return Asc.c_oAscSlideTransitionParams.Param_TopLeft;
+			case 'topRight': return Asc.c_oAscSlideTransitionParams.Param_TopRight;
+			case 'bottomLeft': return Asc.c_oAscSlideTransitionParams.Param_BottomLeft;
+			case 'bottomRight': return Asc.c_oAscSlideTransitionParams.Param_BottomRight;
+			case 'splitVerticalIn': return Asc.c_oAscSlideTransitionParams.Split_VerticalIn;
+			case 'splitVerticalOut': return Asc.c_oAscSlideTransitionParams.Split_VerticalOut;
+			case 'splitHorizontalIn': return Asc.c_oAscSlideTransitionParams.Split_HorizontalIn;
+			case 'splitHorizontalOut': return Asc.c_oAscSlideTransitionParams.Split_HorizontalOut;
+			case 'clockClockwise': return Asc.c_oAscSlideTransitionParams.Clock_Clockwise;
+			case 'clockCounterclockwise': return Asc.c_oAscSlideTransitionParams.Clock_Counterclockwise;
+			case 'clockWedge': return Asc.c_oAscSlideTransitionParams.Clock_Wedge;
+			case 'zoomIn': return Asc.c_oAscSlideTransitionParams.Zoom_In;
+			case 'zoomOut': return Asc.c_oAscSlideTransitionParams.Zoom_Out;
+			case 'zoomAndRotate': return Asc.c_oAscSlideTransitionParams.Zoom_AndRotate;
+			case 'morphObjects': return Asc.c_oAscSlideTransitionParams.Morph_Objects;
+			case 'morphWords': return Asc.c_oAscSlideTransitionParams.Morph_Words;
+			case 'morphLetters': return Asc.c_oAscSlideTransitionParams.Morph_Letters;
+			default: return undefined;
+		}
+	};
+
+	/**
+	 * Returns the transition option for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {TransitionOptionName | undefined} - Transition option name.
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetOption.js
+	 */
+	ApiSlideShowTransition.prototype.GetOption = function () {
+		if (this.Transition) {
+			const option = this.Transition.get_TransitionOption();
+			return ApiSlideShowTransition._getTransitionOptionName(option);
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets the transition option for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {TransitionOptionName} optionName
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetOption.js
+	 */
+	ApiSlideShowTransition.prototype.SetOption = function (optionName) {
+		if (this.Transition) {
+			const option = ApiSlideShowTransition._getTransitionOptionValue(optionName);
+			if (option !== undefined) {
+				this.Transition.put_TransitionOption(option);
+				return true;
+			}
+		}
+		return false;
+	};
+
+	/**
+	 * Returns the transition duration in milliseconds for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {number | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetDuration.js
+	 */
+	ApiSlideShowTransition.prototype.GetDuration = function () {
+		if (this.Transition) {
+			return this.Transition.get_TransitionDuration();
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets the transition duration in milliseconds for the slide show transition.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {number} duration
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetDuration.js
+	 */
+	ApiSlideShowTransition.prototype.SetDuration = function (duration) {
+		if (this.Transition && AscFormat.isRealNumber(duration)) {
+			this.Transition.put_TransitionDuration(duration);
+			return true;
+		}
+		return false;
+	};
+
+	ApiSlideShowTransition.SPEED_FAST_DURATION = 500;
+	ApiSlideShowTransition.SPEED_MEDIUM_DURATION = 750;
+	ApiSlideShowTransition.SPEED_SLOW_DURATION = 1000;
+	ApiSlideShowTransition.SPEED_FAST_THRESHOLD = 250;
+	ApiSlideShowTransition.SPEED_SLOW_THRESHOLD = 1000;
+
+	ApiSlideShowTransition._getSpeedName = function (duration) {
+		if (AscFormat.isRealNumber(duration)) {
+			if (duration < ApiSlideShowTransition.SPEED_FAST_THRESHOLD) {
+				return 'fast';
+			} else if (duration > ApiSlideShowTransition.SPEED_SLOW_THRESHOLD) {
+				return 'slow';
+			} else {
+				return 'medium';
+			}
+		}
+		return undefined;
+	};
+
+	ApiSlideShowTransition._getSpeedValue = function (speedName) {
+		switch (speedName) {
+			case 'fast': return ApiSlideShowTransition.SPEED_FAST_DURATION;
+			case 'medium': return ApiSlideShowTransition.SPEED_MEDIUM_DURATION;
+			case 'slow': return ApiSlideShowTransition.SPEED_SLOW_DURATION;
+			default: return undefined;
+		}
+	};
+
+	/**
+	 * Returns the transition speed (similar to PowerPoint VBA Speed property).
+	 * Maps duration to speed based on OOXML spd attribute logic:
+	 * - fast: duration < 250ms
+	 * - slow: duration > 1000ms
+	 * - medium: 250ms <= duration <= 1000ms
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {TransitionSpeed | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetSpeed.js
+	 */
+	ApiSlideShowTransition.prototype.GetSpeed = function () {
+		if (this.Transition) {
+			const duration = this.Transition.get_TransitionDuration();
+			return ApiSlideShowTransition._getSpeedName(duration);
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets the transition speed (similar to PowerPoint VBA Speed property).
+	 * Converts speed to duration based on standard values:
+	 * - fast = 500ms
+	 * - medium = 750ms
+	 * - slow = 1000ms
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {TransitionSpeed} speed
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetSpeed.js
+	 */
+	ApiSlideShowTransition.prototype.SetSpeed = function (speed) {
+		if (this.Transition) {
+			const duration = ApiSlideShowTransition._getSpeedValue(speed);
+			if (duration !== undefined) {
+				this.Transition.put_TransitionDuration(duration);
+				return true;
+			}
+		}
+		return false;
+	};
+
+	/**
+	 * Returns whether the slide advances on mouse click.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {boolean | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceOnClick.js
+	 */
+	ApiSlideShowTransition.prototype.GetAdvanceOnClick = function () {
+		if (this.Transition) {
+			return this.Transition.get_SlideAdvanceOnMouseClick();
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets whether the slide advances on mouse click.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {boolean} advanceOnClick
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceOnClick.js
+	 */
+	ApiSlideShowTransition.prototype.SetAdvanceOnClick = function (advanceOnClick) {
+		if (this.Transition) {
+			this.Transition.put_SlideAdvanceOnMouseClick(advanceOnClick);
+			return true;
+		}
+		return false;
+	};
+
+	/**
+	 * Returns whether the slide advances after a specified time.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {boolean | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceOnTime.js
+	 */
+	ApiSlideShowTransition.prototype.GetAdvanceOnTime = function () {
+		if (this.Transition) {
+			return this.Transition.get_SlideAdvanceAfter();
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets whether the slide advances after a specified time.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {boolean} advanceOnTime
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceOnTime.js
+	 */
+	ApiSlideShowTransition.prototype.SetAdvanceOnTime = function (advanceOnTime) {
+		if (this.Transition) {
+			this.Transition.put_SlideAdvanceAfter(advanceOnTime);
+			return true;
+		}
+		return false;
+	};
+
+	/**
+	 * Returns the slide advance time in milliseconds.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {number | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceTime.js
+	 */
+	ApiSlideShowTransition.prototype.GetAdvanceTime = function () {
+		if (this.Transition) {
+			return this.Transition.get_SlideAdvanceDuration();
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets the slide advance time in milliseconds.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {number} advanceTime
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceTime.js
+	 */
+	ApiSlideShowTransition.prototype.SetAdvanceTime = function (advanceTime) {
+		if (this.Transition && AscFormat.isRealNumber(advanceTime)) {
+			this.Transition.put_SlideAdvanceDuration(advanceTime);
+			return true;
+		}
+		return false;
+	};
+
+	/**
+	 * Returns whether the presentation loops continuously.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {boolean | undefined}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetShowLoop.js
+	 */
+	ApiSlideShowTransition.prototype.GetShowLoop = function () {
+		if (this.Transition) {
+			return this.Transition.get_ShowLoop();
+		}
+		return undefined;
+	};
+
+	/**
+	 * Sets whether the presentation loops continuously.
+	 *
+	 * @memberof ApiSlideShowTransition
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {boolean} showLoop
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetShowLoop.js
+	 */
+	ApiSlideShowTransition.prototype.SetShowLoop = function (showLoop) {
+		if (this.Transition) {
+			this.Transition.put_ShowLoop(showLoop);
+			return true;
+		}
+		return false;
+	};
+
+	Object.defineProperties(ApiSlideShowTransition.prototype, {
+		"Type": {
+			get: function () { return this.GetType(); },
+			set: function (value) { this.SetType(value); }
+		},
+		"Option": {
+			get: function () { return this.GetOption(); },
+			set: function (value) { this.SetOption(value); }
+		},
+		"Speed": {
+			get: function () { return this.GetSpeed(); },
+			set: function (value) { this.SetSpeed(value); }
+		},
+		"Duration": {
+			get: function () { return this.GetDuration(); },
+			set: function (value) { this.SetDuration(value); }
+		},
+		"AdvanceOnClick": {
+			get: function () { return this.GetAdvanceOnClick(); },
+			set: function (value) { this.SetAdvanceOnClick(value); }
+		},
+		"AdvanceOnTime": {
+			get: function () { return this.GetAdvanceOnTime(); },
+			set: function (value) { this.SetAdvanceOnTime(value); }
+		},
+		"AdvanceTime": {
+			get: function () { return this.GetAdvanceTime(); },
+			set: function (value) { this.SetAdvanceTime(value); }
+		},
+		"ShowLoop": {
+			get: function () { return this.GetShowLoop(); },
+			set: function (value) { this.SetShowLoop(value); }
+		}
+	});
 
     //------------------------------------------------------------------------------------------------------------------
     //
@@ -5693,6 +6225,7 @@
     Api.prototype["CreateThemeFormatScheme"]              = Api.prototype.CreateThemeFormatScheme;
     Api.prototype["CreateThemeFontScheme"]                = Api.prototype.CreateThemeFontScheme;
     Api.prototype["CreateWordArt"]                        = Api.prototype.CreateWordArt;
+	Api.prototype["CreateSlideShowTransition"]            = Api.prototype.CreateSlideShowTransition;
 	Api.prototype["FromJSON"]                             = Api.prototype.FromJSON;
 	Api.prototype["GetSelection"]                         = Api.prototype.GetSelection;
 	Api.prototype["GetByInternalId"]                      = Api.prototype.GetByInternalId;
@@ -5854,12 +6387,32 @@
     ApiSlide.prototype["GroupDrawings"]                   = ApiSlide.prototype.GroupDrawings;
 	ApiSlide.prototype["GetNotesPage"]                    = ApiSlide.prototype.GetNotesPage;
 	ApiSlide.prototype["AddNotesText"]                    = ApiSlide.prototype.AddNotesText;
+	ApiSlide.prototype["GetSlideShowTransition"]          = ApiSlide.prototype.GetSlideShowTransition;
+	ApiSlide.prototype["SetSlideShowTransition"]          = ApiSlide.prototype.SetSlideShowTransition;
 
 	ApiNotesPage.prototype["GetClassType"]                = ApiNotesPage.prototype.GetClassType;
 	ApiNotesPage.prototype["GetBodyShape"]                = ApiNotesPage.prototype.GetBodyShape;
 	ApiNotesPage.prototype["AddBodyShapeText"]            = ApiNotesPage.prototype.AddBodyShapeText;
 	ApiNotesPage.prototype["GetBodyShapeText"]            = ApiNotesPage.prototype.GetBodyShapeText;
 	ApiNotesPage.prototype["GetTheme"]                    = ApiNotesPage.prototype.GetTheme;
+
+	ApiSlideShowTransition.prototype["GetClassType"]      = ApiSlideShowTransition.prototype.GetClassType;
+	ApiSlideShowTransition.prototype["GetType"]           = ApiSlideShowTransition.prototype.GetType;
+	ApiSlideShowTransition.prototype["SetType"]           = ApiSlideShowTransition.prototype.SetType;
+	ApiSlideShowTransition.prototype["GetOption"]         = ApiSlideShowTransition.prototype.GetOption;
+	ApiSlideShowTransition.prototype["SetOption"]         = ApiSlideShowTransition.prototype.SetOption;
+	ApiSlideShowTransition.prototype["GetDuration"]       = ApiSlideShowTransition.prototype.GetDuration;
+	ApiSlideShowTransition.prototype["SetDuration"]       = ApiSlideShowTransition.prototype.SetDuration;
+	ApiSlideShowTransition.prototype["GetSpeed"]          = ApiSlideShowTransition.prototype.GetSpeed;
+	ApiSlideShowTransition.prototype["SetSpeed"]          = ApiSlideShowTransition.prototype.SetSpeed;
+	ApiSlideShowTransition.prototype["GetAdvanceOnClick"] = ApiSlideShowTransition.prototype.GetAdvanceOnClick;
+	ApiSlideShowTransition.prototype["SetAdvanceOnClick"] = ApiSlideShowTransition.prototype.SetAdvanceOnClick;
+	ApiSlideShowTransition.prototype["GetAdvanceOnTime"]  = ApiSlideShowTransition.prototype.GetAdvanceOnTime;
+	ApiSlideShowTransition.prototype["SetAdvanceOnTime"]  = ApiSlideShowTransition.prototype.SetAdvanceOnTime;
+	ApiSlideShowTransition.prototype["GetAdvanceTime"]    = ApiSlideShowTransition.prototype.GetAdvanceTime;
+	ApiSlideShowTransition.prototype["SetAdvanceTime"]    = ApiSlideShowTransition.prototype.SetAdvanceTime;
+	ApiSlideShowTransition.prototype["GetShowLoop"]       = ApiSlideShowTransition.prototype.GetShowLoop;
+	ApiSlideShowTransition.prototype["SetShowLoop"]       = ApiSlideShowTransition.prototype.SetShowLoop;
     
     ApiDrawing.prototype["GetClassType"]                  = ApiDrawing.prototype.GetClassType;
     ApiDrawing.prototype["SetSize"]                       = ApiDrawing.prototype.SetSize;
