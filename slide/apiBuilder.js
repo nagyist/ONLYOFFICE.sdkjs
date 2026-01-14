@@ -419,18 +419,6 @@
 	 */
 
 	/**
-	 * The available slide transition types.
-	 * @typedef TransitionTypeName
-	 * @type {"none" | "fade" | "push" | "wipe" | "split" | "uncover" | "cover" | "clock" | "zoom" | "morph" | "random"}
-	 */
-
-	/**
-	 * The available slide transition option/direction names.
-	 * @typedef TransitionOptionName
-	 * @type {"fadeSmoothly" | "fadeThroughBlack" | "left" | "top" | "right" | "bottom" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight" | "splitVerticalIn" | "splitVerticalOut" | "splitHorizontalIn" | "splitHorizontalOut" | "clockClockwise" | "clockCounterclockwise" | "clockWedge" | "zoomIn" | "zoomOut" | "zoomAndRotate" | "morphObjects" | "morphWords" | "morphLetters"}
-	 */
-
-	/**
 	 * The available slide transition speed values (similar to PowerPoint VBA ppTransitionSpeed).
 	 * @typedef TransitionSpeed
 	 * @type {"slow" | "medium" | "fast"}
@@ -4376,174 +4364,6 @@
 		return 'slideShowTransition';
 	};
 
-	ApiSlideShowTransition._getTransitionTypeName = function (type) {
-		switch (type) {
-			case Asc.c_oAscSlideTransitionTypes.None: return 'none';
-			case Asc.c_oAscSlideTransitionTypes.Fade: return 'fade';
-			case Asc.c_oAscSlideTransitionTypes.Push: return 'push';
-			case Asc.c_oAscSlideTransitionTypes.Wipe: return 'wipe';
-			case Asc.c_oAscSlideTransitionTypes.Split: return 'split';
-			case Asc.c_oAscSlideTransitionTypes.UnCover: return 'uncover';
-			case Asc.c_oAscSlideTransitionTypes.Cover: return 'cover';
-			case Asc.c_oAscSlideTransitionTypes.Clock: return 'clock';
-			case Asc.c_oAscSlideTransitionTypes.Zoom: return 'zoom';
-			case Asc.c_oAscSlideTransitionTypes.Morph: return 'morph';
-			case Asc.c_oAscSlideTransitionTypes.Random: return 'random';
-			default: return undefined;
-		}
-	};
-
-	ApiSlideShowTransition._getTransitionTypeValue = function (typeName) {
-		switch (typeName) {
-			case 'none': return Asc.c_oAscSlideTransitionTypes.None;
-			case 'fade': return Asc.c_oAscSlideTransitionTypes.Fade;
-			case 'push': return Asc.c_oAscSlideTransitionTypes.Push;
-			case 'wipe': return Asc.c_oAscSlideTransitionTypes.Wipe;
-			case 'split': return Asc.c_oAscSlideTransitionTypes.Split;
-			case 'uncover': return Asc.c_oAscSlideTransitionTypes.UnCover;
-			case 'cover': return Asc.c_oAscSlideTransitionTypes.Cover;
-			case 'clock': return Asc.c_oAscSlideTransitionTypes.Clock;
-			case 'zoom': return Asc.c_oAscSlideTransitionTypes.Zoom;
-			case 'morph': return Asc.c_oAscSlideTransitionTypes.Morph;
-			case 'random': return Asc.c_oAscSlideTransitionTypes.Random;
-			default: return undefined;
-		}
-	};
-
-	/**
-	 * Returns the transition type for the slide show transition.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @returns {TransitionTypeName | undefined}
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetType.js
-	 */
-	ApiSlideShowTransition.prototype.GetType = function () {
-		if (this.Transition) {
-			const type = this.Transition.get_TransitionType();
-			return ApiSlideShowTransition._getTransitionTypeName(type);
-		}
-		return undefined;
-	};
-
-	/**
-	 * Sets the transition type for the slide show transition.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @param {TransitionTypeName} typeName
-	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetType.js
-	 */
-	ApiSlideShowTransition.prototype.SetType = function (typeName) {
-		if (this.Transition) {
-			const type = ApiSlideShowTransition._getTransitionTypeValue(typeName);
-			if (type !== undefined) {
-				this.Transition.put_TransitionType(type);
-				return true;
-			}
-		}
-		return false;
-	};
-
-	ApiSlideShowTransition._getTransitionOptionName = function (option) {
-		switch (option) {
-			case Asc.c_oAscSlideTransitionParams.Fade_Smoothly: return 'fadeSmoothly';
-			case Asc.c_oAscSlideTransitionParams.Fade_Through_Black: return 'fadeThroughBlack';
-			case Asc.c_oAscSlideTransitionParams.Param_Left: return 'left';
-			case Asc.c_oAscSlideTransitionParams.Param_Top: return 'top';
-			case Asc.c_oAscSlideTransitionParams.Param_Right: return 'right';
-			case Asc.c_oAscSlideTransitionParams.Param_Bottom: return 'bottom';
-			case Asc.c_oAscSlideTransitionParams.Param_TopLeft: return 'topLeft';
-			case Asc.c_oAscSlideTransitionParams.Param_TopRight: return 'topRight';
-			case Asc.c_oAscSlideTransitionParams.Param_BottomLeft: return 'bottomLeft';
-			case Asc.c_oAscSlideTransitionParams.Param_BottomRight: return 'bottomRight';
-			case Asc.c_oAscSlideTransitionParams.Split_VerticalIn: return 'splitVerticalIn';
-			case Asc.c_oAscSlideTransitionParams.Split_VerticalOut: return 'splitVerticalOut';
-			case Asc.c_oAscSlideTransitionParams.Split_HorizontalIn: return 'splitHorizontalIn';
-			case Asc.c_oAscSlideTransitionParams.Split_HorizontalOut: return 'splitHorizontalOut';
-			case Asc.c_oAscSlideTransitionParams.Clock_Clockwise: return 'clockClockwise';
-			case Asc.c_oAscSlideTransitionParams.Clock_Counterclockwise: return 'clockCounterclockwise';
-			case Asc.c_oAscSlideTransitionParams.Clock_Wedge: return 'clockWedge';
-			case Asc.c_oAscSlideTransitionParams.Zoom_In: return 'zoomIn';
-			case Asc.c_oAscSlideTransitionParams.Zoom_Out: return 'zoomOut';
-			case Asc.c_oAscSlideTransitionParams.Zoom_AndRotate: return 'zoomAndRotate';
-			case Asc.c_oAscSlideTransitionParams.Morph_Objects: return 'morphObjects';
-			case Asc.c_oAscSlideTransitionParams.Morph_Words: return 'morphWords';
-			case Asc.c_oAscSlideTransitionParams.Morph_Letters: return 'morphLetters';
-			default: return undefined;
-		}
-	};
-
-	ApiSlideShowTransition._getTransitionOptionValue = function (optionName) {
-		switch (optionName) {
-			case 'fadeSmoothly': return Asc.c_oAscSlideTransitionParams.Fade_Smoothly;
-			case 'fadeThroughBlack': return Asc.c_oAscSlideTransitionParams.Fade_Through_Black;
-			case 'left': return Asc.c_oAscSlideTransitionParams.Param_Left;
-			case 'top': return Asc.c_oAscSlideTransitionParams.Param_Top;
-			case 'right': return Asc.c_oAscSlideTransitionParams.Param_Right;
-			case 'bottom': return Asc.c_oAscSlideTransitionParams.Param_Bottom;
-			case 'topLeft': return Asc.c_oAscSlideTransitionParams.Param_TopLeft;
-			case 'topRight': return Asc.c_oAscSlideTransitionParams.Param_TopRight;
-			case 'bottomLeft': return Asc.c_oAscSlideTransitionParams.Param_BottomLeft;
-			case 'bottomRight': return Asc.c_oAscSlideTransitionParams.Param_BottomRight;
-			case 'splitVerticalIn': return Asc.c_oAscSlideTransitionParams.Split_VerticalIn;
-			case 'splitVerticalOut': return Asc.c_oAscSlideTransitionParams.Split_VerticalOut;
-			case 'splitHorizontalIn': return Asc.c_oAscSlideTransitionParams.Split_HorizontalIn;
-			case 'splitHorizontalOut': return Asc.c_oAscSlideTransitionParams.Split_HorizontalOut;
-			case 'clockClockwise': return Asc.c_oAscSlideTransitionParams.Clock_Clockwise;
-			case 'clockCounterclockwise': return Asc.c_oAscSlideTransitionParams.Clock_Counterclockwise;
-			case 'clockWedge': return Asc.c_oAscSlideTransitionParams.Clock_Wedge;
-			case 'zoomIn': return Asc.c_oAscSlideTransitionParams.Zoom_In;
-			case 'zoomOut': return Asc.c_oAscSlideTransitionParams.Zoom_Out;
-			case 'zoomAndRotate': return Asc.c_oAscSlideTransitionParams.Zoom_AndRotate;
-			case 'morphObjects': return Asc.c_oAscSlideTransitionParams.Morph_Objects;
-			case 'morphWords': return Asc.c_oAscSlideTransitionParams.Morph_Words;
-			case 'morphLetters': return Asc.c_oAscSlideTransitionParams.Morph_Letters;
-			default: return undefined;
-		}
-	};
-
-	/**
-	 * Returns the transition option for the slide show transition.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @returns {TransitionOptionName | undefined} - Transition option name.
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetOption.js
-	 */
-	ApiSlideShowTransition.prototype.GetOption = function () {
-		if (this.Transition) {
-			const option = this.Transition.get_TransitionOption();
-			return ApiSlideShowTransition._getTransitionOptionName(option);
-		}
-		return undefined;
-	};
-
-	/**
-	 * Sets the transition option for the slide show transition.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @param {TransitionOptionName} optionName
-	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetOption.js
-	 */
-	ApiSlideShowTransition.prototype.SetOption = function (optionName) {
-		if (this.Transition) {
-			const option = ApiSlideShowTransition._getTransitionOptionValue(optionName);
-			if (option !== undefined) {
-				this.Transition.put_TransitionOption(option);
-				return true;
-			}
-		}
-		return false;
-	};
-
 	/**
 	 * Returns the transition duration in milliseconds for the slide show transition.
 	 *
@@ -4755,14 +4575,6 @@
 	};
 
 	Object.defineProperties(ApiSlideShowTransition.prototype, {
-		"Type": {
-			get: function () { return this.GetType(); },
-			set: function (value) { this.SetType(value); }
-		},
-		"Option": {
-			get: function () { return this.GetOption(); },
-			set: function (value) { this.SetOption(value); }
-		},
 		"Speed": {
 			get: function () { return this.GetSpeed(); },
 			set: function (value) { this.SetSpeed(value); }
