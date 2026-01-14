@@ -29157,6 +29157,9 @@
 	ApiSection.prototype["GetType"]                  = ApiSection.prototype.GetType;
 	ApiSection.prototype["SetEqualColumns"]          = ApiSection.prototype.SetEqualColumns;
 	ApiSection.prototype["SetNotEqualColumns"]       = ApiSection.prototype.SetNotEqualColumns;
+	ApiSection.prototype["GetColumnsCount"]          = ApiSection.prototype.GetColumnsCount;
+	ApiSection.prototype["GetColumnsWidths"]         = ApiSection.prototype.GetColumnsWidths;
+	ApiSection.prototype["GetColumnsSpaces"]         = ApiSection.prototype.GetColumnsSpaces;
 	ApiSection.prototype["SetPageSize"]              = ApiSection.prototype.SetPageSize;
 	ApiSection.prototype["GetPageHeight"]            = ApiSection.prototype.GetPageHeight;
 	ApiSection.prototype["GetPageWidth"]             = ApiSection.prototype.GetPageWidth;
