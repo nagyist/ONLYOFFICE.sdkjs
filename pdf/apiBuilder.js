@@ -1516,6 +1516,16 @@
 		return aPageQuads;
 	};
 
+	/**
+	 * Gets selected text on page
+	 * @typeofeditors ["PDFE"]
+	 * @returns {string}
+	 * @see office-js-api/Examples/PDF/ApiPage/Methods/GetSelectedText.js
+	 */
+	ApiPage.prototype.GetSelectedText = function() {
+		return this.Page.GetSelectedText();
+	};
+
 	private_WrapClassMethods(ApiPage, function(method, args) {
 		if (this.Page.GetIndex() == -1) {
 			AscBuilder.throwException("You can't change deleted page");
