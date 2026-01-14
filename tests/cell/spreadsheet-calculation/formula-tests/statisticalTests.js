@@ -10166,22 +10166,23 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #8: Area, String. Count empty values. ' as Empty. Different with Ms
-		// ws.getRange2("A321").setValue("");
-		// ws.getRange2("A322").setValue("");
-		// ws.getRange2("A323").setValue("'");
-		// oParser = new parserFormula('COUNTIF(A321:A323,"")', "C2", ws);
-		// assert.ok(oParser.parse());
-		// assert.strictEqual(oParser.calculate().getValue(), 3);
+		// Case #8: Area, String. Count empty values. ' as Empty.
+		ws.getRange2("A321").setValue("");
+		ws.getRange2("A322").setValue("");
+		ws.getRange2("A323").setValue("'");
+		oParser = new parserFormula('COUNTIF(A321:A323,"")', "C2", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
 
 		// Case #9: Area, String. Count specific numbers in range with strings and numbers
 		ws.getRange2("A324").setValue("123");
 		ws.getRange2("A325").setValue("123.0");
 		ws.getRange2("A326").setValue("0123");
+		ws.getRange2("A327").setValue("1.23E+02");
 		AscCommonExcel.g_oCountIfCache.clean();
-		oParser = new parserFormula('COUNTIF(A324:A326,"123.00")', "AC7", ws);
+		oParser = new parserFormula('COUNTIF(A324:A327,"123.00")', "AC7", ws);
 		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 3);
+		assert.strictEqual(oParser.calculate().getValue(), 4);
 
 		// testArrayFormula2(assert, "COUNTIF", 2, 2)
 	});
