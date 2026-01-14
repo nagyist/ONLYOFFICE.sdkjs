@@ -12115,7 +12115,7 @@
 	 * Adds an AutoFilter to the current range.
 	 * @memberof ApiRange
 	 * @typeofeditors ["CSE"]
-	 * @param {number} [Field] - The integer offset of the field on which you want to base the filter (from the left of the list; the leftmost field is field one).
+	 * @param {number|null} [Field] - The integer offset of the field on which you want to base the filter (from the left of the list; the leftmost field is field one). If {null} provided, clears the AutoFilter for the range.
 	 * @param {string | string[] | ApiColor | XlDynamicFilterCriteria} [Criteria1] - The criteria (a string; for example, "101"). Use "=" to find blank fields, "<>" to find non-blank fields, and "><" to select (No Data) fields in data types.
 	 * If this argument is omitted, the criteria is All. If Operator is xlTop10Items, Criteria1 specifies the number of items (for example, "10").
 	 * @param {XlAutoFilterOperator} [Operator] - An XlAutoFilterOperator constant specifying the type of filter.
