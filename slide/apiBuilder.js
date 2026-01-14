@@ -1907,6 +1907,37 @@
 		return new AscBuilder.ApiCustomXmlParts(this.Presentation);
 	};
 
+	/**
+	 * Returns whether the presentation loops continuously until the user stops it.
+	 *
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetLoopUntilStopped.js
+	 */
+	ApiPresentation.prototype.GetLoopUntilStopped = function () {
+		return this.Presentation.isLoopShowMode();
+	};
+
+	/**
+	 * Sets whether the presentation loops continuously until the user stops it.
+	 *
+	 * @memberof ApiPresentation
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {boolean} loopUntilStopped
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/SetLoopUntilStopped.js
+	 */
+	ApiPresentation.prototype.SetLoopUntilStopped = function (loopUntilStopped) {
+		if (this.Presentation) {
+			this.Presentation.setShowLoop(loopUntilStopped);
+			return true;
+		}
+		return false;
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
     //
     // ApiMaster
@@ -4723,40 +4754,6 @@
 		return false;
 	};
 
-	/**
-	 * Returns whether the presentation loops continuously.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @returns {boolean | undefined}
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetShowLoop.js
-	 */
-	ApiSlideShowTransition.prototype.GetShowLoop = function () {
-		if (this.Transition) {
-			return this.Transition.get_ShowLoop();
-		}
-		return undefined;
-	};
-
-	/**
-	 * Sets whether the presentation loops continuously.
-	 *
-	 * @memberof ApiSlideShowTransition
-	 * @typeofeditors ["CPE"]
-	 *
-	 * @param {boolean} showLoop
-	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetShowLoop.js
-	 */
-	ApiSlideShowTransition.prototype.SetShowLoop = function (showLoop) {
-		if (this.Transition) {
-			this.Transition.put_ShowLoop(showLoop);
-			return true;
-		}
-		return false;
-	};
-
 	Object.defineProperties(ApiSlideShowTransition.prototype, {
 		"Type": {
 			get: function () { return this.GetType(); },
@@ -4785,10 +4782,6 @@
 		"AdvanceTime": {
 			get: function () { return this.GetAdvanceTime(); },
 			set: function (value) { this.SetAdvanceTime(value); }
-		},
-		"ShowLoop": {
-			get: function () { return this.GetShowLoop(); },
-			set: function (value) { this.SetShowLoop(value); }
 		}
 	});
 
@@ -6265,6 +6258,8 @@
     ApiPresentation.prototype["GetCore"]                  = ApiPresentation.prototype.GetCore;
     ApiPresentation.prototype["GetCustomProperties"]      = ApiPresentation.prototype.GetCustomProperties;
     ApiPresentation.prototype["GetCustomXmlParts"]        = ApiPresentation.prototype.GetCustomXmlParts;
+    ApiPresentation.prototype["GetLoopUntilStopped"]      = ApiPresentation.prototype.GetLoopUntilStopped;
+    ApiPresentation.prototype["SetLoopUntilStopped"]      = ApiPresentation.prototype.SetLoopUntilStopped;
 
     ApiMaster.prototype["GetClassType"]                   = ApiMaster.prototype.GetClassType;
     ApiMaster.prototype["GetInternalId"]                  = ApiMaster.prototype.GetInternalId;
@@ -6411,8 +6406,6 @@
 	ApiSlideShowTransition.prototype["SetAdvanceOnTime"]  = ApiSlideShowTransition.prototype.SetAdvanceOnTime;
 	ApiSlideShowTransition.prototype["GetAdvanceTime"]    = ApiSlideShowTransition.prototype.GetAdvanceTime;
 	ApiSlideShowTransition.prototype["SetAdvanceTime"]    = ApiSlideShowTransition.prototype.SetAdvanceTime;
-	ApiSlideShowTransition.prototype["GetShowLoop"]       = ApiSlideShowTransition.prototype.GetShowLoop;
-	ApiSlideShowTransition.prototype["SetShowLoop"]       = ApiSlideShowTransition.prototype.SetShowLoop;
     
     ApiDrawing.prototype["GetClassType"]                  = ApiDrawing.prototype.GetClassType;
     ApiDrawing.prototype["SetSize"]                       = ApiDrawing.prototype.SetSize;
