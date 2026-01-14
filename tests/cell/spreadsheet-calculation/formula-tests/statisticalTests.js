@@ -9789,8 +9789,8 @@ $(function () {
 		assert.ok(oParser.parse(), 'Test: COUNTIF(A2002:A2007,"<>"&"?") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 6, 'Test: Positive case: Area, String. Count cells not equal to single question mark');
 		// Case #27: Area, String. Count exact date string match
-		oParser = new parserFormula('COUNTIF(A1001:A1002,"12/1")', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: COUNTIF(A1001:A1002,"12/1") is parsed.');
+		oParser = new parserFormula('COUNTIF(A1001:A1002,"12/1/2025")', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: COUNTIF(A1001:A1002,"12/1/2025") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 2, 'Test: Positive case: Area, String. Count exact date string match');
 		// Case #28: Area, String. Count date string with no match
 		oParser = new parserFormula('COUNTIF(A1001:A1002,"12/1/1")', 'A2', ws);
@@ -9960,17 +9960,17 @@ $(function () {
 		// Case #40: Area, String. Empty cells check
 		oParser = new parserFormula('COUNTIF(A200:B205,"<>"&"*")', "C2", ws);
 		assert.ok(oParser.parse());
-		assert.strictEqual(oParser.calculate().getValue(), 11);
+		assert.strictEqual(oParser.calculate().getValue(), 10);
 
 		// Case #41: Area, String. Find empty cells check
 		oParser = new parserFormula('COUNTIF(A200:B205,"")', "C2", ws);
 		assert.ok(oParser.parse());
-		//? assert.strictEqual(oParser.calculate().getValue(), 9);
+		assert.strictEqual(oParser.calculate().getValue(), 8);
 
 		// Case #42: Area, Ref. second arg as cell
 		oParser = new parserFormula('COUNTIF(A200:B205,B206)', "C2", ws);
 		assert.ok(oParser.parse());
-		//? assert.strictEqual(oParser.calculate().getValue(), 1);
+		assert.strictEqual(oParser.calculate().getValue(), 1);
 
 		// Case #43: Area, Ref. second arg as cell, case-sens test
 		oParser = new parserFormula('COUNTIF(A200:B205,B207)', "C2", ws);
@@ -10169,6 +10169,15 @@ $(function () {
 		// oParser = new parserFormula('COUNTIF(A321:A323,"")', "C2", ws);
 		// assert.ok(oParser.parse());
 		// assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #9: Area, String. Count specific numbers in range with strings and numbers
+		ws.getRange2("A324").setValue("123");
+		ws.getRange2("A325").setValue("123.0");
+		ws.getRange2("A326").setValue("0123");
+		AscCommonExcel.g_oCountIfCache.clean();
+		oParser = new parserFormula('COUNTIF(A324:A326,"123.00")', "AC7", ws);
+		assert.ok(oParser.parse());
+		assert.strictEqual(oParser.calculate().getValue(), 3);
 
 		// testArrayFormula2(assert, "COUNTIF", 2, 2)
 	});
