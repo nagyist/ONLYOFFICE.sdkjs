@@ -7529,6 +7529,24 @@
 				oResult[sUserName].push(oElement);
 			}
 		}
+		oResult["ToJSON"] = function()
+		{
+			let result = "";
+			try
+			{
+				result = JSON.stringify(this, function(key, value)
+				{
+					if ("ToJSON" === key)
+						return;
+					else if ("ReviewedElement" === key)
+						return value && value.GetInternalId ? value.GetInternalId() : null;
+					
+					return value;
+				});
+			}
+			catch (e) {}
+			return result;
+		};
 		return oResult;
 	};
 	/**
