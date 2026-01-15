@@ -1765,7 +1765,7 @@ function XmlParserContext(){
     this.cellValue = null;
     this.cellBase = null;
     this.drawingId = null;
-    this.twoStage = {
+    this.backgroundOpen = {
         readOnlyActive: false,
         readNextRows: Number.MAX_VALUE,
         maxTextIndex: 0,
