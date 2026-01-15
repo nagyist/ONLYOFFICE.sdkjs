@@ -4763,7 +4763,7 @@
 			return false;
 		}
 
-		this.Transition.makeDuplicate(copy);
+		copy.fillObject(this.Transition);
 		return true;
 	};
 
