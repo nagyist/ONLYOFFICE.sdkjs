@@ -1956,6 +1956,14 @@
     CAnnotationBase.prototype.canResize = function () {
         return true;
     };
+	CAnnotationBase.prototype.deleteDrawingBase = function() {
+		let oDoc = this.GetDocument();
+		if (!oDoc) {
+			return;
+		}
+
+		oDoc.RemoveAnnot(this.GetId());
+	};
     
     function formatTimestampToPDF(timestamp) {
         const date = new Date(parseInt(timestamp));
