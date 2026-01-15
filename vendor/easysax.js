@@ -1369,7 +1369,7 @@ StaxParser.prototype.ReadNextNode = function() {
     }
     return EasySAXEvent.START_ELEMENT === type;
 };
-StaxParser.prototype.ReadNextSiblingNode = function(depth) {
+StaxParser.prototype._readNextSiblingNodeInternal = function(depth) {
     var targetDepth = depth + 1;
     var type;
     
@@ -1391,30 +1391,16 @@ StaxParser.prototype.ReadNextSiblingNode = function(depth) {
     }
     return false;
 };
+StaxParser.prototype.ReadNextSiblingNode = function(depth) {
+    return this._readNextSiblingNodeInternal(depth);
+};
 StaxParser.prototype.ReadNextSiblingNode2 = function() {
-    const depth = this.siblingDepth = this.siblingDepth || this.depth;
-    var targetDepth = depth + 1;
-    var type;
-    
-    while (this.hasNext()) {
-        type = this.next();
-        var curDepth = this.depth;
-        
-        if (curDepth < depth) {
-            break;
-        }
-        
-        if (type === EasySAXEvent.START_ELEMENT && curDepth === targetDepth) {
-            return true;
-        }
-        
-        if (type === EasySAXEvent.END_ELEMENT && curDepth === depth) {
-            this.siblingDepth = 0;
-            return false;
-        }
+    var depth = this.siblingDepth = this.siblingDepth || this.depth;
+    var res = this._readNextSiblingNodeInternal(depth);
+    if (!res) {
+        this.siblingDepth = 0;
     }
-    this.siblingDepth = 0;
-    return false;
+    return res;
 };
 StaxParser.prototype.ReadTillEnd = function (opt_depth) {
     var depth = opt_depth;

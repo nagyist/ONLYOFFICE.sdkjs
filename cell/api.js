@@ -1822,7 +1822,6 @@ var editor;
 		this.OpenDocumentFromBin(file.url, file.data);
 	}
 	let perfEnd = performance.now();
-	console.log("onOpenDocument:", perfEnd - perfStart);
 	AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onOpenDocument", perfEnd - perfStart), this);
   };
 
@@ -2438,10 +2437,11 @@ var editor;
 				processSharedStrings();
 			};
 
-			function readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, startAction) {
+			function readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, selectionState, startAction) {
 				if (startAction && t.asc_checkNeedCallback("asc_onStartAction")) {
-					t.wb.setStartPartialReading(true);
+					t.wb.setIsPartialReading(true);
 					startAction = false;
+					//todo own action type
 					t.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				}
 				//Read remainings
@@ -2450,49 +2450,46 @@ var editor;
 					readSheetDataExternal(bNoBuildDep);
 					const sheetDataElem = curSheetData[0];
 					const updateRigion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
-					// console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
-					t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
-					sheetDataElem.ws.updateSlicersByRange(updateRigion, true);
+					//console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
 					t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-					// t.wb.getWorksheet(sheetDataElem.ws.getIndex()).updateRanges([updateRigion], true);
-					t.handlers.trigger("drawWS");
+					// t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
+					// t.handlers.trigger("drawWS");
 				} else {
 					let sheetDataElem = delayedSheetData.find(function (item) {
 						return !!item.state;
 					});
 					if (!sheetDataElem) {
-						t.wb.setStartPartialReading(false);
+						t.wb.setIsPartialReading(false);
 						//restore state
-						AscCommon.CollaborativeEditing.Set_GlobalLock(false);
+						t.collaborativeEditing.Set_GlobalLock(false);
 						t.wbModel.dependencyFormulas.unlockRecal();
 
+						// t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 						sheetDataElem = curSheetData[0];
-						// Asc["editor"].wb.recalculateDrawingObjects(null, true);
-						const updateRigion = new Asc.Range(0, 0, AscCommon.gc_nMaxCol0, AscCommon.gc_nMaxRow0);
-						t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
-						sheetDataElem.ws.updateSlicersByRange(updateRigion);
-						// t.wb.getWorksheet(sheetDataElem.ws.getIndex()).updateRanges([updateRigion], true);
-						t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-						t.handlers.trigger("drawWS");
+						sheetDataElem.ws.selectionRange = selectionState.selectionRange;
+						sheetDataElem.ws.setTopLeftCell(selectionState.topLeftCell, false);
+						t.handlers.trigger("scrollToTopLeftCell");
+						
+						// t.handlers.trigger("drawWS"); //draw called on sync_EndAction
 						t.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
-						AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReady2", performance.now(), AscCommon.getMemoryInfo()), t);
+						AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReadyBackground", performance.now(), AscCommon.getMemoryInfo()), t);
 						return;
 					}
 					xmlParserContext.InitOpenManager.oReadResult.sheetData = [sheetDataElem];
 					readSheetDataExternal(bNoBuildDep);
-					// const updateRigion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
-					// console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
-					// t.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
-					// sheetDataElem.ws.updateSlicersByRange(updateRigion);
-					// t.wb.getWorksheet(sheetDataElem.ws.getIndex()).updateRanges([updateRigion], true);
+					const updateRigion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
+					sheetDataElem.ws.onUpdateRanges([updateRigion]);//cleanCellCache work only for visible sheets
+					//console.log('updateRigion:' + sheetDataElem.ws.getName() + "-" +updateRigion.r1+"-"+updateRigion.r2);
 				}
 				setTimeout(function() {
-					readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, startAction)
+					readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, selectionState, startAction)
 				}, 10);
 			}
 
 			function openInTwoStage(bNoBuildDep) {
 				if (xmlParserContext.twoStage.readOnlyActive) {
+					xmlParserContext.twoStage.readOnlyActive = false;
+					xmlParserContext.twoStage.readNextRows = 10000;
 					// Validate active sheet index
 					const activeIndex = wb.nActive;
 					const ws = wb.aWorksheets[activeIndex];
@@ -2506,19 +2503,17 @@ var editor;
 					const curSheetData = [sheetDatas[activeIndex]];
 					const delayedSheetData = sheetDatas;
 					//save state
+					const selectionState = {selectionRange: ws.selectionRange, topLeftCell: ws.getTopLeftCell()};
 					ws.selectionRange = new AscCommonExcel.SelectionRange(ws);
 					ws.sheetViews = [];
 					xmlParserContext.InitOpenManager.oReadResult.sheetData = curSheetData;
 
 					t.wbModel.dependencyFormulas.lockRecal();
-					AscCommon.CollaborativeEditing.Set_GlobalLock(true);
+					t.collaborativeEditing.Set_GlobalLock(true);
 					t.asc_registerCallback('asc_onSelectionEnd', function() {
 						t.asc_unregisterCallback('asc_onSelectionEnd');
-						//todo own action type
-						xmlParserContext.twoStage.readOnlyActive = false;
-						xmlParserContext.twoStage.readNextRows = 10000;
 						setTimeout(function() {
-							readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, true)
+							readRemainings(ws, bNoBuildDep, curSheetData, delayedSheetData, selectionState, true)
 						}, 10);
 					});
 				}

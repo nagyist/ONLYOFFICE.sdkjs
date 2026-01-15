@@ -6811,7 +6811,7 @@
 		this.Api.sendEvent("asc_onUserActionEnd");
 		this.Api.getMacroRecorder().onAction(nDescription, additional);
 	};
-	WorkbookView.prototype.setStartPartialReading = function(val)
+	WorkbookView.prototype.setIsPartialReading = function(val)
 	{
 		this.isPartialReading = val;
 	};
