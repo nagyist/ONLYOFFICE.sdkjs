@@ -21128,7 +21128,7 @@ $(function () {
 		assert.strictEqual(oParser.calculate().getValue(), '#DIV/0!', 'Test: Bounded case: Number. Minimum positive values supported by Excel. 2 arguments used.');
 		// Case #2: Number. Maximum Excel values, collinear case. 2 arguments used.
 		oParser = new parserFormula('INTERCEPT({9.99999999999999E+307,9.99999999999999E+307},{9.99999999999999E+307,9.99999999999999E+307})', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: INTERCEPT({9.99999999999999E+307,9.99999999999999E+307},{9.99999999999999E+307,9.99999999999999E+307}) is parsed.');debugger
+		assert.ok(oParser.parse(), 'Test: INTERCEPT({9.99999999999999E+307,9.99999999999999E+307},{9.99999999999999E+307,9.99999999999999E+307}) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Bounded case: Number. Maximum Excel values, collinear case. 2 arguments used.');
 		// Case #3: Number. Collinear x’s (all same) return #DIV/0!. 2 arguments used.
 		oParser = new parserFormula('INTERCEPT({1,2,3},{1,1,1})', 'A2', ws);
@@ -26522,11 +26522,11 @@ $(function () {
 		// Case #5: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(A100,A101,A102,A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(A100,A101,A102,A103) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.125794409, 'Test: Positive case: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.10798193302637613, 'Test: Positive case: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.');
 		// Case #6: Area. Single-cell ranges with valid values. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(A100:A100,A101:A101,A102:A102,A103:A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(A100:A100,A101:A101,A102:A102,A103:A103) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.125794409, 'Test: Positive case: Area. Single-cell ranges with valid values. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.10798193302637613, 'Test: Positive case: Area. Single-cell ranges with valid values. 4 of 4 arguments used.');
 		// Case #7: Array. Array with single valid elements. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST({1},{0},{1},{TRUE})', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST({1},{0},{1},{TRUE}) is parsed.');
@@ -26590,7 +26590,7 @@ $(function () {
 		// Case #22: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST("1",0,1,"1")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST("1",0,1,"1") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
 
 		// Negative cases:
 		// Case #1: Number. Negative standard_dev returns #NUM!. 4 of 4 arguments used.
@@ -26610,13 +26610,13 @@ $(function () {
 		assert.ok(oParser.parse(), 'Test: NORMDIST(A100:A101,A101:A101,A102:A102,A103:A103) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
 		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
-		oParser = new parserFormula('NORMDIST(A104,0,1,TRUE)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: NORMDIST(A104,0,1,TRUE) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.5, 'Test: Negative case: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.');
+		oParser = new parserFormula('NORMDIST(A103,0,1,TRUE)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORMDIST(A103,0,1,TRUE) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.5, 'Test: Negative case: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.');
 		// Case #6: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(1,0,1,"abc")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(1,0,1,"abc") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.');
 		// Case #7: Number. Zero standard_dev returns #NUM!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(1,0,0,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(1,0,0,TRUE) is parsed.');
@@ -26694,19 +26694,11 @@ $(function () {
 		// Case #6: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(1,0,1,"1")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(1,0,1,"1") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
 		// Case #7: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(1,0,1,"0")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(1,0,1,"0") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.');
-
-		// TODO need to fix critical error when trying to convert val to Bool
-		// Case #5: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.
-		// Case #6: Area. Single-cell ranges with valid values. 4 of 4 arguments used.
-		// Case #22: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used. Critical
-		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
-		// Case #6: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.
-		// Case #6: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.');
 
 
 		testArrayFormula2(assert, "NORMDIST", 4, 4);
@@ -26778,11 +26770,11 @@ $(function () {
 		// Case #5: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(A100,A101,A102,A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(A100,A101,A102,A103) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.125794409, 'Test: Positive case: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.10798193302637613, 'Test: Positive case: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.');
 		// Case #6: Area. Single-cell ranges with valid values. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(A100:A100,A101:A101,A102:A102,A103:A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(A100:A100,A101:A101,A102:A102,A103:A103) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.125794409, 'Test: Positive case: Area. Single-cell ranges with valid values. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.10798193302637613, 'Test: Positive case: Area. Single-cell ranges with valid values. 4 of 4 arguments used.');
 		// Case #7: Array. Array with single valid elements. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST({1},{0},{1},{TRUE})', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST({1},{0},{1},{TRUE}) is parsed.');
@@ -26846,7 +26838,7 @@ $(function () {
 		// Case #22: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST("1",0,1,"1")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST("1",0,1,"1") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
 
 		// Negative cases:
 		// Case #1: Number. Negative standard_dev returns #NUM!. 4 of 4 arguments used.
@@ -26866,13 +26858,13 @@ $(function () {
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(A100:A101,A101:A101,A102:A102,A103:A103) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
 		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
-		oParser = new parserFormula('NORM.DIST(A104,0,1,TRUE)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: NORM.DIST(A104,0,1,TRUE) is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), 0.5, 'Test: Negative case: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.');
+		oParser = new parserFormula('NORM.DIST(A103,0,1,TRUE)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORM.DIST(A103,0,1,TRUE) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), 0.5, 'Test: Negative case: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.');
 		// Case #6: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(1,0,1,"abc")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(1,0,1,"abc") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.');
 		// Case #7: Number. Zero standard_dev returns #NUM!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(1,0,0,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(1,0,0,TRUE) is parsed.');
@@ -26950,19 +26942,11 @@ $(function () {
 		// Case #6: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(1,0,1,"1")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(1,0,1,"1") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.');
 		// Case #7: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(1,0,1,"0")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(1,0,1,"0") is parsed.');
-		//? assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.');
-
-		// TODO need to fix critical error when trying to convert val to Bool
-		// Case #5: Reference link. Reference to cells with valid numbers and TRUE. 4 of 4 arguments used.
-		// Case #6: Area. Single-cell ranges with valid values. 4 of 4 arguments used.
-		// Case #22: String,Number. String convertible to TRUE for cumulative. 4 of 4 arguments used. Critical
-		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
-		// Case #6: String. Non-boolean string for cumulative returns #VALUE!. 4 of 4 arguments used.
-		// Case #6: String. String convertible to TRUE for cumulative. 4 of 4 arguments used.
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Bounded case: String. String convertible to FALSE for cumulative. 4 of 4 arguments used.');
 
 	});
 

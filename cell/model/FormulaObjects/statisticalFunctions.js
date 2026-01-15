@@ -9000,7 +9000,7 @@ function (window, undefined) {
 	cNORMDIST.prototype.argumentsType = [argType.number, argType.number, argType.number, argType.logical];
 	cNORMDIST.prototype.Calculate = function (arg) {
 
-		var arg0 = arg[0], arg1 = arg[1], arg2 = arg[2], arg3 = arg[3];
+		let arg0 = arg[0], arg1 = arg[1], arg2 = arg[2], arg3 = arg[3];
 
 		function normdist(x, mue, sigma, kum) {
 			if (sigma <= 0) {
@@ -9015,27 +9015,27 @@ function (window, undefined) {
 
 		}
 
-		if (arg0 instanceof cArea || arg0 instanceof cArea3D) {
+		if (arg0.type === cElementType.cellsRange || arg0.type === cElementType.cellsRange3D) {
 			arg0 = arg0.cross(arguments[1]);
-		} else if (arg0 instanceof cArray) {
+		} else if (arg0.type === cElementType.array) {
 			arg0 = arg0.getElement(0);
 		}
 
-		if (arg1 instanceof cArea || arg1 instanceof cArea3D) {
+		if (arg1.type === cElementType.cellsRange || arg1.type === cElementType.cellsRange3D) {
 			arg1 = arg1.cross(arguments[1]);
-		} else if (arg1 instanceof cArray) {
+		} else if (arg1.type === cElementType.array) {
 			arg1 = arg1.getElement(0);
 		}
 
-		if (arg2 instanceof cArea || arg2 instanceof cArea3D) {
+		if (arg2.type === cElementType.cellsRange || arg2.type === cElementType.cellsRange3D) {
 			arg2 = arg2.cross(arguments[1]);
-		} else if (arg2 instanceof cArray) {
+		} else if (arg2.type === cElementType.array) {
 			arg2 = arg2.getElement(0);
 		}
 
-		if (arg3 instanceof cArea || arg3 instanceof cArea3D) {
+		if (arg3.type === cElementType.cellsRange || arg3.type === cElementType.cellsRange3D) {
 			arg3 = arg3.cross(arguments[1]);
-		} else if (arg3 instanceof cArray) {
+		} else if (arg3.type === cElementType.array) {
 			arg3 = arg3.getElement(0);
 		}
 
@@ -9044,17 +9044,19 @@ function (window, undefined) {
 		arg2 = arg2.tocNumber();
 		arg3 = arg3.tocBool();
 
-		if (arg0 instanceof cError) {
+		if (arg0.type === cElementType.error) {
 			return arg0;
 		}
-		if (arg1 instanceof cError) {
+		if (arg1.type === cElementType.error) {
 			return arg1;
 		}
-		if (arg2 instanceof cError) {
+		if (arg2.type === cElementType.error) {
 			return arg2;
 		}
-		if (arg3 instanceof cError) {
+		if (arg3.type === cElementType.error) {
 			return arg3;
+		} else if (arg3.type === cElementType.string) {
+			return new cError(cErrorType.wrong_value_type);
 		}
 
 
