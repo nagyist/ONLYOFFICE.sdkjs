@@ -9925,7 +9925,7 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 4);
 
-		// testArrayFormula2(assert, "COUNTIF", 2, 2)
+		testArrayFormula2(assert, "COUNTIF", 2, 2);
 	});
 
 	QUnit.test("Test: \"COUNTBLANK\"", function (assert) {
