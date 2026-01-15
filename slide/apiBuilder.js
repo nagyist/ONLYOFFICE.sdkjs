@@ -424,6 +424,67 @@
 	 * @type {"slow" | "medium" | "fast"}
 	 */
 
+	/**
+	 * The available slide transition effects (similar to PowerPoint VBA ppEffect).
+	 * @typedef EntryEffect
+	 * @type {(
+	 * "effectAppear" |
+	 * "effectBlindsHorizontal" | "effectBlindsVertical" |
+	 * "effectBoxDown" | "effectBoxIn" | "effectBoxLeft" | "effectBoxOut" | "effectBoxRight" | "effectBoxUp" |
+	 * "effectCheckerboardAcross" | "effectCheckerboardDown" |
+	 * "effectCircleOut" |
+	 * "effectCombHorizontal" | "effectCombVertical" |
+	 * "effectConveyorLeft" | "effectConveyorRight" |
+	 * "effectCoverDown" | "effectCoverLeft" | "effectCoverLeftDown" | "effectCoverLeftUp" | "effectCoverRight" | "effectCoverRightDown" | "effectCoverRightUp" | "effectCoverUp" |
+	 * "effectCubeDown" | "effectCubeLeft" | "effectCubeRight" | "effectCubeUp" |
+	 * "effectCut" | "effectCutThroughBlack" |
+	 * "effectDiamondOut" |
+	 * "effectDissolve" |
+	 * "effectDoorsHorizontal" | "effectDoorsVertical" |
+	 * "effectFade" | "effectFadeSmoothly" |
+	 * "effectFerrisWheelLeft" | "effectFerrisWheelRight" |
+	 * "effectFlashbulb" |
+	 * "effectFlipDown" | "effectFlipLeft" | "effectFlipRight" | "effectFlipUp" |
+	 * "effectFlyThroughIn" | "effectFlyThroughInBounce" | "effectFlyThroughOut" | "effectFlyThroughOutBounce" |
+	 * "effectGalleryLeft" | "effectGalleryRight" |
+	 * "effectGlitterDiamondDown" | "effectGlitterDiamondLeft" | "effectGlitterDiamondRight" | "effectGlitterDiamondUp" |
+	 * "effectGlitterHexagonDown" | "effectGlitterHexagonLeft" | "effectGlitterHexagonRight" | "effectGlitterHexagonUp" |
+	 * "effectHoneycomb" |
+	 * "effectNewsflash" |
+	 * "effectOrbitDown" | "effectOrbitLeft" | "effectOrbitRight" | "effectOrbitUp" |
+	 * "effectPanDown" | "effectPanLeft" | "effectPanRight" | "effectPanUp" |
+	 * "effectPlusOut" |
+	 * "effectPushDown" | "effectPushLeft" | "effectPushRight" | "effectPushUp" |
+	 * "effectRandom" | "effectRandomBarsHorizontal" | "effectRandomBarsVertical" |
+	 * "effectRevealBlackLeft" | "effectRevealBlackRight" | "effectRevealSmoothLeft" | "effectRevealSmoothRight" |
+	 * "effectRippleCenter" | "effectRippleLeftDown" | "effectRippleLeftUp" | "effectRippleRightDown" | "effectRippleRightUp" |
+	 * "effectRotateDown" | "effectRotateLeft" | "effectRotateRight" | "effectRotateUp" |
+	 * "effectShredRectangleIn" | "effectShredRectangleOut" | "effectShredStripsIn" | "effectShredStripsOut" |
+	 * "effectSplitHorizontalIn" | "effectSplitHorizontalOut" | "effectSplitVerticalIn" | "effectSplitVerticalOut" |
+	 * "effectStripsDownLeft" | "effectStripsDownRight" | "effectStripsLeftDown" | "effectStripsLeftUp" | "effectStripsRightDown" | "effectStripsRightUp" | "effectStripsUpLeft" | "effectStripsUpRight" |
+	 * "effectSwitchDown" | "effectSwitchLeft" | "effectSwitchRight" | "effectSwitchUp" |
+	 * "effectUncoverDown" | "effectUncoverLeft" | "effectUncoverLeftDown" | "effectUncoverLeftUp" | "effectUncoverRight" | "effectUncoverRightDown" | "effectUncoverRightUp" | "effectUncoverUp" |
+	 * "effectVortexDown" | "effectVortexLeft" | "effectVortexRight" | "effectVortexUp" |
+	 * "effectWarpIn" | "effectWarpOut" |
+	 * "effectWedge" |
+	 * "effectWheel1Spoke" | "effectWheel2Spokes" | "effectWheel3Spokes" | "effectWheel4Spokes" | "effectWheel8Spokes" | "effectWheelReverse1Spoke" |
+	 * "effectWindowHorizontal" | "effectWindowVertical" |
+	 * "effectWipeDown" | "effectWipeLeft" | "effectWipeRight" | "effectWipeUp" |
+	 *
+	 * "effectNone" |
+	 *
+	 * "effectCrawlFromDown" | "effectCrawlFromLeft" | "effectCrawlFromRight" | "effectCrawlFromUp" |
+	 * "effectFlashOnceFast" | "effectFlashOnceMedium" | "effectFlashOnceSlow" |
+	 * "effectFlyFromBottom" | "effectFlyFromBottomLeft" | "effectFlyFromBottomRight" | "effectFlyFromLeft" | "effectFlyFromRight" | "effectFlyFromTop" | "effectFlyFromTopLeft" | "effectFlyFromTopRight" |
+	 * "effectMixed" |
+	 * "effectPeekFromDown" | "effectPeekFromLeft" | "effectPeekFromRight" | "effectPeekFromUp" |
+	 * "effectSpiral" |
+	 * "effectStretchAcross" | "effectStretchDown" | "effectStretchLeft" | "effectStretchRight" | "effectStretchUp" |
+	 * "effectSwivel" |
+	 * "effectZoomBottom" | "effectZoomCenter" | "effectZoomIn" | "effectZoomInSlightly" | "effectZoomOut" | "effectZoomOutSlightly"
+	 * )}
+	*/
+
     //------------------------------------------------------------------------------------------------------------------
     //
     // Base Api
@@ -4365,177 +4426,177 @@
 	};
 
 	ApiSlideShowTransition.ENTRY_EFFECT_MAP = {
-		'ppEffectAppear': [{ tag: 'p:cut' }],
-		'ppEffectBlindsHorizontal': [{ tag: 'p:blinds' }],
-		'ppEffectBlindsVertical': [{ tag: 'p:blinds', attrNames: ['dir'], attrValues: ['vert']}],
-		'ppEffectBoxDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
-		'ppEffectBoxIn': [{ tag: 'p:zoom', attrNames: ['dir'], attrValues: ['in'] }],
-		'ppEffectBoxLeft': [{ tag: 'p14:prism', attrNames: ['isInverted'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'ppEffectBoxOut': [{ tag: 'p:zoom' }],
-		'ppEffectBoxRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
-		'ppEffectBoxUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
-		'ppEffectCheckerboardAcross': [{ tag: 'p:checker' }],
-		'ppEffectCheckerboardDown': [{ tag: 'p:checker', attrNames: ['dir'], attrValues: ['vert'] }],
-		'ppEffectCircleOut': [{ tag: 'p:circle' }],
-		'ppEffectCombHorizontal': [{ tag: 'p:comb' }],
-		'ppEffectCombVertical': [{ tag: 'p:comb', attrNames: ['dir'], attrValues: ['vert'] }],
-		'ppEffectConveyorLeft': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'ppEffectConveyorRight': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectCoverDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['d'] }],
-		'ppEffectCoverLeft': [{ tag: 'p:cover' }],
-		'ppEffectCoverLeftDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ld'] }],
-		'ppEffectCoverLeftUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['lu'] }],
-		'ppEffectCoverRight': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['r'] }],
-		'ppEffectCoverRightDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['rd'] }],
-		'ppEffectCoverRightUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ru'] }],
-		'ppEffectCoverUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['u'] }],
-		'ppEffectCubeDown': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'ppEffectCubeLeft': [{ tag: 'p14:prism' }, { tag: 'p:fade' }],
-		'ppEffectCubeRight': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectCubeUp': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'ppEffectCut': [{ tag: 'p:cut' }],
-		'ppEffectCutThroughBlack': [{ tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['1'] }],
-		'ppEffectDiamondOut': [{ tag: 'p:diamond' }],
-		'ppEffectDissolve': [{ tag: 'p:dissolve' }],
-		'ppEffectDoorsHorizontal': [{ tag: 'p14:doors' }, { tag: 'p:fade' }],
-		'ppEffectDoorsVertical': [{ tag: 'p14:doors', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
-		'ppEffectFade': [{ tag: 'p:fade', attrNames: ['thruBlk'], attrValues: ['1'] }],
-		'ppEffectFadeSmoothly': [{ tag: 'p:fade' }],
-		'ppEffectFerrisWheelLeft': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'ppEffectFerrisWheelRight': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectFlashbulb': [{ tag: 'p14:flash' }, { tag: 'p:fade' }],
-		'ppEffectFlipDown': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectFlipLeft': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'ppEffectFlipRight': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectFlipUp': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectFlyThroughIn': [{ tag: 'p14:flythrough' }, { tag: 'p:fade' }],
-		'ppEffectFlyThroughInBounce': [{ tag: 'p14:flythrough', attrNames: ['hasBounce'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'ppEffectFlyThroughOut': [{ tag: 'p14:flythrough', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
-		'ppEffectFlyThroughOutBounce': [{ tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['out', '1'] }, { tag: 'p:fade' }],
-		'ppEffectGalleryLeft': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'ppEffectGalleryRight': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterDiamondDown': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterDiamondLeft': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterDiamondRight': [{ tag: 'p14:glitter' }, { tag: 'p:fade' }],
-		'ppEffectGlitterDiamondUp': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterHexagonDown': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['u', 'hexagon'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterHexagonLeft': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['r', 'hexagon'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterHexagonRight': [{ tag: 'p14:glitter', attrNames: ['pattern'], attrValues: ['hexagon'] }, { tag: 'p:fade' }],
-		'ppEffectGlitterHexagonUp': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['d', 'hexagon'] }, { tag: 'p:fade' }],
-		'ppEffectHoneycomb': [{ tag: 'p14:honeycomb' }, { tag: 'p:fade' }],
-		'ppEffectNewsflash': [{ tag: 'p:newsflash' }],
-		'ppEffectOrbitDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '1', '1'] }, { tag: 'p:fade' }],
-		'ppEffectOrbitLeft': [{ tag: 'p14:prism', attrNames: ['isContent', 'isInverted'], attrValues: ['1', '1'] }, { tag: 'p:fade' }],
-		'ppEffectOrbitRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '1', '1'] }, { tag: 'p:fade' }],
-		'ppEffectOrbitUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '1', '1'] }, { tag: 'p:fade' }],
-		'ppEffectPanDown': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'ppEffectPanLeft': [{ tag: 'p14:pan' }, { tag: 'p:fade' }],
-		'ppEffectPanRight': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectPanUp': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'ppEffectPlusOut': [{ tag: 'p:plus' }],
-		'ppEffectPushDown': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['d'] }],
-		'ppEffectPushLeft': [{ tag: 'p:push' }],
-		'ppEffectPushRight': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['r'] }],
-		'ppEffectPushUp': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['u'] }],
-		'ppEffectRandom': [{ tag: 'p:random' }],
-		'ppEffectRandomBarsHorizontal': [{ tag: 'p:randomBar' }],
-		'ppEffectRandomBarsVertical': [{ tag: 'p:randomBar', attrNames: ['dir'], attrValues: ['vert'] }],
-		'ppEffectRevealBlackLeft': [{ tag: 'p14:reveal', attrNames: ['thruBlk'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'ppEffectRevealBlackRight': [{ tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['1', 'r'] }, { tag: 'p:fade' }],
-		'ppEffectRevealSmoothLeft': [{ tag: 'p14:reveal' }, { tag: 'p:fade' }],
-		'ppEffectRevealSmoothRight': [{ tag: 'p14:reveal', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectRippleCenter': [{ tag: 'p14:ripple' }, { tag: 'p:fade' }],
-		'ppEffectRippleLeftDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ld'] }, { tag: 'p:fade' }],
-		'ppEffectRippleLeftUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['lu'] }, { tag: 'p:fade' }],
-		'ppEffectRippleRightDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['rd'] }, { tag: 'p:fade' }],
-		'ppEffectRippleRightUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ru'] }, { tag: 'p:fade' }],
-		'ppEffectRotateDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
-		'ppEffectRotateLeft': [{ tag: 'p14:prism', attrNames: ['isContent'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'ppEffectRotateRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
-		'ppEffectRotateUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
-		'ppEffectShredRectangleIn': [{ tag: 'p14:shred', attrNames: ['pattern'], attrValues: ['rectangle'] }, { tag: 'p:fade' }],
-		'ppEffectShredRectangleOut': [{ tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['rectangle', 'out'] }, { tag: 'p:fade' }],
-		'ppEffectShredStripsIn': [{ tag: 'p14:shred' }, { tag: 'p:fade' }],
-		'ppEffectShredStripsOut': [{ tag: 'p14:shred', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
-		'ppEffectSplitHorizontalIn': [{ tag: 'p:split', attrNames: ['dir'], attrValues: ['in'] }],
-		'ppEffectSplitHorizontalOut': [{ tag: 'p:split' }],
-		'ppEffectSplitVerticalIn': [{ tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['vert', 'in'] }],
-		'ppEffectSplitVerticalOut': [{ tag: 'p:split', attrNames: ['orient'], attrValues: ['vert'] }],
-		'ppEffectStripsDownLeft': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
-		'ppEffectStripsDownRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
-		'ppEffectStripsLeftDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
-		'ppEffectStripsLeftUp': [{ tag: 'p:strips' }],
-		'ppEffectStripsRightDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
-		'ppEffectStripsRightUp': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
-		'ppEffectStripsUpLeft': [{ tag: 'p:strips' }],
-		'ppEffectStripsUpRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
-		'ppEffectSwitchDown': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectSwitchLeft': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'ppEffectSwitchRight': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectSwitchUp': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectUncoverDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['d'] }],
-		'ppEffectUncoverLeft': [{ tag: 'p:pull' }],
-		'ppEffectUncoverLeftDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ld'] }],
-		'ppEffectUncoverLeftUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['lu'] }],
-		'ppEffectUncoverRight': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['r'] }],
-		'ppEffectUncoverRightDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['rd'] }],
-		'ppEffectUncoverRightUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ru'] }],
-		'ppEffectUncoverUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['u'] }],
-		'ppEffectVortexDown': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'ppEffectVortexLeft': [{ tag: 'p14:vortex' }, { tag: 'p:fade' }],
-		'ppEffectVortexRight': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'ppEffectVortexUp': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'ppEffectWarpIn': [{ tag: 'p14:warp', attrNames: ['dir'], attrValues: ['in'] }, { tag: 'p:fade' }],
-		'ppEffectWarpOut': [{ tag: 'p14:warp' }, { tag: 'p:fade' }],
-		'ppEffectWedge': [{ tag: 'p:wedge' }],
-		'ppEffectWheel1Spoke': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['1'] }],
-		'ppEffectWheel2Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['2'] }],
-		'ppEffectWheel3Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['3'] }],
-		'ppEffectWheel4Spokes': [{ tag: 'p:wheel' }],
-		'ppEffectWheel8Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['8'] }],
-		'ppEffectWheelReverse1Spoke': [{ tag: 'p14:wheelReverse', attrNames: ['spokes'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'ppEffectWindowHorizontal': [{ tag: 'p14:window' }, { tag: 'p:fade' }],
-		'ppEffectWindowVertical': [{ tag: 'p14:window', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
-		'ppEffectWipeDown': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['d'] }],
-		'ppEffectWipeLeft': [{ tag: 'p:wipe' }],
-		'ppEffectWipeRight': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] }],
-		'ppEffectWipeUp': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] }],
+		'effectAppear': [{ tag: 'p:cut' }],
+		'effectBlindsHorizontal': [{ tag: 'p:blinds' }],
+		'effectBlindsVertical': [{ tag: 'p:blinds', attrNames: ['dir'], attrValues: ['vert']}],
+		'effectBoxDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
+		'effectBoxIn': [{ tag: 'p:zoom', attrNames: ['dir'], attrValues: ['in'] }],
+		'effectBoxLeft': [{ tag: 'p14:prism', attrNames: ['isInverted'], attrValues: ['1'] }, { tag: 'p:fade' }],
+		'effectBoxOut': [{ tag: 'p:zoom' }],
+		'effectBoxRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
+		'effectBoxUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
+		'effectCheckerboardAcross': [{ tag: 'p:checker' }],
+		'effectCheckerboardDown': [{ tag: 'p:checker', attrNames: ['dir'], attrValues: ['vert'] }],
+		'effectCircleOut': [{ tag: 'p:circle' }],
+		'effectCombHorizontal': [{ tag: 'p:comb' }],
+		'effectCombVertical': [{ tag: 'p:comb', attrNames: ['dir'], attrValues: ['vert'] }],
+		'effectConveyorLeft': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
+		'effectConveyorRight': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectCoverDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['d'] }],
+		'effectCoverLeft': [{ tag: 'p:cover' }],
+		'effectCoverLeftDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ld'] }],
+		'effectCoverLeftUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['lu'] }],
+		'effectCoverRight': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['r'] }],
+		'effectCoverRightDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['rd'] }],
+		'effectCoverRightUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ru'] }],
+		'effectCoverUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['u'] }],
+		'effectCubeDown': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
+		'effectCubeLeft': [{ tag: 'p14:prism' }, { tag: 'p:fade' }],
+		'effectCubeRight': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectCubeUp': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
+		'effectCut': [{ tag: 'p:cut' }],
+		'effectCutThroughBlack': [{ tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['1'] }],
+		'effectDiamondOut': [{ tag: 'p:diamond' }],
+		'effectDissolve': [{ tag: 'p:dissolve' }],
+		'effectDoorsHorizontal': [{ tag: 'p14:doors' }, { tag: 'p:fade' }],
+		'effectDoorsVertical': [{ tag: 'p14:doors', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
+		'effectFade': [{ tag: 'p:fade', attrNames: ['thruBlk'], attrValues: ['1'] }],
+		'effectFadeSmoothly': [{ tag: 'p:fade' }],
+		'effectFerrisWheelLeft': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
+		'effectFerrisWheelRight': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectFlashbulb': [{ tag: 'p14:flash' }, { tag: 'p:fade' }],
+		'effectFlipDown': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectFlipLeft': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
+		'effectFlipRight': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectFlipUp': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectFlyThroughIn': [{ tag: 'p14:flythrough' }, { tag: 'p:fade' }],
+		'effectFlyThroughInBounce': [{ tag: 'p14:flythrough', attrNames: ['hasBounce'], attrValues: ['1'] }, { tag: 'p:fade' }],
+		'effectFlyThroughOut': [{ tag: 'p14:flythrough', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
+		'effectFlyThroughOutBounce': [{ tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['out', '1'] }, { tag: 'p:fade' }],
+		'effectGalleryLeft': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
+		'effectGalleryRight': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectGlitterDiamondDown': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
+		'effectGlitterDiamondLeft': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectGlitterDiamondRight': [{ tag: 'p14:glitter' }, { tag: 'p:fade' }],
+		'effectGlitterDiamondUp': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
+		'effectGlitterHexagonDown': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['u', 'hexagon'] }, { tag: 'p:fade' }],
+		'effectGlitterHexagonLeft': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['r', 'hexagon'] }, { tag: 'p:fade' }],
+		'effectGlitterHexagonRight': [{ tag: 'p14:glitter', attrNames: ['pattern'], attrValues: ['hexagon'] }, { tag: 'p:fade' }],
+		'effectGlitterHexagonUp': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['d', 'hexagon'] }, { tag: 'p:fade' }],
+		'effectHoneycomb': [{ tag: 'p14:honeycomb' }, { tag: 'p:fade' }],
+		'effectNewsflash': [{ tag: 'p:newsflash' }],
+		'effectOrbitDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '1', '1'] }, { tag: 'p:fade' }],
+		'effectOrbitLeft': [{ tag: 'p14:prism', attrNames: ['isContent', 'isInverted'], attrValues: ['1', '1'] }, { tag: 'p:fade' }],
+		'effectOrbitRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '1', '1'] }, { tag: 'p:fade' }],
+		'effectOrbitUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '1', '1'] }, { tag: 'p:fade' }],
+		'effectPanDown': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
+		'effectPanLeft': [{ tag: 'p14:pan' }, { tag: 'p:fade' }],
+		'effectPanRight': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectPanUp': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
+		'effectPlusOut': [{ tag: 'p:plus' }],
+		'effectPushDown': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['d'] }],
+		'effectPushLeft': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['l'] }], // PowerPoint writes <p:push> without default attributes
+		'effectPushRight': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['r'] }],
+		'effectPushUp': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['u'] }],
+		'effectRandom': [{ tag: 'p:random' }],
+		'effectRandomBarsHorizontal': [{ tag: 'p:randomBar' }],
+		'effectRandomBarsVertical': [{ tag: 'p:randomBar', attrNames: ['dir'], attrValues: ['vert'] }],
+		'effectRevealBlackLeft': [{ tag: 'p14:reveal', attrNames: ['thruBlk'], attrValues: ['1'] }, { tag: 'p:fade' }],
+		'effectRevealBlackRight': [{ tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['1', 'r'] }, { tag: 'p:fade' }],
+		'effectRevealSmoothLeft': [{ tag: 'p14:reveal' }, { tag: 'p:fade' }],
+		'effectRevealSmoothRight': [{ tag: 'p14:reveal', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectRippleCenter': [{ tag: 'p14:ripple' }, { tag: 'p:fade' }],
+		'effectRippleLeftDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ld'] }, { tag: 'p:fade' }],
+		'effectRippleLeftUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['lu'] }, { tag: 'p:fade' }],
+		'effectRippleRightDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['rd'] }, { tag: 'p:fade' }],
+		'effectRippleRightUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ru'] }, { tag: 'p:fade' }],
+		'effectRotateDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
+		'effectRotateLeft': [{ tag: 'p14:prism', attrNames: ['isContent'], attrValues: ['1'] }, { tag: 'p:fade' }],
+		'effectRotateRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
+		'effectRotateUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
+		'effectShredRectangleIn': [{ tag: 'p14:shred', attrNames: ['pattern'], attrValues: ['rectangle'] }, { tag: 'p:fade' }],
+		'effectShredRectangleOut': [{ tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['rectangle', 'out'] }, { tag: 'p:fade' }],
+		'effectShredStripsIn': [{ tag: 'p14:shred' }, { tag: 'p:fade' }],
+		'effectShredStripsOut': [{ tag: 'p14:shred', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
+		'effectSplitHorizontalIn': [{ tag: 'p:split', attrNames: ['dir'], attrValues: ['in'] }],
+		'effectSplitHorizontalOut': [{ tag: 'p:split' }],
+		'effectSplitVerticalIn': [{ tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['vert', 'in'] }],
+		'effectSplitVerticalOut': [{ tag: 'p:split', attrNames: ['orient'], attrValues: ['vert'] }],
+		'effectStripsDownLeft': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
+		'effectStripsDownRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
+		'effectStripsLeftDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
+		'effectStripsLeftUp': [{ tag: 'p:strips' }],
+		'effectStripsRightDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
+		'effectStripsRightUp': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
+		'effectStripsUpLeft': [{ tag: 'p:strips' }],
+		'effectStripsUpRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
+		'effectSwitchDown': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectSwitchLeft': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
+		'effectSwitchRight': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectSwitchUp': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectUncoverDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['d'] }],
+		'effectUncoverLeft': [{ tag: 'p:pull' }],
+		'effectUncoverLeftDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ld'] }],
+		'effectUncoverLeftUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['lu'] }],
+		'effectUncoverRight': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['r'] }],
+		'effectUncoverRightDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['rd'] }],
+		'effectUncoverRightUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ru'] }],
+		'effectUncoverUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['u'] }],
+		'effectVortexDown': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
+		'effectVortexLeft': [{ tag: 'p14:vortex' }, { tag: 'p:fade' }],
+		'effectVortexRight': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
+		'effectVortexUp': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
+		'effectWarpIn': [{ tag: 'p14:warp', attrNames: ['dir'], attrValues: ['in'] }, { tag: 'p:fade' }],
+		'effectWarpOut': [{ tag: 'p14:warp' }, { tag: 'p:fade' }],
+		'effectWedge': [{ tag: 'p:wedge' }],
+		'effectWheel1Spoke': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['1'] }],
+		'effectWheel2Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['2'] }],
+		'effectWheel3Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['3'] }],
+		'effectWheel4Spokes': [{ tag: 'p:wheel' }],
+		'effectWheel8Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['8'] }],
+		'effectWheelReverse1Spoke': [{ tag: 'p14:wheelReverse', attrNames: ['spokes'], attrValues: ['1'] }, { tag: 'p:fade' }],
+		'effectWindowHorizontal': [{ tag: 'p14:window' }, { tag: 'p:fade' }],
+		'effectWindowVertical': [{ tag: 'p14:window', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
+		'effectWipeDown': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['d'] }],
+		'effectWipeLeft': [{ tag: 'p:wipe' }],
+		'effectWipeRight': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] }],
+		'effectWipeUp': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] }],
 
-		'ppEffectNone': [],
+		'effectNone': [],
 
-		// ppEffectCrawlFromDown
-		// ppEffectCrawlFromLeft
-		// ppEffectCrawlFromRight
-		// ppEffectCrawlFromUp
-		// ppEffectFlashOnceFast
-		// ppEffectFlashOnceMedium
-		// ppEffectFlashOnceSlow
-		// ppEffectFlyFromBottom
-		// ppEffectFlyFromBottomLeft
-		// ppEffectFlyFromBottomRight
-		// ppEffectFlyFromLeft
-		// ppEffectFlyFromRight
-		// ppEffectFlyFromTop
-		// ppEffectFlyFromTopLeft
-		// ppEffectFlyFromTopRight
-		// ppEffectMixed
-		// ppEffectPeekFromDown
-		// ppEffectPeekFromLeft
-		// ppEffectPeekFromRight
-		// ppEffectPeekFromUp
-		// ppEffectSpiral
-		// ppEffectStretchAcross
-		// ppEffectStretchDown
-		// ppEffectStretchLeft
-		// ppEffectStretchRight
-		// ppEffectStretchUp
-		// ppEffectSwivel
-		// ppEffectZoomBottom
-		// ppEffectZoomCenter
-		// ppEffectZoomIn
-		// ppEffectZoomInSlightly
-		// ppEffectZoomOut
-		// ppEffectZoomOutSlightly
+		// effectCrawlFromDown
+		// effectCrawlFromLeft
+		// effectCrawlFromRight
+		// effectCrawlFromUp
+		// effectFlashOnceFast
+		// effectFlashOnceMedium
+		// effectFlashOnceSlow
+		// effectFlyFromBottom
+		// effectFlyFromBottomLeft
+		// effectFlyFromBottomRight
+		// effectFlyFromLeft
+		// effectFlyFromRight
+		// effectFlyFromTop
+		// effectFlyFromTopLeft
+		// effectFlyFromTopRight
+		// effectMixed
+		// effectPeekFromDown
+		// effectPeekFromLeft
+		// effectPeekFromRight
+		// effectPeekFromUp
+		// effectSpiral
+		// effectStretchAcross
+		// effectStretchDown
+		// effectStretchLeft
+		// effectStretchRight
+		// effectStretchUp
+		// effectSwivel
+		// effectZoomBottom
+		// effectZoomCenter
+		// effectZoomIn
+		// effectZoomInSlightly
+		// effectZoomOut
+		// effectZoomOutSlightly
 	};
 
 	/**
@@ -4544,7 +4605,7 @@
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
 	 *
-	 * @returns {string | undefined}
+	 * @returns {EntryEffect | undefined}
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetEntryEffect.js
 	 */
 	ApiSlideShowTransition.prototype.GetEntryEffect = function () {
@@ -4604,7 +4665,7 @@
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
 	 *
-	 * @param {string} entryEffect
+	 * @param {EntryEffect} entryEffect
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetEntryEffect.js
 	 */
@@ -4613,7 +4674,7 @@
 			return false;
 		}
 
-		if (entryEffect === 'ppEffectNone') {
+		if (entryEffect === 'effectNone') {
 			this.Transition.TransitionType = c_oAscSlideTransitionTypes.None;
 			this.TransitionOption = -1;
 			return true;
