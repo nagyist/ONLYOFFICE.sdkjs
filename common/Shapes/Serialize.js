@@ -10531,8 +10531,9 @@ function BinaryPPTYLoader()
                                     });
 
                                     let aWidths = [];
+									let nSpacing = _run.GetSpacing();
                                     for (let i = 0; i < aPoses.length - 2; i++) {
-                                        aWidths.push(aPoses[i + 1] - aPoses[i]);
+                                        aWidths.push(aPoses[i + 1] - aPoses[i] - nSpacing);
                                     }
 
                                     new_run.AddPdfOriginText(oPdfFontInfo.gids.split(";").slice(0, -1), _text, aWidths, text_pr.GetFontSize());
