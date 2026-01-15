@@ -220,6 +220,15 @@
 	function ApiSlideShowTransition(transition) {
 		this.Transition = transition;
 	}
+	/**
+	 * Class representing a hyperlink for presentation editor.
+	 * @constructor
+	 */
+	function ApiHyperlink(link, tooltip) {
+		this.link = link || "";
+		this.tooltip = tooltip || "";
+	}
+	ApiHyperlink.prototype.constructor = ApiHyperlink;
 
     /**
      * Twentieths of a point (equivalent to 1/1440th of an inch).
@@ -1222,6 +1231,23 @@
 	Api.prototype.GetSelection = function()
 	{
 		return new ApiSelection();
+	};
+
+	/**
+	 * Creates a new hyperlink object to be used for setting hyperlinks on drawing objects (shapes or images).
+	 *
+	 * @memberof Api
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {string} link - The hyperlink address.
+	 * @param {string} tooltip - The tooltip text.
+	 *
+	 * @returns {ApiHyperlink}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateHyperlink.js
+	 */
+	Api.prototype.CreateHyperlink = function (link, tooltip) {
+		const apiHyperlink = new ApiHyperlink(link, tooltip);
+		return apiHyperlink;
 	};
 
     /**
@@ -5463,6 +5489,40 @@
 		return this.Drawing.GetId();
 	};
 
+	/**
+	 * Sets a hyperlink to the current drawing object (shape or image).
+	 *
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @param {ApiHyperlink} hyperlink - The hyperlink object to be set to the drawing.
+	 *
+	 * @returns {boolean} - Returns true if the hyperlink was set successfully.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetHyperlink.js
+	 */
+	ApiDrawing.prototype.SetHyperlink = function (hyperlink) {
+		const classType = this.GetClassType();
+		if (classType !== 'shape' && classType !== 'image') {
+			return false;
+		}
+
+		if (!this.Drawing) {
+			return false;
+		}
+
+		const controller = this.Drawing.getDrawingObjectsController();
+		const nonVisualProperties = controller.hyperlinkCollectNonVisualProperties(this.Drawing);
+
+		nonVisualProperties.forEach(function (oNvPr) {
+			const oHyperlink = new AscFormat.CT_Hyperlink();
+			oHyperlink.id = hyperlink.link;
+			oHyperlink.tooltip = hyperlink.tooltip;
+			oNvPr.setHlinkClick(oHyperlink);
+		});
+
+		return true;
+	};
+
     //------------------------------------------------------------------------------------------------------------------
     //
     // ApiGroup
@@ -6411,7 +6471,22 @@
         this.Cell.Set_Pr(oPr);
     };
 
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiHyperlink
+	//
+	//------------------------------------------------------------------------------------------------------------------
 
+	/**
+	 * Returns the type of the ApiHyperlink class.
+	 *
+	 * @typeofeditors ["CPE"]
+	 * @returns {"hyperlink"}
+	 * @see office-js-api/Examples/{Editor}/ApiHyperlink/Methods/GetClassType.js
+	 */
+	ApiHyperlink.prototype.GetClassType = function () {
+		return "hyperlink";
+	};
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Export
@@ -6425,6 +6500,7 @@
     Api.prototype["CreateOleObject"]                      = Api.prototype.CreateOleObject;
     Api.prototype["CreateTable"]                          = Api.prototype.CreateTable;
     Api.prototype["CreateParagraph"]                      = Api.prototype.CreateParagraph;
+    Api.prototype["CreateHyperlink"]                      = Api.prototype.CreateHyperlink;
     Api.prototype["Save"]                                 = Api.prototype.Save;
     Api.prototype["CreateMaster"]                         = Api.prototype.CreateMaster;
     Api.prototype["CreateDefaultMasterSlide"]             = Api.prototype.CreateDefaultMasterSlide;
@@ -6644,6 +6720,7 @@
     ApiDrawing.prototype["GetPosY"]                       = ApiDrawing.prototype.GetPosY;
     ApiDrawing.prototype["SetPosX"]                       = ApiDrawing.prototype.SetPosX;
     ApiDrawing.prototype["SetPosY"]                       = ApiDrawing.prototype.SetPosY;
+    ApiDrawing.prototype["SetHyperlink"]                  = ApiDrawing.prototype.SetHyperlink;
   
     ApiDrawing.prototype["ReplacePlaceholder"]            = ApiDrawing.prototype.ReplacePlaceholder;
     ApiDrawing.prototype["GetInternalId"]                 = ApiDrawing.prototype.GetInternalId;
@@ -6714,7 +6791,7 @@
     ApiTableCell.prototype["SetVerticalAlign"]            = ApiTableCell.prototype.SetVerticalAlign;
     ApiTableCell.prototype["SetTextDirection"]            = ApiTableCell.prototype.SetTextDirection;
 
-
+	ApiHyperlink.prototype["GetClassType"]                = ApiHyperlink.prototype.GetClassType;
 
     Api.prototype.private_CreateApiSlide = function(oSlide){
         return new ApiSlide(oSlide);
