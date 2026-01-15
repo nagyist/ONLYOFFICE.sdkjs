@@ -1521,9 +1521,6 @@
 		logicDocument.RemoveSelection();
 
 		text = GetStringParameter(text, "");
-		if ("" === text)
-			return false;
-		
 		position = GetStringParameter(position, "after");
 		
 		if ("after" === position)
@@ -10041,10 +10038,7 @@
 	 */
 	ApiParagraph.prototype.AddText = function(text)
 	{
-		text = GetStringParameter(text, null);
-		if (!text)
-			throwException("The text parameter must be a non empty string");
-
+		text = GetStringParameter(text, "");
 		let oRun = new ParaRun(this.Paragraph, false);
 		oRun.AddText(text);
 
@@ -12026,11 +12020,7 @@
 	 */
 	ApiRun.prototype.AddText = function(text)
 	{
-		text = GetStringParameter(text, null);
-		if (!text) {
-			throwException("The text parameter must be a non empty string");
-		}
-
+		text = GetStringParameter(text, "");
 		this.Run.AddText(text);
 		return true;
 	};
@@ -22133,10 +22123,8 @@
 		if (!this._canBeEdited())
 			return false;
 		
-		text = GetStringParameter(text, null);
-		if (!text)
-			throwException("The text parameter must be a non empty string");
-
+		text = GetStringParameter(text, "");
+		
 		if (this.Sdt.IsShowingPlcHdr())
 		{
 			this.Sdt.RemoveFromContent(0, this.Sdt.GetElementsCount(), false);
@@ -24019,10 +24007,7 @@
 		if (!this._canBeEdited())
 			return false;
 		
-		text = GetStringParameter(text, null);
-		if (!text)
-			throwException("The text parameter must be a non empty string");
-
+		text = GetStringParameter(text, "");
 		let oParagraph;
 		if (this.Sdt.IsPlaceHolder())
 		{
