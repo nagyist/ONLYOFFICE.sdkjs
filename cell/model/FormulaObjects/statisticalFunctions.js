@@ -12604,10 +12604,9 @@ function (window, undefined) {
 					type = cElementType.number;
 				}
 			}
-			let matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
+			const matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
 			_count = this.typedCache.forEachInTyped(range, type, matchingFunction, searchValue);
 			if (type === cElementType.number) {
-				matchingFunction = getMatchingFunction(type, matchingInfo.op, isWildcard);
 				_count += this.typedCache.forEachInTyped(range, cElementType.string, matchingFunction, searchValue, true);
 			}
 		} else if (matchingInfo.op === '<>') {
