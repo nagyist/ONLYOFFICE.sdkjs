@@ -7404,7 +7404,7 @@ function BinaryPPTYLoader()
 
         s.Skip2(1); // start attributes
 
-        while (true)
+        while (s.cur < _end_rec)
         {
             var _at = s.GetUChar();
             if (_at == g_nodeAttributeEnd)
