@@ -4426,143 +4426,212 @@
 	};
 
 	ApiSlideShowTransition.ENTRY_EFFECT_MAP = {
-		'effectAppear': [{ tag: 'p:cut' }],
-		'effectBlindsHorizontal': [{ tag: 'p:blinds' }],
-		'effectBlindsVertical': [{ tag: 'p:blinds', attrNames: ['dir'], attrValues: ['vert']}],
-		'effectBoxDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
-		'effectBoxIn': [{ tag: 'p:zoom', attrNames: ['dir'], attrValues: ['in'] }],
-		'effectBoxLeft': [{ tag: 'p14:prism', attrNames: ['isInverted'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'effectBoxOut': [{ tag: 'p:zoom' }],
-		'effectBoxRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
-		'effectBoxUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isInverted'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
-		'effectCheckerboardAcross': [{ tag: 'p:checker' }],
-		'effectCheckerboardDown': [{ tag: 'p:checker', attrNames: ['dir'], attrValues: ['vert'] }],
-		'effectCircleOut': [{ tag: 'p:circle' }],
-		'effectCombHorizontal': [{ tag: 'p:comb' }],
-		'effectCombVertical': [{ tag: 'p:comb', attrNames: ['dir'], attrValues: ['vert'] }],
-		'effectConveyorLeft': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'effectConveyorRight': [{ tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectCoverDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['d'] }],
-		'effectCoverLeft': [{ tag: 'p:cover' }],
-		'effectCoverLeftDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ld'] }],
-		'effectCoverLeftUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['lu'] }],
-		'effectCoverRight': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['r'] }],
-		'effectCoverRightDown': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['rd'] }],
-		'effectCoverRightUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['ru'] }],
-		'effectCoverUp': [{ tag: 'p:cover', attrNames: ['dir'], attrValues: ['u'] }],
-		'effectCubeDown': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'effectCubeLeft': [{ tag: 'p14:prism' }, { tag: 'p:fade' }],
-		'effectCubeRight': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectCubeUp': [{ tag: 'p14:prism', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'effectCut': [{ tag: 'p:cut' }],
-		'effectCutThroughBlack': [{ tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['1'] }],
-		'effectDiamondOut': [{ tag: 'p:diamond' }],
-		'effectDissolve': [{ tag: 'p:dissolve' }],
-		'effectDoorsHorizontal': [{ tag: 'p14:doors' }, { tag: 'p:fade' }],
-		'effectDoorsVertical': [{ tag: 'p14:doors', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
-		'effectFade': [{ tag: 'p:fade', attrNames: ['thruBlk'], attrValues: ['1'] }],
-		'effectFadeSmoothly': [{ tag: 'p:fade' }],
-		'effectFerrisWheelLeft': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'effectFerrisWheelRight': [{ tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectFlashbulb': [{ tag: 'p14:flash' }, { tag: 'p:fade' }],
-		'effectFlipDown': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectFlipLeft': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'effectFlipRight': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectFlipUp': [{ tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectFlyThroughIn': [{ tag: 'p14:flythrough' }, { tag: 'p:fade' }],
-		'effectFlyThroughInBounce': [{ tag: 'p14:flythrough', attrNames: ['hasBounce'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'effectFlyThroughOut': [{ tag: 'p14:flythrough', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
-		'effectFlyThroughOutBounce': [{ tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['out', '1'] }, { tag: 'p:fade' }],
-		'effectGalleryLeft': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'effectGalleryRight': [{ tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectGlitterDiamondDown': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'effectGlitterDiamondLeft': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectGlitterDiamondRight': [{ tag: 'p14:glitter' }, { tag: 'p:fade' }],
-		'effectGlitterDiamondUp': [{ tag: 'p14:glitter', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'effectGlitterHexagonDown': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['u', 'hexagon'] }, { tag: 'p:fade' }],
-		'effectGlitterHexagonLeft': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['r', 'hexagon'] }, { tag: 'p:fade' }],
-		'effectGlitterHexagonRight': [{ tag: 'p14:glitter', attrNames: ['pattern'], attrValues: ['hexagon'] }, { tag: 'p:fade' }],
-		'effectGlitterHexagonUp': [{ tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['d', 'hexagon'] }, { tag: 'p:fade' }],
-		'effectHoneycomb': [{ tag: 'p14:honeycomb' }, { tag: 'p:fade' }],
-		'effectNewsflash': [{ tag: 'p:newsflash' }],
-		'effectOrbitDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '1', '1'] }, { tag: 'p:fade' }],
-		'effectOrbitLeft': [{ tag: 'p14:prism', attrNames: ['isContent', 'isInverted'], attrValues: ['1', '1'] }, { tag: 'p:fade' }],
-		'effectOrbitRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '1', '1'] }, { tag: 'p:fade' }],
-		'effectOrbitUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '1', '1'] }, { tag: 'p:fade' }],
-		'effectPanDown': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'effectPanLeft': [{ tag: 'p14:pan' }, { tag: 'p:fade' }],
-		'effectPanRight': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectPanUp': [{ tag: 'p14:pan', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'effectPlusOut': [{ tag: 'p:plus' }],
-		'effectPushDown': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['d'] }],
-		'effectPushLeft': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['l'] }], // PowerPoint writes <p:push> without default attributes
-		'effectPushRight': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['r'] }],
-		'effectPushUp': [{ tag: 'p:push', attrNames: ['dir'], attrValues: ['u'] }],
-		'effectRandom': [{ tag: 'p:random' }],
-		'effectRandomBarsHorizontal': [{ tag: 'p:randomBar' }],
-		'effectRandomBarsVertical': [{ tag: 'p:randomBar', attrNames: ['dir'], attrValues: ['vert'] }],
-		'effectRevealBlackLeft': [{ tag: 'p14:reveal', attrNames: ['thruBlk'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'effectRevealBlackRight': [{ tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['1', 'r'] }, { tag: 'p:fade' }],
-		'effectRevealSmoothLeft': [{ tag: 'p14:reveal' }, { tag: 'p:fade' }],
-		'effectRevealSmoothRight': [{ tag: 'p14:reveal', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectRippleCenter': [{ tag: 'p14:ripple' }, { tag: 'p:fade' }],
-		'effectRippleLeftDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ld'] }, { tag: 'p:fade' }],
-		'effectRippleLeftUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['lu'] }, { tag: 'p:fade' }],
-		'effectRippleRightDown': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['rd'] }, { tag: 'p:fade' }],
-		'effectRippleRightUp': [{ tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ru'] }, { tag: 'p:fade' }],
-		'effectRotateDown': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['d', '1'] }, { tag: 'p:fade' }],
-		'effectRotateLeft': [{ tag: 'p14:prism', attrNames: ['isContent'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'effectRotateRight': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['r', '1'] }, { tag: 'p:fade' }],
-		'effectRotateUp': [{ tag: 'p14:prism', attrNames: ['dir', 'isContent'], attrValues: ['u', '1'] }, { tag: 'p:fade' }],
-		'effectShredRectangleIn': [{ tag: 'p14:shred', attrNames: ['pattern'], attrValues: ['rectangle'] }, { tag: 'p:fade' }],
-		'effectShredRectangleOut': [{ tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['rectangle', 'out'] }, { tag: 'p:fade' }],
-		'effectShredStripsIn': [{ tag: 'p14:shred' }, { tag: 'p:fade' }],
-		'effectShredStripsOut': [{ tag: 'p14:shred', attrNames: ['dir'], attrValues: ['out'] }, { tag: 'p:fade' }],
-		'effectSplitHorizontalIn': [{ tag: 'p:split', attrNames: ['dir'], attrValues: ['in'] }],
-		'effectSplitHorizontalOut': [{ tag: 'p:split' }],
-		'effectSplitVerticalIn': [{ tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['vert', 'in'] }],
-		'effectSplitVerticalOut': [{ tag: 'p:split', attrNames: ['orient'], attrValues: ['vert'] }],
-		'effectStripsDownLeft': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
-		'effectStripsDownRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
-		'effectStripsLeftDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] }],
-		'effectStripsLeftUp': [{ tag: 'p:strips' }],
-		'effectStripsRightDown': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] }],
-		'effectStripsRightUp': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
-		'effectStripsUpLeft': [{ tag: 'p:strips' }],
-		'effectStripsUpRight': [{ tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] }],
-		'effectSwitchDown': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectSwitchLeft': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['l'] }, { tag: 'p:fade' }],
-		'effectSwitchRight': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectSwitchUp': [{ tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectUncoverDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['d'] }],
-		'effectUncoverLeft': [{ tag: 'p:pull' }],
-		'effectUncoverLeftDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ld'] }],
-		'effectUncoverLeftUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['lu'] }],
-		'effectUncoverRight': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['r'] }],
-		'effectUncoverRightDown': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['rd'] }],
-		'effectUncoverRightUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['ru'] }],
-		'effectUncoverUp': [{ tag: 'p:pull', attrNames: ['dir'], attrValues: ['u'] }],
-		'effectVortexDown': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['d'] }, { tag: 'p:fade' }],
-		'effectVortexLeft': [{ tag: 'p14:vortex' }, { tag: 'p:fade' }],
-		'effectVortexRight': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['r'] }, { tag: 'p:fade' }],
-		'effectVortexUp': [{ tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['u'] }, { tag: 'p:fade' }],
-		'effectWarpIn': [{ tag: 'p14:warp', attrNames: ['dir'], attrValues: ['in'] }, { tag: 'p:fade' }],
-		'effectWarpOut': [{ tag: 'p14:warp' }, { tag: 'p:fade' }],
-		'effectWedge': [{ tag: 'p:wedge' }],
-		'effectWheel1Spoke': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['1'] }],
-		'effectWheel2Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['2'] }],
-		'effectWheel3Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['3'] }],
-		'effectWheel4Spokes': [{ tag: 'p:wheel' }],
-		'effectWheel8Spokes': [{ tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['8'] }],
-		'effectWheelReverse1Spoke': [{ tag: 'p14:wheelReverse', attrNames: ['spokes'], attrValues: ['1'] }, { tag: 'p:fade' }],
-		'effectWindowHorizontal': [{ tag: 'p14:window' }, { tag: 'p:fade' }],
-		'effectWindowVertical': [{ tag: 'p14:window', attrNames: ['dir'], attrValues: ['vert'] }, { tag: 'p:fade' }],
-		'effectWipeDown': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['d'] }],
-		'effectWipeLeft': [{ tag: 'p:wipe' }],
-		'effectWipeRight': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] }],
-		'effectWipeUp': [{ tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] }],
+		// Default 'p:cut' effect attribute is: thruBlk='0'
+		'effectAppear':          { tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['0'] },
+		'effectCut':             { tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['0'] },
+		'effectCutThroughBlack': { tag: 'p:cut', attrNames: ['thruBlk'], attrValues: ['1'] },
 
-		'effectNone': [],
+		// Default 'p:fade' effect attribute is: dir='horz'
+		'effectBlindsHorizontal': { tag: 'p:blinds', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectBlindsVertical':   { tag: 'p:blinds', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p14:prism' effect attributes are: dir='l', isContent='0', isInverted='0'
+		'effectBoxDown':     { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '0', '1'] },
+		'effectBoxLeft':     { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['l', '0', '1'] },
+		'effectBoxRight':    { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '0', '1'] },
+		'effectBoxUp':       { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '0', '1'] },
+		'effectCubeDown':    { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '0', '0'] },
+		'effectCubeLeft':    { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['l', '0', '0'] },
+		'effectCubeRight':   { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '0', '0'] },
+		'effectCubeUp':      { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '0', '0'] },
+		'effectOrbitDown':   { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '1', '1'] },
+		'effectOrbitLeft':   { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['l', '1', '1'] },
+		'effectOrbitRight':  { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '1', '1'] },
+		'effectOrbitUp':     { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '1', '1'] },
+		'effectRotateDown':  { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['d', '1', '0'] },
+		'effectRotateLeft':  { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['l', '1', '0'] },
+		'effectRotateRight': { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['r', '1', '0'] },
+		'effectRotateUp':    { tag: 'p14:prism', attrNames: ['dir', 'isContent', 'isInverted'], attrValues: ['u', '1', '0'] },
+
+		// Default 'p:zoom' effect attribute is: dir='out'
+		'effectBoxIn':  { tag: 'p:zoom', attrNames: ['dir'], attrValues: ['in'] },
+		'effectBoxOut': { tag: 'p:zoom', attrNames: ['dir'], attrValues: ['out'] },
+
+		// Default 'p:checker' effect attribute is: dir='horz'
+		'effectCheckerboardAcross': { tag: 'p:checker', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectCheckerboardDown':   { tag: 'p:checker', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p:comb' effect attribute is: dir='horz'
+		'effectCombHorizontal': { tag: 'p:comb', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectCombVertical':   { tag: 'p:comb', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p14:conveyor' effect attribute is: dir='l'
+		// Attribute must be specified explicitly - <p14:conveyor/> without 'dir' attribute is forbidden
+		'effectConveyorLeft':  { tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['l'] },
+		'effectConveyorRight': { tag: 'p14:conveyor', attrNames: ['dir'], attrValues: ['r'] },
+
+		// Default 'p:cover' effect attribute is: dir='l'
+		'effectCoverDown':      { tag: 'p:cover', attrNames: ['dir'], attrValues: ['d'] },
+		'effectCoverLeft':      { tag: 'p:cover', attrNames: ['dir'], attrValues: ['l']},
+		'effectCoverLeftDown':  { tag: 'p:cover', attrNames: ['dir'], attrValues: ['ld'] },
+		'effectCoverLeftUp':    { tag: 'p:cover', attrNames: ['dir'], attrValues: ['lu'] },
+		'effectCoverRight':     { tag: 'p:cover', attrNames: ['dir'], attrValues: ['r'] },
+		'effectCoverRightDown': { tag: 'p:cover', attrNames: ['dir'], attrValues: ['rd'] },
+		'effectCoverRightUp':   { tag: 'p:cover', attrNames: ['dir'], attrValues: ['ru'] },
+		'effectCoverUp':        { tag: 'p:cover', attrNames: ['dir'], attrValues: ['u'] },
+
+		// Tags have no attributes
+		'effectCircleOut': { tag: 'p:circle' },
+		'effectDiamondOut': { tag: 'p:diamond' },
+		'effectDissolve': { tag: 'p:dissolve' },
+		'effectFlashbulb': { tag: 'p14:flash' },
+		'effectHoneycomb': { tag: 'p14:honeycomb' },
+		'effectNewsflash': { tag: 'p:newsflash' },
+		'effectPlusOut': { tag: 'p:plus' },
+		'effectRandom': { tag: 'p:random' },
+		'effectWedge': { tag: 'p:wedge' },
+
+		// Default 'p14:doors' effect attribute is: dir='horz'
+		'effectDoorsHorizontal': { tag: 'p14:doors', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectDoorsVertical':   { tag: 'p14:doors', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p:fade' effect attribute is: thruBlk='0'
+		'effectFade':         { tag: 'p:fade', attrNames: ['thruBlk'], attrValues: ['1'] },
+		'effectFadeSmoothly': { tag: 'p:fade', attrNames: ['thruBlk'], attrValues: ['0'] },
+
+		// Default 'p14:ferris' effect attribute is: dir='l'
+		// Attribute must be specified explicitly - <p14:ferris/> without 'dir' attribute is forbidden
+		'effectFerrisWheelLeft': { tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['l'] },
+		'effectFerrisWheelRight': { tag: 'p14:ferris', attrNames: ['dir'], attrValues: ['r'] },
+
+		// Default 'p14:flip' effect attribute is: dir='l'
+		// Attribute must be specified explicitly - <p14:flip/> without 'dir' attribute is forbidden
+		'effectFlipDown': { tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] },
+		'effectFlipLeft': { tag: 'p14:flip', attrNames: ['dir'], attrValues: ['l'] },
+		'effectFlipRight': { tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] },
+		'effectFlipUp': { tag: 'p14:flip', attrNames: ['dir'], attrValues: ['r'] },
+
+		// Default 'p14:flythrough' effect attributes are: dir='in', hasBounce='0'
+		'effectFlyThroughIn':        { tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['in', '0'] },
+		'effectFlyThroughInBounce':  { tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['in', '1'] },
+		'effectFlyThroughOut':       { tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['out', '0'] },
+		'effectFlyThroughOutBounce': { tag: 'p14:flythrough', attrNames: ['dir', 'hasBounce'], attrValues: ['out', '1'] },
+
+		// Default 'p14:gallery' effect attribute is: dir='l'
+		// Attribute must be specified explicitly - <p14:gallery/> without 'dir' attribute is forbidden
+		'effectGalleryLeft': { tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['l'] },
+		'effectGalleryRight': { tag: 'p14:gallery', attrNames: ['dir'], attrValues: ['r'] },
+
+		// Default 'p14:glitter' effect attribute is: dir='l', pattern='diamond'
+		'effectGlitterDiamondDown':  { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['u', 'diamond'] },
+		'effectGlitterDiamondLeft':  { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['r', 'diamond'] },
+		'effectGlitterDiamondRight': { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['l', 'diamond'] },
+		'effectGlitterDiamondUp':    { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['d', 'diamond'] },
+		'effectGlitterHexagonDown':  { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['u', 'hexagon'] },
+		'effectGlitterHexagonLeft':  { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['r', 'hexagon'] },
+		'effectGlitterHexagonRight': { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['l', 'hexagon'] },
+		'effectGlitterHexagonUp':    { tag: 'p14:glitter', attrNames: ['dir', 'pattern'], attrValues: ['d', 'hexagon'] },
+
+		// Default 'p14:pan' effect attribute is: dir='l'
+		'effectPanDown':  { tag: 'p14:pan', attrNames: ['dir'], attrValues: ['d'] },
+		'effectPanLeft':  { tag: 'p14:pan', attrNames: ['dir'], attrValues: ['l'] },
+		'effectPanRight': { tag: 'p14:pan', attrNames: ['dir'], attrValues: ['r'] },
+		'effectPanUp':    { tag: 'p14:pan', attrNames: ['dir'], attrValues: ['u'] },
+
+		// Default 'p:push' effect attribute is: dir='l'
+		'effectPushDown':  { tag: 'p:push', attrNames: ['dir'], attrValues: ['d'] },
+		'effectPushLeft':  { tag: 'p:push', attrNames: ['dir'], attrValues: ['l'] },
+		'effectPushRight': { tag: 'p:push', attrNames: ['dir'], attrValues: ['r'] },
+		'effectPushUp':    { tag: 'p:push', attrNames: ['dir'], attrValues: ['u'] },
+
+		// Default 'p:randomBar' effect attribute is: dir='horz'
+		'effectRandomBarsHorizontal': { tag: 'p:randomBar', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectRandomBarsVertical':   { tag: 'p:randomBar', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p14:reveal' effect attribute is: thruBlk='0', dir='l'
+		'effectRevealBlackLeft':   { tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['1', 'l'] },
+		'effectRevealBlackRight':  { tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['1', 'r'] },
+		'effectRevealSmoothLeft':  { tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['0', 'l'] },
+		'effectRevealSmoothRight': { tag: 'p14:reveal', attrNames: ['thruBlk', 'dir'], attrValues: ['0', 'r'] },
+
+		// Default 'p14:ripple' effect attribute is: dir='center'
+		'effectRippleCenter':    { tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['center'] },
+		'effectRippleLeftDown':  { tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ld'] },
+		'effectRippleLeftUp':    { tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['lu'] },
+		'effectRippleRightDown': { tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['rd'] },
+		'effectRippleRightUp':   { tag: 'p14:ripple', attrNames: ['dir'], attrValues: ['ru'] },
+
+		// Default 'p14:shred' effect attribute is: pattern='strip', dir='in'
+		'effectShredRectangleIn':  { tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['rectangle', 'in'] },
+		'effectShredRectangleOut': { tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['rectangle', 'out'] },
+		'effectShredStripsIn':     { tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['strip', 'in'] },
+		'effectShredStripsOut':    { tag: 'p14:shred', attrNames: ['pattern', 'dir'], attrValues: ['strip', 'out'] },
+
+		// Default 'p:split' effect attribute is: orient='horz', dir='out'
+		'effectSplitHorizontalIn':  { tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['horz', 'in'] },
+		'effectSplitHorizontalOut': { tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['horz', 'out'] },
+		'effectSplitVerticalIn':    { tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['vert', 'in'] },
+		'effectSplitVerticalOut':   { tag: 'p:split', attrNames: ['orient', 'dir'], attrValues: ['vert', 'out'] },
+
+		// Default 'p:strips' effect attribute is: dir='lu'
+		'effectStripsDownLeft':  { tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] },
+		'effectStripsDownRight': { tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] },
+		'effectStripsLeftDown':  { tag: 'p:strips', attrNames: ['dir'], attrValues: ['ld'] },
+		'effectStripsLeftUp':    { tag: 'p:strips', attrNames: ['dir'], attrValues: ['lu'] },
+		'effectStripsRightDown': { tag: 'p:strips', attrNames: ['dir'], attrValues: ['rd'] },
+		'effectStripsRightUp':   { tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] },
+		'effectStripsUpLeft':    { tag: 'p:strips', attrNames: ['dir'], attrValues: ['lu'] },
+		'effectStripsUpRight':   { tag: 'p:strips', attrNames: ['dir'], attrValues: ['ru'] },
+
+		// Default 'p14:switch' effect attribute is: dir='l'
+		// Attribute must be specified explicitly - <p14:switch/> without 'dir' attribute is forbidden
+		'effectSwitchDown':  { tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] },
+		'effectSwitchLeft':  { tag: 'p14:switch', attrNames: ['dir'], attrValues: ['l'] },
+		'effectSwitchRight': { tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] },
+		'effectSwitchUp':    { tag: 'p14:switch', attrNames: ['dir'], attrValues: ['r'] },
+
+		// Default 'p:pull' effect attribute is: dir='l'
+		'effectUncoverDown':      { tag: 'p:pull', attrNames: ['dir'], attrValues: ['d'] },
+		'effectUncoverLeft':      { tag: 'p:pull', attrNames: ['dir'], attrValues: ['l'] },
+		'effectUncoverLeftDown':  { tag: 'p:pull', attrNames: ['dir'], attrValues: ['ld'] },
+		'effectUncoverLeftUp':    { tag: 'p:pull', attrNames: ['dir'], attrValues: ['lu'] },
+		'effectUncoverRight':     { tag: 'p:pull', attrNames: ['dir'], attrValues: ['r'] },
+		'effectUncoverRightDown': { tag: 'p:pull', attrNames: ['dir'], attrValues: ['rd'] },
+		'effectUncoverRightUp':   { tag: 'p:pull', attrNames: ['dir'], attrValues: ['ru'] },
+		'effectUncoverUp':        { tag: 'p:pull', attrNames: ['dir'], attrValues: ['u'] },
+
+		// Default 'p14:vortex' effect attribute is: dir='l'
+		'effectVortexDown':  { tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['d'] },
+		'effectVortexLeft':  { tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['l'] },
+		'effectVortexRight': { tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['r'] },
+		'effectVortexUp':    { tag: 'p14:vortex', attrNames: ['dir'], attrValues: ['u'] },
+
+		// Default 'p14:warp' effect attribute is: dir='out'
+		'effectWarpIn':  { tag: 'p14:warp', attrNames: ['dir'], attrValues: ['in'] },
+		'effectWarpOut': { tag: 'p14:warp', attrNames: ['dir'], attrValues: ['out'] },
+
+		// Default 'p:wheel' effect attribute is: spokes='4'
+		'effectWheel1Spoke':  { tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['1'] },
+		'effectWheel2Spokes': { tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['2'] },
+		'effectWheel3Spokes': { tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['3'] },
+		'effectWheel4Spokes': { tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['4'] },
+		'effectWheel8Spokes': { tag: 'p:wheel', attrNames: ['spokes'], attrValues: ['8'] },
+
+		// Default 'p14:wheelReverse' effect attribute is: spokes='4'
+		// There is no effect with 4 spokes in reverse wheel effects but we can set it manually
+		'effectWheelReverse1Spoke': { tag: 'p14:wheelReverse', attrNames: ['spokes'], attrValues: ['1'] },
+
+		// Default 'p14:window' effect attribute is: dir='horz'
+		'effectWindowHorizontal': { tag: 'p14:window', attrNames: ['dir'], attrValues: ['horz'] },
+		'effectWindowVertical':   { tag: 'p14:window', attrNames: ['dir'], attrValues: ['vert'] },
+
+		// Default 'p:wipe' effect attribute is: dir='l'
+		'effectWipeDown':  { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['d'] },
+		'effectWipeLeft':  { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['l'] },
+		'effectWipeRight': { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] },
+		'effectWipeUp':    { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] },
+
+		'effectNone': {}
 
 		// effectCrawlFromDown
 		// effectCrawlFromLeft
@@ -4616,34 +4685,29 @@
 		const attrNames = [];
 		const attrValues = [];
 		const nodeName = this.Transition.fillXmlParams(attrNames, attrValues);
-
+		
+		const map = ApiSlideShowTransition.ENTRY_EFFECT_MAP;
 		if (nodeName) {
-			const map = ApiSlideShowTransition.ENTRY_EFFECT_MAP;
 			for (const effectName in map) {
 				const effectEntry = map[effectName];
-				if (!Array.isArray(effectEntry) || effectEntry.length === 0) {
+				if (effectEntry === undefined || !effectEntry.tag) {
 					continue;
 				}
 
-				const variant = effectEntry[0];
-				if (!variant || !variant.tag) {
+				if (effectEntry.tag !== nodeName) {
 					continue;
 				}
 
-				if (variant.tag !== nodeName) {
-					continue;
-				}
+				const effectEntryAttrNames = effectEntry.attrNames || [];
+				const effectEntryAttrValues = effectEntry.attrValues || [];
 
-				const variantAttrNames = variant.attrNames || [];
-				const variantAttrValues = variant.attrValues || [];
-
-				if (variantAttrNames.length !== attrNames.length) {
+				if (effectEntryAttrNames.length !== attrNames.length) {
 					continue;
 				}
 
 				let matches = true;
 				for (let j = 0; j < attrNames.length; j++) {
-					if (attrNames[j] !== variantAttrNames[j] || attrValues[j] !== variantAttrValues[j]) {
+					if (attrNames[j] !== effectEntryAttrNames[j] || attrValues[j] !== effectEntryAttrValues[j]) {
 						matches = false;
 						break;
 					}
@@ -4652,11 +4716,10 @@
 				if (matches) {
 					return effectName;
 				}
-
 			}
 		}
 
-		return 'ppEffectNone';
+		return 'effectNone';
 	};
 
 	/**
@@ -4665,37 +4728,30 @@
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
 	 *
-	 * @param {EntryEffect} entryEffect
+	 * @param {EntryEffect} entryEffectName
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetEntryEffect.js
 	 */
-	ApiSlideShowTransition.prototype.SetEntryEffect = function (entryEffect) {
-		if (!this.Transition || !entryEffect) {
+	ApiSlideShowTransition.prototype.SetEntryEffect = function (entryEffectName) {
+		if (!this.Transition || !entryEffectName) {
 			return false;
 		}
 
-		if (entryEffect === 'effectNone') {
+		if (entryEffectName === 'effectNone') {
 			this.Transition.TransitionType = c_oAscSlideTransitionTypes.None;
 			this.TransitionOption = -1;
 			return true;
 		}
 
-		const variants = ApiSlideShowTransition.ENTRY_EFFECT_MAP[entryEffect];
-		if (variants === undefined) {
+		const entryEffect = ApiSlideShowTransition.ENTRY_EFFECT_MAP[entryEffectName];
+		if (entryEffect === undefined) {
 			return false;
 		}
 
-		for (let i = 0; i < variants.length; i++) {
-			const variant = variants[i];
-			const attrNames = variant.attrNames || [];
-			const attrValues = variant.attrValues || [];
-			const isMatched = this.Transition.parseXmlParameters(variant.tag, attrNames, attrValues);
-			if (isMatched) {
-				return true;
-			}
-		}
-
-		return false;
+		const attrNames = entryEffect.attrNames || [];
+		const attrValues = entryEffect.attrValues || [];
+		const isMatched = this.Transition.parseXmlParameters(entryEffect.tag, attrNames, attrValues);
+		return isMatched;
 	};
 
 	/**
