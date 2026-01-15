@@ -1058,8 +1058,9 @@
 	 *
 	 * @memberof Api
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {ApiSlideShowTransition}
+	 * @returns {ApiSlideShowTransition} - Name of the transition effect.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSlideShowTransition.js
 	 */
 	Api.prototype.CreateSlideShowTransition = function () {
@@ -1961,8 +1962,9 @@
 	 *
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {boolean}
+	 * @returns {boolean} - True if the presentation is set to loop until stopped; otherwise, false.
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/GetLoopUntilStopped.js
 	 */
 	ApiPresentation.prototype.GetLoopUntilStopped = function () {
@@ -1974,9 +1976,10 @@
 	 *
 	 * @memberof ApiPresentation
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {boolean} loopUntilStopped
-	 * @returns {boolean}
+	 * @param {boolean} loopUntilStopped - True to set the presentation to loop until stopped; false otherwise.
+	 * @returns {boolean} - True if the new setting was applied successfully; otherwise, false.
 	 * @see office-js-api/Examples/{Editor}/ApiPresentation/Methods/SetLoopUntilStopped.js
 	 */
 	ApiPresentation.prototype.SetLoopUntilStopped = function (loopUntilStopped) {
@@ -4279,8 +4282,9 @@
 	 *
 	 * @memberof ApiSlide
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {ApiSlideShowTransition | null}
+	 * @returns {ApiSlideShowTransition | null} - Returns the slide show transition or null if the slide has no transition.
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/GetSlideShowTransition.js
 	 */
 	ApiSlide.prototype.GetSlideShowTransition = function () {
@@ -4295,9 +4299,10 @@
 	 *
 	 * @memberof ApiSlide
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {ApiSlideShowTransition} transition
-	 * @returns {boolean}
+	 * @param {ApiSlideShowTransition} transition - The slide show transition to be applied.
+	 * @returns {boolean} - Returns true if the transition was applied successfully, otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlide/Methods/SetSlideShowTransition.js
 	 */
 	ApiSlide.prototype.SetSlideShowTransition = function (transition) {
@@ -4417,6 +4422,7 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
 	 * @returns {"slideShowTransition"}
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetClassType.js
@@ -4673,48 +4679,47 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {EntryEffect | undefined}
+	 * @returns {EntryEffect} - The name of the entry effect in string format.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetEntryEffect.js
 	 */
 	ApiSlideShowTransition.prototype.GetEntryEffect = function () {
-		if (!this.Transition) {
-			return undefined;
-		}
+		if (this.Transition) {
+			const attrNames = [];
+			const attrValues = [];
+			const nodeName = this.Transition.fillXmlParams(attrNames, attrValues);
 
-		const attrNames = [];
-		const attrValues = [];
-		const nodeName = this.Transition.fillXmlParams(attrNames, attrValues);
-		
-		const map = ApiSlideShowTransition.ENTRY_EFFECT_MAP;
-		if (nodeName) {
-			for (const effectName in map) {
-				const effectEntry = map[effectName];
-				if (effectEntry === undefined || !effectEntry.tag) {
-					continue;
-				}
-
-				if (effectEntry.tag !== nodeName) {
-					continue;
-				}
-
-				const effectEntryAttrNames = effectEntry.attrNames || [];
-				const effectEntryAttrValues = effectEntry.attrValues || [];
-
-				if (effectEntryAttrNames.length !== attrNames.length) {
-					continue;
-				}
-
-				let matches = true;
-				for (let j = 0; j < attrNames.length; j++) {
-					if (attrNames[j] !== effectEntryAttrNames[j] || attrValues[j] !== effectEntryAttrValues[j]) {
-						matches = false;
-						break;
+			const map = ApiSlideShowTransition.ENTRY_EFFECT_MAP;
+			if (nodeName) {
+				for (const effectName in map) {
+					const effectEntry = map[effectName];
+					if (effectEntry === undefined || !effectEntry.tag) {
+						continue;
 					}
-				}
 
-				if (matches) {
-					return effectName;
+					if (effectEntry.tag !== nodeName) {
+						continue;
+					}
+
+					const effectEntryAttrNames = effectEntry.attrNames || [];
+					const effectEntryAttrValues = effectEntry.attrValues || [];
+
+					if (effectEntryAttrNames.length !== attrNames.length) {
+						continue;
+					}
+
+					let matches = true;
+					for (let j = 0; j < attrNames.length; j++) {
+						if (attrNames[j] !== effectEntryAttrNames[j] || attrValues[j] !== effectEntryAttrValues[j]) {
+							matches = false;
+							break;
+						}
+					}
+
+					if (matches) {
+						return effectName;
+					}
 				}
 			}
 		}
@@ -4727,9 +4732,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {EntryEffect} entryEffectName
-	 * @returns {boolean}
+	 * @param {EntryEffect} entryEffectName - The name of the entry effect in string format.
+	 * @returns {boolean} - True if the entry effect name is supported and was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetEntryEffect.js
 	 */
 	ApiSlideShowTransition.prototype.SetEntryEffect = function (entryEffectName) {
@@ -4750,8 +4756,15 @@
 
 		const attrNames = entryEffect.attrNames || [];
 		const attrValues = entryEffect.attrValues || [];
-		const isMatched = this.Transition.parseXmlParameters(entryEffect.tag, attrNames, attrValues);
-		return isMatched;
+		const copy = this.Transition.createDuplicate();
+		const isMatched = copy.parseXmlParameters(entryEffect.tag, attrNames, attrValues);
+
+		if (!isMatched) {
+			return false;
+		}
+
+		this.Transition.makeDuplicate(copy);
+		return true;
 	};
 
 	/**
@@ -4759,15 +4772,13 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {number | undefined}
+	 * @returns {number} - The transition duration in milliseconds.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetDuration.js
 	 */
 	ApiSlideShowTransition.prototype.GetDuration = function () {
-		if (this.Transition) {
-			return this.Transition.get_TransitionDuration();
-		}
-		return undefined;
+		return this.Transition.get_TransitionDuration();
 	};
 
 	/**
@@ -4775,9 +4786,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {number} duration
-	 * @returns {boolean}
+	 * @param {number} duration - The transition duration in milliseconds.
+	 * @returns {boolean} - True if the duration was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetDuration.js
 	 */
 	ApiSlideShowTransition.prototype.SetDuration = function (duration) {
@@ -4825,16 +4837,14 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {TransitionSpeed | undefined}
+	 * @returns {TransitionSpeed} - The transition speed in string format.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetSpeed.js
 	 */
 	ApiSlideShowTransition.prototype.GetSpeed = function () {
-		if (this.Transition) {
-			const duration = this.Transition.get_TransitionDuration();
-			return ApiSlideShowTransition._getSpeedName(duration);
-		}
-		return undefined;
+		const duration = this.Transition.get_TransitionDuration();
+		return ApiSlideShowTransition._getSpeedName(duration);
 	};
 
 	/**
@@ -4846,9 +4856,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {TransitionSpeed} speed
-	 * @returns {boolean}
+	 * @param {TransitionSpeed} speed - The transition speed in string format.
+	 * @returns {boolean} - True if the given parameter is valid and was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetSpeed.js
 	 */
 	ApiSlideShowTransition.prototype.SetSpeed = function (speed) {
@@ -4867,15 +4878,13 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {boolean | undefined}
+	 * @returns {boolean} - True if the slide advances on mouse click; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceOnClick.js
 	 */
 	ApiSlideShowTransition.prototype.GetAdvanceOnClick = function () {
-		if (this.Transition) {
-			return this.Transition.get_SlideAdvanceOnMouseClick();
-		}
-		return undefined;
+		return this.Transition.get_SlideAdvanceOnMouseClick();
 	};
 
 	/**
@@ -4883,9 +4892,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {boolean} advanceOnClick
-	 * @returns {boolean}
+	 * @param {boolean} advanceOnClick - True to advance the slide on mouse click; otherwise false.
+	 * @returns {boolean} - True if the value was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceOnClick.js
 	 */
 	ApiSlideShowTransition.prototype.SetAdvanceOnClick = function (advanceOnClick) {
@@ -4901,15 +4911,13 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {boolean | undefined}
+	 * @returns {boolean} - True if the slide advances after a specified time; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceOnTime.js
 	 */
 	ApiSlideShowTransition.prototype.GetAdvanceOnTime = function () {
-		if (this.Transition) {
-			return this.Transition.get_SlideAdvanceAfter();
-		}
-		return undefined;
+		return this.Transition.get_SlideAdvanceAfter();
 	};
 
 	/**
@@ -4917,9 +4925,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {boolean} advanceOnTime
-	 * @returns {boolean}
+	 * @param {boolean} advanceOnTime - True to advance the slide after a specified time; otherwise false.
+	 * @returns {boolean} - True if the setting was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceOnTime.js
 	 */
 	ApiSlideShowTransition.prototype.SetAdvanceOnTime = function (advanceOnTime) {
@@ -4935,8 +4944,9 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @returns {number | undefined}
+	 * @returns {number | undefined} - The slide advance time in milliseconds if set; otherwise undefined.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/GetAdvanceTime.js
 	 */
 	ApiSlideShowTransition.prototype.GetAdvanceTime = function () {
@@ -4951,9 +4961,10 @@
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
 	 *
-	 * @param {number} advanceTime
-	 * @returns {boolean}
+	 * @param {number} advanceTime - The slide advance time in milliseconds.
+	 * @returns {boolean} - True if the time was set successfully; otherwise false.
 	 * @see office-js-api/Examples/{Editor}/ApiSlideShowTransition/Methods/SetAdvanceTime.js
 	 */
 	ApiSlideShowTransition.prototype.SetAdvanceTime = function (advanceTime) {
