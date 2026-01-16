@@ -3972,39 +3972,48 @@ Paragraph.prototype.Remove = function(nCount, isRemoveWholeElement, bRemoveOnlyS
 			}
 			else
 			{
+				let oldElement = this.Content[StartPos];
 				this.Content[StartPos].Remove(nCount, bOnAddText);
-
+				
 				var isRemoveOnDrag = this.LogicDocument ? this.LogicDocument.DragAndDropAction : false;
-
-				// TODO: Как только избавимся от para_End переделать здесь
-				// Последние 2 элемента не удаляем (один для para_End, второй для всего остального)
-				// Пустой контент контрол сам себя удаляет внутри функции Remove
-				if (StartPos < this.Content.length - 2
-					&& true === this.Content[StartPos].Is_Empty()
-					&& true !== this.Content[StartPos].Is_CheckingNearestPos()
-					&& !(this.Content[StartPos] instanceof AscWord.CInlineLevelSdt)
-					&& (!bOnAddText || isRemoveOnDrag))
+				
+				if (StartPos < this.Content.length && oldElement === this.Content[StartPos])
 				{
-					if (this.Selection.StartPos === this.Selection.EndPos)
-						this.Selection.Use = false;
-
-					this.Internal_Content_Remove(StartPos);
-					
-					// Fix the content after deletion
-					if (!bOnAddText
-						&& !this.Content[StartPos].IsCursorPlaceable()
-						&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+					// TODO: Как только избавимся от para_End переделать здесь
+					// Последние 2 элемента не удаляем (один для para_End, второй для всего остального)
+					// Пустой контент контрол сам себя удаляет внутри функции Remove
+					if (StartPos < this.Content.length - 2
+						&& true === this.Content[StartPos].Is_Empty()
+						&& true !== this.Content[StartPos].Is_CheckingNearestPos()
+						&& !(this.Content[StartPos] instanceof AscWord.CInlineLevelSdt)
+						&& (!bOnAddText || isRemoveOnDrag))
 					{
-						this.AddToContent(StartPos, new AscWord.Run());
+						if (this.Selection.StartPos === this.Selection.EndPos)
+							this.Selection.Use = false;
+						
+						this.Internal_Content_Remove(StartPos);
+						
+						// Fix the content after deletion
+						if (!bOnAddText
+							&& !this.Content[StartPos].IsCursorPlaceable()
+							&& (0 === StartPos || !this.Content[StartPos - 1].IsCursorPlaceable()))
+						{
+							this.AddToContent(StartPos, new AscWord.Run());
+						}
+						
+						this.CurPos.ContentPos = StartPos;
+						this.Content[StartPos].MoveCursorToStartPos();
+						this.Correct_ContentPos2();
 					}
-
-					this.CurPos.ContentPos = StartPos;
-					this.Content[StartPos].MoveCursorToStartPos();
-					this.Correct_ContentPos2();
+					else
+					{
+						this.CurPos.ContentPos = StartPos;
+					}
 				}
 				else
 				{
-					this.CurPos.ContentPos = StartPos;
+					// Если элемент был удален или перемещен, то основываемся на перемещении позиции селекта
+					this.CurPos.ContentPos = this.Selection.StartPos;
 				}
 				
 				if (this.LogicDocument
