@@ -1934,6 +1934,8 @@ var editor;
 			reader.readSheetData(bNoBuildDep);
 			const updateRegion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
 			sheetDataElem.ws.onUpdateRanges([updateRegion]);//"cleanCellCache" works only for visible sheets
+			const updateRange = new AscCommonExcel.Range(sheetDataElem.ws, updateRegion.r1, updateRegion.c1, updateRegion.r2, updateRegion.c2);
+			api.wb.handleDrawingsOnWorkbookChange([updateRange])
 			//console.log('updateRigion:' + sheetDataElem.ws.getName() + "-" +updateRigion.r1+"-"+updateRigion.r2);
 		}
 		
