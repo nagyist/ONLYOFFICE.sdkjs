@@ -34,9 +34,9 @@
 (function(){
 
     let FREE_TEXT_INTENT_TYPE = {
-        FreeText:           0,
-        FreeTextCallout:    1,
-        FreeTextTypeWriter: 2
+        freeText:           0,
+        freeTextCallout:    1,
+        freeTextTypeWriter: 2
     }
 
     let CALLOUT_EXIT_POS = {
@@ -60,14 +60,9 @@
         
         this.GraphicObj     = this;
         
-        this._popupOpen     = false;
-        this._popupRect     = undefined;
         this._richContents  = [];
         this._rotate        = 0;
-        this._state         = undefined;
-        this._stateModel    = undefined;
-        this._points        = undefined;
-        this._intent        = undefined;
+        this._intent        = AscPDF.FREE_TEXT_INTENT_TYPE.freeText;
         this._lineEnd       = undefined;
         this._callout       = [];
         this._rectDiff      = [0, 0, 0, 0];
@@ -440,7 +435,7 @@
         let oCopy = AscPDF.CAnnotationBase.prototype.Copy.call(this, isForMove);
 
         let aCallout = this.GetCallout();
-        let aRC = this.GetRichContents();
+        let aRC = this.GetRichContents(true);
         
         oCopy.SetLineEnd(this.GetLineEnd());
         oCopy.SetAlign(this.GetAlign());
@@ -522,32 +517,34 @@
             y: (aOrigRect[3] - aRD[3]) * g_dKoef_pt_to_mm
         });
 
-        if (aCallout && aCallout.length == 6) {
-            // точка выхода callout
-            aFreeTextLine90.push({
-                x: (aCallout[2 * 2]) * g_dKoef_pt_to_mm,
-                y: (aCallout[2 * 2 + 1]) * g_dKoef_pt_to_mm
-            });
-            aFreeTextLine90.push({
-                x: (aCallout[2 * 1]) * g_dKoef_pt_to_mm,
-                y: (aCallout[2 * 1 + 1]) * g_dKoef_pt_to_mm
-            });
-        }
+		let aCalloutLine = [];
+		if (this.GetIntent() == AscPDF.FREE_TEXT_INTENT_TYPE.freeTextCallout) {
+			if (aCallout && aCallout.length == 6) {
+				// точка выхода callout
+				aFreeTextLine90.push({
+					x: (aCallout[2 * 2]) * g_dKoef_pt_to_mm,
+					y: (aCallout[2 * 2 + 1]) * g_dKoef_pt_to_mm
+				});
+				aFreeTextLine90.push({
+					x: (aCallout[2 * 1]) * g_dKoef_pt_to_mm,
+					y: (aCallout[2 * 1 + 1]) * g_dKoef_pt_to_mm
+				});
+			}
+			
+			if (aCallout.length != 0) {
+				// x2, y2 линии
+				aCalloutLine.push({
+					x: aCallout[1 * 2] * g_dKoef_pt_to_mm,
+					y: (aCallout[1 * 2 + 1]) * g_dKoef_pt_to_mm
+				});
+				// x1, y1 линии
+				aCalloutLine.push({
+					x: aCallout[0 * 2] * g_dKoef_pt_to_mm,
+					y: (aCallout[0 * 2 + 1]) * g_dKoef_pt_to_mm
+				});
+			}
+		}
         
-        let aCalloutLine = [];
-        if (aCallout.length != 0) {
-            // x2, y2 линии
-            aCalloutLine.push({
-                x: aCallout[1 * 2] * g_dKoef_pt_to_mm,
-                y: (aCallout[1 * 2 + 1]) * g_dKoef_pt_to_mm
-            });
-            // x1, y1 линии
-            aCalloutLine.push({
-                x: aCallout[0 * 2] * g_dKoef_pt_to_mm,
-                y: (aCallout[0 * 2 + 1]) * g_dKoef_pt_to_mm
-            });
-        }
-
         aFreeTextPoints.push(aFreeTextRect);
         if (aCalloutLine.length != 0)
             aFreeTextPoints.push(aCalloutLine);
@@ -618,15 +615,14 @@
 
         return false;
     };
-    CAnnotationFreeText.prototype.SetRichContents = function(aRCInfo) {
+	CAnnotationFreeText.prototype.private_UpdateRichContent = function() {
+		let aRCInfo = this.GetRichContents();
+
         let oContent = this.GetDocContent();
         oContent.ClearContent();
         
         let oLastUsedPara   = oContent.GetElement(0);
         oLastUsedPara.RemoveFromContent(0, oLastUsedPara.GetElementsCount());
-
-        AscCommon.History.Add(new CChangesPDFAnnotRC(this, this.GetRichContents(), aRCInfo));
-        this._richContents = aRCInfo;
 
         if (!aRCInfo) {
             this.SetNeedRecalc(true);
@@ -716,73 +712,8 @@
             _t.SetNeedRecalc(true);
         }
     };
-    CAnnotationFreeText.prototype.GetRichContents = function(bCalced) {
-        if (!bCalced)
-            return this._richContents;
-
-        let oContent = this.GetDocContent();
-        let aRCInfo = [];
-
-        for (let i = 0, nCount = oContent.GetElementsCount(); i < nCount; i++) {
-            let oPara = oContent.GetElement(i);
-
-            for (let j = 0, nRunsCount = oPara.GetElementsCount(); j < nRunsCount; j++) {
-                let oRun = oPara.GetElement(j);
-                let sText = oRun.GetText();
-                let oUniColor   = oRun.Pr.Unifill;
-                let oRGBA       = oUniColor ? oUniColor.fill.color.color.RGBA : null;
-                let aPdfColor   = oRGBA ? [oRGBA.R / 255, oRGBA.G / 255, oRGBA.B / 255] : [0, 0, 0];
-
-                let sFont   = oRun.Get_RFonts().Ascii.Name;
-                let isEmbed = false;
-                let prefix  = AscFonts.getEmbeddedFontPrefix();
-
-                let nVertAlign;
-                switch (oRun.GetVertAlign()) {
-                    case AscCommon.vertalign_SuperScript:
-                        nVertAlign = 0;
-                        break;
-                    case AscCommon.vertalign_SubScript:
-                        nVertAlign = -0.01;
-                        break;
-                }
-
-                if (sFont.startsWith(prefix)) {
-                    sFont = sFont.substr(prefix.length);
-                    isEmbed = true;
-                }
-                    
-                let oRCInfo = {
-                    "alignment":        AscPDF.getPdfTypeAlignByInternal(oRun.Paragraph.GetParagraphAlign()),
-                    "rtl":              oRun.Paragraph.GetParagraphBidi(),
-                    "bold":             oRun.Get_Bold(),
-                    "italic":           oRun.Get_Italic(),
-                    "strikethrough":    oRun.Get_Strikeout(),
-                    "underlined":       oRun.Get_Underline(),
-                    "size":             oRun.Get_FontSize(),
-                    "color":            aPdfColor,
-                    "text":             sText,
-                    "vertical":         nVertAlign
-                };
-
-                if (isEmbed) {
-                    oRCInfo["name"] = sFont;
-                }
-                else {
-                    oRCInfo["actual"] = sFont;
-                }
-
-                aRCInfo.push(oRCInfo);
-            }
-
-            if (aRCInfo[aRCInfo.length - 1])
-                aRCInfo[aRCInfo.length - 1]["text"] += '\r';
-        }
-
-        return aRCInfo;
-    };
     CAnnotationFreeText.prototype.GetAllFonts = function(fontMap) {
-        let aRCInfo = this.GetRichContents();
+        let aRCInfo = this.GetRichContents(true);
         fontMap = fontMap || {};
 
         if (!aRCInfo) {
@@ -1086,15 +1017,9 @@
                 this.GetContents() != sText && this.SetContents(sText);
             
                 if (isNeedUpdateRC) {
-                    let aCurRc = this.GetRichContents();
-                    let aNewRc = this.GetRichContents(true);
-                    
-                    this._richContents = aNewRc;
-
                     oDoc.History.Add(new CChangesFreeTextCallout(this, this._prevCallout, this.GetCallout()));
                     oDoc.History.Add(new CChangesPDFAnnotRD(this, this._prevRectDiff, this.GetRectangleDiff()));
                     oDoc.History.Add(new CChangesPDFAnnotRect(this, this._prevRect, this.GetRect()));
-                    oDoc.History.Add(new CChangesPDFAnnotRC(this, aCurRc, aNewRc));
                     oDoc.private_UpdateTargetForCollaboration(true);
                 }
             }, AscDFH.historydescription_Pdf_UpdateAnnotRC, this);
@@ -1582,12 +1507,18 @@
             if (!oParentAnnot.spTree[1])
                 oParentAnnot.addToSpTree(1, oLineShape);
         }
+		else if (oParentAnnot.spTree[1]) {
+			oParentAnnot.removeFromSpTree(oParentAnnot.spTree[1].GetId());
+		}
 
         if (arrOfArrPoints[2]) {
             let oConnShape = createConnectorShape(arrOfArrPoints[2], oParentAnnot.spTree[2], oParentAnnot);
             if (!oParentAnnot.spTree[2])
                 oParentAnnot.addToSpTree(2, oConnShape);
         }
+		else if (oParentAnnot.spTree[2]) {
+			oParentAnnot.removeFromSpTree(oParentAnnot.spTree[2].GetId());
+		}
         
         oParentAnnot.x = xMin;
         oParentAnnot.y = yMin;
@@ -1879,8 +1810,8 @@
 
     window["AscPDF"].CAnnotationFreeText    = CAnnotationFreeText;
     window["AscPDF"].FREE_TEXT_INTENT_TYPE  = window["AscPDF"]["FREE_TEXT_INTENT_TYPE"] = FREE_TEXT_INTENT_TYPE;
-    FREE_TEXT_INTENT_TYPE['FreeText']           = FREE_TEXT_INTENT_TYPE.FreeText;
-    FREE_TEXT_INTENT_TYPE['FreeTextCallout']    = FREE_TEXT_INTENT_TYPE.FreeTextCallout;
+    FREE_TEXT_INTENT_TYPE['freeText']           = FREE_TEXT_INTENT_TYPE.freeText;
+    FREE_TEXT_INTENT_TYPE['freeTextCallout']    = FREE_TEXT_INTENT_TYPE.freeTextCallout;
     
     window["AscPDF"].CALLOUT_EXIT_POS       = CALLOUT_EXIT_POS;
 })();

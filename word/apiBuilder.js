@@ -4899,7 +4899,7 @@
 	 * Creates an RGB color from red, green and blue components.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "PDFE"]
 	 * @param {byte} r - Red component (0-255).
 	 * @param {byte} g - Green component (0-255).
 	 * @param {byte} b - Blue component (0-255).
@@ -10595,7 +10595,7 @@
 	 * Returns the last Run with text in the current paragraph.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @returns {ApiRun} Returns <code>false</code> if the paragraph doesn't containt the required run.
+	 * @returns {ApiRun}
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/GetLastRunWithText.js
 	 */
 	ApiParagraph.prototype.GetLastRunWithText = function()
@@ -10998,7 +10998,7 @@
 		return this;
 	};
 	/**
-	 * Returns the last element of the paragraph which is not empty.
+	 * Returns the last element of the paragraph.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {?ParagraphContent}
@@ -16598,7 +16598,7 @@
 	 */
 	ApiParaPr.prototype.SetJc = function(sJc)
 	{
-		this.ParaPr.Jc = private_GetParaAlign(sJc);
+		this.ParaPr.Jc = private_GetInnerParaAlign(sJc);
 		this.private_OnChange();
 		return true;
 	};
@@ -16611,32 +16611,14 @@
 	 */
 	ApiParaPr.prototype.GetJc = function()
 	{
-		function GetJC(nType) 
-		{
-			switch (nType)
-			{
-				case align_Right :
-					return "right";
-				case align_Left :
-					return "left";
-				case align_Center :
-					return "center";
-				case align_Justify : 
-					return "both";
-			}
-
-			return "left";
-		}
-
-		if (!this.Parent)
-		{
+		if (!this.Parent) {
 			if (this.ParaPr.Jc !== undefined)
-				return GetJC(this.ParaPr.Jc);
+				return private_GetStrParaAlign(this.ParaPr.Jc);
 
 			return undefined;
 		}
 
-		return GetJC(this.Parent.private_GetImpl().Get_CompiledPr2().ParaPr.Jc);
+		return private_GetStrParaAlign(this.Parent.private_GetImpl().Get_CompiledPr2().ParaPr.Jc);
 	};
 	/**
 	 * Specifies that when rendering the document using a page view, all lines of the current paragraph are maintained on a single page whenever possible.
@@ -30790,7 +30772,7 @@
 		return new CParaTab(nType, private_Twips2MM(nPos));
 	}
 
-	function private_GetParaAlign(sJc)
+	function private_GetInnerParaAlign(sJc)
 	{
 		if ("left" === sJc)
 			return align_Left;
@@ -30802,6 +30784,21 @@
 			return align_Center;
 
 		return undefined;
+	}
+
+	function private_GetStrParaAlign(jc) {
+		switch (jc) {
+			case align_Right :
+				return "right";
+			case align_Left :
+				return "left";
+			case align_Center :
+				return "center";
+			case align_Justify : 
+				return "both";
+		}
+
+		return "left";
 	}
 
 	function private_GetTableBorder(sType, nSize, nSpace, r, g, b)

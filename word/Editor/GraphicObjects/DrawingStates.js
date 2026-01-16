@@ -974,7 +974,7 @@ RotateState.prototype =
 
                         let aNewTextBoxRect = aTextBoxRect.slice();
                         // расширяем рект на ширину линии (или на радиус cloud бордера)
-                        let nLineWidth = oFreeText.GetWidth();
+                        let nLineWidth = oFreeText.GetBorderWidth();
                         if (oFreeText.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.cloud) {
                             aNewTextBoxRect[0] -= 12 * oFreeText.GetBorderEffectIntensity();
                             aNewTextBoxRect[1] -= 12 * oFreeText.GetBorderEffectIntensity();
@@ -1107,7 +1107,7 @@ RotateState.prototype =
 
                         let aNewTextBoxRect = [xMin, yMin, xMax, yMax];
                         // расширяем рект на ширину линии (или на радиус cloud бордера)
-                        let nLineWidth = oFreeText.GetWidth();
+                        let nLineWidth = oFreeText.GetBorderWidth();
                         if (oFreeText.GetBorderEffectStyle() === AscPDF.BORDER_EFFECT_STYLES.cloud) {
                             aNewTextBoxRect[0] -= 12 * oFreeText.GetBorderEffectIntensity();
                             aNewTextBoxRect[1] -= 12 * oFreeText.GetBorderEffectIntensity();

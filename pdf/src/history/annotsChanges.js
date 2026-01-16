@@ -1631,7 +1631,7 @@ CChangesPDFLineAnnotDoCaption.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
 	oAnnot._doCaption = Value;
-	oAnnot.private_UpdateCaption();
+	oAnnot.private_UpdateRichContent();
 	oAnnot.SetNeedRecalc(true);
 };
 
@@ -1649,7 +1649,8 @@ CChangesPDFLineAnnotRC.prototype.Type = AscDFH.historyitem_type_Pdf_Annot_Line_R
 CChangesPDFLineAnnotRC.prototype.private_SetValue = function(Value)
 {
 	let oAnnot = this.Class;
-	oAnnot.SetRichContents(Value);
+	oAnnot._richContents = Value;
+	oAnnot.private_UpdateRichContent();
 };
 
 CChangesPDFLineAnnotRC.prototype.WriteToBinary = function(Writer)

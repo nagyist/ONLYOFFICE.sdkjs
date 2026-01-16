@@ -514,7 +514,7 @@
         this._doCaption = bCaption;
         
         this.SetWasChanged(true);
-        this.private_UpdateCaption();
+        this.private_UpdateRichContent();
         this.SetNeedRecalc(true);
     };
     CAnnotationLine.prototype.private_UpdateRect = function() {
@@ -539,7 +539,7 @@
     CAnnotationLine.prototype.IsDoCaption = function() {
         return this._doCaption;
     };
-    CAnnotationLine.prototype.private_UpdateCaption = function() {
+    CAnnotationLine.prototype.private_UpdateRichContent = function() {
         if (this.IsDoCaption()) {
             if (!this.txBody) {
                 this.createTextBody();
@@ -657,82 +657,6 @@
             this.setTxBody(null);
             this.setTxBox(true);
         }
-    };
-    CAnnotationLine.prototype.SetRichContents = function(aRCInfo) {
-        AscCommon.History.Add(new CChangesPDFAnnotRC(this, this.GetRichContents(), aRCInfo));
-        this._richContents = aRCInfo;
-
-        this.SetWasChanged(true);
-        this.private_UpdateCaption();
-        this.SetNeedRecalc(true);
-    };
-    CAnnotationLine.prototype.GetRichContents = function(bCalced) {
-        if (!bCalced)
-            return this._richContents;
-
-        let oContent = this.GetDocContent();
-        if (!oContent) {
-            return null;
-        }
-        
-        let aRCInfo = [];
-
-        for (let i = 0, nCount = oContent.GetElementsCount(); i < nCount; i++) {
-            let oPara = oContent.GetElement(i);
-
-            for (let j = 0, nRunsCount = oPara.GetElementsCount(); j < nRunsCount; j++) {
-                let oRun = oPara.GetElement(j);
-                let sText = oRun.GetText();
-                let oUniColor   = oRun.Pr.Unifill;
-                let oRGBA       = oUniColor ? oUniColor.fill.color.color.RGBA : null;
-                let aPdfColor   = oRGBA ? [oRGBA.R / 255, oRGBA.G / 255, oRGBA.B / 255] : [0, 0, 0];
-
-                let sFont   = oRun.Get_RFonts().Ascii.Name;
-                let isEmbed = false;
-                let prefix  = AscFonts.getEmbeddedFontPrefix();
-
-                let nVertAlign;
-                switch (oRun.GetVertAlign()) {
-                    case AscCommon.vertalign_SuperScript:
-                        nVertAlign = 0;
-                        break;
-                    case AscCommon.vertalign_SubScript:
-                        nVertAlign = -0.01;
-                        break;
-                }
-
-                if (sFont.startsWith(prefix)) {
-                    sFont = sFont.substr(prefix.length);
-                    isEmbed = true;
-                }
-                    
-                let oRCInfo = {
-                    "alignment":        AscPDF.getPdfTypeAlignByInternal(oRun.Paragraph.GetParagraphAlign()),
-                    "bold":             oRun.Get_Bold(),
-                    "italic":           oRun.Get_Italic(),
-                    "strikethrough":    oRun.Get_Strikeout(),
-                    "underlined":       oRun.Get_Underline(),
-                    "size":             oRun.Get_FontSize(),
-                    "color":            aPdfColor,
-                    "text":             sText,
-                    "vertical":         nVertAlign
-                };
-
-                if (isEmbed) {
-                    oRCInfo["name"] = sFont;
-                }
-                else {
-                    oRCInfo["actual"] = sFont;
-                }
-
-                aRCInfo.push(oRCInfo);
-            }
-
-            if (aRCInfo[aRCInfo.length - 1])
-                aRCInfo[aRCInfo.length - 1]["text"] += '\r';
-        }
-
-        return aRCInfo;
     };
     CAnnotationLine.prototype.GetContents = function() {
         if (!this.IsDoCaption()) {

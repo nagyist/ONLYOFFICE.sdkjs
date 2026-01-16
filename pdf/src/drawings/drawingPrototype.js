@@ -75,9 +75,6 @@
 	CPdfDrawingPrototype.prototype.GetEditField = function() {
 		return null;
 	};
-    CPdfDrawingPrototype.prototype.OnContentChange = function() {
-        return this.SetNeedRecalc(true);
-    };
     CPdfDrawingPrototype.prototype.IsPdfDrawing = function() {
         return true;
     };
@@ -311,6 +308,7 @@
     CPdfDrawingPrototype.prototype.OnContentChange = function() {
         let oGroup = this.getMainGroup();
         if (oGroup) {
+			oGroup.SetWasChanged && oGroup.SetWasChanged(true);
             oGroup.SetNeedRecalc && oGroup.SetNeedRecalc(true);
         }
         else {

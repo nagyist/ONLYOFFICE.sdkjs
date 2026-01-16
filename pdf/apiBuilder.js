@@ -155,6 +155,20 @@
 	 */
 
 	/**
+	 * Axis-aligned rectangle represented as a tuple.
+	 *
+	 * Invariants:
+	 *  - rect[0] < rect[2] (x1 < x2)
+	 *  - rect[1] < rect[3] (y1 < y2)
+	 *
+	 * @typedef {[pt, pt, pt, pt]} Rect
+	 * @property {pt} 0 - x1 (left)
+	 * @property {pt} 1 - y1 (top)
+	 * @property {pt} 2 - x2 (right)
+	 * @property {pt} 3 - y2 (bottom)
+	 */
+
+	/**
 	 * Axis-aligned rectangle difference represented as a tuple.
 	 * Describes coordinate-wise deltas between two rectangles (B - A).
 	 *
@@ -235,6 +249,16 @@
 	 * @property {pt} 7 - y4 (right bottom)
 	 */
 
+
+	/**
+	 * The available free text annot intent.
+	 * @typedef {("freeText" | "freeTextCallout")} FreeTextIntent
+	 */
+
+	/**
+	 * FreeText callout coordinates.
+	 * @typedef {[Point, Point, Point]} FreeTextCallout
+	 */
 	/**
 	 * Degree defines an angle in degrees.
 	 * Can be any finite number (positive or negative).
@@ -247,6 +271,21 @@
 	 * @property {string} text - The text to search for.
 	 * @property {boolean} matchCase - Whether the search is case-sensitive.
 	 * @property {boolean} wholeWords - Whether to match whole words only.
+	 */
+
+	/**
+	 * The available horizontal text alignment.
+	 * @typedef {("left" | "right" | "both" | "center")} TextHorAlign
+	 */
+
+	/**
+	 * The available vertical text alignment.
+	 * @typedef {("baseline" | "subscript" | "superscript")} TextVertAlign
+	 */
+
+	/**
+	 * The reading order (left-to-right or right-to-left).
+	 * @typedef {("ltr" | "rtl")} ReadingOrder
 	 */
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -272,20 +311,6 @@
 	 */
 	Api.prototype.GetDocument = function() {
 		return new ApiDocument(private_GetLogicDocument());
-	};
-
-	/**
-	 * Creates an RGB color setting the appropriate values for the red, green and blue color components.
-	 * @memberof Api
-	 * @typeofeditors ["PDFE"]
-	 * @param {byte} r - Red color component value.
-	 * @param {byte} g - Green color component value.
-	 * @param {byte} b - Blue color component value.
-	 * @returns {ApiRGBColor}
-	 * @see office-js-api/Examples/PDF/Api/Methods/CreateRGBColor.js
-	 */
-	Api.prototype.CreateRGBColor = function(r, g, b) {
-		return new ApiRGBColor(r, g, b);
 	};
 
 	/**
@@ -972,6 +997,50 @@
 		oAnnot.SetBorderColor([1, 0, 0]);
 
 		return new ApiRedactAnnotation(oAnnot);
+	};
+
+	/**
+	 * Creates a new rich paragraph.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichParagraph}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichParagraph.js
+	 */
+	Api.prototype.CreateRichParagraph = function() {
+		return new ApiRichParagraph(new AscWord.Paragraph(private_GetLogicDocument(), true));
+	};
+
+	/**
+	 * Creates a new rich run.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichRun.js
+	 */
+	Api.prototype.CreateRichRun = function() {
+		return new ApiRichRun(new ParaRun(null, false));
+	};
+
+	/**
+	 * Creates the empty rich text properties.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiTextPr}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichTextPr.js
+	 */
+	Api.prototype.CreateRichTextPr = function() {
+		return new ApiRichTextPr(null, new AscCommonWord.CTextPr());
+	};
+
+	/**
+	 * Creates the empty rich paragraph properties.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @returns {ApiParaPr}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichParaPr.js
+	 */
+	Api.prototype.CreateRichParaPr = function() {
+		return new ApiRichParaPr(null, new AscCommonWord.CParaPr());
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -1749,16 +1818,16 @@
 	/**
 	 * Sets widget border color.
 	 * @typeofeditors ["PDFE"]
-	 * @param {ApiRGBColor} oColor
+	 * @param {ApiColor} color
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/SetBorderColor.js
 	 */
-	ApiBaseWidget.prototype.SetBorderColor = function(oColor) {
-		if (!(oColor instanceof ApiRGBColor)) {
+	ApiBaseWidget.prototype.SetBorderColor = function(color) {
+		if (!(color instanceof AscBuilder.ApiColor)) {
 			return false;
 		}
 
-		this.Field.SetBorderColor(private_GetInnerColorByRGB(oColor.R, oColor.G, oColor.B));
+		this.Field.SetBorderColor(private_GetInnerColorByRGB(color["r"], color["g"], color["b"]));
 
 		if (this.Field.GetBorderStyle() == undefined) {
 			this.Field.SetBorderStyle(AscPDF.BORDER_TYPES.solid);
@@ -1773,7 +1842,7 @@
 	/**
 	 * Gets widget border color.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/GetBorderColor.js
 	 */
 	ApiBaseWidget.prototype.GetBorderColor = function() {
@@ -1784,7 +1853,7 @@
 
 		let oRGB = this.Field.GetRGBColor(aInnerColor);
 
-		return new ApiRGBColor(oRGB.r, oRGB.g, oRGB.b);
+		return new Asc.editor.RGB(oRGB.r, oRGB.g, oRGB.b);
 	};
 
 	/**
@@ -1842,23 +1911,23 @@
 	/**
 	 * Sets widget background color.
 	 * @typeofeditors ["PDFE"]
-	 * @param {ApiRGBColor} oColor
+	 * @param {ApiColor} color
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/SetBackgroundColor.js
 	 */
-	ApiBaseWidget.prototype.SetBackgroundColor = function(oColor) {
-		if (!(oColor instanceof ApiRGBColor)) {
+	ApiBaseWidget.prototype.SetBackgroundColor = function(color) {
+		if (!(color instanceof AscBuilder.ApiColor)) {
 			return false;
 		}
 
-		this.Field.SetBackgroundColor(private_GetInnerColorByRGB(oColor.R, oColor.G, oColor.B));
+		this.Field.SetBackgroundColor(private_GetInnerColorByRGB(color["r"], color["g"], color["b"]));
 		return true;
 	};
 
 	/**
 	 * Gets widget background color.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/GetBackgroundColor.js
 	 */
 	ApiBaseWidget.prototype.GetBackgroundColor = function() {
@@ -1869,29 +1938,29 @@
 
 		let oRGB = this.Field.GetRGBColor(aInnerColor);
 
-		return new ApiRGBColor(oRGB.r, oRGB.g, oRGB.b);
+		return new Asc.editor.RGB(oRGB.r, oRGB.g, oRGB.b);
 	};
 
 	/**
 	 * Sets widget text color.
 	 * @typeofeditors ["PDFE"]
-	 * @param {ApiRGBColor} oColor
+	 * @param {ApiColor} color
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/SetTextColor.js
 	 */
-	ApiBaseWidget.prototype.SetTextColor = function(oColor) {
-		if (!(oColor instanceof ApiRGBColor)) {
+	ApiBaseWidget.prototype.SetTextColor = function(color) {
+		if (!(color instanceof AscBuilder.ApiColor)) {
 			return false;
 		}
 
-		this.Field.SetTextColor(private_GetInnerColorByRGB(oColor.R, oColor.G, oColor.B));
+		this.Field.SetTextColor(private_GetInnerColorByRGB(color["r"], color["g"], color["b"]));
 		return true;
 	};
 
 	/**
 	 * Gets widget text color.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/GetTextColor.js
 	 */
 	ApiBaseWidget.prototype.GetTextColor = function() {
@@ -1902,7 +1971,7 @@
 
 		let oRGB = this.Field.GetRGBColor(aInnerColor);
 
-		return new ApiRGBColor(oRGB.r, oRGB.g, oRGB.b);
+		return new Asc.editor.RGB(oRGB.r, oRGB.g, oRGB.b);
 	};
 
 	/**
@@ -1937,7 +2006,7 @@
 	 * Sets text autofit.
 	 * @typeofeditors ["PDFE"]
 	 * @param {boolean} bAuto
-	 * @returns {?ApiRGBColor}
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/SetAutoFit.js
 	 */
 	ApiBaseWidget.prototype.SetAutoFit = function(bAuto) {
@@ -1947,7 +2016,7 @@
 	/**
 	 * Checks if text is autofit.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseWidget/Methods/IsAutoFit.js
 	 */
 	ApiBaseWidget.prototype.IsAutoFit = function() {
@@ -3478,105 +3547,6 @@
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
-	// ApiRGBColor
-	//
-	//------------------------------------------------------------------------------------------------------------------
-
-	/**
-	 * Class representing an RGB Color.
-	 * @constructor
-	 */
-	function ApiRGBColor(r, g, b) {
-		this.Color = AscFormat.CreateUniColorRGB(r, g, b);
-	}
-
-	ApiRGBColor.prototype.toJSON = function () {
-		return { "r": this.R, "g": this.G, "b": this.B };
-	};
-	ApiRGBColor.prototype.toString = function () {
-		return `r: ${this.R}, g: ${this.G}, b: ${this.B}`;
-	};
-
-	/**
-	 * Returns a type of the ApiRGBColor class.
-	 * @memberof ApiRGBColor
-	 * @typeofeditors ["PDFE"]
-	 * @returns {"rgbColor"}
-	 * @see office-js-api/Examples/PDF/ApiRGBColor/Methods/GetClassType.js
-	 */
-	ApiRGBColor.prototype.GetClassType = function() {
-		return "rgbColor";
-	};
-
-	
-	/**
-	 * Represents R component of color.
-	 * @memberof ApiRGBColor
-	 * @typeofeditors ["PDFE"]
-	 * @returns {number}
-	 */
-	Object.defineProperty(ApiRGBColor.prototype, "R", {
-		get: function() {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return 0;
-			
-			let c = this.Color.color.RGBA;
-			return c.R;
-		},
-		set: function(r) {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return;
-			
-			this.Color.color.RGBA.R = r;
-		}
-	});
-
-	/**
-	 * Represents G component of color.
-	 * @memberof ApiRGBColor
-	 * @typeofeditors ["PDFE"]
-	 * @returns {number}
-	 */
-	Object.defineProperty(ApiRGBColor.prototype, "G", {
-		get: function() {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return 0;
-			
-			let c = this.Color.color.RGBA;
-			return c.G;
-		},
-		set: function(g) {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return;
-			
-			this.Color.color.RGBA.G = g;
-		}
-	});
-
-	/**
-	 * Represents B component of color.
-	 * @memberof ApiRGBColor
-	 * @typeofeditors ["PDFE"]
-	 * @returns {number}
-	 */
-	Object.defineProperty(ApiRGBColor.prototype, "B", {
-		get: function() {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return 0;
-			
-			let c = this.Color.color.RGBA;
-			return c.B;
-		},
-		set: function(b) {
-			if (!this.Color.color || !this.Color.color.RGBA)
-				return;
-			
-			this.Color.color.RGBA.B = b;
-		}
-	});
-	
-	//------------------------------------------------------------------------------------------------------------------
-	//
 	// ApiBaseAnnotation
 	//
 	//------------------------------------------------------------------------------------------------------------------
@@ -3595,7 +3565,9 @@
 	};
 
 	ApiBaseAnnotation.prototype.private_UpdateRect = function(rect) {
-		this.Annot.SetRect(rect);
+		if (rect) {
+			this.Annot.SetRect(rect);
+		}
 	};
 
 	/**
@@ -3630,23 +3602,23 @@
 	/**
 	 * Sets annotation border color.
 	 * @typeofeditors ["PDFE"]
-	 * @param {ApiRGBColor} color
+	 * @param {ApiColor} color
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/SetBorderColor.js
 	 */
 	ApiBaseAnnotation.prototype.SetBorderColor = function(color) {
-		if (!(color instanceof ApiRGBColor)) {
+		if (!(color instanceof AscBuilder.ApiColor)) {
 			return false;
 		}
 
-		this.Annot.SetBorderColor(private_GetInnerColorByRGB(color.R, color.G, color.B));
+		this.Annot.SetBorderColor(private_GetInnerColorByRGB(color["r"], color["g"], color["b"]));
 		return true;
 	};
 
 	/**
 	 * Gets annotation border color.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/GetBorderColor.js
 	 */
 	ApiBaseAnnotation.prototype.GetBorderColor = function() {
@@ -3657,29 +3629,29 @@
 
 		let oRGB = this.Annot.GetRGBColor(aInnerColor);
 
-		return new ApiRGBColor(oRGB.r, oRGB.g, oRGB.b);
+		return new Asc.editor.RGB(oRGB.r, oRGB.g, oRGB.b);
 	};
 
 	/**
 	 * Sets annotation fill color.
 	 * @typeofeditors ["PDFE"]
-	 * @param {ApiRGBColor} color
+	 * @param {ApiColor} color
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/SetFillColor.js
 	 */
 	ApiBaseAnnotation.prototype.SetFillColor = function(color) {
-		if (!(color instanceof ApiRGBColor)) {
+		if (!(color instanceof AscBuilder.ApiColor)) {
 			return false;
 		}
 
-		this.Annot.SetFillColor(private_GetInnerColorByRGB(color.R, color.G, color.B));
+		this.Annot.SetFillColor(private_GetInnerColorByRGB(color["r"], color["g"], color["b"]));
 		return true;
 	};
 
 	/**
 	 * Gets annotation fill color.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {?ApiRGBColor}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/PDF/ApiBaseAnnotation/Methods/GetFillColor.js
 	 */
 	ApiBaseAnnotation.prototype.GetFillColor = function() {
@@ -3690,7 +3662,7 @@
 
 		let oRGB = this.Annot.GetRGBColor(aInnerColor);
 
-		return new ApiRGBColor(oRGB.r, oRGB.g, oRGB.b);
+		return new Asc.editor.RGB(oRGB.r, oRGB.g, oRGB.b);
 	};
 
 	/**
@@ -3886,7 +3858,7 @@
 	 */
 	ApiBaseAnnotation.prototype.SetOpacity = function(value) {
 		value = AscBuilder.GetNumberParameter(value, null);
-		if (!value || value < 0 || value > 100) {
+		if (null == value || value < 0 || value > 100) {
 			AscBuilder.throwException("The value parameter must be number from 0 to 100");
 		}
 
@@ -4048,7 +4020,7 @@
 	ApiBaseAnnotation.prototype.SetBorderEffectIntensity = function(value) {
 		value = AscBuilder.GetNumberParameter(value, null);
 
-		if (!value || value < 0) {
+		if (null == value || value < 0) {
 			AscBuilder.throwException("The value parameter must be number greater than 0");
 		}
 
@@ -4428,7 +4400,131 @@
 	ApiFreeTextAnnotation.prototype.GetClassType = function() {
 		return "freeTextAnnot";
 	};
+
+	/**
+	 * Sets intent type for this annotation.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {FreeTextIntent} intentType
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/SetIntent.js
+	 */
+	ApiFreeTextAnnotation.prototype.SetIntent = function(intentType) {
+		if (undefined == AscPDF.FREE_TEXT_INTENT_TYPE[intentType]) {
+			AscBuilder.throwException("The intentType parameter must be one of available");
+		}
+
+		this.Annot.SetIntent(AscPDF.FREE_TEXT_INTENT_TYPE[intentType]);
+		return true;
+	};
+
+	/**
+	 * Gets intent type of this annotation.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {FreeTextIntent}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/GetIntent.js
+	 */
+	ApiFreeTextAnnotation.prototype.GetIntent = function() {
+		let nIntentType = this.Annot.GetIntent();
+
+		switch (nIntentType) {
+			case AscPDF.FREE_TEXT_INTENT_TYPE.freeText: {
+				return "check";
+			}
+			case AscPDF.FREE_TEXT_INTENT_TYPE.freeTextCallout: {
+				return "circle";
+			}
+		}
+	};
 	
+	/**
+	 * Sets annot callout.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {FreeTextCallout} callout
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/SetCallout.js
+	 */
+	ApiFreeTextAnnotation.prototype.SetCallout = function(callout) {
+		callout = AscBuilder.GetArrayParameter(callout, null);
+		if (!callout || callout.length !== 3) {
+			AscBuilder.throwException("The callout parameter must be an array with 3 Point elements.");
+		}
+
+		callout.forEach(function(point) {
+			private_CheckPoint(point);
+		});
+
+		let flatCallout = [];
+		callout.forEach(function(point) {
+			flatCallout.push(point["x"], point["y"]);
+		});
+
+		this.Annot.SetCallout(flatCallout);
+		return true;
+	};
+
+	/**
+	 * Gets annot callout.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {FreeTextCallout}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/GetCallout.js
+	 */
+	ApiFreeTextAnnotation.prototype.GetCallout = function() {
+		let aCallout = this.Annot.GetCallout();
+
+		let aResult = [];
+		for (let i = 0; i < aCallout.length - 1; i++) {
+			aResult.push({
+				"x": aCallout[i],
+				"y": aCallout[i + 1],
+			});
+		}
+
+		return aResult;
+	};
+
+	/**
+	 * Sets annotation rect difference.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @param {RectDiff} rectDiff - A set of four numbers that shall describe the numerical differences between two rectangles.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/SetRectDiff.js
+	 */
+	ApiFreeTextAnnotation.prototype.SetRectDiff = function(rectDiff) {
+		if (!private_IsValidRectDiff(rectDiff)) {
+			AscBuilder.throwException("The rectDiff parameter must be a valid rect diff");
+		}
+
+		this.Annot.SetRectangleDiff(rectDiff);
+		return true;
+	};
+
+	/**
+	 * Gets annotation rect difference.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {Rect}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/GetRectDiff.js
+	 */
+	ApiFreeTextAnnotation.prototype.GetRectDiff = function() {
+		return this.Annot.GetRectangleDiff();
+	};
+
+	/**
+	 * Gets annotation rich content.
+	 * @memberof ApiFreeTextAnnotation
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichContent}
+	 * @see office-js-api/Examples/PDF/ApiFreeTextAnnotation/Methods/GetContent.js
+	 */
+	ApiFreeTextAnnotation.prototype.GetContent = function() {
+		return new ApiRichContent(this.Annot.GetDocContent());
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiLineAnnotation
@@ -5267,6 +5363,856 @@
 		}
 	});
 
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiRichContent
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a rich content.
+	 * @constructor
+	 * @typeofeditors ["PDFE"]
+	 */
+	function ApiRichContent(oContent) {
+		this.Document = oContent;
+	}
+
+	/**
+	 * Returns a type of the ApiRichContent class. 
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @returns {"richContent"}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetClassType.js
+	 */
+	ApiRichContent.prototype.GetClassType = function() {
+		return "richContent";
+	};
+
+	/**
+	 * Returns a number of elements in the current document.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetElementsCount.js
+	 */
+	ApiRichContent.prototype.GetElementsCount = AscBuilder.ApiDocumentContent.prototype.GetElementsCount;
+
+	/**
+	 * Returns an rich paragraph by its position in the content.
+	 * @memberof ApiRichContent
+	 * @param {number} pos - The element position that will be taken from the content.
+	 * @typeofeditors ["PDFE"]
+	 * @returns {?ApiRichParagraph}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetElement.js
+	 */
+	ApiRichContent.prototype.GetElement = function(pos) {
+		if (!this.Document.Content[pos])
+			return null;
+
+		return new ApiRichParagraph(this.Document.Content[pos]);
+	};
+
+	/**
+	 * Adds a rich paragraph using its position in rich content.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @param {number} pos - The position where the rich paragraph will be added.
+	 * @param {ApiRichParagraph} richPara - The rich paragraph which will be added at the current position.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/AddElement.js
+	 */
+	ApiRichContent.prototype.AddElement = function(pos, richPara) {
+		if (!(richPara instanceof ApiRichParagraph)) {
+			AscBuilder.throwException("The richPara parameter must be an ApiRichParagraph object");
+		}
+
+		let nMaxPos = this.GetElementsCount();
+
+		pos = AscBuilder.GetNumberParameter(pos, null);
+		if (null == pos || pos < 0 || pos > nMaxPos) {
+			AscBuilder.throwException("The pos parameter must be a valid position");
+		}
+
+		let oElm = richPara.private_GetImpl();
+		if (oElm.IsUseInDocument()) {
+			AscBuilder.throwException("The richPara already in the document");
+		}
+
+		this.Document.Internal_Content_Add(pos, oElm);
+		return true;
+	};
+
+	/**
+	 * Pushes a rich paragraph to a rich content.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @param {ApiRichParagraph} richPara - The rich paragraph which will be pushed to the rich content.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/Push.js
+	 */
+	ApiRichContent.prototype.Push = function(richPara) {
+		return this.AddElement(this.GetElementsCount(), richPara);
+	};
+
+	/**
+	 * Removes all the elements from the current rich content.
+	 * <note>When all elements are removed, a new empty rich paragraph is automatically created.</note>
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/RemoveAllElements.js
+	 */
+	ApiRichContent.prototype.RemoveAllElements = AscBuilder.ApiDocumentContent.prototype.RemoveAllElements;
+
+	/**
+	 * Removes an element using the position specified.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @param {number} pos - The element number (position) in the rich content.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/RemoveElement.js
+	 */
+	ApiRichContent.prototype.RemoveElement = AscBuilder.ApiDocumentContent.prototype.RemoveElement;
+
+	/**
+	 * Returns an array of rich paragraphs from the current rich content object.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @param {boolean} getCopies - Specifies if the copies of the document elements will be returned or not.
+	 * @returns {ApiRichParagraph[]}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetContent.js
+	 */
+	ApiRichContent.prototype.GetContent = function(getCopies) {
+		let aContent = [];
+		let oTempElm = null;
+
+		for (var nElm = 0; nElm < this.Document.Content.length; nElm++) {
+			oTempElm = this.Document.Content[nElm];
+
+			if (getCopies)
+				oTempElm = oTempElm.Copy();
+
+			aContent.push(new ApiRichParagraph(oTempElm));
+		}
+
+		return aContent;
+	};
+
+	/**
+	 * Returns the inner text of the current document content object.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @param {object} [options] - Options for formatting the returned text.
+	 * @param {string} [options.ParaSeparator='\r\n'] - Defines how the paragraph separator will be specified in the resulting string. Any symbol can be used. The default separator is "\r\n".
+	 * @param {string} [options.TabSymbol='\t'] - Defines how the tab will be specified in the resulting string. Any symbol can be used. The default symbol is "\t".
+	 * @param {string} [options.NewLineSeparator='\r'] - Defines how the line separator will be specified in the resulting string. Any symbol can be used. The default separator is "\r".
+	 * @return {string}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetText.js
+	 */
+	ApiRichContent.prototype.GetText = AscBuilder.ApiDocumentContent.prototype.GetText;
+
+	/**
+	 * Returns the current paragraph where the cursor is located.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @return {?ApiRichParagraph}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetCurrentParagraph.js
+	 */
+	ApiRichContent.prototype.GetCurrentParagraph = function() {
+		let oPara = this.Document.GetCurrentParagraph();
+		if (!oPara) {
+			return null;
+		}
+
+		return new ApiRichParagraph(oPara);
+	};
+
+	/**
+	 * Returns the current run where the cursor is located.
+	 * @memberof ApiRichContent
+	 * @typeofeditors ["PDFE"]
+	 * @return {?ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichContent/Methods/GetCurrentRun.js
+	 */
+	ApiRichContent.prototype.GetCurrentRun = function() {
+		let oRun = this.Document.GetCurrentRun();
+		if (!oRun) {
+			return null;
+		}
+
+		return new ApiRichRun(oRun);
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiRichParaPr
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing the rich paragraph properties.
+	 * @constructor
+	 */
+	function ApiRichParaPr(Parent, ParaPr) {
+		this.Parent = Parent;
+		this.ParaPr = ParaPr;
+	}
+
+	/**
+	 * Returns a type of the ApiRichParaPr class.
+	 * @memberof ApiRichParaPr
+	 * @typeofeditors ["PDFE"]
+	 * @returns {"richParaPr"}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParaPr/Methods/GetClassType.js
+	 */
+	ApiRichParaPr.prototype.GetClassType = function() {
+		return "richParaPr";
+	};
+
+	/**
+	 * Sets the rich paragraph contents justification.
+	 * @memberof ApiRichParaPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {TextHorAlign} jc - The justification type that will be applied to the rich paragraph contents.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParaPr/Methods/SetJc.js
+	 */
+	ApiRichParaPr.prototype.SetJc = AscBuilder.ApiParaPr.prototype.SetJc;
+
+	/**
+	 * Returns the rich paragraph contents justification.
+	 * @memberof ApiRichParaPr
+	 * @typeofeditors ["PDFE"]
+	 * @returns {TextHorAlign} 
+	 * @see office-js-api/Examples/{Editor}/ApiRichParaPr/Methods/GetJc.js
+	 */
+	ApiRichParaPr.prototype.GetJc = AscBuilder.ApiParaPr.prototype.GetJc;
+
+	ApiRichParaPr.prototype.private_OnChange = function() {
+		if (this.Parent)
+			this.Parent.OnChangeParaPr(this);
+	};
+	
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiRichParagraph
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a rich paragraph.
+	 * @constructor
+	 * @extends {ApiRichParaPr}
+	 */
+	function ApiRichParagraph(Paragraph)
+	{
+		ApiRichParaPr.call(this, this, Paragraph.Pr.Copy());
+		this.Paragraph = Paragraph;
+	}
+	ApiRichParagraph.prototype = Object.create(ApiRichParaPr.prototype);
+	ApiRichParagraph.prototype.constructor = ApiRichParagraph;
+
+	/**
+	 * Returns a type of the ApiRichParagraph class.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {"richParagraph"}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetClassType.js
+	 */
+	ApiRichParagraph.prototype.GetClassType = function() {
+		return "richParagraph";
+	};
+
+	/**
+	 * Adds some text to the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {string} text - The text that we want to insert into the current paragraph.
+	 * @returns {ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/AddText.js
+	 */
+	ApiRichParagraph.prototype.AddText = function(text) {
+		let oApiRun = AscBuilder.ApiParagraph.prototype.AddText.call(this, text);
+		return new ApiRichRun(oApiRun.private_GetImpl());
+	};
+
+	/**
+	 * Sets the paragraph properties.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {ApiRichParaPr} paraPr
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/SetParaPr.js
+	 */
+	ApiRichParagraph.prototype.SetParaPr = function(paraPr) {
+		if (!(paraPr instanceof ApiRichParaPr)) {
+			AscBuilder.throwException('The paraPr parameter must be an ApiRichParaPr object');
+		}
+
+		this.ParaPr.Merge(paraPr.ParaPr);
+		this.OnChangeParaPr(new ApiRichParaPr(this.Paragraph, this.ParaPr));
+		return true;
+	};
+
+	/**
+	 * Returns the paragraph properties.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichParaPr}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetParaPr.js
+	 */
+	ApiRichParagraph.prototype.GetParaPr = function() {
+		return new ApiRichParaPr(this, this.Paragraph.Pr.Copy());
+	};
+
+	/**
+	 * Returns a number of elements in the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {number}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetElementsCount.js
+	 */
+	ApiRichParagraph.prototype.GetElementsCount = AscBuilder.ApiParagraph.prototype.GetElementsCount;
+
+	/**
+	 * Adds an element to the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {ApiRichRun} richRun - The element which will be added at the current position.
+	 * @param {number} [pos] - The position where the current element will be added. If this value is not
+	 * specified, then the element will be added at the end of the current paragraph.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/AddElement.js
+	 */
+	ApiRichParagraph.prototype.AddElement = function(richRun, pos) {
+		if (!(richRun instanceof ApiRichRun)) {
+			AscBuilder.throwException("The richRun parameter must be an ApiRichRun object");
+		}
+
+		let nMaxPos = this.GetElementsCount();
+
+		pos = AscBuilder.GetNumberParameter(pos, null);
+		if (null == pos || pos < 0 || pos > nMaxPos) {
+			AscBuilder.throwException("The pos parameter must be a valid position");
+		}
+
+		let oParaElement = richRun.private_GetImpl();
+		if (oParaElement.IsUseInDocument()) {
+			AscBuilder.throwException("The richRun already in the document");
+		}
+
+		this.Paragraph.Add_ToContent(pos, oParaElement);
+		this.Paragraph.CorrectContent(undefined, undefined, true);
+
+		return true;
+	};
+
+	/**
+	 * Adds an element to the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {ParagraphContent} richRun
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/Push.js
+	 */
+	ApiRichParagraph.prototype.Push = function(richRun) {
+		return this.AddElement(richRun, this.GetElementsCount());
+	};
+
+	/**
+	 * Returns a paragraph element using the position specified.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {number} pos - The position where the element which content we want to get must be located.
+	 * @returns {?ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetElement.js
+	 */
+	ApiRichParagraph.prototype.GetElement = function(pos) {
+		if (pos < 0 || pos >= this.Paragraph.Content.length - 1)
+			return null;
+
+		return new ApiRichRun(this.Paragraph.Content[pos]);
+	};
+
+	/**
+	 * Removes an element using the position specified.
+	 * <note>If the element you remove is the last paragraph element (i.e. all the elements are removed from the paragraph),
+	 * a new empty run is automatically created.</note>
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {number} pos - The element position which we want to remove from the paragraph.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/RemoveElement.js
+	 */
+	ApiRichParagraph.prototype.RemoveElement = AscBuilder.ApiParagraph.prototype.RemoveElement;
+
+	/**
+	 * Removes all the elements from the current paragraph.
+	 * <note>When all the elements are removed from the paragraph, a new empty run is automatically created.</note>
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/RemoveAllElements.js
+	 */
+	ApiRichParagraph.prototype.RemoveAllElements = AscBuilder.ApiParagraph.prototype.RemoveAllElements;
+
+	/**
+	 * Deletes the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean} - returns false if paragraph haven't parent.
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/Delete.js
+	 */
+	ApiRichParagraph.prototype.Delete = AscBuilder.ApiParagraph.prototype.Delete;
+
+	/**
+	 * Returns the next paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {?ApiRichParagraph} - returns null if paragraph is last.
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetNext.js
+	 */
+	ApiRichParagraph.prototype.GetNext = function() {
+		let nextPara = this.Paragraph.GetNextParagraph();
+		if (nextPara !== null)
+			return new ApiRichParagraph(nextPara);
+
+		return null;
+	};
+
+	/**
+	 * Returns the previous paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {?ApiRichParagraph} - returns null if paragraph is first.
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetPrevious.js
+	 */
+	ApiRichParagraph.prototype.GetPrevious = function() {
+		let prevPara = this.Paragraph.GetPrevParagraph();
+		if (prevPara !== null)
+			return new ApiRichParagraph(prevPara);
+
+		return null;
+	};
+
+	/**
+	 * Returns the last element of the paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/Last.js
+	 */
+	ApiRichParagraph.prototype.Last = function() {
+		let oApiRun = AscBuilder.ApiParagraph.prototype.Last.call(this);
+		return new ApiRichRun(oApiRun.private_GetImpl());
+	};
+
+	/**
+	 * Returns the last Run with text in the current paragraph.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetLastRunWithText.js
+	 */
+	ApiRichParagraph.prototype.GetLastRunWithText = AscBuilder.ApiParagraph.prototype.GetLastRunWithText;
+
+	/**
+	 * Creates a paragraph copy.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichParagraph}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/Copy.js
+	 */
+	ApiRichParagraph.prototype.Copy = function() {
+		let oParagraph = this.Paragraph.Copy(undefined, private_GetDrawingDocument(), {
+			SkipComments          : true,
+			SkipFootnoteReference : true,
+			SkipComplexFields     : true
+		});
+
+		return new ApiRichParagraph(oParagraph);
+	};
+	
+	/**
+	 * Specifies the reading order for the current paragraph.
+	 * Possible values are:
+	 * <b>null</b> - use the standart direction parameter;
+	 * <b>"ltr"</b> - left-to-right text direction;
+	 * <b>"rtl"</b> - right-to-left text direction.
+	 * @memberof ApiRichParagraph
+	 * @typeofeditors ["PDFE"]
+	 * @param {?ReadingOrder} [readingOrder = undefined] - The reading order.
+	 * @returns {ApiRichParagraph} - Returns the current paragraph itself (ApiRichParagraph).
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/SetReadingOrder.js
+	 */
+	ApiRichParagraph.prototype.SetReadingOrder = function(readingOrder) {
+		let oApiPara = AscBuilder.ApiParagraph.prototype.SetReadingOrder.call(this, readingOrder);
+		return new ApiRichParagraph(oApiPara.private_GetImpl());
+	};
+
+	/**
+	 * Returns the paragraph text.
+	 * @memberof ApiRichParagraph
+	 * @param {object} [options] - Options for formatting the returned text.
+	 * @param {string} [options.NewLineSeparator='\r'] - Defines how the line separator will be specified in the resulting string. Any string can be used. The default separator is "\r".
+	 * @param {string} [options.TabSymbol='\t'] - Defines how the tab will be specified in the resulting string (does not apply to numbering). Any string can be used. The default symbol is "\t".
+	 * @typeofeditors ["PDFE"]
+	 * @return {string}
+	 * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetText.js
+	 */
+	ApiRichParagraph.prototype.GetText = AscBuilder.ApiParagraph.prototype.GetText;
+
+	/**
+     * Returns the paragraph position within its parent element.
+     * @memberof ApiRichParagraph
+     * @typeofeditors ["PDFE"]
+     * @returns {Number} - returns -1 if the paragraph parent doesn't exist. 
+     * @see office-js-api/Examples/{Editor}/ApiRichParagraph/Methods/GetPosInParent.js
+	 */
+	ApiRichParagraph.prototype.GetPosInParent = AscBuilder.ApiParagraph.prototype.GetPosInParent;
+
+	ApiRichParagraph.prototype.OnChangeParaPr = function(oApiParaPr) {
+		AscBuilder.ApiParagraph.prototype.OnChangeParaPr.call(this, oApiParaPr);
+		this.Paragraph.OnContentChange();
+	};
+
+	ApiRichParagraph.prototype.private_GetImpl = AscBuilder.ApiParagraph.prototype.private_GetImpl;
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiRichTextPr
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing the rich text properties.
+	 * @constructor
+	 */
+	function ApiRichTextPr(Parent, TextPr) {
+		this.Parent = Parent;
+		this.TextPr = TextPr;
+	}
+
+	/**
+	 * Returns a type of the ApiRichTextPr class.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @returns {"textPr"}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetClassType.js
+	 */
+	ApiRichTextPr.prototype.GetClassType = function() {
+		return "richTextPr";
+	};
+
+	/**
+	 * Sets the bold property to the text character.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {boolean} isBold - Specifies that the contents of the run are displayed bold.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetBold.js
+	 */
+	ApiRichTextPr.prototype.SetBold = AscBuilder.ApiTextPr.prototype.SetBold;
+
+	/**
+	 * Gets the bold property from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetBold.js
+	 */
+	ApiRichTextPr.prototype.GetBold = AscBuilder.ApiTextPr.prototype.GetBold;
+
+	/**
+	 * Sets the italic property to the text character.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {boolean} isItalic - Specifies that the contents of the current run are displayed italicized.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetItalic.js
+	 */
+	ApiRichTextPr.prototype.SetItalic = AscBuilder.ApiTextPr.prototype.SetItalic;
+
+	/**
+	 * Gets the italic property from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetItalic.js
+	 */
+	ApiRichTextPr.prototype.GetItalic = AscBuilder.ApiTextPr.prototype.GetItalic;
+
+	/**
+	 * Specifies that the contents of the run are displayed with a single horizontal line through the center of the line.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {boolean} isStrikeout - Specifies that the contents of the current run are displayed struck through.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetStrikeout.js
+	 */
+	ApiRichTextPr.prototype.SetStrikeout = AscBuilder.ApiTextPr.prototype.SetStrikeout;
+
+	/**
+	 * Gets the strikeout property from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetStrikeout.js
+	 */
+	ApiRichTextPr.prototype.GetStrikeout = AscBuilder.ApiTextPr.prototype.GetStrikeout;
+
+	/**
+	 * Specifies that the contents of the run are displayed along with a line appearing directly below the character
+	 * (less than all the spacing above and below the characters on the line).
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {boolean} isUnderline - Specifies that the contents of the current run are displayed underlined.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetUnderline.js
+	 */
+	ApiRichTextPr.prototype.SetUnderline = AscBuilder.ApiTextPr.prototype.SetUnderline;
+
+	/**
+	 * Gets the underline property from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetUnderline.js
+	 */
+	ApiRichTextPr.prototype.GetUnderline = AscBuilder.ApiTextPr.prototype.GetUnderline;
+
+	/**
+	 * Sets all 4 font slots with the specified font family.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {string} fontFamily - The font family or families used for the current text run.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetFontFamily.js
+	 */
+	ApiRichTextPr.prototype.SetFontFamily = AscBuilder.ApiTextPr.prototype.SetFontFamily;
+
+	/**
+	 * Returns the font family from the current text properties.
+	 * The method automatically calculates the font from the theme if the font was set via the theme.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * param {undefined | "ascii" | "eastAsia" | "hAnsi" | "cs"} [fontSlot="ascii"] - The font slot.
+	 * If this parameter is not specified, the "ascii" value is used.
+	 * @return {?string}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetFontFamily.js
+	 */
+	ApiRichTextPr.prototype.GetFontFamily = AscBuilder.ApiTextPr.prototype.GetFontFamily;
+
+	/**
+	 * Sets the font size to the characters of the current text run.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {hps} nSize - The text size value measured in half-points (1/144 of an inch).
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetFontSize.js
+	 */
+	ApiRichTextPr.prototype.SetFontSize = AscBuilder.ApiTextPr.prototype.SetFontSize;
+
+	/**
+	 * Gets the font size from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?hps}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetFontSize.js
+	 */
+	ApiRichTextPr.prototype.GetFontSize = AscBuilder.ApiTextPr.prototype.GetFontSize;
+
+	/**
+	 * Sets the text color to the current text run.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {ApiColor} color
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetColor.js
+	 */
+	ApiRichTextPr.prototype.SetColor = AscBuilder.ApiTextPr.prototype.SetColor;
+
+	/**
+	 * Gets the RGB color from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {?ApiColor}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetColor.js
+	 */
+	ApiRichTextPr.prototype.GetColor = AscBuilder.ApiTextPr.prototype.GetColor;
+
+	/**
+	 * Specifies the alignment which will be applied to the contents of the run in relation to the default appearance of the run text:
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @param {TextVertAlign} type - The vertical alignment type applied to the text contents.
+	 * @return {ApiRichTextPr} - this text properties.
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/SetVertAlign.js
+	 */
+	ApiRichTextPr.prototype.SetVertAlign = AscBuilder.ApiTextPr.prototype.SetVertAlign;
+
+	/**
+	 * Gets the vertical alignment type from the current text properties.
+	 * @memberof ApiRichTextPr
+	 * @typeofeditors ["PDFE"]
+	 * @return {TextVertAlign}
+	 * @see office-js-api/Examples/{Editor}/ApiRichTextPr/Methods/GetVertAlign.js
+	 */
+	ApiRichTextPr.prototype.GetVertAlign = AscBuilder.ApiTextPr.prototype.GetVertAlign;
+
+	ApiRichTextPr.prototype.private_OnChange = AscBuilder.ApiTextPr.prototype.private_OnChange;
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiRichRun
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a small text block called 'run'.
+	 * @constructor
+	 * @extends {ApiRichTextPr}
+	 */
+	function ApiRichRun(Run) {
+		ApiRichTextPr.call(this, this, Run.Pr.Copy());
+		this.Run = Run;
+	}
+	ApiRichRun.prototype = Object.create(ApiRichTextPr.prototype);
+	ApiRichRun.prototype.constructor = ApiRichRun;
+
+	/**
+	 * Returns a type of the ApiRichRun class.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {"richRun"}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/GetClassType.js
+	 */
+	ApiRichRun.prototype.GetClassType = function() {
+		return "richRun";
+	};
+
+	/**
+	 * Sets the text properties to the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @param {ApiRichTextPr} textPr - The text properties that will be set to the current run.
+	 * @return {ApiRichTextPr}  
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/SetTextPr.js
+	 */
+	ApiRichRun.prototype.SetTextPr = function(textPr) {
+		if (!(textPr instanceof ApiRichTextPr)) {
+			AscBuilder.throwException('The textPr parameter must be an ApiRichTextPr object');
+		}
+
+		let runTextPr = this.GetTextPr();
+		runTextPr.TextPr.Merge(textPr.TextPr);
+		runTextPr.private_OnChange();
+
+		return runTextPr;
+	};
+
+	/**
+	 * Returns the text properties of the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichTextPr}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/GetTextPr.js
+	 */
+	ApiRichRun.prototype.GetTextPr = function() {
+		return new ApiRichTextPr(this, this.TextPr);
+	};
+
+	/**
+	 * Clears the content from the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/ClearContent.js
+	 */
+	ApiRichRun.prototype.ClearContent = AscBuilder.ApiRun.prototype.ClearContent;
+
+	/**
+	 * Removes all the elements from the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/RemoveAllElements.js
+	 */
+	ApiRichRun.prototype.RemoveAllElements = AscBuilder.ApiRun.prototype.RemoveAllElements;
+
+	/**
+	 * Deletes the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/Delete.js
+	 */
+	ApiRichRun.prototype.Delete = AscBuilder.ApiRun.prototype.Delete;
+
+	/**
+	 * Adds some text to the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @param {string} text - The text which will be added to the current run.
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/AddText.js
+	 */
+	ApiRichRun.prototype.AddText = AscBuilder.ApiRun.prototype.AddText;
+	
+	/**
+	 * Creates a copy of the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {ApiRichRun}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/Copy.js
+	 */
+	ApiRichRun.prototype.Copy = function() {
+		let oRun = this.Run.Copy(false, {
+			SkipComments          : true,
+			SkipAnchors           : true,
+			SkipFootnoteReference : true,
+			SkipComplexFields     : true
+		});
+
+		return new ApiRichRun(oRun);
+	};
+
+	/**
+	 * Returns a text from the text run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @returns {string}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/GetText.js
+	 */
+	ApiRichRun.prototype.GetText = AscBuilder.ApiRun.prototype.GetText;
+
+	/**
+	 * Returns a parent paragraph of the current run.
+	 * @memberof ApiRichRun
+	 * @typeofeditors ["PDFE"]
+	 * @return {?ApiRichParagraph}
+	 * @see office-js-api/Examples/{Editor}/ApiRichRun/Methods/GetParentParagraph.js
+	 */
+	ApiRichRun.prototype.GetParentParagraph = function() {
+		let oPara = this.Run.GetParagraph();
+		if (!oPara)
+			return null;
+
+		return new ApiRichParagraph(oPara); 
+	};
+
+	ApiRichRun.prototype.OnChangeTextPr = function(oApiTextPr) {
+		AscBuilder.ApiRun.prototype.OnChangeTextPr.call(this, oApiTextPr);
+
+		let oPara = this.Run.GetParagraph();
+		if (oPara) {
+			oPara.OnContentChange();
+		}
+	};
+
+	ApiRichRun.prototype.private_GetImpl = AscBuilder.ApiRun.prototype.private_GetImpl;
+	
 	function private_GetLogicDocument() {
 		return Asc.editor.getPDFDoc();
 	}
@@ -5848,9 +6794,40 @@
 		return ((angle % 360) + 360) % 360;
 	}
 
+	function private_GetInnerParaAlign(jc) {
+		if ("left" === jc)
+			return align_Left;
+		else if ("right" === jc)
+			return align_Right;
+		else if ("both" === jc)
+			return align_Justify;
+		else if ("center" === jc)
+			return align_Center;
+
+		return undefined;
+	}
+
+	function private_GetStrParaAlign(jc) {
+		switch (jc) {
+			case align_Right :
+				return "right";
+			case align_Left :
+				return "left";
+			case align_Center :
+				return "center";
+			case align_Justify : 
+				return "both";
+		}
+
+		return "left";
+	}
+
+	function private_GetDrawingDocument() {
+		return Asc.editor.getDrawingDocument();
+	}
+
 	// Api
 	Api.prototype["GetDocument"]							= Api.prototype.GetDocument;
-	Api.prototype["CreateRGBColor"]							= Api.prototype.CreateRGBColor;
 	Api.prototype["CreateTextAnnot"]						= Api.prototype.CreateTextAnnot;
 	Api.prototype["CreateCircleAnnot"]						= Api.prototype.CreateCircleAnnot;
 	Api.prototype["CreateSquareAnnot"]						= Api.prototype.CreateSquareAnnot;
@@ -5865,6 +6842,10 @@
 	Api.prototype["CreateUnderlineAnnot"]					= Api.prototype.CreateUnderlineAnnot;
 	Api.prototype["CreateCaretAnnot"]						= Api.prototype.CreateCaretAnnot;
 	Api.prototype["CreateRedactAnnot"]						= Api.prototype.CreateRedactAnnot;
+	Api.prototype["CreateRichParagraph"]					= Api.prototype.CreateRichParagraph;
+	Api.prototype["CreateRichRun"]							= Api.prototype.CreateRichRun;
+	Api.prototype["CreateRichTextPr"]						= Api.prototype.CreateRichTextPr;
+	Api.prototype["CreateRichParaPr"]						= Api.prototype.CreateRichParaPr;
 
 	// ApiDocument
 	ApiDocument.prototype["GetClassType"]					= ApiDocument.prototype.GetClassType;
@@ -6032,9 +7013,6 @@
 	ApiButtonWidget.prototype["GetLabel"]					= ApiButtonWidget.prototype.GetLabel;
 	ApiButtonWidget.prototype["SetImage"]					= ApiButtonWidget.prototype.SetImage;
 
-	// ApiRGBColor
-	ApiRGBColor.prototype["GetClassType"]					= ApiRGBColor.prototype.GetClassType;
-
 	// ApiBaseAnnotation
 	ApiBaseAnnotation.prototype["SetRect"]					= ApiBaseAnnotation.prototype.SetRect;
 	ApiBaseAnnotation.prototype["GetRect"]					= ApiBaseAnnotation.prototype.GetRect;
@@ -6088,6 +7066,13 @@
 
 	// ApiFreeTextAnnotation
 	ApiFreeTextAnnotation.prototype["GetClassType"]			= ApiFreeTextAnnotation.prototype.GetClassType;
+	ApiFreeTextAnnotation.prototype["SetIntent"]			= ApiFreeTextAnnotation.prototype.SetIntent;
+	ApiFreeTextAnnotation.prototype["GetIntent"]			= ApiFreeTextAnnotation.prototype.GetIntent;
+	ApiFreeTextAnnotation.prototype["SetCallout"]			= ApiFreeTextAnnotation.prototype.SetCallout;
+	ApiFreeTextAnnotation.prototype["GetCallout"]			= ApiFreeTextAnnotation.prototype.GetCallout;
+	ApiFreeTextAnnotation.prototype["SetRectDiff"]			= ApiFreeTextAnnotation.prototype.SetRectDiff;
+	ApiFreeTextAnnotation.prototype["GetRectDiff"]			= ApiFreeTextAnnotation.prototype.GetRectDiff;
+	ApiFreeTextAnnotation.prototype["GetContent"]			= ApiFreeTextAnnotation.prototype.GetContent;
 
 	// ApiLineAnnotation
 	ApiLineAnnotation.prototype["GetClassType"]				= ApiLineAnnotation.prototype.GetClassType;
@@ -6147,5 +7132,73 @@
 	// ApiRedactAnnotation
 	ApiRedactAnnotation.prototype["GetClassType"]			= ApiRedactAnnotation.prototype.GetClassType;
 
+	// ApiRichContent
+	ApiRichContent.prototype["GetClassType"]				= ApiRichContent.prototype.GetClassType;
+	ApiRichContent.prototype["GetElementsCount"]			= ApiRichContent.prototype.GetElementsCount;
+	ApiRichContent.prototype["GetElement"]					= ApiRichContent.prototype.GetElement;
+	ApiRichContent.prototype["AddElement"]					= ApiRichContent.prototype.AddElement;
+	ApiRichContent.prototype["Push"]						= ApiRichContent.prototype.Push;
+	ApiRichContent.prototype["RemoveElement"]				= ApiRichContent.prototype.RemoveElement;
+	ApiRichContent.prototype["GetContent"]					= ApiRichContent.prototype.GetContent;
+	ApiRichContent.prototype["GetText"]						= ApiRichContent.prototype.GetText;
+	ApiRichContent.prototype["GetCurrentParagraph"]			= ApiRichContent.prototype.GetCurrentParagraph;
+	ApiRichContent.prototype["GetCurrentRun"]				= ApiRichContent.prototype.GetCurrentRun;
+
+	// ApiRichParaPr
+	ApiRichParaPr.prototype["GetClassType"]					= ApiRichParaPr.prototype.GetClassType;
+	ApiRichParaPr.prototype["SetJc"]						= ApiRichParaPr.prototype.SetJc;
+	ApiRichParaPr.prototype["GetJc"]						= ApiRichParaPr.prototype.GetJc;
+
+	// ApiRichParagraph
+	ApiRichParagraph.prototype["GetClassType"]				= ApiRichParagraph.prototype.GetClassType;
+	ApiRichParagraph.prototype["AddText"]					= ApiRichParagraph.prototype.AddText;
+	ApiRichParagraph.prototype["SetParaPr"]					= ApiRichParagraph.prototype.SetParaPr;
+	ApiRichParagraph.prototype["GetParaPr"]					= ApiRichParagraph.prototype.GetParaPr;
+	ApiRichParagraph.prototype["GetElementsCount"]			= ApiRichParagraph.prototype.GetElementsCount;
+	ApiRichParagraph.prototype["AddElement"]				= ApiRichParagraph.prototype.AddElement;
+	ApiRichParagraph.prototype["Push"]						= ApiRichParagraph.prototype.Push;
+	ApiRichParagraph.prototype["GetElement"]				= ApiRichParagraph.prototype.GetElement;
+	ApiRichParagraph.prototype["RemoveElement"]				= ApiRichParagraph.prototype.RemoveElement;
+	ApiRichParagraph.prototype["RemoveAllElements"]			= ApiRichParagraph.prototype.RemoveAllElements;
+	ApiRichParagraph.prototype["Delete"]					= ApiRichParagraph.prototype.Delete;
+	ApiRichParagraph.prototype["GetNext"]					= ApiRichParagraph.prototype.GetNext;
+	ApiRichParagraph.prototype["GetPrevious"]				= ApiRichParagraph.prototype.GetPrevious;
+	ApiRichParagraph.prototype["Last"]						= ApiRichParagraph.prototype.Last;
+	ApiRichParagraph.prototype["Copy"]						= ApiRichParagraph.prototype.Copy;
+	ApiRichParagraph.prototype["SetReadingOrder"]			= ApiRichParagraph.prototype.SetReadingOrder;
+	ApiRichParagraph.prototype["GetText"]					= ApiRichParagraph.prototype.GetText;
+	ApiRichParagraph.prototype["GetPosInParent"]			= ApiRichParagraph.prototype.GetPosInParent;
+
+	// ApiRichTextPr
+	ApiRichTextPr.prototype["GetClassType"]					= ApiRichTextPr.prototype.GetClassType;
+	ApiRichTextPr.prototype["SetBold"]						= ApiRichTextPr.prototype.SetBold;
+	ApiRichTextPr.prototype["GetBold"]						= ApiRichTextPr.prototype.GetBold;
+	ApiRichTextPr.prototype["SetItalic"]					= ApiRichTextPr.prototype.SetItalic;
+	ApiRichTextPr.prototype["GetItalic"]					= ApiRichTextPr.prototype.GetItalic;
+	ApiRichTextPr.prototype["SetStrikeout"]					= ApiRichTextPr.prototype.SetStrikeout;
+	ApiRichTextPr.prototype["GetStrikeout"]					= ApiRichTextPr.prototype.GetStrikeout;
+	ApiRichTextPr.prototype["SetUnderline"]					= ApiRichTextPr.prototype.SetUnderline;
+	ApiRichTextPr.prototype["GetUnderline"]					= ApiRichTextPr.prototype.GetUnderline;
+	ApiRichTextPr.prototype["SetFontFamily"]				= ApiRichTextPr.prototype.SetFontFamily;
+	ApiRichTextPr.prototype["GetFontFamily"]				= ApiRichTextPr.prototype.GetFontFamily;
+	ApiRichTextPr.prototype["SetFontSize"]					= ApiRichTextPr.prototype.SetFontSize;
+	ApiRichTextPr.prototype["GetFontSize"]					= ApiRichTextPr.prototype.GetFontSize;
+	ApiRichTextPr.prototype["SetColor"]						= ApiRichTextPr.prototype.SetColor;
+	ApiRichTextPr.prototype["GetColor"]						= ApiRichTextPr.prototype.GetColor;
+	ApiRichTextPr.prototype["SetVertAlign"]					= ApiRichTextPr.prototype.SetVertAlign;
+	ApiRichTextPr.prototype["GetVertAlign"]					= ApiRichTextPr.prototype.GetVertAlign;
+
+	// ApiRichRun
+	ApiRichRun.prototype["GetClassType"]					= ApiRichRun.prototype.GetClassType;
+	ApiRichRun.prototype["SetTextPr"]						= ApiRichRun.prototype.SetTextPr;
+	ApiRichRun.prototype["GetTextPr"]						= ApiRichRun.prototype.GetTextPr;
+	ApiRichRun.prototype["ClearContent"]					= ApiRichRun.prototype.ClearContent;
+	ApiRichRun.prototype["RemoveAllElements"]				= ApiRichRun.prototype.RemoveAllElements;
+	ApiRichRun.prototype["Delete"]							= ApiRichRun.prototype.Delete;
+	ApiRichRun.prototype["AddText"]							= ApiRichRun.prototype.AddText;
+	ApiRichRun.prototype["Copy"]							= ApiRichRun.prototype.Copy;
+	ApiRichRun.prototype["GetText"]							= ApiRichRun.prototype.GetText;
+	ApiRichRun.prototype["GetParentParagraph"]				= ApiRichRun.prototype.GetParentParagraph;
+	
 }(window, null));
 

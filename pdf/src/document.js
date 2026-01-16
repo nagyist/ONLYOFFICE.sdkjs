@@ -6904,14 +6904,14 @@ var CPresentation = CPresentation || function(){};
         });
 
         switch (nType) {
-            case AscPDF.FREE_TEXT_INTENT_TYPE.FreeText: {
-                oFreeText.SetIntent(AscPDF.FREE_TEXT_INTENT_TYPE.FreeText);
+            case AscPDF.FREE_TEXT_INTENT_TYPE.freeText: {
+                oFreeText.SetIntent(AscPDF.FREE_TEXT_INTENT_TYPE.freeText);
                 oFreeText.SetSubject('Text box');
                 break;
             }
             // прописываем RD и Callout
-            case AscPDF.FREE_TEXT_INTENT_TYPE.FreeTextCallout: {
-                oFreeText.SetIntent(AscPDF.FREE_TEXT_INTENT_TYPE.FreeTextCallout);
+            case AscPDF.FREE_TEXT_INTENT_TYPE.freeTextCallout: {
+                oFreeText.SetIntent(AscPDF.FREE_TEXT_INTENT_TYPE.freeTextCallout);
                 oFreeText.SetLineEnd(AscPDF.LINE_END_TYPE.openArrow);
                 oFreeText.SetSubject('Text callout');
                 
@@ -8166,6 +8166,8 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.OnChangeForm = function() {};
     CPDFDoc.prototype.TurnOffCheckChartSelection = function() {};
     CPDFDoc.prototype.TurnOnCheckChartSelection = function() {};
+    CPDFDoc.prototype.Update_ContentIndexing = function() {};
+    CPDFDoc.prototype.GetElement = function() {};
     CPDFDoc.prototype.UpdateRulers = function() {};
     CPDFDoc.prototype.UpdateSelection = function() {};
     CPDFDoc.prototype.Document_Undo = function() {
