@@ -1893,6 +1893,7 @@ var editor;
 			api.wb.setIsPartialReading(true);
 			startAction = false;
 			//todo own action type
+			api.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.BackgroundOpen, Asc.c_oAscRestrictionType.View);
 			api.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 		}
 		
@@ -1926,15 +1927,15 @@ var editor;
 				// t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 				// t.handlers.trigger("drawWS"); //draw called on sync_EndAction
 				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
+				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.BackgroundOpen, Asc.c_oAscRestrictionType.View);
 				AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReadyBackground", performance.now(), AscCommon.getMemoryInfo()), api);
 				return;
 			}
 			
 			reader.setSheetData([sheetDataElem]);
 			reader.readSheetData(bNoBuildDep);
-			const updateRegion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
-			sheetDataElem.ws.onUpdateRanges([updateRegion]);//"cleanCellCache" works only for visible sheets
-			const updateRange = new AscCommonExcel.Range(sheetDataElem.ws, updateRegion.r1, updateRegion.c1, updateRegion.r2, updateRegion.c2);
+			const updateRange = new AscCommonExcel.Range(sheetDataElem.ws, sheetDataElem.r1, 0, sheetDataElem.r2, AscCommon.gc_nMaxCol0);
+			sheetDataElem.ws.onUpdateRanges([updateRange.bbox]);//"cleanCellCache" works only for visible sheets
 			api.wb.handleDrawingsOnWorkbookChange([updateRange])
 			//console.log('updateRigion:' + sheetDataElem.ws.getName() + "-" +updateRigion.r1+"-"+updateRigion.r2);
 		}
