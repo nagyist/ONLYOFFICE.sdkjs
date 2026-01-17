@@ -21461,8 +21461,8 @@
 		if (!logicDocument)
 			return null;
 
-		const theme = logicDocument.GetTheme();
-		const colorMap = logicDocument.GetColorMap();
+		const theme = logicDocument.Get_Theme && logicDocument.Get_Theme();
+		const colorMap = logicDocument.Get_ColorMap && logicDocument.Get_ColorMap();
 		const canResolveThemeColors = colorMap && colorMap.color_map &&
 			theme && theme.themeElements && theme.themeElements.clrScheme;
 		if (!canResolveThemeColors)
