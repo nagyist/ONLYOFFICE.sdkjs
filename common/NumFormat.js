@@ -4643,6 +4643,8 @@ FormatParser.prototype =
 	},
 	parseDatePDF: function (value, cultureInfo, oFormat)
 	{
+		if (null == cultureInfo)
+			cultureInfo = g_oDefaultCultureInfo;
 		let res = null;
 		let match = [];
 		let sCurValue = null;
