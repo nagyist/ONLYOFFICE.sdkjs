@@ -649,6 +649,9 @@ ParaDrawing.prototype.Set_PositionH = function(RelativeFrom, Align, Value, Perce
 	this.PositionH.Align        = Align;
     this.PositionH.Value        = _Value;
     this.PositionH.Percent      = _Percent;
+
+	if (this.IsShape() || this.IsPicture())
+		Asc.editor.addMacroStepData("SetPositionH", {relativeFrom: RelativeFrom, useAlign: Align, value: Value, percent: Percent});
 };
 ParaDrawing.prototype.Set_PositionV = function(RelativeFrom, Align, Value, Percent)
 {
@@ -681,6 +684,9 @@ ParaDrawing.prototype.Set_PositionV = function(RelativeFrom, Align, Value, Perce
 	this.PositionV.Align        = Align;
     this.PositionV.Value        = _Value;
     this.PositionV.Percent      = _Percent;
+
+	if (this.IsShape() || this.IsPicture())
+		Asc.editor.addMacroStepData("SetPositionV", {relativeFrom: RelativeFrom, useAlign: Align, value: Value, percent: Percent});
 };
 ParaDrawing.prototype.GetPositionH = function()
 {
@@ -1046,15 +1052,10 @@ ParaDrawing.prototype.Set_Props = function(Props)
 	if (undefined != Props.PositionH)
 	{
 		this.Set_PositionH(Props.PositionH.RelativeFrom, Props.PositionH.UseAlign, ( true === Props.PositionH.UseAlign ? Props.PositionH.Align : Props.PositionH.Value ), Props.PositionH.Percent);
-
-		if (this.IsShape() || this.IsPicture())
-			Asc.editor.addMacroStepData("SetPositionH", {relativeFrom: Props.PositionH.RelativeFrom, useAlign: Props.PositionH.UseAlign, value: ( true === Props.PositionH.UseAlign ? Props.PositionH.Align : Props.PositionH.Value ), percent: Props.PositionH.Percent});
 	}
 	if (undefined != Props.PositionV)
 	{
 		this.Set_PositionV(Props.PositionV.RelativeFrom, Props.PositionV.UseAlign, ( true === Props.PositionV.UseAlign ? Props.PositionV.Align : Props.PositionV.Value ), Props.PositionV.Percent);
-		if (this.IsShape() || this.IsPicture())
-			Asc.editor.addMacroStepData("SetPositionV", {relativeFrom: Props.PositionV.RelativeFrom, useAlign: Props.PositionV.UseAlign, value: ( true === Props.PositionV.UseAlign ? Props.PositionV.Align : Props.PositionV.Value ), percent: Props.PositionV.Percent});
 	}
 	if (undefined != Props.SizeRelH)
 	{
