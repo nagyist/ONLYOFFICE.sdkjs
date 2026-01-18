@@ -3251,7 +3251,7 @@ CellFormat.prototype =
 		}
 		else if (format.bDateTime) {
 			if (format.bDate) {
-                nType = c_oAscNumFormatType.Date;
+				nType = c_oAscNumFormatType.Date;
 			} else {
 				nType = c_oAscNumFormatType.Time;
 			}
@@ -3684,7 +3684,7 @@ FormatParser.prototype =
                 
 
             var sBefore = match[1];
-            var sAfter = match[5];
+            var sAfter = match[4];
 
         if(currentFormat == Asc.c_oAscNumFormatType.Currency){
             var positivePattern = cultureInfo.CurrencyPositivePattern;

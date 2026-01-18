@@ -39,6 +39,13 @@ $(function () {
     const formatParser = AscCommon.g_oFormatParser;
     const formatTypes = Asc.c_oAscNumFormatType;
 
+    // Helper function to get Excel serial date for a given month/day in the current year
+    // This makes tests year-independent
+    function getDateSerial(month, day) {
+        const year = new Date().getFullYear();
+        return (Date.UTC(year, month - 1, day) - Date.UTC(1899, 11, 30)) / (86400 * 1000);
+    }
+
     // =====================================================================
     // FormatParser.isLeapYear
     // =====================================================================
@@ -628,8 +635,8 @@ $(function () {
             
 
             // Fraction format cases
-            ["1/2", "d-mmm", 45659],
-            ["3/4", "d-mmm", 45720],
+            ["1/2", "d-mmm", getDateSerial(1, 2)],  // Jan 2
+            ["3/4", "d-mmm", getDateSerial(3, 4)],  // Mar 4
             ["15/20", null, "15/20"],
             [" 1/2", null, " 1/2"],
             ["150/200", null, "150/200"],
@@ -689,8 +696,8 @@ $(function () {
     QUnit.test('formatRecognitionWithSelectedFormat', function (assert) {
         let testCases = [
             // appliedFormat = 0 (General)
-            ["1/2", "d-mmm", 45659, formatTypes.General],
-            ["3/4", "d-mmm", 45720, formatTypes.General],
+            ["1/2", "d-mmm", getDateSerial(1, 2), formatTypes.General],  // Jan 2
+            ["3/4", "d-mmm", getDateSerial(3, 4), formatTypes.General],  // Mar 4
             ["15/20", null, "15/20", formatTypes.General],  
             [" 1/2", null, " 1/2", formatTypes.General],
             ["1 1/2", "# ?/?", 1.5, formatTypes.General],
@@ -811,8 +818,8 @@ $(function () {
             ["1 150/200", "\\$#,##0.00_);[Red](\\$#,##0.00)", 1.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
             
             // appliedFormat = 5 (Date - m/d/yyyy)
-            ["1/2", "m/d/yyyy", 45659, formatTypes.Date, "m/d/yyyy"],
-            ["3/4", "m/d/yyyy", 45720, formatTypes.Date, "m/d/yyyy"],
+            ["1/2", "m/d/yyyy", getDateSerial(1, 2), formatTypes.Date, "m/d/yyyy"],  // Jan 2
+            ["3/4", "m/d/yyyy", getDateSerial(3, 4), formatTypes.Date, "m/d/yyyy"],  // Mar 4
             ["15/20", null, "15/20", formatTypes.Date, "m/d/yyyy"], 
             [" 1/2", null, " 1/2", formatTypes.Date, "m/d/yyyy"],
             ["1 1/2", "# ?/?", 1.5, formatTypes.Date, "m/d/yyyy"],
@@ -826,8 +833,8 @@ $(function () {
             ["1 150/200", "# ??/??", 1.75, formatTypes.Date, "m/d/yyyy"],
             
             // appliedFormat = 6 (LongDate - dddd, mmmm d, yyyy)
-            ["1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 45659, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["3/4", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 45720, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
+            ["1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", getDateSerial(1, 2), formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  // Jan 2
+            ["3/4", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", getDateSerial(3, 4), formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  // Mar 4
             ["15/20", null, "15/20", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
             [" 1/2", null, " 1/2", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
             ["1 1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 1.5, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"], 
@@ -841,9 +848,9 @@ $(function () {
             ["1 150/200", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 1.75, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  
             
             // Specific date formats
-            ["1/2", "yyyy-mm-dd", 45659, formatTypes.Date, "yyyy-mm-dd"],
-            ["1/2", "yyyy-mm-dd", 45659, formatTypes.Date, "yyyy-mm-dd"],
-            ["3/4", "yyyy-mm-dd", 45720, formatTypes.Date, "yyyy-mm-dd"],
+            ["1/2", "yyyy-mm-dd", getDateSerial(1, 2), formatTypes.Date, "yyyy-mm-dd"],  // Jan 2
+            ["1/2", "yyyy-mm-dd", getDateSerial(1, 2), formatTypes.Date, "yyyy-mm-dd"],  // Jan 2
+            ["3/4", "yyyy-mm-dd", getDateSerial(3, 4), formatTypes.Date, "yyyy-mm-dd"],  // Mar 4
             ["15/20", null, "15/20", formatTypes.Date, "yyyy-mm-dd"], 
             [" 1/2", null, " 1/2", formatTypes.Date, "yyyy-mm-dd"],
             ["1 1/2", "yyyy-mm-dd", 1.5, formatTypes.Date, "yyyy-mm-dd"],
@@ -857,8 +864,8 @@ $(function () {
             ["1 150/200", "yyyy-mm-dd", 1.75, formatTypes.Date, "yyyy-mm-dd"],
 
             // appliedFormat = 7 (Time - h:mm:ss)
-            ["1/2", "h:mm:ss", 45659, formatTypes.Time, "h:mm:ss"],
-            ["3/4", "h:mm:ss", 45720, formatTypes.Time, "h:mm:ss"],
+            ["1/2", "h:mm:ss", getDateSerial(1, 2), formatTypes.Time, "h:mm:ss"],  // Jan 2
+            ["3/4", "h:mm:ss", getDateSerial(3, 4), formatTypes.Time, "h:mm:ss"],  // Mar 4
             ["15/20", null, "15/20", formatTypes.Time, "h:mm:ss"],
             [" 1/2", null, " 1/2", formatTypes.Time, "h:mm:ss"],
             ["1 1/2", "h:mm:ss", 1.5, formatTypes.Time, "h:mm:ss"],
@@ -872,8 +879,8 @@ $(function () {
             ["1 150/200", "h:mm:ss", 1.75, formatTypes.Time, "h:mm:ss"],
             
             // Specific time format
-            ["1/2", "h:mm AM/PM", 45659, formatTypes.Time, "h:mm AM/PM"],
-            ["3/4", "h:mm AM/PM", 45720, formatTypes.Time, "h:mm AM/PM"],
+            ["1/2", "h:mm AM/PM", getDateSerial(1, 2), formatTypes.Time, "h:mm AM/PM"],  // Jan 2
+            ["3/4", "h:mm AM/PM", getDateSerial(3, 4), formatTypes.Time, "h:mm AM/PM"],  // Mar 4
             ["15/20", null, "15/20", formatTypes.Time, "h:mm AM/PM"],
             [" 1/2", null, " 1/2", formatTypes.Time, "h:mm AM/PM"],
             ["1 1/2", "h:mm AM/PM", 1.5, formatTypes.Time, "h:mm AM/PM"],
