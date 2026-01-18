@@ -18558,7 +18558,7 @@
 	ApiDrawing.prototype.SetRelativeWidth = function(sRelativeFrom, nPercent)
 	{
 		let nRelativeFrom = private_GetRelativeFromH(sRelativeFrom);
-		let nRelSize = AscFormat.ConvertRelPositionVToRelSize(nRelativeFrom);
+		let nRelSize = AscFormat.ConvertRelPositionHToRelSize(nRelativeFrom);
 		this.getParaDrawing().SetSizeRelH({
 			RelativeFrom: nRelSize,
 			Percent: nPercent / 100
@@ -18739,7 +18739,7 @@
 	{
 		let nValue        = private_EMU2MM(nDistance);
 		let nRelativeFrom = private_GetRelativeFromV(sRelativeFrom);
-		this.getParaDrawing().Set_PositionV(nRelativeFrom, false, nValue, !!bPercent);
+		this.getParaDrawing().Set_PositionV(nRelativeFrom, false, !!bPercent ? nDistance : nValue, !!bPercent);
 		return true;
 	};
 	/**
@@ -18973,7 +18973,14 @@
 
 		return true;
 	};
-
+	/**
+	 * Get horizontal flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CDE"]
+	 * @since 9.3.0
+	 * @returns {boolean} bFlip - Specifies if the figure will be flipped horizontally or not.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/AddBreak.js
+	 */
 	ApiDrawing.prototype.GetFlipH = function()
 	{
 		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
@@ -18981,6 +18988,14 @@
 
 		return null;
 	};
+	/**
+	 * Get vertical flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CDE"]
+	 * @since 9.3.0
+	 * @returns {boolean} bFlip - Specifies if the figure will be flipped vertically or not.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/AddBreak.js
+	 */
 	ApiDrawing.prototype.GetFlipV = function()
 	{
 		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
@@ -29605,6 +29620,8 @@
 	ApiDrawing.prototype["GetRotation"]  			 = ApiDrawing.prototype.GetRotation;
 	ApiDrawing.prototype["SetRelativeHeight"]		 = ApiDrawing.prototype.SetRelativeHeight;
 	ApiDrawing.prototype["SetRelativeWidth"]		 = ApiDrawing.prototype.SetRelativeWidth;
+	ApiDrawing.prototype["GetFlipH"]				 = ApiDrawing.prototype.GetFlipH;
+	ApiDrawing.prototype["GetFlipV"]				 = ApiDrawing.prototype.GetFlipV;
 
 	ApiDrawing.prototype["ToJSON"]                   = ApiDrawing.prototype.ToJSON;
 
