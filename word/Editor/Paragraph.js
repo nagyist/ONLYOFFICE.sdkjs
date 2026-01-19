@@ -11393,7 +11393,7 @@ Paragraph.prototype.PasteFormatting = function(oData)
 		if (oParaPr.Spacing)
 			this.Set_Spacing(oParaPr.Spacing, true);
 		else
-			this.Set_Spacing(new CParaSpacing(), true);
+			this.Set_Spacing(new AscWord.ParaSpacing(), true);
 
 		if (oParaPr.Shd)
 			this.Set_Shd(oParaPr.Shd, true);
@@ -11479,7 +11479,7 @@ Paragraph.prototype.Style_Add = function(Id, bDoNotDeleteProps)
 		this.Set_KeepLines(undefined);
 		this.Set_KeepNext(undefined);
 		this.Set_PageBreakBefore(undefined);
-		this.Set_Spacing(new CParaSpacing(), true);
+		this.Set_Spacing(new AscWord.ParaSpacing(), true);
 		this.Set_Shd(undefined, true);
 		this.Set_WidowControl(undefined);
 		this.Set_Tabs(undefined);
@@ -11628,7 +11628,7 @@ Paragraph.prototype.Clear_Formatting = function()
 	this.Set_KeepLines(undefined);
 	this.Set_KeepNext(undefined);
 	this.Set_PageBreakBefore(undefined);
-	this.Set_Spacing(new CParaSpacing(), true);
+	this.Set_Spacing(new AscWord.ParaSpacing(), true);
 	this.Set_Shd(new CDocumentShd(), true);
 	this.Set_WidowControl(undefined);
 	this.Set_Tabs(new CParaTabs());
@@ -11693,7 +11693,7 @@ Paragraph.prototype.Set_Ind = function(Ind, bDeleteUndefined)
 Paragraph.prototype.Set_Spacing = function(Spacing, bDeleteUndefined)
 {
 	if (undefined === this.Pr.Spacing)
-		this.Pr.Spacing = new CParaSpacing();
+		this.Pr.Spacing = new AscWord.ParaSpacing();
 
 	if (( undefined != Spacing.Line || true === bDeleteUndefined ) && this.Pr.Spacing.Line !== Spacing.Line)
 	{
