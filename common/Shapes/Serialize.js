@@ -7525,7 +7525,6 @@ function BinaryPPTYLoader()
                 case 8://smartArt
                 {
                     _smartArt = this.ReadSmartArt();
-                    this.smartarts.push(_smartArt);
                     break;
                 }
                 case 9:
@@ -7629,6 +7628,7 @@ function BinaryPPTYLoader()
         }
         else if(_smartArt != null)
         {
+					this.smartarts.push(_smartArt);
             _smartArt.checkEmptySpPrAndXfrm(_xfrm);
             if(AscCommon.isRealObject(_nvGraphicFramePr) )
             {
@@ -7651,16 +7651,19 @@ function BinaryPPTYLoader()
     this.ReadSmartArt = function(CDrawing)
     {
         var s = this.stream;
-        var _smartArt;
+        var _smartArt = null;
         if(typeof AscFormat.SmartArt !== "undefined" && !CDrawing)
         {
-            _smartArt = Asc.editor.isPdfEditor() ? new AscPDF.CPdfSmartArt() : new AscFormat.SmartArt();
-            _smartArt.fromPPTY(this);
-            _smartArt.setBDeleted(false);
-						_smartArt.generateDefaultStructures();
-            _smartArt.checkDataModel();
-            _smartArt.checkNodePointsAfterRead();
-						_smartArt.correctUngeneratedSmartArtContent();
+            const _tempSmartArt = Asc.editor.isPdfEditor() ? new AscPDF.CPdfSmartArt() : new AscFormat.SmartArt();
+					_tempSmartArt.fromPPTY(this);
+						if (_tempSmartArt.isCorretDataModel()) {
+							_smartArt = _tempSmartArt;
+							_smartArt.setBDeleted(false);
+							_smartArt.generateDefaultStructures();
+							_smartArt.checkDataModel();
+							_smartArt.checkNodePointsAfterRead();
+							_smartArt.correctUngeneratedSmartArtContent();
+						}
         }
         else
         {
@@ -7688,7 +7691,9 @@ function BinaryPPTYLoader()
             }
         }
         s.Seek2(_end_rec);
-        _smartArt.setType(_smartArt.getTypeOfSmartArt());
+				if (_smartArt) {
+					_smartArt.setType(_smartArt.getTypeOfSmartArt());
+				}
         return _smartArt;
     };
 
