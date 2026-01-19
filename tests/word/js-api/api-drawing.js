@@ -65,7 +65,7 @@ $(function ()
         let drawing = AscTest.JsApi.CreateShape("cube", 3212465, 963295, fill, stroke);
         let p = docContent.GetElement(0);
         p.AddDrawing(drawing);
-        assert.strictEqual(stroke.Ln.prstDash, 0, 'Check stroke dash type === 0');  // Исправлено: stroke вместо drawing
+        assert.strictEqual(stroke.Ln.prstDash, 0, 'Check stroke dash type === 0');
     });
 
     QUnit.test("SetRelativeHeight", function (assert) {
@@ -89,7 +89,7 @@ $(function ()
         p.AddDrawing(drawing);
         drawing.SetRelativeWidth("page", 10);
         assert.equal(JSON.parse(drawing.ToJSON()).sizeRelH.relativeFrom, "page", 'Check drawing width relativeFrom === "page"');
-        assert.equal(JSON.parse(drawing.ToJSON()).sizeRelH['wp14:pctWidth'], 10, 'Check drawing width pctWidth === 10');  // Исправлено: 10 вместо 20
+        assert.equal(JSON.parse(drawing.ToJSON()).sizeRelH['wp14:pctWidth'], 10, 'Check drawing width pctWidth === 10');
     });
 
     QUnit.test("SetHorPosition", function (assert) {
