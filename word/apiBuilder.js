@@ -3368,7 +3368,7 @@
 	};
 	/**
 	 * Sets the hyperlink display text.
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 * @param {string} sDisplay - The text to display the hyperlink.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiHyperlink/Methods/SetDisplayedText.js
@@ -3429,7 +3429,11 @@
 	{
 		var sText = null;
 
-		if (this.ParaHyperlink.Content.length !== 0)
+		// In PE/SE we dont use displayText in hyperlinks
+		const skipContentCheck = editor.editorId === AscCommon.c_oEditorId.Presentation ||
+			editor.editorId === AscCommon.c_oEditorId.Spreadsheet;
+
+		if (skipContentCheck || this.ParaHyperlink.Content.length !== 0)
 		{
 			sText = this.ParaHyperlink.GetValue();
 		}
@@ -3438,7 +3442,7 @@
 	};
 	/**
 	 * Returns the hyperlink display text.
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 * @returns {string} 
 	 * @see office-js-api/Examples/{Editor}/ApiHyperlink/Methods/GetDisplayedText.js
 	 */
@@ -3463,7 +3467,11 @@
 	{
 		var sText = null;
 
-		if (this.ParaHyperlink.Content.length !== 0)
+		// In PE/SE we dont use displayText in hyperlinks
+		const skipContentCheck = editor.editorId === AscCommon.c_oEditorId.Presentation ||
+			editor.editorId === AscCommon.c_oEditorId.Spreadsheet;
+
+		if (skipContentCheck || this.ParaHyperlink.Content.length !== 0)
 		{
 			sText = this.ParaHyperlink.GetToolTip();
 		}
@@ -3499,7 +3507,7 @@
 	};
 	/**
 	 * Sets the default hyperlink style.
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiHyperlink/Methods/SetDefaultStyle.js
 	 */
