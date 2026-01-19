@@ -1176,10 +1176,10 @@
 		},
 		setDrawingPos			: function(pos)
 		{
-			return "\tdoc.GetSelectedDrawings().forEach(function(draw) {" +
-				"\t\tdraw.SetVerPosition(\"page\", " + pos.y + " * 36000.0);" +
-				"\t\tdraw.SetHorPosition(\"page\", " + pos.x + " * 36000.0);" +
-				"});"
+			return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
+				"\t\tdraw.SetVerPosition(\"page\", " + pos.y + " * 36000.0);\n" +
+				"\t\tdraw.SetHorPosition(\"page\", " + pos.x + " * 36000.0);\n" +
+				"\t});\n"
 		},
 		setPositionH			: function(data)
 		{
@@ -1207,21 +1207,21 @@
 
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
 					"\t\tdraw.SetHorAlign(\"" + relative + "\", \"" + useAlign + "\");\n" +
-					"});\n"
+					"\t});\n"
 
 			}
 
 			if (data.percent)
 			{
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-					"\tdraw.SetHorPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ");\n" +
-					"});\n"
+					"\t\tdraw.SetHorPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ");\n" +
+					"\t});\n"
 			}
 			else
 			{
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-					"\tdraw.SetHorPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ");\n" +
-					"});\n"
+					"\t\tdraw.SetHorPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ");\n" +
+					"\t});\n"
 			}
 		},
 		setPositionV			: function(data)
@@ -1250,27 +1250,27 @@
 
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
 					"\tdraw.SetVerAlign(\"" + relative + "\", \"" + useAlign + "\");\n" +
-					"});\n"
+					"\t});\n"
 
 			}
 
 			if (data.percent)
 			{
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-       				"\tdraw.SetVerPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ");\n" +
-       			"});\n";
+       				"\t\tdraw.SetVerPosition(\"" + relative + "\", " + data.value + ", " + data.percent + ");\n" +
+       			"\t});\n";
 			}
 			else
 			{
 				return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-					"\tdraw.SetVerPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ");\n" +
-					"});\n";
+					"\t\tdraw.SetVerPosition(\"" + relative + "\", " + data.value + " * 36000.0, " + data.percent + ");\n" +
+					"\t});\n";
 			}
 		},
 		setShapeSize			: function(oSize)
 		{
 			return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-				"\tdraw.SetSize(" + oSize.width + " * 36000.0, " + oSize.height + " * 36000.0);\n" +
+				"\t\tdraw.SetSize(" + oSize.width + " * 36000.0, " + oSize.height + " * 36000.0);\n" +
 				"});\n";
 
 		},
@@ -1302,8 +1302,8 @@
 				 default:									relative = "page";
 			}
 			return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-				"\tdraw.SetRelativeWidth(\"" + relative + "\", " + oSize.Value + ");\n" +
-				"});\n";
+				"\t\tdraw.SetRelativeWidth(\"" + relative + "\", " + oSize.Value + ");\n" +
+				"\t});\n";
 		},
 		setShapeRelSizeV		: function(oSize)
 		{
@@ -1319,8 +1319,8 @@
 				 default:									relative = "page";
 			}
 			return "\tdoc.GetSelectedDrawings().forEach(function(draw) {\n" +
-				"\tdraw.SetRelativeHeight(\"" + relative + "\", " + oSize.Value + ");\n" +
-				"});\n";
+				"\t\tdraw.SetRelativeHeight(\"" + relative + "\", " + oSize.Value + ");\n" +
+				"\t});\n";
 		},
 		setGeometry			: function(type)
 		{
@@ -1396,6 +1396,7 @@
 	WordActionsMacroList['SetDrawingFill']												= wordActions.setDrawingFill;
 	WordActionsMacroList['SetDrawingLine']												= wordActions.setDrawingLine;
 	WordActionsMacroList['SetDrawingRotation']											= wordActions.setDrawingRotation;
+	WordActionsMacroList['SetDrawingPos']												= wordActions.setDrawingPos;
 	WordActionsMacroList['SetDrawingFlipH']												= wordActions.setDrawingFlipH;
 	WordActionsMacroList['SetDrawingFlipV']												= wordActions.setDrawingFlipV;
 	WordActionsMacroList['SetDrawingWrapping']											= wordActions.setDrawingWrapping;
