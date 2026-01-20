@@ -8642,13 +8642,13 @@ background-repeat: no-repeat;\
 		return pages;
 	};
 	asc_docs_api.prototype.GetMultipageViewMode = function() {
-		return this.WordControl && this.WordControl.pageViewMode === EditorPageViewMode.MultiPage;
+		return this.WordControl && this.WordControl.pageViewMode === AscCommonWord.EditorPageViewMode.MultiPage;
 	};
 	asc_docs_api.prototype.SetMultipageViewMode = function(isMultiPage) {
 		if (!this.WordControl)
 			return;
 		let oldValue = this.WordControl.pageViewMode;
-		this.WordControl.pageViewMode = isMultiPage ? EditorPageViewMode.MultiPage : EditorPageViewMode.OnePage;
+		this.WordControl.pageViewMode = isMultiPage ? AscCommonWord.EditorPageViewMode.MultiPage : AscCommonWord.EditorPageViewMode.OnePage;
 		if (oldValue !== this.WordControl.pageViewMode)
 		{
 			if (this.WordControl.m_oEditor && this.WordControl.m_oEditor.HtmlElement)
