@@ -3427,18 +3427,7 @@
 	 */
 	ApiHyperlink.prototype.GetLinkedText = function()
 	{
-		var sText = null;
-
-		// In PE/SE we dont use displayText in hyperlinks
-		const skipContentCheck = editor.editorId === AscCommon.c_oEditorId.Presentation ||
-			editor.editorId === AscCommon.c_oEditorId.Spreadsheet;
-
-		if (skipContentCheck || this.ParaHyperlink.Content.length !== 0)
-		{
-			sText = this.ParaHyperlink.GetValue();
-		}
-
-		return sText;
+		return this.ParaHyperlink.GetValue();
 	};
 	/**
 	 * Returns the hyperlink display text.
@@ -3465,18 +3454,7 @@
 	 */
 	ApiHyperlink.prototype.GetScreenTipText = function()
 	{
-		var sText = null;
-
-		// In PE/SE we dont use displayText in hyperlinks
-		const skipContentCheck = editor.editorId === AscCommon.c_oEditorId.Presentation ||
-			editor.editorId === AscCommon.c_oEditorId.Spreadsheet;
-
-		if (skipContentCheck || this.ParaHyperlink.Content.length !== 0)
-		{
-			sText = this.ParaHyperlink.GetToolTip();
-		}
-
-		return sText;
+		return this.ParaHyperlink.GetToolTip();
 	};
 	/**
 	 * Returns the hyperlink element using the position specified.
