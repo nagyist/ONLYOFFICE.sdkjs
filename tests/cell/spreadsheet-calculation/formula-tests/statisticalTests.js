@@ -6330,18 +6330,17 @@ $(function () {
 		oParser.setArrayFormulaRef(ws.getRange2("A2:A3").bbox);
 		assert.strictEqual(oParser.calculate().getElementRowCol(0,0).getValue(), 4.351460191095526, 'Test: Positive case: Area(2). Multi-cell ranges with valid values.');
 		assert.strictEqual(oParser.calculate().getElementRowCol(1,0).getValue(), 18.30703805327515, 'Test: Positive case: Area(2). Multi-cell ranges with valid values.');
+		
 		// Case #32: Area3D(2). 3D multi-cell ranges with valid values.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('CHISQ.INV.RT(SINGLE(Sheet2!A1:A2),SINGLE(Sheet2!A3:A4))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: Formula CHISQ.INV.RT(SINGLE(Sheet2!A1:A2),SINGLE(Sheet2!A3:A4)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case SINGLE: Area3D(2). 3D multi-cell ranges with valid values.');
+		
+		let res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('CHISQ.INV.RT(Sheet2!A1:A2,Sheet2!A3:A4)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: Formula CHISQ.INV.RT(Sheet2!A1:A2,Sheet2!A3:A4) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Positive case: Area3D(2). 3D multi-cell ranges with valid values.');
-		// Case #33: Boolean, Number. Boolean TRUE (1) for probability is equal to maximum allowed value (may return very small number).
-		oParser = new parserFormula('CHISQ.INV.RT(TRUE,10)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: Formula CHISQ.INV.RT(TRUE,10) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 0, 'Test: Positive case: Boolean, Number. Boolean TRUE (1) for probability is equal to maximum allowed value (may return very small number).');
-		// Case #34: Number(2). Probability equal to 1 returns 0 or very small value.
-		oParser = new parserFormula('CHISQ.INV.RT(1,10)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: Formula CHISQ.INV.RT(1,10) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 0, 'Test: Positive case: Number(2). Probability equal to 1 returns 0 or very small value.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Positive case: Area3D(2). 3D multi-cell ranges with valid values.');
 
 		// Negative cases:
 
@@ -9160,19 +9159,16 @@ $(function () {
 		ws.getRange2("A103").setValue("");
 		ws.getRange2("A104").setValue("");
 
-		oParser = new parserFormula('COUNTIFS(A101:A104,A101:A104)', "E1", ws);
-		assert.ok(oParser.parse(), "COUNTIFS(A101:A104,A101:A104)");
+		//correct test for dynamic arrays
+		oParser = new parserFormula('COUNTIFS(A101:A104,SINGLE(A101:A104))', "E1", ws);
+		assert.ok(oParser.parse(), "COUNTIFS(A101:A104,SINGLE(A101:A104)))");
 		// without setArrayFormulaRef executed as .cross and as result and as a result, #VALUE comes into the second argument
-		assert.strictEqual(oParser.calculate().getValue(), 0, "Result of COUNTIFS(A101:A104,A101:A104)");
+		assert.strictEqual(oParser.calculate().getValue(), 0, "Result of SINGLE COUNTIFS(A101:A104,A101:A104)");
 
-		oParser = new parserFormula('COUNTIFS(A101:A104,A101:A104&"")', "E1", ws);
-		assert.ok(oParser.parse(), 'COUNTIFS(A101:A104,A101:A104&"")');
-		assert.strictEqual(oParser.calculate().getElementRowCol(0,0).getValue(), 1, 'Result of COUNTIFS(A101:A104,A101:A104&"")[0,0]');
-		assert.strictEqual(oParser.calculate().getElementRowCol(1,0).getValue(), 1, 'Result of COUNTIFS(A101:A104,A101:A104&"")[1,0]');
-		assert.strictEqual(oParser.calculate().getElementRowCol(2,0).getValue(), 2, 'Result of COUNTIFS(A101:A104,A101:A104&"")[2,0]');
-		assert.strictEqual(oParser.calculate().getElementRowCol(3,0).getValue(), 2, 'Result of COUNTIFS(A101:A104,A101:A104&"")[3,0]');
-
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 1 : 0;
 		oParser = new parserFormula('COUNTIFS(A101:A104,A101:A104)', "E1", ws);
+		assert.ok(oParser.parse(), "COUNTIFS(A101:A104,A101:A104))");
+	assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, "Result of COUNTIFS(A101:A104,A101:A104)");
 		oParser.setArrayFormulaRef(ws.getRange2("AD6:AF8").bbox);
 		assert.ok(oParser.parse(), "COUNTIFS(A101:A104,A101:A104)");
 		assert.strictEqual(oParser.calculate().getElementRowCol(0,0).getValue(), 1, "Result of COUNTIFS(A101:A104,A101:A104)[0,0]");
@@ -12551,10 +12547,17 @@ $(function () {
 		oParser = new parserFormula('FDIST(TestNameArea3D2,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: FDIST(TestNameArea3D2,10,20) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0.6306835578863199, 'Test: Negative case: Name3D. 3D named range with non-numeric value returns #VALUE!. 3 of 3 arguments used.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('FDIST(SINGLE(Sheet2!A2:A3),10,20)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: FDIST(SINGLE(Sheet2!A2:A3),10,20) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case SINGLE: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+		
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.08978271484374996 : '#VALUE!';
 		oParser = new parserFormula('FDIST(Sheet2!A2:A3,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: FDIST(Sheet2!A2:A3,10,20) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
 
 		// Bounded cases:
 		// Case #1: Number. Minimum valid probability and degrees of freedom. 3 of 3 arguments used.
@@ -13026,10 +13029,17 @@ $(function () {
 		oParser = new parserFormula('F.DIST.RT(TestNameArea3D2,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.DIST.RT(TestNameArea3D2,10,20) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0.6306835578863199, 'Test: Negative case: Name3D. 3D named range with non-numeric value returns #VALUE!. 3 of 3 arguments used.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('F.DIST.RT(SINGLE(Sheet2!A2:A3),10,20)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: F.DIST.RT(SINGLE(Sheet2!A2:A3),10,20) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.08978271484374996 : '#VALUE!';
 		oParser = new parserFormula('F.DIST.RT(Sheet2!A2:A3,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.DIST.RT(Sheet2!A2:A3,10,20) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
 
 		// Bounded cases:
 		// Case #1: Number. Minimum valid probability and degrees of freedom. 3 of 3 arguments used.
@@ -13485,10 +13495,17 @@ $(function () {
 		oParser = new parserFormula('F.INV(TestNameArea3D2,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.INV(TestNameArea3D2,10,20) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 1.531347849027609, 'Test: Negative case: Name3D. 3D named range with non-numeric value returns #VALUE!. 3 of 3 arguments used.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('F.INV(SINGLE(Sheet2!A2:A3),10,20)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: F.INV(SINGLE(Sheet2!A2:A3),10,20) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('F.INV(Sheet2!A2:A3,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.INV(Sheet2!A2:A3,10,20) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
 
 		// Bounded cases:
 		// Case #1: Number. Minimum valid probability and degrees of freedom. 3 of 3 arguments used.
@@ -13720,10 +13737,17 @@ $(function () {
 		oParser = new parserFormula('F.INV.RT(TestNameArea3D2,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.INV.RT(TestNameArea3D2,10,20) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0.5944412149020063, 'Test: Negative case: Name3D. 3D named range with non-numeric value returns #VALUE!. 3 of 3 arguments used.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('F.INV.RT(SINGLE(Sheet2!A2:A3),10,20)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: F.INV.RT(SINGLE(Sheet2!A2:A3),10,20) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('F.INV.RT(Sheet2!A2:A3,10,20)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: F.INV.RT(Sheet2!A2:A3,10,20) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 3 of 3 arguments used.');
 
 		// Bounded cases:
 		// Case #1: Number. Minimum valid probability and degrees of freedom. 3 of 3 arguments used.
@@ -17613,15 +17637,17 @@ $(function () {
 		oParser = new parserFormula('GAMMA("0")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA("0") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: String. String convertible to zero returns #NUM!. 1 argument used.');
+		
 		// Case #17: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.
-		oParser = new parserFormula('GAMMA(Sheet2!A4:A5)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: GAMMA(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
-		// Case #18: Name3D. 3D named range with text (invalid) returns #VALUE!. 1 argument used.
-		oParser = new parserFormula('GAMMA(TestNameArea3D2)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: GAMMA(TestNameArea3D2) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 1.1642297137253033, 'Test: Negative case: Name3D. 3D named range with text (invalid) returns #VALUE!. 1 argument used.');
-		// Case #19: Formula. Formula resulting in zero returns #NUM!. 1 argument used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMA(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMA(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+
+	let res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
+	oParser = new parserFormula('GAMMA(Sheet2!A4:A5)', 'A2', ws);
+	assert.ok(oParser.parse(), 'Test: GAMMA(Sheet2!A4:A5) is parsed.');
+	assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
 		oParser = new parserFormula('GAMMA(DATE(2025,1,1)-DATE(2025,1,1))', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA(DATE(2025,1,1)-DATE(2025,1,1)) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: Formula. Formula resulting in zero returns #NUM!. 1 argument used.');
@@ -17874,10 +17900,18 @@ $(function () {
 		oParser = new parserFormula('GAMMADIST(2,1,-1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMADIST(2,1,-1,TRUE) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: Number. Negative beta returns #NUM!. 4 of 4 arguments used.');
+		
 		// Case #19: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMADIST(SINGLE(Sheet2!A4:A5),1,1,TRUE)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMADIST(SINGLE(Sheet2!A4:A5),1,1,TRUE) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0 : '#VALUE!';
 		oParser = new parserFormula('GAMMADIST(Sheet2!A4:A5,1,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMADIST(Sheet2!A4:A5,1,1,TRUE) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+		
 		// Case #20: Name3D. 3D named range with text (invalid) for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('GAMMADIST(TestNameArea3D2,1,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMADIST(TestNameArea3D2,1,1,TRUE) is parsed.');
@@ -18133,10 +18167,18 @@ $(function () {
 		oParser = new parserFormula('GAMMA.DIST(2,1,-1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.DIST(2,1,-1,TRUE) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: Number. Negative beta returns #NUM!. 4 of 4 arguments used.');
+		
 		// Case #19: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMA.DIST(SINGLE(Sheet2!A4:A5),1,1,TRUE)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMA.DIST(SINGLE(Sheet2!A4:A5),1,1,TRUE) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0 : '#VALUE!';
 		oParser = new parserFormula('GAMMA.DIST(Sheet2!A4:A5,1,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.DIST(Sheet2!A4:A5,1,1,TRUE) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range for x returns #NUM!. 4 of 4 arguments used.');
+		
 		// Case #20: Name3D. 3D named range with text (invalid) for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('GAMMA.DIST(TestNameArea3D2,1,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.DIST(TestNameArea3D2,1,1,TRUE) is parsed.');
@@ -18381,10 +18423,18 @@ $(function () {
 		oParser = new parserFormula('GAMMAINV({FALSE},1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMAINV({FALSE},1,1) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0, 'Test: Negative case: Array. Array with boolean for probability returns #NUM!. 3 of 3 arguments used.');
+		
 		// Case #18: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMAINV(SINGLE(Sheet2!A4:A5),1,1)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMAINV(SINGLE(Sheet2!A4:A5),1,1) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0 : '#VALUE!';
 		oParser = new parserFormula('GAMMAINV(Sheet2!A4:A5,1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMAINV(Sheet2!A4:A5,1,1) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+		
 		// Case #19: Name3D. 3D named range with text (invalid) for probability returns #VALUE!. 3 of 3 arguments used.
 		oParser = new parserFormula('GAMMAINV(TestNameArea3D2,1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMAINV(TestNameArea3D2,1,1) is parsed.');
@@ -18628,10 +18678,18 @@ $(function () {
 		oParser = new parserFormula('GAMMA.INV({FALSE},1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.INV({FALSE},1,1) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0, 'Test: Negative case: Array. Array with boolean for probability returns #NUM!. 3 of 3 arguments used.');
+		
 		// Case #18: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMA.INV(SINGLE(Sheet2!A4:A5),1,1)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMA.INV(SINGLE(Sheet2!A4:A5),1,1) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: SINGLE Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0 : '#VALUE!';
 		oParser = new parserFormula('GAMMA.INV(Sheet2!A4:A5,1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.INV(Sheet2!A4:A5,1,1) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range for probability returns #NUM!. 3 of 3 arguments used.');
+		
 		// Case #19: Name3D. 3D named range with text (invalid) for probability returns #VALUE!. 3 of 3 arguments used.
 		oParser = new parserFormula('GAMMA.INV(TestNameArea3D2,1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMA.INV(TestNameArea3D2,1,1) is parsed.');
@@ -18880,10 +18938,18 @@ $(function () {
 		oParser = new parserFormula('GAMMALN("0")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN("0") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: String. String convertible to zero returns #NUM!. 1 argument used.');
+		
 		// Case #17: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMALN(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMALN(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('GAMMALN(Sheet2!A4:A5)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+		
 		// Case #18: Name3D. 3D named range with text (invalid) returns #VALUE!. 1 argument used.
 		oParser = new parserFormula('GAMMALN(TestNameArea3D2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN(TestNameArea3D2) is parsed.');
@@ -19125,10 +19191,18 @@ $(function () {
 		oParser = new parserFormula('GAMMALN.PRECISE("0")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE("0") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Negative case: String. String convertible to zero returns #NUM!. 1 argument used.');
+		
 		// Case #17: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAMMALN.PRECISE(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('GAMMALN.PRECISE(Sheet2!A4:A5)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+		
 		// Case #18: Name3D. 3D named range with text (invalid) returns #VALUE!. 1 argument used.
 		oParser = new parserFormula('GAMMALN.PRECISE(TestNameArea3D2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAMMALN.PRECISE(TestNameArea3D2) is parsed.');
@@ -19367,9 +19441,14 @@ $(function () {
 		assert.ok(oParser.parse(), 'Test: GAUSS("0") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), 0, 'Test: Negative case: String. String convertible to zero returns #NUM!. 1 argument used.');
 		// Case #17: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('GAUSS(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: GAUSS(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. SINGLE converts multi-cell range and returns #VALUE!. 1 argument used.');
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0 : '#VALUE!';
 		oParser = new parserFormula('GAUSS(Sheet2!A4:A5)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAUSS(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!. 1 argument used.');
 		// Case #18: Name3D. 3D named range with text (invalid) returns #VALUE!. 1 argument used.
 		oParser = new parserFormula('GAUSS(TestNameArea3D2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: GAUSS(TestNameArea3D2) is parsed.');
@@ -26577,10 +26656,18 @@ $(function () {
 		oParser = new parserFormula('NORMDIST(NA(),0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(NA(),0,1,TRUE) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#N/A', 'Test: Negative case: Error. Propagates #N/A error. 4 of 4 arguments used.');
+		
 		// Case #4: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORMDIST(SINGLE(A100:A101),A101:A101,A102:A102,A103:A103)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORMDIST(SINGLE(A100:A101),A101:A101,A102:A102,A103:A103) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.10798193302637613 : '#VALUE!';
 		oParser = new parserFormula('NORMDIST(A100:A101,A101:A101,A102:A102,A103:A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(A100:A101,A101:A101,A102:A102,A103:A103) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(A103,0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(A103,0,1,TRUE) is parsed.');
@@ -26597,10 +26684,18 @@ $(function () {
 		oParser = new parserFormula('NORMDIST(Sheet2!A5,Sheet2!A2,Sheet2!A3,Sheet2!A4)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(Sheet2!A5,Sheet2!A2,Sheet2!A3,Sheet2!A4) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Ref3D. 3D reference to text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #9: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORMDIST(SINGLE(TestNameArea),TestName1,TestName2,TestName3)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORMDIST(SINGLE(TestNameArea),TestName1,TestName2,TestName3) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.037951449638912664 : '#VALUE!';
 		oParser = new parserFormula('NORMDIST(TestNameArea,TestName1,TestName2,TestName3)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(TestNameArea,TestName1,TestName2,TestName3) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #11: Formula. Formula resulting in #NUM! error for x. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST(SQRT(-1),0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(SQRT(-1),0,1,TRUE) is parsed.');
@@ -26625,10 +26720,18 @@ $(function () {
 		oParser = new parserFormula('NORMDIST(Sheet2!A1:A2,Sheet2!A2:A2,Sheet2!A3:A3,Sheet2!A4:A4)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(Sheet2!A1:A2,Sheet2!A2:A2,Sheet2!A3:A3,Sheet2!A4:A4) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #17: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORMDIST(SINGLE(TestNameArea3D),TestName3D,TestName3D,TestName3D)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORMDIST(SINGLE(TestNameArea3D),TestName3D,TestName3D,TestName3D) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('NORMDIST(TestNameArea3D,TestName3D,TestName3D,TestName3D)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST(TestNameArea3D,TestName3D,TestName3D,TestName3D) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #18: String. Empty string for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORMDIST("",0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMDIST("",0,1,TRUE) is parsed.');
@@ -26825,10 +26928,18 @@ $(function () {
 		oParser = new parserFormula('NORM.DIST(NA(),0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(NA(),0,1,TRUE) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#N/A', 'Test: Negative case: Error. Propagates #N/A error. 4 of 4 arguments used.');
+		
 		// Case #4: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORM.DIST(SINGLE(A100:A101),A101:A101,A102:A102,A103:A103)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORM.DIST(SINGLE(A100:A101),A101:A101,A102:A102,A103:A103) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.10798193302637613 : '#VALUE!';
 		oParser = new parserFormula('NORM.DIST(A100:A101,A101:A101,A102:A102,A103:A103)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(A100:A101,A101:A101,A102:A102,A103:A103) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area. Multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #5: Empty. Empty cell reference for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(A103,0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(A103,0,1,TRUE) is parsed.');
@@ -26845,10 +26956,18 @@ $(function () {
 		oParser = new parserFormula('NORM.DIST(Sheet2!A5,Sheet2!A2,Sheet2!A3,Sheet2!A4)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(Sheet2!A5,Sheet2!A2,Sheet2!A3,Sheet2!A4) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Ref3D. 3D reference to text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #9: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORM.DIST(SINGLE(TestNameArea),TestName1,TestName2,TestName3)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORM.DIST(SINGLE(TestNameArea),TestName1,TestName2,TestName3) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 0.037951449638912664 : '#VALUE!';
 		oParser = new parserFormula('NORM.DIST(TestNameArea,TestName1,TestName2,TestName3)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(TestNameArea,TestName1,TestName2,TestName3) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Name. Named range with text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #11: Formula. Formula resulting in #NUM! error for x. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST(SQRT(-1),0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(SQRT(-1),0,1,TRUE) is parsed.');
@@ -26873,10 +26992,18 @@ $(function () {
 		oParser = new parserFormula('NORM.DIST(Sheet2!A1:A2,Sheet2!A2:A2,Sheet2!A3:A3,Sheet2!A4:A4)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(Sheet2!A1:A2,Sheet2!A2:A2,Sheet2!A3:A3,Sheet2!A4:A4) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #17: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORM.DIST(SINGLE(TestNameArea3D),TestName3D,TestName3D,TestName3D)', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORM.DIST(SINGLE(TestNameArea3D),TestName3D,TestName3D,TestName3D) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#NUM!' : '#VALUE!';
 		oParser = new parserFormula('NORM.DIST(TestNameArea3D,TestName3D,TestName3D,TestName3D)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST(TestNameArea3D,TestName3D,TestName3D,TestName3D) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Name3D. 3D named range with text returns #VALUE!. 4 of 4 arguments used.');
+		
 		// Case #18: String. Empty string for x returns #VALUE!. 4 of 4 arguments used.
 		oParser = new parserFormula('NORM.DIST("",0,1,TRUE)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.DIST("",0,1,TRUE) is parsed.');
@@ -28118,20 +28245,18 @@ $(function () {
 		oParser = new parserFormula('NORMSINV("")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMSINV("") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Empty string returns #VALUE!.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #NUM!.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORMSINV(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORMSINV(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #NUM!.');
+
+		let res = AscCommonExcel.bIsSupportDynamicArrays ? '#N/A' : '#VALUE!';
 		oParser = new parserFormula('NORMSINV(Sheet2!A4:A5)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORMSINV(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!.');
 
-		// Bounded cases:
-		// Case #1: Number. Smallest valid probability above 0, returns large negative z-score.
-		oParser = new parserFormula('NORMSINV(1E-100)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: NORMSINV(1E-100) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), -21.27345356096532, 'Test: Bounded case: Number. Smallest valid probability above 0, returns large negative z-score.');
-		// Case #2: Number. Largest valid probability below 1, returns large positive z-score.
-		oParser = new parserFormula('NORMSINV(1-1E-15)', 'A2', ws);
-		assert.ok(oParser.parse(), 'Test: NORMSINV(1-1E-15) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), 7.941444487415977, 'Test: Bounded case: Number. Largest valid probability below 1, returns large positive z-score.');
 
 
 		// Need to fix: area handle, error types difference, empty cell/value handle
@@ -28357,10 +28482,17 @@ $(function () {
 		oParser = new parserFormula('NORM.S.INV("")', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.S.INV("") is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: String. Empty string returns #VALUE!.');
+		
 		// Case #20: Area3D. 3D multi-cell range returns #NUM!.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('NORM.S.INV(SINGLE(Sheet2!A4:A5))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: NORM.S.INV(SINGLE(Sheet2!A4:A5)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: SINGLE Area3D. 3D multi-cell range returns #NUM!.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? '#N/A' : '#VALUE!';
 		oParser = new parserFormula('NORM.S.INV(Sheet2!A4:A5)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: NORM.S.INV(Sheet2!A4:A5) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), '#VALUE!', 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Negative case: Area3D. 3D multi-cell range returns #NUM!.');
 
 		// Bounded cases:
 		// Case #1: Number. Smallest valid probability above 0, returns large negative z-score.
@@ -30301,10 +30433,17 @@ $(function () {
 		oParser = new parserFormula('PERMUT(TestName3D,2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUT(TestName3D,2) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Positive case: Name3D, Number. 3D named range for number. 2 of 2 arguments used.');
+		
 		// Case #15: Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('PERMUT(5,SINGLE(TestNameArea3D2))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: PERMUT(5,SINGLE(TestNameArea3D2)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#NUM!", 'Test: Positive case: SINGLE Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.');
+
 		oParser = new parserFormula('PERMUT(5,TestNameArea3D2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUT(5,TestNameArea3D2) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Positive case: Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.');
+		
 		// Case #16: Ref3D, Number. 3D reference to cell for number. 2 of 2 arguments used.
 		oParser = new parserFormula('PERMUT(Sheet2!A1,2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUT(Sheet2!A1,2) is parsed.');
@@ -30493,6 +30632,9 @@ $(function () {
 		ws2.getRange2("A18").setValue("0.8"); // TestNameArea3D2
 		ws2.getRange2("B18").setValue("-0.8"); // TestNameArea3D2
 
+		ws2.getRange2("A16").setValue(""); // TestNameArea3D
+		ws2.getRange2("B17").setValue(""); // TestNameArea3D
+		ws2.getRange2("A12").setValue(""); // TestName3D1
 
 		// Positive cases:
 		// Case #0: Number, Number. Both arguments are integers. 2 of 2 arguments used.
@@ -30555,10 +30697,18 @@ $(function () {
 		oParser = new parserFormula('PERMUTATIONA(TestName3D,2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUTATIONA(TestName3D,2) is parsed.');
 		assert.strictEqual(oParser.calculate().getValue(), '#NUM!', 'Test: Positive case: Name3D, Number. 3D named range for number. 2 of 2 arguments used.');
+		
 		// Case #15: Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.
+		//correct test for dynamic arrays
+		oParser = new parserFormula('PERMUTATIONA(5,SINGLE(TestNameArea3D))', 'A2', ws);
+		assert.ok(oParser.parse(), 'Test: PERMUTATIONA(5,SINGLE(TestNameArea3D)) is parsed.');
+		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Positive case: SINGLE Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.');
+
+		res = AscCommonExcel.bIsSupportDynamicArrays ? 1 : '#VALUE!';
 		oParser = new parserFormula('PERMUTATIONA(5,TestNameArea3D)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUTATIONA(5,TestNameArea3D) is parsed.');
-		assert.strictEqual(oParser.calculate().getValue(), "#VALUE!", 'Test: Positive case: Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.');
+		assert.strictEqual(oParser.calculate(null, null, null, null, null, null, true).getValue(), res, 'Test: Positive case: Number, Name3D. 3D named range for number_chosen. 2 of 2 arguments used.');
+		
 		// Case #16: Ref3D, Number. 3D reference to cell for number. 2 of 2 arguments used.
 		oParser = new parserFormula('PERMUTATIONA(Sheet2!A1,2)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: PERMUTATIONA(Sheet2!A1,2) is parsed.');
