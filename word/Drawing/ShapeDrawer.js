@@ -2311,7 +2311,7 @@ CShapeDrawer.prototype =
             {
                 if (this.bIsTexture)
                 {
-					const rotWithShape = this.UniFill.fill.rotWithShape;
+					const rotWithShape = this.UniFill.fill.rotWithShape || this.UniFill.fill.rotWithShape === null;
                     if (null == this.UniFill.fill.tile)
                     {
                         if (null == this.UniFill.fill.srcRect)
