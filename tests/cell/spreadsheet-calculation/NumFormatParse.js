@@ -693,327 +693,392 @@ $(function () {
             }
         }
     });
-    QUnit.test('formatRecognitionWithSelectedFormat', function (assert) {
-        let testCases = [
-            // appliedFormat = 0 (General)
-            ["1/2", "d-mmm", getDateSerial(1, 2), formatTypes.General],  // Jan 2
-            ["3/4", "d-mmm", getDateSerial(3, 4), formatTypes.General],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.General],  
-            [" 1/2", null, " 1/2", formatTypes.General],
-            ["1 1/2", "# ?/?", 1.5, formatTypes.General],
-            ["2 3/4", "# ?/?", 2.75, formatTypes.General],
-            ["15/3", null, "15/3", formatTypes.General],
-            ["150/200", null, "150/200", formatTypes.General],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.General],
-            ["0 1/2", "# ?/?", 0.5, formatTypes.General],
-            ["0 1/10", "# ??/??", 0.1, formatTypes.General],
-            ["0 1/100", "# ??/??", 0.01, formatTypes.General],
-            ["1 150/200", "# ??/??", 1.75, formatTypes.General],
-            
-            // appliedFormat = 1 (Number - 0)
-            ["1/2", "0.00", 0.5, formatTypes.Number, "0.00"],
-            ["3/4", "0.00", 0.75, formatTypes.Number, "0.00"],
-            ["15/20", "0.00", 0.75, formatTypes.Number, "0.00"],
-            [" 1/2", "0.00", 0.5, formatTypes.Number, "0.00"],
-            ["1 1/2", "0.00", 1.5, formatTypes.Number, "0.00"],
-            ["2 3/4", "0.00", 2.75, formatTypes.Number, "0.00"],
-            ["15/3", "0.00", 5, formatTypes.Number, "0.00"],
-            ["150/200", "0.00", 0.75, formatTypes.Number, "0.00"],
-            ["1/5/5", "0.00", 38357, formatTypes.Number, "0.00"],
-            ["0 1/2", "0.00", 0.5, formatTypes.Number, "0.00"],
-            ["0 1/10", "0.00", 0.1, formatTypes.Number, "0.00"],
-            ["0 1/100", "0.00", 0.01, formatTypes.Number, "0.00"],
-            ["1 150/200", "0.00", 1.75, formatTypes.Number, "0.00"],
 
+    // Format aliases for readability (matching Excel's format codes)
+    const F = {
+        GENERAL:         'General',
+        NUM_2:           '0.00',
+        NUM_4:           '0.0000',
+        SCI_2:           '0.00E+00',
+        SCI_4:           '0.0000E+00',
+        CURRENCY_2:      '$#,##0.00',
+        CURRENCY_4:      '$#,##0.0000',
+        ACCOUNTING_2:    '_($ #,##0.00_);_($ (#,##0.00);_($ "-"??_);_(@_)',
+        ACCOUNTING_4:    '_($ #,##0.0000_);_($ (#,##0.0000);_($ "-"????_);_(@_)',
+        DATE_SHORT:      'm/d/yyyy;@',
+        DATE_LONG:       '[$-F800]dddd, mmmm dd, yyyy',
+        DATE_MEDIUM:     'd-mmm;@',
+        TIME_12H:        '[$-F400]h:mm:ss AM/PM',
+        TIME_24H:        'h:mm:ss;@',
+        TIME_DURATION:   '[hh]:mm',
+        PERCENT_2:       '0.00%',
+        PERCENT_4:       '0.0000%',
+        FRACTION_1:      '# ?/?',
+        FRACTION_2:      '# ??/??',
+        FRACTION_HALF:   '# ?/2',
+        TEXT:            '@',
+    };
+    //todo 'm/d/yyyy;@', 'd-mmm;@', 'h:mm:ss;@' is overridable by input format
 
-            // Specific number format
-            ["1/2", "0.00000", 0.5, formatTypes.Number, "0.00000"],
-            ["3/4", "0.00000", 0.75, formatTypes.Number, "0.00000"],
-            ["15/20", "0.00000", 0.75, formatTypes.Number, "0.00000"],
-            [" 1/2", "0.00000", 0.5, formatTypes.Number, "0.00000"],
-            ["1 1/2", "0.00000", 1.5, formatTypes.Number, "0.00000"],
-            ["2 3/4", "0.00000", 2.75, formatTypes.Number, "0.00000"],
-            ["15/3", "0.00000", 5, formatTypes.Number, "0.00000"],
-            ["150/200", "0.00000", 0.75, formatTypes.Number, "0.00000"],
-            ["1/5/5", "0.00000", 38357, formatTypes.Number, "0.00000"],
-            ["0 1/2", "0.00000", 0.5, formatTypes.Number, "0.00000"],
-            ["0 1/10", "0.00000", 0.1, formatTypes.Number, "0.00000"],
-            ["0 1/100", "0.00000", 0.01, formatTypes.Number, "0.00000"],
-            ["1 150/200", "0.00000", 1.75, formatTypes.Number, "0.00000"],
+    // Additional format codes that Excel produces
+    const OUT = {
+        DATE_SHORT:      'm/d/yyyy',
+        DATE_MEDIUM:     'd-mmm',
+        TIME_24H:        'h:mm:ss',
+        THOUSAND_INT:    '#,##0',
+        THOUSAND_2:      '#,##0.00',
+        CURRENCY_NEG:    '\\$#,##0.00_);[Red](\\$#,##0.00)',
+        DATE_TIME:       'm/d/yyyy h:mm',
+        TIME_12H_SIMPLE: 'h:mm:ss AM/PM',
+    };
 
-            // appliedFormat = 2 (Scientific - 0.00E+00)
-            ["1/2", "# ?/?", 0.5, formatTypes.Scientific, "0.00E+00"],
-            ["3/4", "# ?/?", 0.75, formatTypes.Scientific, "0.00E+00"],
-            ["15/20", "# ??/??", 0.75, formatTypes.Scientific, "0.00E+00"],
-            [" 1/2", "# ?/?", 0.5, formatTypes.Scientific, "0.00E+00"],
-            ["1 1/2", "# ?/?", 1.5, formatTypes.Scientific, "0.00E+00"],
-            ["2 3/4", "# ?/?", 2.75, formatTypes.Scientific, "0.00E+00"],
-            ["15/3", "# ?/?", 5, formatTypes.Scientific, "0.00E+00"],
-            ["150/200", "# ??/??", 0.75, formatTypes.Scientific, "0.00E+00"],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Scientific, "0.00E+00"],
-            ["0 1/2", "# ?/?", 0.5, formatTypes.Scientific, "0.00E+00"],
-            ["0 1/10", "# ??/??", 0.1, formatTypes.Scientific, "0.00E+00"],
-            ["0 1/100", "# ??/??", 0.01, formatTypes.Scientific, "0.00E+00"],
-            ["1 150/200", "# ??/??", 1.75, formatTypes.Scientific, "0.00E+00"],
-            
-            // Specific scientific format
-            ["1/2", "0.00000E+00", 0.5, formatTypes.Scientific, "0.00000E+00"],
-            ["3/4", "0.00000E+00", 0.75, formatTypes.Scientific, "0.00000E+00"],
-            ["15/20", "0.00000E+00", 0.75, formatTypes.Scientific, "0.00000E+00"],
-            [" 1/2", "0.00000E+00", 0.5, formatTypes.Scientific, "0.00000E+00"],
-            ["1 1/2", "0.00000E+00", 1.5, formatTypes.Scientific, "0.00000E+00"],
-            ["2 3/4", "0.00000E+00", 2.75, formatTypes.Scientific, "0.00000E+00"],
-            ["15/3", "0.00000E+00", 5, formatTypes.Scientific, "0.00000E+00"],
-            ["150/200", "0.00000E+00", 0.75, formatTypes.Scientific, "0.00000E+00"],
-            ["1/5/5", "0.00000E+00", 38357, formatTypes.Scientific, "0.00000E+00"],
-            ["0 1/2", "0.00000E+00", 0.5, formatTypes.Scientific, "0.00000E+00"],
-            ["0 1/10", "0.00000E+00", 0.1, formatTypes.Scientific, "0.00000E+00"],
-            ["0 1/100", "0.00000E+00", 0.01, formatTypes.Scientific, "0.00000E+00"],
-            ["1 150/200", "0.00000E+00", 1.75, formatTypes.Scientific, "0.00000E+00"],
-            
+    let cellFormatTestCases = Object.values(F);
 
-            // appliedFormat = 3 (Accounting)
-            ["1/2", "# ?/?", 0.5, formatTypes.Accounting],
-            ["3/4", "# ?/?", 0.75, formatTypes.Accounting],
-            ["15/20", "# ??/??", 0.75, formatTypes.Accounting],
-            [" 1/2", "# ?/?", 0.5, formatTypes.Accounting],
-            ["1 1/2", "# ?/?", 1.5, formatTypes.Accounting],
-            ["2 3/4", "# ?/?", 2.75, formatTypes.Accounting],
-            ["15/3", "# ?/?", 5, formatTypes.Accounting],
-            ["150/200", "# ??/??", 0.75, formatTypes.Accounting],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Accounting],
-            ["0 1/2", "# ?/?", 0.5, formatTypes.Accounting],
-            ["0 1/10", "# ??/??", 0.1, formatTypes.Accounting],
-            ["0 1/100", "# ??/??", 0.01, formatTypes.Accounting],
-            ["1 150/200", "# ??/??", 1.75, formatTypes.Accounting],
-            
-            // Specific Accounting formats
-            ["1/2", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.5, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["3/4", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.75, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["15/20", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.75, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            [" 1/2", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.5, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["1 1/2", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 1.5, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["2 3/4", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 2.75, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["15/3", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 5, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["150/200", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.75, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["1/5/5", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 38357, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["0 1/2", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.5, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["0 1/10", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.1, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["0 1/100", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 0.01, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            ["1 150/200", '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)', 1.75, formatTypes.Accounting, '_([$$-9]* #,##0.000_);_([$$-9]* \\(#,##0.000\\);_([$$-9]* "-"???_);_(@_)'],
-            
-            // appliedFormat = 4 (Currency - $#,##0.00)
-            ["1/2", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.5, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["3/4", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["15/20", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            [" 1/2", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.5, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["1 1/2", "\\$#,##0.00_);[Red](\\$#,##0.00)", 1.5, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["2 3/4", "\\$#,##0.00_);[Red](\\$#,##0.00)", 2.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["15/3", "\\$#,##0_);[Red](\\$#,##0)", 5, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["150/200", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["1/5/5", "\\$#,##0.00_);[Red](\\$#,##0.00)", 38357, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["0 1/2", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.5, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["0 1/10", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.1, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["0 1/100", "\\$#,##0.00_);[Red](\\$#,##0.00)", 0.01, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            ["1 150/200", "\\$#,##0.00_);[Red](\\$#,##0.00)", 1.75, formatTypes.Currency, "\\$#,##0.00_);[Red](\\$#,##0.00)"],
-            
-            // appliedFormat = 5 (Date - m/d/yyyy)
-            ["1/2", "m/d/yyyy", getDateSerial(1, 2), formatTypes.Date, "m/d/yyyy"],  // Jan 2
-            ["3/4", "m/d/yyyy", getDateSerial(3, 4), formatTypes.Date, "m/d/yyyy"],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.Date, "m/d/yyyy"], 
-            [" 1/2", null, " 1/2", formatTypes.Date, "m/d/yyyy"],
-            ["1 1/2", "# ?/?", 1.5, formatTypes.Date, "m/d/yyyy"],
-            ["2 3/4", "# ?/?", 2.75, formatTypes.Date, "m/d/yyyy"],
-            ["15/3", null, "15/3", formatTypes.Date, "m/d/yyyy"],
-            ["150/200", null, "150/200", formatTypes.Date, "m/d/yyyy"],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Date, "m/d/yyyy"],
-            ["0 1/2", "# ?/?", 0.5, formatTypes.Date, "m/d/yyyy"],
-            ["0 1/10", "# ??/??", 0.1, formatTypes.Date, "m/d/yyyy"],
-            ["0 1/100", "# ??/??", 0.01, formatTypes.Date, "m/d/yyyy"],
-            ["1 150/200", "# ??/??", 1.75, formatTypes.Date, "m/d/yyyy"],
-            
-            // appliedFormat = 6 (LongDate - dddd, mmmm d, yyyy)
-            ["1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", getDateSerial(1, 2), formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  // Jan 2
-            ["3/4", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", getDateSerial(3, 4), formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            [" 1/2", null, " 1/2", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["1 1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 1.5, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"], 
-            ["2 3/4", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 2.75, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["15/3", null, "15/3", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["150/200", null, "150/200", formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["1/5/5", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 38357, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],
-            ["0 1/2", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 0.5, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"], 
-            ["0 1/10", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 0.1, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],   
-            ["0 1/100", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 0.01, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  
-            ["1 150/200", "dddd\\,\\ mmmm\\ d\\,\\ yyyy", 1.75, formatTypes.Date, "[$-F800]dddd\\,\\ mmmm\\ d\\,\\ yyyy"],  
-            
-            // Specific date formats
-            ["1/2", "yyyy-mm-dd", getDateSerial(1, 2), formatTypes.Date, "yyyy-mm-dd"],  // Jan 2
-            ["1/2", "yyyy-mm-dd", getDateSerial(1, 2), formatTypes.Date, "yyyy-mm-dd"],  // Jan 2
-            ["3/4", "yyyy-mm-dd", getDateSerial(3, 4), formatTypes.Date, "yyyy-mm-dd"],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.Date, "yyyy-mm-dd"], 
-            [" 1/2", null, " 1/2", formatTypes.Date, "yyyy-mm-dd"],
-            ["1 1/2", "yyyy-mm-dd", 1.5, formatTypes.Date, "yyyy-mm-dd"],
-            ["2 3/4", "yyyy-mm-dd", 2.75, formatTypes.Date, "yyyy-mm-dd"],
-            ["15/3", null, "15/3", formatTypes.Date, "yyyy-mm-dd"],
-            ["150/200", null, "150/200", formatTypes.Date, "yyyy-mm-dd"],
-            ["1/5/5", "yyyy-mm-dd", 38357, formatTypes.Date, "yyyy-mm-dd"],
-            ["0 1/2", "yyyy-mm-dd", 0.5, formatTypes.Date, "yyyy-mm-dd"],
-            ["0 1/10", "yyyy-mm-dd", 0.1, formatTypes.Date, "yyyy-mm-dd"],
-            ["0 1/100", "yyyy-mm-dd", 0.01, formatTypes.Date, "yyyy-mm-dd"],
-            ["1 150/200", "yyyy-mm-dd", 1.75, formatTypes.Date, "yyyy-mm-dd"],
+    // Test data: [input, defaultValue, formatOverrides]
+    // formatOverrides: { [cellFormat]: { f: outputFormat } } - ONLY when format changes
+    // Skip formats where output format equals input format (the default behavior)
+    const formatRecognitionTestCases = [
+        ['$1234.56', 1234.56, {
+            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
+            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
+            [F.TEXT]: { f: null },
+        }],
+        // === Numbers (no format change for most formats) ===
+        ['1234.56', 1234.56, {
+            [F.TEXT]: { f: null },
+        }],
+        ['1234.5678', 1234.5678, {
+            [F.TEXT]: { f: null },
+        }],
 
-            // appliedFormat = 7 (Time - h:mm:ss)
-            ["1/2", "h:mm:ss", getDateSerial(1, 2), formatTypes.Time, "h:mm:ss"],  // Jan 2
-            ["3/4", "h:mm:ss", getDateSerial(3, 4), formatTypes.Time, "h:mm:ss"],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.Time, "h:mm:ss"],
-            [" 1/2", null, " 1/2", formatTypes.Time, "h:mm:ss"],
-            ["1 1/2", "h:mm:ss", 1.5, formatTypes.Time, "h:mm:ss"],
-            ["2 3/4", "h:mm:ss", 2.75, formatTypes.Time, "h:mm:ss"],
-            ["15/3", null, "15/3", formatTypes.Time, "h:mm:ss"],
-            ["150/200", null, "150/200", formatTypes.Time, "h:mm:ss"],
-            ["1/5/5", "h:mm:ss", 38357, formatTypes.Time, "h:mm:ss"],
-            ["0 1/2", "h:mm:ss", 0.5, formatTypes.Time, "h:mm:ss"],
-            ["0 1/10", "h:mm:ss", 0.1, formatTypes.Time, "h:mm:ss"],
-            ["0 1/100", "h:mm:ss", 0.01, formatTypes.Time, "h:mm:ss"],
-            ["1 150/200", "h:mm:ss", 1.75, formatTypes.Time, "h:mm:ss"],
-            
-            // Specific time format
-            ["1/2", "h:mm AM/PM", getDateSerial(1, 2), formatTypes.Time, "h:mm AM/PM"],  // Jan 2
-            ["3/4", "h:mm AM/PM", getDateSerial(3, 4), formatTypes.Time, "h:mm AM/PM"],  // Mar 4
-            ["15/20", null, "15/20", formatTypes.Time, "h:mm AM/PM"],
-            [" 1/2", null, " 1/2", formatTypes.Time, "h:mm AM/PM"],
-            ["1 1/2", "h:mm AM/PM", 1.5, formatTypes.Time, "h:mm AM/PM"],
-            ["2 3/4", "h:mm AM/PM", 2.75, formatTypes.Time, "h:mm AM/PM"],
-            ["15/3", null, "15/3", formatTypes.Time, "h:mm AM/PM"],
-            ["150/200", null, "150/200", formatTypes.Time, "h:mm AM/PM"],
-            ["1/5/5", "h:mm AM/PM", 38357, formatTypes.Time, "h:mm AM/PM"],
-            ["0 1/2", "h:mm AM/PM", 0.5, formatTypes.Time, "h:mm AM/PM"],
-            ["0 1/10", "h:mm AM/PM", 0.1, formatTypes.Time, "h:mm AM/PM"],
-            ["0 1/100", "h:mm AM/PM", 0.01, formatTypes.Time, "h:mm AM/PM"],
-            ["1 150/200", "h:mm AM/PM", 1.75, formatTypes.Time, "h:mm AM/PM"],
+        // === Thousand separators ===
+        ['1,234', 1234, {
+            [F.GENERAL]: { f: OUT.THOUSAND_INT },
+            [F.TEXT]: { f: null },
+        }],
+        ['1,234.56', 1234.56, {
+            [F.GENERAL]: { f: OUT.THOUSAND_2 },
+            [F.TEXT]: { f: null },
+        }],
+        ['1,234,5678', 12345678, {
+            [F.GENERAL]: { f: OUT.THOUSAND_INT },
+            [F.TEXT]: { f: null },
+        }],
 
-            // appliedFormat = 8 (Percent - 0%)
-            ["1/2", "0.00%", 0.005, formatTypes.Percent, "0.00%"],
-            ["3/4", "0.00%", 0.0075, formatTypes.Percent, "0.00%"],
-            ["15/20", "0.00%", 0.0075, formatTypes.Percent, "0.00%"],
-            [" 1/2", "# ?/?", 0.5, formatTypes.Percent, "0.00%"],
-            ["1 1/2", "0.00%", 0.015, formatTypes.Percent, "0.00%"],
-            ["2 3/4", "0.00%", 0.0275, formatTypes.Percent, "0.00%"],
-            ["15/3", "0%", 0.05, formatTypes.Percent, "0.00%"],
-            ["150/200", "0.00%", 0.0075, formatTypes.Percent, "0.00%"],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Percent, "0.00%"],
-            ["0 1/2", "0.00%", 0.005, formatTypes.Percent, "0.00%"],
-            ["0 1/10", "0.00%", 0.001, formatTypes.Percent, "0.00%"],
-            ["0 1/100", "0.00%", 0.0001, formatTypes.Percent, "0.00%"],
-            ["1 150/200", "0.00%", 0.0175, formatTypes.Percent, "0.00%"],
-            
-            // Specific percent formats
-            ["1/2", "0.00%", 0.005, formatTypes.Percent, "0.0000%"],
-            ["3/4", "0.00%", 0.0075, formatTypes.Percent, "0.0000%"],
-            ["15/20", "0.00%", 0.0075, formatTypes.Percent, "0.0000%"],
-            [" 1/2", "0.00%", 0.005, formatTypes.Percent, "0.0000%"],
-            ["1 1/2", "0.00%", 0.015, formatTypes.Percent, "0.0000%"],
-            ["2 3/4", "0.00%", 0.0275, formatTypes.Percent, "0.0000%"],
-            ["15/3", "0%", 0.05, formatTypes.Percent, "0.0000%"],
-            ["150/200", "0.00%", 0.0075, formatTypes.Percent, "0.0000%"],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Percent, "0.0000%"],
-            ["0 1/2", "0.00%", 0.005, formatTypes.Percent, "0.0000%"],
-            ["0 1/10", "0.00%", 0.001, formatTypes.Percent, "0.0000%"],
-            ["0 1/100", "0.00%", 0.0001, formatTypes.Percent, "0.0000%"],
-            ["1 150/200", "0.00%", 0.0175, formatTypes.Percent, "0.0000%"],
+        //todo 
+        // // === Scientific notation ===
+        // ['1.23E+3', 1230, {
+        //     [F.GENERAL]:     { f: F.SCI_2 },
+        //     [F.PERCENT_2]:   { f: F.SCI_2 },
+        //     [F.FRACTION_1]:  { f: F.SCI_2 },
+        //     [F.FRACTION_2]:  { f: F.SCI_2 },
+        //     [F.TEXT]: { f: null },
+        // }],
+        // ['1.2345E+3', 1234.5, {
+        //     [F.GENERAL]:     { f: F.SCI_2 },
+        //     [F.PERCENT_2]:   { f: F.SCI_2 },
+        //     [F.FRACTION_1]:  { f: F.SCI_2 },
+        //     [F.FRACTION_2]:  { f: F.SCI_2 },
+        //     [F.TEXT]: { f: null },
+        // }],
 
-            // appliedFormat = 9 (Fraction - # ?/?)
-            ["1/2", "# ?/?", 0.5, formatTypes.Fraction, "# ?/?"],
-            ["3/4", "# ?/?", 0.75, formatTypes.Fraction, "# ?/?"],
-            ["15/20", "# ?/?", 0.75, formatTypes.Fraction, "# ?/?"],
-            [" 1/2", "# ?/?", 0.5, formatTypes.Fraction, "# ?/?"],
-            ["1 1/2", "# ?/?", 1.5, formatTypes.Fraction, "# ?/?"],
-            ["2 3/4", "# ?/?", 2.75, formatTypes.Fraction, "# ?/?"],
-            ["15/3", "# ?/?", 5, formatTypes.Fraction, "# ?/?"],
-            ["150/200", "# ?/?", 0.75, formatTypes.Fraction, "# ?/?"],
-            ["1 150/200", "# ?/?", 1.75, formatTypes.Fraction, "# ?/?"],
-            ["1/5/5", "m/d/yyyy", 38357, formatTypes.Fraction, "# ?/?"],
-            ["0 1/2", "# ?/?", 0.5, formatTypes.Fraction, "# ?/?"],
-            ["0 1/10", "# ?/?", 0.1, formatTypes.Fraction, "# ?/?"],
-            ["0 1/100", "# ?/?", 0.01, formatTypes.Fraction, "# ?/?"],
+        // === Currency ===
+        ['$1234.56', 1234.56, {
+            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
+            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
+            [F.TEXT]: { f: null },
+        }],
+        ['$1234.5678', 1234.5678, {
+            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
+            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
+            [F.TEXT]: { f: null },
+        }],
 
-            // Specific fraction formats
-            ["1/2", "# ?/2", 0.5, formatTypes.Fraction, "# ?/2"],
-            ["0 1/2", "# ?/2", 0.5, formatTypes.Fraction, "# ?/2"],
-            ["1 1/2", "# ?/2", 1.5, formatTypes.Fraction, "# ?/2"],
-            [" 1/2", "# ?/2", 0.5, formatTypes.Fraction, "# ?/2"],
-            ["3/7", "# ?/2", 0.42857142857142855, formatTypes.Fraction, "# ?/2"],
-            ["0 3/7", "# ?/2", 0.42857142857142855, formatTypes.Fraction, "# ?/2"],
-            ["1 3/7", "# ?/2", 1.42857142857142855, formatTypes.Fraction, "# ?/2"],
-            ["25/35", "# ?/2", 0.7142857142857143, formatTypes.Fraction, "# ?/2"],
-            ["0 25/35", "# ?/2", 0.7142857142857143, formatTypes.Fraction, "# ?/2"],
-            ["1 25/35", "# ?/2", 1.7142857142857144, formatTypes.Fraction, "# ?/2"],
-            ["17/37", "# ?/2", 0.4594594594594595, formatTypes.Fraction, "# ?/2"],
-            ["0 17/37", "# ?/2", 0.4594594594594595, formatTypes.Fraction, "# ?/2"],
-            ["1 17/37", "# ?/2", 1.4594594594594595, formatTypes.Fraction, "# ?/2"],
-            ["150/200", "# ?/2", 0.75, formatTypes.Fraction, "# ?/2"],
-            ["0 150/200", "# ?/2", 0.75, formatTypes.Fraction, "# ?/2"],
-            ["1 150/200", "# ?/2", 1.75, formatTypes.Fraction, "# ?/2"],
-            ["137/235", "# ?/2", 0.5829787234042553, formatTypes.Fraction, "# ?/2"],
-            ["0 137/235", "# ?/2", 0.5829787234042553, formatTypes.Fraction, "# ?/2"],
-            ["1 137/235", "# ?/2", 1.5829787234042553, formatTypes.Fraction, "# ?/2"],
-           
-            ["1/2", "# ?/8", 0.5, formatTypes.Fraction, "# ?/8"],
-            ["0 1/2", "# ?/8", 0.5, formatTypes.Fraction, "# ?/8"],
-            ["1 1/2", "# ?/8", 1.5, formatTypes.Fraction, "# ?/8"],
-            [" 1/2", "# ?/8", 0.5, formatTypes.Fraction, "# ?/8"],
-            ["3/7", "# ?/8", 0.42857142857142855, formatTypes.Fraction, "# ?/8"],
-            ["0 3/7", "# ?/8", 0.42857142857142855, formatTypes.Fraction, "# ?/8"],
-            ["1 3/7", "# ?/8", 1.42857142857142855, formatTypes.Fraction, "# ?/8"],
-            ["25/35", "# ?/8", 0.7142857142857143, formatTypes.Fraction, "# ?/8"],
-            ["0 25/35", "# ?/8", 0.7142857142857143, formatTypes.Fraction, "# ?/8"],
-            ["1 25/35", "# ?/8", 1.7142857142857144, formatTypes.Fraction, "# ?/8"],
-            ["17/37", "# ?/8", 0.4594594594594595, formatTypes.Fraction, "# ?/8"],
-            ["0 17/37", "# ?/8", 0.4594594594594595, formatTypes.Fraction, "# ?/8"],
-            ["1 17/37", "# ?/8", 1.4594594594594595, formatTypes.Fraction, "# ?/8"],
-            ["150/200", "# ?/8", 0.75, formatTypes.Fraction, "# ?/8"],
-            ["0 150/200", "# ?/8", 0.75, formatTypes.Fraction, "# ?/8"],
-            ["1 150/200", "# ?/8", 1.75, formatTypes.Fraction, "# ?/8"],
-            ["137/235", "# ?/8", 0.5829787234042553, formatTypes.Fraction, "# ?/8"],
-            ["0 137/235", "# ?/8", 0.5829787234042553, formatTypes.Fraction, "# ?/8"],
-            ["1 137/235", "# ?/8", 1.5829787234042553, formatTypes.Fraction, "# ?/8"],
-            
-            // appliedFormat = 10 (Text - @)
-            ["1/2", "@", "1/2", 10],
-            ["3/4", "@", "3/4", 10],
-            ["15/20", "@", "15/20", 10],
-            [" 1/2", "@", " 1/2", 10],
-            ["1 1/2", "@", "1 1/2", 10],
-            ["2 3/4", "@", "2 3/4", 10],
-            ["15/3", "@", "15/3", 10],
-            ["150/200", "@", "150/200", 10],
-            ["1/5/5", "@", "1/5/5", 10],
-            ["0 1/2", "@", "0 1/2", 10],
-            ["0 1/10", "@", "0 1/10", 10],
-            ["0 1/100", "@", "0 1/100", 10],
-        ];
-        
-        for (let i = 0; i < testCases.length; i++) {
-            let value = testCases[i][0];
-            let format = testCases[i][1];
-            let res = testCases[i][2];
-            let appliedFormat = testCases[i][3]
-            
-            let appliedSpecificFormat = testCases[i][4]
+        // === Accounting (negative) ===
+        ['$ (1,234.56)', -1234.56, {
+            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
+            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
+            [F.TEXT]: { f: null },
+        }],
+        ['$ (1,234.5678)', -1234.5678, {
+            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
+            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
+            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
+            [F.TEXT]: { f: null },
+        }],
 
+        // === Dates ===
+        ['1/2/2024', 45293, {
+            [F.GENERAL]:    { f: OUT.DATE_SHORT },
+            [F.SCI_2]:      { f: OUT.DATE_SHORT },
+            [F.PERCENT_2]:  { f: OUT.DATE_SHORT },
+            [F.FRACTION_1]: { f: OUT.DATE_SHORT },
+            [F.FRACTION_2]: { f: OUT.DATE_SHORT },
+            [F.TEXT]: { f: null },
+        }],
+        ['2-Jan', 46024, {  // 2-Jan in current year (2026) = 46024
+            [F.GENERAL]:    { f: OUT.DATE_MEDIUM },
+            [F.SCI_2]:      { f: OUT.DATE_MEDIUM },
+            [F.PERCENT_2]:  { f: OUT.DATE_MEDIUM },
+            [F.FRACTION_1]: { f: OUT.DATE_MEDIUM },
+            [F.FRACTION_2]: { f: OUT.DATE_MEDIUM },
+            [F.TEXT]: { f: null },
+        }],
 
-            // Apply format
-            let formatted = AscCommon.g_oFormatParser.parse(value, null, appliedFormat, appliedSpecificFormat);
+        // === Time ===
+        ['6:00:00', 0.25, {
+            [F.GENERAL]:     { f: OUT.TIME_24H },
+            [F.SCI_2]:       { f: OUT.TIME_24H },
+            [F.PERCENT_2]:   { f: OUT.TIME_24H },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.FRACTION_1]:  { f: OUT.TIME_24H },
+            [F.FRACTION_2]:  { f: OUT.TIME_24H },
+            [F.TEXT]: { f: null },
+        }],
+        ['6:00:00 AM', 0.25, {
+            [F.GENERAL]:     { f: OUT.TIME_12H_SIMPLE },
+            [F.SCI_2]:       { f: OUT.TIME_12H_SIMPLE },
+            [F.PERCENT_2]:   { f: OUT.TIME_12H_SIMPLE },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.FRACTION_1]:  { f: OUT.TIME_12H_SIMPLE },
+            [F.FRACTION_2]:  { f: OUT.TIME_12H_SIMPLE },
+            [F.TEXT]: { f: null },
+        }],
 
-            if (formatted) {
-                assert.strictEqual(formatted.format, format, `Case format: ${value}`);              
-                assert.strictEqual(formatted.value, res, `Case format: ${res}`);              
-            } else {
-                assert.strictEqual(formatted, format, `Case format: ${value}`);
+        // === DateTime ===
+        ['1/2/2024 6:00:00', 45293.25, {
+            [F.GENERAL]:    { f: OUT.DATE_TIME },
+            [F.SCI_2]:      { f: OUT.DATE_TIME },
+            [F.PERCENT_2]:  { f: OUT.DATE_TIME },
+            [F.FRACTION_1]: { f: OUT.DATE_TIME },
+            [F.FRACTION_2]: { f: OUT.DATE_TIME },
+            [F.TEXT]: { f: null },
+        }],
+
+        // === Percentages ===
+        ['1234.56%', 12.3456, {
+            [F.GENERAL]:     { f: F.PERCENT_2 },
+            [F.SCI_2]:       { f: F.PERCENT_2 },
+            [F.FRACTION_1]:  { f: F.PERCENT_2 },
+            [F.FRACTION_2]:  { f: F.PERCENT_2 },
+            [F.TEXT]: { f: null },
+        }],
+        ['1234.5678%', 12.345678, {
+            [F.GENERAL]:     { f: F.PERCENT_2 },
+            [F.SCI_2]:       { f: F.PERCENT_2 },
+            [F.FRACTION_1]:  { f: F.PERCENT_2 },
+            [F.FRACTION_2]:  { f: F.PERCENT_2 },
+            [F.TEXT]: { f: null },
+        }],
+        // === Simple fractions (Excel interprets as dates) ===
+        ['1/2', 0.5, {  // Excel: 1/2 with General → Jan 2 (date); with numeric formats → 0.5
+            [F.GENERAL]:    { f: OUT.DATE_MEDIUM, v: 46024},
+            [F.SCI_2]:      { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:   { f: F.DATE_SHORT, v: 46024 },
+            [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46024 },
+            [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46024 },
+            [F.TIME_12H]:   { f: F.TIME_12H, v: 46024 },
+            [F.TIME_24H]:   { f: F.TIME_24H, v: 46024 },
+            [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46024 },
+            [F.PERCENT_2]:  { f: F.FRACTION_1 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['1/11', 1/11, {  // Excel: 1/11 → Jan 11
+            [F.GENERAL]:    { f: OUT.DATE_MEDIUM, v: 46033 },
+            [F.SCI_2]:      { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:   { f: F.DATE_SHORT, v: 46033 },
+            [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46033 },
+            [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46033 },
+            [F.TIME_12H]:   { f: F.TIME_12H, v: 46033 },
+            [F.TIME_24H]:   { f: F.TIME_24H, v: 46033 },
+            [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46033 },
+            [F.PERCENT_2]:  { f: F.FRACTION_2, v: 0.09090909090909091 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.09090909090909091 },
+            [F.TEXT]: { f: null },
+        }],
+        ['3/4', 0.75, {  // Excel: 3/4 → March 4
+            [F.GENERAL]:    { f: OUT.DATE_MEDIUM, v: 46085 },
+            [F.SCI_2]:      { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:   { f: F.DATE_SHORT, v: 46085 },
+            [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46085 },
+            [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46085 },
+            [F.TIME_12H]:   { f: F.TIME_12H, v: 46085 },
+            [F.TIME_24H]:   { f: F.TIME_24H, v: 46085 },
+            [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46085 },
+            [F.PERCENT_2]:  { f: F.FRACTION_1, v: 0.75 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.75 },
+            [F.TEXT]: { f: null },
+        }],
+        ['15/3', 5, {  // Not a valid date (15th month), stays as fraction
+            [F.GENERAL]:    { f: null },
+            [F.SCI_2]:      { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:   { f: null },
+            [F.DATE_LONG]:   { f: null },
+            [F.DATE_MEDIUM]:   { f: null },
+            [F.TIME_12H]:   { f: null },
+            [F.TIME_24H]:   { f: null },
+            [F.TIME_DURATION]:   { f: null },
+            [F.PERCENT_2]:  { f: F.FRACTION_1, v: 5 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4, v: 5 },
+            [F.TEXT]: { f: null },
+        }],
+        ['15/20', 0.75, {
+            [F.GENERAL]:    { f: null },
+            [F.SCI_2]:      { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:   { f: null },
+            [F.DATE_LONG]:   { f: null },
+            [F.DATE_MEDIUM]:   { f: null },
+            [F.TIME_12H]:   { f: null },
+            [F.TIME_24H]:   { f: null },
+            [F.TIME_DURATION]:   { f: null },
+            [F.PERCENT_2]:  { f: F.FRACTION_2, v: 0.75 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.75 },
+            [F.TEXT]: { f: null },
+        }],
+        ['150/200', 0.75, {
+            [F.GENERAL]:    { f: null },
+            [F.SCI_2]:      { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:   { f: null },
+            [F.DATE_LONG]:   { f: null },
+            [F.DATE_MEDIUM]:   { f: null },
+            [F.TIME_12H]:   { f: null },
+            [F.TIME_24H]:   { f: null },
+            [F.TIME_DURATION]:   { f: null },
+            [F.PERCENT_2]:  { f: F.FRACTION_2, v: 0.75 },
+            [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.75 },
+            [F.TEXT]: { f: null },
+        }],
+
+        // === Mixed fractions ===
+        ['1 1/2', 1.5, {
+            [F.GENERAL]:     { f: F.FRACTION_1 },
+            [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.PERCENT_2]:   { f: F.FRACTION_1 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['2 3/4', 2.75, {
+            [F.GENERAL]:     { f: F.FRACTION_1 },
+            [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.PERCENT_2]:   { f: F.FRACTION_1 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['0 1/2', 0.5, {
+            [F.GENERAL]:     { f: F.FRACTION_1 },
+            [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.PERCENT_2]:   { f: F.FRACTION_1 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['0 1/10', 0.1, {
+            [F.GENERAL]:     { f: F.FRACTION_2 },
+            [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.PERCENT_2]:   { f: F.FRACTION_2 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['0 1/100', 0.01, {
+            [F.GENERAL]:     { f: F.FRACTION_2 },
+            [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.PERCENT_2]:   { f: F.FRACTION_2 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+        ['1 150/200', 1.75, {
+            [F.GENERAL]:     { f: F.FRACTION_2 },
+            [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.PERCENT_2]:   { f: F.FRACTION_2 },
+            [F.PERCENT_4]:   { f: F.PERCENT_4 },
+            [F.TEXT]: { f: null },
+        }],
+
+        // === Short date ===
+        ['1/5/5', 38357, {  // 1/5/2005
+            [F.GENERAL]:    { f: OUT.DATE_SHORT },
+            [F.SCI_2]:      { f: OUT.DATE_SHORT },
+            [F.PERCENT_2]:  { f: OUT.DATE_SHORT },
+            [F.FRACTION_1]: { f: OUT.DATE_SHORT },
+            [F.FRACTION_2]: { f: OUT.DATE_SHORT },
+            [F.TEXT]: { f: null },
+        }],
+
+        // === Text ===
+        ['text', 'text', {
+            [F.GENERAL]: { f: null },
+            [F.NUM_2]: { f: null },
+            [F.NUM_4]: { f: null },
+            [F.SCI_2]: { f: null },
+            [F.SCI_4]: { f: null },
+            [F.CURRENCY_2]: { f: null },
+            [F.CURRENCY_4]: { f: null },
+            [F.ACCOUNTING_2]: { f: null },
+            [F.ACCOUNTING_4]: { f: null },
+            [F.DATE_SHORT]: { f: null },
+            [F.DATE_LONG]: { f: null },
+            [F.DATE_MEDIUM]: { f: null },
+            [F.TIME_12H]: { f: null },
+            [F.TIME_24H]: { f: null },
+            [F.TIME_DURATION]: { f: null },
+            [F.PERCENT_2]: { f: null },
+            [F.PERCENT_4]: { f: null },
+            [F.FRACTION_1]: { f: null },
+            [F.FRACTION_2]: { f: null },
+            [F.FRACTION_HALF]: { f: null },
+            [F.TEXT]: { f: null },
+        }]
+    ];
+
+    for (const cellFormat of cellFormatTestCases) {
+        QUnit.test(`formatRecognition: cellFormat="${cellFormat}"`, function (assert) {
+            for (let i = 0; i < formatRecognitionTestCases.length; i++) {
+                const [textInput, expectedValue, formatOverrides = {}] = formatRecognitionTestCases[i];
+                const override = formatOverrides[cellFormat];
+
+                // Expected format: use override if specified, otherwise same as cell format
+                const expectedFormat = override ? override.f : cellFormat;
+                const expectedVal = override?.v !== undefined ? override.v : expectedValue;
+
+                const numFormat = AscCommon.oNumFormatCache.get(cellFormat);
+                const currentFormat = numFormat.getType();
+                const stringFormat = cellFormat;
+                const formatted = AscCommon.g_oFormatParser.parse(textInput, null, currentFormat, stringFormat);
+
+                if (formatted && formatted.format) {
+                    assert.strictEqual(
+                        formatted.format,
+                        expectedFormat,
+                        `Format: input="${textInput}" formatType="${currentFormat}" cellFormat="${stringFormat}"`
+                    );
+                    assert.strictEqual(
+                        formatted.value,
+                        expectedVal,
+                        `Value: input="${textInput}" formatType="${currentFormat}" cellFormat="${stringFormat}"`
+                    );
+                } else {
+                    assert.strictEqual(
+                        formatted,
+                        expectedFormat,
+                        `Null result: input="${textInput}" formatType="${currentFormat}" cellFormat="${stringFormat}"`
+                    );
+                }
             }
-
-        }
-    });
+        });
+    }
 
 });

@@ -88,6 +88,8 @@ var gc_aTimeFormats = ['[$-F400]h:mm:ss AM/PM', 'h:mm;@', 'h:mm AM/PM;@', 'h:mm:
 	'[h]:mm:ss;@'];
 var gc_aFractionFormats = ['# ?/?', '# ??/??', '# ???/???', '# ?/2', '# ?/4', '# ?/8', '# ??/16', '# ?/10', '# ??/100'];
 const dBNum1Numbers = ['\u3007','\u4E00','\u4E8C','\u4E09','\u56DB','\u4E94','\u516D','\u4E03','\u516B','\u4E5D'];
+const interfaceFormatScientific = '0.00E+00';
+const interfaceFormatPercent = '0.00%';
 
 var NumComporationOperators =
 {
@@ -3642,69 +3644,86 @@ FormatParser.prototype =
     },
     parse: function (value, cultureInfo, currentFormat, stringFormat)
     {
+        if (currentFormat === Asc.c_oAscNumFormatType.Text)
+            return null;
         if (null == cultureInfo)
             cultureInfo = g_oDefaultCultureInfo;
+        if (!stringFormat) {
+            stringFormat = AscCommon.g_cGeneralFormat;
+        }
         var res = null;
         var bError = false;
         //replace Non-breaking space(0xA0) with White-space(0x20)
         if (" " == cultureInfo.NumberGroupSeparator)
             value = value.replace(new RegExp(String.fromCharCode(0xA0), "g"));
-        var rx_thouthand = new RegExp("^(([ \\+\\-%\\$€£¥\\(]|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)((?:\\d+(?:" + escapeRegExp(cultureInfo.NumberGroupSeparator) + "\\d+)*)(?:" + escapeRegExp(cultureInfo.NumberDecimalSeparator) + "\\d*)?(?:\\s+\\d+/\\d+)?)(([ %\\)]|р.|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)$");
-        // If the format is already applied, the regular expression should read a fraction like "1/2"
-        if(currentFormat == Asc.c_oAscNumFormatType.Fraction || currentFormat == Asc.c_oAscNumFormatType.Number || currentFormat == Asc.c_oAscNumFormatType.Scientific || currentFormat == Asc.c_oAscNumFormatType.Accounting || currentFormat == Asc.c_oAscNumFormatType.Currency || currentFormat == Asc.c_oAscNumFormatType.Percent)
-            var rx_thouthand = new RegExp("^(([ \\+\\-%\\$€£¥\\(]|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)((?:\\d+(?:" + escapeRegExp(cultureInfo.NumberGroupSeparator) + "\\d+)*(?:" + escapeRegExp(cultureInfo.NumberDecimalSeparator) + "\\d*)?)?(?:\\s*\\d+/\\d+)?)(([ %\\)]|р.|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)$");        
+
+		// Determine if format should be preserved (not detected from input)
+		// Number, Currency, Accounting, Percent types preserve their format
+		// Scientific preserves if NOT interface format (interface = 0.00E+00)
+		var shouldPreserveFormat = (currentFormat == Asc.c_oAscNumFormatType.Number ||
+			currentFormat == Asc.c_oAscNumFormatType.Currency ||
+			currentFormat == Asc.c_oAscNumFormatType.Accounting ||
+			currentFormat == Asc.c_oAscNumFormatType.Date ||
+			currentFormat == Asc.c_oAscNumFormatType.Time ||
+			currentFormat == Asc.c_oAscNumFormatType.LongDate ||
+			(currentFormat == Asc.c_oAscNumFormatType.Fraction && -1 === stringFormat.indexOf('/?')) ||
+			(currentFormat == Asc.c_oAscNumFormatType.Percent && stringFormat !== interfaceFormatPercent) ||
+			(currentFormat == Asc.c_oAscNumFormatType.Scientific && stringFormat !== interfaceFormatScientific));
+        
+        // Single regex that matches numbers, mixed fractions ("1 1/2"), and simple fractions ("1/2")
+        var rx_thouthand = new RegExp("^(([ \\+\\-%\\$€£¥\\(]|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)((?:\\d+(?:" + escapeRegExp(cultureInfo.NumberGroupSeparator) + "\\d+)*(?:" + escapeRegExp(cultureInfo.NumberDecimalSeparator) + "\\d*)?)?(?:\\s*\\d+/\\d+)?)(([ %\\)]|р.|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)$");
         var match = value.match(rx_thouthand);
 
-        if (currentFormat == Asc.c_oAscNumFormatType.Text)
-            match = null;
+        
+
+        // Variables for fraction parsing
+        var sVal = null;
+        var sNumerator = null;
+        var sDenominator = null;
+        var withoutIntegerPart = false;
+        var sDivide = null;
+        var sBefore = null;
+        var sAfter = null;
 
         if (null != match) {
             // If the third group has "/" symbol parse it like a fraction
-            if (match[3] && match[3].includes('/'))
-            {
+            if (match[3] && match[3].indexOf('/') !== -1) {
                 var match2 = match[3].match(/\d+/g);
-                // If the fraction like a "1/2"
-                if(match2.length == 2)
-                {
-                    var withoutIntegerPart = true;
-                    var sVal = '0';
-                    var sNumerator = match2[0];
-                    var sDenominator = match2[1];
+                if (match2.length == 2) {
+                    // Simple fraction like "1/2" - only parse as fraction for numeric formats
+                    // Otherwise let parseDate handle it (could be date like "1/2" = Jan 2)
+                    var isNumericFormat = (currentFormat == Asc.c_oAscNumFormatType.Fraction || 
+                                          currentFormat == Asc.c_oAscNumFormatType.Number || 
+                                          currentFormat == Asc.c_oAscNumFormatType.Scientific || 
+                                          currentFormat == Asc.c_oAscNumFormatType.Accounting || 
+                                          currentFormat == Asc.c_oAscNumFormatType.Currency || 
+                                          currentFormat == Asc.c_oAscNumFormatType.Percent);
+                    if (!isNumericFormat) {
+                        match = null; // Let parseDate handle it
+                    } else {
+                        withoutIntegerPart = true;
+                        sVal = '0';
+                        sNumerator = match2[0];
+                        sDenominator = match2[1];
+                    }
+                } else {
+                    // Mixed fraction like "1 1/2" - always parse as fraction
+                    sVal = match2[0];
+                    sNumerator = match2[1];
+                    sDenominator = match2[2];
                 }
-                // If the fraction like a "0 1/2"
-                else
-                {
-                    var sVal = match2[0];
-                    var sNumerator = match2[1];
-                    var sDenominator = match2[2];
-                }
-            }
-            else 
-                var sVal = match[3];
-                
-
-            var sBefore = match[1];
-            var sAfter = match[4];
-
-        if(currentFormat == Asc.c_oAscNumFormatType.Currency){
-            var positivePattern = cultureInfo.CurrencyPositivePattern;
-            
-            var currencyBeforePatterns = [0, 1, 2, 9, 11, 12, 14];
-            var currencyAfterPatterns = [3, 4, 5, 6, 7, 8, 10, 13, 15];
-            // We need to detect where the currency symbol is located depending on the locale
-            if (currencyBeforePatterns.includes(positivePattern)) {
-                sBefore = cultureInfo.CurrencySymbol;
-            } else if (currencyAfterPatterns.includes(positivePattern)) {
-                sAfter = cultureInfo.CurrencySymbol;
             } else {
-                sBefore = cultureInfo.CurrencySymbol;
+                sVal = match[3];
             }
-        // The second condition is for compability of results with Excel
-        } else if(currentFormat === Asc.c_oAscNumFormatType.Percent && (value[0] !== " " || /0\.000/.test(stringFormat))){
-            sAfter = '%';
-        } else if (sNumerator && sDenominator) {
-            var sDivide = '/';
         }
+
+        if (null != match) {
+            sBefore = match[1];
+            sAfter = match[4];
+
+			if(sNumerator && sDenominator)
+                var sDivide = '/'
+
 			var oChartCount = {};
 			if(null != sBefore)
 			    this._parseStringLetters(sBefore, cultureInfo.CurrencySymbol, true, oChartCount);
@@ -3712,11 +3731,11 @@ FormatParser.prototype =
 			    this._parseStringLetters(sAfter, cultureInfo.CurrencySymbol, false, oChartCount);
 			if(null != sDivide)
 			    this._parseStringLetters(sDivide, cultureInfo.CurrencySymbol, false, oChartCount);
-			var bMinus = false;
-			var bPercent = false;
+            var bMinus = false;
+            var bPercent = false;
             var bFraction = false;
 
-			var sCurrency = null;
+            var sCurrency = null;
 			var oCurrencyElem = null;
 			var nBracket = 0;
 			for(var sChar in oChartCount){
@@ -3823,61 +3842,23 @@ FormatParser.prototype =
 					if (parseInt(dVal) != dVal)
 						sFracFormat = gc_sFormatDecimalPoint + "00";
 					var sFormat = null;
+					
+					// Percent: always divide by 100, but only change format for non-preserving types
 					if (bPercent) {
 						res.bPercent = true;
 						dVal /= 100;
-						sFormat = "0" + sFracFormat + "%";
+						if (shouldPreserveFormat) {
+							sFormat = stringFormat;
+						} else {
+							sFormat = "0" + sFracFormat + "%";
+						}
 					}
                     else if (bFraction) 
                     {
                         res.bFraction = true;
-                        // Calculate the number of symbols in the numerator and denominator to set the correct format (?/?, ??/??)
-                        var numLength = sNumerator.length;
-                        var denomLength = sDenominator.length;
-
-                        // The second condition checks how many decimal points the scientific data type has. If there are two points, the format parse as fraction (an Excel feature)
-                        if(currentFormat == Asc.c_oAscNumFormatType.Number || (currentFormat == Asc.c_oAscNumFormatType.Scientific && stringFormat !== "0.00E+00") || (currentFormat == Asc.c_oAscNumFormatType.Accounting && /#,##0\.000/.test(stringFormat)))
-                        {
-                            sFormat = stringFormat;
-                        } else if (stringFormat && currentFormat !== Asc.c_oAscNumFormatType.General && currentFormat !== Asc.c_oAscNumFormatType.Date && currentFormat !== Asc.c_oAscNumFormatType.Time && currentFormat !== Asc.c_oAscNumFormatType.Percent && currentFormat !== Asc.c_oAscNumFormatType.Scientific && currentFormat !== Asc.c_oAscNumFormatType.Accounting)
-                        {
-                                var formats = gc_aFractionFormats;
-                                if (formats.indexOf(stringFormat) !== -1)
-                                    sFormat = stringFormat;
-                        } else if (numLength == 1 && denomLength == 1) 
-                        {
-                            sFormat = "# ?/?";
-                        } else if (numLength == 1 && (denomLength == 2 || denomLength == 3))
-                        {
-                            if(currentFormat == Asc.c_oAscNumFormatType.Fraction)
-                                sFormat = "# ?/?";
-                            else 
-                                sFormat = "# ??/??";   
-                        } else if (numLength == 2 && denomLength == 1)
-                        {
-                             sFormat = "# ?/?";   
-                        } else if (numLength == 2 && (denomLength == 2 || denomLength == 3)) 
-                        {
-                            if(currentFormat == Asc.c_oAscNumFormatType.Fraction)
-                                sFormat = "# ?/?";
-                            else 
-                                sFormat = "# ??/??"; 
-                        } else if (numLength == 3 && denomLength == 1) 
-                        {
-                            sFormat = "# ?/?";
-                        } else if (numLength == 3 && (denomLength == 2 || denomLength == 3)) 
-                        {
-                            if (withoutIntegerPart && currentFormat == Asc.c_oAscNumFormatType.Fraction)
-                                sFormat = "# ?/?" 
-                            else   
-                                sFormat = "# ??/??";
-                        } else 
-                        {
-                            sFormat = null;
-                        }
-                    
+                        sFormat = this._selectFractionFormat(sNumerator, sDenominator, shouldPreserveFormat, currentFormat, stringFormat);
                     }
-					else if (sCurrency) {
+					else if (sCurrency && !shouldPreserveFormat) {
 						res.bCurrency = true;
 					    var sNumberFormat = "#" + gc_sFormatThousandSeparator + "##0" + sFracFormat;
 					    var sCurrencyFormat;
@@ -3955,11 +3936,12 @@ FormatParser.prototype =
 					    }
 					    sFormat = sPositivePattern + ";" + sNegativePattern;
 					}
-					else if (oVal.thouthand) {
+					else if (oVal.thouthand && (currentFormat === undefined || currentFormat == Asc.c_oAscNumFormatType.General)) {
+						// Only apply thousand-separator format for General format type (or when no format specified)
 						sFormat = "#" + gc_sFormatThousandSeparator + "##0" + sFracFormat;
 					}
 					else
-						sFormat = AscCommon.g_cGeneralFormat;
+						sFormat = stringFormat;
 					res.format = sFormat;
 					res.value = dVal;
                     if (!sFormat) 
@@ -3967,22 +3949,15 @@ FormatParser.prototype =
 				}
 			}
         }
-        if (res == null && currentFormat == Asc.c_oAscNumFormatType.Text)
-            res = {format: '@', value: value, bDateTime: false, bDate: false, bTime: false, bPercent: false, bCurrency: false};
-        else if(res == null && value[0] == ' ')
-            return res;
-        else if (null == res && !bError)
-            res = this.parseDate(value, cultureInfo, currentFormat, stringFormat);    
-        else if (currentFormat == Asc.c_oAscNumFormatType.Time)
-            res.format = stringFormat;     
+        // Handle special cases after main parsing
+        if (res == null && value[0] == ' ') {
+            return null;
+        }
+        if (res == null && !bError) {
+            res = this.parseDate(value, cultureInfo, shouldPreserveFormat, stringFormat);
+        }
 
-        // If the string is not read as a date but the format is set to date, we need to force the date format to be applied
-        if (res && stringFormat && stringFormat.replace(/^\[.*?\]/, '') == cultureInfo.LongDatePattern)
-            res.format = cultureInfo.LongDatePattern;
-        else if (res && currentFormat == Asc.c_oAscNumFormatType.Date && stringFormat !== getShortDateFormat(cultureInfo))
-            res.format = stringFormat;
-
-        return res
+        return res;
     },
     _parseStringLetters: function (sVal, currencySymbol, bBefore, oRes) {
         //отдельно обрабатываем 'р.' и currencySymbol потому что они могут быть не односимвольными
@@ -4008,20 +3983,54 @@ FormatParser.prototype =
                 elem.all += nCount;
             }
         }
-		for(var i = 0, length = sVal.length; i < length; i++){
-			var sChar = sVal[i];
-			var elem = oRes[sChar];
-			if(!elem){
-				elem = {before: 0, after: 0, all: 0};
-				oRes[sChar] = elem;
-			}
-			if(bBefore)
-				elem.before++;
-			else
-				elem.after++;
-			elem.all++;
-		}
-	},
+        for (var i = 0, length = sVal.length; i < length; i++) {
+            var sChar = sVal[i];
+            var elem = oRes[sChar];
+            if (!elem) {
+                elem = {before: 0, after: 0, all: 0};
+                oRes[sChar] = elem;
+            }
+            if (bBefore)
+                elem.before++;
+            else
+                elem.after++;
+            elem.all++;
+        }
+    },
+    /**
+     * Select appropriate fraction format based on numerator/denominator lengths and current format
+     * @param {string} sNumerator - numerator string
+     * @param {string} sDenominator - denominator string
+	 * @param {boolean} shouldPreserveFormat - true if format should be preserved
+     * @param {number} currentFormat - current cell format type
+	 * @param {string} stringFormat - current format string
+     * @returns {string|null} - fraction format string or null
+     */
+    _selectFractionFormat: function (sNumerator, sDenominator, shouldPreserveFormat, currentFormat, stringFormat) {
+        var numLength = sNumerator.length;
+        var denomLength = sDenominator.length;
+        var maxLength = Math.max(numLength, denomLength);
+        if (shouldPreserveFormat || currentFormat == Asc.c_oAscNumFormatType.Fraction) {
+            return stringFormat;
+        }
+        
+        // Limit to 3 digits max - larger fractions return null (will be treated as text)
+        if (numLength > 3 || denomLength > 3) {
+            return null;
+        }
+        
+        // Simple rule: single digit denominators use "# ?/?", otherwise "# ??/??"
+        // Exception: when current format is already fraction-like, prefer simpler format
+        if (maxLength <= 1) {
+            return "# ?/?";
+        } else if (denomLength <= 1) {
+            // Denominator is single digit - use simpler format
+            return "# ?/?";
+        } else {
+            // Multi-digit denominator - use double-digit format
+            return "# ??/??";
+        }
+    },
     _parseThouthand: function (val, sNumerator, sDenominator, cultureInfo)
     {
         var oRes = null;
@@ -4518,7 +4527,7 @@ FormatParser.prototype =
         }
         return length === 0 ? false: bRes;
     },
-	parseDate: function (value, cultureInfo, currentFormat, stringFormat)
+	parseDate: function (value, cultureInfo, shouldPreserveFormat, stringFormat)
 	{
 		//todo "11: AM" should fail
 		var res = null;
@@ -4746,12 +4755,10 @@ FormatParser.prototype =
 					if(dValue >= 0)
 					{
 						var sFormat = "";
-                        // Some formats shoult not be converted to a date only when they have more than two decimal places (an Excel feature)
-                        if (currentFormat == Asc.c_oAscNumFormatType.Date || currentFormat == Asc.c_oAscNumFormatType.Time || currentFormat == Asc.c_oAscNumFormatType.Currency || currentFormat == Asc.c_oAscNumFormatType.Number || (currentFormat == Asc.c_oAscNumFormatType.Scientific && /0\.000/.test(stringFormat)) || (currentFormat == Asc.c_oAscNumFormatType.Fraction && stringFormat !== "# ?/?" && stringFormat !== "# ??/??") || (currentFormat == Asc.c_oAscNumFormatType.Accounting && /#,##0\.000/.test(stringFormat)))
-                            sFormat += stringFormat;
-                        else if (currentFormat == Asc.c_oAscNumFormatType.LongDate)
-                            sFormat += cultureInfo.LongDatePattern;
-                        else if (bDate) {
+                        // Check if current format should be preserved (not converted to date)
+                        if (shouldPreserveFormat) {
+                            sFormat = stringFormat;
+                        } else if (bDate) {
 							if (bTime && nHour > 23) {
 								sFormat = AscCommon.g_cGeneralFormat;
 							} else {
@@ -5680,7 +5687,7 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 			} else {
 				res.push(AscCommon.g_cGeneralFormat);
 				res.push('0.00');
-				res.push('0.00E+00');
+				res.push(interfaceFormatScientific);
 				res.push(getCurrencyFormat(cultureInfo, 2, hasCurrency, true, currencySymbol));
 				res.push(getCurrencyFormatSimple2(cultureInfo, 2, hasCurrency, currencySymbol, false));
 				res.push(getShortDateFormat(cultureInfo));
@@ -5691,7 +5698,7 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 				} else {
 					res.push('[$-F400]h:mm:ss');
 				}
-				res.push('0.00%');
+				res.push(interfaceFormatPercent);
 				res.push('# ?/?');
 				res.push('@');
 			}
