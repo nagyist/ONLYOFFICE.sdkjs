@@ -4663,6 +4663,12 @@
 		'effectWipeRight': { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] },
 		'effectWipeUp':    { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] },
 
+		// Default 'p159:morph' effect attribute is: option='byObject'
+		// Attribute must be specified explicitly - <p159:morph/> without 'option' attribute is forbidden
+		'effectMorphByObject': { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byObject'] },
+		'effectMorphByWord':   { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byWord'] },
+		'effectMorphByChar':   { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byChar'] },
+
 		'effectNone': {}
 
 		// effectCrawlFromDown
