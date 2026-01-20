@@ -3642,75 +3642,204 @@ FormatParser.prototype =
         }
         return val - 0;
     },
+    /**
+     * Get cached regex for number parsing
+     * @private
+     */
+    _getNumberRegex: function (cultureInfo) {
+        // Cache key based on culture-specific separators
+        var cacheKey = cultureInfo.NumberGroupSeparator + "|" + 
+                       cultureInfo.NumberDecimalSeparator + "|" + 
+                       cultureInfo.CurrencySymbol;
+        
+        if (!this._numberRegexCache) {
+            this._numberRegexCache = {};
+        }
+        let regex = this._numberRegexCache[cacheKey];
+        if (!regex) {
+            regex = new RegExp(
+                "^(([ \\+\\-%\\$€£¥\\(]|" + escapeRegExp(cultureInfo.CurrencySymbol) + 
+                ")*)((?:\\d+(?:" + escapeRegExp(cultureInfo.NumberGroupSeparator) + 
+                "\\d+)*(?:" + escapeRegExp(cultureInfo.NumberDecimalSeparator) + 
+                "\\d*)?)?(?:\\s*\\d+/\\d+)?)(([ %\\)]|р.|" + 
+                escapeRegExp(cultureInfo.CurrencySymbol) + ")*)$"
+            );
+            this._numberRegexCache[cacheKey] = regex;
+        }
+        return regex;
+    },
+    /**
+     * Check if format should be preserved (not auto-detected from input)
+     * @private
+     */
+    _shouldPreserveFormat: function (currentFormat, stringFormat) {
+        switch (currentFormat) {
+            case Asc.c_oAscNumFormatType.Number:
+            case Asc.c_oAscNumFormatType.Currency:
+            case Asc.c_oAscNumFormatType.Accounting:
+            case Asc.c_oAscNumFormatType.Date:
+            case Asc.c_oAscNumFormatType.Time:
+            case Asc.c_oAscNumFormatType.LongDate:
+                return true;
+            case Asc.c_oAscNumFormatType.Fraction:
+                // Preserve unless it's a "detect" format like "# ?/?"
+                return -1 === stringFormat.indexOf('/?');
+            case Asc.c_oAscNumFormatType.Percent:
+                return stringFormat !== interfaceFormatPercent;
+            case Asc.c_oAscNumFormatType.Scientific:
+                return stringFormat !== interfaceFormatScientific;
+            default:
+                return false;
+        }
+    },
+    /**
+     * Check if format is numeric (for simple fraction "1/2" disambiguation with dates)
+     * @private
+     */
+    _isNumericFormat: function (currentFormat) {
+        switch (currentFormat) {
+            case Asc.c_oAscNumFormatType.Fraction:
+            case Asc.c_oAscNumFormatType.Number:
+            case Asc.c_oAscNumFormatType.Scientific:
+            case Asc.c_oAscNumFormatType.Accounting:
+            case Asc.c_oAscNumFormatType.Currency:
+            case Asc.c_oAscNumFormatType.Percent:
+                return true;
+            default:
+                return false;
+        }
+    },
+    /**
+     * Build currency format string based on pattern
+     * @private
+     */
+    _buildCurrencyFormat: function (sCurrency, sFracFormat, nPattern) {
+        var sNumberFormat = "#" + gc_sFormatThousandSeparator + "##0" + sFracFormat;
+        var sCurrencyFormat = (sCurrency.length > 1) ? "\"" + sCurrency + "\"" : "\\" + sCurrency;
+        var sPositivePattern, sNegativePattern;
+
+        switch (nPattern) {
+            case 0:
+                sPositivePattern = sCurrencyFormat + sNumberFormat + "_)";
+                sNegativePattern = "[Red](" + sCurrencyFormat + sNumberFormat + ")";
+                break;
+            case 1:
+                sPositivePattern = sCurrencyFormat + sNumberFormat;
+                sNegativePattern = "[Red]-" + sCurrencyFormat + sNumberFormat;
+                break;
+            case 2:
+                sPositivePattern = sCurrencyFormat + sNumberFormat;
+                sNegativePattern = "[Red]" + sCurrencyFormat + "-" + sNumberFormat;
+                break;
+            case 3:
+                sPositivePattern = sCurrencyFormat + sNumberFormat + "_-";
+                sNegativePattern = "[Red]" + sCurrencyFormat + sNumberFormat + "-";
+                break;
+            case 4:
+                sPositivePattern = sNumberFormat + sCurrencyFormat + "_)";
+                sNegativePattern = "[Red](" + sNumberFormat + sCurrencyFormat + ")";
+                break;
+            case 5:
+                sPositivePattern = sNumberFormat + sCurrencyFormat;
+                sNegativePattern = "[Red]-" + sNumberFormat + sCurrencyFormat;
+                break;
+            case 6:
+                sPositivePattern = sNumberFormat + "-" + sCurrencyFormat;
+                sNegativePattern = "[Red]" + sNumberFormat + "-" + sCurrencyFormat;
+                break;
+            case 7:
+                sPositivePattern = sNumberFormat + sCurrencyFormat + "_-";
+                sNegativePattern = "[Red]" + sNumberFormat + sCurrencyFormat + "-";
+                break;
+            case 8:
+                sPositivePattern = sNumberFormat + " " + sCurrencyFormat;
+                sNegativePattern = "[Red]-" + sNumberFormat + " " + sCurrencyFormat;
+                break;
+            case 9:
+                sPositivePattern = sCurrencyFormat + " " + sNumberFormat;
+                sNegativePattern = "[Red]-" + sCurrencyFormat + " " + sNumberFormat;
+                break;
+            case 10:
+                sPositivePattern = sNumberFormat + " " + sCurrencyFormat + "_-";
+                sNegativePattern = "[Red]" + sNumberFormat + " " + sCurrencyFormat + "-";
+                break;
+            case 11:
+                sPositivePattern = sCurrencyFormat + " " + sNumberFormat + "_-";
+                sNegativePattern = "[Red]" + sCurrencyFormat + " " + sNumberFormat + "-";
+                break;
+            case 12:
+                sPositivePattern = sCurrencyFormat + " " + sNumberFormat;
+                sNegativePattern = "[Red]" + sCurrencyFormat + " -" + sNumberFormat;
+                break;
+            case 13:
+                sPositivePattern = sNumberFormat + " " + sCurrencyFormat;
+                sNegativePattern = "[Red]" + sNumberFormat + "- " + sCurrencyFormat;
+                break;
+            case 14:
+                sPositivePattern = sCurrencyFormat + " " + sNumberFormat + "_)";
+                sNegativePattern = "[Red](" + sCurrencyFormat + " " + sNumberFormat + ")";
+                break;
+            case 15:
+                sPositivePattern = sNumberFormat + " " + sCurrencyFormat + "_)";
+                sNegativePattern = "[Red](" + sNumberFormat + " " + sCurrencyFormat + ")";
+                break;
+            default:
+                sPositivePattern = sCurrencyFormat + sNumberFormat;
+                sNegativePattern = "[Red]-" + sCurrencyFormat + sNumberFormat;
+        }
+        return sPositivePattern + ";" + sNegativePattern;
+    },
     parse: function (value, cultureInfo, currentFormat, stringFormat)
     {
         if (currentFormat === Asc.c_oAscNumFormatType.Text)
             return null;
         if (null == cultureInfo)
             cultureInfo = g_oDefaultCultureInfo;
-        if (!stringFormat) {
+        if (!stringFormat)
             stringFormat = AscCommon.g_cGeneralFormat;
-        }
-        var res = null;
-        var bError = false;
-        //replace Non-breaking space(0xA0) with White-space(0x20)
+
+        // Replace Non-breaking space (0xA0) with White-space (0x20)
         if (" " == cultureInfo.NumberGroupSeparator)
-            value = value.replace(new RegExp(String.fromCharCode(0xA0), "g"));
+            value = value.replace(new RegExp(String.fromCharCode(0xA0), "g"), "");
 
-		// Determine if format should be preserved (not detected from input)
-		// Number, Currency, Accounting, Percent types preserve their format
-		// Scientific preserves if NOT interface format (interface = 0.00E+00)
-		var shouldPreserveFormat = (currentFormat == Asc.c_oAscNumFormatType.Number ||
-			currentFormat == Asc.c_oAscNumFormatType.Currency ||
-			currentFormat == Asc.c_oAscNumFormatType.Accounting ||
-			currentFormat == Asc.c_oAscNumFormatType.Date ||
-			currentFormat == Asc.c_oAscNumFormatType.Time ||
-			currentFormat == Asc.c_oAscNumFormatType.LongDate ||
-			(currentFormat == Asc.c_oAscNumFormatType.Fraction && -1 === stringFormat.indexOf('/?')) ||
-			(currentFormat == Asc.c_oAscNumFormatType.Percent && stringFormat !== interfaceFormatPercent) ||
-			(currentFormat == Asc.c_oAscNumFormatType.Scientific && stringFormat !== interfaceFormatScientific));
-        
-        // Single regex that matches numbers, mixed fractions ("1 1/2"), and simple fractions ("1/2")
-        var rx_thouthand = new RegExp("^(([ \\+\\-%\\$€£¥\\(]|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)((?:\\d+(?:" + escapeRegExp(cultureInfo.NumberGroupSeparator) + "\\d+)*(?:" + escapeRegExp(cultureInfo.NumberDecimalSeparator) + "\\d*)?)?(?:\\s*\\d+/\\d+)?)(([ %\\)]|р.|" + escapeRegExp(cultureInfo.CurrencySymbol) + ")*)$");
+        var shouldPreserveFormat = this._shouldPreserveFormat(currentFormat, stringFormat);
+
+        // Regex that matches numbers, mixed fractions ("1 1/2"), and simple fractions ("1/2")
+        // Cached per cultureInfo to avoid recompilation on every call
+        var rx_thouthand = this._getNumberRegex(cultureInfo);
         var match = value.match(rx_thouthand);
-
-        
 
         // Variables for fraction parsing
         var sVal = null;
         var sNumerator = null;
         var sDenominator = null;
-        var withoutIntegerPart = false;
-        var sDivide = null;
         var sBefore = null;
         var sAfter = null;
+        var res = null;
+        var bError = false;
 
         if (null != match) {
             // If the third group has "/" symbol parse it like a fraction
             if (match[3] && match[3].indexOf('/') !== -1) {
                 var match2 = match[3].match(/\d+/g);
-                if (match2.length == 2) {
+                if (null != match2 && match2.length == 2) {
                     // Simple fraction like "1/2" - only parse as fraction for numeric formats
                     // Otherwise let parseDate handle it (could be date like "1/2" = Jan 2)
-                    var isNumericFormat = (currentFormat == Asc.c_oAscNumFormatType.Fraction || 
-                                          currentFormat == Asc.c_oAscNumFormatType.Number || 
-                                          currentFormat == Asc.c_oAscNumFormatType.Scientific || 
-                                          currentFormat == Asc.c_oAscNumFormatType.Accounting || 
-                                          currentFormat == Asc.c_oAscNumFormatType.Currency || 
-                                          currentFormat == Asc.c_oAscNumFormatType.Percent);
-                    if (!isNumericFormat) {
+                    if (!this._isNumericFormat(currentFormat)) {
                         match = null; // Let parseDate handle it
                     } else {
-                        withoutIntegerPart = true;
                         sVal = '0';
                         sNumerator = match2[0];
                         sDenominator = match2[1];
                     }
-                } else {
+                } else if (null != match2 && match2.length >= 3) {
                     // Mixed fraction like "1 1/2" - always parse as fraction
                     sVal = match2[0];
                     sNumerator = match2[1];
                     sDenominator = match2[2];
+                } else {
+                    // Invalid fraction format
+                    match = null;
                 }
             } else {
                 sVal = match[3];
@@ -3721,20 +3850,16 @@ FormatParser.prototype =
             sBefore = match[1];
             sAfter = match[4];
 
-			if(sNumerator && sDenominator)
-                var sDivide = '/'
-
-			var oChartCount = {};
-			if(null != sBefore)
-			    this._parseStringLetters(sBefore, cultureInfo.CurrencySymbol, true, oChartCount);
-			if(null != sAfter)
-			    this._parseStringLetters(sAfter, cultureInfo.CurrencySymbol, false, oChartCount);
-			if(null != sDivide)
-			    this._parseStringLetters(sDivide, cultureInfo.CurrencySymbol, false, oChartCount);
+            var oChartCount = {};
+            if (null != sBefore)
+                this._parseStringLetters(sBefore, cultureInfo.CurrencySymbol, true, oChartCount);
+            if (null != sAfter)
+                this._parseStringLetters(sAfter, cultureInfo.CurrencySymbol, false, oChartCount);
+            if (sNumerator && sDenominator)
+                this._parseStringLetters('/', cultureInfo.CurrencySymbol, false, oChartCount);
             var bMinus = false;
             var bPercent = false;
             var bFraction = false;
-
             var sCurrency = null;
 			var oCurrencyElem = null;
 			var nBracket = 0;
@@ -3770,22 +3895,16 @@ FormatParser.prototype =
 					else
 						bError = true;
 				}
-                else if('/' == sChar){
-                    if (sVal)
-                    {
-                        if(1 == elem.all)
+                else if ('/' == sChar) {
+                    if (sVal) {
+                        if (1 == elem.all)
                             bFraction = true;
                         else
                             bError = true;
+                    } else {
+                        // "/" without value - treat as error
+                        bError = true;
                     }
-                    else
-                    {
-                        if(1 == elem.all)
-                            bGeneral = true;
-                        else
-                            bError = true;
-                    } 
-                    
                 }
 				else{
 					if(null == sCurrency && 1 == elem.all){
@@ -3860,81 +3979,7 @@ FormatParser.prototype =
                     }
 					else if (sCurrency && !shouldPreserveFormat) {
 						res.bCurrency = true;
-					    var sNumberFormat = "#" + gc_sFormatThousandSeparator + "##0" + sFracFormat;
-					    var sCurrencyFormat;
-					    if(sCurrency.length > 1)
-					        sCurrencyFormat = "\"" + sCurrency + "\"";
-					    else
-					        sCurrencyFormat = "\\" + sCurrency;
-					    var sPositivePattern;
-					    var sNegativePattern;
-					    switch (CurrencyNegativePattern) {
-					        case 0:
-					            sPositivePattern = sCurrencyFormat + sNumberFormat + "_)";
-					            sNegativePattern = "[Red](" + sCurrencyFormat + sNumberFormat + ")";
-					            break;
-					        case 1:
-					            sPositivePattern = sCurrencyFormat + sNumberFormat;
-					            sNegativePattern = "[Red]-" + sCurrencyFormat + sNumberFormat;
-					            break;
-					        case 2:
-					            sPositivePattern = sCurrencyFormat + sNumberFormat;
-					            sNegativePattern = "[Red]" + sCurrencyFormat + "-" + sNumberFormat;
-					            break;
-					        case 3:
-					            sPositivePattern = sCurrencyFormat + sNumberFormat + "_-";
-					            sNegativePattern = "[Red]" + sCurrencyFormat + sNumberFormat + "-";
-					            break;
-					        case 4:
-					            sPositivePattern = sNumberFormat + sCurrencyFormat + "_)";
-					            sNegativePattern = "[Red](" + sNumberFormat + sCurrencyFormat + ")";
-					            break;
-					        case 5:
-					            sPositivePattern = sNumberFormat + sCurrencyFormat;
-					            sNegativePattern = "[Red]-" + sNumberFormat + sCurrencyFormat;
-					            break;
-					        case 6:
-					            sPositivePattern = sNumberFormat + "-" + sCurrencyFormat;
-					            sNegativePattern = "[Red]" + sNumberFormat + "-" + sCurrencyFormat;
-					            break;
-					        case 7:
-					            sPositivePattern = sNumberFormat + sCurrencyFormat + "_-";
-					            sNegativePattern = "[Red]" + sNumberFormat + sCurrencyFormat + "-";
-					            break;
-					        case 8:
-					            sPositivePattern = sNumberFormat + " " + sCurrencyFormat;
-					            sNegativePattern = "[Red]-" + sNumberFormat + " " + sCurrencyFormat;
-					            break;
-					        case 9:
-					            sPositivePattern = sCurrencyFormat + " " + sNumberFormat;
-					            sNegativePattern = "[Red]-" + sCurrencyFormat + " " + sNumberFormat;
-					            break;
-					        case 10:
-					            sPositivePattern = sNumberFormat + " " + sCurrencyFormat + "_-";
-					            sNegativePattern = "[Red]" + sNumberFormat + " " + sCurrencyFormat + "-";
-					            break;
-					        case 11:
-					            sPositivePattern = sCurrencyFormat + " " + sNumberFormat + "_-";
-					            sNegativePattern = "[Red]" + sCurrencyFormat + " " + sNumberFormat + "-";
-					            break;
-					        case 12:
-					            sPositivePattern = sCurrencyFormat + " " + sNumberFormat;
-					            sNegativePattern = "[Red]" + sCurrencyFormat + " -" + sNumberFormat;
-					            break;
-					        case 13:
-					            sPositivePattern = sNumberFormat + " " + sCurrencyFormat;
-					            sNegativePattern = "[Red]" + sNumberFormat + "- " + sCurrencyFormat;
-					            break;
-					        case 14:
-					            sPositivePattern = sCurrencyFormat + " " + sNumberFormat + "_)";
-					            sNegativePattern = "[Red](" + sCurrencyFormat + " " + sNumberFormat + ")";
-					            break;
-					        case 15:
-					            sPositivePattern = sNumberFormat + " " + sCurrencyFormat + "_)";
-					            sNegativePattern = "[Red](" + sNumberFormat + " " + sCurrencyFormat + ")";
-					            break;
-					    }
-					    sFormat = sPositivePattern + ";" + sNegativePattern;
+						sFormat = this._buildCurrencyFormat(sCurrency, sFracFormat, CurrencyNegativePattern);
 					}
 					else if (oVal.thouthand && (currentFormat === undefined || currentFormat == Asc.c_oAscNumFormatType.General)) {
 						// Only apply thousand-separator format for General format type (or when no format specified)
