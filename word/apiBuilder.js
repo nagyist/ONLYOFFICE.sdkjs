@@ -1622,7 +1622,7 @@
 	{
 		sLink = GetStringParameter(sLink, "");
 		sScreenTipText = GetStringParameter(sScreenTipText, "");
-		sBookmarkName = GetStringParameter(sBookmarkName, "");
+		sBookmarkName = GetStringParameter(sBookmarkName, null);
 
 		if ((!sLink && !sBookmarkName) || (sLink && sBookmarkName)) {
 			return null;
@@ -10498,7 +10498,7 @@
 	{
 		sLink = GetStringParameter(sLink, "");
 		sScreenTipText = GetStringParameter(sScreenTipText, "");
-		sBookmarkName = GetStringParameter(sBookmarkName, "");
+		sBookmarkName = GetStringParameter(sBookmarkName, null);
 
 		if ((!sLink && !sBookmarkName) || (sLink && sBookmarkName)) {
 			return null;
@@ -12181,7 +12181,7 @@
 	{
 		sLink = GetStringParameter(sLink, "");
 		sScreenTipText = GetStringParameter(sScreenTipText, "");
-		sBookmarkName = GetStringParameter(sBookmarkName, "");
+		sBookmarkName = GetStringParameter(sBookmarkName, null);
 
 		if ((!sLink && !sBookmarkName) || (sLink && sBookmarkName)) {
 			return null;
