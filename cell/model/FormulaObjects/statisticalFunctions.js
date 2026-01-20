@@ -12167,6 +12167,7 @@ function (window, undefined) {
 	FormulaRangesCache.prototype.remove = function () {
 	};
 
+
 	function CountIfTypedCache() {
 		this.data = {};
 	}
@@ -12285,6 +12286,21 @@ function (window, undefined) {
 		}
 		return i;
 	};
+	CountIfTypedCache.prototype.parseAnyNumber = function(value) {
+		let convertedToNumber = null;
+		if (AscCommon.g_oFormatParser.isLocaleNumber(value)) {
+			convertedToNumber = AscCommon.g_oFormatParser.parseLocaleNumber(value);
+		}
+		if (isNaN(convertedToNumber) || convertedToNumber === null) {
+			let convertedToNumber = AscCommon.g_oFormatParser.parse(value);
+			if (convertedToNumber) {
+				convertedToNumber = convertedToNumber.value;
+				return convertedToNumber;
+			}
+			return null;
+		}
+		return convertedToNumber;
+	};
 	CountIfTypedCache.prototype.forEachInTyped = function(range, type, matchingFunction, searchValue, convertToNumber) {
 		let count = 0;
 		const ws = range.getWS();
@@ -12306,8 +12322,8 @@ function (window, undefined) {
 				const lastIndex = this.findHigherIndexInTyped(bbox.r2, typedIndexes);
 				if (convertToNumber) {
 					for (let j = firstIndex; j < lastIndex; j += 1) {
-						let value = AscCommon.g_oFormatParser.parseLocaleNumber(typedData[j]);
-						if (!isNaN(value)) {
+						let value = this.parseAnyNumber(typedData[j]);
+						if (value !== null) {
 							count += matchingFunction(value, searchValue);
 						}
 					}
@@ -12420,6 +12436,78 @@ function (window, undefined) {
 	}
 	CountIfCache.prototype.constructor = CountIfCache;
 
+	CountIfCache.prototype.parseStringToCElement = function (val, cultureInfo) {
+		if (!cultureInfo) {
+			cultureInfo = AscCommon.g_oDefaultCultureInfo;
+		}
+
+		const cBoolLocal = AscCommon.cBoolLocal;
+		const cErrorLocal = AscCommon.cErrorLocal;
+		const cErrorOrigin = AscCommon.cErrorOrigin;
+
+		function checkCellValueTypeError(sUpText) {
+			switch (sUpText) {
+				case cErrorLocal["nil"]:
+					return cErrorOrigin["nil"];
+				case cErrorLocal["div"]:
+					return cErrorOrigin["div"];
+				case cErrorLocal["value"]:
+					return cErrorOrigin["value"];
+				case cErrorLocal["ref"]:
+					return cErrorOrigin["ref"];
+				case cErrorLocal["name"]:
+				case cErrorLocal["name"].replace('\\', ''):
+					return cErrorOrigin["name"];
+				case cErrorLocal["num"]:
+					return cErrorOrigin["num"];
+				case cErrorLocal["na"]:
+					return cErrorOrigin["na"];
+				case cErrorLocal["getdata"]:
+					return cErrorOrigin["getdata"];
+				case cErrorLocal["uf"]:
+					return cErrorOrigin["uf"];
+				case cErrorLocal["calc"]:
+					return cErrorOrigin["calc"];
+				case cErrorLocal["spill"]:
+					return cErrorOrigin["spill"];
+				case cErrorLocal["busy"]:
+					return cErrorOrigin["busy"];
+			}
+			return false;
+		}
+
+		if ("" === val) {
+			return new cString("");
+		}
+
+		if (AscCommon.g_oFormatParser.isLocaleNumber(val, cultureInfo)) {
+			const numberValue = AscCommon.g_oFormatParser.parseLocaleNumber(val, cultureInfo);
+			return new cNumber(numberValue);
+		}
+
+		const sUpText = val.toUpperCase();
+
+		if (cBoolLocal.t === sUpText || cBoolLocal.f === sUpText) {
+			return new cBool(cBoolLocal.t === sUpText);
+		}
+
+		if (sUpText === "TRUE" || sUpText === "FALSE") {
+			return new cBool(sUpText === "TRUE");
+		}
+
+		const errorValue = checkCellValueTypeError(sUpText);
+		if (errorValue) {
+			return new cError(errorValue);
+		}
+
+		const parseResult = AscCommon.g_oFormatParser.parse(val, cultureInfo);
+		if (null != parseResult) {
+			return new cNumber(parseResult.value);
+		}
+
+		return new cString(val);
+	};
+
 	CountIfCache.prototype.calculate = function (arg, _arg1) {
 		let arg0 = arg[0], arg1 = arg[1];
 
@@ -12497,23 +12585,15 @@ function (window, undefined) {
 	CountIfCache.prototype._calculate = function (range, arg1) {
 		const ws = range.getWS();
 		let _count = 0;
-		let matchingInfo = AscCommonExcel.matchingValue(arg1);
+		let matchingInfo = AscCommonExcel.matchingValue(arg1, this.parseStringToCElement);
 		let type = matchingInfo.val.type;
 		let searchValue = matchingInfo.val;
 		if (type === cElementType.string) {
 			searchValue = searchValue.toString().toLowerCase();
+		} else if (type === cElementType.error) {
+			searchValue = searchValue.errorType;
 		} else {
 			searchValue = searchValue.value;
-		}
-		if (type === cElementType.error) {
-			searchValue = arg1.errorType;
-		}
-		if (type === cElementType.string) {
-			const checkErr = new cError(matchingInfo.val.value.toUpperCase());
-			if (checkErr.errorType !== -1) {
-				type = cElementType.error;
-				searchValue = checkErr.errorType;
-			}
 		}
 		if (searchValue === "") {
 			if (matchingInfo.op === "=" || matchingInfo.op === null) {
@@ -12534,8 +12614,8 @@ function (window, undefined) {
 		const isWildcard = type === cElementType.string && (searchValue.indexOf('*') !== -1 || searchValue.indexOf('?') !== -1);
 		if ((matchingInfo.op === '=' || matchingInfo.op === null) && !isWildcard) {
 			if (type === cElementType.string) {
-				const convertedToNumber = AscCommon.g_oFormatParser.parseLocaleNumber(searchValue);
-				if (!isNaN(convertedToNumber)) {
+				const convertedToNumber = this.typedCache.parseAnyNumber(searchValue)
+				if (convertedToNumber !== null) {
 					searchValue = convertedToNumber;
 					type = cElementType.number;
 				}

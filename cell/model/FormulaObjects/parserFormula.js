@@ -11430,7 +11430,7 @@ function parserFormula( formula, parent, _ws ) {
 
 	var matchingOperators = new RegExp("^(=|<>|<=|>=|<|>).*");
 
-	function matchingValue(oVal) {
+	function matchingValue(oVal, opt_callback) {
 		var res;
 		if (cElementType.string === oVal.type) {
 			var search, op;
@@ -11443,7 +11443,9 @@ function parserFormula( formula, parent, _ws ) {
 				search = val;
 				op = null;
 			}
-
+			if (opt_callback) {
+				return {val: opt_callback(search), op: op};
+			}
 			var parseRes = AscCommon.g_oFormatParser.parse(search);
 			res = {val: parseRes ? new cNumber(parseRes.value) : new cString(search), op: op};
 		} else {
