@@ -2196,11 +2196,15 @@ background-repeat: no-repeat;\
 
 		if (true === ParaPr.Spacing.AfterAutoSpacing)
 			ParaPr.Spacing.After = AscCommonWord.spacing_Auto;
+		else if (undefined !== ParaPr.Spacing.AfterLines)
+			ParaPr.Spacing.After = ParaPr.Spacing.CalculateAfter();
 		else if (undefined === ParaPr.Spacing.AfterAutoSpacing)
 			ParaPr.Spacing.After = AscCommonWord.UnknownValue;
 
 		if (true === ParaPr.Spacing.BeforeAutoSpacing)
 			ParaPr.Spacing.Before = AscCommonWord.spacing_Auto;
+		else if (undefined !== ParaPr.Spacing.BeforeLines)
+			ParaPr.Spacing.Before = ParaPr.Spacing.CalculateBefore();
 		else if (undefined === ParaPr.Spacing.BeforeAutoSpacing)
 			ParaPr.Spacing.Before = AscCommonWord.UnknownValue;
 
@@ -3860,7 +3864,8 @@ background-repeat: no-repeat;\
 					else
 						this.WordControl.m_oLogicDocument.SetParagraphSpacing({
 							Before            : value,
-							BeforeAutoSpacing : false
+							BeforeAutoSpacing : false,
+							BeforeLines       : null
 						});
 
 					break;
@@ -3872,7 +3877,8 @@ background-repeat: no-repeat;\
 					else
 						this.WordControl.m_oLogicDocument.SetParagraphSpacing({
 							After            : value,
-							AfterAutoSpacing : false
+							AfterAutoSpacing : false,
+							AfterLines       : null
 						});
 
 					break;
@@ -4106,7 +4112,14 @@ background-repeat: no-repeat;\
 				this.WordControl.m_oLogicDocument.SetParagraphPageBreakBefore(Props.PageBreakBefore);
 
 			if ("undefined" != typeof(Props.Spacing) && null != Props.Spacing)
+			{
+				if (undefined !== Props.Spacing.Before)
+					Props.Spacing.BeforeLines = null;
+				if (undefined !== Props.Spacing.After)
+					Props.Spacing.AfterLines = null;
+				
 				this.WordControl.m_oLogicDocument.SetParagraphSpacing(Props.Spacing);
+			}
 
 			if (undefined !== Props.OutlineLvl)
 				this.WordControl.m_oLogicDocument.SetParagraphOutlineLvl(Props.OutlineLvl);

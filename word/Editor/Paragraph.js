@@ -11741,6 +11741,32 @@ Paragraph.prototype.Set_Spacing = function(Spacing, bDeleteUndefined)
 		AscCommon.History.Add(new CChangesParagraphSpacingBeforeAutoSpacing(this, this.Pr.Spacing.BeforeAutoSpacing, Spacing.BeforeAutoSpacing));
 		this.Pr.Spacing.BeforeAutoSpacing = Spacing.BeforeAutoSpacing;
 	}
+	
+	if (null === Spacing.BeforeLines || (bDeleteUndefined && undefined === Spacing.BeforeLines))
+	{
+		this.private_AddPrChange();
+		AscCommon.History.Add(new CChangesParagraphSpacingBeforeLines(this, this.Pr.Spacing.BeforeLines, undefined));
+		this.Pr.Spacing.BeforeLines = Spacing.BeforeLines;
+	}
+	else if (undefined !== Spacing.BeforeLines && Spacing.BeforeLines !== this.Pr.Spacing.BeforeLines)
+	{
+		this.private_AddPrChange();
+		AscCommon.History.Add(new CChangesParagraphSpacingBeforeLines(this, this.Pr.Spacing.BeforeLines, Spacing.BeforeLines));
+		this.Pr.Spacing.BeforeLines = Spacing.BeforeLines;
+	}
+
+	if (null === Spacing.AfterLines || (bDeleteUndefined && undefined === Spacing.AfterLines))
+	{
+		this.private_AddPrChange();
+		AscCommon.History.Add(new CChangesParagraphSpacingAfterLines(this, this.Pr.Spacing.AfterLines, undefined));
+		this.Pr.Spacing.AfterLines = Spacing.AfterLines;
+	}
+	else if (undefined !== Spacing.AfterLines && Spacing.AfterLines !== this.Pr.Spacing.AfterLines)
+	{
+		this.private_AddPrChange();
+		AscCommon.History.Add(new CChangesParagraphSpacingAfterLines(this, this.Pr.Spacing.AfterLines, Spacing.AfterLines));
+		this.Pr.Spacing.AfterLines = Spacing.AfterLines;
+	}
 
 	// Надо пересчитать конечный стиль
 	this.CompiledPr.NeedRecalc = true;
