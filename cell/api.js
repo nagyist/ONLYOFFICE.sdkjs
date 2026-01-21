@@ -1924,8 +1924,8 @@ var editor;
 					sheetDataElem.ws.setTopLeftCell(selectionState.topLeftCell, false);
 					let wsView = api.wb.getWorksheet()
 					wsView._initTopLeftCell();
-					wsView._initCellsArea(AscCommonExcel.recalcType.full);
-					api.handlers.trigger("scrollToTopLeftCell");
+					wsView._calcHeightRows(AscCommonExcel.recalcType.full);
+					api.handlers.trigger("drawWS");
 				}
 				// api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 				// api.handlers.trigger("drawWS"); //draw called on sync_EndAction

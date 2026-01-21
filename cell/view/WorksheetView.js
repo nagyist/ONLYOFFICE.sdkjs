@@ -269,6 +269,10 @@ function isAllowPasteLink(pastedWb) {
 		this._heightForPrint = null;
 	}
 
+	CacheRow.prototype.setHeight = function (val) {
+		this.height = val;
+	};
+
     function CacheElement() {
         this.columnsWithText = {};							// Колонки, в которых есть текст
         this.columns = {};
@@ -2946,7 +2950,7 @@ function isAllowPasteLink(pastedWb) {
 		}
 		r = this.rows[i] = new CacheRow();
 		r.top = y;
-		r.height = this.workbook.printPreviewState.isStart() ? AscCommonExcel.convertPtToPx(hR) * this.getZoom() : Asc.round(AscCommonExcel.convertPtToPx(hR) * this.getZoom());
+		r.setHeight(this.workbook.printPreviewState.isStart() ? AscCommonExcel.convertPtToPx(hR) * this.getZoom() : Asc.round(AscCommonExcel.convertPtToPx(hR) * this.getZoom()));
 		if (!hR) {
 			r._heightForPrint = 0;
 		} else {
@@ -9765,7 +9769,7 @@ function isAllowPasteLink(pastedWb) {
 			}
 		}
 
-		rowInfo.height = this.workbook.printPreviewState.isStart() ? th * this.getZoom() : Asc.round(th * this.getZoom());
+		rowInfo.setHeight(this.workbook.printPreviewState.isStart() ? th * this.getZoom() : Asc.round(th * this.getZoom()));
 		rowInfo._heightForPrint = this.updateRowHeightValuePx ? AscCommonExcel.convertPxToPt(this.updateRowHeightValuePx) : this._getRowHeightReal(cell.nRow);
 		rowInfo.descender = d;
 		return th;
@@ -9837,7 +9841,7 @@ function isAllowPasteLink(pastedWb) {
 				//TODO правлю на хотфикс ошибку. это следствие, а не причина. нужно пересмотреть! баг 50489
 				var _rowHeight = this.workbook.printPreviewState.isStart() ? newHeight * this.getZoom() : Asc.round(newHeight * this.getZoom());
 				if (rowInfo) {
-					rowInfo.height = _rowHeight;
+					rowInfo.setHeight(_rowHeight);
 					rowInfo._heightForPrint = AscCommonExcel.convertPxToPt(_rowHeight);
 				}
 				History.TurnOff();
