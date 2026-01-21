@@ -585,7 +585,8 @@ window.AscCommon.g_cIsBeta = "false";
 		Submit : 19,
 		Disconnect :20,
 		RefreshFile: 21,
-		SolverLookingSolution: 22
+		SolverLookingSolution: 22,
+		BackgroundOpen: 23
 	};
 
 	var c_oAscAdvancedOptionsID = {
