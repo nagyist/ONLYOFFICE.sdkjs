@@ -86,6 +86,7 @@ var editor;
     this.tmpDecimalSeparator = null;
     this.tmpGroupSeparator = null;
     this.tmpLocalization = null;
+	this.backgroundOpenFileSize = 3 * 1024 * 1024;//3mb
 
 	this.activeLocalization = null;
 
@@ -1816,7 +1817,7 @@ var editor;
 	this.isOpenOOXInBrowser = this["asc_isSupportFeature"]("ooxml") && AscCommon.checkOOXMLSignature(file.data);
 	if (this.isOpenOOXInBrowser) {
 		this.openOOXInBrowserZip = file.data;
-		const backgroundOpen = file.data.length > 0;//10*1024*1024;
+		const backgroundOpen = file.data.length > this.backgroundOpenFileSize;
 		this.OpenDocumentFromZip(file.data, backgroundOpen);
 	} else {
 		this.OpenDocumentFromBin(file.url, file.data);
@@ -1936,7 +1937,7 @@ var editor;
 		// Schedule next iteration
 		setTimeout(function() {
 			readRemainings(api, reader, ws, bNoBuildDep, curSheetData, delayedSheetData, selectionState, startAction);
-		}, 10);
+		}, 30);
 	}
 
 	/**
@@ -2500,10 +2501,7 @@ var editor;
 			 * Processes shared strings from workbook part
 			 */
 			function processSharedStrings() {
-				if (xmlParserContext.backgroundOpen.sharedStringsState.sharedStrings) {
-				const state = xmlParserContext.backgroundOpen.sharedStringsState;
-					state.sharedStrings.fromXmlSi(state.reader);
-				} else {
+				if (!xmlParserContext.backgroundOpen.sharedStringsState.sharedStrings) {
 					//sharedString
 					var sharedStringPart = wbPart.getPartByRelationshipType(openXml.Types.sharedStringTable.relationType);
 					if (sharedStringPart) {
@@ -2570,8 +2568,8 @@ var editor;
 			 * @param {boolean} bNoBuildDep - whether to skip dependency building
 			 */
 			var readSheetDataExternal = function (bNoBuildDep) {
-				readAllSheetsData(bNoBuildDep);
 				processSharedStrings();
+				readAllSheetsData(bNoBuildDep);
 			};
 
 			// Build BackgroundOpenReader object to expose reading callback and context
