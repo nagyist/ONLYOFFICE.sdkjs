@@ -1892,9 +1892,7 @@ var editor;
 		if (startAction && api.asc_checkNeedCallback("asc_onStartAction")) {
 			api.wb.setIsPartialReading(true);
 			startAction = false;
-			//todo own action type
 			api.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.BackgroundOpen, Asc.c_oAscRestrictionType.View);
-			api.sync_StartAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 		}
 		
 		// Read remainings
@@ -1902,11 +1900,7 @@ var editor;
 			reader.setSheetData(curSheetData);
 			reader.readSheetData(bNoBuildDep);
 			const sheetDataElem = curSheetData[0];
-			const updateRegion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
-			//console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
 			api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-			// api.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRegion], null, false);
-			// api.handlers.trigger("drawWS");
 		} else {
 			let sheetDataElem = delayedSheetData.find(function (item) {
 				return !!item.state;
@@ -1927,9 +1921,6 @@ var editor;
 					wsView._calcHeightRows(AscCommonExcel.recalcType.full);
 					api.handlers.trigger("drawWS");
 				}
-				// api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-				// api.handlers.trigger("drawWS"); //draw called on sync_EndAction
-				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.BackgroundOpen, Asc.c_oAscRestrictionType.View);
 				AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReadyBackground", performance.now(), AscCommon.getMemoryInfo()), api);
 				return;
@@ -1939,8 +1930,7 @@ var editor;
 			reader.readSheetData(bNoBuildDep);
 			const updateRange = new AscCommonExcel.Range(sheetDataElem.ws, sheetDataElem.r1, 0, sheetDataElem.r2, AscCommon.gc_nMaxCol0);
 			sheetDataElem.ws.onUpdateRanges([updateRange.bbox]);//"cleanCellCache" works only for visible sheets
-			api.wb.handleDrawingsOnWorkbookChange([updateRange])
-			//console.log('updateRigion:' + sheetDataElem.ws.getName() + "-" +updateRigion.r1+"-"+updateRigion.r2);
+			api.wb.handleDrawingsOnWorkbookChange([updateRange]);
 		}
 		
 		// Schedule next iteration
