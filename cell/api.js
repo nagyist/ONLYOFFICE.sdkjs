@@ -1905,7 +1905,7 @@ var editor;
 			const updateRegion = new Asc.Range(0, sheetDataElem.r1, AscCommon.gc_nMaxCol0, sheetDataElem.r2);
 			//console.log('updateRigion:'+updateRigion.r1+"-"+updateRigion.r2);
 			api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-			// api.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRigion], null, false);
+			// api.handlers.trigger("cleanCellCache", sheetDataElem.ws.getId(), [updateRegion], null, false);
 			// api.handlers.trigger("drawWS");
 		} else {
 			let sheetDataElem = delayedSheetData.find(function (item) {
@@ -1922,10 +1922,13 @@ var editor;
 				if (sheetDataElem.ws.selectionRange.isEqual(new AscCommonExcel.SelectionRange(sheetDataElem.ws))) {
 					sheetDataElem.ws.selectionRange = selectionState.selectionRange;
 					sheetDataElem.ws.setTopLeftCell(selectionState.topLeftCell, false);
+					let wsView = api.wb.getWorksheet()
+					wsView._initTopLeftCell();
+					wsView._initCellsArea(AscCommonExcel.recalcType.full);
 					api.handlers.trigger("scrollToTopLeftCell");
 				}
-				// t.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
-				// t.handlers.trigger("drawWS"); //draw called on sync_EndAction
+				// api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
+				// api.handlers.trigger("drawWS"); //draw called on sync_EndAction
 				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.Disconnect, Asc.c_oAscRestrictionType.View);
 				api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.BackgroundOpen, Asc.c_oAscRestrictionType.View);
 				AscCommon.sendClientLog("debug", AscCommon.getClientInfoString("onDocumentContentReadyBackground", performance.now(), AscCommon.getMemoryInfo()), api);
