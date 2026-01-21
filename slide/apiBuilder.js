@@ -4831,18 +4831,14 @@
 	ApiSlideShowTransition.SPEED_FAST_DURATION = 500;
 	ApiSlideShowTransition.SPEED_MEDIUM_DURATION = 750;
 	ApiSlideShowTransition.SPEED_SLOW_DURATION = 1000;
-	ApiSlideShowTransition.SPEED_FAST_THRESHOLD = 250;
-	ApiSlideShowTransition.SPEED_SLOW_THRESHOLD = 1000;
 
 	ApiSlideShowTransition._getSpeedName = function (duration) {
 		if (AscFormat.isRealNumber(duration)) {
-			if (duration < ApiSlideShowTransition.SPEED_FAST_THRESHOLD) {
+			if (duration <= ApiSlideShowTransition.SPEED_FAST_DURATION)
 				return 'fast';
-			} else if (duration > ApiSlideShowTransition.SPEED_SLOW_THRESHOLD) {
-				return 'slow';
-			} else {
+			if (duration <= ApiSlideShowTransition.SPEED_MEDIUM_DURATION)
 				return 'medium';
-			}
+			return 'slow';
 		}
 		return undefined;
 	};
