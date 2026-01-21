@@ -87,9 +87,22 @@ var gc_nMaxMantissa = Math.pow(10, gc_nMaxDigCount);
 var gc_aTimeFormats = ['[$-F400]h:mm:ss AM/PM', 'h:mm;@', 'h:mm AM/PM;@', 'h:mm:ss;@', 'h:mm:ss AM/PM;@', 'mm:ss.0;@',
 	'[h]:mm:ss;@'];
 var gc_aFractionFormats = ['# ?/?', '# ??/??', '# ???/???', '# ?/2', '# ?/4', '# ?/8', '# ??/16', '# ?/10', '# ??/100'];
+//important for shortcuts
+var gc_oParseDateOverrideFormats = {
+    "d-mmm": 1,
+    "d-mmm-yy": 1,
+    "mmm-yy": 1,
+    "h:mm": 1,
+    "h:mm AM/PM": 1,
+    "h:mm:ss": 1,
+    "h:mm:ss AM/PM": 1,
+    "mm:ss.0": 1,
+    "[h]:mm:ss": 1
+};
 const dBNum1Numbers = ['\u3007','\u4E00','\u4E8C','\u4E09','\u56DB','\u4E94','\u516D','\u4E03','\u516B','\u4E5D'];
 const interfaceFormatScientific = '0.00E+00';
 const interfaceFormatPercent = '0.00%';
+let interfaceShortDateFormat = 'm/d/yyyy';
 
 var NumComporationOperators =
 {
@@ -3803,6 +3816,7 @@ FormatParser.prototype =
             value = value.replace(new RegExp(String.fromCharCode(0xA0), "g"), "");
 
         var shouldPreserveFormat = this._shouldPreserveFormat(currentFormat, stringFormat);
+		const isDateOverrideFormat = stringFormat in gc_oParseDateOverrideFormats || stringFormat === interfaceShortDateFormat;
 
         // Regex that matches numbers, mixed fractions ("1 1/2"), and simple fractions ("1/2")
         // Cached per cultureInfo to avoid recompilation on every call
@@ -3966,7 +3980,7 @@ FormatParser.prototype =
 					if (bPercent) {
 						res.bPercent = true;
 						dVal /= 100;
-						if (shouldPreserveFormat) {
+						if (shouldPreserveFormat && !isDateOverrideFormat) {
 							sFormat = stringFormat;
 						} else {
 							sFormat = "0" + sFracFormat + "%";
@@ -3975,9 +3989,9 @@ FormatParser.prototype =
                     else if (bFraction) 
                     {
                         res.bFraction = true;
-                        sFormat = this._selectFractionFormat(sNumerator, sDenominator, shouldPreserveFormat, currentFormat, stringFormat);
+                        sFormat = this._selectFractionFormat(sNumerator, sDenominator, shouldPreserveFormat, isDateOverrideFormat, currentFormat, stringFormat);
                     }
-					else if (sCurrency && !shouldPreserveFormat) {
+					else if (sCurrency && !(shouldPreserveFormat && !isDateOverrideFormat)) {
 						res.bCurrency = true;
 						sFormat = this._buildCurrencyFormat(sCurrency, sFracFormat, CurrencyNegativePattern);
 					}
@@ -3999,7 +4013,7 @@ FormatParser.prototype =
             return null;
         }
         if (res == null && !bError) {
-            res = this.parseDate(value, cultureInfo, shouldPreserveFormat, stringFormat);
+            res = this.parseDate(value, cultureInfo, shouldPreserveFormat, isDateOverrideFormat, currentFormat, stringFormat);
         }
 
         return res;
@@ -4047,15 +4061,16 @@ FormatParser.prototype =
      * @param {string} sNumerator - numerator string
      * @param {string} sDenominator - denominator string
 	 * @param {boolean} shouldPreserveFormat - true if format should be preserved
+	 * @param {boolean} isDateOverrideFormat - true if format is a date override format
      * @param {number} currentFormat - current cell format type
 	 * @param {string} stringFormat - current format string
      * @returns {string|null} - fraction format string or null
      */
-    _selectFractionFormat: function (sNumerator, sDenominator, shouldPreserveFormat, currentFormat, stringFormat) {
+    _selectFractionFormat: function (sNumerator, sDenominator, shouldPreserveFormat, isDateOverrideFormat, currentFormat, stringFormat) {
         var numLength = sNumerator.length;
         var denomLength = sDenominator.length;
         var maxLength = Math.max(numLength, denomLength);
-        if (shouldPreserveFormat || currentFormat == Asc.c_oAscNumFormatType.Fraction) {
+        if ((shouldPreserveFormat && !isDateOverrideFormat) || currentFormat == Asc.c_oAscNumFormatType.Fraction) {
             return stringFormat;
         }
         
@@ -4189,7 +4204,7 @@ FormatParser.prototype =
                                 prev.date = true;
                         }
                         if (i + 1 < length) {
-                            let next = match[i + 1]
+                            let next = match[i + 1];
                             // processing the option when the date is given as the format "October 11, 2008"
                             if (i === 0 && i + 2 < length) {
                                 let afterNext = match[i + 2];
@@ -4572,7 +4587,7 @@ FormatParser.prototype =
         }
         return length === 0 ? false: bRes;
     },
-	parseDate: function (value, cultureInfo, shouldPreserveFormat, stringFormat)
+	parseDate: function (value, cultureInfo, shouldPreserveFormat, isDateOverrideFormat, currentFormat, stringFormat)
 	{
 		//todo "11: AM" should fail
 		var res = null;
@@ -4800,8 +4815,13 @@ FormatParser.prototype =
 					if(dValue >= 0)
 					{
 						var sFormat = "";
+
+						const needOverrideFormat = isDateOverrideFormat &&
+							((currentFormat === Asc.c_oAscNumFormatType.Date && !bDate) ||
+							 (currentFormat === Asc.c_oAscNumFormatType.LongDate && bTime) ||
+							 (currentFormat === Asc.c_oAscNumFormatType.Time && bDate));
                         // Check if current format should be preserved (not converted to date)
-                        if (shouldPreserveFormat) {
+                        if (shouldPreserveFormat && !needOverrideFormat) {
                             sFormat = stringFormat;
                         } else if (bDate) {
 							if (bTime && nHour > 23) {
@@ -5133,6 +5153,7 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 		if (LCID !== g_oLCID) {
 			g_oLCID = LCID;
 			AscCommon.g_oDefaultCultureInfo = g_oDefaultCultureInfo = JSON.parse(JSON.stringify(cultureInfoNew)); // ToDo clone
+			interfaceShortDateFormat = getShortDateFormat(g_oDefaultCultureInfo);	
 			res = true;
 		}
 		ParseLocalFormatSymbol(g_oDefaultCultureInfo.Name);
@@ -5735,7 +5756,7 @@ function setCurrentCultureInfo (LCID, decimalSeparator, groupSeparator) {
 				res.push(interfaceFormatScientific);
 				res.push(getCurrencyFormat(cultureInfo, 2, hasCurrency, true, currencySymbol));
 				res.push(getCurrencyFormatSimple2(cultureInfo, 2, hasCurrency, currencySymbol, false));
-				res.push(getShortDateFormat(cultureInfo));
+				res.push(interfaceShortDateFormat);
 				res.push('[$-F800]' + cultureInfo.LongDatePattern);
 				//todo F400
 				if (AscCommon.is12HourTimeFormat(cultureInfo)) {

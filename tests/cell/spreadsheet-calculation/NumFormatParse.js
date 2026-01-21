@@ -705,11 +705,11 @@ $(function () {
         CURRENCY_4:      '$#,##0.0000',
         ACCOUNTING_2:    '_($ #,##0.00_);_($ (#,##0.00);_($ "-"??_);_(@_)',
         ACCOUNTING_4:    '_($ #,##0.0000_);_($ (#,##0.0000);_($ "-"????_);_(@_)',
-        DATE_SHORT:      'm/d/yyyy;@',
+        DATE_SHORT:      'm/d/yyyy',
         DATE_LONG:       '[$-F800]dddd, mmmm dd, yyyy',
-        DATE_MEDIUM:     'd-mmm;@',
+        DATE_MEDIUM:     'd-mmm',
         TIME_12H:        '[$-F400]h:mm:ss AM/PM',
-        TIME_24H:        'h:mm:ss;@',
+        TIME_24H:        'h:mm:ss',
         TIME_DURATION:   '[hh]:mm',
         PERCENT_2:       '0.00%',
         PERCENT_4:       '0.0000%',
@@ -718,8 +718,6 @@ $(function () {
         FRACTION_HALF:   '# ?/2',
         TEXT:            '@',
     };
-    //todo 'm/d/yyyy;@', 'd-mmm;@', 'h:mm:ss;@' is overridable by input format
-
     // Additional format codes that Excel produces
     const OUT = {
         DATE_SHORT:      'm/d/yyyy',
@@ -738,14 +736,6 @@ $(function () {
     // formatOverrides: { [cellFormat]: { f: outputFormat } } - ONLY when format changes
     // Skip formats where output format equals input format (the default behavior)
     const formatRecognitionTestCases = [
-        ['$1234.56', 1234.56, {
-            [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
-            [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
-            [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
-            [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
-            [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
-            [F.TEXT]: { f: null },
-        }],
         // === Numbers (no format change for most formats) ===
         ['1234.56', 1234.56, {
             [F.TEXT]: { f: null },
@@ -772,6 +762,9 @@ $(function () {
         // // === Scientific notation ===
         // ['1.23E+3', 1230, {
         //     [F.GENERAL]:     { f: F.SCI_2 },
+        //     [F.DATE_SHORT]:  { f: F.SCI_2 },
+        //     [F.DATE_MEDIUM]: { f: F.SCI_2 },
+        //     [F.TIME_24H]:    { f: F.SCI_2 },
         //     [F.PERCENT_2]:   { f: F.SCI_2 },
         //     [F.FRACTION_1]:  { f: F.SCI_2 },
         //     [F.FRACTION_2]:  { f: F.SCI_2 },
@@ -779,6 +772,9 @@ $(function () {
         // }],
         // ['1.2345E+3', 1234.5, {
         //     [F.GENERAL]:     { f: F.SCI_2 },
+        //     [F.DATE_SHORT]:  { f: F.SCI_2 },
+        //     [F.DATE_MEDIUM]: { f: F.SCI_2 },
+        //     [F.TIME_24H]:    { f: F.SCI_2 },
         //     [F.PERCENT_2]:   { f: F.SCI_2 },
         //     [F.FRACTION_1]:  { f: F.SCI_2 },
         //     [F.FRACTION_2]:  { f: F.SCI_2 },
@@ -789,6 +785,9 @@ $(function () {
         ['$1234.56', 1234.56, {
             [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
             [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.DATE_SHORT]:  { f: OUT.CURRENCY_NEG },
+            [F.DATE_MEDIUM]: { f: OUT.CURRENCY_NEG },
+            [F.TIME_24H]:    { f: OUT.CURRENCY_NEG },
             [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
             [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
             [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
@@ -797,6 +796,9 @@ $(function () {
         ['$1234.5678', 1234.5678, {
             [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
             [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.DATE_SHORT]:  { f: OUT.CURRENCY_NEG },
+            [F.DATE_MEDIUM]: { f: OUT.CURRENCY_NEG },
+            [F.TIME_24H]:    { f: OUT.CURRENCY_NEG },
             [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
             [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
             [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
@@ -807,6 +809,9 @@ $(function () {
         ['$ (1,234.56)', -1234.56, {
             [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
             [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.DATE_SHORT]:  { f: OUT.CURRENCY_NEG },
+            [F.DATE_MEDIUM]: { f: OUT.CURRENCY_NEG },
+            [F.TIME_24H]:    { f: OUT.CURRENCY_NEG },
             [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
             [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
             [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
@@ -815,6 +820,9 @@ $(function () {
         ['$ (1,234.5678)', -1234.5678, {
             [F.GENERAL]:     { f: OUT.CURRENCY_NEG },
             [F.SCI_2]:       { f: OUT.CURRENCY_NEG },
+            [F.DATE_SHORT]:  { f: OUT.CURRENCY_NEG },
+            [F.DATE_MEDIUM]: { f: OUT.CURRENCY_NEG },
+            [F.TIME_24H]:    { f: OUT.CURRENCY_NEG },
             [F.PERCENT_2]:   { f: OUT.CURRENCY_NEG },
             [F.FRACTION_1]:  { f: OUT.CURRENCY_NEG },
             [F.FRACTION_2]:  { f: OUT.CURRENCY_NEG },
@@ -825,6 +833,7 @@ $(function () {
         ['1/2/2024', 45293, {
             [F.GENERAL]:    { f: OUT.DATE_SHORT },
             [F.SCI_2]:      { f: OUT.DATE_SHORT },
+            [F.TIME_24H]:   { f: OUT.DATE_SHORT },
             [F.PERCENT_2]:  { f: OUT.DATE_SHORT },
             [F.FRACTION_1]: { f: OUT.DATE_SHORT },
             [F.FRACTION_2]: { f: OUT.DATE_SHORT },
@@ -833,6 +842,7 @@ $(function () {
         ['2-Jan', 46024, {  // 2-Jan in current year (2026) = 46024
             [F.GENERAL]:    { f: OUT.DATE_MEDIUM },
             [F.SCI_2]:      { f: OUT.DATE_MEDIUM },
+            [F.TIME_24H]:   { f: F.DATE_MEDIUM },
             [F.PERCENT_2]:  { f: OUT.DATE_MEDIUM },
             [F.FRACTION_1]: { f: OUT.DATE_MEDIUM },
             [F.FRACTION_2]: { f: OUT.DATE_MEDIUM },
@@ -843,6 +853,8 @@ $(function () {
         ['6:00:00', 0.25, {
             [F.GENERAL]:     { f: OUT.TIME_24H },
             [F.SCI_2]:       { f: OUT.TIME_24H },
+            [F.DATE_SHORT]:  { f: F.TIME_24H },
+            [F.DATE_MEDIUM]: { f: F.TIME_24H },
             [F.PERCENT_2]:   { f: OUT.TIME_24H },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.FRACTION_1]:  { f: OUT.TIME_24H },
@@ -852,6 +864,8 @@ $(function () {
         ['6:00:00 AM', 0.25, {
             [F.GENERAL]:     { f: OUT.TIME_12H_SIMPLE },
             [F.SCI_2]:       { f: OUT.TIME_12H_SIMPLE },
+            [F.DATE_SHORT]:  { f: OUT.TIME_12H_SIMPLE },
+            [F.DATE_MEDIUM]: { f: OUT.TIME_12H_SIMPLE },
             [F.PERCENT_2]:   { f: OUT.TIME_12H_SIMPLE },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.FRACTION_1]:  { f: OUT.TIME_12H_SIMPLE },
@@ -863,6 +877,7 @@ $(function () {
         ['1/2/2024 6:00:00', 45293.25, {
             [F.GENERAL]:    { f: OUT.DATE_TIME },
             [F.SCI_2]:      { f: OUT.DATE_TIME },
+            [F.TIME_24H]:   { f: OUT.DATE_TIME },
             [F.PERCENT_2]:  { f: OUT.DATE_TIME },
             [F.FRACTION_1]: { f: OUT.DATE_TIME },
             [F.FRACTION_2]: { f: OUT.DATE_TIME },
@@ -873,6 +888,9 @@ $(function () {
         ['1234.56%', 12.3456, {
             [F.GENERAL]:     { f: F.PERCENT_2 },
             [F.SCI_2]:       { f: F.PERCENT_2 },
+            [F.DATE_SHORT]:  { f: F.PERCENT_2 },
+            [F.DATE_MEDIUM]: { f: F.PERCENT_2 },
+            [F.TIME_24H]:    { f: F.PERCENT_2 },
             [F.FRACTION_1]:  { f: F.PERCENT_2 },
             [F.FRACTION_2]:  { f: F.PERCENT_2 },
             [F.TEXT]: { f: null },
@@ -880,6 +898,9 @@ $(function () {
         ['1234.5678%', 12.345678, {
             [F.GENERAL]:     { f: F.PERCENT_2 },
             [F.SCI_2]:       { f: F.PERCENT_2 },
+            [F.DATE_SHORT]:  { f: F.PERCENT_2 },
+            [F.DATE_MEDIUM]: { f: F.PERCENT_2 },
+            [F.TIME_24H]:    { f: F.PERCENT_2 },
             [F.FRACTION_1]:  { f: F.PERCENT_2 },
             [F.FRACTION_2]:  { f: F.PERCENT_2 },
             [F.TEXT]: { f: null },
@@ -892,7 +913,7 @@ $(function () {
             [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46024 },
             [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46024 },
             [F.TIME_12H]:   { f: F.TIME_12H, v: 46024 },
-            [F.TIME_24H]:   { f: F.TIME_24H, v: 46024 },
+            [F.TIME_24H]:   { f: F.DATE_MEDIUM, v: 46024 },
             [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46024 },
             [F.PERCENT_2]:  { f: F.FRACTION_1 },
             [F.PERCENT_4]:  { f: F.PERCENT_4 },
@@ -905,7 +926,7 @@ $(function () {
             [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46033 },
             [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46033 },
             [F.TIME_12H]:   { f: F.TIME_12H, v: 46033 },
-            [F.TIME_24H]:   { f: F.TIME_24H, v: 46033 },
+            [F.TIME_24H]:   { f: F.DATE_MEDIUM, v: 46033 },
             [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46033 },
             [F.PERCENT_2]:  { f: F.FRACTION_2, v: 0.09090909090909091 },
             [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.09090909090909091 },
@@ -918,7 +939,7 @@ $(function () {
             [F.DATE_LONG]:   { f: F.DATE_LONG, v: 46085 },
             [F.DATE_MEDIUM]:   { f: F.DATE_MEDIUM, v: 46085 },
             [F.TIME_12H]:   { f: F.TIME_12H, v: 46085 },
-            [F.TIME_24H]:   { f: F.TIME_24H, v: 46085 },
+            [F.TIME_24H]:   { f: F.DATE_MEDIUM, v: 46085 },
             [F.TIME_DURATION]:   { f: F.TIME_DURATION, v: 46085 },
             [F.PERCENT_2]:  { f: F.FRACTION_1, v: 0.75 },
             [F.PERCENT_4]:  { f: F.PERCENT_4, v: 0.75 },
@@ -968,6 +989,9 @@ $(function () {
         ['1 1/2', 1.5, {
             [F.GENERAL]:     { f: F.FRACTION_1 },
             [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_1 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_1 },
+            [F.TIME_24H]:    { f: F.FRACTION_1 },
             [F.PERCENT_2]:   { f: F.FRACTION_1 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -975,6 +999,9 @@ $(function () {
         ['2 3/4', 2.75, {
             [F.GENERAL]:     { f: F.FRACTION_1 },
             [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_1 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_1 },
+            [F.TIME_24H]:    { f: F.FRACTION_1 },
             [F.PERCENT_2]:   { f: F.FRACTION_1 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -982,6 +1009,9 @@ $(function () {
         ['0 1/2', 0.5, {
             [F.GENERAL]:     { f: F.FRACTION_1 },
             [F.SCI_2]:       { f: F.FRACTION_1 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_1 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_1 },
+            [F.TIME_24H]:    { f: F.FRACTION_1 },
             [F.PERCENT_2]:   { f: F.FRACTION_1 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -989,6 +1019,9 @@ $(function () {
         ['0 1/10', 0.1, {
             [F.GENERAL]:     { f: F.FRACTION_2 },
             [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_2 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_2 },
+            [F.TIME_24H]:    { f: F.FRACTION_2 },
             [F.PERCENT_2]:   { f: F.FRACTION_2 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -996,6 +1029,9 @@ $(function () {
         ['0 1/100', 0.01, {
             [F.GENERAL]:     { f: F.FRACTION_2 },
             [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_2 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_2 },
+            [F.TIME_24H]:    { f: F.FRACTION_2 },
             [F.PERCENT_2]:   { f: F.FRACTION_2 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -1003,6 +1039,9 @@ $(function () {
         ['1 150/200', 1.75, {
             [F.GENERAL]:     { f: F.FRACTION_2 },
             [F.SCI_2]:       { f: F.FRACTION_2 },
+            [F.DATE_SHORT]:  { f: F.FRACTION_2 },
+            [F.DATE_MEDIUM]: { f: F.FRACTION_2 },
+            [F.TIME_24H]:    { f: F.FRACTION_2 },
             [F.PERCENT_2]:   { f: F.FRACTION_2 },
             [F.PERCENT_4]:   { f: F.PERCENT_4 },
             [F.TEXT]: { f: null },
@@ -1012,6 +1051,7 @@ $(function () {
         ['1/5/5', 38357, {  // 1/5/2005
             [F.GENERAL]:    { f: OUT.DATE_SHORT },
             [F.SCI_2]:      { f: OUT.DATE_SHORT },
+            [F.TIME_24H]: { f: F.DATE_SHORT },
             [F.PERCENT_2]:  { f: OUT.DATE_SHORT },
             [F.FRACTION_1]: { f: OUT.DATE_SHORT },
             [F.FRACTION_2]: { f: OUT.DATE_SHORT },
