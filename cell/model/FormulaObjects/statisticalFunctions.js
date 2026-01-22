@@ -12592,7 +12592,10 @@ function (window, undefined) {
 		}
 
 		if (cElementType.cellsRange === arg1.type || cElementType.cellsRange3D === arg1.type) {
-			const matrix = arg1.getMatrix();
+			let matrix = arg1.getMatrix();
+			if (cElementType.cellsRange3D === arg1.type) {
+				matrix = matrix[0];
+			}
 			const result = new cArray();
 			for (let row = 0; row < matrix.length; row += 1) {
 				result.addRow();

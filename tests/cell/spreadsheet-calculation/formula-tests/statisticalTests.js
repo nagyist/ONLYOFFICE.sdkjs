@@ -9638,25 +9638,31 @@ $(function () {
 		AscCommonExcel.g_oCountIfCache.clean();
 
 		// Table type. Use A601:L6**
-		getTableType(599, 0, 605, 2);
+		getTableType(599, 0, 605, 3);
 		ws.getRange2("A601").setValue("5"); // Number (Column1)
 		ws.getRange2("B601").setValue("Apple"); // Text (Column2)
 		ws.getRange2("C601").setValue("Red"); // Text (Column3)
+		ws.getRange2("D601").setValue("5"); // Criteria (Column4)
 		ws.getRange2("A602").setValue("10"); // Number (Column1)
 		ws.getRange2("B602").setValue("Banana"); // Text (Column2)
 		ws.getRange2("C602").setValue("Yellow"); // Text (Column3)
+		ws.getRange2("D602").setValue(">5"); // Criteria (Column4)
 		ws.getRange2("A603").setValue("5"); // Number (Column1)
 		ws.getRange2("B603").setValue("Apple"); // Text (Column2)
 		ws.getRange2("C603").setValue("Green"); // Text (Column3)
+		ws.getRange2("D603").setValue("Apple"); // Criteria (Column4)
 		ws.getRange2("A604").setValue("15"); // Number (Column1)
 		ws.getRange2("B604").setValue("Orange"); // Text (Column2)
 		ws.getRange2("C604").setValue("Orange"); // Text (Column3)
+		ws.getRange2("D604").setValue("Red"); // Criteria (Column4)
 		ws.getRange2("A605").setValue("10"); // Number (Column1)
 		ws.getRange2("B605").setValue("Banana"); // Text (Column2)
 		ws.getRange2("C605").setValue("Yellow"); // Text (Column3)
+		ws.getRange2("D605").setValue(">5"); // Criteria (Column4)
 		ws.getRange2("A606").setValue("5"); // Number (Column1)
 		ws.getRange2("B606").setValue("Cherry"); // Text (Column2)
 		ws.getRange2("C606").setValue("Red"); // Text (Column3)
+		ws.getRange2("D606").setValue("5"); // Criteria (Column4)
 		// 3D links. Use A1:Z10
 		let ws2 = getSecondSheet();
 		ws2.getRange2("A1:C10").cleanAll();
@@ -9679,6 +9685,9 @@ $(function () {
 		ws2.getRange2("D1").setValue(">5");
 		ws2.getRange2("D2").setValue("Apple");
 		ws2.getRange2("D3").setValue("TRUE");
+		ws2.getRange2("D4").setValue("5");
+		ws2.getRange2("D5").setValue("Banana");
+		ws2.getRange2("D6").setValue("FALSE");
 		ws2.getRange2("A311").setValue("aac");
 		ws2.getRange2("A312").setValue("a123c");
 		ws2.getRange2("A313").setValue("a**c");
@@ -9885,60 +9894,84 @@ $(function () {
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #56: Area3D, Number. Count numeric values equal to 5 in 3D range
+		// Case #56: Table, Table. Count values using table column as criteria array
+		oParser = new parserFormula('COUNTIF(Table1[Column1], Table1[Column4])', "C2", ws);
+		assert.ok(oParser.parse());
+		let result = oParser.calculate();
+		assert.strictEqual(result.getElementRowCol(0, 0).getValue(), 3, 'Row 1: COUNTIF with criteria "5" returns 3');
+		assert.strictEqual(result.getElementRowCol(1, 0).getValue(), 3, 'Row 2: COUNTIF with criteria ">5" returns 3');
+		assert.strictEqual(result.getElementRowCol(2, 0).getValue(), 0, 'Row 3: COUNTIF with criteria "Apple" returns 0');
+		assert.strictEqual(result.getElementRowCol(3, 0).getValue(), 0, 'Row 4: COUNTIF with criteria "Red" returns 0');
+		assert.strictEqual(result.getElementRowCol(4, 0).getValue(), 3, 'Row 5: COUNTIF with criteria ">5" returns 3');
+		assert.strictEqual(result.getElementRowCol(5, 0).getValue(), 3, 'Row 6: COUNTIF with criteria "5" returns 3');
+
+
+		// Case #57: Area3D, Number. Count numeric values equal to 5 in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!A1:A6, 5)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #57: Area3D, String. Count numeric values greater than 5 in 3D range
+		// Case #58: Area3D, String. Count numeric values greater than 5 in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!A1:A6, ">5")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #58: Area3D, String. Count text values equal to "Apple" in 3D range
+		// Case #59: Area3D, String. Count text values equal to "Apple" in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!B1:B5, "Apple")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #59: Area3D, String. Count text values using wildcard in 3D range
+		// Case #60: Area3D, String. Count text values using wildcard in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!B1:B5, "*an*")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #60: Area3D, Boolean. Count TRUE values using boolean literal in 3D range
+		// Case #61: Area3D, Boolean. Count TRUE values using boolean literal in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!C1:C5, TRUE)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #61: Area3D, String. Count TRUE values using string in 3D range
+		// Case #62: Area3D, String. Count TRUE values using string in 3D range
 		oParser = new parserFormula('COUNTIF(Sheet2!C1:C5, "TRUE")', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #62: Ref3D, Number. Count single cell reference in 3D
+		// Case #63: Ref3D, Number. Count single cell reference in 3D
 		oParser = new parserFormula('COUNTIF(Sheet2!A1, 5)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 1);
 
-		// Case #63: Area, Ref3D. Count values in area using 3D cell reference as criteria
+		// Case #64: Area, Ref3D. Count values in area using 3D cell reference as criteria
 		oParser = new parserFormula('COUNTIF(Sheet2!A1:A6, Sheet2!D1)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #64: Area, Ref3D. Count text values using 3D cell reference as criteria
+		// Case #65: Area, Ref3D. Count text values using 3D cell reference as criteria
 		oParser = new parserFormula('COUNTIF(Sheet2!B1:B5, Sheet2!D2)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 2);
 
-		// Case #65: Area, Ref3D. Count boolean values using 3D cell reference as criteria
+		// Case #66: Area, Ref3D. Count boolean values using 3D cell reference as criteria
 		oParser = new parserFormula('COUNTIF(Sheet2!C1:C5, Sheet2!D3)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
 
-		// Case #66: Area3D, Ref3D. Count values in 3D area using 3D cell reference as criteria
+		// Case #67: Area3D, Ref3D. Count values in 3D area using 3D cell reference as criteria
 		oParser = new parserFormula('COUNTIF(Sheet2!A1:A6, Sheet2!A1)', "C2", ws);
 		assert.ok(oParser.parse());
 		assert.strictEqual(oParser.calculate().getValue(), 3);
+
+		// Case #68: Area3D, Area3D. Count values using 3D range as criteria array
+		oParser = new parserFormula('COUNTIF(Sheet2!A1:A6, Sheet2!D1:D6)', "C2", ws);
+		assert.ok(oParser.parse());
+		result = oParser.calculate();
+		assert.strictEqual(result.getElementRowCol(0, 0).getValue(), 3, 'Row 1: COUNTIF with criteria ">5" returns 3');
+		assert.strictEqual(result.getElementRowCol(1, 0).getValue(), 0, 'Row 2: COUNTIF with criteria "Apple" returns 0');
+		assert.strictEqual(result.getElementRowCol(2, 0).getValue(), 0, 'Row 3: COUNTIF with criteria "TRUE" returns 0');
+		assert.strictEqual(result.getElementRowCol(3, 0).getValue(), 3, 'Row 4: COUNTIF with criteria "5" returns 3');
+		assert.strictEqual(result.getElementRowCol(4, 0).getValue(), 0, 'Row 5: COUNTIF with criteria "Banana" returns 0');
+		assert.strictEqual(result.getElementRowCol(5, 0).getValue(), 0, 'Row 6: COUNTIF with criteria "FALSE" returns 0');
+	
 
 		// Negative Cases:
 		// Case #1: Error, Number. Handle reference error in range
