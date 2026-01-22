@@ -1691,8 +1691,8 @@ CShapeDrawer.prototype =
 						arrowEndPoint.x, arrowEndPoint.y,
 						arrowStartPoint.x, arrowStartPoint.y,
 						this.Ln.headEnd.type,
-						arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth),
-						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth),
+						arrCoef * this.Ln.headEnd.GetWidth(penWidth, maxWidth) * transformScaleFactor,
+						arrCoef * this.Ln.headEnd.GetLen(penWidth, maxWidth) * transformScaleFactor,
 						this, inverseTransform
 					);
 				}
@@ -1745,8 +1745,8 @@ CShapeDrawer.prototype =
 						arrowEndPoint.x, arrowEndPoint.y,
 						arrowStartPoint.x, arrowStartPoint.y,
 						this.Ln.tailEnd.type,
-						arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth),
-						arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth),
+						arrCoef * this.Ln.tailEnd.GetWidth(penWidth, maxWidth) * transformScaleFactor,
+						arrCoef * this.Ln.tailEnd.GetLen(penWidth, maxWidth) * transformScaleFactor,
 						this, inverseTransform
 					);
 				}
