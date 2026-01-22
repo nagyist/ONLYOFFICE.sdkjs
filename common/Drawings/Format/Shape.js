@@ -3920,64 +3920,22 @@
 			let w, h;
 			w = oRect.r - oRect.l - (l_ins + r_ins);
 			h = oRect.b - oRect.t - (t_ins + b_ins);
-			if (oBodyPr.wrap === AscFormat.nTWTNone) {
-				var dMaxWidth = 100000;
-				if (this.bWordShape) {
-					this.m_oSectPr = null;
-					var oParaDrawing = getParaDrawing(this);
-					if (oParaDrawing) {
-						var oParentParagraph = oParaDrawing.Get_ParentParagraph();
-						if (oParentParagraph) {
-							var oSectPr = oParentParagraph.Get_SectPr();
-							if (oSectPr) {
-								if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
-									dMaxWidth = oSectPr.GetContentFrameWidth() - l_ins - r_ins;
-								} else {
-									dMaxWidth = oSectPr.GetContentFrameHeight();
-								}
-								this.m_oSectPr = new AscWord.SectPr();
-								this.m_oSectPr.Copy(oSectPr);
-							}
-						}
-					}
-				}
-				var dMaxWidthRec = RecalculateDocContentByMaxLine(oDocContent, dMaxWidth, this.bWordShape);
+
+			if (!oBodyPr.upright) {
 				if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
-					if (dMaxWidthRec < w && (!this.bWordShape && !this.bCheckAutoFitFlag)) {
-						oRet.w = w + TEXT_RECT_ERROR;
-						oDocContent.RecalculateContent(oRet.w, h, nStartPage);
-						oRet.contentH = oDocContent.GetSummaryHeight();
-						oRet.h = oRet.contentH;
-					} else {
-						oRet.w = dMaxWidthRec + TEXT_RECT_ERROR;
-						oDocContent.RecalculateContent(oRet.w, h, nStartPage);
-						oRet.contentH = oDocContent.GetSummaryHeight();
-						oRet.h = oRet.contentH;
-					}
+					oRet.w = w + TEXT_RECT_ERROR;
+					oRet.h = h + TEXT_RECT_ERROR;
 					oRet.correctW = l_ins + r_ins;
 					oRet.correctH = t_ins + b_ins;
-					oRet.textRectW = w;
-					oRet.textRectH = h;
 				} else {
-					if (dMaxWidthRec < h && !this.bWordShape) {
-						oRet.w = h + TEXT_RECT_ERROR;
-						oDocContent.RecalculateContent(oRet.w, h, nStartPage);
-						oRet.contentH = oDocContent.GetSummaryHeight();
-						oRet.h = oRet.contentH;
-					} else {
-						oRet.w = dMaxWidthRec + TEXT_RECT_ERROR;
-						oDocContent.RecalculateContent(oRet.w, h, nStartPage);
-						oRet.contentH = oDocContent.GetSummaryHeight();
-						oRet.h = oRet.contentH;
-					}
+					oRet.w = h + TEXT_RECT_ERROR;
+					oRet.h = w + TEXT_RECT_ERROR;
 					oRet.correctW = t_ins + b_ins;
 					oRet.correctH = l_ins + r_ins;
-					oRet.textRectW = h;
-					oRet.textRectH = w;
 				}
-			} else//AscFormat.nTWTSquare
-			{
-				if (!oBodyPr.upright) {
+			} else {
+				var _full_rotate = this.getFullRotate();
+				if (checkNormalRotate(_full_rotate)) {
 					if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
 						oRet.w = w + TEXT_RECT_ERROR;
 						oRet.h = h + TEXT_RECT_ERROR;
@@ -3990,64 +3948,49 @@
 						oRet.correctH = l_ins + r_ins;
 					}
 				} else {
-					var _full_rotate = this.getFullRotate();
-					if (checkNormalRotate(_full_rotate)) {
-						if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
-							oRet.w = w + TEXT_RECT_ERROR;
-							oRet.h = h + TEXT_RECT_ERROR;
-							oRet.correctW = l_ins + r_ins;
-							oRet.correctH = t_ins + b_ins;
-						} else {
-							oRet.w = h + TEXT_RECT_ERROR;
-							oRet.h = w + TEXT_RECT_ERROR;
-							oRet.correctW = t_ins + b_ins;
-							oRet.correctH = l_ins + r_ins;
-						}
+					if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
+						oRet.w = h + TEXT_RECT_ERROR;
+						oRet.h = w + TEXT_RECT_ERROR;
+						oRet.correctW = t_ins + b_ins;
+						oRet.correctH = l_ins + r_ins;
 					} else {
-						if (!(oBodyPr.vert === AscFormat.nVertTTvert || oBodyPr.vert === AscFormat.nVertTTvert270 || oBodyPr.vert === AscFormat.nVertTTeaVert)) {
-							oRet.w = h + TEXT_RECT_ERROR;
-							oRet.h = w + TEXT_RECT_ERROR;
-							oRet.correctW = t_ins + b_ins;
-							oRet.correctH = l_ins + r_ins;
-						} else {
-							oRet.w = w + TEXT_RECT_ERROR;
-							oRet.h = h + TEXT_RECT_ERROR;
-							oRet.correctW = l_ins + r_ins;
-							oRet.correctH = t_ins + b_ins;
-						}
+						oRet.w = w + TEXT_RECT_ERROR;
+						oRet.h = h + TEXT_RECT_ERROR;
+						oRet.correctW = l_ins + r_ins;
+						oRet.correctH = t_ins + b_ins;
 					}
 				}
-				oRet.textRectW = oRet.w;
-				oRet.textRectH = oRet.h;
+			}
+			oRet.textRectW = oRet.w;
+			oRet.textRectH = oRet.h;
 
-				//oDocContent.Set_StartPage(0);
-				/*oDocContent.Reset(0, 0, oRet.w, 20000);
-        var CurPage = 0;
-        var RecalcResult = recalcresult2_NextPage;
-        while ( recalcresult2_End !== RecalcResult  )
-            RecalcResult = oDocContent.Recalculate_Page( CurPage++, true );*/
+			//oDocContent.Set_StartPage(0);
+			/*oDocContent.Reset(0, 0, oRet.w, 20000);
+	var CurPage = 0;
+	var RecalcResult = recalcresult2_NextPage;
+	while ( recalcresult2_End !== RecalcResult  )
+		RecalcResult = oDocContent.Recalculate_Page( CurPage++, true );*/
 
-				var oContentW = oRet.w;
+			var oContentW = oRet.w;
 
-				if (oForm && !oForm.IsMultiLineForm())
-					oDocContent.SetUseXLimit(false);
-				else
-					oDocContent.SetUseXLimit(true);
+			if (oForm && !oForm.IsMultiLineForm() || oBodyPr.wrap === AscFormat.nTWTNone)
+				oDocContent.SetUseXLimit(false);
+			else
+				oDocContent.SetUseXLimit(true);
 
-				oDocContent.RecalculateContent(oContentW, oRet.h, nStartPage);
-				oRet.contentH = oDocContent.GetSummaryHeight();
+			oDocContent.RecalculateContent(oContentW, oRet.h, nStartPage);
+			oRet.contentH = oDocContent.GetSummaryHeight();
 
-				if (this.bWordShape) {
-					this.m_oSectPr = null;
-					var oParaDrawing = getParaDrawing(this);
-					if (oParaDrawing) {
-						var oParentParagraph = oParaDrawing.Get_ParentParagraph();
-						if (oParentParagraph) {
-							var oSectPr = oParentParagraph.Get_SectPr();
-							if (oSectPr) {
-								this.m_oSectPr = new AscWord.SectPr();
-								this.m_oSectPr.Copy(oSectPr);
-							}
+			if (this.bWordShape) {
+				this.m_oSectPr = null;
+				var oParaDrawing = getParaDrawing(this);
+				if (oParaDrawing) {
+					var oParentParagraph = oParaDrawing.Get_ParentParagraph();
+					if (oParentParagraph) {
+						var oSectPr = oParentParagraph.Get_SectPr();
+						if (oSectPr) {
+							this.m_oSectPr = new AscWord.SectPr();
+							this.m_oSectPr.Copy(oSectPr);
 						}
 					}
 				}
