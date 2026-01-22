@@ -5009,6 +5009,8 @@ window.AscCommon.g_cIsBeta = "false";
 	prot['Submit']                           = prot.Submit;
 	prot['Disconnect']                       = prot.Disconnect;
 	prot['RefreshFile']                      = prot.RefreshFile;
+	prot['SolverLookingSolution']            = prot.SolverLookingSolution;
+	prot['BackgroundOpen']                   = prot.BackgroundOpen;
 	window['Asc']['c_oAscAdvancedOptionsID'] = window['Asc'].c_oAscAdvancedOptionsID = c_oAscAdvancedOptionsID;
 	prot                                         = c_oAscAdvancedOptionsID;
 	prot['CSV']                                  = prot.CSV;
