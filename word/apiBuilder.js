@@ -4147,6 +4147,11 @@
 	 */
 
 	/**
+	 * The available text flow direction inside a drawing content.
+	 * @typedef {("lrtb" | "tbrl" | "btlr")} TextFlowDirection
+	 */
+
+	/**
 	 * The available fill types.
 	 * @typedef {("solid" | "gradient" | "pattern" | "blip" | "nofill")} FillType
 	 */
@@ -4168,7 +4173,7 @@
 	 */
 
 	/**
-     * The available color scheme identifiers.
+	* The available color scheme identifiers.
 	 * @typedef {("accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" | "bg1" | "bg2" | "dk1" | "dk2"
 	 *     | "lt1" | "lt2" | "tx1" | "tx2")} SchemeColorId
 	 * @see office-js-api/Examples/Enumerations/SchemeColorId.js
@@ -18231,7 +18236,7 @@
 	 * Specifies the direction of the text flow for this table cell.
 	 * @memberof ApiTableCellPr
 	 * @typeofeditors ["CDE"]
-	 * @param {("lrtb" | "tbrl" | "btlr")} sType - The available types of the text direction in the table cell: <code>"lrtb"</code>
+	 * @param {TextFlowDirection} sType - The available types of the text direction in the table cell: <code>"lrtb"</code>
 	 * - text direction left-to-right moving from top to bottom, <code>"tbrl"</code> - text direction top-to-bottom moving from right
 	 * to left, <code>"btlr"</code> - text direction bottom-to-top moving from left to right.
 	 * @returns {boolean}

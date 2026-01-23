@@ -4480,7 +4480,7 @@ var CPresentation = CPresentation || function(){};
         });
 
         if (!oDrawing)
-            return;
+            return true;
 
         let oPage = oDrawing.GetParentPage();
         oPage.RemoveDrawing(Id);
@@ -4488,6 +4488,7 @@ var CPresentation = CPresentation || function(){};
 
         this.SetNeedUpdateSearch(true);
         this.private_UpdateTargetForCollaboration(true);
+		return true;
     };
 
     CPDFDoc.prototype.RemoveField = function(sId) {
@@ -6065,12 +6066,6 @@ var CPresentation = CPresentation || function(){};
             return false;
 
         this.BlurActiveObject();
-
-        this.StartAction(AscDFH.historydescription_Pdf_EditPage);
-        if (this.IsSelectionLocked(AscDFH.historydescription_Pdf_EditPage, [nPage])) {
-            this.FinalizeAction(true);
-            return false;
-        }
 
         const _this = this;
         Asc.editor.canSave = false;
@@ -8796,6 +8791,9 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.Reassign_ImageUrls = function(oImages) {
         this.widgets.forEach(function(widget) {
             widget.GetType() == AscPDF.FIELD_TYPES.button && widget.Reassign_ImageUrls(oImages);
+        });
+        this.drawings.forEach(function(drawing) {
+            drawing.Reassign_ImageUrls && drawing.Reassign_ImageUrls(oImages);
         });
     };
     CPDFDoc.prototype.Document_Get_AllFontNames = function() {

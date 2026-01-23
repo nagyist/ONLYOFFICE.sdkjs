@@ -312,6 +312,11 @@
      * @see office-js-api/Examples/Enumerations/VerticalTextAlign.js
 	 */
 
+	/**
+	 * The available text flow direction inside a drawing content.
+	 * @typedef {("lrtb" | "tbrl" | "btlr")} TextFlowDirection
+	 */
+
     /**
      * The available color scheme identifiers.
      * @typedef {("accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" | "bg1" | "bg2" | "dk1" | "dk2" | "lt1" | "lt2" | "tx1" | "tx2")} SchemeColorId
@@ -6717,7 +6722,7 @@
     /**
      * Specifies the vertical alignment for text within the current table cell.
      * @typeofeditors ["CPE"]
-     * @param {("top" | "center" | "bottom")} sType - The type of the vertical alignment.
+     * @param {VerticalTextAlign} sType - The type of the vertical alignment.
      * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/SetVerticalAlign.js
 	 */
     ApiTableCell.prototype.SetVerticalAlign = function(sType)
@@ -6734,7 +6739,7 @@
     /**
      * Specifies the direction of the text flow for the current table cell.
      * @typeofeditors ["CPE"]
-     * @param {("lrtb" | "tbrl" | "btlr")} sType - The type of the text flow direction. 
+     * @param {TextFlowDirection} sType - The type of the text flow direction. 
      * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/SetTextDirection.js
 	 */
     ApiTableCell.prototype.SetTextDirection = function(sType)

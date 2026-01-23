@@ -691,6 +691,31 @@
         this.recalcTransformText && this.recalcTransformText();
         this.SetNeedRecalc(true);
     };
+	CPdfDrawingPrototype.prototype.Set_CurrentElement = function(bUpdate, pageIndex, bNoTextSelection) {
+        let oDoc = this.GetDocument();
+		if (!oDoc) {
+			return;
+		}
+
+        let oController = oDoc.GetController();
+
+		pageIndex = pageIndex !== undefined ? pageIndex : this.GetAbsolutePage();
+		if (bNoTextSelection !== true) {
+			this.SetControllerTextSelection(oController, pageIndex, bNoTextSelection);
+		}
+
+		if(bNoTextSelection !== true) {
+            this.SetControllerTextSelection(oController, pageIndex);
+        }
+        else {
+            oController.resetSelection();
+            oController.selectObject(this, pageIndex);
+        }
+
+        let oGroup = this.getMainGroup && this.getMainGroup();
+        if (!oGroup)
+            oDoc.SetMouseDownObject(this);
+    };
 
     /////////////////////////////
     /// saving

@@ -592,16 +592,6 @@
             }
         }
     };
-    CPdfShape.prototype.Set_CurrentElement = function(bUpdate, pageIndex) {
-        let oDoc = this.GetDocument();
-        let oController = oDoc.GetController();
-
-        this.SetControllerTextSelection(oController, this.GetPage());
-
-        let oGroup = this.getMainGroup();
-        if (!oGroup)
-            oDoc.SetMouseDownObject(this);
-    };
     CPdfShape.prototype.setRecalculateInfo = function() {
         this.recalcInfo =
         {

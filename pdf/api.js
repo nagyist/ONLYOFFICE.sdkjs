@@ -765,6 +765,12 @@
 		let oViewer	= this.getDocumentRenderer();
 		let oDoc	= this.getPDFDoc();
 		
+		oDoc.StartAction(AscDFH.historydescription_Pdf_EditPage);
+		if (oDoc.IsSelectionLocked(AscDFH.historydescription_Pdf_EditPage, [oViewer.currentPage])) {
+			oDoc.FinalizeAction(true);
+			return false;
+		}
+
 		oDoc.EditPage(oViewer.currentPage);
 	};
 	PDFEditorApi.prototype.asc_AddPage = function(nPos) {
