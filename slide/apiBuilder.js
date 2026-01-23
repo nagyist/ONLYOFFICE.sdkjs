@@ -178,6 +178,17 @@
 	ApiOleObject.prototype.constructor = ApiOleObject;
 
 	/**
+	 * Class representing a chart.
+	 * @constructor
+	 */
+	function ApiChart(Chart) {
+		ApiDrawing.call(this, Chart);
+		this.Chart = Chart;
+	}
+	ApiChart.prototype = Object.create(ApiDrawing.prototype);
+	ApiChart.prototype.constructor = ApiChart;
+
+	/**
      * Class representing a table.
      * @param oGraphicFrame
      * @constructor
@@ -891,7 +902,7 @@
     {
         var oChartSpace = AscFormat.builder_CreateChart(nWidth/36000, nHeight/36000, sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
         oChartSpace.setParent(private_GetCurrentSlide());
-        return Asc.editor.private_CreateApiChart(oChartSpace);
+        return new ApiChart(oChartSpace);
     };
 
 
@@ -6768,20 +6779,52 @@
     ApiDrawing.prototype["ToJSON"]                        = ApiDrawing.prototype.ToJSON;
 
 
-	let ApiChart = AscBuilder.ApiChart;
-	ApiChart.prototype["SetSize"]         = ApiChart.prototype.SetSize           = ApiDrawing.prototype.SetSize;
-	ApiChart.prototype["SetPosition"]     = ApiChart.prototype.SetPosition       = ApiDrawing.prototype.SetPosition;
-	ApiChart.prototype["GetParent"]       = ApiChart.prototype.GetParent         = ApiDrawing.prototype.GetParent;
-	ApiChart.prototype["GetParentSlide"]  = ApiChart.prototype.GetParentSlide    = ApiDrawing.prototype.GetParentSlide;
-	ApiChart.prototype["GetParentLayout"] = ApiChart.prototype.GetParentLayout   = ApiDrawing.prototype.GetParentLayout;
-	ApiChart.prototype["GetParentMaster"] = ApiChart.prototype.GetParentMaster   = ApiDrawing.prototype.GetParentMaster;
-	ApiChart.prototype["Delete"]          = ApiChart.prototype.Delete            = ApiDrawing.prototype.Delete;
-	ApiChart.prototype["SetPlaceholder"]  = ApiChart.prototype.SetPlaceholder    = ApiDrawing.prototype.SetPlaceholder;
-	ApiChart.prototype["GetPlaceholder"]  = ApiChart.prototype.GetPlaceholder    = ApiDrawing.prototype.GetPlaceholder;
-	ApiChart.prototype["GetWidth"]        = ApiChart.prototype.GetWidth          = ApiDrawing.prototype.GetWidth;
-	ApiChart.prototype["GetHeight"]       = ApiChart.prototype.GetHeight         = ApiDrawing.prototype.GetHeight;
-	ApiChart.prototype["GetLockValue"]    = ApiChart.prototype.GetLockValue      = ApiDrawing.prototype.GetLockValue;
-	ApiChart.prototype["SetLockValue"]    = ApiChart.prototype.SetLockValue      = ApiDrawing.prototype.SetLockValue;
+	ApiChart.prototype["GetClassType"]					= AscBuilder.ApiChart.prototype.GetClassType;
+	ApiChart.prototype["GetChartType"]					= AscBuilder.ApiChart.prototype.GetChartType;
+	ApiChart.prototype["SetTitle"]						= AscBuilder.ApiChart.prototype.SetTitle;
+	ApiChart.prototype["SetHorAxisTitle"]				= AscBuilder.ApiChart.prototype.SetHorAxisTitle;
+	ApiChart.prototype["SetVerAxisTitle"]				= AscBuilder.ApiChart.prototype.SetVerAxisTitle;
+	ApiChart.prototype["SetVerAxisOrientation"]			= AscBuilder.ApiChart.prototype.SetVerAxisOrientation;
+	ApiChart.prototype["SetHorAxisOrientation"]			= AscBuilder.ApiChart.prototype.SetHorAxisOrientation;
+	ApiChart.prototype["SetLegendPos"]					= AscBuilder.ApiChart.prototype.SetLegendPos;
+	ApiChart.prototype["SetLegendFontSize"]				= AscBuilder.ApiChart.prototype.SetLegendFontSize;
+	ApiChart.prototype["SetShowDataLabels"]				= AscBuilder.ApiChart.prototype.SetShowDataLabels;
+	ApiChart.prototype["SetShowPointDataLabel"]			= AscBuilder.ApiChart.prototype.SetShowPointDataLabel;
+	ApiChart.prototype["SetVertAxisTickLabelPosition"]	= AscBuilder.ApiChart.prototype.SetVertAxisTickLabelPosition;
+	ApiChart.prototype["SetHorAxisTickLabelPosition"]	= AscBuilder.ApiChart.prototype.SetHorAxisTickLabelPosition;
+	ApiChart.prototype["SetHorAxisMajorTickMark"]		= AscBuilder.ApiChart.prototype.SetHorAxisMajorTickMark;
+	ApiChart.prototype["SetHorAxisMinorTickMark"]		= AscBuilder.ApiChart.prototype.SetHorAxisMinorTickMark;
+	ApiChart.prototype["SetVertAxisMajorTickMark"]		= AscBuilder.ApiChart.prototype.SetVertAxisMajorTickMark;
+	ApiChart.prototype["SetVertAxisMinorTickMark"]		= AscBuilder.ApiChart.prototype.SetVertAxisMinorTickMark;
+	ApiChart.prototype["SetMajorVerticalGridlines"]		= AscBuilder.ApiChart.prototype.SetMajorVerticalGridlines;
+	ApiChart.prototype["SetMinorVerticalGridlines"]		= AscBuilder.ApiChart.prototype.SetMinorVerticalGridlines;
+	ApiChart.prototype["SetMajorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMajorHorizontalGridlines;
+	ApiChart.prototype["SetMinorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMinorHorizontalGridlines;
+	ApiChart.prototype["SetHorAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetHorAxisLablesFontSize;
+	ApiChart.prototype["SetVertAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["RemoveSeria"]					= AscBuilder.ApiChart.prototype.RemoveSeria;
+	ApiChart.prototype["SetSeriaValues"]				= AscBuilder.ApiChart.prototype.SetSeriaValues;
+	ApiChart.prototype["SetXValues"]					= AscBuilder.ApiChart.prototype.SetXValues;
+	ApiChart.prototype["SetSeriaName"]					= AscBuilder.ApiChart.prototype.SetSeriaName;
+	ApiChart.prototype["SetCategoryName"]				= AscBuilder.ApiChart.prototype.SetCategoryName;
+	ApiChart.prototype["ApplyChartStyle"]				= AscBuilder.ApiChart.prototype.ApplyChartStyle;
+	ApiChart.prototype["SetPlotAreaFill"]				= AscBuilder.ApiChart.prototype.SetPlotAreaFill;
+	ApiChart.prototype["SetPlotAreaOutLine"]			= AscBuilder.ApiChart.prototype.SetPlotAreaOutLine;
+	ApiChart.prototype["SetSeriesFill"]					= AscBuilder.ApiChart.prototype.SetSeriesFill;
+	ApiChart.prototype["SetSeriesOutLine"]				= AscBuilder.ApiChart.prototype.SetSeriesOutLine;
+	ApiChart.prototype["SetDataPointFill"]				= AscBuilder.ApiChart.prototype.SetDataPointFill;
+	ApiChart.prototype["SetDataPointOutLine"]			= AscBuilder.ApiChart.prototype.SetDataPointOutLine;
+	ApiChart.prototype["SetMarkerFill"]					= AscBuilder.ApiChart.prototype.SetMarkerFill;
+	ApiChart.prototype["SetMarkerOutLine"]				= AscBuilder.ApiChart.prototype.SetMarkerOutLine;
+	ApiChart.prototype["SetTitleFill"]					= AscBuilder.ApiChart.prototype.SetTitleFill;
+	ApiChart.prototype["SetTitleOutLine"]				= AscBuilder.ApiChart.prototype.SetTitleOutLine;
+	ApiChart.prototype["SetLegendFill"]					= AscBuilder.ApiChart.prototype.SetLegendFill;
+	ApiChart.prototype["SetLegendOutLine"]				= AscBuilder.ApiChart.prototype.SetLegendOutLine;
+	ApiChart.prototype["SetAxieNumFormat"]				= AscBuilder.ApiChart.prototype.SetAxieNumFormat;
+	ApiChart.prototype["SetSeriaNumFormat"]				= AscBuilder.ApiChart.prototype.SetSeriaNumFormat;
+	ApiChart.prototype["SetDataPointNumFormat"]			= AscBuilder.ApiChart.prototype.SetDataPointNumFormat;
+	ApiChart.prototype["GetAllSeries"]					= AscBuilder.ApiChart.prototype.GetAllSeries;
+	ApiChart.prototype["GetSeries"]						= AscBuilder.ApiChart.prototype.GetSeries;
 
     ApiImage.prototype["GetClassType"]                    = ApiImage.prototype.GetClassType;
 

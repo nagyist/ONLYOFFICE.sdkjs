@@ -20739,7 +20739,7 @@
 	/**
 	 * Specifies font size for labels of the horizontal axis.
 	 * @memberof ApiChart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisLablesFontSize.js
@@ -20752,7 +20752,7 @@
 	/**
 	 * Specifies font size for labels of the vertical axis.
 	 * @memberof ApiChart
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVertAxisLablesFontSize.js
