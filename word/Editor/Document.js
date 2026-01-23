@@ -4271,7 +4271,6 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
 			// console.log("Recalc time : " + ((performance.now() - this.FullRecalc.StartTime) / 1000));
 
 			this.FullRecalc.Id           = null;
-			console.log("Strange Clear 2");
 			this.FullRecalc.MainStartPos = -1;
 
 			this.private_CheckUnusedFields();
