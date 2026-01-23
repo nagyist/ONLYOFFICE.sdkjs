@@ -3660,9 +3660,9 @@
 		return sTrText;
 	};
     CGraphicObjectBase.prototype.checkRecalculateTransform = function() {
-        if(this.recalcInfo.recalcTransform) {
+        if(this.recalcInfo.recalculateTransform) {
             this.recalculateTransform();
-            this.recalcInfo.recalcTransform = false;
+            this.recalcInfo.recalculateTransform = false;
         }
     };
     CGraphicObjectBase.prototype.checkTransformBeforeApply = function() {
