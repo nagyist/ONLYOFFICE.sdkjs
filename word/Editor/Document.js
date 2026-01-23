@@ -14880,8 +14880,11 @@ CDocument.prototype.UpdateCursorOnRecalculate = function()
 
 	this.private_UpdateCursorXY(true, true);
 
+	// Если во время пересчета изменилась текущая позиция, и нам надо скроллится, то скроллимся каждый раз
 	if (isLockScroll)
 		this.Api.asc_LockScrollToTarget(false);
+	else
+		this.DrawingDocument.scrollToTarget();
 };
 CDocument.prototype.private_UpdateCursorXY = function(bUpdateX, bUpdateY, isUpdateTarget)
 {
