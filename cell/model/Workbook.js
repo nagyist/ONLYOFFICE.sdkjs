@@ -16381,7 +16381,8 @@
 		}
 		let bContainsInFormula = false;
 		foreachRefElements(function (oRange) {
-			if (oRange.containCell2(oThis)) {
+			const sWsId = oRange.worksheet.getId();
+			if (oRange.containCell2(oThis) && sWsId === oThis.ws.getId()) {
 				bContainsInFormula = true;
 				return true;
 			}
@@ -16495,6 +16496,7 @@
 	 */
 	function _getRefElements(oFormulaParsed) {
 		const aRefElements = [];
+		const aExcludeFormulas = AscCommonExcel.aExcludeRecursiveFormulas;
 		for (let i = 0, length = oFormulaParsed.getOutStackSize(); i < length; i++) {
 			const oOutStackElem = oFormulaParsed.getOutStackElem(i);
 			const nElemType = oOutStackElem.type;
@@ -16502,6 +16504,26 @@
 			const bArea = nElemType === cElementType.cellsRange || nElemType === cElementType.name;
 			const bDefName = nElemType === cElementType.name || nElemType === cElementType.name3D;
 			const bTable = nElemType === cElementType.table;
+
+			if (nElemType === cElementType.func && aExcludeFormulas.includes(oOutStackElem.name)) {
+				const nPrevIndex = i - 1;
+				const nArgsCount = oFormulaParsed.getOutStackElem(nPrevIndex);
+				if (nArgsCount > 0) {
+					const nStartIndex = nPrevIndex - 1;
+					const nEndIndex = nPrevIndex - nArgsCount;
+					const aLinkTypes =  [cElementType.cell, cElementType.cell3D, cElementType.cellsRange,
+						cElementType.cellsRange3D, cElementType.name, cElementType.name3D, cElementType.table];
+					for (let j = nStartIndex; j >= nEndIndex; j--) {
+						if (j < 0) {
+							break;
+						}
+						const oElem = oFormulaParsed.getOutStackElem(j);
+						if (aLinkTypes.includes(oElem.type)) {
+							aRefElements.pop()
+						}
+					}
+				}
+			}
 
 			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
 				aRefElements.push(oOutStackElem);

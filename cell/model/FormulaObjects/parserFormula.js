@@ -75,7 +75,7 @@ function (window, undefined) {
 	var arrayFunctionsMap = {"SUMPRODUCT": 1, "FILTER": 1, "SUM": 1, "LOOKUP": 1, "AGGREGATE": 1};
 
 	var importRangeLinksState = {importRangeLinks: null, startBuildImportRangeLinks: null};
-	const aExcludeRecursiveFormulas = ['ISFORMULA','SHEET','SHEETS', 'AREAS', 'COLUMN', 'COLUMNS', 'ROW', 'ROWS', 'CELL', 'OFFSET'];
+	const aExcludeRecursiveFormulas = ['ISFORMULA','SHEET','SHEETS', 'AREAS', 'COLUMN', 'COLUMNS', 'ROW', 'ROWS', 'CELL', 'OFFSET', 'VLOOKUP'];
 
 	const cReplaceFormulaType = {
 		val: 1,
@@ -6803,7 +6803,7 @@ function parserFormula( formula, parent, _ws ) {
 		if (!~nMainFuncIndex) {
 			return aNewOutStack;
 		}
-		for (let i = 0; i < aOutStack.length; i++) {
+		for (let i = 0; i < nMainFuncIndex; i++) {
 			if (!(aOutStack[i] instanceof cBaseOperator) && aOutStack[i].type === cElementType.operator) {
 				continue;
 			}
@@ -6828,6 +6828,7 @@ function parserFormula( formula, parent, _ws ) {
 					continue;
 				}
 			} else if (aOutStack[i].type === cElementType.operator) {
+				const ARGUMENT_COUNT_INDEX = 1;
 				const aArgsOfOperator = [];
 				const aOperatorData = [aOutStack[i], aOutStack[i].argumentsCurrent];
 				let nPrevIndex = i - 1;
@@ -6838,7 +6839,7 @@ function parserFormula( formula, parent, _ws ) {
 					}
 					aArgsOfOperator.unshift(aNewOutStack.pop());
 				}
-				if (aArgsOfOperator.length < aOperatorData[1]) {
+				if (aArgsOfOperator.length < aOperatorData[ARGUMENT_COUNT_INDEX]) {
 					break;
 				}
 				aOperatorData.push(aArgsOfOperator);
@@ -7183,7 +7184,8 @@ function parserFormula( formula, parent, _ws ) {
 			}
 			// Check on recursion ref.  Recursion ref means that cell is recursion need to set ca flag to true.
 			if (aArgs[i] && aTypesWithRange.includes(aArgs[i].type) && !this._isConditionalFormula(oFormula.name)) {
-				if (aArgs[i].getBBox0().contains(oParentCell.nCol, oParentCell.nRow)) {
+				const sWsId = aArgs[i].getWS().getId();
+				if (aArgs[i].getBBox0().contains(oParentCell.nCol, oParentCell.nRow) && sWsId === oParentCell.ws.getId()) {
 					return null;
 				}
 			}
