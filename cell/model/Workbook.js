@@ -16519,7 +16519,7 @@
 						}
 						const oElem = oFormulaParsed.getOutStackElem(j);
 						if (aLinkTypes.includes(oElem.type)) {
-							aRefElements.pop()
+							aRefElements.pop();
 						}
 					}
 				}
