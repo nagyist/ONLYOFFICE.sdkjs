@@ -395,7 +395,7 @@
 
     /**
      * Any valid drawing element.
-     * @typedef {(ApiShape | ApiImage | ApiGroup | ApiOleObject | ApiTable | ApiChart )} Drawing
+     * @typedef {(ApiShape | ApiImage | ApiGroup | ApiOleObject | ApiTable | ApiChart | ApiSmartArt)} Drawing
      * @see office-js-api/Examples/Enumerations/Drawing.js
 	 */
 
@@ -5664,6 +5664,33 @@
         return true;
     };
 
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiSmartArt
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a smart art.
+	 * @constructor
+	 */
+	function ApiSmartArt(oGroup){
+		ApiDrawing.call(this, oGroup);
+	}
+	ApiSmartArt.prototype = Object.create(ApiDrawing.prototype);
+	ApiSmartArt.prototype.constructor = ApiSmartArt;
+
+	/**
+	 * Returns a type of the ApiSmartArt class.
+	 * @memberof ApiSmartArt
+	 * @typeofeditors ["CPE"]
+	 * @returns {"smartArt"}
+	 * @see office-js-api/Examples/{Editor}/ApiSmartArt/Methods/GetClassType.js
+	 */
+	ApiSmartArt.prototype.GetClassType = function() {
+		return "smartArt";
+	};
+
     //------------------------------------------------------------------------------------------------------------------
     //
     // ApiImage
@@ -7307,6 +7334,7 @@
 	window['AscBuilder'].ApiShape = ApiShape;
 	window['AscBuilder'].ApiImage = ApiImage;
 	window['AscBuilder'].ApiGroup = ApiGroup;
+	window['AscBuilder'].ApiSmartArt = ApiSmartArt;
 	window['AscBuilder'].ApiOleObject = ApiOleObject;
 	window['AscBuilder'].ApiTable = ApiTable;
 	window['AscBuilder'].ApiChart = ApiChart;

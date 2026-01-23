@@ -316,7 +316,7 @@
 
 	/**
      * Any valid drawing element.
-     * @typedef {(ApiShape | ApiImage | ApiOleObject | ApiChart )} Drawing
+     * @typedef {(ApiShape | ApiImage | ApiOleObject | ApiChart | ApiGroup | ApiSmartArt)} Drawing
 	 * @see office-js-api/Examples/Enumerations/Drawing.js
 	 */
 
@@ -12975,6 +12975,60 @@
 	 */
 	ApiImage.prototype.GetClassType = function () {
 		return "image";
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiGroup
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a group of drawings.
+	 * @constructor
+	 */
+	function ApiGroup(oGroup) {
+		ApiDrawing.call(this, oGroup);
+	}
+	ApiGroup.prototype = Object.create(ApiDrawing.prototype);
+	ApiGroup.prototype.constructor = ApiGroup;
+
+	/**
+	 * Returns a type of the ApiGroup class.
+	 * @memberof ApiGroup
+	 * @typeofeditors ["CSE"]
+	 * @returns {"group"}
+	 * @see office-js-api/Examples/{Editor}/ApiGroup/Methods/GetClassType.js
+	 */
+	ApiGroup.prototype.GetClassType = function() {
+		return "group";
+	};
+
+	//------------------------------------------------------------------------------------------------------------------
+	//
+	// ApiSmartArt
+	//
+	//------------------------------------------------------------------------------------------------------------------
+
+	/**
+	 * Class representing a smart art.
+	 * @constructor
+	 */
+	function ApiSmartArt(oGroup){
+		ApiDrawing.call(this, oGroup);
+	}
+	ApiSmartArt.prototype = Object.create(ApiDrawing.prototype);
+	ApiSmartArt.prototype.constructor = ApiSmartArt;
+
+	/**
+	 * Returns a type of the ApiSmartArt class.
+	 * @memberof ApiSmartArt
+	 * @typeofeditors ["CSE"]
+	 * @returns {"smartArt"}
+	 * @see office-js-api/Examples/{Editor}/ApiSmartArt/Methods/GetClassType.js
+	 */
+	ApiSmartArt.prototype.GetClassType = function() {
+		return "smartArt";
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -28683,7 +28737,9 @@
             case AscDFH.historyitem_type_OleObject:
                 return new AscBuilder.ApiOleObject(drawing);
 			case AscDFH.historyitem_type_GroupShape:
-                return new ApiDrawing(drawing);
+                return new AscBuilder.ApiGroup(drawing);
+			case AscDFH.historyitem_type_SmartArt:
+                return new AscBuilder.ApiSmartArt(drawing);
 			case AscDFH.historyitem_type_ChartSpace:
 				return new AscBuilder.ApiChart(drawing);
         }
@@ -28696,6 +28752,8 @@
 	window['AscBuilder'] = window['AscBuilder'] || {};
 	window['AscBuilder'].ApiShape           = ApiShape;
 	window['AscBuilder'].ApiImage           = ApiImage;
+	window['AscBuilder'].ApiGroup           = ApiGroup;
+	window['AscBuilder'].ApiSmartArt        = ApiSmartArt;
 	window['AscBuilder'].ApiOleObject       = ApiOleObject;
 	window['AscBuilder'].ApiChart			= ApiChart;
 
