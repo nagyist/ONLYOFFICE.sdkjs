@@ -3711,12 +3711,12 @@ FormatParser.prototype =
      */
     _isNumericFormat: function (currentFormat) {
         switch (currentFormat) {
-            case Asc.c_oAscNumFormatType.Fraction:
-            case Asc.c_oAscNumFormatType.Number:
-            case Asc.c_oAscNumFormatType.Scientific:
-            case Asc.c_oAscNumFormatType.Accounting:
-            case Asc.c_oAscNumFormatType.Currency:
-            case Asc.c_oAscNumFormatType.Percent:
+			case Asc.c_oAscNumFormatType.Number:
+			case Asc.c_oAscNumFormatType.Currency:
+			case Asc.c_oAscNumFormatType.Accounting:
+			case Asc.c_oAscNumFormatType.Fraction:
+			case Asc.c_oAscNumFormatType.Percent:
+			case Asc.c_oAscNumFormatType.Scientific:
                 return true;
             default:
                 return false;
@@ -3835,25 +3835,30 @@ FormatParser.prototype =
         if (null != match) {
             // If the third group has "/" symbol parse it like a fraction
             if (match[3] && match[3].indexOf('/') !== -1) {
-                var match2 = match[3].match(/\d+/g);
-                if (null != match2 && match2.length == 2) {
-                    // Simple fraction like "1/2" - only parse as fraction for numeric formats
-                    // Otherwise let parseDate handle it (could be date like "1/2" = Jan 2)
-                    if (!this._isNumericFormat(currentFormat)) {
-                        match = null; // Let parseDate handle it
-                    } else {
-                        sVal = '0';
-                        sNumerator = match2[0];
-                        sDenominator = match2[1];
-                    }
-                } else if (null != match2 && match2.length >= 3) {
-                    // Mixed fraction like "1 1/2" - always parse as fraction
-                    sVal = match2[0];
-                    sNumerator = match2[1];
-                    sDenominator = match2[2];
-                } else {
-                    // Invalid fraction format
+                // Find fraction at end: must be at start OR after space
+                // This rejects "0.5/2" (no space before 5) but accepts "1 1/2", "1,234 1/2"
+                var fractionMatch = match[3].match(/(?:^|\s)(\d+)\/(\d+)$/);
+                if (!fractionMatch) {
                     match = null;
+                } else {
+                    sNumerator = fractionMatch[1];
+                    sDenominator = fractionMatch[2];
+                    
+                    // Get part before fraction - let existing locale-aware parsing handle it
+                    var beforeFraction = match[3].substring(0, fractionMatch.index).trim();
+                    
+                    if (beforeFraction === '') {
+                        // Simple fraction like "1/2"
+                        if (!this._isNumericFormat(currentFormat)) {
+                            // Let parseDate handle it (could be date like "1/2" = Jan 2)
+                            match = null;
+                        } else {
+                            sVal = '0';
+                        }
+                    } else {
+                        // Mixed fraction - whole part validated by _parseThouthand (locale-aware)
+                        sVal = beforeFraction;
+                    }
                 }
             } else {
                 sVal = match[3];
@@ -4126,10 +4131,16 @@ FormatParser.prototype =
             }
 			if (g_oFormatParser.isLocaleNumber(val, cultureInfo)) {
 				var dNumber = g_oFormatParser.parseLocaleNumber(val, cultureInfo);
-                if(sNumerator && sDenominator)
-                    oRes = { number: dNumber + (sNumerator / sDenominator), thouthand: bThouthand };
-				else
+                if(sNumerator && sDenominator) {
+                    // Mixed fractions must have integer whole part (e.g., "0.5 1/2" is invalid)
+                    if (Number.isInteger(dNumber)) {
+                        oRes = { number: dNumber + (sNumerator / sDenominator), thouthand: bThouthand };
+                    }
+                    // else oRes stays null - invalid mixed fraction
+                }
+				else {
                     oRes = { number: dNumber, thouthand: bThouthand };
+                }
 			}
         }
 		return oRes;

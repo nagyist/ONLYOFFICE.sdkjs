@@ -302,6 +302,98 @@ $(function () {
         assert.strictEqual(formatParser.parse("$€100", null), null, 'Mixed currencies');
         assert.strictEqual(formatParser.parse("", null), null, 'Empty string');
         assert.strictEqual(formatParser.parse("   ", null), null, 'Whitespace only');
+        
+        // === Decimal with fraction is invalid (Excel treats as text) ===
+        assert.strictEqual(formatParser.parse("0.1/3", null), null, 'Decimal numerator 0.1/3');
+        assert.strictEqual(formatParser.parse("0.5/2", null), null, 'Decimal numerator 0.5/2');
+        assert.strictEqual(formatParser.parse("1.5/2", null), null, 'Decimal numerator 1.5/2');
+        assert.strictEqual(formatParser.parse("0.25/4", null), null, 'Decimal numerator 0.25/4');
+        assert.strictEqual(formatParser.parse("2.5/5", null), null, 'Decimal numerator 2.5/5');
+        assert.strictEqual(formatParser.parse("10.5/3", null), null, 'Decimal numerator 10.5/3');
+        assert.strictEqual(formatParser.parse("3/0.5", null), null, 'Decimal denominator 3/0.5');
+        assert.strictEqual(formatParser.parse("1/2.5", null), null, 'Decimal denominator 1/2.5');
+        assert.strictEqual(formatParser.parse("2/0.25", null), null, 'Decimal denominator 2/0.25');
+        assert.strictEqual(formatParser.parse("0.5/0.5", null), null, 'Both decimal 0.5/0.5');
+        assert.strictEqual(formatParser.parse("1.5/2.5", null), null, 'Both decimal 1.5/2.5');
+        assert.strictEqual(formatParser.parse(".5/2", null), null, 'Leading dot numerator .5/2');
+        assert.strictEqual(formatParser.parse("1/.5", null), null, 'Leading dot denominator 1/.5');
+        assert.strictEqual(formatParser.parse("0.5 1/2", null), null, 'Decimal with mixed fraction');
+        
+        // === Invalid fraction formats (Excel stays as text) ===
+        assert.strictEqual(formatParser.parse("/2", null), null, 'Missing numerator /2');
+        assert.strictEqual(formatParser.parse("1/", null), null, 'Missing denominator 1/');
+        assert.strictEqual(formatParser.parse("/", null), null, 'Just slash');
+        assert.strictEqual(formatParser.parse("//", null), null, 'Double slash');
+        assert.strictEqual(formatParser.parse("1//2", null), null, 'Double slash between 1//2');
+        assert.strictEqual(formatParser.parse("1/-2", null), null, 'Negative denominator 1/-2');
+        assert.strictEqual(formatParser.parse("0/0", null), null, 'Zero over zero 0/0');
+        assert.strictEqual(formatParser.parse("0/1", null), null, 'Zero numerator 0/1');
+        
+        // === Text with slash patterns (should stay as text) ===
+        assert.strictEqual(formatParser.parse("N/A", null), null, 'Abbreviation N/A');
+        assert.strictEqual(formatParser.parse("n/a", null), null, 'Abbreviation n/a');
+        assert.strictEqual(formatParser.parse("w/o", null), null, 'Abbreviation w/o');
+        assert.strictEqual(formatParser.parse("path/to/file", null), null, 'Path pattern');
+        assert.strictEqual(formatParser.parse("C:/folder", null), null, 'Drive path');
+        assert.strictEqual(formatParser.parse("yes/no", null), null, 'Choice pattern yes/no');
+        assert.strictEqual(formatParser.parse("and/or", null), null, 'Choice pattern and/or');
+        
+        // === Fraction with text around (should stay as text) ===
+        assert.strictEqual(formatParser.parse("1/2 cup", null), null, 'Fraction with text after');
+        assert.strictEqual(formatParser.parse("part 1/2", null), null, 'Fraction with text before');
+        assert.strictEqual(formatParser.parse("1/2 inch", null), null, 'Fraction measurement');
+        assert.strictEqual(formatParser.parse("page 1/10", null), null, 'Page fraction');
+        
+        // === Special chars in fraction (should stay as text) ===
+        assert.strictEqual(formatParser.parse("1_/2", null), null, 'Underscore in fraction');
+        assert.strictEqual(formatParser.parse("1/_2", null), null, 'Underscore in denominator');
+        assert.strictEqual(formatParser.parse("1|/2", null), null, 'Pipe in fraction');
+        assert.strictEqual(formatParser.parse("1&/2", null), null, 'Ampersand in fraction');
+        
+        // === Spaces around slash (should stay as text or parse as date) ===
+        assert.strictEqual(formatParser.parse(" /2", null), null, 'Space before slash');
+    });
+    
+    // =====================================================================
+    // FormatParser.parse - Valid fraction patterns
+    // =====================================================================
+    QUnit.test('valid fraction patterns', function (assert) {
+        // Get proper format type for fraction context
+        const fractionFormatString = "# ?/?";
+        const numFormat = AscCommon.oNumFormatCache.get(fractionFormatString);
+        const fractionFormatType = numFormat.getType();
+        
+        // These should parse as fractions when format is numeric (fraction type)
+        assert.ok(formatParser.parse("1/2", null, fractionFormatType, fractionFormatString) !== null, 'Simple fraction 1/2');
+        assert.ok(formatParser.parse("1/3", null, fractionFormatType, fractionFormatString) !== null, 'Simple fraction 1/3');
+        assert.ok(formatParser.parse("3/4", null, fractionFormatType, fractionFormatString) !== null, 'Simple fraction 3/4');
+        assert.ok(formatParser.parse("7/8", null, fractionFormatType, fractionFormatString) !== null, 'Simple fraction 7/8');
+        assert.ok(formatParser.parse("15/16", null, fractionFormatType, fractionFormatString) !== null, 'Two digit fraction 15/16');
+        
+        // Mixed fractions
+        assert.ok(formatParser.parse("1 1/2", null, fractionFormatType, fractionFormatString) !== null, 'Mixed fraction 1 1/2');
+        assert.ok(formatParser.parse("2 3/4", null, fractionFormatType, fractionFormatString) !== null, 'Mixed fraction 2 3/4');
+        assert.ok(formatParser.parse("0 1/2", null, fractionFormatType, fractionFormatString) !== null, 'Mixed fraction 0 1/2');
+        assert.ok(formatParser.parse("10 1/4", null, fractionFormatType, fractionFormatString) !== null, 'Mixed fraction 10 1/4');
+        assert.ok(formatParser.parse("100 99/100", null, fractionFormatType, fractionFormatString) !== null, 'Large mixed fraction');
+        
+        // Mixed fractions with thousand separators
+        let result = formatParser.parse("1,234 1/2", null, fractionFormatType, fractionFormatString);
+        assert.ok(result !== null, 'Mixed fraction with thousands 1,234 1/2');
+        if (result) {
+            assert.ok(Math.abs(result.value - 1234.5) < 0.0001, 'Value of 1,234 1/2 should be 1234.5');
+        }
+        
+        // Fractions with sign (should parse in fraction context)
+        const result1 = formatParser.parse("-1/2", null, fractionFormatType, fractionFormatString);
+        if (result1 !== null) {
+            assert.ok(result1.value < 0, 'Negative fraction -1/2 has negative value');
+        }
+        
+        const result2 = formatParser.parse("+1/2", null, fractionFormatType, fractionFormatString);
+        if (result2 !== null) {
+            assert.ok(result2.value > 0, 'Positive fraction +1/2 has positive value');
+        }
     });
 
     // =====================================================================
@@ -1120,5 +1212,73 @@ $(function () {
             }
         });
     }
+
+    // =====================================================================
+    // FormatParser.parse - Locale-specific mixed fraction tests
+    // Tests Number.isInteger check for non-US locales (decimal=",", group=".")
+    // =====================================================================
+    QUnit.module('FormatParser.parse - Locale mixed fractions');
+
+    QUnit.test('European locale (decimal=comma, group=period) mixed fractions', function (assert) {
+        // Danish/German-like culture: decimal separator is comma, group separator is period
+        // LCID 6 is Danish: NumberDecimalSeparator: ",", NumberGroupSeparator: "."
+        const europeanCulture = {
+            NumberDecimalSeparator: ",",
+            NumberGroupSeparator: ".",
+            NumberGroupSizes: [3],
+            CurrencySymbol: "€",
+            CurrencyPositivePattern: 3,
+            CurrencyNegativePattern: 8,
+            DateSeparator: ".",
+            TimeSeparator: ":"
+        };
+        
+        // Get fraction format for context
+        const fractionFormatString = "# ?/?";
+        const numFormat = AscCommon.oNumFormatCache.get(fractionFormatString);
+        const fractionFormatType = numFormat.getType();
+        
+        // === Valid: thousand separator in whole part ===
+        // "1.000 1/2" in European = 1000 + 0.5 = 1000.5 (period is thousand separator)
+        let result = formatParser.parse("1.000 1/2", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.ok(result !== null, '"1.000 1/2" with European locale should parse (1000 + 1/2)');
+        if (result) {
+            assert.strictEqual(result.value, 1000.5, '"1.000 1/2" value should be 1000.5');
+        }
+        
+        // "2.500 3/4" = 2500 + 0.75 = 2500.75
+        result = formatParser.parse("2.500 3/4", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.ok(result !== null, '"2.500 3/4" with European locale should parse');
+        if (result) {
+            assert.strictEqual(result.value, 2500.75, '"2.500 3/4" value should be 2500.75');
+        }
+        
+        // === Invalid: decimal separator in whole part of mixed fraction ===
+        // "1,5 1/2" in European = 1.5 + 0.5 - INVALID (whole part must be integer)
+        result = formatParser.parse("1,5 1/2", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.strictEqual(result, null, '"1,5 1/2" with European locale should be null (decimal in whole part)');
+        
+        // "0,5 1/2" - also invalid
+        result = formatParser.parse("0,5 1/2", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.strictEqual(result, null, '"0,5 1/2" with European locale should be null');
+        
+        // "10,25 1/4" - invalid
+        result = formatParser.parse("10,25 1/4", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.strictEqual(result, null, '"10,25 1/4" with European locale should be null');
+        
+        // === Valid: simple fractions (no whole part) ===
+        result = formatParser.parse("1/2", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.ok(result !== null, '"1/2" with European locale should parse');
+        if (result) {
+            assert.strictEqual(result.value, 0.5, '"1/2" value should be 0.5');
+        }
+        
+        // === Valid: integer whole part ===
+        result = formatParser.parse("5 1/2", europeanCulture, fractionFormatType, fractionFormatString);
+        assert.ok(result !== null, '"5 1/2" with European locale should parse');
+        if (result) {
+            assert.strictEqual(result.value, 5.5, '"5 1/2" value should be 5.5');
+        }
+    });
 
 });
