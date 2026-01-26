@@ -320,7 +320,7 @@
                 
                 // далее вычисляем ширину с новым потенциальным зумом,
                 // если при данных размерах будет добавлен скролл, то вычитаем его ширину и пересчитываем zoom
-                let nNewPageW = oViewer.drawingPages[nPageIdx].W = (oViewer.file.pages[nPageIdx].W * 96 * nMinZoom / oViewer.file.pages[nPageIdx].Dpi) >> 0;
+                let nNewPageW = (oViewer.file.pages[nPageIdx].W * 96 * nMinZoom / oViewer.file.pages[nPageIdx].Dpi) >> 0;
                 if (nNewPageW > oViewer.width) {
                     nVerZoom = (((oViewer.canvas.height - oViewer.scrollWidth) / (nRectH)) * 100 >> 0) / 100;
                 }

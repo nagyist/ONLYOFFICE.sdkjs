@@ -9685,13 +9685,13 @@ var CPresentation = CPresentation || function(){};
         }
 
         let oTrigger = annot.GetTrigger(AscPDF.PDF_TRIGGERS_TYPES.MouseUp);
-        let oAction = oTrigger.Actions[0];
 
         let oProps = new Asc.CHyperlinkProperty(this);
-        if (!oAction) {
+        if (!oTrigger || !oTrigger.Actions[0]) {
             return oProps;
         }
-        
+
+        let oAction = oTrigger.Actions[0];
         switch (oAction.GetType()) {
             case AscPDF.ACTIONS_TYPES.Named: {
                 switch (oAction.GetNameStrType()) {
