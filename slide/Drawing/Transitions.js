@@ -2714,6 +2714,129 @@ function CTransitionAnimation(htmlpage)
     };
 }
 
+function CGIFTimer(demoManager)
+{
+    this.demoManager = demoManager;
+    this.timerId = null;
+
+    this.gifPlayers = [];
+}
+
+CGIFTimer.prototype.start = function()
+{
+    const this_ = this;
+    this.timerId = __nextFrame(function()
+    {
+        this_.onTick();
+    });
+};
+CGIFTimer.prototype.end = function()
+{
+    if(this.timerId !== null)
+    {
+        __cancelFrame(this.timerId);
+        this.timerId = null;
+    }
+};
+CGIFTimer.prototype.onTick = function()
+{
+    if (this.gifPlayers.length > 0)
+    {
+        let redraw = false;
+        for (let i = 0; i < this.gifPlayers.length; i++)
+        {
+            if (this.gifPlayers[i].onTick())
+                redraw = true;
+        }
+        if (redraw)
+        {
+            let player = this.demoManager.GetCurrentAnimPlayer();
+            if (player) {
+                player.animationDrawer.clearTextureCache();
+                this.demoManager.OnRecalculateAnimationFrame(player);
+            }
+        }
+        this.start();
+    }
+};
+CGIFTimer.prototype.onStartSlide = function(slide)
+{
+    this.onEndSlide();
+    this.slide = slide;
+
+    if (this.slide.backgroundFill)
+    {
+        this.checkBlipFill(this.slide.backgroundFill.fill);
+    }
+    let layout = this.slide.Layout;
+    let master = layout.Master;
+    let slideObjects = [];
+    slideObjects.push(slide);
+    slideObjects.push(layout);
+    slideObjects.push(master);
+    let this_ = this;
+    for (let i = 0; i < slideObjects.length; i++) {
+        let slideObject = slideObjects[i];
+        let fCheckFunction = function(sp) {
+            this_.checkBlipFill(sp.blipFill);
+            if (sp.spTree) {
+                for (let spIdx = 0; spIdx < sp.spTree.length; spIdx++) {
+                    fCheckFunction(sp.spTree[spIdx]);
+                }
+            }
+        };
+        slideObject.cSld.forEachSp(fCheckFunction);
+    }
+    if (this.gifPlayers.length > 0) {
+        this.start();
+    }
+};
+
+CGIFTimer.prototype.checkBlipFill = function(fill)
+{
+    if(!fill || !(fill instanceof AscFormat.CBlipFill)) return;
+    let imageUrl = fill.RasterImageId;
+    if (!imageUrl) return;
+
+    if (this.demoManager.GifData[imageUrl])
+    {
+        let data = this.demoManager.GifData[imageUrl];
+        let adapter = new AscCommon.GIFAdapter(fill);
+        let player = new AscCommon.GIFPlayer(data, adapter);
+        player.start();
+        this.gifPlayers.push(player);
+    }
+    else
+    {
+        let this_ = this;
+        let currentSlide = this.slide;
+        this.demoManager.loadGIF(imageUrl, function(data)
+        {
+            if (data && this_.slide === currentSlide)
+            {
+                let adapter = new AscCommon.GIFAdapter(fill);
+                let player = new AscCommon.GIFPlayer(data, adapter);
+                player.start();
+                this_.gifPlayers.push(player);
+                if (this_.gifPlayers.length === 1)
+                {
+                    this_.start();
+                }
+            }
+        });
+    }
+};
+CGIFTimer.prototype.onEndSlide = function()
+{
+    this.slide = null;
+    for (let i = 0; i < this.gifPlayers.length; i++)
+    {
+        this.gifPlayers[i].stop();
+    }
+    this.gifPlayers.length = 0;
+    this.end();
+};
+
 function CDemonstrationManager(htmlpage)
 {
     this.HtmlPage   = htmlpage;
@@ -2762,6 +2885,10 @@ function CDemonstrationManager(htmlpage)
 	this.GoToSlideShortcutStack = [];
 
     this.SlideAnnotations = new AscCommonSlide.CSlideShowAnnotations();
+
+    this.GifData = {};
+
+    this.GIFTimer = new CGIFTimer(this);
 
     var oThis = this;
 
@@ -3036,6 +3163,10 @@ function CDemonstrationManager(htmlpage)
         this.SlideIndexes[1] = -1;
 
 		this.GoToSlideShortcutStack = [];
+		if (!this.GifData)
+		{
+			this.GifData = {};
+		}
         this.StartSlide(true, true);
     };
 
@@ -3095,7 +3226,6 @@ function CDemonstrationManager(htmlpage)
                 oThis.StartAnimation(oThis.SlideNum);
             }
         }
-
         oThis.OnPaintSlide(false);
     };
 
@@ -3104,6 +3234,8 @@ function CDemonstrationManager(htmlpage)
         var oSlide = this.GetSlide(nSlideNum);
         if(oSlide)
         {
+
+            this.GIFTimer.onStartSlide(oSlide);
             return oSlide.getAnimationPlayer().start();
         }
         return false;
@@ -3114,6 +3246,7 @@ function CDemonstrationManager(htmlpage)
         if(this.HtmlPage.m_oLogicDocument)
         {
             var oSlide = this.GetSlide(nSlideNum);
+            this.GIFTimer.onEndSlide();
             if(oSlide)
             {
                 oSlide.getAnimationPlayer().stop();
@@ -3407,13 +3540,15 @@ function CDemonstrationManager(htmlpage)
             }, oSlide.getAdvanceDuration());
         }
     };
-		this.EndDrawInk = function() {
-			const oSlide = oThis.GetCurrentSlide();
-			const oController = oSlide && oSlide.graphicObjects;
-			if (oController && oController.curState instanceof AscFormat.CInkDrawState) {
-				oController.curState.onMouseUp({ClickCount : 1, X : 0, Y : 0}, 0, 0, oThis.SlideNum);
-			}
-		};
+    this.EndDrawInk = function()
+    {
+        const oSlide = oThis.GetCurrentSlide();
+        const oController = oSlide && oSlide.graphicObjects;
+        if (oController && oController.curState instanceof AscFormat.CInkDrawState)
+        {
+            oController.curState.onMouseUp({ClickCount : 1, X : 0, Y : 0}, 0, 0, oThis.SlideNum);
+        }
+    };
     this.AdvanceAfter = function()
     {
         if (oThis.IsPlayMode)
@@ -3435,6 +3570,8 @@ function CDemonstrationManager(htmlpage)
 
     this.End = function(isNoUseFullScreen)
     {
+        this.GIFTimer.onEndSlide();
+		this.GifDataLoading = {};
 		this.PointerRemove();
         if (this.waitReporterObject)
         {
@@ -3672,7 +3809,7 @@ function CDemonstrationManager(htmlpage)
         return false;
     };
 
-		this.sendNextFromReporter = function (isNoSendFormReporter) {
+	this.sendNextFromReporter = function (isNoSendFormReporter) {
 			if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
 				this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"next\" }");
 		};
@@ -3680,6 +3817,108 @@ function CDemonstrationManager(htmlpage)
 		if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
 			this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"prev\" }");
 	};
+
+	this.loadGIF = function(imageUrl, callback)
+	{
+		if (window["IS_NATIVE_EDITOR"])
+		{
+			if (callback)
+			{
+				callback(null);
+			}
+			return;
+		}
+
+		var MAX_GIF_SIZE = 20 * 1024 * 1024;
+
+		if (!imageUrl)
+		{
+			if (callback)
+			{
+				callback(null);
+			}
+			return;
+		}
+
+		if (this.GifData[imageUrl])
+		{
+			if (callback)
+			{
+				callback(this.GifData[imageUrl]);
+			}
+			return;
+		}
+
+		if (!this.GifDataLoading)
+		{
+			this.GifDataLoading = {};
+		}
+
+		if (this.GifDataLoading[imageUrl])
+		{
+			if (callback)
+			{
+				this.GifDataLoading[imageUrl].push(callback);
+			}
+			return;
+		}
+
+		this.GifDataLoading[imageUrl] = callback ? [callback] : [];
+
+		var this_ = this;
+		var url = AscCommon.getFullImageSrc2(imageUrl);
+
+		fetch(url)
+			.then(function (response)
+			{
+				if (response.ok)
+				{
+					var contentLength = response.headers.get('content-length');
+					if (contentLength && parseInt(contentLength) > MAX_GIF_SIZE)
+					{
+						return null;
+					}
+					return response.arrayBuffer();
+				}
+				return null;
+			})
+			.then(function (data)
+			{
+				if (data && data.byteLength > 0 && data.byteLength <= MAX_GIF_SIZE)
+				{
+					this_.GifData[imageUrl] = data;
+				}
+				else
+				{
+					data = null;
+				}
+
+				var callbacks = this_.GifDataLoading[imageUrl];
+				delete this_.GifDataLoading[imageUrl];
+
+				if (callbacks)
+				{
+					for (var i = 0; i < callbacks.length; i++)
+					{
+						callbacks[i](data);
+					}
+				}
+			})
+			.catch(function ()
+			{
+				var callbacks = this_.GifDataLoading[imageUrl];
+				delete this_.GifDataLoading[imageUrl];
+
+				if (callbacks)
+				{
+					for (var i = 0; i < callbacks.length; i++)
+					{
+						callbacks[i](null);
+					}
+				}
+			});
+	};
+
     this.NextSlide = function(isNoSendFormReporter, isNoFromEvent)
     {
         if (!this.Mode)

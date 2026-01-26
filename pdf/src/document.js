@@ -2510,24 +2510,6 @@ var CPresentation = CPresentation || function(){};
                 if (oMouseMoveAnnot)
                     oMouseMoveAnnot.onMouseEnter();
             }
-
-            if (oMouseMoveLink && !oMouseMoveField && !oMouseMoveAnnot && !oMouseMoveDrawing) {
-                if (oMouseMoveLink["link"]) {
-                    let oMMData   = new AscCommon.CMouseMoveData();
-                    let oCoords   = AscPDF.GetGlobalCoordsByPageCoords(pageObjectOrig.x, pageObjectOrig.y, pageObjectOrig.index);
-                    oMMData.X_abs = oCoords.X - 5;
-                    oMMData.Y_abs = oCoords.Y;
-                    oMMData.Type = Asc.c_oAscMouseMoveDataTypes.Hyperlink;
-                    oMMData.Hyperlink = new Asc.CHyperlinkProperty({
-                        Text: null,
-                        Value: oMouseMoveLink["link"],
-                        ToolTip: oMouseMoveLink["link"],
-                        Class: null,
-                        NoCtrl: true
-                    });
-                    Asc.editor.sync_MouseMoveCallback(oMMData);
-                }
-            }
         }
 
         this.Api.sync_MouseMoveEndCallback();
@@ -4074,6 +4056,11 @@ var CPresentation = CPresentation || function(){};
     };
 
     CPDFDoc.prototype.FinalizeAction = function(checkEmptyAction) {
+		let oActionsQueue = this.GetActionsQueue();
+		if (this.Action.Description == AscDFH.historydescription_Pdf_ExecActions && oActionsQueue.IsInProgress()) {
+			return;
+		}
+
 		Asc.editor.htmlPasteSepParagraphs = true;
 		Asc.editor.htmlPastePageIdx = undefined;
 		this.Action.PasteHtmlAction = false;
@@ -4674,8 +4661,6 @@ var CPresentation = CPresentation || function(){};
                     oThis.AddFieldToCommit(field);
                 }
             });
-            if (this.widgets.length > 0)
-                AscCommon.History.Clear()
         }
 
         this.CommitFields();
@@ -8251,7 +8236,8 @@ var CPresentation = CPresentation || function(){};
         let isRestrictionView   = Asc.editor.isRestrictionView();
         let oDoc                = this;
 
-        if (true === this.CollaborativeEditing.Get_GlobalLock()) {
+		// allow do pdf actions in all modes
+        if (true === this.CollaborativeEditing.Get_GlobalLock() && nCheckType !== AscDFH.historydescription_Pdf_ExecActions) {
             return true;
         }
 
@@ -9086,6 +9072,7 @@ var CPresentation = CPresentation || function(){};
         Asc.editor.canSave = true;
 
         this.SetInProgress(false);
+        this.doc.FinalizeAction(true);
     };
     CActionQueue.prototype.IsInProgress = function() {
         return this.isInProgress;

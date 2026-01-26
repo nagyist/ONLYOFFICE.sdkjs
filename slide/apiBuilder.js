@@ -178,6 +178,17 @@
 	ApiOleObject.prototype.constructor = ApiOleObject;
 
 	/**
+	 * Class representing a chart.
+	 * @constructor
+	 */
+	function ApiChart(Chart) {
+		ApiDrawing.call(this, Chart);
+		this.Chart = Chart;
+	}
+	ApiChart.prototype = Object.create(ApiDrawing.prototype);
+	ApiChart.prototype.constructor = ApiChart;
+
+	/**
      * Class representing a table.
      * @param oGraphicFrame
      * @constructor
@@ -220,15 +231,6 @@
 	function ApiSlideShowTransition(transition) {
 		this.Transition = transition;
 	}
-	/**
-	 * Class representing a hyperlink for presentation editor.
-	 * @constructor
-	 */
-	function ApiHyperlink(link, tooltip) {
-		this.link = link || "";
-		this.tooltip = tooltip || "";
-	}
-	ApiHyperlink.prototype.constructor = ApiHyperlink;
 
     /**
      * Twentieths of a point (equivalent to 1/1440th of an inch).
@@ -900,7 +902,7 @@
     {
         var oChartSpace = AscFormat.builder_CreateChart(nWidth/36000, nHeight/36000, sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
         oChartSpace.setParent(private_GetCurrentSlide());
-        return Asc.editor.private_CreateApiChart(oChartSpace);
+        return new ApiChart(oChartSpace);
     };
 
 
@@ -1246,7 +1248,12 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateHyperlink.js
 	 */
 	Api.prototype.CreateHyperlink = function (link, tooltip) {
-		const apiHyperlink = new ApiHyperlink(link, tooltip);
+		const paraHyperlink   = new AscCommonWord.ParaHyperlink();
+		const apiHyperlink = new AscBuilder.ApiHyperlink(paraHyperlink);
+
+		apiHyperlink.SetLink(link);
+		apiHyperlink.SetScreenTipText(tooltip);
+
 		return apiHyperlink;
 	};
 
@@ -4663,6 +4670,12 @@
 		'effectWipeRight': { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['r'] },
 		'effectWipeUp':    { tag: 'p:wipe', attrNames: ['dir'], attrValues: ['u'] },
 
+		// Default 'p159:morph' effect attribute is: option='byObject'
+		// Attribute must be specified explicitly - <p159:morph/> without 'option' attribute is forbidden
+		'effectMorphByObject': { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byObject'] },
+		'effectMorphByWord':   { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byWord'] },
+		'effectMorphByChar':   { tag: 'p159:morph', attrNames: ['option'], attrValues: ['byChar'] },
+
 		'effectNone': {}
 
 		// effectCrawlFromDown
@@ -4829,18 +4842,14 @@
 	ApiSlideShowTransition.SPEED_FAST_DURATION = 500;
 	ApiSlideShowTransition.SPEED_MEDIUM_DURATION = 750;
 	ApiSlideShowTransition.SPEED_SLOW_DURATION = 1000;
-	ApiSlideShowTransition.SPEED_FAST_THRESHOLD = 250;
-	ApiSlideShowTransition.SPEED_SLOW_THRESHOLD = 1000;
 
 	ApiSlideShowTransition._getSpeedName = function (duration) {
 		if (AscFormat.isRealNumber(duration)) {
-			if (duration < ApiSlideShowTransition.SPEED_FAST_THRESHOLD) {
+			if (duration <= ApiSlideShowTransition.SPEED_FAST_DURATION)
 				return 'fast';
-			} else if (duration > ApiSlideShowTransition.SPEED_SLOW_THRESHOLD) {
-				return 'slow';
-			} else {
+			if (duration <= ApiSlideShowTransition.SPEED_MEDIUM_DURATION)
 				return 'medium';
-			}
+			return 'slow';
 		}
 		return undefined;
 	};
@@ -4857,9 +4866,9 @@
 	/**
 	 * Returns the transition speed (similar to PowerPoint VBA Speed property).
 	 * Maps duration to speed based on OOXML spd attribute logic:
-	 * - fast: duration < 250ms
-	 * - slow: duration > 1000ms
-	 * - medium: 250ms <= duration <= 1000ms
+	 * - fast: duration <= 500ms
+	 * - medium: 500ms < duration <= 750ms
+	 * - slow: duration > 750ms
 	 *
 	 * @memberof ApiSlideShowTransition
 	 * @typeofeditors ["CPE"]
@@ -5491,13 +5500,14 @@
 
 	/**
 	 * Sets a hyperlink to the current drawing object (shape or image).
+	 * Pass null to remove the hyperlink.
 	 *
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["CPE"]
 	 *
-	 * @param {ApiHyperlink} hyperlink - The hyperlink object to be set to the drawing.
+	 * @param {ApiHyperlink | null} hyperlink - The hyperlink object to be set to the drawing, or null to remove the hyperlink.
 	 *
-	 * @returns {boolean} - Returns true if the hyperlink was set successfully.
+	 * @returns {boolean} - Returns true if the hyperlink was set or removed successfully.
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetHyperlink.js
 	 */
 	ApiDrawing.prototype.SetHyperlink = function (hyperlink) {
@@ -5513,14 +5523,68 @@
 		const controller = this.Drawing.getDrawingObjectsController();
 		const nonVisualProperties = controller.hyperlinkCollectNonVisualProperties(this.Drawing);
 
+		if (hyperlink === null) {
+			nonVisualProperties.forEach(function (oNvPr) {
+				oNvPr.setHlinkClick(null);
+			});
+			return true;
+		}
+
+		let link = null;
+		let tooltip = null;
+		if (hyperlink && hyperlink.ParaHyperlink) {
+			link = hyperlink.ParaHyperlink.GetValue();
+			tooltip = hyperlink.ParaHyperlink.GetToolTip();
+		}
+
 		nonVisualProperties.forEach(function (oNvPr) {
 			const oHyperlink = new AscFormat.CT_Hyperlink();
-			oHyperlink.id = hyperlink.link;
-			oHyperlink.tooltip = hyperlink.tooltip;
+			oHyperlink.id = link;
+			oHyperlink.tooltip = tooltip;
 			oNvPr.setHlinkClick(oHyperlink);
 		});
 
 		return true;
+	};
+
+	/**
+	 * Returns the hyperlink from the current drawing object (shape or image).
+	 *
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 *
+	 * @returns {ApiHyperlink | null} - Returns the hyperlink object or null if no hyperlink is set.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetHyperlink.js
+	 */
+	ApiDrawing.prototype.GetHyperlink = function () {
+		const classType = this.GetClassType();
+		if (classType !== 'shape' && classType !== 'image') {
+			return null;
+		}
+
+		if (!this.Drawing) {
+			return null;
+		}
+
+		const controller = this.Drawing.getDrawingObjectsController();
+		const nonVisualProperties = controller.hyperlinkCollectNonVisualProperties(this.Drawing);
+
+		if (nonVisualProperties.length === 0) {
+			return null;
+		}
+
+		const oNvPr = nonVisualProperties[0];
+		if (!oNvPr || !oNvPr.hlinkClick) {
+			return null;
+		}
+
+		const paraHyperlink = new AscCommonWord.ParaHyperlink();
+		const apiHyperlink = new AscBuilder.ApiHyperlink(paraHyperlink);
+
+		apiHyperlink.SetLink(oNvPr.hlinkClick.id);
+		apiHyperlink.SetScreenTipText(oNvPr.hlinkClick.tooltip);
+
+		return apiHyperlink;
 	};
 
     //------------------------------------------------------------------------------------------------------------------
@@ -6471,23 +6535,6 @@
         this.Cell.Set_Pr(oPr);
     };
 
-	//------------------------------------------------------------------------------------------------------------------
-	//
-	// ApiHyperlink
-	//
-	//------------------------------------------------------------------------------------------------------------------
-
-	/**
-	 * Returns the type of the ApiHyperlink class.
-	 *
-	 * @typeofeditors ["CPE"]
-	 * @returns {"hyperlink"}
-	 * @see office-js-api/Examples/{Editor}/ApiHyperlink/Methods/GetClassType.js
-	 */
-	ApiHyperlink.prototype.GetClassType = function () {
-		return "hyperlink";
-	};
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Export
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6721,6 +6768,7 @@
     ApiDrawing.prototype["SetPosX"]                       = ApiDrawing.prototype.SetPosX;
     ApiDrawing.prototype["SetPosY"]                       = ApiDrawing.prototype.SetPosY;
     ApiDrawing.prototype["SetHyperlink"]                  = ApiDrawing.prototype.SetHyperlink;
+    ApiDrawing.prototype["GetHyperlink"]                  = ApiDrawing.prototype.GetHyperlink;
   
     ApiDrawing.prototype["ReplacePlaceholder"]            = ApiDrawing.prototype.ReplacePlaceholder;
     ApiDrawing.prototype["GetInternalId"]                 = ApiDrawing.prototype.GetInternalId;
@@ -6731,20 +6779,52 @@
     ApiDrawing.prototype["ToJSON"]                        = ApiDrawing.prototype.ToJSON;
 
 
-	let ApiChart = AscBuilder.ApiChart;
-	ApiChart.prototype["SetSize"]         = ApiChart.prototype.SetSize           = ApiDrawing.prototype.SetSize;
-	ApiChart.prototype["SetPosition"]     = ApiChart.prototype.SetPosition       = ApiDrawing.prototype.SetPosition;
-	ApiChart.prototype["GetParent"]       = ApiChart.prototype.GetParent         = ApiDrawing.prototype.GetParent;
-	ApiChart.prototype["GetParentSlide"]  = ApiChart.prototype.GetParentSlide    = ApiDrawing.prototype.GetParentSlide;
-	ApiChart.prototype["GetParentLayout"] = ApiChart.prototype.GetParentLayout   = ApiDrawing.prototype.GetParentLayout;
-	ApiChart.prototype["GetParentMaster"] = ApiChart.prototype.GetParentMaster   = ApiDrawing.prototype.GetParentMaster;
-	ApiChart.prototype["Delete"]          = ApiChart.prototype.Delete            = ApiDrawing.prototype.Delete;
-	ApiChart.prototype["SetPlaceholder"]  = ApiChart.prototype.SetPlaceholder    = ApiDrawing.prototype.SetPlaceholder;
-	ApiChart.prototype["GetPlaceholder"]  = ApiChart.prototype.GetPlaceholder    = ApiDrawing.prototype.GetPlaceholder;
-	ApiChart.prototype["GetWidth"]        = ApiChart.prototype.GetWidth          = ApiDrawing.prototype.GetWidth;
-	ApiChart.prototype["GetHeight"]       = ApiChart.prototype.GetHeight         = ApiDrawing.prototype.GetHeight;
-	ApiChart.prototype["GetLockValue"]    = ApiChart.prototype.GetLockValue      = ApiDrawing.prototype.GetLockValue;
-	ApiChart.prototype["SetLockValue"]    = ApiChart.prototype.SetLockValue      = ApiDrawing.prototype.SetLockValue;
+	ApiChart.prototype["GetClassType"]					= AscBuilder.ApiChart.prototype.GetClassType;
+	ApiChart.prototype["GetChartType"]					= AscBuilder.ApiChart.prototype.GetChartType;
+	ApiChart.prototype["SetTitle"]						= AscBuilder.ApiChart.prototype.SetTitle;
+	ApiChart.prototype["SetHorAxisTitle"]				= AscBuilder.ApiChart.prototype.SetHorAxisTitle;
+	ApiChart.prototype["SetVerAxisTitle"]				= AscBuilder.ApiChart.prototype.SetVerAxisTitle;
+	ApiChart.prototype["SetVerAxisOrientation"]			= AscBuilder.ApiChart.prototype.SetVerAxisOrientation;
+	ApiChart.prototype["SetHorAxisOrientation"]			= AscBuilder.ApiChart.prototype.SetHorAxisOrientation;
+	ApiChart.prototype["SetLegendPos"]					= AscBuilder.ApiChart.prototype.SetLegendPos;
+	ApiChart.prototype["SetLegendFontSize"]				= AscBuilder.ApiChart.prototype.SetLegendFontSize;
+	ApiChart.prototype["SetShowDataLabels"]				= AscBuilder.ApiChart.prototype.SetShowDataLabels;
+	ApiChart.prototype["SetShowPointDataLabel"]			= AscBuilder.ApiChart.prototype.SetShowPointDataLabel;
+	ApiChart.prototype["SetVertAxisTickLabelPosition"]	= AscBuilder.ApiChart.prototype.SetVertAxisTickLabelPosition;
+	ApiChart.prototype["SetHorAxisTickLabelPosition"]	= AscBuilder.ApiChart.prototype.SetHorAxisTickLabelPosition;
+	ApiChart.prototype["SetHorAxisMajorTickMark"]		= AscBuilder.ApiChart.prototype.SetHorAxisMajorTickMark;
+	ApiChart.prototype["SetHorAxisMinorTickMark"]		= AscBuilder.ApiChart.prototype.SetHorAxisMinorTickMark;
+	ApiChart.prototype["SetVertAxisMajorTickMark"]		= AscBuilder.ApiChart.prototype.SetVertAxisMajorTickMark;
+	ApiChart.prototype["SetVertAxisMinorTickMark"]		= AscBuilder.ApiChart.prototype.SetVertAxisMinorTickMark;
+	ApiChart.prototype["SetMajorVerticalGridlines"]		= AscBuilder.ApiChart.prototype.SetMajorVerticalGridlines;
+	ApiChart.prototype["SetMinorVerticalGridlines"]		= AscBuilder.ApiChart.prototype.SetMinorVerticalGridlines;
+	ApiChart.prototype["SetMajorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMajorHorizontalGridlines;
+	ApiChart.prototype["SetMinorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMinorHorizontalGridlines;
+	ApiChart.prototype["SetHorAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetHorAxisLablesFontSize;
+	ApiChart.prototype["SetVertAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["RemoveSeria"]					= AscBuilder.ApiChart.prototype.RemoveSeria;
+	ApiChart.prototype["SetSeriaValues"]				= AscBuilder.ApiChart.prototype.SetSeriaValues;
+	ApiChart.prototype["SetXValues"]					= AscBuilder.ApiChart.prototype.SetXValues;
+	ApiChart.prototype["SetSeriaName"]					= AscBuilder.ApiChart.prototype.SetSeriaName;
+	ApiChart.prototype["SetCategoryName"]				= AscBuilder.ApiChart.prototype.SetCategoryName;
+	ApiChart.prototype["ApplyChartStyle"]				= AscBuilder.ApiChart.prototype.ApplyChartStyle;
+	ApiChart.prototype["SetPlotAreaFill"]				= AscBuilder.ApiChart.prototype.SetPlotAreaFill;
+	ApiChart.prototype["SetPlotAreaOutLine"]			= AscBuilder.ApiChart.prototype.SetPlotAreaOutLine;
+	ApiChart.prototype["SetSeriesFill"]					= AscBuilder.ApiChart.prototype.SetSeriesFill;
+	ApiChart.prototype["SetSeriesOutLine"]				= AscBuilder.ApiChart.prototype.SetSeriesOutLine;
+	ApiChart.prototype["SetDataPointFill"]				= AscBuilder.ApiChart.prototype.SetDataPointFill;
+	ApiChart.prototype["SetDataPointOutLine"]			= AscBuilder.ApiChart.prototype.SetDataPointOutLine;
+	ApiChart.prototype["SetMarkerFill"]					= AscBuilder.ApiChart.prototype.SetMarkerFill;
+	ApiChart.prototype["SetMarkerOutLine"]				= AscBuilder.ApiChart.prototype.SetMarkerOutLine;
+	ApiChart.prototype["SetTitleFill"]					= AscBuilder.ApiChart.prototype.SetTitleFill;
+	ApiChart.prototype["SetTitleOutLine"]				= AscBuilder.ApiChart.prototype.SetTitleOutLine;
+	ApiChart.prototype["SetLegendFill"]					= AscBuilder.ApiChart.prototype.SetLegendFill;
+	ApiChart.prototype["SetLegendOutLine"]				= AscBuilder.ApiChart.prototype.SetLegendOutLine;
+	ApiChart.prototype["SetAxieNumFormat"]				= AscBuilder.ApiChart.prototype.SetAxieNumFormat;
+	ApiChart.prototype["SetSeriaNumFormat"]				= AscBuilder.ApiChart.prototype.SetSeriaNumFormat;
+	ApiChart.prototype["SetDataPointNumFormat"]			= AscBuilder.ApiChart.prototype.SetDataPointNumFormat;
+	ApiChart.prototype["GetAllSeries"]					= AscBuilder.ApiChart.prototype.GetAllSeries;
+	ApiChart.prototype["GetSeries"]						= AscBuilder.ApiChart.prototype.GetSeries;
 
     ApiImage.prototype["GetClassType"]                    = ApiImage.prototype.GetClassType;
 
@@ -6790,8 +6870,6 @@
     ApiTableCell.prototype["SetCellBorderTop"]            = ApiTableCell.prototype.SetCellBorderTop;
     ApiTableCell.prototype["SetVerticalAlign"]            = ApiTableCell.prototype.SetVerticalAlign;
     ApiTableCell.prototype["SetTextDirection"]            = ApiTableCell.prototype.SetTextDirection;
-
-	ApiHyperlink.prototype["GetClassType"]                = ApiHyperlink.prototype.GetClassType;
 
     Api.prototype.private_CreateApiSlide = function(oSlide){
         return new ApiSlide(oSlide);

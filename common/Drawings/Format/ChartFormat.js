@@ -2566,9 +2566,9 @@
                 this.recalculateContent();
                 //this.recalcInfo.recalculateContent = false;
             }
-            if(this.recalcInfo.recalcTransform) {
+            if(this.recalcInfo.recalculateTransform) {
                 this.recalculateTransform();
-                //this.recalcInfo.recalcTransform = false;
+                //this.recalcInfo.recalculateTransform = false;
             }
             if(this.recalcInfo.recalculateTransformText) {
                 this.recalculateTransformText();
@@ -14477,7 +14477,7 @@
     };
     CTitle.prototype.Refresh_RecalcData2 = function(pageIndex) {
         this.recalcInfo.recalculateTxBody = true;
-        this.recalcInfo.recalcTransform = true;
+        this.recalcInfo.recalculateTransform = true;
         this.recalcInfo.recalculateTransformText = true;
         this.recalcInfo.recalculateContent = true;
         this.recalcInfo.recalculateGeometry = true;
@@ -14732,7 +14732,7 @@
     };
     CTitle.prototype.resetRecalcFlags = function() {
         this.recalcInfo.recalculateTxBody = true;
-        this.recalcInfo.recalcTransform = true;
+        this.recalcInfo.recalculateTransform = true;
         this.recalcInfo.recalculateTransformText = true;
         this.recalcInfo.recalculateContent = true;
         this.recalcInfo.recalculateGeometry = true;
@@ -14809,9 +14809,9 @@
                 this.recalculateContent();
                 this.recalcInfo.recalculateContent = false;
             }
-            if(this.recalcInfo.recalcTransform) {
+            if(this.recalcInfo.recalculateTransform) {
                 this.recalculateTransform();
-                this.recalcInfo.recalcTransform = false;
+                this.recalcInfo.recalculateTransform = false;
             }
             if(this.recalcInfo.recalculateGeometry) {
                 this.recalculateGeometry && this.recalculateGeometry();

@@ -7452,6 +7452,14 @@ background-repeat: no-repeat;\
 			this.WordControl.DemonstrationManager.EndShowMessage = this.EndShowMessage;
 			this.EndShowMessage = undefined;
 		}
+
+		let presentation = this.private_GetLogicDocument();
+		let allGIFs = presentation.GetAllGIFImageUrls();
+		for (let i = 0; i < allGIFs.length; i++) {
+			this.WordControl.DemonstrationManager.loadGIF(allGIFs[i]);
+		}
+
+
 	};
 
 	asc_docs_api.prototype.EndDemonstration = function(isNoUseFullScreen)

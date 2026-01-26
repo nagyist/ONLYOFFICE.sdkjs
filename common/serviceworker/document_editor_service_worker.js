@@ -51,6 +51,105 @@ let g_storageInfoCache = null;
 let g_storageInfoCacheTime = 0;
 const STORAGE_INFO_CACHE_DURATION = 30000; // 30 seconds
 
+// === FIFO Cache for Dynamic Document Files ===
+const g_fifoCachePrefix = 'document_editor_dynamic_';
+const g_fifoCacheName = g_fifoCachePrefix + g_version;
+const g_fifoPrefix = 'cache/files/data/';
+const g_fifoDocIdParams = ['shardkey', 'WOPISrc'];
+const g_fifoConfig = {
+	maxDocIds: 3,                         // max unique docids to keep
+	maxEntrySize: 500 * 1024 * 1024       // 500 MB per file
+};
+
+/**
+ * Extract docid from URL query parameters (shardkey or WOPISrc)
+ * @param {string} url
+ * @returns {string|null} docid or null if not a FIFO-cacheable URL
+ */
+function fifoExtractDocId(url) {
+	// Must contain cache/files/data/ path
+	if (url.indexOf('/' + g_fifoPrefix) === -1) return null;
+	
+	const queryIdx = url.indexOf('?');
+	if (queryIdx === -1) return null;
+	
+	const queryString = url.substring(queryIdx + 1);
+	const params = queryString.split('&');
+	
+	for (let i = 0; i < params.length; i++) {
+		const pair = params[i].split('=');
+		if (pair[1] && g_fifoDocIdParams.indexOf(pair[0]) !== -1) {
+			return decodeURIComponent(pair[1]);
+		}
+	}
+	
+	return null;
+}
+
+/**
+ * Cache a large file with FIFO eviction by docid
+ * @param {Request} request
+ * @param {string} docid - pre-extracted docid
+ * @param {Response} response
+ * @returns {Promise}
+ */
+function fifoCacheFile(request, docid, response) {
+	return caches.open(g_fifoCacheName).then(function(cache) {
+		return cache.keys().then(function(keys) {
+			// Group keys by docid, preserving insertion order
+			const docidOrder = [];  // ordered list of unique docids
+			const docidKeys = {};   // docid -> [keys]
+			
+			for (let i = 0; i < keys.length; i++) {
+				const keyDocid = fifoExtractDocId(keys[i].url);
+				if (keyDocid) {
+					if (!docidKeys[keyDocid]) {
+						docidKeys[keyDocid] = [];
+						docidOrder.push(keyDocid);
+					}
+					docidKeys[keyDocid].push(keys[i]);
+				}
+			}
+			
+			// If this docid is not in cache and we're at limit, evict oldest docid
+			const evictions = [];
+			if (!docidKeys[docid] && docidOrder.length >= g_fifoConfig.maxDocIds) {
+				const oldestDocid = docidOrder[0];
+				const keysToDelete = docidKeys[oldestDocid];
+				for (let i = 0; i < keysToDelete.length; i++) {
+					evictions.push(cache.delete(keysToDelete[i]));
+				}
+			}
+			
+			return Promise.all(evictions).then(function() {
+				return cache.put(request, response.clone());
+			});
+		});
+	}).catch(function(err) {
+		console.error('fifoCacheFile failed:', err);
+	});
+}
+
+/**
+ * Get file from FIFO cache
+ * @param {Request} request
+ * @returns {Promise<Response|undefined>}
+ */
+function fifoGetFromCache(request) {
+	return caches.open(g_fifoCacheName).then(function(cache) {
+		return cache.match(request);
+	});
+}
+
+/**
+ * Quick check if URL might use FIFO cache (cache/files/data URLs)
+ * @param {string} url
+ * @returns {boolean}
+ */
+function shouldUseFifoCache(url) {
+	return url.indexOf('/' + g_fifoPrefix) !== -1;
+}
+
 /**
  * Check if a response is safe to cache
  * @param {Request} request
@@ -121,34 +220,6 @@ function getStorageInfo() {
 }
 
 /**
- * Check if response size is within cacheable limits
- * @param {Response} response
- * @returns {Promise<boolean>} true if response is not too large
- */
-function isReasonableSize(response) {
-	const size = Number(response.headers.get('content-length')) || 0;
-	if (size === 0) {
-		return Promise.resolve(true); // No size header, assume reasonable
-	}
-	
-	return getStorageInfo()
-		.then(function(info) {
-			return size < info.maxEntrySize;
-		});
-}
-
-/**
- * Check if storage quota is healthy for caching
- * @returns {Promise<boolean>} true if storage is healthy
- */
-function storageHealthy() {
-	return getStorageInfo()
-		.then(function(info) {
-			return info.isHealthy;
-		});
-}
-
-/**
  * Put response in cache with retry logic for transient errors
  * @param {Request} request
  * @param {Response} response - Response to cache; this function clones per attempt to preserve the original for retries
@@ -188,28 +259,44 @@ function putInCache(request, response, attempt) {
 
 function cacheFirst(event) {
 	const request = event.request;
+	const url = request.url;
+	const fifoDocId = fifoExtractDocId(url);
 	
-	return caches.match(request, { cacheName: g_cacheName })
+	// Try FIFO cache first for large file prefixes
+	const cachePromise = fifoDocId
+		? fifoGetFromCache(request)
+		: caches.match(request, { cacheName: g_cacheName });
+	
+	return cachePromise
 		.then(function(cached) {
 			return cached || fetch(request).then(function(networkResp) {
-			// Clone immediately to avoid "body already used" errors
-			const responseForCache = networkResp.clone();
-			
-			// Fire-and-forget caching **after** responding to the page
-			if (safeToCache(request, networkResp)) {
-				event.waitUntil(
-					getStorageInfo()
-					.then(function(info) {
-						const size = Number(networkResp.headers.get('content-length')) || 0;
-						const sizeOk = size === 0 || size < info.maxEntrySize;
-						
-						if (info.isHealthy && sizeOk) {
-							return putInCache(request, responseForCache);
-						}
-					})
-				);
-			}
-			return networkResp;
+				// Clone immediately to avoid "body already used" errors
+				const responseForCache = networkResp.clone();
+				
+				// Fire-and-forget caching **after** responding to the page
+				if (safeToCache(request, networkResp)) {
+					event.waitUntil(
+						getStorageInfo()
+						.then(function(info) {
+							if (!info.isHealthy) return;
+							
+							const size = Number(networkResp.headers.get('content-length')) || 0;
+							
+							if (fifoDocId) {
+								// Use FIFO cache: require content-length and check size limit
+								if (size > 0 && size <= g_fifoConfig.maxEntrySize) {
+									return fifoCacheFile(request, fifoDocId, responseForCache);
+								}
+							} else {
+								// Use regular cache
+								if (size === 0 || size < info.maxEntrySize) {
+									return putInCache(request, responseForCache);
+								}
+							}
+						})
+					);
+				}
+				return networkResp;
 			});
 		});
 }
@@ -222,7 +309,11 @@ function activateWorker(event) {
 		.then(function (keys) {
 			const deletePromises = keys
 				.filter(function(cache) {
-					return cache.includes(g_cacheNamePrefix) && !cache.includes(g_cacheName);
+					// Remove old static caches
+					const isOldStatic = cache.startsWith(g_cacheNamePrefix) && cache !== g_cacheName;
+					// Remove old dynamic caches
+					const isOldDynamic = cache.startsWith(g_fifoCachePrefix) && cache !== g_fifoCacheName;
+					return isOldStatic || isOldDynamic;
 				})
 				.map(function(cache) {
 					return caches.delete(cache);
@@ -266,8 +357,16 @@ self.addEventListener('fetch', (event) => {
 	const request = event.request;
 	const url = request.url;
 	
-	// Fast path: check method and URL pattern in one go
-	if (request.method !== "GET" || !matchesCacheablePath(url)) {
+	// Only handle GET requests
+	if (request.method !== "GET") {
+		return;
+	}
+	
+	// Check if URL is cacheable (versioned static files OR FIFO cache files)
+	const isCacheablePath = matchesCacheablePath(url);
+	const isFifoPath = shouldUseFifoCache(url);
+	
+	if (!isCacheablePath && !isFifoPath) {
 		return;
 	}
 
