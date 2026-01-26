@@ -8230,7 +8230,7 @@
 				const selectedOne = selectedDrawings[0];
 
 				if (selectedOne.graphicObject && selectedOne.isChart()) {
-					return Asc.editor.private_CreateApiChart(selectedOne.graphicObject);
+					return new ApiChart(selectedOne.graphicObject);
 				}
 			}
 		}
@@ -9273,7 +9273,7 @@
 
 		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
 			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].isChart()) {
-				allApiDrawings.push(Asc.editor.private_CreateApiChart(allDrawings[nDrawing].graphicObject));
+				allApiDrawings.push(new ApiChart(allDrawings[nDrawing].graphicObject));
 			}
 		}
 		return allApiDrawings;

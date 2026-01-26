@@ -1169,7 +1169,7 @@
                 oResult = new ApiShape(oReader.GraphicObjFromJSON(oParsedObj));
                 break;
             case "chartSpace":
-                oResult = this.private_CreateApiChart(oReader.GraphicObjFromJSON(oParsedObj));
+                oResult = new ApiChart(oReader.GraphicObjFromJSON(oParsedObj));
                 break;
 			case "textPr":
 				oResult = this.private_CreateApiTextPr(oReader.TextPrDrawingFromJSON(oParsedObj));
@@ -2393,7 +2393,7 @@
     ApiMaster.prototype.GetAllCharts = function() {
 		if(!this.Master) return [];
 		return private_GetAllDrawingsWithType(this.Master.cSld.spTree, AscDFH.historyitem_type_ChartSpace,
-			function (oDrawing) {return private_GetApi().private_CreateApiChart(oDrawing);});
+			function (oDrawing) {return new ApiChart(oDrawing);});
     };
 
     /**
@@ -2806,7 +2806,7 @@
 			return [];
 		}
 		return private_GetAllDrawingsWithType(this.Layout.cSld.spTree, AscDFH.historyitem_type_ChartSpace,
-			function (oDrawing) {return private_GetApi().private_CreateApiChart(oDrawing);});
+			function (oDrawing) {return new ApiChart(oDrawing);});
     };
 
     /**
@@ -4123,7 +4123,7 @@
 			return [];
 		}
 		return private_GetAllDrawingsWithType(this.Slide.cSld.spTree, AscDFH.historyitem_type_ChartSpace,
-			function (oDrawing) {return private_GetApi().private_CreateApiChart(oDrawing);});
+			function (oDrawing) {return new ApiChart(oDrawing);});
     };
 
     /**
