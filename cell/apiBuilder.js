@@ -9261,6 +9261,45 @@
 	};
 
 	/**
+	 * Returns selected shapes from the current sheet.
+	 * @memberof ApiWorksheet
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiShape[]}.
+	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetSelectedShapes.js
+	 */
+	ApiWorksheet.prototype.GetSelectedShapes = function () {
+		var allDrawings = this.worksheet.Drawings;
+		var allApiDrawings = [];
+
+		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
+			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].graphicObject.selected && allDrawings[nDrawing].isShape()) {
+				allApiDrawings.push(new ApiShape(allDrawings[nDrawing].graphicObject));
+			}
+		}
+		return allApiDrawings;
+	};
+
+	/**
+	 * Returns selected drawings from the current sheet.
+	 * @memberof ApiWorksheet
+	 * @typeofeditors ["CSE"]
+	 * @returns {Drawing[]}.
+	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetAllDrawings.js
+	 */
+	ApiWorksheet.prototype.GetSelectedDrawings = function () {
+		var allDrawings = this.worksheet.Drawings;
+		var allApiDrawings = [];
+
+		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
+			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].graphicObject.selected) {
+				allApiDrawings.push(GetApiDrawings(selectedDrawings));
+			}
+		}
+
+		return allApiDrawings
+	};
+
+	/**
 	 * Returns all charts from the current sheet.
 	 * @memberof ApiWorksheet
 	 * @typeofeditors ["CSE"]
