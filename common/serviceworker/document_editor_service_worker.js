@@ -52,13 +52,18 @@ let g_storageInfoCacheTime = 0;
 const STORAGE_INFO_CACHE_DURATION = 30000; // 30 seconds
 
 // === FIFO Cache for Dynamic Document Files ===
+// Used for cache/files/data/ URLs (including WOPI integration where WOPISrc may be reused).
+// TTL-based invalidation: all files for a docid are evicted after docIdTTL from first cache.
+// Timestamp stored in X-Cache-Time response header (no separate metadata cache needed).
 const g_fifoCachePrefix = 'document_editor_dynamic_';
 const g_fifoCacheName = g_fifoCachePrefix + g_version;
 const g_fifoPrefix = 'cache/files/data/';
 const g_fifoDocIdParams = ['shardkey', 'WOPISrc'];
+const g_fifoCacheTimeHeader = 'X-Cache-Time';
 const g_fifoConfig = {
 	maxDocIds: 3,                         // max unique docids to keep
-	maxEntrySize: 500 * 1024 * 1024       // 500 MB per file
+	maxEntrySize: 500 * 1024 * 1024,      // 500 MB per file
+	docIdTTL: 10 * 60 * 1000              // 10 minutes TTL for docid (in ms)
 };
 
 /**
@@ -87,6 +92,42 @@ function fifoExtractDocId(url) {
 }
 
 /**
+ * Get oldest cache timestamp for a docid from cached response headers
+ * @param {Array} keys - array of Request objects for this docid
+ * @param {Cache} cache - opened cache instance
+ * @returns {Promise<number>} oldest timestamp or 0 if not found
+ */
+function fifoGetOldestTimestamp(keys, cache) {
+	if (!keys || keys.length === 0) {
+		return Promise.resolve(0);
+	}
+	
+	// Check first cached entry for this docid (oldest by insertion order)
+	return cache.match(keys[0]).then(function(response) {
+		if (!response) return 0;
+		const timeStr = response.headers.get(g_fifoCacheTimeHeader);
+		return timeStr ? parseInt(timeStr, 10) : 0;
+	}).catch(function() {
+		return 0;
+	});
+}
+
+/**
+ * Create a response with cache timestamp header
+ * @param {Response} response - original response to clone with timestamp
+ * @returns {Response} new response with X-Cache-Time header
+ */
+function fifoAddTimestamp(response) {
+	const headers = new Headers(response.headers);
+	headers.set(g_fifoCacheTimeHeader, Date.now().toString());
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers: headers
+	});
+}
+
+/**
  * Cache a large file with FIFO eviction by docid
  * @param {Request} request
  * @param {string} docid - pre-extracted docid
@@ -111,18 +152,39 @@ function fifoCacheFile(request, docid, response) {
 				}
 			}
 			
-			// If this docid is not in cache and we're at limit, evict oldest docid
-			const evictions = [];
-			if (!docidKeys[docid] && docidOrder.length >= g_fifoConfig.maxDocIds) {
-				const oldestDocid = docidOrder[0];
-				const keysToDelete = docidKeys[oldestDocid];
-				for (let i = 0; i < keysToDelete.length; i++) {
-					evictions.push(cache.delete(keysToDelete[i]));
+			// Check if current docid's cache has expired
+			return fifoGetOldestTimestamp(docidKeys[docid], cache).then(function(oldestTime) {
+				const isExpired = oldestTime > 0 && (Date.now() - oldestTime) > g_fifoConfig.docIdTTL;
+				const evictions = [];
+				
+				// If docid exists but TTL expired, delete all its files
+				if (docidKeys[docid] && isExpired) {
+					const expiredKeys = docidKeys[docid];
+					for (let j = 0; j < expiredKeys.length; j++) {
+						evictions.push(cache.delete(expiredKeys[j]));
+					}
+					// Remove from docidOrder to fix count
+					const idx = docidOrder.indexOf(docid);
+					if (idx !== -1) {
+						docidOrder.splice(idx, 1);
+					}
+					delete docidKeys[docid];
 				}
-			}
-			
-			return Promise.all(evictions).then(function() {
-				return cache.put(request, response.clone());
+				
+				// If this docid is not in cache and we're at limit, evict oldest docid
+				if (!docidKeys[docid] && docidOrder.length >= g_fifoConfig.maxDocIds) {
+					const oldestDocid = docidOrder[0];
+					const oldestKeys = docidKeys[oldestDocid];
+					for (let k = 0; k < oldestKeys.length; k++) {
+						evictions.push(cache.delete(oldestKeys[k]));
+					}
+				}
+				
+				return Promise.all(evictions).then(function() {
+					// Add timestamp header and cache the file
+					const timestampedResponse = fifoAddTimestamp(response);
+					return cache.put(request, timestampedResponse);
+				});
 			});
 		});
 	}).catch(function(err) {
@@ -138,6 +200,8 @@ function fifoCacheFile(request, docid, response) {
 function fifoGetFromCache(request) {
 	return caches.open(g_fifoCacheName).then(function(cache) {
 		return cache.match(request);
+	}).catch(function() {
+		return undefined; // Cache miss on error
 	});
 }
 
@@ -227,34 +291,34 @@ function getStorageInfo() {
  * @returns {Promise} Promise that resolves when caching completes or fails
  */
 function putInCache(request, response, attempt) {
-    if (typeof attempt === 'undefined') attempt = 0;
-    return caches.open(g_cacheName)
-        .then(function(cache) {
-            // Clone at the moment of caching so the provided response remains pristine for retries
-            return cache.put(request, response.clone());
-        })
-        .catch(function(err) {
-            // Transient quota/disk hiccup? Retry up to 2x with exponential back-off
-            if (attempt < 2) {
-                return new Promise(function(resolve) {
-                    setTimeout(resolve, 250 * Math.pow(2, attempt)); // 250ms, 500ms
-                })
-                .then(function() {
-                    // Reuse the original unconsumed response; a fresh clone will be created inside cache.put
-                    return putInCache(request, response, attempt + 1);
-                });
-            } else {
-                const size = response.headers ? response.headers.get('content-length') : 'unknown';
-                console.error('putInCache failed after max retries:', {
-                    url: request.url,
-                    method: request.method,
-                    responseSize: size,
-                    responseType: response.type,
-                    cacheName: g_cacheName,
-                    error: err && (err.message || err)
-                });
-            }
-        });
+	if (typeof attempt === 'undefined') attempt = 0;
+	return caches.open(g_cacheName)
+		.then(function(cache) {
+			// Clone at the moment of caching so the provided response remains pristine for retries
+			return cache.put(request, response.clone());
+		})
+		.catch(function(err) {
+			// Transient quota/disk hiccup? Retry up to 2x with exponential back-off
+			if (attempt < 2) {
+				return new Promise(function(resolve) {
+					setTimeout(resolve, 250 * Math.pow(2, attempt)); // 250ms, 500ms
+				})
+				.then(function() {
+					// Reuse the original unconsumed response; a fresh clone will be created inside cache.put
+					return putInCache(request, response, attempt + 1);
+				});
+			} else {
+				const size = response.headers ? response.headers.get('content-length') : 'unknown';
+				console.error('putInCache failed after max retries:', {
+					url: request.url,
+					method: request.method,
+					responseSize: size,
+					responseType: response.type,
+					cacheName: g_cacheName,
+					error: err && (err.message || err)
+				});
+			}
+		});
 }
 
 function cacheFirst(event) {
@@ -283,8 +347,8 @@ function cacheFirst(event) {
 							const size = Number(networkResp.headers.get('content-length')) || 0;
 							
 							if (fifoDocId) {
-								// Use FIFO cache: require content-length and check size limit
-								if (size > 0 && size <= g_fifoConfig.maxEntrySize) {
+								// Use FIFO cache
+								if (size === 0 || size <= g_fifoConfig.maxEntrySize) {
 									return fifoCacheFile(request, fifoDocId, responseForCache);
 								}
 							} else {
@@ -330,19 +394,19 @@ function activateWorker(event) {
  */
 function matchesCacheablePath(url) {
 	const g_versionNeedle = "/" + g_version + "/";
-    const versionIndex = url.indexOf(g_versionNeedle);
-    if (versionIndex === -1) return false;
+	const versionIndex = url.indexOf(g_versionNeedle);
+	if (versionIndex === -1) return false;
 
-    // Position just after "/<version>/"
-    const i = versionIndex + g_versionNeedle.length;
+	// Position just after "/<version>/"
+	const i = versionIndex + g_versionNeedle.length;
 
 	for (let k = 0; k < g_cacheablePrefixes.length; k++) {
 		//startsWith not supported in ie11 but at first service worker not supported
 		if (url.startsWith(g_cacheablePrefixes[k], i)) {
-            return true;
-        }
-    }
-    return false;
+			return true;
+		}
+	}
+	return false;
 }
 
 self.addEventListener('install', (event) => {
