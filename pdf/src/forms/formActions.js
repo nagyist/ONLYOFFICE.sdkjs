@@ -487,6 +487,7 @@
         let oField          = this.GetCallerFiled();
         let oDoc            = oField.GetDocument();
         let oActionsQueue   = oDoc.GetActionsQueue();
+		let nPagesCount		= oDoc.GetPagesCount();
 
         oActionsQueue.SetCurAction(this);
 
@@ -501,7 +502,7 @@
                 Api.goToPage(0);
                 break;
             case ACTION_NAMED_TYPES.NextPage:
-                if (oViewer.currentPage + 1 <= oViewer.pagesInfo.countTextPages)
+                if (oViewer.currentPage + 1 <= nPagesCount)
                     Api.goToPage(oViewer.currentPage + 1);
                 break;
             case ACTION_NAMED_TYPES.PrevPage:
@@ -509,8 +510,8 @@
                     Api.goToPage(oViewer.currentPage - 1);
                 break;
             case ACTION_NAMED_TYPES.LastPage:
-                if (oViewer.currentPage != oViewer.pagesInfo.countTextPages)
-                    Api.goToPage(oViewer.pagesInfo.countTextPages - 1);
+                if (oViewer.currentPage != nPagesCount)
+                    Api.goToPage(nPagesCount - 1);
                 break;
         }
 
