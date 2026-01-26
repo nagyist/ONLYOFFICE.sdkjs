@@ -2375,8 +2375,7 @@
     return false;
   };
 
-  WorkbookView.prototype._onSetFontAttributes = function(prop) {
-    var val;
+  WorkbookView.prototype._onSetFontAttributes = function(prop, val) {
     var xfs = this.getSelectionInfo().asc_getXfs();
     switch (prop) {
       case "b":
@@ -2393,6 +2392,11 @@
       case "s":
         val = !(xfs.asc_getFontStrikeout());
         break;
+			case "fa":
+				if (val === xfs.asc_getFontVerticalAlign()) {
+					val = null;
+				}
+				break;
     }
     return this.setFontAttributes(prop, val);
   };

@@ -4892,11 +4892,14 @@ var g_oFontProperties = {
         return this.getFont2().getStrikeout();
     };
     CellXfs.prototype.asc_getFontSubscript = function () {
-        return (AscCommon.vertalign_SubScript === this.getFont2().getVerticalAlign());
+        return (AscCommon.vertalign_SubScript === this.asc_getFontVerticalAlign());
     };
     CellXfs.prototype.asc_getFontSuperscript = function () {
-        return (AscCommon.vertalign_SuperScript === this.getFont2().getVerticalAlign());
+        return (AscCommon.vertalign_SuperScript === this.asc_getFontVerticalAlign());
     };
+	CellXfs.prototype.asc_getFontVerticalAlign = function () {
+		return this.getFont2().getVerticalAlign();
+	};
 
 	CellXfs.prototype.asc_getNumFormat = function () {
 		return this.getNum2().getFormat();
@@ -21977,6 +21980,7 @@ function RangeDataManagerElem(bbox, data)
     prot["asc_getFontStrikeout"] = prot.asc_getFontStrikeout;
     prot["asc_getFontSubscript"] = prot.asc_getFontSubscript;
     prot["asc_getFontSuperscript"] = prot.asc_getFontSuperscript;
+    prot["asc_getFontVerticalAlign"] = prot.asc_getFontVerticalAlign;
 	prot["asc_getNumFormat"] = prot.asc_getNumFormat;
 	prot["asc_getNumFormatInfo"] = prot.asc_getNumFormatInfo;
 	prot["asc_getHorAlign"] = prot.asc_getHorAlign;
