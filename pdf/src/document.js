@@ -1595,6 +1595,7 @@ var CPresentation = CPresentation || function(){};
         if (IsOnRedact || IsOnLink) {
             oViewer.isMouseMoveBetweenDownUp = true;
             if (null == oMouseDownDrawing) {
+                this.BlurActiveObject();
                 oViewer.onMouseDownEpsilon(e);
                 return;
             }
@@ -1673,6 +1674,13 @@ var CPresentation = CPresentation || function(){};
             // всегда даём кликнуть по лкм, пкм даем кликнуть один раз, при первом попадании в объект
             if (AscCommon.getMouseButton(e || {}) != 2 || (AscCommon.getMouseButton(e || {}) == 2 && oCurObject != oMouseDownObject)) {
                 oMouseDownObject.onMouseDown(x, y, e, nPage);
+
+                // if no text select, then do mousedown in file
+                if ((IsOnRedact || IsOnLink) && null == oController.getTargetTextObject()) {
+                    this.BlurActiveObject();
+                    oViewer.onMouseDownEpsilon(e);
+                    return;
+				}
             }
             
             if ((oMouseDownObject.IsDrawing() || (oMouseDownObject.IsAnnot() && oMouseDownObject.IsFreeText())) && false == oMouseDownObject.IsInTextBox()) {
@@ -8799,7 +8807,7 @@ var CPresentation = CPresentation || function(){};
 		return this.Api.canEdit();
 	};
     CPDFDoc.prototype.IsShowShapeAdjustments = function() {
-        return this.Api.canEdit() && false == this.Api.IsCommentMarker();
+        return this.Api.canEdit() && false == this.Api.IsCommentMarker() && false == this.Api.IsRedactTool() && false == this.Api.IsLinkTool();
     };
     CPDFDoc.prototype.IsShowTableAdjustments = function() {
         return this.Api.canEdit() && false == this.Api.IsCommentMarker();

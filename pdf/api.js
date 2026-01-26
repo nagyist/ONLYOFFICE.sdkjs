@@ -1417,7 +1417,7 @@
 		this.sendEvent("asc_onRedactState", bUse);
 	};
 	PDFEditorApi.prototype.IsRedactTool = function() {
-		return this.isRedactTool;
+		return !!this.isRedactTool;
 	};
 	PDFEditorApi.prototype.RedactPages = function(aIdxs) {
 		let oDoc = this.getPDFDoc();
@@ -1484,7 +1484,7 @@
 		this.sendEvent("asc_onLinkToolState", bUse);
 	};
 	PDFEditorApi.prototype.IsLinkTool = function() {
-		return this.isLinkTool;
+		return !!this.isLinkTool;
 	};
 	PDFEditorApi.prototype.SetLinkAnnotGoToAction = function(arrIds) {
 		let oDoc = this.getPDFDoc();
