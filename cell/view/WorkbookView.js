@@ -2908,7 +2908,7 @@
 
 	// Останавливаем ввод данных в редакторе ввода
 	WorkbookView.prototype.closeCellEditor = function (cancel) {
-		this.externalSelectionController.sendExternalCloseEditor(!cancel);
+		this.isFormulaEditMode && this.externalSelectionController.sendExternalCloseEditor(!cancel);
 		return this.getCellEditMode() ? this.cellEditor.close(!cancel) : true;
 	};
 

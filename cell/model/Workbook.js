@@ -3546,7 +3546,7 @@
 				formula.vm--;
 
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_ChangeValueMetaDataIndex,
-					formula.ws.getId(), null, new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(formula.ref.c1, formula.ref.r1, formula.ref.c1, formula.ref.r1), null, null, formula.vm, oldIndex), true);
+					formula.ws.getId(), null, new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(formula.ref.c1, formula.ref.r1, formula.ref.c1, formula.ref.r1), null, null, formula.vm, oldIndex));
 			}
 		}
 		//this.dependencyFormulas.volatileArrays
@@ -15564,7 +15564,7 @@
 				var fText = "=" + this.formulaParsed.getFormula();
 				this.formulaParsed.removeDependencies();
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_DeleteFormula, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, this.formulaParsed.getCm(), this.formulaParsed.getVm()), true);
+					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, this.formulaParsed.getCm(), this.formulaParsed.getVm()));
 			} else {
 				this.formulaParsed.removeDependencies();
 			}
@@ -25387,7 +25387,7 @@
 
 				//remove old formula
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_DeleteFormula, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, arrayData.formula.getCm()), true);
+					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, arrayData.formula.getCm()));
 
 				//set vm/cm/aca by first cell in range
 				let dynamicProps = this.generateDynamicProps(arrayData.formula, arrayFormula);
@@ -25403,7 +25403,7 @@
 
 				//add new 1-cell-dimention formula
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(arrayFormula.c1, arrayFormula.r1, arrayFormula.c1, arrayFormula.r1), fText, cmIndex, vmIndex), true);
+					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(arrayFormula.c1, arrayFormula.r1, arrayFormula.c1, arrayFormula.r1), fText, cmIndex, vmIndex));
 
 				// add to volatile
 				ws.workbook.dependencyFormulas.addToVolatileArrays(formula);
@@ -25495,7 +25495,7 @@
 
 				//remove old formula
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_DeleteFormula, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, arrayData.formula.getCm()), true);
+					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, arrayData.formula.getCm()));
 
 				//set vm/cm/aca by first cell in range
 				let dynamicProps = this.generateDynamicProps(arrayData.formula, arrayFormula);
@@ -25511,7 +25511,7 @@
 
 				//add new 1-cell-dimention formula
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula, this.ws.getId(),
-					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(arrayFormula.c1, arrayFormula.r1, arrayFormula.c1, arrayFormula.r1), fText, cmIndex, vmIndex), true);
+					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(new Asc.Range(arrayFormula.c1, arrayFormula.r1, arrayFormula.c1, arrayFormula.r1), fText, cmIndex, vmIndex));
 
 				// add to volatile
 				ws.workbook.dependencyFormulas.addToVolatileArrays(formula);
