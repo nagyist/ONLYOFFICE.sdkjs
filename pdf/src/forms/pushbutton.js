@@ -854,6 +854,10 @@
         Object.values(AscPDF.APPEARANCE_TYPES).forEach(function(type) {
             let sRasterId = _t.GetImageRasterId(type);
             if (oImages[sRasterId]) {
+				if (_t._rasterId == sRasterId) {
+					_t._rasterId = oImages[sRasterId];
+				}
+
                 _t.SetImageRasterId(oImages[sRasterId], type);
             }
         });

@@ -368,6 +368,118 @@
 	};
 
 	/**
+	 * Creates a text field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiTextField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddTextField.js
+	 */
+	Api.prototype.CreateTextField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateTextField();
+		oField.SetRect(aRect);
+
+		return new ApiTextField(oField);
+	};
+
+	/**
+	 * Creates a text date field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiTextField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddDateField.js
+	 */
+	Api.prototype.CreateDateField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateTextField(true);
+		oField.SetRect(aRect);
+
+		return new ApiTextField(oField);
+	};
+
+	/**
+	 * Creates a image field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiButtonField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddImageField.js
+	 */
+	Api.prototype.CreateImageField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateButtonField(true);
+		oField.SetRect(aRect);
+
+		return new ApiButtonField(oField);
+	};
+
+	/**
+	 * Creates a checkbox field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiCheckboxField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddImageField.js
+	 */
+	Api.prototype.CreateCheckboxField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateCheckboxField();
+		oField.SetRect(aRect);
+
+		return new ApiCheckboxField(oField);
+	};
+
+	/**
+	 * Creates a radiobutton field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiRadiobuttonField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddRadiobuttonField.js
+	 */
+	Api.prototype.CreateRadiobuttonField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateRadiobuttonField();
+		oField.SetRect(aRect);
+
+		return new ApiRadiobuttonField(oField);
+	};
+
+	/**
+	 * Creates a combobox field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiComboboxField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddComboboxField.js
+	 */
+	Api.prototype.CreateComboboxField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateComboboxField();
+		oField.SetRect(aRect);
+
+		return new ApiComboboxField(oField);
+	};
+
+	/**
+	 * Creates a listbox field.
+	 * @memberof Api
+	 * @typeofeditors ["PDFE"]
+	 * @param {Rect} aRect - widget rect
+	 * @returns {ApiListboxField}
+	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddListboxField.js
+	 */
+	Api.prototype.CreateListboxField = function(aRect) {
+		let oDoc = private_GetLogicDocument();
+		let oField = oDoc.CreateListboxField();
+		oField.SetRect(aRect);
+
+		return new ApiListboxField(oField);
+	};
+
+	/**
 	 * Creates text annotation.
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
@@ -1295,125 +1407,6 @@
 	ApiDocument.prototype.GetPagesCount = function() {
 		let oFile = this.Document.GetFile();
 		return oFile.pages.length;
-	};
-
-	/**
-	 * Creates a text field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddTextField.js
-	 */
-	ApiDocument.prototype.AddTextField = function(nPage, aRect) {
-		let oField = this.Document.CreateTextField();
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiTextField(oField);
-	};
-
-	/**
-	 * Creates a text date field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddDateField.js
-	 */
-	ApiDocument.prototype.AddDateField = function(nPage, aRect) {
-		let oField = this.Document.CreateTextField(true);
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiTextField(oField);
-	};
-
-	/**
-	 * Creates a image field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddImageField.js
-	 */
-	ApiDocument.prototype.AddImageField = function(nPage, aRect) {
-		let oField = this.Document.CreateButtonField(true);
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiButtonField(oField);
-	};
-
-	/**
-	 * Creates a checkbox field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddImageField.js
-	 */
-	ApiDocument.prototype.AddCheckboxField = function(nPage, aRect) {
-		let oField = this.Document.CreateCheckboxField();
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiCheckboxField(oField);
-	};
-
-	/**
-	 * Creates a radiobutton field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddRadiobuttonField.js
-	 */
-	ApiDocument.prototype.AddRadiobuttonField = function(nPage, aRect) {
-		let oField = this.Document.CreateRadiobuttonField();
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiRadiobuttonField(oField);
-	};
-
-	/**
-	 * Creates a combobox field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddComboboxField.js
-	 */
-	ApiDocument.prototype.AddComboboxField = function(nPage, aRect) {
-		let oField = this.Document.CreateComboboxField();
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiComboboxField(oField);
-	};
-
-	/**
-	 * Creates a listbox field.
-	 * @memberof ApiDocument
-	 * @typeofeditors ["PDFE"]
-	 * @param {number} nPage - page index
-	 * @param {Rect} aRect - widget rect
-	 * @returns {ApiTextField}
-	 * @see office-js-api/Examples/{Editor}/ApiDocument/Methods/AddListboxField.js
-	 */
-	ApiDocument.prototype.AddListboxField = function(nPage, aRect) {
-		let oField = this.Document.CreateListboxField();
-		oField.SetRect(aRect);
-
-		this.Document.AddField(oField, nPage);
-		return new ApiListboxField(oField);
 	};
 
 	/**
@@ -8159,6 +8152,13 @@
 
 	// Api
 	Api.prototype["GetDocument"]							= Api.prototype.GetDocument;
+	Api.prototype["CreateTextField"]						= Api.prototype.CreateTextField;
+	Api.prototype["CreateDateField"]						= Api.prototype.CreateDateField;
+	Api.prototype["CreateImageField"]						= Api.prototype.CreateImageField;
+	Api.prototype["CreateCheckboxField"]					= Api.prototype.CreateCheckboxField;
+	Api.prototype["CreateRadiobuttonField"]					= Api.prototype.CreateRadiobuttonField;
+	Api.prototype["CreateComboboxField"]					= Api.prototype.CreateComboboxField;
+	Api.prototype["CreateListboxField"]						= Api.prototype.CreateListboxField;
 	Api.prototype["CreateTextAnnot"]						= Api.prototype.CreateTextAnnot;
 	Api.prototype["CreateCircleAnnot"]						= Api.prototype.CreateCircleAnnot;
 	Api.prototype["CreateSquareAnnot"]						= Api.prototype.CreateSquareAnnot;
@@ -8185,13 +8185,6 @@
 	ApiDocument.prototype["GetPage"]						= ApiDocument.prototype.GetPage;
 	ApiDocument.prototype["RemovePage"]						= ApiDocument.prototype.RemovePage;
 	ApiDocument.prototype["GetPagesCount"]					= ApiDocument.prototype.GetPagesCount;
-	ApiDocument.prototype["AddTextField"]					= ApiDocument.prototype.AddTextField;
-	ApiDocument.prototype["AddDateField"]					= ApiDocument.prototype.AddDateField;
-	ApiDocument.prototype["AddImageField"]					= ApiDocument.prototype.AddImageField;
-	ApiDocument.prototype["AddCheckboxField"]				= ApiDocument.prototype.AddCheckboxField;
-	ApiDocument.prototype["AddRadiobuttonField"]			= ApiDocument.prototype.AddRadiobuttonField;
-	ApiDocument.prototype["AddComboboxField"]				= ApiDocument.prototype.AddComboboxField;
-	ApiDocument.prototype["AddListboxField"]				= ApiDocument.prototype.AddListboxField;
 	ApiDocument.prototype["GetAllFields"]					= ApiDocument.prototype.GetAllFields;
 	ApiDocument.prototype["GetFieldByName"]					= ApiDocument.prototype.GetFieldByName;
 	ApiDocument.prototype["SearchAndRedact"]				= ApiDocument.prototype.SearchAndRedact;
