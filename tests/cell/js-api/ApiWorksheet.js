@@ -49,8 +49,21 @@ QUnit.config.autostart = false;
 		QUnit.start();
 	});
 
-	QUnit.module("ChartsDraw");
+	const initializeTest = function (/*rangeAddress optional*/) {
+        const globalRange = editor.GetRange('A1:Z100'); // acceptable sandbox
+        globalRange.Clear();
+        // Reset validations entirely
+        if (editor.worksheet && editor.worksheet.dataValidations) {
+            editor.worksheet.dataValidations.clear(editor.worksheet, true);
+        }
+
+		editor.asc_cleanWorksheet()
+    };
+    window.initializeTest = initializeTest; // expose for debugging if needed
+
+	QUnit.module("ApiWorksheet");
 	QUnit.test("GetSelectedShapes", function (assert) {
+		initializeTest();
 		let worksheet = editor.GetActiveSheet()
 
 		const fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
@@ -59,8 +72,11 @@ QUnit.config.autostart = false;
 		for(let nShape = 0; nShape < 3; nShape++)
 		{
 			let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
-			if (nShape !== 1)
+			assert.ok(true, 'Add new ellipse shape');
+			if (nShape !== 1) {
 				shape.Select();
+				assert.ok(true, 'Select added shape');
+			}
 		}
 
 		let selectedShapes = worksheet.GetSelectedShapes();
@@ -69,6 +85,41 @@ QUnit.config.autostart = false;
 			2,
 			"Count of selected shapes is 2"
 		);
+	});
+	
+	QUnit.test("GetSelectedDrawings", function (assert) {
+		initializeTest();
+		let worksheet = editor.GetActiveSheet()
+
+		const fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
+		const stroke = editor.CreateStroke(0, editor.CreateNoFill());
+
+		for(let nShape = 0; nShape < 3; nShape++)
+		{
+			let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
+			assert.ok(true, 'Add new ellipse shape');
+			if (nShape !== 1) {
+				shape.Select();
+				assert.ok(true, 'Select added shape');
+			}
+		}
+
+		let image = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
+		assert.ok(true, 'Add new image');
+		image.Select();
+		assert.ok(true, 'Select added image');
+
+		image = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
+		assert.ok(true, 'Add new image')
+
+		let selectedShapes = worksheet.GetSelectedDrawings();
+		assert.strictEqual(
+			selectedShapes.length,
+			3,
+			"Count of selected shapes is 3 (2 shape, 1 image)"
+		);
+
+		worksheet.Delete()
 	});
 
 })(window);

@@ -9292,7 +9292,7 @@
 
 		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
 			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].graphicObject.selected) {
-				allApiDrawings.push(GetApiDrawings(selectedDrawings));
+				allApiDrawings.push(GetApiDrawing(allDrawings[nDrawing].graphicObject));
 			}
 		}
 
