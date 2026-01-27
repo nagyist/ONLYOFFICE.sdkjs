@@ -8733,7 +8733,9 @@ function isAllowPasteLink(pastedWb) {
 
     WorksheetView.prototype._drawCollaborativeElements = function () {
         if ( this.collaborativeEditing.getCollaborativeEditing() ) {
-            this._drawCollaborativeElementsMeOther(c_oAscLockTypes.kLockTypeMine);
+			//if (this.collaborativeEditing.isCollaboration()) {
+			this._drawCollaborativeElementsMeOther(c_oAscLockTypes.kLockTypeMine);
+			//}
             this._drawCollaborativeElementsMeOther(c_oAscLockTypes.kLockTypeOther);
             this._drawCollaborativeElementsAllLock();
         }
