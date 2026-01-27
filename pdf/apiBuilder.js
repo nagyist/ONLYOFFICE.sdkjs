@@ -1569,9 +1569,9 @@
 	 * @memberof ApiPage
 	 * @typeofeditors ["PDFE"]
 	 * @returns {number}
-	 * @see office-js-api/Examples/{Editor}/ApiPage/Methods/GetRotate.js
+	 * @see office-js-api/Examples/{Editor}/ApiPage/Methods/GetRotation.js
 	 */
-	ApiPage.prototype.GetRotate = function() {
+	ApiPage.prototype.GetRotation = function() {
 		return this.Page.GetRotate();
 	};
 
@@ -5324,9 +5324,9 @@
 	 * @memberof ApiStampAnnotation
 	 * @typeofeditors ["PDFE"]
 	 * @returns {Degree}
-	 * @see office-js-api/Examples/{Editor}/ApiStampAnnotation/Methods/GetRotate.js
+	 * @see office-js-api/Examples/{Editor}/ApiStampAnnotation/Methods/GetRotation.js
 	 */
-	ApiStampAnnotation.prototype.GetRotate = function() {
+	ApiStampAnnotation.prototype.GetRotation = function() {
 		return this.Annot.GetRotate();
 	};
 
@@ -8211,7 +8211,7 @@
 	// ApiPage
 	ApiPage.prototype["GetClassType"]						= ApiPage.prototype.GetClassType;
 	ApiPage.prototype["SetRotation"]						= ApiPage.prototype.SetRotation;
-	ApiPage.prototype["GetRotate"]							= ApiPage.prototype.GetRotate;
+	ApiPage.prototype["GetRotation"]						= ApiPage.prototype.GetRotation;
 	ApiPage.prototype["GetIndex"]							= ApiPage.prototype.GetIndex;
 	ApiPage.prototype["GetAllWidgets"]						= ApiPage.prototype.GetAllWidgets;
 	ApiPage.prototype["AddAnnot"]							= ApiPage.prototype.AddAnnot;
@@ -8456,7 +8456,7 @@
 	ApiStampAnnotation.prototype["SetScale"]				= ApiStampAnnotation.prototype.SetScale;
 	ApiStampAnnotation.prototype["GetScale"]				= ApiStampAnnotation.prototype.GetScale;
 	ApiStampAnnotation.prototype["SetRotation"]				= ApiStampAnnotation.prototype.SetRotation;
-	ApiStampAnnotation.prototype["GetRotate"]				= ApiStampAnnotation.prototype.GetRotate;
+	ApiStampAnnotation.prototype["GetRotation"]				= ApiStampAnnotation.prototype.GetRotation;
 
 	// ApiBaseMarkupAnnotation
 	ApiBaseMarkupAnnotation.prototype["GetClassType"]		= ApiBaseMarkupAnnotation.prototype.GetClassType;
