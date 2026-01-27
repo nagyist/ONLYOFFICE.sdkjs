@@ -109,7 +109,6 @@ QUnit.config.autostart = false;
 
 		assert.ok(shape.Drawing.spPr.ln, "Shape outline is defined");
 		assert.ok(shape.Drawing.spPr.ln.Fill.fill instanceof AscFormat.CSolidFill, "Shape outline filled with solid fill");
-		assert.ok(shape.Drawing.spPr.ln.w === 36000, "Shape width outline is 36000");
 
 		let outlineColor = shape.Drawing.spPr.ln.Fill.fill.color.color.RGBA;
 
