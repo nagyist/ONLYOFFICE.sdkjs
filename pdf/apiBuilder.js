@@ -309,6 +309,16 @@
 	 */
 
 	/**
+	 * English measure unit. 1 mm = 36000 EMUs, 1 inch = 914400 EMUs.
+	 * @typedef {number} EMU
+	 */
+
+	/**
+	 * 1 millimetre equals 1/10th of a centimetre.
+	 * @typedef {number} mm
+	 */
+
+	/**
 	 * The available text direction inside a drawing content.
 	 * @typedef {("lrtb" | "tbrl" | "btlr")} TextFlowDirection
 	 */
@@ -1225,8 +1235,8 @@
 	 * @memberof Api
 	 * @typeofeditors ["PDFE"]
 	 * @param {ShapeType} [sType= "rect"] - The shape type which specifies the preset shape geometry.
-	 * @param {pt} [nWidth = 72] - The shape width in English measure units.
-	 * @param {pt} [nHeight = 72] - The shape height in English measure units.
+	 * @param {EMU} [nWidth = 72] - The shape width in English measure units.
+	 * @param {EMU} [nHeight = 72] - The shape height in English measure units.
 	 * @param {ApiFill} [oFill = Api.CreateNoFill()] - The color or pattern used to fill the shape.
 	 * @param {ApiStroke} [oStroke = Api.CreateStroke(0, Api.CreateNoFill())] - The stroke used to create the element shadow.
 	 * @returns {ApiShape}
@@ -1240,7 +1250,7 @@
 		oFill = oFill || Asc.editor.CreateNoFill();
 		oStroke = oStroke || Asc.editor.CreateStroke(0, Asc.editor.CreateNoFill());
 
-		return new ApiShape(AscFormat.builder_CreateShape(sType, private_PtToMM(nWidth), private_PtToMM(nHeight), oFill.UniFill, oStroke.Ln, null, oDoc.GetTheme(), private_GetDrawingDocument(), false));
+		return new ApiShape(AscFormat.builder_CreateShape(sType, private_EMU2MM(nWidth), private_EMU2MM(nHeight), oFill.UniFill, oStroke.Ln, null, oDoc.GetTheme(), private_GetDrawingDocument(), false));
 	};
 
 	/**
@@ -1249,13 +1259,13 @@
 	 * @typeofeditors ["PDFE"]
 	 * @param {string} sImageSrc - The image source where the image to be inserted should be taken from (currently,
 	 * only internet URL or Base64 encoded images are supported).
-	 * @param {pt} nWidth - The image width in English measure units.
-	 * @param {pt} nHeight - The image height in English measure units.
+	 * @param {EMU} nWidth - The image width in English measure units.
+	 * @param {EMU} nHeight - The image height in English measure units.
 	 * @returns {ApiImage}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateImage.js
 	 */
 	Api.prototype.CreateImage = function(sImageSrc, nWidth, nHeight) {
-		let oImage = AscFormat.DrawingObjectsController.prototype.createImage(sImageSrc, 0, 0, private_PtToMM(nWidth), private_PtToMM(nHeight));
+		let oImage = AscFormat.DrawingObjectsController.prototype.createImage(sImageSrc, 0, 0, private_EMU2MM(nWidth), private_EMU2MM(nHeight));
 
 		return new ApiImage(oImage);
 	};
@@ -1294,8 +1304,8 @@
 	 * @param {number[][]} aSeries - The array of the data used to build the chart from.
 	 * @param {number[] | string[]} aSeriesNames - The array of the names (the source table column names) used for the data which the chart will be build from.
 	 * @param {number[] | string[]} aCatNames - The array of the names (the source table row names) used for the data which the chart will be build from.
-	 * @param {pt} nWidth - The chart width in English measure units.
-	 * @param {pt} nHeight - The chart height in English measure units.
+	 * @param {EMU} nWidth - The chart width in English measure units.
+	 * @param {EMU} nHeight - The chart height in English measure units.
 	 * @param {number} nStyleIndex - The chart color style index (can be <b>1 - 48</b>, as described in OOXML specification).
 	 * @param {NumFormat[] | String[]} aNumFormats - Numeric formats which will be applied to the series (can be custom formats).
 	 * The default numeric format is "General".
@@ -1303,7 +1313,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateChart.js
 	 */
 	Api.prototype.CreateChart = function(sType, aSeries, aSeriesNames, aCatNames, nWidth, nHeight, nStyleIndex, aNumFormats) {
-		let oChartSpace = AscFormat.builder_CreateChart(private_PtToMM(nWidth), private_PtToMM(nHeight), sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
+		let oChartSpace = AscFormat.builder_CreateChart(private_EMU2MM(nWidth), private_EMU2MM(nHeight), sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
 		return new ApiChart(oChartSpace);
 	};
 
@@ -6442,14 +6452,14 @@
 	/**
 	 * Sets the size of the object (image, shape, chart) bounding box.
 	 * @typeofeditors ["PDFE"]
-	 * @param {pt} width - The object width measured in English measure units.
-	 * @param {pt} height - The object height measured in English measure units.
+	 * @param {EMU} width - The object width measured in English measure units.
+	 * @param {EMU} height - The object height measured in English measure units.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetSize.js
 	 */
 	ApiDrawing.prototype.SetSize = function(width, height) {
-		let fWidth = private_PtToMM(width);
-		let fHeight = private_PtToMM(height);
+		let fWidth = private_EMU2MM(width);
+		let fHeight = private_EMU2MM(height);
 
 		this.Drawing.checkTransformBeforeApply();
 		let xfrm = this.Drawing.getXfrm();
@@ -6464,14 +6474,14 @@
 	/**
 	 * Sets the position of the drawing on the page.
 	 * @typeofeditors ["PDFE"]
-	 * @param {pt} posX - The distance from the left side of the page to the left side of the drawing measured in English measure units.
-	 * @param {pt} posY - The distance from the top side of the page to the upper side of the drawing measured in English measure units.
+	 * @param {EMU} posX - The distance from the left side of the page to the left side of the drawing measured in English measure units.
+	 * @param {EMU} posY - The distance from the top side of the page to the upper side of the drawing measured in English measure units.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetPosition.js
 	 */
 	ApiDrawing.prototype.SetPosition = function(posX, posY) {
-		let fPosX = private_PtToMM(posX);
-		let fPosY = private_PtToMM(posY);
+		let fPosX = private_EMU2MM(posX);
+		let fPosY = private_EMU2MM(posY);
 
 		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm) {
 			this.Drawing.spPr.xfrm.setOffX(fPosX);
@@ -6484,14 +6494,14 @@
 	/**
 	 * Sets the x position of the drawing on the page.
 	 * @typeofeditors ["PDFE"]
-	 * @param {pt} posX - The distance from the left side of the page to the left side of the drawing measured in English measure units.
+	 * @param {EMU} posX - The distance from the left side of the page to the left side of the drawing measured in English measure units.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetPosX.js
 	 */
 	ApiDrawing.prototype.SetPosX = function(posX) {
         this.Drawing.checkTransformBeforeApply();
 		let oXfrm = this.Drawing.getXfrm();
-		oXfrm.setOffX(private_PtToMM(posX));
+		oXfrm.setOffX(private_EMU2MM(posX));
 
 		return true;
 	};
@@ -6499,24 +6509,24 @@
 	/**
 	 * Gets the x position of the drawing on the page.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {pt}
+	 * @returns {EMU}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetPosX.js
 	 */
 	ApiDrawing.prototype.GetPosX = function() {
-		return private_MM2Pt(this.Drawing.GetPosX());
+		return private_MM2EMU(this.Drawing.GetPosX());
 	};
 
 	/**
 	 * Sets the y position of the drawing on the page.
 	 * @typeofeditors ["PDFE"]
-	 * @param {pt} posY - The distance from the top side of the page to the upper side of the drawing measured in English measure units.
+	 * @param {EMU} posY - The distance from the top side of the page to the upper side of the drawing measured in English measure units.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetPosY.js
 	 */
 	ApiDrawing.prototype.SetPosY = function(posY) {
         this.Drawing.checkTransformBeforeApply();
 		let oXfrm = this.Drawing.getXfrm();
-		oXfrm.setOffY(private_PtToMM(posY));
+		oXfrm.setOffY(private_EMU2MM(posY));
 
 		return true;
 	};
@@ -6524,11 +6534,11 @@
 	/**
 	 * Gets the y position of the drawing on the page.
 	 * @typeofeditors ["PDFE"]
-	 * @returns {pt}
+	 * @returns {EMU}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetPosY.js
 	 */
 	ApiDrawing.prototype.GetPosY = function() {
-		return private_MM2Pt(this.Drawing.GetPosY());
+		return private_MM2EMU(this.Drawing.GetPosY());
 	};
 
 	/**
@@ -6557,22 +6567,22 @@
 	 * Returns the width of the current drawing.
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["PDFE"]
-	 * @returns {pt}
+	 * @returns {EMU}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetWidth.js
 	 */
 	ApiDrawing.prototype.GetWidth = function() {
-		return private_MM2Pt(this.Drawing.GetWidth());
+		return private_MM2EMU(this.Drawing.GetWidth());
 	};
 
 	/**
 	 * Returns the height of the current drawing.
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["PDFE"]
-	 * @returns {pt}
+	 * @returns {EMU}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetHeight.js
 	 */
 	ApiDrawing.prototype.GetHeight = function() {
-		return private_MM2Pt(this.Drawing.GetHeight());
+		return private_MM2EMU(this.Drawing.GetHeight());
 	};
 
 	/**
@@ -7097,7 +7107,7 @@
 	/**
 	 * Sets the height to the current table row.
 	 * @typeofeditors ["PDFE"]
-	 * @param {pt} [nValue] - The row height in English measure units.
+	 * @param {EMU} [nValue] - The row height in English measure units.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiTableRow/Methods/SetHeight.js
 	 */
@@ -7127,7 +7137,7 @@
 			}
 		}
 
-		this.Row.Set_Height(Math.max(1, private_PtToMM(nValue) - fMaxTopMargin - fMaxBottomMargin - fMaxTopBorder / 2 - fMaxBottomBorder / 2), Asc.linerule_AtLeast);
+		this.Row.Set_Height(Math.max(1, private_EMU2MM(nValue) - fMaxTopMargin - fMaxBottomMargin - fMaxTopBorder / 2 - fMaxBottomBorder / 2), Asc.linerule_AtLeast);
 		return true;
 	};
 
@@ -8123,6 +8133,14 @@
 
 	function private_MM2Pt(mm) {
 		return mm / (25.4 / 72.0);
+	}
+
+	function private_EMU2MM(EMU) {
+		return EMU / 36000.0;
+	}
+
+	function private_MM2EMU(mm) {
+		return mm * 36000.0;
 	}
 
 	function private_GetTableMeasure(sType, nValue) {
