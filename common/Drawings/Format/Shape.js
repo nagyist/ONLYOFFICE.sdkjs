@@ -3555,7 +3555,15 @@
 					var oBodyPr = this.getBodyPr();
 					if (this.bWordShape) {
 						if (this.recalcInfo.recalculateTxBoxContent) {
+
+							let oldCheckAutoFitFlag = this.bCheckAutoFitFlag;
+							if (this.bWordShape) {
+								this.bCheckAutoFitFlag = true;
+							}
 							this.recalcInfo.oContentMetrics = this.recalculateTxBoxContent();
+							if (this.bWordShape) {
+								this.bCheckAutoFitFlag = oldCheckAutoFitFlag;
+							}
 							//this.recalcInfo.recalculateTxBoxContent = false;
 							this.recalcInfo.AllDrawings = [];
 							var oContent = this.getDocContent();
