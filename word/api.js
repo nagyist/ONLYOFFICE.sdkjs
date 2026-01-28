@@ -8666,7 +8666,7 @@ background-repeat: no-repeat;\
 		{
 			if (this.WordControl.m_oEditor && this.WordControl.m_oEditor.HtmlElement)
 				this.WordControl.m_oEditor.HtmlElement.fullRepaint = true;
-			this.WordControl.OnResize(true);
+			this.WordControl.zoom_Fire(0, this.WordControl.m_nZoomValue);
 		}
 	};
 
