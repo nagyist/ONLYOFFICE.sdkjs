@@ -9595,5 +9595,112 @@ $(function () {
 		clearData(0, 0, 100, 200);
 	});
 
+	QUnit.test("Test: \"IF with array condition and range values\"", function (assert) {
+		if (!AscCommonExcel.bIsSupportDynamicArrays) {
+			assert.ok(true, "Dynamic arrays support is disabled");
+			return;
+		}
+
+		let fillRange, resCell, fragment;
+		let flags = wsView._getCellFlags(0, 0);
+		flags.ctrlKey = false;
+		flags.shiftKey = false;
+
+		clearData(0, 0, 100, 200);
+
+		ws.getRange2("A1").setValue("1");
+		ws.getRange2("B1").setValue("FALSE");
+		ws.getRange2("C1").setValue("3");
+		
+		ws.getRange2("A2").setValue("34");
+		ws.getRange2("B2").setValue("FALSE");
+		ws.getRange2("C2").setValue("23");
+
+		fillRange = ws.getRange2("E1");
+		wsView.setSelection(fillRange.bbox);
+		fragment = ws.getRange2("E1").getValueForEdit2();
+		fragment[0].setFragmentText("=IF({1,0,1},A1:C2)");
+		wsView._saveCellValueAfterEdit(fillRange, fragment, flags, null, null);
+
+		resCell = getCell(ws.getRange2("E1"));
+		assert.ok(resCell, "Formula cell E1 exists");
+
+		assert.strictEqual(ws.getRange2("E1").getValue(), "1", "E1 = 1");
+		assert.strictEqual(ws.getRange2("F1").getValue(), "FALSE", "F1 = FALSE");
+		assert.strictEqual(ws.getRange2("G1").getValue(), "3", "G1 = 3");
+		assert.strictEqual(ws.getRange2("E2").getValue(), "34", "E2 = 34");
+		assert.strictEqual(ws.getRange2("F2").getValue(), "FALSE", "F2 = FALSE");
+		assert.strictEqual(ws.getRange2("G2").getValue(), "23", "G2 = 23");
+
+		fillRange = ws.getRange2("H1");
+		wsView.setSelection(fillRange.bbox);
+		fragment = ws.getRange2("H1").getValueForEdit2();
+		fragment[0].setFragmentText("=IF({1,0,1},A1:C1)");
+		wsView._saveCellValueAfterEdit(fillRange, fragment, flags, null, null);
+
+		resCell = getCell(ws.getRange2("H1"));
+		assert.ok(resCell, "Formula cell H1 exists");
+
+		assert.strictEqual(ws.getRange2("H1").getValue(), "1", "H1 = 1");
+		assert.strictEqual(ws.getRange2("I1").getValue(), "FALSE", "I1 = FALSE");
+		assert.strictEqual(ws.getRange2("J1").getValue(), "3", "J1 = 3");
+
+		fillRange = ws.getRange2("K1");
+		wsView.setSelection(fillRange.bbox);
+		fragment = ws.getRange2("K1").getValueForEdit2();
+		fragment[0].setFragmentText("=IF({1,0,1;2,0,4;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1},A1:C10)");
+		wsView._saveCellValueAfterEdit(fillRange, fragment, flags, null, null);
+
+		resCell = getCell(ws.getRange2("K1"));
+		assert.ok(resCell, "Formula cell K1 exists");
+
+		assert.strictEqual(ws.getRange2("K1").getValue(), "1", "K1 = 1");
+		assert.strictEqual(ws.getRange2("L1").getValue(), "FALSE", "L1 = FALSE");
+		assert.strictEqual(ws.getRange2("M1").getValue(), "3", "M1 = 3");
+		assert.strictEqual(ws.getRange2("K2").getValue(), "34", "K2 = 34");
+		assert.strictEqual(ws.getRange2("L2").getValue(), "FALSE", "L2 = FALSE");
+		assert.strictEqual(ws.getRange2("M2").getValue(), "23", "M2 = 23");
+		assert.strictEqual(ws.getRange2("K3").getValue(), "0", "K3 = 0");
+		assert.strictEqual(ws.getRange2("L3").getValue(), "FALSE", "L3 = FALSE");
+		assert.strictEqual(ws.getRange2("M3").getValue(), "0", "M3 = 0");
+		assert.strictEqual(ws.getRange2("K4").getValue(), "0", "K4 = 0");
+		assert.strictEqual(ws.getRange2("L4").getValue(), "FALSE", "L4 = FALSE");
+		assert.strictEqual(ws.getRange2("M4").getValue(), "0", "M4 = 0");
+		assert.strictEqual(ws.getRange2("K5").getValue(), "0", "K5 = 0");
+		assert.strictEqual(ws.getRange2("L5").getValue(), "FALSE", "L5 = FALSE");
+		assert.strictEqual(ws.getRange2("M5").getValue(), "0", "M5 = 0");
+		assert.strictEqual(ws.getRange2("K6").getValue(), "0", "K6 = 0");
+		assert.strictEqual(ws.getRange2("L6").getValue(), "FALSE", "L6 = FALSE");
+		assert.strictEqual(ws.getRange2("M6").getValue(), "0", "M6 = 0");
+		assert.strictEqual(ws.getRange2("K7").getValue(), "0", "K7 = 0");
+		assert.strictEqual(ws.getRange2("L7").getValue(), "FALSE", "L7 = FALSE");
+		assert.strictEqual(ws.getRange2("M7").getValue(), "0", "M7 = 0");
+		assert.strictEqual(ws.getRange2("K8").getValue(), "0", "K8 = 0");
+		assert.strictEqual(ws.getRange2("L8").getValue(), "FALSE", "L8 = FALSE");
+		assert.strictEqual(ws.getRange2("M8").getValue(), "0", "M8 = 0");
+		assert.strictEqual(ws.getRange2("K9").getValue(), "0", "K9 = 0");
+		assert.strictEqual(ws.getRange2("L9").getValue(), "FALSE", "L9 = FALSE");
+		assert.strictEqual(ws.getRange2("M9").getValue(), "0", "M9 = 0");
+		assert.strictEqual(ws.getRange2("K10").getValue(), "0", "K10 = 0");
+		assert.strictEqual(ws.getRange2("L10").getValue(), "FALSE", "L10 = FALSE");
+		assert.strictEqual(ws.getRange2("M10").getValue(), "0", "M10 = 0");
+		assert.strictEqual(ws.getRange2("K11").getValue(), "#N/A", "K11 = #N/A");
+		assert.strictEqual(ws.getRange2("L11").getValue(), "FALSE", "L11 = FALSE");
+		assert.strictEqual(ws.getRange2("M11").getValue(), "#N/A", "M11 = #N/A");
+		assert.strictEqual(ws.getRange2("K12").getValue(), "#N/A", "K12 = #N/A");
+		assert.strictEqual(ws.getRange2("L12").getValue(), "FALSE", "L12 = FALSE");
+		assert.strictEqual(ws.getRange2("M12").getValue(), "#N/A", "M12 = #N/A");
+		assert.strictEqual(ws.getRange2("K13").getValue(), "#N/A", "K13 = #N/A");
+		assert.strictEqual(ws.getRange2("L13").getValue(), "FALSE", "L13 = FALSE");
+		assert.strictEqual(ws.getRange2("M13").getValue(), "#N/A", "M13 = #N/A");
+		assert.strictEqual(ws.getRange2("K14").getValue(), "#N/A", "K14 = #N/A");
+		assert.strictEqual(ws.getRange2("L14").getValue(), "FALSE", "L14 = FALSE");
+		assert.strictEqual(ws.getRange2("M14").getValue(), "#N/A", "M14 = #N/A");
+
+		//TODO IF({1,0,1;2,0,4;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1;1,0,1},A1:C10)
+
+		clearData(0, 0, 100, 200);
+	});
+
 	QUnit.module("Dynamic Arrays Tests");
 });

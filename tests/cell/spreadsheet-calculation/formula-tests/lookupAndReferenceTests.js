@@ -8881,7 +8881,7 @@ $(function () {
 		// Case #7: Formula, Number. Sorts a range with nested IF formula in ascending order. 3 of 4 arguments used.
 		oParser = new parserFormula('SORT(IF(TRUE,A108:A109,{1,2}),1,1)', 'A2', ws);
 		assert.ok(oParser.parse(), 'Test: SORT(IF(TRUE,A108:A109,{1,2}),1,1) is parsed.');
-		assert.strictEqual(oParser.calculate().getElementRowCol(0, 0).getValue(), "", 'Test: Positive case: Formula, Number. Sorts a range with nested IF formula in ascending order. 3 of 4 arguments used.');
+		assert.strictEqual(oParser.calculate().getElementRowCol(0, 0).getValue(), AscCommonExcel.bIsSupportDynamicArrays ? "" : "", 'Test: Positive case: Formula, Number. Sorts a range with nested IF formula in ascending order. 3 of 4 arguments used.');
 
 		// Case #8: Reference link, Number. Sorts a single-cell reference as an array in ascending order. 3 of 4 arguments used.
 		oParser = new parserFormula('SORT(A100,1,1)', 'A2', ws);
@@ -13015,6 +13015,57 @@ $(function () {
 		oParser = new parserFormula('ISREF(XLOOKUP(2,A700:A710,A700:G710,"",1))', "A2", ws);
 		assert.ok(oParser.parse(), 'ISREF(XLOOKUP(2,A700:A710,A700:G710,"",1))');
 		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(XLOOKUP(2,A700:A710,A700:G710,"",1))');
+
+		//TODO we add @ if formulas applied without ref, but need see on parent
+		// Case #49a: IF function with array condition and reference arguments. Testing ISREF with IF returning array as TRUE branch returns FALSE.
+		// oParser = new parserFormula('ISREF(IF({1,0,1;2,0,4},A1:C2))', "A2", ws);
+		// assert.ok(oParser.parse(), 'ISREF(IF({1,0,1;2,0,4},A1:C2))');
+		// assert.strictEqual(oParser.calculate().getValue(), "FALSE", 'Result of ISREF(IF({1,0,1;2,0,4},A1:C2)) should be FALSE');
+
+		// Case #49b: IF function with range condition as TRUE value returns range reference. Testing ISREF returns FALSE.
+		oParser = new parserFormula('ISREF(IF(A1:C1,A1:C2))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(A1:C1,A1:C2))');
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE", 'Result of ISREF(IF(A1:C1,A1:C2)) should be FALSE');
+
+		// Case #49c: IF function with TRUE condition and range reference argument. Testing ISREF with reference TRUE branch returns TRUE.
+		oParser = new parserFormula('ISREF(IF(TRUE,A1:C2,{1,2,3}))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(TRUE,A1:C2,{1,2,3}))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(TRUE,A1:C2,{1,2,3})) should be TRUE');
+
+		// Case #49d: IF function with FALSE condition returns array as FALSE branch. Testing ISREF returns FALSE.
+		oParser = new parserFormula('ISREF(IF(FALSE,A1:C2,{1,2,3}))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(FALSE,A1:C2,{1,2,3}))');
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE", 'Result of ISREF(IF(FALSE,A1:C2,{1,2,3})) should be FALSE');
+
+		// Case #49e: IF function with FALSE condition returns range reference as FALSE branch. Testing ISREF returns TRUE.
+		oParser = new parserFormula('ISREF(IF(FALSE,A1:C2,A1:C1))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(FALSE,A1:C2,A1:C1))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(FALSE,A1:C2,A1:C1)) should be TRUE');
+
+		// Case #49f: IF function with array condition and array arguments. Testing ISREF returns FALSE.
+		oParser = new parserFormula('ISREF(IF({1,0;0,1},{1,2,3},{4,5,6}))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF({1,0;0,1},{1,2,3},{4,5,6}))');
+		assert.strictEqual(oParser.calculate().getValue(), "FALSE", 'Result of ISREF(IF({1,0;0,1},{1,2,3},{4,5,6})) should be FALSE');
+
+		// Case #49g: IF function with TRUE condition and both branches as ranges. Testing ISREF returns TRUE.
+		oParser = new parserFormula('ISREF(IF(TRUE,A1:B2,B1:C2))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(TRUE,A1:B2,B1:C2))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(TRUE,A1:B2,B1:C2)) should be TRUE');
+
+		// Case #49h: IF function with FALSE condition and both branches as ranges. Testing ISREF returns TRUE.
+		oParser = new parserFormula('ISREF(IF(FALSE,A1:B2,B1:C2))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(FALSE,A1:B2,B1:C2))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(FALSE,A1:B2,B1:C2)) should be TRUE');
+
+		// Case #49i: IF function with scalar TRUE condition and array FALSE branch. Testing ISREF returns FALSE.
+		oParser = new parserFormula('ISREF(IF(1,A1:C2,{1,2,3,4,5,6}))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(1,A1:C2,{1,2,3,4,5,6}))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(1,A1:C2,{1,2,3,4,5,6})) should be TRUE');
+
+		// Case #49j: IF function with scalar FALSE condition and array TRUE branch. Testing ISREF returns FALSE.
+		oParser = new parserFormula('ISREF(IF(0,{1,2,3,4,5,6},A1:C2))', "A2", ws);
+		assert.ok(oParser.parse(), 'ISREF(IF(0,{1,2,3,4,5,6},A1:C2))');
+		assert.strictEqual(oParser.calculate().getValue(), "TRUE", 'Result of ISREF(IF(0,{1,2,3,4,5,6},A1:C2)) should be TRUE');
 
 		// Case #50: XLOOKUP in range operation with SUM. Using XLOOKUP result as range reference in SUM function. For bug 70550.
 		oParser = new parserFormula('SUM(XLOOKUP(2,A700:A710,A700:G710,"",1):XLOOKUP(2,A700:A710,A700:G710,"",1))', "A2", ws);

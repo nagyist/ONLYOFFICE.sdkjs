@@ -3996,9 +3996,9 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		var replaceOnlyArray = cReturnFormulaType.replace_only_array === returnFormulaType;
 
 		// Проверка должен ли элемент поступать в формулу без изменени?
-		const checkArrayIndex = function(index, _arg_type) {
+		const checkArrayIndex = function(index, _arg_type, args) {
 			let res = false;
-			let arrayIndex = t.getArrayIndex(index, _arg_type);
+			let arrayIndex = t.getArrayIndex(index, _arg_type, args);
 			if(arrayIndex) {
 				if(arrayIndex === arrayIndexesType.any) {
 					res = true;
@@ -4011,6 +4011,8 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 							res = true;
 						}
 					}
+				} else if (_arg_type === cElementType.cellsRange && arrayIndex === arrayIndexesType.range) {
+					res = true;
 				}
 			}
 			return res;
@@ -4058,7 +4060,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 			for (var j = 0; j < argumentsCount; j++) {
 				tempArg = arg[j];
 
-				_checkArrayIndex = checkArrayIndex(j, tempArg.type);
+				_checkArrayIndex = checkArrayIndex(j, tempArg.type, arg);
 				if (!_checkArrayIndex) {
 					if (cElementType.cellsRange === tempArg.type || cElementType.cellsRange3D === tempArg.type) {
 						if (checkArayIndexType(j, arrayIndexesType.range)) {
@@ -4127,7 +4129,8 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 					var newArgs = [], newArg;
 					for (var j = 0; j < argumentsCount; j++) {
 						newArg = tempArgs[j];
-						if (cElementType.array === newArg.type && !checkArrayIndex(j, cElementType.array)) {
+						let isArrayArg = checkArrayIndex(j, cElementType.array, tempArgs);
+						if (cElementType.array === newArg.type && !isArrayArg) {
 							if (1 === newArg.getRowCount() && 1 === newArg.getCountElementInRow()) {
 								newArg = newArg.array[0] ? newArg.array[0][0] : null;
 							} else if (1 === newArg.getRowCount()) {
@@ -4141,6 +4144,22 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 								//TODO проверить что ставить, если данный эламент массива недоступен
 								//пока делаю так - если не последний аргумент, то пустой элемент, если последний - undefined
 								newArg = /*j === argumentsCount - 1 ? undefined : */new cError(cErrorType.not_available);
+							}
+						} else if ((cElementType.cellsRange === newArg.type || cElementType.cellsRange3D === newArg.type) && !isArrayArg && !checkArrayIndex(j, cElementType.cellsRange)) {
+							let dimensions = newArg.getDimensions();
+							if (1 === dimensions.row && 1 === dimensions.col) {
+								newArg = newArg.getValueByRowCol(0, 0);
+							} else if (1 === dimensions.row) {
+								newArg = newArg.getValueByRowCol(0, c);
+							} else if (1 === dimensions.col) {
+								newArg = newArg.getValueByRowCol(r, 0);
+							} else {
+								newArg = newArg.getValueByRowCol(r, c);
+							}
+							if (!newArg) {
+								//TODO проверить что ставить, если данный эламент массива недоступен
+								//пока делаю так - если не последний аргумент, то пустой элемент, если последний - undefined
+								newArg = /*j === argumentsCount - 1 ? undefined : */new cNumber(0);
 							}
 						}
 
