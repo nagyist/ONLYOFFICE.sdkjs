@@ -16925,7 +16925,7 @@
 			return null;
 
 		let unifill, color;
-		if (this.Parent) {
+		if (this.Parent && this.Parent.GetClassType() === 'paragraph') {
 			const compiledShd = this.Parent.private_GetImpl().Get_CompiledPr2().ParaPr.Shd;
 			unifill = compiledShd.Unifill || compiledShd.ThemeFill;
 			color = compiledShd.Color || compiledShd.Fill;
