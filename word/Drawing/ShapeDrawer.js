@@ -1657,7 +1657,7 @@ CShapeDrawer.prototype =
 
 		const geometry = this.Shape.getGeometry();
 		const unclosedPaths = geometry.pathLst.filter(function (path) {
-			return !path.isClosed();
+			return !path.isEmpty() && !path.isClosed();
 		});
 
 		if (this.Ln.headEnd != null) {
