@@ -4147,6 +4147,27 @@
 	 */
 
 	/**
+	 * The available fill types.
+	 * @typedef {("solid" | "gradient" | "pattern" | "blip" | "nofill")} FillType
+	 */
+
+	/**
+	 * The available line dash types.
+	 * <b>"dash"</b> - 0: Dashed line.
+	 * <b>"dashDot"</b> - 1: Alternating dashes and dots.
+	 * <b>"dot"</b> - 2: Dotted line.
+	 * <b>"lgDash"</b> - 3: Long dashes.
+	 * <b>"lgDashDot"</b> - 4: Alternating long dashes and dots.
+	 * <b>"lgDashDotDot"</b> - 5: Alternating long dashes and double dots.
+	 * <b>"solid"</b> - 6: Solid line (no dashes).
+	 * <b>"sysDash"</b> - 7: System dash style.
+	 * <b>"sysDashDot"</b> - 8: System dash-dot style.
+	 * <b>"sysDashDotDot"</b> - 9: System dash-dot-dot style.
+	 * <b>"sysDot"</b> - 10: System dot style.
+	 * @typedef {("dash" | "dashDot" | "dot" | "lgDash" | "lgDashDot" | "lgDashDotDot" | "solid" | "sysDash" | "sysDashDot" | "sysDashDotDot" | "sysDot")} LineDashType
+	 */
+
+	/**
      * The available color scheme identifiers.
 	 * @typedef {("accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" | "bg1" | "bg2" | "dk1" | "dk2"
 	 *     | "lt1" | "lt2" | "tx1" | "tx2")} SchemeColorId
@@ -19655,6 +19676,84 @@
 		return false;
 	};
 
+	/**
+	 * Sets the fill properties to the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CDE"]
+	 * @param {ApiFill} oFill - The fill type used to fill the shape.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/SetFill.js
+	 */
+	ApiShape.prototype.SetFill = function(oFill)
+	{
+		if (!oFill || !oFill.GetClassType || oFill.GetClassType() !== "fill")
+			return false;
+
+		if (this.Shape && this.Shape.spPr)
+		{
+			this.Shape.spPr.setFill(oFill.UniFill);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Gets the fill properties from the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CDE"]
+	 * @returns {ApiFill | null}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetFill.js
+	 */
+	ApiShape.prototype.GetFill = function()
+	{
+		if (this.Shape && this.Shape.spPr && this.Shape.spPr.Fill)
+		{
+			return new ApiFill(this.Shape.spPr.Fill);
+		}
+
+		return null;
+	};
+
+	/**
+	 * Sets the outline properties to the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CDE"]
+	 * @param {ApiStroke} oStroke - The stroke used to create the shape outline.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/SetLine.js
+	 */
+	ApiShape.prototype.SetLine = function(oStroke)
+	{
+		if (!oStroke || !oStroke.GetClassType || oStroke.GetClassType() !== "stroke")
+			return false;
+
+		if (this.Shape && this.Shape.spPr)
+		{
+			this.Shape.spPr.setLn(oStroke.Ln);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Gets the outline properties from the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CDE"]
+	 * @returns {ApiStroke | null}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetLine.js
+	 */
+	ApiShape.prototype.GetLine = function()
+	{
+		if (this.Shape && this.Shape.spPr && this.Shape.spPr.ln)
+		{
+			return new ApiStroke(this.Shape.spPr.ln);
+		}
+
+		return null;
+	};
+
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -21387,6 +21486,36 @@
 		return JSON.stringify(oWriter.SerFill(this.UniFill));
 	};
 
+	/**
+	 * Gets the fill type.
+	 * @memberof ApiFill
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {FillType} - returns "solid", "gradient", "pattern", "blip", "nofill" or null.
+	 * @see office-js-api/Examples/{Editor}/ApiFill/Methods/GetType.js
+	 */
+	ApiFill.prototype.GetType = function()
+	{
+		if (!this.UniFill || !this.UniFill.fill)
+			return null;
+
+		var c_oAscFill = window['Asc'].c_oAscFill;
+		switch(this.UniFill.fill.type)
+		{
+			case c_oAscFill.FILL_TYPE_SOLID:
+				return "solid";
+			case c_oAscFill.FILL_TYPE_GRAD:
+				return "gradient";
+			case c_oAscFill.FILL_TYPE_PATT:
+				return "pattern";
+			case c_oAscFill.FILL_TYPE_BLIP:
+				return "blip";
+			case c_oAscFill.FILL_TYPE_NOFILL:
+				return "nofill";
+			default:
+				return null;
+		}
+	};
+
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiStroke
@@ -21415,6 +21544,56 @@
 	{
 		var oWriter = new AscJsonConverter.WriterToJSON();
 		return JSON.stringify(oWriter.SerLn(this.Ln));
+	};
+
+	/**
+	 * Gets the width of the stroke in English Metric Units.
+	 * @memberof ApiStroke
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {EMU | null}
+	 * @see office-js-api/Examples/{Editor}/ApiStroke/Methods/GetWidth.js
+	 */
+	ApiStroke.prototype.GetWidth = function()
+	{
+		if (this.Ln && this.Ln.w !== null && this.Ln.w !== undefined)
+		{
+			return this.Ln.w;
+		}
+		return null;
+	};
+
+	/**
+	 * Gets the fill (color) of the stroke.
+	 * @memberof ApiStroke
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {ApiFill | null}
+	 * @see office-js-api/Examples/{Editor}/ApiStroke/Methods/GetFill.js
+	 */
+	ApiStroke.prototype.GetFill = function()
+	{
+		if (this.Ln && this.Ln.Fill)
+		{
+			return new ApiFill(this.Ln.Fill);
+		}
+		return null;
+	};
+
+	/**
+	 * Gets the dash type of the stroke.
+	 * @memberof ApiStroke
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {LineDashType | null} - returns dash type ("solid", "dash", etc.) or null.
+	 * @see office-js-api/Examples/{Editor}/ApiStroke/Methods/GetDashType.js
+	 */
+	ApiStroke.prototype.GetDashType = function()
+	{
+		if (this.Ln && this.Ln.prstDash !== null && this.Ln.prstDash !== undefined)
+		{
+			// Convert numeric code to string value using GetDashByCode
+			var dashString = this.Ln.GetDashByCode ? this.Ln.GetDashByCode(this.Ln.prstDash) : null;
+			return dashString;
+		}
+		return null;
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -29650,6 +29829,10 @@
 	ApiShape.prototype["GetPrevShape"]               = ApiShape.prototype.GetPrevShape;
 	ApiShape.prototype["GetGeometry"]                = ApiShape.prototype.GetGeometry;
 	ApiShape.prototype["SetGeometry"]                = ApiShape.prototype.SetGeometry;
+	ApiShape.prototype["SetFill"]                    = ApiShape.prototype.SetFill;
+	ApiShape.prototype["GetFill"]                    = ApiShape.prototype.GetFill;
+	ApiShape.prototype["SetLine"]                    = ApiShape.prototype.SetLine;
+	ApiShape.prototype["GetLine"]                    = ApiShape.prototype.GetLine;
 
 	ApiGeometry.prototype["IsCustom"]                = ApiGeometry.prototype.IsCustom;
 	ApiGeometry.prototype["GetPreset"]               = ApiGeometry.prototype.GetPreset;
@@ -29757,9 +29940,13 @@
 
 	ApiFill.prototype["GetClassType"]                = ApiFill.prototype.GetClassType;
 	ApiFill.prototype["ToJSON"]                      = ApiFill.prototype.ToJSON;
+	ApiFill.prototype["GetType"]                     = ApiFill.prototype.GetType;
 
 	ApiStroke.prototype["GetClassType"]              = ApiStroke.prototype.GetClassType;
 	ApiStroke.prototype["ToJSON"]                    = ApiStroke.prototype.ToJSON;
+	ApiStroke.prototype["GetWidth"]                  = ApiStroke.prototype.GetWidth;
+	ApiStroke.prototype["GetFill"]                   = ApiStroke.prototype.GetFill;
+	ApiStroke.prototype["GetDashType"]               = ApiStroke.prototype.GetDashType;
 
 	ApiGradientStop.prototype["GetClassType"]        = ApiGradientStop.prototype.GetClassType;
 	ApiGradientStop.prototype["ToJSON"]              = ApiGradientStop.prototype.ToJSON;
@@ -30200,6 +30387,8 @@
 	window['AscBuilder'].ApiCustomProperties = ApiCustomProperties;
 	window['AscBuilder'].ApiCustomXmlParts	 = ApiCustomXmlParts;
 	window['AscBuilder'].ApiColor            = ApiColor;
+	window['AscBuilder'].ApiFill             = ApiFill;
+	window['AscBuilder'].ApiStroke           = ApiStroke;
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Area for internal usage
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

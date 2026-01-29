@@ -5831,6 +5831,84 @@
 		return false;
 	};
 
+	/**
+	 * Sets the fill properties to the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @param {ApiFill} oFill - The fill type used to fill the shape.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/SetFill.js
+	 */
+	ApiShape.prototype.SetFill = function(oFill)
+	{
+		if (!oFill || !oFill.GetClassType || oFill.GetClassType() !== "fill")
+			return false;
+
+		if (this.Shape && this.Shape.spPr)
+		{
+			this.Shape.spPr.setFill(oFill.UniFill);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Gets the fill properties from the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiFill | null}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetFill.js
+	 */
+	ApiShape.prototype.GetFill = function()
+	{
+		if (this.Shape && this.Shape.spPr && this.Shape.spPr.Fill)
+		{
+			return new AscBuilder.ApiFill(this.Shape.spPr.Fill);
+		}
+
+		return null;
+	};
+
+	/**
+	 * Sets the outline properties to the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @param {ApiStroke} oStroke - The stroke used to create the shape outline.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/SetLine.js
+	 */
+	ApiShape.prototype.SetLine = function(oStroke)
+	{
+		if (!oStroke || !oStroke.GetClassType || oStroke.GetClassType() !== "stroke")
+			return false;
+
+		if (this.Shape && this.Shape.spPr)
+		{
+			this.Shape.spPr.setLn(oStroke.Ln);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Gets the outline properties from the current shape.
+	 * @memberof ApiShape
+	 * @typeofeditors ["CPE"]
+	 * @returns {ApiStroke | null}
+	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetLine.js
+	 */
+	ApiShape.prototype.GetLine = function()
+	{
+		if (this.Shape && this.Shape.spPr && this.Shape.spPr.ln)
+		{
+			return new AscBuilder.ApiStroke(this.Shape.spPr.ln);
+		}
+
+		return null;
+	};
+
 
 	//------------------------------------------------------------------------------------------------------------------
     //
@@ -6798,7 +6876,7 @@
 	ApiSlideShowTransition.prototype["SetAdvanceOnTime"]  = ApiSlideShowTransition.prototype.SetAdvanceOnTime;
 	ApiSlideShowTransition.prototype["GetAdvanceTime"]    = ApiSlideShowTransition.prototype.GetAdvanceTime;
 	ApiSlideShowTransition.prototype["SetAdvanceTime"]    = ApiSlideShowTransition.prototype.SetAdvanceTime;
-    
+
     ApiDrawing.prototype["GetClassType"]                  = ApiDrawing.prototype.GetClassType;
     ApiDrawing.prototype["SetSize"]                       = ApiDrawing.prototype.SetSize;
     ApiDrawing.prototype["SetPosition"]                   = ApiDrawing.prototype.SetPosition;
@@ -6888,6 +6966,10 @@
     ApiShape.prototype["SetVerticalTextAlign"]            = ApiShape.prototype.SetVerticalTextAlign;
 	ApiShape.prototype["GetGeometry"]                     = ApiShape.prototype.GetGeometry;
 	ApiShape.prototype["SetGeometry"]                     = ApiShape.prototype.SetGeometry;
+	ApiShape.prototype["SetFill"]                         = ApiShape.prototype.SetFill;
+	ApiShape.prototype["GetFill"]                         = ApiShape.prototype.GetFill;
+	ApiShape.prototype["SetLine"]                         = ApiShape.prototype.SetLine;
+	ApiShape.prototype["GetLine"]                         = ApiShape.prototype.GetLine;
 
     ApiOleObject.prototype["GetClassType"]                = ApiOleObject.prototype.GetClassType;
 	ApiOleObject.prototype["SetData"]                     = ApiOleObject.prototype.SetData;
