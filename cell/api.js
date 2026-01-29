@@ -1901,6 +1901,7 @@ var editor;
 			reader.setSheetData(curSheetData);
 			reader.readSheetData(bNoBuildDep);
 			const sheetDataElem = curSheetData[0];
+			updateDrawingsBySheetDataElem(api, sheetDataElem);
 			api.wb._onScrollReinitialize(AscCommonExcel.c_oAscScrollType.ScrollVertical | AscCommonExcel.c_oAscScrollType.ScrollHorizontal);
 		} else {
 			let sheetDataElem = delayedSheetData.find(function (item) {
@@ -1929,15 +1930,22 @@ var editor;
 			
 			reader.setSheetData([sheetDataElem]);
 			reader.readSheetData(bNoBuildDep);
-			const updateRange = new AscCommonExcel.Range(sheetDataElem.ws, sheetDataElem.r1, 0, sheetDataElem.r2, AscCommon.gc_nMaxCol0);
-			sheetDataElem.ws.onUpdateRanges([updateRange.bbox]);//"cleanCellCache" works only for visible sheets
-			api.wb.handleDrawingsOnWorkbookChange([updateRange]);
+			updateDrawingsBySheetDataElem(api, sheetDataElem);
 		}
 		
 		// Schedule next iteration
 		setTimeout(function() {
 			readRemainings(api, reader, ws, bNoBuildDep, curSheetData, delayedSheetData, selectionState, startAction);
 		}, 30);
+	}
+	/**
+	 * Update drawings on reading sheet data
+	 */
+	function updateDrawingsBySheetDataElem(api, sheetDataElem) {
+		const intersectionRange = new AscCommonExcel.Range(sheetDataElem.ws, sheetDataElem.r1, 0, sheetDataElem.r2, AscCommon.gc_nMaxCol0);
+		const insideRange = new AscCommonExcel.Range(sheetDataElem.ws, 0, 0, sheetDataElem.r2, AscCommon.gc_nMaxCol0);
+		sheetDataElem.ws.onUpdateRanges([intersectionRange.bbox]);//"cleanCellCache" works only for visible sheets
+		api.wb.handleDrawingsOnWorkbookOpening([{intersectionRange: intersectionRange, insideRange: insideRange}]);
 	}
 
 	/**

@@ -13032,12 +13032,14 @@ function RangeDataManagerElem(bbox, data)
 		this.bssr = null;
 	}
 
-	CSharedStrings.prototype.addText = function(text) {
+	CSharedStrings.prototype.addText = function(text, isReadingTable) {
 		var textMap = this.text;
 		var index = textMap[text];
-		if (undefined === index) {
-			var allArray = this.all;
+		var allArray = this.all;
+		if (isReadingTable || undefined === index) {
 			allArray.push(text);
+		}
+		if (undefined === index) {
 			index = allArray.length;
 			textMap[text] = index;
 			if (AscFonts.IsCheckSymbols) {
@@ -13046,7 +13048,7 @@ function RangeDataManagerElem(bbox, data)
 		}
 		return index;
 	};
-	CSharedStrings.prototype.addMultiText = function(multiText) {
+	CSharedStrings.prototype.addMultiText = function(multiText, isReadingTable) {
 		var index, i;
 		var text = multiText.reduce(function(accumulator, currentValue) {
 			return accumulator + currentValue.text;
@@ -13062,8 +13064,10 @@ function RangeDataManagerElem(bbox, data)
 				break;
 			}
 		}
-		if (undefined === index) {
+		if (isReadingTable || undefined === index) {
 			this.all.push(multiText);
+		}
+		if (undefined === index) {
 			index = this.all.length;
 			mapElem.push(index);
 			if (AscFonts.IsCheckSymbols) {
@@ -13077,41 +13081,20 @@ function RangeDataManagerElem(bbox, data)
 	 * Adds new shared strings to existing ones without removing existing data
 	 * @param {Array<string | Array<{text: string, format: CellXfs}>>} sharedStrings
 	 */
-	CSharedStrings.prototype.initWithSharedStrings = function(sharedStrings, opt_sharedStringIndexMap) {
-		if (this.all.length > 0) {
-			for (let i = 0; i < sharedStrings.length; i++) {
+	CSharedStrings.prototype.initWithSharedStrings = function(sharedStrings, opt_sharedStringIndexMap, sharedStringOffset) {
+		sharedStringOffset = sharedStringOffset || 0;
+		for (let i = sharedStringOffset; i < sharedStrings.length; i++) {
 				const item = sharedStrings[i];
 				let index;
 				if (typeof item === 'string') {
-					index = this.addText(item);
+					index = this.addText(item, true);
 				} else {
-					index = this.addMultiText(item);
+					index = this.addMultiText(item, true);
 				}
 				if (opt_sharedStringIndexMap) {
 					opt_sharedStringIndexMap[i] = index;
 				}
 			}
-			return;
-		}
-		if (this.all.length > 0) {
-			for (let i = 0; i < sharedStrings.length; i++) {
-				const item = sharedStrings[i];
-				if (typeof item === 'string') {
-					this.addText(item);
-				} else {
-					this.addMultiText(item);
-				}
-			}
-			return;
-		}
-		this.all = sharedStrings.slice(); //copy
-		this.text = Object.create(null);
-		this.multiTextMap = Object.create(null);
-		
-		for (let i = 0; i < sharedStrings.length; i++) {
-			const text = sharedStrings[i];
-			this._addSharedStringCacheByIndex(text, i + 1);// 1-based indexing
-		}
 	};
 	CSharedStrings.prototype._addSharedStringCacheByIndex = function(text, index) {
 		if (typeof text === 'string') {

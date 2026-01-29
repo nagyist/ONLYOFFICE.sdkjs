@@ -10577,6 +10577,13 @@ function(window, undefined) {
 		var oDataRange = this.getDataRefs();
 		oDataRange.collectIntersectionRefs(aRanges, aRefs);
 	};
+	CChartSpace.prototype.collectInsideAndIntersectionRefs = function (aRanges, aRefs) {
+		if (!Array.isArray(aRanges) || aRanges.length === 0) {
+			return;
+		}
+		var oDataRange = this.getDataRefs();
+		oDataRange.collectInsideAndIntersectionRefs(aRanges, aRefs);
+	};
 	CChartSpace.prototype.getCommonRange = function () {
 		var oDataRange = this.getDataRefs();
 		return oDataRange.getRange();
