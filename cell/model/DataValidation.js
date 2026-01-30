@@ -164,17 +164,6 @@
 			}
 		}
 
-		const isRef = function (formula) {
-			if (formula && formula.outStack && formula.outStack.length) {
-				for (let i = 0; i < formula.outStack.length; i++) {
-					if (formula.outStack[i].type === AscCommonExcel.cElementType.cell) {
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
 		// fix the text from quotes
 		data = normalizeText(data)
 		if (data.isNum) {
@@ -1504,7 +1493,6 @@
 
 		for (let i = 0; i < res.length; i++) {
 			res[i]._init(ws);
-			res[i].correctToInterface(ws);
 		}
 		return res;
 	}

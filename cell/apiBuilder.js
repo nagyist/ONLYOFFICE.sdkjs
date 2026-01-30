@@ -19584,8 +19584,15 @@
 				return new window['Asc'].CDataFormula(formula);
 			} else if (typeof formula === "number") {
 				return new window['Asc'].CDataFormula(formula.toString());
-			} else if (formula && formula.constructor === ApiRange) {
-				return new window['Asc'].CDataFormula(formula.GetAddress());
+			} else if (Array.isArray(formula)) {
+                const sep = ",";
+                return new window['Asc'].CDataFormula(formula.join(sep));
+            } else if (formula && formula.constructor === ApiRange) {
+                let text = formula.GetAddress();
+                if (text && typeof text === "string") {
+                    text = "=" + text;
+                }
+				return new window['Asc'].CDataFormula(text);
 			}
 
 			return null;
@@ -19624,8 +19631,8 @@
 			worksheet.dataValidations = new window['AscCommonExcel'].CDataValidations();
 		}
 
+        dataValidation.correctFromInterface(worksheet);
 		dataValidation._init(worksheet);
-		dataValidation.correctFromInterface(worksheet);
 
 		worksheet.dataValidations.add(worksheet, dataValidation, true);
 
