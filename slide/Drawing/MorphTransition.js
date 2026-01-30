@@ -817,13 +817,24 @@
         const oT = this.drawObject.transform;
         const oT1 = this.transform1;
         const oT2 = this.transform2;
-        oT.tx = this.getValBetween(oT1.tx, oT2.tx);
-        oT.ty = this.getValBetween(oT1.ty, oT2.ty);
-        oT.sx = this.getValBetween(oT1.sx, oT2.sx);
-        oT.sy = this.getValBetween(oT1.sy, oT2.sy);
-        oT.shx = this.getValBetween(oT1.shx, oT2.shx);
-        oT.shy = this.getValBetween(oT1.shy, oT2.shy);
-        const oInvT = AscCommon.global_MatrixTransformer.Invert(oT);
+
+		const oParent1 = this.geometry1.parent && this.geometry1.parent.parent;
+		const isConnector = oParent1 && oParent1.getObjectType() === AscDFH.historyitem_type_Cnx;
+
+		let oInvT;
+		if (isConnector) {
+			oT.Reset();
+			oInvT = null;
+		} else {
+			oT.tx = this.getValBetween(oT1.tx, oT2.tx);
+			oT.ty = this.getValBetween(oT1.ty, oT2.ty);
+			oT.sx = this.getValBetween(oT1.sx, oT2.sx);
+			oT.sy = this.getValBetween(oT1.sy, oT2.sy);
+			oT.shx = this.getValBetween(oT1.shx, oT2.shx);
+			oT.shy = this.getValBetween(oT1.shy, oT2.shy);
+			oInvT = AscCommon.global_MatrixTransformer.Invert(oT);
+		}
+
         const nPathsCount = this.morphedPaths.length;
         for(let nIdx = 0; nIdx < nPathsCount; ++nIdx) {
             this.morphedPaths[nIdx].morph(dRelTime, oInvT);
