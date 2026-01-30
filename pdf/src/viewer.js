@@ -3564,6 +3564,13 @@
 
 				bRetValue = true;
 			}
+			else if (e.KeyCode === 56 && true === e.ShiftKey && true === e.CtrlKey) // 8
+			{
+				this.Api.ShowParaMarks = !this.Api.ShowParaMarks;
+				this.isClearPages = true;
+				this.resize();
+				bRetValue = true;
+			}
 			
 			oDoc.UpdateCopyCutState();
 			return bRetValue;
