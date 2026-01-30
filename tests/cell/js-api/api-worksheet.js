@@ -32,42 +32,14 @@
 
 "use strict";
 
-QUnit.config.autostart = false;
 (function (window)
 {
-	const {InitEditor} = AscTestShortcut;
-
-	let editor, wb, wbView, ws, wsView, cellEditor;
-	InitEditor(function ()
-	{
-		editor = window["Asc"]["editor"];
-		wb = editor.wbModel;
-		wbView = editor.wb;
-		ws = wb.aWorksheets[0];
-		wsView = wbView.getWorksheet();
-		cellEditor = wbView.cellEditor;
-		QUnit.start();
-	});
-
-	const initializeTest = function (/*rangeAddress optional*/) {
-        const globalRange = editor.GetRange('A1:Z100'); // acceptable sandbox
-        globalRange.Clear();
-        // Reset validations entirely
-        if (editor.worksheet && editor.worksheet.dataValidations) {
-            editor.worksheet.dataValidations.clear(editor.worksheet, true);
-        }
-
-		editor.asc_cleanWorksheet()
-    };
-    window.initializeTest = initializeTest; // expose for debugging if needed
-
 	QUnit.module("ApiWorksheet");
 	QUnit.test("GetSelectedShapes", function (assert) {
-		initializeTest();
-		let worksheet = editor.GetActiveSheet()
+		let worksheet = AscTest.JsApi.GetActiveSheet()
 
-		const fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
-		const stroke = editor.CreateStroke(0, editor.CreateNoFill());
+		const fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
+		const stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
 		for(let nShape = 0; nShape < 3; nShape++)
 		{
@@ -88,11 +60,10 @@ QUnit.config.autostart = false;
 	});
 	
 	QUnit.test("GetSelectedDrawings", function (assert) {
-		initializeTest();
-		let worksheet = editor.GetActiveSheet()
+		let worksheet = AscTest.JsApi.GetActiveSheet()
 
-		const fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
-		const stroke = editor.CreateStroke(0, editor.CreateNoFill());
+		const fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
+		const stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
 		for(let nShape = 0; nShape < 3; nShape++)
 		{

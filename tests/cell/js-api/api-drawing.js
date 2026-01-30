@@ -32,49 +32,21 @@
 
 "use strict";
 
-QUnit.config.autostart = false;
 (function (window)
 {
-	const {InitEditor} = AscTestShortcut;
-
-	let editor, wb, wbView, ws, wsView, cellEditor;
-	InitEditor(function ()
-	{
-		editor = window["Asc"]["editor"];
-		wb = editor.wbModel;
-		wbView = editor.wb;
-		ws = wb.aWorksheets[0];
-		wsView = wbView.getWorksheet();
-		cellEditor = wbView.cellEditor;
-		QUnit.start();
-	});
-
-	const initializeTest = function (/*rangeAddress optional*/) {
-        const globalRange = editor.GetRange('A1:Z100'); // acceptable sandbox
-        globalRange.Clear();
-        // Reset validations entirely
-        if (editor.worksheet && editor.worksheet.dataValidations) {
-            editor.worksheet.dataValidations.clear(editor.worksheet, true);
-        }
-
-		editor.asc_cleanWorksheet()
-    };
-    window.initializeTest = initializeTest; // expose for debugging if needed
-
 	QUnit.module("ApiDrawing");
 	QUnit.test("Fill", function (assert) {
-		initializeTest();
-		let worksheet = editor.GetActiveSheet()
+		let worksheet = AscTest.JsApi.GetActiveSheet()
 
-		let fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
-		let stroke = editor.CreateStroke(0, editor.CreateNoFill());
+		let fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
+		let stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
 		let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
 		assert.ok(true, 'Add new ellipse shape');
 		
-		let gs1 = editor.CreateGradientStop(editor.CreateRGBColor(255, 213, 191), 0);
-		let gs2 = editor.CreateGradientStop(editor.CreateRGBColor(255, 111, 61), 100000);
-		fill = editor.CreateRadialGradientFill([gs1, gs2]);
+		let gs1 = AscTest.JsApi.CreateGradientStop(AscTest.JsApi.CreateRGBColor(255, 213, 191), 0);
+		let gs2 = AscTest.JsApi.CreateGradientStop(AscTest.JsApi.CreateRGBColor(255, 111, 61), 100000);
+		fill = AscTest.JsApi.CreateRadialGradientFill([gs1, gs2]);
 		shape.Fill(fill);
 
         assert.ok(shape.Drawing.spPr.Fill.fill instanceof AscFormat.CGradFill, "Shape created and filled with gradient");
@@ -94,17 +66,16 @@ QUnit.config.autostart = false;
 	});
 
 	QUnit.test("SetOutLine", function (assert) {
-		initializeTest();
-		let worksheet = editor.GetActiveSheet()
+		let worksheet = AscTest.JsApi.GetActiveSheet()
 
-		let fill = editor.CreateSolidFill(editor.CreateRGBColor(51, 51, 51));
-		let stroke = editor.CreateStroke(0, editor.CreateNoFill());
+		let fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
+		let stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
 		let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
 		assert.ok(true, 'Add new ellipse shape');
 
-		let outlineFill = editor.CreateSolidFill(editor.CreateRGBColor(255, 111, 61));
-		let outline = editor.CreateStroke(1 * 36000, outlineFill);
+		let outlineFill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(255, 111, 61));
+		let outline = AscTest.JsApi.CreateStroke(1 * 36000, outlineFill);
 		shape.SetOutLine(outline);
 
 		assert.ok(shape.Drawing.spPr.ln, "Shape outline is defined");

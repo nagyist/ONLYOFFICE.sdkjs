@@ -31,70 +31,14 @@
  */
 
 $(function () {
-    // ====== REQUIRED ENVIRONMENT SETUP (preserve these stubs/settings) ======
-    Asc.spreadsheet_api.prototype._init = function () { };
-    Asc.spreadsheet_api.prototype._loadFonts = function (fonts, callback) {
-        callback();
-    };
-    AscCommonExcel.WorkbookView.prototype._calcMaxDigitWidth = function () { };
-    AscCommonExcel.WorkbookView.prototype._init = function () { };
-    AscCommonExcel.WorkbookView.prototype._onWSSelectionChanged =
-        function () { };
-    AscCommonExcel.WorkbookView.prototype.showWorksheet = function () { };
-    AscCommonExcel.WorksheetView.prototype._init = function () { };
-    AscCommonExcel.WorksheetView.prototype._onUpdateFormatTable =
-        function () { };
-    AscCommonExcel.WorksheetView.prototype.setSelection = function () { };
-    AscCommonExcel.WorksheetView.prototype.draw = function () { };
-    AscCommonExcel.WorksheetView.prototype._prepareDrawingObjects =
-        function () { };
-    AscCommonExcel.WorksheetView.prototype._reinitializeScroll = function () { };
-    AscCommonExcel.WorksheetView.prototype.getZoom = function () { };
-    AscCommonExcel.WorksheetView.prototype._getPPIY = function () { };
-    AscCommonExcel.WorksheetView.prototype._getPPIX = function () { };
-    AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function () { };
-    Asc.ReadDefTableStyles = function () { };
-
-    var api = new Asc.spreadsheet_api({ "id-view": "editor_sdk" });
-
-    api.FontLoader = { LoadDocumentFonts: function () { } };
-    window["Asc"]["editor"] = api;
-    AscCommon.g_oTableId.init();
-    api._onEndLoadSdk();
-    api.isOpenOOXInBrowser = false;
-    api.OpenDocumentFromBin(null, AscCommon.getEmpty());
-    api.initCollaborativeEditing({});
-    api.wb = new AscCommonExcel.WorkbookView(
-        api.wbModel,
-        api.controller,
-        api.handlers,
-        api.HtmlElement,
-        api.topLineEditorElement,
-        api,
-        api.collaborativeEditing,
-        api.fontRenderingMode
-    );
-
-    var wsView = api.wb.getWorksheet(0);
-    wsView.handlers = api.handlers;
-    wsView.objectRender = new AscFormat.DrawingObjects();
-    wsView.objectRender.controller = new AscFormat.DrawingObjectsController(
-        wsView.objectRender
-    );
-    var ws = api.GetActiveSheet();
-
-    // ====== TEST UTILITIES ======
-
-    // MUST-HAVE helper: clear all conditional formats in A1:Z100 before each test
-    window.initializeTest = function () {
-        var r = ws.GetRange("A1:Z100");
-        ws.worksheet.AutoFilter = null;
-        // r.Clear();
-    };
+	
+	var ws = AscTest.JsApi.GetActiveSheet();
 
     theRange = function (address) {
         return ws.GetRange(address);
     };
+	
+	function initializeTest(){}
 
     // ====== TESTS ======
 
@@ -254,11 +198,11 @@ $(function () {
             // Make some colored cells to be realistic
             theRange("A1").SetValue("x");
             theRange("A2").SetValue("y");
-            theRange("A1").SetFillColor(api.CreateColorFromRGB(255, 255, 0));
-            theRange("A2").SetFillColor(api.CreateColorFromRGB(0, 255, 0));
+            theRange("A1").SetFillColor(AscTest.JsApi.CreateColorFromRGB(255, 255, 0));
+            theRange("A2").SetFillColor(AscTest.JsApi.CreateColorFromRGB(0, 255, 0));
 
             let range = ws.GetRange("A1:A5");
-            range.SetAutoFilter(1, api.CreateColorFromRGB(255, 255, 0), "xlFilterCellColor");
+            range.SetAutoFilter(1, AscTest.JsApi.CreateColorFromRGB(255, 255, 0), "xlFilterCellColor");
 
             let f = ws.AutoFilter.Filters;
             assert.equal(f.length, 1, "One filter created");
