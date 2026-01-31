@@ -4960,30 +4960,15 @@
 	 * Creates a theme color.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @param {"accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" |
-	 * "bg1" | "bg2" | "dk1" | "dk2" | "lt1" | "lt2" | "tx1" | "tx2"} [name="tx1"]
+	 * @typeofeditors ["CDE"]
+	 * @param {SchemeColorId} [name="tx1"] The theme color name. If the provided name is not supported, the 'tx1' color will be used.
 	 * @returns {ApiColor} Instance of ApiColor with 'theme' type.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ThemeColor.js
 	 */
 	Api.prototype.ThemeColor = function (name) {
-		const themeColorMap = {
-			'accent1': 0,
-			'accent2': 1,
-			'accent3': 2,
-			'accent4': 3,
-			'accent5': 4,
-			'accent6': 5,
-			'bg1': 6,
-			'bg2': 7,
-			'dk1': 8,
-			'dk2': 9,
-			'lt1': 12,
-			'lt2': 13,
-			'tx1': 15,
-			'tx2': 16,
-		};
-		const index = themeColorMap[name] !== undefined ? themeColorMap[name] : 15; // default is 'tx1' color
+		const index = ApiColor.ThemeColorMap[name] !== undefined
+			? ApiColor.ThemeColorMap[name]
+			: ApiColor.ThemeColorMap['tx1'];
 		return new ApiColor('theme', index);
 	};
 
@@ -21979,6 +21964,46 @@
 		"a": {get : function() {return this.GetRGBA()["a"];}}
 	});
 
+	ApiColor.ThemeColorMap = {
+		'accent1': 0,
+		'accent2': 1,
+		'accent3': 2,
+		'accent4': 3,
+		'accent5': 4,
+		'accent6': 5,
+		'bg1': 6,
+		'bg2': 7,
+		'dk1': 8,
+		'dk2': 9,
+		'lt1': 12,
+		'lt2': 13,
+		'tx1': 15,
+		'tx2': 16,
+	};
+
+	/**
+	 * Gets the theme color name if the color is a theme color.
+	 *
+	 * @memberof ApiColor
+	 * @typeofeditors ["CDE"]
+	 * @since 9.3.0
+	 * @returns {SchemeColorId | null} The theme color name or null if not a theme color.
+	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetThemeName.js
+	 */
+	ApiColor.prototype.GetThemeName = function () {
+		if (this.type !== 'theme') {
+			return null;
+		}
+
+		for (let themeName in ApiColor.ThemeColorMap) {
+			if (ApiColor.ThemeColorMap[themeName] === this.value) {
+				return themeName;
+			}
+		}
+
+		return null;
+	};
+
 	/**
 	 * Converts the ApiColor object into the JSON object.
 	 *
@@ -30029,6 +30054,7 @@
 	ApiColor.prototype["GetRGB"] = ApiColor.prototype.GetRGB;
 	ApiColor.prototype["GetRGBA"] = ApiColor.prototype.GetRGBA;
 	ApiColor.prototype["GetHex"] = ApiColor.prototype.GetHex;
+	ApiColor.prototype["GetThemeName"] = ApiColor.prototype.GetThemeName;
 	ApiColor.prototype["ToJSON"] = ApiColor.prototype.ToJSON;
 	ApiColor.prototype["FromJSON"] = ApiColor.prototype.FromJSON;
 
