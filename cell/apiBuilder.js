@@ -11139,18 +11139,18 @@
 		
 		sortSettings.levels = [];
 		key1 = filterRange(key1);
-		const rangeKey1 = apiWorksheet.GetRange(key1);
-		if (key1 && false === getSortLevel(rangeKey1, sSortOrder1)) {
+		const rangeKey1 = key1 && apiWorksheet.GetRange(key1);
+		if (rangeKey1 && false === getSortLevel(rangeKey1, sSortOrder1)) {
 			return;
 		}
 		key2 = filterRange(key2);
-		const rangeKey2 = apiWorksheet.GetRange(key2);
-		if (key2 && false === getSortLevel(rangeKey2, sSortOrder2)) {
+		const rangeKey2 = key2 && apiWorksheet.GetRange(key2);
+		if (rangeKey2 && false === getSortLevel(rangeKey2, sSortOrder2)) {
 			return;
 		}
 		key3 = filterRange(key3);
-		const rangeKey3 = apiWorksheet.GetRange(key3);
-		if (key3 && false === getSortLevel(rangeKey3, sSortOrder3)) {
+		const rangeKey3 = key3 && apiWorksheet.GetRange(key3);
+		if (rangeKey3 && false === getSortLevel(rangeKey3, sSortOrder3)) {
 			return;
 		}
 

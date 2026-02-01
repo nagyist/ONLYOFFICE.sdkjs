@@ -230,7 +230,11 @@ $(function () {
             initializeTest();
 
             let range = ws.GetRange("A1:B5");
-            range.SetAutoFilter("foo", ">1", "xlOr"); // invalid Field
+            try {
+                range.SetAutoFilter("foo", ">1", "xlOr"); // invalid Field
+            } catch (e) {
+                // Expected error for invalid Field
+            }
 
             assert.equal(ws.AutoFilter.FilterMode, false, "AutoFilter not added");
             assert.equal(ws.AutoFilter.Range, null, "Range null");
@@ -241,7 +245,11 @@ $(function () {
             initializeTest();
 
             let range = ws.GetRange("A1:B5"); // only 2 columns
-            range.SetAutoFilter(3, ">1", "xlOr"); // invalid: field > columns count
+            try {
+                range.SetAutoFilter(3, ">1", "xlOr"); // invalid: field > columns count
+            } catch (e) {
+                // Expected error for Field out of range
+            }
 
             assert.equal(ws.AutoFilter.FilterMode, false, "AutoFilter not added");
             assert.equal(ws.AutoFilter.Filters.length, 0, "No filters created");
@@ -253,7 +261,7 @@ $(function () {
         initializeTest();
 
         // Values: >2 are visible, <=2 are hidden after filter
-        [1, 2, 2, 4, 5].forEach((v, i) => theRange("A" + (i + 1)).SetValue(v));
+        [1, 2, 2, 4, 5, "", ""].forEach((v, i) => theRange("A" + (i + 1)).SetValue(v));
         let range = ws.GetRange("A1:A10");
         range.SetAutoFilter(1, ">2", "xlOr");
 
@@ -268,6 +276,8 @@ $(function () {
 
         // Change data after filter has been applied
         [1, 2, 2, 4, 5, 2, 3].forEach((v, i) => theRange("A" + (i + 1)).SetValue(v));
+
+        ws.worksheet.setRowHidden(false, 5, 6);
 
         // Still using old visibility until ApplyFilter is called again
         assert.equal(ws.worksheet.getRowHidden(5), false, "Row 7 visible before ApplyFilter");

@@ -257,7 +257,6 @@ $(function () {
     });
 
     QUnit.test("Test asc_sortRanges", function (assert) {
-        console.log("here");
         ws.GetRange("A1").SetValue("1");
         ws.GetRange("A2").SetValue("2");
         ws.GetRange("A3").SetValue("3");
