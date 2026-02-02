@@ -167,6 +167,8 @@ $(function()
 			ws.dataValidations.clear(ws, true);
 		
 		AscTest.Editor.asc_cleanWorksheet();
+		let wsView = AscTest.WorkbookView.getWorksheet();
+		wsView && wsView.objectRender && wsView.objectRender.controller && wsView.objectRender.controller.remove(1);
 	});
 	
 	AscTest.GetActiveWorksheet = function()
