@@ -89,8 +89,6 @@
 			3,
 			"Count of selected shapes is 3 (2 shape, 1 image)"
 		);
-
-		worksheet.Delete()
 	});
 
 })(window);
