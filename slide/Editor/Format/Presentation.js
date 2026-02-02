@@ -11228,7 +11228,10 @@ CPresentation.prototype.FinalizeAction = function (isCheckEmptyAction, isCheckLo
 	this.Api.sendEvent("asc_onUserActionEnd");
 	this.Api.getMacroRecorder().onAction(null, additional, false);
 };
-
+CPresentation.prototype.AddMacroData = function(nDescription, additional)
+{
+	this.Api.getMacroRecorder().addStepData(nDescription, additional);
+};
 CPresentation.prototype.IsSplitPageBreakAndParaMark = function () {
 	return false;
 };

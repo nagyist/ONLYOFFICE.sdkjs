@@ -9261,6 +9261,45 @@
 	};
 
 	/**
+	 * Returns selected shapes from the current sheet.
+	 * @memberof ApiWorksheet
+	 * @typeofeditors ["CSE"]
+	 * @returns {ApiShape[]}.
+	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetSelectedShapes.js
+	 */
+	ApiWorksheet.prototype.GetSelectedShapes = function () {
+		var allDrawings = this.worksheet.Drawings;
+		var allApiDrawings = [];
+
+		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
+			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].graphicObject.selected && allDrawings[nDrawing].isShape()) {
+				allApiDrawings.push(new ApiShape(allDrawings[nDrawing].graphicObject));
+			}
+		}
+		return allApiDrawings;
+	};
+
+	/**
+	 * Returns selected drawings from the current sheet.
+	 * @memberof ApiWorksheet
+	 * @typeofeditors ["CSE"]
+	 * @returns {Drawing[]}.
+	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/GetAllDrawings.js
+	 */
+	ApiWorksheet.prototype.GetSelectedDrawings = function () {
+		var allDrawings = this.worksheet.Drawings;
+		var allApiDrawings = [];
+
+		for (var nDrawing = 0; nDrawing < allDrawings.length; nDrawing++) {
+			if (allDrawings[nDrawing].graphicObject && allDrawings[nDrawing].graphicObject.selected) {
+				allApiDrawings.push(GetApiDrawing(allDrawings[nDrawing].graphicObject));
+			}
+		}
+
+		return allApiDrawings
+	};
+
+	/**
 	 * Returns all charts from the current sheet.
 	 * @memberof ApiWorksheet
 	 * @typeofeditors ["CSE"]
@@ -11100,18 +11139,18 @@
 		
 		sortSettings.levels = [];
 		key1 = filterRange(key1);
-		const rangeKey1 = apiWorksheet.GetRange(key1);
-		if (key1 && false === getSortLevel(rangeKey1, sSortOrder1)) {
+		const rangeKey1 = key1 && apiWorksheet.GetRange(key1);
+		if (rangeKey1 && false === getSortLevel(rangeKey1, sSortOrder1)) {
 			return;
 		}
 		key2 = filterRange(key2);
-		const rangeKey2 = apiWorksheet.GetRange(key2);
-		if (key2 && false === getSortLevel(rangeKey2, sSortOrder2)) {
+		const rangeKey2 = key2 && apiWorksheet.GetRange(key2);
+		if (rangeKey2 && false === getSortLevel(rangeKey2, sSortOrder2)) {
 			return;
 		}
 		key3 = filterRange(key3);
-		const rangeKey3 = apiWorksheet.GetRange(key3);
-		if (key3 && false === getSortLevel(rangeKey3, sSortOrder3)) {
+		const rangeKey3 = key3 && apiWorksheet.GetRange(key3);
+		if (rangeKey3 && false === getSortLevel(rangeKey3, sSortOrder3)) {
 			return;
 		}
 
@@ -12958,6 +12997,42 @@
 		oController.selectObject(oDrawing, 0);
 		oController.updateSelectionState();
 		oController.updateOverlay();
+	};
+
+	/**
+	 * Sets the fill formatting properties to the current graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @param {ApiFill} oFill - The fill type used to fill the graphic object.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Fill.js
+	 */
+	ApiDrawing.prototype.Fill = function(oFill)
+	{
+		if (!oFill || !oFill.GetClassType || oFill.GetClassType() !== "fill")
+			return false;
+
+		this.Drawing.spPr.setFill(oFill.UniFill);
+		return true;
+	};
+
+	/**
+	 * Sets the outline properties to the specified graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @param {ApiStroke} oStroke - The stroke used to create the graphic object outline.
+	 * @returns {boolean} - returns false if param is invalid.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetOutLine.js
+	 */
+	ApiDrawing.prototype.SetOutLine = function(oStroke)
+	{
+		if (!oStroke || !oStroke.GetClassType || oStroke.GetClassType() !== "stroke")
+			return false;
+
+		this.Drawing.spPr.setLn(oStroke.Ln);
+		return true;
 	};
 
 	//------------------------------------------------------------------------------------------------------------------

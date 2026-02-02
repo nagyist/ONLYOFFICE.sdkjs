@@ -3928,7 +3928,7 @@
 							objects_by_type.shapes[i].setPaddings(props.paddings);
 						}
 						if (objects_by_type.shapes.length)
-							Asc.editor.addMacroStepData('SetShapeInnerPadding', props.paddings);
+							Asc.editor.addMacroStepData('SetShapeInnerPadding', {set: props.paddings, original: objects_by_type.shapes[0].getPaddings()});
 
 						for (i = 0; i < objects_by_type.groups.length; ++i) {
 							objects_by_type.groups[i].setPaddings(props.paddings);
@@ -4349,6 +4349,14 @@
 							}
 							oDrawing.checkDrawingBaseCoords();
 							oDrawing.recalculate();
+						}
+						if (bPosition && editorId === AscCommon.c_oEditorId.Presentation)
+						{
+							if (AscFormat.isRealNumber(props.Position.X))
+								Asc.editor.addMacroStepData('SetShapeX', props.Position.X);
+							if (AscFormat.isRealNumber(props.Position.Y))
+								Asc.editor.addMacroStepData('SetShapeY', props.Position.Y);
+
 						}
 						if (editorId === AscCommon.c_oEditorId.Presentation || editorId === AscCommon.c_oEditorId.Spreadsheet) {
 							bCheckConnectors = true;

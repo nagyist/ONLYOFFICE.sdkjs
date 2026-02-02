@@ -31,66 +31,12 @@
  */
 
 $(function () {
-    // ======= MUST-HAVE RUNTIME SETTINGS (kept exactly; do not remove) =======
-    Asc.spreadsheet_api.prototype._init = function () {};
-    Asc.spreadsheet_api.prototype._loadFonts = function (fonts, callback) {
-        callback();
-    };
-    AscCommonExcel.WorkbookView.prototype._calcMaxDigitWidth = function () {};
-    AscCommonExcel.WorkbookView.prototype._init = function () {};
-    AscCommonExcel.WorkbookView.prototype._onWSSelectionChanged = function () {};
-    AscCommonExcel.WorkbookView.prototype.showWorksheet = function () {};
-    AscCommonExcel.WorksheetView.prototype._init = function () {};
-    AscCommonExcel.WorksheetView.prototype._onUpdateFormatTable = function () {};
-    AscCommonExcel.WorksheetView.prototype.setSelection = function () {};
-    AscCommonExcel.WorksheetView.prototype.draw = function () {};
-    AscCommonExcel.WorksheetView.prototype._prepareDrawingObjects = function () {};
-    AscCommonExcel.WorksheetView.prototype._reinitializeScroll = function () {};
-    AscCommonExcel.WorksheetView.prototype.getZoom = function () {};
-    AscCommonExcel.WorksheetView.prototype._getPPIY = function () {};
-    AscCommonExcel.WorksheetView.prototype._getPPIX = function () {};
-    AscCommon.baseEditorsApi.prototype._onEndLoadSdk = function () {};
-    Asc.ReadDefTableStyles = function () {};
-
-    var api = new Asc.spreadsheet_api({
-        "id-view": "editor_sdk",
-    });
-
-    api.FontLoader = { LoadDocumentFonts: function () {} };
-    window["Asc"]["editor"] = api;
-    AscCommon.g_oTableId.init();
-    api._onEndLoadSdk();
-    api.isOpenOOXInBrowser = false;
-    api.OpenDocumentFromBin(null, AscCommon.getEmpty());
-    api.initCollaborativeEditing({});
-    api.wb = new AscCommonExcel.WorkbookView(
-        api.wbModel,
-        api.controller,
-        api.handlers,
-        api.HtmlElement,
-        api.topLineEditorElement,
-        api,
-        api.collaborativeEditing,
-        api.fontRenderingMode
-    );
-
-    var wsView = api.wb.getWorksheet(0);
-    wsView.handlers = api.handlers;
-    wsView.objectRender = new AscFormat.DrawingObjects();
-    wsView.objectRender.controller = new AscFormat.DrawingObjectsController(wsView.objectRender);
-    var ws = api.GetActiveSheet();
+    var ws = AscTest.JsApi.GetActiveSheet();
 
     // ======= TEST HELPERS =======
     // Must exist & each test must start with it
     const initializeTest = function (/*rangeAddress optional*/) {
-        const globalRange = ws.GetRange('A1:Z100'); // acceptable sandbox
-        globalRange.Clear();
-        // Reset validations entirely
-        if (ws.worksheet && ws.worksheet.dataValidations) {
-            ws.worksheet.dataValidations.clear(ws.worksheet, true);
-        }
     };
-    window.initializeTest = initializeTest; // expose for debugging if needed
 
     const isSameRange = function (rA, rB) {
         return rA && rB && (rA.r1 === rB.r1 && rA.c1 === rB.c1 && rA.r2 === rB.r2 && rA.c2 === rB.c2);
