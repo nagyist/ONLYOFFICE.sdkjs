@@ -2032,6 +2032,10 @@ function (window, undefined) {
 	STANDART_COLORS_MAP[0xE0E0E0] = "Light Gray";
 	STANDART_COLORS_MAP[0xE6F5E6] = "Light Green";
 	STANDART_COLORS_MAP[0xDCF0DC] = "Light Green";
+	STANDART_COLORS_MAP[0xDCE6F5] = "Light Blue";
+	STANDART_COLORS_MAP[0xD7E1F0] = "Light Blue";
+	STANDART_COLORS_MAP[0xFAE6D7] = "Light Orange";
+	STANDART_COLORS_MAP[0xF5E1D2] = "Light Orange";
 
 
 	/**

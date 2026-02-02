@@ -7447,7 +7447,11 @@ function(window, undefined) {
 			const bSurfaceChart = oFirstChart && (oFirstChart.getObjectType() === AscDFH.historyitem_type_SurfaceChart);
 			const bRadarChart = oFirstChart && (oFirstChart.getObjectType() === AscDFH.historyitem_type_RadarChart);
 
-			let bSeriesLegend = aCharts.length > 1 || (bNoPieChart && (!(oFirstChart.varyColors && series.length === 1) || bSurfaceChart || bRadarChart));
+			// Check if single series has custom point formatting (dPt with spPr)
+			const bHasCustomDPt = series.length === 1 && Array.isArray(series[0].dPt) &&
+				series[0].dPt.some(function(dPt) { return dPt.spPr; });
+
+			let bSeriesLegend = aCharts.length > 1 || (bNoPieChart && (!((oFirstChart.varyColors || bHasCustomDPt) && series.length === 1) || bSurfaceChart || bRadarChart));
 			if (bSeriesLegend) {
 				if (bSurfaceChart) {
 					this.legendLength = this.chart.plotArea.charts[0].compiledBandFormats.length;
