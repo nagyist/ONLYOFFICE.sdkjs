@@ -4648,6 +4648,9 @@ Paragraph.prototype.Add = function(Item)
 				TextPr.RFonts.HAnsi    = {Name : FName, Index : FIndex};
 				TextPr.RFonts.CS       = {Name : FName, Index : FIndex};
 			}
+			
+			if (TextPr.Lang && !TextPr.Lang.IsEmpty())
+				this.RecalcInfo.NeedSpellCheck();
 
 			if (true === this.ApplyToAll)
 			{
