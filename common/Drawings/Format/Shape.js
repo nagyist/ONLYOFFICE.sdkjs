@@ -1608,6 +1608,17 @@
 			r = oRect.r - r_ins;
 			b = oRect.b - b_ins;
 
+			if (l >= r) {
+				var _c = (l + r) * 0.5;
+				l = _c - 0.01;
+				r = _c + 0.01;
+			}
+			if (t >= b) {
+				var _c = (t + b) * 0.5;
+				t = _c - 0.01;
+				b = _c + 0.01;
+			}
+
 			var x_lt, y_lt, x_rt, y_rt, x_rb, y_rb, x_lb, y_lb;
 			var tr = this.transform;
 			x_lt = tr.TransformPointX(l, t);
@@ -3929,6 +3940,12 @@
 			w = oRect.r - oRect.l - (l_ins + r_ins);
 			h = oRect.b - oRect.t - (t_ins + b_ins);
 
+			if (w <= 0) {
+				w = 0.02;
+			}
+			if (h <= 0) {
+				h = 0.02;
+			}
 
 			if (this.checkAutofit && this.checkAutofit() &&
 				this.bCheckAutoFitFlag &&
@@ -4177,6 +4194,13 @@
 						} else {
 							w = this.extX - (l_ins + r_ins);
 							h = this.extY - (t_ins + b_ins);
+						}
+
+						if (w <= 0) {
+							w = 0.02;
+						}
+						if (h <= 0) {
+							h = 0.02;
 						}
 
 						if (!body_pr.upright) {
