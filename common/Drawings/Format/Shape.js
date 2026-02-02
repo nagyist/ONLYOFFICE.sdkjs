@@ -4042,11 +4042,19 @@
 		RecalcResult = oDocContent.Recalculate_Page( CurPage++, true );*/
 
 			var oContentW = oRet.w;
-
-			if (oForm && !oForm.IsMultiLineForm() || oBodyPr.wrap === AscFormat.nTWTNone)
-				oDocContent.SetUseXLimit(false);
-			else
-				oDocContent.SetUseXLimit(true);
+			let bUseXLimit = true;
+			if (oForm && !oForm.IsMultiLineForm()) {
+				bUseXLimit = false;
+			}
+			else {
+				if (oBodyPr.wrap === AscFormat.nTWTNone && (!oBodyPr.textFit || oBodyPr.textFit.type !== AscFormat.text_fit_Auto)) {
+					bUseXLimit = false;
+				}
+				else {
+					bUseXLimit = true;
+				}
+			}
+			oDocContent.SetUseXLimit(bUseXLimit);
 
 			oDocContent.RecalculateContent(oContentW, oRet.h, nStartPage);
 			oRet.contentH = oDocContent.GetSummaryHeight();
