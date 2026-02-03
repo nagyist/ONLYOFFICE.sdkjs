@@ -6793,9 +6793,8 @@ function parserFormula( formula, parent, _ws ) {
 	 * @param {[]} aOutStack
 	 * @param {Function} fAction - Callback function must return truthy method as indicate that operand was found or falsy otherwise
 	 * @returns {number}
-	 * @private
 	 */
-	function _findLastOperandId(aOutStack, fAction) {
+	function findLastOperandId(aOutStack, fAction) {
 		const nStartIndex = aOutStack.length - 1;
 		const nEndIndex = 0;
 
@@ -6816,7 +6815,7 @@ function parserFormula( formula, parent, _ws ) {
 	 */
 	function _getNewOutStack(aOutStack) {
 		const aNewOutStack = [];
-		const nMainFuncIndex = _findLastOperandId(aOutStack, function (oElement) {
+		const nMainFuncIndex = findLastOperandId(aOutStack, function (oElement) {
 			return oElement.type && (oElement.type === cElementType.func || oElement.type === cElementType.operator);
 		});
 		if (!~nMainFuncIndex) {
@@ -6961,7 +6960,7 @@ function parserFormula( formula, parent, _ws ) {
 			oExpressionValue = aOutStack.shift();
 		}
 
-		let nMainFunctionIndex = _findLastOperandId(aOutStack, function (oElement) {
+		let nMainFunctionIndex = findLastOperandId(aOutStack, function (oElement) {
 			if (Array.isArray(oElement)) {
 				return oElement[0].type === cElementType.func || oElement[0].type === cElementType.operator;
 			}
@@ -13315,6 +13314,7 @@ function parserFormula( formula, parent, _ws ) {
 	window['AscCommonExcel'].convertAreaToArrayRefs = convertAreaToArrayRefs;
 	window['AscCommonExcel'].getArrayHelper = getArrayHelper;
 	window['AscCommonExcel'].getMaxDate = getMaxDate;
+	window['AscCommonExcel'].findLastOperandId = findLastOperandId;
 
 	window['AscCommonExcel'].importRangeLinksState = importRangeLinksState;
 
