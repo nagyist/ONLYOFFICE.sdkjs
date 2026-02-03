@@ -25123,21 +25123,55 @@
 
 		for (let listenerId in volatileArrayList) {
 			const formula = volatileArrayList[listenerId];
+			
+			// Store old range before recalculation
+			const oldDynamicRef = formula.getDynamicRef();
+			const oldRef = oldDynamicRef ? oldDynamicRef.clone() : null;
+			
 			const formulaResult = formula.calculate();
 			const firstCellRef = formula.parent && new Asc.Range(formula.parent.nCol, formula.parent.nRow, formula.parent.nCol, formula.parent.nRow);
 
 			if (!(formula.aca && formula.ca)) {
 				// array can expand, setValue for each cell except first
-				const dimensions = formulaResult.getDimensions();
+				const dimensions = formulaResult.getDimensions(/*true*/);
 				const newRef = new Asc.Range(
 					firstCellRef.c1,
 					firstCellRef.r1,
-					firstCellRef.c1 + dimensions.col - 1,
-					firstCellRef.r1 + dimensions.row - 1
+					Math.min(firstCellRef.c1 + dimensions.col - 1, AscCommon.gc_nMaxCol - 1),
+					Math.min(firstCellRef.r1 + dimensions.row - 1, AscCommon.gc_nMaxRow - 1)
 				);
+				
+				// Check if size has changed
+				let sizeChanged = false;
+				if (oldRef) {
+					const oldWidth = oldRef.c2 - oldRef.c1 + 1;
+					const oldHeight = oldRef.r2 - oldRef.r1 + 1;
+					const newWidth = newRef.c2 - newRef.c1 + 1;
+					const newHeight = newRef.r2 - newRef.r1 + 1;
+					sizeChanged = (oldWidth !== newWidth || oldHeight !== newHeight);
+				}
+				
 				formula.setDynamicRef(newRef);
 
 				if (newRef) {
+					// Clear old cells that are outside new range
+					if (sizeChanged && oldRef) {
+						for (let row = oldRef.r1; row <= oldRef.r2; row++) {
+							for (let col = oldRef.c1; col <= oldRef.c2; col++) {
+								if (row === firstCellRef.r1 && col === firstCellRef.c1) {
+									continue;
+								}
+								if (row > newRef.r2 || col > newRef.c2) {
+									ws._getCell(row, col, function(cell) {
+										if (cell) {
+											cell.setValue("");
+										}
+									});
+								}
+							}
+						}
+					}
+					
 					for (let row = newRef.r1; row <= newRef.r2; row++) {
 						for (let col = newRef.c1; col <= newRef.c2; col++) {
 							// get cell and setPF to it
@@ -25152,9 +25186,19 @@
 						}
 					}
 				}
+				
+				// If size changed, update metadata
+				if (sizeChanged) {
+					const cmIndex = formula.getCm();
+					if (cmIndex) {
+						this.updateDynamicArrayCollapsedState(cmIndex, false);
+					}
+				}
+				
 				depGraph.addToChangedRange2(formula.getWs().getId(), formula.getDynamicRef());
 				depGraph.endListeningVolatileArray(listenerId);
 			} else {
+				// Array is collapsed
 				if (!formula.getDynamicRef() || !formula.getDynamicRef().isEqual(firstCellRef)) {
 					formula.setDynamicRef(firstCellRef);
 					ws._getCell(firstCellRef.r1, firstCellRef.c1, function(cell) {
@@ -25162,6 +25206,12 @@
 					});
 
 					depGraph.addToChangedRange2(formula.getWs().getId(), formula.getArrayFormulaRef());
+				}
+				
+				// Update metadata to mark as collapsed
+				const cmIndex = formula.getCm();
+				if (cmIndex) {
+					this.updateDynamicArrayCollapsedState(cmIndex, true);
 				}
 			}
 		}
@@ -25519,6 +25569,58 @@
 		}
 	};
 
+	CDynamicArrayManager.prototype.checkVm = function (formula, newSpilledRef) {
+		if (!AscCommonExcel.bIsSupportDynamicArrays || !formula) {
+			return;
+		}
+
+		const existingVm = formula.getVm ? formula.getVm() : null;
+		if (existingVm != null) {
+			return;
+		}
+
+		let oldRef = formula.getDynamicRef();
+
+		if (newSpilledRef && oldRef) {
+			const newProps = this.generateDynamicProps(formula, newSpilledRef);
+			if (newProps && newProps.vmIndex != null) {
+				const oldVm = formula.getVm ? formula.getVm() : null;
+				formula.setVm(newProps.vmIndex);
+				formula.setAca(true);
+				formula.setCa(true);
+
+
+				for (let r = oldRef.r1; r <= oldRef.r2; r++) {
+					for (let c = oldRef.c1; c <= oldRef.c2; c++) {
+						if (!(c === oldRef.c1 && r === oldRef.r1)) {
+							this.ws._getCell(r, c, function(cell) {
+								if (cell) {
+									cell.setValue("");
+									cell.setIsDirty(true);
+								}
+							});
+						}
+					}
+				}
+
+
+				const cmIndex = newProps.cmIndex != null ? newProps.cmIndex : formula.getCm();
+
+				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_AddFormula,
+					this.ws.getId(),
+					new Asc.Range(oldRef.c1, oldRef.r1, oldRef.oldRef, oldRef.r1),
+					new AscCommonExcel.UndoRedoData_ArrayFormula(
+						new Asc.Range(oldRef.c1, oldRef.r1, oldRef.c1, oldRef.r1),
+						null,
+						cmIndex,
+						newProps.vmIndex,
+						oldVm
+					)
+				);
+			}
+		}
+	};
+
 	CDynamicArrayManager.prototype.checkDynamicRangeByElement = function (element, parentCell) {
 		/* this function checks if element can fit in the cells */
 		if (!element || !parentCell) {
@@ -25531,24 +25633,40 @@
 		if (element.type !== cElementType.array && element.type !== cElementType.cellsRange && element.type !== cElementType.cellsRange3D) {
 			return true;
 		} else if (element.type === cElementType.array || element.type === cElementType.cellsRange || element.type === cElementType.cellsRange3D) {
-			// go through the range and see if the array can fit into it
-			let dimensions = element.getDimensions(true);
+
+			if (element.isOneElement()) {
+				return true
+			}
+			let _ref = this.getArrayByElement(element, parentCell);
+			return _ref && this.isAutoExpandBBox(_ref);
+		}
+
+		return false
+	};
+
+	CDynamicArrayManager.prototype.getArrayByElement = function (element, parentCell) {
+		if (!parentCell || !parentCell.nCol == null || !element) {
+			return null;
+		}
+		if (element.type === cElementType.array || element.type === cElementType.cellsRange || element.type === cElementType.cellsRange3D) {
 
 			if (element.isOneElement()) {
 				return true
 			}
 
+			// go through the range and see if the array can fit into it
+			let dimensions = element.getDimensions(true);
+
 			// todo if an element is defname, it has no parent element?
 			const t = this;
-			let rangeRow = parentCell.r1,
-				rangeCol = parentCell.c1;
+			let rangeRow = parentCell.nRow,
+				rangeCol = parentCell.nCol;
 			let rangeRow2 = (rangeRow + dimensions.row) - 1;
 			let rangeCol2 = (rangeCol + dimensions.col) - 1;
 
-			return this.isAutoExpandBBox(new Asc.Range(rangeCol, rangeRow, rangeCol2, rangeRow2));
+			return new Asc.Range(rangeCol, rangeRow, rangeCol2, rangeRow2);
 		}
-
-		return false
+		return null;
 	};
 
 	CDynamicArrayManager.prototype.isAutoExpandBBox = function (bbox) {
@@ -26088,6 +26206,199 @@
 		}
 		if (generateNewStructure) {
 			return this._addDynamicArrayMetadata(false);
+		}
+	};
+
+	/**
+	 * Update dynamic array metadata when array size changes
+	 * @param {number} cmIndex - cm index of the dynamic array
+	 * @param {boolean} isCollapsed - new collapsed state
+	 * @returns {boolean} - true if updated successfully
+	 */
+	CDynamicArrayManager.prototype.updateDynamicArrayCollapsedState = function(cmIndex, isCollapsed) {
+		if (!AscCommonExcel.bIsSupportDynamicArrays || !cmIndex) {
+			return false;
+		}
+
+		const metadata = this.ws.workbook.metadata;
+		if (!metadata || !metadata.cellMetadata || cmIndex > metadata.cellMetadata.length) {
+			return false;
+		}
+
+		const oldMetadata = metadata.clone();
+		const cellMetadataBlock = metadata.cellMetadata[cmIndex - 1];
+		if (!cellMetadataBlock) {
+			return false;
+		}
+
+		const typeIndex = cellMetadataBlock.t - 1;
+		if (!metadata.metadataTypes || !metadata.metadataTypes[typeIndex]) {
+			return false;
+		}
+
+		if (metadata.metadataTypes[typeIndex].name !== "XLDAPR") {
+			return false;
+		}
+
+		const futureMetadataIndex = cellMetadataBlock.v;
+		const futureMetadata = metadata.getFutureMetadataByType("XLDAPR");
+		if (!futureMetadata || !futureMetadata.futureMetadataBlocks || 
+			futureMetadataIndex >= futureMetadata.futureMetadataBlocks.length) {
+			return false;
+		}
+
+		const futureBlock = futureMetadata.futureMetadataBlocks[futureMetadataIndex];
+		if (!futureBlock || !futureBlock.extLst || !futureBlock.extLst.length) {
+			return false;
+		}
+
+		const extBlock = futureBlock.extLst[0];
+		if (!extBlock || !extBlock.dynamicArrayProperties) {
+			return false;
+		}
+
+		// Update collapsed state
+		extBlock.dynamicArrayProperties.fCollapsed = isCollapsed;
+
+		const newMetadata = metadata.clone();
+		AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_Metadata,
+			null, null, new UndoRedoData_FromTo(oldMetadata, newMetadata));
+
+		return true;
+	};
+
+	/**
+	 * Check and handle dynamic array size change after recalculation
+	 * This method is called when a formula is recalculated and we need to check
+	 * if the resulting array size has changed
+	 * @param {Object} formula - parserFormula object
+	 * @param {Object} oldRange - old dynamic array range (Asc.Range)
+	 * @returns {boolean} - true if size was changed and handled
+	 */
+	CDynamicArrayManager.prototype.checkAndHandleSizeChange = function(formula, oldRange) {
+		if (!AscCommonExcel.bIsSupportDynamicArrays || !formula || !oldRange) {
+			return false;
+		}
+
+		// Get current range from formula
+		const currentRange = formula.getArrayFormulaRef();
+		if (!currentRange) {
+			return false;
+		}
+
+		// Check if dimensions have changed
+		const oldWidth = oldRange.c2 - oldRange.c1 + 1;
+		const oldHeight = oldRange.r2 - oldRange.r1 + 1;
+		const newWidth = currentRange.c2 - currentRange.c1 + 1;
+		const newHeight = currentRange.r2 - currentRange.r1 + 1;
+
+		const sizeChanged = (oldWidth !== newWidth || oldHeight !== newHeight);
+		
+		if (!sizeChanged) {
+			return false;
+		}
+
+		// Size has changed - handle it
+		const oldWasCollapsed = !!(formula.aca && formula.ca);
+		const currentIsCollapsed = !!(formula.aca && formula.ca);
+
+		// If was collapsed and still collapsed - no action needed
+		if (oldWasCollapsed && currentIsCollapsed) {
+			return false;
+		}
+
+		// If was expanded and now collapsed - handle collapse
+		if (!oldWasCollapsed && currentIsCollapsed) {
+			this._handleDynamicArrayCollapse(formula, oldRange);
+			return true;
+		}
+
+		// If was collapsed and now expanded - handle expansion
+		if (oldWasCollapsed && !currentIsCollapsed) {
+			this._handleDynamicArrayExpansion(formula, currentRange);
+			return true;
+		}
+
+		// If both expanded but size changed - handle resize
+		if (!oldWasCollapsed && !currentIsCollapsed) {
+			this._handleDynamicArrayResize(formula, oldRange, currentRange);
+			return true;
+		}
+
+		return false;
+	};
+
+	CDynamicArrayManager.prototype._handleDynamicArrayCollapse = function(formula, oldRange) {
+		const ws = this.ws;
+		
+		// Clear cells that were part of the array
+		for (let r = oldRange.r1; r <= oldRange.r2; r++) {
+			for (let c = oldRange.c1; c <= oldRange.c2; c++) {
+				if (r === oldRange.r1 && c === oldRange.c1) {
+					continue; // Skip first cell
+				}
+				ws._getCell(r, c, function(cell) {
+					if (cell) {
+						cell.setValue("");
+					}
+				});
+			}
+		}
+
+		// Update metadata
+		const cmIndex = formula.getCm();
+		if (cmIndex) {
+			this.updateDynamicArrayCollapsedState(cmIndex, true);
+		}
+	};
+
+	CDynamicArrayManager.prototype._handleDynamicArrayExpansion = function(formula, newRange) {
+		// Update metadata
+		const cmIndex = formula.getCm();
+		if (cmIndex) {
+			this.updateDynamicArrayCollapsedState(cmIndex, false);
+		}
+
+		// Mark range for recalculation
+		if (this.ws.workbook && this.ws.workbook.dependencyFormulas) {
+			this.ws.workbook.dependencyFormulas.addToChangedRange(this.ws.getId(), newRange);
+		}
+	};
+
+	CDynamicArrayManager.prototype._handleDynamicArrayResize = function(formula, oldRange, newRange) {
+		const ws = this.ws;
+		
+		// Clear cells that are no longer part of the array
+		for (let r = oldRange.r1; r <= oldRange.r2; r++) {
+			for (let c = oldRange.c1; c <= oldRange.c2; c++) {
+				if (r === newRange.r1 && c === newRange.c1) {
+					continue; // Skip first cell
+				}
+				// Check if cell is outside new range
+				if (r > newRange.r2 || c > newRange.c2 || r < newRange.r1 || c < newRange.c1) {
+					ws._getCell(r, c, function(cell) {
+						if (cell) {
+							cell.setValue("");
+						}
+					});
+				}
+			}
+		}
+
+		// Update metadata to ensure it's marked as not collapsed
+		const cmIndex = formula.getCm();
+		if (cmIndex) {
+			this.updateDynamicArrayCollapsedState(cmIndex, false);
+		}
+
+		// Mark affected area for recalculation
+		if (this.ws.workbook && this.ws.workbook.dependencyFormulas) {
+			const minR = Math.min(oldRange.r1, newRange.r1);
+			const minC = Math.min(oldRange.c1, newRange.c1);
+			const maxR = Math.max(oldRange.r2, newRange.r2);
+			const maxC = Math.max(oldRange.c2, newRange.c2);
+			const unionRange = new Asc.Range(minC, minR, maxC, maxR);
+			this.ws.workbook.dependencyFormulas.addToChangedRange(this.ws.getId(), unionRange);
 		}
 	};
 

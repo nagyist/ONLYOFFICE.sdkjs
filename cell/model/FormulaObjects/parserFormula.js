@@ -10248,13 +10248,17 @@ function parserFormula( formula, parent, _ws ) {
 		// DAF can only expand to completely empty cells(empty values)
 
 		let isRangeCanFitIntoCells;
+		let oldDynamicRef = null;
+		if (AscCommonExcel.bIsSupportDynamicArrays && this.getDynamicRef() && this.ref) {
+			oldDynamicRef = this.ref.clone();
+		}
 		//TODO заглушка для парсинга множественного диапазона в _xlnm.Print_Area. Сюда попадаем только в одном случае - из функции findCell для отображения диапазона области печати
 		if(checkMultiSelect && elemArr.length > 1 && this.parent && this.parent instanceof window['AscCommonExcel'].DefName /*&& this.parent.name === "_xlnm.Print_Area"*/) {
 			this.value = elemArr;
 
 			if (AscCommonExcel.bIsSupportDynamicArrays && this.getDynamicRef()) {
 				// check further dynamic range
-				isRangeCanFitIntoCells =  this.ws.dynamicArrayManager.checkDynamicRangeByElement(this.value, opt_bbox);
+				isRangeCanFitIntoCells =  this.ws.dynamicArrayManager.checkDynamicRangeByElement(this.value, this.parent);
 				if (!isRangeCanFitIntoCells) {
 					this.setAca(true);
 					this.setCa(true);
@@ -10296,10 +10300,17 @@ function parserFormula( formula, parent, _ws ) {
 
 			if (AscCommonExcel.bIsSupportDynamicArrays && this.getDynamicRef()) {
 				// check further dynamic range
-				isRangeCanFitIntoCells = this.ws.dynamicArrayManager.checkDynamicRangeByElement(this.value, opt_bbox);
+				isRangeCanFitIntoCells = this.ws.dynamicArrayManager.checkDynamicRangeByElement(this.value, this.parent);
 				if (!isRangeCanFitIntoCells) {
 					this.setAca(true);
 					this.setCa(true);
+
+					let realRef = this.ws.dynamicArrayManager.getArrayByElement(this.value, this.parent);
+					// this.setAca(true);
+					// this.setCa(true);
+					// this.value = new cError(cErrorType.cannot_be_spilled);
+					this.ws.dynamicArrayManager.checkVm(this, realRef);
+
 					this.value = new cError(cErrorType.cannot_be_spilled);
 				} else {
 					this.setAca(false);
@@ -10308,6 +10319,11 @@ function parserFormula( formula, parent, _ws ) {
 			}
 
 			this.value.numFormat = numFormat;
+			
+			if (AscCommonExcel.bIsSupportDynamicArrays && this.getDynamicRef() && null == this.getVm()) {
+				this._checkAndHandleDynamicArraySizeChange(oldDynamicRef, opt_bbox);
+			}
+			
 			//***array-formula***
 			//для обработки формулы массива
 			//передаётся последним параметром cell и временно подменяется parent у parserFormula для того, чтобы поменялось значение в элементе массива
@@ -10333,6 +10349,197 @@ function parserFormula( formula, parent, _ws ) {
 
 		return this.value;
 	};
+	parserFormula.prototype._checkAndHandleDynamicArraySizeChange = function(oldDynamicRef, opt_bbox) {
+		if (!this.value || !this.parent || !this.ws) {
+			return;
+		}
+
+		let t = this;
+		let resultDimensions = null;
+		if (this.value.type === cElementType.array) {
+			resultDimensions = this.value.getDimensions(true);
+		} else if (this.value.type === cElementType.cellsRange || this.value.type === cElementType.cellsRange3D) {
+			resultDimensions = this.value.getDimensions();
+		} else if (this.value.type === cElementType.error && this.value.errorType === cErrorType.cannot_be_spilled) {
+			if (oldDynamicRef && (oldDynamicRef.r2 > oldDynamicRef.r1 || oldDynamicRef.c2 > oldDynamicRef.c1)) {
+				this._collapseDynamicArray(oldDynamicRef);
+			}
+			if(false == this.ws.workbook.bUndoChanges && false == this.ws.workbook.bRedoChanges) {
+				this.ws._getCell(oldDynamicRef.r1, oldDynamicRef.c1, function(cell) {
+					//t.ws.dynamicArrayManager.changeCell(cell);
+				});
+			}
+			return;
+		} else {
+			resultDimensions = {row: 1, col: 1};
+		}
+
+		if (!resultDimensions) {
+			return;
+		}
+
+		let requiredR2 = Math.min(this.parent.nRow + resultDimensions.row - 1, AscCommon.gc_nMaxRow - 1);
+		let requiredC2 = Math.min(this.parent.nCol + resultDimensions.col - 1, AscCommon.gc_nMaxCol - 1);
+		let requiredRange = new Asc.Range(this.parent.nCol, this.parent.nRow, requiredC2, requiredR2);
+
+		let currentRef = this.ref || new Asc.Range(this.parent.nCol, this.parent.nRow, this.parent.nCol, this.parent.nRow);
+		let currentDimensions = {
+			row: currentRef.r2 - currentRef.r1 + 1,
+			col: currentRef.c2 - currentRef.c1 + 1
+		};
+
+		let sizeChanged = (currentDimensions.row !== resultDimensions.row || currentDimensions.col !== resultDimensions.col);
+		
+		if (!sizeChanged) {
+			return;
+		}
+
+		let isCurrentlyCollapsed = !!(this.aca && this.ca);
+		
+		if (isCurrentlyCollapsed) {
+			if (oldDynamicRef && (oldDynamicRef.r2 > oldDynamicRef.r1 || oldDynamicRef.c2 > oldDynamicRef.c1)) {
+				//this._collapseDynamicArray(oldDynamicRef);
+			}
+		} else {
+			let wasExpanded = oldDynamicRef && (oldDynamicRef.r2 > oldDynamicRef.r1 || oldDynamicRef.c2 > oldDynamicRef.c1);
+			if (wasExpanded) {
+				this._resizeDynamicArray(requiredRange, oldDynamicRef);
+			} else {
+				//this._expandDynamicArray(requiredRange, oldDynamicRef || currentRef);
+			}
+		}
+	};
+
+	parserFormula.prototype._expandDynamicArray = function(newRange, oldRange) {
+		if (!this.ws || !this.parent) {
+			return;
+		}
+
+		this.ref = newRange;
+		
+		let cmIndex = this.getCm();
+		if (cmIndex && this.ws.dynamicArrayManager) {
+			this.ws.dynamicArrayManager.updateDynamicArrayCollapsedState(cmIndex, false);
+		}
+		
+		let ws = this.ws;
+		let formula = this;
+		for (let row = newRange.r1; row <= newRange.r2; row++) {
+			for (let col = newRange.c1; col <= newRange.c2; col++) {
+				if (row === newRange.r1 && col === newRange.c1) {
+					continue;
+				}
+				ws._getCell(row, col, function(cell) {
+					if (cell) {
+						cell.setValue("=" + formula.Formula, null, null, newRange, null, {range: newRange});
+					}
+				});
+			}
+		}
+		
+		if (oldRange) {
+			for (let r = oldRange.r1; r <= oldRange.r2; r++) {
+				for (let c = oldRange.c1; c <= oldRange.c2; c++) {
+					if (r > newRange.r2 || c > newRange.c2) {
+						this.ws._getCell(r, c, function(cell) {
+							if (cell) {
+								cell.setValue("");
+							}
+						});
+					}
+				}
+			}
+		}
+
+		if (this.ws.workbook && this.ws.workbook.dependencyFormulas) {
+			this.ws.workbook.dependencyFormulas.addToChangedRange(this.ws.getId(), newRange);
+		}
+	};
+
+	parserFormula.prototype._collapseDynamicArray = function(oldRange) {
+		if (!this.ws || !this.parent) {
+			return;
+		}
+
+		this.ref = new Asc.Range(this.parent.nCol, this.parent.nRow, this.parent.nCol, this.parent.nRow);
+		
+		let cmIndex = this.getCm();
+		if (cmIndex && this.ws.dynamicArrayManager) {
+			this.ws.dynamicArrayManager.updateDynamicArrayCollapsedState(cmIndex, true);
+		}
+		
+		if (oldRange && (oldRange.r2 > oldRange.r1 || oldRange.c2 > oldRange.c1)) {
+			for (let r = oldRange.r1; r <= oldRange.r2; r++) {
+				for (let c = oldRange.c1; c <= oldRange.c2; c++) {
+					if (r === oldRange.r1 && c === oldRange.c1) {
+						continue;
+					}
+					this.ws._getCell(r, c, function(cell) {
+						if (cell) {
+							cell.setValue("");
+						}
+					});
+				}
+			}
+		}
+
+		if (this.ws.workbook && this.ws.workbook.dependencyFormulas) {
+			let firstCellRange = new Asc.Range(this.parent.nCol, this.parent.nRow, this.parent.nCol, this.parent.nRow);
+			this.ws.workbook.dependencyFormulas.addToChangedRange(this.ws.getId(), firstCellRange);
+		}
+	};
+
+	parserFormula.prototype._resizeDynamicArray = function(newRange, oldRange) {
+		if (!this.ws || !this.parent) {
+			return;
+		}
+
+		this.ref = newRange;
+		
+		let cmIndex = this.getCm();
+		if (cmIndex && this.ws.dynamicArrayManager) {
+			//this.ws.dynamicArrayManager.updateDynamicArrayCollapsedState(cmIndex, false);
+		}
+
+		if (oldRange) {
+			for (let r = oldRange.r1; r <= oldRange.r2; r++) {
+				for (let c = oldRange.c1; c <= oldRange.c2; c++) {
+					this.ws._getCell(r, c, function(cell) {
+						if (cell) {
+							cell.setValue("");
+							cell.setIsDirty(true);
+						}
+					});
+				}
+			}
+		}
+
+		let ws = this.ws;
+		let formula = this;
+		for (let row = newRange.r1; row <= newRange.r2; row++) {
+			for (let col = newRange.c1; col <= newRange.c2; col++) {
+				if (row === newRange.r1 && col === newRange.c1) {
+					//continue;
+				}
+				ws._getCell(row, col, function(cell) {
+					if (cell) {
+						cell.setValue("=" + formula.Formula, null, null, newRange, null, {range: newRange});
+						cell.setIsDirty(true);//ws.workbook.dependencyFormulas.addToChangedCell(cell.formulaParsed.parent);
+					}
+				});
+			}
+		}
+
+		if (this.ws.workbook && this.ws.workbook.dependencyFormulas) {
+			let minR = Math.min(oldRange.r1, newRange.r1);
+			let minC = Math.min(oldRange.c1, newRange.c1);
+			let maxR = Math.max(oldRange.r2, newRange.r2);
+			let maxC = Math.max(oldRange.c2, newRange.c2);
+			let unionRange = new Asc.Range(minC, minR, maxC, maxR);
+			this.ws.workbook.dependencyFormulas.addToChangedRange(this.ws.getId(), unionRange);
+		}
+	};
+
 	parserFormula.prototype._endCalculate = function() {
 		if (this.parent && this.parent.onFormulaEvent) {
 			this.parent.onFormulaEvent(AscCommon.c_oNotifyParentType.EndCalculate);
