@@ -42,6 +42,8 @@
 	const FLAG_SHD           = 0x0040;
 	const FLAG_PERM_RANGE    = 0x0080;
 	
+	const DEFAULT_COMMENT_COLOR = new AscCommon.CColor(248, 231, 195, 255);
+	
 	/**
 	 * Class for storing the current draw state of paragraph highlight (text/paragraph/field/etc. background)
 	 * @param {AscWord.ParagraphDrawState} drawState
@@ -474,7 +476,13 @@
 			this.CFields.Add(startY, endY, startX, endX, 0, 0, 0, 0);
 		
 		if (flags & FLAG_COMMENT && comments.length)
-			this.Comm.Add(startY, endY, startX, endX, 0, 0, 0, 0, {Active : curComment, CommentId : comments});
+		{
+			let commentColor = this.getCommentColor(comments[0], curComment);
+			this.Comm.Add(startY, endY, startX, endX, 0, commentColor.r, commentColor.g, commentColor.b, {
+				Active    : curComment,
+				CommentId : comments
+			});
+		}
 		
 		if ((flags & FLAG_HIGHLIGHT) && (this.highlight && highlight_None !== this.highlight))
 			this.High.Add(startY, endY, startX, endX, 0, this.highlight.r, this.highlight.g, this.highlight.b, highlightAdditional, this.highlight);
@@ -609,6 +617,24 @@
 		}
 		
 		return flags;
+	};
+	ParagraphHighlightDrawState.prototype.getCommentColor = function(commentId, isCurrent)
+	{
+		if (!this.Paragraph)
+			return DEFAULT_COMMENT_COLOR;
+		
+		let logicDocument  = this.Paragraph.GetLogicDocument();
+		let commentManager = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCommentsManager() : null;
+		if (!commentManager)
+			return DEFAULT_COMMENT_COLOR;
+		
+		let comment = commentManager.GetById(commentId);
+		if (!comment)
+			return DEFAULT_COMMENT_COLOR;
+		
+		let userId   = comment.GetUserId();
+		let userName = comment.GetUserName();
+		return AscCommon.getUserColorById(userId, userName, isCurrent ? 0 : -1, false);
 	};
 	//--------------------------------------------------------export----------------------------------------------------
 	AscWord.ParagraphHighlightDrawState = ParagraphHighlightDrawState;

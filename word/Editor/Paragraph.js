@@ -2845,6 +2845,7 @@ Paragraph.prototype.drawRunHighlight = function(CurPage, pGraphics, Pr, drawStat
 					else
 						pGraphics.set_fillColor(Element.r, Element.g, Element.b);
 					
+					
 					pGraphics.rect(Element.x0, Element.y0, Element.x1 - Element.x0, Element.y1 - Element.y0);
 					pGraphics.df();
 					Element = aPerm.Get_Next();
@@ -2860,14 +2861,12 @@ Paragraph.prototype.drawRunHighlight = function(CurPage, pGraphics, Pr, drawStat
 			{
 				if (!pGraphics.DrawTextArtComment)
 				{
-					if (Element.Additional.Active === true)
-						pGraphics.b_color1(240, 200, 120, 255);
+					if (!pGraphics.set_fillColor)
+						pGraphics.b_color1(Element.r, Element.g, Element.b, 255);
 					else
-						pGraphics.b_color1(248, 231, 195, 255);
-
-					pGraphics.rect(Element.x0, Element.y0, Element.x1 - Element.x0, Element.y1 - Element.y0);
-					pGraphics.df();
-
+						pGraphics.set_fillColor(Element.r, Element.g, Element.b);
+					
+					pGraphics.drawCommentArea(Element.x0, Element.y0, Element.x1 - Element.x0, Element.y1 - Element.y0);
 					DocumentComments.Add_DrawingRect(Element.x0, Element.y0, Element.x1 - Element.x0, Element.y1 - Element.y0, Page_abs, Element.Additional.CommentId, ParentInvertTransform);
 				}
 				else
