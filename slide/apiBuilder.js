@@ -5900,9 +5900,16 @@
 	 */
 	ApiShape.prototype.GetFill = function()
 	{
-		if (this.Shape && this.Shape.spPr && this.Shape.spPr.Fill)
+		if (this.Shape)
 		{
-			return new AscBuilder.ApiFill(this.Shape.spPr.Fill);
+			if (this.Shape.recalcInfo && this.Shape.recalcInfo.recalculateBrush)
+			{
+				this.Shape.recalculateBrush();
+			}
+			if (this.Shape.brush)
+			{
+				return new AscBuilder.ApiFill(this.Shape.brush);
+			}
 		}
 
 		return null;
@@ -5939,9 +5946,16 @@
 	 */
 	ApiShape.prototype.GetLine = function()
 	{
-		if (this.Shape && this.Shape.spPr && this.Shape.spPr.ln)
+		if (this.Shape)
 		{
-			return new AscBuilder.ApiStroke(this.Shape.spPr.ln);
+			if (this.Shape.recalcInfo && this.Shape.recalcInfo.recalculatePen)
+			{
+				this.Shape.recalculatePen();
+			}
+			if (this.Shape.pen)
+			{
+				return new AscBuilder.ApiStroke(this.Shape.pen);
+			}
 		}
 
 		return null;
