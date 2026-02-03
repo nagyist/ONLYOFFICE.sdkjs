@@ -37,6 +37,8 @@
 // Import
 var getFullImageSrc2 = AscCommon.getFullImageSrc2;
 
+var getSourceImageSize = AscCommon.getSourceImageSize;
+
 var getFillRect = AscCommon.getFillRect;
 
 var CShapeColor = AscFormat.CShapeColor;
@@ -2382,7 +2384,8 @@ CShapeDrawer.prototype =
                         }
 
                         this.Graphics.put_brushTexture(imageUrl, type);
-                        const imageData = Asc.editor.ImageLoader.map_image_index[imageUrl];
+                        const imageSize = getSourceImageSize(imageUrl);
+						//const imageData = Asc.editor.ImageLoader.map_image_index[imageUrl];
 
 						if (imageData === undefined || imageData.Image === null || imageData.Status != AscFonts.ImageLoadStatus.Complete)
 							return;
@@ -2412,15 +2415,15 @@ CShapeDrawer.prototype =
                         let alignOffsetX, alignOffsetY;
                         if (rotWithShape)
                         {
-                            alignOffsetX = getAlignment(align)[0] * (this.max_x - this.min_x - imageData.Image.width * sx * AscCommon.g_dKoef_pix_to_mm)
-                            alignOffsetY = getAlignment(align)[1] * (this.max_y - this.min_y - imageData.Image.height * sy * AscCommon.g_dKoef_pix_to_mm)
+                            alignOffsetX = getAlignment(align)[0] * (this.max_x - this.min_x - imageSize.width * sx * AscCommon.g_dKoef_pix_to_mm)
+                            alignOffsetY = getAlignment(align)[1] * (this.max_y - this.min_y - imageSize.height * sy * AscCommon.g_dKoef_pix_to_mm)
                         }
                         else
                         {
                             const shapeBounds = this.Shape.getBounds();
 
-                            alignOffsetX = shapeBounds.x + getAlignment(align)[0] * (shapeBounds.w - imageData.Image.width * sx * AscCommon.g_dKoef_pix_to_mm);
-                            alignOffsetY = shapeBounds.y + getAlignment(align)[1] * (shapeBounds.h - imageData.Image.height * sy * AscCommon.g_dKoef_pix_to_mm);
+                            alignOffsetX = shapeBounds.x + getAlignment(align)[0] * (shapeBounds.w - imageSize.width * sx * AscCommon.g_dKoef_pix_to_mm);
+                            alignOffsetY = shapeBounds.y + getAlignment(align)[1] * (shapeBounds.h - imageSize.height * sy * AscCommon.g_dKoef_pix_to_mm);
                         }
 
                         const tx = this.UniFill.fill.tile.tx ? this.UniFill.fill.tile.tx * AscCommonWord.g_dKoef_emu_to_mm : 0;
