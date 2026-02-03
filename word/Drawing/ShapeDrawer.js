@@ -2385,10 +2385,6 @@ CShapeDrawer.prototype =
 
                         this.Graphics.put_brushTexture(imageUrl, type);
                         const imageSize = getSourceImageSize(imageUrl);
-						//const imageData = Asc.editor.ImageLoader.map_image_index[imageUrl];
-
-						if (imageData === undefined || imageData.Image === null || imageData.Status != AscFonts.ImageLoadStatus.Complete)
-							return;
 
                         const sx = this.UniFill.fill.tile.sx ? (this.UniFill.fill.tile.sx / 1000) / 100 : 1;
                         const sy = this.UniFill.fill.tile.sy ? (this.UniFill.fill.tile.sy / 1000) / 100 : 1;
