@@ -1308,6 +1308,9 @@
     CROUNDFunctionNode.prototype._calculate = function (aArgs) {
         this.result = fRoundNumber(aArgs[1].result, (aArgs[0].result >> 0));
     };
+    CROUNDFunctionNode.prototype.checkRoundNumber = function(number){
+        return number;
+    };
 
     function CSIGNFunctionNode(parseQueue){
         CFunctionNode.call(this, parseQueue);
