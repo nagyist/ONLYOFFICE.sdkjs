@@ -2240,6 +2240,11 @@
             this.setFlag(PARSER_MASK_CLEAN, false);
             return new CLineSeparatorOperatorNode(this.parseQueue);
         }
+        if(this.formula[this.pos] === this.listSeparator){
+            ++this.pos;
+            this.setFlag(PARSER_MASK_CLEAN, false);
+            return new CLineSeparatorOperatorNode(this.parseQueue);
+        }
         var oRet;
         //check operators
         oRet = this.checkExpression(oOperatorRegExp, this.parseOperator);
