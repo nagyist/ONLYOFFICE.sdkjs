@@ -25446,6 +25446,40 @@
 		}, this);
 	};
 	
+	/**
+	 * Sets the lock state of the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.3.0
+	 * @param {boolean} isLock - Specifies whether to lock the form (true) or unlock it (false).
+	 * @returns {boolean} Returns true if the operation is successful.
+	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/SetLock.js
+	 */
+	ApiFormBase.prototype.SetLock = function(isLock)
+	{
+		return executeNoFormLockCheck(function(){
+			if (isLock)
+				this.Sdt.SetContentControlLock(c_oAscSdtLockType.SdtLocked);
+			else
+				this.Sdt.SetContentControlLock(c_oAscSdtLockType.Unlocked);
+			return true;
+		}, this);
+	};
+	
+	/**
+	 * Returns the lock state of the current form.
+	 * @memberof ApiFormBase
+	 * @typeofeditors ["CDE", "CFE"]
+	 * @since 9.3.0
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/GetLock.js
+	 */
+	ApiFormBase.prototype.GetLock = function()
+	{
+		let lock = this.Sdt.GetContentControlLock();
+		return (c_oAscSdtLockType.SdtContentLocked === lock || c_oAscSdtLockType.SdtLocked === lock);
+	};
+	
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiTextForm
@@ -30139,6 +30173,8 @@
 	ApiFormBase.prototype["GetRole"]            = ApiFormBase.prototype.GetRole;
 	ApiFormBase.prototype["SetRole"]            = ApiFormBase.prototype.SetRole;
 	ApiFormBase.prototype["Delete"]             = ApiFormBase.prototype.Delete;
+	ApiFormBase.prototype["SetLock"]            = ApiFormBase.prototype.SetLock;
+	ApiFormBase.prototype["GetLock"]            = ApiFormBase.prototype.GetLock;
 	
 	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
