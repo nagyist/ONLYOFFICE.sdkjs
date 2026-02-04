@@ -7748,7 +7748,7 @@
 			this.cmpd = cmpd;
 		};
 		CLn.prototype.setW = function (w) {
-			this.w = w;
+			this.w = (w !== null && w !== undefined) ? (w + 0.5 >> 0) : w;
 		};
 		CLn.prototype.isVisible = function () {
 			return this.Fill && this.Fill.isVisible();
@@ -16851,7 +16851,7 @@
 			var _w = asc_stroke.width;
 
 			if (_w !== null && _w !== undefined)
-				ret.w = _w * 36000.0;
+				ret.setW(_w * 36000);
 
 			var _color = asc_stroke.color;
 			if (_type === c_oAscStrokeType.STROKE_NONE) {
@@ -17522,7 +17522,7 @@
 				return new AscFormat.CreateNoFillLine();
 			}
 			var oLn = new AscFormat.CLn();
-			oLn.w = nWidth;
+			oLn.setW(nWidth);
 			oLn.Fill = oFill.UniFill;
 			oLn.prstDash = (prstDash === undefined) ? null : prstDash;
 			return oLn;
