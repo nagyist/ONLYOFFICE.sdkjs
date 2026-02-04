@@ -22632,6 +22632,11 @@ CDocument.prototype.IsFillingOFormMode = function()
 	let api = this.GetApi();
 	return !!(api.DocInfo && api.DocInfo.isFormatWithForms());
 };
+CDocument.prototype.IsEditingOFormMode = function()
+{
+	let api = this.GetApi();
+	return (api.DocInfo && api.DocInfo.isFormatWithForms() && !this.IsFillingOFormMode());
+};
 CDocument.prototype.CheckOFormUserMaster = function(form)
 {
 	let currentUserMaster = this.GetCurrentOFormUserMaster();
