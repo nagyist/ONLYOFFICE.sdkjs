@@ -1932,17 +1932,6 @@ $(function () {
 		bCellHasRecursion = null;
 		wb.delDefinesNames(oDefNameSHEET);
 		wb.removeWorksheet(0);
-		// -- Test changeLinkedCell method.
-		oCell = selectCell("A1000");
-		let oCellNeedEnableRecalc = selectCell("B1000");
-		assert.strictEqual(oCellNeedEnableRecalc.getIsDirty(), false, "Test: changeLinkedCell. Before: Cell B1000 isDirty - false");
-		oCell.changeLinkedCell(function(oCell) {
-			if (oCell.isFormula && !oCell.getIsDirty()) {
-				oCell.setIsDirty(true);
-			}
-		}, true);
-		oCellNeedEnableRecalc = selectCell("B1000");
-		assert.strictEqual(oCellNeedEnableRecalc.getIsDirty(), true, "Test: changeLinkedCell. After: Cell B1000 isDirty - true");
 		// - Case: SUMIF. 3 args. Non-recursion formula with disabled setting. Range argument has an Error type. Bug-78980
 		ws.getRange2("A1136").setValue('=SUMIF(#REF!,">"&TODAY(), $A$1136:$A$1136)');
 		oCell = selectCell("A1136");
@@ -1961,6 +1950,117 @@ $(function () {
 		bCellHasRecursion = !!getStartCellForIterCalc(oCell);
 		assert.strictEqual(bCellHasRecursion, true, "Test: SUMIF. 3 args. Recursion formula with disabled setting. Criteria argument has Error type. Bug-78980. C1136 - true");
 		bCellHasRecursion = null;
+		// - Case: Formula INDIRECT isn't recursive cell with disabled setting. Bug-72610
+		ws.getRange2("B1136").setValue("10");
+		ws.getRange2("A1137").setValue("A");
+		ws.getRange2("B1137").setValue("=$B1136+INDIRECT(ADDRESS(2,11,1,1,$A1137))+SUM(INDIRECT(ADDRESS(9,11,1,1,$A1137)):INDIRECT(ADDRESS(39,11,1,1,$A1137)))");
+		ws.getRange2("A1138").setValue("B");
+		ws.getRange2("B1138").setValue("=$B1137+INDIRECT(ADDRESS(2,11,1,1,$A1138))+SUM(INDIRECT(ADDRESS(9,11,1,1,$A1138)):INDIRECT(ADDRESS(39,11,1,1,$A1138)))");
+		oCell = selectCell("B1137");
+		bCellHasRecursion = !!getStartCellForIterCalc(oCell);
+		assert.strictEqual(bCellHasRecursion, false, "Test: Formula INDIRECT isn't recursive cell with disabled setting. Bug-72610. B1137 - false");
+		bCellHasRecursion = null
+		oCell = selectCell("B1138");
+		bCellHasRecursion = !!getStartCellForIterCalc(oCell);
+		assert.strictEqual(bCellHasRecursion, false, "Test: Formula INDIRECT isn't recursive cell with disabled setting. Bug-72610. B1138 - false");
+		bCellHasRecursion = null;
+		// - Case: Table whole column with recursive formula.
+		getTableType(599, 0, 601, 1);
+		ws.getRange2("B602").setValue("=SUBTOTAL(103,Table1[[#All],[Column2]])");
+		assert.strictEqual(ws.getRange2("B602").getValue(), "0", "Test: Table whole column with recursive formula. B602 - 0");
+		bCaFromSelectedCell = getCaFromSelectedCell("B602");
+		assert.strictEqual(bCaFromSelectedCell, true, "Test: Table whole column with recursive formula. B602 - flag ca: true");
+		bCaFromSelectedCell = null;
+		// - Case: Table in another sheet with same coordinates isn't recursive cell with disabled setting. Bug-79238
+		ws2 = getSecondSheet();
+		getTableType(599, 0, 602, 1);
+		ws.getRange2("A601").setValue("VE24ZI0005");
+		ws.getRange2("A602").setValue("VE24ZI0006");
+		ws.getRange2("A603").setValue("VE24VE0007");
+		ws.getRange2("B601").setValue("SI24E05S");
+		ws.getRange2("B602").setValue("SI24F06S");
+		ws.getRange2("B603").setValue("SI24F06S");
+		ws2.getRange2("A601").setValue("SI24E05S");
+		ws2.getRange2("A602").setValue("SI24F06S");
+		ws2.getRange2("B601").setValue("=IF(ISERROR(FILTER(Table1[Column1],Table1[Column2]=A601)),0,COUNTA(FILTER(Table1[Column1],Table1[Column2]=A601)))");
+		ws2.getRange2("B602").setValue("=IF(ISERROR(FILTER(Table1[Column1],Table1[Column2]=A602)),0,COUNTA(FILTER(Table1[Column1],Table1[Column2]=A602)))");
+		assert.strictEqual(ws2.getRange2("B601").getValue(), "1", "Test: Table in another sheet with same coordinates isn't recursive cell with disabled setting. Bug-79238. B601 - 1");
+		assert.strictEqual(ws2.getRange2("B602").getValue(), "2", "Test: Table in another sheet with same coordinates isn't recursive cell with disabled setting. Bug-79238. B602 - 2");
+		bCaFromSelectedCell = getCaFromSelectedCell("B601", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Table in another sheet with same coordinates isn't recursive cell with disabled setting. Bug-79238. B601 - flag ca: false");
+		bCaFromSelectedCell = null;
+		bCaFromSelectedCell = getCaFromSelectedCell("B602", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Table in another sheet with same coordinates isn't recursive cell with disabled setting. Bug-79238. B602 - flag ca: false");
+		bCaFromSelectedCell = null;
+		// Clear cell data on Sheet2
+		ws2.getRange2("B601").setValue("");
+		ws2.getRange2("B602").setValue("");
+		// - Case: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238
+		getTableType(599, 0,602, 2);
+		ws.getRange2("A601").setValue("123");
+		ws.getRange2("A602").setValue("456");
+		ws.getRange2("A603").setValue("789");
+		ws.getRange2("B601").setValue("321");
+		ws.getRange2("B602").setValue("654");
+		ws.getRange2("B603").setValue("987");
+		ws2.getRange2("B1").setValue("123");
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;2;FALSE)");
+		ws2.getRange2("B2").setValue("456");
+		ws2.getRange2("A2").setValue("=VLOOKUP(B2;Table1;2;FALSE)")
+		ws2.getRange2("B3").setValue("789");
+		ws2.getRange2("A3").setValue("=VLOOKUP(B3;Table1;2;FALSE)");
+		ws.getRange2("C601").setValue("=COUNTA(FILTER(Sheet2!$A$1:$A$3;Sheet2!$B$1:$B$3=A601))");
+		ws.getRange2("C602").setValue("=COUNTA(FILTER(Sheet2!$A$1:$A$3;Sheet2!$B$1:$B$3=A602))");
+		ws.getRange2("C603").setValue("=COUNTA(FILTER(Sheet2!$A$1:$A$3;Sheet2!$B$1:$B$3=A603))");
+		assert.strictEqual(ws.getRange2("C601").getValue(), "1", "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C601 - 1");
+		bCaFromSelectedCell = getCaFromSelectedCell("C601");
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C601 - flag ca: false");
+		bCaFromSelectedCell = null;
+		assert.strictEqual(ws.getRange2("C602").getValue(), "1", "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C602 - 1");
+		bCaFromSelectedCell = getCaFromSelectedCell("C602");
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C602 - flag ca: false");
+		bCaFromSelectedCell = null;
+		assert.strictEqual(ws.getRange2("C603").getValue(), "1", "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C603 - 1");
+		bCaFromSelectedCell = getCaFromSelectedCell("C603");
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. C603 - flag ca: false");
+		bCaFromSelectedCell = null;
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: false");
+		bCaFromSelectedCell = null;
+		bCaFromSelectedCell = getCaFromSelectedCell("A2", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. Sheet2!A2 - flag ca: false");
+		bCaFromSelectedCell = null;
+		bCaFromSelectedCell = getCaFromSelectedCell("A3", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. Bug-79238. Sheet2!A3 - flag ca: false");
+		bCaFromSelectedCell = null;
+		// - Case: Formula VLOOKUP is a recursive cell with disabled setting. Bug-79238
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;3;FALSE)");
+		//ws.getRange2("C601").setValue("=COUNTA(FILTER(Sheet2!$A$1:$A$3;Sheet2!$B$1:$B$3=A601))");
+		assert.strictEqual(ws2.getRange2("A1").getValue(), "0", "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. Sheet2!A1 - 0");
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: true");
+		bCaFromSelectedCell = null;
+		bCaFromSelectedCell = getCaFromSelectedCell("C601");
+		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. C601 - flag ca: true");
+		bCaFromSelectedCell = null;
+		// Clear cell data on Sheet2
+		ws2.getRange2("A1").setValue("");
+		ws2.getRange2("A2").setValue("");
+		ws2.getRange2("A3").setValue("");
+		ws2.getRange2("B1").setValue("");
+		ws2.getRange2("B2").setValue("");
+		ws2.getRange2("B3").setValue("");
+		// -- Test changeLinkedCell method.
+		oCell = selectCell("A1000");
+		let oCellNeedEnableRecalc = selectCell("B1000");
+		assert.strictEqual(oCellNeedEnableRecalc.getIsDirty(), false, "Test: changeLinkedCell. Before: Cell B1000 isDirty - false");
+		oCell.changeLinkedCell(function(oCell) {
+			if (oCell.isFormula && !oCell.getIsDirty()) {
+				oCell.setIsDirty(true);
+			}
+		}, true);
+		oCellNeedEnableRecalc = selectCell("B1000");
+		assert.strictEqual(oCellNeedEnableRecalc.getIsDirty(), true, "Test: changeLinkedCell. After: Cell B1000 isDirty - true");
 		// -- Test initStartCellForIterCalc method
 		// - Case: Sequence chain A1000 -> B1000 -> C1000
 		nExpectedCellIndex = AscCommonExcel.getCellIndex(999, 0);
