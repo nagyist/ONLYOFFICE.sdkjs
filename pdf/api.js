@@ -4411,6 +4411,19 @@
 				TextPr.Strikeout = false;
 			if (TextPr.FontFamily === undefined)
 				TextPr.FontFamily = {Index : 0, Name : ""};
+			else {
+				let prefix = AscFonts.getEmbeddedFontPrefix();
+
+				if (TextPr.FontFamily.Name.startsWith(prefix)) {
+					let subStr = TextPr.FontFamily.Name.slice(prefix.length);
+    				let lastSpaceIdx = subStr.lastIndexOf(' ');
+
+					if (lastSpaceIdx !== -1) {
+						TextPr.FontFamily.Name = TextPr.FontFamily.Name.slice(0, lastSpaceIdx);
+					}
+				}
+			}
+
 			if (TextPr.FontSize === undefined)
 				TextPr.FontSize = "";
 
