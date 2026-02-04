@@ -4341,22 +4341,17 @@ var CPresentation = CPresentation || function(){};
     };
     
     CPDFDoc.prototype.RemoveComment = function(Id) {
-        let oAnnot = this.annots.find(function(annot) {
-            return annot.GetId() === Id;
-        });
-
+        let oAnnot = AscCommon.g_oTableId.GetById(Id);
         if (!oAnnot)
             return;
 
-        this.DoAction(function() {
-            Asc.editor.sync_HideComment();
-            if (oAnnot.IsComment()) {
-                this.RemoveAnnot(oAnnot.GetId());
-            }
-            else {
-                oAnnot.RemoveComment();
-            }
-        }, AscDFH.historydescription_Pdf_RemoveComment, this, Id);
+        Asc.editor.sync_HideComment();
+		if (oAnnot.IsComment()) {
+			this.RemoveAnnot(oAnnot.GetId());
+		}
+		else {
+			oAnnot.RemoveComment();
+		}
     };
     CPDFDoc.prototype.RemoveAnnot = function(Id, bIsOnMove) {
         let oController = this.GetController();
@@ -8361,18 +8356,22 @@ var CPresentation = CPresentation || function(){};
                 break;
             }
             case AscCommon.changestype_2_Comment: {
-                let oTargetAnnot = this.GetAnnotById(AdditionalData);
+				if (AdditionalData) {
+					for (let i = 0; i < AdditionalData.length; ++i) {
+						let oTargetAnnot = this.GetAnnotById(AdditionalData[i]);
 
-                if (oTargetAnnot) {
-                    let check_obj = {
-                        "type":     AscLockTypeElemPDF.Object,
-                        "pageId":   oCurPageInfo.GetId(),
-                        "objId":    oTargetAnnot.GetId(),
-                        "guid":     oTargetAnnot.GetId()
-                    };
+						if (oTargetAnnot) {
+							let check_obj = {
+								"type":     AscLockTypeElemPDF.Object,
+								"pageId":   oCurPageInfo.GetId(),
+								"objId":    oTargetAnnot.GetId(),
+								"guid":     oTargetAnnot.GetId()
+							};
 
-                    oTargetAnnot.Lock.Check(check_obj);
-                }
+							oTargetAnnot.Lock.Check(check_obj);
+						}
+					}
+				}
 
                 break;
             }

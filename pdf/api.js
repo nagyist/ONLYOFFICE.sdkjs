@@ -4612,13 +4612,59 @@
 
 		return new AscCommon.asc_CRect(oPos["X"], oPos["Y"], 0, 0);
 	};
-	PDFEditorApi.prototype.asc_removeComment = function(Id)
-	{
+	PDFEditorApi.prototype.asc_removeComment = function(Id) {
 		let oDoc = this.getPDFDoc();
 		if (!oDoc)
 			return;
 
-		oDoc.RemoveComment(Id);
+		oDoc.DoAction(function() {
+            oDoc.RemoveComment(Id);
+        }, AscDFH.historydescription_Pdf_RemoveComment, null, [Id]);
+	};
+	PDFEditorApi.prototype.asc_RemoveAllComments = function(isMine, isCurrent, arrIds) {
+		let oDoc = this.getPDFDoc();
+		if (!oDoc)
+			return;
+
+		let arrCommentsId = arrIds;
+		if (arrCommentsId == undefined) {
+			let oController = oDoc.GetController();
+
+			if (isCurrent) {
+				let oActiveObj = oDoc.GetActiveObject();
+				if (oActiveObj && oActiveObj.IsAnnot()) {
+					arrCommentsId = oController.selectedObjects.map(function(annot) {
+						return annot.GetId();
+					});
+				}
+			}
+			else if (isMine) {
+				let sUserId = Asc.editor.DocInfo.get_UserId();
+				let annots = oDoc.annots;
+
+				arrCommentsId = [];
+				for (let i = 0, count = annots.length; i < count; i++) {
+					let annot = annots[i];
+
+					if (annot.GetUserId() === sUserId) {
+						arrCommentsId.push(annot.GetId());
+					}
+				}
+			}
+			else {
+				arrCommentsId = oDoc.annots.map(function(annot) {
+					return annot.GetId();
+				});
+			}
+		}
+
+		if (arrCommentsId != undefined && arrCommentsId.length !== 0) {
+			oDoc.DoAction(function() {
+				arrCommentsId.forEach(function(id) {
+					oDoc.RemoveAnnot(id);
+				});
+			}, AscDFH.historydescription_Pdf_RemoveComment, null, arrCommentsId);
+		}
 	};
 	PDFEditorApi.prototype.asc_remove = function() {
 		let oDoc = this.getPDFDoc();
@@ -5166,6 +5212,7 @@
 	PDFEditorApi.prototype['asc_showComment']              = PDFEditorApi.prototype.asc_showComment;
 	PDFEditorApi.prototype['asc_hideComments']             = PDFEditorApi.prototype.asc_hideComments;
 	PDFEditorApi.prototype['asc_removeComment']            = PDFEditorApi.prototype.asc_removeComment;
+	PDFEditorApi.prototype['asc_RemoveAllComments']        = PDFEditorApi.prototype.asc_RemoveAllComments;
 	PDFEditorApi.prototype['asc_remove']            	   = PDFEditorApi.prototype.asc_remove;
 	PDFEditorApi.prototype['asc_removeAnnots']             = PDFEditorApi.prototype.asc_removeAnnots;
 	PDFEditorApi.prototype['asc_changeComment']            = PDFEditorApi.prototype.asc_changeComment;
