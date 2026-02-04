@@ -3926,7 +3926,7 @@
 			
 			return isRotated;
 		};
-		CShape.prototype.recalculateDocContent = function (oDocContent, oBodyPr) {
+		CShape.prototype.recalculateDocContent = function (oDocContent, oBodyPr, bSkipPctSpacing) {
 			let nStartPage = this.GetAbsolutePage ? this.GetAbsolutePage() : 0;
 			let oRet = {w: 0, h: 0, contentH: 0};
 			let oInsets = this.getInsets({bIgnoreInsets: false, bodyPr: oBodyPr});
@@ -4074,6 +4074,36 @@
 			oDocContent.SetUseXLimit(bUseXLimit);
 
 			oDocContent.RecalculateContent(oContentW, oRet.h, nStartPage);
+
+			if (!bSkipPctSpacing) {
+				let bNeedSecondPass = false;
+				for (let i = 0; i < oDocContent.Content.length; i++) {
+					const para = oDocContent.Content[i];
+					if (!para.CompiledPr || !para.CompiledPr.Pr || !para.Lines || !para.Lines.length)
+						continue;
+
+					const spacing = para.CompiledPr.Pr.ParaPr.Spacing;
+					const firstLine = para.Lines[0];
+
+					if (spacing.BeforePct && (!spacing.Before || spacing.Before === 0)) {
+						const lineH = firstLine.Metrics.TextAscent + firstLine.Metrics.TextDescent;
+						spacing.Before = lineH * spacing.BeforePct / 100000;
+						bNeedSecondPass = true;
+					}
+
+					if (spacing.AfterPct && (!spacing.After || spacing.After === 0)) {
+						const lastLine = para.Lines[para.Lines.length - 1];
+						const lastLineH = lastLine.Metrics.TextAscent + lastLine.Metrics.TextDescent;
+						spacing.After = lastLineH * spacing.AfterPct / 100000;
+						bNeedSecondPass = true;
+					}
+				}
+
+				if (bNeedSecondPass) {
+					return this.recalculateDocContent(oDocContent, oBodyPr, true);
+				}
+			}
+
 			oRet.contentH = oDocContent.GetSummaryHeight();
 
 			if (this.bWordShape) {
