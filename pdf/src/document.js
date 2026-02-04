@@ -1593,7 +1593,6 @@ var CPresentation = CPresentation || function(){};
         }
 
         if (IsOnRedact || IsOnLink) {
-            oViewer.isMouseMoveBetweenDownUp = true;
             if (null == oMouseDownDrawing) {
                 this.BlurActiveObject();
                 oViewer.onMouseDownEpsilon(e);
@@ -1625,7 +1624,6 @@ var CPresentation = CPresentation || function(){};
         // если хайлайт (аннотация) текста на странице (селектим текст на странице, если не попали в фигуру в режиме view).
         // если попали в фигуру, то селектим в ней (т.к. это типо текст на странице)
         else if (IsPageHighlight) {
-            oViewer.isMouseMoveBetweenDownUp = true;
             if (null == oMouseDownDrawing) {
                 oViewer.onMouseDownEpsilon(e);
                 return;
@@ -1695,7 +1693,6 @@ var CPresentation = CPresentation || function(){};
         }
 
         if (oViewer.canSelectPageText()) {
-            oViewer.isMouseMoveBetweenDownUp = true;
             oViewer.onMouseDownEpsilon(e);
         }
         

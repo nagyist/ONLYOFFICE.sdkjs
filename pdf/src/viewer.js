@@ -524,7 +524,6 @@
 		this.fullTextMessageCallbackArgs = null;
 
 		this.isMouseDown = false;
-		this.isMouseMoveBetweenDownUp = false;
 		this.mouseMoveEpsilon = 5;
 		this.mouseDownCoords = { X : 0, Y : 0 };
 
@@ -1950,7 +1949,6 @@
 			oThis.mouseDownCoords.X = AscCommon.global_mouseEvent.X;
 			oThis.mouseDownCoords.Y = AscCommon.global_mouseEvent.Y;
 
-			oThis.isMouseMoveBetweenDownUp = false;
 			oDoc.OnMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, AscCommon.global_mouseEvent);
 		};
 
@@ -2009,6 +2007,7 @@
 			//if (e && e.preventDefault)
 			//	e.preventDefault();
 
+			let wasMouseDown = oThis.isMouseDown;
 			oThis.isMouseDown = false;
 
 			if (!oThis.file || !oThis.file.isValid())
@@ -2074,7 +2073,7 @@
 			}
 
 			// если было нажатие - то отжимаем
-			if (oThis.isMouseMoveBetweenDownUp) {
+			if (wasMouseDown) {
 				let pageObjectLogic = oThis.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
 				oThis.file.onMouseUp(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 			}
@@ -2089,8 +2088,6 @@
 				}
 			}
 				
-			oThis.isMouseMoveBetweenDownUp = false;
-
 			if (-1 !== oThis.timerScrollSelect)
 			{
 				clearInterval(oThis.timerScrollSelect);
@@ -2172,7 +2169,7 @@
 				if (oThis.getPDFDoc().mouseDownLinkObject)
 				{
 					// селект начат на ссылке. смотрим, нужно ли начать реально селект
-					if (oThis.isMouseMoveBetweenDownUp)
+					if (oThis.isMouseDown)
 					{
 						// вышли за eps
 						oThis.getPDFDoc().mouseDownLinkObject = null;
