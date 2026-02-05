@@ -2073,7 +2073,7 @@
 			}
 
 			// если было нажатие - то отжимаем
-			if (wasMouseDown) {
+			if (wasMouseDown && !oDoc.GetActiveObject()) {
 				let pageObjectLogic = oThis.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
 				oThis.file.onMouseUp(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 			}
