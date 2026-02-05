@@ -3361,6 +3361,12 @@
 
 		if (sLink !== "")
 		{
+			const isPresentationEditor = Asc.editor && Asc.editor.editorId === AscCommon.c_oEditorId.Presentation;
+			if (isPresentationEditor && AscCommon.IsLinkPPAction(sLink)) {
+				this.ParaHyperlink.SetValue(sLink);
+				return true;
+			}
+
 			urlType		= AscCommon.getUrlType(sLink);
 			if (!AscCommon.rx_allowedProtocols.test(sLink))
 				sLink = (urlType === 0) ? null :(( (urlType === 2) ? 'mailto:' : 'http://' ) + sLink);
