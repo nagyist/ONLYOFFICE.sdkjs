@@ -9613,15 +9613,26 @@ var CPresentation = CPresentation || function(){};
     function CreateAscAnnotPropFromObj(annot) {
         let oProps = new Asc.asc_CAnnotProperty();
 
+		let nType = annot.GetType();
+		
         oProps.asc_putType(annot.GetType());
         
         // fill
-        let oFillColor  = annot.GetFillColor();
-        let oFillRGB    = annot.GetRGBColor(oFillColor);
-        oFillRGB["r"] = oFillRGB.r;
-        oFillRGB["g"] = oFillRGB.g;
-        oFillRGB["b"] = oFillRGB.b;
-        oProps.asc_putFill(oFillRGB);
+		switch (nType) {
+			case AscPDF.ANNOTATIONS_TYPES.FreeText:
+			case AscPDF.ANNOTATIONS_TYPES.Square:
+			case AscPDF.ANNOTATIONS_TYPES.Circle:
+			case AscPDF.ANNOTATIONS_TYPES.Polygon:
+			case AscPDF.ANNOTATIONS_TYPES.Redact: {
+				let oFillColor  = annot.GetFillColor();
+				let oFillRGB    = oFillColor ? annot.GetRGBColor(oFillColor) : undefined;
+				oFillRGB["r"] = oFillRGB.r;
+				oFillRGB["g"] = oFillRGB.g;
+				oFillRGB["b"] = oFillRGB.b;
+				oProps.asc_putFill(oFillRGB);
+				break;
+			}
+		}
 
         // stroke
         let oStrokeColor    = annot.GetStrokeColor();
@@ -9663,6 +9674,7 @@ var CPresentation = CPresentation || function(){};
             }
             case AscPDF.ANNOTATIONS_TYPES.Polygon:
             case AscPDF.ANNOTATIONS_TYPES.Square:
+            case AscPDF.ANNOTATIONS_TYPES.Link:
             case AscPDF.ANNOTATIONS_TYPES.Circle: {
                 oAnnotProps = new Asc.asc_CClosedAnnotProperty();
                 oAnnotProps.asc_putBorderStyle(annot.GetComplexBorderType());

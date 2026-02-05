@@ -444,7 +444,7 @@
 
         let nComplexType = null;
 
-        if (AscPDF.BORDER_TYPES.solid == nBorderStyle) {
+        if (AscPDF.BORDER_TYPES.solid == nBorderStyle || undefined == nBorderStyle) {
             if (AscPDF.BORDER_EFFECT_STYLES.Cloud == nBorderEffectStyle) {
                 if (1 == nBorderEffectIntensity) {
                     nComplexType = AscPDF.ANNOT_COMPLEX_BORDER_TYPES.cloud1;
