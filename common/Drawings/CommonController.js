@@ -847,7 +847,11 @@
 											}
 										}
 									}
-									editor.sync_HyperlinkClickCallback(sHyperlink);
+									if (Asc.editor.isPdfEditor() && Asc.editor.canEdit() && drawing.IsAnnot() && drawing.IsLink()) {
+										return false;
+									}
+
+									Asc.editor.sync_HyperlinkClickCallback(sHyperlink);
 									return true;
 								}
 							} else {
