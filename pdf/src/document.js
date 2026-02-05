@@ -5766,6 +5766,7 @@ var CPresentation = CPresentation || function(){};
                 oAnnot.SetStrokeColor([0, 0, 1]);
                 oAnnot.SetOpacity(1);
                 oAnnot.SetWidth(1);
+                oAnnot.SetHighlight(AscPDF.BUTTON_HIGHLIGHT_TYPES.none);
 
                 if (isTextSelection) {
                     oAnnot.SetQuads(aQuads);
