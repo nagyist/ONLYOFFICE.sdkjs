@@ -1989,6 +1989,22 @@
 	};
 
 	/**
+	 * Removes field from document.
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiBaseField/Methods/Delete.js
+	 */
+	ApiBaseField.prototype.Delete = function() {
+		let oDoc = private_GetLogicDocument();
+		
+		this.Field.GetAllWidgets().forEach(function(widget) {
+			oDoc.RemoveField(widget.GetId());
+		});
+
+		return true;
+	};
+
+	/**
 	 * Class representing a base field widget.
 	 * @constructor
 	 * @typeofeditors ["PDFE"]
@@ -2220,9 +2236,9 @@
 	 * Removes widget from parent field.
 	 * @typeofeditors ["PDFE"]
 	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiBaseWidget/Methods/Remove.js
+	 * @see office-js-api/Examples/{Editor}/ApiBaseWidget/Methods/Delete.js
 	 */
-	ApiBaseWidget.prototype.Remove = function() {
+	ApiBaseWidget.prototype.Delete = function() {
 		let oDoc = private_GetLogicDocument();
 		return oDoc.RemoveField(this.Field.GetId());
 	};
@@ -4262,6 +4278,19 @@
 	 */
 	ApiBaseAnnotation.prototype.GetReplies = function() {
 		return this.Annot.GetReplies().map(private_GetAnnotApi);
+	};
+
+	/**
+	 * Removes annotation from document.
+	 * @typeofeditors ["PDFE"]
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiBaseAnnotation/Methods/Delete.js
+	 */
+	ApiBaseAnnotation.prototype.Delete = function() {
+		let oDoc = private_GetLogicDocument();
+		
+		oDoc.RemoveAnnot(this.Annot.GetId());
+		return true;
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -8318,6 +8347,7 @@
 	ApiBaseField.prototype["GetValue"]						= ApiBaseField.prototype.GetValue;
 	ApiBaseField.prototype["AddWidget"]						= ApiBaseField.prototype.AddWidget;
 	ApiBaseField.prototype["GetAllWidgets"]					= ApiBaseField.prototype.GetAllWidgets;
+	ApiBaseField.prototype["Delete"]						= ApiBaseField.prototype.Delete;
 
 	// ApiBaseWidget
 	ApiBaseWidget.prototype["GetClassType"]					= ApiBaseWidget.prototype.GetClassType;
@@ -8335,7 +8365,7 @@
 	ApiBaseWidget.prototype["GetTextSize"]					= ApiBaseWidget.prototype.GetTextSize;
 	ApiBaseWidget.prototype["SetAutoFit"]					= ApiBaseWidget.prototype.SetAutoFit;
 	ApiBaseWidget.prototype["IsAutoFit"]					= ApiBaseWidget.prototype.IsAutoFit;
-	ApiBaseWidget.prototype["Remove"]						= ApiBaseWidget.prototype.Remove;
+	ApiBaseWidget.prototype["Delete"]						= ApiBaseWidget.prototype.Delete;
 
 	// ApiTextField
 	ApiTextField.prototype["GetClassType"]					= ApiTextField.prototype.GetClassType;
@@ -8474,6 +8504,7 @@
 	ApiBaseAnnotation.prototype["GetBorderEffectIntensity"]	= ApiBaseAnnotation.prototype.GetBorderEffectIntensity;
 	ApiBaseAnnotation.prototype["AddReply"]					= ApiBaseAnnotation.prototype.AddReply;
 	ApiBaseAnnotation.prototype["GetReplies"]				= ApiBaseAnnotation.prototype.GetReplies;
+	ApiBaseAnnotation.prototype["Delete"]					= ApiBaseAnnotation.prototype.Delete;
 
 	// ApiTextAnnotation
 	ApiTextAnnotation.prototype["GetClassType"]				= ApiTextAnnotation.prototype.GetClassType;
@@ -8711,8 +8742,8 @@
 	ApiChart.prototype["SetMinorVerticalGridlines"]		= AscBuilder.ApiChart.prototype.SetMinorVerticalGridlines;
 	ApiChart.prototype["SetMajorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMajorHorizontalGridlines;
 	ApiChart.prototype["SetMinorHorizontalGridlines"]	= AscBuilder.ApiChart.prototype.SetMinorHorizontalGridlines;
-	ApiChart.prototype["SetHorAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetHorAxisLablesFontSize;
-	ApiChart.prototype["SetVertAxisLablesFontSize"]		= AscBuilder.ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["SetHorAxisLabelsFontSize"]		= AscBuilder.ApiChart.prototype.SetHorAxisLabelsFontSize;
+	ApiChart.prototype["SetVertAxisLabelsFontSize"]		= AscBuilder.ApiChart.prototype.SetVertAxisLabelsFontSize;
 	ApiChart.prototype["RemoveSeria"]					= AscBuilder.ApiChart.prototype.RemoveSeria;
 	ApiChart.prototype["SetSeriaValues"]				= AscBuilder.ApiChart.prototype.SetSeriaValues;
 	ApiChart.prototype["SetXValues"]					= AscBuilder.ApiChart.prototype.SetXValues;
