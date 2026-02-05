@@ -4508,20 +4508,29 @@
 		let nParaCopy = this._nParaRun;
 		let nIndex = this._index;
 		let counter = this.counter;
+		let paraRun = this._paraRun;
+
+		let oReset = {
+			RunPos: nParaCopy,
+			nIndex: nIndex,
+			Counter: counter,
+			ParaRun: paraRun
+		}
 
 		if (!this.IsHasContent())
 			return false;
 
 		if (this._paraRun)
 		{
-			return this.Reset(this.Next(), nParaCopy, nIndex, counter);
+			return this.Reset(this.Next(), oReset);
 		}
 	};
-	CMathContentIterator.prototype.Reset = function (El, RunPos, nIndex, Counter)
+	CMathContentIterator.prototype.Reset = function (El, oReset)
 	{
-		this._nParaRun = RunPos;
-		this._index = nIndex;
-		this.counter = Counter;
+		this._nParaRun = oReset.RunPos;
+		this._index = oReset.nIndex;
+		this.counter = oReset.Counter;
+		this._paraRun = oReset.ParaRun;
 
 		return El;
 	};

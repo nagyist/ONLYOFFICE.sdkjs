@@ -1418,6 +1418,19 @@ $(function () {
 			assert.strictEqual(cont.CurPos, 2, 'Cursor after function');
 		})
 
+		QUnit.test('Create function after degree (bug 79822)', function (assert)
+		{
+			Clear();
+			logicDocument.SetMathInputType(0);
+			AddText('x^2 log ');
+
+			let cont = MathContent.Root;
+
+			assert.strictEqual(cont.Content.length, 5, 'Check length of content');
+			let func = cont.Content[3];
+			assert.ok(func instanceof CMathFunc, 'Check is math func created');
+		})
+
 		QUnit.test('Add nary from menu', function (assert)
 		{
 			if (p1.Content.length > 0)
