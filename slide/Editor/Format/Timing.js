@@ -8807,6 +8807,10 @@
         if (this.selected) {
             oCopy.selected = true;
         }
+        // Copy _apiId for tracking effect across tree rebuilds
+        if (this._apiId !== undefined) {
+            oCopy._apiId = this._apiId;
+        }
     };
     CTimeNodeContainer.prototype.privateWriteAttributes = function (pWriter) {
     };
