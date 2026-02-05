@@ -6307,8 +6307,18 @@
             pr.FrameHeight = this.GetHeight() / 36000;
             pr.Force = true;
             oDrawing.Drawing.recalculate();
-            
+
             oDrawing.Drawing.setFrameTransform(pr);
+        }
+        else if(oDrawing.GetClassType() === "chart")
+        {
+            AscFormat.CheckSpPrXfrm(oDrawing.Drawing);
+            let xfrm = oDrawing.Drawing.spPr.xfrm;
+            xfrm.setOffX(this.GetPosX() / 36000);
+            xfrm.setOffY(this.GetPosY() / 36000);
+            xfrm.setExtX(this.GetWidth() / 36000);
+            xfrm.setExtY(this.GetHeight() / 36000);
+            oDrawing.Drawing.recalculate();
         }
         return true;
 	};
