@@ -349,6 +349,11 @@
 	prot['MustFormulaResultNumber']          = prot.MustFormulaResultNumber;
 	prot['MustContainValue']                 = prot.MustContainValue;
 	prot['LockedCellGoalSeek']               = prot.LockedCellGoalSeek;
+	prot['LockedCellSolver']				 = prot.LockedCellSolver;
+	prot['TooManyVarCellsSolver'] 			 = prot.TooManyVarCellsSolver;
+	prot['DataConstraintError'] 			 = prot.DataConstraintError;
+	prot['TooManyCells'] 					 = prot.TooManyCells;
+	prot['UnequalCellsNumber'] 				 = prot.UnequalCellsNumber;
 	prot['NoValues']                         = prot.NoValues;
 	prot['NoSingleRowCol']                   = prot.NoSingleRowCol;
 	prot['InvalidReference']                 = prot.InvalidReference;

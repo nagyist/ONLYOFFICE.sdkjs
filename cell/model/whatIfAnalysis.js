@@ -937,6 +937,32 @@ function (window, undefined) {
 	}
 
 	/**
+	 * Returns the full name of the reference link in format '<NameSheet>'!$A$1
+	 * @param {string} sValue
+	 * @param {Workbook} oWb
+	 * @returns {string}
+	 */
+	function getFullRefLinkName (sValue, oWb) {
+		let oWs = oWb.getActiveWs();
+		const oDefName = oWb.getDefinesNames(sValue);
+
+		if (oDefName) {
+			sValue = oDefName.ref;
+		}
+		if (!!~sValue.indexOf('!')) {
+			const sWsName = sValue.split('!')[0];
+			oWs = oWb.getWorksheetByName(sWsName);
+		}
+		const oRange = oWs.getRange2(sValue);
+		if (!oRange) {
+			return sValue;
+		}
+		const sWsName = !!~oWs.getName().search(/[\W\s]/) ? "'" + oWs.getName() + "'" : oWs.getName();
+
+		return sWsName + '!' + oRange.getName();
+	}
+
+	/**
 	 * Adds Def names ranges according to the values of the Solver params and options.
 	 * @memberof asc_CSolverParams
 	 * @param {Workbook} oWbModel
@@ -972,6 +998,9 @@ function (window, undefined) {
 			if (aMaxLimitsAttrs.includes(sDefName) && !ref) {
 				ref = DEFAULT_VALUE;
 			}
+			if (oCellType[sDefName]) {
+				ref = getFullRefLinkName(ref, oWbModel);
+			}
 			let oNewDefName = new Asc.asc_CDefName(sDefName, String(ref), nWsId, undefined, true, undefined, undefined, true);
 			if ((oOldDefName && oOldDefName.Ref !== oNewDefName.Ref) || !oOldDefName) {
 				oWbModel.editDefinesNames(oOldDefName, oNewDefName);
@@ -992,6 +1021,10 @@ function (window, undefined) {
 			'solver_abj': Asc.c_oAscSelectionDialogType.Solver_VariableCell
 		}
 		const nNoError = Asc.c_oAscError.ID.No;
+		const oCellType = {
+			'solver_opt': true,
+			'solver_adj': true,
+		}
 
 		// Finds existed defined names for the solver.
 		if (aWsDefNames.length) {
@@ -1024,8 +1057,8 @@ function (window, undefined) {
 			let nIndex = 1;
 			updateDefName('solver_num', mConstraints.size);
 			mConstraints.forEach(function (constraint) {
-				updateDefName('solver_lhs' + nIndex, constraint['cellRef']);
-				updateDefName('solver_rhs' + nIndex, constraint['constraint']);
+				updateDefName('solver_lhs' + nIndex, getFullRefLinkName(constraint['cellRef'], oWbModel));
+				updateDefName('solver_rhs' + nIndex, getFullRefLinkName(constraint['constraint'], oWbModel));
 				updateDefName('solver_rel' + nIndex, constraint['operator']);
 				nIndex++;
 			});

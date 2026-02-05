@@ -787,6 +787,7 @@ var c_oAscPopUpSelectorType = {
   prot['Solver_ObjectiveCell'] = prot.Solver_ObjectiveCell;
   prot['Solver_VariableCell'] = prot.Solver_VariableCell;
   prot['Solver_Constraint'] = prot.Solver_Constraint;
+  prot['Solver_CellReference'] = prot.Solver_CellReference;
 
 
   window['Asc']['c_oAscHyperlinkType'] = window['Asc'].c_oAscHyperlinkType = c_oAscHyperlinkType;
