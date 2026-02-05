@@ -12599,7 +12599,7 @@
 	 * Specifies the shading applied to the contents of the current text run.
 	 *
 	 * @memberof ApiRun
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 *
 	 * @since 9.1.0
 	 * @param {ShdType} type - The shading type applied to the contents of the current text run.
