@@ -20855,9 +20855,9 @@
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisLablesFontSize.js
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisLabelsFontSize.js
 	 */
-	ApiChart.prototype.SetHorAxisLablesFontSize = function(nFontSize){
+	ApiChart.prototype.SetHorAxisLabelsFontSize = function(nFontSize){
 		AscFormat.builder_SetHorAxisFontSize(this.Chart, nFontSize);
 		return true;
 	};
@@ -20868,9 +20868,9 @@
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVertAxisLablesFontSize.js
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVertAxisLabelsFontSize.js
 	 */
-	ApiChart.prototype.SetVertAxisLablesFontSize = function(nFontSize){
+	ApiChart.prototype.SetVertAxisLabelsFontSize = function(nFontSize){
 		AscFormat.builder_SetVerAxisFontSize(this.Chart, nFontSize);
 		return true;
 	};
@@ -29949,8 +29949,8 @@
 	ApiChart.prototype["SetMinorVerticalGridlines"]    =  ApiChart.prototype.SetMinorVerticalGridlines;
 	ApiChart.prototype["SetMajorHorizontalGridlines"]  =  ApiChart.prototype.SetMajorHorizontalGridlines;
 	ApiChart.prototype["SetMinorHorizontalGridlines"]  =  ApiChart.prototype.SetMinorHorizontalGridlines;
-	ApiChart.prototype["SetHorAxisLablesFontSize"]     = ApiChart.prototype.SetHorAxisLablesFontSize;
-	ApiChart.prototype["SetVertAxisLablesFontSize"]    = ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["SetHorAxisLabelsFontSize"]     = ApiChart.prototype.SetHorAxisLabelsFontSize;
+	ApiChart.prototype["SetVertAxisLabelsFontSize"]    = ApiChart.prototype.SetVertAxisLabelsFontSize;
 	ApiChart.prototype["GetNextChart"]                 = ApiChart.prototype.GetNextChart;
 	ApiChart.prototype["GetPrevChart"]                 = ApiChart.prototype.GetPrevChart;
 	ApiChart.prototype["RemoveSeria"]                  = ApiChart.prototype.RemoveSeria;

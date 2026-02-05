@@ -7014,8 +7014,8 @@
 	ApiChart.prototype["SetMinorVerticalGridlines"] = ApiChart.prototype.SetMinorVerticalGridlines = AscBuilder.ApiChart.prototype.SetMinorVerticalGridlines;
 	ApiChart.prototype["SetMajorHorizontalGridlines"] = ApiChart.prototype.SetMajorHorizontalGridlines = AscBuilder.ApiChart.prototype.SetMajorHorizontalGridlines;
 	ApiChart.prototype["SetMinorHorizontalGridlines"] = ApiChart.prototype.SetMinorHorizontalGridlines = AscBuilder.ApiChart.prototype.SetMinorHorizontalGridlines;
-	ApiChart.prototype["SetHorAxisLablesFontSize"] = ApiChart.prototype.SetHorAxisLablesFontSize = AscBuilder.ApiChart.prototype.SetHorAxisLablesFontSize;
-	ApiChart.prototype["SetVertAxisLablesFontSize"] = ApiChart.prototype.SetVertAxisLablesFontSize = AscBuilder.ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["SetHorAxisLabelsFontSize"] = ApiChart.prototype.SetHorAxisLabelsFontSize = AscBuilder.ApiChart.prototype.SetHorAxisLabelsFontSize;
+	ApiChart.prototype["SetVertAxisLabelsFontSize"] = ApiChart.prototype.SetVertAxisLabelsFontSize = AscBuilder.ApiChart.prototype.SetVertAxisLabelsFontSize;
 	ApiChart.prototype["RemoveSeria"] = ApiChart.prototype.RemoveSeria = AscBuilder.ApiChart.prototype.RemoveSeria;
 	ApiChart.prototype["SetSeriaValues"] = ApiChart.prototype.SetSeriaValues = AscBuilder.ApiChart.prototype.SetSeriaValues;
 	ApiChart.prototype["SetXValues"] = ApiChart.prototype.SetXValues = AscBuilder.ApiChart.prototype.SetXValues;
