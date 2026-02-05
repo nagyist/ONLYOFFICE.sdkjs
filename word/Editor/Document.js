@@ -13202,19 +13202,17 @@ CDocument.prototype.ModifyHyperlink = function(oHyperProps)
 	}
 	else if (!oClass)
 	{
-		// shape/image hyperlink
 		if (docpostype_DrawingObjects === this.GetDocPosType())
-			return this.DrawingObjects.hyperlinkModify(oHyperProps);
-		return;
+			this.DrawingObjects.hyperlinkModify(oHyperProps);
 	}
 	else
 	{
 		return;
 	}
-
+	
 	this.Recalculate();
-    this.Document_UpdateSelectionState();
-    this.Document_UpdateInterfaceState();
+	this.UpdateSelection();
+	this.UpdateInterface();
 };
 CDocument.prototype.RemoveHyperlink = function(oHyperProps)
 {
