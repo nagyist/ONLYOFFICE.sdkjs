@@ -401,7 +401,12 @@
 
 		// рендер html тагов
 		if (!this.Config.renderHTMLTags) {
-			sOutputText = sOutputText.replace(/</gi, '&lt;').replace(/>/gi, '&gt;');
+			sOutputText = sOutputText = sOutputText
+							.replace(/&/g, '&amp;')
+							.replace(/</g, '&lt;')
+							.replace(/>/g, '&gt;')
+							.replace(/"/g, '&quot;')
+							.replace(/'/g, '&#39;');
 		}
 
 		return sOutputText;
