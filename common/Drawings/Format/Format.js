@@ -3704,14 +3704,20 @@
 				return null;
 			}
 			var _ret = new CBlipFill();
-			if (this.RasterImageId == fill.RasterImageId) {
-				_ret.RasterImageId = this.RasterImageId;
+
+			_ret.RasterImageId = this.RasterImageId == fill.RasterImageId
+				? this.RasterImageId
+				: null;
+
+			if (isRealObject(this.stretch) && isRealObject(fill.stretch)) {
+				_ret.stretch = this.stretch.isIdentical(fill.stretch)
+					? this.stretch.createDuplicate()
+					: new CBlipFillStretch();
 			}
-			if (isRealObject(fill.stretch)) {
-				_ret.stretch = this.stretch.isIdentical(fill.stretch) ? this.stretch.createDuplicate() : new CBlipFillStretch();
-			}
-			if (isRealObject(fill.tile)) {
-				_ret.tile = fill.tile.IsIdentical(this.tile) ? this.tile.createDuplicate() : new CBlipFillTile();
+			if (isRealObject(this.tile) && isRealObject(fill.tile)) {
+				_ret.tile = this.tile.IsIdentical(fill.tile)
+					? this.tile.createDuplicate()
+					: new CBlipFillTile();
 			}
 			if (fill.rotWithShape === this.rotWithShape) {
 				_ret.rotWithShape = this.rotWithShape;
