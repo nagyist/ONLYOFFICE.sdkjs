@@ -8819,9 +8819,8 @@ var CPresentation = CPresentation || function(){};
 	CPDFDoc.prototype.IsEditSignaturesMode = function() {
 		return false;
 	};
-	CPDFDoc.prototype.getDrawingObjects = function() {
-		return null;
-	};
+	CPDFDoc.prototype.getDrawingObjects = CPDFDoc.prototype.GetController;
+
     CPDFDoc.prototype.private_computeDrawingAddingPos = function(nPage, nExtX, nExtY) {
         let oDoc        = Asc.editor.getPDFDoc();
         let oViewRect   = oDoc.Viewer.getViewingRect(nPage);
