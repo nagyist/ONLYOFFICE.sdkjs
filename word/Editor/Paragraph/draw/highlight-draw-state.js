@@ -104,7 +104,7 @@
 		this.highlight = highlight_None;
 		this.shdColor  = null;
 		this.shd       = null;
-
+		
 		this.permColor = null;
 	}
 	ParagraphHighlightDrawState.prototype.init = function(paragraph, graphics)
@@ -446,7 +446,7 @@
 		
 		let textPr = run.getCompiledPr();
 		let shd = this.DrawShd ? textPr.Shd : null;
-
+		
 		this.shd = shd;
 		this.shdColor = shd && !shd.IsNil() ? shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap()) : null;
 		if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
