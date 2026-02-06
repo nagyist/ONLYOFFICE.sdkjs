@@ -10089,6 +10089,10 @@ CDocumentShd.prototype.GetSimpleColor = function(oTheme, oColorMap)
 
 	return oResultColor;
 };
+CDocumentShd.prototype.GetAlpha = function(theme, colorMap, logicDocument)
+{
+	return 255;
+};
 CDocumentShd.prototype.private_GetPctShdColor = function(nPct, strokeColor, fillColor)
 {
 	var _nPct = 1 - nPct;

@@ -2772,7 +2772,7 @@ Paragraph.prototype.drawRunHighlight = function(CurPage, pGraphics, Pr, drawStat
 			var Element = aShd.Get_Next();
 			while (null != Element)
 			{
-				pGraphics.b_color1(Element.r, Element.g, Element.b, 255);
+				pGraphics.b_color1(Element.r, Element.g, Element.b, Element.a);
 				if (pGraphics.SetShd)
 				{
 					pGraphics.SetShd(Element.Additional2);

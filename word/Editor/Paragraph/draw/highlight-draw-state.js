@@ -103,6 +103,7 @@
 		this.run       = null;
 		this.highlight = highlight_None;
 		this.shdColor  = null;
+		this.shdAlpha  = 255;
 		this.shd       = null;
 		
 		this.permColor = null;
@@ -190,6 +191,7 @@
 		this.run       = null;
 		this.highlight = highlight_None;
 		this.shdColor  = null;
+		this.shdAlpha  = 255;
 		this.shd       = null;
 	};
 	ParagraphHighlightDrawState.prototype.endRange = function()
@@ -449,6 +451,7 @@
 		
 		this.shd = shd;
 		this.shdColor = shd && !shd.IsNil() ? shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap()) : null;
+		this.shdAlpha = shd && !shd.IsNil() ? shd.GetAlpha(this.drawState.getTheme(), this.drawState.getColorMap(), this.Paragraph.GetLogicDocument()) : 255;
 		if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
 			this.shdColor = null;
 		
@@ -469,7 +472,7 @@
 		let endY   = this.Y1;
 		
 		if ((flags & FLAG_SHD) && this.shdColor)
-			this.Shd.Add(startY, endY, startX, endX, 0, this.shdColor.r, this.shdColor.g, this.shdColor.b, undefined, this.shd);
+			this.Shd.addWithAlpha(startY, endY, startX, endX, 0, this.shdColor.r, this.shdColor.g, this.shdColor.b, this.shdAlpha, this.shd);
 		
 		if (hyperlink)
 			this.HyperCF.Add(startY, endY, startX, endX, 0, 0, 0, 0, {HyperlinkCF : hyperlink});
