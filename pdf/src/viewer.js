@@ -4620,7 +4620,7 @@
 						continue;
 					}
 
-					oPageInfo.annots[nAnnot].IsChanged() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
+					!oPageInfo.annots[nAnnot].IsNeedDrawFromStream() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
 					oPageInfo.annots[nAnnot].GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -4855,7 +4855,7 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.find(function(annot) {
 				let aReplies = annot.GetReplies();
-				return annot.IsChanged() || aReplies.find(function(reply) {
+				return !annot.IsNeedDrawFromStream() || aReplies.find(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;
@@ -5172,7 +5172,7 @@
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
 
-					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
+					!oAnnot.IsNeedDrawFromStream() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -5279,7 +5279,7 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.some(function(annot) {
 				let aReplies = annot.GetReplies();
-				return annot.IsChanged() || aReplies.some(function(reply) {
+				return !annot.IsNeedDrawFromStream() || aReplies.some(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;
