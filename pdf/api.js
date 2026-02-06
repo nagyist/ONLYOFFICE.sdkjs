@@ -4414,7 +4414,7 @@
 			else {
 				let prefix = AscFonts.getEmbeddedFontPrefix();
 
-				if (TextPr.FontFamily.Name.startsWith(prefix)) {
+				if (TextPr.FontFamily.Name && TextPr.FontFamily.Name.startsWith(prefix)) {
 					let subStr = TextPr.FontFamily.Name.slice(prefix.length);
     				let lastSpaceIdx = subStr.lastIndexOf(' ');
 
