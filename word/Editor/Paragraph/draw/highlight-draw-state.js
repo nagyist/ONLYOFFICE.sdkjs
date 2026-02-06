@@ -447,21 +447,30 @@
 		this.run = run;
 		
 		let textPr = run.getCompiledPr();
-		let shd = this.DrawShd ? textPr.Shd : null;
-		
-		this.shd = shd;
-		this.shdColor = shd && !shd.IsNil() ? shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap()) : null;
-		this.shdAlpha = shd && !shd.IsNil() ? shd.GetAlpha(this.drawState.getTheme(), this.drawState.getColorMap(), this.Paragraph.GetLogicDocument()) : 255;
-		if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
-			this.shdColor = null;
-		
-		this.highlight = textPr.HighLight;
+		let shd = null;
+		if (this.DrawShd)
+		{
+			shd = textPr.Shd;
+		}
 		if (textPr.HighlightColor)
 		{
-			textPr.HighlightColor.check(this.drawState.getTheme(), this.drawState.getColorMap());
-			let RGBA = textPr.HighlightColor.RGBA;
-			this.highlight = new CDocumentColor(RGBA.R, RGBA.G, RGBA.B, false);
+			shd = new CDocumentShd();
+			shd.Value = Asc.c_oAscShd.Clear;
+			shd.ThemeFill = AscFormat.CreateUniFillByUniColor(textPr.HighlightColor);
 		}
+		this.shd = shd;
+		this.shdColor = null;
+		this.shdAlpha = 255;
+		if (shd && !shd.IsNil())
+		{
+			this.shdColor = shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap());
+			this.shdAlpha = shd.GetAlpha(this.drawState.getTheme(), this.drawState.getColorMap());
+			if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
+				this.shdColor = null;
+		}
+
+
+		this.highlight = textPr.HighLight;
 	};
 	/**
 	 *
