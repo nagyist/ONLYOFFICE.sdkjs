@@ -871,6 +871,10 @@
         this._bDrawFromStream = bFromStream;
     };
     CAnnotationBase.prototype.SetRect = function(aOrigRect) {
+        if (this._rect != null && aOrigRect != null && AscCommon.isEqualSortedArrays(this._rect, aOrigRect)) {
+            return;
+        }
+
         AscCommon.History.Add(new CChangesPDFAnnotRect(this, this.GetRect(), aOrigRect));
 
         this._rect = aOrigRect;
