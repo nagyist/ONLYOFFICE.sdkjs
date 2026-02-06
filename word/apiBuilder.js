@@ -21565,9 +21565,16 @@
 	 */
 	ApiStroke.prototype.GetWidth = function()
 	{
-		if (this.Ln && this.Ln.w !== null && this.Ln.w !== undefined)
+		if (this.Ln)
 		{
-			return this.Ln.w;
+			if (!this.Ln.isVisible())
+			{
+				return 0;
+			}
+			if (this.Ln.w !== null && this.Ln.w !== undefined)
+			{
+				return this.Ln.w;
+			}
 		}
 		return null;
 	};
