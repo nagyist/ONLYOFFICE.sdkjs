@@ -4064,8 +4064,13 @@
 				bUseXLimit = false;
 			}
 			else {
-				if (oBodyPr.wrap === AscFormat.nTWTNone && (!oBodyPr.textFit || oBodyPr.textFit.type !== AscFormat.text_fit_Auto)) {
-					bUseXLimit = false;
+				if (oBodyPr.wrap === AscFormat.nTWTNone) {
+					if (oBodyPr.textFit && oBodyPr.textFit.type === AscFormat.text_fit_Auto) {
+						bUseXLimit = !!this.bCheckAutoFitFlag;
+					}
+					else {
+						bUseXLimit = false;
+					}
 				}
 				else {
 					bUseXLimit = true;
