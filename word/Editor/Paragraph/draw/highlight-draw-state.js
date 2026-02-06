@@ -457,7 +457,7 @@
 		{
 			textPr.HighlightColor.check(this.drawState.getTheme(), this.drawState.getColorMap());
 			let RGBA = textPr.HighlightColor.RGBA;
-			this.highlight = new CDocumentColor(RGBA.R, RGBA.G, RGBA.B, RGBA.A);
+			this.highlight = new CDocumentColor(RGBA.R, RGBA.G, RGBA.B, false);
 		}
 	};
 	/**
