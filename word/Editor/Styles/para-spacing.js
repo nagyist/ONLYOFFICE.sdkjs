@@ -94,10 +94,16 @@
 			this.AfterAutoSpacing = Spacing.AfterAutoSpacing;
 
 		if ( undefined != Spacing.BeforePct )
+		{
 			this.BeforePct = Spacing.BeforePct;
+			this.Before = undefined;
+		}
 
 		if ( undefined != Spacing.AfterPct )
+		{
 			this.AfterPct = Spacing.AfterPct;
+			this.After = undefined;
+		}
 
 		if (undefined !== Spacing.BeforeLines)
 			this.BeforeLines = Spacing.BeforeLines;
