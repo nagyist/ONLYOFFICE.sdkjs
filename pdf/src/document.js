@@ -6223,13 +6223,6 @@ var CPresentation = CPresentation || function(){};
         }
 
         const fEndCallback = function() {
-            for (let idx = 0; idx < aPageDrawings.length; idx++) {
-                const drawing = aPageDrawings[idx];
-                drawing.SetFromScan(true);
-                _this.AddDrawing(drawing, nPage, idx);
-                drawing.SetNeedRecalc(true);
-            }
-
             _this.FinalizeAction();
             _this.Viewer.file.removeSelection();
             _this.Viewer.paint(function() {
@@ -6268,6 +6261,13 @@ var CPresentation = CPresentation || function(){};
 
             Asc.editor.pre_Paste(aFonts, oLoadUrls, fEndCallback);
         }
+
+		for (let idx = 0; idx < aPageDrawings.length; idx++) {
+			const drawing = aPageDrawings[idx];
+			drawing.SetFromScan(true);
+			this.AddDrawing(drawing, nPage, idx);
+			drawing.SetNeedRecalc(true);
+		}
 
         return true;
     };
