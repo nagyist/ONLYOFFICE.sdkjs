@@ -2220,7 +2220,7 @@
 		};
 		this.canSelectPageText = function() {
 			let oDoc = this.getPDFDoc();
-			return !oDoc.activeDrawing && !oDoc.activeForm && (!oDoc.mouseDownAnnot || (oDoc.mouseDownAnnot && oDoc.mouseDownAnnot.IsTextMarkup() == true)) && !this.Api.isInkDrawerOn() && !this.Api.isStartAddShape;
+			return !oDoc.activeDrawing && !oDoc.activeForm && (!oDoc.mouseDownAnnot || (oDoc.mouseDownAnnot && oDoc.mouseDownAnnot.IsTextMarkup() == true)) && !this.Api.isInkDrawerOn() && !this.Api.isStartAddShape && false !== Asc.editor.canInteract;
 		};
 		this.onMouseWhell = function(e)
 		{
