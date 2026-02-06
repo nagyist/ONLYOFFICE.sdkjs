@@ -1086,6 +1086,35 @@
 		return result;
 	};
 	/**
+	 * Returns the current addin field from the document.
+	 * @memberof Api
+	 * @typeofeditors ["CDE"]
+	 * @alias GetCurrentAddinField
+	 * @returns {?AddinFieldData} - An AddinFieldData object containing the data about the current addin field, or null if no addin field is found.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/GetCurrentAddinField.js
+	 */
+	Api.prototype["pluginMethod_GetCurrentAddinField"] = function()
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return null;
+		
+		let fields = logicDocument.GetCurrentComplexFields();
+		let data = null;
+		for (let i = 0; i < fields.length; ++i)
+		{
+			let field = fields[i];
+			if ((field instanceof AscWord.CComplexField) && field.IsAddin())
+			{
+				data = AscWord.CAddinFieldData.FromField(field).ToJson();
+				break;
+			}
+		}
+		
+		return data;
+	};
+	/**
 	 * Updates the addin fields with the specified data.
 	 * @memberof Api
 	 * @typeofeditors ["CDE"]
