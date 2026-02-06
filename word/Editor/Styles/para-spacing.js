@@ -76,13 +76,19 @@
 			this.LineRule = Spacing.LineRule;
 
 		if ( undefined != Spacing.Before )
+		{
 			this.Before = Spacing.Before;
+			this.BeforePct = undefined;
+		}
 
 		if ( undefined != Spacing.BeforeAutoSpacing )
 			this.BeforeAutoSpacing = Spacing.BeforeAutoSpacing;
 
 		if ( undefined != Spacing.After )
+		{
 			this.After = Spacing.After;
+			this.AfterPct = undefined;
+		}
 
 		if ( undefined != Spacing.AfterAutoSpacing )
 			this.AfterAutoSpacing = Spacing.AfterAutoSpacing;
@@ -95,7 +101,7 @@
 
 		if (undefined !== Spacing.BeforeLines)
 			this.BeforeLines = Spacing.BeforeLines;
-		
+
 		if (undefined !== Spacing.AfterLines)
 			this.AfterLines = Spacing.AfterLines;
 	};
