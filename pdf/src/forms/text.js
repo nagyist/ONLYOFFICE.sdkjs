@@ -508,7 +508,7 @@
             this.CheckFormViewWindow();
 
         oGraphicsWord.AddClipRect(this.contentClipRect.X, this.contentClipRect.Y, this.contentClipRect.W, this.contentClipRect.H);
-        oContentToDraw.Draw(0, oGraphicsWord);
+        oContentToDraw.Draw(oContentToDraw.GetAbsolutePage(), oGraphicsWord);
         
         oGraphicsWord.RemoveLastClip();
         this.DrawBorders(oGraphicsPDF, oGraphicsWord);

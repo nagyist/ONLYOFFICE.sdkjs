@@ -74,7 +74,7 @@
             this.CheckFormViewWindow();
 
         oGraphicsWord.AddClipRect(this.contentClipRect.X, this.contentClipRect.Y, this.contentClipRect.W, this.contentClipRect.H);
-        oContentToDraw.Draw(0, oGraphicsWord);
+        oContentToDraw.Draw(oContentToDraw.GetAbsolutePage(), oGraphicsWord);
         // redraw target cursor if field is selected
         if (oDoc.activeForm == this && oContentToDraw.IsSelectionUse() == false && this.IsCanEditText())
             oContentToDraw.RecalculateCurPos();
