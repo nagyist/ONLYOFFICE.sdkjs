@@ -7210,7 +7210,7 @@
 		oSectPr.Copy(oCurSectPr);
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);
-		oCurSectPr.Clear_AllHdrFtr();
+		oCurSectPr.RemoveAllHdrFtr();
 
 		oParagraph.private_GetImpl().Set_SectionPr(oSectPr);
 		return new ApiSection(oSectPr);
@@ -11947,7 +11947,7 @@
 
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);
-		oCurSectPr.Clear_AllHdrFtr();
+		oCurSectPr.RemoveAllHdrFtr();
 
 		this.private_GetImpl().Set_SectionPr(oSectPr);
 		return true;

@@ -14462,7 +14462,7 @@ CDocument.prototype.AddSectionBreak = function(sectionBreakType)
 	sectPr.Copy(curSectPr);
 	curSectPr.Set_Type(sectionBreakType);
 	curSectPr.SetPageNumStart(-1);
-	curSectPr.Clear_AllHdrFtr();
+	curSectPr.RemoveAllHdrFtr();
 
 	this.History.MinorChanges = false;
 	
