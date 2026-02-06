@@ -21604,11 +21604,14 @@
 	 */
 	ApiStroke.prototype.GetDashType = function()
 	{
-		if (this.Ln && this.Ln.prstDash !== null && this.Ln.prstDash !== undefined)
+		if (this.Ln)
 		{
-			// Convert numeric code to string value using GetDashByCode
-			var dashString = this.Ln.GetDashByCode ? this.Ln.GetDashByCode(this.Ln.prstDash) : null;
-			return dashString;
+			if (this.Ln.prstDash !== null && this.Ln.prstDash !== undefined)
+			{
+				let dashString = this.Ln.GetDashByCode ? this.Ln.GetDashByCode(this.Ln.prstDash) : null;
+				return dashString || "solid";
+			}
+			return "solid";
 		}
 		return null;
 	};
