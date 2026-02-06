@@ -4482,10 +4482,13 @@ var CPresentation = CPresentation || function(){};
         let oPos = oTr.TransformPoint(xOffset, yOffset);
 
         if (yOffset != undefined && xOffset != undefined || this.Viewer.currentPage != nPage) {
-            this.Viewer.disabledPaintOnScroll = true; // вырубаем отрисовку на скроле
-            this.Viewer.scrollToXY(this.Viewer.scrollY + oPos.y, this.Viewer.scrollX + oPos.x);
-            this.Viewer.disabledPaintOnScroll = false;
-            this.Viewer.paint();
+			let oViewer = this.Viewer;
+
+			oViewer.paint(function() {
+				oViewer.disabledPaintOnScroll = true; // вырубаем отрисовку на скроле
+				oViewer.scrollToXY(oViewer.scrollY + oPos.y, oViewer.scrollX + oPos.x);
+				oViewer.disabledPaintOnScroll = false;
+			});
         }
     };
     CPDFDoc.prototype.HideComments = function() {

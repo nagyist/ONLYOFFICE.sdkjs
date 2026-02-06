@@ -1491,6 +1491,13 @@
 			let oActiveObj	= oDoc.GetActiveObject();
 			let nPage		= oActiveObj ? oActiveObj.GetPage() : undefined;
 
+			if (posY < 0) {
+				posY = 0;
+			}
+			if (posX < 0) {
+				posX = 0;
+			}
+			
 			this.m_oScrollVerApi.scrollToY(posY);
 			this.m_oScrollHorApi.scrollToX(posX);
 

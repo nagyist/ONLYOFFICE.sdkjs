@@ -1489,6 +1489,7 @@
 	PDFEditorApi.prototype.SetLinkAnnotGoToAction = function(arrIds) {
 		let oDoc = this.getPDFDoc();
 
+		let result = false;
 		oDoc.DoAction(function() {
 			arrIds.forEach(function(id) {
 				let oLink = oDoc.GetAnnotById(id);
@@ -1510,10 +1511,13 @@
 				};
 
 				oLink.SetActions(AscPDF.PDF_TRIGGERS_TYPES.MouseUp, [oAction]);
-			})
+				
+				result = true;
+			});
 		}, AscDFH.historydescription_Pdf_ContextMenuRemove);
 
 		this.SetCanInteract(true);
+		result && oDoc.GoToAnnot(arrIds[0]);
 	};
 	PDFEditorApi.prototype.OnAfterAddLinkAnnot = function(aIds) {
 		Asc.editor.sendEvent("asc_onDialogAddAnnotLink", aIds);
