@@ -9628,9 +9628,12 @@ var CPresentation = CPresentation || function(){};
 			case AscPDF.ANNOTATIONS_TYPES.Redact: {
 				let oFillColor  = annot.GetFillColor();
 				let oFillRGB    = oFillColor ? annot.GetRGBColor(oFillColor) : undefined;
-				oFillRGB["r"] = oFillRGB.r;
-				oFillRGB["g"] = oFillRGB.g;
-				oFillRGB["b"] = oFillRGB.b;
+				if (oFillColor) {
+					oFillRGB["r"] = oFillRGB.r;
+					oFillRGB["g"] = oFillRGB.g;
+					oFillRGB["b"] = oFillRGB.b;
+				}
+				
 				oProps.asc_putFill(oFillRGB);
 				break;
 			}
@@ -9652,7 +9655,7 @@ var CPresentation = CPresentation || function(){};
             case AscPDF.ANNOTATIONS_TYPES.FreeText: {
                 oAnnotProps = new Asc.asc_CFreeTextAnnotProperty();
                 oAnnotProps.asc_putBorderWidth(annot.GetWidth());
-                oAnnotProps.asc_putLineEnd(annot.GetLineEnd());
+                annot.GetIntent() == AscPDF.FREE_TEXT_INTENT_TYPE.FreeTextCallout && oAnnotProps.asc_putLineEnd(annot.GetLineEnd());
                 oAnnotProps.asc_putBorderStyle(annot.GetComplexBorderType());
                 oAnnotProps.asc_putCanEditText(annot.IsInTextBox());
                 break;

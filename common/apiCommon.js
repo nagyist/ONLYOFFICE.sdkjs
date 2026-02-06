@@ -3767,7 +3767,7 @@ function (window, undefined) {
 	function asc_CFreeTextAnnotProperty() {
 		this.borderWidth		= undefined;
 		this.borderStyle		= undefined;
-		this.lineEnd			= undefined;
+		this.lineEnd			= null;
 		this.canEditText		= undefined;
 	}
 

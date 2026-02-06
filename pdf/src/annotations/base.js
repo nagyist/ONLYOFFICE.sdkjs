@@ -519,11 +519,11 @@
         }
 
         if (this.IsFreeText()) {
-            for (let i = 1; i < this.spTree.length; i++) {
+            for (let i = 0; i < this.spTree.length; i++) {
                 const oLine = this.spTree[i].spPr.ln;
                 oLine.Fill.transparent = t;
 
-                const oFill = this.spPr.Fill;
+                const oFill = this.spTree[i].spPr.Fill;
                 oFill.transparent = t;
 
                 this.spTree[i].handleUpdateLn();

@@ -411,6 +411,9 @@
 				oLine.setFill(oFill);
 			}
 		}, undefined, this);
+
+		this.SetWasChanged(true);
+		this.SetNeedRecalc(true);
 	};
 	CAnnotationFreeText.prototype.SetFillColor = function(aColor) {
 		AscCommon.History.Add(new CChangesPDFAnnotFill(this, this.GetFillColor(), aColor));
@@ -425,6 +428,9 @@
 				this.spTree[i].setFill(oFill);
 			}
 		}, undefined, this);
+
+		this.SetWasChanged(true);
+		this.SetNeedRecalc(true);
 	};
     CAnnotationFreeText.prototype.GetTextBoxRect = function() {
         let aOrigRect   = this.GetRect();
