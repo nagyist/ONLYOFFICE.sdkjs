@@ -1186,10 +1186,13 @@
 			let drawState = this.drawState;
 			let align = this.getEffectiveAlign();
 			let i, j, p, p_, strBeg;
-			let n = 0, l = this.lines[0], x1 = l ? this.initStartX(0, l, x, maxWidth) : 0, y1 = y, dx = l ? computeWordDeltaX() : 0;
+			let n = 0, l = this.lines[0];
+			let lastLineAlign = this._getJustifyLastLineAlign(align, !this.lines || this.lines.length <= 1);
+			let x1 = l ? this.initStartX(0, l, x, maxWidth, false, lastLineAlign) : 0, y1 = y, dx = l ? computeWordDeltaX() : 0;
 
 			ctx.setTextRotated(!!this.angle);
 			self.textColor = textColor;
+			drawState.justifyDx = dx;
 
 
 			function computeWordDeltaX() {
@@ -1197,87 +1200,45 @@
 					return 0;
 				}
 
-				if (align === AscCommon.align_Justify) {
-					let wordCount = 0;
-					let isLastWordSpace = false;
-					let lastSpacesWidth = 0;
-					let lastSymbolWidth = 0;
-
-					for (let i = l.beg; i <= l.end; ++i) {
-						let p = self.charProps[i];
-						let isSpace = self.codesHypSp[self.chars[i]];
-
-						if (p && p.wrd && isLastWordSpace) {
-							++wordCount;
-							if (i !== l.end) {
-								lastSpacesWidth = 0;
-							} else if (!isSpace) {
-								lastSymbolWidth = self.charWidths[i];
-							}
-						} else if (i === l.end) {
-							++wordCount;
-						}
-
-						if (isSpace) {
-							lastSpacesWidth += self.charWidths[i];
-						}
-
-						isLastWordSpace = isSpace;
-					}
-
-					if (wordCount <= 1) {
-						return 0;
-					}
-
-					let rightDiff = 1;
-					let availableWidth = maxWidth - rightDiff - (l.tw - lastSymbolWidth - lastSpacesWidth);
-					return (availableWidth) / (wordCount - 1);
-				} else {
-					for (var i = l.beg, c = 0; i <= l.end; ++i) {
-						var p = self.charProps[i];
-						if (p && p.wrd) {
-							++c;
-						}
-					}
-					return c > 1 ? (maxWidth - l.tw) / (c - 1) : 0;
+				let effectiveEnd = l.end;
+				let endProp = self.charProps[effectiveEnd];
+				if (endProp && (endProp.hp || endProp.nl)) {
+					effectiveEnd--;
 				}
+				while (effectiveEnd >= l.beg && self.codesHypSp[self.chars[effectiveEnd]]) {
+					effectiveEnd--;
+				}
+				if (effectiveEnd < l.beg) return 0;
+
+				let renderedWidth = 0;
+				for (let i = l.beg; i <= effectiveEnd; ++i) {
+					renderedWidth += self.charWidths[i];
+				}
+
+				let gaps = 0, prevSpace = false, seenNonSpace = false;
+				for (let i = l.beg; i <= effectiveEnd; ++i) {
+					let isSpace = !!self.codesHypSp[self.chars[i]];
+					if (!isSpace && prevSpace && seenNonSpace) ++gaps;
+					if (!isSpace) seenNonSpace = true;
+					prevSpace = isSpace;
+				}
+
+				if (gaps === 0) return 0;
+				return (maxWidth - 1 - renderedWidth) / gaps;
 			}
 
 			function renderFragment(begin, end, prop, angle) {
 				var dh = prop && prop.lm && prop.lm.bl2 > 0 ? prop.lm.bl2 - prop.lm.bl : 0;
-				var dw = self._calcCharsWidth(strBeg, end - 1);
-				var y, i, b, cp;
 				var bl = asc_round(l.bl * zoom);
 
 				if (begin > end)
-					return 0;
+					return;
 
 				let fontSize = prop.font.getSize();
-				y = y1 + bl + dh;
+				let y = y1 + bl + dh;
 
 				drawState.baselineY = y1 + bl;
-				let startX = drawState.x;
-				x1 = startX;
-				if (align !== AscCommon.align_Justify || dx < 0.000001) {
-					renderGraphemes(begin, end, drawState.x, y, fontSize);
-				} else {
-					for (i = b = begin; i < end; ++i) {
-						cp = self.charProps[i];
-						if (cp && cp.wrd && i > b) {
-							x1 = drawState.x;
-							renderGraphemes(b, i, drawState.x, y, fontSize);
-							x1 += self._calcCharsWidth(b, i - 1) + dx;
-							drawState.x = x1;
-							dw += dx;
-							b = i;
-						}
-					}
-					if (i > b) {
-						renderGraphemes(b, i, drawState.x, y, fontSize);
-					}
-				}
-
-				return dw;
+				renderGraphemes(begin, end, drawState.x, y, fontSize);
 			}
 
 			function renderGraphemes(begin, end, x, y) {
@@ -1313,8 +1274,10 @@
 						drawState.endLine();
 						y1 += asc_round(l.th * zoom);
 						l = self.lines[++n];
-						drawState.x = self.initStartX(i, l, x, maxWidth);
+						let la = self._getJustifyLastLineAlign(align, n === self.lines.length - 1);
+						drawState.x = self.initStartX(i, l, x, maxWidth, false, la);
 						dx = computeWordDeltaX();
+						drawState.justifyDx = dx;
 						drawState.beginLine(l, drawState.x, y);
 					}
 				}
@@ -1325,19 +1288,27 @@
 
 			drawState.endLine();
 		};
-		StringRender.prototype.initStartX = function (startPos, l, x, maxWidth, initAllLines) {
-			let align = this.getEffectiveAlign();
+		StringRender.prototype.initStartX = function (startPos, l, x, maxWidth, initAllLines, lineAlign) {
+			let align = lineAlign != null ? lineAlign : this.getEffectiveAlign();
 
 			if (initAllLines) {
 				if (this.lines) {
 					for (let i = 0; i < this.lines.length; ++i) {
+						let la = this._getJustifyLastLineAlign(align, i === this.lines.length - 1);
 						let lineWidth = this._calcLineWidth(this.lines[i].beg);
-						this.lines[i].initStartX(lineWidth, x, maxWidth, align);
+						this.lines[i].initStartX(lineWidth, x, maxWidth, la);
 					}
 				}
 			} else {
 				return l.initStartX(this._calcLineWidth(startPos), x, maxWidth, align);
 			}
+		};
+		StringRender.prototype._getJustifyLastLineAlign = function (align, isLastLine) {
+			if (align === AscCommon.align_Justify && isLastLine) {
+				let isRtl = this.drawState.getMainDirection() === AscBidi.DIRECTION_FLAG.RTL;
+				return isRtl ? AscCommon.align_Right : AscCommon.align_Left;
+			}
+			return align;
 		};
 		StringRender.prototype.getInternalState = function () {
 			return {
@@ -1412,6 +1383,10 @@
 			this.lastHandledFont = null;
 			this.baselineY = 0;
 			this.pendingDecorations = [];
+			this.justifyDx = 0;
+			this.afterSpaceInLine = false;
+			this.seenNonSpaceInLine = false;
+			this.trailingSpaceStart = Infinity;
 		}
 
 
@@ -1508,16 +1483,29 @@
 
 		TableCellDrawState.prototype.handleBidiFlow = function(data, direction) {
 			let charIndex = data.charIndex;
+
+			if (charIndex >= this.trailingSpaceStart) {
+				return;
+			}
+
 			let width = this.stringRender.charWidths[charIndex];
+			let char = this.stringRender.chars[charIndex];
+			let isSpace = !!this.stringRender.codesHypSp[char];
+
+			if (!isSpace && this.afterSpaceInLine && this.seenNonSpaceInLine && this.justifyDx) {
+				this.x += this.justifyDx;
+			}
+
 			let cr = this.stringRender.clipRect;
 			if (cr.use) {
 				if (cr.x > this.x + width || cr.x + cr.w < this.x) {
 					this.x += width;
+					if (!isSpace) this.seenNonSpaceInLine = true;
+					this.afterSpaceInLine = isSpace;
 					return;
 				}
 			}
 			let charProp = data.charProp;
-			let char = this.stringRender.chars[charIndex];
 			let grapheme = charProp ? charProp.grapheme : AscFonts.NO_GRAPHEME;
 
 			if (direction === AscBidi.DIRECTION.R && AscBidi.isPairedBracket(char)) {
@@ -1570,6 +1558,8 @@
 			}
 
 			this.x += width;
+			if (!isSpace) this.seenNonSpaceInLine = true;
+			this.afterSpaceInLine = isSpace;
 		};
 
 		TableCellDrawState.prototype.beginLine = function(line, x, y) {
@@ -1577,6 +1567,24 @@
 			this.x = x;
 			this.y = y;
 			this.baseY = y;
+			this.afterSpaceInLine = false;
+			this.seenNonSpaceInLine = false;
+
+			this.trailingSpaceStart = line ? line.end + 1 : Infinity;
+			if (line && line.beg >= 0) {
+				let endPos = line.end;
+				let endProp = this.stringRender.charProps[endPos];
+				if (endProp && (endProp.hp || endProp.nl)) {
+					endPos--;
+				}
+				for (let j = endPos; j >= line.beg; --j) {
+					if (this.stringRender.codesHypSp[this.stringRender.chars[j]]) {
+						this.trailingSpaceStart = j;
+					} else {
+						break;
+					}
+				}
+			}
 
 			this.bidiFlow.begin(this.getMainDirection() === AscBidi.DIRECTION_FLAG.RTL);
 		};
@@ -1595,6 +1603,10 @@
 			this.lastHandledFont = null;
 			this.baselineY = 0;
 			this.pendingDecorations.length = 0;
+			this.justifyDx = 0;
+			this.afterSpaceInLine = false;
+			this.seenNonSpaceInLine = false;
+			this.trailingSpaceStart = Infinity;
 			this.textColor = textColor || null;
 			this.angle = angle || 0;
 			this.zoom = this.drawingCtx.getZoom();
