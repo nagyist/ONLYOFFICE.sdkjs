@@ -1435,6 +1435,7 @@
 			this.angle = 0;
 			this.currentLine = null;
 			this.startIdx = 0;
+			this.lastHandledFont = null;
 		}
 
 
@@ -1505,7 +1506,27 @@
 				}
 			}
 
-			let fontSize = data.fragmentProp && data.fragmentProp.font ? data.fragmentProp.font.getSize() : 10;
+			let prop = data.fragmentProp;
+			if (prop && prop.font) {
+				if (!this.lastHandledFont || !prop.font.isEqual2(this.lastHandledFont)) {
+					this.lastHandledFont = prop.font;
+					this.stringRender._setFont(this.drawingCtx, prop.font);
+				}
+				let textColor = prop.c || this.stringRender.textColor;
+				let _r = textColor.getR();
+				let _g = textColor.getG();
+				let _b = textColor.getB();
+				let _a = textColor.getA();
+				let setColor = true;
+				if (this.drawingCtx.fillColor && this.drawingCtx.fillColor.isEqual(_r, _g, _b, _a)) {
+					setColor = false;
+				}
+				if (setColor || window["IS_NATIVE_EDITOR"]) {
+					this.drawingCtx.setFillStyle(textColor);
+				}
+			}
+
+			let fontSize = prop && prop.font ? prop.font.getSize() : 10;
 			let y = this.y;
 
 			if (grapheme !== AscFonts.NO_GRAPHEME) {
@@ -1535,6 +1556,7 @@
 			this.currentColor = null;
 			this.currentLine = null;
 			this.startIdx = 0;
+			this.lastHandledFont = null;
 			this.textColor = textColor || null;
 			this.angle = angle || 0;
 			this.zoom = this.drawingCtx.getZoom();
