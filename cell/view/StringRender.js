@@ -1242,10 +1242,7 @@
 			function renderFragment(begin, end, prop, angle) {
 				var dh = prop && prop.lm && prop.lm.bl2 > 0 ? prop.lm.bl2 - prop.lm.bl : 0;
 				var dw = self._calcCharsWidth(strBeg, end - 1);
-				var so = prop.font.getStrikeout();
-				var ul = Asc.EUnderline.underlineNone !== prop.font.getUnderline();
-				var isSO = so === true;
-				var fsz, x2, y, lw, dy, i, b, cp;
+				var y, i, b, cp;
 				var bl = asc_round(l.bl * zoom);
 
 				if (begin > end)
@@ -1254,6 +1251,7 @@
 				let fontSize = prop.font.getSize();
 				y = y1 + bl + dh;
 
+				drawState.baselineY = y1 + bl;
 				let startX = drawState.x;
 				x1 = startX;
 				if (align !== AscCommon.align_Justify || dx < 0.000001) {
@@ -1273,34 +1271,6 @@
 					if (i > b) {
 						renderGraphemes(b, i, drawState.x, y, fontSize);
 					}
-				}
-
-
-				if (isSO || ul) {
-					if (angle && window["IS_NATIVE_EDITOR"])
-						ctx.nativeTextDecorationTransform(true);
-
-					x2 = startX + dw;
-					fsz = prop.font.getSize();
-					lw = asc_round(fsz * ppiy / 72 / 18) || 1;
-					ctx.setStrokeStyle(prop.c || textColor)
-						.setLineWidth(lw)
-						.beginPath();
-					dy = (lw / 2);
-					dy = dy >> 0;
-					if (ul) {
-						y = asc_round(y1 + bl + prop.lm.d * 0.4 * zoom);
-						ctx.lineHor(startX, y + dy, x2 + 1);
-					}
-					if (isSO) {
-						dy += 1;
-						y = asc_round(y1 + bl - prop.lm.a * 0.275 * zoom);
-						ctx.lineHor(startX, y - dy, x2 + 1);
-					}
-					ctx.stroke();
-
-					if (angle && window["IS_NATIVE_EDITOR"])
-						ctx.nativeTextDecorationTransform(false);
 				}
 
 				return dw;
@@ -1436,11 +1406,55 @@
 			this.currentLine = null;
 			this.startIdx = 0;
 			this.lastHandledFont = null;
+			this.baselineY = 0;
+			this.pendingDecorations = [];
 		}
 
 
 		TableCellDrawState.prototype.endLine = function() {
 			this.bidiFlow.end();
+			this.drawDecorations();
+		};
+		TableCellDrawState.prototype.drawDecorations = function() {
+			let ctx = this.drawingCtx;
+			let ppiy = this.ppiy;
+			let zoom = this.zoom;
+			let angle = this.angle;
+			let textColor = this.stringRender.textColor;
+			for (let i = 0; i < this.pendingDecorations.length; ++i) {
+				let dec = this.pendingDecorations[i];
+				let prop = dec.prop;
+				let baselineY = dec.baselineY;
+				let startX = dec.startX;
+				let endX = dec.endX;
+				let isSO = prop.font.getStrikeout() === true;
+				let ul = Asc.EUnderline.underlineNone !== prop.font.getUnderline();
+
+				if (angle && window["IS_NATIVE_EDITOR"])
+					ctx.nativeTextDecorationTransform(true);
+
+				let fsz = prop.font.getSize();
+				let lw = asc_round(fsz * ppiy / 72 / 18) || 1;
+				ctx.setStrokeStyle(prop.c || textColor)
+					.setLineWidth(lw)
+					.beginPath();
+				let dy = (lw / 2);
+				dy = dy >> 0;
+				if (ul) {
+					let y = asc_round(baselineY + prop.lm.d * 0.4 * zoom);
+					ctx.lineHor(startX, y + dy, endX + 1);
+				}
+				if (isSO) {
+					dy += 1;
+					let y = asc_round(baselineY - prop.lm.a * 0.275 * zoom);
+					ctx.lineHor(startX, y - dy, endX + 1);
+				}
+				ctx.stroke();
+
+				if (angle && window["IS_NATIVE_EDITOR"])
+					ctx.nativeTextDecorationTransform(false);
+			}
+			this.pendingDecorations.length = 0;
 		};
 		TableCellDrawState.prototype.getBidiType = function(char, charProp) {
 			if (charProp && charProp.nl) {
@@ -1480,7 +1494,9 @@
 				this.bidiFlow.add({
 					charIndex: i,
 					charProp: charProp,
-					fragmentProp: prop
+					fragmentProp: prop,
+					y: this.y,
+					baselineY: this.baselineY
 				}, bidiType);
 				i++;
 			}
@@ -1527,10 +1543,26 @@
 			}
 
 			let fontSize = prop && prop.font ? prop.font.getSize() : 10;
-			let y = this.y;
+			let y = data.y;
 
 			if (grapheme !== AscFonts.NO_GRAPHEME) {
 				AscFonts.DrawGrapheme(grapheme, this.drawingCtx, this.x, y, fontSize, this.ppiy / 25.4);
+			}
+
+			if (prop && prop.font) {
+				let isSO = prop.font.getStrikeout() === true;
+				let ul = Asc.EUnderline.underlineNone !== prop.font.getUnderline();
+				if (isSO || ul) {
+					let startX = this.x;
+					let endX = this.x + width;
+					let last = this.pendingDecorations.length > 0 ? this.pendingDecorations[this.pendingDecorations.length - 1] : null;
+					if (last && last.prop === prop) {
+						last.startX = Math.min(last.startX, startX);
+						last.endX = Math.max(last.endX, endX);
+					} else {
+						this.pendingDecorations.push({startX: startX, endX: endX, prop: prop, baselineY: data.baselineY});
+					}
+				}
 			}
 
 			this.x += width;
@@ -1557,6 +1589,8 @@
 			this.currentLine = null;
 			this.startIdx = 0;
 			this.lastHandledFont = null;
+			this.baselineY = 0;
+			this.pendingDecorations.length = 0;
 			this.textColor = textColor || null;
 			this.angle = angle || 0;
 			this.zoom = this.drawingCtx.getZoom();
