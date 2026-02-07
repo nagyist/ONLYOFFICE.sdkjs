@@ -226,14 +226,18 @@
 			}
 			else
 			{
+				let graphemeW = w + (r ? 1 : 0);
+				if (r)
+					--r;
+
 				if (this.IsRtlDirection())
 				{
 					this.private_HandleItem(this.Buffer[charIndex], AscFonts.NO_GRAPHEME, w);
-					this.private_HandleItem(this.Buffer[charIndex + codePointCount - 1], grapheme, w);
+					this.private_HandleItem(this.Buffer[charIndex + codePointCount - 1], grapheme, graphemeW);
 				}
 				else
 				{
-					this.private_HandleItem(this.Buffer[charIndex], grapheme, w);
+					this.private_HandleItem(this.Buffer[charIndex], grapheme, graphemeW);
 					this.private_HandleItem(this.Buffer[charIndex + codePointCount - 1], AscFonts.NO_GRAPHEME, w);
 				}
 
