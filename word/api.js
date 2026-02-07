@@ -7062,8 +7062,6 @@ background-repeat: no-repeat;\
 		return this.WordControl.m_oLogicDocument.GetHyperlinkAnchors();
 	};
 
-
-
 	asc_docs_api.prototype.sync_HyperlinkPropCallback = function(hyperProp)
 	{
 		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new asc_CSelectedObject(c_oAscTypeSelectElement.Hyperlink, new Asc.CHyperlinkProperty(hyperProp));

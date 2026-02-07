@@ -7233,29 +7233,24 @@ CDocument.prototype.CanAddDropCap = function()
 };
 /**
  * Обновляем данные в интерфейсе о свойствах графики (картинки, автофигуры).
- * @param Flag
  * @returns {*}
  */
-CDocument.prototype.Interface_Update_DrawingPr = function(Flag)
+CDocument.prototype.Interface_Update_DrawingPr = function()
 {
-	var DrawingPr = this.DrawingObjects.Get_Props();
-
-	if (true === Flag)
-		return DrawingPr;
-	else
+	if (!this.Api)
+		return;
+	
+	let showHyperlinks = docpostype_DrawingObjects === this.GetDocPosType() && !this.DrawingObjects.getTargetDocContent();
+	let drawingProps = this.DrawingObjects.Get_Props();
+	for (let i = 0; i < drawingProps.length; ++i)
 	{
-		if (this.Api)
-		{
-			for (var i = 0; i < DrawingPr.length; ++i)
-			{
-				DrawingPr[i] instanceof Asc.CHyperlinkProperty
-					? this.Api.sync_HyperlinkPropCallback(DrawingPr[i])
-					: this.Api.sync_ImgPropCallback(DrawingPr[i]);
-			}
-		}
+		let pr = drawingProps[i];
+		
+		if (!(pr instanceof Asc.CHyperlinkProperty))
+			this.Api.sync_ImgPropCallback(pr);
+		else if (showHyperlinks)
+			this.Api.sync_HyperlinkPropCallback(pr);
 	}
-	if (Flag)
-		return null;
 };
 /**
  * Обновляем данные в интерфейсе о свойствах таблицы.
@@ -13270,17 +13265,14 @@ CDocument.prototype.RemoveHyperlink = function(oHyperProps)
 	}
 	else if (!oClass)
 	{
-		// shape/image hyperlink
 		if (docpostype_DrawingObjects === this.GetDocPosType())
-			return this.DrawingObjects.hyperlinkModify(oHyperProps);
-		return;
+			this.DrawingObjects.hyperlinkRemove();
 	}
 	else
 	{
 		return;
 	}
-
-	//this.Controller.RemoveHyperlink();
+	
 	this.Recalculate();
 	this.Document_UpdateSelectionState();
 	this.Document_UpdateInterfaceState();
