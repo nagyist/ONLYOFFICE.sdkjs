@@ -19831,8 +19831,11 @@
 				if(cell){
 					switch(cell.getType()){
 						case CellValueType.String: {
-
-							let dir = AscCommon.getFirstStrongDirection(cell.text);
+							let cellText = cell.text;
+							if (null == cellText && null != cell.multiText) {
+								cellText = AscCommonExcel.getStringFromMultiText(cell.multiText);
+							}
+							let dir = AscCommon.getFirstStrongDirection(cellText);
 							if (dir === AscBidi.DIRECTION_FLAG.RTL) {
 								align = AscCommon.align_Right;
 							}
