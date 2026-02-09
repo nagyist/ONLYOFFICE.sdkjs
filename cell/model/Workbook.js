@@ -9419,6 +9419,38 @@
 			}
 		});
 	};
+	Worksheet.prototype._getLockedOnlyXfIndex = function(xfIndex) {
+		// Get the original style by xfIndex
+		let originalXfs = AscCommonExcel.g_StyleCache.getXf(xfIndex);
+		if (!originalXfs) {
+			return null;
+		}
+		
+		// Get protection-related values from the original style (only locked and applyProtection)
+		let lockedValue = originalXfs.getLocked();
+		let applyProtectionValue = originalXfs.getApplyProtection();
+		
+		// If all protection values are default (locked=true/null, applyProtection=null), 
+		// no need to preserve custom style
+		if ((lockedValue === null || lockedValue === true) && 
+			applyProtectionValue === null) {
+			return null;
+		}
+		
+		// Create a minimal style with only protection properties (locked, applyProtection)
+		let newXfs = new AscCommonExcel.CellXfs();
+		if (lockedValue !== null) {
+			newXfs.setLocked(lockedValue);
+		}
+		if (applyProtectionValue !== null) {
+			newXfs.setApplyProtection(applyProtectionValue);
+		}
+		
+		// Register the new style and return its index
+		let registeredXfs = AscCommonExcel.g_StyleCache.addXf(newXfs);
+		return registeredXfs ? registeredXfs.getIndexNumber() : null;
+	};
+	
 	Worksheet.prototype._moveCells = function(oBBoxFrom, oBBoxTo, copyRange, wsTo, offset) {
 		var oThis = this;
 		var nRowsCountNew = 0;
@@ -9426,6 +9458,8 @@
 		var dependencyFormulas = oThis.workbook.dependencyFormulas;
 		var moveToOtherSheet = this !== wsTo;
 		var isClearFromArea = !copyRange || (copyRange && oThis.workbook.bUndoChanges);
+		let isLockedSheet = this.getSheetProtection();
+		var getLockedOnlyXfIndex = isLockedSheet ? this._getLockedOnlyXfIndex : null;
 		var moveCells = function(copyRange, from, to, r1From, r1To, count){
 			var fromData = oThis.getColDataNoEmpty(from);
 			var toData;
@@ -9434,12 +9468,24 @@
 				toData.copyRange(fromData, r1From, r1To, count);
 				if (isClearFromArea) {
 					if(from !== to || moveToOtherSheet) {
-						fromData.clear(r1From, r1From + count);
+						if (isLockedSheet) {
+							fromData.clearExceptLocked(r1From, r1From + count, getLockedOnlyXfIndex);
+						} else {
+							fromData.clear(r1From, r1From + count);
+						}
 					} else {
 						if (r1From < r1To) {
-							fromData.clear(r1From, Math.min(r1From + count, r1To));
+							if (isLockedSheet) {
+								fromData.clearExceptLocked(r1From, Math.min(r1From + count, r1To), getLockedOnlyXfIndex);
+							} else {
+								fromData.clear(r1From, Math.min(r1From + count, r1To));
+							}
 						} else {
-							fromData.clear(Math.max(r1From, r1To + count), r1From + count);
+							if (isLockedSheet) {
+								fromData.clearExceptLocked(Math.max(r1From, r1To + count), r1From + count, getLockedOnlyXfIndex);
+							} else {
+								fromData.clear(Math.max(r1From, r1To + count), r1From + count);
+							}
 						}
 					}
 				}
