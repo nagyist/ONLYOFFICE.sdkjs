@@ -1475,7 +1475,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     DrawingBase.prototype._getGraphicObjectCoords = function()
     {
         var _t = this;
-
+        if (!this.worksheet)
+            return null;
         if ( _t.isGraphicObject() ) {
             var ret = {Pos:{}, ext: {}, from: {}, to: {}};
             var rot = AscFormat.isRealNumber(_t.graphicObject.rot) ? _t.graphicObject.rot : 0;
@@ -1535,6 +1536,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
 
     DrawingBase.prototype.setGraphicObjectCoords = function() {
         var _t = this;
+        if (!this.worksheet)
+            return;
         var oCoords = this._getGraphicObjectCoords();
         if(oCoords)
         {
@@ -1609,6 +1612,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     DrawingBase.prototype.checkBoundsFromTo = function() {
         var _t = this;
 
+        if (!this.worksheet)
+            return;
         if ( _t.isGraphicObject() && _t.graphicObject.bounds) {
 
 
