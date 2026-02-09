@@ -896,7 +896,9 @@
 		let oTextPr	= oDoc.GetDirectTextPr();
 
 		let oMathElement = new AscCommonWord.MathMenu(Type, oTextPr ? oTextPr.Copy() : null);
-		oDoc.AddToParagraph(oMathElement, false);
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(oMathElement, false);
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.asc_ConvertMathView = function(isToLinear, isAll)
 	{
@@ -3526,19 +3528,31 @@
 	////////////////////////////////////////////////////////////
 
 	PDFEditorApi.prototype.put_TextPrBold = function(value) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({Bold : value}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({Bold : value}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_TextPrItalic = function(value) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({Italic : value}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({Italic : value}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_TextPrUnderline = function(value) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({Underline : value}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({Underline : value}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_TextPrStrikeout = function(value) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({
-			Strikeout  : value,
-			DStrikeout : false
-		}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({
+				Strikeout  : value,
+				DStrikeout : false
+			}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_PrLineSpacing = function(nType, nValue) {
 		this.getPDFDoc().SetParagraphSpacing({LineRule : nType, Line : nValue});
@@ -3561,10 +3575,16 @@
 	};
 	// 0- baseline, 2-subscript, 1-superscript
 	PDFEditorApi.prototype.put_TextPrBaseline = function(value) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({VertAlign : value}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({VertAlign : value}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_TextPrFontSize = function(size) {
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({FontSize : Math.min(size, 300)}));
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({FontSize : Math.min(size, 300)}));
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.put_TextPrFontName = function(name) {
 		var loader   = AscCommon.g_font_loader;
@@ -3572,20 +3592,26 @@
 		var isasync  = loader.LoadFont(fontinfo);
 
 		if (false === isasync) {
-			this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({
-				FontFamily : {
-					Name  : name,
-					Index : -1
-				}
-			}));
+			let oDoc = this.getPDFDoc();
+			oDoc.DoAction(function() {
+				oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({
+					FontFamily : {
+						Name  : name,
+						Index : -1
+					}
+				}));
+			}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 		}
 	};
 	PDFEditorApi.prototype.put_TextColor = function(color) {
-		var _unifill        = new AscFormat.CUniFill();
+		let _unifill        = new AscFormat.CUniFill();
 		_unifill.fill       = new AscFormat.CSolidFill();
 		_unifill.fill.color = AscFormat.CorrectUniColor(color, _unifill.fill.color, 0);
 
-		this.getPDFDoc().AddToParagraph(new AscCommonWord.ParaTextPr({Unifill : _unifill}), false);
+		let oDoc = this.getPDFDoc();
+		oDoc.DoAction(function() {
+			oDoc.AddToParagraph(new AscCommonWord.ParaTextPr({Unifill : _unifill}), false);
+		}, AscDFH.historydescription_Presentation_ParagraphAdd, this);
 	};
 	PDFEditorApi.prototype.asc_ChangeTextCase = function(nType) {
 		this.getPDFDoc().ChangeTextCase(nType);

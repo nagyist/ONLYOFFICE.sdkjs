@@ -3365,7 +3365,9 @@
 						this._checkTargetUpdate();
 					}
 					else {
-						oDoc.AddToParagraph(new AscWord.CRunTab());
+						oDoc.DoAction(function() {
+							oDoc.AddToParagraph(new AscWord.CRunTab());
+						}, AscDFH.historydescription_Presentation_ParagraphAdd);
 					}
 				}
 				else {
