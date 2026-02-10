@@ -422,7 +422,14 @@
 			
 			if (form.IsCheckBox() && !form.IsRadioButton())
 				formData["label"] = form.GetCheckBoxLabel();
-				
+			
+			if (form.IsDatePicker())
+			{
+				formData["format"] = form.GetDatePickerPr().GetDateFormat();
+				let lcid = form.GetDatePickerPr().GetLangId();
+				if (lcid)
+					formData["lang"] = Asc.g_oLcidIdToNameMap[lcid];
+			}
 			
 			data.push(formData);
 		}
