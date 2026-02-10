@@ -3665,23 +3665,32 @@
 				},
 
 				insertHyperlink: function (options) {
-
 					if (this.checkSelectedObjectsProtectionText()) {
 						return;
 					}
-					if (!this.getHyperlinkInfo()) {
-						this.checkSelectedObjectsAndCallback(this.hyperlinkAdd, [{
-							Text: options.text,
-							Value: options.hyperlinkModel.Hyperlink,
-							ToolTip: options.hyperlinkModel.Tooltip
-						}], false, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd);
-					} else {
-						this.checkSelectedObjectsAndCallback(this.hyperlinkModify, [{
-							Text: options.text,
-							Value: options.hyperlinkModel.Hyperlink,
-							ToolTip: options.hyperlinkModel.Tooltip
-						}], false, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify);
+
+					let hyperlinkValue = options.hyperlinkModel.Hyperlink;
+					let hyperlinkAnchor = null;
+					let hyperlinkTooltip = options.hyperlinkModel.Tooltip;
+
+					if (!hyperlinkValue) {
+						const location = options.hyperlinkModel.getLocation && options.hyperlinkModel.getLocation();
+						if (location) {
+							hyperlinkAnchor = location;
+						}
 					}
+
+					const hyperProps = {
+						Text: options.text,
+						Value: hyperlinkValue,
+						Anchor: hyperlinkAnchor,
+						ToolTip: hyperlinkTooltip
+					};
+
+					const hyperlinkInfo = this.getHyperlinkInfo();
+					hyperlinkInfo
+						? this.checkSelectedObjectsAndCallback(this.hyperlinkModify, [hyperProps], false, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkModify)
+						: this.checkSelectedObjectsAndCallback(this.hyperlinkAdd, [hyperProps], false, AscDFH.historydescription_Spreadsheet_SetCellHyperlinkAdd);
 				},
 
 				removeHyperlink: function () {
