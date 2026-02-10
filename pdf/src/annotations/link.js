@@ -266,7 +266,7 @@
 
     CAnnotationLink.prototype.RefillGeometry = function() {
         let aQuads = this.GetQuads();
-        if (aQuads.length == 0 || aQuads.length > 1 || this.GetBorder() !== AscPDF.BORDER_TYPES.underline) {
+        if (aQuads.length > 1 || this.GetBorder() !== AscPDF.BORDER_TYPES.underline) {
             return;
         }
 
