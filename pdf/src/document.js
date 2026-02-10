@@ -5748,8 +5748,8 @@ var CPresentation = CPresentation || function(){};
             let nPage   = aSelQuads[nInfo].page;
             let aQuads  = aSelQuads[nInfo].quads;
 
-            aQuads.forEach(function(rect) {
-                let aMinRect = getMinRect(rect);
+            aQuads.forEach(function(quads) {
+                let aMinRect = getMinRect(quads);
                 let MinX = aMinRect[0];
                 let MinY = aMinRect[1];
                 let MaxX = aMinRect[2];
@@ -5775,7 +5775,14 @@ var CPresentation = CPresentation || function(){};
                 oAnnot.SetHighlight(AscPDF.BUTTON_HIGHLIGHT_TYPES.none);
 
                 if (isTextSelection) {
-                    oAnnot.SetQuads(aQuads);
+                    let dx = quads[2] - quads[0];
+                    let dy = quads[3] - quads[1];
+                    let angle = Math.atan2(dy, dx);
+
+                    if (angle !== 0) {
+                        oAnnot.SetQuads([quads]);
+                    }
+
                     oAnnot.SetBorder(AscPDF.BORDER_TYPES.underline);
                 }
                 else {
