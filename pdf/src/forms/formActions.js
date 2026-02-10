@@ -430,9 +430,9 @@
             case 4:
             {
                 memory.WriteDouble(this.rect.left);
-                memory.WriteDouble(this.rect.bottom);
-                memory.WriteDouble(this.rect.right);
                 memory.WriteDouble(this.rect.top);
+                memory.WriteDouble(this.rect.right);
+                memory.WriteDouble(this.rect.bottom);
                 break;
             }
         }
