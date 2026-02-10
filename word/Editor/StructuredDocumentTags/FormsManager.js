@@ -397,19 +397,69 @@
 				stringType = "radio";
 			
 			let roleColor = form.GetRoleColor();
-			
-			data.push({
+			let formData = {
 				"key"       : key,
 				"tag"       : form.GetTag(),
 				"value"     : this.GetFormValue(form),
 				"type"      : stringType,
 				"role"      : form.GetFormRole(),
 				"roleColor" : roleColor ? roleColor.ToHexColor() : undefined
-			});
+			};
+			
+			let formOptions = this.GetFormOptions(form);
+			if (formOptions)
+				formData["options"] = formOptions;
+			
+			data.push(formData);
 		}
 		
 		return data;
 	};
+	CFormsManager.prototype.GetFormOptions = function(form)
+	{
+		if (form.IsRadioButton())
+		{
+			let groupKey = form.GetCheckBoxPr().GetGroupKey();
+			let group   = this.GetRadioButtons(groupKey);
+			let options = [];
+			for (let i = 0, count = group.length; i < count; ++i)
+			{
+				let rb = group[i];
+				options.push({
+					"value" : rb.GetFormKey(),
+					"label" : rb.GetCheckBoxLabel()
+				});
+			}
+			return options;
+		}
+		else if (form.IsCheckBox())
+		{
+			let label = form.GetCheckBoxLabel();
+			return [{
+				"value" : true,
+				"label" : label
+			}, {
+				"value" : false,
+				"label" : label
+			}];
+		}
+		else if (form.IsDropDownList() || form.IsComboBox())
+		{
+			let pr      = form.IsComboBox() ? form.GetComboBoxPr() : form.GetDropDownListPr();
+			let options = [];
+			for (let i = 0, count = pr.GetItemsCount(); i < count; ++i)
+			{
+				options.push({
+					"value" : pr.GetItemValue(i),
+					"label" : pr.GetItemDisplayText(i)
+				});
+			}
+			return options;
+		}
+
+		return undefined;
+	};
+
 	CFormsManager.prototype.SetAllFormsData = function(data)
 	{
 		if (!data || !Array.isArray(data))
