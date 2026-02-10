@@ -13249,43 +13249,96 @@ function isAllowPasteLink(pastedWb) {
 
 		let action = function (stopFunc, props) {
 			let _ranges = props && props.ranges ? props.ranges : t.model.selectionRange.ranges;
-			let _oExistCells = props && props.oExistCells ? props.oExistCells : {};
+			let _oExistCells = props && props.oExistCells ? props.oExistCells : new Map();
 			let _oSelectionMathInfo = props.oSelectionMathInfo;
 
 			if (!_oSelectionMathInfo || !_ranges) {
 				return;
 			}
 
-			for (let i = 0; i < _ranges.length; i++) {
-				var cellValue;
-				let item = _ranges[i];
-				var range = t.model.getRange3(item.r1, item.c1, item.r2, item.c2);
-				let needBreak = false;
-				let _col, _row;
-				range._setPropertyNoEmpty(null, null, function (cell, r) {
-					var idCell = cell.nCol + '-' + cell.nRow;
-					if (!_oExistCells[idCell] && !cell.isNullTextString() && 0 < t._getRowHeight(r)) {
-						_oExistCells[idCell] = true;
-						++_oSelectionMathInfo.count;
-						if (CellValueType.Number === cell.getType()) {
-							cellValue = cell.getNumberValue();
-							if (0 === _oSelectionMathInfo.countNumbers) {
-								_oSelectionMathInfo.min = _oSelectionMathInfo.max = cellValue;
-							} else {
-								_oSelectionMathInfo.min = Math.min(_oSelectionMathInfo.min, cellValue);
-								_oSelectionMathInfo.max = Math.max(_oSelectionMathInfo.max, cellValue);
+		const maxCol = AscCommon.gc_nMaxCol0;
+		const hasStopFunc = !!stopFunc;
+		const max_size = 100000;
+		let lastCleanupRow = -1;
+
+		for (let i = 0; i < _ranges.length; i++) {
+			let item = _ranges[i];
+			let range = t.model.getRange3(item.r1, item.c1, item.r2, item.c2);
+			let needBreak = false;
+			let _col, _row;
+			let cachedRowHeight = null;
+			let lastRow = -1;
+
+			range._setPropertyNoEmpty(null, null, function (cell, r) {
+					if (_oExistCells.size > max_size && r > lastCleanupRow + 1000) {
+						let minRowToKeep = r - 500;
+						_oExistCells.forEach(function(value, key){
+							let rowNum = key % maxCol;
+							if (rowNum < minRowToKeep) {
+								_oExistCells.delete(key);
 							}
-							++_oSelectionMathInfo.countNumbers;
-							props.sum += cellValue;
-						}
+						});
+						lastCleanupRow = r;
 					}
 
-					_col = cell.nCol;
-					_row = cell.nRow;
+					let idCell = cell.nCol * maxCol + cell.nRow;
 
-					if (stopFunc && stopFunc()) {
-						needBreak = true;
-						return true;
+					if (_oExistCells.has(idCell) || cell.isNullTextString()) {
+						if (hasStopFunc) {
+							_col = cell.nCol;
+							_row = cell.nRow;
+							if (stopFunc()) {
+								needBreak = true;
+								return true;
+							}
+						}
+						return;
+					}
+
+					if (r !== lastRow) {
+						lastRow = r;
+						cachedRowHeight = t._getRowHeight(r);
+					}
+
+					if (cachedRowHeight <= 0) {
+						if (hasStopFunc) {
+							_col = cell.nCol;
+							_row = cell.nRow;
+							if (stopFunc()) {
+								needBreak = true;
+								return true;
+							}
+						}
+						return;
+					}
+
+					_oExistCells.set(idCell, 1);
+					++_oSelectionMathInfo.count;
+
+					let cellType = cell.getType();
+					if (CellValueType.Number === cellType) {
+						let cellValue = cell.getNumberValue();
+						if (0 === _oSelectionMathInfo.countNumbers) {
+							_oSelectionMathInfo.min = _oSelectionMathInfo.max = cellValue;
+						} else {
+							if (cellValue < _oSelectionMathInfo.min) {
+								_oSelectionMathInfo.min = cellValue;
+							}
+							if (cellValue > _oSelectionMathInfo.max) {
+								_oSelectionMathInfo.max = cellValue;
+							}
+						}
+						++_oSelectionMathInfo.countNumbers;
+						props.sum += cellValue;
+					}
+
+					if (hasStopFunc) {
+						_col = cell.nCol;
+						_row = cell.nRow;
+						if (stopFunc()) {
+							needBreak = true;
+							return true;
+						}
 					}
 				});
 
@@ -13363,7 +13416,7 @@ function isAllowPasteLink(pastedWb) {
 			};
 
 			oAsyncSelectionMathInfo.props = {};
-			oAsyncSelectionMathInfo.props.oExistCells = {};
+			oAsyncSelectionMathInfo.props.oExistCells = new Map();
 			oAsyncSelectionMathInfo.props.oSelectionMathInfo = oSelectionMathInfo;
 			oAsyncSelectionMathInfo.props.sum = 0;
 			let cloneRanges = [];
@@ -13374,7 +13427,7 @@ function isAllowPasteLink(pastedWb) {
 			oAsyncSelectionMathInfo.start();
 
 		} else {
-			let simpleProps = {oSelectionMathInfo: oSelectionMathInfo, sum: 0};
+			let simpleProps = {oSelectionMathInfo: oSelectionMathInfo, sum: 0, oExistCells: new Map()};
 			action(null, simpleProps);
 			afterAction(simpleProps);
 		}
