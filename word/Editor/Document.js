@@ -4231,7 +4231,8 @@ CDocument.prototype.Recalculate_PageColumn                   = function()
                 this.CurPage = PageIndex; // TODO: переделать
         }
 
-		if (docpostype_Content === this.GetDocPosType() && ((true !== this.Selection.Use && Index === this.CurPos.ContentPos + 1) || (true === this.Selection.Use && Index === (Math.max(this.Selection.EndPos, this.Selection.StartPos) + 1))))
+		let cursorPos = true !== this.Selection.Use ? this.CurPos.ContentPos : Math.max(this.Selection.EndPos, this.Selection.StartPos);
+		if (docpostype_Content === this.GetDocPosType() && (Index === cursorPos + 1 || (cursorPos === Index && cursorPos === Count - 1)))
 			this.UpdateCursorOnRecalculate();
     }
 
