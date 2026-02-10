@@ -2842,7 +2842,7 @@ background-repeat: no-repeat;\
 		let bIsDownloadEvent = options.isDownloadEvent;
 		let changes = null;
 		let isCloudLocal = false;
-		if (this.isUseNativeViewer && this.isDocumentRenderer()) {
+		if (this.isUseNativeViewer && this.isDocumentRenderer() && 0 === this.DocumentRenderer.file.type) {
 			isCloudLocal = this.isCloudSaveAsLocalToDrawingFormat(Asc.c_oAscAsyncAction.DownloadAs, Asc.c_oAscFileType.PDF);
 			changes = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Save();
 			if (!changes && isCloudLocal)
