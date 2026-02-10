@@ -4445,11 +4445,12 @@
 				let prefix = AscFonts.getEmbeddedFontPrefix();
 
 				if (TextPr.FontFamily.Name && TextPr.FontFamily.Name.startsWith(prefix)) {
-					let subStr = TextPr.FontFamily.Name.slice(prefix.length);
-    				let lastSpaceIdx = subStr.lastIndexOf(' ');
+					let match = TextPr.FontFamily.Name.match(/ (\d+)$/);
+					let lastSpaceIdx = match ? match.index : -1;
 
 					if (lastSpaceIdx !== -1) {
-						TextPr.FontFamily.Name = TextPr.FontFamily.Name.slice(0, lastSpaceIdx);
+						let subStr = TextPr.FontFamily.Name.slice(0, lastSpaceIdx);
+						TextPr.FontFamily.Name = subStr;
 					}
 				}
 			}
