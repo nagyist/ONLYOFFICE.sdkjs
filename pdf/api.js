@@ -1513,13 +1513,10 @@
 				};
 
 				oLink.SetActions(AscPDF.PDF_TRIGGERS_TYPES.MouseUp, [oAction]);
-				
-				result = true;
 			});
 		}, AscDFH.historydescription_Pdf_ContextMenuRemove);
 
 		this.SetCanInteract(true);
-		result && oDoc.GoToAnnot(arrIds[0]);
 	};
 	PDFEditorApi.prototype.OnAfterAddLinkAnnot = function(aIds) {
 		Asc.editor.sendEvent("asc_onDialogAddAnnotLink", aIds);
