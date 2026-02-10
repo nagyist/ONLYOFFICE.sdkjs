@@ -3670,20 +3670,22 @@
 					}
 
 					let hyperlinkValue = options.hyperlinkModel.Hyperlink;
-					let hyperlinkAnchor = null;
 					let hyperlinkTooltip = options.hyperlinkModel.Tooltip;
 
 					if (!hyperlinkValue) {
 						const location = options.hyperlinkModel.getLocation && options.hyperlinkModel.getLocation();
 						if (location) {
-							hyperlinkAnchor = location;
+							hyperlinkValue = '#' + location;
 						}
+					}
+
+					if (!hyperlinkValue) {
+						return;
 					}
 
 					const hyperProps = {
 						Text: options.text,
 						Value: hyperlinkValue,
-						Anchor: hyperlinkAnchor,
 						ToolTip: hyperlinkTooltip
 					};
 

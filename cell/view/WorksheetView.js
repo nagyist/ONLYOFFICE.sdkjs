@@ -12059,11 +12059,17 @@ function isAllowPasteLink(pastedWb) {
 				if (drawingInfo.hyperlink instanceof ParaHyperlink) {
 					oHyperlink = new AscCommonExcel.Hyperlink();
 					oHyperlink.Tooltip = drawingInfo.hyperlink.ToolTip;
-					var spl = drawingInfo.hyperlink.Value.split("!");
+
+					let hyperlinkValue = drawingInfo.hyperlink.Value;
+					if (typeof hyperlinkValue === 'string' && hyperlinkValue[0] === '#') {
+						hyperlinkValue = hyperlinkValue.slice(1);
+					}
+
+					const spl = hyperlinkValue.split('!');
 					if (spl.length === 2) {
-						oHyperlink.setLocation(drawingInfo.hyperlink.Value);
+						oHyperlink.setLocation(hyperlinkValue);
 					} else {
-						oHyperlink.Hyperlink = drawingInfo.hyperlink.Value;
+						oHyperlink.Hyperlink = hyperlinkValue;
 					}
 
 					cellCursor =
@@ -13838,12 +13844,17 @@ function isAllowPasteLink(pastedWb) {
                 var hyperlink = new AscCommonExcel.Hyperlink();
                 hyperlink.Tooltip = shapeHyperlink.ToolTip;
 
-                var spl = shapeHyperlink.Value.split("!");
-                if (spl.length === 2) {
-                    hyperlink.setLocation(shapeHyperlink.Value);
-                } else {
-                    hyperlink.Hyperlink = shapeHyperlink.Value;
-                }
+				let hyperlinkValue = shapeHyperlink.Value;
+				if (typeof hyperlinkValue === 'string' && hyperlinkValue[0] === '#') {
+					hyperlinkValue = hyperlinkValue.slice(1);
+				}
+
+				const spl = hyperlinkValue.split('!');
+				if (spl.length === 2) {
+					hyperlink.setLocation(hyperlinkValue);
+				} else {
+					hyperlink.Hyperlink = hyperlinkValue;
+				}
 
                 objectInfo.hyperlink = new asc_CHyperlink(hyperlink);
                 objectInfo.hyperlink.asc_setText(shapeHyperlink.GetSelectedText(true, true));
