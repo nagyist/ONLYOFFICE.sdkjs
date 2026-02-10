@@ -2035,13 +2035,18 @@ $(function () {
 		bCaFromSelectedCell = null;
 		// - Case: Formula VLOOKUP is a recursive cell with disabled setting. Bug-79238
 		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;3;FALSE)");
-		//ws.getRange2("C601").setValue("=COUNTA(FILTER(Sheet2!$A$1:$A$3;Sheet2!$B$1:$B$3=A601))");
 		assert.strictEqual(ws2.getRange2("A1").getValue(), "0", "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. Sheet2!A1 - 0");
 		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
 		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: true");
 		bCaFromSelectedCell = null;
 		bCaFromSelectedCell = getCaFromSelectedCell("C601");
 		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. C601 - flag ca: true");
+		bCaFromSelectedCell = null;
+		// - Case: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;2;FALSE)");
+		assert.strictEqual(ws2.getRange2("A1").getValue(), "321", "Test: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238. Sheet2!A1 - 321");
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: false");
 		bCaFromSelectedCell = null;
 		// Clear cell data on Sheet2
 		ws2.getRange2("A1").setValue("");

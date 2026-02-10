@@ -7802,6 +7802,7 @@ function parserFormula( formula, parent, _ws ) {
 		var argPosArrMap = [];
 		var startArrayArg = null;
 		let bConditionalFormula = false;
+		let bRecheckFormula = false;
 
 		let atOperatorStack = [];
 
@@ -8228,6 +8229,7 @@ function parserFormula( formula, parent, _ws ) {
 		};
 		const isRecursiveFormula = function (found_operand, parserFormula) {
 			const nOperandType = found_operand.type;
+			const aRecheckFormulas = ['VLOOKUP', 'HLOOKUP'];
 			let oRange = null;
 			let bRecursiveCell = parserFormula.ca;
 			let sFunctionName = "";
@@ -8252,7 +8254,10 @@ function parserFormula( formula, parent, _ws ) {
 				return bRecursiveCell;
 			}
 			if (nOperandType === cElementType.cellsRange || nOperandType === cElementType.cellsRange3D) {
-				return parserFormula._isAreaContainCell(found_operand);
+				bRecursiveCell = parserFormula._isAreaContainCell(found_operand);
+			}
+			if (!bRecheckFormula && aRecheckFormulas.includes(sFunctionName)) {
+				bRecheckFormula = true;
 			}
 			if (nOperandType === cElementType.name || nOperandType === cElementType.name3D) {
 				const oElemValue = found_operand.getValue();
@@ -9010,6 +9015,22 @@ function parserFormula( formula, parent, _ws ) {
 					}
 				}
 			});
+		}
+		if (bRecheckFormula && t.getParent() && t.getParent() instanceof AscCommonExcel.CCellWithFormula && !ignoreErrors) {
+			const aRefElements = t.getRefElements();
+			let bRecursiveCell = false;
+			aRefElements.forEach(function (oRefElement) {
+				if (oRefElement.type === cElementType.name || oRefElement.type === cElementType.name3D) {
+					oRefElement = oRefElement.getValue();
+				}
+				const oRange = oRefElement && oRefElement.getRange && oRefElement.getRange();
+				oRange && oRange._foreachNoEmpty(function (oCell) {
+					if (!bRecursiveCell) {
+						bRecursiveCell = oCell.checkRecursiveFormula(t.getParent(), [], bRecheckFormula);
+					}
+				});
+			});
+			t.ca = bRecursiveCell;
 		}
 		if (parenthesesNotEnough) {
 			parseResult.setError(c_oAscError.ID.FrmlParenthesesCorrectCount);
@@ -11564,6 +11585,70 @@ function parserFormula( formula, parent, _ws ) {
 	parserFormula.prototype.getAca = function (val) {
 		return this.aca;
 	};
+	/**
+	 * Returns an array of reference cells from outStack attribute.
+	 * @memberof parserFormula
+	 * @returns {[]}
+	 */
+	parserFormula.prototype.getRefElements = function () {
+		const aRefElements = [];
+		const aExcludeFormulas = aExcludeRecursiveFormulas;
+		const aLookupFormulas = ['VLOOKUP', 'HLOOKUP'];
+
+		for (let i = 0, length = this.getOutStackSize(); i < length; i++) {
+			const oOutStackElem = this.getOutStackElem(i);
+			const nElemType = oOutStackElem.type;
+			const b3D = nElemType === cElementType.cell3D || nElemType === cElementType.cellsRange3D || nElemType === cElementType.name3D;
+			const bArea = nElemType === cElementType.cellsRange || nElemType === cElementType.name;
+			const bDefName = nElemType === cElementType.name || nElemType === cElementType.name3D;
+			const bTable = nElemType === cElementType.table;
+			const nPrevIndex = i - 1;
+
+			if (nElemType === cElementType.func && aExcludeFormulas.includes(oOutStackElem.name)) {
+				const nArgsCount = this.getOutStackElem(nPrevIndex);
+				if (nArgsCount > 0) {
+					const nStartIndex = nPrevIndex - 1;
+					const nEndIndex = nPrevIndex - nArgsCount;
+					const aLinkTypes =  [cElementType.cell, cElementType.cell3D, cElementType.cellsRange,
+						cElementType.cellsRange3D, cElementType.name, cElementType.name3D, cElementType.table];
+					for (let j = nStartIndex; j >= nEndIndex; j--) {
+						if (j < 0) {
+							break;
+						}
+						const oElem = this.getOutStackElem(j);
+						if (aLinkTypes.includes(oElem.type)) {
+							aRefElements.pop();
+						}
+					}
+				}
+			}
+			if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
+				const nArgsCount = this.getOutStackElem(nPrevIndex);
+				const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
+				const nIndexNumValue = this.getOutStackElem(nIndexNumId).tocNumber().toNumber() - 1;
+				const oTableArrayArg = this.getOutStackElem(nIndexNumId - 1).clone();
+				const nIndexTableArray = aRefElements.findIndex(function (oElem) {
+					return oElem.toString() === oTableArrayArg.toString();
+				});
+				const oTableArrayRange = oTableArrayArg.getRange().clone();
+				const oTableArrayBbox = oTableArrayRange.getBBox0();
+				// Updating Range according index_num value
+				if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
+					oTableArrayBbox.c1 = nIndexNumValue;
+					oTableArrayBbox.c2 = nIndexNumValue;
+				} else if (nIndexNumValue >= 0) {
+					oTableArrayBbox.r1 = nIndexNumValue;
+					oTableArrayBbox.r2 = nIndexNumValue;
+				}
+				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
+			}
+			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
+				aRefElements.push(oOutStackElem);
+			}
+		}
+
+		return aRefElements;
+	}
 
 	/**
 	 * Class representative an iterative calculations logic

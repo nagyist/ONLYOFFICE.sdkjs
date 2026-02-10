@@ -15559,7 +15559,7 @@
 			} else if(arrayFormula && this.formulaParsed.checkFirstCellArray(this)) {
 				//***array-formula***
 				var fText = "=" + this.formulaParsed.getFormula();
-				this.formulaParsed.removeDependencies();
+				//this.formulaParsed.removeDependencies();
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_DeleteFormula, this.ws.getId(),
 					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, this.formulaParsed.getCm(), this.formulaParsed.getVm()), true);
 			} else {
@@ -16490,72 +16490,6 @@
 	};
 
 	/**
-	 * Function returns an array of reference cells from outStack attribute of parserFormula class.
-	 * @param {parserFormula} oFormulaParsed
-	 * @returns {[]}
-	 * @private
-	 */
-	function _getRefElements(oFormulaParsed) {
-		const aRefElements = [];
-		const aExcludeFormulas = AscCommonExcel.aExcludeRecursiveFormulas;
-		const aLookupFormulas = ['VLOOKUP', 'HLOOKUP'];
-
-		for (let i = 0, length = oFormulaParsed.getOutStackSize(); i < length; i++) {
-			const oOutStackElem = oFormulaParsed.getOutStackElem(i);
-			const nElemType = oOutStackElem.type;
-			const b3D = nElemType === cElementType.cell3D || nElemType === cElementType.cellsRange3D || nElemType === cElementType.name3D;
-			const bArea = nElemType === cElementType.cellsRange || nElemType === cElementType.name;
-			const bDefName = nElemType === cElementType.name || nElemType === cElementType.name3D;
-			const bTable = nElemType === cElementType.table;
-			const nPrevIndex = i - 1;
-
-			if (nElemType === cElementType.func && aExcludeFormulas.includes(oOutStackElem.name)) {
-				const nArgsCount = oFormulaParsed.getOutStackElem(nPrevIndex);
-				if (nArgsCount > 0) {
-					const nStartIndex = nPrevIndex - 1;
-					const nEndIndex = nPrevIndex - nArgsCount;
-					const aLinkTypes =  [cElementType.cell, cElementType.cell3D, cElementType.cellsRange,
-						cElementType.cellsRange3D, cElementType.name, cElementType.name3D, cElementType.table];
-					for (let j = nStartIndex; j >= nEndIndex; j--) {
-						if (j < 0) {
-							break;
-						}
-						const oElem = oFormulaParsed.getOutStackElem(j);
-						if (aLinkTypes.includes(oElem.type)) {
-							aRefElements.pop();
-						}
-					}
-				}
-			}
-			if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
-				const nArgsCount = oFormulaParsed.getOutStackElem(nPrevIndex);
-				const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
-				const nIndexNumValue = oFormulaParsed.getOutStackElem(nIndexNumId).tocNumber().toNumber();
-				const oTableArrayArg = oFormulaParsed.getOutStackElem(nIndexNumId - 1).clone();
-				const nIndexTableArray = aRefElements.findIndex(function (oElem) {
-					return oElem.toString() === oTableArrayArg.toString();
-				});
-				const oTableArrayRange = oTableArrayArg.getRange().clone();
-				const oTableArrayBbox = oTableArrayRange.getBBox0();
-				// Updating Range according index_num value
-				if (oOutStackElem.name === 'VLOOKUP') {
-					oTableArrayBbox.c1 = nIndexNumValue;
-					oTableArrayBbox.c2 = nIndexNumValue;
-				} else {
-					oTableArrayBbox.r1 = nIndexNumValue;
-					oTableArrayBbox.r2 = nIndexNumValue;
-				}
-				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
-			}
-			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
-				aRefElements.push(oOutStackElem);
-			}
-		}
-
-		return aRefElements;
-	}
-
-	/**
 	 * Iterative extract reference elements from outStack attribute of parserFormula class.
 	 * @param {Function} fAction - Action with reference element
 	 * @param {[]} aRefElements
@@ -16565,7 +16499,7 @@
 			return;
 		}
 		let nLastIndex = aRefElements.length - 1;
-		for (let i = 0; i < aRefElements.length; i++) {
+		for (let i = 0, length = aRefElements.length; i < length; i++) {
 			const oRefElement = aRefElements[i];
 			const nRefType = oRefElement.type;
 			const b3D = nRefType === cElementType.cell3D || nRefType === cElementType.cellsRange3D;
@@ -16605,9 +16539,10 @@
 	 * Changes ca flag of cell from listener.
 	 * Function is recursive.
 	 * @param {Cell} oSourceCell
+	 * @param {boolean} bRecursiveCell
 	 * @private
 	 */
-	function _changeCellsFromListener (oSourceCell) {
+	function _changeCellsFromListener (oSourceCell, bRecursiveCell) {
 		if (g_cCalcRecursion.checkRecursionCounter()) {
 			g_cCalcRecursion.resetRecursionCounter();
 			return;
@@ -16627,26 +16562,27 @@
 				return;
 			}
 			const oFormulaParsed = oListenerCell.getFormulaParsed();
-			if (oFormulaParsed.ca) {
+			if (oFormulaParsed.ca === bRecursiveCell) {
 				return;
 			}
-			oFormulaParsed.ca = true;
+			oFormulaParsed.ca = bRecursiveCell;
 			if (oListenerCell.getListeners()) {
 			g_cCalcRecursion.incRecursionCounter();
-			_changeCellsFromListener(oListenerCell);
+			_changeCellsFromListener(oListenerCell, bRecursiveCell);
 			}
 		}, oSourceCell, oCellListeners);
 		g_cCalcRecursion.resetRecursionCounter();
 	}
 
 	/**
-	 * Method checks is cell has recursive formula.
+	 * Method checks is cell has a recursive formula.
 	 * Recursion method
 	 * @param {CCellWithFormula} oCellWithFormula
 	 * @param {Cell[]} [aPassedCell]
+	 * @param {boolean} [bRecheckFormula] - uses when changing a cell in an already checked chain of cells.
 	 * @returns {boolean}
 	 */
-	Cell.prototype.checkRecursiveFormula = function (oCellWithFormula, aPassedCell) {
+	Cell.prototype.checkRecursiveFormula = function (oCellWithFormula, aPassedCell, bRecheckFormula) {
 		if (g_cCalcRecursion.checkRecursionCounter() || oCellWithFormula == null) {
 			g_cCalcRecursion.resetRecursionCounter();
 			return false;
@@ -16667,7 +16603,7 @@
 			return false;
 		}
 		const oFormulaParsed = this.getFormulaParsed();
-		const aRefElements = _getRefElements(oFormulaParsed);
+		const aRefElements = oFormulaParsed.getRefElements();
 		const oThis = this;
 		let bRecursiveFormula = false;
 		aPassedCell = aPassedCell || [];
@@ -16688,7 +16624,7 @@
 				} else if (!bRecursiveFormula && oCell.isFormula() && !bCellIsPassed) {
 					g_cCalcRecursion.incRecursionCounter();
 					aPassedCell.push(oCell);
-					bRecursiveFormula = oCell.checkRecursiveFormula(oCellWithFormula, aPassedCell);
+					bRecursiveFormula = oCell.checkRecursiveFormula(oCellWithFormula, aPassedCell, bRecheckFormula);
 				}
 				if (bRecursiveFormula) {
 					return true; // break loop
@@ -16703,12 +16639,15 @@
 							oSourceCell = oCell;
 						});
 						if (oSourceCell) {
-							_changeCellsFromListener(oSourceCell);
+							_changeCellsFromListener(oSourceCell, bRecursiveFormula);
 						}
 					}
 				}
 				oFormulaParsed.ca = true;
 				return true;
+			}
+			if (oFormulaParsed.ca !== bRecursiveFormula && bRecheckFormula) {
+				oFormulaParsed.ca = bRecursiveFormula;
 			}
 		}, aRefElements);
 
@@ -16735,7 +16674,7 @@
 			return;
 		}
 
-		const aRefElements = _getRefElements(oFormulaParsed);
+		const aRefElements = oFormulaParsed.getRefElements();
 		foreachRefElements(function (oRange, nIndex, nLastRefElemIndex) {
 			oRange._foreachNoEmpty(function(oCell) {
 				let nCellIndex = getCellIndex(oCell.nRow, oCell.nCol);
