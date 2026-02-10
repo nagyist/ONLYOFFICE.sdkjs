@@ -211,7 +211,10 @@
 		for (let nIndex = 0, nCount = arrForms.length; nIndex < nCount; ++nIndex)
 		{
 			let oForm = arrForms[nIndex];
-			if (oForm.IsRadioButton() && sGroupKey === oForm.GetCheckBoxPr().GetGroupKey())
+			if (oForm.IsLabeledCheckBox())
+				oForm = oForm.GetInnerCheckBox();
+			
+			if (oForm && oForm.IsRadioButton() && sGroupKey === oForm.GetCheckBoxPr().GetGroupKey())
 				arrResult.push(oForm);
 		}
 
@@ -378,6 +381,12 @@
 		for (let index = 0, count = allForms.length; index < count; ++index)
 		{
 			let form = allForms[index];
+			if (form.IsLabeledCheckBox())
+				form = form.GetInnerCheckBox();
+			
+			if (!form)
+				continue;
+			
 			let key  = form.GetFormKey();
 			let type = form.GetSpecificType();
 			
@@ -410,6 +419,11 @@
 			if (formOptions)
 				formData["options"] = formOptions;
 			
+			
+			if (form.IsCheckBox() && !form.IsRadioButton())
+				formData["label"] = form.GetCheckBoxLabel();
+				
+			
 			data.push(formData);
 		}
 		
@@ -434,14 +448,7 @@
 		}
 		else if (form.IsCheckBox())
 		{
-			let label = form.GetCheckBoxLabel();
-			return [{
-				"value" : true,
-				"label" : label
-			}, {
-				"value" : false,
-				"label" : label
-			}];
+			return [true, false];
 		}
 		else if (form.IsDropDownList() || form.IsComboBox())
 		{
