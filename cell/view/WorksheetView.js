@@ -12874,6 +12874,10 @@ function isAllowPasteLink(pastedWb) {
             d.col = 1;
         }
 
+        if (this.getRightToLeft() && d.col !== 0) {
+            d.col = -d.col;
+        }
+
         var type = ar.getType();
         if (type === c_oAscSelectionType.RangeRow) {
             d.col = 0;
