@@ -1238,7 +1238,8 @@ CHistory.prototype.Add = function(Class, Type, sheetid, range, Data, LocalChange
 			var bAdd = Class.IsAdd();
 			var Count = Class.GetItemsCount();
 
-			var ContentChanges = new AscCommon.CContentChangesElement(bAdd == true ? AscCommon.contentchanges_Add : AscCommon.contentchanges_Remove, Class.Pos, Count, Class);
+			var oContentChangeData = {Class: Class.GetClass(), Data: Class, Binary: Item.Binary, Item: Item};
+			var ContentChanges = new AscCommon.CContentChangesElement(bAdd == true ? AscCommon.contentchanges_Add : AscCommon.contentchanges_Remove, Class.Pos, Count, oContentChangeData);
 			Class.Class.Add_ContentChanges(ContentChanges);
 			AscCommon.CollaborativeEditing.Add_NewDC(Class.Class);
 			if (true === bAdd)
