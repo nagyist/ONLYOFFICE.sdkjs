@@ -7851,12 +7851,63 @@
 	 * @property {string | boolean} value - The current field value.
 	 * @property {string} tag - The form tag.
 	 * @property {FormSpecificType} type - The form type.
+	 * @property {string} [role] - The form role.
+	 * @property {string} [roleColor] - The form role color in hex format.
+	 * @property {Array.<{value: string, label: string}> | Array.<boolean>} [options] - The list of available options for the field.
+	 * Present for checkboxes, radio button groups, dropdown lists, and combo boxes.
+	 * For <b>checkboxes</b> this is <b>[true, false]</b>.
+	 * For <b>radio buttons</b>, <b>dropdown lists</b>, and <b>combo boxes</b> each entry contains
+	 * a <b>value</b> (the stored value) and a <b>label</b> (the display text).
+	 * @property {string} [label] - The checkbox label. Present only for checkbox fields.
+	 * @property {string} [format] - The date format string (e.g. <b>MM/DD/YYYY</b>). Present only for date picker fields.
+	 * @property {string} [lang] - The date language/locale name (e.g. <b>en-US</b>). Present only for date picker fields.
 	 * @example
+	 * 	// Text form
 	 * 	{
-	 * 	  "key" : "CompanyName",
-	 * 	  "tag" : "companyName",
-	 * 	  "value" : "ONLYOFFICE",
-	 * 	  "type" : "text"
+	 * 	  "key"       : "CompanyName",
+	 * 	  "tag"       : "companyName",
+	 * 	  "value"     : "ONLYOFFICE",
+	 * 	  "type"      : "text",
+	 * 	  "role"      : "",
+	 * 	  "roleColor" : "FF0000"
+	 * 	}
+	 * @example
+	 * 	// Checkbox form
+	 * 	{
+	 * 	  "key"     : "Agree",
+	 * 	  "tag"     : "agree",
+	 * 	  "value"   : true,
+	 * 	  "type"    : "checkBox",
+	 * 	  "label"   : "I agree",
+	 * 	  "options" : [true, false]
+	 * 	}
+	 * @example
+	 * 	// Radio button group
+	 * 	{
+	 * 	  "key"     : "ColorGroup",
+	 * 	  "tag"     : "",
+	 * 	  "value"   : "red",
+	 * 	  "type"    : "radio",
+	 * 	  "options" : [{"value": "red", "label": "Red"}, {"value": "blue", "label": "Blue"}]
+	 * 	}
+	 * @example
+	 * 	// Dropdown list form
+	 * 	{
+	 * 	  "key"     : "Country",
+	 * 	  "tag"     : "country",
+	 * 	  "value"   : "France",
+	 * 	  "type"    : "dropDownList",
+	 * 	  "options" : [{"value": "US", "label": "United States"}, {"value": "FR", "label": "France"}]
+	 * 	}
+	 * @example
+	 * 	// Date picker form
+	 * 	{
+	 * 	  "key"    : "StartDate",
+	 * 	  "tag"    : "startDate",
+	 * 	  "value"  : "01/15/2024",
+	 * 	  "type"   : "dateTime",
+	 * 	  "format" : "MM/DD/YYYY",
+	 * 	  "lang"   : "en-US"
 	 * 	}
 	 * @see office-js-api/Examples/Enumerations/FormData.js
 	 */
