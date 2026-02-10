@@ -315,8 +315,8 @@
 		Writer.WriteLong(para_PdfSpace);
 		Writer.WriteLong(this.Value);
 		Writer.WriteLong(this.charGid);
-		Writer.WriteLong(this.originWidth);
-		Writer.WriteLong(this.fontSize);
+		Writer.WriteDouble(this.originWidth);
+		Writer.WriteDouble(this.fontSize);
 
 	};
 	CPdfRunSpace.prototype.Read_FromBinary = function(Reader)
@@ -324,8 +324,8 @@
 		this.Value = Reader.GetLong();
 		
 		this.charGid = Reader.GetLong();
-		this.originWidth = Reader.GetLong();
-		this.fontSize = Reader.GetLong();
+		this.originWidth = Reader.GetDouble();
+		this.fontSize = Reader.GetDouble();
 	};
 	
 	AscWord.CPdfRunSpace = CPdfRunSpace;

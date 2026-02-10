@@ -853,8 +853,8 @@
 		Writer.WriteLong(this.Value);
 		Writer.WriteBool(this.IsSpaceAfter());
 		Writer.WriteLong(this.charGid);
-		Writer.WriteLong(this.originWidth);
-		Writer.WriteLong(this.fontSize);
+		Writer.WriteDouble(this.originWidth);
+		Writer.WriteDouble(this.fontSize);
 
 	};
 	CPdfRunText.prototype.Read_FromBinary = function(Reader)
@@ -863,8 +863,8 @@
 		this.SetSpaceAfter(Reader.GetBool());
 		
 		this.charGid = Reader.GetLong();
-		this.originWidth = Reader.GetLong();
-		this.fontSize = Reader.GetLong();
+		this.originWidth = Reader.GetDouble();
+		this.fontSize = Reader.GetDouble();
 	};
 	AscWord.CPdfRunText = CPdfRunText;
 	
