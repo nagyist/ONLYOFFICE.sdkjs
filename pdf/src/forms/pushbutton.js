@@ -815,6 +815,10 @@
         this.DrawEdit(oGraphicsWord);
     };
     CPushButtonField.prototype.SetImageRasterId = function(sRasterId, nAPType) {
+		if (sRasterId == undefined) {
+			sRasterId = "";
+		}
+
         let sPrevRasterId;
 
         if (undefined == nAPType) {

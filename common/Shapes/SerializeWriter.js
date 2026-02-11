@@ -1748,7 +1748,9 @@ function CBinaryFileWriter()
         });
     };
     this.WriteFieldTreeElem = function(oField) {
-        oThis.buttonImages = [];
+		if (!oThis.buttonImages) {
+			oThis.buttonImages = [];
+		}
 
         oThis.WriteByMemory(function(memory) {
             memory.isCopyPaste = true;
