@@ -782,7 +782,7 @@
 	{
 		CRunText.call(this, codePoint);
 		
-		this.charGid     = gid;
+		this.charGid     = gid ? gid | 0 : 0;
 		this.originWidth = width ? width : 0;
 		this.originSize  = fontSize ? fontSize : 0;
 		this.originCoeff = 1;
@@ -835,7 +835,7 @@
 		
 	 	this.fontSize = _fontSize;
 		
-		fontCoeff *= fontSize / this.originSize;
+		fontCoeff *= this.originSize ? fontSize / this.originSize : 1;
 		
 		this.originCoeff = fontCoeff;
 		
@@ -854,7 +854,7 @@
 		Writer.WriteBool(this.IsSpaceAfter());
 		Writer.WriteLong(this.charGid);
 		Writer.WriteDouble(this.originWidth);
-		Writer.WriteDouble(this.fontSize);
+		Writer.WriteDouble(this.originSize);
 
 	};
 	CPdfRunText.prototype.Read_FromBinary = function(Reader)
@@ -862,9 +862,9 @@
 		this.SetCharCode(Reader.GetLong());
 		this.SetSpaceAfter(Reader.GetBool());
 		
-		this.charGid = Reader.GetLong();
+		this.charGid     = Reader.GetLong();
 		this.originWidth = Reader.GetDouble();
-		this.fontSize = Reader.GetDouble();
+		this.originSize  = Reader.GetDouble();
 	};
 	AscWord.CPdfRunText = CPdfRunText;
 	
