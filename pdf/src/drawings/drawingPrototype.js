@@ -295,6 +295,8 @@
     };
     
     CPdfDrawingPrototype.prototype.SetFromScan = function(bFromScan) {
+		AscCommon.History.Add(new CChangesPDFDrawingFromScan(this, this._isFromScan, bFromScan));
+
         this._isFromScan = bFromScan;
     };
     CPdfDrawingPrototype.prototype.IsFromScan = function() {
