@@ -7826,6 +7826,8 @@
 	ApiGroup.prototype["Ungroup"]		= ApiGroup.prototype.Ungroup;
 
     ApiDrawing.prototype["ToJSON"]                        = ApiDrawing.prototype.ToJSON;
+    ApiDrawing.prototype["Fill"]                          = ApiDrawing.prototype.Fill;
+    ApiDrawing.prototype["SetOutLine"]                    = ApiDrawing.prototype.SetOutLine;
 
 
 	ApiChart.prototype["GetClassType"] = ApiChart.prototype.GetClassType = AscBuilder.ApiChart.prototype.GetClassType;
@@ -7876,6 +7878,8 @@
 	ApiChart.prototype["GetSeries"] = ApiChart.prototype.GetSeries = AscBuilder.ApiChart.prototype.GetSeries;
 
     ApiImage.prototype["GetClassType"]                    = ApiImage.prototype.GetClassType;
+
+    ApiSmartArt.prototype["GetClassType"]                 = ApiSmartArt.prototype.GetClassType;
 
     ApiShape.prototype["GetClassType"]                    = ApiShape.prototype.GetClassType;
     ApiShape.prototype["GetDocContent"]                   = ApiShape.prototype.GetDocContent;

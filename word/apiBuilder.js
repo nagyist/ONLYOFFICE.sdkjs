@@ -29610,6 +29610,7 @@
 	ApiRun.prototype["SetSmallCaps"]                 = ApiRun.prototype.SetSmallCaps;
 	ApiRun.prototype["SetSpacing"]                   = ApiRun.prototype.SetSpacing;
 	ApiRun.prototype["SetStrikeout"]                 = ApiRun.prototype.SetStrikeout;
+	ApiRun.prototype["SetStyle"]                     = ApiRun.prototype.SetStyle;
 	ApiRun.prototype["SetUnderline"]                 = ApiRun.prototype.SetUnderline;
 	ApiRun.prototype["SetVertAlign"]                 = ApiRun.prototype.SetVertAlign;
 	ApiRun.prototype["WrapInMailMergeField"]         = ApiRun.prototype.WrapInMailMergeField;
@@ -29966,6 +29967,8 @@
 	ApiImage.prototype["GetNextImage"]               = ApiImage.prototype.GetNextImage;
 	ApiImage.prototype["GetPrevImage"]               = ApiImage.prototype.GetPrevImage;
 
+	ApiSmartArt.prototype["GetClassType"]            = ApiSmartArt.prototype.GetClassType;
+
 	ApiShape.prototype["GetClassType"]               = ApiShape.prototype.GetClassType;
 	ApiShape.prototype["GetDocContent"]              = ApiShape.prototype.GetDocContent;
 	ApiShape.prototype["SetVerticalTextAlign"]       = ApiShape.prototype.SetVerticalTextAlign;
@@ -30287,7 +30290,8 @@
 	ApiFormBase.prototype["Delete"]             = ApiFormBase.prototype.Delete;
 	ApiFormBase.prototype["SetLock"]            = ApiFormBase.prototype.SetLock;
 	ApiFormBase.prototype["GetLock"]            = ApiFormBase.prototype.GetLock;
-	
+	ApiFormBase.prototype["Copy"]              = ApiFormBase.prototype.Copy;
+
 	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;

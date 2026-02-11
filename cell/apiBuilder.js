@@ -27578,6 +27578,8 @@
 	ApiWorksheet.prototype["GetAllShapes"] = ApiWorksheet.prototype.GetAllShapes;
 	ApiWorksheet.prototype["GetAllCharts"] = ApiWorksheet.prototype.GetAllCharts;
 	ApiWorksheet.prototype["GetAllOleObjects"] = ApiWorksheet.prototype.GetAllOleObjects;
+	ApiWorksheet.prototype["GetSelectedShapes"] = ApiWorksheet.prototype.GetSelectedShapes;
+	ApiWorksheet.prototype["GetSelectedDrawings"] = ApiWorksheet.prototype.GetSelectedDrawings;
 	ApiWorksheet.prototype["Move"] = ApiWorksheet.prototype.Move;
 	ApiWorksheet.prototype["GetFreezePanes"] = ApiWorksheet.prototype.GetFreezePanes;
 	ApiWorksheet.prototype["AddProtectedRange"] = ApiWorksheet.prototype.AddProtectedRange;
@@ -27698,8 +27700,14 @@
 	ApiDrawing.prototype["SetRotation"]                =  ApiDrawing.prototype.SetRotation;
 	ApiDrawing.prototype["GetRotation"]                =  ApiDrawing.prototype.GetRotation;
 	ApiDrawing.prototype["Select"]                     =  ApiDrawing.prototype.Select;
+	ApiDrawing.prototype["Fill"]                       =  ApiDrawing.prototype.Fill;
+	ApiDrawing.prototype["SetOutLine"]                 =  ApiDrawing.prototype.SetOutLine;
 
 	ApiImage.prototype["GetClassType"]                 =  ApiImage.prototype.GetClassType;
+
+	ApiSmartArt.prototype["GetClassType"]              =  ApiSmartArt.prototype.GetClassType;
+
+	ApiGroup.prototype["GetClassType"]                =  ApiGroup.prototype.GetClassType;
 
 	ApiShape.prototype["GetClassType"]                 =  ApiShape.prototype.GetClassType;
 	ApiShape.prototype["GetDocContent"]                =  ApiShape.prototype.GetDocContent;
