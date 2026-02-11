@@ -91,6 +91,18 @@ $(function () {
 		logicDocument.MoveCursorToEndPos();
 		return form;
 	}
+	function addDatePicker(key, format, date)
+	{
+		let pr = new AscWord.CSdtDatePickerPr();
+		pr.SetDateFormat(format);
+		if (date)
+			pr.SetFullDate(date);
+		let form = logicDocument.AddContentControlDatePicker();
+		form.SetFormPr(new AscWord.CSdtFormPr(key));
+		form.ApplyDatePickerPr(pr, !!date);
+		logicDocument.MoveCursorToEndPos();
+		return form;
+	}
 
 	QUnit.module("Check forms");
 
@@ -634,6 +646,9 @@ $(function () {
 		const comboBoxItems = [{"value" : "opt1", "label" : "Option1"}, {"value" : "opt2", "label" : "Option2"}];
 		let comboBox1 = addComboBox("ComboBox1", comboBoxItems);
 		
+		const datePickerDate = new Date(2024, 6, 24);
+		let datePicker1 = addDatePicker("DatePicker1", "mm/dd/yyyy", datePickerDate);
+		
 		assert.deepEqual(formsManager.GetAllFormsData(), [
 			{"key" : "TextForm1",  "value" : "123",   "tag" : "", "type" : "text",         "role" : "", "roleColor" : undefined},
 			{"key" : "TextForm2",  "value" : "222",   "tag" : "", "type" : "text",         "role" : "", "roleColor" : undefined},
@@ -642,7 +657,8 @@ $(function () {
 			{"key" : "Group2",     "value" : "",      "tag" : "", "type" : "radio",        "role" : "", "roleColor" : undefined, "options" : [{"value" : "Choice1", "label" : ""}, {"value" : "Choice2", "label" : ""}]},
 			{"key" : "CheckBox1",  "value" : false,   "tag" : "", "type" : "checkBox",     "role" : "", "roleColor" : undefined, "options" : [true, false], "label" : ""},
 			{"key" : "DropDown1",  "value" : "",      "tag" : "", "type" : "dropDownList", "role" : "", "roleColor" : undefined, "options" : [{"value" : "v1", "label" : "Item1"}, {"value" : "v2", "label" : "Item2"}]},
-			{"key" : "ComboBox1",  "value" : "",      "tag" : "", "type" : "comboBox",     "role" : "", "roleColor" : undefined, "options" : [{"value" : "opt1", "label" : "Option1"}, {"value" : "opt2", "label" : "Option2"}]}
+			{"key" : "ComboBox1",  "value" : "",      "tag" : "", "type" : "comboBox",     "role" : "", "roleColor" : undefined, "options" : [{"value" : "opt1", "label" : "Option1"}, {"value" : "opt2", "label" : "Option2"}]},
+			{"key" : "DatePicker1", "value" : "07/24/2024", "tag" : "", "type" : "dateTime", "role" : "", "roleColor" : undefined, "format" : "mm/dd/yyyy", "lang" : "en-US"}
 		], "Add text forms and check GetAllFormsData");
 		
 		AscTest.SetFillingFormMode();
@@ -672,7 +688,8 @@ $(function () {
 			{"key" : "Group2",     "value" : "Choice2",      "tag" : "", "type" : "radio",        "role" : "", "roleColor" : undefined, "options" : [{"value" : "Choice1", "label" : ""}, {"value" : "Choice2", "label" : ""}]},
 			{"key" : "CheckBox1",  "value" : false,          "tag" : "", "type" : "checkBox",     "role" : "", "roleColor" : undefined, "options" : [true, false], "label" : ""},
 			{"key" : "DropDown1",  "value" : "",             "tag" : "", "type" : "dropDownList", "role" : "", "roleColor" : undefined, "options" : [{"value" : "v1", "label" : "Item1"}, {"value" : "v2", "label" : "Item2"}]},
-			{"key" : "ComboBox1",  "value" : "",             "tag" : "", "type" : "comboBox",     "role" : "", "roleColor" : undefined, "options" : [{"value" : "opt1", "label" : "Option1"}, {"value" : "opt2", "label" : "Option2"}]}
+			{"key" : "ComboBox1",  "value" : "",             "tag" : "", "type" : "comboBox",     "role" : "", "roleColor" : undefined, "options" : [{"value" : "opt1", "label" : "Option1"}, {"value" : "opt2", "label" : "Option2"}]},
+			{"key" : "DatePicker1", "value" : "07/24/2024", "tag" : "", "type" : "dateTime", "role" : "", "roleColor" : undefined, "format" : "mm/dd/yyyy", "lang" : "en-US"}
 		], "Add text forms and check GetAllFormsData");
 	});
 
