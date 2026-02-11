@@ -577,6 +577,24 @@
 	PDFEditorApi.prototype.getCurrentPage = function() {
 		return this.DocumentRenderer ? this.DocumentRenderer.currentPage : 0;
 	};
+	PDFEditorApi.prototype.getCurScroll = function() {
+		if (!this.DocumentRenderer) {
+			return null;
+		}
+
+		return {
+			"x": this.DocumentRenderer.scrollX,
+			"y": this.DocumentRenderer.scrollY
+		}
+	};
+	PDFEditorApi.prototype.scrollToXY = function(x, y) {
+		if (!this.DocumentRenderer) {
+			return false;
+		}
+
+		this.DocumentRenderer.scrollToXY(x, y);
+		return true;
+	}
 	PDFEditorApi.prototype.getSelectedPages = function() {
 		const oThumbnails = this.DocumentRenderer.thumbnails;
 		if (oThumbnails) {
@@ -5226,6 +5244,8 @@
 	PDFEditorApi.prototype['goToPage']						= PDFEditorApi.prototype.goToPage;
 	PDFEditorApi.prototype['getCountPages']					= PDFEditorApi.prototype.getCountPages;
 	PDFEditorApi.prototype['getCurrentPage']				= PDFEditorApi.prototype.getCurrentPage;
+	PDFEditorApi.prototype['getCurScroll']					= PDFEditorApi.prototype.getCurScroll;
+	PDFEditorApi.prototype['scrollToXY']					= PDFEditorApi.prototype.scrollToXY;
 	PDFEditorApi.prototype['getSelectedPages']				= PDFEditorApi.prototype.getSelectedPages;
 	PDFEditorApi.prototype['asc_getPdfProps']				= PDFEditorApi.prototype.asc_getPdfProps;
 	PDFEditorApi.prototype['asc_enterText']					= PDFEditorApi.prototype.asc_enterText;
