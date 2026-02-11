@@ -592,7 +592,7 @@
 			return false;
 		}
 
-		this.DocumentRenderer.scrollToXY(x, y);
+		this.DocumentRenderer.scrollToXY(y, x);
 		return true;
 	}
 	PDFEditorApi.prototype.getSelectedPages = function() {
