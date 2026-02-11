@@ -6922,8 +6922,15 @@ function(window, undefined) {
 		}
 		return null;
 	};
+	CChartSpace.prototype.removeCachedCanvas = function () {
+		if (this.cachedCanvas) {
+			this.cachedCanvas.width = 0;
+			this.cachedCanvas.height = 0;
+			this.cachedCanvas = null;
+		}
+	};
 	CChartSpace.prototype.recalculateAxes = function () {
-		this.cachedCanvas = null;
+		this.removeCachedCanvas();
 		this.plotAreaRect = null;
 		this.bEmptySeries = this.checkEmptySeries();
 		const isChartEx = this.isChartEx();
@@ -9266,6 +9273,10 @@ function(window, undefined) {
 	};
 	CChartSpace.prototype.recalculateDLbls = function () {
 		if (this.chart && this.chart.plotArea) {
+			if (this.cachedCanvas) {
+				this.cachedCanvas.width = 0;
+				this.cachedCanvas.height = 0;
+			}
 			this.cachedCanvas = null;
 			var aCharts = this.chart.plotArea.charts;
 			for (var t = 0; t < aCharts.length; ++t) {
@@ -9382,7 +9393,7 @@ function(window, undefined) {
 		}
 	};
 	CChartSpace.prototype.recalculateSeriesColors = function () {
-		this.cachedCanvas = null;
+		this.removeCachedCanvas();
 		this.ptsCount = 0;
 		if (this.chart && this.chart.plotArea) {
 			let style = CHART_STYLE_MANAGER.getStyleByIndex(this.style);
@@ -9958,7 +9969,7 @@ function(window, undefined) {
 		old_pos_y = this.recalcInfo.recalcTitle.y;
 		old_pos_cx = this.recalcInfo.recalcTitle.x + this.recalcInfo.recalcTitle.extX / 2;
 		old_pos_cy = this.recalcInfo.recalcTitle.y + this.recalcInfo.recalcTitle.extY / 2;
-		this.cachedCanvas = null;
+		this.removeCachedCanvas();
 		this.recalculateAxisLabels();
 		this.recalculateDLbls();
 		this.recalculateTrendlines();
@@ -10344,7 +10355,7 @@ function(window, undefined) {
 		}
 		if (this.cachedCanvas) {
 			if (this.cachedCanvas.width !== nWidth || this.cachedCanvas.height !== nHeight) {
-				this.cachedCanvas = null;
+				this.removeCachedCanvas();
 			}
 		}
 		var ctx;
