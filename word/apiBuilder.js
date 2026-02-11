@@ -20256,7 +20256,12 @@
 		return this.command.swAng !== undefined ? this.command.swAng : null;
 	};
 
-
+	ApiPath.prototype.private_ConvertParentToCustomGeometry = function () {
+		const parent = this.path.parent;
+		if (parent && typeof parent.preset === 'string' && parent.preset.length > 0) {
+			parent.setPreset(null);
+		}
+	};
 
 	/**
 	 * Returns true if the current path is stroked, otherwise false.
@@ -20283,6 +20288,7 @@
 	{
 		if (bStroke !== true && bStroke !== false)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setStroke(bStroke);
 	};
 
@@ -20315,6 +20321,7 @@
 		{
 			return;
 		}
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setFill(sFill);
 	};
 
@@ -20343,6 +20350,7 @@
 	{
 		if (!AscFormat.isRealNumber(nWidth) || nWidth < 0)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setPathW(nWidth);
 	};
 
@@ -20371,6 +20379,7 @@
 	{
 		if (!AscFormat.isRealNumber(nHeight) || nHeight < 0)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setPathH(nHeight);
 	};
 
