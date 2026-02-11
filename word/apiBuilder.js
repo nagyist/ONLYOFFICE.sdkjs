@@ -19606,7 +19606,7 @@
 	/**
 	 * Sets the text paddings to the current shape.
 	 * @memberof ApiShape
-	 * @typeofeditors ["CDE", "CSE"]
+	 * @typeofeditors ["CDE"]
 	 * @param {?EMU} nLeft - Left padding.
 	 * @param {?EMU} nTop - Top padding.
 	 * @param {?EMU} nRight - Right padding.

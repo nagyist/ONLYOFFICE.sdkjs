@@ -7887,6 +7887,7 @@
 	ApiShape.prototype["GetFill"]                         = ApiShape.prototype.GetFill;
 	ApiShape.prototype["SetLine"]                         = ApiShape.prototype.SetLine;
 	ApiShape.prototype["GetLine"]                         = ApiShape.prototype.GetLine;
+	ApiShape.prototype["SetPaddings"]                     = ApiShape.prototype.SetPaddings;
 
     ApiOleObject.prototype["GetClassType"]                = ApiOleObject.prototype.GetClassType;
 	ApiOleObject.prototype["SetData"]                     = ApiOleObject.prototype.SetData;
