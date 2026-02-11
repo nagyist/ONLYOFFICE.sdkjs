@@ -9293,17 +9293,24 @@ PasteProcessor.prototype =
 					let curLvl = pNoHtmlPr.nLvl != null ? pNoHtmlPr.nLvl : 0;
 					if (this.aContent.length > 1) {
 						let prevElem = null;
+						let bCanContinue = true;
 						for (let iPrev = this.aContent.length - 2; iPrev >= 0; iPrev--) {
 							var tempElem = this.aContent[iPrev];
 							if (null != tempElem && type_Paragraph === tempElem.GetType()) {
 								var TempNumPr = tempElem.GetNumPr();
-								if (null != TempNumPr && TempNumPr.Lvl === curLvl) {
-									prevElem = tempElem;
-									break;
+								if (null != TempNumPr) {
+									if (curLvl > 0 && TempNumPr.Lvl < curLvl) {
+										bCanContinue = false;
+										break;
+									}
+									if (TempNumPr.Lvl === curLvl) {
+										prevElem = tempElem;
+										break;
+									}
 								}
 							}
 						}
-						if (null != prevElem) {
+						if (bCanContinue && null != prevElem) {
 							var PrevNumPr = prevElem.GetNumPr();
 							if (null != PrevNumPr && true === this.oLogicDocument.Numbering.CheckFormat(PrevNumPr.NumId, PrevNumPr.Lvl, num)) {
 								NumId = PrevNumPr.NumId;
