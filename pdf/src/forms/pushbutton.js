@@ -1179,7 +1179,7 @@
 		}
 
         if (contentX != this.content.X || contentY != this.content.Y ||
-            contentXLimit != this.content.XLimit) {
+            contentXLimit != this.content.XLimit || !this.getFormRelRect()) {
             this.content.X      = contentX;
             this.content.Y      = contentY;
             this.content.XLimit = contentXLimit;
