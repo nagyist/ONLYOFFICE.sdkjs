@@ -568,15 +568,6 @@
 
         return false;
     };
-	CPdfDrawingPrototype.prototype.Remove = function(direction, isWord) {
-		let oDoc = this.GetDocument();
-		if (!oDoc)
-			return;
-		
-		let oController = oDoc.GetController();
-		oController.remove(direction, true, false, false, isWord)
-		this.SetNeedRecalc(true);
-	};
 	CPdfDrawingPrototype.prototype.deleteDrawingBase = function() {
 		let oDoc = this.GetDocument();
 		if (!oDoc) {
