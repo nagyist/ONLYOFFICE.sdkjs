@@ -12224,7 +12224,7 @@
             Operator = "xlOr"
         }
 
-		if (Field !== null && (Criteria1 === undefined || Criteria1 === null)) {
+		if (Field != null && (Criteria1 === undefined || Criteria1 === null)) {
 			return;
 		}
 
