@@ -401,12 +401,7 @@
 
 		// рендер html тагов
 		if (!this.Config.renderHTMLTags) {
-			sOutputText = sOutputText = sOutputText
-							.replace(/&/g, '&amp;')
-							.replace(/</g, '&lt;')
-							.replace(/>/g, '&gt;')
-							.replace(/"/g, '&quot;')
-							.replace(/'/g, '&#39;');
+			sOutputText = private_EscapeHtml(sOutputText);
 		}
 
 		return sOutputText;
@@ -936,7 +931,7 @@
 
 			}
 
-			return sText;
+			return private_EscapeHtml(sText);
 		}
 
 		var oCMarkdownConverter    = this;
@@ -31456,6 +31451,14 @@
 		if (!console.error)
 			logError(err);
 		throw err;
+	}
+
+	function private_EscapeHtml(text) {
+		return text.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
 	}
 
 	ApiDocument.prototype.OnChangeParaPr = function(oApiParaPr)
