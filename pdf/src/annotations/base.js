@@ -1589,13 +1589,15 @@
                         oMeta["InRect"] = this.GetInRect();
                     }
                 }
-                else if (this.IsFromOO()) {
+                if (this.IsFromOO()) {
                     if (this.IsRedact()) {
                         let sRedactId = this.GetRedactId();
                         if (sRedactId) {
                             oMeta["redactId"] = sRedactId;
                         }
                     }
+
+                    oMeta["isOO"] = true;
                 }
             }
             
