@@ -2109,7 +2109,7 @@
     CTiming.prototype.isSpClickTrigger = function (oSp) {
         var oRoot = this.getTimingRootNode();
         if (!oRoot) {
-            return true;
+            return false;
         }
         var aRootChildren = oRoot.getChildrenTimeNodes();
         var sSpId = oSp.Get_Id();
