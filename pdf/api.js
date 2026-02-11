@@ -1536,9 +1536,44 @@
 
 		this.SetCanInteract(true);
 	};
-	PDFEditorApi.prototype.OnAfterAddLinkAnnot = function(aIds) {
+	PDFEditorApi.prototype.StartLinkAnnotCreation = function(aIds) {
 		Asc.editor.sendEvent("asc_onDialogAddAnnotLink", aIds);
 		this.SetLinkTool(false);
+
+		this.oldIsCanSendChanges = this.isCanSendChanges;
+		this.startPointIdx = AscCommon.History.Index;
+		this.isCanSendChanges = false;
+	};
+	PDFEditorApi.prototype.EndLinkAnnotCreation = function(isOk) {
+		this.isCanSendChanges = this.oldIsCanSendChanges;
+		delete this.oldIsCanSendChanges;
+
+		if (isOk) {
+			let Point1 = AscCommon.History.Points[AscCommon.History.Points.length - 2];
+			let Point2 = AscCommon.History.Points[AscCommon.History.Points.length - 1];
+
+			let NewPoint = {
+				State      : Point1.State,
+				Items      : Point1.Items.concat(Point2.Items),
+				Time       : Point1.Time,
+				Additional : {},
+				Description: Point1.Description
+			};
+
+			if (null !== AscCommon.History.SavedIndex && AscCommon.History.SavedIndex >= AscCommon.History.Points.length - 2)
+				AscCommon.History.Set_SavedIndex(AscCommon.History.Points.length - 3);
+
+			AscCommon.History.Points.splice(AscCommon.History.Points.length - 2, 2, NewPoint);
+			if (AscCommon.History.Index >= AscCommon.History.Points.length) {
+				let DiffIndex = -AscCommon.History.Index + (AscCommon.History.Points.length - 1);
+				AscCommon.History.Index += DiffIndex;
+				AscCommon.History.RecIndex = Math.max( -1, AscCommon.History.RecIndex + DiffIndex);
+			}
+		}
+		else {
+			AscCommon.History.Undo();
+			AscCommon.History.ClearRedo();
+		}
 	};
 
 	/////////////////////////////////////////////////////////////
@@ -5378,6 +5413,7 @@
 	PDFEditorApi.prototype['SetLinkTool']					= PDFEditorApi.prototype.SetLinkTool;
 	PDFEditorApi.prototype['IsLinkTool']					= PDFEditorApi.prototype.IsLinkTool;
 	PDFEditorApi.prototype['SetLinkAnnotGoToAction']		= PDFEditorApi.prototype.SetLinkAnnotGoToAction;
+	PDFEditorApi.prototype['EndLinkAnnotCreation']			= PDFEditorApi.prototype.EndLinkAnnotCreation;
 
 	// forms
 	PDFEditorApi.prototype['IsEditFieldsMode']			= PDFEditorApi.prototype.IsEditFieldsMode;
