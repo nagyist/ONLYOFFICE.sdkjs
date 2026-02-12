@@ -6587,7 +6587,7 @@ function parserFormula( formula, parent, _ws ) {
 	 */
 	parserFormula.prototype._isConditionalFormula = function (sFunctionName) {
 		const aExcludeCondFormulas = ["IFERROR", "IFNA", "COUNTIF", "BITLSHIFT", "BITRSHIFT", "DATEDIF"];
-		const aCondFormulas = ["SWITCH"];
+		const aCondFormulas = ["SWITCH", "LOOKUP"];
 
 		return !!sFunctionName && (sFunctionName.includes("IF") || aCondFormulas.includes(sFunctionName)) &&
 			!aExcludeCondFormulas.includes(sFunctionName);
@@ -6896,7 +6896,11 @@ function parserFormula( formula, parent, _ws ) {
 				bCalcRangeSkipped = true;
 				continue;
 			}
-			if (bEvenIndex && !Array.isArray(aOutStack[i])) {
+			if (bEvenIndex && !Array.isArray(aOutStack[i]) && sFunctionName !== 'LOOKUP') {
+				aCriteriaRanges.push(aOutStack[i]);
+				continue;
+			}
+			if (sFunctionName === 'LOOKUP' && !bEvenIndex && !Array.isArray(aOutStack[i])) {
 				aCriteriaRanges.push(aOutStack[i]);
 				continue;
 			}
@@ -7375,10 +7379,11 @@ function parserFormula( formula, parent, _ws ) {
 			const aAvailableTypes = aNameType.concat(aAreaType);
 			// For formulas like SUMIF, COUNTIF, etc. with 2 arguments, check the range has the cycle link without criteria.
 			if (nCountArgs === 2) {
-				bRecursiveCell = this._isAreaContainCell(aOutStack[0]);
-				if (!bRecursiveCell && (typeof aOutStack[nCountArgs - 1] !== 'number' && (aAreaType.includes(aOutStack[nCountArgs - 1].type) ||
-					aNameType.includes(aOutStack[nCountArgs - 1].type)))) {
-					bRecursiveCell = this._isAreaContainCell(aOutStack[nCountArgs - 1]);
+				const oRange = sFunctionName === 'LOOKUP' ? aOutStack[nCountArgs - 1] : aOutStack[0];
+				const oCriteria = sFunctionName === 'LOOKUP' ? aOutStack[0] : aOutStack[nCountArgs - 1];
+				bRecursiveCell = this._isAreaContainCell(oRange);
+				if (!bRecursiveCell && (typeof oCriteria !== 'number' && (aAreaType.includes(oCriteria.type) || aNameType.includes(oCriteria.type)))) {
+					bRecursiveCell = this._isAreaContainCell(oCriteria);
 				}
 				return bRecursiveCell;
 			}
@@ -9031,6 +9036,10 @@ function parserFormula( formula, parent, _ws ) {
 				});
 			});
 			t.ca = bRecursiveCell;
+			// Update ca flag for linked cells
+			t.ws._getCell(t.parent.nCol, t.parent.nRow, function (oCell) {
+				//oCell._changeCaFlagFromListener(bRecursiveCell);
+			});
 		}
 		if (parenthesesNotEnough) {
 			parseResult.setError(c_oAscError.ID.FrmlParenthesesCorrectCount);
@@ -11086,7 +11095,7 @@ function parserFormula( formula, parent, _ws ) {
 				if (isFullTableLink || !refAreaRange) {
 					this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this, null, ref);
 				} else {
-					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
+					this._buildDependenciesRef(refAreaRange.worksheet.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
 				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.startListeningDefName(ref.value, this);
@@ -11169,7 +11178,7 @@ function parserFormula( formula, parent, _ws ) {
 				if (isFullTableLink || !refAreaRange) {
 					this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
 				} else {
-					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
+					this._buildDependenciesRef(refAreaRange.worksheet.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
 				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.endListeningDefName(ref.value, this);
@@ -11634,11 +11643,17 @@ function parserFormula( formula, parent, _ws ) {
 				const oTableArrayBbox = oTableArrayRange.getBBox0();
 				// Updating Range according index_num value
 				if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
-					oTableArrayBbox.c1 = nIndexNumValue;
-					oTableArrayBbox.c2 = nIndexNumValue;
+					const nUpdatedCol = oTableArrayBbox.c1 + nIndexNumValue;
+					if (nUpdatedCol <= oTableArrayBbox.c2) {
+						oTableArrayBbox.c1 = nUpdatedCol;
+						oTableArrayBbox.c2 = nUpdatedCol;
+					}
 				} else if (nIndexNumValue >= 0) {
-					oTableArrayBbox.r1 = nIndexNumValue;
-					oTableArrayBbox.r2 = nIndexNumValue;
+					const nUpdatedRow = oTableArrayBbox.r1 + nIndexNumValue;
+					if (nUpdatedRow <= oTableArrayBbox.r2) {
+						oTableArrayBbox.r1 = nUpdatedRow;
+						oTableArrayBbox.r2 = nUpdatedRow;
+					}
 				}
 				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
 			}

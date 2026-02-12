@@ -16260,13 +16260,19 @@
 			return oSheetListeners.cellMap[nCellIndex];
 		} else if (aOutStack && aOutStack.length && sFunctionName) {
 			for (let nIndex in oSheetListeners.areaMap) {
-				if (oSheetListeners.areaMap[nIndex].bbox.contains(this.nCol, this.nRow)) {
-					return _areaMapIsExcludeFormula(aOutStack, oSheetListeners.areaMap[nIndex]) ? null : oSheetListeners.areaMap[nIndex];
+				const oAreaMap = oSheetListeners.areaMap[nIndex];
+				let bInvalidListener = false;
+				if (oAreaMap.count === 1) {
+					const sListenerId = Object.getOwnPropertyNames(oAreaMap.listeners)[0];
+					const oListener = oAreaMap.listeners[sListenerId];
+					bInvalidListener = oListener.isTable === 1;
+				}
+				if (oAreaMap.bbox.contains(this.nCol, this.nRow) && !bInvalidListener) {
+					return _areaMapIsExcludeFormula(aOutStack, oAreaMap) ? null : oAreaMap;
 				}
 			}
 		}
 	};
-
 	/**
 	 * Iterative extract listeners of a cell
 	 * @param fAction {Function} Action on the listener.
@@ -16537,17 +16543,18 @@
 
 	/**
 	 * Changes ca flag of cell from listener.
-	 * Function is recursive.
-	 * @param {Cell} oSourceCell
+	 * Method is recursive.
 	 * @param {boolean} bRecursiveCell
 	 * @private
+	 * @memberof Cell
 	 */
-	function _changeCellsFromListener (oSourceCell, bRecursiveCell) {
+	Cell.prototype._changeCaFlagFromListener = function (bRecursiveCell) {
 		if (g_cCalcRecursion.checkRecursionCounter()) {
 			g_cCalcRecursion.resetRecursionCounter();
 			return;
 		}
-		const oCellListeners = oSourceCell.getListeners();
+		const caFlag = !bRecursiveCell ? null : bRecursiveCell;
+		const oCellListeners = this.getListeners();
 		if (!oCellListeners) {
 			g_cCalcRecursion.resetRecursionCounter();
 			return;
@@ -16562,18 +16569,17 @@
 				return;
 			}
 			const oFormulaParsed = oListenerCell.getFormulaParsed();
-			if (oFormulaParsed.ca === bRecursiveCell) {
+			if (oFormulaParsed.ca === caFlag) {
 				return;
 			}
 			oFormulaParsed.ca = bRecursiveCell;
 			if (oListenerCell.getListeners()) {
-			g_cCalcRecursion.incRecursionCounter();
-			_changeCellsFromListener(oListenerCell, bRecursiveCell);
+				g_cCalcRecursion.incRecursionCounter();
+				oListenerCell._changeCaFlagFromListener(bRecursiveCell);
 			}
-		}, oSourceCell, oCellListeners);
+		}, this, oCellListeners);
 		g_cCalcRecursion.resetRecursionCounter();
-	}
-
+	};
 	/**
 	 * Method checks is cell has a recursive formula.
 	 * Recursion method
@@ -16639,7 +16645,7 @@
 							oSourceCell = oCell;
 						});
 						if (oSourceCell) {
-							_changeCellsFromListener(oSourceCell, bRecursiveFormula);
+							oSourceCell._changeCaFlagFromListener(bRecursiveFormula);
 						}
 					}
 				}
