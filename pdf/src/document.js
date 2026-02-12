@@ -2075,6 +2075,16 @@ var CPresentation = CPresentation || function(){};
                             aCollectArray.push(new FieldCopyObject(oCopy));
                         }
                         else {
+							if (Asc.editor.embeddedFontsMap) {
+								oCopy.checkRunContent(function(run) {
+									let sFont = run.Pr.GetFontFamily();
+
+									if (Asc.editor.embeddedFontsMap[sFont]) {
+										run.Pr.RFonts.SetAll(Asc.editor.embeddedFontsMap[sFont]);
+									}
+								});
+							}
+							
                             aCollectArray.push(new DrawingCopyObject(oCopy, oSp.x, oSp.y, oSp.extX, oSp.extY, oSp.getBase64Img()));
                         }
                         
