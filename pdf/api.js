@@ -379,21 +379,6 @@
 
 		return bCanUndo;
 	};
-	PDFEditorApi.prototype.pre_Paste = function(_fonts, _images, callback) {
-		let aEmbedFonts = [];
-		
-		if (Array.isArray(_fonts)) {
-			let prefix = AscFonts.getEmbeddedFontPrefix();
-
-			_fonts.forEach(function(font) {
-				if (font.name.startsWith(prefix))
-					aEmbedFonts.push(font.name.substr(prefix.length));
-			});
-		}
-
-		AscFonts.initEmbeddedFonts(aEmbedFonts, true);
-		return AscCommon.DocumentEditorApi.prototype.pre_Paste.call(this, _fonts, _images, callback);
-	};
 	PDFEditorApi.prototype.asc_PasteData = function(_format, data1, data2, text_data, useCurrentPoint, callback, checkLocks) {
 		if (!this.DocumentRenderer)
 			return;
@@ -4337,14 +4322,6 @@
 		oDoc.drawings.forEach(function(drawing) {
 			drawing.GetAllFonts(fontMap);
 		});
-
-		let aEmbedFonts = [];
-		let prefix = AscFonts.getEmbeddedFontPrefix();
-		Object.keys(fontMap).forEach(function(fontName) {
-			if (fontName.startsWith(prefix))
-				aEmbedFonts.push(fontName.substr(prefix.length));
-		});
-		AscFonts.initEmbeddedFonts(aEmbedFonts, true);
 
 		this.FontLoader.LoadDocumentFonts2([]);
 	};

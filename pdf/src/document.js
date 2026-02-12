@@ -9008,6 +9008,8 @@ var CPresentation = CPresentation || function(){};
 	CPDFDoc.prototype.checkFonts = function(aFontsNames, callback) {
 		let fontsToLoad = [];
 		let fontMap     = {};
+		let embeddedFontsToInit = [];
+		let prefix = AscFonts.getEmbeddedFontPrefix();
 
         let aExtended = [];
         AscFonts.FontPickerByCharacter.extendFonts(aExtended);
@@ -9021,11 +9023,16 @@ var CPresentation = CPresentation || function(){};
 			
 			fontsToLoad.push(aFontsNames[i]);
 			fontMap[aFontsNames[i]] = true;
+
+			if (aFontsNames[i].startsWith(prefix))
+				embeddedFontsToInit.push(aFontsNames[i].substr(prefix.length));
 		}
 		
 		if (!fontsToLoad.length)
 			return true;
 		
+		AscFonts.initEmbeddedFonts(embeddedFontsToInit, true);
+
 		let _t = this;
 		this.fontLoader.LoadFonts(fontMap,
 			function()
