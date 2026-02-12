@@ -2075,6 +2075,16 @@ var CPresentation = CPresentation || function(){};
                             aCollectArray.push(new FieldCopyObject(oCopy));
                         }
                         else {
+							if (Asc.editor.embeddedFontsMap) {
+								oCopy.checkRunContent(function(run) {
+									let sFont = run.Pr.GetFontFamily();
+
+									if (Asc.editor.embeddedFontsMap[sFont]) {
+										run.Pr.RFonts.SetAll(Asc.editor.embeddedFontsMap[sFont]);
+									}
+								});
+							}
+							
                             aCollectArray.push(new DrawingCopyObject(oCopy, oSp.x, oSp.y, oSp.extX, oSp.extY, oSp.getBase64Img()));
                         }
                         
@@ -8998,6 +9008,8 @@ var CPresentation = CPresentation || function(){};
 	CPDFDoc.prototype.checkFonts = function(aFontsNames, callback) {
 		let fontsToLoad = [];
 		let fontMap     = {};
+		let embeddedFontsToInit = [];
+		let prefix = AscFonts.getEmbeddedFontPrefix();
 
         let aExtended = [];
         AscFonts.FontPickerByCharacter.extendFonts(aExtended);
@@ -9011,11 +9023,16 @@ var CPresentation = CPresentation || function(){};
 			
 			fontsToLoad.push(aFontsNames[i]);
 			fontMap[aFontsNames[i]] = true;
+
+			if (aFontsNames[i].startsWith(prefix))
+				embeddedFontsToInit.push(aFontsNames[i].substr(prefix.length));
 		}
 		
 		if (!fontsToLoad.length)
 			return true;
 		
+		AscFonts.initEmbeddedFonts(embeddedFontsToInit, true);
+
 		let _t = this;
 		this.fontLoader.LoadFonts(fontMap,
 			function()
