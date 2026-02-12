@@ -2764,6 +2764,7 @@
 							if (urls.length > 0)
 							{
 								_this.ImageUrl = urls[0];
+								_this.ProcessedCanvas = null;
 								t.sendEvent("asc_onSignatureImageLoaded");
 							}
 							t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
@@ -2789,6 +2790,7 @@
 				t.ImageLoader.LoadImagesWithCallback([AscCommon.getFullImageSrc2(url)], function()
 				{
 					_this.ImageUrl = url;
+					_this.ProcessedCanvas = null;
 					t.sendEvent("asc_onSignatureImageLoaded");
 				});
 			}
@@ -2832,8 +2834,16 @@
 			return;
 		}
 
-		const nW = Math.max(_img.Image.width, 1);
-		const nH = Math.max(_img.Image.height, 1);
+		let nW = Math.max(_img.Image.width, 1);
+		let nH = Math.max(_img.Image.height, 1);
+
+		const nMaxSize = 4096;
+		if (nW > nMaxSize || nH > nMaxSize)
+		{
+			const dScale = Math.min(nMaxSize / nW, nMaxSize / nH);
+			nW = Math.round(nW * dScale);
+			nH = Math.round(nH * dScale);
+		}
 
 		if (!this.ProcessedCanvas)
 			this.ProcessedCanvas = document.createElement('canvas');
