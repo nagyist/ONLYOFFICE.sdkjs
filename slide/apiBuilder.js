@@ -7163,7 +7163,27 @@
         this.Table.Set_Pr(oPr);
     };
 
-    /**
+	/**
+	 * Sets the table size.
+	 * @memberof ApiTable
+	 * @typeofeditors ["CPE"]
+	 * @param {EMU} width - The table width measured in English measure units.
+	 * @param {EMU} height - The table height measured in English measure units.
+	 * @see office-js-api/Examples/{Editor}/ApiTable/Methods/SetSize.js
+	 */
+	ApiTable.prototype.SetSize = function (width, height) {
+		if (this.Drawing) {
+			this.Drawing.recalculateTable();
+			this.Drawing.recalculateSizes();
+			this.Drawing.resize(
+				private_EMU2MM(width),
+				private_EMU2MM(height),
+				true
+			);
+		}
+	};
+
+	/**
 	 * Converts the ApiTable object into the JSON object.
 	 * @memberof ApiTable
 	 * @typeofeditors ["CPE"]
@@ -7908,6 +7928,7 @@
     ApiTable.prototype["RemoveRow"]                       = ApiTable.prototype.RemoveRow;
     ApiTable.prototype["RemoveColumn"]                    = ApiTable.prototype.RemoveColumn;
     ApiTable.prototype["SetShd"]                          = ApiTable.prototype.SetShd;
+	ApiTable.prototype["SetSize"]                         = ApiTable.prototype.SetSize;
     ApiTable.prototype["ToJSON"]    				      = ApiTable.prototype.ToJSON;
 
     ApiTableRow.prototype["GetClassType"]                 = ApiTableRow.prototype.GetClassType;
