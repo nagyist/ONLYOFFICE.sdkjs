@@ -550,7 +550,6 @@
 		this.fullTextMessageCallbackArgs = null;
 
 		this.isMouseDown = false;
-		this.isMouseMoveBetweenDownUp = false;
 		this.mouseMoveEpsilon = 5;
 		this.mouseDownCoords = { X : 0, Y : 0 };
 
@@ -1518,6 +1517,13 @@
 			let oActiveObj	= oDoc.GetActiveObject();
 			let nPage		= oActiveObj ? oActiveObj.GetPage() : undefined;
 
+			if (posY < 0) {
+				posY = 0;
+			}
+			if (posX < 0) {
+				posX = 0;
+			}
+			
 			this.m_oScrollVerApi.scrollToY(posY);
 			this.m_oScrollHorApi.scrollToX(posX);
 
@@ -1976,7 +1982,6 @@
 			oThis.mouseDownCoords.X = AscCommon.global_mouseEvent.X;
 			oThis.mouseDownCoords.Y = AscCommon.global_mouseEvent.Y;
 
-			oThis.isMouseMoveBetweenDownUp = false;
 			oDoc.OnMouseDown(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y, AscCommon.global_mouseEvent);
 		};
 
@@ -2035,6 +2040,7 @@
 			//if (e && e.preventDefault)
 			//	e.preventDefault();
 
+			let wasMouseDown = oThis.isMouseDown;
 			oThis.isMouseDown = false;
 
 			if (!oThis.file || !oThis.file.isValid())
@@ -2100,7 +2106,7 @@
 			}
 
 			// если было нажатие - то отжимаем
-			if (oThis.isMouseMoveBetweenDownUp) {
+			if (wasMouseDown && (!oDoc.GetActiveObject() || Asc.editor.IsLinkTool() || Asc.editor.IsRedactTool())) {
 				let pageObjectLogic = oThis.getPageByCoords2(AscCommon.global_mouseEvent.X, AscCommon.global_mouseEvent.Y);
 				oThis.file.onMouseUp(pageObjectLogic.index, pageObjectLogic.x, pageObjectLogic.y);
 			}
@@ -2115,8 +2121,6 @@
 				}
 			}
 				
-			oThis.isMouseMoveBetweenDownUp = false;
-
 			if (-1 !== oThis.timerScrollSelect)
 			{
 				clearInterval(oThis.timerScrollSelect);
@@ -2198,7 +2202,7 @@
 				if (oThis.getPDFDoc().mouseDownLinkObject)
 				{
 					// селект начат на ссылке. смотрим, нужно ли начать реально селект
-					if (oThis.isMouseMoveBetweenDownUp)
+					if (oThis.isMouseDown)
 					{
 						// вышли за eps
 						oThis.getPDFDoc().mouseDownLinkObject = null;
@@ -2242,7 +2246,7 @@
 		};
 		this.canSelectPageText = function() {
 			let oDoc = this.getPDFDoc();
-			return !oDoc.activeDrawing && !oDoc.activeForm && (!oDoc.mouseDownAnnot || (oDoc.mouseDownAnnot && oDoc.mouseDownAnnot.IsTextMarkup() == true)) && !this.Api.isInkDrawerOn() && !this.Api.isStartAddShape;
+			return !oDoc.activeDrawing && !oDoc.activeForm && (!oDoc.mouseDownAnnot || (oDoc.mouseDownAnnot && oDoc.mouseDownAnnot.IsTextMarkup() == true)) && !this.Api.isInkDrawerOn() && !this.Api.isStartAddShape && false !== Asc.editor.canInteract;
 		};
 		this.onMouseWhell = function(e)
 		{
@@ -3387,7 +3391,9 @@
 						this._checkTargetUpdate();
 					}
 					else {
-						oDoc.AddToParagraph(new AscWord.CRunTab());
+						oDoc.DoAction(function() {
+							oDoc.AddToParagraph(new AscWord.CRunTab());
+						}, AscDFH.historydescription_Presentation_ParagraphAdd);
 					}
 				}
 				else {
@@ -4642,7 +4648,7 @@
 						continue;
 					}
 
-					oPageInfo.annots[nAnnot].IsChanged() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
+					!oPageInfo.annots[nAnnot].IsNeedDrawFromStream() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
 					oPageInfo.annots[nAnnot].GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -4877,7 +4883,7 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.find(function(annot) {
 				let aReplies = annot.GetReplies();
-				return annot.IsChanged() || aReplies.find(function(reply) {
+				return !annot.IsNeedDrawFromStream() || aReplies.find(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;
@@ -5194,7 +5200,7 @@
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
 
-					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
+					!oAnnot.IsNeedDrawFromStream() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -5301,7 +5307,7 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.some(function(annot) {
 				let aReplies = annot.GetReplies();
-				return annot.IsChanged() || aReplies.some(function(reply) {
+				return !annot.IsNeedDrawFromStream() || aReplies.some(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;

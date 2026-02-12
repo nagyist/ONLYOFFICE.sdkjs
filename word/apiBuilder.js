@@ -401,7 +401,7 @@
 
 		// рендер html тагов
 		if (!this.Config.renderHTMLTags) {
-			sOutputText = sOutputText.replace(/</gi, '&lt;').replace(/>/gi, '&gt;');
+			sOutputText = private_EscapeHtml(sOutputText);
 		}
 
 		return sOutputText;
@@ -931,7 +931,7 @@
 
 			}
 
-			return sText;
+			return private_EscapeHtml(sText);
 		}
 
 		var oCMarkdownConverter    = this;
@@ -3356,6 +3356,12 @@
 
 		if (sLink !== "")
 		{
+			const isPresentationEditor = Asc.editor && Asc.editor.editorId === AscCommon.c_oEditorId.Presentation;
+			if (isPresentationEditor && AscCommon.IsLinkPPAction(sLink)) {
+				this.ParaHyperlink.SetValue(sLink);
+				return true;
+			}
+
 			urlType		= AscCommon.getUrlType(sLink);
 			if (!AscCommon.rx_allowedProtocols.test(sLink))
 				sLink = (urlType === 0) ? null :(( (urlType === 2) ? 'mailto:' : 'http://' ) + sLink);
@@ -4954,30 +4960,15 @@
 	 * Creates a theme color.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @param {"accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" |
-	 * "bg1" | "bg2" | "dk1" | "dk2" | "lt1" | "lt2" | "tx1" | "tx2"} [name="tx1"]
+	 * @typeofeditors ["CDE"]
+	 * @param {SchemeColorId} [name="tx1"] The theme color name. If the provided name is not supported, the 'tx1' color will be used.
 	 * @returns {ApiColor} Instance of ApiColor with 'theme' type.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ThemeColor.js
 	 */
 	Api.prototype.ThemeColor = function (name) {
-		const themeColorMap = {
-			'accent1': 0,
-			'accent2': 1,
-			'accent3': 2,
-			'accent4': 3,
-			'accent5': 4,
-			'accent6': 5,
-			'bg1': 6,
-			'bg2': 7,
-			'dk1': 8,
-			'dk2': 9,
-			'lt1': 12,
-			'lt2': 13,
-			'tx1': 15,
-			'tx2': 16,
-		};
-		const index = themeColorMap[name] !== undefined ? themeColorMap[name] : 15; // default is 'tx1' color
+		const index = ApiColor.ThemeColorMap[name] !== undefined
+			? ApiColor.ThemeColorMap[name]
+			: ApiColor.ThemeColorMap['tx1'];
 		return new ApiColor('theme', index);
 	};
 
@@ -7219,7 +7210,7 @@
 		oSectPr.Copy(oCurSectPr);
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);
-		oCurSectPr.Clear_AllHdrFtr();
+		oCurSectPr.RemoveAllHdrFtr();
 
 		oParagraph.private_GetImpl().Set_SectionPr(oSectPr);
 		return new ApiSection(oSectPr);
@@ -7850,7 +7841,7 @@
 	
 	/**
 	 * The specific form type.
-	 * @typedef {("text" | "checkBox" | "picture" | "comboBox" | "dropDownList" | "dateTime" | "radio")} FormSpecificType
+	 * @typedef {("text" | "checkBox" | "picture" | "comboBox" | "dropDownList" | "dateTime" | "radio" | "complex" | "signature")} FormSpecificType
 	 * @see office-js-api/Examples/Enumerations/FormSpecificType.js
 	 */
 	/**
@@ -7860,12 +7851,63 @@
 	 * @property {string | boolean} value - The current field value.
 	 * @property {string} tag - The form tag.
 	 * @property {FormSpecificType} type - The form type.
+	 * @property {string} [role] - The form role.
+	 * @property {string} [roleColor] - The form role color in hex format.
+	 * @property {Array.<{value: string, label: string}> | Array.<boolean>} [options] - The list of available options for the field.
+	 * Present for checkboxes, radio button groups, dropdown lists, and combo boxes.
+	 * For <b>checkboxes</b> this is <b>[true, false]</b>.
+	 * For <b>radio buttons</b>, <b>dropdown lists</b>, and <b>combo boxes</b> each entry contains
+	 * a <b>value</b> (the stored value) and a <b>label</b> (the display text).
+	 * @property {string} [label] - The checkbox label. Present only for checkbox fields.
+	 * @property {string} [format] - The date format string (e.g. <b>MM/DD/YYYY</b>). Present only for date picker fields.
+	 * @property {string} [lang] - The date language/locale name (e.g. <b>en-US</b>). Present only for date picker fields.
 	 * @example
+	 * 	// Text form
 	 * 	{
-	 * 	  "key" : "CompanyName",
-	 * 	  "tag" : "companyName",
-	 * 	  "value" : "ONLYOFFICE",
-	 * 	  "type" : "text"
+	 * 	  "key"       : "CompanyName",
+	 * 	  "tag"       : "companyName",
+	 * 	  "value"     : "ONLYOFFICE",
+	 * 	  "type"      : "text",
+	 * 	  "role"      : "",
+	 * 	  "roleColor" : "FF0000"
+	 * 	}
+	 * @example
+	 * 	// Checkbox form
+	 * 	{
+	 * 	  "key"     : "Agree",
+	 * 	  "tag"     : "agree",
+	 * 	  "value"   : true,
+	 * 	  "type"    : "checkBox",
+	 * 	  "label"   : "I agree",
+	 * 	  "options" : [true, false]
+	 * 	}
+	 * @example
+	 * 	// Radio button group
+	 * 	{
+	 * 	  "key"     : "ColorGroup",
+	 * 	  "tag"     : "",
+	 * 	  "value"   : "red",
+	 * 	  "type"    : "radio",
+	 * 	  "options" : [{"value": "red", "label": "Red"}, {"value": "blue", "label": "Blue"}]
+	 * 	}
+	 * @example
+	 * 	// Dropdown list form
+	 * 	{
+	 * 	  "key"     : "Country",
+	 * 	  "tag"     : "country",
+	 * 	  "value"   : "France",
+	 * 	  "type"    : "dropDownList",
+	 * 	  "options" : [{"value": "US", "label": "United States"}, {"value": "FR", "label": "France"}]
+	 * 	}
+	 * @example
+	 * 	// Date picker form
+	 * 	{
+	 * 	  "key"    : "StartDate",
+	 * 	  "tag"    : "startDate",
+	 * 	  "value"  : "01/15/2024",
+	 * 	  "type"   : "dateTime",
+	 * 	  "format" : "MM/DD/YYYY",
+	 * 	  "lang"   : "en-US"
 	 * 	}
 	 * @see office-js-api/Examples/Enumerations/FormData.js
 	 */
@@ -11956,7 +11998,7 @@
 
 		oCurSectPr.Set_Type(oSectPr.Type);
 		oCurSectPr.SetPageNumStart(-1);
-		oCurSectPr.Clear_AllHdrFtr();
+		oCurSectPr.RemoveAllHdrFtr();
 
 		this.private_GetImpl().Set_SectionPr(oSectPr);
 		return true;
@@ -12599,7 +12641,7 @@
 	 * Specifies the shading applied to the contents of the current text run.
 	 *
 	 * @memberof ApiRun
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE"]
 	 *
 	 * @since 9.1.0
 	 * @param {ShdType} type - The shading type applied to the contents of the current text run.
@@ -19546,7 +19588,7 @@
 	/**
 	 * Sets the text paddings to the current shape.
 	 * @memberof ApiShape
-	 * @typeofeditors ["CDE", "CSE"]
+	 * @typeofeditors ["CDE"]
 	 * @param {?EMU} nLeft - Left padding.
 	 * @param {?EMU} nTop - Top padding.
 	 * @param {?EMU} nRight - Right padding.
@@ -20201,7 +20243,12 @@
 		return this.command.swAng !== undefined ? this.command.swAng : null;
 	};
 
-
+	ApiPath.prototype.private_ConvertParentToCustomGeometry = function () {
+		const parent = this.path.parent;
+		if (parent && typeof parent.preset === 'string' && parent.preset.length > 0) {
+			parent.setPreset(null);
+		}
+	};
 
 	/**
 	 * Returns true if the current path is stroked, otherwise false.
@@ -20228,6 +20275,7 @@
 	{
 		if (bStroke !== true && bStroke !== false)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setStroke(bStroke);
 	};
 
@@ -20260,6 +20308,7 @@
 		{
 			return;
 		}
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setFill(sFill);
 	};
 
@@ -20288,6 +20337,7 @@
 	{
 		if (!AscFormat.isRealNumber(nWidth) || nWidth < 0)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setPathW(nWidth);
 	};
 
@@ -20316,6 +20366,7 @@
 	{
 		if (!AscFormat.isRealNumber(nHeight) || nHeight < 0)
 			return;
+		this.private_ConvertParentToCustomGeometry();
 		this.path.setPathH(nHeight);
 	};
 
@@ -20842,9 +20893,9 @@
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisLablesFontSize.js
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetHorAxisLabelsFontSize.js
 	 */
-	ApiChart.prototype.SetHorAxisLablesFontSize = function(nFontSize){
+	ApiChart.prototype.SetHorAxisLabelsFontSize = function(nFontSize){
 		AscFormat.builder_SetHorAxisFontSize(this.Chart, nFontSize);
 		return true;
 	};
@@ -20855,9 +20906,9 @@
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @param {pt} nFontSize - The text size value measured in points.
 	 * @returns {boolean}
-	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVertAxisLablesFontSize.js
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/SetVertAxisLabelsFontSize.js
 	 */
-	ApiChart.prototype.SetVertAxisLablesFontSize = function(nFontSize){
+	ApiChart.prototype.SetVertAxisLabelsFontSize = function(nFontSize){
 		AscFormat.builder_SetVerAxisFontSize(this.Chart, nFontSize);
 		return true;
 	};
@@ -21556,9 +21607,16 @@
 	 */
 	ApiStroke.prototype.GetWidth = function()
 	{
-		if (this.Ln && this.Ln.w !== null && this.Ln.w !== undefined)
+		if (this.Ln)
 		{
-			return this.Ln.w;
+			if (!this.Ln.isVisible())
+			{
+				return 0;
+			}
+			if (this.Ln.w !== null && this.Ln.w !== undefined)
+			{
+				return this.Ln.w;
+			}
 		}
 		return null;
 	};
@@ -21588,11 +21646,14 @@
 	 */
 	ApiStroke.prototype.GetDashType = function()
 	{
-		if (this.Ln && this.Ln.prstDash !== null && this.Ln.prstDash !== undefined)
+		if (this.Ln)
 		{
-			// Convert numeric code to string value using GetDashByCode
-			var dashString = this.Ln.GetDashByCode ? this.Ln.GetDashByCode(this.Ln.prstDash) : null;
-			return dashString;
+			if (this.Ln.prstDash !== null && this.Ln.prstDash !== undefined)
+			{
+				let dashString = this.Ln.GetDashByCode ? this.Ln.GetDashByCode(this.Ln.prstDash) : null;
+				return dashString || "solid";
+			}
+			return "solid";
 		}
 		return null;
 	};
@@ -21954,6 +22015,46 @@
 		"b": {get : function() {return this.GetRGBA()["b"];}},
 		"a": {get : function() {return this.GetRGBA()["a"];}}
 	});
+
+	ApiColor.ThemeColorMap = {
+		'accent1': 0,
+		'accent2': 1,
+		'accent3': 2,
+		'accent4': 3,
+		'accent5': 4,
+		'accent6': 5,
+		'bg1': 6,
+		'bg2': 7,
+		'dk1': 8,
+		'dk2': 9,
+		'lt1': 12,
+		'lt2': 13,
+		'tx1': 15,
+		'tx2': 16,
+	};
+
+	/**
+	 * Gets the theme color name if the color is a theme color.
+	 *
+	 * @memberof ApiColor
+	 * @typeofeditors ["CDE"]
+	 * @since 9.3.0
+	 * @returns {SchemeColorId | null} The theme color name or null if not a theme color.
+	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetThemeName.js
+	 */
+	ApiColor.prototype.GetThemeName = function () {
+		if (this.type !== 'theme') {
+			return null;
+		}
+
+		for (let themeName in ApiColor.ThemeColorMap) {
+			if (ApiColor.ThemeColorMap[themeName] === this.value) {
+				return themeName;
+			}
+		}
+
+		return null;
+	};
 
 	/**
 	 * Converts the ApiColor object into the JSON object.
@@ -29500,6 +29601,7 @@
 	ApiRun.prototype["SetSmallCaps"]                 = ApiRun.prototype.SetSmallCaps;
 	ApiRun.prototype["SetSpacing"]                   = ApiRun.prototype.SetSpacing;
 	ApiRun.prototype["SetStrikeout"]                 = ApiRun.prototype.SetStrikeout;
+	ApiRun.prototype["SetStyle"]                     = ApiRun.prototype.SetStyle;
 	ApiRun.prototype["SetUnderline"]                 = ApiRun.prototype.SetUnderline;
 	ApiRun.prototype["SetVertAlign"]                 = ApiRun.prototype.SetVertAlign;
 	ApiRun.prototype["WrapInMailMergeField"]         = ApiRun.prototype.WrapInMailMergeField;
@@ -29856,6 +29958,8 @@
 	ApiImage.prototype["GetNextImage"]               = ApiImage.prototype.GetNextImage;
 	ApiImage.prototype["GetPrevImage"]               = ApiImage.prototype.GetPrevImage;
 
+	ApiSmartArt.prototype["GetClassType"]            = ApiSmartArt.prototype.GetClassType;
+
 	ApiShape.prototype["GetClassType"]               = ApiShape.prototype.GetClassType;
 	ApiShape.prototype["GetDocContent"]              = ApiShape.prototype.GetDocContent;
 	ApiShape.prototype["SetVerticalTextAlign"]       = ApiShape.prototype.SetVerticalTextAlign;
@@ -29936,8 +30040,8 @@
 	ApiChart.prototype["SetMinorVerticalGridlines"]    =  ApiChart.prototype.SetMinorVerticalGridlines;
 	ApiChart.prototype["SetMajorHorizontalGridlines"]  =  ApiChart.prototype.SetMajorHorizontalGridlines;
 	ApiChart.prototype["SetMinorHorizontalGridlines"]  =  ApiChart.prototype.SetMinorHorizontalGridlines;
-	ApiChart.prototype["SetHorAxisLablesFontSize"]     = ApiChart.prototype.SetHorAxisLablesFontSize;
-	ApiChart.prototype["SetVertAxisLablesFontSize"]    = ApiChart.prototype.SetVertAxisLablesFontSize;
+	ApiChart.prototype["SetHorAxisLabelsFontSize"]     = ApiChart.prototype.SetHorAxisLabelsFontSize;
+	ApiChart.prototype["SetVertAxisLabelsFontSize"]    = ApiChart.prototype.SetVertAxisLabelsFontSize;
 	ApiChart.prototype["GetNextChart"]                 = ApiChart.prototype.GetNextChart;
 	ApiChart.prototype["GetPrevChart"]                 = ApiChart.prototype.GetPrevChart;
 	ApiChart.prototype["RemoveSeria"]                  = ApiChart.prototype.RemoveSeria;
@@ -30005,6 +30109,7 @@
 	ApiColor.prototype["GetRGB"] = ApiColor.prototype.GetRGB;
 	ApiColor.prototype["GetRGBA"] = ApiColor.prototype.GetRGBA;
 	ApiColor.prototype["GetHex"] = ApiColor.prototype.GetHex;
+	ApiColor.prototype["GetThemeName"] = ApiColor.prototype.GetThemeName;
 	ApiColor.prototype["ToJSON"] = ApiColor.prototype.ToJSON;
 	ApiColor.prototype["FromJSON"] = ApiColor.prototype.FromJSON;
 
@@ -30176,7 +30281,8 @@
 	ApiFormBase.prototype["Delete"]             = ApiFormBase.prototype.Delete;
 	ApiFormBase.prototype["SetLock"]            = ApiFormBase.prototype.SetLock;
 	ApiFormBase.prototype["GetLock"]            = ApiFormBase.prototype.GetLock;
-	
+	ApiFormBase.prototype["Copy"]              = ApiFormBase.prototype.Copy;
+
 	ApiTextForm.prototype["GetClassType"]        = ApiTextForm.prototype.GetClassType;
 	ApiTextForm.prototype["IsAutoFit"]           = ApiTextForm.prototype.IsAutoFit;
 	ApiTextForm.prototype["SetAutoFit"]          = ApiTextForm.prototype.SetAutoFit;
@@ -31356,6 +31462,14 @@
 		if (!console.error)
 			logError(err);
 		throw err;
+	}
+
+	function private_EscapeHtml(text) {
+		return text.replace(/&/g, '&amp;')
+				.replace(/</g, '&lt;')
+				.replace(/>/g, '&gt;')
+				.replace(/"/g, '&quot;')
+				.replace(/'/g, '&#39;');
 	}
 
 	ApiDocument.prototype.OnChangeParaPr = function(oApiParaPr)

@@ -937,6 +937,32 @@ function (window, undefined) {
 	}
 
 	/**
+	 * Returns the full name of the reference link in format '<NameSheet>'!$A$1
+	 * @param {string} sValue
+	 * @param {Workbook} oWb
+	 * @returns {string}
+	 */
+	function getFullRefLinkName (sValue, oWb) {
+		let oWs = oWb.getActiveWs();
+		const oDefName = oWb.getDefinesNames(sValue);
+
+		if (oDefName) {
+			sValue = oDefName.ref;
+		}
+		if (!!~sValue.indexOf('!')) {
+			const sWsName = sValue.split('!')[0];
+			oWs = oWb.getWorksheetByName(sWsName);
+		}
+		const oRange = oWs.getRange2(sValue);
+		if (!oRange) {
+			return sValue;
+		}
+		const sWsName = !!~oWs.getName().search(/[\W\s]/) ? "'" + oWs.getName() + "'" : oWs.getName();
+
+		return sWsName + '!' + oRange.getName();
+	}
+
+	/**
 	 * Adds Def names ranges according to the values of the Solver params and options.
 	 * @memberof asc_CSolverParams
 	 * @param {Workbook} oWbModel
@@ -972,6 +998,9 @@ function (window, undefined) {
 			if (aMaxLimitsAttrs.includes(sDefName) && !ref) {
 				ref = DEFAULT_VALUE;
 			}
+			if (oCellType[sDefName]) {
+				ref = getFullRefLinkName(ref, oWbModel);
+			}
 			let oNewDefName = new Asc.asc_CDefName(sDefName, String(ref), nWsId, undefined, true, undefined, undefined, true);
 			if ((oOldDefName && oOldDefName.Ref !== oNewDefName.Ref) || !oOldDefName) {
 				oWbModel.editDefinesNames(oOldDefName, oNewDefName);
@@ -992,6 +1021,10 @@ function (window, undefined) {
 			'solver_abj': Asc.c_oAscSelectionDialogType.Solver_VariableCell
 		}
 		const nNoError = Asc.c_oAscError.ID.No;
+		const oCellType = {
+			'solver_opt': true,
+			'solver_adj': true,
+		}
 
 		// Finds existed defined names for the solver.
 		if (aWsDefNames.length) {
@@ -1024,8 +1057,8 @@ function (window, undefined) {
 			let nIndex = 1;
 			updateDefName('solver_num', mConstraints.size);
 			mConstraints.forEach(function (constraint) {
-				updateDefName('solver_lhs' + nIndex, constraint['cellRef']);
-				updateDefName('solver_rhs' + nIndex, constraint['constraint']);
+				updateDefName('solver_lhs' + nIndex, getFullRefLinkName(constraint['cellRef'], oWbModel));
+				updateDefName('solver_rhs' + nIndex, getFullRefLinkName(constraint['constraint'], oWbModel));
 				updateDefName('solver_rel' + nIndex, constraint['operator']);
 				nIndex++;
 			});
@@ -2876,6 +2909,9 @@ function (window, undefined) {
 
 		// Calculating option
 		this.oOptions = oParams.asc_getOptions();
+
+		// Attributes for validators
+		this.nCellReferenceCount = 0;
 	}
 
 	CSolver.prototype = Object.create(CBaseAnalysis.prototype);
@@ -3483,7 +3519,22 @@ function (window, undefined) {
 	CSolver.prototype.getResultStatus = function () {
 		return this.nResultStatus;
 	};
-
+	/**
+	 * Sets the cell total count in the "Cell Reference" field.
+	 * @memberof CSolver
+	 * @param {number} nCellReferenceCount
+	 */
+	CSolver.prototype.setCellReferenceCount = function (nCellReferenceCount) {
+		this.nCellReferenceCount = nCellReferenceCount;
+	};
+	/**
+	 * Returns the cell total count in the "Cell Reference" field.
+	 * @memberof CSolver
+	 * @return {number}
+	 */
+	CSolver.prototype.getCellReferenceCount = function () {
+		return this.nCellReferenceCount;
+	};
 	/**
 	 * Returns error type
 	 * @memberof CSolver
@@ -3494,6 +3545,7 @@ function (window, undefined) {
 	 * @returns {Asc.c_oAscError}
 	 */
 	CSolver.prototype.isValidDataRef = function(ws, range, type, dataRange) {
+		const MAX_CELL_COUNT = 2147467264;
 		let res = Asc.c_oAscError.ID.No;
 		if (range === null && type !== Asc.c_oAscSelectionDialogType.Solver_Constraint) {
 			// error text: "Problem to solve not specified"
@@ -3532,6 +3584,26 @@ function (window, undefined) {
 				if (!range && !~dataRange.search(/^\d*[.,]?\d+$/)) {
 					res = Asc.c_oAscError.ID.DataConstraintError;
 				}
+				if (range) {
+					const constraintCellCount = range.getHeight() * range.getWidth();
+					if (constraintCellCount >= MAX_CELL_COUNT) {
+						// error text: "Too many cells"
+						res = Asc.c_oAscError.ID.TooManyCells;
+					}
+					// check equal number of cells in Cell Reference and Constraint fields.
+					if (this.getCellReferenceCount() !== constraintCellCount) {
+						// error text: "Unequal number of cells in Cell Reference and Constraint"
+						res = Asc.c_oAscError.ID.UnequalCellsNumber;
+					}
+				}
+				break;
+			case Asc.c_oAscSelectionDialogType.Solver_CellReference:
+				const cellReferenceCount = range.getHeight() * range.getWidth();
+				if (cellReferenceCount >= MAX_CELL_COUNT) {
+					// error text: "Too many cells"
+					res = Asc.c_oAscError.ID.TooManyCells;
+				}
+				this.setCellReferenceCount(cellReferenceCount);
 				break;
 		}
 

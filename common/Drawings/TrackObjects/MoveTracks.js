@@ -786,7 +786,10 @@ function MoveAnnotationTrack(originalObject)
 
         oDrawer.m_oContext.globalAlpha = 0.5;
 
-        this.objectToDraw.SetPosition(this.x, this.y, true);
+		AscFormat.ExecuteNoHistory(function() {
+			this.objectToDraw.SetPosition(this.x, this.y, true);
+		}, this);
+        
         if (this.originalObject.IsNeedDrawFromStream())
             this.objectToDraw.DrawFromStream(oGraphicsPDF, oGraphicsWord);
         else

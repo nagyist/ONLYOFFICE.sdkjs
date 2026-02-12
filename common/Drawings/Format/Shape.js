@@ -3926,7 +3926,7 @@
 			
 			return isRotated;
 		};
-		CShape.prototype.recalculateDocContent = function (oDocContent, oBodyPr) {
+		CShape.prototype.recalculateDocContent = function (oDocContent, oBodyPr, bSkipPctSpacing) {
 			let nStartPage = this.GetAbsolutePage ? this.GetAbsolutePage() : 0;
 			let oRet = {w: 0, h: 0, contentH: 0};
 			let oInsets = this.getInsets({bIgnoreInsets: false, bodyPr: oBodyPr});
@@ -4064,8 +4064,13 @@
 				bUseXLimit = false;
 			}
 			else {
-				if (oBodyPr.wrap === AscFormat.nTWTNone && (!oBodyPr.textFit || oBodyPr.textFit.type !== AscFormat.text_fit_Auto)) {
-					bUseXLimit = false;
+				if (oBodyPr.wrap === AscFormat.nTWTNone) {
+					if (oBodyPr.textFit && oBodyPr.textFit.type === AscFormat.text_fit_Auto) {
+						bUseXLimit = !!this.bCheckAutoFitFlag;
+					}
+					else {
+						bUseXLimit = false;
+					}
 				}
 				else {
 					bUseXLimit = true;
@@ -4074,6 +4079,36 @@
 			oDocContent.SetUseXLimit(bUseXLimit);
 
 			oDocContent.RecalculateContent(oContentW, oRet.h, nStartPage);
+
+			if (!bSkipPctSpacing) {
+				let bNeedSecondPass = false;
+				for (let i = 0; i < oDocContent.Content.length; i++) {
+					const para = oDocContent.Content[i];
+					if (!para.CompiledPr || !para.CompiledPr.Pr || !para.Lines || !para.Lines.length)
+						continue;
+
+					const spacing = para.CompiledPr.Pr.ParaPr.Spacing;
+					const firstLine = para.Lines[0];
+
+					if (spacing.BeforePct && (!spacing.Before || spacing.Before === 0)) {
+						const lineH = firstLine.Metrics.TextAscent + firstLine.Metrics.TextDescent;
+						spacing.Before = lineH * spacing.BeforePct / 100000;
+						bNeedSecondPass = true;
+					}
+
+					if (spacing.AfterPct && (!spacing.After || spacing.After === 0)) {
+						const lastLine = para.Lines[para.Lines.length - 1];
+						const lastLineH = lastLine.Metrics.TextAscent + lastLine.Metrics.TextDescent;
+						spacing.After = lastLineH * spacing.AfterPct / 100000;
+						bNeedSecondPass = true;
+					}
+				}
+
+				if (bNeedSecondPass) {
+					return this.recalculateDocContent(oDocContent, oBodyPr, true);
+				}
+			}
+
 			oRet.contentH = oDocContent.GetSummaryHeight();
 
 			if (this.bWordShape) {
@@ -5979,9 +6014,14 @@
 		}
 
 		CShape.prototype.getAllRasterImages = function (images) {
-			if (this.spPr && this.spPr.Fill && this.spPr.Fill.fill && typeof (this.spPr.Fill.fill.RasterImageId) === "string" && this.spPr.Fill.fill.RasterImageId.length > 0)
-				images.push(this.spPr.Fill.fill.RasterImageId);
-
+			if (this.spPr) {
+				let sId = this.spPr.Fill && this.spPr.Fill.checkRasterImageId();
+				if (sId)
+					images.push(sId);
+				sId = this.spPr.ln && this.spPr.ln.checkRasterImageId();
+				if (sId)
+					images.push(sId);
+			}
 
 			var compiled_style = this.getCompiledStyle();
 			var parents = this.getParentObjects();

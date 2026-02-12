@@ -2842,7 +2842,7 @@ background-repeat: no-repeat;\
 		let bIsDownloadEvent = options.isDownloadEvent;
 		let changes = null;
 		let isCloudLocal = false;
-		if (this.isUseNativeViewer && this.isDocumentRenderer()) {
+		if (this.isUseNativeViewer && this.isDocumentRenderer() && 0 === this.DocumentRenderer.file.type) {
 			isCloudLocal = this.isCloudSaveAsLocalToDrawingFormat(Asc.c_oAscAsyncAction.DownloadAs, Asc.c_oAscFileType.PDF);
 			changes = this.WordControl.m_oDrawingDocument.m_oDocumentRenderer.Save();
 			if (!changes && isCloudLocal)
@@ -7062,8 +7062,6 @@ background-repeat: no-repeat;\
 		return this.WordControl.m_oLogicDocument.GetHyperlinkAnchors();
 	};
 
-
-
 	asc_docs_api.prototype.sync_HyperlinkPropCallback = function(hyperProp)
 	{
 		this.SelectedObjectsStack[this.SelectedObjectsStack.length] = new asc_CSelectedObject(c_oAscTypeSelectElement.Hyperlink, new Asc.CHyperlinkProperty(hyperProp));
@@ -7071,6 +7069,18 @@ background-repeat: no-repeat;\
 
 	asc_docs_api.prototype.sync_HyperlinkClickCallback = function(Url)
 	{
+		if (typeof Url === 'string' && Url[0] === '#') {
+			const logicDocument = this.WordControl && this.WordControl.m_oLogicDocument;
+			if (logicDocument) {
+				const bookmarkName = Url.substring(1);
+				if (bookmarkName === '_top') {
+					logicDocument.MoveCursorToStartOfDocument();
+				} else {
+					logicDocument.GoToBookmark(bookmarkName, true);
+				}
+			}
+			return;
+		}
 		this.sendEvent("asc_onHyperlinkClick", Url);
 	};
 
@@ -11818,6 +11828,14 @@ background-repeat: no-repeat;\
 		this.WordControl.EndUpdateOverlay();
 	};
 
+	asc_docs_api.prototype.asc_SetSignatureProps = function(signatureResult)
+	{
+		if (!signatureResult || !signatureResult.imageData || !signatureResult.internalId)
+			return;
+
+		this.asc_SetContentControlPictureUrl(signatureResult.imageData, signatureResult.internalId, null);
+	};
+
 	asc_docs_api.prototype.asc_BeginViewModeInReview = function(isFinal)
 	{
 		this.asc_SetDisplayModeInReview(isFinal ? Asc.c_oAscDisplayModeInReview.Final : Asc.c_oAscDisplayModeInReview.Original);
@@ -15468,6 +15486,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype["asc_GetContentControlRightAnchorPosition"]  = asc_docs_api.prototype.asc_GetContentControlRightAnchorPosition;
 	asc_docs_api.prototype["asc_GetContentControlBoundingRect"]         = asc_docs_api.prototype.asc_GetContentControlBoundingRect;
 	asc_docs_api.prototype["asc_UncheckContentControlButtons"]          = asc_docs_api.prototype.asc_UncheckContentControlButtons;
+	asc_docs_api.prototype["asc_SetSignatureProps"]                     = asc_docs_api.prototype.asc_SetSignatureProps;
 	asc_docs_api.prototype['asc_SetGlobalContentControlHighlightColor'] = asc_docs_api.prototype.asc_SetGlobalContentControlHighlightColor;
 	asc_docs_api.prototype['asc_GetGlobalContentControlHighlightColor'] = asc_docs_api.prototype.asc_GetGlobalContentControlHighlightColor;
 	asc_docs_api.prototype['asc_SetGlobalContentControlShowHighlight']  = asc_docs_api.prototype.asc_SetGlobalContentControlShowHighlight;

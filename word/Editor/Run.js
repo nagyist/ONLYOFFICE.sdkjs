@@ -8252,7 +8252,7 @@ ParaRun.prototype.Apply_TextPr = function(TextPr, IncFontSize, ApplyToAll)
     }
 
 	function checkRunPdf(run, textPr) {
-		if (!!run.Pr.Bold !== !!textPr.Bold || !!run.Pr.Italic !== !!textPr.Italic)
+		if (!!run.Pr.Bold !== !!textPr.Bold || !!run.Pr.Italic !== !!textPr.Italic || (textPr.GetFontFamily() && run.Pr.GetFontFamily() != textPr.GetFontFamily()))
 		{
 			for (let i = 0; i < run.Content.length; i++)
 			{

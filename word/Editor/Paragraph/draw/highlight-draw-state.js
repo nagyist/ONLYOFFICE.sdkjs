@@ -59,6 +59,7 @@
 		
 		this.CurPos = new AscWord.CParagraphContentPos();
 		
+		this.DrawShd   = true;
 		this.DrawColl     = false;
 		this.DrawMMFields = false;
 		
@@ -102,6 +103,7 @@
 		this.run       = null;
 		this.highlight = highlight_None;
 		this.shdColor  = null;
+		this.shdAlpha  = 255;
 		this.shd       = null;
 		
 		this.permColor = null;
@@ -114,6 +116,7 @@
 		let logicDocument = paragraph.GetLogicDocument();
 		let commentManager = logicDocument && logicDocument.IsDocumentEditor() ? logicDocument.GetCommentsManager() : null;
 		
+		this.DrawShd            = logicDocument && logicDocument.IsDocumentEditor();
 		this.DrawColl           = !graphics.isPdf();
 		this.DrawSearch         = logicDocument && logicDocument.IsDocumentEditor() && logicDocument.SearchEngine.Selection;
 		this.DrawComments       = commentManager && commentManager.isUse();
@@ -188,6 +191,7 @@
 		this.run       = null;
 		this.highlight = highlight_None;
 		this.shdColor  = null;
+		this.shdAlpha  = 255;
 		this.shd       = null;
 	};
 	ParagraphHighlightDrawState.prototype.endRange = function()
@@ -443,20 +447,30 @@
 		this.run = run;
 		
 		let textPr = run.getCompiledPr();
-		let shd    = textPr.Shd;
-		
-		this.shd = textPr.Shd;
-		this.shdColor = shd && !shd.IsNil() ? shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap()) : null;
-		if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
-			this.shdColor = null;
-		
-		this.highlight = textPr.HighLight;
+		let shd = null;
+		if (this.DrawShd)
+		{
+			shd = textPr.Shd;
+		}
 		if (textPr.HighlightColor)
 		{
-			textPr.HighlightColor.check(this.drawState.getTheme(), this.drawState.getColorMap());
-			let RGBA = textPr.HighlightColor.RGBA;
-			this.highlight = new CDocumentColor(RGBA.R, RGBA.G, RGBA.B, RGBA.A);
+			shd = new CDocumentShd();
+			shd.Value = Asc.c_oAscShd.Clear;
+			shd.ThemeFill = AscFormat.CreateUniFillByUniColor(textPr.HighlightColor);
 		}
+		this.shd = shd;
+		this.shdColor = null;
+		this.shdAlpha = 255;
+		if (shd && !shd.IsNil())
+		{
+			this.shdColor = shd.GetSimpleColor(this.drawState.getTheme(), this.drawState.getColorMap());
+			this.shdAlpha = shd.GetAlpha(this.drawState.getTheme(), this.drawState.getColorMap());
+			if (!this.shdColor || this.shdColor.IsAuto() || (run.IsMathRun() && run.IsPlaceholder()))
+				this.shdColor = null;
+		}
+
+
+		this.highlight = textPr.HighLight;
 	};
 	/**
 	 *
@@ -467,7 +481,7 @@
 		let endY   = this.Y1;
 		
 		if ((flags & FLAG_SHD) && this.shdColor)
-			this.Shd.Add(startY, endY, startX, endX, 0, this.shdColor.r, this.shdColor.g, this.shdColor.b, undefined, this.shd);
+			this.Shd.addWithAlpha(startY, endY, startX, endX, 0, this.shdColor.r, this.shdColor.g, this.shdColor.b, this.shdAlpha, this.shd);
 		
 		if (hyperlink)
 			this.HyperCF.Add(startY, endY, startX, endX, 0, 0, 0, 0, {HyperlinkCF : hyperlink});

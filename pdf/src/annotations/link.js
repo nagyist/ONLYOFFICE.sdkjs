@@ -558,6 +558,8 @@
         let oCopy = AscPDF.CAnnotationBase.prototype.Copy.call(this, isForMove);
 
         oCopy.SetActions(AscPDF.PDF_TRIGGERS_TYPES.MouseUp, this.GetActions(AscPDF.PDF_TRIGGERS_TYPES.MouseUp));
+        oCopy.SetHighlight(this.GetHighlight());
+
         return oCopy;
     };
 
@@ -645,15 +647,14 @@
         // highlight
         let nHighlightType = this.GetHighlight();
         if (nHighlightType != null) {
-            memory.fieldDataFlags |= (1 << 2);
+            nFlags |= (1 << 2);
             memory.WriteByte(nHighlightType);
         }
 
         // quads
         let aQuads = this.GetQuads();
         if (aQuads != null) {
-            memory.fieldDataFlags |= (1 << 3);
-            memory.WriteByte(nHighlightType);
+            nFlags |= (1 << 3);
             
             let nLen = 0;
             for (let i = 0; i < aQuads.length; i++) {

@@ -332,6 +332,7 @@
     DIGITS_TYPES["hindi"]   = DIGITS_TYPES.hindi;
     
     const USER_PERMISSIONS = {
+		print:	3,
         edit:   4
     };
 	

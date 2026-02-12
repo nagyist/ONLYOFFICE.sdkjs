@@ -408,15 +408,15 @@
                 memory.Skip(4);
 
                 if (this.rect.left != null) {
-                    nFlag |= (1 << 4);
+                    nFlag |= (1 << 0);
                     memory.WriteDouble(this.rect.left);
                 }
                 if (this.rect.top != null) {
-                    nFlag |= (1 << 4);
+                    nFlag |= (1 << 1);
                     memory.WriteDouble(this.rect.top);
                 }
                 if (this.zoom != null) {
-                    nFlag |= (1 << 4);
+                    nFlag |= (1 << 2);
                     memory.WriteDouble(this.zoom);
                 }
 
@@ -430,9 +430,9 @@
             case 4:
             {
                 memory.WriteDouble(this.rect.left);
-                memory.WriteDouble(this.rect.bottom);
-                memory.WriteDouble(this.rect.right);
                 memory.WriteDouble(this.rect.top);
+                memory.WriteDouble(this.rect.right);
+                memory.WriteDouble(this.rect.bottom);
                 break;
             }
         }

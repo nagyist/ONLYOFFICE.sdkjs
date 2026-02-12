@@ -2676,7 +2676,7 @@
         return this._textSize;
     };
     CBaseField.prototype.SetRect = function(aOrigRect) {
-        if (this._rect == aOrigRect) {
+        if (this._rect != null && aOrigRect != null && AscCommon.isEqualSortedArrays(this._rect, aOrigRect)) {
             return;
         }
 

@@ -36,18 +36,19 @@
 {
 	QUnit.module("ApiWorksheet");
 	QUnit.test("GetSelectedShapes", function (assert) {
-		let worksheet = AscTest.JsApi.GetActiveSheet()
-
+		let worksheet = AscTest.JsApi.GetActiveSheet();
 		const fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
 		const stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
+		let shapes = [];
+		// Create 3 shapes, but select only 2 of them (skip the middle one)
 		for(let nShape = 0; nShape < 3; nShape++)
 		{
 			let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
-			assert.ok(true, 'Add new ellipse shape');
+			assert.ok(shape, 'Ellipse shape created');
+			shapes.push(shape);
 			if (nShape !== 1) {
 				shape.Select();
-				assert.ok(true, 'Select added shape');
 			}
 		}
 
@@ -55,39 +56,80 @@
 		assert.strictEqual(
 			selectedShapes.length,
 			2,
-			"Count of selected shapes is 2"
+			"Count of selected shapes is 2 (first and third)"
+		);
+
+		// Verify that selected shapes are the ones we actually selected
+		let selectedDrawings = selectedShapes.map(s => s.Drawing);
+		assert.ok(
+			selectedDrawings.includes(shapes[0].Drawing),
+			"First shape is selected"
+		);
+		assert.ok(
+			selectedDrawings.includes(shapes[2].Drawing),
+			"Third shape is selected"
+		);
+		assert.ok(
+			!selectedDrawings.includes(shapes[1].Drawing),
+			"Second shape is not selected"
 		);
 	});
 	
 	QUnit.test("GetSelectedDrawings", function (assert) {
-		let worksheet = AscTest.JsApi.GetActiveSheet()
+		let worksheet = AscTest.JsApi.GetActiveSheet();
 
 		const fill = AscTest.JsApi.CreateSolidFill(AscTest.JsApi.CreateRGBColor(51, 51, 51));
 		const stroke = AscTest.JsApi.CreateStroke(0, AscTest.JsApi.CreateNoFill());
 
+		let shapes = [];
+		// Create 3 shapes, but select only 2 of them (skip the middle one)
 		for(let nShape = 0; nShape < 3; nShape++)
 		{
 			let shape = worksheet.AddShape("ellipse", 50 * 36000, 50 * 36000, fill, stroke, 0, 0, 0, 0);
-			assert.ok(true, 'Add new ellipse shape');
+			assert.ok(shape, 'Ellipse shape created');
+			shapes.push(shape);
 			if (nShape !== 1) {
 				shape.Select();
-				assert.ok(true, 'Select added shape');
 			}
 		}
 
-		let image = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
-		assert.ok(true, 'Add new image');
-		image.Select();
-		assert.ok(true, 'Select added image');
+		// Add first image and select it
+		let image1 = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
+		assert.ok(image1, 'First image created');
+		image1.Select();
 
-		image = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
-		assert.ok(true, 'Add new image')
+		// Add second image but don't select it
+		let image2 = worksheet.AddImage("https://static.onlyoffice.com/assets/docs/samples/img/presentation_sky.png", 60 * 36000, 35 * 36000, 0, 2 * 36000, 0, 3 * 36000);
+		assert.ok(image2, 'Second image created');
 
-		let selectedShapes = worksheet.GetSelectedDrawings();
+		let selectedDrawings = worksheet.GetSelectedDrawings();
 		assert.strictEqual(
-			selectedShapes.length,
+			selectedDrawings.length,
 			3,
-			"Count of selected shapes is 3 (2 shape, 1 image)"
+			"Count of selected drawings is 3 (2 shapes + 1 image)"
+		);
+
+		// Verify that selected drawings are the ones we actually selected
+		let selectedDrawingsInner = selectedDrawings.map(d => d.Drawing);
+		assert.ok(
+			selectedDrawingsInner.includes(shapes[0].Drawing),
+			"First shape is selected"
+		);
+		assert.ok(
+			selectedDrawingsInner.includes(shapes[2].Drawing),
+			"Third shape is selected"
+		);
+		assert.ok(
+			selectedDrawingsInner.includes(image1.Drawing),
+			"First image is selected"
+		);
+		assert.ok(
+			!selectedDrawingsInner.includes(shapes[1].Drawing),
+			"Second shape is not selected"
+		);
+		assert.ok(
+			!selectedDrawingsInner.includes(image2.Drawing),
+			"Second image is not selected"
 		);
 	});
 

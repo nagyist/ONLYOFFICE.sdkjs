@@ -2057,6 +2057,30 @@ var editor;
 					reader = new StaxParser(contentMetaData, metaData, xmlParserContext);
 					wb.metadata.fromXml(reader);
 				}
+
+				let rdRichValue = wbPart.getPartByRelationshipType(openXml.Types.rdRichValue.relationType);
+				if (rdRichValue) {
+					let content = rdRichValue.getDocumentContent();
+					wb.richValueData = new AscCommonExcel.CRichValueData();
+					reader = new StaxParser(content, rdRichValue, xmlParserContext);
+					wb.richValueData.fromXml(reader);
+				}
+
+				let rdRichValueStructure = wbPart.getPartByRelationshipType(openXml.Types.rdRichValueStructure.relationType);
+				if (rdRichValueStructure) {
+					let content = rdRichValueStructure.getDocumentContent();
+					wb.richValueStructures = new AscCommonExcel.CRichValueStructures();
+					reader = new StaxParser(content, rdRichValueStructure, xmlParserContext);
+					wb.richValueStructures.fromXml(reader);
+				}
+
+				let rdRichValueTypes = wbPart.getPartByRelationshipType(openXml.Types.rdRichValueTypes.relationType);
+				if (rdRichValueTypes) {
+					let content = rdRichValueTypes.getDocumentContent();
+					wb.richValueTypesInfo = new AscCommonExcel.CRichValueTypesInfo();
+					reader = new StaxParser(content, rdRichValueTypes, xmlParserContext);
+					wb.richValueTypesInfo.fromXml(reader);
+				}
 			}
 
 			//theme
