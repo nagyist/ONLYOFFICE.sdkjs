@@ -9640,6 +9640,7 @@ background-repeat: no-repeat;\
 				oLogicDocument.FinalizeAction(undefined, oChart);
 			}.bind(this, oChart), false, false, false);
 			if (bOpenChartEditor) {
+				oChart.recalculate();
 				oLogicDocument.OpenChartEditor();
 			}
 		}
