@@ -9108,7 +9108,12 @@
     };
     CTimeNodeContainer.prototype.addEffectToTheEndOfSeqAsClickEffect = function (oEffect) {
         var oPar2Lvl, oPar3Lvl;
-        var sSecondLevelDelay = this.isMainSequence() ? "indefinite" : "0";
+        var sSecondLevelDelay;
+        if (this.isMainSequence()) {
+            sSecondLevelDelay = "indefinite";
+        } else {
+            sSecondLevelDelay = this.getLastChild() ? "indefinite" : "0";
+        }
         oPar2Lvl = CTiming.prototype.createPar(NODE_FILL_HOLD, sSecondLevelDelay);
         oPar3Lvl = CTiming.prototype.createPar(NODE_FILL_HOLD, "0");
         oPar3Lvl.pushToChildTnLst(oEffect);
