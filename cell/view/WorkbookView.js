@@ -3395,9 +3395,9 @@
     g_clipboardExcel.pasteData(ws, _format, data1, data2, text_data, null, doNotShowButton, null, callback);
   };
 
-  WorkbookView.prototype.specialPasteData = function(props) {
+  WorkbookView.prototype.specialPasteData = function(props, isPasteOptions) {
     if (!this.getCellEditMode()) {
-		this.getWorksheet().specialPaste(props);
+		this.getWorksheet().specialPaste(props, isPasteOptions);
 	}
   };
 

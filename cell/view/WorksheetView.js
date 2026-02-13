@@ -17020,8 +17020,8 @@ function isAllowPasteLink(pastedWb) {
 		return startActionMap[prop] ? {nDescription: startActionMap[prop], additional: val} : null;
 	};
 
-	WorksheetView.prototype.specialPaste = function (props) {
-		this.cellPasteHelper.specialPaste(props);
+	WorksheetView.prototype.specialPaste = function (props, isPasteOptions) {
+		this.cellPasteHelper.specialPaste(props, isPasteOptions);
 	};
 
 	WorksheetView.prototype.showSpecialPasteOptions = function (options/*, range, positionShapeContent*/) {
@@ -28166,6 +28166,8 @@ function isAllowPasteLink(pastedWb) {
 		var specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
 		var specialPasteProps = specialPasteHelper.specialPasteProps;
 
+		let isPasteOptions = window['AscCommon'].g_specialPasteHelper.isPasteOptions;
+
 		if (val.props && val.props.onlyImages === true) {
 			if (!specialPasteHelper.specialPasteStart) {
 				ws.handlers.trigger("showSpecialPasteOptions", [Asc.c_oSpecialPasteProps.picture]);
@@ -28227,6 +28229,32 @@ function isAllowPasteLink(pastedWb) {
 		var pasteRange = AscCommonExcel.g_clipboardExcel.pasteProcessor.activeRange;
 		var activeCellsPasteFragment = typeof pasteRange === "string" ?
 			AscCommonExcel.g_oRangeCache.getAscRange(pasteRange) : pasteRange;
+
+		var checkTablesPaste = function () {
+			var _res = false;
+			if (val && val.TableParts && val.TableParts.length && activeCellsPasteFragment) {
+				for (var i = 0; i < val.TableParts.length; i++) {
+					if (activeCellsPasteFragment.containsRange(val.TableParts[i].Ref)) {
+						_res = true;
+						break;
+					}
+				}
+			}
+			return _res;
+		};
+
+		AscCommon.g_specialPasteHelper.buttonInfo && AscCommon.g_specialPasteHelper.buttonInfo.asc_setLastSelectedPasteProperty(null);
+
+		var isTablePasted = fromBinary && checkTablesPaste();
+		var _isAllowPasteLink = fromBinary && pasteInfo && pasteInfo.wb && isAllowPasteLink(pasteInfo.wb);
+
+		if (isPasteOptions && specialPasteProps) {
+			if (specialPasteProps.property === Asc.c_oSpecialPasteProps.link && !_isAllowPasteLink) {
+				specialPasteProps.setBaseOptions(true);
+			} else if (specialPasteProps.property === Asc.c_oSpecialPasteProps.transpose && isTablePasted) {
+				specialPasteProps.setBaseOptions(true);
+			}
+		}
 
 		//для бага 26402 - добавляю возможность продолжения ф/т если вставляем фрагмент по ширине такой же как и ф/т
 		//и имеет хоть одну ячейку с данными
@@ -28414,7 +28442,7 @@ function isAllowPasteLink(pastedWb) {
 		var api = ws.getApi();
 		api.onWorksheetChange(pasteToRange);
 		if (specialPasteHelper.specialPasteStart) {
-			if (window['Asc'].c_oSpecialPasteOperation.none !== specialPasteProps.operation && null !== specialPasteProps.operation) {
+			if (isPasteOptions || (Asc.c_oSpecialPasteOperation.none !== specialPasteProps.operation && null !== specialPasteProps.operation)) {
 				if (pasteInfo && pasteInfo.originalSelectBeforePaste) {
 					specialPasteHelper.selectionRange = pasteInfo.originalSelectBeforePaste;
 				} else {
@@ -28490,26 +28518,12 @@ function isAllowPasteLink(pastedWb) {
 		}
 
 		//for special paste
-		if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart) {
-			var checkTablesPaste = function () {
-				var _res = false;
-				if (val.TableParts && val.TableParts.length && activeCellsPasteFragment) {
-					for (var i = 0; i < val.TableParts.length; i++) {
-						if (activeCellsPasteFragment.containsRange(val.TableParts[i].Ref)) {
-							_res = true;
-							break;
-						}
-					}
-				}
-				return _res;
-			};
-
+		if (!window['AscCommon'].g_specialPasteHelper.specialPasteStart || isPasteOptions) {
 			if (!(pasteInfo && pasteInfo.originalSelectBeforePaste && pasteInfo.originalSelectBeforePaste.ranges && pasteInfo.originalSelectBeforePaste.ranges.length === 1) && ws.isMultiSelect()) {
 				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 				window['AscCommon'].g_specialPasteHelper.Special_Paste_Hide_Button();
 			} else {
 				//var specialPasteShowOptions = new Asc.SpecialPasteShowOptions();
-				var isTablePasted = checkTablesPaste();
 				var allowedSpecialPasteProps;
 				var sProps = Asc.c_oSpecialPasteProps;
 				if (fromBinary) {
@@ -28519,7 +28533,7 @@ function isAllowPasteLink(pastedWb) {
 							sProps.valueNumberFormat, sProps.valueAllFormating, sProps.pasteOnlyFormating, sProps.comments,
 							sProps.columnWidth];
 
-					if (isAllowPasteLink(pasteInfo.wb)) {
+					if (_isAllowPasteLink) {
 						allowedSpecialPasteProps.push(sProps.link);
 					}
 					if (!isTablePasted) {
@@ -28541,6 +28555,9 @@ function isAllowPasteLink(pastedWb) {
 
 				window['AscCommon'].g_specialPasteHelper.CleanButtonInfo();
 				window['AscCommon'].g_specialPasteHelper.buttonInfo.asc_setOptions(allowedSpecialPasteProps);
+
+				window['AscCommon'].g_specialPasteHelper.buttonInfo.asc_setLastSelectedPasteProperty(isPasteOptions ? specialPasteProps.property : null);
+
 				if (fromBinary) {
 					window['AscCommon'].g_specialPasteHelper.buttonInfo.asc_setShowPasteSpecial(true);
 				}
@@ -30188,7 +30205,7 @@ function isAllowPasteLink(pastedWb) {
 
 		return false;
 	};
-	CCellPasteHelper.prototype.specialPaste = function (props) {
+	CCellPasteHelper.prototype.specialPaste = function (props, isPasteOptions) {
 		var api = window["Asc"]["editor"];
 		var t = this;
 		let ws = this.ws;
@@ -30209,8 +30226,10 @@ function isAllowPasteLink(pastedWb) {
 			window['AscCommon'].g_specialPasteHelper.Paste_Process_Start();
 			window['AscCommon'].g_specialPasteHelper.Special_Paste_Start();
 
+			window['AscCommon'].g_specialPasteHelper.isPasteOptions = isPasteOptions;
+
 			//для того, чтобы была возможность делать несколько математических операций подряд
-			var doUndo = true;
+			var doUndo = isPasteOptions ? false : true;
 			if (window['Asc'].c_oSpecialPasteOperation.none !== props.operation && null !== props.operation) {
 				if (window['AscCommon'].g_specialPasteHelper.isAppliedOperation) {
 					doUndo = false;
@@ -30225,7 +30244,7 @@ function isAllowPasteLink(pastedWb) {
 			if (doUndo) {
 				api.asc_Undo();
 			}
-			if (specialPasteHelper.selectionRange) {
+			if (specialPasteHelper.selectionRange && !isPasteOptions) {
 				ws.model.selectionRange = specialPasteHelper.selectionRange.clone();
 			}
 
