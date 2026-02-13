@@ -1928,7 +1928,7 @@
 		}
 
 		Asc.editor.addBuilderFont('Cambria Math');
-		Asc.editor.loadBuilderFonts(insertMathEquation);
+		Asc.editor.addBuilderEndAction(insertMathEquation);
 
 		function insertMathEquation() {
 			const format = AscBuilder.GetStringParameter(sFormat, "unicode");
@@ -1958,7 +1958,13 @@
 
 			logicDocument.AddToParagraph(mathPr);
 
-			const targetDocContent = editor.getGraphicController().getSelectedArray()[0].txBody.content;
+			const graphicController = Asc.editor.getGraphicController();
+			const shape = graphicController.getSelectedArray()[0];
+			if (!shape || !shape.txBody) {
+				return;
+			}
+
+			const targetDocContent = shape.txBody.content;
 			const info = new CSelectedElementsInfo();
 			targetDocContent.GetSelectedElementsInfo(info);
 
@@ -1969,7 +1975,10 @@
 
             paraMath.ConvertView(false, mathformat, text);
 
-			const graphicController = Asc.editor.getGraphicController();
+			if (shape.checkExtentsByDocContent) {
+				shape.checkExtentsByDocContent();
+			}
+
 			graphicController.startRecalculate();
 		}
 
