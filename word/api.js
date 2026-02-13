@@ -14864,6 +14864,11 @@ background-repeat: no-repeat;\
 			logicDocument.GetSpellCheckManager().TurnOn();
 		}
 	};
+	
+	asc_docs_api.prototype.getJsApi = function()
+	{
+		return AscBuilder.Word.Api;
+	};
 
 
 	//-------------------------------------------------------------export---------------------------------------------------

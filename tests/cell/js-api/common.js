@@ -142,13 +142,15 @@ $(function()
 	
 	AscTest.JsApi.GetActiveSheet = Asc.spreadsheet_api.prototype.GetActiveSheet.bind(AscTest.Editor);
 	AscTest.JsApi.GetRange = Asc.spreadsheet_api.prototype.GetRange.bind(AscTest.Editor);
-	AscTest.JsApi.CreateRGBColor = Asc.spreadsheet_api.prototype.CreateRGBColor.bind(AscTest.Editor);
-	AscTest.JsApi.CreateSolidFill = Asc.spreadsheet_api.prototype.CreateSolidFill.bind(AscTest.Editor);
-	AscTest.JsApi.CreateStroke = Asc.spreadsheet_api.prototype.CreateStroke.bind(AscTest.Editor);
-	AscTest.JsApi.CreateNoFill = Asc.spreadsheet_api.prototype.CreateNoFill.bind(AscTest.Editor);
+	
+	AscTest.JsApi.CreateRGBColor = AscBuilder.Word.Api.CreateRGBColor.bind(AscTest.Editor);
+	AscTest.JsApi.CreateSolidFill = AscBuilder.Word.Api.CreateSolidFill.bind(AscTest.Editor);
+	AscTest.JsApi.CreateStroke = AscBuilder.Word.Api.CreateStroke.bind(AscTest.Editor);
+	AscTest.JsApi.CreateNoFill = AscBuilder.Word.Api.CreateNoFill.bind(AscTest.Editor);
+	AscTest.JsApi.CreateGradientStop = AscBuilder.Word.Api.CreateGradientStop.bind(AscTest.Editor);
+	AscTest.JsApi.CreateRadialGradientFill = AscBuilder.Word.Api.CreateRadialGradientFill.bind(AscTest.Editor);
+	
 	AscTest.JsApi.CreateColorFromRGB = Asc.spreadsheet_api.prototype.CreateColorFromRGB.bind(AscTest.Editor);
-	AscTest.JsApi.CreateGradientStop = Asc.spreadsheet_api.prototype.CreateGradientStop.bind(AscTest.Editor);
-	AscTest.JsApi.CreateRadialGradientFill = Asc.spreadsheet_api.prototype.CreateRadialGradientFill.bind(AscTest.Editor);
 	AscTest.JsApi.AddDefName = Asc.spreadsheet_api.prototype.AddDefName.bind(AscTest.Editor);
 	
 	AscTest.JsApi.wbModel = AscTest.Editor.wbModel;

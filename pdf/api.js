@@ -4101,6 +4101,10 @@
 
 		this.stampAnnotPreviewManager = new AscPDF.StampAnnotPreviewManager();
 	};
+	PDFEditorApi.prototype.getJsApi = function()
+	{
+		return AscBuilder.Pdf.Api;
+	};
 	PDFEditorApi.prototype.asc_getPropertyEditorStamps = function() {
 		if (this.loadStampsJSON()) {
 			return this.stampAnnotPreviewManager.getStampPreviews();

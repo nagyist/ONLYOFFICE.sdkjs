@@ -6155,6 +6155,11 @@
 	{
 		return this.macroRecorder.addStepData(type, additional);
 	};
+	
+	baseEditorsApi.prototype.getJsApi = function()
+	{
+		return this;
+	};
 
 	//----------------------------------------------------------export----------------------------------------------------
 	window['AscCommon']                = window['AscCommon'] || {};

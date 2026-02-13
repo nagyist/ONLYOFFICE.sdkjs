@@ -364,8 +364,8 @@
 	 * @class
 	 * @name Api
 	 */
-	let Api = window["Asc"]["PDFEditorApi"];
-
+	let Api = {};
+	
 	/**
 	 * Creates a text field with the specified text field properties.
 	 * @memberof Api
@@ -373,7 +373,7 @@
 	 * @returns {ApiDocument}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDocument.js
 	 */
-	Api.prototype.GetDocument = function() {
+	Api.GetDocument = function() {
 		return new ApiDocument(private_GetLogicDocument());
 	};
 
@@ -385,7 +385,7 @@
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddTextField.js
 	 */
-	Api.prototype.CreateTextField = function(aRect) {
+	Api.CreateTextField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateTextField();
 		oField.SetRect(aRect);
@@ -401,7 +401,7 @@
 	 * @returns {ApiTextField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddDateField.js
 	 */
-	Api.prototype.CreateDateField = function(aRect) {
+	Api.CreateDateField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateTextField(true);
 		oField.SetRect(aRect);
@@ -417,7 +417,7 @@
 	 * @returns {ApiButtonField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddImageField.js
 	 */
-	Api.prototype.CreateImageField = function(aRect) {
+	Api.CreateImageField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateButtonField(true);
 		oField.SetRect(aRect);
@@ -433,7 +433,7 @@
 	 * @returns {ApiCheckboxField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddImageField.js
 	 */
-	Api.prototype.CreateCheckboxField = function(aRect) {
+	Api.CreateCheckboxField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateCheckboxField();
 		oField.SetRect(aRect);
@@ -449,7 +449,7 @@
 	 * @returns {ApiRadiobuttonField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddRadiobuttonField.js
 	 */
-	Api.prototype.CreateRadiobuttonField = function(aRect) {
+	Api.CreateRadiobuttonField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateRadiobuttonField();
 		oField.SetRect(aRect);
@@ -465,7 +465,7 @@
 	 * @returns {ApiComboboxField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddComboboxField.js
 	 */
-	Api.prototype.CreateComboboxField = function(aRect) {
+	Api.CreateComboboxField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateComboboxField();
 		oField.SetRect(aRect);
@@ -481,7 +481,7 @@
 	 * @returns {ApiListboxField}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddListboxField.js
 	 */
-	Api.prototype.CreateListboxField = function(aRect) {
+	Api.CreateListboxField = function(aRect) {
 		let oDoc = private_GetLogicDocument();
 		let oField = oDoc.CreateListboxField();
 		oField.SetRect(aRect);
@@ -497,7 +497,7 @@
 	 * @returns {ApiTextAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTextAnnot.js
 	 */
-	Api.prototype.CreateTextAnnot = function(rect) {
+	Api.CreateTextAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect)) {
@@ -526,7 +526,7 @@
 	 * @returns {ApiCircleAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateCircleAnnot.js
 	 */
-	Api.prototype.CreateCircleAnnot = function(rect) {
+	Api.CreateCircleAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect)) {
@@ -560,7 +560,7 @@
 	 * @returns {ApiSquareAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSquareAnnot.js
 	 */
-	Api.prototype.CreateSquareAnnot = function(rect) {
+	Api.CreateSquareAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect)) {
@@ -594,7 +594,7 @@
 	 * @returns {ApiFreeTextAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateFreeTextAnnot.js
 	 */
-	Api.prototype.CreateFreeTextAnnot = function(rect) {
+	Api.CreateFreeTextAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect)) {
@@ -628,7 +628,7 @@
 	 * @returns {ApiLineAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateLineAnnot.js
 	 */
-	Api.prototype.CreateLineAnnot = function(rect, startPoint, endPoint) {
+	Api.CreateLineAnnot = function(rect, startPoint, endPoint) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect)) {
@@ -665,7 +665,7 @@
 	 * @returns {ApiInkAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateInkAnnot.js
 	 */
-	Api.prototype.CreateInkAnnot = function(rect, inkPaths) {
+	Api.CreateInkAnnot = function(rect, inkPaths) {
 		let oDoc = private_GetLogicDocument();
 
 		inkPaths = AscBuilder.GetArrayParameter(inkPaths, []);
@@ -721,7 +721,7 @@
 	 * @returns {ApiPolygonAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePolygonAnnot.js
 	 */
-	Api.prototype.CreatePolygonAnnot = function(rect, path) {
+	Api.CreatePolygonAnnot = function(rect, path) {
 		let oDoc = private_GetLogicDocument();
 
 		path = AscBuilder.GetArrayParameter(path, []);
@@ -769,7 +769,7 @@
 	 * @returns {ApiPolyLineAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePolyLineAnnot.js
 	 */
-	Api.prototype.CreatePolyLineAnnot = function(rect, path) {
+	Api.CreatePolyLineAnnot = function(rect, path) {
 		let oDoc = private_GetLogicDocument();
 
 		path = AscBuilder.GetArrayParameter(path, []);
@@ -819,7 +819,7 @@
 	 * @returns {ApiStampAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateStampAnnot.js
 	 */
-	Api.prototype.CreateStampAnnot = function(rect, type, author, creationDate) {
+	Api.CreateStampAnnot = function(rect, type, author, creationDate) {
 		let oDoc = private_GetLogicDocument();
 
 		if (!private_IsValidRect(rect, true)) {
@@ -887,7 +887,7 @@
 	 * @returns {ApiHighlightAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateHighlightAnnot.js
 	 */
-	Api.prototype.CreateHighlightAnnot = function(rect) {
+	Api.CreateHighlightAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 		rect = AscBuilder.GetArrayParameter(rect, []);
 
@@ -946,7 +946,7 @@
 	 * @returns {ApiStrikeoutAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateStrikeoutAnnot.js
 	 */
-	Api.prototype.CreateStrikeoutAnnot = function(rect) {
+	Api.CreateStrikeoutAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 		rect = AscBuilder.GetArrayParameter(rect, []);
 
@@ -1005,7 +1005,7 @@
 	 * @returns {ApiUnderlineAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateUnderlineAnnot.js
 	 */
-	Api.prototype.CreateUnderlineAnnot = function(rect) {
+	Api.CreateUnderlineAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 		rect = AscBuilder.GetArrayParameter(rect, []);
 
@@ -1064,7 +1064,7 @@
 	 * @returns {ApiCaretAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateCaretAnnot.js
 	 */
-	Api.prototype.CreateCaretAnnot = function(rect) {
+	Api.CreateCaretAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 		rect = AscBuilder.GetArrayParameter(rect, []);
 
@@ -1123,7 +1123,7 @@
 	 * @returns {ApiRedactAnnotation}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRedactAnnot.js
 	 */
-	Api.prototype.CreateRedactAnnot = function(rect) {
+	Api.CreateRedactAnnot = function(rect) {
 		let oDoc = private_GetLogicDocument();
 		rect = AscBuilder.GetArrayParameter(rect, []);
 
@@ -1182,7 +1182,7 @@
 	 * @returns {ApiParagraph}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateParagraph.js
 	 */
-	Api.prototype.CreateParagraph = function() {
+	Api.CreateParagraph = function() {
 		return this.private_CreateApiParagraph(new AscWord.Paragraph(null, true));
 	};
 
@@ -1193,7 +1193,7 @@
 	 * @returns {ApiRichParagraph}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichParagraph.js
 	 */
-	Api.prototype.CreateRichParagraph = function() {
+	Api.CreateRichParagraph = function() {
 		return new ApiRichParagraph(new AscWord.Paragraph(private_GetLogicDocument(), true));
 	};
 
@@ -1204,7 +1204,7 @@
 	 * @returns {ApiRichRun}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichRun.js
 	 */
-	Api.prototype.CreateRichRun = function() {
+	Api.CreateRichRun = function() {
 		return new ApiRichRun(new ParaRun(null, false));
 	};
 
@@ -1215,7 +1215,7 @@
 	 * @returns {ApiTextPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichTextPr.js
 	 */
-	Api.prototype.CreateRichTextPr = function() {
+	Api.CreateRichTextPr = function() {
 		return new ApiRichTextPr(null, new AscCommonWord.CTextPr());
 	};
 
@@ -1226,7 +1226,7 @@
 	 * @returns {ApiParaPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRichParaPr.js
 	 */
-	Api.prototype.CreateRichParaPr = function() {
+	Api.CreateRichParaPr = function() {
 		return new ApiRichParaPr(null, new AscCommonWord.CParaPr());
 	};
 
@@ -1242,7 +1242,7 @@
 	 * @returns {ApiShape}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateShape.js
 	 */
-	Api.prototype.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke) {
+	Api.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke) {
 		let oDoc = private_GetLogicDocument();
 		sType = sType || "rect";
 		nWidth = nWidth || 72;
@@ -1264,7 +1264,7 @@
 	 * @returns {ApiImage}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateImage.js
 	 */
-	Api.prototype.CreateImage = function(sImageSrc, nWidth, nHeight) {
+	Api.CreateImage = function(sImageSrc, nWidth, nHeight) {
 		let oImage = AscFormat.DrawingObjectsController.prototype.createImage(sImageSrc, 0, 0, private_EMU2MM(nWidth), private_EMU2MM(nHeight));
 
 		return new ApiImage(oImage);
@@ -1279,7 +1279,7 @@
 	 * @returns {ApiTable}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTable.js
 	 */
-	Api.prototype.CreateTable = function(nCols, nRows) {
+	Api.CreateTable = function(nCols, nRows) {
 		let oDoc = private_GetLogicDocument();
 		let nPage = oDoc.GetCurPage();
 		if (nPage == -1) {
@@ -1312,7 +1312,7 @@
 	 * @returns {ApiChart}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateChart.js
 	 */
-	Api.prototype.CreateChart = function(sType, aSeries, aSeriesNames, aCatNames, nWidth, nHeight, nStyleIndex, aNumFormats) {
+	Api.CreateChart = function(sType, aSeries, aSeriesNames, aCatNames, nWidth, nHeight, nStyleIndex, aNumFormats) {
 		let oChartSpace = AscFormat.builder_CreateChart(private_EMU2MM(nWidth), private_EMU2MM(nHeight), sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
 		return new ApiChart(oChartSpace);
 	};
@@ -6799,7 +6799,7 @@
 	 */
 	ApiShape.prototype.GetGeometry = function() {
 		if (this.Shape && this.Shape.spPr && this.Shape.spPr.geometry) {
-			return Api.prototype.private_CreateGeometry(this.Shape.spPr.geometry);
+			return Api.private_CreateGeometry(this.Shape.spPr.geometry);
 		}
 
 		return null;
@@ -8332,33 +8332,33 @@
 
 
 	// Api
-	Api.prototype["GetDocument"]							= Api.prototype.GetDocument;
-	Api.prototype["CreateTextField"]						= Api.prototype.CreateTextField;
-	Api.prototype["CreateDateField"]						= Api.prototype.CreateDateField;
-	Api.prototype["CreateImageField"]						= Api.prototype.CreateImageField;
-	Api.prototype["CreateCheckboxField"]					= Api.prototype.CreateCheckboxField;
-	Api.prototype["CreateRadiobuttonField"]					= Api.prototype.CreateRadiobuttonField;
-	Api.prototype["CreateComboboxField"]					= Api.prototype.CreateComboboxField;
-	Api.prototype["CreateListboxField"]						= Api.prototype.CreateListboxField;
-	Api.prototype["CreateTextAnnot"]						= Api.prototype.CreateTextAnnot;
-	Api.prototype["CreateCircleAnnot"]						= Api.prototype.CreateCircleAnnot;
-	Api.prototype["CreateSquareAnnot"]						= Api.prototype.CreateSquareAnnot;
-	Api.prototype["CreateFreeTextAnnot"]					= Api.prototype.CreateFreeTextAnnot;
-	Api.prototype["CreateLineAnnot"]						= Api.prototype.CreateLineAnnot;
-	Api.prototype["CreateInkAnnot"]							= Api.prototype.CreateInkAnnot;
-	Api.prototype["CreatePolygonAnnot"]						= Api.prototype.CreatePolygonAnnot;
-	Api.prototype["CreatePolyLineAnnot"]					= Api.prototype.CreatePolyLineAnnot;
-	Api.prototype["CreateStampAnnot"]						= Api.prototype.CreateStampAnnot;
-	Api.prototype["CreateHighlightAnnot"]					= Api.prototype.CreateHighlightAnnot;
-	Api.prototype["CreateStrikeoutAnnot"]					= Api.prototype.CreateStrikeoutAnnot;
-	Api.prototype["CreateUnderlineAnnot"]					= Api.prototype.CreateUnderlineAnnot;
-	Api.prototype["CreateCaretAnnot"]						= Api.prototype.CreateCaretAnnot;
-	Api.prototype["CreateRedactAnnot"]						= Api.prototype.CreateRedactAnnot;
-	Api.prototype["CreateParagraph"]						= Api.prototype.CreateParagraph;
-	Api.prototype["CreateRichParagraph"]					= Api.prototype.CreateRichParagraph;
-	Api.prototype["CreateRichRun"]							= Api.prototype.CreateRichRun;
-	Api.prototype["CreateRichTextPr"]						= Api.prototype.CreateRichTextPr;
-	Api.prototype["CreateRichParaPr"]						= Api.prototype.CreateRichParaPr;
+	Api["GetDocument"]            = Api.GetDocument;
+	Api["CreateTextField"]        = Api.CreateTextField;
+	Api["CreateDateField"]        = Api.CreateDateField;
+	Api["CreateImageField"]       = Api.CreateImageField;
+	Api["CreateCheckboxField"]    = Api.CreateCheckboxField;
+	Api["CreateRadiobuttonField"] = Api.CreateRadiobuttonField;
+	Api["CreateComboboxField"]    = Api.CreateComboboxField;
+	Api["CreateListboxField"]     = Api.CreateListboxField;
+	Api["CreateTextAnnot"]        = Api.CreateTextAnnot;
+	Api["CreateCircleAnnot"]      = Api.CreateCircleAnnot;
+	Api["CreateSquareAnnot"]      = Api.CreateSquareAnnot;
+	Api["CreateFreeTextAnnot"]    = Api.CreateFreeTextAnnot;
+	Api["CreateLineAnnot"]        = Api.CreateLineAnnot;
+	Api["CreateInkAnnot"]         = Api.CreateInkAnnot;
+	Api["CreatePolygonAnnot"]     = Api.CreatePolygonAnnot;
+	Api["CreatePolyLineAnnot"]    = Api.CreatePolyLineAnnot;
+	Api["CreateStampAnnot"]       = Api.CreateStampAnnot;
+	Api["CreateHighlightAnnot"]   = Api.CreateHighlightAnnot;
+	Api["CreateStrikeoutAnnot"]   = Api.CreateStrikeoutAnnot;
+	Api["CreateUnderlineAnnot"]   = Api.CreateUnderlineAnnot;
+	Api["CreateCaretAnnot"]       = Api.CreateCaretAnnot;
+	Api["CreateRedactAnnot"]      = Api.CreateRedactAnnot;
+	Api["CreateParagraph"]        = Api.CreateParagraph;
+	Api["CreateRichParagraph"]    = Api.CreateRichParagraph;
+	Api["CreateRichRun"]          = Api.CreateRichRun;
+	Api["CreateRichTextPr"]       = Api.CreateRichTextPr;
+	Api["CreateRichParaPr"]       = Api.CreateRichParaPr;
 
 	// ApiDocument
 	ApiDocument.prototype["GetClassType"]					= ApiDocument.prototype.GetClassType;
@@ -8838,6 +8838,9 @@
 	window['AscBuilder'].ApiChart			= ApiChart;
 	window['AscBuilder'].ApiGroup			= ApiGroup;
 	window['AscBuilder'].ApiSmartArt		= ApiSmartArt;
+	
+	window['AscBuilder']["Pdf"] = window['AscBuilder'].Pdf = window['AscBuilder'].Pdf || {};
+	AscBuilder.Pdf["Api"] = AscBuilder.Pdf.Api = Api;
 
 }(window, null));
 
