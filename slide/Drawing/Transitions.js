@@ -3175,7 +3175,11 @@ function CDemonstrationManager(htmlpage)
         oThis.HtmlPage.m_oApi.hideMediaControl();
         if (oThis.Canvas)
         {
-            oThis.Canvas.style.cursor = "default";
+            let sLockedCursor = oThis.HtmlPage.m_oDrawingDocument.m_sLockedCursorType;
+            let sCursorValue = (sLockedCursor !== "") ? AscCommon.g_oHtmlCursor.value(sLockedCursor) : "default";
+            oThis.Canvas.style.cursor = sCursorValue;
+            if (oThis.Overlay)
+                oThis.Overlay.style.cursor = sCursorValue;
         }
 
         oThis.StopTransition();
@@ -4243,9 +4247,12 @@ function CDemonstrationManager(htmlpage)
         var nShowTime = 3000;
         if(oThis.LastMoveTime !== null && (new Date()).getTime() - oThis.LastMoveTime > nShowTime)
         {
-            if(oThis.Canvas.style.cursor !== "none" && oThis.Canvas.style.cursor !== "pointer")
+            if(oThis.Canvas.style.cursor !== "none" && oThis.Canvas.style.cursor !== "pointer"
+                && oThis.HtmlPage.m_oDrawingDocument.m_sLockedCursorType === "")
             {
                 oThis.Canvas.style.cursor = "none";
+                if (oThis.Overlay)
+                    oThis.Overlay.style.cursor = "none";
             }
         }
     };
