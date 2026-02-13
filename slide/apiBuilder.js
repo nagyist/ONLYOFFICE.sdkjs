@@ -5154,7 +5154,7 @@
 		const seqs = this.Timing.getInteractiveSequences();
 		const result = [];
 		for (let i = 0; i < seqs.length; i++) {
-			const triggerObjectId = seqs[i].getTriggerObjectId ? seqs[i].getTriggerObjectId() : null;
+			const triggerObjectId = seqs[i].getSpClickInteractiveSeq ? seqs[i].getSpClickInteractiveSeq() : null;
 			result.push(new ApiAnimationSequence(seqs[i], this.Timing, triggerObjectId));
 		}
 		return result;
