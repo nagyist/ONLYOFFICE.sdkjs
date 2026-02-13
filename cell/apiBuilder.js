@@ -1008,12 +1008,34 @@
 	 * @returns {ApiName}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDefName.js
 	 */
-	Api.prototype.GetDefName = function (defName) {
-		if (defName && typeof defName === "string") {
-			defName = this.wbModel.getDefinesNames(defName);
-		}
-		return new ApiName(defName);
-	};
+    Api.prototype.GetDefName = function (defName) {
+        if (!defName || typeof  defName !== "string") {
+            throwException(new Error('No name provided'));
+        }
+
+        let defNameFound = null;
+        if (this.wbModel && this.wbModel.aWorksheets) {
+            const worksheets = this.wbModel.aWorksheets;
+
+            // search for all sheets
+            for (let i = 0; i < worksheets.length; i++) {
+                defNameFound = this.wbModel.getDefinesNames(defName, worksheets[i].Id, true);
+                if (defNameFound) {
+                    break;
+                }
+            }
+
+            // search inside book
+            if (!defNameFound) {
+                defNameFound = this.wbModel.getDefineNameWb(defName);
+            }
+        }
+
+        if (!defNameFound) {
+            throwException(new Error('Defined name does not exist:' + defName));
+        }
+        return new ApiName(defNameFound);
+    };
 
 	/**
 	 * Saves changes to the specified document.

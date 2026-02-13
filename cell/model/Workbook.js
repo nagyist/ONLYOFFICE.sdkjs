@@ -937,6 +937,10 @@
 			}
 			return res;
 		},
+		getDefNameFromWorkBook: function (name) {
+			let nameIndex = getDefNameIndex(name);
+			return this.defNames.wb[nameIndex];
+		},
 		getDefNameByNodeId: function(nodeId) {
 			getFromDefNameId(nodeId);
 			return this.getDefNameByName(g_FDNI.name, g_FDNI.sheetId, true);
@@ -4298,8 +4302,11 @@
 	Workbook.prototype.addDefName = function (name, ref, sheetId, hidden, isTable) {
 		return this.dependencyFormulas.addDefName(name, ref, sheetId, hidden, isTable);
 	};
-	Workbook.prototype.getDefinesNames = function ( name, sheetId ) {
-		return this.dependencyFormulas.getDefNameByName( name, sheetId );
+	Workbook.prototype.getDefinesNames = function ( name, sheetId, isDirectSearch ) {
+		return this.dependencyFormulas.getDefNameByName( name, sheetId, isDirectSearch );
+	};
+	Workbook.prototype.getDefineNameWb = function(name) {
+		return this.dependencyFormulas.getDefNameFromWorkBook(name);
 	};
 	Workbook.prototype.getDefinedName = function(name) {
 		var sheetId = this.getSheetIdByIndex(name.LocalSheetId);
