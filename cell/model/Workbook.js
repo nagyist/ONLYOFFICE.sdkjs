@@ -15559,7 +15559,7 @@
 			} else if(arrayFormula && this.formulaParsed.checkFirstCellArray(this)) {
 				//***array-formula***
 				var fText = "=" + this.formulaParsed.getFormula();
-				//this.formulaParsed.removeDependencies();
+				this.formulaParsed.removeDependencies();
 				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoArrayFormula, AscCH.historyitem_ArrayFromula_DeleteFormula, this.ws.getId(),
 					new Asc.Range(this.nCol, this.nRow, this.nCol, this.nRow), new AscCommonExcel.UndoRedoData_ArrayFormula(arrayFormula, fText, this.formulaParsed.getCm(), this.formulaParsed.getVm()), true);
 			} else {

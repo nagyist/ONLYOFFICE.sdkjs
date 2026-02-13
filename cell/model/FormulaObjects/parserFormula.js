@@ -9036,10 +9036,6 @@ function parserFormula( formula, parent, _ws ) {
 				});
 			});
 			t.ca = bRecursiveCell;
-			// Update ca flag for linked cells
-			t.ws._getCell(t.parent.nCol, t.parent.nRow, function (oCell) {
-				//oCell._changeCaFlagFromListener(bRecursiveCell);
-			});
 		}
 		if (parenthesesNotEnough) {
 			parseResult.setError(c_oAscError.ID.FrmlParenthesesCorrectCount);
