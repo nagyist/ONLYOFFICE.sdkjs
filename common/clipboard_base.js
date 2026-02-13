@@ -1038,10 +1038,10 @@
 
 		Button_Copy_New : function(isCut)
 		{
-			return this.Copy_New(isCut);
+			return this.Copy_New(isCut, true);
 		},
 
-		Copy_New : function(isCut)
+		Copy_New : function(isCut, isButtonCopy)
 		{
 			let oThis = this;
 			if (!this.isCopyEnabled()) {
@@ -1049,7 +1049,7 @@
 				return true;
 			}
 			//todo add check on mobile version, because before all work without focus check
-			if (!this.Api.asc_IsFocus(true) && !this._isUseMobileNewCopy()) {
+			if (!this.Api.asc_IsFocus(true) && !isButtonCopy && !this._isUseMobileNewCopy()) {
 				return;
 			}
 			if (navigator.clipboard)
