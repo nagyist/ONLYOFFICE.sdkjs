@@ -294,14 +294,19 @@
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/SetCustomFunctions.js
 	 */
-	Api.prototype["pluginMethod_SetCustomFunctions"] = function(jsonString)
+	Api.prototype["pluginMethod_SetCustomFunctions"] = function(jsonString, waitingAddToHistory)
 	{
 		try
 		{
 			if (AscCommon.History.Is_On()) {
-				AscCommon.History.Create_NewPoint();
-				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
-					null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				if (waitingAddToHistory) {
+					AscCommon.History.AddToWaitingList(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
+						null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				} else {
+					AscCommon.History.Create_NewPoint();
+					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
+						null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				}
 			}
 
 			let obj = JSON.parse(jsonString);

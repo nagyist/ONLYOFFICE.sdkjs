@@ -475,6 +475,8 @@ function CHistory(Document)
 	this.PosInCurPoint = null; // position to roll back changes within the current point
 
 	this.oRedoObjectParam = null;
+
+	this.waitingList = null;
 }
 	CHistory.prototype = Object.create(CHistoryWord.prototype);
 CHistory.prototype.init = function(workbook) {
@@ -1170,6 +1172,8 @@ CHistory.prototype.Add = function(Class, Type, sheetid, range, Data, LocalChange
 	if (!this.CanAddChanges())
 		return;
 
+	this.executeWaitingList();
+
 	if (Class instanceof AscCommonExcel.UndoRedoItemSerializable) {
 		let serializable = Class;
 		Class = serializable.oClass;
@@ -1252,6 +1256,32 @@ CHistory.prototype.Add = function(Class, Type, sheetid, range, Data, LocalChange
 		}
 	}
 };
+
+	CHistory.prototype.AddToWaitingList = function(Class, Type, sheetid, range, Data, LocalChange, isRedoAdd)
+	{
+		if (!this.waitingList) {
+			this.waitingList = [];
+		}
+		this.waitingList.push({
+			Class: Class,
+			Type: Type,
+			sheetid: sheetid,
+			range: range,
+			Data: Data,
+			LocalChange: LocalChange,
+			isRedoAdd: isRedoAdd
+		});
+	};
+
+	CHistory.prototype.executeWaitingList = function()
+	{
+		if (this.waitingList) {
+			for (let i = 0; i < this.waitingList.length; i++) {
+				this.Add(this.waitingList[i].Class, this.waitingList[i].Type, this.waitingList[i].sheetid, this.waitingList[i].range, this.waitingList[i].Data, this.waitingList[i].LocalChange, this.waitingList[i].isRedoAdd);
+			}
+		}
+	};
+
 	CHistory.prototype.Item_ToSerializable = function(item)
 	{
 		return new AscCommonExcel.UndoRedoItemSerializable(item.Class, item.Type, item.SheetId, item.Range, item.Data, item.LocalChange);
