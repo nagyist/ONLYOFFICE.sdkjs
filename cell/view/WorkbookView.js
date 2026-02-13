@@ -6826,7 +6826,7 @@
 	WorkbookView.prototype.StartAction = function(nDescription, additional)
 	{
 		this.Api.sendEvent("asc_onUserActionStart");
-		this.Api.getMacroRecorder().onAction(nDescription, additional);
+		this.Api.getMacroRecorder().addStepData(nDescription, additional);
 	};
 	WorkbookView.prototype.MacrosAddData = function(nDescription, additional)
 	{
@@ -6835,7 +6835,7 @@
 	WorkbookView.prototype.FinalizeAction = function(nDescription, additional)
 	{
 		this.Api.sendEvent("asc_onUserActionEnd");
-		this.Api.getMacroRecorder().onAction(nDescription, additional);
+		this.Api.getMacroRecorder().addStepData(nDescription, additional);
 	};
 	WorkbookView.prototype.setIsPartialReading = function(val)
 	{
