@@ -11024,15 +11024,13 @@
 						if(ref) {
 							var rangeFormulaArray = tmp.ws.getRange3(ref.r1, ref.c1, ref.r2, ref.c2);
 							rangeFormulaArray._foreach(function(cell, row, col){
-								/*if (row === ref.r1 && col === ref.c1) {
-									return;
-								}*/
-								cell.setFormulaInternal(curFormula);
+								if (!(row === ref.r1 && col === ref.c1 && cell.formulaParsed)) {
+									cell.setFormulaInternal(curFormula);
+								}
 								if (curFormula.ca || cell.isNullTextString()) {
 									tmp.ws.workbook.dependencyFormulas.addToChangedCell(cell);
 								}
 							});
-							curFormula.buildDependencies();
 						}
 					}
 					for (var nCol in tmp.prevFormulas) {
