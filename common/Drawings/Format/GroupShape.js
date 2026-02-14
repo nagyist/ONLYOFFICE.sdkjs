@@ -1250,6 +1250,21 @@
 		};
 
 		CGroupShape.prototype.updateCoordinatesAfterInternalResize = function () {
+			if (this.drawingBase && !this.group && this.drawingBase.worksheet) {
+				var metrics = this.drawingBase.getGraphicObjectMetrics();
+				var rot = this.spPr.xfrm.rot == null ? 0 : this.spPr.xfrm.rot;
+				if (AscFormat.checkNormalRotate(rot)) {
+					this.spPr.xfrm.offX = metrics.x;
+					this.spPr.xfrm.offY = metrics.y;
+					this.spPr.xfrm.extX = metrics.extX;
+					this.spPr.xfrm.extY = metrics.extY;
+				} else {
+					this.spPr.xfrm.offX = metrics.x + metrics.extX / 2 - metrics.extY / 2;
+					this.spPr.xfrm.offY = metrics.y + metrics.extY / 2 - metrics.extX / 2;
+					this.spPr.xfrm.extX = metrics.extY;
+					this.spPr.xfrm.extY = metrics.extX;
+				}
+			}
 			this.normalize();
 			for (var i = 0; i < this.spTree.length; ++i) {
 				if (this.spTree[i].isGroup())
