@@ -1885,7 +1885,8 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     var ScrollOffset = function() {
 
         this.getX = function() {
-            return 2 * worksheet._getColLeft(0) - worksheet._getColLeft(worksheet.getFirstVisibleCol(true));
+            var val = 2 * worksheet._getColLeft(0) - worksheet._getColLeft(worksheet.getFirstVisibleCol(true));
+            return worksheet.getRightToLeft() ? -val : val;
         };
 
         this.getY = function() {
@@ -3855,9 +3856,17 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
             response.result = false;
             response.y = Math.abs(y);
         }
-        if ( x < 0 ) {
-            response.result = false;
-            response.x = Math.abs(x);
+        if (worksheet.getRightToLeft()) {
+            var maxX = pxToMm(worksheet.getCtxWidth());
+            if (x + w > maxX) {
+                response.result = false;
+                response.x = maxX - x - w; // negative → pushes shape left
+            }
+        } else {
+            if ( x < 0 ) {
+                response.result = false;
+                response.x = Math.abs(x);
+            }
         }
 
         return response;

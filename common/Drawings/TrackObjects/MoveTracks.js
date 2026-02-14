@@ -383,10 +383,17 @@ function MoveShapeImageTrack(originalObject)
         {
             _xfrm.setOffX(this.x/scale_coefficients.cx + ch_off_x);
             _xfrm.setOffY(this.y/scale_coefficients.cy + ch_off_y);
-			if (Asc.editor.getEditorId() === AscCommon.c_oEditorId.Spreadsheet)
-				Asc.editor.addMacroStepData("SetDrawingPos", {from: this.originalObject.drawingBase.from, to: this.originalObject.drawingBase.to});
-			if (Asc.editor.getEditorId() === AscCommon.c_oEditorId.Presentation)
-				Asc.editor.addMacroStepData("SetDrawingPos", {x: this.x, y: this.y});
+
+            if (!this.originalObject.group) {
+                if (Asc.editor.getEditorId() === AscCommon.c_oEditorId.Spreadsheet) {
+                    let drawingBase = this.originalObject.drawingBase;
+                    if (drawingBase) {
+                        Asc.editor.addMacroStepData("SetDrawingPos", {from: drawingBase.from, to: drawingBase.to});
+                    }
+                }
+                if (Asc.editor.getEditorId() === AscCommon.c_oEditorId.Presentation)
+                    Asc.editor.addMacroStepData("SetDrawingPos", {x: this.x, y: this.y});
+            }
 
             if (this.originalObject.txXfrm) {
                 var previousTxXfrmX = this.originalObject.txXfrm.offX;
