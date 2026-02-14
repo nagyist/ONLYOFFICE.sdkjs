@@ -1594,11 +1594,13 @@ CGraphicObjects.prototype =
     {
         //console.log("down " + this.curState.id);
         this.checkInkState();
+        var nSavedSelType = this.document.Selection.Type;
         this.curState.onMouseDown(e, x, y, pageIndex);
         if(this.arrTrackObjects.length === 0)
         {
             this.document.GetApi().sendEvent("asc_onSelectionEnd");
         }
+        this.document.Selection.Type = nSavedSelType;
     },
 
     OnMouseMove: function(e, x, y, pageIndex)
