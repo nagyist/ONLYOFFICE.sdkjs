@@ -5898,6 +5898,16 @@ function(window, undefined) {
 		const seria = this.chart.plotArea.plotAreaRegion.series[size - 1];
 		const cachedData = this.chart.plotArea.plotAreaRegion.getCachedData();
 
+		// helper to get label for treemap from catPts by idx of valPt
+		function searchLabel(sPts, idx) {
+			for (let i = 0; i < sPts.length; i++) {
+				if (sPts[i].idx === idx && sPts[i].val) {
+					return sPts[i].val;
+				}
+			}
+			return String(idx + 1);
+		}
+
 		//seria.dataLabels.visibility optional
 		if (cachedData && seria && seria.dataLabels) {
 			const chartType = cachedData.type;
@@ -5907,6 +5917,7 @@ function(window, undefined) {
 			cachedData.compiledDlbs = [];
 			let aPts = seria.getValPts();
 			let sPts = seria.getCatPts();
+			let sPtsIndex = 0;
 
 			for(let nPt = 0; nPt < aPts.length; ++nPt) {
 				let pt = null;
@@ -5924,9 +5935,14 @@ function(window, undefined) {
 				pt.compiledDlb.pt = pt;
 				pt.compiledDlb.idx = pt.idx;
 				pt.compiledDlb.setShowChartExVal(true);
-				// LOOKUP//HERE
-				// pt.compiledDlb.replaceTextContentNoHistory("new test");
 				pt.compiledDlb.recalculate();
+
+				// treemap show labels rather than numbers
+				if (chartType === AscFormat.SERIES_LAYOUT_TREEMAP) {
+					const label = searchLabel(sPts, pt.idx);
+					pt.compiledDlb.replaceTextContentNoHistory(label);
+					pt.compiledDlb.recalculateInternal();
+				}
 				if (cachedData.funnel && pt.compiledDlb.pt <= 0) {
 					pt.compiledDlb = default_lbl;
 				}
