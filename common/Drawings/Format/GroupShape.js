@@ -1254,15 +1254,15 @@
 				var metrics = this.drawingBase.getGraphicObjectMetrics();
 				var rot = this.spPr.xfrm.rot == null ? 0 : this.spPr.xfrm.rot;
 				if (AscFormat.checkNormalRotate(rot)) {
-					this.spPr.xfrm.offX = metrics.x;
-					this.spPr.xfrm.offY = metrics.y;
-					this.spPr.xfrm.extX = metrics.extX;
-					this.spPr.xfrm.extY = metrics.extY;
+					this.spPr.xfrm.setOffX(metrics.x);
+					this.spPr.xfrm.setOffY(metrics.y);
+					this.spPr.xfrm.setExtX(metrics.extX);
+					this.spPr.xfrm.setExtY(metrics.extY);
 				} else {
-					this.spPr.xfrm.offX = metrics.x + metrics.extX / 2 - metrics.extY / 2;
-					this.spPr.xfrm.offY = metrics.y + metrics.extY / 2 - metrics.extX / 2;
-					this.spPr.xfrm.extX = metrics.extY;
-					this.spPr.xfrm.extY = metrics.extX;
+					this.spPr.xfrm.setOffX(metrics.x + metrics.extX / 2 - metrics.extY / 2);
+					this.spPr.xfrm.setOffY(metrics.y + metrics.extY / 2 - metrics.extX / 2);
+					this.spPr.xfrm.setExtX(metrics.extY);
+					this.spPr.xfrm.setExtY(metrics.extX);
 				}
 			}
 			this.normalize();
