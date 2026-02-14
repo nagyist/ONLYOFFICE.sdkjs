@@ -1748,7 +1748,9 @@ function CBinaryFileWriter()
         });
     };
     this.WriteFieldTreeElem = function(oField) {
-        oThis.buttonImages = [];
+		if (!oThis.buttonImages) {
+			oThis.buttonImages = [];
+		}
 
         oThis.WriteByMemory(function(memory) {
             memory.isCopyPaste = true;
@@ -4829,7 +4831,17 @@ function CBinaryFileWriter()
             this._WriteBool2(0, _path.extrusionOk);
             if (_path.fill != null && _path.fill !== undefined)
             {
-                this._WriteLimit1(1, (_path.fill == "none") ? 4 : 5);
+				let fillValue;
+				switch (_path.fill) {
+					case "darken":      fillValue = Asc.c_oAscPathFillMode.DARKEN; break;
+					case "darkenLess":  fillValue = Asc.c_oAscPathFillMode.DARKEN_LESS; break;
+					case "lighten":     fillValue = Asc.c_oAscPathFillMode.LIGHTEN; break;
+					case "lightenLess": fillValue = Asc.c_oAscPathFillMode.LIGHTEN_LESS; break;
+					case "none":        fillValue = Asc.c_oAscPathFillMode.NONE; break;
+					case "norm":        fillValue = Asc.c_oAscPathFillMode.NORM; break;
+					default:            fillValue = Asc.c_oAscPathFillMode.NORM;
+				}
+				this._WriteLimit1(1, fillValue);
             }
             this._WriteInt2(2, _path.pathH);
             this._WriteBool2(3, _path.stroke);

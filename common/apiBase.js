@@ -3782,6 +3782,9 @@
 	{
 		return false;
 	};
+	baseEditorsApi.prototype.asc_getPasteOptions          = function()
+	{
+	};
 	baseEditorsApi.prototype.asc_Recalculate       = function()
 	{
 	};
@@ -4583,7 +4586,7 @@
 		{
 			case AscCommon.c_oEditorId.Word:
 			{
-				if (this.WordControl && this.WordControl.m_oLogicDocument)
+				if (!this.isPdfEditor() && this.WordControl && this.WordControl.m_oLogicDocument)
 					this.WordControl.m_oLogicDocument.LockPanelStyles();
 				break;
 			}
