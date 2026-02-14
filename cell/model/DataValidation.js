@@ -75,10 +75,13 @@
 			this._formula.buildDependencies();
 		}
 	};
-	CDataFormula.prototype.clone = function () {
+	CDataFormula.prototype.clone = function (fullClone) {
 		var res = new CDataFormula();
 		res.text = this.text;
 		//this._formula = null;
+		if (fullClone && this._formula) {
+			res._formula = this._formula.clone();
+		}
 		return res;
 	};
 	CDataFormula.prototype.onFormulaEvent = function (type, eventData) {
@@ -126,10 +129,13 @@
 			isNum: isNum(this.text),
 		}
 
-		const normalizeText = function (data) {
-			const isQuote = typeof data.val === "string" && data.val.length >=2 && data.val[0] === '"';
+		const isQuoted = function (data) {
+			return typeof data.val === "string" && data.val.length >=2 && data.val[0] === '"';
+		}
 
-			if (isQuote) {
+		const normalizeText = function (data, wasQuoted) {
+
+			if (wasQuoted) {
 				let _val = data.val;
 
 				_val = _val.slice(1, -1);
@@ -181,13 +187,14 @@
 		}
 
 		// fix the text from quotes
-		data = normalizeText(data)
+		const wasQuoted = isQuoted(data);
+		data = normalizeText(data, wasQuoted);
 		if (data.isNum) {
 			fromNumberToString(data);
-		} else if (oValidation.type === Asc.EDataValidationType.List) {
-			toListPreview(data);
 		} else {
-			if (this && this._formula) {
+			if (wasQuoted && oValidation.type === Asc.EDataValidationType.List) {
+				toListPreview(data);
+			} else if (this && this._formula) {
 				//если формула содержит ссылки на диапазоны, то в зависимости от активной области нужно их сдвинуть
 				var offset = oValidation.calculateOffset(ws);
 				if (offset) {

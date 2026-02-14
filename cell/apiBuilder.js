@@ -20132,7 +20132,7 @@
 		let formula1 = validation.getFormula1();
 		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (formula1 && worksheet) {
-			formula1 = formula1.clone();
+			formula1 = formula1.clone(true);
 			formula1.correctToInterface(worksheet, validation);
 		}
 		return formula1 ? formula1.asc_getValue() : "";
@@ -20153,7 +20153,7 @@
 		let formula2 = validation.getFormula2();
 		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (formula2 && worksheet) {
-			formula2 = formula2.clone();
+			formula2 = formula2.clone(true);
 			formula2.correctToInterface(worksheet, validation);
 		}
 		return formula2 ? formula2.asc_getValue() : "";
