@@ -1419,6 +1419,9 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                 metrics.y = this.Pos.Y;
                 metrics.extX = this.ext.cx;
                 metrics.extY = this.ext.cy;
+                if (this.worksheet && this.worksheet.getRightToLeft()) {
+                    metrics.x = this.worksheet.checkRtl(metrics.x, undefined, 3, true) - metrics.extX;
+                }
                 break;
             }
             case c_oAscCellAnchorType.cellanchorOneCell:
@@ -1509,6 +1512,10 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                 ret.ext.cy = _t.graphicObject.extX;
             }
 
+            if (this.worksheet.getRightToLeft() && this.Type === c_oAscCellAnchorType.cellanchorAbsolute) {
+                ret.Pos.X = this.worksheet.checkRtl(ret.Pos.X + ret.ext.cx, undefined, 3, true);
+            }
+
             if (this.worksheet.getRightToLeft()) {
                 let temp = fromX;
                 fromX = toX;
@@ -1584,6 +1591,10 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
                 this.Pos.Y = _yc - _t.graphicObject.extX/2;
                 this.ext.cx = _t.graphicObject.extY;
                 this.ext.cy = _t.graphicObject.extX;
+            }
+
+            if (this.worksheet.getRightToLeft() && this.Type === c_oAscCellAnchorType.cellanchorAbsolute) {
+                this.Pos.X = this.worksheet.checkRtl(this.Pos.X + this.ext.cx, undefined, 3, true);
             }
 
             if (this.worksheet.getRightToLeft()) {
