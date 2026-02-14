@@ -7544,9 +7544,11 @@ background-repeat: no-repeat;\
 		}
 
 		let presentation = this.private_GetLogicDocument();
-		let allGIFs = presentation.GetAllGIFImageUrls();
-		for (let i = 0; i < allGIFs.length; i++) {
-			this.WordControl.DemonstrationManager.loadGIF(allGIFs[i]);
+		if (presentation) {
+			let allGIFs = presentation.GetAllGIFImageUrls();
+			for (let i = 0; i < allGIFs.length; i++) {
+				this.WordControl.DemonstrationManager.loadGIF(allGIFs[i]);
+			}
 		}
 
 
