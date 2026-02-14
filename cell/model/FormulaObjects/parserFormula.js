@@ -11852,32 +11852,33 @@ function parserFormula( formula, parent, _ws ) {
 					}
 				}
 			}
-			if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
-				const nArgsCount = this.getOutStackElem(nPrevIndex);
-				const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
-				const nIndexNumValue = this.getOutStackElem(nIndexNumId).tocNumber().toNumber() - 1;
-				const oTableArrayArg = this.getOutStackElem(nIndexNumId - 1).clone();
-				const nIndexTableArray = aRefElements.findIndex(function (oElem) {
-					return oElem.toString() === oTableArrayArg.toString();
-				});
-				const oTableArrayRange = oTableArrayArg.getRange().clone();
-				const oTableArrayBbox = oTableArrayRange.getBBox0();
-				// Updating Range according index_num value
-				if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
-					const nUpdatedCol = oTableArrayBbox.c1 + nIndexNumValue;
-					if (nUpdatedCol <= oTableArrayBbox.c2) {
-						oTableArrayBbox.c1 = nUpdatedCol;
-						oTableArrayBbox.c2 = nUpdatedCol;
-					}
-				} else if (nIndexNumValue >= 0) {
-					const nUpdatedRow = oTableArrayBbox.r1 + nIndexNumValue;
-					if (nUpdatedRow <= oTableArrayBbox.r2) {
-						oTableArrayBbox.r1 = nUpdatedRow;
-						oTableArrayBbox.r2 = nUpdatedRow;
-					}
-				}
-				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
-			}
+			//TODO cBaseFunction don't have tocNumber
+			// if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
+			// 	const nArgsCount = this.getOutStackElem(nPrevIndex);
+			// 	const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
+			// 	const nIndexNumValue = this.getOutStackElem(nIndexNumId).tocNumber().toNumber() - 1;
+			// 	const oTableArrayArg = this.getOutStackElem(nIndexNumId - 1).clone();
+			// 	const nIndexTableArray = aRefElements.findIndex(function (oElem) {
+			// 		return oElem.toString() === oTableArrayArg.toString();
+			// 	});
+			// 	const oTableArrayRange = oTableArrayArg.getRange().clone();
+			// 	const oTableArrayBbox = oTableArrayRange.getBBox0();
+			// 	// Updating Range according index_num value
+			// 	if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
+			// 		const nUpdatedCol = oTableArrayBbox.c1 + nIndexNumValue;
+			// 		if (nUpdatedCol <= oTableArrayBbox.c2) {
+			// 			oTableArrayBbox.c1 = nUpdatedCol;
+			// 			oTableArrayBbox.c2 = nUpdatedCol;
+			// 		}
+			// 	} else if (nIndexNumValue >= 0) {
+			// 		const nUpdatedRow = oTableArrayBbox.r1 + nIndexNumValue;
+			// 		if (nUpdatedRow <= oTableArrayBbox.r2) {
+			// 			oTableArrayBbox.r1 = nUpdatedRow;
+			// 			oTableArrayBbox.r2 = nUpdatedRow;
+			// 		}
+			// 	}
+			// 	aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
+			// }
 			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
 				aRefElements.push(oOutStackElem);
 			}
