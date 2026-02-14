@@ -4394,7 +4394,10 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
         const oContext = oWS.workbook.trackOverlay.m_oContext;
 
         const oRect = {};
-        const nLeft = 2 * oWS.cellsLeft - oWS._getColLeft(oWS.visibleRange.c1);
+        let nLeft = 2 * oWS.cellsLeft - oWS._getColLeft(oWS.visibleRange.c1);
+        if (oWS.getRightToLeft()) {
+            nLeft = -nLeft;
+        }
         const nTop = 2 * oWS.cellsTop - oWS._getRowTop(oWS.visibleRange.r1);
         oRect.left   = nLeft;
         oRect.right  = nLeft + AscCommon.AscBrowser.convertToRetinaValue(oContext.canvas.width);

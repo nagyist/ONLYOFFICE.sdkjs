@@ -11977,6 +11977,7 @@ function isAllowPasteLink(pastedWb) {
 	};
 
 	WorksheetView.prototype.getCursorTypeFromXY = function (x, y, fromDoubleClickCall) {
+		var origX = x;
 		if (this.getRightToLeft()) {
 			x = this.getCtxWidth() - x;
 		}
@@ -11996,7 +11997,7 @@ function isAllowPasteLink(pastedWb) {
 		if(this.workbook.Api.isEyedropperStarted()) {
 			return {cursor: AscCommon.Cursors.Eyedropper, target: c_oTargetType.Cells, color: this.workbook.Api.getEyedropperColor(x, y)};
 		}
-		const oPlaceholderCursor = this.objectRender.checkCursorPlaceholder(x, y);
+		const oPlaceholderCursor = this.objectRender.checkCursorPlaceholder(origX, y);
 		if (oPlaceholderCursor) {
 			return {cursor: kCurDefault, target: c_oTargetType.Placeholder, col: -1, row: -1, placeholderType: oPlaceholderCursor.placeholderType};
 		}
