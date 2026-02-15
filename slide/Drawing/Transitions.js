@@ -3899,55 +3899,52 @@ function CDemonstrationManager(htmlpage)
 		var this_ = this;
 		var url = AscCommon.getFullImageSrc2(imageUrl);
 
-		fetch(url)
-			.then(function (response)
-			{
-				if (response.ok)
-				{
-					var contentLength = response.headers.get('content-length');
-					if (contentLength && parseInt(contentLength) > MAX_GIF_SIZE)
-					{
-						return null;
-					}
-					return response.arrayBuffer();
-				}
-				return null;
-			})
-			.then(function (data)
-			{
-				if (data && data.byteLength > 0 && data.byteLength <= MAX_GIF_SIZE)
-				{
-					this_.GifData[imageUrl] = data;
-				}
-				else
-				{
-					data = null;
-				}
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', url, true);
+		xhr.responseType = 'arraybuffer';
 
-				var callbacks = this_.GifDataLoading[imageUrl];
-				delete this_.GifDataLoading[imageUrl];
+		if (xhr.overrideMimeType)
+			xhr.overrideMimeType('text/plain; charset=x-user-defined');
+		else
+			xhr.setRequestHeader('Accept-Charset', 'x-user-defined');
 
-				if (callbacks)
-				{
-					for (var i = 0; i < callbacks.length; i++)
-					{
-						callbacks[i](data);
-					}
-				}
-			})
-			.catch(function ()
+		xhr.onload = function()
+		{
+			var data = null;
+			if ((xhr.status === 200 || xhr.status === 0) && xhr.response &&
+				xhr.response.byteLength > 0 && xhr.response.byteLength <= MAX_GIF_SIZE)
 			{
-				var callbacks = this_.GifDataLoading[imageUrl];
-				delete this_.GifDataLoading[imageUrl];
+				data = xhr.response;
+				this_.GifData[imageUrl] = data;
+			}
 
-				if (callbacks)
+			var callbacks = this_.GifDataLoading[imageUrl];
+			delete this_.GifDataLoading[imageUrl];
+
+			if (callbacks)
+			{
+				for (var i = 0; i < callbacks.length; i++)
 				{
-					for (var i = 0; i < callbacks.length; i++)
-					{
-						callbacks[i](null);
-					}
+					callbacks[i](data);
 				}
-			});
+			}
+		};
+
+		xhr.onerror = function()
+		{
+			var callbacks = this_.GifDataLoading[imageUrl];
+			delete this_.GifDataLoading[imageUrl];
+
+			if (callbacks)
+			{
+				for (var i = 0; i < callbacks.length; i++)
+				{
+					callbacks[i](null);
+				}
+			}
+		};
+
+		xhr.send();
 	};
 
     this.NextSlide = function(isNoSendFormReporter, isNoFromEvent)
