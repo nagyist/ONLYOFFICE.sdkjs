@@ -4690,6 +4690,98 @@ CSparklineView.prototype.setMinMaxValAx = function(minVal, maxVal, oSparklineGro
     }
 }
 
+	DrawingObjects.prototype.CorrectEnterText = function (oldValue, newValue) {
+		let oController = this.controller;
+		if (!oController) {
+			return false;
+		}
+		let oDocContent = oController.getTargetDocContent(false, false);
+		if (!oDocContent) {
+			return false;
+		}
+		if (oDocContent.IsSelectionUse()) {
+			return false;
+		}
+
+		let newCodePoints = typeof (newValue) === "string" ? newValue.codePointsArray() : newValue;
+		let oldCodePoints = typeof (oldValue) === "string" ? oldValue.codePointsArray() : oldValue;
+
+		if (!Array.isArray(oldCodePoints)) {
+			oldCodePoints = [oldCodePoints];
+		}
+
+		let paragraph = oDocContent.GetCurrentParagraph();
+		if (!paragraph) {
+			return false;
+		}
+
+		let contentPos = paragraph.GetContentPosition(false, false);
+		let run, inRunPos;
+		for (let index = contentPos.length - 1; index >= 0; --index) {
+			if (contentPos[index].Class instanceof AscWord.CRun) {
+				run = contentPos[index].Class;
+				inRunPos = contentPos[index].Position;
+				break;
+			}
+		}
+
+		if (!run) {
+			return false;
+		}
+
+		if (!AscWord.checkAsYouTypeEnterText(run, inRunPos, oldCodePoints[oldCodePoints.length - 1])) {
+			return false;
+		}
+
+		if (undefined === newCodePoints || null === newCodePoints) {
+			newCodePoints = [];
+		} else if (!Array.isArray(newCodePoints)) {
+			newCodePoints = [newCodePoints];
+		}
+
+		let oldText = "";
+		for (let index = 0, count = oldCodePoints.length; index < count; ++index) {
+			oldText += String.fromCodePoint(oldCodePoints[index]);
+		}
+
+		let state = {};
+		oController.Save_DocumentStateBeforeLoadChanges(state);
+
+		let maxShifts = oldCodePoints.length;
+		let selectedText;
+		while (maxShifts >= 0) {
+			oDocContent.MoveCursorLeft(true, false);
+			selectedText = oDocContent.GetSelectedText(true);
+
+			if (!selectedText || selectedText === oldText) {
+				break;
+			}
+			maxShifts--;
+		}
+
+		if (selectedText !== oldText) {
+			oController.resetSelection();
+			oController.loadDocumentStateAfterLoadChanges(state);
+			return false;
+		}
+
+		AscCommon.History.Create_NewPoint(AscDFH.historydescription_Document_CorrectEnterText);
+
+		this.drawingDocument.TargetStart();
+		this.drawingDocument.TargetShow();
+
+		oDocContent.Remove(1, true, false, true);
+
+		for (let index = 0, count = newCodePoints.length; index < count; ++index) {
+			let codePoint = newCodePoints[index];
+			oDocContent.AddToParagraph(AscCommon.IsSpace(codePoint) ? new AscWord.CRunSpace(codePoint) : new AscWord.CRunText(codePoint));
+		}
+
+		oController.startRecalculate();
+		oController.updateSelectionState();
+		return true;
+	};
+
 	DrawingObjects.prototype.calculateCoords = function (cell) {
         var ws = this.getWorksheet();
 		var coords = {x: 0, y: 0};

@@ -5735,6 +5735,14 @@
 			return this.EnterText(newValue);
 		}
 
+		let oWSView = this.getWorksheet();
+		if (oWSView && oWSView.isSelectOnShape) {
+			if (oWSView.objectRender) {
+				return oWSView.objectRender.CorrectEnterText(oldValue, newValue);
+			}
+			return;
+		}
+
 		if (!this.isCellEditMode || !this.cellEditor) {
 			return;
 		}
