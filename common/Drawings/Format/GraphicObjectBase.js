@@ -1479,6 +1479,7 @@
 	CGraphicObjectBase.prototype.checkTypeCorrect = function () {
 		return true;
 	};
+	CGraphicObjectBase.prototype.updateDrawingTextCache = function () {};
 	CGraphicObjectBase.prototype.isSupported = function () {
 		return true;
 	};

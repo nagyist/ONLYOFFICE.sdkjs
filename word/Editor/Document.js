@@ -18625,6 +18625,13 @@ CDocument.prototype.getCompositeInput = function()
 	
 	return this.compositeInput;
 };
+CDocument.prototype.UpdateDrawingTextCache = function()
+{
+	if (docpostype_DrawingObjects === this.CurPos.Type)
+	{
+		this.DrawingObjects.updateDrawingTextCache();
+	}
+};
 CDocument.prototype.CheckCurrentTextObjectExtends = function()
 {
 	var oController = this.DrawingObjects;

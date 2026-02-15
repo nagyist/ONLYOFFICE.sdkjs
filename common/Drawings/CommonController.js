@@ -9999,6 +9999,13 @@
 					}, [], false, 0);
 				},
 
+				updateDrawingTextCache: function () {
+					for (let i = 0; i < this.selectedObjects.length; i += 1) {
+						const oGraphicObject = this.selectedObjects[i];
+						oGraphicObject.updateDrawingTextCache();
+					}
+				},
+
 				getInputLanguage: function () {
 					let oContent = this.getTargetDocContent();
 					if(!oContent) {
