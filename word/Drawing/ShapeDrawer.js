@@ -1870,7 +1870,8 @@ CShapeDrawer.prototype =
 			scaleY * scaleCoefY,
 			offsetX + alignOffsetX,
 			offsetY + alignOffsetY,
-			flipH, flipV
+			flipH, flipV,
+			this.UniFill.fill.canvas
 		);
 
 		graphics.m_bPenColorInit = false;

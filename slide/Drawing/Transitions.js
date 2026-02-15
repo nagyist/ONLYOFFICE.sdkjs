@@ -3576,7 +3576,13 @@ function CDemonstrationManager(htmlpage)
     this.End = function(isNoUseFullScreen)
     {
         this.GIFTimer.onEndSlide();
-		this.GifDataLoading = {};
+		for (var key in this.GifDataLoading)
+		{
+			if (this.GifDataLoading.hasOwnProperty(key))
+			{
+				this.GifDataLoading[key] = [];
+			}
+		}
 		this.PointerRemove();
         if (this.waitReporterObject)
         {
@@ -3821,6 +3827,26 @@ function CDemonstrationManager(htmlpage)
 	this.sendPrevFromReporter = function (isNoSendFormReporter) {
 		if (this.HtmlPage.m_oApi.isReporterMode && !isNoSendFormReporter)
 			this.HtmlPage.m_oApi.sendFromReporter("{ \"reporter_command\" : \"prev\" }");
+	};
+
+	this.cleanGifCache = function(activeUrls)
+	{
+		if (!this.GifData)
+			return;
+
+		let activeSet = {};
+		for (let i = 0; i < activeUrls.length; i++)
+		{
+			activeSet[activeUrls[i]] = true;
+		}
+
+		for (let key in this.GifData)
+		{
+			if (this.GifData.hasOwnProperty(key) && !activeSet[key])
+			{
+				delete this.GifData[key];
+			}
+		}
 	};
 
 	this.loadGIF = function(imageUrl, callback)

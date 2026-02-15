@@ -7546,6 +7546,7 @@ background-repeat: no-repeat;\
 		let presentation = this.private_GetLogicDocument();
 		if (presentation) {
 			let allGIFs = presentation.GetAllGIFImageUrls();
+			this.WordControl.DemonstrationManager.cleanGifCache(allGIFs);
 			for (let i = 0; i < allGIFs.length; i++) {
 				this.WordControl.DemonstrationManager.loadGIF(allGIFs[i]);
 			}
