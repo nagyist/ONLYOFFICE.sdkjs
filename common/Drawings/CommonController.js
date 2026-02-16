@@ -545,16 +545,17 @@
 				_x = 0.0;
 				_y = 0.0;
 			}
-			if (oXfrm.offX === null || !AscFormat.fApproxEqual(_x, oXfrm.offX, 0.01)) {
+			const scaleCoefficient = object.getScaleCoefficient();
+			if (oXfrm.offX === null || !AscFormat.fApproxEqual(_x, oXfrm.offX * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setOffX(_x);
 			}
-			if (oXfrm.offY === null || !AscFormat.fApproxEqual(_y, oXfrm.offY, 0.01)) {
+			if (oXfrm.offY === null || !AscFormat.fApproxEqual(_y, oXfrm.offY * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setOffY(_y);
 			}
-			if (oXfrm.extX === null || !AscFormat.fApproxEqual(object.extX, oXfrm.extX, 0.01)) {
+			if (oXfrm.extX === null || !AscFormat.fApproxEqual(object.extX, oXfrm.extX * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setExtX(object.extX);
 			}
-			if (oXfrm.extY === null || !AscFormat.fApproxEqual(object.extY, oXfrm.extY, 0.01)) {
+			if (oXfrm.extY === null || !AscFormat.fApproxEqual(object.extY, oXfrm.extY * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setExtY(object.extY);
 			}
 		}
@@ -4419,8 +4420,9 @@
 						const oPos = oGroup.updateCoordinatesAfterInternalResize();
 						const oParent = oGroup.parent;
 						if (oParent instanceof AscCommonWord.ParaDrawing) {
-							const nNewX = oPos.posX + oGroup.x;
-							const nNewY = oPos.posY + oGroup.y;
+							const scaleCoefficient = oParent.GetScaleCoefficient();
+							const nNewX = oPos.posX + oGroup.x / scaleCoefficient;
+							const nNewY = oPos.posY + oGroup.y / scaleCoefficient;
 							oGroup.spPr.xfrm.setOffX(0);
 							oGroup.spPr.xfrm.setOffY(0);
 							if (!oParent.IsInline()) {
@@ -6937,11 +6939,12 @@
 						arrDrawings = this.getArrayForGrouping();
 					if (arrDrawings.length < 2)
 						return null;
+					const scaleCoefficient = arrDrawings[0].getScaleCoefficient();
 					var bounds = this.getBoundsForGroup(arrDrawings);
-					var max_x = bounds.r;
-					var max_y = bounds.b;
-					var min_x = bounds.l;
-					var min_y = bounds.t;
+					var max_x = bounds.r / scaleCoefficient;
+					var max_y = bounds.b / scaleCoefficient;
+					var min_x = bounds.l / scaleCoefficient;
+					var min_y = bounds.t / scaleCoefficient;
 					var group = new AscFormat.CGroupShape();
 					group.setSpPr(new AscFormat.CSpPr());
 					group.spPr.setParent(group);
@@ -6958,8 +6961,8 @@
 					xfrm.setChOffY(0);
 					for (var i = 0; i < arrDrawings.length; ++i) {
 						CheckSpPrXfrm(arrDrawings[i]);
-						arrDrawings[i].spPr.xfrm.setOffX(arrDrawings[i].x - min_x);
-						arrDrawings[i].spPr.xfrm.setOffY(arrDrawings[i].y - min_y);
+						arrDrawings[i].spPr.xfrm.setOffX(arrDrawings[i].x / scaleCoefficient - min_x);
+						arrDrawings[i].spPr.xfrm.setOffY(arrDrawings[i].y / scaleCoefficient - min_y);
 						arrDrawings[i].setGroup(group);
 						group.addToSpTree(group.spTree.length, arrDrawings[i]);
 					}

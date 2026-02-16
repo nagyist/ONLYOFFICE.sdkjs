@@ -200,11 +200,15 @@ StartAddNewShape.prototype =
                     drawing.Set_Distance( 3.2,  0,  3.2, 0 );
                     nearest_pos.Paragraph.Check_NearestPos(nearest_pos);
                     nearest_pos.Page = this.pageIndex;
-
-                    drawing.Set_XYForAdd(shape.x, shape.y, nearest_pos, this.pageIndex);
-                    drawing.AddToDocument(nearest_pos);
+										const scaleCoefficient = nearest_pos.Paragraph.getLayoutScaleCoefficient();
+										shape.spPr.xfrm.setExtX(shape.spPr.xfrm.extX / scaleCoefficient);
+										shape.spPr.xfrm.setExtY(shape.spPr.xfrm.extY / scaleCoefficient);
+										const x = shape.x / scaleCoefficient;
+										const y = shape.y / scaleCoefficient;
                     drawing.CheckWH();
-                    let oAPI = this.drawingObjects.getEditorApi();
+									drawing.Set_XYForAdd(x, y, nearest_pos, this.pageIndex);
+									drawing.AddToDocument(nearest_pos);
+									let oAPI = this.drawingObjects.getEditorApi();
                     if(!oAPI.isDrawInkMode())
                     {
                         this.drawingObjects.resetSelection();
@@ -1864,7 +1868,6 @@ RotateState.prototype =
                                     originalCopy.CopyComments();
                                     original.Remove_FromDocument(false);
                                     aNearestPos[i].Paragraph.Check_NearestPos(aNearestPos[i]);
-
                                     originalCopy.Set_XYForAdd(bounds.posX, bounds.posY, aNearestPos[i], pageIndex);
                                     originalCopy.AddToDocument(aNearestPos[i], null, oOriginalRun);
 
@@ -2511,9 +2514,11 @@ MoveInGroupState.prototype =
             this.group.recalculate();
             const posX = posObject.posX;
             const posY = posObject.posY;
+						const scaleCoefficient = this.group.getScaleCoefficient();
+						const groupPosX = this.group.posX / scaleCoefficient;
+						const groupPosY = this.group.posY / scaleCoefficient;
             this.group.spPr.xfrm.setOffX(0);
             this.group.spPr.xfrm.setOffY(0);
-
             if(this.group.parent.Is_Inline())
             {
                 this.group.parent.CheckWH();
@@ -2534,7 +2539,7 @@ MoveInGroupState.prototype =
                 {
                     pageNum = 0;
                 }
-                this.group.parent.Set_XY(this.group.posX + posX, this.group.posY + posY, parentParagraph, pageNum, false);
+                this.group.parent.Set_XY(groupPosX + posX, groupPosY + posY, parentParagraph, pageNum, false);
             }
             this.drawingObjects.document.Recalculate();
             this.drawingObjects.document.FinalizeAction();

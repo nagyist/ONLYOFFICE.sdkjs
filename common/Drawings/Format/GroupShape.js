@@ -562,9 +562,9 @@
 			return this.invertTransform;
 		};
 
-		CGroupShape.prototype.getResultScaleCoefficients = function () {
+		CGroupShape.prototype.getResultScaleCoefficients = function (isSkipParaDrawingCoefficient) {
 			if (this.recalcInfo.recalculateScaleCoefficients) {
-				var cx, cy;
+				var cx = 1, cy = 1;
 				if (this.spPr && this.spPr.xfrm && this.spPr.xfrm.isNotNullForGroup()) {
 
 					var dExtX = this.spPr.xfrm.extX, dExtY = this.spPr.xfrm.extY;
@@ -579,50 +579,41 @@
 							}
 						}
 
-						var metricExtX, metricExtY;
-						//  if(!(this instanceof AscFormat.CGroupShape))
-						{
-							if (AscFormat.checkNormalRotate(rot)) {
-								dExtX = metrics.extX;
-								dExtY = metrics.extY;
-							} else {
-								dExtX = metrics.extY;
-								dExtY = metrics.extX;
-							}
+						if (AscFormat.checkNormalRotate(rot)) {
+							dExtX = metrics.extX;
+							dExtY = metrics.extY;
+						} else {
+							dExtX = metrics.extY;
+							dExtY = metrics.extX;
 						}
 					}
 
 					if (this.spPr.xfrm.chExtX > 0)
 						cx = dExtX / this.spPr.xfrm.chExtX;
-					else
-						cx = 1;
 
 					if (this.spPr.xfrm.chExtY > 0)
 						cy = dExtY / this.spPr.xfrm.chExtY;
-					else
-						cy = 1;
-				} else {
-					cx = 1;
-					cy = 1;
 				}
 				if (isRealObject(this.group)) {
-					var group_scale_coefficients = this.group.getResultScaleCoefficients();
+					var group_scale_coefficients = this.group.getResultScaleCoefficients(true);
 					cx *= group_scale_coefficients.cx;
 					cy *= group_scale_coefficients.cy;
-				} else {
-					let oParaDrawing = AscFormat.getParaDrawing(this);
-					if (oParaDrawing) {
-						let dScaleCoefficient = oParaDrawing.GetScaleCoefficient();
-						cx *= dScaleCoefficient;
-						cy *= dScaleCoefficient;
-					}
 				}
 
 				this.scaleCoefficients.cx = cx;
 				this.scaleCoefficients.cy = cy;
 				this.recalcInfo.recalculateScaleCoefficients = false;
 			}
-			return this.scaleCoefficients;
+			const scaleCoefficients = {cx: this.scaleCoefficients.cx, cy: this.scaleCoefficients.cy};
+			if (!isSkipParaDrawingCoefficient) {
+				let oParaDrawing = AscFormat.getParaDrawing(this);
+				if (oParaDrawing) {
+					let dScaleCoefficient = oParaDrawing.GetScaleCoefficient();
+					scaleCoefficients.cx *= dScaleCoefficient;
+					scaleCoefficients.cy *= dScaleCoefficient;
+				}
+			}
+			return scaleCoefficients;
 		};
 
 		CGroupShape.prototype.getCompiledTransparent = function () {
