@@ -6297,5 +6297,7 @@
 	prot['asc_isFinal'] = prot.asc_isFinal = prot.isFinal;
 	prot["getMacroRecorder"] = prot.getMacroRecorder;
 	prot["addMacroStepData"] = prot.addMacroStepData;
+	
+	prot['getJsApi'] = prot.getJsApi;
 
 })(window);

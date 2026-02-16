@@ -56,8 +56,8 @@
 	 * @property {ApiWorksheetFunction} WorksheetFunction - Returns an object that represents the function list.
 	 * @property {ApiPivotTable[]} PivotTables - Returns all pivot tables.
 	 */
-	var Api = window["Asc"]["spreadsheet_api"];
-
+	var Api = AscBuilder.Slide.Api || {};
+	
 	/**
 	 * Class representing the currently active workbook
 	 *
@@ -620,7 +620,7 @@
 	 * @returns {string}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/Format.js
 	 */
-	Api.prototype.Format = function (expression, format) {
+	Api.Format = function (expression, format) {
 		format = null == format ? '' : format;
 		return AscCommonExcel.cTEXT.prototype.Calculate([checkFormat(expression), new AscCommonExcel.cString(format)])
 			.getValue();
@@ -653,7 +653,7 @@
 	//     }
 	//     return first + second;
 	// })
-	Api.prototype.AddCustomFunction = function (fCustom) {
+	Api.AddCustomFunction = function (fCustom) {
 		// get parsedJSDoc from a macros (we receive it from the Api class)
 		// take the first element and validate it
 		const parsedJSDoc = this.parsedJSDoc && this.parsedJSDoc.shift();
@@ -732,7 +732,7 @@
 			);
 		})();*/
 
-		this.addCustomFunction(fCustom, parsedJSDoc/*isValidJsDoc ? parsedJSDoc : options*/);
+		Asc.editor.addCustomFunction(fCustom, parsedJSDoc/*isValidJsDoc ? parsedJSDoc : options*/);
 	};
 
 	/**
@@ -747,8 +747,8 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddCustomFunctionLibrary.js
 	 */
-	Api.prototype.AddCustomFunctionLibrary = function(sName, Func) {
-		this.addCustomFunctionsLibrary(sName, Func);
+	Api.AddCustomFunctionLibrary = function(sName, Func) {
+		Asc.editor.addCustomFunctionsLibrary(sName, Func);
 	};
 
 	/**
@@ -759,7 +759,7 @@
 	 * @returns {boolean} - returns false if such a function does not exist.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RemoveCustomFunction.js
 	 */
-	Api.prototype.RemoveCustomFunction = function (sName) {
+	Api.RemoveCustomFunction = function (sName) {
 		return this.removeCustomFunction(sName);
 	};
 	/**
@@ -769,7 +769,7 @@
 	 * @returns {boolean} - returns false if such functions do not exist.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ClearCustomFunctions.js
 	 */
-	Api.prototype.ClearCustomFunctions = function () {
+	Api.ClearCustomFunctions = function () {
 		return this.clearCustomFunctions();
 	};
 
@@ -780,7 +780,7 @@
 	 * @param {string} sName - The name of a new worksheet.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddSheet.js
 	 */
-	Api.prototype.AddSheet = function (sName) {
+	Api.AddSheet = function (sName) {
 		if (this.GetSheet(sName))
 			throwException(new Error('Worksheet with such a name already exists.'));
 		else
@@ -794,14 +794,14 @@
 	 * @returns {ApiWorksheet[]}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetSheets.js
 	 */
-	Api.prototype.GetSheets = function () {
+	Api.GetSheets = function () {
 		var result = [];
 		for (var i = 0; i < this.wbModel.getWorksheetCount(); ++i) {
 			result.push(new ApiWorksheet(this.wbModel.getWorksheet(i)));
 		}
 		return result;
 	};
-	Object.defineProperty(Api.prototype, "Sheets", {
+	Object.defineProperty(Api, "Sheets", {
 		get: function () {
 			return this.GetSheets();
 		}
@@ -814,7 +814,7 @@
 	 * @param {number} LCID - The locale specified.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/SetLocale.js
 	 */
-	Api.prototype.SetLocale = function (LCID) {
+	Api.SetLocale = function (LCID) {
 		this.asc_setLocale(LCID, null, null);
 	};
 
@@ -825,7 +825,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetLocale.js
 	 */
-	Api.prototype.GetLocale = function () {
+	Api.GetLocale = function () {
 		return this.asc_getLocale();
 	};
 
@@ -836,11 +836,11 @@
 	 * @returns {ApiWorksheet}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetActiveSheet.js
 	 */
-	Api.prototype.GetActiveSheet = function () {
+	Api.GetActiveSheet = function () {
 		var index = this.wbModel.getActive();
 		return new ApiWorksheet(this.wbModel.getWorksheet(index));
 	};
-	Object.defineProperty(Api.prototype, "ActiveSheet", {
+	Object.defineProperty(Api, "ActiveSheet", {
 		get: function () {
 			return this.GetActiveSheet();
 		}
@@ -853,10 +853,10 @@
 	 * @returns {ApiWorkbook}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetActiveWorkbook.js
 	 */
-	Api.prototype.GetActiveWorkbook = function () {
+	Api.GetActiveWorkbook = function () {
 		return new ApiWorkbook(this.wbModel);
 	};
-	Object.defineProperty(Api.prototype, "ActiveWorkbook", {
+	Object.defineProperty(Api, "ActiveWorkbook", {
 		get: function () {
 			return this.GetActiveWorkbook();
 		}
@@ -870,7 +870,7 @@
 	 * @returns {ApiWorksheet | null}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetSheet.js
 	 */
-	Api.prototype.GetSheet = function (nameOrIndex) {
+	Api.GetSheet = function (nameOrIndex) {
 		var ws = ('string' === typeof nameOrIndex) ? this.wbModel.getWorksheetByName(nameOrIndex) :
 			this.wbModel.getWorksheet(nameOrIndex);
 		return ws ? new ApiWorksheet(ws) : null;
@@ -883,7 +883,7 @@
 	 * @returns {string[]}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetThemesColors.js
 	 */
-	Api.prototype.GetThemesColors = function () {
+	Api.GetThemesColors = function () {
 		var result = [];
 		AscCommon.g_oUserColorScheme.forEach(function (item) {
 			result.push(item.get_name());
@@ -900,7 +900,7 @@
 	 * @returns {boolean} - returns false if sTheme isn't a string.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/SetThemeColors.js
 	 */
-	Api.prototype.SetThemeColors = function (sTheme) {
+	Api.SetThemeColors = function (sTheme) {
 		if ('string' === typeof sTheme) {
 			this.wbModel.changeColorScheme(sTheme);
 			return true;
@@ -914,7 +914,7 @@
 	 * @typeofeditors ["CSE"]
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateNewHistoryPoint.js
 	 */
-	Api.prototype.CreateNewHistoryPoint = function () {
+	Api.CreateNewHistoryPoint = function () {
 		History.Create_NewPoint();
 	};
 
@@ -928,7 +928,7 @@
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateColorFromRGB.js
 	 */
-	Api.prototype.CreateColorFromRGB = function (r, g, b) {
+	Api.CreateColorFromRGB = function (r, g, b) {
 		return new ApiColor(AscCommonExcel.createRgbColor(r, g, b));
 	};
 
@@ -940,7 +940,7 @@
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateColorByName.js
 	 */
-	Api.prototype.CreateColorByName = function (sPresetColor) {
+	Api.CreateColorByName = function (sPresetColor) {
 		var rgb = AscFormat.mapPrstColor[sPresetColor];
 		return new ApiColor(AscCommonExcel.createRgbColor((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF));
 	};
@@ -954,7 +954,7 @@
 	 * @returns {ApiRange | null}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/Intersect.js
 	 */
-	Api.prototype.Intersect = function (Range1, Range2) {
+	Api.Intersect = function (Range1, Range2) {
 		let result = null;
 		if (Range1.GetWorksheet().Id === Range2.GetWorksheet().Id) {
 			var res = Range1.range.bbox.intersection(Range2.range.bbox);
@@ -976,10 +976,10 @@
 	 * @returns {ApiRange}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetSelection.js
 	 */
-	Api.prototype.GetSelection = function () {
+	Api.GetSelection = function () {
 		return this.GetActiveSheet().GetSelection();
 	};
-	Object.defineProperty(Api.prototype, "Selection", {
+	Object.defineProperty(Api, "Selection", {
 		get: function () {
 			return this.GetSelection();
 		}
@@ -996,7 +996,7 @@
 	 * @returns {boolean} - returns false if sName or sRef are invalid.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddDefName.js
 	 */
-	Api.prototype.AddDefName = function (sName, sRef, isHidden) {
+	Api.AddDefName = function (sName, sRef, isHidden) {
 		return private_AddDefName(this.wbModel, sName, sRef, null, isHidden);
 	};
 
@@ -1008,7 +1008,7 @@
 	 * @returns {ApiName}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDefName.js
 	 */
-	Api.prototype.GetDefName = function (defName) {
+	Api.GetDefName = function (defName) {
 		if (defName && typeof defName === "string") {
 			defName = this.wbModel.getDefinesNames(defName);
 		}
@@ -1021,7 +1021,7 @@
 	 * @typeofeditors ["CSE"]
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/Save.js
 	 */
-	Api.prototype.Save = function () {
+	Api.Save = function () {
 		this.SaveAfterMacros = true;
 	};
 
@@ -1033,7 +1033,7 @@
 	 * @returns {ApiRange}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetRange.js
 	 */
-	Api.prototype.GetRange = function (sRange) {
+	Api.GetRange = function (sRange) {
 		var ws;
 		var res = AscCommon.parserHelp.parse3DRef(sRange);
 		if (res) {
@@ -1052,14 +1052,14 @@
 	 * @returns {ApiWorksheetFunction}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetWorksheetFunction.js
 	 */
-	Api.prototype.GetWorksheetFunction = function () {
+	Api.GetWorksheetFunction = function () {
 		if (!this.oWorksheetFunction) {
 			this.oWorksheetFunction = new ApiWorksheetFunction(this);
 			//this.oWorksheetFunction.init();
 		}
 		return this.oWorksheetFunction;
 	};
-	Object.defineProperty(Api.prototype, "WorksheetFunction", {
+	Object.defineProperty(Api, "WorksheetFunction", {
 		get: function () {
 			return this.GetWorksheetFunction();
 		}
@@ -7441,7 +7441,7 @@
 	 * @param {Range[]} areas - A collection of the ranges (not a ApiRange) from the specified range. For more details see any new ApiRange.
 	 * @returns {ApiRange}
 	 */
-	Api.prototype.private_GetRange = function (range, areas) {
+	Api.private_GetRange = function (range, areas) {
 		return new ApiRange(range, areas);
 	};
 
@@ -7452,7 +7452,7 @@
 	 * @param {number} nSheet - The sheet index.
 	 * @returns {string[]}
 	 */
-	Api.prototype.private_GetMailMergeFields = function (nSheet) {
+	Api.private_GetMailMergeFields = function (nSheet) {
 		var oSheet = this.GetSheet(nSheet);
 		var arrFields = [];
 		var colIndex = 0;
@@ -7487,7 +7487,7 @@
 	 * @param {boolean} [bWithFormat=false] - Specifies that the data will be received with the format.
 	 * @returns {string[][]}
 	 */
-	Api.prototype.private_GetMailMergeMap = function (nSheet, bWithFormat) {
+	Api.private_GetMailMergeMap = function (nSheet, bWithFormat) {
 		var oSheet = this.GetSheet(nSheet);
 		var arrMailMergeMap = [];
 		var valuesInRow = null;
@@ -7542,7 +7542,7 @@
 	 * @returns {string[][]}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetMailMergeData.js
 	 */
-	Api.prototype.GetMailMergeData = function (nSheet, bWithFormat) {
+	Api.GetMailMergeData = function (nSheet, bWithFormat) {
 		if (bWithFormat !== true)
 			bWithFormat = false;
 
@@ -7565,7 +7565,7 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RecalculateAllFormulas.js
 	 */
-	Api.prototype.RecalculateAllFormulas = function (fLogger) {
+	Api.RecalculateAllFormulas = function (fLogger) {
 		var formulas = this.wbModel.getAllFormulas(true);
 		var _compare = function (_val1, _val2) {
 			if (!isNaN(parseFloat(_val1)) && isFinite(_val1) && !isNaN(parseFloat(_val2)) && isFinite(_val2)) {
@@ -7658,7 +7658,7 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/Cell/Api/Methods/InsertPivotExistingWorksheet.js
 	 */
-	Api.prototype.InsertPivotExistingWorksheet = function (dataRef, pivotRef, confirmation) {
+	Api.InsertPivotExistingWorksheet = function (dataRef, pivotRef, confirmation) {
 		if (dataRef) {
 			dataRef = dataRef.GetWorksheet().GetName() + "!" + dataRef.GetAddress(true, true);
 		} else {
@@ -7687,7 +7687,7 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/Cell/Api/Methods/InsertPivotNewWorksheet.js
 	 */
-	Api.prototype.InsertPivotNewWorksheet = function (dataRef, newSheetName) {
+	Api.InsertPivotNewWorksheet = function (dataRef, newSheetName) {
 		if (dataRef) {
 			dataRef = dataRef.GetWorksheet().GetName() + "!" + dataRef.GetAddress(true, true);
 		} else {
@@ -7724,7 +7724,7 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/Cell/Api/Methods/GetPivotByName.js
 	 */
-	Api.prototype.GetPivotByName = function (name) {
+	Api.GetPivotByName = function (name) {
 		var res = null;
 		if (typeof name == "string" && name.trim().length) {
 			var pivot = this.wbModel.getPivotTableByName( name.trim() );
@@ -7741,7 +7741,7 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/Cell/Api/Methods/RefreshAllPivots.js
 	 */
-	Api.prototype.RefreshAllPivots = function () {
+	Api.RefreshAllPivots = function () {
 		this.asc_refreshAllPivots();
 	};
 
@@ -7753,7 +7753,7 @@
 	 * @since 8.2.0
 	 * @see office-js-api/Examples/Cell/Api/Methods/GetAllPivotTables.js
 	 */
-	Api.prototype.GetAllPivotTables = function () {
+	Api.GetAllPivotTables = function () {
 		var res = [];
 		var sheets = this.GetSheets();
 		sheets.forEach(function(ws) {
@@ -7762,7 +7762,7 @@
 		return res;
 	};
 
-	Object.defineProperty(Api.prototype, "PivotTables", {
+	Object.defineProperty(Api, "PivotTables", {
 		get: function () {
 			return this.GetAllPivotTables();
 		}
@@ -7778,7 +7778,10 @@
 	 * @fires Api#onWorksheetChange
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/attachEvent.js
 	 */
-	Api.prototype["attachEvent"] = Api.prototype.attachEvent;
+	Api["attachEvent"] = function(eventName, callback)
+	{
+		Asc.editor.attachEvent(eventName, callback);
+	};
 
 	/**
 	 * Unsubscribes from the specified event.
@@ -7789,7 +7792,10 @@
 	 * @fires Api#onWorksheetChange
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/detachEvent.js
 	 */
-	Api.prototype["detachEvent"] = Api.prototype.detachEvent;
+	Api["detachEvent"] = function(eventName)
+	{
+		Asc.editor.detachEvent(eventName);
+	};
 
 	/**
 	 * Returns an array of ApiComment objects.
@@ -7801,7 +7807,7 @@
 	 * @since 7.5.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddComment.js
 	 */
-	Api.prototype.AddComment = function (sText, sAuthor) {
+	Api.AddComment = function (sText, sAuthor) {
 		let result = null;
 		let isValidData = typeof (sText) === 'string' && sText.trim() !== '';
 		if (isValidData) {
@@ -7827,7 +7833,7 @@
 	 * @returns {?ApiComment}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCommentById.js
 	 */
-	Api.prototype.GetCommentById = function (sId) {
+	Api.GetCommentById = function (sId) {
 		let comment = this.asc_findComment(sId);
 		if (!comment)
 			comment = this.wb.cellCommentator.findComment(sId);
@@ -7842,14 +7848,14 @@
 	 * @returns {ApiComment[]}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetComments.js
 	 */
-	Api.prototype.GetComments = function () {
+	Api.GetComments = function () {
 		var comments = [];
 		for (var i = 0; i < this.wbModel.aComments.length; i++) {
 			comments.push(new ApiComment(this.wbModel.aComments[i], this.wb));
 		}
 		return comments;
 	};
-	Object.defineProperty(Api.prototype, "Comments", {
+	Object.defineProperty(Api, "Comments", {
 		get: function () {
 			return this.GetComments();
 		}
@@ -7863,7 +7869,7 @@
 	 * @returns {ApiComment[]}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetAllComments.js
 	 */
-	Api.prototype.GetAllComments = function () {
+	Api.GetAllComments = function () {
 		let aApiComments = this.GetComments();
 
 		let aWS = this.GetSheets();
@@ -7872,7 +7878,7 @@
 		}
 		return aApiComments;
 	};
-	Object.defineProperty(Api.prototype, "AllComments", {
+	Object.defineProperty(Api, "AllComments", {
 		get: function () {
 			return this.GetAllComments();
 		}
@@ -7892,7 +7898,7 @@
 	 * @since 8.0.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/SetFreezePanesType.js
 	 */
-	Api.prototype.SetFreezePanesType = function (FreezePaneType) {
+	Api.SetFreezePanesType = function (FreezePaneType) {
 		if (typeof FreezePaneType === 'string' || FreezePaneType === null) {
 			//detect current freeze type
 			let curType = this.GetFreezePanesType();
@@ -7928,7 +7934,7 @@
 	 * @since 8.0.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetFreezePanesType.js
 	 */
-	Api.prototype.GetFreezePanesType = function () {
+	Api.GetFreezePanesType = function () {
 		let cell = this.wb.getWorksheet().topLeftFrozenCell;
 		//detect current freeze type
 		let curType = null;
@@ -7949,7 +7955,7 @@
 		return curType;
 	};
 
-	Object.defineProperty(Api.prototype, "FreezePanes", {
+	Object.defineProperty(Api, "FreezePanes", {
 		get: function () {
 			return this.GetFreezePanesType();
 		},
@@ -7966,7 +7972,7 @@
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetReferenceStyle.js
 	 */
-	Api.prototype.GetReferenceStyle = function () {
+	Api.GetReferenceStyle = function () {
 		let bReferenceStyle = this.asc_getR1C1Mode();
 		return bReferenceStyle ? "xlR1C1" : "xlA1";
 	};
@@ -7979,7 +7985,7 @@
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/SetReferenceStyle.js
 	 */
-	Api.prototype.SetReferenceStyle = function (sReferenceStyle) {
+	Api.SetReferenceStyle = function (sReferenceStyle) {
 		let bReferenceMode = null;
 		switch (sReferenceStyle) {
 			case "xlA1":
@@ -7997,7 +8003,7 @@
 		}
 	};
 
-	Object.defineProperty(Api.prototype, "ReferenceStyle", {
+	Object.defineProperty(Api, "ReferenceStyle", {
 		get: function () {
 			return this.GetReferenceStyle();
 		},
@@ -8025,7 +8031,7 @@
 	 * @returns {object}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDocumentInfo.js
 	 */
-	Api.prototype.GetDocumentInfo = function()
+	Api.GetDocumentInfo = function()
 	{
 		const oDocInfo = {
 			"Application": '',
@@ -8097,7 +8103,7 @@
 	 * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCore.js
 	 */
-	Api.prototype.GetCore = function () {
+	Api.GetCore = function () {
 		return new AscBuilder.ApiCore(this.wbModel.Core);
 	};
 
@@ -8109,7 +8115,7 @@
 	 * @since 9.0.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCustomProperties.js
 	 */
-	Api.prototype.GetCustomProperties = function () {
+	Api.GetCustomProperties = function () {
 		return new AscBuilder.ApiCustomProperties(this.wbModel.CustomProperties);
 	};
 
@@ -13229,7 +13235,7 @@
 	{
 		if (this.Shape && this.Shape.spPr && this.Shape.spPr.geometry)
 		{
-			return Api.prototype.private_CreateGeometry(this.Shape.spPr.geometry);
+			return Api.private_CreateGeometry(this.Shape.spPr.geometry);
 		}
 		return null;
 	};
@@ -27470,53 +27476,53 @@
         }
     });
 
-	Api.prototype["Format"]                = Api.prototype.Format;
-	Api.prototype["AddSheet"]              = Api.prototype.AddSheet;
-	Api.prototype["GetSheets"]             = Api.prototype.GetSheets;
-	Api.prototype["GetActiveSheet"]        = Api.prototype.GetActiveSheet;
-	Api.prototype["GetActiveWorkbook"]     = Api.prototype.GetActiveWorkbook;
-	Api.prototype["GetLocale"]             = Api.prototype.GetLocale;
-	Api.prototype["SetLocale"]             = Api.prototype.SetLocale;
-	Api.prototype["GetSheet"]              = Api.prototype.GetSheet;
-	Api.prototype["GetThemesColors"]       = Api.prototype.GetThemesColors;
-	Api.prototype["SetThemeColors"]        = Api.prototype.SetThemeColors;
-	Api.prototype["CreateNewHistoryPoint"] = Api.prototype.CreateNewHistoryPoint;
-	Api.prototype["CreateColorFromRGB"]    = Api.prototype.CreateColorFromRGB;
-	Api.prototype["CreateColorByName"]     = Api.prototype.CreateColorByName;
-	Api.prototype["Intersect"]             = Api.prototype.Intersect;
-	Api.prototype["GetSelection"]          = Api.prototype.GetSelection;
-	Api.prototype["AddDefName"]            = Api.prototype.AddDefName;
-	Api.prototype["GetDefName"]            = Api.prototype.GetDefName;
-	Api.prototype["Save"]                  = Api.prototype.Save;
-	Api.prototype["GetMailMergeData"]      = Api.prototype.GetMailMergeData;
+	Api["Format"]                = Api.Format;
+	Api["AddSheet"]              = Api.AddSheet;
+	Api["GetSheets"]             = Api.GetSheets;
+	Api["GetActiveSheet"]        = Api.GetActiveSheet;
+	Api["GetActiveWorkbook"]     = Api.GetActiveWorkbook;
+	Api["GetLocale"]             = Api.GetLocale;
+	Api["SetLocale"]             = Api.SetLocale;
+	Api["GetSheet"]              = Api.GetSheet;
+	Api["GetThemesColors"]       = Api.GetThemesColors;
+	Api["SetThemeColors"]        = Api.SetThemeColors;
+	Api["CreateNewHistoryPoint"] = Api.CreateNewHistoryPoint;
+	Api["CreateColorFromRGB"]    = Api.CreateColorFromRGB;
+	Api["CreateColorByName"]     = Api.CreateColorByName;
+	Api["Intersect"]             = Api.Intersect;
+	Api["GetSelection"]          = Api.GetSelection;
+	Api["AddDefName"]            = Api.AddDefName;
+	Api["GetDefName"]            = Api.GetDefName;
+	Api["Save"]                  = Api.Save;
+	Api["GetMailMergeData"]      = Api.GetMailMergeData;
 	
-	Api.prototype["GetRange"] = Api.prototype.GetRange;
+	Api["GetRange"] = Api.GetRange;
 
-	Api.prototype["RecalculateAllFormulas"] = Api.prototype.RecalculateAllFormulas;
-	Api.prototype["AddComment"]  = Api.prototype.AddComment;
-	Api.prototype["GetComments"] = Api.prototype.GetComments;
-	Api.prototype["GetAllComments"] = Api.prototype.GetAllComments;
-	Api.prototype["GetCommentById"] = Api.prototype.GetCommentById;
-	Api.prototype["SetFreezePanesType"] = Api.prototype.SetFreezePanesType;
-	Api.prototype["GetFreezePanesType"] = Api.prototype.GetFreezePanesType;
-	Api.prototype["GetDocumentInfo"] = Api.prototype.GetDocumentInfo;
-	Api.prototype["GetCore"] = Api.prototype.GetCore;
-	Api.prototype["GetCustomProperties"] = Api.prototype.GetCustomProperties;
+	Api["RecalculateAllFormulas"] = Api.RecalculateAllFormulas;
+	Api["AddComment"]  = Api.AddComment;
+	Api["GetComments"] = Api.GetComments;
+	Api["GetAllComments"] = Api.GetAllComments;
+	Api["GetCommentById"] = Api.GetCommentById;
+	Api["SetFreezePanesType"] = Api.SetFreezePanesType;
+	Api["GetFreezePanesType"] = Api.GetFreezePanesType;
+	Api["GetDocumentInfo"] = Api.GetDocumentInfo;
+	Api["GetCore"] = Api.GetCore;
+	Api["GetCustomProperties"] = Api.GetCustomProperties;
 
-	Api.prototype["AddCustomFunction"] = Api.prototype.AddCustomFunction;
-	Api.prototype["RemoveCustomFunction"] = Api.prototype.RemoveCustomFunction;
-	Api.prototype["ClearCustomFunctions"] = Api.prototype.ClearCustomFunctions;
-	Api.prototype["AddCustomFunctionLibrary"] = Api.prototype.AddCustomFunctionLibrary;
+	Api["AddCustomFunction"] = Api.AddCustomFunction;
+	Api["RemoveCustomFunction"] = Api.RemoveCustomFunction;
+	Api["ClearCustomFunctions"] = Api.ClearCustomFunctions;
+	Api["AddCustomFunctionLibrary"] = Api.AddCustomFunctionLibrary;
 
-	Api.prototype["GetReferenceStyle"] = Api.prototype.GetReferenceStyle;
-	Api.prototype["SetReferenceStyle"] = Api.prototype.SetReferenceStyle;
+	Api["GetReferenceStyle"] = Api.GetReferenceStyle;
+	Api["SetReferenceStyle"] = Api.SetReferenceStyle;
 
-	Api.prototype["GetWorksheetFunction"] = Api.prototype.GetWorksheetFunction;
-	Api.prototype["InsertPivotExistingWorksheet"] = Api.prototype.InsertPivotExistingWorksheet;
-	Api.prototype["InsertPivotNewWorksheet"] = Api.prototype.InsertPivotNewWorksheet;
-	Api.prototype["GetPivotByName"] = Api.prototype.GetPivotByName;
-	Api.prototype["RefreshAllPivots"] = Api.prototype.RefreshAllPivots;
-	Api.prototype["GetAllPivotTables"] = Api.prototype.GetAllPivotTables;
+	Api["GetWorksheetFunction"] = Api.GetWorksheetFunction;
+	Api["InsertPivotExistingWorksheet"] = Api.InsertPivotExistingWorksheet;
+	Api["InsertPivotNewWorksheet"] = Api.InsertPivotNewWorksheet;
+	Api["GetPivotByName"] = Api.GetPivotByName;
+	Api["RefreshAllPivots"] = Api.RefreshAllPivots;
+	Api["GetAllPivotTables"] = Api.GetAllPivotTables;
 
 	ApiWorkbook.prototype["Save"] = ApiWorkbook.prototype.Save;
 	ApiWorkbook.prototype["GetSheets"] = ApiWorkbook.prototype.GetSheets;
@@ -28972,5 +28978,8 @@
 	window['AscBuilder'].ApiSmartArt        = ApiSmartArt;
 	window['AscBuilder'].ApiOleObject       = ApiOleObject;
 	window['AscBuilder'].ApiChart			= ApiChart;
-
+	
+	window['AscBuilder']["Cell"] = window['AscBuilder'].Cell = window['AscBuilder'].Cell || {};
+	AscBuilder.Cell["Api"] = AscBuilder.Cell.Api = Api;
+	
 }(window, null));

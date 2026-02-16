@@ -9864,6 +9864,9 @@ var editor;
 	spreadsheet_api.prototype.asc_SetIsSupportDynamicArrays = function(val) {
 		AscCommonExcel.bIsSupportDynamicArrays = val;
 	};
+	spreadsheet_api.prototype.getJsApi = function() {
+		return AscBuilder.Cell.Api;
+	};
 
   /*
    * Export
@@ -10485,8 +10488,9 @@ var editor;
   prot["sync_currentSheetCallback"]= prot.sync_currentSheetCallback;
 
   prot["asc_SetIsSupportDynamicArrays"]= prot.asc_SetIsSupportDynamicArrays;
-
-
+  prot["getJsApi"]= prot.getJsApi;
+  
+  AscCommon['SpreadsheetEditorApi'] = AscCommon.SpreadsheetEditorApi = spreadsheet_api;
 
 
 })(window);

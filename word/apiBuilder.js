@@ -333,8 +333,7 @@
 	};
 	CMarkdownConverter.prototype.DoMarkdown = function()
 	{
-		var oApi               = editor;
-		var oDocument          = oApi.GetDocument();
+		var oDocument          = Api.GetDocument();
 		var sOutputText        = '';
 		var arrSelectedContent = [];
 		var oSelectedContent   = null;
@@ -371,8 +370,7 @@
 	};
 	CMarkdownConverter.prototype.DoHtml = function()
 	{
-		var oApi               = editor;
-		var oDocument          = oApi.GetDocument();
+		var oDocument          = Api.GetDocument();
 		var sOutputText        = '';
 		var arrSelectedContent = [];
 		var oSelectedContent   = null;
@@ -1202,7 +1200,7 @@
 		this.isEmpty 		= false;
 		this.Paragraphs 	= [];
 		this.Text 			= undefined;
-		this.oDocument		= editor.GetDocument();
+		this.oDocument		= Api.GetDocument();
 		this.EndPos			= null;
 		this.StartPos		= null;
 		this.TextPr 		= new CTextPr();
@@ -3391,7 +3389,7 @@
 
 		if (this.ParaHyperlink.Content.length === 0)
 		{
-			HyperRun = editor.CreateRun(); 
+			HyperRun = Api.CreateRun();
 			HyperRun.AddText(sDisplay);
 			this.ParaHyperlink.Add_ToContent(0, HyperRun.Run, false);
 			HyperRun.Run.Set_RStyle(Styles.GetDefaultHyperlink());
@@ -4711,8 +4709,8 @@
 		shapeType = shapeType || "rect";
 		width     = width || 914400;
 		height    = height || 914400;
-		fill      = fill || editor.CreateNoFill();
-		stroke    = stroke || editor.CreateStroke(0, editor.CreateNoFill());
+		fill      = fill || Api.CreateNoFill();
+		stroke    = stroke || Api.CreateStroke(0, Api.CreateNoFill());
 		var nW = private_EMU2MM(width);
 		var nH = private_EMU2MM(height);
 		var oDrawing = new ParaDrawing(nW, nH, null, oDrawingDocuemnt, oLogicDocument, null);
@@ -5957,7 +5955,10 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/attachEvent.js
 	 */
-	Api["attachEvent"] = Api.attachEvent;
+	Api["attachEvent"] = function(eventName, callback)
+	{
+		Asc.editor.attachEvent(eventName, callback);
+	};
 
 	/**
 	 * Unsubscribes from the specified event.
@@ -5968,7 +5969,10 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/detachEvent.js
 	 */
-	Api["detachEvent"] = Api.detachEvent;
+	Api["detachEvent"] = function(eventName)
+	{
+		Asc.editor.detachEvent(eventName);
+	};
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -10631,7 +10635,7 @@
 				LastTextPrInParagraph = this.Paragraph.TextPr.Value;
 			}
 			
-			var oRun = editor.CreateRun();
+			var oRun = Api.CreateRun();
 			oRun.AddText(oElement);
 			oRun.Run.Apply_TextPr(LastTextPrInParagraph, undefined, true);
 			
@@ -11336,7 +11340,7 @@
 		}
 		else if (typeof paragraph === "string")
 		{
-			oNewPara = editor.CreateParagraph();
+			oNewPara = Api.CreateParagraph();
 			oNewPara.AddText(paragraph);
 
 			if (sPosition === "before")
@@ -13392,7 +13396,7 @@
 	 */
 	ApiSection.prototype.GetNext = function()
 	{
-		var oDocument		= editor.GetDocument();
+		var oDocument		= Api.GetDocument();
 		var arrApiSections	= oDocument.GetSections();
 		var sectionIndex	= -1;
 
@@ -13421,7 +13425,7 @@
 	 */
 	ApiSection.prototype.GetPrevious = function()
 	{
-		var oDocument		= editor.GetDocument();
+		var oDocument		= Api.GetDocument();
 		var arrApiSections	= oDocument.GetSections();
 		var sectionIndex	= -1;
 
@@ -19168,7 +19172,7 @@
 	 */
 	ApiDrawing.prototype.GetNextDrawing = function()
 	{
-		let oDocument				= editor.GetDocument();
+		let oDocument				= Api.GetDocument();
 		let GetAllDrawingObjects	= oDocument.GetAllDrawingObjects();
 		let drawingIndex			= null;
 		let paraDrawingId           = this.getParaDrawing().Id;
@@ -19196,7 +19200,7 @@
 	 */
 	ApiDrawing.prototype.GetPrevDrawing = function()
 	{
-		let oDocument				= editor.GetDocument();
+		let oDocument				= Api.GetDocument();
 		let GetAllDrawingObjects	= oDocument.GetAllDrawingObjects();
 		let drawingIndex			= null;
 		let paraDrawingId           = this.getParaDrawing().Id;
@@ -19392,7 +19396,7 @@
 	 */
 	ApiImage.prototype.GetNextImage	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllImages	= oDocument.GetAllImages();
 		var imageIndex	= null;
 
@@ -19419,7 +19423,7 @@
 	 */
 	ApiImage.prototype.GetPrevImage	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllImages	= oDocument.GetAllImages();
 		var imageIndex	= null;
 
@@ -19623,7 +19627,7 @@
 	 */
 	ApiShape.prototype.GetNextShape = function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllShapes	= oDocument.GetAllShapes();
 		var shapeIndex	= null;
 
@@ -19650,7 +19654,7 @@
 	 */
 	ApiShape.prototype.GetPrevShape	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllShapes	= oDocument.GetAllShapes();
 		var shapeIndex	= null;
 
@@ -20924,7 +20928,7 @@
 	 */
 	ApiChart.prototype.GetNextChart = function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllCharts	= oDocument.GetAllCharts();
 		var chartIndex	= null;
 
@@ -20952,7 +20956,7 @@
 	 */
 	ApiChart.prototype.GetPrevChart	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllCharts	= oDocument.GetAllCharts();
 		var chartIndex	= null;
 
@@ -22567,7 +22571,7 @@
 			this.Sdt.SetShowingPlcHdr(false);
 		}
 
-		var newRun = editor.CreateRun();
+		var newRun = Api.CreateRun();
 		newRun.AddText(text);
 		this.AddElement(newRun, this.GetElementsCount())
 
@@ -27226,7 +27230,7 @@
 		if (typeof message !== 'string' || message === '')
 			return false;
 
-		this.asc_coAuthoringChatSendMessage(message);
+		Asc.editor.asc_coAuthoringChatSendMessage(message);
 		return true;
 	};
 	/**
@@ -28528,7 +28532,7 @@
 		if (!this.IsUseInDocument())
 			return null;
 		
-		let oApiDoc				= Asc.editor.GetDocument();
+		let oApiDoc				= Api.GetDocument();
 		let oOldSelectionInfo	= this.Document.SaveDocumentState();
 
 		this.Select(true);

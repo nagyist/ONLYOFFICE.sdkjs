@@ -38,7 +38,7 @@
      * @class
      * @name Api
      */
-    var Api = window["Asc"]["asc_docs_api"] || window["Asc"]["spreadsheet_api"];
+	var Api = AscBuilder.Word.Api || {};
 
     /**
      * Class representing a presentation.
@@ -514,14 +514,14 @@
      * @returns {ApiPresentation}
      * @see office-js-api/Examples/{Editor}/Api/Methods/GetPresentation.js
 	 */
-    Api.prototype.GetPresentation = function(){
+    Api.GetPresentation = function(){
         if(this.WordControl && this.WordControl.m_oLogicDocument){
             return new ApiPresentation(this.WordControl.m_oLogicDocument);
         }
         return null;
     };
 
-	Api.prototype.GetByInternalId = function(id)
+	Api.GetByInternalId = function(id)
 	{
 		let obj = AscCommon.g_oTableId.Get_ById(id);
 		if (!obj)
@@ -557,7 +557,7 @@
      * @returns {?ApiMaster} - returns null if presentation theme doesn't exist.
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateMaster.js
 	 */
-    Api.prototype.CreateMaster = function(oTheme)
+    Api.CreateMaster = function(oTheme)
 	{
 		const rawMaster = new AscCommonSlide.MasterSlide();
 
@@ -589,7 +589,7 @@
     };
 
 
-	Api.prototype.CreateDefaultMasterSlide = function () {
+	Api.CreateDefaultMasterSlide = function () {
         let master = AscCommonSlide.CreateDefaultMaster();
         let pres = private_GetPresentation()
         pres.pushSlideMaster(master);
@@ -603,7 +603,7 @@
      * @returns {ApiLayout}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateLayout.js
 	 */
-    Api.prototype.CreateLayout = function(oMaster){
+    Api.CreateLayout = function(oMaster){
         var oLayout = new ApiLayout(new AscCommonSlide.SlideLayout());
 
 				oLayout.Layout.setPreserve(true);
@@ -621,7 +621,7 @@
      * @returns {ApiPlaceholder}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePlaceholder.js
 	 */
-    Api.prototype.CreatePlaceholder = function(sType){
+    Api.CreatePlaceholder = function(sType){
         
         if (typeof(sType) !== "string")
             sType = "body";
@@ -644,7 +644,7 @@
      * @returns {ApiTheme | null} 
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTheme.js
 	 */
-    Api.prototype.CreateTheme = function(sName, oMaster, oClrScheme, oFormatScheme, oFontScheme){
+    Api.CreateTheme = function(sName, oMaster, oClrScheme, oFormatScheme, oFontScheme){
         if (typeof(sName) !== "string")
             sName = "";
         if (oMaster.GetClassType() !== "master" || oClrScheme.GetClassType() !== "themeColorScheme" ||
@@ -694,7 +694,7 @@
 	 *
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateThemeColorScheme.js
 	 */
-    Api.prototype.CreateThemeColorScheme = function(arrColors, sName){
+    Api.CreateThemeColorScheme = function(arrColors, sName){
         if (typeof(sName) !== "string")
             sName = "New theme's color scheme";
         if (!Array.isArray(arrColors) || arrColors.length !== 12)
@@ -703,7 +703,7 @@
 		arrColors = arrColors.map(function (color) {
 			if (color instanceof AscBuilder.ApiColor) {
 				const rgb = color.GetRGB();
-				const safeCopy = new AscBuilder.Api.prototype.RGB(rgb['r'], rgb['g'], rgb['b']);
+				const safeCopy = Api.RGB(rgb['r'], rgb['g'], rgb['b']);
 				const unifill = safeCopy.private_createUnifill();
 				return { Unicolor: unifill.fill.color };
 			}
@@ -740,7 +740,7 @@
      * @returns {?ApiThemeFormatScheme} 
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateThemeFormatScheme.js
 	 */
-    Api.prototype.CreateThemeFormatScheme = function(arrFill, arrBgFill, arrLine, sName){
+    Api.CreateThemeFormatScheme = function(arrFill, arrBgFill, arrLine, sName){
         
         if (typeof(sName) !== "string")
             sName = "New format scheme";
@@ -777,7 +777,7 @@
      * @returns {ApiThemeFontScheme}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateThemeFontScheme.js
 	 */
-    Api.prototype.CreateThemeFontScheme = function(mjLatin, mjEa, mjCs, mnLatin, mnEa, mnCs, sName){
+    Api.CreateThemeFontScheme = function(mjLatin, mjEa, mjCs, mnLatin, mnEa, mnCs, sName){
         
         if (typeof(sName) !== "string")
             sName = "New format scheme";
@@ -809,7 +809,7 @@
      * @returns {ApiSlide}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSlide.js
 	 */
-    Api.prototype.CreateSlide = function(){
+    Api.CreateSlide = function(){
         var oPresentation = private_GetPresentation();
         var oSlide = new AscCommonSlide.Slide(oPresentation, oPresentation.slideMasters[0].sldLayoutLst[0], 0);
         oSlide.setNotes(AscCommonSlide.CreateNotes());
@@ -829,7 +829,7 @@
      * @returns {ApiImage}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateImage.js
 	 */
-    Api.prototype.CreateImage = function(sImageSrc, nWidth, nHeight){
+    Api.CreateImage = function(sImageSrc, nWidth, nHeight){
         var oImage = AscFormat.DrawingObjectsController.prototype.createImage(sImageSrc, 0, 0, nWidth/36000, nHeight/36000);
         oImage.setParent(private_GetCurrentSlide());
         return new ApiImage(oImage);
@@ -847,7 +847,7 @@
 	 * @returns {ApiOleObject}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateOleObject.js
 	 */
-	Api.prototype.CreateOleObject = function(sImageSrc, nWidth, nHeight, sData, sAppId)
+	Api.CreateOleObject = function(sImageSrc, nWidth, nHeight, sData, sAppId)
 	{
 		if (typeof sImageSrc === "string" && sImageSrc.length > 0 && typeof sData === "string"
 			&& typeof sAppId === "string" && sAppId.length > 0
@@ -874,7 +874,7 @@
      * @returns {ApiShape}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateShape.js
 	 */
-	Api.prototype.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke){
+	Api.CreateShape = function(sType, nWidth, nHeight, oFill, oStroke){
         let curSlide = private_GetCurrentSlide();
 		let presentation = private_GetPresentation();
         sType   = sType   || "rect";
@@ -903,7 +903,7 @@
      * @returns {ApiChart}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateChart.js
 	 */
-    Api.prototype.CreateChart = function(sType, aSeries, aSeriesNames, aCatNames, nWidth, nHeight, nStyleIndex, aNumFormats)
+    Api.CreateChart = function(sType, aSeries, aSeriesNames, aCatNames, nWidth, nHeight, nStyleIndex, aNumFormats)
     {
         var oChartSpace = AscFormat.builder_CreateChart(nWidth/36000, nHeight/36000, sType, aCatNames, aSeriesNames, aSeries, nStyleIndex, aNumFormats);
         oChartSpace.setParent(private_GetCurrentSlide());
@@ -920,7 +920,7 @@
      * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateGroup.js
 	 */
-    Api.prototype.CreateGroup = function(drawings) {
+    Api.CreateGroup = function(drawings) {
         drawings = AscBuilder.GetArrayParameter(drawings, []);
 		if (drawings.length == 0)
 			AscBuilder.throwException(new Error("The drawings parameter must be a non empty array"));
@@ -951,7 +951,7 @@
      * @returns {?ApiTable}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTable.js
 	 */
-    Api.prototype.CreateTable = function(nCols, nRows){
+    Api.CreateTable = function(nCols, nRows){
         var oPresentation = private_GetPresentation();
         var oSlide = private_GetCurrentSlide();
         if(oPresentation && oSlide){
@@ -973,7 +973,7 @@
      * @returns {ApiParagraph}
      * @see office-js-api/Examples/{Editor}/Api/Methods/CreateParagraph.js
 	 */
-    Api.prototype.CreateParagraph = function()
+    Api.CreateParagraph = function()
     {
         return this.private_CreateApiParagraph(new AscWord.Paragraph(null, true));
     };
@@ -984,7 +984,7 @@
 	 * @memberof Api
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/Save.js
 	 */
-	Api.prototype.Save = function () {
+	Api.Save = function () {
 		this.SaveAfterMacros = true;
 	};
 
@@ -997,7 +997,7 @@
      * @param {ApiPlaceholder} oPlaceholder - Placeholder to be added.
      * @return {boolean} - return false if object is unsupported or oPlaceholder isn't a placeholder.
 	 */
-    Api.prototype.private_checkPlaceholders = function(object, oPlaceholder)
+    Api.private_checkPlaceholders = function(object, oPlaceholder)
     {
         if (object.GetClassType() !== "slide" && object.GetClassType() !== "layout" && object.GetClassType() !== "master" )
             return false;
@@ -1048,7 +1048,7 @@
 	 * @returns {ApiDrawing}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateWordArt.js
 	 */
-    Api.prototype.CreateWordArt = function(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight, nIndLeft, nIndTop) {
+    Api.CreateWordArt = function(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight, nIndLeft, nIndTop) {
         var oPres = private_GetPresentation();
 		oTextPr   = oTextPr && oTextPr.TextPr ? oTextPr.TextPr : null;
 		nRotAngle = typeof(nRotAngle) === "number" && nRotAngle > 0 ? nRotAngle : 0;
@@ -1079,7 +1079,7 @@
 	 * @returns {ApiSlideShowTransition} - Name of the transition effect.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSlideShowTransition.js
 	 */
-	Api.prototype.CreateSlideShowTransition = function () {
+	Api.CreateSlideShowTransition = function () {
 		return new ApiSlideShowTransition(new Asc.CAscSlideTransition());
 	};
 
@@ -1090,7 +1090,7 @@
 	 * @typeofeditors ["CPE"]
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/FromJSON.js
 	 */
-	Api.prototype.FromJSON = function(sMessage)
+	Api.FromJSON = function(sMessage)
 	{
 		let oReader = new AscJsonConverter.ReaderFromJSON();
         let oApiPresentation = this.GetPresentation();
@@ -1235,7 +1235,7 @@
      * @since 8.3.0
      * @see office-js-api/Examples/{Editor}/Api/Methods/GetSelection.js
 	 */
-	Api.prototype.GetSelection = function()
+	Api.GetSelection = function()
 	{
 		return new ApiSelection();
 	};
@@ -1252,7 +1252,7 @@
 	 * @returns {ApiHyperlink}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateHyperlink.js
 	 */
-	Api.prototype.CreateHyperlink = function (link, tooltip) {
+	Api.CreateHyperlink = function (link, tooltip) {
 		const paraHyperlink   = new AscCommonWord.ParaHyperlink();
 		const apiHyperlink = new AscBuilder.ApiHyperlink(paraHyperlink);
 
@@ -1271,7 +1271,10 @@
 	 * @param {function} callback - Function to be called when the event fires.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/attachEvent.js
 	 */
-	Api.prototype["attachEvent"] = Api.prototype.attachEvent;
+	Api["attachEvent"] = function(eventName, callback)
+	{
+		Asc.editor.attachEvent(eventName, callback);
+	};
 
 	/**
 	 * Unsubscribes from the specified event.
@@ -1281,7 +1284,10 @@
 	 * @param {string} eventName - The event name.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/detachEvent.js
 	 */
-	Api.prototype["detachEvent"] = Api.prototype.detachEvent;
+	Api["detachEvent"] = function(eventName)
+	{
+		Asc.editor.detachEvent(eventName);
+	};
 
     //------------------------------------------------------------------------------------------------------------------
     //
@@ -6658,7 +6664,7 @@
 	{
 		if (this.Shape && this.Shape.spPr && this.Shape.spPr.geometry)
 		{
-			return Api.prototype.private_CreateGeometry(this.Shape.spPr.geometry);
+			return Api.private_CreateGeometry(this.Shape.spPr.geometry);
 		}
 		return null;
 	};
@@ -7585,30 +7591,30 @@
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Export
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    Api.prototype["GetPresentation"]                      = Api.prototype.GetPresentation;
-    Api.prototype["CreateSlide"]                          = Api.prototype.CreateSlide;
-    Api.prototype["CreateImage"]                          = Api.prototype.CreateImage;
-    Api.prototype["CreateShape"]                          = Api.prototype.CreateShape;
-    Api.prototype["CreateChart"]                          = Api.prototype.CreateChart;
-    Api.prototype["CreateGroup"]                          = Api.prototype.CreateGroup;
-    Api.prototype["CreateOleObject"]                      = Api.prototype.CreateOleObject;
-    Api.prototype["CreateTable"]                          = Api.prototype.CreateTable;
-    Api.prototype["CreateParagraph"]                      = Api.prototype.CreateParagraph;
-    Api.prototype["CreateHyperlink"]                      = Api.prototype.CreateHyperlink;
-    Api.prototype["Save"]                                 = Api.prototype.Save;
-    Api.prototype["CreateMaster"]                         = Api.prototype.CreateMaster;
-    Api.prototype["CreateDefaultMasterSlide"]             = Api.prototype.CreateDefaultMasterSlide;
-    Api.prototype["CreateLayout"]                         = Api.prototype.CreateLayout;
-    Api.prototype["CreatePlaceholder"]                    = Api.prototype.CreatePlaceholder;
-    Api.prototype["CreateTheme"]                          = Api.prototype.CreateTheme;
-    Api.prototype["CreateThemeColorScheme"]               = Api.prototype.CreateThemeColorScheme;
-    Api.prototype["CreateThemeFormatScheme"]              = Api.prototype.CreateThemeFormatScheme;
-    Api.prototype["CreateThemeFontScheme"]                = Api.prototype.CreateThemeFontScheme;
-    Api.prototype["CreateWordArt"]                        = Api.prototype.CreateWordArt;
-	Api.prototype["CreateSlideShowTransition"]            = Api.prototype.CreateSlideShowTransition;
-	Api.prototype["FromJSON"]                             = Api.prototype.FromJSON;
-	Api.prototype["GetSelection"]                         = Api.prototype.GetSelection;
-	Api.prototype["GetByInternalId"]                      = Api.prototype.GetByInternalId;
+    Api["GetPresentation"]                      = Api.GetPresentation;
+    Api["CreateSlide"]                          = Api.CreateSlide;
+    Api["CreateImage"]                          = Api.CreateImage;
+    Api["CreateShape"]                          = Api.CreateShape;
+    Api["CreateChart"]                          = Api.CreateChart;
+    Api["CreateGroup"]                          = Api.CreateGroup;
+    Api["CreateOleObject"]                      = Api.CreateOleObject;
+    Api["CreateTable"]                          = Api.CreateTable;
+    Api["CreateParagraph"]                      = Api.CreateParagraph;
+    Api["CreateHyperlink"]                      = Api.CreateHyperlink;
+    Api["Save"]                                 = Api.Save;
+    Api["CreateMaster"]                         = Api.CreateMaster;
+    Api["CreateDefaultMasterSlide"]             = Api.CreateDefaultMasterSlide;
+    Api["CreateLayout"]                         = Api.CreateLayout;
+    Api["CreatePlaceholder"]                    = Api.CreatePlaceholder;
+    Api["CreateTheme"]                          = Api.CreateTheme;
+    Api["CreateThemeColorScheme"]               = Api.CreateThemeColorScheme;
+    Api["CreateThemeFormatScheme"]              = Api.CreateThemeFormatScheme;
+    Api["CreateThemeFontScheme"]                = Api.CreateThemeFontScheme;
+    Api["CreateWordArt"]                        = Api.CreateWordArt;
+	Api["CreateSlideShowTransition"]            = Api.CreateSlideShowTransition;
+	Api["FromJSON"]                             = Api.FromJSON;
+	Api["GetSelection"]                         = Api.GetSelection;
+	Api["GetByInternalId"]                      = Api.GetByInternalId;
 
 
     ApiPresentation.prototype["GetClassType"]             = ApiPresentation.prototype.GetClassType;
@@ -7955,16 +7961,16 @@
     ApiTableCell.prototype["SetVerticalAlign"]            = ApiTableCell.prototype.SetVerticalAlign;
     ApiTableCell.prototype["SetTextDirection"]            = ApiTableCell.prototype.SetTextDirection;
 
-    Api.prototype.private_CreateApiSlide = function(oSlide){
+    Api.private_CreateApiSlide = function(oSlide){
         return new ApiSlide(oSlide);
     };
-    Api.prototype.private_CreateApiMaster = function(oMaster){
+    Api.private_CreateApiMaster = function(oMaster){
         return new ApiMaster(oMaster);
     };
-    Api.prototype.private_CreateApiLayout = function(oLayout){
+    Api.private_CreateApiLayout = function(oLayout){
         return new ApiLayout(oLayout);
     };
-    Api.prototype.private_CreateApiPresentation = function(oPresentation){
+    Api.private_CreateApiPresentation = function(oPresentation){
         return new ApiPresentation(oPresentation);
     };
 
@@ -8368,6 +8374,10 @@
 	window['AscBuilder'].ApiOleObject = ApiOleObject;
 	window['AscBuilder'].ApiTable = ApiTable;
 	window['AscBuilder'].ApiChart = ApiChart;
+	
+	window['AscBuilder']["Slide"] = window['AscBuilder'].Slide = window['AscBuilder'].Slide || {};
+	AscBuilder.Slide["Api"] = AscBuilder.Slide.Api = Api;
+	
 })(window, null);
 
 

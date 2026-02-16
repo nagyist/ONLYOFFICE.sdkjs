@@ -5548,6 +5548,9 @@
 	PDFEditorApi.prototype['asc_CheckEditPassword']			= PDFEditorApi.prototype.asc_CheckEditPassword;
 	PDFEditorApi.prototype['asc_CheckPrintPassword']		= PDFEditorApi.prototype.asc_CheckPrintPassword;
 	
+	PDFEditorApi.prototype['getJsApi'] = PDFEditorApi.prototype.getJsApi;
+	
 	window["PDFEditorApi"] = PDFEditorApi;
+	AscCommon['PDFEditorApi'] = AscCommon.PDFEditorApi = PDFEditorApi;
 
 })(window, window.document);
