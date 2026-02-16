@@ -2988,15 +2988,28 @@
 		this.DrawCtx.lineJoin = 'round';
 
 		const _this = this;
-		oCanvas.addEventListener('mousedown',  function(e) { _this._onDrawStart(e); });
-		oCanvas.addEventListener('mousemove',  function(e) { _this._onDrawMove(e); });
-		oCanvas.addEventListener('mouseup',    function(e) { _this._onDrawEnd(e); });
-		oCanvas.addEventListener('mouseleave', function(e) { _this._onDrawEnd(e); });
 
-		oCanvas.addEventListener('touchstart', function(e) { e.preventDefault(); _this._onDrawStart(e); }, {passive: false});
-		oCanvas.addEventListener('touchmove',  function(e) { e.preventDefault(); _this._onDrawMove(e); },  {passive: false});
-		oCanvas.addEventListener('touchend',   function(e) { e.preventDefault(); _this._onDrawEnd(e); });
-		oCanvas.addEventListener('touchcancel', function(e) { _this._onDrawEnd(e); });
+		this.DrawMouseMoveHandler = function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawMove(e);
+		};
+		this.DrawMouseUpHandler = function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawEnd(e);
+			if (window.removeEventListener) {
+				window.removeEventListener(AscCommon.getPtrEvtName("move"), _this.DrawMouseMoveHandler, false);
+				window.removeEventListener(AscCommon.getPtrEvtName("up"), _this.DrawMouseUpHandler, false);
+			}
+		};
+
+		oCanvas.addEventListener(AscCommon.getPtrEvtName("down"), function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawStart(e);
+			if (window.addEventListener) {
+				window.addEventListener(AscCommon.getPtrEvtName("move"), _this.DrawMouseMoveHandler, false);
+				window.addEventListener(AscCommon.getPtrEvtName("up"), _this.DrawMouseUpHandler, false);
+			}
+		});
 	};
 
 	CSignatureFormProps.prototype._getDrawPos = function(e)
