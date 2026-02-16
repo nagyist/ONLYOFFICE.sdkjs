@@ -10122,5 +10122,38 @@ $(function () {
 		clearData(0, 0, 100, 200);
 	});
 
+	QUnit.test("Test: \"Array formula display with undo/redo\"", function (assert) {
+		clearData(0, 0, 100, 200);
+
+		let fillRange, fragment;
+		let flags = wsView._getCellFlags(0, 0);
+		flags.ctrlKey = true;
+		flags.shiftKey = true;
+
+		let formula = "=1";
+		fillRange = ws.getRange2("A1");
+		wsView.setSelection(fillRange.bbox);
+		fragment = ws.getRange2("A1").getValueForEdit2();
+		fragment[0].setFragmentText(formula);
+		wsView._saveCellValueAfterEdit(fillRange, fragment, flags, null, null);
+
+		let displayedFormula = ws.getRange2("A1").getValueForEdit(true);
+		assert.strictEqual(displayedFormula, "{=1}", "Array formula should display with braces");
+
+		let checkFormulaPresent = function(desc) {
+			let formulaText = ws.getRange2("A1").getValueForEdit(true);
+			assert.strictEqual(formulaText, "{=1}", desc + " - Formula should be present with braces");
+		};
+
+		let checkFormulaAbsent = function(desc) {
+			let formulaText = ws.getRange2("A1").getValueForEdit(true);
+			assert.ok(formulaText === "" || formulaText === null || formulaText === undefined, desc + " - Formula should be absent");
+		};
+
+		checkUndoRedo(checkFormulaAbsent, checkFormulaPresent, "Array formula add/remove");
+
+		clearData(0, 0, 100, 200);
+	});
+
 	QUnit.module("Dynamic Arrays Tests");
 });
