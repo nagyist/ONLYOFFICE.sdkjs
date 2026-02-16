@@ -300,7 +300,7 @@
     };
     CComboBoxField.prototype.SetCurIdxs = function(aIdxs) {
         if (this.IsWidget()) {
-            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetCurIdxs(), aIdxs));
+            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetParentCurIdxs(), aIdxs));
 
             let aOptions = this.GetOptions();
             if (undefined !== aIdxs[0]) {
@@ -654,7 +654,7 @@
 	 */
     CComboBoxField.prototype.GetCurIdxs = function(bApiValue) {
         if (bApiValue)
-            return this._currentValueIndices;
+            return this._currentValueIndexes;
 
         let aOptions = this.GetOptions();
         let sValue = this.content.getAllText();
