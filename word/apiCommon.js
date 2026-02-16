@@ -3250,26 +3250,26 @@
 		const _this = this;
 		return AscCommon.ExecuteNoHistory(function()
 		{
-			const hdr = new CHeaderFooter(oLogicDocument.HdrFtr, oLogicDocument, _this.Api.WordControl.m_oDrawingDocument, AscCommon.hdrftr_Header);
+			const hdr = new AscCommonWord.CHeaderFooter(oLogicDocument.HdrFtr, oLogicDocument, _this.Api.WordControl.m_oDrawingDocument, AscCommon.hdrftr_Header);
 			const _dc = hdr.Content;
 
 			const par = new AscWord.Paragraph(_dc, false);
-			const run = new ParaRun(par, false);
+			const run = new AscCommonWord.ParaRun(par, false);
 			run.AddText(_this.TypeText);
 
-			const textPr = new CTextPr();
+			const textPr = new AscCommonWord.CTextPr();
 			textPr.FontFamily = {Name: _this.TypeFont, Index: -1};
 			textPr.RFonts.SetAll(_this.TypeFont, -1);
 			textPr.FontSize = _this.TypeFontSize;
 			textPr.Bold = _this.TypeBold;
 			textPr.Italic = _this.TypeItalic;
-			textPr.Color = new CDocumentColor(0, 0, 0, false);
+			textPr.Color = new AscCommonWord.CDocumentColor(0, 0, 0, false);
 			run.Set_Pr(textPr);
 
 			_dc.Internal_Content_Add(0, par, false);
 			par.Add_ToContent(0, run);
 
-			const _ind = new CParaInd();
+			const _ind = new AscWord.CParaInd();
 			_ind.FirstLine = 0;
 			_ind.Left = 0;
 			_ind.Right = 0;
