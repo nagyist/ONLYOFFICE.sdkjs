@@ -11816,6 +11816,95 @@ function parserFormula( formula, parent, _ws ) {
 		return this.aca;
 	};
 	/**
+	 * Calculates formula of argument and return first formula argument index.
+	 * Recursive function
+	 * @memberof parserFormula
+	 * @param {Object} oFormula - argument with function or operator.
+	 * @param {number} nArgIndex - index of argument with function.
+	 * @param {number} nArgsCount - arguments count of function.
+	 * @returns {[cRef|cRef3D|cNumber|cArea|cName|cName3D|cBool, number]}
+	 */
+	parserFormula.prototype.calculateFormula = function (oFormula, nArgIndex, nArgsCount) {
+		if (nArgsCount > 0) {
+			const aArgs = [];
+			const nStartIndex = nArgIndex - 1;
+			const nEndIndex = oFormula.type === cElementType.func ? nArgIndex - nArgsCount - 1 : nArgIndex - nArgsCount;
+			let bIsSpecialFunction = false;
+			let oBbox = null;
+			let nDefNameArgCount = 0;
+			let nIndex = null;
+
+			if (this.parent && this.parent.onFormulaEvent) {
+				oBbox = this.parent.onFormulaEvent(AscCommon.c_oNotifyParentType.GetRangeCell);
+			}
+			if (!oBbox) {
+				oBbox = new Asc.Range(0, 0, 0, 0);
+			}
+			for (let i = nStartIndex; i >= nEndIndex; i--) {
+				const oArg = this.getOutStackElem(i);
+				if (oArg.name === "(") {
+					continue;
+				}
+				if (AscCommonExcel.bIsSupportDynamicArrays) {
+					bIsSpecialFunction = true;
+				}
+				if (oArg.type === cElementType.specialFunctionStart) {
+					bIsSpecialFunction = true;
+					continue;
+				}
+				if (oArg.type === cElementType.specialFunctionEnd) {
+					if (!(AscCommonExcel.bIsSupportDynamicArrays)) {
+						bIsSpecialFunction = false;
+					}
+					continue;
+				}
+				if(typeof oArg === "number"){
+					continue;
+				}
+				if (oArg.type === cElementType.func || oArg.type === cElementType.operator) {
+					let oArgResult = null;
+					let nArgumentsCount = typeof this.getOutStackElem(i - 1) === "number" ? this.getOutStackElem(i - 1) : oArg.argumentsCurrent;
+					if (nArgumentsCount < 0) {
+						nArgumentsCount = -nArgumentsCount;
+						oArg.bArrayFormula = true;
+					}
+					if(nArgumentsCount + nDefNameArgCount > oArg.argumentsMax) {
+						oArgResult = new cError(cErrorType.wrong_value_type);
+					} else {
+						const aResult = this.calculateFormula(oArg, i, nArgumentsCount);
+						oArgResult = aResult[0];
+						nIndex = aResult[1];
+					}
+					aArgs.unshift(oArgResult);
+				} else if (oArg.type === cElementType.name || oArg.type === cElementType.name3D) {
+					const oDefName = oArg.getDefName();
+					if (oDefName && oDefName.parsedRef && this.ref) {
+						oArg.getDefName().parsedRef.ref = this.ref;
+					}
+					const oDefNameCalcArr = oArg.Calculate(null, oBbox, true);
+					if(oDefNameCalcArr && oDefNameCalcArr.length) {
+						nDefNameArgCount = oDefNameCalcArr.length - 1;
+						for(let j = 0; j < oDefNameCalcArr.length; j++) {
+							aArgs.unshift(oDefNameCalcArr[j]);
+						}
+					} else {
+						aArgs.unshift(oDefNameCalcArr);
+					}
+				} else if (oArg.type === cElementType.table) {
+					aArgs.unshift(oArg.toRef(oBbox));
+				} else {
+					aArgs.unshift(oArg);
+				}
+			}
+			if (nIndex === null) {
+				nIndex = nEndIndex;
+			}
+			return [oFormula.Calculate(aArgs, oBbox, null, this.getWs(), bIsSpecialFunction), nIndex];
+		}
+
+		return [oFormula.Calculate(), nArgIndex];
+	};
+	/**
 	 * Returns an array of reference cells from outStack attribute.
 	 * @memberof parserFormula
 	 * @returns {[]}
@@ -11852,33 +11941,44 @@ function parserFormula( formula, parent, _ws ) {
 					}
 				}
 			}
-			//TODO cBaseFunction don't have tocNumber
-			// if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
-			// 	const nArgsCount = this.getOutStackElem(nPrevIndex);
-			// 	const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
-			// 	const nIndexNumValue = this.getOutStackElem(nIndexNumId).tocNumber().toNumber() - 1;
-			// 	const oTableArrayArg = this.getOutStackElem(nIndexNumId - 1).clone();
-			// 	const nIndexTableArray = aRefElements.findIndex(function (oElem) {
-			// 		return oElem.toString() === oTableArrayArg.toString();
-			// 	});
-			// 	const oTableArrayRange = oTableArrayArg.getRange().clone();
-			// 	const oTableArrayBbox = oTableArrayRange.getBBox0();
-			// 	// Updating Range according index_num value
-			// 	if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
-			// 		const nUpdatedCol = oTableArrayBbox.c1 + nIndexNumValue;
-			// 		if (nUpdatedCol <= oTableArrayBbox.c2) {
-			// 			oTableArrayBbox.c1 = nUpdatedCol;
-			// 			oTableArrayBbox.c2 = nUpdatedCol;
-			// 		}
-			// 	} else if (nIndexNumValue >= 0) {
-			// 		const nUpdatedRow = oTableArrayBbox.r1 + nIndexNumValue;
-			// 		if (nUpdatedRow <= oTableArrayBbox.r2) {
-			// 			oTableArrayBbox.r1 = nUpdatedRow;
-			// 			oTableArrayBbox.r2 = nUpdatedRow;
-			// 		}
-			// 	}
-			// 	aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
-			// }
+			if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
+				let nArgsCount = this.getOutStackElem(nPrevIndex);
+				const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
+				let oIndexNumValue = this.getOutStackElem(nIndexNumId);
+				let nTableArrayId = nIndexNumId - 1;
+				if (oIndexNumValue.type === cElementType.func || oIndexNumValue.type === cElementType.operator) {
+					nArgsCount = oIndexNumValue.type === cElementType.func ? this.getOutStackElem(nIndexNumId - 1) : oIndexNumValue.argumentsCurrent;
+					const aResult = this.calculateFormula(oIndexNumValue, nIndexNumId, nArgsCount);
+					oIndexNumValue = aResult[0];
+					nTableArrayId = aResult[1] - 1;
+				}
+				const nIndexNumValue = oIndexNumValue.tocNumber().toNumber() - 1;
+				let oTableArrayArg = this.getOutStackElem(nTableArrayId);
+				if (oTableArrayArg.type === cElementType.func) {
+					oTableArrayArg = this.calculateFormula(oTableArrayArg, nTableArrayId, this.getOutStackElem(nTableArrayId - 1))[0];
+				}
+				oTableArrayArg = oTableArrayArg.clone();
+				const nIndexTableArray = aRefElements.findIndex(function (oElem) {
+					return oElem.toString() === oTableArrayArg.toString();
+				});
+				const oTableArrayRange = oTableArrayArg.getRange().clone();
+				const oTableArrayBbox = oTableArrayRange.getBBox0();
+				// Updating Range according index_num value
+				if (oOutStackElem.name === 'VLOOKUP' && nIndexNumValue >= 0) {
+					const nUpdatedCol = oTableArrayBbox.c1 + nIndexNumValue;
+					if (nUpdatedCol <= oTableArrayBbox.c2) {
+						oTableArrayBbox.c1 = nUpdatedCol;
+						oTableArrayBbox.c2 = nUpdatedCol;
+					}
+				} else if (nIndexNumValue >= 0) {
+					const nUpdatedRow = oTableArrayBbox.r1 + nIndexNumValue;
+					if (nUpdatedRow <= oTableArrayBbox.r2) {
+						oTableArrayBbox.r1 = nUpdatedRow;
+						oTableArrayBbox.r2 = nUpdatedRow;
+					}
+				}
+				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
+			}
 			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
 				aRefElements.push(oOutStackElem);
 			}
