@@ -2739,40 +2739,67 @@
 		if (!t)
 			return;
 
-		AscCommon.ShowImageFileDialog(t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
-			t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, files)
+		if (window["AscDesktopEditor"])
 		{
-			if (Asc.c_oAscError.ID.No !== error)
+			window["AscDesktopEditor"]["OpenFilenameDialog"]("images", false, function(_file)
 			{
-				t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-			}
-			else
-			{
-				t.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-				AscCommon.UploadImageFiles(files, t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
-					t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, urls)
+				let file = _file;
+				if (Array.isArray(file))
+					file = file[0];
+				if (!file)
+					return;
+
+				let url = window["AscDesktopEditor"]["LocalFileGetImageUrl"](file);
+				let urls = [AscCommon.g_oDocumentUrls.getImageUrl(url)];
+
+				t.ImageLoader.LoadImagesWithCallback(urls, function()
 				{
-					if (Asc.c_oAscError.ID.No !== error)
+					if (urls.length > 0)
 					{
-						t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-						t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-					}
-					else
-					{
-						t.ImageLoader.LoadImagesWithCallback(urls, function()
-						{
-							if (urls.length > 0)
-							{
-								_this.ImageUrl = urls[0];
-								_this.ProcessedCanvas = null;
-								t.sendEvent("asc_onSignatureImageLoaded");
-							}
-							t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-						});
+						_this.ImageUrl = urls[0];
+						_this.ProcessedCanvas = null;
+						t.sendEvent("asc_onSignatureImageLoaded");
 					}
 				});
-			}
-		});
+			});
+		}
+		else
+		{
+			AscCommon.ShowImageFileDialog(t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
+				t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, files)
+			{
+				if (Asc.c_oAscError.ID.No !== error)
+				{
+					t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+				}
+				else
+				{
+					t.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+					AscCommon.UploadImageFiles(files, t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
+						t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, urls)
+					{
+						if (Asc.c_oAscError.ID.No !== error)
+						{
+							t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+							t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+						}
+						else
+						{
+							t.ImageLoader.LoadImagesWithCallback(urls, function()
+							{
+								if (urls.length > 0)
+								{
+									_this.ImageUrl = urls[0];
+									_this.ProcessedCanvas = null;
+									t.sendEvent("asc_onSignatureImageLoaded");
+								}
+								t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+							});
+						}
+					});
+				}
+			});
+		}
 	};
 
 	CSignatureFormProps.prototype.put_ImageUrl = function(sUrl, token)
