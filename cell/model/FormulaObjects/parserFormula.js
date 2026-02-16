@@ -6757,9 +6757,13 @@ function parserFormula( formula, parent, _ws ) {
 		oRes.isParsed = this.isParsed;
 		oRes.ref = this.ref;
 		oRes.ca = this.ca;
-		oRes.cm = this.cm;
-		oRes.vm = this.vm;
-		oRes.aca = this.aca;
+		// Don't copy cm/vm/aca when copying between workbooks (opt_ws != null)
+		// They will be regenerated for the target workbook
+		if (!opt_ws) {
+			oRes.cm = this.cm;
+			oRes.vm = this.vm;
+			oRes.aca = this.aca;
+		}
 		return oRes;
 	};
 	parserFormula.prototype.getParent = function() {

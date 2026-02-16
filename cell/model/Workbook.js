@@ -3926,6 +3926,11 @@
 			
 			newSheet.copyFromFormulas(renameParams);
 
+			// Regenerate dynamic array indexes when copying between workbooks
+			if (opt_sheet && AscCommonExcel.bIsSupportDynamicArrays) {
+				newSheet.regenerateDynamicArrayIndexes();
+			}
+
 			newSheet.initPostOpen(this.wsHandlers, {}, {});
 			AscCommon.History.TurnOn();
 
@@ -7153,10 +7158,15 @@
 			this.rowBreaks = wsFrom.rowBreaks.clone(this);
 		}
 
+		// Copy allFormulasCountMap only for same-workbook copy
+		// For cross-workbook copy, it will be regenerated with new indexes
 		if (AscCommonExcel.bIsSupportDynamicArrays && wsFrom.dynamicArrayManager && wsFrom.dynamicArrayManager.allFormulasCountMap) {
-			this.dynamicArrayManager.allFormulasCountMap = {};
-			for (var cmIndex in wsFrom.dynamicArrayManager.allFormulasCountMap) {
-				this.dynamicArrayManager.allFormulasCountMap[cmIndex] = wsFrom.dynamicArrayManager.allFormulasCountMap[cmIndex];
+			var isCrossWorkbookCopy = (wsFrom.workbook !== this.workbook);
+			if (!isCrossWorkbookCopy) {
+				this.dynamicArrayManager.allFormulasCountMap = {};
+				for (var cmIndex in wsFrom.dynamicArrayManager.allFormulasCountMap) {
+					this.dynamicArrayManager.allFormulasCountMap[cmIndex] = wsFrom.dynamicArrayManager.allFormulasCountMap[cmIndex];
+				}
 			}
 		}
 
@@ -7219,6 +7229,72 @@
 				}
 				cell.setFormulaInternal(parsed, true);
 				t.workbook.dependencyFormulas.addToBuildDependencyCell(cell);
+			}
+		});
+	};
+	Worksheet.prototype.regenerateDynamicArrayIndexes = function() {
+		if (!AscCommonExcel.bIsSupportDynamicArrays) {
+			return;
+		}
+		var t = this;
+		var processedFormulas = {}; // Track processed array formulas by listener ID
+		
+		this._forEachCell(function(cell) {
+			if (cell.isFormula()) {
+				var parsed = cell.getFormulaParsed();
+				if (!parsed) {
+					return;
+				}
+				
+				// Check if this is a dynamic array formula (has cm but no cm/vm yet, or is array formula main cell)
+				var arrayFormulaRef = parsed.getArrayFormulaRef();
+				var isMainArrayCell = arrayFormulaRef && parsed.checkFirstCellArray(cell);
+				
+				if (arrayFormulaRef && !isMainArrayCell) {
+					// Skip non-main cells of array formulas
+					return;
+				}
+				
+				if (isMainArrayCell) {
+					// For array formulas, process only once per listener ID
+					var listenerId = parsed.getListenerId();
+					if (processedFormulas[listenerId]) {
+						return;
+					}
+					processedFormulas[listenerId] = true;
+				}
+				
+				// Check if formula is a dynamic array by checking ca (cached array) or ref fields
+				// These fields indicate that the formula creates a dynamic array
+				var ca = parsed.getCa ? parsed.getCa() : parsed.ca;
+				var ref = parsed.getRef ? parsed.getRef() : parsed.ref;
+				
+				if (ca || ref) {
+					// This is a dynamic array formula - generate new metadata
+					var aca = parsed.getAca();
+					var beforeSpillRange = aca === true;
+					
+					// Generate new cm/vm indexes for this workbook
+					var dynamicProps = t.dynamicArrayManager.generateDynamicProps(null, beforeSpillRange);
+					if (dynamicProps) {
+						if (dynamicProps.cmIndex != null) {
+							parsed.setCm(dynamicProps.cmIndex);
+							// Update allFormulasCountMap for the new index
+							if (!t.dynamicArrayManager.allFormulasCountMap) {
+								t.dynamicArrayManager.allFormulasCountMap = {};
+							}
+							if (!t.dynamicArrayManager.allFormulasCountMap[dynamicProps.cmIndex]) {
+								t.dynamicArrayManager.allFormulasCountMap[dynamicProps.cmIndex] = 1;
+							} else {
+								t.dynamicArrayManager.allFormulasCountMap[dynamicProps.cmIndex]++;
+							}
+						}
+						if (dynamicProps.vmIndex != null && beforeSpillRange) {
+							parsed.setVm(dynamicProps.vmIndex);
+							parsed.setAca(true);
+						}
+					}
+				}
 			}
 		});
 	};
