@@ -2102,6 +2102,15 @@
 		}
 	};
 
+	CGraphicObjects.prototype.OnMouseDown = function(e, x, y, pageIndex) {
+		this.checkInkState();
+		this.curState.onMouseDown(e, x, y, pageIndex);
+
+		if (this.arrTrackObjects.length === 0) {
+			this.document.GetApi().sendEvent("asc_onSelectionEnd");
+		}
+	};
+
     // import
     CGraphicObjects.prototype.setEquationTrack          = AscFormat.DrawingObjectsController.prototype.setEquationTrack;
     CGraphicObjects.prototype.alignLeft                 = AscFormat.DrawingObjectsController.prototype.alignLeft;

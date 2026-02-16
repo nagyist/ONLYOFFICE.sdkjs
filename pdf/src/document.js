@@ -1710,12 +1710,13 @@ var CPresentation = CPresentation || function(){};
         let oController = this.GetController();
         let oActiveObj = this.GetActiveObject();
         
+		oController.resetSelection();
+		oController.resetTrackState();
+
         if (!oActiveObj) {
-            oController.resetSelection();
-            oController.resetTrackState();
             return;
         }
-           
+        
         if (false == oActiveObj.IsUseInDocument()) {
             this.activeForm = null;
             this.mouseDownAnnot = null;
@@ -1725,9 +1726,6 @@ var CPresentation = CPresentation || function(){};
 
         let oDrDoc = this.GetDrawingDocument();
         
-        oController.resetSelection();
-        oController.resetTrackState();
-
         let oContent;
         if (oActiveObj.IsDrawing()) {
             oContent = oActiveObj.GetDocContent();
