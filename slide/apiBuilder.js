@@ -5597,7 +5597,8 @@
 			return null;
 		}
 
-		const nodeType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger] || AscFormat.NODE_TYPE_CLICKEFFECT;
+		const mappedType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger];
+		const nodeType = mappedType !== undefined ? mappedType : AscFormat.NODE_TYPE_CLICKEFFECT;
 		const objectId = drawing.Drawing.GetId();
 
 		const effect = this.Timing.createEffect(
