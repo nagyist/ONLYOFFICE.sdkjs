@@ -3665,11 +3665,25 @@
                 if (!nCount || nCount <= 0 || nCount > this.Slide.cSld.spTree.length)
                     nCount = 1;
 
+                const spTree = this.Slide.cSld.spTree;
+                const nEnd = Math.min(nPos + nCount, spTree.length);
+                const objectIds = [];
+                for (let i = nPos; i < nEnd; i++)
+                {
+                    objectIds.push(spTree[i].Get_Id());
+                }
                 this.Slide.shapeRemove(nPos, nCount);
+                if (this.Slide.timing)
+                {
+                    for (let i = 0; i < objectIds.length; i++)
+                    {
+                        this.Slide.timing.onRemoveObject(objectIds[i]);
+                    }
+                }
                 return true;
             }
         }
-        
+
         return false;
     };
 
