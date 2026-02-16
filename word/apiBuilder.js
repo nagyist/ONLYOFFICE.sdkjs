@@ -32087,5 +32087,8 @@
 	window['AscBuilder']["Word"] = window['AscBuilder'].Word = window['AscBuilder'].Word || {};
 	AscBuilder.Word["Api"] = AscBuilder.Word.Api = Api;
 	
+	AscBuilder.private_GetInt = private_GetInt;
+	AscBuilder.private_Twips2MM = private_Twips2MM;
+	
 }(window, null));
 

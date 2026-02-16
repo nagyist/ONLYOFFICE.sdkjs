@@ -331,7 +331,6 @@ function NativeOpenFileData(data, version, xlsx_file_path, options)
 		default:
 			break;
 	}
-	
 	Api = Api.getJsApi();
 }
 

@@ -8320,11 +8320,11 @@
 		}
 		else if ("percent" === sType) {
 			nType = tblwidth_Pct;
-			nW    = private_GetInt(nValue, null, null);
+			nW    = AscBuilder.private_GetInt(nValue, null, null);
 		}
 		else if ("twips" === sType) {
 			nType = tblwidth_Mm;
-			nW    = private_Twips2MM(nValue);
+			nW    = AscBuilder.private_Twips2MM(nValue);
 		}
 
 		return new CTableMeasurement(nType, nW);
