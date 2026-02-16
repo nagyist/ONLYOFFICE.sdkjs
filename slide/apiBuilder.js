@@ -5881,6 +5881,10 @@
 							return new ApiOleObject(drawing);
 						case AscDFH.historyitem_type_GroupShape:
 							return new ApiGroup(drawing);
+						case AscDFH.historyitem_type_GraphicFrame:
+							return new ApiTable(drawing);
+						case AscDFH.historyitem_type_SmartArt:
+							return new ApiSmartArt(drawing);
 						default:
 							return new ApiDrawing(drawing);
 					}
