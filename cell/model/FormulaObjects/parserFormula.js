@@ -645,7 +645,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		return {col: 1, row: 1};
 	};
 	cBaseType.prototype.isOneElement = function () {
-		let dimensions = this.getDimensions();
+		let dimensions = this.getDimensions(true);
 		if (dimensions.col === 1 && dimensions.row === 1) {
 			return true;
 		}
