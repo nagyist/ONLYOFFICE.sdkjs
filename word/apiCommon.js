@@ -3172,7 +3172,7 @@
 		this.TypeFont = name;
 
 		const loader = AscCommon.g_font_loader;
-		const fontinfo = g_fontApplication.GetFontInfo(name);
+		const fontinfo = AscFonts.g_fontApplication.GetFontInfo(name);
 		const _this = this;
 		const isAsync = loader.LoadFont(fontinfo, function() {
 			_this.Api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.LoadFont);
