@@ -7736,7 +7736,7 @@ var CPresentation = CPresentation || function(){};
 		this.CollaborativeEditing.UpdateDocumentPositionsByState(oState);
 
 		this.RemoveSelection();
-		if (!oState.drawingSelection[0].textObject || !oState.drawingSelection[0].textObject.IsForm() || !this.IsEditFieldsMode()) {
+		if (!oState.DrawingsSelectionState.textObject || !oState.DrawingsSelectionState.textObject.IsForm() || !this.IsEditFieldsMode()) {
 			this.SetMouseDownObject(oState.activeObject);
 			if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
 				this.activeForm = oState.activeObject;
