@@ -2861,8 +2861,14 @@
 			return;
 		}
 
-		let nW = Math.max(_img.Image.width, 1);
-		let nH = Math.max(_img.Image.height, 1);
+		let nW = _img.Image.naturalWidth || _img.Image.width;
+		let nH = _img.Image.naturalHeight || _img.Image.height;
+
+		if (!nW || !nH)
+		{
+			nW = nW || 1024;
+			nH = nH || 1024;
+		}
 
 		const nMaxSize = 4096;
 		if (nW > nMaxSize || nH > nMaxSize)
@@ -3373,8 +3379,11 @@
 		graphics._z();
 		graphics.clip();
 
+		let oldParamarks = this.Api.ShowParaMarks;
+		this.Api.ShowParaMarks = false;
 		result.par.Shift(0, xOff, yOff);
 		result.par.Draw(0, graphics);
+		this.Api.ShowParaMarks = oldParamarks;
 
 		graphics.restore();
 	};
