@@ -10234,7 +10234,7 @@ function parserFormula( formula, parent, _ws ) {
 					defNameArgCount = 0;
 					elemArr.push(_tmp);
 
-					if (g_cCalcRecursion.needRecheckFormulaAfterCalc()) {
+					if (g_cCalcRecursion.needRecheckFormulaAfterCalc() && !opt_check_dynamic) {
 						const recheckFormula = g_cCalcRecursion.getRecheckingFormulaData('parserFormula');
 						const formulaName = g_cCalcRecursion.getRecheckingFormulaData('formulaName');
 						if (recheckFormula && this.compare(recheckFormula) && formulaName === currentElement.name && arg.length === argumentsCount) {
