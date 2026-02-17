@@ -19930,7 +19930,7 @@
                 const sep = ",";
                 return formula.join(sep)
             } else if (formula && formula.constructor === ApiRange) {
-                let text = formula.GetAddress();
+                let text = formula.GetAddress(true, true);
                 if (text && typeof text === "string") {
                     text = "=" + text;
                 }
