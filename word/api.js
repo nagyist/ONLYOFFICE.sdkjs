@@ -10256,6 +10256,8 @@ background-repeat: no-repeat;\
         {
             this.openFileCryptCallback(this.openFileCryptBinary);
         }
+		
+		AscBuilder.Word.init();
 	};
 	asc_docs_api.prototype.initCollaborativeEditing = function()
 	{

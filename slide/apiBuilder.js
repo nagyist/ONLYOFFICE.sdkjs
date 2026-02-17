@@ -515,8 +515,8 @@
      * @see office-js-api/Examples/{Editor}/Api/Methods/GetPresentation.js
 	 */
     Api.GetPresentation = function(){
-        if(this.WordControl && this.WordControl.m_oLogicDocument){
-            return new ApiPresentation(this.WordControl.m_oLogicDocument);
+        if(Asc.editor.WordControl && Asc.editor.WordControl.m_oLogicDocument){
+            return new ApiPresentation(Asc.editor.WordControl.m_oLogicDocument);
         }
         return null;
     };
@@ -564,7 +564,7 @@
 		const isThemeValid = oTheme && oTheme.GetClassType && oTheme.GetClassType() === "theme";
         if (!isThemeValid) {
 			
-			const zeroMaster = editor.GetPresentation().GetMaster(0);
+			const zeroMaster = Api.GetPresentation().GetMaster(0);
             if (zeroMaster) {
 				oTheme = zeroMaster.GetTheme();
 			} else {
@@ -663,7 +663,7 @@
         presentation.ImageMap         = {};
         presentation.Fonts            = [];
         presentation.Masters          = [oMaster.Master];
-        presentation.DrawingDocument  = editor.WordControl.m_oDrawingDocument;
+        presentation.DrawingDocument  = Asc.editor.WordControl.m_oDrawingDocument;
         presentation.pres             = oPresentation;
         presentation.Width            = oPresentation.Width;
         presentation.Height           = oPresentation.Height;
@@ -880,8 +880,8 @@
         sType   = sType   || "rect";
         nWidth  = nWidth  || 914400;
 	    nHeight = nHeight || 914400;
-	    oFill   = oFill   || Asc.editor.CreateNoFill();
-	    oStroke = oStroke || Asc.editor.CreateStroke(0, Asc.editor.CreateNoFill());
+	    oFill   = oFill   || Api.CreateNoFill();
+	    oStroke = oStroke || Api.CreateStroke(0, Api.CreateNoFill());
         let theme = presentation.Get_Theme();
         return new ApiShape(AscFormat.builder_CreateShape(sType, nWidth/36000, nHeight/36000, oFill.UniFill, oStroke.Ln, curSlide, theme, private_GetDrawingDocument(), false));
     };
@@ -1706,7 +1706,7 @@
 		let aCommentsData = this.Presentation.GetAllComments();
 		let aApiComments = [];
 		for(let nComment = 0; nComment < aCommentsData.length; ++nComment) {
-			aApiComments.push(private_GetApi().private_CreateApiComment(aCommentsData[nComment].comment));
+			aApiComments.push(Api.private_CreateApiComment(aCommentsData[nComment].comment));
 		}
 		return aApiComments;
 	};
@@ -2176,7 +2176,7 @@
 
             oDrawing.Drawing.setParent(this.Master);
             this.Master.shapeAdd(this.Master.cSld.spTree.length, oDrawing.Drawing);
-            editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
+            Api.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
 
             return true;
         }
@@ -2240,7 +2240,7 @@
         if (!this.Master)
             return false;
         
-        var apiNoFill = editor.CreateNoFill();
+        var apiNoFill = Api.CreateNoFill();
         var bg        = new AscFormat.CBg();
         bg.bgPr       = new AscFormat.CBgPr();
         bg.bgPr.Fill  = apiNoFill.UniFill;
@@ -2589,7 +2589,7 @@
 
             oDrawing.Drawing.setParent(this.Layout);
             this.Layout.shapeAdd(this.Layout.cSld.spTree.length, oDrawing.Drawing);
-            editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
+            Api.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
 
             return true;
         }
@@ -2652,7 +2652,7 @@
         if (!this.Layout)
             return false;
 
-        var apiNoFill = editor.CreateNoFill();
+        var apiNoFill = Api.CreateNoFill();
         var bg        = new AscFormat.CBg();
         bg.bgPr       = new AscFormat.CBgPr();
         bg.bgPr.Fill  = apiNoFill.UniFill;
@@ -3331,7 +3331,7 @@
 				if (arrFill[nFill] && arrFill[nFill].GetClassType() === "fill")
 					formatScheme.addFillToStyleLst(arrFill[nFill].UniFill);
 				else
-					formatScheme.addFillToStyleLst(editor.CreateNoFill().UniFill);
+					formatScheme.addFillToStyleLst(Api.CreateNoFill().UniFill);
 			}
 		});
 		return true;
@@ -3357,7 +3357,7 @@
 				if (arrBgFill[nFill] && arrBgFill[nFill].GetClassType() === "fill")
 					formatScheme.addBgFillToStyleLst(arrBgFill[nFill].UniFill);
 				else
-					formatScheme.addBgFillToStyleLst(editor.CreateNoFill().UniFill);
+					formatScheme.addBgFillToStyleLst(Api.CreateNoFill().UniFill);
 			}
 		});
 		return true;
@@ -3383,7 +3383,7 @@
 				if (arrLine[nLine] && arrLine[nLine].GetClassType() === "stroke")
 					formatScheme.addLnToStyleLst(arrLine[nLine].Ln);
 				else
-					formatScheme.addLnToStyleLst(editor.CreateStroke(0, editor.CreateNoFill()).Ln);
+					formatScheme.addLnToStyleLst(Api.CreateStroke(0, Api.CreateNoFill()).Ln);
 			}
 		});
 		return true;
@@ -3410,7 +3410,7 @@
     //     //     if (arrEffect[nFill] && arrEffect[nFill].GetClassType() === "stroke")
     //     //         this.FormatScheme.addEffectToStyleLst(arrEffect[nFill].UniFill);
     //     //     else 
-    //     //         this.FormatScheme.addEffectToStyleLst(editor.CreateNoFill().UniFill);
+    //     //         this.FormatScheme.addEffectToStyleLst(Api.CreateNoFill().UniFill);
     //     // }
 
     //     // return true;
@@ -3602,7 +3602,7 @@
 
             oDrawing.Drawing.setParent(this.Slide);
             this.Slide.shapeAdd(this.Slide.cSld.spTree.length, oDrawing.Drawing);
-            editor.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
+            Api.private_checkPlaceholders(this, oDrawing.GetPlaceholder());
 
             return true;
         }
@@ -3778,7 +3778,7 @@
         if (!this.Slide)
             return false;
         
-        let presentation = private_GetApi().GetPresentation();
+        let presentation = Api.GetPresentation();
         let nPosToDelete  = this.GetSlideIndex();
 
         if (nPosToDelete > -1)
@@ -3883,7 +3883,7 @@
         if (!this.Slide)
             return false;
         
-        var apiNoFill = editor.CreateNoFill();
+        var apiNoFill = Api.CreateNoFill();
         var bg        = new AscFormat.CBg();
         bg.bgPr       = new AscFormat.CBgPr();
         bg.bgPr.Fill  = apiNoFill.UniFill;
@@ -6062,7 +6062,7 @@
             {
                 if (allDrawingsInParent[nDrawing].Drawing.Id === this.Drawing.Id)
                 {
-                    editor.private_checkPlaceholders(drawingParent, oPlaceholder);
+                    Api.private_checkPlaceholders(drawingParent, oPlaceholder);
                     break;
                 }
             }
@@ -6603,9 +6603,6 @@
 	 */
     ApiShape.prototype.GetContent = function()
     {
-		var oApi = Asc["editor"];
-		if (!oApi)
-			return null;
 		let docContent = this.Drawing.getDocContent();
 		if (!docContent)
 		{
@@ -6614,7 +6611,7 @@
 		docContent = this.Drawing.getDocContent();
 		if (docContent)
 		{
-			return oApi.private_CreateApiDocContent(docContent);
+			return Api.private_CreateApiDocContent(docContent);
 		}
 		return null;
     };
@@ -7308,9 +7305,7 @@
      * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/GetContent.js
 	 */
     ApiTableCell.prototype.GetContent = function(){
-        var oApi = private_GetApi();
-        return oApi.private_CreateApiDocContent(this.Cell.Content);
-
+        return Api.private_CreateApiDocContent(this.Cell.Content);
     };
 
 
@@ -8078,7 +8073,7 @@
 	ApiSelection.prototype["IsEmpty"]                     = ApiSelection.prototype.IsEmpty;
 
     function private_GetCurrentSlide(){
-        var oApiPresentation = editor.GetPresentation();
+        var oApiPresentation = Api.GetPresentation();
         if(oApiPresentation){
             var oApiSlide = oApiPresentation.GetCurrentSlide();
             if(oApiSlide){
@@ -8100,12 +8095,7 @@
     {
         return EMU / 36000.0;
     }
-
-    function private_GetApi(){
-        return Asc.editor;
-    }
-
-
+	
     function private_GetBoolean(bValue, bDefValue)
     {
         if (true === bValue)

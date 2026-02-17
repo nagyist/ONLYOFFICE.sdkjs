@@ -760,7 +760,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RemoveCustomFunction.js
 	 */
 	Api.RemoveCustomFunction = function (sName) {
-		return this.removeCustomFunction(sName);
+		return Asc.editor.removeCustomFunction(sName);
 	};
 	/**
 	 * Clears all custom functions.
@@ -770,7 +770,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ClearCustomFunctions.js
 	 */
 	Api.ClearCustomFunctions = function () {
-		return this.clearCustomFunctions();
+		return Asc.editor.clearCustomFunctions();
 	};
 
 	/**
@@ -784,7 +784,7 @@
 		if (this.GetSheet(sName))
 			throwException(new Error('Worksheet with such a name already exists.'));
 		else
-			this.asc_addWorksheet(sName);
+			Asc.editor.asc_addWorksheet(sName);
 	};
 
 	/**
@@ -796,8 +796,8 @@
 	 */
 	Api.GetSheets = function () {
 		var result = [];
-		for (var i = 0; i < this.wbModel.getWorksheetCount(); ++i) {
-			result.push(new ApiWorksheet(this.wbModel.getWorksheet(i)));
+		for (var i = 0; i < Asc.editor.wbModel.getWorksheetCount(); ++i) {
+			result.push(new ApiWorksheet(Asc.editor.wbModel.getWorksheet(i)));
 		}
 		return result;
 	};
@@ -815,7 +815,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/SetLocale.js
 	 */
 	Api.SetLocale = function (LCID) {
-		this.asc_setLocale(LCID, null, null);
+		Asc.editor.asc_setLocale(LCID, null, null);
 	};
 
 	/**
@@ -826,7 +826,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetLocale.js
 	 */
 	Api.GetLocale = function () {
-		return this.asc_getLocale();
+		return Asc.editor.asc_getLocale();
 	};
 
 	/**
@@ -837,8 +837,8 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetActiveSheet.js
 	 */
 	Api.GetActiveSheet = function () {
-		var index = this.wbModel.getActive();
-		return new ApiWorksheet(this.wbModel.getWorksheet(index));
+		var index = Asc.editor.wbModel.getActive();
+		return new ApiWorksheet(Asc.editor.wbModel.getWorksheet(index));
 	};
 	Object.defineProperty(Api, "ActiveSheet", {
 		get: function () {
@@ -854,7 +854,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetActiveWorkbook.js
 	 */
 	Api.GetActiveWorkbook = function () {
-		return new ApiWorkbook(this.wbModel);
+		return new ApiWorkbook(Asc.editor.wbModel);
 	};
 	Object.defineProperty(Api, "ActiveWorkbook", {
 		get: function () {
@@ -871,8 +871,8 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetSheet.js
 	 */
 	Api.GetSheet = function (nameOrIndex) {
-		var ws = ('string' === typeof nameOrIndex) ? this.wbModel.getWorksheetByName(nameOrIndex) :
-			this.wbModel.getWorksheet(nameOrIndex);
+		var ws = ('string' === typeof nameOrIndex) ? Asc.editor.wbModel.getWorksheetByName(nameOrIndex) :
+			Asc.editor.wbModel.getWorksheet(nameOrIndex);
 		return ws ? new ApiWorksheet(ws) : null;
 	};
 
@@ -902,7 +902,7 @@
 	 */
 	Api.SetThemeColors = function (sTheme) {
 		if ('string' === typeof sTheme) {
-			this.wbModel.changeColorScheme(sTheme);
+			Asc.editor.wbModel.changeColorScheme(sTheme);
 			return true;
 		}
 		return false;
@@ -997,7 +997,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddDefName.js
 	 */
 	Api.AddDefName = function (sName, sRef, isHidden) {
-		return private_AddDefName(this.wbModel, sName, sRef, null, isHidden);
+		return private_AddDefName(Asc.editor.wbModel, sName, sRef, null, isHidden);
 	};
 
 	/**
@@ -1010,7 +1010,7 @@
 	 */
 	Api.GetDefName = function (defName) {
 		if (defName && typeof defName === "string") {
-			defName = this.wbModel.getDefinesNames(defName);
+			defName = Asc.editor.wbModel.getDefinesNames(defName);
 		}
 		return new ApiName(defName);
 	};
@@ -1037,10 +1037,10 @@
 		var ws;
 		var res = AscCommon.parserHelp.parse3DRef(sRange);
 		if (res) {
-			ws = this.wbModel.getWorksheetByName(res.sheet);
+			ws = Asc.editor.wbModel.getWorksheetByName(res.sheet);
 			sRange = res.range;
 		} else {
-			ws = this.wbModel.getActiveWs();
+			ws = Asc.editor.wbModel.getActiveWs();
 		}
 		return new ApiRange(ws ? ws.getRange2(sRange) : null);
 	};
@@ -1681,7 +1681,8 @@
 		}
 
 		//prepare result
-		let ws = this.api && this.api.wb && this.api.wb.getWorksheet();
+		let editor = Asc.editor;
+		let ws = editor && editor.wb && editor.wb.getWorksheet();
 		if (ws) {
 			ws = ws.model;
 		}
@@ -7566,7 +7567,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RecalculateAllFormulas.js
 	 */
 	Api.RecalculateAllFormulas = function (fLogger) {
-		var formulas = this.wbModel.getAllFormulas(true);
+		var formulas = Asc.editor.wbModel.getAllFormulas(true);
 		var _compare = function (_val1, _val2) {
 			if (!isNaN(parseFloat(_val1)) && isFinite(_val1) && !isNaN(parseFloat(_val2)) && isFinite(_val2)) {
 				var eps = 1e-12;
@@ -7662,7 +7663,7 @@
 		if (dataRef) {
 			dataRef = dataRef.GetWorksheet().GetName() + "!" + dataRef.GetAddress(true, true);
 		} else {
-			var options = this.asc_getAddPivotTableOptions();
+			var options = Asc.editor.asc_getAddPivotTableOptions();
 			dataRef = options.range;
 		}
 		if (pivotRef) {
@@ -7670,9 +7671,9 @@
 		} else {
 			private_MakeError('"pivotRef" is undefined.');
 		}
-		var pivot = this.asc_insertPivotExistingWorksheet(dataRef, pivotRef, confirmation);
+		var pivot = Asc.editor.asc_insertPivotExistingWorksheet(dataRef, pivotRef, confirmation);
 		if (pivot) {
-			return new ApiPivotTable(pivot, this);
+			return new ApiPivotTable(pivot, Asc.editor);
 		}
 		private_MakeError('Error! Bad pivotRef!');
 	};
@@ -7688,16 +7689,17 @@
 	 * @see office-js-api/Examples/Cell/Api/Methods/InsertPivotNewWorksheet.js
 	 */
 	Api.InsertPivotNewWorksheet = function (dataRef, newSheetName) {
+		let editor = Asc.editor;
 		if (dataRef) {
 			dataRef = dataRef.GetWorksheet().GetName() + "!" + dataRef.GetAddress(true, true);
 		} else {
-			var options = this.asc_getAddPivotTableOptions();
+			var options = editor.asc_getAddPivotTableOptions();
 			dataRef = options.range;
 		}
 		if (!newSheetName) {
-			var items = [], wc = this.asc_getWorksheetsCount();
+			var items = [], wc = editor.asc_getWorksheetsCount();
 			while (wc--) {
-				items.push(this.asc_getWorksheetName(wc).toLowerCase());
+				items.push(editor.asc_getWorksheetName(wc).toLowerCase());
 			}
 
 			var index = 0, name;
@@ -7708,9 +7710,9 @@
 
 			newSheetName = name;
 		}
-		var pivot = this.asc_insertPivotNewWorksheet(dataRef, newSheetName);
+		var pivot = editor.asc_insertPivotNewWorksheet(dataRef, newSheetName);
 		if (pivot) {
-			return new ApiPivotTable(pivot, this);
+			return new ApiPivotTable(pivot, Asc.editor);
 		}
 		private_MakeError('An error occurred while creating the pivot table!');
 	};
@@ -7727,9 +7729,9 @@
 	Api.GetPivotByName = function (name) {
 		var res = null;
 		if (typeof name == "string" && name.trim().length) {
-			var pivot = this.wbModel.getPivotTableByName( name.trim() );
+			var pivot = Asc.editor.wbModel.getPivotTableByName( name.trim() );
 			if (pivot)
-				res = new ApiPivotTable(pivot, this);
+				res = new ApiPivotTable(pivot, Asc.editor);
 		}
 		return res;
 	};
@@ -7742,7 +7744,7 @@
 	 * @see office-js-api/Examples/Cell/Api/Methods/RefreshAllPivots.js
 	 */
 	Api.RefreshAllPivots = function () {
-		this.asc_refreshAllPivots();
+		Asc.editor.asc_refreshAllPivots();
 	};
 
 	/**
@@ -7818,7 +7820,7 @@
 			// todo проверить как в документа добавлются (надо ли выставлять этот параметр)
 			// comment.asc_putUserId(Asc['editor'].User.asc_getId());
 			comment.asc_putDocumentFlag(true);
-			this.asc_addComment(comment);
+			Asc.editor.asc_addComment(comment);
 			result = new ApiComment(comment, Asc['editor'].wb);
 		}
 
@@ -7834,11 +7836,11 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCommentById.js
 	 */
 	Api.GetCommentById = function (sId) {
-		let comment = this.asc_findComment(sId);
+		let comment = Asc.editor.asc_findComment(sId);
 		if (!comment)
-			comment = this.wb.cellCommentator.findComment(sId);
+			comment = Asc.editor.wb.cellCommentator.findComment(sId);
 
-		return comment ? new ApiComment(comment, Asc['editor'].wb) : null;
+		return comment ? new ApiComment(comment, Asc.editor.wb) : null;
 	};
 
 	/**
@@ -7850,8 +7852,8 @@
 	 */
 	Api.GetComments = function () {
 		var comments = [];
-		for (var i = 0; i < this.wbModel.aComments.length; i++) {
-			comments.push(new ApiComment(this.wbModel.aComments[i], this.wb));
+		for (var i = 0; i < Asc.editor.wbModel.aComments.length; i++) {
+			comments.push(new ApiComment(Asc.editor.wbModel.aComments[i], this.wb));
 		}
 		return comments;
 	};
@@ -7907,7 +7909,7 @@
 			if (FreezePaneType === 'cell' && ((curType && curType !== 'cell') || (!curType))) {
 				// make unfreeze and freeze then
 				if (curType)
-					this.asc_freezePane(undefined);
+					Asc.editor.asc_freezePane(undefined);
 
 				type = undefined;
 			} else if (FreezePaneType === null && curType) {
@@ -7919,7 +7921,7 @@
 			}
 
 			if (type !== null)
-				this.asc_freezePane(type);
+				Asc.editor.asc_freezePane(type);
 
 		} else {
 			throwException(new Error('Invalid parameter "FreezePaneType".'));
@@ -7935,7 +7937,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetFreezePanesType.js
 	 */
 	Api.GetFreezePanesType = function () {
-		let cell = this.wb.getWorksheet().topLeftFrozenCell;
+		let cell = Asc.editor.wb.getWorksheet().topLeftFrozenCell;
 		//detect current freeze type
 		let curType = null;
 		if (cell) {
@@ -7973,7 +7975,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetReferenceStyle.js
 	 */
 	Api.GetReferenceStyle = function () {
-		let bReferenceStyle = this.asc_getR1C1Mode();
+		let bReferenceStyle = Asc.editor.asc_getR1C1Mode();
 		return bReferenceStyle ? "xlR1C1" : "xlA1";
 	};
 
@@ -7997,7 +7999,7 @@
 		}
 
 		if (bReferenceMode !== null) {
-			this.asc_setR1C1Mode(bReferenceMode);
+			Asc.editor.asc_setR1C1Mode(bReferenceMode);
 		} else {
 			throwException(new Error('Invalid parameter "ReferenceStyle"'));
 		}
@@ -8046,21 +8048,22 @@
 			"Subject": '',
 			"Comment": ''
 		};
-
-		let props = (this) ? this.asc_getAppProps() : null;
+		
+		let editor = Asc.editor;
+		let props = editor.asc_getAppProps();
 		oDocInfo["Application"] = (props.asc_getApplication() || '') + (props.asc_getAppVersion() ? ' ' : '') + (props.asc_getAppVersion() || '');
 
 		let langCode = 1033; // en-US
 		let langName = 'en-us';
 		if (AscCommon.g_oDefaultCultureInfo.Name) {
 			langName = AscCommon.g_oDefaultCultureInfo.Name.replace('_', '-').toLowerCase();
-		} else if (this.defaultLanguage && window['Common']) {
-			langCode = this.defaultLanguage;
+		} else if (editor.defaultLanguage && window['Common']) {
+			langCode = editor.defaultLanguage;
 			langName = window['Common']['util']['LanguageInfo']['getLocalLanguageName'](langCode)[0].toLowerCase();
 
 		}
 
-		props = this.asc_getCoreProps();
+		props = editor.asc_getCoreProps();
 		oDocInfo["CreatedRaw"] = props.asc_getCreated();
 		oDocInfo["LastModifiedRaw"] = props.asc_getModified();
 
@@ -8104,7 +8107,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCore.js
 	 */
 	Api.GetCore = function () {
-		return new AscBuilder.ApiCore(this.wbModel.Core);
+		return new AscBuilder.ApiCore(Asc.editor.wbModel.Core);
 	};
 
 	/**
@@ -8116,7 +8119,7 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetCustomProperties.js
 	 */
 	Api.GetCustomProperties = function () {
-		return new AscBuilder.ApiCustomProperties(this.wbModel.CustomProperties);
+		return new AscBuilder.ApiCustomProperties(Asc.editor.wbModel.CustomProperties);
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -8134,7 +8137,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/Save.js
 	 */
 	ApiWorkbook.prototype.Save = function () {
-		return Asc.editor.Save();
+		return Api.Save();
 	};
 
 	/**
@@ -8147,7 +8150,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetSheets.js
 	 */
 	ApiWorkbook.prototype.GetSheets = function () {
-		return Asc.editor.GetSheets();
+		return Api.GetSheets();
 	};
 
 	/**
@@ -8160,7 +8163,7 @@
 	 * @see office-js-api/Examples/Cell/ApiWorkbook/Methods/GetAllPivotTables.js
 	 */
 	ApiWorkbook.prototype.GetAllPivotTables = function () {
-		return Asc.editor.GetAllPivotTables();
+		return Api.GetAllPivotTables();
 	};
 
 	/**
@@ -8173,7 +8176,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetCustomProperties.js
 	 */
 	ApiWorkbook.prototype.GetCustomProperties = function () {
-		return Asc.editor.GetCustomProperties();
+		return Api.GetCustomProperties();
 	};
 
 	/**
@@ -8199,7 +8202,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetName.js
 	 */
 	ApiWorkbook.prototype.GetName = function () {
-		return Asc.editor.GetFullName();
+		return Api.GetFullName();
 	};
 
 	/**
@@ -8212,7 +8215,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetActiveSheet.js
 	 */
 	ApiWorkbook.prototype.GetActiveSheet = function () {
-		return Asc.editor.GetActiveSheet();
+		return Api.GetActiveSheet();
 	};
 
 	/**
@@ -9158,7 +9161,7 @@
 		nRowOffset = typeof (nRowOffset) === "number" && nRowOffset > 0 ? nRowOffset : 0;
 		sTransform = typeof (sTransform) === "string" && sTransform !== "" ? sTransform : "textNoShape";
 
-		var oArt = Asc.editor.private_createWordArt(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight);
+		var oArt = Api.private_createWordArt(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight);
 
 		private_SetCoords(oArt, this.worksheet, nWidth, nHeight, nFromCol, nColOffset, nFromRow, nRowOffset);
 
@@ -9546,7 +9549,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiWorksheet/Methods/Paste.js
 	 */
 	ApiWorksheet.prototype.Paste = function (destination) {
-		var oApi = Asc["editor"];
+		var oApi = Asc.editor;
 		if (destination) {
 			if (destination instanceof ApiRange) {
 				AscCommon.g_specialPasteHelper && AscCommon.g_specialPasteHelper.Special_Paste_Hide_Button();
@@ -11292,7 +11295,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/Copy.js
 	 */
 	ApiRange.prototype.Copy = function (destination) {
-		var oApi = Asc["editor"];
+		var oApi = Asc.editor;
 		if (destination) {
 			if (destination instanceof ApiRange) {
 				let bboxFrom = this.range.bbox;
@@ -11323,7 +11326,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiRange/Methods/Cut.js
 	 */
 	ApiRange.prototype.Cut = function (destination) {
-		var oApi = Asc["editor"];
+		var oApi = Asc.editor;
 		if (destination) {
 			if (destination instanceof ApiRange) {
 				let bboxFrom = this.range.bbox;
@@ -11463,7 +11466,7 @@
 		specialPasteProps.asc_setSkipBlanks(!!bSkipBlanks);
 		specialPasteProps.asc_setTranspose(!!bTranspose);
 
-		let oApi = Asc["editor"];
+		let oApi = Asc.editor;
 		AscCommon.g_specialPasteHelper && AscCommon.g_specialPasteHelper.Special_Paste_Hide_Button();
 		let ws =  this.range.worksheet;
 		private_executeOtherActiveSheet(ws, this.areas || [this.range], function () {
@@ -13137,16 +13140,13 @@
 	 * @see office-js-api/Examples/{Editor}/ApiShape/Methods/GetContent.js
 	 */
 	ApiShape.prototype.GetContent = function () {
-		var oApi = Asc["editor"];
-		if (!oApi)
-			return null;
 		let docContent = this.Drawing.getDocContent();
 		if (!docContent) {
 			this.Drawing.createTextBody();
 		}
 		docContent = this.Drawing.getDocContent();
 		if (docContent) {
-			return oApi.private_CreateApiDocContent(docContent);
+			return Api.private_CreateApiDocContent(docContent);
 		}
 		return null;
 	};

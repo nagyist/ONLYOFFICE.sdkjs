@@ -8830,17 +8830,19 @@
 	
 	// ApiSmartArt
 	ApiSmartArt.prototype["GetClassType"]					= ApiSmartArt.prototype.GetClassType;
-
-	window['AscBuilder'] = window['AscBuilder'] || {};
-	window['AscBuilder'].ApiShape           = ApiShape;
-	window['AscBuilder'].ApiImage           = ApiImage;
-	window['AscBuilder'].ApiTable           = ApiTable;
-	window['AscBuilder'].ApiChart			= ApiChart;
-	window['AscBuilder'].ApiGroup			= ApiGroup;
-	window['AscBuilder'].ApiSmartArt		= ApiSmartArt;
 	
 	window['AscBuilder']["Pdf"] = window['AscBuilder'].Pdf = window['AscBuilder'].Pdf || {};
 	AscBuilder.Pdf["Api"] = AscBuilder.Pdf.Api = Api;
+	
+	AscBuilder.Pdf.init = function()
+	{
+		AscBuilder.ApiDrawing   = ApiDrawing;
+		AscBuilder.ApiShape     = ApiShape;
+		AscBuilder.ApiImage     = ApiImage;
+		AscBuilder.ApiGroup     = ApiGroup;
+		AscBuilder.ApiSmartArt  = ApiSmartArt;
+		AscBuilder.ApiChart     = ApiChart;
+	};
 
 }(window, null));
 

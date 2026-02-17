@@ -27106,7 +27106,7 @@
 			}
 		}
 
-		if (this.editorId === AscCommon.c_oEditorId.Spreadsheet) 
+		if (Asc.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
 		{
 			var oWorksheet        = this.GetActiveSheet();
 			var oRange            = oWorksheet.GetSelection();
@@ -27114,7 +27114,8 @@
 			var nCountLinesInCell = null;
 			var resultText        = null;
 			var nTextToReplace    = 0;
-			var ws                = this.wb.getWorksheet();
+			let wb                = Asc.editor.wb;
+			var ws                = wb.getWorksheet();
 			var oContent          = ws.objectRender.controller != null ? ws.objectRender.controller.getTargetDocContent() : null;
 			var isPasteLocked     = false;
 			var isLockedRange     = oWorksheet.worksheet.isLockedRange(oRange.range.bbox);
@@ -27172,10 +27173,10 @@
 					nTextToReplace += nCountLinesInCell;
 
 					if (resultText !== '')
-						if (!this.wb.getCellEditMode())
+						if (!wb.getCellEditMode())
 							tempRange.SetValue(resultText);
 						else
-							this.wb.cellEditor.pasteText(resultText);
+							wb.cellEditor.pasteText(resultText);
 				}
 			}
 		}
@@ -27368,7 +27369,7 @@
 	 */
 	Api.GetFullName = function()
 	{
-		return this.DocInfo.Title;
+		return Asc.editor.DocInfo.Title;
 	};
 	Object.defineProperty(Api, "FullName", {
 		get: function () {
@@ -28203,7 +28204,7 @@
 		{
 			oTextPr.Set_FromObject(new AscWord.CTextPr());
 		}
-		return private_GetLogicDocument().GetApi().private_CreateApiTextPr(oTextPr);
+		return Api.private_CreateApiTextPr(oTextPr);
 	};
 
 	/**
@@ -31944,11 +31945,12 @@
 
 	Api.private_createWordArt = function(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight) {
 		var oWorksheet, bWord, nFontSize;
-		if (this.editorId === AscCommon.c_oEditorId.Spreadsheet)
+		let editorId = Asc.editor.editorId;
+		if (editorId === AscCommon.c_oEditorId.Spreadsheet)
 			oWorksheet = this.GetActiveSheet().worksheet;
-		else if (this.editorId === AscCommon.c_oEditorId.Presentation)
+		else if (editorId === AscCommon.c_oEditorId.Presentation)
 			bWord = false;
-		else if (this.editorId === AscCommon.c_oEditorId.Word)
+		else if (editorId === AscCommon.c_oEditorId.Word)
 			bWord = true;
 
 		var dAngle = nRotAngle !== 0 ? (Math.PI / 180) * nRotAngle : 0;
@@ -32093,6 +32095,17 @@
 	
 	AscBuilder.private_GetInt = private_GetInt;
 	AscBuilder.private_Twips2MM = private_Twips2MM;
+	
+	AscBuilder.Word.init = function()
+	{
+		AscBuilder.ApiDrawing   = ApiDrawing;
+		AscBuilder.ApiShape     = ApiShape;
+		AscBuilder.ApiImage     = ApiImage;
+		AscBuilder.ApiGroup     = ApiGroup;
+		AscBuilder.ApiSmartArt  = ApiSmartArt;
+		AscBuilder.ApiOleObject = ApiOleObject;
+		AscBuilder.ApiChart     = ApiChart;
+	};
 	
 }(window, null));
 

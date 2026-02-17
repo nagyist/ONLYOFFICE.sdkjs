@@ -9037,9 +9037,11 @@ var editor;
 
 	spreadsheet_api.prototype.onWorksheetChange = function(props) {
 		let ws = this.wbModel.getActiveWs();
-		if (!ws) {
+		let jsApi = this.getJsApi();
+		if (!ws || !jsApi) {
 			return;
 		}
+		
 		let range = null;
 		let result = null;
 		if (Array.isArray(props)) {
@@ -9048,11 +9050,11 @@ var editor;
 			let arr = props.length <= 1 ? null : props.map(function(r){
 				return ws.getRange3(r.r1, r.c1, r.r2, r.c2);
 			})
-			result = this.private_GetRange(range, arr);
+			result = jsApi.private_GetRange(range, arr);
 		} else {
 			// todo сделать получение листа ещё
 			range = ws.getRange3(props.r1, props.c1, props.r2, props.c2);
-			result = this.private_GetRange(range);
+			result = jsApi.private_GetRange(range);
 		}
 		this.sendEvent('onWorksheetChange', result);
 	};

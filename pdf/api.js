@@ -4100,6 +4100,7 @@
 		AscCommon.DocumentEditorApi.prototype._onEndLoadSdk.call(this);
 
 		this.stampAnnotPreviewManager = new AscPDF.StampAnnotPreviewManager();
+		AscBuilder.Pdf.init();
 	};
 	PDFEditorApi.prototype.getJsApi = function()
 	{
