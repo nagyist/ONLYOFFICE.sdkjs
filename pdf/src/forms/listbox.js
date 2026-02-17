@@ -654,7 +654,6 @@
 
             this.UpdateScroll(true);
             if (this.IsNeedDrawFromStream() == true) {
-                this.SetDrawFromStream(false);
                 this.AddToRedraw();
             }
             else if (false == isInForm) {

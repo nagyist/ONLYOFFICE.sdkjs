@@ -1759,9 +1759,6 @@
 
         if (!isChanged)
             this.SetWasChanged(false);
-        
-        if (this.IsChanged() == false)
-            this.SetDrawFromStream(true);
     };
 
     CBaseField.prototype.ClearCache = function() {
@@ -1780,7 +1777,7 @@
         return this._hasOriginView;
     };
     CBaseField.prototype.IsNeedDrawFromStream = function() {
-        return this._bDrawFromStream;
+		return this._bDrawFromStream && (this.GetType() === AscPDF.FIELD_TYPES.button || !this.IsInForm());
     };
     CBaseField.prototype.SetDrawFromStream = function(bFromStream) {
         let valueToSet;

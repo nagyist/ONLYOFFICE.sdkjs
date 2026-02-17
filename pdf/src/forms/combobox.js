@@ -229,7 +229,6 @@
             
             this.SetDrawHighlight(false);
             if (this.IsNeedDrawFromStream() == true) {
-                this.SetDrawFromStream(false);
                 this.AddToRedraw();
             }
             else if (this.curContent === this.contentFormat || bHighlight) {

@@ -1281,9 +1281,6 @@ var CPresentation = CPresentation || function(){};
         oNextForm.SetDrawHighlight(false);
         
         let nFieldType = oNextForm.GetType();
-        if (oNextForm.IsNeedDrawFromStream() == true && nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
-            oNextForm.SetDrawFromStream(false);
-        }
         
         oNextForm.onFocus();
         if (nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
@@ -1368,9 +1365,6 @@ var CPresentation = CPresentation || function(){};
         oNextForm.SetDrawHighlight(false);
         
         let nFieldType = oNextForm.GetType();
-        if (oNextForm.IsNeedDrawFromStream() == true && nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
-            oNextForm.SetDrawFromStream(false);
-        }
         
         oNextForm.onFocus();
         if (nFieldType != AscPDF.FIELD_TYPES.button && nFieldType != AscPDF.FIELD_TYPES.signature) {
@@ -1488,9 +1482,6 @@ var CPresentation = CPresentation || function(){};
         }
         else {
             oField.UndoNotAppliedChanges();
-            if (oField.IsChanged() == false) {
-                oField.SetDrawFromStream(true);
-            }
         }
 
         oField.SetNeedCommit(false);
@@ -1523,10 +1514,6 @@ var CPresentation = CPresentation || function(){};
                 this.CommitField(oForm);
             }
             
-            if (oForm.IsChanged() == false) {
-                oForm.SetDrawFromStream(true);
-            }
-
             if (oForm && oForm.content && oForm.content.IsSelectionUse()) {
                 oForm.content.RemoveSelection();
                 oViewer.onUpdateOverlay();
@@ -1758,10 +1745,6 @@ var CPresentation = CPresentation || function(){};
                     this.CommitField(oActiveObj);
                 }
                 else {
-                    if (oActiveObj.IsChanged() == false) {
-                        oActiveObj.SetDrawFromStream(true);
-                    }
-    
                     if (oActiveObj.IsNeedRevertShiftView()) {
                         oActiveObj.RevertContentView();
                     }
@@ -3037,9 +3020,6 @@ var CPresentation = CPresentation || function(){};
         this.SetGlobalHistory();
         if (this.activeForm && this.activeForm.IsNeedDrawHighlight() == false) {
             this.activeForm.UndoNotAppliedChanges();
-
-            if (this.activeForm.IsChanged() == false)
-                this.activeForm.SetDrawFromStream(true);
 
             this.activeForm.AddToRedraw();
             this.activeForm.SetDrawHighlight(true);
