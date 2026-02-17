@@ -5307,6 +5307,7 @@
             }
             case AscDFH.historyitem_PlotArea_SetLayout:
             {
+				this.Refresh_RecalcData2(data);
                 break;
             }
             case AscDFH.historyitem_PlotArea_SetSerAx:
