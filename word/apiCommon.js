@@ -3390,7 +3390,7 @@
 				if (this.RemoveBackground && this.ProcessedCanvas)
 					imageData = this.ProcessedCanvas.toDataURL("image/png");
 				else
-					imageData = this.ImageUrl;
+					imageData = AscCommon.getFullImageSrc2(this.ImageUrl);
 				break;
 			case 1:
 				imageData = this._getDrawImageData();
