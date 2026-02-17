@@ -19407,7 +19407,7 @@
 		if (name === "" || name === null || name === undefined)
 			return false
 
-		let doc = Asc.editor.GetDocument();
+		let doc = Api.GetDocument();
 		let drawings = doc.GetAllDrawingObjects();
 		for (let nCount = 0; nCount < drawings.length; nCount++)
 		{

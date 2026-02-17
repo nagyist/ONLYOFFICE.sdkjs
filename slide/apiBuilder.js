@@ -6370,7 +6370,7 @@
 			return false;
 
         let drawings = [];
-		let oPresentation = Asc.editor.GetPresentation();
+		let oPresentation = Api.GetPresentation();
         oPresentation.GetAllSlides().forEach(function (oSource) {
 			oSource.GetAllDrawings().forEach(function (oObject) {
 				drawings.push(oObject);
