@@ -1804,6 +1804,27 @@
 	};
 
 	/**
+	 * Returns a collection of drawing objects from the document content filtered by their names.
+	 * @memberof ApiDocumentContent
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {string[]} ids - An array of drawing names to filter by.
+	 * @return {Drawing[]}
+	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetDrawingsByName.js
+	 */
+	ApiPresentation.prototype.GetDrawingsByName = function(ids)
+	{
+		let drawings = []
+		this.GetAllSlides().forEach(function (oSource) {
+			oSource.GetAllDrawings().forEach(function (oObject) {
+				drawings.push(oObject);
+			});
+		})
+
+		return drawings.filter(function(drawing){return ids.includes(drawing.GetName())})
+	};
+
+	/**
 	 * Returns the document information:
 	 * <b>Application</b> - the application the document has been created with.
 	 * <b>CreatedRaw</b> - the date and time when the file was created.
@@ -3665,11 +3686,25 @@
                 if (!nCount || nCount <= 0 || nCount > this.Slide.cSld.spTree.length)
                     nCount = 1;
 
+                const spTree = this.Slide.cSld.spTree;
+                const nEnd = Math.min(nPos + nCount, spTree.length);
+                const objectIds = [];
+                for (let i = nPos; i < nEnd; i++)
+                {
+                    objectIds.push(spTree[i].Get_Id());
+                }
                 this.Slide.shapeRemove(nPos, nCount);
+                if (this.Slide.timing)
+                {
+                    for (let i = 0; i < objectIds.length; i++)
+                    {
+                        this.Slide.timing.onRemoveObject(objectIds[i]);
+                    }
+                }
                 return true;
             }
         }
-        
+
         return false;
     };
 
@@ -5597,7 +5632,8 @@
 			return null;
 		}
 
-		const nodeType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger] || AscFormat.NODE_TYPE_CLICKEFFECT;
+		const mappedType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger];
+		const nodeType = mappedType !== undefined ? mappedType : AscFormat.NODE_TYPE_CLICKEFFECT;
 		const objectId = drawing.Drawing.GetId();
 
 		const effect = this.Timing.createEffect(
@@ -5880,6 +5916,10 @@
 							return new ApiOleObject(drawing);
 						case AscDFH.historyitem_type_GroupShape:
 							return new ApiGroup(drawing);
+						case AscDFH.historyitem_type_GraphicFrame:
+							return new ApiTable(drawing);
+						case AscDFH.historyitem_type_SmartArt:
+							return new ApiSmartArt(drawing);
 						default:
 							return new ApiDrawing(drawing);
 					}
@@ -6291,7 +6331,53 @@
 	{
 		return private_MM2EMU(this.Drawing.GetHeight());
 	};
+	/**
+	 * Returns the name of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @returns {string}
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetName.js
+	 */
+	ApiDrawing.prototype.GetName = function()
+	{
+		return this.Drawing.getObjectName();
+	};
+	/**
+	 * Sets the name of the current drawing.
+	 * If another drawing with the same name already exists, that drawing's name will be reset to a default auto-generated name.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @param {string} name - The name which will be set to the current drawing.
+	 * @returns {boolean} - Returns true if the name was successfully set, otherwise returns false.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetName.js
+	 */
+	ApiDrawing.prototype.SetName = function(name)
+	{
+		if (name === "" || name === null || name === undefined)
+			return false;
 
+        let drawings = [];
+		let oPresentation = Asc.editor.GetPresentation();
+        oPresentation.GetAllSlides().forEach(function (oSource) {
+			oSource.GetAllDrawings().forEach(function (oObject) {
+				drawings.push(oObject);
+			});
+		})
+
+		for (let nCount = 0; nCount < drawings.length; nCount++)
+		{
+			let drawing = drawings[nCount];
+			if (drawing.Drawing.getOwnName() === name)
+			{
+				drawing.Drawing.setName("");
+				break;
+			}
+		}
+		this.Drawing.setName(name);
+		return true;
+	};
     /**
      * Returns the lock value for the specified lock type of the current drawing.
      * @typeofeditors ["CPE"]
@@ -6353,17 +6439,57 @@
 	 * Selects the current graphic object.
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["CPE"]
-     * @since 8.2.0
+	 * @deprecated since 9.3.0 version.
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
-	 */	
-	ApiDrawing.prototype.Select = function() {
+	 */
+	/**
+	 * Selects the current graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} [isReplace=false] - Specifies whether the selection should replace the current selection (true) or be added to it (false).
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
+	 */
+	ApiDrawing.prototype.Select = function(isReplace) {
+		if (isReplace === undefined)
+			isReplace = false;
+
 		let oDrawing = this.Drawing;
-		if(!oDrawing) return;
-        oDrawing.Set_CurrentElement(true, 0, true);
+		if(!oDrawing) return false;
+
+        oDrawing.Set_CurrentElement(true, 0, true, !!isReplace);
         let oController = oDrawing.getDrawingObjectsController();
+        if (!oController)
+            return false;
         oController.updateSelectionState();
         oController.updateOverlay();
+        return true;
 	};
+
+	/**
+	 * Removes the current graphic object from the selection.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Unselect.js
+	 */
+	ApiDrawing.prototype.Unselect = function()
+	{
+		let oDrawing =  this.Drawing;
+		if (!oDrawing)
+			return false;
+		let oController = oDrawing.getDrawingObjectsController();
+		if (!oController)
+			return false;
+		oController.deselectObject(oDrawing);
+		oController.updateSelectionState();
+		oController.updateOverlay();
+		return true;
+	};
+
 
     /**
      * Sets the rotation angle to the current drawing object.
@@ -6398,6 +6524,84 @@
 	{
 		this.Drawing.checkRecalculateTransform();
 		return this.Drawing.rot * 180 / Math.PI
+	};
+
+	/**
+	 * Get horizontal flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped horizontally, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipH.js
+	 */
+	ApiDrawing.prototype.GetFlipH = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipH;
+
+		return null;
+	};
+
+	/**
+	 * Get vertical flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped vertically, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipV.js
+	 */
+	ApiDrawing.prototype.GetFlipV = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipV;
+
+		return null;
+	};
+
+	/**
+	 * Sets the horizontal flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped horizontally or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipH.js
+	 */
+	ApiDrawing.prototype.SetFlipH = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipH(bFlip);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Sets the vertical flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped vertically or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipV.js
+	 */
+	ApiDrawing.prototype.SetFlipV = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipV(bFlip);
+			return true;
+		}
+
+		return false;
 	};
 
 	/**
@@ -7807,6 +8011,7 @@
     ApiPresentation.prototype["GetAllShapes"]             = ApiPresentation.prototype.GetAllShapes;
     ApiPresentation.prototype["GetAllImages"]             = ApiPresentation.prototype.GetAllImages;
     ApiPresentation.prototype["GetAllDrawings"]           = ApiPresentation.prototype.GetAllDrawings;
+    ApiPresentation.prototype["GetDrawingsByName"]        = ApiPresentation.prototype.GetDrawingsByName;
     ApiPresentation.prototype["GetCore"]                  = ApiPresentation.prototype.GetCore;
     ApiPresentation.prototype["GetCustomProperties"]      = ApiPresentation.prototype.GetCustomProperties;
     ApiPresentation.prototype["GetCustomXmlParts"]        = ApiPresentation.prototype.GetCustomXmlParts;
@@ -7997,11 +8202,18 @@
     ApiDrawing.prototype["GetPlaceholder"]                = ApiDrawing.prototype.GetPlaceholder;
     ApiDrawing.prototype["GetWidth"]                      = ApiDrawing.prototype.GetWidth;
 	ApiDrawing.prototype["GetHeight"]                     = ApiDrawing.prototype.GetHeight;
+	ApiDrawing.prototype["GetName"]                       = ApiDrawing.prototype.GetName;
+	ApiDrawing.prototype["SetName"]                       = ApiDrawing.prototype.SetName;
     ApiDrawing.prototype["GetLockValue"]                  = ApiDrawing.prototype.GetLockValue;
     ApiDrawing.prototype["SetLockValue"]                  = ApiDrawing.prototype.SetLockValue;
     ApiDrawing.prototype["Select"]                        = ApiDrawing.prototype.Select;
+    ApiDrawing.prototype["Unselect"]                      = ApiDrawing.prototype.Unselect;
     ApiDrawing.prototype["SetRotation"]                   = ApiDrawing.prototype.SetRotation;
     ApiDrawing.prototype["GetRotation"]                   = ApiDrawing.prototype.GetRotation;
+    ApiDrawing.prototype["GetFlipH"]                      = ApiDrawing.prototype.GetFlipH;
+    ApiDrawing.prototype["GetFlipV"]                      = ApiDrawing.prototype.GetFlipV;
+    ApiDrawing.prototype["SetFlipH"]                      = ApiDrawing.prototype.SetFlipH;
+    ApiDrawing.prototype["SetFlipV"]                      = ApiDrawing.prototype.SetFlipV;
     ApiDrawing.prototype["GetPosX"]                       = ApiDrawing.prototype.GetPosX;
     ApiDrawing.prototype["GetPosY"]                       = ApiDrawing.prototype.GetPosY;
     ApiDrawing.prototype["SetPosX"]                       = ApiDrawing.prototype.SetPosX;

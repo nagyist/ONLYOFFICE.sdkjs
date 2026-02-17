@@ -8028,7 +8028,7 @@ ParaRun.prototype.Apply_TextPr = function(TextPr, IncFontSize, ApplyToAll)
 
 		if (undefined === IncFontSize)
 		{
-			if (Asc.editor.isPdfEditor())
+			if (Asc.editor.isPdfEditor() && !AscCommon.g_oIdCounter.IsLoad())
 				checkRunPdf(this, TextPr);
 
 			this.Apply_Pr(TextPr);
@@ -8227,7 +8227,7 @@ ParaRun.prototype.Apply_TextPr = function(TextPr, IncFontSize, ApplyToAll)
 
 			if (undefined === IncFontSize)
 			{
-				if (Asc.editor.isPdfEditor())
+				if (Asc.editor.isPdfEditor() && !AscCommon.g_oIdCounter.IsLoad())
 					checkRunPdf(CRun, TextPr);
 
 				CRun.Apply_Pr(TextPr);

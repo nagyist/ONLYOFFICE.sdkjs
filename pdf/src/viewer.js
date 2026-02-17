@@ -1147,7 +1147,6 @@
 				if (this.file && this.file.isNeedPassword())
 				{
 					window["AscViewer"].setFilePassword(this.file, password);
-					this.Api.asc_setCurrentPassword(password, true);
 				}
 			}
 			else
@@ -1179,6 +1178,9 @@
 				}, 100);
 				return;
 			}
+
+			if (undefined !== password)
+				this.Api.asc_setCurrentPassword(password, true);
 
 			if (window["AscDesktopEditor"])
 			{

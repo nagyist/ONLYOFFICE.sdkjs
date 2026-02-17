@@ -732,8 +732,8 @@ var CPresentation = CPresentation || function(){};
                     value = value.toString();
                 }
 
-                if (oParent._currentValueIndices && oParent._currentValueIndices.length != 0) {
-                    oField.SetCurIdxs(oParent._currentValueIndices);
+                if (oParent._currentValueIndexes && oParent._currentValueIndexes.length != 0) {
+                    oField.SetCurIdxs(oParent._currentValueIndexes);
                 }
                 else {
                     if (oField.GetType() !== AscPDF.FIELD_TYPES.radiobutton && oParent.IsAllKidsWidgets())
@@ -7755,17 +7755,19 @@ var CPresentation = CPresentation || function(){};
 
         return State;
     };
-    CPDFDoc.prototype.Load_DocumentStateAfterLoadChanges = function(State) {
-        this.CollaborativeEditing.UpdateDocumentPositionsByState(State);
+	CPDFDoc.prototype.Load_DocumentStateAfterLoadChanges = function(oState) {
+		this.CollaborativeEditing.UpdateDocumentPositionsByState(oState);
 
-        this.RemoveSelection();
-        this.SetMouseDownObject(State.activeObject)
-        if (State.activeObject && State.activeObject.IsForm && State.activeObject.IsForm() && State.activeObject.IsUseInDocument && State.activeObject.IsUseInDocument()) {
-            this.activeForm = State.activeObject;
-        }
+		this.RemoveSelection();
+		if (!oState.drawingSelection[0].textObject || !oState.drawingSelection[0].textObject.IsForm() || !this.IsEditFieldsMode()) {
+			this.SetMouseDownObject(oState.activeObject);
+			if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
+				this.activeForm = oState.activeObject;
+			}
 
-        this.GetController().Load_DocumentStateAfterLoadChanges(State);
-    };
+			this.GetController().Load_DocumentStateAfterLoadChanges(oState);
+		}
+	};
     CPDFDoc.prototype.Check_MergeData = function() {};
     CPDFDoc.prototype.Set_SelectionState2 = function() {};
     CPDFDoc.prototype.ResumeRecalculate = function() {};
@@ -8237,18 +8239,22 @@ var CPresentation = CPresentation || function(){};
 
         return oSelectionState;
     };
-    CPDFDoc.prototype.SetSelectionState = function(oState) {
-        let oController = this.GetController();
+	CPDFDoc.prototype.SetSelectionState = function(oState) {
+		let oController = this.GetController();
 
-        this.SetMouseDownObject(oState.activeObject);
-        if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
-            this.activeForm = oState.activeObject;
-        }
-        
-        oController.setSelectionState(oState.drawingSelection);
-        if (oState.CurPage != -1 && oState.CurPage != this.Viewer.currentPage)
-	        this.Viewer.navigateToPage(oState.CurPage);
-    };
+		this.RemoveSelection();
+		if (!oState.drawingSelection[0].textObject || !oState.drawingSelection[0].textObject.IsForm() || !this.IsEditFieldsMode()) {
+			this.SetMouseDownObject(oState.activeObject);
+			if (oState.activeObject && oState.activeObject.IsForm && oState.activeObject.IsForm() && oState.activeObject.IsUseInDocument && oState.activeObject.IsUseInDocument()) {
+				this.activeForm = oState.activeObject;
+			}
+			
+			oController.setSelectionState(oState.drawingSelection);
+		}
+		
+		if (oState.CurPage != -1 && oState.CurPage != this.Viewer.currentPage)
+			this.Viewer.navigateToPage(oState.CurPage);
+	};
     CPDFDoc.prototype.IsSelectionLocked = function (nCheckType, oAdditionalData, isDontLockInFastMode, isIgnoreCanEditFlag) {
         return this.Document_Is_SelectionLocked(nCheckType, oAdditionalData, isIgnoreCanEditFlag, undefined, isDontLockInFastMode);
     };

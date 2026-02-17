@@ -2448,10 +2448,10 @@
 					}
 					this.lastSelectedObject = null;
 					this.checkShowMediaControlOnSelect();
-					Asc.editor.addMacroStepData("SelectShape", [this.selectedObjects.filter(function (drawing){return drawing instanceof AscFormat.CShape})]);
+					Asc.editor.addMacroStepData("SelectDrawing", this.selectedObjects.slice());
 				},
 
-				deselectObject: function (object) {
+				deselectObject: function (object) {	
 					for (let i = 0; i < this.selectedObjects.length; ++i) {
 						if (this.selectedObjects[i] === object) {
 							object.selected = false;
@@ -2460,6 +2460,7 @@
 								this.lastSelectedObject = object;
 							}
 							this.checkShowMediaControlOnSelect();
+							Asc.editor.addMacroStepData("DeselectDrawing", object.getObjectName());
 							return;
 						}
 					}
@@ -4026,8 +4027,6 @@
 						for (i = 0; i < objects_by_type.shapes.length; ++i) {
 							objects_by_type.shapes[i].changeLine(props.stroke);
 						}
-						if (objects_by_type.shapes.length)
-							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.shapes[0].getCompiledLine());
 
 						for (i = 0; i < objects_by_type.groups.length; ++i) {
 							objects_by_type.groups[i].changeLine(props.stroke);
@@ -4039,7 +4038,9 @@
 							objects_by_type.images[i].changeLine(props.stroke);
 						}
 						if (objects_by_type.images.length)
-							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.images[0].spPr.ln.createDuplicate(true));
+							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.images[0].getCompiledLine().createDuplicate());
+						else if (objects_by_type.shapes.length)
+							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.shapes[0].getCompiledLine().createDuplicate());
 
 						for (i = 0; i < objects_by_type.smartArts.length; ++i) {
 							objects_by_type.smartArts[i].changeLine(props.stroke);
@@ -4049,8 +4050,6 @@
 						for (i = 0; i < objects_by_type.shapes.length; ++i) {
 							objects_by_type.shapes[i].changeFill(props.fill);
 						}
-						if (objects_by_type.shapes.length)
-							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.shapes[0].getFill().createDuplicate());
 
 						for (i = 0; i < objects_by_type.groups.length; ++i) {
 							objects_by_type.groups[i].changeFill(props.fill);
@@ -4065,6 +4064,8 @@
 							objects_by_type.images[i].changeFill(props.fill);
 						}
 
+						if (objects_by_type.shapes.length)
+							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.shapes[0].getFill().createDuplicate());
 						if (objects_by_type.images.length)
 							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.images[0].getFill().createDuplicate());
 					}

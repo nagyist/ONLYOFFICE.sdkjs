@@ -1103,7 +1103,7 @@
     };
     CListBoxField.prototype.GetCurIdxs = function(bApiValue) {
         if (bApiValue)
-            return this._currentValueIndices;
+            return this._currentValueIndexes;
             
         let oPara, oShd;
         let aIndexes = [];
