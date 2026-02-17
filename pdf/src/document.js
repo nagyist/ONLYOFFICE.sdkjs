@@ -1491,9 +1491,10 @@ var CPresentation = CPresentation || function(){};
     CPDFDoc.prototype.EnterDownActiveField = function() {
         this.SetGlobalHistory();
         
-        let oViewer = editor.getDocumentRenderer();
-        let oDrDoc  = this.GetDrawingDocument();
-        let oForm   = this.activeForm;
+		let oViewer		= editor.getDocumentRenderer();
+		let oDrDoc 		= this.GetDrawingDocument();
+		let oController	= this.GetController();
+		let oForm   	= this.activeForm;
 
         if (!oForm)
             return;
@@ -1502,7 +1503,8 @@ var CPresentation = CPresentation || function(){};
             return;
 
         oForm.SetInForm(false);
-
+		oController.resetSelection();
+				
         if ([AscPDF.FIELD_TYPES.checkbox, AscPDF.FIELD_TYPES.radiobutton].includes(oForm.GetType())) {
             oForm.onMouseUp();
         }

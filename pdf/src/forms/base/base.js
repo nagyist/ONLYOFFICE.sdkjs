@@ -3540,8 +3540,8 @@
 		let oDrDoc = oDoc.GetDrawingDocument();
 
         if (oDrDoc) {
-            var content = this.getDocContent();
-            if (content) {
+            let content = this.getDocContent();
+            if (content && this.IsInForm()) {
                 oDrDoc.UpdateTargetTransform(null);
                 if (true === content.IsSelectionUse()) {
                     if (false === content.IsSelectionEmpty()) {
