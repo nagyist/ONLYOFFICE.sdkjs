@@ -3782,6 +3782,9 @@
 	{
 		return false;
 	};
+	baseEditorsApi.prototype.asc_getPasteOptions          = function()
+	{
+	};
 	baseEditorsApi.prototype.asc_Recalculate       = function()
 	{
 	};

@@ -588,9 +588,7 @@
 		
         let oPara = content.GetCurrentParagraph();
         let oRun = oPara.IsSelectionUse() ? oPara.GetElement(oPara.Selection.StartPos) : oPara.GetElement(oPara.CurPos.ContentPos);
-        let oParaContentPos = new AscWord.CParagraphContentPos();
-        oRun.Get_ParaContentPos(undefined, undefined, oParaContentPos);
-        let oTextPr = oRun.GetTextPr(oParaContentPos, oParaContentPos.Depth);
+        let oTextPr = oRun.GetDirectTextPr();
         let sFontName = oTextPr.GetFontFamily();
 
         let oFontFile;

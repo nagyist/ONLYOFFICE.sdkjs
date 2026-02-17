@@ -2447,12 +2447,12 @@ background-repeat: no-repeat;\
 		_logicDoc.FinalizeAction();
 	};
 	
-	asc_docs_api.prototype.asc_SpecialPaste = function(props) 
+	asc_docs_api.prototype.asc_SpecialPaste = function(props, isPasteOptions)
 	{
-		return AscCommon.g_specialPasteHelper.Special_Paste(props);
+		return AscCommon.g_specialPasteHelper.Special_Paste(props, isPasteOptions);
 	};
 	
-	asc_docs_api.prototype.asc_SpecialPasteData = function(props) 
+	asc_docs_api.prototype.asc_SpecialPasteData = function(props, isPasteOptions)
 	{
 		if (AscCommon.CollaborativeEditing.Get_GlobalLock())
 	        return;
@@ -2466,55 +2466,69 @@ background-repeat: no-repeat;\
 		//TODO пересмотреть проверку лока и добавление новой точки(AscDFH.historydescription_Document_PasteHotKey)
 		if (false === _logicDoc.Document_Is_SelectionLocked(changestype_Paragraph_Content, null, true, false))
 		{
-			if (props === Asc.c_oSpecialPasteProps.picture) {
-				let specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
-				let specialPasteData = specialPasteHelper.specialPasteData;
-				
-				let blob = specialPasteData.images && specialPasteData.images[0];
-				if (!blob) {
-					return;
-				}
-				let reader = new FileReader();
-				
-				reader.onload = function(e) {
-					let html = "<img src=\"" + e.target.result + "\"/>";
-					AscCommon.g_clipboardBase.CommonIframe_PasteStart(html, null, function (oHtmlElem) {
-						if (oHtmlElem) {
-							window['AscCommon'].g_specialPasteHelper.Paste_Process_Start();
-							window['AscCommon'].g_specialPasteHelper.Special_Paste_Start();
+			let doPaste = function () {
+				if (props === Asc.c_oSpecialPasteProps.picture) {
+					let specialPasteHelper = window['AscCommon'].g_specialPasteHelper;
+					let specialPasteData = specialPasteHelper.specialPasteData;
 
-							//undo previous action
-							t.WordControl.m_oLogicDocument.Document_Undo();
+					let blob = specialPasteData.images && specialPasteData.images[0];
+					if (!blob) {
+						return;
+					}
+					let reader = new FileReader();
 
-							let oldData1 = specialPasteData.data1;
-							specialPasteData.data1 = oHtmlElem;
+					reader.onload = function(e) {
+						let html = "<img src=\"" + e.target.result + "\"/>";
+						AscCommon.g_clipboardBase.CommonIframe_PasteStart(html, null, function (oHtmlElem) {
+							if (oHtmlElem) {
+								if (!isPasteOptions) {
+									window['AscCommon'].g_specialPasteHelper.Paste_Process_Start();
+									window['AscCommon'].g_specialPasteHelper.Special_Paste_Start();
 
-							_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
-							AscCommon.Editor_Paste_Exec(t, AscCommon.c_oAscClipboardDataFormat.HtmlElement, oHtmlElem, null, null, props, function () {
-								_logicDoc.FinalizeAction();
-								specialPasteData.data1 = oldData1;
-							});
-						}
+									//undo previous action
+									t.WordControl.m_oLogicDocument.Document_Undo();
+								}
+
+								let oldData1 = specialPasteData.data1;
+								specialPasteData.data1 = oHtmlElem;
+
+								_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
+								AscCommon.Editor_Paste_Exec(t, AscCommon.c_oAscClipboardDataFormat.HtmlElement, oHtmlElem, null, null, props, function () {
+									_logicDoc.FinalizeAction();
+									specialPasteData.data1 = oldData1;
+								});
+							}
+						});
+					};
+
+					reader.onabort = reader.onerror = function(e) {
+					};
+					try {
+						reader.readAsDataURL(blob);
+					} catch (err) {
+					}
+				} else {
+					if (!isPasteOptions) {
+						window['AscCommon'].g_specialPasteHelper.Paste_Process_Start();
+						window['AscCommon'].g_specialPasteHelper.Special_Paste_Start();
+
+						//undo previous action
+						t.WordControl.m_oLogicDocument.Document_Undo();
+					}
+
+					_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
+					AscCommon.Editor_Paste_Exec(t, null, null, null, null, props, function () {
+						_logicDoc.FinalizeAction();
 					});
-				};
-
-				reader.onabort = reader.onerror = function(e) {
-				};
-				try {
-					reader.readAsDataURL(blob);
-				} catch (err) {
 				}
-			} else {
-				window['AscCommon'].g_specialPasteHelper.Paste_Process_Start();
-				window['AscCommon'].g_specialPasteHelper.Special_Paste_Start();
+			};
 
-				//undo previous action
-				this.WordControl.m_oLogicDocument.Document_Undo();
-
-				_logicDoc.StartAction(AscDFH.historydescription_Document_PasteHotKey);
-				AscCommon.Editor_Paste_Exec(this, null, null, null, null, props, function () {
-					_logicDoc.FinalizeAction();
+			if (isPasteOptions) {
+				AscCommon.g_clipboardBase.initSpecialPasteData(function () {
+					doPaste();
 				});
+			} else {
+				doPaste();
 			}
 		}
 	};
@@ -8431,7 +8445,7 @@ background-repeat: no-repeat;\
 
 		if (false === this.WordControl.m_oLogicDocument.Document_Is_SelectionLocked(AscCommon.changestype_Paragraph_TextProperties))
 		{
-			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontNameLong);
+			this.WordControl.m_oLogicDocument.StartAction(AscDFH.historydescription_Document_SetTextFontNameLong,  null, null, fontinfo.Name);
 			this.WordControl.m_oLogicDocument.AddToParagraph(new AscCommonWord.ParaTextPr({
 				FontFamily : {
 					Name  : fontinfo.Name,
@@ -9626,6 +9640,7 @@ background-repeat: no-repeat;\
 				oLogicDocument.FinalizeAction(undefined, oChart);
 			}.bind(this, oChart), false, false, false);
 			if (bOpenChartEditor) {
+				oChart.recalculate();
 				oLogicDocument.OpenChartEditor();
 			}
 		}
@@ -14872,6 +14887,62 @@ background-repeat: no-repeat;\
 		return AscBuilder.Word.Api;
 	};
 
+	asc_docs_api.prototype.asc_getPasteOptions = function(callback) {
+		AscCommon.g_clipboardBase.Get_Clipboard_Data(function (data) {
+			if (!data) {
+				callback(null);
+				return;
+			}
+			
+			// onpaste - real paste event
+			if (data.clipboardData) {
+				callback(null);
+				return;
+			}
+			
+			// data from navigator.clipboard
+			let _internal = data[AscCommon.c_oAscClipboardDataFormat.Internal];
+			let _html = data[AscCommon.c_oAscClipboardDataFormat.Html];
+			let _text = data[AscCommon.c_oAscClipboardDataFormat.Text];
+			let _image = data[AscCommon.c_oAscClipboardDataFormat.Image];
+			
+			let _specialPasteShowOptions = new Asc.SpecialPasteShowOptions();
+			let allowedSpecialPasteProps = null;
+			let sProps = Asc.c_oSpecialPasteProps;
+
+			//TODO now don't analyze inner pasted content + place of paste. it can be slow. only simple options
+			if (_internal && _internal !== "" && _internal.indexOf("asc_internalData2;") === 0) {
+				// Default options for internal paste (see _specialPasteSetShowOptions in wordcopypaste.js)
+				// props = [sProps.sourceformatting, sProps.keepTextOnly];
+				allowedSpecialPasteProps = [sProps.sourceformatting, sProps.keepTextOnly];
+				if (_image) {
+					allowedSpecialPasteProps.push(sProps.picture);
+				}
+				
+				_specialPasteShowOptions.options = allowedSpecialPasteProps;
+				callback(_specialPasteShowOptions);
+				return;
+			}
+			
+			// HTML format (external source)
+			if (_html) {
+				allowedSpecialPasteProps = [sProps.destinationFormatting, sProps.keepTextOnly];
+				if (_image) {
+					allowedSpecialPasteProps.push(sProps.picture);
+				}
+				
+				_specialPasteShowOptions.options = allowedSpecialPasteProps;
+				callback(_specialPasteShowOptions);
+				return;
+			}
+			
+			// Text only
+			if (_text) {
+			}
+			
+			callback(null);
+		});
+	};
 
 	//-------------------------------------------------------------export---------------------------------------------------
 	window['Asc']                                                       = window['Asc'] || {};

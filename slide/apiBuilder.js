@@ -1815,6 +1815,27 @@
 	};
 
 	/**
+	 * Returns a collection of drawing objects from the document content filtered by their names.
+	 * @memberof ApiDocumentContent
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {string[]} ids - An array of drawing names to filter by.
+	 * @return {Drawing[]}
+	 * @see office-js-api/Examples/{Editor}/ApiDocumentContent/Methods/GetDrawingsByName.js
+	 */
+	ApiPresentation.prototype.GetDrawingsByName = function(ids)
+	{
+		let drawings = []
+		this.GetAllSlides().forEach(function (oSource) {
+			oSource.GetAllDrawings().forEach(function (oObject) {
+				drawings.push(oObject);
+			});
+		})
+
+		return drawings.filter(function(drawing){return ids.includes(drawing.GetName())})
+	};
+
+	/**
 	 * Returns the document information:
 	 * <b>Application</b> - the application the document has been created with.
 	 * <b>CreatedRaw</b> - the date and time when the file was created.
@@ -1939,7 +1960,7 @@
 		}
 
 		Asc.editor.addBuilderFont('Cambria Math');
-		Asc.editor.loadBuilderFonts(insertMathEquation);
+		Asc.editor.addBuilderEndAction(insertMathEquation);
 
 		function insertMathEquation() {
 			const format = AscBuilder.GetStringParameter(sFormat, "unicode");
@@ -1969,7 +1990,13 @@
 
 			logicDocument.AddToParagraph(mathPr);
 
-			const targetDocContent = editor.getGraphicController().getSelectedArray()[0].txBody.content;
+			const graphicController = Asc.editor.getGraphicController();
+			const shape = graphicController.getSelectedArray()[0];
+			if (!shape || !shape.txBody) {
+				return;
+			}
+
+			const targetDocContent = shape.txBody.content;
 			const info = new CSelectedElementsInfo();
 			targetDocContent.GetSelectedElementsInfo(info);
 
@@ -1980,7 +2007,10 @@
 
             paraMath.ConvertView(false, mathformat, text);
 
-			const graphicController = Asc.editor.getGraphicController();
+			if (shape.checkExtentsByDocContent) {
+				shape.checkExtentsByDocContent();
+			}
+
 			graphicController.startRecalculate();
 		}
 
@@ -3667,11 +3697,25 @@
                 if (!nCount || nCount <= 0 || nCount > this.Slide.cSld.spTree.length)
                     nCount = 1;
 
+                const spTree = this.Slide.cSld.spTree;
+                const nEnd = Math.min(nPos + nCount, spTree.length);
+                const objectIds = [];
+                for (let i = nPos; i < nEnd; i++)
+                {
+                    objectIds.push(spTree[i].Get_Id());
+                }
                 this.Slide.shapeRemove(nPos, nCount);
+                if (this.Slide.timing)
+                {
+                    for (let i = 0; i < objectIds.length; i++)
+                    {
+                        this.Slide.timing.onRemoveObject(objectIds[i]);
+                    }
+                }
                 return true;
             }
         }
-        
+
         return false;
     };
 
@@ -5089,28 +5133,23 @@
 	 * @see office-js-api/Examples/Enumerations/AnimationTriggerType.js
 	 */
 
-	/**
-	 * Animation effect type for entrance effects.
-	 * @typedef {"appear" | "fade" | "fly-in" | "float-in" | "split" | "wipe" | "shape" | "wheel" | "random-bars" | "grow-and-turn" | "zoom" | "swivel" | "bounce"} AnimationEntranceEffectType
-	 * @see office-js-api/Examples/Enumerations/AnimationEntranceEffectType.js
-	 */
-
-	/**
-	 * Animation effect type for exit effects.
-	 * @typedef {"disappear" | "fade" | "fly-out" | "float-out" | "split" | "wipe" | "shape" | "wheel" | "random-bars" | "shrink-and-turn" | "zoom" | "swivel" | "bounce"} AnimationExitEffectType
-	 * @see office-js-api/Examples/Enumerations/AnimationExitEffectType.js
-	 */
-
-	/**
-	 * Animation effect type for emphasis effects.
-	 * @typedef {"pulse" | "color-pulse" | "teeter" | "spin" | "grow-shrink" | "desaturate" | "darken" | "lighten" | "transparency" | "object-color" | "complementary-color" | "line-color" | "fill-color"} AnimationEmphasisEffectType
-	 * @see office-js-api/Examples/Enumerations/AnimationEmphasisEffectType.js
-	 */
-
-	/**
-	 * Animation effect type for motion path effects.
-	 * @typedef {"lines" | "arcs" | "turns" | "shapes" | "loops" | "custom"} AnimationMotionPathType
-	 * @see office-js-api/Examples/Enumerations/AnimationMotionPathType.js
+	/**Animation effect type.
+	 * @typedef {"entranceAppear" | "entranceFade" | "entranceFlyIn" | "entranceFloatIn" | "entranceSplit" | "entranceWipe"
+	 * | "entranceCircle" | "entranceBox" | "entranceDiamond" | "entrancePlus" | "entranceWheel" | "entranceRandomBars"
+	 * | "entranceGrowAndTurn" | "entranceZoom" | "entranceSwivel" | "entranceBounce" | "entranceBlinds"
+	 * | "entranceCheckerboard" | "entrancePeekIn" | "entranceStrips" | "entranceExpand" | "entranceRiseUp"
+	 * | "entranceCenterRevolve" | "entranceSpinner" | "entranceFloatUp" | "entranceFloatDown" | "entranceSpiralIn"
+	 * | "entranceWedge" | "entranceDissolveIn" | "entrancePinwheel"
+	 * | "exitDisappear" | "exitFadeOut" | "exitFlyOut" | "exitFloatOut" | "exitSplitOut" | "exitWipeOut"
+	 * | "exitCircleOut" | "exitBoxOut" | "exitDiamondOut" | "exitPlusOut" | "exitWheelOut" | "exitRandomBarsOut"
+	 * | "exitShrinkAndTurn" | "exitZoomOut" | "exitSwivelOut" | "exitBounceOut" | "exitSpiralOut" | "exitCollapse"
+	 * | "emphasisPulse" | "emphasisColorPulse" | "emphasisTeeter" | "emphasisSpin" | "emphasisGrowShrink"
+	 * | "emphasisDesaturate" | "emphasisDarken" | "emphasisLighten" | "emphasisTransparency"
+	 * | "emphasisObjectColor" | "emphasisComplementaryColor" | "emphasisLineColor" | "emphasisFillColor"
+	 * | "emphasisFontColor" | "emphasisBlink" | "emphasisShimmer" | "emphasisWave"
+	 * | "pathCircle" | "pathSquare" | "pathDiamond" | "pathHeart" | "pathStar" | "pathHexagon"
+	 * | "pathOctagon" | "pathRight" | "pathLeft" | "pathUp" | "pathDown"} AnimationEffectType
+	 * @see office-js-api/Examples/Enumerations/AnimationEffectType.js
 	 */
 
 	/**
@@ -5156,7 +5195,7 @@
 		const seqs = this.Timing.getInteractiveSequences();
 		const result = [];
 		for (let i = 0; i < seqs.length; i++) {
-			const triggerObjectId = seqs[i].getTriggerObjectId ? seqs[i].getTriggerObjectId() : null;
+			const triggerObjectId = seqs[i].getSpClickInteractiveSeq ? seqs[i].getSpClickInteractiveSeq() : null;
 			result.push(new ApiAnimationSequence(seqs[i], this.Timing, triggerObjectId));
 		}
 		return result;
@@ -5254,6 +5293,38 @@
 		"dissolve-in": { presetClass: 1, presetID: 9 },
 		"pinwheel": { presetClass: 1, presetID: 35 },
 
+		// Entrance effects — camelCase aliases
+		"entranceAppear": { presetClass: 1, presetID: 1 },
+		"entranceFade": { presetClass: 1, presetID: 10 },
+		"entranceFlyIn": { presetClass: 1, presetID: 2 },
+		"entranceFloatIn": { presetClass: 1, presetID: 42 },
+		"entranceSplit": { presetClass: 1, presetID: 16 },
+		"entranceWipe": { presetClass: 1, presetID: 22 },
+		"entranceCircle": { presetClass: 1, presetID: 6 },
+		"entranceBox": { presetClass: 1, presetID: 4 },
+		"entranceDiamond": { presetClass: 1, presetID: 8 },
+		"entrancePlus": { presetClass: 1, presetID: 13 },
+		"entranceWheel": { presetClass: 1, presetID: 21 },
+		"entranceRandomBars": { presetClass: 1, presetID: 14 },
+		"entranceGrowAndTurn": { presetClass: 1, presetID: 31 },
+		"entranceZoom": { presetClass: 1, presetID: 53 },
+		"entranceSwivel": { presetClass: 1, presetID: 45 },
+		"entranceBounce": { presetClass: 1, presetID: 26 },
+		"entranceBlinds": { presetClass: 1, presetID: 3 },
+		"entranceCheckerboard": { presetClass: 1, presetID: 5 },
+		"entrancePeekIn": { presetClass: 1, presetID: 12 },
+		"entranceStrips": { presetClass: 1, presetID: 18 },
+		"entranceExpand": { presetClass: 1, presetID: 55 },
+		"entranceRiseUp": { presetClass: 1, presetID: 37 },
+		"entranceCenterRevolve": { presetClass: 1, presetID: 43 },
+		"entranceSpinner": { presetClass: 1, presetID: 49 },
+		"entranceFloatUp": { presetClass: 1, presetID: 42 },
+		"entranceFloatDown": { presetClass: 1, presetID: 47 },
+		"entranceSpiralIn": { presetClass: 1, presetID: 15 },
+		"entranceWedge": { presetClass: 1, presetID: 20 },
+		"entranceDissolveIn": { presetClass: 1, presetID: 9 },
+		"entrancePinwheel": { presetClass: 1, presetID: 35 },
+
 		// Exit effects (PRESET_CLASS_EXIT = 2)
 		"disappear": { presetClass: 2, presetID: 1 },
 		"fade-out": { presetClass: 2, presetID: 10 },
@@ -5274,6 +5345,26 @@
 		"spiral-out": { presetClass: 2, presetID: 15 },
 		"collapse": { presetClass: 2, presetID: 17 },
 
+		// Exit effects — camelCase aliases
+		"exitDisappear": { presetClass: 2, presetID: 1 },
+		"exitFadeOut": { presetClass: 2, presetID: 10 },
+		"exitFlyOut": { presetClass: 2, presetID: 2 },
+		"exitFloatOut": { presetClass: 2, presetID: 42 },
+		"exitSplitOut": { presetClass: 2, presetID: 16 },
+		"exitWipeOut": { presetClass: 2, presetID: 22 },
+		"exitCircleOut": { presetClass: 2, presetID: 6 },
+		"exitBoxOut": { presetClass: 2, presetID: 4 },
+		"exitDiamondOut": { presetClass: 2, presetID: 8 },
+		"exitPlusOut": { presetClass: 2, presetID: 13 },
+		"exitWheelOut": { presetClass: 2, presetID: 21 },
+		"exitRandomBarsOut": { presetClass: 2, presetID: 14 },
+		"exitShrinkAndTurn": { presetClass: 2, presetID: 31 },
+		"exitZoomOut": { presetClass: 2, presetID: 53 },
+		"exitSwivelOut": { presetClass: 2, presetID: 45 },
+		"exitBounceOut": { presetClass: 2, presetID: 26 },
+		"exitSpiralOut": { presetClass: 2, presetID: 15 },
+		"exitCollapse": { presetClass: 2, presetID: 17 },
+
 		// Emphasis effects (PRESET_CLASS_EMPH = 0)
 		"pulse": { presetClass: 0, presetID: 26 },
 		"color-pulse": { presetClass: 0, presetID: 27 },
@@ -5293,6 +5384,25 @@
 		"shimmer": { presetClass: 0, presetID: 36 },
 		"wave": { presetClass: 0, presetID: 34 },
 
+		// Emphasis effects — camelCase aliases
+		"emphasisPulse": { presetClass: 0, presetID: 26 },
+		"emphasisColorPulse": { presetClass: 0, presetID: 27 },
+		"emphasisTeeter": { presetClass: 0, presetID: 32 },
+		"emphasisSpin": { presetClass: 0, presetID: 8 },
+		"emphasisGrowShrink": { presetClass: 0, presetID: 6 },
+		"emphasisDesaturate": { presetClass: 0, presetID: 25 },
+		"emphasisDarken": { presetClass: 0, presetID: 24 },
+		"emphasisLighten": { presetClass: 0, presetID: 30 },
+		"emphasisTransparency": { presetClass: 0, presetID: 9 },
+		"emphasisObjectColor": { presetClass: 0, presetID: 19 },
+		"emphasisComplementaryColor": { presetClass: 0, presetID: 21 },
+		"emphasisLineColor": { presetClass: 0, presetID: 7 },
+		"emphasisFillColor": { presetClass: 0, presetID: 1 },
+		"emphasisFontColor": { presetClass: 0, presetID: 3 },
+		"emphasisBlink": { presetClass: 0, presetID: 35 },
+		"emphasisShimmer": { presetClass: 0, presetID: 36 },
+		"emphasisWave": { presetClass: 0, presetID: 34 },
+
 		// Motion path effects (PRESET_CLASS_PATH = 4)
 		"path-circle": { presetClass: 4, presetID: 1 },
 		"path-square": { presetClass: 4, presetID: 7 },
@@ -5304,21 +5414,116 @@
 		"path-right": { presetClass: 4, presetID: 63 },
 		"path-left": { presetClass: 4, presetID: 35 },
 		"path-up": { presetClass: 4, presetID: 64 },
-		"path-down": { presetClass: 4, presetID: 42 }
+		"path-down": { presetClass: 4, presetID: 42 },
+
+		// Motion path effects — camelCase aliases
+		"pathCircle": { presetClass: 4, presetID: 1 },
+		"pathSquare": { presetClass: 4, presetID: 7 },
+		"pathDiamond": { presetClass: 4, presetID: 3 },
+		"pathHeart": { presetClass: 4, presetID: 9 },
+		"pathStar": { presetClass: 4, presetID: 5 },
+		"pathHexagon": { presetClass: 4, presetID: 4 },
+		"pathOctagon": { presetClass: 4, presetID: 10 },
+		"pathRight": { presetClass: 4, presetID: 63 },
+		"pathLeft": { presetClass: 4, presetID: 35 },
+		"pathUp": { presetClass: 4, presetID: 64 },
+		"pathDown": { presetClass: 4, presetID: 42 }
 	};
 
 	/**
-	 * Reverse mapping from presetClass+presetID to effect type name.
+	 * Reverse mapping from "presetClass_presetID" to canonical effect type name.
+	 * @private
+	 */
+	ApiAnimationSequence.REVERSE_EFFECT_MAP = {
+		// Entrance effects
+		"1_1": "entranceAppear",
+		"1_10": "entranceFade",
+		"1_2": "entranceFlyIn",
+		"1_42": "entranceFloatIn",
+		"1_16": "entranceSplit",
+		"1_22": "entranceWipe",
+		"1_6": "entranceCircle",
+		"1_4": "entranceBox",
+		"1_8": "entranceDiamond",
+		"1_13": "entrancePlus",
+		"1_21": "entranceWheel",
+		"1_14": "entranceRandomBars",
+		"1_31": "entranceGrowAndTurn",
+		"1_53": "entranceZoom",
+		"1_45": "entranceSwivel",
+		"1_26": "entranceBounce",
+		"1_3": "entranceBlinds",
+		"1_5": "entranceCheckerboard",
+		"1_12": "entrancePeekIn",
+		"1_18": "entranceStrips",
+		"1_55": "entranceExpand",
+		"1_37": "entranceRiseUp",
+		"1_43": "entranceCenterRevolve",
+		"1_49": "entranceSpinner",
+		"1_47": "entranceFloatDown",
+		"1_15": "entranceSpiralIn",
+		"1_20": "entranceWedge",
+		"1_9": "entranceDissolveIn",
+		"1_35": "entrancePinwheel",
+
+		// Exit effects
+		"2_1": "exitDisappear",
+		"2_10": "exitFadeOut",
+		"2_2": "exitFlyOut",
+		"2_42": "exitFloatOut",
+		"2_16": "exitSplitOut",
+		"2_22": "exitWipeOut",
+		"2_6": "exitCircleOut",
+		"2_4": "exitBoxOut",
+		"2_8": "exitDiamondOut",
+		"2_13": "exitPlusOut",
+		"2_21": "exitWheelOut",
+		"2_14": "exitRandomBarsOut",
+		"2_31": "exitShrinkAndTurn",
+		"2_53": "exitZoomOut",
+		"2_45": "exitSwivelOut",
+		"2_26": "exitBounceOut",
+		"2_15": "exitSpiralOut",
+		"2_17": "exitCollapse",
+
+		// Emphasis effects
+		"0_26": "emphasisPulse",
+		"0_27": "emphasisColorPulse",
+		"0_32": "emphasisTeeter",
+		"0_8": "emphasisSpin",
+		"0_6": "emphasisGrowShrink",
+		"0_25": "emphasisDesaturate",
+		"0_24": "emphasisDarken",
+		"0_30": "emphasisLighten",
+		"0_9": "emphasisTransparency",
+		"0_19": "emphasisObjectColor",
+		"0_21": "emphasisComplementaryColor",
+		"0_7": "emphasisLineColor",
+		"0_1": "emphasisFillColor",
+		"0_3": "emphasisFontColor",
+		"0_35": "emphasisBlink",
+		"0_36": "emphasisShimmer",
+		"0_34": "emphasisWave",
+
+		// Motion path effects
+		"4_1": "pathCircle",
+		"4_7": "pathSquare",
+		"4_3": "pathDiamond",
+		"4_9": "pathHeart",
+		"4_5": "pathStar",
+		"4_4": "pathHexagon",
+		"4_10": "pathOctagon",
+		"4_63": "pathRight",
+		"4_35": "pathLeft",
+		"4_64": "pathUp",
+		"4_42": "pathDown"
+	};
+
+	/**
 	 * @private
 	 */
 	ApiAnimationSequence._getEffectTypeName = function (presetClass, presetID) {
-		for (let key in ApiAnimationSequence.EFFECT_TYPE_MAP) {
-			const mapping = ApiAnimationSequence.EFFECT_TYPE_MAP[key];
-			if (mapping.presetClass === presetClass && mapping.presetID === presetID) {
-				return key;
-			}
-		}
-		return null;
+		return ApiAnimationSequence.REVERSE_EFFECT_MAP[presetClass + "_" + presetID] || null;
 	};
 
 	/**
@@ -5423,7 +5628,7 @@
 	 * @since 9.3.0
 	 *
 	 * @param {ApiDrawing} drawing - The drawing object to animate.
-	 * @param {string} effectType - The type of animation effect (e.g., "fade", "fly-in", "pulse").
+	 * @param {AnimationEffectType} effectType - The type of animation effect (e.g., "entranceFade", "entranceFlyIn", "emphasisPulse").
 	 * @param {AnimationTriggerType} [trigger="onclick"] - The trigger type: "onclick", "withprevious", or "afterprevious".
 	 * @returns {ApiAnimationEffect | null} - The created animation effect, or null if creation failed.
 	 * @see office-js-api/Examples/{Editor}/ApiAnimationSequence/Methods/AddEffect.js
@@ -5438,7 +5643,8 @@
 			return null;
 		}
 
-		const nodeType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger] || AscFormat.NODE_TYPE_CLICKEFFECT;
+		const mappedType = ApiAnimationSequence.TRIGGER_TYPE_MAP[trigger];
+		const nodeType = mappedType !== undefined ? mappedType : AscFormat.NODE_TYPE_CLICKEFFECT;
 		const objectId = drawing.Drawing.GetId();
 
 		const effect = this.Timing.createEffect(
@@ -5558,7 +5764,7 @@
 	 * @typeofeditors ["CPE"]
 	 * @since 9.3.0
 	 *
-	 * @returns {string | null} - The effect type name (e.g., "fade", "fly-in", "pulse"), or null if unknown.
+	 * @returns {AnimationEffectType | null} - The effect type name (e.g., "entranceFade", "exitFadeOut", "emphasisPulse"), or null if unknown.
 	 * @see office-js-api/Examples/{Editor}/ApiAnimationEffect/Methods/GetEffectType.js
 	 */
 	ApiAnimationEffect.prototype.GetEffectType = function () {
@@ -5721,6 +5927,10 @@
 							return new ApiOleObject(drawing);
 						case AscDFH.historyitem_type_GroupShape:
 							return new ApiGroup(drawing);
+						case AscDFH.historyitem_type_GraphicFrame:
+							return new ApiTable(drawing);
+						case AscDFH.historyitem_type_SmartArt:
+							return new ApiSmartArt(drawing);
 						default:
 							return new ApiDrawing(drawing);
 					}
@@ -6132,7 +6342,53 @@
 	{
 		return private_MM2EMU(this.Drawing.GetHeight());
 	};
+	/**
+	 * Returns the name of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @returns {string}
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetName.js
+	 */
+	ApiDrawing.prototype.GetName = function()
+	{
+		return this.Drawing.getObjectName();
+	};
+	/**
+	 * Sets the name of the current drawing.
+	 * If another drawing with the same name already exists, that drawing's name will be reset to a default auto-generated name.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @param {string} name - The name which will be set to the current drawing.
+	 * @returns {boolean} - Returns true if the name was successfully set, otherwise returns false.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetName.js
+	 */
+	ApiDrawing.prototype.SetName = function(name)
+	{
+		if (name === "" || name === null || name === undefined)
+			return false;
 
+        let drawings = [];
+		let oPresentation = Asc.editor.GetPresentation();
+        oPresentation.GetAllSlides().forEach(function (oSource) {
+			oSource.GetAllDrawings().forEach(function (oObject) {
+				drawings.push(oObject);
+			});
+		})
+
+		for (let nCount = 0; nCount < drawings.length; nCount++)
+		{
+			let drawing = drawings[nCount];
+			if (drawing.Drawing.getOwnName() === name)
+			{
+				drawing.Drawing.setName("");
+				break;
+			}
+		}
+		this.Drawing.setName(name);
+		return true;
+	};
     /**
      * Returns the lock value for the specified lock type of the current drawing.
      * @typeofeditors ["CPE"]
@@ -6194,17 +6450,57 @@
 	 * Selects the current graphic object.
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["CPE"]
-     * @since 8.2.0
+	 * @deprecated since 9.3.0 version.
+	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
-	 */	
-	ApiDrawing.prototype.Select = function() {
+	 */
+	/**
+	 * Selects the current graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} [isReplace=false] - Specifies whether the selection should replace the current selection (true) or be added to it (false).
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
+	 */
+	ApiDrawing.prototype.Select = function(isReplace) {
+		if (isReplace === undefined)
+			isReplace = false;
+
 		let oDrawing = this.Drawing;
-		if(!oDrawing) return;
-        oDrawing.Set_CurrentElement(true, 0, true);
+		if(!oDrawing) return false;
+
+        oDrawing.Set_CurrentElement(true, 0, true, !!isReplace);
         let oController = oDrawing.getDrawingObjectsController();
+        if (!oController)
+            return false;
         oController.updateSelectionState();
         oController.updateOverlay();
+        return true;
 	};
+
+	/**
+	 * Removes the current graphic object from the selection.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean}
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Unselect.js
+	 */
+	ApiDrawing.prototype.Unselect = function()
+	{
+		let oDrawing =  this.Drawing;
+		if (!oDrawing)
+			return false;
+		let oController = oDrawing.getDrawingObjectsController();
+		if (!oController)
+			return false;
+		oController.deselectObject(oDrawing);
+		oController.updateSelectionState();
+		oController.updateOverlay();
+		return true;
+	};
+
 
     /**
      * Sets the rotation angle to the current drawing object.
@@ -6239,6 +6535,84 @@
 	{
 		this.Drawing.checkRecalculateTransform();
 		return this.Drawing.rot * 180 / Math.PI
+	};
+
+	/**
+	 * Get horizontal flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped horizontally, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipH.js
+	 */
+	ApiDrawing.prototype.GetFlipH = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipH;
+
+		return null;
+	};
+
+	/**
+	 * Get vertical flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped vertically, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipV.js
+	 */
+	ApiDrawing.prototype.GetFlipV = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipV;
+
+		return null;
+	};
+
+	/**
+	 * Sets the horizontal flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped horizontally or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipH.js
+	 */
+	ApiDrawing.prototype.SetFlipH = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipH(bFlip);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Sets the vertical flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CPE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped vertically or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipV.js
+	 */
+	ApiDrawing.prototype.SetFlipV = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipV(bFlip);
+			return true;
+		}
+
+		return false;
 	};
 
 	/**
@@ -7643,6 +8017,7 @@
     ApiPresentation.prototype["GetAllShapes"]             = ApiPresentation.prototype.GetAllShapes;
     ApiPresentation.prototype["GetAllImages"]             = ApiPresentation.prototype.GetAllImages;
     ApiPresentation.prototype["GetAllDrawings"]           = ApiPresentation.prototype.GetAllDrawings;
+    ApiPresentation.prototype["GetDrawingsByName"]        = ApiPresentation.prototype.GetDrawingsByName;
     ApiPresentation.prototype["GetCore"]                  = ApiPresentation.prototype.GetCore;
     ApiPresentation.prototype["GetCustomProperties"]      = ApiPresentation.prototype.GetCustomProperties;
     ApiPresentation.prototype["GetCustomXmlParts"]        = ApiPresentation.prototype.GetCustomXmlParts;
@@ -7833,11 +8208,18 @@
     ApiDrawing.prototype["GetPlaceholder"]                = ApiDrawing.prototype.GetPlaceholder;
     ApiDrawing.prototype["GetWidth"]                      = ApiDrawing.prototype.GetWidth;
 	ApiDrawing.prototype["GetHeight"]                     = ApiDrawing.prototype.GetHeight;
+	ApiDrawing.prototype["GetName"]                       = ApiDrawing.prototype.GetName;
+	ApiDrawing.prototype["SetName"]                       = ApiDrawing.prototype.SetName;
     ApiDrawing.prototype["GetLockValue"]                  = ApiDrawing.prototype.GetLockValue;
     ApiDrawing.prototype["SetLockValue"]                  = ApiDrawing.prototype.SetLockValue;
     ApiDrawing.prototype["Select"]                        = ApiDrawing.prototype.Select;
+    ApiDrawing.prototype["Unselect"]                      = ApiDrawing.prototype.Unselect;
     ApiDrawing.prototype["SetRotation"]                   = ApiDrawing.prototype.SetRotation;
     ApiDrawing.prototype["GetRotation"]                   = ApiDrawing.prototype.GetRotation;
+    ApiDrawing.prototype["GetFlipH"]                      = ApiDrawing.prototype.GetFlipH;
+    ApiDrawing.prototype["GetFlipV"]                      = ApiDrawing.prototype.GetFlipV;
+    ApiDrawing.prototype["SetFlipH"]                      = ApiDrawing.prototype.SetFlipH;
+    ApiDrawing.prototype["SetFlipV"]                      = ApiDrawing.prototype.SetFlipV;
     ApiDrawing.prototype["GetPosX"]                       = ApiDrawing.prototype.GetPosX;
     ApiDrawing.prototype["GetPosY"]                       = ApiDrawing.prototype.GetPosY;
     ApiDrawing.prototype["SetPosX"]                       = ApiDrawing.prototype.SetPosX;

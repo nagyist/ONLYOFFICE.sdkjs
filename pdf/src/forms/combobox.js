@@ -195,8 +195,8 @@
         let oController     = oDoc.GetController();
         let oActionsQueue   = oDoc.GetActionsQueue();
 
-        let bHighlight  = this.IsNeedDrawHighlight();
         let isInFocus   = oDoc.activeForm === this;
+		let isInForm    = this.IsInForm();
 
         oDoc.activeForm = this;
 
@@ -230,12 +230,7 @@
                 this.content.MoveCursorToStartPos();
             }
             
-            this.SetDrawHighlight(false);
-            if (this.IsNeedDrawFromStream() == true) {
-                this.SetDrawFromStream(false);
-                this.AddToRedraw();
-            }
-            else if (this.curContent === this.contentFormat || bHighlight) {
+            if (this.curContent === this.contentFormat || !isInForm) {
                 this.AddToRedraw();
             }
         }
@@ -303,7 +298,7 @@
     };
     CComboBoxField.prototype.SetCurIdxs = function(aIdxs) {
         if (this.IsWidget()) {
-            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetCurIdxs(), aIdxs));
+            AscCommon.History.Add(new CChangesPDFListFormCurIdxs(this, this.GetParentCurIdxs(), aIdxs));
 
             let aOptions = this.GetOptions();
             if (undefined !== aIdxs[0]) {
@@ -662,7 +657,7 @@
 	 */
     CComboBoxField.prototype.GetCurIdxs = function(bApiValue) {
         if (bApiValue)
-            return this._currentValueIndices;
+            return this._currentValueIndexes;
 
         let aOptions = this.GetOptions();
         let sValue = this.content.getAllText();

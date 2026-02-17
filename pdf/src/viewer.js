@@ -712,10 +712,10 @@
 			if (oThis.isRepaint)
 			{
 				let res = oThis._paint();
-				oThis.onUpdateOverlay();
 				oThis.isRepaint = false;
 
 				if (res) {
+					oThis.onUpdateOverlay();
 					oThis.afterPaintCallbacks();
 				}
 			}
@@ -1173,7 +1173,6 @@
 				if (this.file && this.file.isNeedPassword())
 				{
 					window["AscViewer"].setFilePassword(this.file, password);
-					this.Api.asc_setCurrentPassword(password, true);
 				}
 			}
 			else
@@ -1205,6 +1204,9 @@
 				}, 100);
 				return;
 			}
+
+			if (undefined !== password)
+				this.Api.asc_setCurrentPassword(password, true);
 
 			if (window["AscDesktopEditor"])
 			{
@@ -2514,7 +2516,7 @@
 
 		this.onUpdateOverlay = function() {
 			Asc.editor.checkLastWork();
-			if (!this.overlay || this.scheduledRepaintTimer != null) return;
+			if (!this.overlay) return;
 			
 			const oDoc = this.getPDFDoc();
 			const oDrDoc = oDoc.GetDrawingDocument();

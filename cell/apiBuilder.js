@@ -1008,12 +1008,35 @@
 	 * @returns {ApiName}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDefName.js
 	 */
-	Api.GetDefName = function (defName) {
-		if (defName && typeof defName === "string") {
-			defName = Asc.editor.wbModel.getDefinesNames(defName);
-		}
-		return new ApiName(defName);
-	};
+    Api.GetDefName = function (defName) {
+        if (!defName || typeof  defName !== "string") {
+            throwException(new Error('No name provided'));
+        }
+
+        let wbModel = Asc.editor && Asc.editor.wbModel;
+        let defNameFound = null;
+        if (wbModel && wbModel.aWorksheets) {
+            const worksheets = wbModel.aWorksheets;
+
+            // search for all sheets
+            for (let i = 0; i < worksheets.length; i++) {
+                defNameFound = wbModel.getDefinesNames(defName, worksheets[i].Id, true);
+                if (defNameFound) {
+                    break;
+                }
+            }
+
+            // search inside book
+            if (!defNameFound) {
+                defNameFound = wbModel.getDefineNameWb(defName);
+            }
+        }
+
+        if (!defNameFound) {
+            throwException(new Error('Defined name does not exist:' + defName));
+        }
+        return new ApiName(defNameFound);
+    };
 
 	/**
 	 * Saves changes to the specified document.
@@ -8246,6 +8269,26 @@
 		return null;
 	};
 
+	/**
+	 * Returns drawings with the specified names from the workbook.
+	 * @memberof ApiWorkbook
+	 * @typeofeditors ["CSE"]
+	 * @param {string[]} ids - An array of drawing names.
+	 * @returns {Drawing[]} - Returns an array of drawing obkects filtered by the specified names.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiWorkbook/Methods/GetDrawingsByName.js
+	 */
+	ApiWorkbook.prototype.GetDrawingsByName = function(ids)
+	{
+		let sheets = this.GetSheets();
+		let allDrawings = [];
+		for (let i = 0; i < sheets.length; i++) {
+			allDrawings = allDrawings.concat(sheets[i].GetAllDrawings());
+		}
+		return allDrawings.filter(function(drawing) {
+			return ids.includes(drawing.GetName());
+		});
+	};
 	//------------------------------------------------------------------------------------------------------------------
 	//
 	// ApiWorksheet
@@ -12887,6 +12930,47 @@
 		return private_MM2EMU(this.Drawing.GetHeight());
 	};
 	/**
+	 * Returns the name of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @returns {string}
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetName.js
+	 */
+	ApiDrawing.prototype.GetName = function () {
+		return this.Drawing.getObjectName();
+	};
+	/**
+	 * Sets the name of the current drawing.
+	 * If another drawing with the same name already exists, that drawing's name will be reset to a default auto-generated name.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @param {string} name - The name which will be set to the current drawing.
+	 * @returns {boolean} - Returns true if the name was successfully set, otherwise returns false.
+	 * @since 9.3.0
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetName.js
+	 */
+	ApiDrawing.prototype.SetName = function(name)
+	{
+		if (name === "" || name === null || name === undefined)
+			return false
+
+		let worksheet = this.Drawing.getWorksheet();
+		let drawings = GetApiDrawings(worksheet.Drawings.map(function(drawingBase) { return drawingBase.graphicObject }));
+
+		for (let nCount = 0; nCount < drawings.length; nCount++)
+		{
+			let drawing = drawings[nCount];
+			if (drawing.Drawing.getOwnName() === name)
+			{
+				drawing.Drawing.setName("");
+				break;
+			}
+		}
+		this.Drawing.setName(name);
+		return true;
+	}
+	/**
 	 * Returns the lock value for the specified lock type of the current drawing.
 	 * @typeofeditors ["CSE"]
 	 * @param {DrawingLockType} sType - Lock type in the string format.
@@ -12992,20 +13076,131 @@
 	};
 
 	/**
+	 * Get horizontal flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped horizontally, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipH.js
+	 */
+	ApiDrawing.prototype.GetFlipH = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipH;
+
+		return null;
+	};
+
+	/**
+	 * Get vertical flip of current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @returns {boolean | null} Returns true if the figure is flipped vertically, false if not, or null if the drawing properties are not available.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipV.js
+	 */
+	ApiDrawing.prototype.GetFlipV = function()
+	{
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+			return this.Drawing.spPr.xfrm.flipV;
+
+		return null;
+	};
+
+	/**
+	 * Sets the horizontal flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped horizontally or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipH.js
+	 */
+	ApiDrawing.prototype.SetFlipH = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipH(bFlip);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
+	 * Sets the vertical flip of the current drawing.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @param {boolean} bFlip - Specifies if the figure will be flipped vertically or not.
+	 * @returns {boolean} Returns true if the operation is successful, false otherwise.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/SetFlipV.js
+	 */
+	ApiDrawing.prototype.SetFlipV = function(bFlip)
+	{
+		if (typeof(bFlip) !== "boolean")
+			return false;
+
+		if (this.Drawing && this.Drawing.spPr && this.Drawing.spPr.xfrm)
+		{
+			this.Drawing.spPr.xfrm.setFlipV(bFlip);
+			return true;
+		}
+
+		return false;
+	};
+
+	/**
 	 * Selects the current graphic object.
 	 * @memberof ApiDrawing
 	 * @typeofeditors ["CSE"]
-	 * @since 9.1.0
+	 * @deprecated since 9.3.0 version.
 	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
 	 */
-	ApiDrawing.prototype.Select = function() {
+	/**
+	 * Selects the current graphic object.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @param {boolean} [isReplace=false] - Specifies whether the selection should replace the current selection (true) or be added to it (false).
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Select.js
+	 */
+	ApiDrawing.prototype.Select = function(isReplace) {
 		let oDrawing = this.Drawing;
 		if(!oDrawing) return;
 		let oController = oDrawing.getDrawingObjectsController();
 		if (!oController) return;
+
+		if (!!isReplace)
+			oController.resetSelection();
+
 		oController.selectObject(oDrawing, 0);
 		oController.updateSelectionState();
 		oController.updateOverlay();
+	};
+
+	/**
+	 * Removes the current drawing from the selection.
+	 * @memberof ApiDrawing
+	 * @typeofeditors ["CSE"]
+	 * @since 9.3.0
+	 * @returns {boolean} - Returns false if the drawing or controller is not available, otherwise returns true.
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/Unselect.js
+	 */
+	ApiDrawing.prototype.Unselect = function() {
+		let oDrawing = this.Drawing;
+		if(!oDrawing)
+			return false
+		let oController = oDrawing.getDrawingObjectsController();
+		if (!oController)
+			return false
+		oController.deselectObject(oDrawing);
+		oController.updateSelectionState();
+		oController.updateOverlay();
+		return true
 	};
 
 	/**
@@ -19613,7 +19808,7 @@
 		return sOperator;
 	}
 
-	// Helper to get single instance of validation
+	// Helpers to get single instance of validation
 	function getSingleValidation(apiValidation) {
 		if (!apiValidation) {
 			return;
@@ -19629,6 +19824,39 @@
 		}
 		return apiValidation.validations[0];
 	}
+
+    function setSingleValidation(apiValidation) {
+        if (!apiValidation) {
+            return;
+        }
+        if (!apiValidation.validations || !Array.isArray(apiValidation.validations) || !apiValidation.validations.length) {
+            const validation = new window['AscCommonExcel'].CDataValidations().getNewValidation();
+            apiValidation.validations = [validation];
+            return apiValidation.validations[0];
+        }
+        if (apiValidation.validations.length > 1) {
+            throwException(new Error('Multiple validations exist'));
+            return null;
+        }
+        if (!apiValidation.range || !apiValidation.range.range) {
+            throwException(new Error('Range is not provided'));
+            return
+        }
+        const targetRange = apiValidation.range.range;
+        const thisValidation = apiValidation.validations[0];
+        // if validation contains multiple ranges or if validations range is not the same as target range, create newValidation
+        if (thisValidation.ranges.length > 1 || (thisValidation.ranges.length > 0 && !targetRange.bbox.isEqual(thisValidation.ranges[0]))) {
+            const type = apiValidation.GetType();
+            const alert = apiValidation.GetAlertStyle();
+            const operator = apiValidation.GetOperator();
+            const formula1 = apiValidation.GetFormula1();
+            const formula2 = apiValidation.GetFormula2();
+            const newValidation = apiValidation.Modify(type, alert, operator, formula1, formula2);
+            return newValidation ? newValidation.validations[0] : null;
+        } else {
+            return apiValidation.validations[0];
+        }
+    }
 
 	/**
 	 * Class representing data validation.
@@ -19696,35 +19924,56 @@
 		dataValidation.showInputMessage = true;
 		dataValidation.allowBlank = true;
 
-		let processFormula = function(formula) {
+        const getFormulaString = function (formula) {
+            if (formula === undefined || formula === null) {
+                return null;
+            }
+
+            if (typeof formula === "string") {
+                return formula
+            } else if (typeof formula === "number") {
+                return formula.toString()
+            } else if (Array.isArray(formula)) {
+                const sep = ",";
+                return formula.join(sep)
+            } else if (formula && formula.constructor === ApiRange) {
+                let text = formula.GetAddress(true, true);
+                if (text && typeof text === "string") {
+                    text = "=" + text;
+                }
+                return text
+            }
+
+            return null;
+        }
+
+		let processFormula = function(formula, t) {
 			if (formula === undefined || formula === null) {
 				return null;
 			}
 
-			if (typeof formula === "string") {
-				return new window['Asc'].CDataFormula(formula);
-			} else if (typeof formula === "number") {
-				return new window['Asc'].CDataFormula(formula.toString());
-			} else if (Array.isArray(formula)) {
-                const sep = ",";
-                return new window['Asc'].CDataFormula(formula.join(sep));
-            } else if (formula && formula.constructor === ApiRange) {
-                let text = formula.GetAddress();
-                if (text && typeof text === "string") {
-                    text = "=" + text;
+            const formulaText = getFormulaString(formula);
+            if (formulaText !== null) {
+                // check for validation if validation provided else simply pass
+                const res = t.range && t.range.range && t.range.range.worksheet && t.range.range.worksheet.workbook && t.range.range.worksheet.workbook.oApi && t.range.range.worksheet.workbook.oApi.asc_checkDataRange ?
+                    t.range.range.worksheet.workbook.oApi.asc_checkDataRange(Asc.c_oAscSelectionDialogType.DataValidation, formulaText, true, undefined, internalType) : Asc.c_oAscError.ID.No;
+                if (res !== Asc.c_oAscError.ID.No) {
+                    throwException(new Error('Provide correct formula!'));
+                    return null;
                 }
-				return new window['Asc'].CDataFormula(text);
-			}
+                return new window['Asc'].CDataFormula(formulaText);
+            }
 
 			return null;
 		};
 
+        const t = this;
 		if (Formula1 !== undefined) {
-			dataValidation.formula1 = processFormula(Formula1);
+			dataValidation.formula1 = processFormula(Formula1, t);
 		}
 
 		if (Formula2 !== undefined) {
-			dataValidation.formula2 = processFormula(Formula2);
+			dataValidation.formula2 = processFormula(Formula2, t);
 		}
 
 		let ranges = [];
@@ -19878,7 +20127,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetIgnoreBlank.js
 	 */
 	ApiValidation.prototype.SetIgnoreBlank = function(IgnoreBlank) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -19908,7 +20157,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetInCellDropdown.js
 	 */
 	ApiValidation.prototype.SetInCellDropdown = function(InCellDropdown) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -19938,7 +20187,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetShowInput.js
 	 */
 	ApiValidation.prototype.SetShowInput = function(ShowInput) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -19968,7 +20217,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetShowError.js
 	 */
 	ApiValidation.prototype.SetShowError = function(ShowError) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -19999,7 +20248,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetInputTitle.js
 	 */
 	ApiValidation.prototype.SetInputTitle = function(InputTitle) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -20030,7 +20279,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetInputMessage.js
 	 */
 	ApiValidation.prototype.SetInputMessage = function(InputMessage) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -20062,7 +20311,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetErrorTitle.js
 	 */
 	ApiValidation.prototype.SetErrorTitle = function(ErrorTitle) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -20094,7 +20343,7 @@
 	 * @see office-js-api/Examples/{Editor}/ApiValidation/Methods/SetErrorMessage.js
 	 */
 	ApiValidation.prototype.SetErrorMessage = function(ErrorMessage) {
-		const validation = getSingleValidation(this);
+		const validation = setSingleValidation(this);
 		if (!validation) {
 			return;
 		}
@@ -20116,7 +20365,7 @@
 		let formula1 = validation.getFormula1();
 		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (formula1 && worksheet) {
-			formula1 = formula1.clone();
+			formula1 = formula1.clone(true);
 			formula1.correctToInterface(worksheet, validation);
 		}
 		return formula1 ? formula1.asc_getValue() : "";
@@ -20137,7 +20386,7 @@
 		let formula2 = validation.getFormula2();
 		let worksheet = this.range && this.range.range && this.range.range.worksheet;
 		if (formula2 && worksheet) {
-			formula2 = formula2.clone();
+			formula2 = formula2.clone(true);
 			formula2.correctToInterface(worksheet, validation);
 		}
 		return formula2 ? formula2.asc_getValue() : "";
@@ -27532,6 +27781,7 @@
 	ApiWorkbook.prototype["GetName"] = ApiWorkbook.prototype.GetName;
 	ApiWorkbook.prototype["GetActiveSheet"] = ApiWorkbook.prototype.GetActiveSheet;
 	ApiWorkbook.prototype["GetActiveChart"] = ApiWorkbook.prototype.GetActiveChart;
+	ApiWorkbook.prototype["GetDrawingsByName"] = ApiWorkbook.prototype.GetDrawingsByName;
 
 	ApiWorksheet.prototype["GetVisible"] = ApiWorksheet.prototype.GetVisible;
 	ApiWorksheet.prototype["SetVisible"] = ApiWorksheet.prototype.SetVisible;
@@ -27700,14 +27950,21 @@
 	ApiDrawing.prototype["SetPosition"]                =  ApiDrawing.prototype.SetPosition;
 	ApiDrawing.prototype["GetWidth"]                   =  ApiDrawing.prototype.GetWidth;
 	ApiDrawing.prototype["GetHeight"]                  =  ApiDrawing.prototype.GetHeight;
+	ApiDrawing.prototype["GetName"]                    =  ApiDrawing.prototype.GetName;
+	ApiDrawing.prototype["SetName"]                    =  ApiDrawing.prototype.SetName;
 	ApiDrawing.prototype["GetLockValue"]               =  ApiDrawing.prototype.GetLockValue;
 	ApiDrawing.prototype["SetLockValue"]               =  ApiDrawing.prototype.SetLockValue;
 	ApiDrawing.prototype["GetParentSheet"]             =  ApiDrawing.prototype.GetParentSheet;
 	ApiDrawing.prototype["SetRotation"]                =  ApiDrawing.prototype.SetRotation;
 	ApiDrawing.prototype["GetRotation"]                =  ApiDrawing.prototype.GetRotation;
+	ApiDrawing.prototype["GetFlipH"]                   =  ApiDrawing.prototype.GetFlipH;
+	ApiDrawing.prototype["GetFlipV"]                   =  ApiDrawing.prototype.GetFlipV;
+	ApiDrawing.prototype["SetFlipH"]                   =  ApiDrawing.prototype.SetFlipH;
+	ApiDrawing.prototype["SetFlipV"]                   =  ApiDrawing.prototype.SetFlipV;
 	ApiDrawing.prototype["Select"]                     =  ApiDrawing.prototype.Select;
 	ApiDrawing.prototype["Fill"]                       =  ApiDrawing.prototype.Fill;
 	ApiDrawing.prototype["SetOutLine"]                 =  ApiDrawing.prototype.SetOutLine;
+	ApiDrawing.prototype["Unselect"]                   =  ApiDrawing.prototype.Unselect;
 
 	ApiImage.prototype["GetClassType"]                 =  ApiImage.prototype.GetClassType;
 

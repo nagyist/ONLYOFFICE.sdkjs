@@ -645,7 +645,7 @@ parserHelp.setDigitSeparator(AscCommon.g_oDefaultCultureInfo.NumberDecimalSepara
 		return {col: 1, row: 1};
 	};
 	cBaseType.prototype.isOneElement = function () {
-		let dimensions = this.getDimensions();
+		let dimensions = this.getDimensions(true);
 		if (dimensions.col === 1 && dimensions.row === 1) {
 			return true;
 		}
@@ -6757,6 +6757,13 @@ function parserFormula( formula, parent, _ws ) {
 		oRes.isParsed = this.isParsed;
 		oRes.ref = this.ref;
 		oRes.ca = this.ca;
+		// Don't copy cm/vm/aca when copying between workbooks (opt_ws != null)
+		// They will be regenerated for the target workbook
+		if (!opt_ws) {
+			oRes.cm = this.cm;
+			oRes.vm = this.vm;
+			oRes.aca = this.aca;
+		}
 		return oRes;
 	};
 	parserFormula.prototype.getParent = function() {
@@ -11288,7 +11295,7 @@ function parserFormula( formula, parent, _ws ) {
 				if (isFullTableLink || !refAreaRange) {
 					this.wb.dependencyFormulas.startListeningDefName(ref.tableName, this, null, ref);
 				} else {
-					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
+					this._buildDependenciesRef(refAreaRange.worksheet.getId(), refAreaRange.getBBox0(), null, /*isStart*/true);
 				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.startListeningDefName(ref.value, this);
@@ -11371,7 +11378,7 @@ function parserFormula( formula, parent, _ws ) {
 				if (isFullTableLink || !refAreaRange) {
 					this.wb.dependencyFormulas.endListeningDefName(ref.tableName, this);
 				} else {
-					this._buildDependenciesRef(ref.ws.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
+					this._buildDependenciesRef(refAreaRange.worksheet.getId(), refAreaRange.getBBox0(), null, /*isStart*/false);
 				}
 			} else if (ref.type === cElementType.name) {
 				this.wb.dependencyFormulas.endListeningDefName(ref.value, this);

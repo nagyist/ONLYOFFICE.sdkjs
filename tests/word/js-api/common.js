@@ -33,7 +33,6 @@
 $(function()
 {
 	AscTest.Editor.GetDocument = AscBuilder.Word.Api.GetDocument.bind(AscTest.Editor);
-
 	AscTest.JsApi = {};
 	
 	AscTest.JsApi.GetDocument = AscBuilder.Word.Api.GetDocument.bind(AscTest.Editor);

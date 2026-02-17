@@ -629,7 +629,7 @@
 			new_ext_x = xfrm.extX;
 			new_ext_y = xfrm.extY;
 		} else {
-			var scale_scale_coefficients = this.group.getResultScaleCoefficients();
+			var scale_scale_coefficients = this.group.getResultScaleCoefficients(true);
 			new_off_x = scale_scale_coefficients.cx * (xfrm.offX - this.group.spPr.xfrm.chOffX);
 			new_off_y = scale_scale_coefficients.cy * (xfrm.offY - this.group.spPr.xfrm.chOffY);
 			new_ext_x = scale_scale_coefficients.cx * xfrm.extX;
@@ -1479,6 +1479,7 @@
 	CGraphicObjectBase.prototype.checkTypeCorrect = function () {
 		return true;
 	};
+	CGraphicObjectBase.prototype.updateDrawingTextCache = function () {};
 	CGraphicObjectBase.prototype.isSupported = function () {
 		return true;
 	};
@@ -3566,13 +3567,15 @@
 				if (oBounds.t < topEdgeOfSmartArt) {
 					diffY = topEdgeOfSmartArt - oBounds.t;
 				}
-
+				const scaleCoefficient = this.getScaleCoefficient();
 				if (diffX !== null) {
+					diffX /= scaleCoefficient;
 					var newOffX = this.spPr.xfrm.offX + diffX;
 					this.spPr.xfrm.setOffX(newOffX);
 					this.txXfrm && this.txXfrm.setOffX(this.txXfrm.offX + diffX);
 				}
 				if (diffY !== null) {
+					diffY /=  scaleCoefficient;
 					var newOffY = this.spPr.xfrm.offY + diffY;
 					this.spPr.xfrm.setOffY(newOffY);
 					this.txXfrm && this.txXfrm.setOffY(this.txXfrm.offY + diffY);

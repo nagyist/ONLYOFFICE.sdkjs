@@ -645,7 +645,6 @@
 
         function callbackAfterFocus(x, y, e) {
             this.SetInForm(true);
-            this.SetDrawHighlight(false);
 
             if (this.GetOptions().length == 0)
                 return;
@@ -659,11 +658,7 @@
             let oShd    = oPara.Pr.Shd;
 
             this.UpdateScroll(true);
-            if (this.IsNeedDrawFromStream() == true) {
-                this.SetDrawFromStream(false);
-                this.AddToRedraw();
-            }
-            else if (false == isInForm) {
+            if (false == isInForm) {
                 this.AddToRedraw();
             }
 
@@ -1109,7 +1104,7 @@
     };
     CListBoxField.prototype.GetCurIdxs = function(bApiValue) {
         if (bApiValue)
-            return this._currentValueIndices;
+            return this._currentValueIndexes;
             
         let oPara, oShd;
         let aIndexes = [];
