@@ -1800,7 +1800,7 @@
         this._needDrawHighlight = bDraw;
     };
     CBaseField.prototype.IsNeedDrawHighlight = function() {
-        return false == this.IsReadOnly() && this._needDrawHighlight;
+        return false == this.IsReadOnly() && this._needDrawHighlight && (this.GetType() === AscPDF.FIELD_TYPES.button || !this.IsInForm());
     };
 
     CBaseField.prototype.DrawEdit = function(oGraphicsWord) {

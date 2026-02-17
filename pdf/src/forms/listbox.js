@@ -639,7 +639,6 @@
 
         function callbackAfterFocus(x, y, e) {
             this.SetInForm(true);
-            this.SetDrawHighlight(false);
 
             if (this.GetOptions().length == 0)
                 return;
@@ -653,10 +652,7 @@
             let oShd    = oPara.Pr.Shd;
 
             this.UpdateScroll(true);
-            if (this.IsNeedDrawFromStream() == true) {
-                this.AddToRedraw();
-            }
-            else if (false == isInForm) {
+            if (false == isInForm) {
                 this.AddToRedraw();
             }
 

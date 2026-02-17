@@ -192,8 +192,8 @@
         let oController     = oDoc.GetController();
         let oActionsQueue   = oDoc.GetActionsQueue();
 
-        let bHighlight  = this.IsNeedDrawHighlight();
         let isInFocus   = oDoc.activeForm === this;
+		let isInForm    = this.IsInForm();
 
         oDoc.activeForm = this;
 
@@ -227,11 +227,7 @@
                 this.content.MoveCursorToStartPos();
             }
             
-            this.SetDrawHighlight(false);
-            if (this.IsNeedDrawFromStream() == true) {
-                this.AddToRedraw();
-            }
-            else if (this.curContent === this.contentFormat || bHighlight) {
+            if (this.curContent === this.contentFormat || !isInForm) {
                 this.AddToRedraw();
             }
         }

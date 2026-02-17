@@ -1332,11 +1332,7 @@
             if (this.IsDoNotScroll() == false && this.IsMultiline())
                 this.UpdateScroll(true);
 
-            this.SetDrawHighlight(false);
-            if (this.IsNeedDrawFromStream() == true) {
-                this.AddToRedraw();
-            }
-            else if (this.curContent === this.contentFormat || false == isInForm) {
+            if (this.curContent === this.contentFormat || false == isInForm) {
                 this.AddToRedraw();
             }
         }

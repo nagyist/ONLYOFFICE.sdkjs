@@ -1278,7 +1278,6 @@ var CPresentation = CPresentation || function(){};
         this.BlurActiveObject();
         this.activeForm = oNextForm;
         oNextForm.Recalculate();
-        oNextForm.SetDrawHighlight(false);
         
         let nFieldType = oNextForm.GetType();
         
@@ -1362,7 +1361,6 @@ var CPresentation = CPresentation || function(){};
         this.BlurActiveObject();
         this.activeForm = oNextForm;
         oNextForm.Recalculate();
-        oNextForm.SetDrawHighlight(false);
         
         let nFieldType = oNextForm.GetType();
         
@@ -1509,7 +1507,6 @@ var CPresentation = CPresentation || function(){};
             oForm.onMouseUp();
         }
         else {
-            oForm.SetDrawHighlight(true);
             oForm.UpdateScroll && oForm.UpdateScroll(false); // убираем скролл
 
             if (oForm.IsNeedCommit()) {
@@ -1731,7 +1728,6 @@ var CPresentation = CPresentation || function(){};
 
             oContent = oActiveObj.GetDocContent();
 
-            oActiveObj.SetDrawHighlight(true);
             oActiveObj.UpdateScroll && oActiveObj.UpdateScroll(false); // убираем скрол
             
             // если чекбокс то выходим сразу
@@ -2809,7 +2805,7 @@ var CPresentation = CPresentation || function(){};
                         
                         if (this.activeForm) {
                             this.activeForm.UpdateScroll && this.activeForm.UpdateScroll(false);
-                            this.activeForm.SetDrawHighlight(true);
+							this.activeForm.SetInForm(false);
                             this.activeForm = null;
                         }
                     }
@@ -2861,7 +2857,7 @@ var CPresentation = CPresentation || function(){};
                             
                         if (this.activeForm) {
                             this.activeForm.UpdateScroll && this.activeForm.UpdateScroll(false);
-                            this.activeForm.SetDrawHighlight(true);
+							this.activeForm.SetInForm(false);
                             this.activeForm = null;
                         }
                     }
@@ -3024,7 +3020,6 @@ var CPresentation = CPresentation || function(){};
             this.activeForm.UndoNotAppliedChanges();
 
             this.activeForm.AddToRedraw();
-            this.activeForm.SetDrawHighlight(true);
             this.GetDrawingDocument().TargetEnd();
         }
     };

@@ -361,7 +361,6 @@
         }
 
         oDrDoc.TargetEnd();
-        this.SetDrawHighlight(false);
         this.DrawPressed();
         
         let oOnFocus = this.GetTrigger(AscPDF.PDF_TRIGGERS_TYPES.OnFocus);
