@@ -16718,12 +16718,12 @@
 				if (!aRef.includes(oElemType)) {
 					return;
 				}
-				oRange = oElemValue.getRange();
+				oRange = oElemValue.getRange && oElemValue.getRange();
 			} else if (nRefType === cElementType.table) {
 				let oRefElem = oRefElement.toRef();
-				oRange = oRefElem.getRange();
+				oRange = oRefElem.getRange && oRefElem.getRange();
 			} else {
-				oRange = oRefElement.getRange();
+				oRange = oRefElement.getRange && oRefElement.getRange();
 			}
 			if (!oRange) {
 				continue;
