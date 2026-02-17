@@ -2057,16 +2057,34 @@ $(function () {
 		bCaFromSelectedCell = getCaFromSelectedCell("C601");
 		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive cell with disabled setting. Bug-79238. C601 - flag ca: true");
 		bCaFromSelectedCell = null;
-		// - Case: Formula VLOOKUP changing an exist chain to non-recursive cell with disabled setting. Bug-79238
+		// - Case: Formula VLOOKUP changing an existed chain to non-recursive cell with disabled setting. Bug-79238
 		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;2;FALSE)");
 		assert.strictEqual(ws2.getRange2("A1").getValue(), "321", "Test: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238. Sheet2!A1 - 321");
 		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
-		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: false");
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP changing exist chain to non-recursive cell with disabled setting. Bug-79238. Sheet2!A1 - flag ca: false");
 		bCaFromSelectedCell = null;
 		/*bCaFromSelectedCell = getCaFromSelectedCell("C601");
-		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP changing exist chain to non recursive cell with disabled setting. Bug-79238. C601 - flag ca: false");
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP changing exist chain to non-recursive cell with disabled setting. Bug-79238. C601 - flag ca: false");
 		bCaFromSelectedCell = null;*/
-		// - Case: Formula HLOOKUP isn't recursive cell with disabled setting. Bug-79238
+		// - Case: Formula VLOOKUP isn't a recursive cell with a disabled setting. index_num is a formula. Bug-79238
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;IF(B1>0;2;1);FALSE)");
+		assert.strictEqual(ws2.getRange2("A1").getValue(), "321", "Test: Formula VLOOKUP isn't recursive cell with disabled setting. index_num is formula. Bug-79238. Sheet2!A1 - 321");
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't a recursive cell with disabled setting. index_num is a formula. Bug-79238. Sheet2!A1 - flag ca: false");
+		bCaFromSelectedCell = null;
+		// - Case: Formula VLOOKUP isn't a recursive cell with a disabled setting. array_table is a formula. Bug-79238
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;IF(B1>0;Table1;Table2);2;FALSE)");
+		assert.strictEqual(ws2.getRange2("A1").getValue(), "321", "Test: Formula VLOOKUP isn't recursive cell with disabled setting. array_table is formula. Bug-79238. Sheet2!A1 - 321");
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, false, "Test: Formula VLOOKUP isn't recursive cell with disabled setting. array_table is formula. Bug-79238. Sheet2!A1 - flag ca: false");
+		bCaFromSelectedCell = null;
+		// - Case: Formula VLOOKUP is a recursive formula with disabled setting. index_num is a formula. Bug-79238
+		ws2.getRange2("A1").setValue("=VLOOKUP(B1;Table1;1+2;FALSE)");
+		assert.strictEqual(ws2.getRange2("A1").getValue(), "0", "Test: Formula VLOOKUP is recursive formula with disabled setting. index_num is formula. Bug-79238. Sheet2!A1 - 0");
+		bCaFromSelectedCell = getCaFromSelectedCell("A1", ws2);
+		assert.strictEqual(bCaFromSelectedCell, true, "Test: Formula VLOOKUP is recursive formula with disabled setting. index_num is formula. Bug-79238. Sheet2!A1 - flag ca: true");
+		bCaFromSelectedCell = null;
+		// - Case: Formula HLOOKUP isn't a recursive cell with a disabled setting. Bug-79238
 		ws.getRange2("A601").setValue("123");
 		ws.getRange2("B601").setValue("456");
 		ws.getRange2("C601").setValue("789");

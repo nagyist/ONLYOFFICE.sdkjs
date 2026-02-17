@@ -1659,6 +1659,8 @@
 			g_cCalcRecursion.clearDiffBetweenIter();
 			g_cCalcRecursion.clearCycleCells();
 			g_cCalcRecursion.clearCheckedCells();
+			g_cCalcRecursion.clearRecheckingFormulaData();
+			g_cCalcRecursion.clearCalculatedArguments();
 			this.changedCell = null;
 			this.changedRange = null;
 			this.updateSharedFormulas();
@@ -16857,6 +16859,80 @@
 		g_cCalcRecursion.addRecursiveCells(this, aRecursiveCells);
 	};
 	/**
+	 * Rechecks the cell for the cycle after being calculated.
+	 * @memberof Cell
+	 * @param {[]} calcedElements - calculated elements from outStack
+	 * @param {AscCommonExcel.parserFormula} parsedFormula
+	 */
+	Cell.prototype.recheckCellForCycle = function (calcedElements, parsedFormula) {
+		const t = this;
+		const isEnabledRecursion = g_cCalcRecursion.getIsEnabledRecursion();
+		let isCycleCell = false;
+
+		foreachRefElements(function (range) {
+			if (range.bbox.contains(t.nCol, t.nRow) && range.worksheet.getName() === t.ws.getName()) {
+				if (!parsedFormula.ca) {
+					parsedFormula.ca = true;
+				}
+				isCycleCell = true;
+				!isEnabledRecursion && g_cCalcRecursion.addCycleCell(t);
+			} else {
+				range._foreachNoEmpty(function (cell) {
+					if (cell.isFormula()) {
+						cell.initStartCellForIterCalc();
+						if (g_cCalcRecursion.getStartCellIndex() != null) {
+							if (!cell.getFormulaParsed().ca) {
+								cell.getFormulaParsed().ca = true;
+							}
+							isCycleCell = true;
+							!isEnabledRecursion && g_cCalcRecursion.addCycleCell(cell);
+							g_cCalcRecursion.getStartCellIndex() && g_cCalcRecursion.setStartCellIndex(null);
+							return true;
+						}
+						if (!parsedFormula.ca && g_cCalcRecursion.needRecheckFormulaAfterCalc()) {
+							const bRecheckFormula = g_cCalcRecursion.needRecheckFormulaAfterCalc();
+							const bRecursionFormula = cell.checkRecursiveFormula(parsedFormula.getParent(), [], bRecheckFormula);
+							if (bRecursionFormula) {
+								parsedFormula.ca = true;
+								if (cell.getFormulaParsed().ca !== bRecursionFormula) {
+									cell.getFormulaParsed().ca = bRecursionFormula;
+								}
+								isCycleCell = true;
+								!isEnabledRecursion && g_cCalcRecursion.addCycleCell(cell);
+								return true;
+							}
+
+						}
+					}
+				});
+			}
+			if (isCycleCell) {
+				return true;
+			}
+		}, calcedElements);
+		if (isCycleCell) {
+			if (isEnabledRecursion) {
+				const recursiveCells = g_cCalcRecursion.getRecursiveCells(t);
+				if (!recursiveCells.length) {
+					const cellIndex = {
+						cellId: getCellIndex(t.nRow, t.nCol),
+						wsName: t.ws.getName().toLowerCase()
+					};
+					t.fillRecursiveCells(recursiveCells, cellIndex);
+				}
+
+			} else {
+				parsedFormula.value = null;
+				t.setIsDirty(false);
+				if (t.getType() !== CellValueType.Number) {
+					t.setTypeInternal(CellValueType.Number);
+				}
+				t.setValueNumberInternal(0);
+				g_cCalcRecursion.addCycleCell(t);
+			}
+		}
+	};
+	/**
 	 * Method calculates cells with formula aren't calculated yet.
 	 * @memberof Cell
 	 * @private
@@ -16895,59 +16971,16 @@
 						}
 						if (g_cCalcRecursion.getFunctionsResult().length && g_cCalcRecursion.getIterStep() === 1 && g_cCalcRecursion.getLevel() === 1) {
 							const functionsResult = g_cCalcRecursion.getFunctionsResult();
-							const isEnabledRecursion = g_cCalcRecursion.getIsEnabledRecursion();
-							let isCycleCell = false;
-
-							foreachRefElements(function (range) {
-								if (range.bbox.contains(t.nCol, t.nRow) && range.worksheet.getName() === t.ws.getName()) {
-									if (!parsed.ca) {
-										parsed.ca = true;
-									}
-									isCycleCell = true;
-									!isEnabledRecursion && g_cCalcRecursion.addCycleCell(t);
-								} else {
-									range._foreachNoEmpty(function (cell) {
-										if (cell.isFormula()) {
-											cell.initStartCellForIterCalc();
-											if (g_cCalcRecursion.getStartCellIndex() != null) {
-												if (!cell.getFormulaParsed().ca) {
-													cell.getFormulaParsed().ca = true;
-												}
-												isCycleCell = true;
-												!isEnabledRecursion && g_cCalcRecursion.addCycleCell(cell);
-												g_cCalcRecursion.getStartCellIndex() && g_cCalcRecursion.setStartCellIndex(null);
-												return true;
-											}
-										}
-									});
-								}
-								if (isCycleCell) {
-									return true;
-								}
-							}, functionsResult);
-							if (isCycleCell) {
-								if (isEnabledRecursion) {
-									const recursiveCells = g_cCalcRecursion.getRecursiveCells(t);
-									if (!recursiveCells.length) {
-										const cellIndex = {
-											cellId: getCellIndex(t.nRow, t.nCol),
-											wsName: t.ws.getName().toLowerCase()
-										};
-										t.fillRecursiveCells(recursiveCells, cellIndex);
-									}
-
-								} else {
-									parsed.value = null;
-									t.setIsDirty(false);
-									if (t.getType() !== CellValueType.Number) {
-										t.setTypeInternal(CellValueType.Number);
-									}
-									t.setValueNumberInternal(0);
-								}
-							}
+							t.recheckCellForCycle(functionsResult, parsed);
 						}
 						if (g_cCalcRecursion.getFunctionsResult().length) {
 							g_cCalcRecursion.clearFunctionsResult();
+						}
+						if (g_cCalcRecursion.needRecheckFormulaAfterCalc() && g_cCalcRecursion.hasCalculatedArguments() &&
+							g_cCalcRecursion.getRecheckingFormulaData('parserFormula') && parsed.compare(g_cCalcRecursion.getRecheckingFormulaData('parserFormula'))) {
+							const refElements = parsed.getRefElements();
+							t.recheckCellForCycle(refElements, parsed);
+							g_cCalcRecursion.resetRecheckFormula();
 						}
 					}
 				});

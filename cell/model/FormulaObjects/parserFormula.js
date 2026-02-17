@@ -9042,17 +9042,19 @@ function parserFormula( formula, parent, _ws ) {
 		if (bRecheckFormula && t.getParent() && t.getParent() instanceof AscCommonExcel.CCellWithFormula && !ignoreErrors) {
 			const aRefElements = t.getRefElements();
 			let bRecursiveCell = false;
-			aRefElements.forEach(function (oRefElement) {
-				if (oRefElement.type === cElementType.name || oRefElement.type === cElementType.name3D) {
-					oRefElement = oRefElement.getValue();
-				}
-				const oRange = oRefElement && oRefElement.getRange && oRefElement.getRange();
-				oRange && oRange._foreachNoEmpty(function (oCell) {
-					if (!bRecursiveCell) {
-						bRecursiveCell = oCell.checkRecursiveFormula(t.getParent(), [], bRecheckFormula);
+			if (!g_cCalcRecursion.needRecheckFormulaAfterCalc()) {
+				aRefElements.forEach(function (oRefElement) {
+					if (oRefElement.type === cElementType.name || oRefElement.type === cElementType.name3D) {
+						oRefElement = oRefElement.getValue();
 					}
+					const oRange = oRefElement && oRefElement.getRange && oRefElement.getRange();
+					oRange && oRange._foreachNoEmpty(function (oCell) {
+						if (!bRecursiveCell) {
+							bRecursiveCell = oCell.checkRecursiveFormula(t.getParent(), [], bRecheckFormula);
+						}
+					});
 				});
-			});
+			}
 			t.ca = bRecursiveCell;
 		}
 		if (parenthesesNotEnough) {
@@ -10231,6 +10233,15 @@ function parserFormula( formula, parent, _ws ) {
 
 					defNameArgCount = 0;
 					elemArr.push(_tmp);
+
+					if (g_cCalcRecursion.needRecheckFormulaAfterCalc()) {
+						const recheckFormula = g_cCalcRecursion.getRecheckingFormulaData('parserFormula');
+						const formulaName = g_cCalcRecursion.getRecheckingFormulaData('formulaName');
+						if (recheckFormula && this.compare(recheckFormula) && formulaName === currentElement.name && arg.length === argumentsCount) {
+							g_cCalcRecursion.addCalculatedArgument('table_array', arg[1]);
+							g_cCalcRecursion.addCalculatedArgument('index_num', arg[2]);
+						}
+					}
 				}
 			} else if (currentElement.type === cElementType.name || currentElement.type === cElementType.name3D) {
 				var defName = currentElement.getDefName();
@@ -11816,95 +11827,6 @@ function parserFormula( formula, parent, _ws ) {
 		return this.aca;
 	};
 	/**
-	 * Calculates formula of argument and return first formula argument index.
-	 * Recursive function
-	 * @memberof parserFormula
-	 * @param {Object} oFormula - argument with function or operator.
-	 * @param {number} nArgIndex - index of argument with function.
-	 * @param {number} nArgsCount - arguments count of function.
-	 * @returns {[cRef|cRef3D|cNumber|cArea|cName|cName3D|cBool, number]}
-	 */
-	parserFormula.prototype.calculateFormula = function (oFormula, nArgIndex, nArgsCount) {
-		if (nArgsCount > 0) {
-			const aArgs = [];
-			const nStartIndex = nArgIndex - 1;
-			const nEndIndex = oFormula.type === cElementType.func ? nArgIndex - nArgsCount - 1 : nArgIndex - nArgsCount;
-			let bIsSpecialFunction = false;
-			let oBbox = null;
-			let nDefNameArgCount = 0;
-			let nIndex = null;
-
-			if (this.parent && this.parent.onFormulaEvent) {
-				oBbox = this.parent.onFormulaEvent(AscCommon.c_oNotifyParentType.GetRangeCell);
-			}
-			if (!oBbox) {
-				oBbox = new Asc.Range(0, 0, 0, 0);
-			}
-			for (let i = nStartIndex; i >= nEndIndex; i--) {
-				const oArg = this.getOutStackElem(i);
-				if (oArg.name === "(") {
-					continue;
-				}
-				if (AscCommonExcel.bIsSupportDynamicArrays) {
-					bIsSpecialFunction = true;
-				}
-				if (oArg.type === cElementType.specialFunctionStart) {
-					bIsSpecialFunction = true;
-					continue;
-				}
-				if (oArg.type === cElementType.specialFunctionEnd) {
-					if (!(AscCommonExcel.bIsSupportDynamicArrays)) {
-						bIsSpecialFunction = false;
-					}
-					continue;
-				}
-				if(typeof oArg === "number"){
-					continue;
-				}
-				if (oArg.type === cElementType.func || oArg.type === cElementType.operator) {
-					let oArgResult = null;
-					let nArgumentsCount = typeof this.getOutStackElem(i - 1) === "number" ? this.getOutStackElem(i - 1) : oArg.argumentsCurrent;
-					if (nArgumentsCount < 0) {
-						nArgumentsCount = -nArgumentsCount;
-						oArg.bArrayFormula = true;
-					}
-					if(nArgumentsCount + nDefNameArgCount > oArg.argumentsMax) {
-						oArgResult = new cError(cErrorType.wrong_value_type);
-					} else {
-						const aResult = this.calculateFormula(oArg, i, nArgumentsCount);
-						oArgResult = aResult[0];
-						nIndex = aResult[1];
-					}
-					aArgs.unshift(oArgResult);
-				} else if (oArg.type === cElementType.name || oArg.type === cElementType.name3D) {
-					const oDefName = oArg.getDefName();
-					if (oDefName && oDefName.parsedRef && this.ref) {
-						oArg.getDefName().parsedRef.ref = this.ref;
-					}
-					const oDefNameCalcArr = oArg.Calculate(null, oBbox, true);
-					if(oDefNameCalcArr && oDefNameCalcArr.length) {
-						nDefNameArgCount = oDefNameCalcArr.length - 1;
-						for(let j = 0; j < oDefNameCalcArr.length; j++) {
-							aArgs.unshift(oDefNameCalcArr[j]);
-						}
-					} else {
-						aArgs.unshift(oDefNameCalcArr);
-					}
-				} else if (oArg.type === cElementType.table) {
-					aArgs.unshift(oArg.toRef(oBbox));
-				} else {
-					aArgs.unshift(oArg);
-				}
-			}
-			if (nIndex === null) {
-				nIndex = nEndIndex;
-			}
-			return [oFormula.Calculate(aArgs, oBbox, null, this.getWs(), bIsSpecialFunction), nIndex];
-		}
-
-		return [oFormula.Calculate(), nArgIndex];
-	};
-	/**
 	 * Returns an array of reference cells from outStack attribute.
 	 * @memberof parserFormula
 	 * @returns {[]}
@@ -11942,24 +11864,43 @@ function parserFormula( formula, parent, _ws ) {
 				}
 			}
 			if (nElemType === cElementType.func && aLookupFormulas.includes(oOutStackElem.name)) {
-				let nArgsCount = this.getOutStackElem(nPrevIndex);
+				const nArgsCount = this.getOutStackElem(nPrevIndex);
 				const nIndexNumId = nArgsCount === 4 ? nPrevIndex - 2 : nPrevIndex - 1;
-				let oIndexNumValue = this.getOutStackElem(nIndexNumId);
-				let nTableArrayId = nIndexNumId - 1;
-				if (oIndexNumValue.type === cElementType.func || oIndexNumValue.type === cElementType.operator) {
-					nArgsCount = oIndexNumValue.type === cElementType.func ? this.getOutStackElem(nIndexNumId - 1) : oIndexNumValue.argumentsCurrent;
-					const aResult = this.calculateFormula(oIndexNumValue, nIndexNumId, nArgsCount);
-					oIndexNumValue = aResult[0];
-					nTableArrayId = aResult[1] - 1;
+				let oIndexNumValue = null;
+				let oTableArrayArg = null;
+				if (g_cCalcRecursion.needRecheckFormulaAfterCalc() && g_cCalcRecursion.hasCalculatedArguments()) {
+					oIndexNumValue = g_cCalcRecursion.getCalculatedArgument('index_num');
+					oTableArrayArg = g_cCalcRecursion.getCalculatedArgument('table_array');
 				}
-				const nIndexNumValue = oIndexNumValue.tocNumber().toNumber() - 1;
-				let oTableArrayArg = this.getOutStackElem(nTableArrayId);
+				if (!oIndexNumValue) {
+					oIndexNumValue = this.getOutStackElem(nIndexNumId);
+				}
+				if (oIndexNumValue.type === cElementType.func || oIndexNumValue.type === cElementType.operator) {
+					g_cCalcRecursion.setRecheckFormula(true);
+					g_cCalcRecursion.addRecheckingFormulaData('parserFormula', this);
+					g_cCalcRecursion.addRecheckingFormulaData('formulaName', oOutStackElem.name);
+					continue;
+				}
+				if (oIndexNumValue.type === cElementType.error) {
+					continue;
+				}
+				if (!oTableArrayArg) {
+					const nTableArrayId = nIndexNumId - 1;
+					oTableArrayArg = this.getOutStackElem(nTableArrayId);
+				}
 				if (oTableArrayArg.type === cElementType.func) {
-					oTableArrayArg = this.calculateFormula(oTableArrayArg, nTableArrayId, this.getOutStackElem(nTableArrayId - 1))[0];
+					g_cCalcRecursion.setRecheckFormula(true);
+					g_cCalcRecursion.addRecheckingFormulaData('parserFormula', this);
+					g_cCalcRecursion.addRecheckingFormulaData('formulaName', oOutStackElem.name);
+					continue;
+				}
+				if (oTableArrayArg.type === cElementType.error) {
+					continue;
 				}
 				oTableArrayArg = oTableArrayArg.clone();
+				const nIndexNumValue = oIndexNumValue.tocNumber().toNumber() - 1;
 				const nIndexTableArray = aRefElements.findIndex(function (oElem) {
-					return oElem.toString() === oTableArrayArg.toString();
+					return oElem.getRange().getBBox0().isEqualAll(oTableArrayArg.getRange().getBBox0());
 				});
 				const oTableArrayRange = oTableArrayArg.getRange().clone();
 				const oTableArrayBbox = oTableArrayRange.getBBox0();
@@ -11977,7 +11918,7 @@ function parserFormula( formula, parent, _ws ) {
 						oTableArrayBbox.r2 = nUpdatedRow;
 					}
 				}
-				aRefElements[nIndexTableArray] = new AscCommonExcel.cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
+				aRefElements[nIndexTableArray] = new cArea3D(oTableArrayBbox.getAbsName(), oTableArrayRange.worksheet);
 			}
 			if (nElemType === cElementType.cell || b3D || bArea || bDefName || bTable) {
 				aRefElements.push(oOutStackElem);
@@ -11985,10 +11926,30 @@ function parserFormula( formula, parent, _ws ) {
 		}
 
 		return aRefElements;
-	}
+	};
+	/**
+	 * Method compares parserFormula objects for equality.
+	 * @memberof parserFormula
+	 * @param {parserFormula}oComparedFormula
+	 * @returns {boolean}
+	 */
+	parserFormula.prototype.compare = function (oComparedFormula) {
+		const oComparedParent = oComparedFormula.getParent();
+		const oParent = this.getParent();
+		const sWsId = oParent && oParent.ws && oParent.ws.getId();
+		const sComparedWsId = oComparedParent && oComparedParent.ws && oComparedParent.ws.getId();
+		const nParentRow = oParent && oParent.nRow;
+		const nComparedParentRow = oComparedParent && oComparedParent.nRow;
+		const nParentCol = oParent && oParent.nCol;
+		const nComparedParentCol = oComparedParent && oComparedParent.nCol;
+		const sFormula = this.Formula;
+		const sComparedFormula = oComparedFormula.Formula;
+
+		return sWsId === sComparedWsId && nParentRow === nComparedParentRow && nParentCol === nComparedParentCol && sFormula === sComparedFormula;
+	};
 
 	/**
-	 * Class representative an iterative calculations logic
+	 * Class representative an iterative calculation logic
 	 * @constructor
 	 */
 	function CalcRecursion() {
@@ -12022,10 +11983,15 @@ function parserFormula( formula, parent, _ws ) {
 		/*for chrome63(real maximum call stack size is 12575) nMaxRecursion that cause exception is 783
 		by measurement: stack size in doctrenderer is one fourth smaller than chrome*/
 		this.nMaxRecursion = 300; // Default value: 300
+
+		// Attributes for checking a cycle
+		this.bRecheckFormula = false;
+		this.oRecheckingFormula = null;
+		this.oCalculatedArgs = null;
 	}
 
 	/**
-	 * Method returns maximum recursion level.
+	 * Method returns the maximum recursion level.
 	 * @memberof CalcRecursion
 	 * @returns {number}
 	 */
@@ -12033,7 +11999,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.nMaxRecursion;
 	};
 	/**
-	 * Method sets a flag who recognizes recursion needs force backtracking.
+	 * Method sets a flag which recognizes recursion needs force backtracking.
 	 * Uses if level of recursion exceeds max level.
 	 * @memberof CalcRecursion
 	 * @param {boolean} bIsForceBacktracking
@@ -12046,7 +12012,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.bIsForceBacktracking = bIsForceBacktracking;
 	};
 	/**
-	 * Method returns a flag who recognizes recursion needs force backtracking.
+	 * Method returns a flag which recognizes recursion needs force backtracking.
 	 * Uses if level of recursion exceeds max level.
 	 * @memberof CalcRecursion
 	 * @returns {boolean}
@@ -12055,7 +12021,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.bIsForceBacktracking;
 	};
 	/**
-	 * Method sets a flag who recognizes work with aElems in _checkDirty method is already in process.
+	 * Method sets a flag which recognizes work with aElems in _checkDirty method is already in process.
 	 * @memberof CalcRecursion
 	 * @param {boolean} bIsProcessRecursion
 	 */
@@ -12063,7 +12029,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.bIsProcessRecursion = bIsProcessRecursion;
 	};
 	/**
-	 * Method returns a flag who recognizes work with aElems in _checkDirty method is already in process.
+	 * Method returns a flag which recognizes work with aElems in _checkDirty method is already in process.
 	 * @memberof CalcRecursion
 	 * @returns {boolean}
 	 */
@@ -12071,14 +12037,14 @@ function parserFormula( formula, parent, _ws ) {
 		return this.bIsProcessRecursion;
 	}
 	/**
-	 * Method increases recursion level. Uses for tracking a level of recursion in _checkDirty method.
+	 * Method increases the recursion level. Uses for tracking a level of recursion in _checkDirty method.
 	 * @memberof CalcRecursion
 	 */
 	CalcRecursion.prototype.incLevel = function () {
 		this.nLevel++;
 	};
 	/**
-	 * Method decreases recursion level. Uses for actualizes a level of recursion
+	 * Method decreases the recursion level. Uses for actualizes a level of recursion
 	 * in case when one of recursion is finished. Uses in _checkDirty method.
 	 * @memberof CalcRecursion
 	 */
@@ -12086,7 +12052,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.nLevel--;
 	};
 	/**
-	 * Method returns level of recursion in _checkDirty method.
+	 * Method returns the level of recursion in _checkDirty method.
 	 * @memberof CalcRecursion
 	 * @returns {number}
 	 */
@@ -12121,7 +12087,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.aElemsPart.push(oCellCoordinate);
 	};
 	/**
-	 * Method executes callback for each cell from aElems in reverse order.
+	 * Method executes a callback for each cell from aElems in reverse order.
 	 * aElems stores cell coordinates which need to be processed in _checkDirty method again.
 	 * @memberof CalcRecursion
 	 * @param {Function} fCallback
@@ -12145,7 +12111,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.nIterStep++;
 	};
 	/**
-	 * Method resets iteration step.
+	 * Method resets an iteration step.
 	 * @memberof CalcRecursion
 	 */
 	CalcRecursion.prototype.resetIterStep = function () {
@@ -12176,7 +12142,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.nRecursionCounter--;
 	};
 	/**
-	 * Method resets recursion counter.
+	 * Method resets the recursion counter.
 	 * Uses for control recursion level of initStartCellForIterCalc method.
 	 * @memberof CalcRecursion
 	 */
@@ -12188,7 +12154,7 @@ function parserFormula( formula, parent, _ws ) {
 		}
 	};
 	/**
-	 * Method checks the recursion counter exceeds max level of recursion or not.
+	 * Method checks the recursion counter exceeds the max level of recursion or not.
 	 * @memberof CalcRecursion
 	 * @returns {boolean}
 	 */
@@ -12206,7 +12172,7 @@ function parserFormula( formula, parent, _ws ) {
 		return bRecursionExceeded;
 	}
 	/**
-	 * Method returns recursion counter.
+	 * Method returns a recursion counter.
 	 * Uses for control recursion level of initStartCellForIterCalc method.
 	 * @memberof CalcRecursion
 	 * @returns {number}
@@ -12215,7 +12181,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.nRecursionCounter;
 	};
 	/**
-	 * Method sets a flag who recognizes an iteration calculations setting is enabled or not.
+	 * Method sets a flag which recognizes an iteration calculations setting is enabled or not.
 	 * @memberof CalcRecursion
 	 * @param {boolean} bIsEnabledRecursion
 	 */
@@ -12223,7 +12189,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.bIsEnabledRecursion = bIsEnabledRecursion;
 	};
 	/**
-	 * Method returns a flag who recognizes an iteration calculations setting is enabled or not.
+	 * Method returns a flag which recognizes an iteration calculations setting is enabled or not.
 	 * @memberof CalcRecursion
 	 * @returns {boolean}
 	 */
@@ -12231,7 +12197,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.bIsEnabledRecursion;
 	};
 	/**
-	 * Method sets index of start cell. This cell is a start and finish point of iteration for a recursion formula.
+	 * Method sets the index of the start cell. This cell is a start and finish point of iteration for a recursion formula.
 	 * Uses for only with enabled iterative calculations setting.
 	 * @memberof CalcRecursion
 	 * @param {{cellId: number, wsName: string}|null} oStartCellIndex
@@ -12240,7 +12206,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.oStartCellIndex = oStartCellIndex;
 	};
 	/**
-	 * Method returns index of start cell. This cell is a start and finish point of iteration for a recursion formula.
+	 * Method returns the index of the start cell. This cell is a start and finish point of iteration for a recursion formula.
 	 * Uses for only with enabled iterative calculations setting.
 	 * @memberof CalcRecursion
 	 * @returns {{cellId: number, wsName: string}}
@@ -12249,7 +12215,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.oStartCellIndex;
 	};
 	/**
-	 * Method sets a maximum iterations.
+	 * Method sets a maximum iteration.
 	 * @memberof CalcRecursion
 	 * @param {number} nMaxIterations
 	 */
@@ -12257,7 +12223,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.nMaxIterations = nMaxIterations;
 	};
 	/**
-	 * Method returns a maximum iterations.
+	 * Method returns a maximum iteration.
 	 * @memberof CalcRecursion
 	 * @returns {number}
 	 */
@@ -12297,7 +12263,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.nCalcMode;
 	};
 	/**
-	 * Method sets a grouped changed cells.
+	 * Method sets grouped changed cells.
 	 * @memberof CalcRecursion
 	 * @param {{wsName:{cellId: {cellId: number, wsName: string}[]}}|null} oGroupChangedCells
 	 */
@@ -12305,7 +12271,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.oGroupChangedCells = oGroupChangedCells;
 	};
 	/**
-	 * Method returns a grouped changed cells.
+	 * Method returns grouped changed cells.
 	 * @memberof CalcRecursion
 	 * @returns {{wsName:{cellId: {cellId: number, wsName: string}[]}}|null}
 	 */
@@ -12324,7 +12290,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.setGroupChangedCells(oGroupChangedCell);
 	};
 	/**
-	 * Method returns an array of cells with recursive formula.
+	 * Method returns an array of cells with a recursive formula.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
 	 * @returns {{cellId: number, wsName: string}[]}
@@ -12353,7 +12319,7 @@ function parserFormula( formula, parent, _ws ) {
 		return [];
 	};
 	/**
-	 * Method checks a cell has in array with recursive cells.
+	 * Method checks a cell has in an array with recursive cells.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
 	 * @returns {boolean}
@@ -12405,7 +12371,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.setStartCellIndex(oStartCellIdFromArr);
 	};
 	/**
-	 * Method adds array with recursive cells in the group changed cells object.
+	 * Method adds an array with recursive cells in the group changed cells object.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
 	 * @param {{cellId: number, wsName: string}[]} aRecursiveCells
@@ -12425,7 +12391,7 @@ function parserFormula( formula, parent, _ws ) {
 		oGroupChangedCell[sCellWsName][nCellIndex] = aRecursiveCells;
 	};
 	/**
-	 * Method updates array with recursive cells in the group changed cells object.
+	 * Method updates an array with recursive cells in the group changed cells object.
 	 * @memberof CalcRecursion
 	 * @param {{cellId: number, wsName: string}} oCellIndex
 	 * @param {{cellId: number, wsName: string}[]} aRecursiveCells
@@ -12438,7 +12404,7 @@ function parserFormula( formula, parent, _ws ) {
 		oGroupChangedCell[sCellWsName][nCellIndex] = aRecursiveCells;
 	};
 	/**
-	 * Method removes array with recursive cells in the group changed cells object.
+	 * Method removes an array with recursive cells in the group changed cells object.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
 	 */
@@ -12496,7 +12462,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.oPrevIterResult = null;
 	};
 	/**
-	 * Method sets result of a difference between iterations.
+	 * Method sets the result of a difference between iterations.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
 	 * @param {number} nResult
@@ -12685,7 +12651,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.nCellPasteValue;
 	};
 	/**
-	 * Method sets flag that checks cell is in edited mode
+	 * Method sets a flag that checks cell is in edited mode
 	 * * true - cell is editing. File in the editor already opened.
 	 * * false - cell isn't editing. File in the editor is opening.
 	 * @param {boolean} bIsCellEdited
@@ -12694,7 +12660,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.bIsCellEdited = bIsCellEdited;
 	};
 	/**
-	 * Method gets flag that checks cell is in edited mode
+	 * Method gets a flag that checks cell is in edited mode
 	 * * true - cell is editing. File in the editor already opened.
 	 * * false - cell isn't editing. File in the editor is opening.
 	 * @returns {boolean}
@@ -12745,7 +12711,7 @@ function parserFormula( formula, parent, _ws ) {
 		}
 	};
 	/**
-	 * Method returns the array of result of functions, which need to be checked for cycle after being calculated.
+	 * Method returns the array of a result of functions, which need to be checked for cycle after being calculated.
 	 * @memberof CalcRecursion
 	 * @returns {[]}
 	 */
@@ -12774,7 +12740,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.oCellContentFuncRes = null;
 	};
 	/**
-	 * Method returns array of cycle cells.
+	 * Method returns an array of cycle cells.
 	 * Uses when "Iteration calculation" setting is disabled.
 	 * @memberof CalcRecursion
 	 * @returns {Cell[]}
@@ -12783,7 +12749,7 @@ function parserFormula( formula, parent, _ws ) {
 		return this.aCycleCell;
 	};
 	/**
-	 * Method adds cycle cell to array.
+	 * Method adds a cycle cell to array.
 	 * Uses when "Iteration calculation" setting is disabled.
 	 * @memberof CalcRecursion
 	 * @param {Cell} oCell
@@ -12798,7 +12764,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.aCycleCell.push(oCell);
 	};
 	/**
-	 * Method clears array of cycle cells.
+	 * Method clears an array of cycle cells.
 	 * @memberof CalcRecursion
 	 */
 	CalcRecursion.prototype.clearCycleCells = function () {
@@ -12818,7 +12784,7 @@ function parserFormula( formula, parent, _ws ) {
 		this.oCheckedCells[sCellKey] = bCheckResult;
 	};
 	/**
-	 * Method clears oCheckedCells attribute.
+	 * Method clears the oCheckedCells attribute.
 	 * @memberof CalcResursion
 	 */
 	CalcRecursion.prototype.clearCheckedCells = function () {
@@ -12836,13 +12802,100 @@ function parserFormula( formula, parent, _ws ) {
 		return !!(this.oCheckedCells && this.oCheckedCells.hasOwnProperty(sCellKey));
 	};
 	/**
-	 * Method returns result of checked cell.
+	 * Method returns the result of the checked cell.
 	 * @memberof CalcRecursion
 	 * @param {string} sCellKey
 	 * @returns {boolean}
 	 */
 	CalcRecursion.prototype.getCheckedCell = function (sCellKey) {
 		return this.oCheckedCells && this.oCheckedCells[sCellKey];
+	};
+	/**
+	 * Method sets a flag that checks whether the formula needs to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @param {boolean} bRecheckFormula
+	 */
+	CalcRecursion.prototype.setRecheckFormula = function (bRecheckFormula) {
+		this.bRecheckFormula = bRecheckFormula
+	};
+	/**
+	 * Method returns a flag that checks whether the formula needs to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @return {boolean}
+	 */
+	CalcRecursion.prototype.needRecheckFormulaAfterCalc = function () {
+		return this.bRecheckFormula;
+	};
+	/**
+	 * Method resets a flag that checks whether the formula needs to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 */
+	CalcRecursion.prototype.resetRecheckFormula = function () {
+		this.bRecheckFormula = false;
+	}
+	/**
+	 * Method initializes the object and adds formula data which need to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @param {string} sKey
+	 * @param {parserFormula|string} value
+	 */
+	CalcRecursion.prototype.addRecheckingFormulaData = function (sKey, value) {
+		if (!this.oRecheckingFormula) {
+			this.oRecheckingFormula = {};
+		}
+		this.oRecheckingFormula[sKey] = value;
+	};
+	/**
+	 * Method returns formula data which need to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @param {string} sKey
+	 * @returns {parserFormula|string}
+	 */
+	CalcRecursion.prototype.getRecheckingFormulaData = function (sKey) {
+		return this.oRecheckingFormula && this.oRecheckingFormula[sKey];
+	};
+	/**
+	 * Method clears formula data which need to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 */
+	CalcRecursion.prototype.clearRecheckingFormulaData = function () {
+		this.oRecheckingFormula = null;
+	};
+	/**
+	 * Method initializes the object and adds calculated argument for formula which needs to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @param {string} sKey
+	 * @param {cNumber|cArea} oValue
+	 */
+	CalcRecursion.prototype.addCalculatedArgument = function (sKey, oValue) {
+		if (!this.oCalculatedArgs) {
+			this.oCalculatedArgs = {};
+		}
+		this.oCalculatedArgs[sKey] = oValue;
+	};
+	/**
+	 * Method returns a calculated argument for formula which needs to recheck after being calculated.
+	 * @memberof CalcRecursion
+	 * @param {string} sKey
+	 * @returns {cNumber|cArea}
+	 */
+	CalcRecursion.prototype.getCalculatedArgument = function (sKey) {
+		return this.oCalculatedArgs && this.oCalculatedArgs[sKey];
+	};
+	/**
+	 * Method checks has in the attribute calculated arguments.
+	 * @memberof CalcRecursion
+	 * @return {boolean}
+	 */
+	CalcRecursion.prototype.hasCalculatedArguments = function () {
+		return this.oCalculatedArgs !== null;
+	};
+	/**
+	 * Method clears calculated arguments.
+	 * @memberof CalcRecursion
+	 */
+	CalcRecursion.prototype.clearCalculatedArguments = function () {
+		this.oCalculatedArgs = null;
 	};
 
 	const g_cCalcRecursion = new CalcRecursion();
