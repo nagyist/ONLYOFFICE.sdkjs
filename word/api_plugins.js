@@ -1567,7 +1567,7 @@
 	/**
 	 * Checks if the document is in the filling form mode.
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @alias IsFillingFormMode
 	 * @returns {boolean} - Returns **true** if the document is in the filling form mode.
 	 * @since 9.3.0
@@ -1584,7 +1584,7 @@
 	/**
 	 * Checks if the document is in the filling OForm mode.
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @alias IsFillingOFormMode
 	 * @returns {boolean} - Returns **true** if the document is in the filling OForm mode.
 	 * @since 9.3.0
@@ -1602,7 +1602,7 @@
 	/**
 	 * Checks if the document is in the editing OForm mode.
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CFE"]
 	 * @alias IsEditingOFormMode
 	 * @returns {boolean} - Returns **true** if the document is in the editing OForm mode.
 	 * @since 9.3.0
