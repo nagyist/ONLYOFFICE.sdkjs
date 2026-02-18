@@ -8457,6 +8457,7 @@ background-repeat: no-repeat;\
         {
             this.openFileCryptCallback(this.openFileCryptBinary);
         }
+		AscBuilder.Slide.init();
 	};
 	asc_docs_api.prototype.initCollaborativeEditing = function()
 	{

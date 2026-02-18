@@ -32284,6 +32284,27 @@
 		AscBuilder.ApiSmartArt  = ApiSmartArt;
 		AscBuilder.ApiOleObject = ApiOleObject;
 		AscBuilder.ApiChart     = ApiChart;
+		
+		// for backward compatibility
+		Api.asc_GetLocalTrackRevisions = Api["asc_GetLocalTrackRevisions"] = function()
+		{
+			return Asc.editor.asc_GetLocalTrackRevisions();
+		};
+		
+		Api.asc_GetLocalTrackRevisions = Api["asc_SetLocalTrackRevisions"] = function(isTrack)
+		{
+			Asc.editor.asc_SetLocalTrackRevisions(isTrack);
+		};
+		
+		Api.sendEvent = Api["sendEvent"] = function()
+		{
+			Asc.editor.sendEvent.apply(Asc.editor, arguments);
+		};
+		
+		Api.AI = Api["AI"] = function()
+		{
+			Asc.editor.AI.apply(Asc.editor, arguments);
+		};
 	};
 	
 }(window, null));

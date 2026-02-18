@@ -29230,14 +29230,31 @@
 		return EMU / 36000.0;
 	}
 	window['AscBuilder'] = window['AscBuilder'] || {};
-	window['AscBuilder'].ApiShape           = ApiShape;
-	window['AscBuilder'].ApiImage           = ApiImage;
-	window['AscBuilder'].ApiGroup           = ApiGroup;
-	window['AscBuilder'].ApiSmartArt        = ApiSmartArt;
-	window['AscBuilder'].ApiOleObject       = ApiOleObject;
-	window['AscBuilder'].ApiChart			= ApiChart;
 	
 	window['AscBuilder']["Cell"] = window['AscBuilder'].Cell = window['AscBuilder'].Cell || {};
 	AscBuilder.Cell["Api"] = AscBuilder.Cell.Api = Api;
+	
+	AscBuilder.Cell.init = function()
+	{
+		AscBuilder.ApiDrawing   = ApiDrawing;
+		AscBuilder.ApiShape     = ApiShape;
+		AscBuilder.ApiImage     = ApiImage;
+		AscBuilder.ApiGroup     = ApiGroup;
+		AscBuilder.ApiSmartArt  = ApiSmartArt;
+		AscBuilder.ApiOleObject = ApiOleObject;
+		AscBuilder.ApiChart     = ApiChart;
+		
+		// for backward compatibility
+		Api.sendEvent = Api["sendEvent"] = function()
+		{
+			Asc.editor.sendEvent.apply(Asc.editor, arguments);
+		};
+		
+		Api.AI = Api["AI"] = function()
+		{
+			Asc.editor.AI.apply(Asc.editor, arguments);
+		};
+	};
+	
 	
 }(window, null));

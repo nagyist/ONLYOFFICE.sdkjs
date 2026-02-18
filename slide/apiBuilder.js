@@ -8740,16 +8740,31 @@
 
 	
 	window['AscBuilder'] = window['AscBuilder'] || {};
-	window['AscBuilder'].ApiShape = ApiShape;
-	window['AscBuilder'].ApiImage = ApiImage;
-	window['AscBuilder'].ApiGroup = ApiGroup;
-	window['AscBuilder'].ApiSmartArt = ApiSmartArt;
-	window['AscBuilder'].ApiOleObject = ApiOleObject;
-	window['AscBuilder'].ApiTable = ApiTable;
-	window['AscBuilder'].ApiChart = ApiChart;
 	
 	window['AscBuilder']["Slide"] = window['AscBuilder'].Slide = window['AscBuilder'].Slide || {};
 	AscBuilder.Slide["Api"] = AscBuilder.Slide.Api = Api;
+	
+	AscBuilder.Slide.init = function()
+	{
+		AscBuilder.ApiDrawing   = ApiDrawing;
+		AscBuilder.ApiShape     = ApiShape;
+		AscBuilder.ApiImage     = ApiImage;
+		AscBuilder.ApiGroup     = ApiGroup;
+		AscBuilder.ApiSmartArt  = ApiSmartArt;
+		AscBuilder.ApiOleObject = ApiOleObject;
+		AscBuilder.ApiChart     = ApiChart;
+		
+		// for backward compatibility
+		Api.sendEvent = Api["sendEvent"] = function()
+		{
+			Asc.editor.sendEvent.apply(Asc.editor, arguments);
+		};
+		
+		Api.AI = Api["AI"] = function()
+		{
+			Asc.editor.AI.apply(Asc.editor, arguments);
+		};
+	};
 	
 })(window, null);
 
