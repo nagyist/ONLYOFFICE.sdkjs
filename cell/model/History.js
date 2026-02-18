@@ -477,6 +477,7 @@ function CHistory(Document)
 	this.oRedoObjectParam = null;
 
 	this.waitingList = null;
+	this.isExecutingWaitingList = false;
 }
 	CHistory.prototype = Object.create(CHistoryWord.prototype);
 CHistory.prototype.init = function(workbook) {
@@ -510,6 +511,9 @@ CHistory.prototype.Clear = function()
 	this.SavedIndex = null;
 	this.ForceSave= false;
   	this.UserSavedIndex = null;
+
+	this.waitingList = null;
+	this.isExecutingWaitingList = false;
 
 	window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Hide();
 	this.workbook.handlers.trigger("toggleAutoCorrectOptions", null, true);
@@ -1275,9 +1279,18 @@ CHistory.prototype.Add = function(Class, Type, sheetid, range, Data, LocalChange
 
 	CHistory.prototype.executeWaitingList = function()
 	{
-		if (this.waitingList) {
-			for (let i = 0; i < this.waitingList.length; i++) {
-				this.Add(this.waitingList[i].Class, this.waitingList[i].Type, this.waitingList[i].sheetid, this.waitingList[i].range, this.waitingList[i].Data, this.waitingList[i].LocalChange, this.waitingList[i].isRedoAdd);
+		if (this.isExecutingWaitingList) {
+			return;
+		}
+		
+		if (this.waitingList && this.waitingList.length > 0) {
+			if (this.Index === 0 && this.SavedIndex === -1) {
+				this.isExecutingWaitingList = true;
+				for (let i = 0; i < this.waitingList.length; i++) {
+					this.Add(this.waitingList[i].Class, this.waitingList[i].Type, this.waitingList[i].sheetid, this.waitingList[i].range, this.waitingList[i].Data, this.waitingList[i].LocalChange, this.waitingList[i].isRedoAdd);
+				}
+				this.waitingList = null;
+				this.isExecutingWaitingList = false;
 			}
 		}
 	};
