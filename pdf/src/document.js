@@ -5971,6 +5971,8 @@ var CPresentation = CPresentation || function(){};
             return false;
         }
 
+		let sOldEmbedFontsMap = JSON.stringify(Asc.editor.embeddedFontsMap);
+
         const _this = this;
         Asc.editor.canSave = false;
         const oDrDoc = this.GetDrawingDocument();
@@ -6133,6 +6135,8 @@ var CPresentation = CPresentation || function(){};
                 _this.AddDrawing(drawing, nPage, idx);
                 drawing.SetNeedRecalc(true);
             }
+
+			AscCommon.History.Add(new CChangesEmbedFontsMap(_this, sOldEmbedFontsMap, JSON.stringify(Asc.editor.embeddedFontsMap)));
 
             _this.FinalizeAction();
             _this.Viewer.file.removeSelection();
