@@ -102,7 +102,7 @@
 
         let oIconPos = this.GetIconPosition();
         oCopy.SetIconPosition(oIconPos.X, oIconPos.Y);
-        oCopy.SetButtonFitBounds(this.IsButtonFitBounds());
+        oCopy.SetFitBounds(this.IsButtonFitBounds());
         oCopy.SetLayout(this.GetLayout());
         oCopy.SetScaleHow(this.GetScaleHow());
         oCopy.SetScaleWhen(this.GetScaleWhen());
@@ -864,6 +864,20 @@
         this.SetNeedUpdateImage(true);
         this.SetWasChanged(true);
     };
+    CPushButtonField.prototype.Reassign_ImageUrls = function(oImages) {
+        let _t = this;
+
+        Object.values(AscPDF.APPEARANCE_TYPES).forEach(function(type) {
+            let sRasterId = _t.GetImageRasterId(type);
+            if (oImages[sRasterId]) {
+				if (_t._rasterId == sRasterId) {
+					_t._rasterId = oImages[sRasterId];
+				}
+
+                _t.SetImageRasterId(oImages[sRasterId], type);
+            }
+        });
+    };
     CPushButtonField.prototype.DrawPressed = function() {
         if (this.IsReadOnly()) {
             return;
@@ -1545,7 +1559,7 @@
     CPushButtonField.prototype.GetDrawing = function() {
         return this.content.GetAllDrawingObjects()[0];
     };
-    CPushButtonField.prototype.SetButtonFitBounds = function(bValue) {
+    CPushButtonField.prototype.SetFitBounds = function(bValue) {
         if (this._buttonFitBounds != bValue) {
             AscCommon.History.Add(new CChangesPDFPushbuttonFitBounds(this, this._buttonFitBounds, bValue));
 

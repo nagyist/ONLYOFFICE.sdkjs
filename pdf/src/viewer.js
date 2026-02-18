@@ -246,6 +246,9 @@
 
         AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], true));
 		this.RedrawAnnots();
+
+		let oDoc = Asc.editor.getPDFDoc();
+		oDoc.CheckComment(oAnnot);
 	};
 	CPageInfo.prototype.RemoveAnnot = function(sId) {
 		let oAnnot = this.annots.find(function(annot) {
@@ -260,6 +263,9 @@
         
         AscCommon.History.Add(new CChangesPDFDocumentAnnotsContent(this, nPos, [oAnnot], false));
 		this.RedrawAnnots(oAnnot.IsTextMarkup());
+	};
+	CPageInfo.prototype.GetAnnots = function() {
+		return this.annots;
 	};
 	CPageInfo.prototype.AddField = function(oField, nPos) {
 		if (nPos == undefined) {
@@ -375,7 +381,27 @@
 		return oFile.pages[nIndex].isRecognized;
 	};
 	CPageInfo.prototype.Is_Inline = function(){};
+	CPageInfo.prototype.GetSelectedText = function(bClearText, oPr) {
+		let oDoc		= this.GetDocument();
+		let oController = oDoc.GetController();
+		let oViewer     = oDoc.Viewer;
+		let oFile       = oViewer.file;
+		let nPageIndex	= this.GetIndex();
+		let oAcitveObj	= oDoc.GetActiveObject();
 
+		let sText = "";
+
+		if (oAcitveObj && oAcitveObj.GetPage() == nPageIndex) {
+			sText = oController.GetSelectedText(bClearText, oPr)
+		}
+		else {
+			let oTextObj = {Text: ""};
+			oFile.copySelection(nPageIndex, oTextObj);
+			sText = oTextObj.Text;
+		}
+
+		return sText;
+	}
 	function PropLocker(objectId) {
 		this.objectId = null;
 		this.Lock = new AscCommon.CLock();
