@@ -949,11 +949,14 @@ function (window, undefined) {
 		if (oDefName) {
 			sValue = oDefName.ref;
 		}
+		let sCellName = sValue;
 		if (!!~sValue.indexOf('!')) {
-			const sWsName = sValue.split('!')[0];
+			const aSplittedValue = sValue.split('!');
+			const sWsName = aSplittedValue[0].replaceAll("'", "");
+			sCellName = aSplittedValue[1];
 			oWs = oWb.getWorksheetByName(sWsName);
 		}
-		const oRange = oWs.getRange2(sValue);
+		const oRange = oWs.getRange2(sCellName);
 		if (!oRange) {
 			return sValue;
 		}

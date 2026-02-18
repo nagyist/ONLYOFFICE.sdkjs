@@ -1647,6 +1647,61 @@ $(function () {
                 assert.strictEqual(sCellVal, oExpectedChangingCells[sCellName], _desc + `Cell: ${sCellName}. Value: ${sCellVal}`);
             }
         },`Check API. CloseSolver API with final result. isSave - true. Check fill of cells from "By Changing Variable Cells".`);
+
+		// Case #4: Check defNames for cells with SheetNames in quotes 'sheet name' for Constraint. Bug-80174
+		ws.getRange2('A1').setValue('=1+1');
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#4: asc_GetSolverParams is created. Reopen Solver params dialogue window after closing');
+		solverParams.asc_resetAll(); // Reset all previous field data
+		solverParams.asc_setObjectiveFunction('$A$1');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '$A$1', 'Check API. Case #4: asc_GetSolverParams. objectiveFunction is $A$1');
+		solverParams.asc_setOptimizeResultTo(c_oAscOptimizeTo.max);
+		assert.strictEqual(solverParams.asc_getOptimizeResultTo(), c_oAscOptimizeTo.max, 'Check API. Case #4: asc_GetSolverParams. optimizeResultTo is max');
+		solverParams.asc_setChangingCells('$A$1');
+		assert.strictEqual(solverParams.asc_getChangingCells(), '$A$1', 'Check API. Case #4: asc_GetSolverParams. changingCells is $A$1');
+		solverParams.asc_addConstraint(1, {cellRef: "'Sheet1'!$A$1", operator: c_oAscOperator['<='], constraint: '1'});
+		assert.strictEqual(solverParams.asc_getConstraints().size, 1, 'Check API. Case #4: asc_GetSolverParams. constraints has 1 element');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).cellRef, '\'Sheet1\'!$A$1', 'Check API. Case #4: asc_GetSolverParams. constraints has cellRef \'Sheet1\'!$A$1');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).operator, c_oAscOperator['<='], 'Check API. Case #4: asc_GetSolverParams. constraints has operator <=');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).constraint, '1', 'Check API. Case #4: asc_GetSolverParams. constraints has constraint 1');
+		// Closing Solver params dialogue window for save fields in define names
+		api.asc_CloseSolver(false);
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#4: asc_GetSolverParams is created with saved data. Reopen Solver params dialogue window after closing');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), 'Sheet1!$A$1', 'Check API. Case #4: asc_GetSolverParams. objectiveFunction is Sheet1!$A$1');
+		assert.strictEqual(solverParams.asc_getChangingCells(), 'Sheet1!$A$1', 'Check API. Case #4: asc_GetSolverParams. changingCells is Sheet1!$A$1');
+		assert.strictEqual(solverParams.asc_getConstraints().size, 1, 'Check API. Case #4: asc_GetSolverParams. constraints has 1 element');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).cellRef, 'Sheet1!$A$1', 'Check API. Case #4: asc_GetSolverParams. constraints has cellRef Sheet1!$A$1');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).operator, c_oAscOperator['<='], 'Check API. Case #4: asc_GetSolverParams. constraints has operator <=');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).constraint, '1', 'Check API. Case #4: asc_GetSolverParams. constraints has constraint 1');
+
+		// Case #5: Check defNames for cells with sheet names with spaces or special symbols.
+		// Change ws name to name with spaces.
+		ws.setName('Sheet with spaces');
+		// Fill solver params
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#5: asc_GetSolverParams is created. Reopen Solver params dialogue window after closing');
+		solverParams.asc_setObjectiveFunction('$A$10')
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '$A$10', 'Check API. Case #5: asc_GetSolverParams. objectiveFunction is $A$10');
+		// Closing Solver params dialogue window for save fields in define names
+		api.asc_CloseSolver(false);
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#5: asc_GetSolverParams is created with saved data. Reopen Solver params dialogue window after closing');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '\'Sheet with spaces\'!$A$10', 'Check API. Case #5: asc_GetSolverParams. objectiveFunction is \'Sheet with spaces\'!$A$10');
+		// Change ws name to name with special symbols.
+		ws.setName('Case#5');
+		// Open solver params for filling fields.
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#5: asc_GetSolverParams is created. Reopen Solver params dialogue window after closing');
+		solverParams.asc_setObjectiveFunction('\'Case#5\'!$A$1');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '\'Case#5\'!$A$1', 'Check API. Case #5: asc_GetSolverParams. objectiveFunction is \'Case#5\'!$A$1');
+		// Closing Solver params dialogue window for save fields in define names
+		api.asc_CloseSolver(false);
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#5: asc_GetSolverParams is created with saved data. Reopen Solver params dialogue window after closing');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '\'Case#5\'!$A$1', 'Check API. Case #5: asc_GetSolverParams. objectiveFunction is \'Case#5\'!$A$1');
+
+		ws.setName('Sheet1');
 		clearData(0, 0, 100, 100);
 	});
 	QUnit.test('Test: Check calculate by Simplex method. Value of type.', function (assert) {
