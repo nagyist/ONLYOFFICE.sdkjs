@@ -1439,7 +1439,9 @@
     CAnnotationBase.prototype.GetStrokeColor = function() {
         return this._strokeColor;
     };
-
+	CAnnotationBase.prototype.IsNeedWriteOnSave = function() {
+		return !this.IsNeedDrawFromStream() || this.IsChanged();
+	};
     CAnnotationBase.prototype.WriteToBinaryBase = function(memory) {
         // type
         memory.WriteByte(this.GetType());

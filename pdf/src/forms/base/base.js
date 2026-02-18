@@ -2809,6 +2809,9 @@
             "h" : (aOrigRect[3] - aOrigRect[1])
         };
     };
+	CBaseField.prototype.IsNeedWriteOnSave = function() {
+		return !this.IsNeedDrawFromStream() || this.IsChanged();
+	};
     CBaseField.prototype.WriteToBinaryBase = function(memory) {
         // type
         memory.WriteByte(this.GetType());

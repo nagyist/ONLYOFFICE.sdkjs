@@ -4624,7 +4624,7 @@
 						continue;
 					}
 
-					!oPageInfo.annots[nAnnot].IsNeedDrawFromStream() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
+					oPageInfo.annots[nAnnot].IsNeedWriteOnSave() && oPageInfo.annots[nAnnot].WriteToBinary(oMemory);
 					oPageInfo.annots[nAnnot].GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -4642,7 +4642,7 @@
 			// forms
 			if (oPageInfo.fields) {
 				for (let nForm = 0; nForm < oPageInfo.fields.length; nForm++) {
-					if (oPageInfo.fields[nForm].IsChanged())
+					if (oPageInfo.fields[nForm].IsNeedWriteOnSave())
 						oPageInfo.fields[nForm].WriteToBinary(oMemory);
 				}
 			}
@@ -4859,12 +4859,12 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.find(function(annot) {
 				let aReplies = annot.GetReplies();
-				return !annot.IsNeedDrawFromStream() || aReplies.find(function(reply) {
+				return annot.IsNeedWriteOnSave() || aReplies.find(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;
 			if (aForms.find(function(form) {
-				return form.IsChanged();
+				return form.IsNeedWriteOnSave();
 			})) bNeedEdit = true;
 			if (aDeletedObj.length != 0) bNeedEdit = true;
 
@@ -5176,7 +5176,7 @@
 				for (let nAnnot = 0; nAnnot < oPageInfo.annots.length; nAnnot++) {
 					let oAnnot = oPageInfo.annots[nAnnot];
 
-					!oAnnot.IsNeedDrawFromStream() && oAnnot.WriteToBinary(oMemory);
+					oAnnot.IsChanged() && oAnnot.WriteToBinary(oMemory);
 					oAnnot.GetReplies().forEach(function(reply) {
 						(reply.IsChanged() || !oMemory.docRenderer) && reply.WriteToBinary(oMemory);
 					});
@@ -5283,7 +5283,7 @@
 			if (aDrawings.length != 0) bNeedEdit = true;
 			if (aAnnots.some(function(annot) {
 				let aReplies = annot.GetReplies();
-				return !annot.IsNeedDrawFromStream() || aReplies.some(function(reply) {
+				return annot.IsChanged() || aReplies.some(function(reply) {
 					return reply.IsChanged();
 				});
 			})) bNeedEdit = true;
