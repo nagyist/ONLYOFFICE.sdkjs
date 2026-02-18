@@ -20738,6 +20738,18 @@
 	};
 
 	/**
+	 * Returns the chart title text.
+	 * @memberof ApiChart
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {string | null} - The chart title text or null if the chart has no title.
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/GetTitle.js
+	 */
+	ApiChart.prototype.GetTitle = function ()
+	{
+		return AscFormat.builder_GetChartTitle(this.Chart);
+	};
+
+	/**
 	 *  Specifies the chart horizontal axis title.
 	 *  @memberof ApiChart
 	 *  @typeofeditors ["CDE", "CSE", "CPE"]
@@ -30194,6 +30206,7 @@
 	ApiChart.prototype["GetClassType"]                 = ApiChart.prototype.GetClassType;
 	ApiChart.prototype["GetChartType"]                 = ApiChart.prototype.GetChartType;
 	ApiChart.prototype["SetTitle"]                     = ApiChart.prototype.SetTitle;
+	ApiChart.prototype["GetTitle"]                     = ApiChart.prototype.GetTitle;
 	ApiChart.prototype["SetHorAxisTitle"]              = ApiChart.prototype.SetHorAxisTitle;
 	ApiChart.prototype["SetVerAxisTitle"]              = ApiChart.prototype.SetVerAxisTitle;
 	ApiChart.prototype["SetVerAxisOrientation"]        = ApiChart.prototype.SetVerAxisOrientation;
