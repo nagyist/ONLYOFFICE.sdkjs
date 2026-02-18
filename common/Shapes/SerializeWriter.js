@@ -3319,6 +3319,14 @@ function CBinaryFileWriter()
                     var _run_len = _elem.Content.length;
                     var _run_text = "";
                     var _pdfFontInfo = oThis.GetPdfFontInfoFromRun(_elem);
+                    var _origEmbeddedFont = null;
+                    if (_pdfFontInfo && _elem.Pr) {
+                        _origEmbeddedFont = _elem.Pr.GetFontFamily();
+                        var _matchedFont = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_origEmbeddedFont] : null;
+                        if (_matchedFont) {
+                            _elem.Pr.RFonts.SetAll(_matchedFont, -1);
+                        }
+                    }
                     for (var j = 0; j < _run_len; j++)
                     {
                         switch (_elem.Content[j].Type)
@@ -3376,6 +3384,9 @@ function CBinaryFileWriter()
 
                         _count++;
                     }
+                    if (_origEmbeddedFont !== null) {
+                        _elem.Pr.RFonts.SetAll(_origEmbeddedFont, -1);
+                    }
                     break;
                 }
                 case para_Hyperlink:
@@ -3393,6 +3404,14 @@ function CBinaryFileWriter()
                                 var _run_len = _elem_h.Content.length;
                                 var _run_text = "";
                                 var _pdfFontInfoH = oThis.GetPdfFontInfoFromRun(_elem_h);
+                                var _origEmbeddedFontH = null;
+                                if (_pdfFontInfoH && _elem_h.Pr) {
+                                    _origEmbeddedFontH = _elem_h.Pr.GetFontFamily();
+                                    var _matchedFontH = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_origEmbeddedFontH] : null;
+                                    if (_matchedFontH) {
+                                        _elem_h.Pr.RFonts.SetAll(_matchedFontH, -1);
+                                    }
+                                }
                                 for (var j = 0; j < _run_len; j++)
                                 {
                                     switch (_elem_h.Content[j].Type)
@@ -3442,6 +3461,9 @@ function CBinaryFileWriter()
                                     oThis.EndRecord();
 
                                     _count++;
+                                }
+                                if (_origEmbeddedFontH !== null) {
+                                    _elem_h.Pr.RFonts.SetAll(_origEmbeddedFontH, -1);
                                 }
                                 break;
                             }
