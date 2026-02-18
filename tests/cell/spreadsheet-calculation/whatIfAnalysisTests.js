@@ -1870,12 +1870,12 @@ $(function () {
 		let oSimplexTableau = wb.getSolver().getSimplexTableau();
 		let oVarIndexByCellName = oSimplexTableau.getVarIndexByCellName();
 		api.asc_CloseSolver(true);
-		const undoExpectedVariableCells = {
+		let undoExpectedVariableCells = {
 			'A1': '55',
 			'A2': '40',
 			'A3': '45'
 		};
-		const expectedVariableCells = {
+		let expectedVariableCells = {
 			'A1': '0',
 			'A2': '1',
 			'A3': '0'
@@ -1897,6 +1897,48 @@ $(function () {
 			assert.strictEqual(nResult.toFixed(2), '0.12', _desc + 'Objective cell: ' + nResult.toFixed(2));
 
 		}, 'Case #1: Checking result after found solution. Result: ');
+		// Case #2: Objective cell and Variable cell have the same reference link
+		ws.getRange2('A1').setValue('=1+1');
+		// Filling solver parameters
+		oSolverParams = api.asc_GetSolverParams();
+		assert.ok(oSolverParams, 'Case #2: solverParams is created. Open Solver params dialogue window');
+		oSolverParams.asc_resetAll();
+		oSolverParams.asc_setObjectiveFunction('Sheet1!$A$1');
+		assert.strictEqual(oSolverParams.asc_getObjectiveFunction(), 'Sheet1!$A$1', 'Case #2: Checking fill "Set Objective" field. Result: ' + oSolverParams.asc_getObjectiveFunction());
+		oSolverParams.asc_setOptimizeResultTo(c_oAscOptimizeTo.max);
+		assert.strictEqual(oSolverParams.asc_getOptimizeResultTo(), c_oAscOptimizeTo.max, 'Case #2: Checking fill "Optimize to" field. Result: Max(' + oSolverParams.asc_getOptimizeResultTo() + ')');
+		oSolverParams.asc_setChangingCells('Sheet1!$A$1');
+		assert.strictEqual(oSolverParams.asc_getChangingCells(), 'Sheet1!$A$1', 'Case #2: Checking fill "By changing Variable" cells field. Result: ' + oSolverParams.asc_getChangingCells());
+		oSolverParams.asc_addConstraint(1, {cellRef: 'Sheet1!$A$1', operator: c_oAscOperator['<='], constraint: '1'});
+		assert.strictEqual(oSolverParams.asc_getConstraints().size, 1, 'Case #2: Checking count elements of "Constraints" field. Result: ' + oSolverParams.asc_getConstraints().size);
+		assert.strictEqual(oSolverParams.asc_getVariablesNonNegative(), true, 'Case #2: Checking fill "Variables Non-Negative" field. Result: ' + oSolverParams.asc_getVariablesNonNegative());
+		assert.strictEqual(oSolverParams.asc_getSolvingMethod(), c_oAscSolvingMethod.simplexLP, 'Case #2: Checking fill "Select a solving method" field. Result: Simplex LP(' + oSolverParams.asc_getSolvingMethod() + ')');
+		// Finding solution
+		api.asc_StartSolver(oSolverParams);
+		oSimplexTableau = wb.getSolver().getSimplexTableau();
+		oVarIndexByCellName = oSimplexTableau.getVarIndexByCellName();
+		api.asc_CloseSolver(true);
+		undoExpectedVariableCells = {
+			'A1': '55',
+		};
+		expectedVariableCells = {
+			'A1': '1',
+		};
+		checkUndoRedo(function (_desc) {
+			for (let sCellName in oVarIndexByCellName) {
+				let sVarCellVal = ws.getCell2(sCellName).getValue();
+				assert.strictEqual(sVarCellVal, undoExpectedVariableCells[sCellName], _desc + 'Variable cell: ' + sVarCellVal);
+			}
+			let nResult = +ws.getCell2('A1').getValue();
+			assert.strictEqual(nResult, 55, _desc + 'Result cell: ' + nResult);
+		}, function (_desc) {
+			for (let sCellName in oVarIndexByCellName) {
+				let sVarCellVal = ws.getCell2(sCellName).getValue();
+				assert.strictEqual(sVarCellVal, expectedVariableCells[sCellName], _desc + 'Variable cell: ' + sVarCellVal);
+			}
+			let nResult = +ws.getCell2('A1').getValue();
+			assert.strictEqual(nResult, 1, _desc + 'Result cell: ' + nResult.toFixed());
+		}, 'Case #2: Checking result after found solution.');
 	});
 	QUnit.test('Test: Check calculate by Simplex method. Minimize.', function (assert) {
 		// Case #1: Finding the total spending for advertising.
@@ -1933,13 +1975,13 @@ $(function () {
 		let oSimplexTableau = wb.getSolver().getSimplexTableau();
 		let oVarIndexByCellName = oSimplexTableau.getVarIndexByCellName();
 		api.asc_CloseSolver(true);
-		const undoExpectedVariableCells = {
+		let undoExpectedVariableCells = {
 			'A4': '',
 			'B4': '',
 			'C4': '',
 			'D4': '',
 		};
-		const expectedVariableCells = {
+		let expectedVariableCells = {
 			'A4': '60000',
 			'B4': '15000',
 			'C4': '15000',
@@ -1949,9 +1991,9 @@ $(function () {
 			for (let sCellName in oVarIndexByCellName) {
 				let sVarCellVal = ws.getCell2(sCellName).getValue();
 				assert.strictEqual(sVarCellVal, undoExpectedVariableCells[sCellName], _desc + 'Variable cell: ' + sVarCellVal);
-				let nResult = +ws.getCell2('E4').getValue();
-				assert.strictEqual(nResult, 0, _desc + 'Result cell: ' + nResult);
 			}
+			let nResult = +ws.getCell2('E4').getValue();
+			assert.strictEqual(nResult, 0, _desc + 'Result cell: ' + nResult);
 		}, function (_desc) {
 			for (let sCellName in oVarIndexByCellName) {
 				let nVarCellVal = +ws.getCell2(sCellName).getValue();
