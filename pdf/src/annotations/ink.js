@@ -255,11 +255,13 @@
             aShapePaths.push(aShapePath);
         }
         
+		AscCommon.History.StartNoHistoryMode();
         let geometry = generateGeometry(aShapePaths, aBounds, this.spPr.geometry);
         this.recalcTransform()
         var transform = this.getTransform();
         
         geometry.Recalculate(transform.extX, transform.extY);
+		AscCommon.History.EndNoHistoryMode();
 
         return geometry;
     };

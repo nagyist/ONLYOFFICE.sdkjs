@@ -460,7 +460,10 @@
             return;
         }
 
+		AscCommon.History.StartNoHistoryMode();
         oGeometry.Recalculate(aBounds[2] - aBounds[0], aBounds[3] - aBounds[1]);
+		AscCommon.History.EndNoHistoryMode();
+
         return oGeometry;
     };
     CAnnotationStamp.prototype.IsSelected = function() {
