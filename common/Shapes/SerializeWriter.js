@@ -3249,6 +3249,45 @@ function CBinaryFileWriter()
 				}
     };
 
+    this.GetPdfFontInfoFromRun = function(run)
+    {
+        if (!run || !run.Content || run.Content.length === 0 || !run.Content[0].IsPdfText())
+            return null;
+
+        let oPdfFontInfo = {};
+
+        let sFontName = run.Pr ? run.Pr.GetFontFamily() : "";
+        let sPrefix = AscFonts.getEmbeddedFontPrefix();
+        if (sFontName && sFontName.indexOf(sPrefix) === 0) {
+            oPdfFontInfo.name = sFontName.substring(sPrefix.length);
+            oPdfFontInfo.isActual = false;
+        } else {
+            oPdfFontInfo.name = sFontName || "";
+            oPdfFontInfo.isActual = true;
+        }
+
+        let aGids = [];
+        let aPositions = [0];
+        let nSpacing = run.Pr ? (run.Pr.GetSpacing() || 0) : 0;
+        let nPos = 0;
+
+        for (let i = 0; i < run.Content.length; i++) {
+            let oItem = run.Content[i];
+            if (oItem.IsPdfText()) {
+                aGids.push(oItem.GetGid());
+                nPos += oItem.originWidth + nSpacing;
+                aPositions.push(nPos);
+            }
+        }
+
+        oPdfFontInfo.gids = aGids.join(";") + ";";
+        oPdfFontInfo.lefts = aPositions.map(function(pos) {
+            return Math.round(pos / AscCommonWord.g_dKoef_emu_to_mm);
+        }).join(";") + ";";
+
+        return oPdfFontInfo;
+    };
+
     this.WriteParagraph = function(paragraph, startPos, endPos)
     {
         var tPr = new AscFormat.CTextParagraphPr();
@@ -3279,6 +3318,7 @@ function CBinaryFileWriter()
                 {
                     var _run_len = _elem.Content.length;
                     var _run_text = "";
+                    var _pdfFontInfo = oThis.GetPdfFontInfoFromRun(_elem);
                     for (var j = 0; j < _run_len; j++)
                     {
                         switch (_elem.Content[j].Type)
@@ -3303,7 +3343,7 @@ function CBinaryFileWriter()
                                 if("" != _run_text)
                                 {
                                     oThis.StartRecord(0); // subtype
-                                    oThis.WriteTextRun(_elem.Pr, _run_text, null);
+                                    oThis.WriteTextRun(_elem.Pr, _run_text, null, _pdfFontInfo);
                                     oThis.EndRecord();
 
                                     _count++;
@@ -3331,7 +3371,7 @@ function CBinaryFileWriter()
                     else if ("" != _run_text)
                     {
                         oThis.StartRecord(0); // subtype
-                        oThis.WriteTextRun(_elem.Pr, _run_text, null);
+                        oThis.WriteTextRun(_elem.Pr, _run_text, null, _pdfFontInfo);
                         oThis.EndRecord();
 
                         _count++;
@@ -3352,6 +3392,7 @@ function CBinaryFileWriter()
                             {
                                 var _run_len = _elem_h.Content.length;
                                 var _run_text = "";
+                                var _pdfFontInfoH = oThis.GetPdfFontInfoFromRun(_elem_h);
                                 for (var j = 0; j < _run_len; j++)
                                 {
                                     switch (_elem_h.Content[j].Type)
@@ -3376,7 +3417,7 @@ function CBinaryFileWriter()
                                             if("" != _run_text)
                                             {
                                                 oThis.StartRecord(0); // subtype
-                                                oThis.WriteTextRun(_elem_h.Pr, _run_text, _hObj);
+                                                oThis.WriteTextRun(_elem_h.Pr, _run_text, _hObj, _pdfFontInfoH);
                                                 oThis.EndRecord();
 
                                                 _count++;
@@ -3397,7 +3438,7 @@ function CBinaryFileWriter()
                                 if ("" != _run_text)
                                 {
                                     oThis.StartRecord(0); // subtype
-                                    oThis.WriteTextRun(_elem.Content[0].Pr, _run_text, _hObj);
+                                    oThis.WriteTextRun(_elem.Content[0].Pr, _run_text, _hObj, _pdfFontInfoH);
                                     oThis.EndRecord();
 
                                     _count++;
@@ -3517,7 +3558,7 @@ function CBinaryFileWriter()
         oThis.EndRecord();
     };
 
-    this.WriteTextRun = function(runPr, text, hlinkObj)
+    this.WriteTextRun = function(runPr, text, hlinkObj, pdfFontInfo)
     {
         oThis.StartRecord(AscFormat.PARRUN_TYPE_RUN);
 
@@ -3531,6 +3572,34 @@ function CBinaryFileWriter()
             oThis.WriteRunProperties(runPr, hlinkObj);
             oThis.EndRecord();
         }
+
+        if (pdfFontInfo)
+        {
+            oThis.WritePdfRunFontInfo(pdfFontInfo);
+        }
+
+        oThis.EndRecord();
+    };
+    this.WritePdfRunFontInfo = function(pdfFontInfo)
+    {
+        oThis.StartRecord(111);
+
+        oThis.WriteUChar(g_nodeAttributeStart);
+        if (pdfFontInfo.name !== undefined)
+            oThis._WriteString2(0, pdfFontInfo.name);
+        if (pdfFontInfo.index !== undefined)
+            oThis._WriteInt2(1, pdfFontInfo.index);
+        if (pdfFontInfo.left !== undefined)
+            oThis._WriteUInt2(2, pdfFontInfo.left);
+        if (pdfFontInfo.right !== undefined)
+            oThis._WriteUInt2(3, pdfFontInfo.right);
+        if (pdfFontInfo.gids !== undefined)
+            oThis._WriteString2(4, pdfFontInfo.gids);
+        if (pdfFontInfo.lefts !== undefined)
+            oThis._WriteString2(5, pdfFontInfo.lefts);
+        if (pdfFontInfo.isActual !== undefined)
+            oThis._WriteBool2(6, pdfFontInfo.isActual);
+        oThis.WriteUChar(g_nodeAttributeEnd);
 
         oThis.EndRecord();
     };
