@@ -3537,14 +3537,11 @@
 						return;
 					}
 
-					let hyperlinkAnchor = HyperProps.Anchor;
-					if (typeof hyperlinkAnchor === "string") {
-						hyperlinkAnchor = hyperlinkAnchor.trim();
-					}
+					const hyperlinkAnchor = typeof HyperProps.Anchor === 'string' && HyperProps.Anchor;
 
 					let hyperlinkId = HyperProps.Value;
 					if (!hyperlinkId && hyperlinkAnchor) {
-						hyperlinkId = "#" + hyperlinkAnchor;
+						hyperlinkId = '#' + hyperlinkAnchor;
 					}
 					if (!hyperlinkId) {
 						return;
@@ -3605,14 +3602,11 @@
 						return null;
 					}
 
-					let hyperlinkAnchor = HyperProps.Anchor;
-					if (typeof hyperlinkAnchor === "string") {
-						hyperlinkAnchor = hyperlinkAnchor.trim();
-					}
+					const hyperlinkAnchor = typeof HyperProps.Anchor === 'string' && HyperProps.Anchor;
 
 					let hyperlinkId = HyperProps.Value;
 					if (!hyperlinkId && hyperlinkAnchor) {
-						hyperlinkId = "#" + hyperlinkAnchor;
+						hyperlinkId = '#' + hyperlinkAnchor;
 					}
 					if (!hyperlinkId) {
 						return null;
