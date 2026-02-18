@@ -1074,20 +1074,28 @@
 					shapesSort.push(element);
 			});
 
-			let ids = "";
+			shapesSort = shapesSort.filter(function(element) {
+				return shapesMacro[element.getObjectName()] !== undefined;
+			});
+
+			if (shapesSort.length === 0)
+				return "";
+
+			let ids = ""
 			for(let i = 0; i < shapesSort.length; i++)
 			{
 				if (shapesMacro[shapesSort[i].getObjectName()] !== undefined)
 					ids +=  "\"" + "macroShape" + shapesMacro[shapesSort[i].getObjectName()] + "\"" + (i != shapesSort.length - 1 ? ", " : "")
-				else
-					ids += "\"" + shapesSort[i].getObjectName() + "\"" + (i != shapesSort.length - 1 ? ", " : "")
 			}
 
 			return str + "\tdoc.GetDrawingsByName([" + ids + "])\n\t\t.forEach(function(drawing, index){drawing.Select(index === 0)});\n"
 		},
 		deselectDrawing			: function(name)
 		{
-			return "\tdoc.GetDrawingsByName([\"" + (shapesMacro[name] ? "macroShape" + shapesMacro[name] : name) + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
+			if (shapesMacro[name] === undefined) {
+				return "\tdoc.GetSelectedDrawings().forEach(function(drawing){drawing.Unselect()});\n";
+			}
+			return "\tdoc.GetDrawingsByName([\"" + ("macroShape" + shapesMacro[name]) + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
 		},
 		setDrawingFill			: function(unifill)
 		{
@@ -1705,7 +1713,10 @@
 		},
 		deselectDrawing				: function(name)
 		{
-			return "\tworkbook.GetDrawingsByName([\"" + (shapesMacro[name] ? "macroShape" + shapesMacro[name] : name)  + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
+			if (shapesMacro[name] === undefined) {
+				return "\tworksheet.GetSelectedDrawings().forEach(function(drawing){drawing.Unselect()});\n";
+			}
+			return "\tworkbook.GetDrawingsByName([\"" + ("macroShape" + shapesMacro[name])  + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
 		},
 		selectDrawing				: function(shapes)
 		{
@@ -1717,13 +1728,19 @@
 					shapesSort.push(element);
 			});
 
-			let ids = "";
+			// Remove elements where shapesMacro[element.getObjectName()] === undefined
+			shapesSort = shapesSort.filter(function(element) {
+				return shapesMacro[element.getObjectName()] !== undefined;
+			});
+
+			if (shapesSort.length === 0)
+				return "";
+
+			let ids = ""
 			for(let i = 0; i < shapesSort.length; i++)
 			{
 				if (shapesMacro[shapesSort[i].getObjectName()] !== undefined)
 					ids +=  "\"" + "macroShape" + shapesMacro[shapesSort[i].getObjectName()] + "\"" + (i != shapesSort.length - 1 ? ", " : "")
-				else
-					ids += "\"" + shapesSort[i].getObjectName() + "\"" + (i != shapesSort.length - 1 ? ", " : "")
 			}
 
 			return str + "\tworkbook.GetDrawingsByName([" + ids + "])\n\t\t.forEach(function(drawing, index){drawing.Select(index === 0)});\n"
@@ -2262,13 +2279,18 @@
 			if (shapesSort.length === 0)
 				return "";
 
+			shapesSort = shapesSort.filter(function(element) {
+				return shapesMacro[element.getObjectName()] !== undefined;
+			});
+
+			if (shapesSort.length === 0)
+				return "";
+
 			let ids = "";
 			for(let i = 0; i < shapesSort.length; i++)
 			{
 				if (shapesMacro[shapesSort[i].getObjectName()] !== undefined)
 					ids +=  "\"" + "macroShape" + shapesMacro[shapesSort[i].getObjectName()] + "\"" + (i != shapesSort.length - 1 ? ", " : "")
-				else
-					ids += "\"" + shapesSort[i].getObjectName() + "\"" + (i != shapesSort.length - 1 ? ", " : "")
 			}
 
 			return str + "\tpresentation.GetDrawingsByName([" + ids + "])\n\t\t.forEach(function(drawing, index){drawing.Select(index === 0)});\n"
@@ -2276,7 +2298,10 @@
 		},
 		deselectDrawing			: function(name)
 		{
-			return "\tpresentation.GetDrawingsByName([\"" + (shapesMacro[name] ? "macroShape" + shapesMacro[name] : name) + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
+			if (shapesMacro[name] === undefined) {
+				return "\tpresentation.GetSelectedDrawings().forEach(function(drawing){drawing.Unselect()});\n";
+			}
+			return "\tpresentation.GetDrawingsByName([\"" + ("macroShape" + shapesMacro[name]) + "\"])\n\t\t.forEach(function(drawing){drawing.Unselect()});\n"
 		},
 		setDrawingFill			: function(unifill)
 		{
