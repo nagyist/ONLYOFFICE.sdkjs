@@ -3321,9 +3321,10 @@ function CBinaryFileWriter()
                     var _pdfFontInfo = oThis.GetPdfFontInfoFromRun(_elem);
                     var _origEmbeddedFont = null;
                     if (_pdfFontInfo && _elem.Pr) {
-                        _origEmbeddedFont = _elem.Pr.GetFontFamily();
-                        var _matchedFont = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_origEmbeddedFont] : null;
+                        var _embeddedFont = _elem.Pr.GetFontFamily();
+                        var _matchedFont = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_embeddedFont] : null;
                         if (_matchedFont) {
+                            _origEmbeddedFont = _embeddedFont;
                             _elem.Pr.RFonts.SetAll(_matchedFont, -1);
                         }
                     }
@@ -3406,9 +3407,10 @@ function CBinaryFileWriter()
                                 var _pdfFontInfoH = oThis.GetPdfFontInfoFromRun(_elem_h);
                                 var _origEmbeddedFontH = null;
                                 if (_pdfFontInfoH && _elem_h.Pr) {
-                                    _origEmbeddedFontH = _elem_h.Pr.GetFontFamily();
-                                    var _matchedFontH = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_origEmbeddedFontH] : null;
+                                    var _embeddedFontH = _elem_h.Pr.GetFontFamily();
+                                    var _matchedFontH = Asc.editor.embeddedFontsMap ? Asc.editor.embeddedFontsMap[_embeddedFontH] : null;
                                     if (_matchedFontH) {
+                                        _origEmbeddedFontH = _embeddedFontH;
                                         _elem_h.Pr.RFonts.SetAll(_matchedFontH, -1);
                                     }
                                 }
