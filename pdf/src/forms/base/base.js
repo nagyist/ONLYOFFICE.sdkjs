@@ -1003,12 +1003,12 @@
         let oParent = this.GetParent(true);
         if (oParent == null && this._value == null)
             return undefined;
-        else if (bInherit === false || (this._value != null && this.GetPartialName() != null)) {
+		else if (oParent && bInherit !== false) {
+			return oParent.GetParentValue();
+		}
+        else {
             return this._value;
         }
-        
-        if (oParent)
-            return oParent.GetParentValue();
     };
     /**
 	 * Sets api value of form.
