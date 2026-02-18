@@ -3487,8 +3487,11 @@
 		graphics.transform(1, 0, 0, 1, 0, 0);
 		graphics.save();
 
+		let oldParamarks = this.Api.ShowParaMarks;
+		this.Api.ShowParaMarks = false;
 		result.par.Shift(0, paddingMM, -result.lineTop + paddingMM);
 		result.par.Draw(0, graphics);
+		this.Api.ShowParaMarks = oldParamarks;
 
 		graphics.restore();
 		return oCanvas.toDataURL("image/png");
