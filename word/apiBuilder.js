@@ -31,6 +31,7 @@
  */
 
 "use strict";
+
 (function(window, builder)
 {
 	/**
@@ -39,7 +40,8 @@
 	 * @class
 	 * @name Api
 	 */
-	var Api = window["Asc"]["asc_docs_api"] || window["Asc"]["spreadsheet_api"];
+	var Api = {};
+	
 	var c_oAscRevisionsChangeType = Asc.c_oAscRevisionsChangeType;
 	var c_oAscSectionBreakType    = Asc.c_oAscSectionBreakType;
 	var c_oAscSdtLockType         = Asc.c_oAscSdtLockType;
@@ -331,8 +333,7 @@
 	};
 	CMarkdownConverter.prototype.DoMarkdown = function()
 	{
-		var oApi               = editor;
-		var oDocument          = oApi.GetDocument();
+		var oDocument          = Api.GetDocument();
 		var sOutputText        = '';
 		var arrSelectedContent = [];
 		var oSelectedContent   = null;
@@ -369,8 +370,7 @@
 	};
 	CMarkdownConverter.prototype.DoHtml = function()
 	{
-		var oApi               = editor;
-		var oDocument          = oApi.GetDocument();
+		var oDocument          = Api.GetDocument();
 		var sOutputText        = '';
 		var arrSelectedContent = [];
 		var oSelectedContent   = null;
@@ -1200,7 +1200,7 @@
 		this.isEmpty 		= false;
 		this.Paragraphs 	= [];
 		this.Text 			= undefined;
-		this.oDocument		= editor.GetDocument();
+		this.oDocument		= Api.GetDocument();
 		this.EndPos			= null;
 		this.StartPos		= null;
 		this.TextPr 		= new CTextPr();
@@ -3389,7 +3389,7 @@
 
 		if (this.ParaHyperlink.Content.length === 0)
 		{
-			HyperRun = editor.CreateRun(); 
+			HyperRun = Api.CreateRun();
 			HyperRun.AddText(sDisplay);
 			this.ParaHyperlink.Add_ToContent(0, HyperRun.Run, false);
 			HyperRun.Run.Set_RStyle(Styles.GetDefaultHyperlink());
@@ -4153,6 +4153,11 @@
 	 */
 
 	/**
+	 * The available text flow direction inside a drawing content.
+	 * @typedef {("lrtb" | "tbrl" | "btlr")} TextFlowDirection
+	 */
+
+	/**
 	 * The available fill types.
 	 * @typedef {("solid" | "gradient" | "pattern" | "blip" | "nofill")} FillType
 	 */
@@ -4174,7 +4179,7 @@
 	 */
 
 	/**
-     * The available color scheme identifiers.
+	* The available color scheme identifiers.
 	 * @typedef {("accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6" | "bg1" | "bg2" | "dk1" | "dk2"
 	 *     | "lt1" | "lt2" | "tx1" | "tx2")} SchemeColorId
 	 * @see office-js-api/Examples/Enumerations/SchemeColorId.js
@@ -4527,9 +4532,9 @@
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetDocument.js
 	 */
 
-	Api.prototype.GetDocument = function()
+	Api.GetDocument = function()
 	{
-		return new ApiDocument(this.WordControl.m_oLogicDocument);
+		return new ApiDocument(private_GetLogicDocument());
 	};
 	/**
 	 * Returns the object by it's internal ID.
@@ -4540,7 +4545,7 @@
 	 * @since 9.0.4
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetByInternalId.js
 	 */
-	Api.prototype.GetByInternalId = function(id)
+	Api.GetByInternalId = function(id)
 	{
 		let obj = AscCommon.g_oTableId.Get_ById(id);
 		if (!obj)
@@ -4574,7 +4579,7 @@
 	 * @returns {ApiParagraph}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateParagraph.js
 	 */
-	Api.prototype.CreateParagraph = function()
+	Api.CreateParagraph = function()
 	{
 		return new ApiParagraph(new AscWord.Paragraph(private_GetLogicDocument()));
 	};
@@ -4589,7 +4594,7 @@
 	 * @returns {ApiRange | null} - returns null if element isn't supported.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRange.js
 	 */
-	Api.prototype.CreateRange = function(element, start, end)
+	Api.CreateRange = function(element, start, end)
 	{
 		if (element)
 		{
@@ -4619,7 +4624,7 @@
 	 * @returns {ApiTable}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTable.js
 	 */
-	Api.prototype.CreateTable = function(cols, rows)
+	Api.CreateTable = function(cols, rows)
 	{
 		if (!rows || rows <= 0 || !cols || cols <= 0)
 			return null;
@@ -4637,7 +4642,7 @@
 	 * @returns {ApiRun}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRun.js
 	 */
-	Api.prototype.CreateRun = function()
+	Api.CreateRun = function()
 	{
 		return new ApiRun(new ParaRun(null, false));
 	};
@@ -4651,7 +4656,7 @@
 	 * @returns {ApiHyperlink}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateHyperlink.js
 	 */
-	Api.prototype.CreateHyperlink = function(link, display, screenTipText)
+	Api.CreateHyperlink = function(link, display, screenTipText)
 	{
 		var oHyperlink   = new ParaHyperlink();
 		var apiHyperlink = new ApiHyperlink(oHyperlink);
@@ -4673,7 +4678,7 @@
 	 * @returns {ApiImage}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateImage.js
 	 */
-	Api.prototype.CreateImage = function(imageSrc, width, height)
+	Api.CreateImage = function(imageSrc, width, height)
 	{
 		var nW = private_EMU2MM(width);
 		var nH = private_EMU2MM(height);
@@ -4697,15 +4702,15 @@
 	 * @returns {ApiShape}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateShape.js
 	 */
-	Api.prototype.CreateShape = function(shapeType, width, height, fill, stroke)
+	Api.CreateShape = function(shapeType, width, height, fill, stroke)
 	{
 		var oLogicDocument = private_GetLogicDocument();
 		var oDrawingDocuemnt = private_GetDrawingDocument();
 		shapeType = shapeType || "rect";
 		width     = width || 914400;
 		height    = height || 914400;
-		fill      = fill || editor.CreateNoFill();
-		stroke    = stroke || editor.CreateStroke(0, editor.CreateNoFill());
+		fill      = fill || Api.CreateNoFill();
+		stroke    = stroke || Api.CreateStroke(0, Api.CreateNoFill());
 		var nW = private_EMU2MM(width);
 		var nH = private_EMU2MM(height);
 		var oDrawing = new ParaDrawing(nW, nH, null, oDrawingDocuemnt, oLogicDocument, null);
@@ -4728,7 +4733,7 @@
 	 * @since 8.3.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateGroup.js
 	 */
-	Api.prototype.CreateGroup = function(drawings)
+	Api.CreateGroup = function(drawings)
 	{
 		drawings = GetArrayParameter(drawings, []);
 		if (drawings.length == 0)
@@ -4770,7 +4775,7 @@
 	 * @returns {ApiChart}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateChart.js
 	 */
-	Api.prototype.CreateChart = function(chartType, series, seriesNames, catNames, width, height, styleIndex, numFormats)
+	Api.CreateChart = function(chartType, series, seriesNames, catNames, width, height, styleIndex, numFormats)
 	{
 		var oDrawingDocument = private_GetDrawingDocument();
 		var nW = private_EMU2MM(width);
@@ -4799,7 +4804,7 @@
 	 * @returns {?ApiOleObject}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateOleObject.js
 	 */
-	Api.prototype.CreateOleObject = function(imageSrc, width, height, data, appId)
+	Api.CreateOleObject = function(imageSrc, width, height, data, appId)
 	{
 		if (!(typeof imageSrc === "string" && imageSrc.length > 0 && typeof data === "string"
 			&& typeof appId === "string" && appId.length > 0
@@ -4824,9 +4829,9 @@
 	 * @since 9.1.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateCustomGeometry.js
 	 */
-	Api.prototype.CreateCustomGeometry = function()
+	Api.CreateCustomGeometry = function()
 	{
-		return Api.prototype.private_CreateGeometry(new AscFormat.Geometry());
+		return Api.private_CreateGeometry(new AscFormat.Geometry());
 	};
 
 	/**
@@ -4838,14 +4843,14 @@
 	 * @since 9.1.0
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePresetGeometry.js
 	 */
-	Api.prototype.CreatePresetGeometry = function(sPreset)
+	Api.CreatePresetGeometry = function(sPreset)
 	{
 		let geometry = AscFormat.CreateGeometry(sPreset);
 		if (!geometry)
 		{
 			return null;
 		}
-		return Api.prototype.private_CreateGeometry(geometry);
+		return Api.private_CreateGeometry(geometry);
 	};
 
 	/**
@@ -4858,7 +4863,7 @@
 	 * @returns {ApiRGBColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRGBColor.js
 	 */
-	Api.prototype.CreateRGBColor = function(r, g, b)
+	Api.CreateRGBColor = function(r, g, b)
 	{
 		return new ApiRGBColor(r, g, b);
 	};
@@ -4871,7 +4876,7 @@
 	 * @returns {ApiSchemeColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSchemeColor.js
 	 */
-	Api.prototype.CreateSchemeColor = function(schemeColorId)
+	Api.CreateSchemeColor = function(schemeColorId)
 	{
 		return new ApiSchemeColor(schemeColorId);
 	};
@@ -4884,7 +4889,7 @@
 	 * @returns {ApiPresetColor};
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePresetColor.js
 	 */
-	Api.prototype.CreatePresetColor = function(presetColor)
+	Api.CreatePresetColor = function(presetColor)
 	{
 		return new ApiPresetColor(presetColor);
 	};
@@ -4897,7 +4902,7 @@
 	 * @returns {ApiColor} Instance of ApiColor with 'auto' type.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AutoColor.js
 	 */
-	Api.prototype.AutoColor = function () {
+	Api.AutoColor = function () {
 		return new ApiColor('auto');
 	};
 
@@ -4905,14 +4910,14 @@
 	 * Creates an RGB color from red, green and blue components.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "PDFE"]
 	 * @param {byte} r - Red component (0-255).
 	 * @param {byte} g - Green component (0-255).
 	 * @param {byte} b - Blue component (0-255).
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RGB.js
 	 */
-	Api.prototype.RGB = function (r, g, b) {
+	Api.RGB = function (r, g, b) {
 		const intRgbColor = (r & 0xFF) << 16 | (g & 0xFF) << 8 | (b & 0xFF);
 		return new ApiColor('rgb', intRgbColor);
 	};
@@ -4929,7 +4934,7 @@
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RGBA.js
 	 */
-	Api.prototype.RGBA = function (r, g, b, a) {
+	Api.RGBA = function (r, g, b, a) {
 		const intRgbColor = (r & 0xFF) << 24 | (g & 0xFF) << 16 | (b & 0xFF) << 8 | (a & 0xFF);
 		return new ApiColor('rgba', intRgbColor);
 	};
@@ -4943,7 +4948,7 @@
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/HexColor.js
 	 */
-	Api.prototype.HexColor = function (hexString) {
+	Api.HexColor = function (hexString) {
 		hexString = hexString.replace(/^#/, '');
 		let hexNumber = parseInt(hexString, 16);
 		if (isNaN(hexNumber))
@@ -4960,7 +4965,7 @@
 	 * @returns {ApiColor} Instance of ApiColor with 'theme' type.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ThemeColor.js
 	 */
-	Api.prototype.ThemeColor = function (name) {
+	Api.ThemeColor = function (name) {
 		const index = ApiColor.ThemeColorMap[name] !== undefined
 			? ApiColor.ThemeColorMap[name]
 			: ApiColor.ThemeColorMap['tx1'];
@@ -4991,7 +4996,7 @@
 	 *
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateSolidFill.js
 	 */
-	Api.prototype.CreateSolidFill = function (color)
+	Api.CreateSolidFill = function (color)
 	{
 		const unifill = color instanceof ApiColor
 			? color.private_createUnifill()
@@ -5009,7 +5014,7 @@
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateLinearGradientFill.js
 	 */
-	Api.prototype.CreateLinearGradientFill = function(gradientStops, angle)
+	Api.CreateLinearGradientFill = function(gradientStops, angle)
 	{
 		return new ApiFill(AscFormat.builder_CreateLinearGradient(gradientStops, angle));
 	};
@@ -5023,7 +5028,7 @@
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateRadialGradientFill.js
 	 */
-	Api.prototype.CreateRadialGradientFill = function(gradientStops)
+	Api.CreateRadialGradientFill = function(gradientStops)
 	{
 		return new ApiFill(AscFormat.builder_CreateRadialGradient(gradientStops));
 	};
@@ -5056,7 +5061,7 @@
 	 *
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePatternFill.js
 	 */
-	Api.prototype.CreatePatternFill = function (patternType, bgColor, fgColor)
+	Api.CreatePatternFill = function (patternType, bgColor, fgColor)
 	{
 		if (bgColor instanceof ApiColor) {
 			bgColor = { Unicolor: bgColor.private_createUnifill().fill.color };
@@ -5077,7 +5082,7 @@
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateBlipFill.js
 	 */
-	Api.prototype.CreateBlipFill = function(imageUrl, blipFillType)
+	Api.CreateBlipFill = function(imageUrl, blipFillType)
 	{
 		return new ApiFill(AscFormat.builder_CreateBlipFill(imageUrl, blipFillType));
 	};
@@ -5089,7 +5094,7 @@
 	 * @returns {ApiFill}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateNoFill.js
 	 */
-	Api.prototype.CreateNoFill = function()
+	Api.CreateNoFill = function()
 	{
 		return new ApiFill(AscFormat.CreateNoFillUniFill());
 	};
@@ -5121,7 +5126,7 @@
 	 *
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateStroke.js
 	 */
-	Api.prototype.CreateStroke = function(width, fill, sDash)
+	Api.CreateStroke = function(width, fill, sDash)
 	{
 		let strDashType = AscFormat.CLn.prototype.GetDashCode(sDash);
 		return new ApiStroke(AscFormat.builder_CreateLine(width, fill, strDashType));
@@ -5153,7 +5158,7 @@
 	 *
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateGradientStop.js
 	 */
-	Api.prototype.CreateGradientStop = function (color, pos)
+	Api.CreateGradientStop = function (color, pos)
 	{
 		let pos_ = AscCommon.clampNumber(pos, 0, 100000);
 		return new ApiGradientStop(color, pos_);
@@ -5167,7 +5172,7 @@
 	 * @returns {ApiBullet}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateBullet.js
 	 */
-	Api.prototype.CreateBullet = function(sSymbol){
+	Api.CreateBullet = function(sSymbol){
 		var oBullet = new AscFormat.CBullet();
 		oBullet.bulletType = new AscFormat.CBulletType();
 		if(typeof sSymbol === "string" && sSymbol.length > 0){
@@ -5189,7 +5194,7 @@
 	 * @returns {ApiBullet}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateNumbering.js
 	 */
-	Api.prototype.CreateNumbering = function(numType, startAt)
+	Api.CreateNumbering = function(numType, startAt)
 	{
 		var oBullet             = new AscFormat.CBullet();
 		oBullet.bulletType      = new AscFormat.CBulletType();
@@ -5259,7 +5264,7 @@
 	 * @returns {ApiInlineLvlSdt}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateInlineLvlSdt.js
 	 */
-	Api.prototype.CreateInlineLvlSdt = function()
+	Api.CreateInlineLvlSdt = function()
 	{
 		var oSdt = new CInlineLevelSdt();
 		oSdt.Add_ToContent(0, new ParaRun(null, false));
@@ -5283,7 +5288,7 @@
 	 * @returns {ApiInlineLvlSdt} An inline-level content control that represents a checkbox.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateCheckBoxContentControl.js
 	 */
-	Api.prototype.CreateCheckBoxContentControl = function(checkBoxPr)
+	Api.CreateCheckBoxContentControl = function(checkBoxPr)
 	{
 		let pr = getSdtCheckBoxPr(checkBoxPr);
 		let sdt = new CInlineLevelSdt();
@@ -5301,7 +5306,7 @@
 	 * @return {ApiInlineLvlSdt} An inline-level content control that represents a picture container.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreatePictureContentControl.js
 	 */
-	Api.prototype.CreatePictureContentControl = function(width, height)
+	Api.CreatePictureContentControl = function(width, height)
 	{
 		var oSdt = new CInlineLevelSdt();
 		
@@ -5332,7 +5337,7 @@
 	 * @return {ApiInlineLvlSdt} An inline-level content control that represents a combo box.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateComboBoxContentControl.js
 	 */
-	Api.prototype.CreateComboBoxContentControl = function(list, selected)
+	Api.CreateComboBoxContentControl = function(list, selected)
 	{
 		let comboBoxPr = getSdtComboBoxPr(list);
 		
@@ -5356,7 +5361,7 @@
 	 * @return {ApiInlineLvlSdt} An inline-level content control that represents a drop-down list.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateDropDownListContentControl.js
 	 */
-	Api.prototype.CreateDropDownListContentControl = function(list, selected)
+	Api.CreateDropDownListContentControl = function(list, selected)
 	{
 		let comboBoxPr = getSdtComboBoxPr(list);
 		
@@ -5387,7 +5392,7 @@
 	 * @return {ApiInlineLvlSdt} An inline-level content control that represents a date-time picker.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateDatePickerContentControl.js
 	 */
-	Api.prototype.CreateDatePickerContentControl = function(datePickerPr)
+	Api.CreateDatePickerContentControl = function(datePickerPr)
 	{
 		let pr = getSdtDatePickerPr(datePickerPr);
 		
@@ -5403,7 +5408,7 @@
 	 * @returns {ApiBlockLvlSdt}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateBlockLvlSdt.js
 	 */
-	Api.prototype.CreateBlockLvlSdt = function()
+	Api.CreateBlockLvlSdt = function()
 	{
 		return new ApiBlockLvlSdt(new CBlockLevelSdt(editor.private_GetLogicDocument(), private_GetLogicDocument()));
 	};
@@ -5415,7 +5420,7 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/Save.js
 	 */
-	Api.prototype.Save = function()
+	Api.Save = function()
 	{
 		this.SaveAfterMacros = true;
 		return true;
@@ -5431,7 +5436,7 @@
 	 * @return {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/LoadMailMergeData.js
 	 */
-	Api.prototype.LoadMailMergeData = function(data)
+	Api.LoadMailMergeData = function(data)
 	{
 		if (!data || data.length === 0)
 			return false;
@@ -5448,7 +5453,7 @@
 	 * @return {ApiDocumentContent}  
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetMailMergeTemplateDocContent.js
 	 */
-	Api.prototype.GetMailMergeTemplateDocContent = function()
+	Api.GetMailMergeTemplateDocContent = function()
 	{
 		var oDocument = editor.private_GetLogicDocument();
 
@@ -5532,7 +5537,7 @@
 	 * @return {number}  
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetMailMergeReceptionsCount.js
 	 */
-	Api.prototype.GetMailMergeReceptionsCount = function()
+	Api.GetMailMergeReceptionsCount = function()
 	{
 		var oDocument = editor.private_GetLogicDocument();
 
@@ -5547,7 +5552,7 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ReplaceDocumentContent.js
 	 */
-	Api.prototype.ReplaceDocumentContent = function(documentContent)
+	Api.ReplaceDocumentContent = function(documentContent)
 	{
 		var oDocument        = editor.private_GetLogicDocument();
 		var mailMergeContent = documentContent.Document.Content;
@@ -5570,7 +5575,7 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/MailMerge.js
 	 */
-	Api.prototype.MailMerge = function(startIndex, endIndex)
+	Api.MailMerge = function(startIndex, endIndex)
 	{
 		var oDocument = editor.private_GetLogicDocument();
 
@@ -5595,7 +5600,7 @@
 	 * @returns {object} - readed api class element
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/FromJSON.js
 	 */
-	Api.prototype.FromJSON = function(message)
+	Api.FromJSON = function(message)
 	{
 		var oReader = new AscJsonConverter.ReaderFromJSON();
 		AscJsonConverter.ActiveReader = oReader;
@@ -5852,7 +5857,7 @@
 	 * @returns {ApiComment?} - Returns null if the comment was not added.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/AddComment.js
 	 */
-	Api.prototype.AddComment = function(element, text, author, userId)
+	Api.AddComment = function(element, text, author, userId)
 	{
 		if (!text || typeof(text) !== "string")
 			return null;
@@ -5950,7 +5955,10 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/attachEvent.js
 	 */
-	Api.prototype["attachEvent"] = Api.prototype.attachEvent;
+	Api["attachEvent"] = function(eventName, callback)
+	{
+		Asc.editor.attachEvent(eventName, callback);
+	};
 
 	/**
 	 * Unsubscribes from the specified event.
@@ -5961,7 +5969,10 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/detachEvent.js
 	 */
-	Api.prototype["detachEvent"] = Api.prototype.detachEvent;
+	Api["detachEvent"] = function(eventName)
+	{
+		Asc.editor.detachEvent(eventName);
+	};
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
@@ -10642,7 +10653,7 @@
 				LastTextPrInParagraph = this.Paragraph.TextPr.Value;
 			}
 			
-			var oRun = editor.CreateRun();
+			var oRun = Api.CreateRun();
 			oRun.AddText(oElement);
 			oRun.Run.Apply_TextPr(LastTextPrInParagraph, undefined, true);
 			
@@ -10655,7 +10666,7 @@
 	 * Returns the last Run with text in the current paragraph.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
-	 * @returns {ApiRun} Returns <code>false</code> if the paragraph doesn't containt the required run.
+	 * @returns {ApiRun}
 	 * @see office-js-api/Examples/{Editor}/ApiParagraph/Methods/GetLastRunWithText.js
 	 */
 	ApiParagraph.prototype.GetLastRunWithText = function()
@@ -11058,7 +11069,7 @@
 		return this;
 	};
 	/**
-	 * Returns the last element of the paragraph which is not empty.
+	 * Returns the last element of the paragraph.
 	 * @memberof ApiParagraph
 	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 * @returns {?ParagraphContent}
@@ -11347,7 +11358,7 @@
 		}
 		else if (typeof paragraph === "string")
 		{
-			oNewPara = editor.CreateParagraph();
+			oNewPara = Api.CreateParagraph();
 			oNewPara.AddText(paragraph);
 
 			if (sPosition === "before")
@@ -13403,7 +13414,7 @@
 	 */
 	ApiSection.prototype.GetNext = function()
 	{
-		var oDocument		= editor.GetDocument();
+		var oDocument		= Api.GetDocument();
 		var arrApiSections	= oDocument.GetSections();
 		var sectionIndex	= -1;
 
@@ -13432,7 +13443,7 @@
 	 */
 	ApiSection.prototype.GetPrevious = function()
 	{
-		var oDocument		= editor.GetDocument();
+		var oDocument		= Api.GetDocument();
 		var arrApiSections	= oDocument.GetSections();
 		var sectionIndex	= -1;
 
@@ -15223,7 +15234,7 @@
 
 		const oUnifill = isTheme
 			? color.private_createUnifill()
-			: Api.prototype.RGB(r, g, b).private_createUnifill();
+			: Api.RGB(r, g, b).private_createUnifill();
 
 		const oNewShd = {
 			Value: bNone ? Asc.c_oAscShd.Nil : Asc.c_oAscShd.Clear,
@@ -15258,15 +15269,15 @@
 				return new ApiColor('theme', unifillColor.id);
 
 			if (unifillColor instanceof AscFormat.CRGBColor)
-				return Api.prototype.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
+				return Api.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
 		}
 
 		const color = shd.Fill;
 		if (color) {
 			const isAuto = color.Auto === true;
 			return isAuto
-				? Api.prototype.AutoColor()
-				: Api.prototype.RGB(color.r, color.g, color.b);
+				? Api.AutoColor()
+				: Api.RGB(color.r, color.g, color.b);
 		}
 
 		return null;
@@ -15945,15 +15956,15 @@
 				return new ApiColor('theme', unifillColor.id);
 
 			if (unifillColor instanceof AscFormat.CRGBColor)
-				return Api.prototype.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
+				return Api.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
 		}
 
 		const oColor = this.TextPr.GetColor();
 		if (oColor !== undefined) {
 			const isAuto = oColor.Auto === true;
 			return isAuto
-				? Api.prototype.AutoColor()
-				: Api.prototype.RGB(oColor.r, oColor.g, oColor.b);
+				? Api.AutoColor()
+				: Api.RGB(oColor.r, oColor.g, oColor.b);
 		}
 
 		return null;
@@ -16334,15 +16345,15 @@
 				return new ApiColor('theme', unifillColor.id);
 
 			if (unifillColor instanceof AscFormat.CRGBColor)
-				return Api.prototype.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
+				return Api.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
 		}
 
 		const color = oShd.Color || oShd.Fill;
 		if (color) {
 			const isAuto = color.Auto === true;
 			return isAuto
-				? Api.prototype.AutoColor()
-				: Api.prototype.RGB(color.r, color.g, color.b);
+				? Api.AutoColor()
+				: Api.RGB(color.r, color.g, color.b);
 		}
 
 		return null;
@@ -16658,7 +16669,7 @@
 	 */
 	ApiParaPr.prototype.SetJc = function(sJc)
 	{
-		this.ParaPr.Jc = private_GetParaAlign(sJc);
+		this.ParaPr.Jc = private_GetInnerParaAlign(sJc);
 		this.private_OnChange();
 		return true;
 	};
@@ -16671,32 +16682,14 @@
 	 */
 	ApiParaPr.prototype.GetJc = function()
 	{
-		function GetJC(nType) 
-		{
-			switch (nType)
-			{
-				case align_Right :
-					return "right";
-				case align_Left :
-					return "left";
-				case align_Center :
-					return "center";
-				case align_Justify : 
-					return "both";
-			}
-
-			return "left";
-		}
-
-		if (!this.Parent)
-		{
+		if (!this.Parent) {
 			if (this.ParaPr.Jc !== undefined)
-				return GetJC(this.ParaPr.Jc);
+				return private_GetStrParaAlign(this.ParaPr.Jc);
 
 			return undefined;
 		}
 
-		return GetJC(this.Parent.private_GetImpl().Get_CompiledPr2().ParaPr.Jc);
+		return private_GetStrParaAlign(this.Parent.private_GetImpl().Get_CompiledPr2().ParaPr.Jc);
 	};
 	/**
 	 * Specifies that when rendering the document using a page view, all lines of the current paragraph are maintained on a single page whenever possible.
@@ -17021,14 +17014,14 @@
 				return new ApiColor('theme', unifillColor.id);
 
 			if (unifillColor instanceof AscFormat.CRGBColor)
-				return Api.prototype.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
+				return Api.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
 		}
 
 		if (color) {
 			const isAuto = color.Auto === true;
 			return isAuto
-				? Api.prototype.AutoColor()
-				: Api.prototype.RGB(color.r, color.g, color.b);
+				? Api.AutoColor()
+				: Api.RGB(color.r, color.g, color.b);
 		}
 
 		return null;
@@ -18309,7 +18302,7 @@
 	 * Specifies the direction of the text flow for this table cell.
 	 * @memberof ApiTableCellPr
 	 * @typeofeditors ["CDE"]
-	 * @param {("lrtb" | "tbrl" | "btlr")} sType - The available types of the text direction in the table cell: <code>"lrtb"</code>
+	 * @param {TextFlowDirection} sType - The available types of the text direction in the table cell: <code>"lrtb"</code>
 	 * - text direction left-to-right moving from top to bottom, <code>"tbrl"</code> - text direction top-to-bottom moving from right
 	 * to left, <code>"btlr"</code> - text direction bottom-to-top moving from left to right.
 	 * @returns {boolean}
@@ -19298,7 +19291,7 @@
 	 */
 	ApiDrawing.prototype.GetNextDrawing = function()
 	{
-		let oDocument				= editor.GetDocument();
+		let oDocument				= Api.GetDocument();
 		let GetAllDrawingObjects	= oDocument.GetAllDrawingObjects();
 		let drawingIndex			= null;
 		let paraDrawingId           = this.getParaDrawing().Id;
@@ -19326,7 +19319,7 @@
 	 */
 	ApiDrawing.prototype.GetPrevDrawing = function()
 	{
-		let oDocument				= editor.GetDocument();
+		let oDocument				= Api.GetDocument();
 		let GetAllDrawingObjects	= oDocument.GetAllDrawingObjects();
 		let drawingIndex			= null;
 		let paraDrawingId           = this.getParaDrawing().Id;
@@ -19414,7 +19407,7 @@
 		if (name === "" || name === null || name === undefined)
 			return false
 
-		let doc = Asc.editor.GetDocument();
+		let doc = Api.GetDocument();
 		let drawings = doc.GetAllDrawingObjects();
 		for (let nCount = 0; nCount < drawings.length; nCount++)
 		{
@@ -19563,7 +19556,7 @@
 	 */
 	ApiImage.prototype.GetNextImage	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllImages	= oDocument.GetAllImages();
 		var imageIndex	= null;
 
@@ -19590,7 +19583,7 @@
 	 */
 	ApiImage.prototype.GetPrevImage	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllImages	= oDocument.GetAllImages();
 		var imageIndex	= null;
 
@@ -19794,7 +19787,7 @@
 	 */
 	ApiShape.prototype.GetNextShape = function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllShapes	= oDocument.GetAllShapes();
 		var shapeIndex	= null;
 
@@ -19821,7 +19814,7 @@
 	 */
 	ApiShape.prototype.GetPrevShape	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllShapes	= oDocument.GetAllShapes();
 		var shapeIndex	= null;
 
@@ -19854,7 +19847,7 @@
 	{
 		if (this.Shape && this.Shape.spPr && this.Shape.spPr.geometry)
 		{
-			return Api.prototype.private_CreateGeometry(this.Shape.spPr.geometry);
+			return Api.private_CreateGeometry(this.Shape.spPr.geometry);
 		}
 		return null;
 	};
@@ -20745,6 +20738,18 @@
 	};
 
 	/**
+	 * Returns the chart title text.
+	 * @memberof ApiChart
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @returns {string | null} - The chart title text or null if the chart has no title.
+	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/GetTitle.js
+	 */
+	ApiChart.prototype.GetTitle = function ()
+	{
+		return AscFormat.builder_GetChartTitle(this.Chart);
+	};
+
+	/**
 	 *  Specifies the chart horizontal axis title.
 	 *  @memberof ApiChart
 	 *  @typeofeditors ["CDE", "CSE", "CPE"]
@@ -21095,7 +21100,7 @@
 	 */
 	ApiChart.prototype.GetNextChart = function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllCharts	= oDocument.GetAllCharts();
 		var chartIndex	= null;
 
@@ -21123,7 +21128,7 @@
 	 */
 	ApiChart.prototype.GetPrevChart	= function()
 	{
-		var oDocument	= editor.GetDocument();
+		var oDocument	= Api.GetDocument();
 		var AllCharts	= oDocument.GetAllCharts();
 		var chartIndex	= null;
 
@@ -22738,7 +22743,7 @@
 			this.Sdt.SetShowingPlcHdr(false);
 		}
 
-		var newRun = editor.CreateRun();
+		var newRun = Api.CreateRun();
 		newRun.AddText(text);
 		this.AddElement(newRun, this.GetElementsCount())
 
@@ -23111,7 +23116,7 @@
 		if (!color)
 			return null;
 
-		return Api.prototype.RGBA(color.r, color.g, color.b, color.a);
+		return Api.RGBA(color.r, color.g, color.b, color.a);
 	};
 
 	/**
@@ -23177,7 +23182,7 @@
 		if (!color)
 			return null;
 
-		return Api.prototype.RGBA(color.r, color.g, color.b, color.a);
+		return Api.RGBA(color.r, color.g, color.b, color.a);
 	};
 
 	/**
@@ -24626,7 +24631,7 @@
 
 		if (!oParagraph)
 		{
-			oParagraph = Api.prototype.CreateParagraph();
+			oParagraph = Api.CreateParagraph();
 			this.GetContent().Push(oParagraph);
 		}
 
@@ -25361,8 +25366,8 @@
 
 		const color = formPr.Border.Color;
 		return (color.Auto === true)
-			? Api.prototype.AutoColor()
-			: Api.prototype.RGB(color.r, color.g, color.b);
+			? Api.AutoColor()
+			: Api.RGB(color.r, color.g, color.b);
 	};
 
 	/**
@@ -25416,7 +25421,7 @@
 			bNone = GetBoolParameter(arguments[3], false);
 			isAuto = false;
 			isTheme = false;
-			unifill = Api.prototype.RGB(r, g, b).private_createUnifill();
+			unifill = Api.RGB(r, g, b).private_createUnifill();
 		}
 
 		if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255)
@@ -25458,15 +25463,15 @@
 				return new ApiColor('theme', unifillColor.id);
 
 			if (unifillColor instanceof AscFormat.CRGBColor)
-				return Api.prototype.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
+				return Api.RGB(unifillColor.r, unifillColor.g, unifillColor.b);
 		}
 
 		const color = formPr.Shd.Fill || formPr.Shd.Color;
 		if (color) {
 			const isAuto = color.Auto === true;
 			return isAuto
-				? Api.prototype.AutoColor()
-				: Api.prototype.RGB(color.r, color.g, color.b);
+				? Api.AutoColor()
+				: Api.RGB(color.r, color.g, color.b);
 		}
 
 		return null;
@@ -26917,7 +26922,7 @@
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ReplaceTextSmart.js
 	 */
-	Api.prototype.ReplaceTextSmart = function(textStrings, tab, newLine)
+	Api.ReplaceTextSmart = function(textStrings, tab, newLine)
 	{
 		let sParaTab     = GetStringParameter(tab, "\t");
 		let sParaNewLine = GetStringParameter(newLine, "\r\n");
@@ -27273,7 +27278,7 @@
 			}
 		}
 
-		if (this.editorId === AscCommon.c_oEditorId.Spreadsheet) 
+		if (Asc.editor.editorId === AscCommon.c_oEditorId.Spreadsheet)
 		{
 			var oWorksheet        = this.GetActiveSheet();
 			var oRange            = oWorksheet.GetSelection();
@@ -27281,7 +27286,8 @@
 			var nCountLinesInCell = null;
 			var resultText        = null;
 			var nTextToReplace    = 0;
-			var ws                = this.wb.getWorksheet();
+			let wb                = Asc.editor.wb;
+			var ws                = wb.getWorksheet();
 			var oContent          = ws.objectRender.controller != null ? ws.objectRender.controller.getTargetDocContent() : null;
 			var isPasteLocked     = false;
 			var isLockedRange     = oWorksheet.worksheet.isLockedRange(oRange.range.bbox);
@@ -27339,10 +27345,10 @@
 					nTextToReplace += nCountLinesInCell;
 
 					if (resultText !== '')
-						if (!this.wb.getCellEditMode())
+						if (!wb.getCellEditMode())
 							tempRange.SetValue(resultText);
 						else
-							this.wb.cellEditor.pasteText(resultText);
+							wb.cellEditor.pasteText(resultText);
 				}
 			}
 		}
@@ -27392,12 +27398,12 @@
 
 		return true;
 	};
-	Api.prototype.CoAuthoringChatSendMessage = function(message)
+	Api.CoAuthoringChatSendMessage = function(message)
 	{
 		if (typeof message !== 'string' || message === '')
 			return false;
 
-		this.asc_coAuthoringChatSendMessage(message);
+		Asc.editor.asc_coAuthoringChatSendMessage(message);
 		return true;
 	};
 	/**
@@ -27413,7 +27419,7 @@
 	 * @returns {string}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ConvertDocument.js
 	 */
-	Api.prototype.ConvertDocument = function(convertType, htmlHeadings, base64img, demoteHeadings, renderHTMLTags)
+	Api.ConvertDocument = function(convertType, htmlHeadings, base64img, demoteHeadings, renderHTMLTags)
 	{
 		var oDocument = this.GetDocument();
 		if (!oDocument.Document)
@@ -27432,7 +27438,7 @@
 	 * @returns {ApiTextPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTextPr.js
 	 */
-	Api.prototype.CreateTextPr = function()
+	Api.CreateTextPr = function()
 	{
 		return this.private_CreateApiTextPr(new AscCommonWord.CTextPr());
 	};
@@ -27443,7 +27449,7 @@
 	 * @returns {ApiParaPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateParaPr.js
 	 */
-	Api.prototype.CreateParaPr = function()
+	Api.CreateParaPr = function()
 	{
 		return this.private_CreateApiParaPr(new AscCommonWord.CParaPr());
 	};
@@ -27454,7 +27460,7 @@
 	 * @returns {ApiTablePr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTablePr.js
 	 */
-	Api.prototype.CreateTablePr = function()
+	Api.CreateTablePr = function()
 	{
 		return this.private_CreateApiTablePr(new CTablePr());
 	};
@@ -27465,7 +27471,7 @@
 	 * @returns {ApiTableRowPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTableRowPr.js
 	 */
-	Api.prototype.CreateTableRowPr = function()
+	Api.CreateTableRowPr = function()
 	{
 		return this.private_CreateApiTableRowPr(new CTableRowPr());
 	};
@@ -27476,7 +27482,7 @@
 	 * @returns {ApiTableCellPr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTableCellPr.js
 	 */
-	Api.prototype.CreateTableCellPr = function()
+	Api.CreateTableCellPr = function()
 	{
 		return this.private_CreateApiTableCellPr(new CTableCellPr());
 	};
@@ -27488,7 +27494,7 @@
 	 * @returns {ApiTableStylePr}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateTableStylePr.js
 	 */
-	Api.prototype.CreateTableStylePr = function(sType)
+	Api.CreateTableStylePr = function(sType)
 	{
 		return this.private_CreateApiTableStylePr(sType, new CTableStylePr());
 	};
@@ -27508,7 +27514,7 @@
 	 * @returns {ApiDrawing}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CreateWordArt.js
 	 */
-	Api.prototype.CreateWordArt = function(textPr, text, transform, fill, stroke, rotAngle, width, height)
+	Api.CreateWordArt = function(textPr, text, transform, fill, stroke, rotAngle, width, height)
 	{
 		textPr    = textPr && textPr.TextPr ? textPr.TextPr : null;
 		rotAngle  = typeof (rotAngle) === "number" && rotAngle > 0 ? rotAngle : 0;
@@ -27533,11 +27539,11 @@
 	 * @returns {string}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/GetFullName.js
 	 */
-	Api.prototype.GetFullName = function()
+	Api.GetFullName = function()
 	{
-		return this.DocInfo.Title;
+		return Asc.editor.DocInfo.Title;
 	};
-	Object.defineProperty(Api.prototype, "FullName", {
+	Object.defineProperty(Api, "FullName", {
 		get: function () {
 			return this.GetFullName();
 		}
@@ -27551,7 +27557,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PixelsToEmu.js
 	 */
-	Api.prototype.PixelsToEmus = function Px2Emu(px) {
+	Api.PixelsToEmus = function Px2Emu(px) {
 		return Math.round(private_MM2EMU(AscCommon.g_dKoef_pix_to_mm * px));
 	};
 
@@ -27563,7 +27569,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToPixels.js
 	 */
-	Api.prototype.MillimetersToPixels = function Mm2Px(mm) {
+	Api.MillimetersToPixels = function Mm2Px(mm) {
 		return mm * AscCommon.g_dKoef_mm_to_pix;
 	};
 
@@ -27575,7 +27581,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToCentimeters.js
 	 */
-	Api.prototype.PointsToCentimeters = function PointsToCentimeters(pt) {
+	Api.PointsToCentimeters = function PointsToCentimeters(pt) {
 		const ptToCm = g_dKoef_pt_to_mm / 10;
 		return pt * ptToCm;
 	};
@@ -27588,7 +27594,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToEmus.js
 	 */
-	Api.prototype.PointsToEmus = function PointsToEmus(pt) {
+	Api.PointsToEmus = function PointsToEmus(pt) {
 		const ptToEmu = g_dKoef_pt_to_mm * g_dKoef_mm_to_emu;
 		return Math.round(pt * ptToEmu);
 	};
@@ -27601,7 +27607,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToInches.js
 	 */
-	Api.prototype.PointsToInches = function PointsToInches(pt) {
+	Api.PointsToInches = function PointsToInches(pt) {
 		const ptToIn = g_dKoef_pt_to_mm / g_dKoef_in_to_mm;
 		return pt * ptToIn;
 	};
@@ -27614,7 +27620,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToLines.js
 	 */
-	Api.prototype.PointsToLines = function PointsToLines(pt) {
+	Api.PointsToLines = function PointsToLines(pt) {
 		const ptToLines = 1 / 12;
 		return pt * ptToLines;
 	};
@@ -27627,7 +27633,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToMillimeters.js
 	 */
-	Api.prototype.PointsToMillimeters = function PointsToMillimeters(pt) {
+	Api.PointsToMillimeters = function PointsToMillimeters(pt) {
 		return pt * g_dKoef_pt_to_mm;
 	};
 
@@ -27639,7 +27645,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToPicas.js
 	 */
-	Api.prototype.PointsToPicas = function PointsToPicas(pt) {
+	Api.PointsToPicas = function PointsToPicas(pt) {
 		return pt / g_dKoef_pc_to_pt;
 	};
 
@@ -27651,7 +27657,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToPixels.js
 	 */
-	Api.prototype.PointsToPixels = function PointsToPixels(pt) {
+	Api.PointsToPixels = function PointsToPixels(pt) {
 		const ptToPx = g_dKoef_pt_to_mm / AscCommon.g_dKoef_pix_to_mm;
 		return pt * ptToPx;
 	};
@@ -27664,7 +27670,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PointsToTwips.js
 	 */
-	Api.prototype.PointsToTwips = function PointsToTwips(pt) {
+	Api.PointsToTwips = function PointsToTwips(pt) {
 		return pt * g_dKoef_pt_to_twips;
 	};
 
@@ -27676,7 +27682,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/CentimetersToPoints.js
 	 */
-	Api.prototype.CentimetersToPoints = function CentimetersToPoints(cm) {
+	Api.CentimetersToPoints = function CentimetersToPoints(cm) {
 		const cmToPt = 10 * g_dKoef_mm_to_pt;
 		return cm * cmToPt;
 	};
@@ -27689,7 +27695,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/EmusToPoints.js
 	 */
-	Api.prototype.EmusToPoints = function EmusToPoints(emu) {
+	Api.EmusToPoints = function EmusToPoints(emu) {
 		const emuToPt = g_dKoef_emu_to_mm * g_dKoef_mm_to_pt;
 		return emu * emuToPt;
 	};
@@ -27702,7 +27708,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/InchesToPoints.js
 	 */
-	Api.prototype.InchesToPoints = function InchesToPoints(inches) {
+	Api.InchesToPoints = function InchesToPoints(inches) {
 		const inToPt = g_dKoef_in_to_mm * g_dKoef_mm_to_pt;
 		return inches * inToPt;
 	};
@@ -27715,7 +27721,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/LinesToPoints.js
 	 */
-	Api.prototype.LinesToPoints = function LinesToPoints(lines) {
+	Api.LinesToPoints = function LinesToPoints(lines) {
 		// 1 line == 12 points
 		const linesToPt = 12;
 		return lines * linesToPt;
@@ -27729,7 +27735,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToPoints.js
 	 */
-	Api.prototype.MillimetersToPoints = function MillimetersToPoints(mm) {
+	Api.MillimetersToPoints = function MillimetersToPoints(mm) {
 		return mm * g_dKoef_mm_to_pt;
 	};
 
@@ -27741,7 +27747,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PicasToPoints.js
 	 */
-	Api.prototype.PicasToPoints = function PicasToPoints(pc) {
+	Api.PicasToPoints = function PicasToPoints(pc) {
 		return pc * g_dKoef_pc_to_pt;
 	};
 
@@ -27753,7 +27759,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/PixelsToPoints.js
 	 */
-	Api.prototype.PixelsToPoints = function PixelsToPoints(px) {
+	Api.PixelsToPoints = function PixelsToPoints(px) {
 		const pxToPt = AscCommon.g_dKoef_pix_to_mm * g_dKoef_mm_to_pt;
 		return px * pxToPt;
 	};
@@ -27766,7 +27772,7 @@
 	 * @returns {number}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/TwipsToPoints.js
 	 */
-	Api.prototype.TwipsToPoints = function TwipsToPoints(twips) {
+	Api.TwipsToPoints = function TwipsToPoints(twips) {
 		return twips * g_dKoef_twips_to_pt;
 	};
 
@@ -27780,7 +27786,7 @@
 	 * @returns {EMU} - The value in English Metric Units (EMUs), as an integer.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/MillimetersToEmus.js
 	 */
-	Api.prototype.MillimetersToEmus = function MillimetersToEmus(mm) {
+	Api.MillimetersToEmus = function MillimetersToEmus(mm) {
 		return Math.round(mm * AscCommonWord.g_dKoef_mm_to_emu);
 	};
 
@@ -27792,7 +27798,7 @@
 	 * @returns {mm}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/EmusToMillimeters.js
 	 */
-	Api.prototype.EmusToMillimeters = function EmusToMillimeters(emu) {
+	Api.EmusToMillimeters = function EmusToMillimeters(emu) {
 		return emu * AscCommonWord.g_dKoef_emu_to_mm;
 	};
 
@@ -28370,7 +28376,7 @@
 		{
 			oTextPr.Set_FromObject(new AscWord.CTextPr());
 		}
-		return private_GetLogicDocument().GetApi().private_CreateApiTextPr(oTextPr);
+		return Api.private_CreateApiTextPr(oTextPr);
 	};
 
 	/**
@@ -28699,7 +28705,7 @@
 		if (!this.IsUseInDocument())
 			return null;
 		
-		let oApiDoc				= Asc.editor.GetDocument();
+		let oApiDoc				= Api.GetDocument();
 		let oOldSelectionInfo	= this.Document.SaveDocumentState();
 
 		this.Select(true);
@@ -29393,88 +29399,88 @@
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Export
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	Api.prototype["GetDocument"]                      = Api.prototype.GetDocument;
-	Api.prototype["GetByInternalId"]                  = Api.prototype.GetByInternalId;
-	Api.prototype["CreateParagraph"]                  = Api.prototype.CreateParagraph;
-	Api.prototype["CreateTable"]                      = Api.prototype.CreateTable;
-	Api.prototype["AddComment"]                       = Api.prototype.AddComment;
-	Api.prototype["CreateRun"]                        = Api.prototype.CreateRun;
-	Api.prototype["CreateHyperlink"]                  = Api.prototype.CreateHyperlink;
-	Api.prototype["CreateImage"]                      = Api.prototype.CreateImage;
-	Api.prototype["CreateShape"]                      = Api.prototype.CreateShape;
-	Api.prototype["CreateGroup"]                      = Api.prototype.CreateGroup;
-	Api.prototype["CreateChart"]                      = Api.prototype.CreateChart;
-	Api.prototype["CreateRGBColor"]                   = Api.prototype.CreateRGBColor;
-	Api.prototype["CreateSchemeColor"]                = Api.prototype.CreateSchemeColor;
-	Api.prototype["CreatePresetColor"]                = Api.prototype.CreatePresetColor;
-	Api.prototype["AutoColor"]                        = Api.prototype.AutoColor;
-	Api.prototype["RGB"]                              = Api.prototype.RGB;
-	Api.prototype["RGBA"]                             = Api.prototype.RGBA;
-	Api.prototype["HexColor"]                         = Api.prototype.HexColor;
-	Api.prototype["ThemeColor"]                       = Api.prototype.ThemeColor;
-	Api.prototype["CreateSolidFill"]                  = Api.prototype.CreateSolidFill;
-	Api.prototype["CreateLinearGradientFill"]         = Api.prototype.CreateLinearGradientFill;
-	Api.prototype["CreateRadialGradientFill"]         = Api.prototype.CreateRadialGradientFill;
-	Api.prototype["CreatePatternFill"]                = Api.prototype.CreatePatternFill;
-	Api.prototype["CreateBlipFill"]                   = Api.prototype.CreateBlipFill;
-	Api.prototype["CreateNoFill"]                     = Api.prototype.CreateNoFill;
-	Api.prototype["CreateStroke"]                     = Api.prototype.CreateStroke;
-	Api.prototype["CreateGradientStop"]               = Api.prototype.CreateGradientStop;
-	Api.prototype["CreateBullet"]                     = Api.prototype.CreateBullet;
-	Api.prototype["CreateNumbering"]                  = Api.prototype.CreateNumbering;
-	Api.prototype["CreateInlineLvlSdt"]               = Api.prototype.CreateInlineLvlSdt;
-	Api.prototype["CreateBlockLvlSdt"]                = Api.prototype.CreateBlockLvlSdt;
-	Api.prototype["Save"]                             = Api.prototype.Save;
-	Api.prototype["LoadMailMergeData"]                = Api.prototype.LoadMailMergeData;
-	Api.prototype["GetMailMergeTemplateDocContent"]   = Api.prototype.GetMailMergeTemplateDocContent;
-	Api.prototype["GetMailMergeReceptionsCount"]      = Api.prototype.GetMailMergeReceptionsCount;
-	Api.prototype["ReplaceDocumentContent"]           = Api.prototype.ReplaceDocumentContent;
-	Api.prototype["MailMerge"]                        = Api.prototype.MailMerge;
-	Api.prototype["ReplaceTextSmart"]                 = Api.prototype.ReplaceTextSmart;
-	Api.prototype["CoAuthoringChatSendMessage"]       = Api.prototype.CoAuthoringChatSendMessage;
-	Api.prototype["CreateTextPr"]                     = Api.prototype.CreateTextPr;
-	Api.prototype["CreateParaPr"]                     = Api.prototype.CreateParaPr;
-	Api.prototype["CreateTablePr"]                    = Api.prototype.CreateTablePr;
-	Api.prototype["CreateTableRowPr"]                 = Api.prototype.CreateTableRowPr;
-	Api.prototype["CreateTableCellPr"]                = Api.prototype.CreateTableCellPr;
-	Api.prototype["CreateTableStylePr"]               = Api.prototype.CreateTableStylePr;
-	Api.prototype["CreateWordArt"]                    = Api.prototype.CreateWordArt;
-	Api.prototype["CreateOleObject"]                  = Api.prototype.CreateOleObject;
-	Api.prototype["GetFullName"]                      = Api.prototype.GetFullName;
-	Api.prototype["CreateCheckBoxContentControl"]     = Api.prototype.CreateCheckBoxContentControl;
-	Api.prototype["CreatePictureContentControl"]      = Api.prototype.CreatePictureContentControl;
-	Api.prototype["CreateComboBoxContentControl"]     = Api.prototype.CreateComboBoxContentControl;
-	Api.prototype["CreateDropDownListContentControl"] = Api.prototype.CreateDropDownListContentControl;
-	Api.prototype["CreateDatePickerContentControl"]   = Api.prototype.CreateDatePickerContentControl;
+	Api["GetDocument"]                      = Api.GetDocument;
+	Api["GetByInternalId"]                  = Api.GetByInternalId;
+	Api["CreateParagraph"]                  = Api.CreateParagraph;
+	Api["CreateTable"]                      = Api.CreateTable;
+	Api["AddComment"]                       = Api.AddComment;
+	Api["CreateRun"]                        = Api.CreateRun;
+	Api["CreateHyperlink"]                  = Api.CreateHyperlink;
+	Api["CreateImage"]                      = Api.CreateImage;
+	Api["CreateShape"]                      = Api.CreateShape;
+	Api["CreateGroup"]                      = Api.CreateGroup;
+	Api["CreateChart"]                      = Api.CreateChart;
+	Api["CreateRGBColor"]                   = Api.CreateRGBColor;
+	Api["CreateSchemeColor"]                = Api.CreateSchemeColor;
+	Api["CreatePresetColor"]                = Api.CreatePresetColor;
+	Api["AutoColor"]                        = Api.AutoColor;
+	Api["RGB"]                              = Api.RGB;
+	Api["RGBA"]                             = Api.RGBA;
+	Api["HexColor"]                         = Api.HexColor;
+	Api["ThemeColor"]                       = Api.ThemeColor;
+	Api["CreateSolidFill"]                  = Api.CreateSolidFill;
+	Api["CreateLinearGradientFill"]         = Api.CreateLinearGradientFill;
+	Api["CreateRadialGradientFill"]         = Api.CreateRadialGradientFill;
+	Api["CreatePatternFill"]                = Api.CreatePatternFill;
+	Api["CreateBlipFill"]                   = Api.CreateBlipFill;
+	Api["CreateNoFill"]                     = Api.CreateNoFill;
+	Api["CreateStroke"]                     = Api.CreateStroke;
+	Api["CreateGradientStop"]               = Api.CreateGradientStop;
+	Api["CreateBullet"]                     = Api.CreateBullet;
+	Api["CreateNumbering"]                  = Api.CreateNumbering;
+	Api["CreateInlineLvlSdt"]               = Api.CreateInlineLvlSdt;
+	Api["CreateBlockLvlSdt"]                = Api.CreateBlockLvlSdt;
+	Api["Save"]                             = Api.Save;
+	Api["LoadMailMergeData"]                = Api.LoadMailMergeData;
+	Api["GetMailMergeTemplateDocContent"]   = Api.GetMailMergeTemplateDocContent;
+	Api["GetMailMergeReceptionsCount"]      = Api.GetMailMergeReceptionsCount;
+	Api["ReplaceDocumentContent"]           = Api.ReplaceDocumentContent;
+	Api["MailMerge"]                        = Api.MailMerge;
+	Api["ReplaceTextSmart"]                 = Api.ReplaceTextSmart;
+	Api["CoAuthoringChatSendMessage"]       = Api.CoAuthoringChatSendMessage;
+	Api["CreateTextPr"]                     = Api.CreateTextPr;
+	Api["CreateParaPr"]                     = Api.CreateParaPr;
+	Api["CreateTablePr"]                    = Api.CreateTablePr;
+	Api["CreateTableRowPr"]                 = Api.CreateTableRowPr;
+	Api["CreateTableCellPr"]                = Api.CreateTableCellPr;
+	Api["CreateTableStylePr"]               = Api.CreateTableStylePr;
+	Api["CreateWordArt"]                    = Api.CreateWordArt;
+	Api["CreateOleObject"]                  = Api.CreateOleObject;
+	Api["GetFullName"]                      = Api.GetFullName;
+	Api["CreateCheckBoxContentControl"]     = Api.CreateCheckBoxContentControl;
+	Api["CreatePictureContentControl"]      = Api.CreatePictureContentControl;
+	Api["CreateComboBoxContentControl"]     = Api.CreateComboBoxContentControl;
+	Api["CreateDropDownListContentControl"] = Api.CreateDropDownListContentControl;
+	Api["CreateDatePickerContentControl"]   = Api.CreateDatePickerContentControl;
 
 
-	Api.prototype["ConvertDocument"]		         = Api.prototype.ConvertDocument;
-	Api.prototype["FromJSON"]		                 = Api.prototype.FromJSON;
-	Api.prototype["CreateRange"]		             = Api.prototype.CreateRange;
+	Api["ConvertDocument"]		         = Api.ConvertDocument;
+	Api["FromJSON"]		                 = Api.FromJSON;
+	Api["CreateRange"]		             = Api.CreateRange;
 	
-	Api.prototype["PixelsToEmus"] = Api.prototype["Px2Emu"] = Api.prototype.PixelsToEmus;
-	Api.prototype["MillimetersToPixels"] = Api.prototype["Mm2Px"] = Api.prototype.MillimetersToPixels;
+	Api["PixelsToEmus"] = Api["Px2Emu"] = Api.PixelsToEmus;
+	Api["MillimetersToPixels"] = Api["Mm2Px"] = Api.MillimetersToPixels;
 
-	Api.prototype["PointsToCentimeters"]             = Api.prototype.PointsToCentimeters;
-	Api.prototype["PointsToEmus"]                    = Api.prototype.PointsToEmus;
-	Api.prototype["PointsToInches"]                  = Api.prototype.PointsToInches;
-	Api.prototype["PointsToLines"]                   = Api.prototype.PointsToLines;
-	Api.prototype["PointsToMillimeters"]             = Api.prototype.PointsToMillimeters;
-	Api.prototype["PointsToPicas"]                   = Api.prototype.PointsToPicas;
-	Api.prototype["PointsToPixels"]                  = Api.prototype.PointsToPixels;
-	Api.prototype["PointsToTwips"]                   = Api.prototype.PointsToTwips;
-	Api.prototype["CentimetersToPoints"]             = Api.prototype.CentimetersToPoints;
-	Api.prototype["EmusToPoints"]                    = Api.prototype.EmusToPoints;
-	Api.prototype["InchesToPoints"]                  = Api.prototype.InchesToPoints;
-	Api.prototype["LinesToPoints"]                   = Api.prototype.LinesToPoints;
-	Api.prototype["MillimetersToPoints"]             = Api.prototype.MillimetersToPoints;
-	Api.prototype["PicasToPoints"]                   = Api.prototype.PicasToPoints;
-	Api.prototype["PixelsToPoints"]                  = Api.prototype.PixelsToPoints;
-	Api.prototype["TwipsToPoints"]                   = Api.prototype.TwipsToPoints;
-	Api.prototype["MillimetersToEmus"]               = Api.prototype.MillimetersToEmus;
-	Api.prototype["EmusToMillimeters"]               = Api.prototype.EmusToMillimeters;
-	Api.prototype["CreateCustomGeometry"]            = Api.prototype.CreateCustomGeometry;
-	Api.prototype["CreatePresetGeometry"]            = Api.prototype.CreatePresetGeometry;
+	Api["PointsToCentimeters"]             = Api.PointsToCentimeters;
+	Api["PointsToEmus"]                    = Api.PointsToEmus;
+	Api["PointsToInches"]                  = Api.PointsToInches;
+	Api["PointsToLines"]                   = Api.PointsToLines;
+	Api["PointsToMillimeters"]             = Api.PointsToMillimeters;
+	Api["PointsToPicas"]                   = Api.PointsToPicas;
+	Api["PointsToPixels"]                  = Api.PointsToPixels;
+	Api["PointsToTwips"]                   = Api.PointsToTwips;
+	Api["CentimetersToPoints"]             = Api.CentimetersToPoints;
+	Api["EmusToPoints"]                    = Api.EmusToPoints;
+	Api["InchesToPoints"]                  = Api.InchesToPoints;
+	Api["LinesToPoints"]                   = Api.LinesToPoints;
+	Api["MillimetersToPoints"]             = Api.MillimetersToPoints;
+	Api["PicasToPoints"]                   = Api.PicasToPoints;
+	Api["PixelsToPoints"]                  = Api.PixelsToPoints;
+	Api["TwipsToPoints"]                   = Api.TwipsToPoints;
+	Api["MillimetersToEmus"]               = Api.MillimetersToEmus;
+	Api["EmusToMillimeters"]               = Api.EmusToMillimeters;
+	Api["CreateCustomGeometry"]            = Api.CreateCustomGeometry;
+	Api["CreatePresetGeometry"]            = Api.CreatePresetGeometry;
 
 	ApiUnsupported.prototype["GetClassType"]         = ApiUnsupported.prototype.GetClassType;
 	
@@ -30200,6 +30206,7 @@
 	ApiChart.prototype["GetClassType"]                 = ApiChart.prototype.GetClassType;
 	ApiChart.prototype["GetChartType"]                 = ApiChart.prototype.GetChartType;
 	ApiChart.prototype["SetTitle"]                     = ApiChart.prototype.SetTitle;
+	ApiChart.prototype["GetTitle"]                     = ApiChart.prototype.GetTitle;
 	ApiChart.prototype["SetHorAxisTitle"]              = ApiChart.prototype.SetHorAxisTitle;
 	ApiChart.prototype["SetVerAxisTitle"]              = ApiChart.prototype.SetVerAxisTitle;
 	ApiChart.prototype["SetVerAxisOrientation"]        = ApiChart.prototype.SetVerAxisOrientation;
@@ -31062,7 +31069,7 @@
 		return new CParaTab(nType, private_Twips2MM(nPos));
 	}
 
-	function private_GetParaAlign(sJc)
+	function private_GetInnerParaAlign(sJc)
 	{
 		if ("left" === sJc)
 			return align_Left;
@@ -31074,6 +31081,21 @@
 			return align_Center;
 
 		return undefined;
+	}
+
+	function private_GetStrParaAlign(jc) {
+		switch (jc) {
+			case align_Right :
+				return "right";
+			case align_Left :
+				return "left";
+			case align_Center :
+				return "center";
+			case align_Justify : 
+				return "both";
+		}
+
+		return "left";
 	}
 
 	function private_GetTableBorder(sType, nSize, nSpace, r, g, b)
@@ -32068,45 +32090,46 @@
 		return (bookmarkMarks && bookmarkMarks[0].IsUseInDocument() && bookmarkMarks[1].IsUseInDocument());
 	};
 
-	Api.prototype.private_CreateApiParagraph = function(oParagraph){
+	Api.private_CreateApiParagraph = function(oParagraph){
 		return new ApiParagraph(oParagraph);
 	};
-	Api.prototype.private_CreateTextPr = function(oParent, oTextPr){
+	Api.private_CreateTextPr = function(oParent, oTextPr){
 		return new ApiTextPr(oParent, oTextPr);
 	};
 
-	Api.prototype.private_CreateApiDocContent = function(oDocContent){
+	Api.private_CreateApiDocContent = function(oDocContent){
 		return new ApiDocumentContent(oDocContent);
 	};
 
-	Api.prototype.private_CreateCheckBoxForm = function(oCC){
+	Api.private_CreateCheckBoxForm = function(oCC){
 		return new ApiCheckBoxForm(oCC);
 	};
-	Api.prototype.private_CreateTextForm = function(oCC){
+	Api.private_CreateTextForm = function(oCC){
 		return new ApiTextForm(oCC);
 	};
-	Api.prototype.private_CreateComboBoxForm = function(oCC){
+	Api.private_CreateComboBoxForm = function(oCC){
 		return new ApiComboBoxForm(oCC);
 	};
-	Api.prototype.private_CreatePictureForm = function(oCC){
+	Api.private_CreatePictureForm = function(oCC){
 		return new ApiPictureForm(oCC);
 	};
-	Api.prototype.private_CreateDateForm = function(oCC){
+	Api.private_CreateDateForm = function(oCC){
 		return new ApiDateForm(oCC);
 	};
-	Api.prototype.private_CreateComplexForm = function(oCC)
+	Api.private_CreateComplexForm = function(oCC)
 	{
 		return new ApiComplexForm(oCC);
 	};
 	
 
-	Api.prototype.private_createWordArt = function(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight) {
+	Api.private_createWordArt = function(oTextPr, sText, sTransform, oFill, oStroke, nRotAngle, nWidth, nHeight) {
 		var oWorksheet, bWord, nFontSize;
-		if (this.editorId === AscCommon.c_oEditorId.Spreadsheet)
+		let editorId = Asc.editor.editorId;
+		if (editorId === AscCommon.c_oEditorId.Spreadsheet)
 			oWorksheet = this.GetActiveSheet().worksheet;
-		else if (this.editorId === AscCommon.c_oEditorId.Presentation)
+		else if (editorId === AscCommon.c_oEditorId.Presentation)
 			bWord = false;
-		else if (this.editorId === AscCommon.c_oEditorId.Word)
+		else if (editorId === AscCommon.c_oEditorId.Word)
 			bWord = true;
 
 		var dAngle = nRotAngle !== 0 ? (Math.PI / 180) * nRotAngle : 0;
@@ -32200,51 +32223,68 @@
 		return oArt;
 	};
 
-	Api.prototype.private_CreateApiRun = function(oRun){
+	Api.private_CreateApiRun = function(oRun){
 		return new ApiRun(oRun);
 	};
-	Api.prototype.private_CreateApiHyperlink = function(oHyperlink){
+	Api.private_CreateApiHyperlink = function(oHyperlink){
 		return new ApiRun(oHyperlink);
 	};
-	Api.prototype.private_CreateApiTextPr = function(oTextPr){
+	Api.private_CreateApiTextPr = function(oTextPr){
 		return new ApiTextPr(null, oTextPr);
 	};
-	Api.prototype.private_CreateApiParaPr = function(oParaPr){
+	Api.private_CreateApiParaPr = function(oParaPr){
 		return new ApiParaPr(null, oParaPr);
 	};
-	Api.prototype.private_CreateApiTablePr = function(oTablePr){
+	Api.private_CreateApiTablePr = function(oTablePr){
 		return new ApiTablePr(null, oTablePr);
 	};
-	Api.prototype.private_CreateApiTableRowPr = function(oTableRowPr){
+	Api.private_CreateApiTableRowPr = function(oTableRowPr){
 		return new ApiTableRowPr(null, oTableRowPr);
 	};
-	Api.prototype.private_CreateApiTableCellPr = function(oTableCellPr){
+	Api.private_CreateApiTableCellPr = function(oTableCellPr){
 		return new ApiTableCellPr(null, oTableCellPr);
 	};
-	Api.prototype.private_CreateApiTableStylePr = function(sType, oTableStylePr){
+	Api.private_CreateApiTableStylePr = function(sType, oTableStylePr){
 		return new ApiTableStylePr(sType, null, oTableStylePr);
 	};
-	Api.prototype.private_CreateApiFill = function(oFill){
+	Api.private_CreateApiFill = function(oFill){
 		return new ApiFill(oFill);
 	};
-	Api.prototype.private_CreateApiStroke = function(oStroke){
+	Api.private_CreateApiStroke = function(oStroke){
 		return new ApiStroke(oStroke);
 	};
-	Api.prototype.private_CreateApiGradStop = function(oApiUniColor, pos){
+	Api.private_CreateApiGradStop = function(oApiUniColor, pos){
 		return new ApiGradientStop(oApiUniColor, pos);
 	};
-	Api.prototype.private_CreateApiUniColor = function(oUniColor){
+	Api.private_CreateApiUniColor = function(oUniColor){
 		return new ApiUniColor(oUniColor);
 	};
-	Api.prototype.private_CreateApiComment = function(oComment){
+	Api.private_CreateApiComment = function(oComment){
 		return new ApiComment(oComment);
 	};
-	Api.prototype.private_CreateApiChart = function(oChartSpace){
+	Api.private_CreateApiChart = function(oChartSpace){
 		return new ApiChart(oChartSpace);
 	};
-	Api.prototype.private_CreateGeometry = function(geometry){
+	Api.private_CreateGeometry = function(geometry){
 		return new ApiGeometry(geometry);
 	};
-
+	
+	window['AscBuilder']["Word"] = window['AscBuilder'].Word = window['AscBuilder'].Word || {};
+	AscBuilder.Word["Api"] = AscBuilder.Word.Api = Api;
+	
+	AscBuilder.private_GetInt = private_GetInt;
+	AscBuilder.private_Twips2MM = private_Twips2MM;
+	
+	AscBuilder.Word.init = function()
+	{
+		AscBuilder.ApiDrawing   = ApiDrawing;
+		AscBuilder.ApiShape     = ApiShape;
+		AscBuilder.ApiImage     = ApiImage;
+		AscBuilder.ApiGroup     = ApiGroup;
+		AscBuilder.ApiSmartArt  = ApiSmartArt;
+		AscBuilder.ApiOleObject = ApiOleObject;
+		AscBuilder.ApiChart     = ApiChart;
+	};
+	
 }(window, null));
 

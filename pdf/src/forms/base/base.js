@@ -1003,12 +1003,12 @@
         let oParent = this.GetParent(true);
         if (oParent == null && this._value == null)
             return undefined;
-        else if (bInherit === false || (this._value != null && this.GetPartialName() != null)) {
+		else if (oParent && bInherit !== false) {
+			return oParent.GetParentValue();
+		}
+        else {
             return this._value;
         }
-        
-        if (oParent)
-            return oParent.GetParentValue();
     };
     /**
 	 * Sets api value of form.
@@ -1995,6 +1995,8 @@
         this._strokeColor = this._borderColor = aColor;
         this.SetWasChanged(true);
         this.AddToRedraw();
+
+        return true;
     };
     CBaseField.prototype.GetBorderColor = function() {
         return this._strokeColor;
@@ -2676,6 +2678,8 @@
 
         this.SetWasChanged(true);
         this.SetNeedRecalc(true);
+
+        return true;
     };
     CBaseField.prototype.GetTextSize = function() {
         return this._textSize;
@@ -2809,6 +2813,9 @@
             "h" : (aOrigRect[3] - aOrigRect[1])
         };
     };
+	CBaseField.prototype.IsNeedWriteOnSave = function() {
+		return !this.IsNeedDrawFromStream() || this.IsChanged();
+	};
     CBaseField.prototype.WriteToBinaryBase = function(memory) {
         // type
         memory.WriteByte(this.GetType());
