@@ -3603,6 +3603,9 @@ var CPresentation = CPresentation || function(){};
             // выставляем только ImageData. Форму пересчитаем и добавим картинку после того, как форма изменится, чтобы не грузить шрифты
             for (let nBtn = 0; nBtn < oIconsInfo["MK"].length; nBtn++) {
                 let oBtnField = oDoc.GetFieldByApIdx(oIconsInfo["MK"][nBtn]["i"]);
+				if (!oBtnField) {
+					continue;
+				}
 
                 if (oIconsInfo["MK"][nBtn]["I"]) {
                     oBtnField.SetImageRasterId(oIconsInfo["MK"][nBtn]["I"].src, AscPDF.APPEARANCE_TYPES.normal);

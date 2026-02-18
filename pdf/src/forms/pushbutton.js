@@ -827,17 +827,29 @@
 
         switch (nAPType) {
             case AscPDF.APPEARANCE_TYPES.rollover:
-                sPrevRasterId           = this._imgData.rollover;
+				sPrevRasterId           = this._imgData.rollover;
+				if (sRasterId == sPrevRasterId) {
+					return;
+				}
+
                 this._imgData.rollover  = sRasterId;
                 this._imgData.changedInfo.rollover = true;
                 break;
             case AscPDF.APPEARANCE_TYPES.mouseDown:
                 sPrevRasterId           = this._imgData.mouseDown;
+				if (sRasterId == sPrevRasterId) {
+					return;
+				}
+
                 this._imgData.mouseDown = sRasterId;
                 this._imgData.changedInfo.mouseDown = true;
                 break;
             case AscPDF.APPEARANCE_TYPES.normal:
                 sPrevRasterId           = this._imgData.normal;
+				if (sRasterId == sPrevRasterId) {
+					return;
+				}
+				
                 this._imgData.normal    = sRasterId;
                 this._imgData.changedInfo.normal = true;
                 break;
