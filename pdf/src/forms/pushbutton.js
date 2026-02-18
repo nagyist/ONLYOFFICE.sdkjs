@@ -1248,12 +1248,45 @@
 			let oStyle = this.GetFontStyle();
 			this.content.SetBold(oStyle.bold);
 			this.content.SetItalic(oStyle.italic);
-            this.UpdateMEOptions();
+            this.private_UpdateMEOptions();
             if (this.GetTextSize()) {
                 this.content.SetFontSize(this.GetTextSize());
             }
         }, undefined, this);
     };
+	CPushButtonField.prototype.private_UpdateMEOptions = function(isRtlChanged) {
+		AscCommon.History.StartNoHistoryMode();
+
+		if (isRtlChanged) {
+			AscCommon.History.EndNoHistoryMode();
+
+			if (false == Asc.editor.getDocumentRenderer().IsOpenFormsInProgress) {
+				if (this.IsRTL()) {
+					this.SetAlign(AscPDF.ALIGN_TYPE.right);
+				}
+				else {
+					this.SetAlign(AscPDF.ALIGN_TYPE.left);
+				}
+			}
+			else {
+				this.SetNeedCheckAlign(true);
+			}
+
+			AscCommon.History.StartNoHistoryMode();
+		}
+
+		if (this.content) {
+			this.content.SetApplyToAll(true);
+			this.content.SetParagraphBidi(this.IsRTL());
+			this.content.SetApplyToAll(false);
+			this.private_NeedShapeText();
+		}
+
+		this.SetWasChanged(true);
+		this.SetNeedRecalc(true);
+
+		AscCommon.History.EndNoHistoryMode();
+	};
     CPushButtonField.prototype.GetCaptionRun = function() {
         return this._captionRun;
     };
@@ -2054,34 +2087,6 @@
      * @typeofeditors ["PDF"]
      */
     CPushButtonField.prototype.Commit = function() {
-        let aFields = this.GetDocument().GetAllWidgets(this.GetFullName());
-        let oThisPara = this.content.GetElement(0);
-        
-        AscCommon.History.StartNoHistoryMode();
-
-        if (aFields.length == 1)
-            this.SetNeedCommit(false);
-
-        for (let i = 0; i < aFields.length; i++) {
-            if (aFields[i] == this)
-                continue;
-
-            let oFieldPara = aFields[i].content.GetElement(0);
-            let oThisRun, oFieldRun;
-            for (let nItem = 0; nItem < oThisPara.Content.length - 1; nItem++) {
-                oThisRun = oThisPara.Content[nItem];
-                oFieldRun = oFieldPara.Content[nItem];
-                oFieldRun.ClearContent();
-
-                for (let nRunPos = 0; nRunPos < oThisRun.Content.length; nRunPos++) {
-                    oFieldRun.AddToContent(nRunPos, AscCommon.IsSpace(oThisRun.Content[nRunPos].Value) ? new AscWord.CRunSpace(oThisRun.Content[nRunPos].Value) : new AscWord.CRunText(oThisRun.Content[nRunPos].Value));
-                }
-            }
-
-            aFields[i].SetNeedRecalc(true);
-        }
-
-        AscCommon.History.EndNoHistoryMode();
     };
 
     CPushButtonField.prototype.Reset = function() {
