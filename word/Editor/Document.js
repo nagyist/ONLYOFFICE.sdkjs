@@ -26723,6 +26723,44 @@ CDocument.prototype.ConvertFormFixedType = function(sId, isToFixed)
 	return false;
 };
 /**
+ * Конвертируем
+ * @param formId
+ * @returns {boolean}
+ */
+CDocument.prototype.StretchFormToCell = function(formId)
+{
+	let form = this.GetContentControl(formId);
+	if (!form || !form.IsForm())
+		return false;
+	
+	form = form.GetMainForm();
+	if (!form)
+		return false;
+	
+	let paragraph = form.GetParagraph();
+	if (!paragraph)
+		return false;
+	
+	if (this.IsSelectionLocked(AscCommon.changestype_None, {
+		Type      : AscCommon.changestype_2_ElementsArray_and_Type,
+		Elements  : [paragraph],
+		CheckType : AscCommon.changestype_Paragraph_Properties
+	}, false, false))
+		return false;
+	
+	this.StartAction(AscDFH.historydescription_Document_StretchFormToCell);
+	
+	form.StretchFormToCell();
+	
+	this.Recalculate();
+	this.UpdateInterface();
+	this.UpdateSelection();
+	this.UpdateTracks();
+	this.FinalizeAction();
+	
+	return true;
+};
+/**
  * Подсвечиваем ли обязательные поля
  * @returns {boolean}
  */

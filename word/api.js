@@ -11690,6 +11690,14 @@ background-repeat: no-repeat;\
 
 		oLogicDocument.ConvertFormFixedType(sId, isFixed);
 	};
+	asc_docs_api.prototype.asc_StretchFormToCell = function(formId)
+	{
+		let logicDocument = this.private_GetLogicDocument();
+		if (!logicDocument)
+			return;
+
+		logicDocument.StretchFormToCell(formId);
+	};
 	asc_docs_api.prototype.asc_IsHighlightRequiredFields = function()
 	{
 		var oLogicDocument = this.private_GetLogicDocument();
@@ -15595,6 +15603,7 @@ background-repeat: no-repeat;\
 	asc_docs_api.prototype['asc_IsAllRequiredFormsFilled']              = asc_docs_api.prototype.asc_IsAllRequiredFormsFilled;
 	asc_docs_api.prototype['asc_SendForm']                    			= asc_docs_api.prototype.asc_SendForm;
 	asc_docs_api.prototype['asc_SetFixedForm']                          = asc_docs_api.prototype.asc_SetFixedForm;
+	asc_docs_api.prototype['asc_StretchFormToCell']                     = asc_docs_api.prototype.asc_StretchFormToCell;
 	asc_docs_api.prototype['asc_IsHighlightRequiredFields']             = asc_docs_api.prototype.asc_IsHighlightRequiredFields;
 	asc_docs_api.prototype['asc_SetHighlightRequiredFields']            = asc_docs_api.prototype.asc_SetHighlightRequiredFields;
 	asc_docs_api.prototype['asc_GetAllFormsData']                       = asc_docs_api.prototype.asc_GetAllFormsData;
