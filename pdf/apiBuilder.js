@@ -367,7 +367,8 @@
      * @class
      * @name Api
      */
-	let Api = AscBuilder.Word.Api || {};
+	let Api = Object.create(AscBuilder.Word.Api || {});
+	
 	
 	/**
 	 * Creates a text field with the specified text field properties.

@@ -56,7 +56,7 @@
 	 * @property {ApiWorksheetFunction} WorksheetFunction - Returns an object that represents the function list.
 	 * @property {ApiPivotTable[]} PivotTables - Returns all pivot tables.
 	 */
-	var Api = AscBuilder.Slide.Api || {};
+	var Api = Object.create(AscBuilder.Slide.Api || {});
 	
 	/**
 	 * Class representing the currently active workbook

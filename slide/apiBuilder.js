@@ -38,7 +38,7 @@
      * @class
      * @name Api
      */
-	var Api = AscBuilder.Word.Api || {};
+	var Api = Object.create(AscBuilder.Word.Api || {});
 
     /**
      * Class representing a presentation.
