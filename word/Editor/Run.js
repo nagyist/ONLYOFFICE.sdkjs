@@ -8269,9 +8269,33 @@ ParaRun.prototype.Apply_TextPr = function(TextPr, IncFontSize, ApplyToAll)
 					run.Add_ToContent(i, oItem.IsSpace() ? new AscWord.CRunSpace(oItem.Value) : new AscWord.CRunText(oItem.Value));
 				}
 			}
-
-			newTextPr.RFonts.SetAll(Asc.editor.embeddedFontsMap[fontName]);
+			
+			let subFontName = Asc.editor.embeddedFontsMap[fontName];
+			newTextPr.RFonts.SetAll(subFontName);
 			newTextPr.SetSpacing(0);
+			
+			let paragraph = run.GetParagraph();
+			let shape     = paragraph ? paragraph.GetParentShape() : null;
+			let pdfDoc    = run.GetLogicDocument();
+			if (pdfDoc && shape
+				&& subFontName
+				&& shape.GetId
+				&& shape.recalcText
+				&& shape.recalculate)
+			{
+				pdfDoc.needRecalcShape[shape.GetId()] = true;
+
+				pdfDoc.checkFonts([subFontName], function(){
+					if (!pdfDoc.needRecalcShape[shape.GetId()])
+						return;
+					
+					delete pdfDoc.needRecalcShape[shape.GetId()];
+					paragraph.RecalcInfo.NeedShapeText();
+					shape.recalcText();
+					shape.recalculate();
+					shape.AddToRedraw();
+				});
+			}
 		}
 	}
 };
