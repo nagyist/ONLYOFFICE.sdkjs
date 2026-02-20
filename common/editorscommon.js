@@ -1779,6 +1779,12 @@
 			case c_oAscFileType.PDFA:
 				return 'pdf';
 				break;
+			case c_oAscFileType.DJVU:
+				return 'djvu';
+				break;
+			case c_oAscFileType.XPS:
+				return 'xps';
+				break;
 			case c_oAscFileType.HTML:
 				return 'html';
 				break;
@@ -1842,6 +1848,9 @@
 				break;
 			case c_oAscFileType.DOCXF:
 				return 'docxf';
+				break;
+			case c_oAscFileType.MD:
+				return 'md';
 				break;
 			case c_oAscFileType.DOCY:
 				return 'doct';
@@ -1917,6 +1926,9 @@
 			case c_oAscFileType.OTP:
 				return 'otp';
 				break;
+			case c_oAscFileType.PPTY:
+				return 'pptt';
+				break;
 			case c_oAscFileType.VSDX:
 				return 'vsdx';
 				break;
@@ -1934,6 +1946,9 @@
 				break;
 			case c_oAscFileType.VSTM:
 				return 'vstm';
+				break;
+			case c_oAscFileType.VSDY:
+				return 'vsdt';
 				break;
 			case c_oAscFileType.IMG:
 				return 'zip';
