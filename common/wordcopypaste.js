@@ -14542,6 +14542,7 @@ function addThemeImagesToMap(oImageMap, aDwnldUrls, aImages) {
   prot["asc_getOptions"]					= prot.asc_getOptions;
   prot["asc_getShowPasteSpecial"]			= prot.asc_getShowPasteSpecial;
   prot["asc_getContainTables"]			    = prot.asc_getContainTables;
+  prot["asc_getLastSelectedPasteProperty"]	= prot.asc_getLastSelectedPasteProperty;
 
   window["AscCommon"].checkOnlyOneImage = checkOnlyOneImage;
 
