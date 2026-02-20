@@ -1700,8 +1700,44 @@ $(function () {
 		solverParams = api.asc_GetSolverParams();
 		assert.ok(solverParams, 'Check API. Case#5: asc_GetSolverParams is created with saved data. Reopen Solver params dialogue window after closing');
 		assert.strictEqual(solverParams.asc_getObjectiveFunction(), '\'Case#5\'!$A$1', 'Check API. Case #5: asc_GetSolverParams. objectiveFunction is \'Case#5\'!$A$1');
-
 		ws.setName('Sheet1');
+
+		// Case #6: Check filling fields from define names in R1C1 mode.
+		const oldMode = AscCommonExcel.g_R1C1Mode;
+		AscCommonExcel.g_R1C1Mode = true;
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#6: asc_GetSolverParams is created. Reopen Solver params dialogue window after closing');
+		assert.strictEqual(solverParams.asc_getObjectiveFunction(), 'Sheet1!R1C1', 'Check API. Case #6: asc_GetSolverParams. objectiveFunction is \'Case#5\'!R1C1');
+		assert.strictEqual(solverParams.asc_getChangingCells(), 'Sheet1!R1C1', 'Check API. Case #6: asc_GetSolverParams. changingCells is \'Case#5\'!R1C1');
+		assert.strictEqual(solverParams.asc_getConstraints().get(1).cellRef, 'Sheet1!R1C1', 'Check API. Case#6: asc_GetSolverParams. constraints has cellRef Sheet1!R1C1\'');
+		api.asc_CloseSolver(false);
+
+		// Case #7: Check filling define names for filled fields in R1C1 mode.
+		solverParams = api.asc_GetSolverParams();
+		assert.ok(solverParams, 'Check API. Case#7: asc_GetSolverParams is created. Reopen Solver params dialogue window after closing');
+		solverParams.asc_setObjectiveFunction('Sheet1!R1C1');
+		solverParams.asc_setChangingCells('Sheet1!R1C1,Sheet1!R1C2,Sheet1!R1C3');
+		solverParams.asc_editConstraint(1, {cellRef: 'Sheet1!R1C1', operator: c_oAscOperator['<='], constraint: '1'});
+		api.asc_CloseSolver(false);
+		// Checking def names data after closing a Solver params dialogue window.
+		aDefNames = getHiddenDefinedNamesWS(wb.dependencyFormulas);
+		expectedDefNamesResult = {
+			'solver_obj': 'Sheet1!$A$1',
+			'solver_adj': 'Sheet1!$A$1,Sheet1!$B$1,Sheet1!$C$1',
+			'solver_lhs1': 'Sheet1!$A$1'
+		};
+		for (let i = 0, length = aDefNames.length; i < length; i++) {
+			const oDefName = aDefNames[i];
+			if (expectedDefNamesResult[oDefName.name]) {
+				assert.strictEqual(oDefName.ref, expectedDefNamesResult[oDefName.name], `Check API. Case #7: asc_GetSolverParams. Define name: ${oDefName.name}, Value: ${oDefName.ref}`);
+			}
+		}
+		AscCommonExcel.g_R1C1Mode = oldMode;
+
+		// Clearing data
+		solverParams = api.asc_GetSolverParams();
+		solverParams.asc_resetAll()
+		api.asc_CloseSolver(false);
 		clearData(0, 0, 100, 100);
 	});
 	QUnit.test('Test: Check calculate by Simplex method. Value of type.', function (assert) {
