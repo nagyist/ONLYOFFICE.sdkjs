@@ -2302,8 +2302,9 @@
       return this.closeCellEditor();
   };
 
-  WorkbookView.prototype._onCloseCellEditor = function() {
+  WorkbookView.prototype._onCloseCellEditor = function(saveValue) {
     var isCellEditMode = this.getCellEditMode();
+    var isFormulaEditMode = this.isFormulaEditMode;
     this.setCellEditMode(false);
 
     if (isCellEditMode) {
@@ -2332,7 +2333,9 @@
     this.updateTargetForCollaboration();
     this.sendCursor();
 
-	this.externalSelectionController.sendExternalCloseEditor();
+	if (isFormulaEditMode) {
+		this.externalSelectionController.sendExternalCloseEditor(saveValue);
+	}
   };
 
   WorkbookView.prototype._onEmpty = function() {
@@ -7613,7 +7616,7 @@
 		});
 
 		window.addEventListener && window.addEventListener('unload', function() {
-			if (isClosing) {
+			if (isClosing && oThis.wb.isFormulaEditMode) {
 				oThis.sendExternalCloseEditor();
 			}
 		});
@@ -7672,6 +7675,10 @@
 			return;
 		}
 
+		if (!this.wb.isFormulaEditMode && !this.getExternalFormulaEditMode()) {
+			return;
+		}
+
 		this.lockSendChangeSelection = true;
 		if ((!this.getExternalFormulaEditMode() && !this._isEqualEditorState(data)) || !this.supportVisibilityChangeOption) {
 			this.wb.setFormulaEditMode(true);
@@ -7697,10 +7704,16 @@
 			return;
 		}
 		const isExternalFormulaEditMode = this.getExternalFormulaEditMode();
+
+		if (!data.isClose && this.wb.isCellEditMode) {
+			return;
+		}
+
 		this.setExternalFormulaEditMode(!data.isClose ? {id: data.id} : null);
 
-		if (this.wb.getCellEditMode() && data.isClose && (isExternalFormulaEditMode || !this.supportVisibilityChangeOption)) {
-			this.wb.closeCellEditor(!data.saveValue);
+		if (this.wb.getCellEditMode() && data.isClose && (isExternalFormulaEditMode || this.wb.isFormulaEditMode)) {
+			var cancelClose = isExternalFormulaEditMode ? true : !data.saveValue;
+			this.wb.closeCellEditor(cancelClose);
 			this.clean();
 		} else if (!this.supportVisibilityChangeOption && !this.wb.getCellEditMode() && !data.isClose) {
 			this.onOpenCellEditor();
