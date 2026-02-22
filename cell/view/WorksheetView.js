@@ -21592,7 +21592,7 @@ function isAllowPasteLink(pastedWb) {
 			worksheet.workbook.handlers.trigger("asc_onError", c_oAscError.ID.LockedCellPivot,
 				c_oAscError.Level.NoCritical);
 			result = false;
-		} else if(styleName && this.intersectionFormulaArray(activeRange, true, true)) {
+		} else if(styleName && this.intersectionFormulaArray(activeRange, true, true, true)) {
 			worksheet.workbook.handlers.trigger("asc_onError", c_oAscError.ID.MultiCellsInTablesFormulaArray, c_oAscError.Level.NoCritical);
 			result = false;
 		}
