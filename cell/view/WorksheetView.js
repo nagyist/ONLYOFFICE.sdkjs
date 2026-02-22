@@ -11414,8 +11414,9 @@ function isAllowPasteLink(pastedWb) {
 			reinitScrollX = oldEnd !== vr.c2;
 		}
 		
+		let _maxCol = this.model.isDefaultWidthHidden() ? this.nColsCount : gc_nMaxCol;
 		if ((reinitScrollX && !this.workbook.getSmoothScrolling()) || (reinitScrollX && this.workbook.getSmoothScrolling() && deltaCorrect !== currentScrollCorrect) ||
-			(0 > delta && initColsCount && this._initColsCount()) || (this.workbook.getSmoothScrolling() && initColsCount && this.nColsCount !== gc_nMaxCol)) {
+			(0 > delta && initColsCount && this._initColsCount()) || (this.workbook.getSmoothScrolling() && initColsCount && this.nColsCount !== _maxCol)) {
 			if (reinitScrollX && (start - cFrozen) === 0 && 0 > delta && initColsCount) {
 				this._initColsCount();
 			}
