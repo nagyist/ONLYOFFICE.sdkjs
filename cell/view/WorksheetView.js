@@ -14283,8 +14283,7 @@ function isAllowPasteLink(pastedWb) {
 				return;
 			}
 			if (this.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
-				var lockedCell = this.model.getLockedCell(newRange.c2, newRange.r2);
-				if (lockedCell || lockedCell === null) {
+				if (this.model.isLockedRange(newRange)) {
 					return;
 				}
 			}
@@ -14329,6 +14328,15 @@ function isAllowPasteLink(pastedWb) {
         if (0 === dc && 0 === dr) {
             return this._calcActiveCellOffset();
         }
+
+		if (this.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
+			var newRange = this._calcSelectionEndPointByOffset(dc, dr);
+			var lockedCell = this.model.getLockedCell(newRange.c2, newRange.r2);
+			if (lockedCell || lockedCell === null) {
+				return;
+			}
+		}
+
 		res = this._moveActivePointInSelection(dc, dr);
         if (0 === res) {
             return this.changeSelectionStartPoint(dc, dr, /*isCoord*/false, false);

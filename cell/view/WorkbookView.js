@@ -1447,12 +1447,36 @@
 			return;
 		}
 		if (ws.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
-			//TODO _getRangeByXY ?
-			var newRange = isCoord ? ws._getRangeByXY(dc, dr) :
-				ws._calcSelectionEndPointByOffset(dc, dr);
-			var lockedCell = ws.model.getLockedCell(newRange.c2, newRange.r2);
-			if (lockedCell || lockedCell === null) {
-				return;
+			var newRange, checkCol, checkRow;
+			if (isStartPoint) {
+				if (isCoord) {
+					newRange = ws._getRangeByXY(dc, dr);
+					checkCol = newRange.c1;
+					checkRow = newRange.r1;
+				} else {
+					var activeCell = ws._getSelection().activeCell;
+					var mc = ws.model.getMergedByCell(activeCell.row, activeCell.col);
+					var c = mc ? (dc < 0 ? mc.c1 : dc > 0 ? Math.min(mc.c2, ws.nColsCount - 1 - dc) : activeCell.col) :
+						activeCell.col;
+					var r = mc ? (dr < 0 ? mc.r1 : dr > 0 ? Math.min(mc.r2, ws.nRowsCount - 1 - dr) : activeCell.row) :
+						activeCell.row;
+					var p = ws._calcCellPosition(c, r, dc, dr);
+					checkCol = p.col;
+					checkRow = p.row;
+				}
+				var lockedCell = ws.model.getLockedCell(checkCol, checkRow);
+				if (lockedCell || lockedCell === null) {
+					return;
+				}
+			} else {
+				if (isCoord) {
+					newRange = ws._calcSelectionEndPointByXY(dc, dr, isCoord && this.keepType);
+				} else {
+					newRange = ws._calcSelectionEndPointByOffset(dc, dr);
+				}
+				if (ws.model.isLockedRange(newRange)) {
+					return;
+				}
 			}
 		}
 
