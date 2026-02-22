@@ -138,6 +138,7 @@
 			Warning  : -101,
 			UpdateVersion : -102,
 			ForcedViewMode : -103,
+			FileNotAssembled : -104,
 
 			PrintMaxPagesCount : -110,
 
