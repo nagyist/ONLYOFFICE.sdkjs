@@ -2684,17 +2684,21 @@
     CBaseField.prototype.GetTextSize = function() {
         return this._textSize;
     };
-    CBaseField.prototype.SetRect = function(aOrigRect) {
-        if (this._rect != null && aOrigRect != null && AscCommon.isEqualSortedArrays(this._rect, aOrigRect)) {
+    CBaseField.prototype.SetRect = function(aRect) {
+		if (aRect) {
+			aRect = aRect.slice();
+		}
+		
+        if (this._rect != null && aRect != null && AscCommon.isEqualSortedArrays(this._rect, aRect)) {
             return;
         }
 
         let nOldExtX = this.GetWidth();
         let nOldExtY = this.GetHeight();
 
-        AscCommon.History.Add(new CChangesPDFFormRect(this, this.GetRect(), aOrigRect));
+        AscCommon.History.Add(new CChangesPDFFormRect(this, this._rect, aRect));
 
-        this._rect = aOrigRect;
+        this._rect = aRect;
 
         let nNewExtX = this.GetWidth();
         let nNewExtY = this.GetHeight();
