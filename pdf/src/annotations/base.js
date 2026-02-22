@@ -1985,7 +1985,9 @@
         let nStartPos = memory.GetCurPosition();
         memory.Skip(4);
 
+        memory.docRenderer.ClearCacheProps();
         this.draw(memory.docRenderer); // для каждой страницы инициализируется свой renderer
+        memory.docRenderer.ClearCacheProps();
 
         // запись длины комманд
         let nEndPos = memory.GetCurPosition();

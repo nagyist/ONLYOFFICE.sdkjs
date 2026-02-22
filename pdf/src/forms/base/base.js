@@ -3516,8 +3516,9 @@
         let oContentToDraw = this.GetTrigger(AscPDF.PDF_TRIGGERS_TYPES.Format) ? this.contentFormat : this.content;
         let oldTrMatrix = oContentToDraw.transform;
         oContentToDraw.transform = new AscCommon.CMatrix();
-        memory.docRenderer.ClearLastFont();
+        memory.docRenderer.ClearCacheProps();
         oContentToDraw.Draw(0, memory.docRenderer);
+        memory.docRenderer.ClearCacheProps();
         oContentToDraw.transform = oldTrMatrix;
 
         // запись длины комманд
