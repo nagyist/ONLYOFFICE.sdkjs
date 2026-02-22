@@ -3450,6 +3450,17 @@ function CEditorPage(api)
 			}
 		}
 
+		if (this.isUseMultiPageView())
+		{
+			if (this.m_oEditor && this.m_oEditor.HtmlElement)
+				this.m_oEditor.HtmlElement.fullRepaint = true;
+			this.zoom_Fire(0, this.m_nZoomValue);
+
+			this.m_oBoundsController.ClearNoAttack();
+			this.onTimerScroll_sync();
+			return;
+		}
+
 		this.m_bIsUpdateHorRuler = true;
 		this.m_bIsUpdateVerRuler = true;
 
