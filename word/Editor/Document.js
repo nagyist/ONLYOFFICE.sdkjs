@@ -26734,7 +26734,7 @@ CDocument.prototype.StretchFormToCell = function(formId)
 		return false;
 	
 	form = form.GetMainForm();
-	if (!form)
+	if (!form || form.IsFormLocked())
 		return false;
 	
 	let paragraph = form.GetParagraph();
