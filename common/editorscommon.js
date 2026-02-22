@@ -1105,6 +1105,9 @@
 			case c_oAscServerError.ForcedViewMode :
 				nRes = Asc.c_oAscError.ID.ForcedViewMode;
 				break;
+			case c_oAscServerError.FileNotAssembled :
+				nRes = Asc.c_oAscError.ID.FileNotAssembled;
+				break;
 			case c_oAscServerError.Storage :
 			case c_oAscServerError.StorageFileNoFound :
 			case c_oAscServerError.StorageRead :
@@ -1704,7 +1707,8 @@
 
 		Password: -180,
 
-		ForcedViewMode: -200
+		ForcedViewMode: -200,
+		FileNotAssembled: -201
 	};
 
 	//todo get from server config
