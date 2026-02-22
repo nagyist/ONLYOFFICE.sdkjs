@@ -20740,7 +20740,7 @@
 	/**
 	 * Returns the chart title text.
 	 * @memberof ApiChart
-	 * @typeofeditors ["CDE", "CSE", "CPE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @returns {string | null} - The chart title text or null if the chart has no title.
 	 * @see office-js-api/Examples/{Editor}/ApiChart/Methods/GetTitle.js
 	 */
