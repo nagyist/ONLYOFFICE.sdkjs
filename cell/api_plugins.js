@@ -300,6 +300,10 @@
 		this.SetCustomFunctions(jsonString, true);
 	};
 
+	//------------------------------------------------------------export--------------------------------------------------
+	window['AscCommon']                             = window['AscCommon'] || {};
+	window["AscCommon"].customFunctionsStorageId    = customFunctionsStorageId;
+
 })(window);
 
 
