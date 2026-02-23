@@ -4486,7 +4486,7 @@
 				let prefix = AscFonts.getEmbeddedFontPrefix();
 
 				if (TextPr.FontFamily.Name && TextPr.FontFamily.Name.startsWith(prefix)) {
-					let match = TextPr.FontFamily.Name.match(/ (\d+)$/);
+					let match = TextPr.FontFamily.Name.match(/ [0-9a-fA-F]+$/);
 					let lastSpaceIdx = match ? match.index : -1;
 
 					if (lastSpaceIdx !== -1) {
