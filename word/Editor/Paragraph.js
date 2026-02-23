@@ -19853,6 +19853,10 @@ CParaDrawingRangeLines.prototype =
 
 				return true;
 			}
+			else if ((PrevEl.Additional instanceof AscWord.Shd) && (Element.Additional instanceof AscWord.Shd))
+			{
+				return Element.Additional.IsEqual(PrevEl.Additional);
+			}
 			else if (undefined !== PrevEl.Additional.RunPr && true === Element.Additional.RunPr.Is_Equal(PrevEl.Additional.RunPr))
 			{
 				return true;
