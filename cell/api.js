@@ -9978,8 +9978,7 @@ var editor;
 	};
 
 	spreadsheet_api.prototype.SetCustomFunctions = function(jsonString, disableSave) {
-		try
-		{
+		try {
 			if (AscCommon.History.Is_On()) {
 				if (disableSave) {
 					AscCommon.History.AddToWaitingList(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
