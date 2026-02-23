@@ -370,6 +370,8 @@
 	prot['UserDrop']                         = prot.UserDrop;
 	prot['Warning']                          = prot.Warning;
 	prot['UpdateVersion']                    = prot.UpdateVersion;
+	prot['ForcedViewMode']                   = prot.ForcedViewMode;
+	prot['FileNotAssembled']                 = prot.FileNotAssembled;
 	prot['PrintMaxPagesCount']               = prot.PrintMaxPagesCount;
 	prot['SessionAbsolute']                  = prot.SessionAbsolute;
 	prot['SessionIdle']                      = prot.SessionIdle;
