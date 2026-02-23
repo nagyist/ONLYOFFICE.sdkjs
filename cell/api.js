@@ -9985,13 +9985,19 @@ var editor;
 	spreadsheet_api.prototype.SetCustomFunctions = function(jsonString, disableSave) {
 		try {
 			if (AscCommon.History.Is_On()) {
-				AscCommon.History.Create_NewPoint();
-				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
-					null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				if (disableSave) {
+					AscCommon.History.AddToWaitingList(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
+						null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				} else {
+					AscCommon.History.Create_NewPoint();
+					AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
+						null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+				}
 			}
 
+			let customFunctionsStorageId = AscCommon.customFunctionsStorageId;
 			let obj = JSON.parse(jsonString);
-			AscCommon.setLocalStorageItem(customFunctionsStorageId, obj);
+			AscCommon.setLocalStorageItem(AscCommon.customFunctionsStorageId, obj);
 
 			this.wb && this.wb.model && this.wb.model.clearFileCustomFunctions();
 			this.registerCustomFunctionsLibrary(obj);

@@ -3161,7 +3161,7 @@ function CEditorPage(api)
 				}
 				else
 				{
-					currentBlockW += _pageWidth;
+					currentBlockW = testW;
 
 					if (_pageHeight > currentBlockH)
 						currentBlockH = _pageHeight;
