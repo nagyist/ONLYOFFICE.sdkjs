@@ -4947,7 +4947,12 @@
 		
 		let desktopOptions = {};
 		if (options && options.advancedOptions)
+		{
 			desktopOptions["nativeOptions"] = options.advancedOptions.asc_getNativeOptions();
+			desktopOptions["pdfLayout"] = {
+				"content" : options.advancedOptions.asc_getPdfContent()
+			};
+		}
 		
 		let viewer = this.DocumentRenderer;
 		if (window["AscDesktopEditor"] && !window["AscDesktopEditor"]["IsLocalFile"]() && window["AscDesktopEditor"]["SetPdfCloudPrintFileInfo"])
