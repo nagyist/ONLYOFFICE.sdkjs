@@ -23148,7 +23148,7 @@ CDocument.prototype.CallSignatureDblClickEvent = function(sGuid)
     allSpr = allSpr.concat(allSpr.concat(this.DrawingObjects.getAllSignatures2(ret, this.DrawingObjects.getDrawingArray())));
     for(var i = 0; i < allSpr.length; ++i)
     {
-        if(allSpr[i].getSignatureLineGuid() === sGuid)
+        if(allSpr[i].isEqualSignatureLineGuid(sGuid))
         {
             this.sendEvent("asc_onSignatureDblClick", sGuid, allSpr[i].extX, allSpr[i].extY);
         }

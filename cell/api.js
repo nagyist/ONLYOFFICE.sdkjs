@@ -4981,7 +4981,7 @@ var editor;
 		}
         AscFormat.DrawingObjectsController.prototype.getAllSignatures2(ret, aSpTree);
         for(var i = 0; i < aSpTree.length; ++i){
-            if(aSpTree[i].signatureLine && aSpTree[i].signatureLine.id === sGuid){
+            if(aSpTree[i].signatureLine && aSpTree[i].signatureLine.isEqualId(sGuid)){
                 return aSpTree[i];
             }
         }
