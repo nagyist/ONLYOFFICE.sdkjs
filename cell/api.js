@@ -9986,7 +9986,7 @@ var editor;
 			}
 
 			let obj = JSON.parse(jsonString);
-			AscCommon.setLocalStorageItem(customFunctionsStorageId, obj);
+			AscCommon.setLocalStorageItem(AscCommon.customFunctionsStorageId, obj);
 
 			this.wb && this.wb.model && this.wb.model.clearFileCustomFunctions();
 			this.registerCustomFunctionsLibrary(obj);

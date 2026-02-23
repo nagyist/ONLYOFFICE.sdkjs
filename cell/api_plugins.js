@@ -173,6 +173,7 @@
 	};
 
 	const customFunctionsStorageId = "cell-custom-functions-library";
+	AscCommon.customFunctionsStorageId = customFunctionsStorageId;
 
 	Api.prototype.registerCustomFunctionsLibrary = function(obj, isNotUpdate)
 	{
