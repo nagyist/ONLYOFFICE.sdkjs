@@ -4291,6 +4291,7 @@
 	window['AscDFH'].historyitem_Pdf_Document_Start_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 15;
 	window['AscDFH'].historyitem_Pdf_Document_Part_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 16;
 	window['AscDFH'].historyitem_Pdf_Document_End_Redact		= window['AscDFH'].historyitem_type_PDF_Document | 17;
+	window['AscDFH'].historyitem_Pdf_Embed_Fonts_Map			= window['AscDFH'].historyitem_type_PDF_Document | 18;
 
 
 	AscDFH.historyitem_CustomPropertiesAddProperty = AscDFH.historyitem_type_CustomProperties | 0;
@@ -4811,6 +4812,7 @@
 	window['AscDFH'].historydescription_Spreadsheet_SelectRange						= 0x01fa;
 	window['AscDFH'].historydescription_Spreadsheet_SetCellFormula					= 0x01fb;
 	window['AscDFH'].historydescription_Document_AddCheckBoxLabel                   = 0x01fc;
+	window['AscDFH'].historydescription_Document_StretchFormToCell                  = 0x01fd;
 
 	// pdf
 	window['AscDFH'].historydescription_Pdf_AddAnnot			= 0x29a;

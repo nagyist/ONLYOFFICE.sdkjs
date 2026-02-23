@@ -545,16 +545,17 @@
 				_x = 0.0;
 				_y = 0.0;
 			}
-			if (oXfrm.offX === null || !AscFormat.fApproxEqual(_x, oXfrm.offX, 0.01)) {
+			const scaleCoefficient = object.getScaleCoefficient();
+			if (oXfrm.offX === null || !AscFormat.fApproxEqual(_x, oXfrm.offX * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setOffX(_x);
 			}
-			if (oXfrm.offY === null || !AscFormat.fApproxEqual(_y, oXfrm.offY, 0.01)) {
+			if (oXfrm.offY === null || !AscFormat.fApproxEqual(_y, oXfrm.offY * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setOffY(_y);
 			}
-			if (oXfrm.extX === null || !AscFormat.fApproxEqual(object.extX, oXfrm.extX, 0.01)) {
+			if (oXfrm.extX === null || !AscFormat.fApproxEqual(object.extX, oXfrm.extX * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setExtX(object.extX);
 			}
-			if (oXfrm.extY === null || !AscFormat.fApproxEqual(object.extY, oXfrm.extY, 0.01)) {
+			if (oXfrm.extY === null || !AscFormat.fApproxEqual(object.extY, oXfrm.extY * scaleCoefficient, 0.01)) {
 				object.spPr.xfrm.setExtY(object.extY);
 			}
 		}
@@ -2447,10 +2448,10 @@
 					}
 					this.lastSelectedObject = null;
 					this.checkShowMediaControlOnSelect();
-					Asc.editor.addMacroStepData("SelectShape", [this.selectedObjects.filter(function (drawing){return drawing instanceof AscFormat.CShape})]);
+					Asc.editor.addMacroStepData("SelectDrawing", this.selectedObjects.slice());
 				},
 
-				deselectObject: function (object) {
+				deselectObject: function (object) {	
 					for (let i = 0; i < this.selectedObjects.length; ++i) {
 						if (this.selectedObjects[i] === object) {
 							object.selected = false;
@@ -2459,6 +2460,7 @@
 								this.lastSelectedObject = object;
 							}
 							this.checkShowMediaControlOnSelect();
+							Asc.editor.addMacroStepData("DeselectDrawing", object.getObjectName());
 							return;
 						}
 					}
@@ -3535,14 +3537,11 @@
 						return;
 					}
 
-					let hyperlinkAnchor = HyperProps.Anchor;
-					if (typeof hyperlinkAnchor === "string") {
-						hyperlinkAnchor = hyperlinkAnchor.trim();
-					}
+					const hyperlinkAnchor = typeof HyperProps.Anchor === 'string' && HyperProps.Anchor;
 
 					let hyperlinkId = HyperProps.Value;
 					if (!hyperlinkId && hyperlinkAnchor) {
-						hyperlinkId = "#" + hyperlinkAnchor;
+						hyperlinkId = '#' + hyperlinkAnchor;
 					}
 					if (!hyperlinkId) {
 						return;
@@ -3603,14 +3602,11 @@
 						return null;
 					}
 
-					let hyperlinkAnchor = HyperProps.Anchor;
-					if (typeof hyperlinkAnchor === "string") {
-						hyperlinkAnchor = hyperlinkAnchor.trim();
-					}
+					const hyperlinkAnchor = typeof HyperProps.Anchor === 'string' && HyperProps.Anchor;
 
 					let hyperlinkId = HyperProps.Value;
 					if (!hyperlinkId && hyperlinkAnchor) {
-						hyperlinkId = "#" + hyperlinkAnchor;
+						hyperlinkId = '#' + hyperlinkAnchor;
 					}
 					if (!hyperlinkId) {
 						return null;
@@ -4025,8 +4021,6 @@
 						for (i = 0; i < objects_by_type.shapes.length; ++i) {
 							objects_by_type.shapes[i].changeLine(props.stroke);
 						}
-						if (objects_by_type.shapes.length)
-							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.shapes[0].getCompiledLine());
 
 						for (i = 0; i < objects_by_type.groups.length; ++i) {
 							objects_by_type.groups[i].changeLine(props.stroke);
@@ -4038,7 +4032,9 @@
 							objects_by_type.images[i].changeLine(props.stroke);
 						}
 						if (objects_by_type.images.length)
-							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.images[0].spPr.ln.createDuplicate(true));
+							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.images[0].getCompiledLine().createDuplicate());
+						else if (objects_by_type.shapes.length)
+							Asc.editor.addMacroStepData('SetDrawingLine', objects_by_type.shapes[0].getCompiledLine().createDuplicate());
 
 						for (i = 0; i < objects_by_type.smartArts.length; ++i) {
 							objects_by_type.smartArts[i].changeLine(props.stroke);
@@ -4048,8 +4044,6 @@
 						for (i = 0; i < objects_by_type.shapes.length; ++i) {
 							objects_by_type.shapes[i].changeFill(props.fill);
 						}
-						if (objects_by_type.shapes.length)
-							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.shapes[0].getFill().createDuplicate());
 
 						for (i = 0; i < objects_by_type.groups.length; ++i) {
 							objects_by_type.groups[i].changeFill(props.fill);
@@ -4064,6 +4058,8 @@
 							objects_by_type.images[i].changeFill(props.fill);
 						}
 
+						if (objects_by_type.shapes.length)
+							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.shapes[0].getFill().createDuplicate());
 						if (objects_by_type.images.length)
 							Asc.editor.addMacroStepData('SetDrawingFill', objects_by_type.images[0].getFill().createDuplicate());
 					}
@@ -4419,8 +4415,9 @@
 						const oPos = oGroup.updateCoordinatesAfterInternalResize();
 						const oParent = oGroup.parent;
 						if (oParent instanceof AscCommonWord.ParaDrawing) {
-							const nNewX = oPos.posX + oGroup.x;
-							const nNewY = oPos.posY + oGroup.y;
+							const scaleCoefficient = oParent.GetScaleCoefficient();
+							const nNewX = oPos.posX + oGroup.x / scaleCoefficient;
+							const nNewY = oPos.posY + oGroup.y / scaleCoefficient;
 							oGroup.spPr.xfrm.setOffX(0);
 							oGroup.spPr.xfrm.setOffY(0);
 							if (!oParent.IsInline()) {
@@ -6937,11 +6934,12 @@
 						arrDrawings = this.getArrayForGrouping();
 					if (arrDrawings.length < 2)
 						return null;
+					const scaleCoefficient = arrDrawings[0].getScaleCoefficient();
 					var bounds = this.getBoundsForGroup(arrDrawings);
-					var max_x = bounds.r;
-					var max_y = bounds.b;
-					var min_x = bounds.l;
-					var min_y = bounds.t;
+					var max_x = bounds.r / scaleCoefficient;
+					var max_y = bounds.b / scaleCoefficient;
+					var min_x = bounds.l / scaleCoefficient;
+					var min_y = bounds.t / scaleCoefficient;
 					var group = new AscFormat.CGroupShape();
 					group.setSpPr(new AscFormat.CSpPr());
 					group.spPr.setParent(group);
@@ -6958,8 +6956,8 @@
 					xfrm.setChOffY(0);
 					for (var i = 0; i < arrDrawings.length; ++i) {
 						CheckSpPrXfrm(arrDrawings[i]);
-						arrDrawings[i].spPr.xfrm.setOffX(arrDrawings[i].x - min_x);
-						arrDrawings[i].spPr.xfrm.setOffY(arrDrawings[i].y - min_y);
+						arrDrawings[i].spPr.xfrm.setOffX(arrDrawings[i].x / scaleCoefficient - min_x);
+						arrDrawings[i].spPr.xfrm.setOffY(arrDrawings[i].y / scaleCoefficient - min_y);
 						arrDrawings[i].setGroup(group);
 						group.addToSpTree(group.spTree.length, arrDrawings[i]);
 					}
@@ -9997,6 +9995,13 @@
 						this.loadDocumentStateAfterLoadChanges(oStateBeforeLoadChanges);
 						this.startRecalculate();
 					}, [], false, 0);
+				},
+
+				updateDrawingTextCache: function () {
+					for (let i = 0; i < this.selectedObjects.length; i += 1) {
+						const oGraphicObject = this.selectedObjects[i];
+						oGraphicObject.updateDrawingTextCache();
+					}
 				},
 
 				getInputLanguage: function () {

@@ -2739,40 +2739,67 @@
 		if (!t)
 			return;
 
-		AscCommon.ShowImageFileDialog(t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
-			t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, files)
+		if (window["AscDesktopEditor"])
 		{
-			if (Asc.c_oAscError.ID.No !== error)
+			window["AscDesktopEditor"]["OpenFilenameDialog"]("images", false, function(_file)
 			{
-				t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-			}
-			else
-			{
-				t.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-				AscCommon.UploadImageFiles(files, t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
-					t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, urls)
+				let file = _file;
+				if (Array.isArray(file))
+					file = file[0];
+				if (!file)
+					return;
+
+				let url = window["AscDesktopEditor"]["LocalFileGetImageUrl"](file);
+				let urls = [AscCommon.g_oDocumentUrls.getImageUrl(url)];
+
+				t.ImageLoader.LoadImagesWithCallback(urls, function()
 				{
-					if (Asc.c_oAscError.ID.No !== error)
+					if (urls.length > 0)
 					{
-						t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
-						t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-					}
-					else
-					{
-						t.ImageLoader.LoadImagesWithCallback(urls, function()
-						{
-							if (urls.length > 0)
-							{
-								_this.ImageUrl = urls[0];
-								_this.ProcessedCanvas = null;
-								t.sendEvent("asc_onSignatureImageLoaded");
-							}
-							t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
-						});
+						_this.ImageUrl = urls[0];
+						_this.ProcessedCanvas = null;
+						t.sendEvent("asc_onSignatureImageLoaded");
 					}
 				});
-			}
-		});
+			});
+		}
+		else
+		{
+			AscCommon.ShowImageFileDialog(t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
+				t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, files)
+			{
+				if (Asc.c_oAscError.ID.No !== error)
+				{
+					t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+				}
+				else
+				{
+					t.sync_StartAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+					AscCommon.UploadImageFiles(files, t.documentId, t.documentUserId, t.CoAuthoringApi.get_jwt(),
+						t.documentShardKey, t.documentWopiSrc, t.documentUserSessionId, function(error, urls)
+					{
+						if (Asc.c_oAscError.ID.No !== error)
+						{
+							t.sendEvent("asc_onError", error, Asc.c_oAscError.Level.NoCritical);
+							t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+						}
+						else
+						{
+							t.ImageLoader.LoadImagesWithCallback(urls, function()
+							{
+								if (urls.length > 0)
+								{
+									_this.ImageUrl = urls[0];
+									_this.ProcessedCanvas = null;
+									t.sendEvent("asc_onSignatureImageLoaded");
+								}
+								t.sync_EndAction(Asc.c_oAscAsyncActionType.BlockInteraction, Asc.c_oAscAsyncAction.UploadImage);
+							});
+						}
+					});
+				}
+			});
+		}
 	};
 
 	CSignatureFormProps.prototype.put_ImageUrl = function(sUrl, token)
@@ -2834,8 +2861,14 @@
 			return;
 		}
 
-		let nW = Math.max(_img.Image.width, 1);
-		let nH = Math.max(_img.Image.height, 1);
+		let nW = _img.Image.naturalWidth || _img.Image.width;
+		let nH = _img.Image.naturalHeight || _img.Image.height;
+
+		if (!nW || !nH)
+		{
+			nW = nW || 1024;
+			nH = nH || 1024;
+		}
 
 		const nMaxSize = 4096;
 		if (nW > nMaxSize || nH > nMaxSize)
@@ -2851,24 +2884,38 @@
 		this.ProcessedCanvas.width = nW;
 		this.ProcessedCanvas.height = nH;
 		const ctx = this.ProcessedCanvas.getContext('2d');
-		ctx.drawImage(_img.Image, 0, 0, nW, nH);
+
+		try
+		{
+			ctx.drawImage(_img.Image, 0, 0, nW, nH);
+		}
+		catch (e)
+		{
+			return;
+		}
 
 		if (this.RemoveBackground)
 		{
-			const oData = ctx.getImageData(0, 0, nW, nH);
-			const px = oData.data;
-			const nLow = 50;
-			const nHigh = 230;
-			const nRange = nHigh - nLow;
-			for (let i = 0; i < px.length; i += 4)
+			try
 			{
-				const nLum = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000;
-				if (nLum >= nHigh)
-					px[i + 3] = 0;
-				else if (nLum > nLow)
-					px[i + 3] = Math.min(px[i + 3], Math.round(255 * (nHigh - nLum) / nRange));
+				const oData = ctx.getImageData(0, 0, nW, nH);
+				const px = oData.data;
+				const nLow = 50;
+				const nHigh = 230;
+				const nRange = nHigh - nLow;
+				for (let i = 0; i < px.length; i += 4)
+				{
+					const nLum = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000;
+					if (nLum >= nHigh)
+						px[i + 3] = 0;
+					else if (nLum > nLow)
+						px[i + 3] = Math.min(px[i + 3], Math.round(255 * (nHigh - nLum) / nRange));
+				}
+				ctx.putImageData(oData, 0, 0);
 			}
-			ctx.putImageData(oData, 0, 0);
+			catch (e)
+			{
+			}
 		}
 	};
 
@@ -2961,15 +3008,28 @@
 		this.DrawCtx.lineJoin = 'round';
 
 		const _this = this;
-		oCanvas.addEventListener('mousedown',  function(e) { _this._onDrawStart(e); });
-		oCanvas.addEventListener('mousemove',  function(e) { _this._onDrawMove(e); });
-		oCanvas.addEventListener('mouseup',    function(e) { _this._onDrawEnd(e); });
-		oCanvas.addEventListener('mouseleave', function(e) { _this._onDrawEnd(e); });
 
-		oCanvas.addEventListener('touchstart', function(e) { e.preventDefault(); _this._onDrawStart(e); }, {passive: false});
-		oCanvas.addEventListener('touchmove',  function(e) { e.preventDefault(); _this._onDrawMove(e); },  {passive: false});
-		oCanvas.addEventListener('touchend',   function(e) { e.preventDefault(); _this._onDrawEnd(e); });
-		oCanvas.addEventListener('touchcancel', function(e) { _this._onDrawEnd(e); });
+		this.DrawMouseMoveHandler = function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawMove(e);
+		};
+		this.DrawMouseUpHandler = function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawEnd(e);
+			if (window.removeEventListener) {
+				window.removeEventListener(AscCommon.getPtrEvtName("move"), _this.DrawMouseMoveHandler, false);
+				window.removeEventListener(AscCommon.getPtrEvtName("up"), _this.DrawMouseUpHandler, false);
+			}
+		};
+
+		oCanvas.addEventListener(AscCommon.getPtrEvtName("down"), function(e) {
+			AscCommon.stopEvent(e);
+			_this._onDrawStart(e);
+			if (window.addEventListener) {
+				window.addEventListener(AscCommon.getPtrEvtName("move"), _this.DrawMouseMoveHandler, false);
+				window.addEventListener(AscCommon.getPtrEvtName("up"), _this.DrawMouseUpHandler, false);
+			}
+		});
 	};
 
 	CSignatureFormProps.prototype._getDrawPos = function(e)
@@ -3172,7 +3232,7 @@
 		this.TypeFont = name;
 
 		const loader = AscCommon.g_font_loader;
-		const fontinfo = g_fontApplication.GetFontInfo(name);
+		const fontinfo = AscFonts.g_fontApplication.GetFontInfo(name);
 		const _this = this;
 		const isAsync = loader.LoadFont(fontinfo, function() {
 			_this.Api.sync_EndAction(Asc.c_oAscAsyncActionType.Information, Asc.c_oAscAsyncAction.LoadFont);
@@ -3250,26 +3310,26 @@
 		const _this = this;
 		return AscCommon.ExecuteNoHistory(function()
 		{
-			const hdr = new CHeaderFooter(oLogicDocument.HdrFtr, oLogicDocument, _this.Api.WordControl.m_oDrawingDocument, AscCommon.hdrftr_Header);
+			const hdr = new AscCommonWord.CHeaderFooter(oLogicDocument.HdrFtr, oLogicDocument, _this.Api.WordControl.m_oDrawingDocument, AscCommon.hdrftr_Header);
 			const _dc = hdr.Content;
 
 			const par = new AscWord.Paragraph(_dc, false);
-			const run = new ParaRun(par, false);
+			const run = new AscCommonWord.ParaRun(par, false);
 			run.AddText(_this.TypeText);
 
-			const textPr = new CTextPr();
+			const textPr = new AscCommonWord.CTextPr();
 			textPr.FontFamily = {Name: _this.TypeFont, Index: -1};
 			textPr.RFonts.SetAll(_this.TypeFont, -1);
 			textPr.FontSize = _this.TypeFontSize;
 			textPr.Bold = _this.TypeBold;
 			textPr.Italic = _this.TypeItalic;
-			textPr.Color = new CDocumentColor(0, 0, 0, false);
+			textPr.Color = new AscCommonWord.CDocumentColor(0, 0, 0, false);
 			run.Set_Pr(textPr);
 
 			_dc.Internal_Content_Add(0, par, false);
 			par.Add_ToContent(0, run);
 
-			const _ind = new CParaInd();
+			const _ind = new AscWord.CParaInd();
 			_ind.FirstLine = 0;
 			_ind.Left = 0;
 			_ind.Right = 0;
@@ -3333,8 +3393,11 @@
 		graphics._z();
 		graphics.clip();
 
+		let oldParamarks = this.Api.ShowParaMarks;
+		this.Api.ShowParaMarks = false;
 		result.par.Shift(0, xOff, yOff);
 		result.par.Draw(0, graphics);
+		this.Api.ShowParaMarks = oldParamarks;
 
 		graphics.restore();
 	};
@@ -3350,7 +3413,7 @@
 				if (this.RemoveBackground && this.ProcessedCanvas)
 					imageData = this.ProcessedCanvas.toDataURL("image/png");
 				else
-					imageData = this.ImageUrl;
+					imageData = AscCommon.getFullImageSrc2(this.ImageUrl);
 				break;
 			case 1:
 				imageData = this._getDrawImageData();
@@ -3438,8 +3501,11 @@
 		graphics.transform(1, 0, 0, 1, 0, 0);
 		graphics.save();
 
+		let oldParamarks = this.Api.ShowParaMarks;
+		this.Api.ShowParaMarks = false;
 		result.par.Shift(0, paddingMM, -result.lineTop + paddingMM);
 		result.par.Draw(0, graphics);
+		this.Api.ShowParaMarks = oldParamarks;
 
 		graphics.restore();
 		return oCanvas.toDataURL("image/png");

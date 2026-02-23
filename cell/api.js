@@ -492,13 +492,30 @@ var editor;
     }
   };
 
-  spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste) {
+  spreadsheet_api.prototype.asc_TextImport = function(options, callback, bPaste, isPasteOptions) {
     //return this.asc_TextFromUrl(null, options, callback);
     //return this.asc_TextFromFile(options, callback);
     if (this.canEdit()) {
       var text;
       if(bPaste) {
-        text = AscCommon.g_specialPasteHelper.GetPastedData(true);
+        if (isPasteOptions) {
+          AscCommon.g_clipboardBase.Get_Clipboard_Data(function (data) {
+            if (!data) {
+              callback("");
+              return;
+            }
+            //onpaste
+            if (data.clipboardData) {
+              callback("");
+            } else {
+              let _text = data[AscCommon.c_oAscClipboardDataFormat.Text];
+              callback(_text ? _text : "");
+            }
+          });
+          return;
+        } else {
+          text = AscCommon.g_specialPasteHelper.GetPastedData(true);
+        }
       } else {
         var ws = this.wb.getWorksheet();
         text = ws.getRangeText();
@@ -507,7 +524,7 @@ var editor;
         //error
         //no data was selected to parse
         this.sendEvent('asc_onError', c_oAscError.ID.NoDataToParse, c_oAscError.Level.NoCritical);
-        callback(false);
+        callback("");
         return;
       }
       callback(text);
@@ -7345,6 +7362,7 @@ var editor;
         {
             this.openFileCryptCallback(this.openFileCryptBinary);
         }
+		AscBuilder.Cell.init();
 	};
 
 	spreadsheet_api.prototype.asc_OnShowContextMenu = function() {
@@ -9048,9 +9066,11 @@ var editor;
 
 	spreadsheet_api.prototype.onWorksheetChange = function(props) {
 		let ws = this.wbModel.getActiveWs();
-		if (!ws) {
+		let jsApi = this.getJsApi();
+		if (!ws || !jsApi) {
 			return;
 		}
+		
 		let range = null;
 		let result = null;
 		if (Array.isArray(props)) {
@@ -9059,11 +9079,11 @@ var editor;
 			let arr = props.length <= 1 ? null : props.map(function(r){
 				return ws.getRange3(r.r1, r.c1, r.r2, r.c2);
 			})
-			result = this.private_GetRange(range, arr);
+			result = jsApi.private_GetRange(range, arr);
 		} else {
 			// todo сделать получение листа ещё
 			range = ws.getRange3(props.r1, props.c1, props.r2, props.c2);
-			result = this.private_GetRange(range);
+			result = jsApi.private_GetRange(range);
 		}
 		this.sendEvent('onWorksheetChange', result);
 	};
@@ -9875,6 +9895,9 @@ var editor;
 	spreadsheet_api.prototype.asc_SetIsSupportDynamicArrays = function(val) {
 		AscCommonExcel.bIsSupportDynamicArrays = val;
 	};
+	spreadsheet_api.prototype.getJsApi = function() {
+		return AscBuilder.Cell.Api;
+	};
 
 	spreadsheet_api.prototype.asc_getPasteOptions = function(callback) {
 		AscCommon.g_clipboardBase.Get_Clipboard_Data(function (data) {
@@ -9952,6 +9975,25 @@ var editor;
 				callback(null);
 			}
 		});
+	};
+
+	spreadsheet_api.prototype.SetCustomFunctions = function(jsonString, disableSave) {
+		try {
+			if (AscCommon.History.Is_On()) {
+				AscCommon.History.Create_NewPoint();
+				AscCommon.History.Add(AscCommonExcel.g_oUndoRedoWorkbook, AscCH.historyitem_Workbook_SetCustomFunctions,
+					null, null, new AscCommonExcel.UndoRedoData_FromTo(this["pluginMethod_GetCustomFunctions"](), jsonString));
+			}
+
+			let obj = JSON.parse(jsonString);
+			AscCommon.setLocalStorageItem(customFunctionsStorageId, obj);
+
+			this.wb && this.wb.model && this.wb.model.clearFileCustomFunctions();
+			this.registerCustomFunctionsLibrary(obj);
+		}
+		catch (err) {
+			console.log("SetCustomFunctions method error! Please check your code...");
+		}
 	};
 
   /*
@@ -10575,8 +10617,11 @@ var editor;
 
   prot["asc_SetIsSupportDynamicArrays"]= prot.asc_SetIsSupportDynamicArrays;
   prot["asc_getPasteOptions"]= prot.asc_getPasteOptions;
+  prot["getJsApi"]= prot.getJsApi;
 
-
+  prot["SetCustomFunctions"] = prot.SetCustomFunctions;
+  
+  AscCommon['SpreadsheetEditorApi'] = AscCommon.SpreadsheetEditorApi = spreadsheet_api;
 
 
 })(window);

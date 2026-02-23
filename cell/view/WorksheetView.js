@@ -11414,8 +11414,9 @@ function isAllowPasteLink(pastedWb) {
 			reinitScrollX = oldEnd !== vr.c2;
 		}
 		
+		let _maxCol = this.model.isDefaultWidthHidden() ? this.nColsCount : gc_nMaxCol;
 		if ((reinitScrollX && !this.workbook.getSmoothScrolling()) || (reinitScrollX && this.workbook.getSmoothScrolling() && deltaCorrect !== currentScrollCorrect) ||
-			(0 > delta && initColsCount && this._initColsCount()) || (this.workbook.getSmoothScrolling() && initColsCount && this.nColsCount !== gc_nMaxCol)) {
+			(0 > delta && initColsCount && this._initColsCount()) || (this.workbook.getSmoothScrolling() && initColsCount && this.nColsCount !== _maxCol)) {
 			if (reinitScrollX && (start - cFrozen) === 0 && 0 > delta && initColsCount) {
 				this._initColsCount();
 			}
@@ -11977,6 +11978,7 @@ function isAllowPasteLink(pastedWb) {
 	};
 
 	WorksheetView.prototype.getCursorTypeFromXY = function (x, y, fromDoubleClickCall) {
+		var origX = x;
 		if (this.getRightToLeft()) {
 			x = this.getCtxWidth() - x;
 		}
@@ -11996,7 +11998,7 @@ function isAllowPasteLink(pastedWb) {
 		if(this.workbook.Api.isEyedropperStarted()) {
 			return {cursor: AscCommon.Cursors.Eyedropper, target: c_oTargetType.Cells, color: this.workbook.Api.getEyedropperColor(x, y)};
 		}
-		const oPlaceholderCursor = this.objectRender.checkCursorPlaceholder(x, y);
+		const oPlaceholderCursor = this.objectRender.checkCursorPlaceholder(origX, y);
 		if (oPlaceholderCursor) {
 			return {cursor: kCurDefault, target: c_oTargetType.Placeholder, col: -1, row: -1, placeholderType: oPlaceholderCursor.placeholderType};
 		}
@@ -14052,6 +14054,7 @@ function isAllowPasteLink(pastedWb) {
         this._updateSelectionNameAndInfo();
 
 		window['AscCommon'].g_specialPasteHelper.SpecialPasteButton_Update_Position();
+		Asc.editor.addMacroStepData("SelectDrawing", this.objectRender.getSelectedGraphicObjects().slice());
     };
     WorksheetView.prototype.setSelection = function (range, onlyCells) {
     	if (!Array.isArray(range)) {
@@ -14281,8 +14284,7 @@ function isAllowPasteLink(pastedWb) {
 				return;
 			}
 			if (this.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
-				var lockedCell = this.model.getLockedCell(newRange.c2, newRange.r2);
-				if (lockedCell || lockedCell === null) {
+				if (this.model.isLockedRange(newRange)) {
 					return;
 				}
 			}
@@ -14327,6 +14329,15 @@ function isAllowPasteLink(pastedWb) {
         if (0 === dc && 0 === dr) {
             return this._calcActiveCellOffset();
         }
+
+		if (this.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
+			var newRange = this._calcSelectionEndPointByOffset(dc, dr);
+			var lockedCell = this.model.getLockedCell(newRange.c2, newRange.r2);
+			if (lockedCell || lockedCell === null) {
+				return;
+			}
+		}
+
 		res = this._moveActivePointInSelection(dc, dr);
         if (0 === res) {
             return this.changeSelectionStartPoint(dc, dr, /*isCoord*/false, false);
@@ -19015,11 +19026,14 @@ function isAllowPasteLink(pastedWb) {
 
 		let ctrlKey = flags && flags.ctrlKey;
 		let shiftKey = flags && flags.shiftKey;
+		const userCtrlKey = ctrlKey;
+		const userShiftKey = shiftKey;
 		let applyByArray = ctrlKey && shiftKey;
 		//t.model.workbook.dependencyFormulas.lockRecal();
 
 		let arrayCannotExpand; 	// flag, needed to avoid selecting the entire expected dynamic range in situations where the array cannot open
 		let beforeSpillRange;
+		let ctrlEnterWithDynamicArray = false;
 
 		//***array-formula***
 		const changeRangesIfArrayFormula = function() {
@@ -19182,17 +19196,22 @@ function isAllowPasteLink(pastedWb) {
 			if (!applyByArray && AscCommonExcel.bIsSupportDynamicArrays) {
 				/* if we write not through cse, then check the formula for the presence of ref */
 				/* if ref exists, write the formula as an array formula and also find its dimensions for further expansion */
-				dynamicSelectionRange = t.model.dynamicArrayManager.getDynamicRangeByFormula(newFP, calculateResult, true, needReparse);
+				dynamicSelectionRange = t.model.dynamicArrayManager.getDynamicRangeByFormula(newFP, calculateResult, !userCtrlKey, needReparse);
 				if (dynamicSelectionRange) {
-					applyByArray = true;
-					ctrlKey = true;
-					if ((newFP.aca && newFP.ca)) {
-						// array cannot expand
-						// set ref to the first(parent) cell
-						arrayCannotExpand = true;
-					} else if (!ws.dynamicArrayManager.isAutoExpandBBox(dynamicSelectionRange)) {
-						beforeSpillRange = dynamicSelectionRange;
-						dynamicSelectionRange = new Asc.Range(dynamicSelectionRange.c1, dynamicSelectionRange.r1, dynamicSelectionRange.c1, dynamicSelectionRange.r1);
+					if (userCtrlKey && !userShiftKey) {
+						ctrlEnterWithDynamicArray = true;
+					} else {
+						// Normal Enter or other cases: create single dynamic array
+						applyByArray = true;
+						ctrlKey = true;
+						if ((newFP.aca && newFP.ca)) {
+							// array cannot expand
+							// set ref to the first(parent) cell
+							arrayCannotExpand = true;
+						} else if (!ws.dynamicArrayManager.isAutoExpandBBox(dynamicSelectionRange)) {
+							beforeSpillRange = dynamicSelectionRange;
+							dynamicSelectionRange = new Asc.Range(dynamicSelectionRange.c1, dynamicSelectionRange.r1, dynamicSelectionRange.c1, dynamicSelectionRange.r1);
+						}
 					}
 				}
 			} else if (!applyByArray && !ctrlKey) {
@@ -19265,9 +19284,66 @@ function isAllowPasteLink(pastedWb) {
 				this.workbook.MacrosAddData(AscDFH.historydescription_Spreadsheet_SetCellValue, AscCommonExcel.getFragmentsText(val));
 			
 			// set the value to the selected range
-			c.setValue(AscCommonExcel.getFragmentsText(val), function (r) {
-				ret = r;
-			}, null, applyByArray ? bbox : ((!applyByArray && ctrlKey) ? null : undefined), null, AscCommonExcel.bIsSupportDynamicArrays && (dynamicSelectionRange || beforeSpillRange) ? {range: dynamicSelectionRange, beforeSpillRange: beforeSpillRange} : null);
+			if (ctrlEnterWithDynamicArray) {
+				var _formula = new AscCommonExcel.parserFormula(AscCommonExcel.getFragmentsText(val).substr(1), null, t.model);
+				if (_formula.parse(true)) {
+					var _selection = t.model.getSelection();
+					var activeCell = _selection.activeCell;
+					var selectionRange = t.getSelectedRange();
+					
+					selectionRange._foreach(function(cell) {
+						if (cell.ws.isUserProtectedRangesIntersectionCell(cell)) {
+							return;
+						}
+						
+						_formula.isParsed = false;
+						_formula.outStack = [];
+						_formula.parse(true);
+						var offset = new AscCommon.CellBase(cell.nRow - activeCell.row, cell.nCol - activeCell.col);
+						var _val = "=" + _formula.changeOffset(offset, null, true).assembleLocale(AscCommonExcel.cFormulaLocaleInfo, true, true);
+						
+						var cellFormula = new AscCommonExcel.parserFormula(_val.substr(1), new AscCommonExcel.CCellWithFormula(t.model, cell.nRow, cell.nCol), t.model);
+						if (cellFormula.parse(AscCommonExcel.oFormulaLocaleInfo.Parse, AscCommonExcel.oFormulaLocaleInfo.DigitSep)) {
+							var cellCalculateResult = new AscCommonExcel.CalculateResult(true);
+							var cellDynamicRange = t.model.dynamicArrayManager.getDynamicRangeByFormula(cellFormula, cellCalculateResult, false, false);
+							
+							var dynamicProps = null;
+							var byRefRange = null;
+							if (cellDynamicRange) {
+								if (!ws.dynamicArrayManager.isAutoExpandBBox(cellDynamicRange)) {
+									dynamicProps = {
+										range: new Asc.Range(cell.nCol, cell.nRow, cell.nCol, cell.nRow),
+										beforeSpillRange: cellDynamicRange
+									};
+									byRefRange = new Asc.Range(cell.nCol, cell.nRow, cell.nCol, cell.nRow);
+								} else {
+									dynamicProps = {
+										range: cellDynamicRange
+									};
+									byRefRange = cellDynamicRange;
+								}
+								
+								var dynamicRangeObj = t.model.getRange3(byRefRange.r1, byRefRange.c1, byRefRange.r2, byRefRange.c2);
+								dynamicRangeObj.setValue(_val, function (r) {
+									if (!r) ret = r;
+								}, null, byRefRange, null, dynamicProps);
+							} else {
+								cell.setValue(_val, function (r) {
+									if (!r) ret = r;
+								}, null, undefined, null, null);
+							}
+						}
+					});
+					
+					if (false == t.model.workbook.bUndoChanges && false == t.model.workbook.bRedoChanges) {
+						t.model.dynamicArrayManager.recalculateVolatileArrays();
+					}
+				}
+			} else {
+				c.setValue(AscCommonExcel.getFragmentsText(val), function (r) {
+					ret = r;
+				}, null, applyByArray ? bbox : ((!applyByArray && ctrlKey) ? null : undefined), null, AscCommonExcel.bIsSupportDynamicArrays && (dynamicSelectionRange || beforeSpillRange) ? {range: dynamicSelectionRange, beforeSpillRange: beforeSpillRange} : null);
+			}
 
 			this.workbook.FinalizeAction();
 			// recalc all volatile arrays on page
@@ -21517,7 +21593,7 @@ function isAllowPasteLink(pastedWb) {
 			worksheet.workbook.handlers.trigger("asc_onError", c_oAscError.ID.LockedCellPivot,
 				c_oAscError.Level.NoCritical);
 			result = false;
-		} else if(styleName && this.intersectionFormulaArray(activeRange, true, true)) {
+		} else if(styleName && this.intersectionFormulaArray(activeRange, true, true, true)) {
 			worksheet.workbook.handlers.trigger("asc_onError", c_oAscError.ID.MultiCellsInTablesFormulaArray, c_oAscError.Level.NoCritical);
 			result = false;
 		}

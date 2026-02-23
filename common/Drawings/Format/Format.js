@@ -1234,7 +1234,7 @@
 		AscDFH.changesFactory[AscDFH.historyitem_Xfrm_SetChExtY] = CChangesDrawingsDouble;
 		AscDFH.changesFactory[AscDFH.historyitem_Xfrm_SetFlipH] = CChangesDrawingsBool;
 		AscDFH.changesFactory[AscDFH.historyitem_Xfrm_SetFlipV] = CChangesDrawingsBool;
-		AscDFH.changesFactory[AscDFH.historyitem_Xfrm_SetRot] = CChangesDrawingsDouble;
+		AscDFH.changesFactory[AscDFH.historyitem_Xfrm_SetRot] = AscDFH.CChangesDrawingsDouble2;
 		AscDFH.changesFactory[AscDFH.historyitem_SpPr_SetParent] = CChangesDrawingsObject;
 		AscDFH.changesFactory[AscDFH.historyitem_SpPr_SetBwMode] = CChangesDrawingsLong;
 		AscDFH.changesFactory[AscDFH.historyitem_SpPr_SetXfrm] = CChangesDrawingsObject;
@@ -8959,7 +8959,7 @@
 			this.handleUpdateFlip();
 		};
 		CXfrm.prototype.setRot = function (pr) {
-			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new CChangesDrawingsDouble(this, AscDFH.historyitem_Xfrm_SetRot, this.rot, pr));
+			AscCommon.History.CanAddChanges() && AscCommon.History.Add(new AscDFH.CChangesDrawingsDouble2(this, AscDFH.historyitem_Xfrm_SetRot, this.rot, pr));
 			this.rot = pr;
 			this.handleUpdateRot();
 		};
@@ -17598,6 +17598,17 @@
 			}
 		}
 
+		function builder_GetChartTitle(chartSpace) {
+			const title = chartSpace && chartSpace.chart && chartSpace.chart.title;
+			if (title) {
+				const content = title.getDocContent();
+				if (content) {
+					return content.GetText();
+				}
+			}
+			return null;
+		}
+
 		function builder_SetChartHorAxisTitle(oChartSpace, sTitle, nFontSize, bIsBold) {
 			if (oChartSpace) {
 				var horAxis = oChartSpace.chart.plotArea.getHorizontalAxis();
@@ -20595,6 +20606,7 @@
 		window['AscFormat'].builder_CreateBlipFill = builder_CreateBlipFill;
 		window['AscFormat'].builder_CreateLine = builder_CreateLine;
 		window['AscFormat'].builder_SetChartTitle = builder_SetChartTitle;
+		window['AscFormat'].builder_GetChartTitle = builder_GetChartTitle;
 		window['AscFormat'].builder_SetChartHorAxisTitle = builder_SetChartHorAxisTitle;
 		window['AscFormat'].builder_SetChartVertAxisTitle = builder_SetChartVertAxisTitle;
 		window['AscFormat'].builder_SetChartLegendPos = builder_SetChartLegendPos;

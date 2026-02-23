@@ -1302,8 +1302,11 @@
       }
 	  AscCommon.applyElementDirection(this.input);
     }
-    this.handlers.trigger("asc_onSelectionChanged", this.oSelectionInfo);
-    this.handlers.trigger("asc_onSelectionEnd");
+	//TODO need review -> it may be enough to add a condition to _setEditorFocus
+	if (!(window["NATIVE_EDITOR_ENJINE"] && this.SearchEngine && this.SearchEngine.changingSelection)) {
+		this.handlers.trigger("asc_onSelectionChanged", this.oSelectionInfo);
+		this.handlers.trigger("asc_onSelectionEnd");
+	}
     //если меняется выделенный диапазон
     this.SearchEngine && this.SearchEngine.ResetCurrent(true);
 
@@ -1444,12 +1447,36 @@
 			return;
 		}
 		if (ws.model.getSheetProtection(Asc.c_oAscSheetProtectType.selectLockedCells)) {
-			//TODO _getRangeByXY ?
-			var newRange = isCoord ? ws._getRangeByXY(dc, dr) :
-				ws._calcSelectionEndPointByOffset(dc, dr);
-			var lockedCell = ws.model.getLockedCell(newRange.c2, newRange.r2);
-			if (lockedCell || lockedCell === null) {
-				return;
+			var newRange, checkCol, checkRow;
+			if (isStartPoint) {
+				if (isCoord) {
+					newRange = ws._getRangeByXY(dc, dr);
+					checkCol = newRange.c1;
+					checkRow = newRange.r1;
+				} else {
+					var activeCell = ws._getSelection().activeCell;
+					var mc = ws.model.getMergedByCell(activeCell.row, activeCell.col);
+					var c = mc ? (dc < 0 ? mc.c1 : dc > 0 ? Math.min(mc.c2, ws.nColsCount - 1 - dc) : activeCell.col) :
+						activeCell.col;
+					var r = mc ? (dr < 0 ? mc.r1 : dr > 0 ? Math.min(mc.r2, ws.nRowsCount - 1 - dr) : activeCell.row) :
+						activeCell.row;
+					var p = ws._calcCellPosition(c, r, dc, dr);
+					checkCol = p.col;
+					checkRow = p.row;
+				}
+				var lockedCell = ws.model.getLockedCell(checkCol, checkRow);
+				if (lockedCell || lockedCell === null) {
+					return;
+				}
+			} else {
+				if (isCoord) {
+					newRange = ws._calcSelectionEndPointByXY(dc, dr, isCoord && this.keepType);
+				} else {
+					newRange = ws._calcSelectionEndPointByOffset(dc, dr);
+				}
+				if (ws.model.isLockedRange(newRange)) {
+					return;
+				}
 			}
 		}
 
@@ -1630,7 +1657,10 @@
 		const nPage = this.model.nActive;
 		const oContext = this.trackOverlay.m_oContext;
 		const oRect = {};
-		const nLeft = 2 * oWS.cellsLeft - oWS._getColLeft(oWS.visibleRange.c1);
+		let nLeft = 2 * oWS.cellsLeft - oWS._getColLeft(oWS.visibleRange.c1);
+		if (oWS.getRightToLeft()) {
+			nLeft = -nLeft;
+		}
 		const nTop = 2 * oWS.cellsTop - oWS._getRowTop(oWS.visibleRange.r1);
 		oRect.left   = nLeft;
 		oRect.right  = nLeft + AscCommon.AscBrowser.convertToRetinaValue(oContext.canvas.width);
@@ -2296,8 +2326,9 @@
       return this.closeCellEditor();
   };
 
-  WorkbookView.prototype._onCloseCellEditor = function() {
+  WorkbookView.prototype._onCloseCellEditor = function(saveValue) {
     var isCellEditMode = this.getCellEditMode();
+    var isFormulaEditMode = this.isFormulaEditMode;
     this.setCellEditMode(false);
 
     if (isCellEditMode) {
@@ -2326,7 +2357,9 @@
     this.updateTargetForCollaboration();
     this.sendCursor();
 
-	this.externalSelectionController.sendExternalCloseEditor();
+	if (isFormulaEditMode) {
+		this.externalSelectionController.sendExternalCloseEditor(saveValue);
+	}
   };
 
   WorkbookView.prototype._onEmpty = function() {
@@ -5732,6 +5765,14 @@
 			return this.EnterText(newValue);
 		}
 
+		let oWSView = this.getWorksheet();
+		if (oWSView && oWSView.isSelectOnShape) {
+			if (oWSView.objectRender) {
+				return oWSView.objectRender.CorrectEnterText(oldValue, newValue);
+			}
+			return;
+		}
+
 		if (!this.isCellEditMode || !this.cellEditor) {
 			return;
 		}
@@ -6815,7 +6856,7 @@
 	WorkbookView.prototype.StartAction = function(nDescription, additional)
 	{
 		this.Api.sendEvent("asc_onUserActionStart");
-		this.Api.getMacroRecorder().onAction(nDescription, additional);
+		this.Api.getMacroRecorder().addStepData(nDescription, additional);
 	};
 	WorkbookView.prototype.MacrosAddData = function(nDescription, additional)
 	{
@@ -6824,7 +6865,7 @@
 	WorkbookView.prototype.FinalizeAction = function(nDescription, additional)
 	{
 		this.Api.sendEvent("asc_onUserActionEnd");
-		this.Api.getMacroRecorder().onAction(nDescription, additional);
+		this.Api.getMacroRecorder().addStepData(nDescription, additional);
 	};
 	WorkbookView.prototype.setIsPartialReading = function(val)
 	{
@@ -7599,7 +7640,7 @@
 		});
 
 		window.addEventListener && window.addEventListener('unload', function() {
-			if (isClosing) {
+			if (isClosing && oThis.wb.isFormulaEditMode) {
 				oThis.sendExternalCloseEditor();
 			}
 		});
@@ -7658,6 +7699,10 @@
 			return;
 		}
 
+		if (!this.wb.isFormulaEditMode && !this.getExternalFormulaEditMode()) {
+			return;
+		}
+
 		this.lockSendChangeSelection = true;
 		if ((!this.getExternalFormulaEditMode() && !this._isEqualEditorState(data)) || !this.supportVisibilityChangeOption) {
 			this.wb.setFormulaEditMode(true);
@@ -7683,10 +7728,16 @@
 			return;
 		}
 		const isExternalFormulaEditMode = this.getExternalFormulaEditMode();
+
+		if (!data.isClose && this.wb.isCellEditMode) {
+			return;
+		}
+
 		this.setExternalFormulaEditMode(!data.isClose ? {id: data.id} : null);
 
-		if (this.wb.getCellEditMode() && data.isClose && (isExternalFormulaEditMode || !this.supportVisibilityChangeOption)) {
-			this.wb.closeCellEditor(!data.saveValue);
+		if (this.wb.getCellEditMode() && data.isClose && (isExternalFormulaEditMode || this.wb.isFormulaEditMode)) {
+			var cancelClose = isExternalFormulaEditMode ? true : !data.saveValue;
+			this.wb.closeCellEditor(cancelClose);
 			this.clean();
 		} else if (!this.supportVisibilityChangeOption && !this.wb.getCellEditMode() && !data.isClose) {
 			this.onOpenCellEditor();
