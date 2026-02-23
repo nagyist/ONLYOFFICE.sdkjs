@@ -1842,6 +1842,7 @@ var editor;
 		//this.VersionHistory.applyChanges(this);
 	}
 
+	AscCommonExcel.checkSupportDynamicArrays && AscCommonExcel.checkSupportDynamicArrays();
 	this.isOpenOOXInBrowser = this["asc_isSupportFeature"]("ooxml") && AscCommon.checkOOXMLSignature(file.data);
 	if (this.isOpenOOXInBrowser) {
 		this.openOOXInBrowserZip = file.data;
@@ -9892,8 +9893,12 @@ var editor;
 		this.wb.removeAllInks();
 	};
 
-	spreadsheet_api.prototype.asc_SetIsSupportDynamicArrays = function(val) {
+	spreadsheet_api.prototype.asc_SetIsSupportDynamicArrays = function(val, addToLS) {
 		AscCommonExcel.bIsSupportDynamicArrays = val;
+		if (addToLS) {
+			AscCommon.setLocalStorageItem(AscCommonExcel.dynamicArraysStorageId, {"support": val === false ? "false" : "true"});
+		}
+
 	};
 	spreadsheet_api.prototype.getJsApi = function() {
 		return AscBuilder.Cell.Api;
