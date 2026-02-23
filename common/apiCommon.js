@@ -6877,6 +6877,7 @@ function (window, undefined) {
 			let y = (h - hMM) / 2;
 
 			if (window["NATIVE_EDITOR_ENJINE"]) {
+				renderer.ResetRotation();
 				renderer.put_brushTexture(this.imageBase64, 0);
 				renderer.put_BrushTextureAlpha((255 * this.transparent) >> 0);
 				renderer._e();
