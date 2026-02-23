@@ -294,10 +294,14 @@
 	 * @since 8.1.0
 	 * @see office-js-api/Examples/Plugins/{Editor}/Api/Methods/SetCustomFunctions.js
 	 */
-	Api.prototype["pluginMethod_SetCustomFunctions"] = function(jsonString, waitingAddToHistory)
+	Api.prototype["pluginMethod_SetCustomFunctions"] = function(jsonString)
 	{
 		this.SetCustomFunctions(jsonString, true);
 	};
+
+	//------------------------------------------------------------export--------------------------------------------------
+	window['AscCommon']                             = window['AscCommon'] || {};
+	window["AscCommon"].customFunctionsStorageId    = customFunctionsStorageId;
 
 })(window);
 
