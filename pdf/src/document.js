@@ -2373,7 +2373,7 @@ var CPresentation = CPresentation || function(){};
 
                                         bOldShowParaMarks = this.Api.ShowParaMarks;
                                         this.Api.ShowParaMarks = false;
-                                        oDocContentForDraw.Draw(0, oGraphics);
+                                        oDocContentForDraw.Draw(oDocContentForDraw.GetAbsolutePage(), oGraphics);
                                         this.Api.ShowParaMarks = bOldShowParaMarks;
                                     }
                                     sImageUrl = oCanvas.toDataURL("image/png");
