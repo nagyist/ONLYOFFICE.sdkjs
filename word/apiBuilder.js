@@ -10749,7 +10749,7 @@
 	 * Sets the text color to the current paragraph.
 	 *
 	 * @memberof ApiParagraph
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE"]
 	 *
 	 * @since 9.1.0
 	 * @param {ApiColor} color
