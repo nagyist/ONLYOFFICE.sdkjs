@@ -5829,6 +5829,16 @@
 		oReader.AssignConnectedObjects();
 		return oResult;
 	};
+	
+	/**
+	 * @undocumented
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
+	 */
+	Api.installDeveloperPlugin = Api["installDeveloperPlugin"] = function()
+	{
+		return Asc.editor.installDeveloperPlugin.apply(Asc.editor, arguments);
+	};
 
 	//------------------------------------------------------------------------------------------------------------------
 	//
