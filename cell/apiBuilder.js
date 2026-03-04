@@ -7586,7 +7586,7 @@
 	 * Recalculates all formulas in the active workbook.
 	 * @memberof Api
 	 * @typeofeditors ["CSE"]
-	 * @param {Function} fLogger - A function which specifies the logger object for checking recalculation of formulas.
+	 * @param {Function} [fLogger] - A function which specifies the logger object for checking recalculation of formulas.
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/RecalculateAllFormulas.js
 	 */
