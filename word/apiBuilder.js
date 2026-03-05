@@ -4910,7 +4910,7 @@
 	 * Creates an RGB color from red, green and blue components.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "PDFE"]
 	 * @param {byte} r - Red component (0-255).
 	 * @param {byte} g - Green component (0-255).
 	 * @param {byte} b - Blue component (0-255).
@@ -4943,7 +4943,7 @@
 	 * Creates a color from a HEX string.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "PDFE"]
 	 * @param {string} hexString
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/HexColor.js
@@ -5828,6 +5828,16 @@
 
 		oReader.AssignConnectedObjects();
 		return oResult;
+	};
+	
+	/**
+	 * @undocumented
+	 * @memberof Api
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
+	 */
+	Api.installDeveloperPlugin = Api["installDeveloperPlugin"] = function()
+	{
+		return Asc.editor.installDeveloperPlugin.apply(Asc.editor, arguments);
 	};
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -10054,7 +10064,7 @@
 	};
 	
 	/**
-	 * Moves a cursor to the start of the specified page in the document.
+	 * Returns the footnote or endnote content if the cursor is currently inside one, otherwise returns null.
 	 * @memberof ApiDocument
 	 * @returns {?ApiDocumentContent}
 	 * @typeofeditors ["CDE"]
@@ -15259,7 +15269,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @return {?ApiColor}
 	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/SetBackgroundColor.js
+	 * @see office-js-api/Examples/{Editor}/ApiTableCell/Methods/GetBackgroundColor.js
 	 */
 	ApiTableCell.prototype.GetBackgroundColor = function () {
 		const shd = this.Cell.Get_Shd();
@@ -16150,7 +16160,7 @@
 	};
 
 	/**
-	 * Specifies whether the text with the current text properties are capitalized.
+	 * Returns whether the text with the current text properties are capitalized.
 	 * @memberof ApiTextPr
 	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @return {?boolean}
@@ -16179,7 +16189,7 @@
 	};
 
 	/**
-	 * Specifies whether the text with the current text properties are displayed capitalized two points smaller than the actual font size.
+	 * Returns whether the text with the current text properties are displayed capitalized two points smaller than the actual font size.
 	 * @memberof ApiTextPr
 	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @return {?boolean}
@@ -17352,7 +17362,7 @@
 		return this.Lvl;
 	};
 	/**
-	 * Specifies the text properties which will be applied to the text in the current numbering level itself, not to the text in the subsequent paragraph.
+	 * Returns the text properties which will be applied to the text in the current numbering level itself, not to the text in the subsequent paragraph.
 	 * <note>To change the text style of the paragraph, a style must be applied to it using the {@link ApiRun#SetStyle} method.</note>
 	 * @memberof ApiNumberingLevel
 	 * @typeofeditors ["CDE"]
@@ -19098,7 +19108,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @since 9.3.0
 	 * @returns {boolean | null} Returns true if the figure is flipped horizontally, false if not, or null if the drawing properties are not available.
-	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/AddBreak.js
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipH.js
 	 */
 	ApiDrawing.prototype.GetFlipH = function()
 	{
@@ -19113,7 +19123,7 @@
 	 * @typeofeditors ["CDE"]
 	 * @since 9.3.0
 	 * @returns {boolean | null} Returns true if the figure is flipped vertically, false if not, or null if the drawing properties are not available.
-	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/AddBreak.js
+	 * @see office-js-api/Examples/{Editor}/ApiDrawing/Methods/GetFlipV.js
 	 */
 	ApiDrawing.prototype.GetFlipV = function()
 	{
@@ -25453,7 +25463,7 @@
 	 * @typeofeditors ["CDE", "CFE"]
 	 * @return {?ApiColor}
 	 * @since 9.1.0
-	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/SetBorderColor.js
+	 * @see office-js-api/Examples/{Editor}/ApiFormBase/Methods/GetBackgroundColor.js
 	 */
 	ApiFormBase.prototype.GetBackgroundColor = function () {
 		const formPr = this.Sdt.GetFormPr();
