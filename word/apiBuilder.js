@@ -4910,7 +4910,7 @@
 	 * Creates an RGB color from red, green and blue components.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @param {byte} r - Red component (0-255).
 	 * @param {byte} g - Green component (0-255).
 	 * @param {byte} b - Blue component (0-255).
@@ -4926,7 +4926,7 @@
 	 * Creates an RGBA color from red, green, blue and alpha components.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @param {byte} r - Red component (0-255).
 	 * @param {byte} g - Green component (0-255).
 	 * @param {byte} b - Blue component (0-255).
@@ -4943,7 +4943,7 @@
 	 * Creates a color from a HEX string.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @param {string} hexString
 	 * @returns {ApiColor}
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/HexColor.js
@@ -4960,7 +4960,7 @@
 	 * Creates a theme color.
 	 *
 	 * @memberof Api
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @param {SchemeColorId} [name="tx1"] The theme color name. If the provided name is not supported, the 'tx1' color will be used.
 	 * @returns {ApiColor} Instance of ApiColor with 'theme' type.
 	 * @see office-js-api/Examples/{Editor}/Api/Methods/ThemeColor.js
@@ -22110,7 +22110,7 @@
 	 * Returns a type of the ApiColor class.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.1.0
 	 * @returns {"color"}
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetClassType.js
@@ -22136,7 +22136,7 @@
 	 * Returns true if the color is a theme color.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.1.0
 	 * @returns {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/IsThemeColor.js
@@ -22149,7 +22149,7 @@
 	 * Gets the RGB components of the color.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.1.0
 	 * @returns {{r: byte, g: byte, b: byte}}
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetRGB.js
@@ -22167,7 +22167,7 @@
 	 * Gets the RGBA components of the color.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.1.0
 	 * @returns {{r: byte, g: byte, b: byte, a: byte}}
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetRGBA.js
@@ -22186,7 +22186,7 @@
 	 * Gets the HEX string representation of the color.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.1.0
 	 * @returns {string} A six-digit uppercase hex string, e.g. "FF00AA".
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetHex.js
@@ -22229,7 +22229,7 @@
 	 * Gets the theme color name if the color is a theme color.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.3.0
 	 * @returns {SchemeColorId | null} The theme color name or null if not a theme color.
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/GetThemeName.js
@@ -22252,7 +22252,7 @@
 	 * Converts the ApiColor object into the JSON object.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.3.0
 	 * @returns {string} JSON string representation of the color.
 	 * @see office-js-api/Examples/{Editor}/ApiColor/Methods/ToJSON.js
@@ -22299,7 +22299,7 @@
 	 * Converts the JSON object into the ApiColor object.
 	 *
 	 * @memberof ApiColor
-	 * @typeofeditors ["CDE", "PDFE"]
+	 * @typeofeditors ["CDE", "CSE", "CPE", "PDFE"]
 	 * @since 9.3.0
 	 * @param {string} jsonObject - JSON representation of the color.
 	 * @returns {ApiColor|null} - new ApiColor object if the conversion was successful, null otherwise.
