@@ -25000,7 +25000,7 @@
 	 * @method
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
-	 *
+	 * @since 8.3.2
 	 * @param {ApiColor} [color]
 	 * @return {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetBorderColor.js
