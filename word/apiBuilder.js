@@ -24999,13 +24999,10 @@
 	 * Sets the border color to the current content control.
 	 * @method
 	 * @memberof ApiBlockLvlSdt
-	 * @param {byte} r - Red color component value.
-	 * @param {byte} g - Green color component value.
-	 * @param {byte} b - Blue color component value.
-	 * @param {byte} a - Alpha color component value.
 	 * @typeofeditors ["CDE"]
-	 * @since 8.3.2
-	 * @returns {boolean}
+	 *
+	 * @param {ApiColor} [color]
+	 * @return {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetBorderColor.js
 	 */
 	ApiBlockLvlSdt.prototype.SetBorderColor = ApiInlineLvlSdt.prototype.SetBorderColor;
@@ -25016,7 +25013,7 @@
 	 * @memberof ApiBlockLvlSdt
 	 * @typeofeditors ["CDE"]
 	 * @since 8.3.2
-	 * @returns {null | {r:byte, g:byte, b:byte, a:byte}}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/GetBorderColor.js
 	 */
 	ApiBlockLvlSdt.prototype.GetBorderColor = ApiInlineLvlSdt.prototype.GetBorderColor;
@@ -25024,13 +25021,10 @@
 	/**
 	 * Sets the background color to the current content control.
 	 * @memberof ApiBlockLvlSdt
-	 * @method
-	 * @param {byte} r - Red color component value.
-	 * @param {byte} g - Green color component value.
-	 * @param {byte} b - Blue color component value.
-	 * @param {byte} a - Alpha color component value.
 	 * @typeofeditors ["CDE"]
-	 * @returns {boolean}
+	 *
+	 * @param {ApiColor} [color]
+	 * @return {boolean}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/SetBackgroundColor.js
 	 */
 	ApiBlockLvlSdt.prototype.SetBackgroundColor = ApiInlineLvlSdt.prototype.SetBackgroundColor;
@@ -25041,7 +25035,7 @@
 	 * @method
 	 * @typeofeditors ["CDE"]
 	 * @since 8.3.2
-	 * @returns {null | {r:byte, g:byte, b:byte, a:byte}}
+	 * @returns {?ApiColor}
 	 * @see office-js-api/Examples/{Editor}/ApiBlockLvlSdt/Methods/GetBackgroundColor.js
 	 */
 	ApiBlockLvlSdt.prototype.GetBackgroundColor = ApiInlineLvlSdt.prototype.GetBackgroundColor;
